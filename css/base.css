@@ -36,6 +36,34 @@ a désormais son propre système de couleur, découplé de --accent-*.
 --accent-600:#6459B8;
 --accent-color:var(--accent-500);
 
+/* ==========================================================
+ACCENT AMBRE (2026-08-02) — vie et touche premium sur un site que le
+bleu rend sérieux mais un peu froid. Le bleu reste dominant.
+
+CE N'EST PAS L'ANCIEN OR. #D4A24C (thème marron/or abandonné) était
+un or éteint, désaturé, pensé pour aller avec du bordeaux. Celui-ci
+est un ambre franc, +22 points de saturation, choisi pour tenir face
+au bleu profond. Ne jamais réintroduire #D4A24C ni #8B1E3F.
+
+RÈGLE D'EMPLOI — par petites touches, jamais en fond de section
+large. Réservé au CTA principal, aux badges de mise en avant, aux
+icônes de points forts et aux soulignements de titres clés. Viser
+moins de 10-15% de la surface visible.
+
+  --amber-500  SURFACES uniquement (fond de bouton, de badge, de
+               pastille). Toujours avec un libellé --primary-900 :
+               8,24:1. Sur blanc il ne fait que 2,16:1 — donc jamais
+               en couleur de texte sur fond clair.
+  --amber-600  survol de ces mêmes surfaces (5,85:1 avec le libellé).
+  --amber-700  la SEULE valeur admise pour du texte ou une icône
+               ambre sur fond clair : 5,8 / 5,5 / 5,3 sur --background,
+               --background-soft et --background-alt.
+========================================================== */
+
+--amber-500:#E9A319;
+--amber-600:#C9860B;
+--amber-700:#8A5D00;
+
 --success:#22C55E;
 --warning:#EAA83D;
 --danger:#EF4444;
@@ -409,6 +437,35 @@ color:var(--text-color);
 border-color:var(--primary-color);
 
 color:var(--primary-color);
+
+}
+
+/* CTA principal d'une page — l'ambre le détache des boutons bleus
+courants sans que la page devienne dorée. Un seul par page : si deux
+boutons ambre se retrouvent à l'écran, aucun des deux ne ressort. */
+.btn-accent{
+
+background:var(--amber-500);
+
+color:var(--primary-900);
+
+font-weight:var(--fw-bold);
+
+}
+
+.btn-accent:hover{
+
+background:var(--amber-600);
+
+transform:translateY(-1px);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.btn-accent:focus-visible{
+
+box-shadow:0 0 0 4px rgba(233,163,25,.4);
 
 }
 

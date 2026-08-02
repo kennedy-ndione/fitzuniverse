@@ -1211,20 +1211,26 @@ color:var(--text-decorative);
 
 }
 
-/* Formule recommandée — le seul badge plein de la page. */
+/* Formule recommandée — le seul badge plein de la page, et le seul
+endroit ambre de offers.html. En bleu, il se fondait dans la carte
+mise en avant, elle-même bleue ; l'ambre l'en détache. Le violet
+(Premium) et le rose (accompagnement humain) restent inchangés :
+chaque famille garde son signal. Libellé en --primary-900 : 8,24:1. */
 .plan-badge--recommended{
 
-background:var(--primary-600);
+background:var(--amber-500);
 
 border-color:transparent;
 
-color:#fff;
+color:var(--primary-900);
 
-box-shadow:0 8px 20px rgba(51,65,140,.32);
+box-shadow:0 8px 20px rgba(233,163,25,.32);
 
 }
 
-.plan-badge--recommended i{ color:#fff; }
+/* svg inclus : Lucide remplace les <i data-lucide> par des <svg>. */
+.plan-badge--recommended i,
+.plan-badge--recommended svg{ color:var(--primary-900); }
 
 /* Sur la carte sombre, le badge neutre clair se confondrait avec le
 fond de page : version pleine violette, cohérente avec l'accent que

@@ -506,7 +506,10 @@ font-size:2rem;
 
 font-weight:800;
 
-color:rgba(51,65,140,.14);
+/* Chiffre d'étape en ambre translucide : purement décoratif (le titre
+de l'étape porte l'information), il réchauffe la carte sans occuper de
+surface. */
+color:rgba(233,163,25,.30);
 
 line-height:1;
 
@@ -887,10 +890,16 @@ font-size:.92rem;
 color:rgba(255,255,255,.85);
 }
 
-.cta-trust i{
+/* svg inclus : Lucide remplace les <i data-lucide> par des <svg> (voir
+la note dans css/hero.css). */
+.cta-trust i,
+.cta-trust svg{
 width:18px;
 height:18px;
 flex-shrink:0;
+/* Le bloc CTA est sur fond marine : l'ambre y ressort à plus de 8:1
+et fait écho au bouton "Créer un compte" juste au-dessus. */
+color:var(--amber-500);
 }
 
 /* ==========================================================
