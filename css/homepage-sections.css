@@ -16,30 +16,52 @@ align-items:center;
 gap:20px;
 }
 
+/* ==========================================================
+TYPOGRAPHIE DE LA PAGE D'ACCUEIL — révision 2026-08-02
+L'écart entre les titres et le texte courant était trop faible pour
+accrocher : les h2 étaient en graisse 600, à peine au-dessus du gras
+d'un paragraphe, et les sur-titres se lisaient comme du texte normal.
+La hiérarchie repose maintenant sur trois leviers cumulés — graisse,
+approche (letter-spacing) et casse — plutôt que sur la seule taille,
+qui restait déjà correcte via --fs-h2.
+========================================================== */
+
 .section-badge{
 display:inline-flex;
 align-items:center;
 gap:8px;
 width:max-content;
-padding:8px 16px;
+padding:7px 15px;
 border-radius:999px;
 background:var(--background-light);
 color:var(--primary-color);
-font-weight:600;
-font-size:var(--fs-small);
+/* Sur-titre : petit, gras, espacé et en capitales — il annonce la
+section sans concurrencer le h2 qui le suit. */
+font-family:var(--font-display);
+font-weight:var(--fw-bold);
+font-size:var(--fs-badge);
+letter-spacing:.08em;
+text-transform:uppercase;
+/* Les capitales et l'approche élargie rallongent le libellé : sans
+ces deux lignes, un sur-titre long ("Un aperçu, pas le catalogue
+entier") dépassait la fenêtre à 375px, la pastille étant en
+width:max-content. */
+max-width:100%;
+text-align:center;
 }
 
 .section-badge i{
-width:16px;
-height:16px;
+width:15px;
+height:15px;
 }
 
 .section-header h2{
 font-family:var(--font-display);
-font-weight:600;
+/* 600 -> 800 : c'est le premier mot que lit un visiteur. */
+font-weight:var(--fw-extrabold);
 font-size:var(--fs-h2);
-line-height:var(--lh-snug);
-letter-spacing:var(--ls-tight);
+line-height:1.12;
+letter-spacing:-.028em;
 color:var(--primary-dark);
 text-wrap:balance;
 }
@@ -48,6 +70,10 @@ text-wrap:balance;
 color:var(--text-light);
 font-size:var(--fs-lead);
 line-height:var(--lh-relaxed);
+max-width:62ch;
+margin-left:auto;
+margin-right:auto;
+text-wrap:pretty;
 }
 
 /* ==========================================================
@@ -322,7 +348,7 @@ transform:translateY(-10px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(139,30,63,.20);
+border-color:rgba(51,65,140,.22);
 
 }
 
@@ -340,7 +366,7 @@ justify-content:center;
 
 border-radius:var(--radius-lg);
 
-background:rgba(139,30,63,.08);
+background:rgba(51,65,140,.07);
 
 color:var(--primary-color);
 
@@ -372,9 +398,9 @@ height:30px;
 font-family:var(--font-display);
 font-size:var(--fs-h3);
 
-font-weight:600;
+font-weight:var(--fw-bold);
 
-letter-spacing:var(--ls-snug);
+letter-spacing:-.015em;
 
 margin-bottom:12px;
 
@@ -464,7 +490,7 @@ transform:translateY(-10px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(139,30,63,.18);
+border-color:rgba(51,65,140,.20);
 
 }
 
@@ -480,7 +506,7 @@ font-size:2rem;
 
 font-weight:800;
 
-color:rgba(139,30,63,.12);
+color:rgba(51,65,140,.14);
 
 line-height:1;
 
@@ -502,7 +528,7 @@ margin-bottom:24px;
 
 border-radius:var(--radius-lg);
 
-background:rgba(139,30,63,.08);
+background:rgba(51,65,140,.07);
 
 color:var(--primary-color);
 
@@ -533,9 +559,11 @@ height:30px;
 font-family:var(--font-display);
 font-size:var(--fs-h3);
 
-font-weight:600;
+/* Les 3 étapes sont le cœur explicatif de la page : leurs titres
+portent la graisse maximale, au même niveau que les h2 de section. */
+font-weight:var(--fw-extrabold);
 
-letter-spacing:var(--ls-snug);
+letter-spacing:-.015em;
 
 margin-bottom:12px;
 
@@ -608,7 +636,7 @@ transition:transform .25s var(--ease-premium), box-shadow .25s var(--ease-premiu
 .feature-card:hover{
 transform:translateY(-6px);
 box-shadow:var(--shadow-md);
-border-color:rgba(139,30,63,.18);
+border-color:rgba(51,65,140,.20);
 }
 
 .feature-card-disabled{
@@ -628,7 +656,7 @@ border-color:var(--border-color);
 
 .feature-card-disabled:hover .card-icon{
 transform:none;
-background:rgba(139,30,63,.08);
+background:rgba(51,65,140,.07);
 color:var(--primary-color);
 }
 
@@ -663,6 +691,10 @@ height:16px;
 transition:transform .25s ease;
 }
 
+/* Les 3 étapes réutilisent .feature-link depuis la fusion des sections
+"Comment ça fonctionne" et "Fonctionnalités" : l'animation de flèche
+n'était accrochée qu'au survol d'une .feature-card. */
+.step:hover .feature-link i,
 .feature-card:hover .feature-link i{
 transform:translateX(4px);
 }
@@ -706,10 +738,10 @@ align-items:flex-start;
 
 .vision-content h2{
 font-family:var(--font-display);
-font-weight:600;
+font-weight:var(--fw-extrabold);
 font-size:var(--fs-h2);
-line-height:var(--lh-snug);
-letter-spacing:var(--ls-tight);
+line-height:1.12;
+letter-spacing:-.028em;
 color:var(--primary-dark);
 text-wrap:balance;
 }
@@ -784,7 +816,7 @@ CTA
 position:relative;
 isolation:isolate;
 background:
-linear-gradient(135deg,rgba(43,14,22,.93),rgba(139,30,63,.88)),
+linear-gradient(135deg,rgba(18,22,46,.93),rgba(51,65,140,.88)),
 url("../assets/images/hero-bg4.jpg");
 background-size:cover;
 background-position:center 35%;
@@ -804,7 +836,7 @@ content:"";
 position:absolute;
 inset:0;
 z-index:-1;
-background:radial-gradient(circle at 85% 15%,rgba(212,162,76,.22),transparent 55%);
+background:radial-gradient(circle at 85% 15%,rgba(126,113,216,.24),transparent 55%);
 }
 
 .cta-box .section-badge{
@@ -814,10 +846,10 @@ color:#fff;
 
 .cta-box h2{
 font-family:var(--font-display);
-font-weight:600;
+font-weight:var(--fw-extrabold);
 font-size:var(--fs-h2);
-line-height:var(--lh-snug);
-letter-spacing:var(--ls-tight);
+line-height:1.12;
+letter-spacing:-.028em;
 max-width:680px;
 text-wrap:balance;
 text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.2);

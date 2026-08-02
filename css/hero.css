@@ -99,13 +99,16 @@ gap:24px;
 
 font-family:var(--font-display);
 
-font-weight:700;
+/* Première chose que voit un visiteur : graisse maximale. Le passage
+de 700 à 800 s'accompagne d'une approche encore resserrée, sans quoi
+un titre très gras paraît empâté aux grandes tailles. */
+font-weight:var(--fw-extrabold);
 
 font-size:var(--fs-hero);
 
-line-height:var(--lh-tight);
+line-height:1.05;
 
-letter-spacing:-.03em;
+letter-spacing:-.035em;
 
 max-width:700px;
 
@@ -125,7 +128,10 @@ font-size:var(--fs-lead);
 
 line-height:var(--lh-relaxed);
 
-color:rgba(255,255,255,.82);
+/* Remonté de .82 à .90 : l'écart de graisse avec le h1 en 800 suffit
+désormais à créer la hiérarchie, le texte n'a plus besoin d'être
+délavé pour paraître secondaire — et il reste lisible sur la photo. */
+color:rgba(255,255,255,.90);
 
 text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
 
@@ -337,7 +343,7 @@ height:48px;
 
 border-radius:var(--radius-md);
 
-background:rgba(139,30,63,.12);
+background:rgba(51,65,140,.12);
 
 color:var(--primary-color);
 
@@ -483,7 +489,7 @@ z-index:-1;
 
 border-radius:inherit;
 
-background:conic-gradient(from 0deg, #D4A24C, #B23358, #E8C077, #D4A24C);
+background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
 
 opacity:.55;
 
@@ -581,7 +587,7 @@ background:var(--gradient-primary);
 
 border-radius:999px;
 
-box-shadow:0 0 10px rgba(139,30,63,.5);
+box-shadow:0 0 10px rgba(51,65,140,.5);
 
 transition:width .6s var(--ease-premium);
 
