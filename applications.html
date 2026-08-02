@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Suivi des candidatures | ScholarBridge</title>
+
+<meta name="description" content="Suivez chacune de vos candidatures étape par étape, avec des rappels pour vérifier vos portails universitaires.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="applications.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link is-active" aria-current="page" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Mes candidatures</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div id="lockedState" hidden></div>
+
+<div id="applicationsApp" class="reveal">
+
+<section class="apps-intro">
+<h2>Suivez chaque candidature jusqu'à la réponse</h2>
+<p>Fitz vous rappelle quand vérifier un portail universitaire.</p>
+</section>
+
+<div class="apps-stats">
+
+<div class="apps-stat">
+<div class="apps-stat-icon"><i data-lucide="list-checks"></i></div>
+<div class="apps-stat-body">
+<strong id="statTracked">0</strong>
+<span>Candidatures suivies</span>
+</div>
+</div>
+
+<div class="apps-stat apps-stat-urgent">
+<div class="apps-stat-icon"><i data-lucide="alarm-clock"></i></div>
+<div class="apps-stat-body">
+<strong id="statDue">0</strong>
+<span>À vérifier maintenant</span>
+</div>
+</div>
+
+<div class="apps-stat">
+<div class="apps-stat-icon"><i data-lucide="hourglass"></i></div>
+<div class="apps-stat-body">
+<strong id="statPending">0</strong>
+<span>En attente de réponse</span>
+</div>
+</div>
+
+</div>
+
+<div class="apps-toolbar">
+<button type="button" class="btn btn-primary" id="addApplicationBtn">
+<i data-lucide="plus"></i>
+<span>Nouvelle candidature</span>
+</button>
+</div>
+
+<div id="applicationsEmpty" class="apps-empty" hidden>
+<div class="apps-empty-icon"><i data-lucide="list-checks"></i></div>
+<h3>Prêt à suivre votre première candidature ?</h3>
+<p>Ajoutez-la dès maintenant pour que Fitz commence à vous relancer aux bons moments.</p>
+</div>
+
+<div id="applicationsList" class="apps-list"></div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<!-- Formulaire candidature -->
+<div class="apps-modal" id="applicationModal" hidden>
+
+<div class="apps-modal-card">
+
+<div class="apps-modal-head">
+<h3 id="applicationModalTitle">Nouvelle candidature</h3>
+<button type="button" class="apps-modal-close" id="applicationModalClose" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<form id="applicationForm">
+
+<label class="apps-field">
+<span>Université</span>
+<input type="text" id="fieldUniversity" required placeholder="Ex. Budapest University of Technology">
+</label>
+
+<label class="apps-field">
+<span>Bourse (optionnel)</span>
+<input type="text" id="fieldScholarship" placeholder="Ex. Stipendium Hungaricum">
+</label>
+
+<label class="apps-field">
+<span>Lien du portail de candidature (optionnel)</span>
+<input type="url" id="fieldPortalUrl" placeholder="https://...">
+</label>
+
+<div class="apps-field-row">
+
+<label class="apps-field">
+<span>Statut</span>
+<select id="fieldStatus">
+<option value="a_preparer">À préparer</option>
+<option value="en_cours">En préparation</option>
+<option value="deposee">Déposée</option>
+<option value="en_attente">En attente de réponse</option>
+<option value="reponse_recue">Réponse reçue</option>
+</select>
+</label>
+
+<label class="apps-field">
+<span>Date limite (optionnel)</span>
+<input type="date" id="fieldDeadline">
+</label>
+
+</div>
+
+<label class="apps-field">
+<span>Fitz vous relance tous les</span>
+<select id="fieldFrequency">
+<option value="7">7 jours</option>
+<option value="14" selected>14 jours</option>
+</select>
+</label>
+
+<label class="apps-field">
+<span>Notes (optionnel)</span>
+<textarea id="fieldNotes" rows="2" placeholder="Identifiants du portail, documents déjà envoyés..."></textarea>
+</label>
+
+<div class="apps-modal-actions">
+<button type="button" class="btn btn-secondary" id="applicationCancelBtn">Annuler</button>
+<button type="submit" class="btn btn-primary" id="applicationSaveBtn">
+<span>Enregistrer</span>
+</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="pricing-plans.js"></script>
+<script type="module" src="applications.js"></script>
+
+</body>
+
+</html>

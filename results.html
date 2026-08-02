@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ScholarBridge | Votre diagnostic Fitz</title>
+
+<meta name="description" content="Découvrez le diagnostic personnalisé de Fitz sur votre profil : vos points forts, vos opportunités, et comment renforcer votre candidature.">
+
+<!-- Google Fonts (identiques à index.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="results.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Badge -->
+<div class="ai-badge">
+<i data-lucide="bot"></i>
+<span>Fitz</span>
+</div>
+
+<h1>Votre diagnostic est terminé</h1>
+
+<!-- Récit d'ouverture de Fitz -->
+<div class="narrative-card" id="narrativeIntro">
+<div class="assistant-avatar"><i data-lucide="sparkles"></i></div>
+<div class="narrative-text" id="narrativeText"></div>
+</div>
+
+<!-- Score -->
+<section class="score-section reveal">
+
+<div class="score-ring" id="scoreRing">
+<div class="score-ring-inner">
+<span id="score">0</span>
+<span class="score-suffix">/100</span>
+</div>
+</div>
+
+<div class="score-copy">
+<span class="score-label" id="scoreTier">Indicateur ScholarBridge</span>
+<p id="profileMessage"></p>
+<p class="score-note">
+<i data-lucide="info"></i>
+Ce score est un point de départ pour comprendre votre profil — pas un verdict. L'analyse ci-dessous explique ce qui le compose.
+</p>
+</div>
+
+</section>
+
+<!-- Décomposition du score -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="list-tree"></i>
+<h2>Ce qui compose votre score de compatibilité</h2>
+</div>
+<p class="section-subtext">Chaque catégorie ci-dessous est calculée à partir de vos réponses — c'est cette décomposition qui explique le chiffre affiché plus haut.</p>
+
+<div class="score-breakdown" id="scoreBreakdown"></div>
+
+<div class="improvement-free" id="improvementFree"></div>
+
+<div class="reco-locked" id="recoLocked" hidden>
+<div class="reco-locked-icon"><i data-lucide="lock"></i></div>
+<div class="reco-locked-copy">
+<strong id="recoLockedCount"></strong>
+<p>Réservé aux étudiants accompagnés — chaque axe restant a sa propre piste d'amélioration.</p>
+</div>
+<a href="offers.html" class="btn btn-secondary">
+<span>Débloquer avec Essentiel</span>
+<i data-lucide="arrow-right"></i>
+</a>
+</div>
+
+</section>
+
+<!-- Ce que Fitz a compris du profil -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="brain"></i>
+<h2>Ce que Fitz a compris de votre profil</h2>
+</div>
+<p class="section-subtext">Le niveau et le potentiel ci-dessus s'expliquent par ces éléments de votre parcours.</p>
+
+<div class="analysis-card strengths-card">
+<div class="analysis-heading">
+<i data-lucide="check-circle"></i>
+<h2>Ce qui joue en votre faveur</h2>
+</div>
+<ul id="strengths"></ul>
+</div>
+
+</section>
+
+<!-- Destinations -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="globe-2"></i>
+<h2>Destinations où votre profil semble compétitif</h2>
+</div>
+<ul class="pill-list" id="countries"></ul>
+</section>
+
+<!-- Opportunités -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="compass"></i>
+<h2>Opportunités correspondant actuellement à votre profil</h2>
+</div>
+<p class="section-subtext">Chaque opportunité ci-dessous est reliée à des éléments précis de vos réponses.</p>
+<div id="scholarships" class="opportunity-list"></div>
+</section>
+
+<!-- Ce qui limite actuellement les chances -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="alert-triangle"></i>
+<h2>Ce qui limite actuellement vos chances</h2>
+</div>
+<p class="section-subtext">Ce sont les points que Fitz recommande de renforcer avant de candidater.</p>
+
+<div class="analysis-card weaknesses-card">
+<div class="analysis-heading">
+<i data-lucide="trending-up"></i>
+<h2>Axes à renforcer</h2>
+</div>
+<ul id="weaknesses"></ul>
+</div>
+
+</section>
+
+<!-- Recommandations -->
+<section class="section reveal">
+<div class="section-heading">
+<i data-lucide="lightbulb"></i>
+<h2>Prochaines étapes suggérées</h2>
+</div>
+<ul id="recommendations"></ul>
+</section>
+
+<!-- Transition vers l'accompagnement -->
+<section class="closing-card reveal">
+
+<div class="closing-icon"><i data-lucide="shield-check"></i></div>
+
+<h2>De l'opportunité identifiée à la candidature qui se démarque</h2>
+
+<p>
+Ce qui fait vraiment la différence face à des programmes recherchés, c'est la qualité du dossier : la cohérence du projet, la lettre de motivation, la mise en valeur de votre parcours.
+</p>
+
+<p>
+C'est exactement ce que ScholarBridge propose : Fitz va bien au-delà d'une liste d'opportunités, il travaille avec vous sur votre dossier.
+</p>
+
+<ul class="closing-checklist">
+<li><i data-lucide="check"></i><span>Construire un plan d'action personnalisé</span></li>
+<li><i data-lucide="check"></i><span>Améliorer votre lettre de motivation</span></li>
+<li><i data-lucide="check"></i><span>Corriger et renforcer votre CV</span></li>
+<li><i data-lucide="check"></i><span>Préparer les documents attendus</span></li>
+<li><i data-lucide="check"></i><span>Organiser les échéances de candidature</span></li>
+<li><i data-lucide="check"></i><span>Répondre à vos questions à chaque étape</span></li>
+<li><i data-lucide="check"></i><span>Vous accompagner jusqu'au dépôt du dossier</span></li>
+</ul>
+
+<a href="offers.html" class="btn btn-primary btn-lg">
+<span>Construire mon dossier avec Fitz</span>
+<i data-lucide="arrow-right"></i>
+</a>
+
+<p class="closing-note">
+<i data-lucide="shield-check"></i>
+Aucun engagement à cette étape — découvrez simplement comment fonctionne l'accompagnement.
+</p>
+
+</section>
+
+</div>
+
+<script src="eligibility-ai.js"></script>
+<script src="results.js"></script>
+
+</body>
+
+</html>

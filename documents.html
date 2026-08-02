@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Documents à préparer | ScholarBridge</title>
+
+<meta name="description" content="Tous les documents généralement demandés pour une candidature internationale, avec leur rôle, comment les préparer, et les erreurs à éviter.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="documents.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link is-active" aria-current="page" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Documents à préparer</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div id="lockedState" hidden></div>
+
+<div id="documentsApp" class="reveal">
+
+<section class="docs-intro">
+<h2>Ce que les universités attendent réellement de vous</h2>
+<p>Comprendre le rôle de chaque document vous aide à avancer sereinement, étape par étape.</p>
+</section>
+
+<!-- Documents générés par Fitz -->
+<section id="aiDocumentsSection" class="docs-generated" hidden>
+<div class="section-heading">
+<i data-lucide="sparkles"></i>
+<h2>Vos documents générés avec Fitz</h2>
+</div>
+<div id="generatedDocuments" class="docs-generated-grid"></div>
+</section>
+
+<!-- Recherche et filtres -->
+<div class="docs-toolbar">
+
+<div class="docs-search-field">
+<i data-lucide="search"></i>
+<input type="text" id="searchDocument" placeholder="Rechercher un document...">
+</div>
+
+<div class="docs-category-filters" id="categoryFilters">
+<button type="button" class="docs-category-chip is-active" data-category="">Tous</button>
+</div>
+
+</div>
+
+<p class="docs-results-count" id="resultsCount"></p>
+
+<div id="documentsContainer" class="docs-grid"></div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<!-- Détail d'un document -->
+<div class="docs-modal" id="documentModal" hidden>
+
+<div class="docs-modal-card">
+
+<div class="docs-modal-head">
+<div class="docs-modal-icon"><i id="modalIcon" data-lucide="file-text"></i></div>
+<div>
+<span class="docs-modal-category" id="modalCategory"></span>
+<h3 id="modalTitle"></h3>
+</div>
+<button type="button" class="docs-modal-close" id="modalClose" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<div class="docs-modal-body" id="modalBody"></div>
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script type="module" src="documents.js"></script>
+
+</body>
+
+</html>

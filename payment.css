@@ -1,0 +1,1728 @@
+/* ==========================================================
+SCHOLARBRIDGE — ACTIVATION DE L'ACCOMPAGNEMENT (payment.html)
+Repose sur les variables et le reset définis dans css/base.css
+(même palette, même typographie, même système que index.html,
+eligibility-test.html, eligibility-questions.html, results.html
+et offers.html)
+========================================================== */
+
+body{
+
+padding:60px 20px 120px;
+
+overflow-x:hidden;
+
+}
+
+.container{
+
+position:relative;
+
+width:100%;
+
+max-width:720px;
+
+margin:0 auto;
+
+}
+
+/* ==========================================================
+PROFONDEUR — HALOS DE FOND (cohérents avec offers.html)
+========================================================== */
+
+.container::before,
+.container::after{
+
+content:"";
+
+position:absolute;
+
+z-index:-1;
+
+border-radius:50%;
+
+pointer-events:none;
+
+filter:blur(70px);
+
+}
+
+.container::before{
+
+top:-120px;
+
+left:-15%;
+
+width:360px;
+
+height:360px;
+
+background:radial-gradient(circle,rgba(139,30,63,.22) 0%,transparent 70%);
+
+animation:heroHaloA 24s ease-in-out infinite;
+
+}
+
+.container::after{
+
+top:-70px;
+
+right:-18%;
+
+width:320px;
+
+height:320px;
+
+background:radial-gradient(circle,rgba(212,162,76,.2) 0%,transparent 70%);
+
+animation:heroHaloB 28s ease-in-out infinite;
+
+}
+
+@keyframes heroHaloA{
+
+0%,100%{ transform:translate(0,0) scale(1); }
+50%{ transform:translate(26px,18px) scale(1.08); }
+
+}
+
+@keyframes heroHaloB{
+
+0%,100%{ transform:translate(0,0) scale(1); }
+50%{ transform:translate(-20px,22px) scale(1.06); }
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.container::before,
+.container::after{
+
+animation:none;
+
+}
+
+}
+
+/* ==========================================================
+RÉVÉLATION AU DÉFILEMENT
+========================================================== */
+
+.reveal{
+
+opacity:1;
+
+transform:none;
+
+}
+
+html.js-ready .reveal{
+
+opacity:0;
+
+transform:translateY(24px);
+
+transition:opacity .8s var(--ease-premium), transform .8s var(--ease-premium);
+
+}
+
+html.js-ready .reveal.is-visible{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+html.js-ready .fitz-showcase.reveal{ transition-delay:.05s; }
+html.js-ready .plan-summary.reveal{ transition-delay:.1s; }
+
+html.js-ready .payment-methods .payment-method:nth-child(2){ transition-delay:.06s; }
+html.js-ready .payment-methods .payment-method:nth-child(3){ transition-delay:.12s; }
+
+html.js-ready .reassurance .reassurance-item:nth-child(2){ transition-delay:.04s; }
+html.js-ready .reassurance .reassurance-item:nth-child(3){ transition-delay:.08s; }
+html.js-ready .reassurance .reassurance-item:nth-child(4){ transition-delay:.12s; }
+html.js-ready .reassurance .reassurance-item:nth-child(5){ transition-delay:.16s; }
+
+@media (prefers-reduced-motion: reduce){
+
+.reveal{
+
+opacity:1 !important;
+
+transform:none !important;
+
+transition:none !important;
+
+}
+
+}
+
+/* ==========================================================
+EN-TÊTE
+========================================================== */
+
+.back-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+margin-bottom:28px;
+
+color:var(--text-light);
+
+font-weight:600;
+
+font-size:.9rem;
+
+transition:var(--transition);
+
+}
+
+.back-link i{
+
+width:16px;
+
+height:16px;
+
+}
+
+.back-link:hover{
+
+color:var(--primary-color);
+
+}
+
+.payment-header{
+
+text-align:center;
+
+margin-bottom:36px;
+
+}
+
+.ai-badge{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+width:max-content;
+
+margin:0 auto 20px;
+
+padding:10px 18px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+font-weight:700;
+
+font-size:.88rem;
+
+}
+
+.ai-badge i{
+
+width:16px;
+
+height:16px;
+
+}
+
+.payment-header h1{
+
+font-size:clamp(1.6rem,3.6vw,2.15rem);
+
+line-height:1.25;
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:14px;
+
+}
+
+.lead{
+
+max-width:560px;
+
+margin:0 auto;
+
+color:var(--text-light);
+
+font-size:.98rem;
+
+line-height:1.75;
+
+}
+
+/* ==========================================================
+FITZ AI — TOUJOURS PRÉSENT
+========================================================== */
+
+.fitz-showcase{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+margin:0 0 32px;
+
+padding:20px 24px;
+
+border-radius:var(--radius-lg);
+
+background:var(--glass);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+border:1px solid var(--glass-border);
+
+box-shadow:var(--shadow-md);
+
+}
+
+/* Fitz porte partout sur le site la même identité or-dominante
+(--gradient-fitz/--glow-fitz) et le même halo conique animé — voir
+css/hero.css .demo-avatar et css/ai-suite.css .fitz-avatar. Cet avatar
+utilisait encore --gradient-primary générique + un anneau qui pulse,
+une signature bespoke qui dupliquait sans réutiliser celle établie. */
+.fitz-showcase-avatar{
+
+position:relative;
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:48px;
+
+height:48px;
+
+border-radius:15px;
+
+background:var(--gradient-fitz);
+
+color:#fff;
+
+box-shadow:var(--glow-fitz);
+
+isolation:isolate;
+
+}
+
+.fitz-showcase-avatar i{
+
+width:22px;
+
+height:22px;
+
+}
+
+.fitz-showcase-avatar::before{
+
+content:"";
+
+position:absolute;
+
+inset:-3px;
+
+z-index:-1;
+
+border-radius:inherit;
+
+background:conic-gradient(from 0deg, #D4A24C, #B23358, #E8C077, #D4A24C);
+
+opacity:.55;
+
+filter:blur(6px);
+
+animation:fitzHalo 8s linear infinite;
+
+}
+
+@keyframes fitzHalo{
+
+100%{ transform:rotate(360deg); }
+
+}
+
+.fitz-showcase-copy{
+
+min-width:0;
+
+}
+
+.fitz-showcase-label{
+
+display:block;
+
+margin-bottom:4px;
+
+color:var(--text-muted);
+
+font-weight:700;
+
+font-size:.72rem;
+
+text-transform:uppercase;
+
+letter-spacing:.05em;
+
+}
+
+.fitz-showcase-copy p{
+
+color:var(--text-color);
+
+font-weight:700;
+
+font-size:1rem;
+
+min-height:1.4em;
+
+opacity:1;
+
+transform:translateY(0);
+
+transition:opacity .4s var(--ease-premium), transform .4s var(--ease-premium);
+
+}
+
+.fitz-showcase-copy p.is-swapping{
+
+opacity:0;
+
+transform:translateY(6px);
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.fitz-showcase-avatar::before{ animation:none; }
+
+}
+
+/* ==========================================================
+CARTE RÉSUMÉ DU PALIER
+========================================================== */
+
+.plan-summary{
+
+display:flex;
+
+align-items:center;
+
+gap:20px;
+
+padding:28px 30px;
+
+margin-bottom:36px;
+
+border-radius:var(--radius-lg);
+
+background:
+radial-gradient(circle at top right,rgba(212,162,76,.1),transparent 55%),
+var(--background);
+
+border:1px solid rgba(212,162,76,.4);
+
+box-shadow:var(--shadow-lg);
+
+}
+
+.plan-summary-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:60px;
+
+height:60px;
+
+border-radius:18px;
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+box-shadow:0 10px 24px rgba(139,30,63,.32);
+
+}
+
+.plan-summary-icon i{
+
+width:28px;
+
+height:28px;
+
+}
+
+.plan-summary-body{
+
+min-width:0;
+
+}
+
+.plan-summary-badge{
+
+display:inline-block;
+
+margin-bottom:8px;
+
+padding:5px 14px;
+
+border-radius:var(--radius-full);
+
+background:var(--accent-color);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.76rem;
+
+}
+
+.plan-summary-body h2{
+
+font-size:1.3rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:6px;
+
+}
+
+.plan-summary-price{
+
+display:flex;
+
+align-items:baseline;
+
+gap:8px;
+
+}
+
+.plan-summary-price span:first-child{
+
+font-family:var(--font-display);
+
+font-size:2rem;
+
+font-weight:800;
+
+letter-spacing:-.01em;
+
+background:var(--gradient-primary);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+.plan-summary-currency{
+
+font-weight:700;
+
+color:var(--text-muted);
+
+font-size:.9rem;
+
+}
+
+/* ==========================================================
+SECTIONS GÉNÉRIQUES
+========================================================== */
+
+.section{
+
+margin-bottom:36px;
+
+}
+
+.section-heading{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+margin-bottom:6px;
+
+}
+
+.section-heading i{
+
+width:20px;
+
+height:20px;
+
+color:var(--primary-color);
+
+}
+
+.section-heading h2{
+
+font-size:1.12rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+}
+
+.section-subtext{
+
+color:var(--text-light);
+
+font-size:.9rem;
+
+margin-bottom:18px;
+
+}
+
+/* ==========================================================
+RÉCAPITULATIF
+========================================================== */
+
+.summary-card{
+
+background:
+radial-gradient(circle at 100% 0%,rgba(139,30,63,.04),transparent 45%),
+var(--background);
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-lg);
+
+padding:8px 28px;
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.summary-row{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+padding:18px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.summary-row:last-child{
+
+border-bottom:none;
+
+}
+
+.summary-row-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+border-radius:12px;
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+}
+
+.summary-row-icon i{
+
+width:18px;
+
+height:18px;
+
+}
+
+.summary-row-icon-accent{
+
+background:linear-gradient(135deg,rgba(212,162,76,.22),rgba(212,162,76,.1));
+
+color:var(--accent-600);
+
+}
+
+.summary-row-body{
+
+flex:1;
+
+min-width:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+}
+
+.summary-row dt{
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+font-weight:600;
+
+}
+
+.summary-row dd{
+
+color:var(--text-color);
+
+font-weight:700;
+
+font-size:.94rem;
+
+text-align:right;
+
+}
+
+.summary-row-price{
+
+margin:4px 0;
+
+padding:16px 18px;
+
+border-radius:var(--radius-lg);
+
+background:linear-gradient(135deg,rgba(212,162,76,.1),rgba(139,30,63,.05));
+
+border-bottom:none;
+
+}
+
+.summary-row-price dt{
+
+color:var(--text-color);
+
+font-weight:700;
+
+}
+
+.summary-row-price dd{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:var(--fw-extrabold);
+
+font-variant-numeric:tabular-nums;
+
+letter-spacing:-.01em;
+
+background:var(--gradient-primary);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+.summary-status{
+
+display:inline-flex;
+
+align-items:center;
+
+padding:5px 12px;
+
+border-radius:var(--radius-full);
+
+background:rgba(234,168,61,.14);
+
+color:var(--warning);
+
+font-size:.85rem;
+
+}
+
+/* ==========================================================
+MOYEN DE PAIEMENT
+========================================================== */
+
+.payment-methods{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+
+gap:16px;
+
+border:none;
+
+padding:0;
+
+margin:0;
+
+}
+
+.visually-hidden{
+
+position:absolute;
+
+width:1px;
+
+height:1px;
+
+padding:0;
+
+margin:-1px;
+
+overflow:hidden;
+
+clip:rect(0,0,0,0);
+
+white-space:nowrap;
+
+border:0;
+
+}
+
+.payment-method{
+
+--method-color:var(--primary-color);
+--method-glow:rgba(139,30,63,.28);
+--method-tint:var(--background-light);
+
+display:block;
+
+height:100%;
+
+cursor:pointer;
+
+}
+
+/* Chrome de carte assorti à la couleur déjà utilisée par le logo SVG
+de chaque méthode (voir payment.html) plutôt qu'une teinte inventée
+séparément : Wave et Orange Money restent visuellement distincts pour
+faciliter le scan des 3 options, mais la couleur vient d'une source
+réelle déjà présente dans la page, pas d'un choix arbitraire. */
+.payment-method.method-wave{
+
+--method-color:#0089C7;
+--method-glow:rgba(0,137,199,.32);
+--method-tint:rgba(0,137,199,.08);
+
+}
+
+.payment-method.method-orange{
+
+--method-color:#FF7900;
+--method-glow:rgba(255,121,0,.32);
+--method-tint:rgba(255,121,0,.08);
+
+}
+
+.payment-method input{
+
+position:absolute;
+
+width:1px;
+
+height:1px;
+
+padding:0;
+
+margin:-1px;
+
+overflow:hidden;
+
+clip:rect(0,0,0,0);
+
+white-space:nowrap;
+
+border:0;
+
+}
+
+.payment-method-card{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+height:100%;
+
+padding:20px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-lg);
+
+background:linear-gradient(160deg,var(--background) 0%,var(--background-soft) 130%);
+
+box-shadow:var(--shadow-xs);
+
+transition:border-color .25s var(--ease-premium),
+background-color .25s var(--ease-premium),
+box-shadow .25s var(--ease-premium),
+transform .25s var(--ease-premium);
+
+}
+
+.payment-method-card::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+
+left:0;
+
+right:0;
+
+height:3px;
+
+border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+
+background:var(--method-color);
+
+opacity:.4;
+
+transition:opacity .25s var(--ease-premium);
+
+}
+
+.payment-method-card::after{
+
+content:"";
+
+position:absolute;
+
+inset:-18px;
+
+z-index:-1;
+
+border-radius:inherit;
+
+background:radial-gradient(ellipse at 50% 35%,var(--method-glow),transparent 70%);
+
+filter:blur(20px);
+
+opacity:0;
+
+transition:opacity .3s var(--ease-premium);
+
+pointer-events:none;
+
+}
+
+.payment-method:hover .payment-method-card{
+
+border-color:var(--method-color);
+
+transform:translateY(-4px);
+
+box-shadow:var(--shadow-md);
+
+}
+
+.payment-method input:focus-visible + .payment-method-card{
+
+outline:none;
+
+box-shadow:0 0 0 4px var(--method-glow);
+
+}
+
+.payment-method input:checked + .payment-method-card{
+
+border-color:var(--method-color);
+
+background:var(--method-tint);
+
+box-shadow:0 16px 36px var(--method-glow);
+
+transform:translateY(-4px);
+
+}
+
+.payment-method input:checked + .payment-method-card::before{
+
+opacity:1;
+
+}
+
+.payment-method input:checked + .payment-method-card::after{
+
+opacity:1;
+
+}
+
+.payment-method-logo{
+
+flex-shrink:0;
+
+display:flex;
+
+}
+
+.payment-method-logo svg{
+
+width:48px;
+
+height:48px;
+
+border-radius:14px;
+
+box-shadow:0 8px 18px rgba(15,23,42,.16);
+
+transition:transform .25s var(--ease-premium);
+
+}
+
+.payment-method:hover .payment-method-logo svg{
+
+transform:scale(1.05);
+
+}
+
+/* Carte avec logo officiel large (lockup horizontal, pas une icône
+carrée) : la carte passe en colonne pour laisser toute sa largeur au
+logo, et la coche de sélection se déplace en haut à droite. */
+.payment-method-card-official{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+padding:18px 52px 18px 20px;
+
+}
+
+.payment-method-card-official .payment-method-check{
+
+position:absolute;
+
+top:18px;
+
+right:18px;
+
+}
+
+.payment-method-card-official .payment-method-copy{
+
+width:100%;
+
+margin-top:2px;
+
+}
+
+/* Logo officiel (lockup horizontal) : traité comme une vignette blanche
+plutôt qu'un pictogramme carré, pour rester net à toute taille. */
+.payment-method-logo.payment-method-logo-official{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:8px 14px;
+
+background:#fff;
+
+border:1px solid var(--border-color);
+
+border-radius:12px;
+
+box-shadow:0 8px 18px rgba(15,23,42,.1);
+
+}
+
+.payment-method-logo.payment-method-logo-official svg{
+
+width:auto;
+
+height:22px;
+
+border-radius:0;
+
+box-shadow:none;
+
+}
+
+.payment-method-copy{
+
+flex:1;
+
+min-width:0;
+
+display:flex;
+
+flex-direction:column;
+
+gap:3px;
+
+}
+
+.payment-method-copy strong{
+
+font-size:.98rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+}
+
+.payment-method-copy small{
+
+font-size:.8rem;
+
+color:var(--text-light);
+
+line-height:1.4;
+
+}
+
+.payment-method-brands{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+margin-top:6px;
+
+}
+
+.brand-chip{
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+height:20px;
+
+padding:0 7px;
+
+border-radius:6px;
+
+background:var(--background-soft);
+
+border:1px solid var(--border-color);
+
+}
+
+.brand-chip-visa{
+
+color:#1A1F71;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-style:italic;
+
+font-size:.62rem;
+
+letter-spacing:.02em;
+
+}
+
+.brand-chip-mastercard{
+
+padding:0 6px;
+
+}
+
+.brand-chip-mastercard svg{
+
+width:20px;
+
+height:12px;
+
+display:block;
+
+}
+
+.payment-method-check{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:24px;
+
+height:24px;
+
+border-radius:50%;
+
+background:var(--method-color);
+
+color:#fff;
+
+opacity:0;
+
+transform:scale(.6);
+
+transition:var(--transition);
+
+}
+
+.payment-method-check i{
+
+width:14px;
+
+height:14px;
+
+}
+
+.payment-method input:checked + .payment-method-card .payment-method-check{
+
+opacity:1;
+
+transform:scale(1);
+
+}
+
+/* ==========================================================
+RÉASSURANCE
+========================================================== */
+
+.reassurance{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:14px;
+
+margin-bottom:40px;
+
+}
+
+.reassurance-item{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:14px;
+
+padding:18px;
+
+border-radius:var(--radius-lg);
+
+background:var(--glass);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+border:1px solid var(--glass-border);
+
+box-shadow:var(--shadow-xs);
+
+transition:transform .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+}
+
+.reassurance-item:hover{
+
+transform:translateY(-3px);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.reassurance-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+border-radius:12px;
+
+background:var(--background-light);
+
+}
+
+.reassurance-icon i{
+
+width:18px;
+
+height:18px;
+
+color:var(--primary-color);
+
+}
+
+.reassurance-copy{
+
+min-width:0;
+
+}
+
+.reassurance-copy strong{
+
+display:block;
+
+margin-bottom:3px;
+
+color:var(--text-color);
+
+font-size:.92rem;
+
+font-weight:700;
+
+}
+
+.reassurance-copy p{
+
+color:var(--text-light);
+
+font-size:.82rem;
+
+line-height:1.5;
+
+}
+
+/* ==========================================================
+ACTIVATION
+========================================================== */
+
+.activation{
+
+text-align:center;
+
+}
+
+.activation-cta{
+
+width:100%;
+
+padding:18px 28px;
+
+font-size:1.05rem;
+
+background:var(--gradient-primary);
+
+}
+
+.activation-cta:hover{
+
+background:var(--primary-700);
+
+box-shadow:var(--shadow-md);
+
+}
+
+.activation-cta:disabled{
+
+opacity:.55;
+
+cursor:not-allowed;
+
+transform:none !important;
+
+box-shadow:none !important;
+
+}
+
+.activation-cta.is-loading{
+
+opacity:.85;
+
+cursor:progress;
+
+}
+
+.activation-note{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:8px;
+
+margin-top:16px;
+
+color:var(--text-light);
+
+font-size:.85rem;
+
+}
+
+.activation-note i{
+
+width:15px;
+
+height:15px;
+
+color:var(--primary-color);
+
+}
+
+/* ==========================================================
+LOGOS DE PAIEMENT — sous le bouton
+========================================================== */
+
+.trust-logos{
+
+margin-top:22px;
+
+padding-top:20px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.trust-logos-label{
+
+display:block;
+
+margin-bottom:12px;
+
+color:var(--text-muted);
+
+font-weight:700;
+
+font-size:.74rem;
+
+text-transform:uppercase;
+
+letter-spacing:.05em;
+
+}
+
+.trust-logos-row{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+}
+
+.trust-logo{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+height:28px;
+
+min-width:28px;
+
+padding:0 8px;
+
+border-radius:9px;
+
+background:var(--background-soft);
+
+border:1px solid var(--border-color);
+
+}
+
+.trust-logo svg{
+
+width:20px;
+
+height:20px;
+
+border-radius:6px;
+
+display:block;
+
+}
+
+.trust-logo-visa{
+
+color:#1A1F71;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-style:italic;
+
+font-size:.68rem;
+
+letter-spacing:.02em;
+
+}
+
+.trust-logo-mastercard svg{
+
+width:22px;
+
+height:13px;
+
+border-radius:0;
+
+}
+
+.trust-logo.trust-logo-official{
+
+padding:0 9px;
+
+}
+
+.trust-logo.trust-logo-official svg{
+
+width:auto;
+
+height:11px;
+
+border-radius:0;
+
+}
+
+.activation-result[hidden]{
+
+display:none;
+
+}
+
+.activation-result{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:12px;
+
+margin-top:22px;
+
+padding:18px 22px;
+
+border-radius:var(--radius-lg);
+
+background:rgba(34,197,94,.08);
+
+border:1px solid rgba(34,197,94,.28);
+
+text-align:left;
+
+}
+
+.activation-result i{
+
+flex-shrink:0;
+
+width:20px;
+
+height:20px;
+
+margin-top:2px;
+
+color:var(--success);
+
+}
+
+.activation-result strong{
+
+display:block;
+
+margin-bottom:4px;
+
+color:var(--text-color);
+
+font-size:.95rem;
+
+}
+
+.activation-result p{
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+line-height:1.6;
+
+}
+
+/* ==========================================================
+RESPONSIVE — TABLETTE (768–1023px)
+========================================================== */
+
+@media(max-width:1023px){
+
+.container{
+
+max-width:600px;
+
+}
+
+}
+
+/* ==========================================================
+RESPONSIVE — MOBILE (< 768px)
+========================================================== */
+
+@media(max-width:767px){
+
+body{
+
+padding:36px 16px 90px;
+
+}
+
+.fitz-showcase{
+
+flex-direction:column;
+
+text-align:center;
+
+}
+
+.plan-summary{
+
+flex-direction:column;
+
+text-align:center;
+
+padding:26px 22px;
+
+}
+
+.plan-summary-price{
+
+justify-content:center;
+
+}
+
+.summary-row-body{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:3px;
+
+}
+
+.summary-row dd{
+
+text-align:left;
+
+}
+
+.payment-method-card{
+
+padding:16px;
+
+}
+
+.payment-method-card-official{
+
+padding:16px 46px 16px 16px;
+
+}
+
+.payment-methods{
+
+grid-template-columns:1fr;
+
+}
+
+.reassurance{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+}
+
+@media(max-width:480px){
+
+.reassurance{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+@media(max-width:380px){
+
+.container{
+
+max-width:100%;
+
+}
+
+}

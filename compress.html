@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Compression de documents | ScholarBridge</title>
+
+<meta name="description" content="Réduisez la taille de vos PDF et images à la taille exacte demandée par un portail universitaire, directement dans votre navigateur.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="compress.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link is-active" aria-current="page" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Compression de fichiers</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div id="lockedState" hidden></div>
+
+<div id="compressApp" class="reveal">
+
+<section class="cpr-intro">
+<h2>Réduisez vos documents à la taille exacte demandée</h2>
+<p>Indiquez la taille maximale exigée par le portail universitaire : Fitz compresse votre PDF ou votre image en conservant le meilleur rendu possible, directement dans votre navigateur — vos documents restent uniquement sur votre appareil.</p>
+</section>
+
+<div class="cpr-layout">
+
+<div class="cpr-panel">
+
+<div class="cpr-dropzone" id="dropzone">
+<input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
+<i data-lucide="upload-cloud"></i>
+<p><strong>Cliquez pour choisir un fichier</strong><br>ou glissez-le ici</p>
+<span class="cpr-dropzone-hint">PDF, JPG ou PNG</span>
+</div>
+
+<div class="cpr-file-info" id="fileInfo" hidden>
+<i data-lucide="file"></i>
+<div>
+<strong id="fileName"></strong>
+<span id="fileSize"></span>
+</div>
+<button type="button" class="cpr-file-remove" id="fileRemove" aria-label="Retirer le fichier"><i data-lucide="x"></i></button>
+</div>
+
+<div class="cpr-field">
+<span>Taille maximale demandée par le portail</span>
+<div class="cpr-target-row">
+<input type="number" id="targetSize" min="10" value="2" step="0.1">
+<select id="targetUnit">
+<option value="MB" selected>Mo</option>
+<option value="KB">Ko</option>
+</select>
+</div>
+</div>
+
+<button type="button" class="btn btn-primary btn-lg cpr-run-btn" id="runBtn" disabled>
+<i data-lucide="shrink"></i>
+<span>Compresser le fichier</span>
+</button>
+
+<div class="cpr-note" id="pdfNote" hidden>
+<i data-lucide="info"></i>
+<p>Pour un PDF, chaque page est réencodée en image optimisée : idéal pour un document scanné. Le texte ne sera pas sélectionnable après compression, mais la mise en page et la lisibilité restent parfaitement intactes.</p>
+</div>
+
+</div>
+
+<div class="cpr-panel cpr-result" id="resultPanel" hidden>
+
+<div class="cpr-result-head">
+<i data-lucide="check-circle"></i>
+<h3>Compression terminée</h3>
+</div>
+
+<div class="cpr-result-stats">
+<div class="cpr-result-stat">
+<span>Taille initiale</span>
+<strong id="statOriginal">—</strong>
+</div>
+<div class="cpr-result-stat">
+<i data-lucide="arrow-right"></i>
+</div>
+<div class="cpr-result-stat">
+<span>Nouvelle taille</span>
+<strong id="statFinal">—</strong>
+</div>
+</div>
+
+<p class="cpr-result-message" id="resultMessage"></p>
+
+<a class="btn btn-primary" id="downloadBtn" download>
+<i data-lucide="download"></i>
+<span>Télécharger le fichier compressé</span>
+</a>
+
+</div>
+
+<div class="cpr-panel cpr-progress" id="progressPanel" hidden>
+<div class="cpr-spinner"></div>
+<p id="progressText">Compression en cours...</p>
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script type="module" src="compress.js"></script>
+
+</body>
+
+</html>

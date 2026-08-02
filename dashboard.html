@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard | ScholarBridge</title>
+
+<meta name="description" content="Votre espace personnel ScholarBridge : suivez votre progression, vos documents et votre accompagnement Fitz.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+
+</head>
+
+<body data-plan="essentiel">
+
+<!-- Loader affiché pendant la vérification de la session Firebase -->
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link is-active" aria-current="page">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1 id="welcomeMessage">Bonjour</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div id="welcomeAlert" class="welcome-alert" hidden>
+<i data-lucide="check-circle"></i>
+<div>
+<strong>Bienvenue sur ScholarBridge !</strong>
+<p>Votre compte a été créé avec succès.</p>
+</div>
+</div>
+
+<div id="accompagnementAlert" class="welcome-alert welcome-alert-accompagnement" hidden>
+<i data-lucide="sparkles"></i>
+<div>
+<strong id="accompagnementAlertTitle">Votre accompagnement est activé.</strong>
+<p>Pour que Fitz vous connaisse vraiment et puisse vous guider, complétez votre profil — c'est la première étape de votre accompagnement.</p>
+<a href="profile.html" class="welcome-alert-cta">
+<span>Compléter mon profil</span>
+<i data-lucide="arrow-right"></i>
+</a>
+</div>
+</div>
+
+<!-- Coach — "Aujourd'hui" -->
+<section class="coach-section reveal">
+
+<div class="section-heading">
+<i data-lucide="compass"></i>
+<h2>Aujourd'hui</h2>
+</div>
+
+<p class="section-subtext">Voici ce que Fitz vous recommande de faire ensuite.</p>
+
+<div class="coach-grid" id="coachList"></div>
+
+</section>
+
+<!-- Statistiques -->
+<section class="stats-section reveal">
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="target"></i></div>
+<div class="stat-card-body">
+<span class="stat-card-value"><span id="aiScore">0</span><small>/10</small></span>
+<span class="stat-card-label">Profil complété</span>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="graduation-cap"></i></div>
+<div class="stat-card-body">
+<span class="stat-card-value" id="totalScholarships">0</span>
+<span class="stat-card-label">Opportunités compatibles</span>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="file-text"></i></div>
+<div class="stat-card-body">
+<span class="stat-card-value" id="documentsCount">0</span>
+<span class="stat-card-label">Documents préparés</span>
+</div>
+</div>
+
+</section>
+
+<!-- Nudge de montée en gamme (masqué en Premium) -->
+<section class="upgrade-nudge reveal" id="upgradeNudge" hidden>
+
+<div class="upgrade-nudge-icon"><i data-lucide="rocket"></i></div>
+
+<div class="upgrade-nudge-body">
+
+<p class="upgrade-nudge-current">
+Votre profil est actuellement accompagné avec la formule <strong id="upgradeCurrentPlan">Essentiel</strong>.
+</p>
+
+<p class="upgrade-nudge-title">
+En passant à <strong id="upgradeNextPlan">Avancé</strong>, vous débloquez :
+</p>
+
+<ul class="upgrade-nudge-list" id="upgradeHighlights"></ul>
+
+<a href="offers.html" class="btn-upgrade" id="upgradeCta">
+<span>Découvrir cette formule</span>
+<i data-lucide="arrow-right"></i>
+</a>
+
+</div>
+
+</section>
+
+<!-- Outils -->
+<section class="tools-section reveal">
+
+<div class="section-heading">
+<i data-lucide="layout-grid"></i>
+<h2>Vos outils</h2>
+</div>
+
+<p class="section-subtext">Les outils inclus dans votre formule, et ceux que vous pouvez encore débloquer.</p>
+
+<div class="tools-grid">
+
+<a href="applications.html" class="tool-card" data-feature="applications" data-real-href="applications.html">
+<div class="tool-card-icon"><i data-lucide="list-checks"></i></div>
+<h3>Suivi des candidatures</h3>
+<p>Suivez chaque candidature par étapes, avec des rappels pour vérifier vos portails.</p>
+<span class="tool-card-cta"><span>Voir mes candidatures</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="documents.html" class="tool-card" data-feature="documents" data-real-href="documents.html">
+<div class="tool-card-icon"><i data-lucide="file-text"></i></div>
+<h3>Checklists &amp; documents</h3>
+<p>Suivez les documents attendus pour chaque candidature.</p>
+<span class="tool-card-cta"><span>Voir mes documents</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="ai-chat.html" class="tool-card" data-feature="ai_chat" data-real-href="ai-chat.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="message-circle"></i></div>
+<h3>Questions à Fitz</h3>
+<p>Posez vos questions ponctuelles sur votre candidature.</p>
+<span class="tool-card-cta"><span>Discuter avec Fitz</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="universities.html" class="tool-card">
+<div class="tool-card-icon"><i data-lucide="landmark"></i></div>
+<h3>Universités partenaires</h3>
+<p>Parcourez librement l'ensemble des universités partenaires de ScholarBridge, au-delà de vos opportunités compatibles.</p>
+<span class="tool-card-cta"><span>Explorer les universités</span><i data-lucide="arrow-right"></i></span>
+</a>
+
+<a href="ai-letter.html" class="tool-card" data-feature="ai_letter" data-real-href="ai-letter.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="pen-line"></i></div>
+<h3>Lettre de motivation</h3>
+<p>Fitz relit et améliore votre lettre de motivation.</p>
+<span class="tool-card-cta"><span>Améliorer ma lettre</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="ai-check.html" class="tool-card" data-feature="ai_check" data-real-href="ai-check.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="shield-check"></i></div>
+<h3>Vérification du dossier</h3>
+<p>Fitz vérifie la cohérence de vos documents avant l'envoi.</p>
+<span class="tool-card-cta"><span>Vérifier mon dossier</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="ai-email.html" class="tool-card" data-feature="ai_email" data-real-href="ai-email.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="mail"></i></div>
+<h3>E-mails Fitz</h3>
+<p>Générez des e-mails professionnels pour vos candidatures.</p>
+<span class="tool-card-cta"><span>Rédiger un e-mail</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="ai-translate.html" class="tool-card" data-feature="ai_translate" data-real-href="ai-translate.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="languages"></i></div>
+<h3>Traduction de documents</h3>
+<p>Traduisez vos documents pour vos candidatures internationales.</p>
+<span class="tool-card-cta"><span>Traduire un document</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<a href="compress.html" class="tool-card" data-feature="compress" data-real-href="compress.html">
+<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="file-archive"></i></div>
+<h3>Compression de fichiers</h3>
+<p>Réduisez un PDF ou une image à la taille exacte demandée par un portail universitaire.</p>
+<span class="tool-card-cta"><span>Compresser un fichier</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
+</div>
+</a>
+
+<!--
+Le suivi multi-candidatures a été construit le 2026-07-29
+(applications.html, carte "Suivi des candidatures" plus haut dans
+cette grille) — l'ancienne carte "Bientôt disponible" qui vivait ici
+a été retirée pour ne pas contredire une fonctionnalité qui existe et
+fonctionne réellement. La préparation aux entretiens, elle, n'a
+toujours pas de page : carte volontairement non cliquable (pas de
+<a>, pas de href mensonger) tant que cet outil n'existe pas
+réellement. Pour l'activer plus tard : créer la page dédiée,
+remplacer ce <div> par un <a href="..." class="tool-card"
+data-feature="..."> (ajouter la clé dans js/plan-features.js) et
+retirer tool-card-soon / le badge "Bientôt disponible".
+-->
+<div class="tool-card tool-card-soon">
+<div class="tool-card-icon"><i data-lucide="mic"></i></div>
+<h3>Préparation aux entretiens</h3>
+<p>Entraînez-vous aux questions d'entretien avec Fitz. Fonctionnalité Premium en préparation.</p>
+<span class="tool-card-cta tool-card-soon-badge">Bientôt disponible</span>
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+</div>
+
+<script src="pricing-plans.js"></script>
+<script type="module" src="dashboard.js"></script>
+
+</body>
+
+</html>

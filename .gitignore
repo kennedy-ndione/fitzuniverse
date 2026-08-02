@@ -1,0 +1,13 @@
+# Secrets et variables d'environnement — ne jamais versionner.
+# Les identifiants du compte de test vivent dans .env.local.
+.env
+.env.*
+!.env.example
+
+# Dépendances
+node_modules/
+
+# Artefacts système / éditeur
+Thumbs.db
+.DS_Store
+*.log

@@ -1,0 +1,30 @@
+/* ==========================================================
+AI CHAT — mise en page spécifique
+Les composants (bulles, indicateur de frappe, suggestions...) vivent
+dans css/ai-suite.css, partagés avec les autres outils Fitz. Ce
+fichier ne contient que ce qui est propre à cette page.
+========================================================== */
+
+#chatApp{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+@media(max-width:767px){
+
+.ai-chat-shell{
+
+height:calc(100vh - var(--topbar-height) - 110px);
+
+}
+
+.ai-page-header-badge span{
+
+display:none;
+
+}
+
+}

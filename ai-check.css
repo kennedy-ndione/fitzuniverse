@@ -1,0 +1,31 @@
+/* ==========================================================
+AI CHECK — mise en page spécifique
+Composants (dépôt de fichiers, anneau de score, checklist...) dans
+css/ai-suite.css.
+========================================================== */
+
+@media(max-width:520px){
+
+.ai-page-header-badge span{
+
+display:none;
+
+}
+
+}
+
+/* Verre dépoli — réservé au panneau de résultat (score + insights),
+le moment de révélation de la page ; le panneau de dépôt de fichiers
+au repos reste sur le fond .ai-panel standard. */
+
+#resultsPanel{
+
+background:var(--glass);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+}

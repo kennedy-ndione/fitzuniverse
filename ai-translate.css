@@ -1,0 +1,56 @@
+/* ==========================================================
+AI TRANSLATE — mise en page spécifique
+Composants (onglets de mode, inversion de langues, panneaux...) dans
+css/ai-suite.css.
+========================================================== */
+
+#sourceText,
+#targetText{
+
+min-height:220px;
+
+}
+
+#targetText{
+
+background:var(--background-alt);
+
+}
+
+.ai-field-hint label{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+cursor:pointer;
+
+}
+
+@media(max-width:520px){
+
+.ai-page-header-badge span{
+
+display:none;
+
+}
+
+}
+
+/* Verre dépoli — réservé au panneau d'historique, qui flotte
+au-dessus du reste du contenu ; le panneau de traduction principal
+reste sur le fond .ai-panel standard. */
+
+#historyPanel{
+
+background:var(--glass);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+}

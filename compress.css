@@ -1,0 +1,271 @@
+/* ==========================================================
+SCHOLARBRIDGE — COMPRESSION DE FICHIERS
+========================================================== */
+
+.cpr-intro{
+margin-bottom:28px;
+}
+
+.cpr-intro h2{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h2);
+line-height:var(--lh-snug);
+letter-spacing:var(--ls-tight);
+color:var(--text-color);
+margin-bottom:10px;
+}
+
+.cpr-intro p{
+font-size:var(--fs-lead);
+line-height:var(--lh-relaxed);
+color:var(--text-light);
+max-width:620px;
+}
+
+.cpr-layout{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:24px;
+align-items:start;
+}
+
+.cpr-panel{
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:28px;
+box-shadow:var(--shadow-sm);
+}
+
+/* ---------- Dropzone ---------- */
+
+.cpr-dropzone{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:10px;
+text-align:center;
+padding:44px 24px;
+border:2px dashed var(--border-color);
+border-radius:var(--radius-md);
+cursor:pointer;
+transition:var(--transition);
+margin-bottom:22px;
+}
+
+.cpr-dropzone:hover,
+.cpr-dropzone.is-dragover{
+border-color:var(--accent-color);
+background:var(--background-light);
+}
+
+.cpr-dropzone i{width:34px;height:34px;color:var(--accent-color);}
+
+.cpr-dropzone p{font-size:var(--fs-small);color:var(--text-light);line-height:1.5;}
+
+.cpr-dropzone-hint{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+
+.cpr-file-info{
+display:flex;
+align-items:center;
+gap:12px;
+padding:14px 16px;
+border-radius:var(--radius-md);
+background:var(--background-soft);
+border:1px solid var(--border-color);
+margin-bottom:22px;
+}
+
+.cpr-file-info i{width:22px;height:22px;color:var(--accent-color);flex-shrink:0;}
+
+.cpr-file-info div{flex:1;min-width:0;}
+
+.cpr-file-info strong{
+display:block;
+font-size:var(--fs-small);
+color:var(--text-color);
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.cpr-file-info span{font-size:var(--fs-caption);color:var(--text-muted);}
+
+.cpr-file-remove{
+flex:0 0 auto;
+width:28px;
+height:28px;
+border-radius:var(--radius-xs);
+border:none;
+background:transparent;
+color:var(--text-muted);
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.cpr-file-remove:hover{background:var(--background-alt);color:var(--text-color);}
+
+/* ---------- Champ taille cible ---------- */
+
+.cpr-field{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-bottom:22px;
+font-size:var(--fs-small);
+color:var(--text-light);
+font-weight:600;
+}
+
+.cpr-target-row{
+display:flex;
+gap:10px;
+}
+
+.cpr-target-row input{
+flex:1;
+font-family:var(--font-body);
+font-size:var(--fs-body);
+padding:11px 14px;
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+}
+
+.cpr-target-row select{
+font-family:var(--font-body);
+font-size:var(--fs-body);
+padding:11px 14px;
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+}
+
+.cpr-target-row input:focus,
+.cpr-target-row select:focus{
+outline:none;
+border-color:var(--accent-color);
+}
+
+.cpr-run-btn{width:100%;justify-content:center;}
+
+.cpr-note{
+display:flex;
+align-items:flex-start;
+gap:10px;
+margin-top:18px;
+padding:14px 16px;
+border-radius:var(--radius-md);
+background:var(--background-light);
+}
+
+.cpr-note i{width:17px;height:17px;color:var(--accent-color);flex-shrink:0;margin-top:1px;}
+
+.cpr-note p{font-size:var(--fs-caption);color:var(--text-light);line-height:1.5;margin:0;}
+
+/* ---------- Résultat ---------- */
+
+.cpr-result-head{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:20px;
+}
+
+.cpr-result-head i{width:22px;height:22px;color:var(--success);}
+
+.cpr-result-head h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h4);
+color:var(--text-color);
+}
+
+.cpr-result-stats{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:20px;
+margin-bottom:20px;
+padding:20px;
+border-radius:var(--radius-md);
+background:var(--background-soft);
+}
+
+.cpr-result-stat{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:4px;
+}
+
+.cpr-result-stat span{font-size:var(--fs-caption);color:var(--text-muted);}
+
+.cpr-result-stat strong{
+font-family:var(--font-display);
+font-size:1.25rem;
+font-weight:700;
+color:var(--text-color);
+}
+
+.cpr-result-stat i{width:20px;height:20px;color:var(--accent-color);}
+
+.cpr-result-message{
+font-size:var(--fs-small);
+color:var(--text-light);
+line-height:1.55;
+margin-bottom:20px;
+}
+
+.cpr-result .btn{width:100%;justify-content:center;}
+
+/* ---------- Progression ---------- */
+
+.cpr-progress{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:16px;
+padding:60px 24px;
+text-align:center;
+}
+
+.cpr-spinner{
+width:38px;
+height:38px;
+border-radius:50%;
+border:3px solid var(--border-color);
+border-top-color:var(--accent-color);
+animation:cpr-spin .8s linear infinite;
+}
+
+@keyframes cpr-spin{
+to{transform:rotate(360deg);}
+}
+
+.cpr-progress p{font-size:var(--fs-small);color:var(--text-light);}
+
+/* ---------- Verre dépoli ---------- */
+/* Moment de révélation (fichier compressé) : seule surface du panneau
+qui mérite le glassmorphism — pas les cartes de formulaire au repos. */
+
+#resultPanel{
+background:var(--glass);
+border:1px solid var(--glass-border);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+}
+
+@media(max-width:900px){
+.cpr-layout{grid-template-columns:1fr;}
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScholarBridge | Questionnaire</title>
+
+<meta name="description" content="Répondez à 10 questions pour recevoir une analyse ScholarBridge personnalisée de votre profil, réalisée par Fitz.">
+
+<!-- Google Fonts (identiques à index.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge (mêmes variables, mêmes couleurs que index.html) -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="eligibility-questions.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Badge -->
+<div class="fitz-badge">
+<i data-lucide="bot"></i>
+<span>Fitz</span>
+</div>
+
+<!-- Barre de progression -->
+<div class="progress-info">
+<span id="questionNumber">Question 1 / 10</span>
+<span id="progressPercent">10%</span>
+</div>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar" style="width: 10%;"></div>
+</div>
+
+<!-- Conversation -->
+<div class="chat-box">
+<div class="fitz-avatar">
+<i data-lucide="sparkles"></i>
+</div>
+<div class="assistant-bubble">
+<div class="assistant-message" id="assistantMessage">
+Bonjour ! Commençons par savoir où vous vivez actuellement.
+</div>
+<p class="fitz-status" id="fitzHint">Fitz apprend à connaître votre profil…</p>
+</div>
+</div>
+
+<!-- Question -->
+<div class="question-header">
+<span class="question-icon" id="questionIcon"></span>
+<h2 id="question">Dans quel pays vivez-vous actuellement ?</h2>
+</div>
+
+<label for="answer" class="visually-hidden">Votre réponse</label>
+
+<!-- Réponse texte / recherche -->
+<div id="textContainer">
+<input type="text" id="answer" autocomplete="off" placeholder="Commencez à taper..." aria-label="Votre réponse">
+<div id="suggestions" class="suggestions" role="listbox"></div>
+</div>
+
+<!-- Cartes de choix (cachées par défaut) -->
+<div id="cardsContainer" class="cards-container" style="display:none;"></div>
+
+<!-- Curseur (caché par défaut, utilisé pour la moyenne académique) -->
+<div id="sliderContainer" class="slider-container" style="display:none;">
+<output id="sliderValue">10</output>
+<input type="range" id="sliderInput" aria-label="Votre moyenne générale sur 20">
+</div>
+
+<!-- Bouton -->
+<div class="nav-buttons">
+<button id="backButton" type="button" class="back-button" aria-label="Question précédente">
+<i data-lucide="arrow-left"></i>
+<span>Retour</span>
+</button>
+<button id="nextButton" type="button">
+<span>Continuer</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</div>
+
+</div>
+
+<script src="questions.js"></script>
+<script src="eligibility.engine.js"></script>
+<script src="eligibility-questions.js"></script>
+<script>
+if (window.lucide) lucide.createIcons();
+</script>
+
+</body>
+</html>

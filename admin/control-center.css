@@ -1,0 +1,3038 @@
+/* ==========================================================
+SCHOLARBRIDGE — CONTROL CENTER (admin/dashboard.html)
+Repose sur css/base.css (tokens, reset) mais applique la même
+surcharge sombre "navy + gold" déjà validée sur le dashboard
+étudiant (dashboard.css) — reproduite ici pour ce fichier plutôt que
+partagée, comme le fait déjà chaque famille de pages du site
+(dashboard.css, profile.css ont chacun leur propre copie du
+pattern de coquille). Depuis la migration du 2026-07-30, ce fichier
+sert TOUTES les pages du Control Center (dashboard, étudiants,
+formules, bourses, universités, fiche université, édition
+d'université) — admin/admin.css a été supprimé, son thème vert
+("--primary:#16a34a") ne correspondait plus à l'identité
+ScholarBridge (maroon/or définie dans css/base.css).
+========================================================== */
+
+:root{
+
+--sidebar-width:260px;
+--sidebar-width-collapsed:80px;
+--topbar-height:72px;
+
+/* ==========================================================
+THÈME SOMBRE DU CONTROL CENTER — surcharge locale des tokens de
+css/base.css avec les tokens --shell-* partagés (voir base.css) au
+lieu de redéfinir ses propres valeurs : dashboard.css et
+admin/login.css consomment désormais exactement le même jeu, plus
+de dérive entre les trois (control-center.css avait sa propre copie
+légèrement décalée — --shadow-sm/md/lg notamment n'avaient plus les
+mêmes flous/opacités que le dashboard étudiant).
+========================================================== */
+
+--background:var(--shell-bg);
+--background-soft:var(--shell-surface);
+--background-alt:var(--shell-elevated);
+--background-light:rgba(212,162,76,.12);
+
+--border-color:var(--shell-border);
+
+--text-color:var(--shell-text);
+--text-light:#C2CBDE;
+--text-muted:#8792A8;
+
+--shadow-xs:var(--shell-shadow-xs);
+--shadow-sm:var(--shell-shadow-sm);
+--shadow-md:var(--shell-shadow-md);
+--shadow-lg:var(--shell-shadow-lg);
+
+}
+
+body{
+
+background:
+radial-gradient(circle at 15% -10%,rgba(139,30,63,.2),transparent 45%),
+radial-gradient(circle at 100% 0%,rgba(212,162,76,.12),transparent 40%),
+var(--background-soft);
+
+background-attachment:fixed;
+
+}
+
+/* ==========================================================
+CHARGEMENT
+========================================================== */
+
+.auth-page-loader{
+
+position:fixed;
+
+inset:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:var(--background-soft);
+
+z-index:9999;
+
+}
+
+.loader-spinner{
+
+width:44px;
+
+height:44px;
+
+border:4px solid rgba(255,255,255,.12);
+
+border-top:4px solid var(--accent-color);
+
+border-radius:50%;
+
+animation:controlCenterSpin .8s linear infinite;
+
+}
+
+@keyframes controlCenterSpin{
+
+100%{ transform:rotate(360deg); }
+
+}
+
+/* ==========================================================
+STRUCTURE GÉNÉRALE (identique au pattern dashboard.css)
+========================================================== */
+
+.dashboard-shell{
+
+display:flex;
+
+min-height:100vh;
+
+}
+
+.sidebar{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+bottom:0;
+
+z-index:50;
+
+width:var(--sidebar-width);
+
+display:flex;
+
+flex-direction:column;
+
+background:var(--background);
+
+border-right:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+overflow-y:auto;
+
+overflow-x:hidden;
+
+}
+
+.sidebar-top{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:22px 18px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.sidebar-brand{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:1.05rem;
+
+color:var(--text-color);
+
+}
+
+.sidebar-brand .logo-icon{
+
+display:block;
+
+width:36px;
+
+height:36px;
+
+object-fit:contain;
+
+border-radius:var(--radius-sm);
+
+}
+
+.sidebar-brand-text{
+
+line-height:1;
+
+}
+
+.sidebar-brand-text .scholar{ color:var(--primary-color); }
+.sidebar-brand-text .bridge{ color:var(--accent-color); }
+
+.sidebar-badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+margin:14px 18px 6px;
+
+padding:6px 12px;
+
+width:max-content;
+
+border-radius:var(--radius-full);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.72rem;
+
+text-transform:uppercase;
+
+letter-spacing:.06em;
+
+}
+
+.sidebar-nav{
+
+flex:1;
+
+padding:10px 12px;
+
+}
+
+.sidebar-section-label{
+
+display:block;
+
+margin:16px 10px 8px;
+
+color:var(--text-muted);
+
+font-weight:700;
+
+font-size:.7rem;
+
+text-transform:uppercase;
+
+letter-spacing:.06em;
+
+}
+
+.sidebar-nav ul{
+
+display:flex;
+
+flex-direction:column;
+
+gap:3px;
+
+}
+
+.nav-link{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:11px 12px;
+
+border-radius:var(--radius-md);
+
+color:var(--text-light);
+
+font-weight:600;
+
+transition:var(--transition);
+
+}
+
+.nav-link i{
+
+flex-shrink:0;
+
+width:19px;
+
+height:19px;
+
+}
+
+.nav-link:hover{
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+}
+
+.nav-link.is-active{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+box-shadow:0 8px 18px rgba(139,30,63,.24);
+
+}
+
+.nav-link.is-soon{
+
+opacity:.55;
+
+cursor:default;
+
+}
+
+.nav-link.is-soon:hover{
+
+background:none;
+
+color:var(--text-light);
+
+}
+
+.nav-soon-badge{
+
+margin-left:auto;
+
+padding:2px 8px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--text-muted);
+
+font-size:var(--fs-badge);
+
+font-weight:700;
+
+letter-spacing:.02em;
+
+text-transform:uppercase;
+
+}
+
+.sidebar-bottom{
+
+padding:14px 12px 20px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.sidebar-logout{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+width:100%;
+
+padding:11px 12px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:none;
+
+color:var(--text-light);
+
+font-family:"Inter",sans-serif;
+
+font-weight:600;
+
+font-size:.92rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.sidebar-logout i{
+
+width:19px;
+
+height:19px;
+
+}
+
+.sidebar-logout:hover{
+
+background:rgba(239,68,68,.08);
+
+color:var(--danger);
+
+}
+
+/* ==========================================================
+CONTENU PRINCIPAL
+========================================================== */
+
+.dashboard-main{
+
+flex:1;
+
+min-width:0;
+
+margin-left:var(--sidebar-width);
+
+}
+
+.topbar{
+
+position:sticky;
+
+top:0;
+
+z-index:20;
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+height:var(--topbar-height);
+
+padding:0 32px;
+
+background:rgba(15,23,42,.72);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.topbar-title h1{
+
+/* Taille/famille/couleur viennent de .text-page-title (css/base.css,
+--fs-page-title, clamp 1.35–1.65rem) — ne garder ici que la graisse
+extrabold, seule variation propre au Control Center par rapport au
+reste du site (tous les titres de carte de ce fichier sont en 800). */
+font-weight:800;
+
+}
+
+.topbar-title p{
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+}
+
+.topbar-search{
+
+flex:1;
+
+max-width:360px;
+
+margin-left:auto;
+
+position:relative;
+
+}
+
+.topbar-search i{
+
+position:absolute;
+
+left:14px;
+
+top:50%;
+
+transform:translateY(-50%);
+
+width:16px;
+
+height:16px;
+
+color:var(--text-muted);
+
+}
+
+.topbar-search input{
+
+width:100%;
+
+padding:10px 14px 10px 40px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-color);
+
+font-size:.86rem;
+
+}
+
+.topbar-search input::placeholder{ color:var(--text-muted); }
+
+.topbar-search input:focus{
+
+outline:none;
+
+border-color:var(--accent-color);
+
+box-shadow:0 0 0 3px rgba(212,162,76,.2);
+
+}
+
+.content{
+
+max-width:1280px;
+
+margin:0 auto;
+
+padding:32px 32px 80px;
+
+}
+
+/* ==========================================================
+GRILLE DE STATISTIQUES
+========================================================== */
+
+.stats-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:18px;
+
+margin-bottom:32px;
+
+}
+
+.stat-card{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+padding:22px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.stat-card-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:48px;
+
+height:48px;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+.stat-card-icon i{
+
+width:22px;
+
+height:22px;
+
+}
+
+.stat-card-value{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:800;
+
+line-height:1;
+
+font-variant-numeric:tabular-nums;
+
+color:var(--text-color);
+
+}
+
+.stat-card-label{
+
+color:var(--text-light);
+
+font-size:.82rem;
+
+font-weight:600;
+
+}
+
+.stat-card.is-pending{
+
+opacity:.6;
+
+}
+
+.stat-card.is-pending .stat-card-icon{
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+}
+
+.stat-card-pending-note{
+
+margin-top:4px;
+
+color:var(--text-muted);
+
+font-size:.72rem;
+
+line-height:1.4;
+
+}
+
+/* ==========================================================
+CARTES GRAPHIQUES / TOP LISTES
+========================================================== */
+
+.panels-grid{
+
+display:grid;
+
+grid-template-columns:2fr 1fr;
+
+gap:20px;
+
+margin-bottom:32px;
+
+}
+
+.panel-card{
+
+padding:26px 28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.panel-card h2{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.panel-card-subtext{
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+margin-bottom:18px;
+
+}
+
+.top-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+}
+
+.top-list-row{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.top-list-rank{
+
+flex-shrink:0;
+
+width:22px;
+
+height:22px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+border-radius:50%;
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+font-size:.72rem;
+
+font-weight:800;
+
+}
+
+.top-list-label{
+
+flex:1;
+
+min-width:0;
+
+color:var(--text-color);
+
+font-size:.86rem;
+
+font-weight:600;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+white-space:nowrap;
+
+}
+
+.top-list-count{
+
+color:var(--text-muted);
+
+font-size:.82rem;
+
+font-weight:700;
+
+}
+
+.top-list-empty{
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+font-style:italic;
+
+}
+
+/* ==========================================================
+MENU MOBILE — bouton hamburger + fond assombri, nécessaires pour
+révéler la sidebar sous 1024px (elle est glissée hors écran via
+transform à cette largeur, voir RESPONSIVE ci-dessous).
+========================================================== */
+
+.topbar-menu-btn{
+
+display:none;
+
+align-items:center;
+
+justify-content:center;
+
+flex-shrink:0;
+
+width:38px;
+
+height:38px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-sm);
+
+background:var(--background);
+
+color:var(--text-color);
+
+cursor:pointer;
+
+}
+
+.topbar-menu-btn i{
+
+width:19px;
+
+height:19px;
+
+}
+
+.sidebar-backdrop{
+
+display:none;
+
+position:fixed;
+
+inset:0;
+
+z-index:40;
+
+background:rgba(15,23,42,.6);
+
+}
+
+/* ==========================================================
+RESPONSIVE
+========================================================== */
+
+@media(max-width:1023px){
+
+.sidebar{
+
+transform:translateX(-100%);
+
+}
+
+body.sidebar-open .sidebar{
+
+transform:translateX(0);
+
+}
+
+body.sidebar-open .sidebar-backdrop{
+
+display:block;
+
+}
+
+.topbar-menu-btn{
+
+display:flex;
+
+}
+
+.dashboard-main{
+
+margin-left:0;
+
+}
+
+.panels-grid{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+@media(max-width:767px){
+
+.content{
+
+padding:22px 18px 70px;
+
+}
+
+.topbar{
+
+padding:0 18px;
+
+}
+
+.topbar-search{
+
+display:none;
+
+}
+
+}
+
+/* ==========================================================
+MODULE 3 — CRM ÉTUDIANTS
+========================================================== */
+
+.page-toolbar{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+flex-wrap:wrap;
+
+margin-bottom:22px;
+
+}
+
+.page-toolbar .topbar-search{
+
+max-width:320px;
+
+margin-left:0;
+
+}
+
+.page-toolbar select{
+
+padding:10px 14px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-color);
+
+font-size:.86rem;
+
+}
+
+.admin-table-wrap{
+
+overflow-x:auto;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+/* Bordures/en-tête/survol de base viennent maintenant de .table
+(css/base.css) — chaque <table> admin porte les deux classes
+(class="table admin-table"). .admin-table ne garde que les deltas
+propres au tableau admin : padding plus large (colonnes denses),
+retour à la ligne désactivé, texte de cellule discret par défaut
+(text-light plutôt que text-color) et un survol teinté accent
+plutôt que le survol neutre de .table. */
+
+.admin-table th,
+.admin-table td{
+
+padding:14px 18px;
+
+white-space:nowrap;
+
+}
+
+.admin-table td{
+
+color:var(--text-light);
+
+}
+
+.scholarship-title-missing{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+color:var(--warning);
+
+}
+
+.scholarship-title-missing i{
+
+width:14px;
+
+height:14px;
+
+}
+
+.admin-table tbody tr:hover{
+
+background:var(--background-light);
+
+}
+
+.admin-table td.is-name{
+
+color:var(--text-color);
+
+font-weight:600;
+
+}
+
+.admin-table-empty{
+
+padding:40px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+}
+
+.table-link-btn{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:7px 14px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.8rem;
+
+}
+
+.table-link-btn:hover{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+.status-pill{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:4px 12px;
+
+border-radius:var(--radius-full);
+
+font-size:.76rem;
+
+font-weight:700;
+
+}
+
+.status-pill.is-active{
+
+background:rgba(34,197,94,.14);
+
+color:var(--success);
+
+}
+
+.status-pill.is-disabled{
+
+background:rgba(239,68,68,.14);
+
+color:var(--danger);
+
+}
+
+.status-pill.plan-gratuit{ background:var(--background-alt); color:var(--text-muted); }
+.status-pill.plan-essentiel{ background:var(--background-light); color:var(--text-light); }
+.status-pill.plan-accompagnement{ background:rgba(212,162,76,.16); color:var(--accent-color); }
+.status-pill.plan-premium{ background:var(--gradient-primary); color:#fff; }
+.status-pill.plan-none{ background:var(--background-light); color:var(--text-muted); }
+
+/* ---- Fiche détail : en-tête + onglets ---- */
+
+.detail-header{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+margin-bottom:24px;
+
+padding:24px 28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+flex-wrap:wrap;
+
+}
+
+.detail-avatar{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:56px;
+
+height:56px;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:1.2rem;
+
+}
+
+.detail-header-info{ flex:1; min-width:200px; }
+
+.detail-header-info h2{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.detail-header-info p{
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+}
+
+.detail-tabs{
+
+display:flex;
+
+gap:6px;
+
+margin-bottom:20px;
+
+overflow-x:auto;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.tab-btn{
+
+flex-shrink:0;
+
+padding:12px 18px;
+
+border:none;
+
+background:none;
+
+color:var(--text-muted);
+
+font-weight:700;
+
+font-size:.86rem;
+
+cursor:pointer;
+
+border-bottom:2px solid transparent;
+
+transition:var(--transition);
+
+}
+
+.tab-btn:hover{
+
+color:var(--text-color);
+
+}
+
+.tab-btn.is-active{
+
+color:var(--accent-color);
+
+border-bottom-color:var(--accent-color);
+
+}
+
+.tab-panel{
+
+display:none;
+
+}
+
+.tab-panel.is-active{
+
+display:block;
+
+}
+
+/* ---- Sections génériques de la fiche ---- */
+
+.detail-section{
+
+padding:26px 28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+margin-bottom:18px;
+
+}
+
+.detail-section h3{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:16px;
+
+}
+
+.detail-field-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:14px 20px;
+
+}
+
+.detail-field{
+
+display:flex;
+
+flex-direction:column;
+
+gap:3px;
+
+}
+
+.detail-field-label{
+
+font-size:.72rem;
+
+color:var(--text-muted);
+
+text-transform:uppercase;
+
+letter-spacing:.04em;
+
+font-weight:700;
+
+}
+
+.detail-field-value{
+
+font-size:.9rem;
+
+color:var(--text-color);
+
+font-weight:600;
+
+}
+
+/* .text-stat-sm (css/base.css) et .detail-field-value partagent la
+même spécificité (une classe) ; comme control-center.css charge après
+base.css, .detail-field-value gagnerait seul sur font-size/font-weight
+en cascade et écraserait le token de statistique. Règle combinée pour
+que les deux classes composent correctement quand utilisées ensemble
+(ex. progressionScore sur student-detail.html). */
+.detail-field-value.text-stat-sm{
+
+font-size:var(--fs-stat-sm);
+
+font-weight:800;
+
+line-height:1;
+
+}
+
+.detail-actions-row{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+flex-wrap:wrap;
+
+}
+
+.detail-actions-row select{
+
+padding:10px 14px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+}
+
+.btn-detail-action{
+
+padding:10px 20px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.86rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.btn-detail-action:hover{
+
+transform:translateY(-1px);
+
+box-shadow:0 12px 26px rgba(139,30,63,.28);
+
+}
+
+.btn-detail-action.is-danger{
+
+background:rgba(239,68,68,.16);
+
+color:var(--danger);
+
+}
+
+.btn-detail-action.is-danger:hover{
+
+box-shadow:0 12px 26px rgba(239,68,68,.24);
+
+}
+
+/* ---- Chronologie d'activité ---- */
+
+.timeline{
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+}
+
+.timeline-item{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:14px;
+
+padding:12px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.timeline-item:last-child{
+
+border-bottom:none;
+
+}
+
+.timeline-dot{
+
+flex-shrink:0;
+
+width:8px;
+
+height:8px;
+
+margin-top:6px;
+
+border-radius:50%;
+
+background:var(--accent-color);
+
+}
+
+.timeline-body{ flex:1; min-width:0; }
+
+.timeline-label{
+
+color:var(--text-color);
+
+font-weight:600;
+
+font-size:.88rem;
+
+}
+
+.timeline-meta{
+
+color:var(--text-muted);
+
+font-size:var(--fs-meta);
+
+font-weight:500;
+
+margin-top:2px;
+
+}
+
+/* ---- Notes / messages ---- */
+
+.note-item,
+.message-item{
+
+padding:14px 16px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-soft);
+
+border:1px solid var(--border-color);
+
+margin-bottom:10px;
+
+}
+
+.note-item p,
+.message-item p{
+
+color:var(--text-color);
+
+font-size:.88rem;
+
+line-height:1.5;
+
+margin-bottom:6px;
+
+}
+
+.note-item-meta,
+.message-item-meta{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+color:var(--text-muted);
+
+font-size:var(--fs-meta);
+
+font-weight:500;
+
+}
+
+.message-item.is-unread{
+
+border-color:var(--accent-color);
+
+}
+
+.compose-row{
+
+display:flex;
+
+gap:10px;
+
+margin-top:14px;
+
+align-items:flex-start;
+
+}
+
+.compose-row textarea{
+
+flex:1;
+
+padding:12px 16px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+font-family:"Inter",sans-serif;
+
+font-size:.88rem;
+
+resize:vertical;
+
+min-height:60px;
+
+}
+
+/* ---- Sections "en attente" (jamais de fausse donnée) ---- */
+
+.pending-section{
+
+padding:26px 28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px dashed var(--border-color);
+
+opacity:.7;
+
+margin-bottom:18px;
+
+}
+
+.pending-section h3{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:8px;
+
+}
+
+.pending-section h3 i{
+
+width:18px;
+
+height:18px;
+
+color:var(--accent-color);
+
+}
+
+.pending-section p{
+
+color:var(--text-muted);
+
+font-size:.86rem;
+
+line-height:1.5;
+
+}
+
+/* ==========================================================
+MODULE 4 — GESTION DES FORMULES
+========================================================== */
+
+.plans-legend{
+
+display:flex;
+
+gap:10px;
+
+margin-bottom:18px;
+
+}
+
+.plans-table th:not(:first-child),
+.plans-table td:not(:first-child){
+
+text-align:center;
+
+}
+
+.plans-feature-description{
+
+margin-top:3px;
+
+color:var(--text-muted);
+
+font-size:.78rem;
+
+font-weight:400;
+
+white-space:normal;
+
+max-width:320px;
+
+line-height:1.4;
+
+}
+
+.plan-toggle{
+
+position:relative;
+
+display:inline-flex;
+
+cursor:pointer;
+
+}
+
+.plan-toggle input{
+
+position:absolute;
+
+opacity:0;
+
+width:1px;
+
+height:1px;
+
+}
+
+.plan-toggle-track{
+
+display:inline-flex;
+
+align-items:center;
+
+width:42px;
+
+height:24px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+border:1px solid var(--border-color);
+
+transition:var(--transition);
+
+}
+
+.plan-toggle-thumb{
+
+width:16px;
+
+height:16px;
+
+margin-left:3px;
+
+border-radius:50%;
+
+background:var(--text-muted);
+
+transition:var(--transition);
+
+}
+
+.plan-toggle input:checked + .plan-toggle-track{
+
+background:var(--gradient-primary);
+
+border-color:transparent;
+
+}
+
+.plan-toggle input:checked + .plan-toggle-track .plan-toggle-thumb{
+
+transform:translateX(18px);
+
+background:#fff;
+
+}
+
+.plan-toggle input:focus-visible + .plan-toggle-track{
+
+box-shadow:0 0 0 3px rgba(212,162,76,.35);
+
+}
+
+.profile-save-bar{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+margin-top:20px;
+
+padding:18px 24px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-lg);
+
+bottom:20px;
+
+flex-wrap:wrap;
+
+}
+
+.profile-save-note{
+
+color:var(--text-light);
+
+font-size:.84rem;
+
+}
+
+.btn-profile-save{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:9px;
+
+padding:12px 24px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.86rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+white-space:nowrap;
+
+}
+
+.btn-profile-save:hover{
+
+transform:translateY(-1px);
+
+box-shadow:0 12px 26px rgba(139,30,63,.3);
+
+}
+
+.btn-profile-save:disabled{
+
+opacity:.6;
+
+cursor:not-allowed;
+
+transform:none;
+
+}
+
+/* ==========================================================
+EXECUTIVE COMMAND CENTER — hero, briefing, vue d'ensemble,
+observations IA, chronologie, infrastructure, cartes premium.
+========================================================== */
+
+@keyframes execFadeUp{
+
+from{ opacity:0; transform:translateY(14px); }
+to{ opacity:1; transform:translateY(0); }
+
+}
+
+.reveal-stagger{
+
+opacity:0;
+
+animation:execFadeUp .7s var(--ease-premium) forwards;
+
+}
+
+.content > .reveal-stagger:nth-of-type(1){ animation-delay:.02s; }
+.content > .reveal-stagger:nth-of-type(2){ animation-delay:.1s; }
+.content > .reveal-stagger:nth-of-type(3){ animation-delay:.18s; }
+
+.stats-grid{ animation:execFadeUp .7s var(--ease-premium) .16s both; }
+.ai-observations{ animation:execFadeUp .7s var(--ease-premium) .24s both; }
+
+@media (prefers-reduced-motion: reduce){
+
+.reveal-stagger,
+.stats-grid,
+.ai-observations{
+
+animation:none;
+
+opacity:1;
+
+}
+
+}
+
+/* ---- Hero exécutif ---- */
+
+.exec-hero{
+
+position:relative;
+
+display:flex;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+gap:24px;
+
+padding:34px 36px;
+
+margin:0 0 24px;
+
+border-radius:var(--radius-lg);
+
+background:
+
+radial-gradient(circle at 100% 0%,rgba(212,162,76,.16),transparent 55%),
+
+radial-gradient(circle at 0% 100%,rgba(139,30,63,.24),transparent 50%),
+
+linear-gradient(155deg,#1A2338 0%,#161F33 55%,#12192B 100%);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-lg);
+
+overflow:hidden;
+
+flex-wrap:wrap;
+
+}
+
+.exec-hero::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);
+
+background-size:22px 22px;
+
+opacity:.35;
+
+pointer-events:none;
+
+}
+
+.exec-hero-identity{
+
+position:relative;
+
+z-index:1;
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+min-width:260px;
+
+}
+
+.exec-avatar{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:64px;
+
+height:64px;
+
+border-radius:var(--radius-lg);
+
+background:var(--gradient-primary);
+
+box-shadow:0 12px 28px rgba(139,30,63,.35), inset 0 1px 0 rgba(255,255,255,.16);
+
+color:#fff;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:1.3rem;
+
+overflow:hidden;
+
+}
+
+.exec-avatar img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+}
+
+.exec-identity-text h1{
+
+font-family:var(--font-display);
+
+font-size:1.55rem;
+
+font-weight:800;
+
+color:#fff;
+
+letter-spacing:-.01em;
+
+margin-bottom:5px;
+
+}
+
+.exec-role{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+margin-bottom:10px;
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.8rem;
+
+text-transform:uppercase;
+
+letter-spacing:.06em;
+
+}
+
+.exec-role::before{
+
+content:"";
+
+width:6px;
+
+height:6px;
+
+border-radius:50%;
+
+background:var(--accent-color);
+
+box-shadow:0 0 0 3px rgba(212,162,76,.2);
+
+}
+
+.exec-briefing{
+
+max-width:460px;
+
+color:rgba(226,232,240,.82);
+
+font-size:.92rem;
+
+line-height:1.6;
+
+}
+
+.exec-hero-badges{
+
+position:relative;
+
+z-index:1;
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+max-width:360px;
+
+justify-content:flex-end;
+
+align-content:flex-start;
+
+}
+
+.exec-badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:8px 14px;
+
+border-radius:var(--radius-full);
+
+background:rgba(255,255,255,.06);
+
+border:1px solid rgba(255,255,255,.1);
+
+backdrop-filter:blur(6px);
+
+color:rgba(226,232,240,.9);
+
+font-size:.78rem;
+
+font-weight:600;
+
+white-space:nowrap;
+
+}
+
+.exec-badge i{
+
+width:13px;
+
+height:13px;
+
+flex-shrink:0;
+
+color:var(--accent-color);
+
+}
+
+.exec-badge .status-dot{
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+flex-shrink:0;
+
+}
+
+.exec-badge .status-dot.is-online{ background:var(--success); box-shadow:0 0 0 3px rgba(34,197,94,.2); }
+.exec-badge .status-dot.is-pending{ background:var(--warning); box-shadow:0 0 0 3px rgba(234,168,61,.2); }
+.exec-badge .status-dot.is-offline{ background:var(--danger); box-shadow:0 0 0 3px rgba(239,68,68,.2); }
+
+/* ---- Vue d'ensemble du jour ---- */
+
+.overview-card{
+
+margin:0 0 24px;
+
+padding:28px 32px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.overview-card-header h2{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.overview-card-header p{
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+margin-bottom:20px;
+
+}
+
+.overview-checklist{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:14px 22px;
+
+}
+
+.overview-item{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:12px;
+
+}
+
+.overview-item-mark{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:26px;
+
+height:26px;
+
+border-radius:50%;
+
+margin-top:1px;
+
+}
+
+.overview-item-mark.is-done{
+
+background:rgba(34,197,94,.14);
+
+color:var(--success);
+
+}
+
+.overview-item-mark.is-idle{
+
+background:var(--background-light);
+
+color:var(--text-muted);
+
+}
+
+.overview-item-mark i{ width:14px; height:14px; }
+
+.overview-item-text strong{
+
+display:block;
+
+color:var(--text-color);
+
+font-size:.88rem;
+
+font-weight:700;
+
+margin-bottom:2px;
+
+}
+
+.overview-item-text span{
+
+color:var(--text-muted);
+
+font-size:.8rem;
+
+line-height:1.4;
+
+}
+
+/* ---- Grille de statistiques : hiérarchie visuelle ---- */
+
+.stats-grid{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+grid-auto-rows:minmax(108px,auto);
+
+gap:16px;
+
+margin:0 0 24px;
+
+}
+
+.stat-card{
+
+opacity:0;
+
+animation:execFadeUp .6s var(--ease-premium) forwards;
+
+}
+
+.stats-grid .stat-card:nth-child(1){ animation-delay:.05s; }
+.stats-grid .stat-card:nth-child(2){ animation-delay:.09s; }
+.stats-grid .stat-card:nth-child(3){ animation-delay:.13s; }
+.stats-grid .stat-card:nth-child(4){ animation-delay:.17s; }
+.stats-grid .stat-card:nth-child(5){ animation-delay:.21s; }
+.stats-grid .stat-card:nth-child(6){ animation-delay:.25s; }
+.stats-grid .stat-card:nth-child(7){ animation-delay:.29s; }
+.stats-grid .stat-card:nth-child(8){ animation-delay:.33s; }
+.stats-grid .stat-card:nth-child(9){ animation-delay:.37s; }
+.stats-grid .stat-card:nth-child(10){ animation-delay:.41s; }
+.stats-grid .stat-card:nth-child(11){ animation-delay:.45s; }
+.stats-grid .stat-card:nth-child(12){ animation-delay:.49s; }
+.stats-grid .stat-card:nth-child(13){ animation-delay:.53s; }
+
+@media (prefers-reduced-motion: reduce){
+
+.stat-card{ animation:none; opacity:1; }
+
+}
+
+.stat-card.is-featured{
+
+grid-column:span 2;
+
+grid-row:span 2;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+padding:26px 28px;
+
+background:
+
+radial-gradient(circle at 100% 0%,rgba(212,162,76,.14),transparent 60%),
+
+var(--gradient-primary);
+
+border:none;
+
+box-shadow:0 20px 44px rgba(139,30,63,.3);
+
+}
+
+.stat-card.is-featured .stat-card-icon{
+
+background:rgba(255,255,255,.16);
+
+color:#fff;
+
+width:52px;
+
+height:52px;
+
+}
+
+.stat-card.is-featured .stat-card-value{
+
+font-size:2.6rem;
+
+color:#fff;
+
+margin-top:14px;
+
+}
+
+.stat-card.is-featured .stat-card-label{
+
+color:rgba(255,255,255,.85);
+
+font-size:.88rem;
+
+}
+
+.stat-card.is-wide{
+
+grid-column:span 2;
+
+}
+
+.stat-card.is-tall{
+
+grid-row:span 2;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+}
+
+.stat-card.is-tall .stat-card-value{
+
+margin-top:auto;
+
+padding-top:14px;
+
+}
+
+.stat-card.is-accent .stat-card-icon{
+
+background:rgba(212,162,76,.16);
+
+color:var(--accent-color);
+
+}
+
+.stat-card.is-accent .stat-card-value{
+
+background:linear-gradient(135deg,var(--accent-color),#F0C878);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+@media(max-width:1279px){
+
+.stats-grid{ grid-template-columns:repeat(2,1fr); }
+
+.stat-card.is-featured,
+.stat-card.is-wide{ grid-column:span 2; }
+
+}
+
+@media(max-width:640px){
+
+.stats-grid{ grid-template-columns:1fr; }
+
+.stat-card.is-featured,
+.stat-card.is-wide,
+.stat-card.is-tall{ grid-column:span 1; grid-row:span 1; }
+
+}
+
+/* ---- Observations IA ---- */
+
+.ai-observations{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:16px;
+
+margin:0 0 24px;
+
+padding:24px 28px;
+
+border-radius:var(--radius-lg);
+
+background:linear-gradient(135deg,rgba(212,162,76,.08),rgba(139,30,63,.06));
+
+border:1px solid rgba(212,162,76,.22);
+
+}
+
+.ai-observations-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:40px;
+
+height:40px;
+
+border-radius:var(--radius-md);
+
+background:rgba(212,162,76,.16);
+
+color:var(--accent-color);
+
+}
+
+.ai-observations-icon i{ width:19px; height:19px; }
+
+.ai-observations h2{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.ai-observations p{
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+line-height:1.55;
+
+}
+
+/* ---- Panels : conteneur général ---- */
+
+.panels-grid{
+
+margin:0 0 24px;
+
+}
+
+.panels-grid--asym{
+
+grid-template-columns:1.3fr 1fr;
+
+}
+
+/* ---- États vides des graphiques ---- */
+
+.chart-wrap{
+
+position:relative;
+
+}
+
+.chart-empty-state{
+
+position:absolute;
+
+inset:0;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+gap:10px;
+
+text-align:center;
+
+padding:20px;
+
+background:var(--background);
+
+}
+
+.chart-empty-state i{
+
+width:26px;
+
+height:26px;
+
+color:var(--text-muted);
+
+opacity:.6;
+
+}
+
+.chart-empty-state p{
+
+max-width:220px;
+
+color:var(--text-muted);
+
+font-size:.82rem;
+
+line-height:1.5;
+
+}
+
+/* ---- Chronologie d'activité (réutilise .timeline-item du Module 3) ---- */
+
+#activityTimeline{
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+}
+
+.timeline-empty{
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+font-style:italic;
+
+}
+
+/* ---- Infrastructure ---- */
+
+.infra-grid{
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+}
+
+.infra-item{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:12px;
+
+padding:11px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.infra-item:last-child{
+
+border-bottom:none;
+
+}
+
+.infra-item-name{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+color:var(--text-color);
+
+font-size:.86rem;
+
+font-weight:600;
+
+}
+
+.infra-item-name i{
+
+width:16px;
+
+height:16px;
+
+color:var(--text-muted);
+
+}
+
+.infra-status{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:3px 10px;
+
+border-radius:var(--radius-full);
+
+font-size:.74rem;
+
+font-weight:700;
+
+}
+
+.infra-status.is-online{ background:rgba(34,197,94,.12); color:var(--success); }
+.infra-status.is-pending{ background:rgba(234,168,61,.14); color:var(--warning); }
+.infra-status.is-offline{ background:rgba(239,68,68,.12); color:var(--danger); }
+
+.infra-status .status-dot{
+
+width:6px;
+
+height:6px;
+
+border-radius:50%;
+
+background:currentColor;
+
+}
+
+@media(max-width:1023px){
+
+.exec-hero{
+
+padding:26px 24px;
+
+}
+
+.panels-grid--asym{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+@media(max-width:640px){
+
+.exec-hero{
+
+flex-direction:column;
+
+}
+
+.exec-hero-badges{
+
+justify-content:flex-start;
+
+max-width:none;
+
+}
+
+}
+
+/* ==========================================================
+MODULE 5 — UNIVERSITÉS / BOURSES : barre d'outils avec bouton
+d'ajout, et contenu des modales d'ajout/édition (.modal-base,
+css/base.css). .modal-card garde un fond blanc (base.css) —
+on y redéfinit localement les variables de couleur/texte en
+clair, indépendamment de la surcharge sombre du Control Center
+définie plus haut dans ce fichier, pour que tout ce qui les
+utilise déjà (.modal-close, h2, label...) reste lisible sans
+dupliquer chaque règle.
+========================================================== */
+
+.page-toolbar-actions{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+margin-left:auto;
+
+}
+
+.btn-page-action{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+padding:10px 18px;
+
+border:none;
+
+border-radius:var(--radius-full);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.86rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+white-space:nowrap;
+
+}
+
+.btn-page-action:hover{
+
+transform:translateY(-1px);
+
+box-shadow:0 12px 26px rgba(139,30,63,.28);
+
+}
+
+.btn-page-action i{ width:16px; height:16px; }
+
+.btn-page-action.is-secondary{
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+box-shadow:none;
+
+}
+
+.table-icon-btn{
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:32px;
+
+height:32px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:var(--background-light);
+
+color:var(--text-light);
+
+cursor:pointer;
+
+margin-right:6px;
+
+transition:var(--transition);
+
+}
+
+.table-icon-btn:hover{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+.table-icon-btn.is-danger:hover{
+
+background:var(--danger);
+
+color:#fff;
+
+}
+
+.table-icon-btn i{ width:15px; height:15px; }
+
+.modal-base .modal-card{
+
+--text-color:#0F172A;
+--text-light:#64748B;
+--text-muted:#94A3B8;
+--border-color:#E2E8F0;
+--background-soft:#F8FAFC;
+--background-alt:#F1F5F9;
+
+text-align:left;
+
+}
+
+.modal-base .modal-header h2{
+
+font-size:var(--fs-card-title);
+
+}
+
+.modal-base .modal-close i{ width:20px; height:20px; }
+
+.modal-base .modal-close:hover{ color:var(--danger); }
+
+.modal-base .modal-footer{
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:10px;
+
+margin-top:4px;
+
+}
+
+/* ---- Formulaires — .form-group (recette indépendante d'input/
+select/textarea) a été retiré : les champs utilisent maintenant
+.field (css/base.css), LE seul système de champ du site. .form-grid
+reste, en tant que simple conteneur de mise en page (grille de
+champs), pas un système de champ. Utilisé à la fois dans les cartes
+de modale claires (modal-card) et, potentiellement, dans des cartes
+sombres du Control Center — .field résout ses tokens (border-color,
+background, text-color) à la valeur locale de chaque contexte comme
+le faisait déjà l'ancien .form-group. ---- */
+
+.form-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+
+gap:16px;
+
+margin-bottom:16px;
+
+}
+
+/* .field ne fournit pas d'espacement vertical entre champs empilés
+(pensé pour être posé dans un layout qui gère déjà le gap) : ajouté
+ici pour les champs autonomes hors .form-grid, annulé pour ceux déjà
+espacés par le gap de la grille. */
+
+.field{ margin-bottom:16px; }
+.field:last-child{ margin-bottom:0; }
+.form-grid .field{ margin-bottom:0; }
+
+/* Focus doré plutôt que la teinte marron par défaut de .field : tous
+les champs sombres du Control Center (recherche, bascules, cases à
+cocher) utilisent déjà l'accent or comme signal d'interaction sur
+fond sombre — cohérence locale avec le reste de ce fichier. */
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+
+border-color:var(--accent-color);
+
+box-shadow:0 0 0 3px rgba(212,162,76,.18);
+
+}
+
+.admin-table td.actions-cell{ white-space:nowrap; }
+
+/* ---- Cases à cocher génériques (niveaux d'une bourse, universités
+partenaires) — même logique de portabilité clair/sombre que .field
+ci-dessus. ---- */
+
+.form-hint{
+
+font-size:.8rem;
+
+color:var(--text-muted);
+
+margin:0 0 8px;
+
+}
+
+.checkbox-row{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+.checkbox-pill{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:8px 14px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+font-size:.85rem;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.checkbox-pill:has(input:checked){
+
+border-color:var(--accent-color);
+
+background:var(--background-light);
+
+color:var(--text-color);
+
+}
+
+.checkbox-pill input{ accent-color:var(--accent-color); }
+
+.checkbox-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+max-height:260px;
+
+overflow-y:auto;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+padding:6px;
+
+background:var(--background-soft);
+
+}
+
+.checkbox-list-item{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:9px 10px;
+
+border-radius:var(--radius-sm);
+
+font-size:.86rem;
+
+color:var(--text-color);
+
+cursor:pointer;
+
+}
+
+.checkbox-list-item:hover{ background:var(--background-light); }
+
+.checkbox-list-item input{ accent-color:var(--accent-color); flex-shrink:0; }
+
+.checkbox-list-item span{ flex:1; }
+
+.checkbox-list-item small{ color:var(--text-muted); font-weight:500; }
+
+.checkbox-list-empty{
+
+padding:16px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.85rem;
+
+}

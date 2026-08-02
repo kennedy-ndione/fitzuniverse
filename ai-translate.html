@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Traduction de documents | ScholarBridge</title>
+
+<meta name="description" content="Traduisez vos documents universitaires entre français, anglais, espagnol, allemand, italien et portugais avec Fitz.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="ai-translate.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link is-active" aria-current="page" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Fitz — Traduction</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="ai-page-header reveal">
+
+<div class="ai-page-header-main">
+
+<div class="fitz-avatar fitz-avatar--lg"><i data-lucide="languages"></i></div>
+
+<div>
+<h1>Traduction de documents</h1>
+<p>Traduisez vos textes académiques entre 6 langues, avec détection automatique de la langue source.</p>
+</div>
+
+</div>
+
+<span class="ai-page-header-badge"><i data-lucide="globe"></i><span>6 langues</span></span>
+
+</div>
+
+<div id="lockedState" hidden></div>
+
+<div id="translateApp" class="reveal">
+
+<section class="ai-panel">
+
+<div class="ai-panel-body">
+
+<div class="ai-mode-tabs">
+<button type="button" class="ai-mode-tab is-active" data-mode="text">Texte collé</button>
+<button type="button" class="ai-mode-tab" data-mode="file">Fichier</button>
+</div>
+
+<div class="ai-lang-row">
+
+<div class="ai-field">
+<label for="sourceLanguage">Langue source</label>
+<select id="sourceLanguage"></select>
+<span class="ai-field-hint"><label><input type="checkbox" id="autoDetect" checked> Détection automatique</label></span>
+</div>
+
+<button type="button" class="ai-lang-swap-btn" id="swapBtn" aria-label="Inverser les langues"><i data-lucide="arrow-left-right"></i></button>
+
+<div class="ai-field">
+<label for="targetLanguage">Traduire vers</label>
+<select id="targetLanguage"></select>
+</div>
+
+</div>
+
+<div id="textModePanel" class="ai-tool-layout">
+
+<div class="ai-field" style="margin-bottom:0;">
+<label for="sourceText">Texte à traduire</label>
+<textarea id="sourceText" rows="10" placeholder="Collez ici le texte à traduire…"></textarea>
+</div>
+
+<div class="ai-field" style="margin-bottom:0;">
+<label for="targetText">Traduction</label>
+<textarea id="targetText" rows="10" readonly placeholder="La traduction apparaîtra ici…"></textarea>
+</div>
+
+</div>
+
+<div id="fileModePanel" hidden>
+
+<div class="ai-dropzone" id="dropzone">
+<i data-lucide="upload-cloud"></i>
+<strong>Glissez-déposez un document, ou cliquez pour parcourir</strong>
+<span>PDF, DOC, DOCX, JPG, PNG</span>
+<input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden>
+</div>
+
+<div class="ai-preview-content" id="fileTargetText" style="margin-top:16px;">
+<div class="ai-preview-empty">
+<i data-lucide="languages"></i>
+<span>La traduction du document apparaîtra ici.</span>
+</div>
+</div>
+
+</div>
+
+<div class="ai-preview-toolbar" style="margin-top:16px;">
+<button type="button" class="btn btn-primary" id="translateBtn"><i data-lucide="languages"></i><span>Traduire</span></button>
+<button type="button" class="ai-icon-btn" id="copyBtn" disabled><i data-lucide="copy"></i>Copier</button>
+<button type="button" class="ai-icon-btn" id="downloadBtn" disabled><i data-lucide="download"></i>Télécharger</button>
+</div>
+
+</div>
+
+</section>
+
+<section class="ai-panel" id="historyPanel" style="margin-top:20px;">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="history"></i>Historique récent</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<div class="ai-history-list" id="historyList">
+<p class="ai-field-hint">Vos dernières traductions apparaîtront ici.</p>
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="ai-translate.js"></script>
+
+</body>
+
+</html>

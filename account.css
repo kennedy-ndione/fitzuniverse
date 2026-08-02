@@ -1,0 +1,230 @@
+/* ==========================================================
+ACCOUNT — mise en page spécifique
+Composants génériques (panneaux, champs...) dans css/ai-suite.css.
+========================================================== */
+
+/* Sous-titre du topbar — même recette que profile.css (.topbar-title p),
+dupliquée ici car account.html ne charge pas profile.css. Remplace
+l'ancien bloc .ai-page-header (icône + h1 + p) qui répétait à
+l'identique le h1 du topbar juste au-dessus : double en-tête retiré,
+un seul titre + une seule ligne de contexte désormais. */
+.topbar-title p{
+
+color:var(--text-light);
+
+font-size:var(--fs-meta);
+
+}
+
+.account-info-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+
+gap:18px;
+
+}
+
+.account-info-grid > div{
+
+display:flex;
+
+flex-direction:column;
+
+gap:4px;
+
+}
+
+.account-info-grid p.ai-field-hint{
+
+grid-column:1 / -1;
+
+margin-top:6px;
+
+}
+
+.account-info-label{
+
+font-size:.76rem;
+
+font-weight:700;
+
+text-transform:uppercase;
+
+letter-spacing:.04em;
+
+color:var(--text-muted);
+
+}
+
+.account-info-grid strong{
+
+font-size:.98rem;
+
+color:var(--text-color);
+
+}
+
+.account-form-error{
+
+margin-top:12px;
+
+padding:11px 14px;
+
+border-radius:var(--radius-sm);
+
+background:rgba(239,68,68,.1);
+
+border:1px solid rgba(239,68,68,.35);
+
+color:var(--danger);
+
+font-size:.84rem;
+
+}
+
+.account-danger-zone{
+
+border-color:rgba(239,68,68,.3);
+
+}
+
+.account-danger-zone .ai-panel-header h2 i{
+
+color:var(--danger);
+
+}
+
+.account-danger-btn{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:9px;
+
+padding:12px 22px;
+
+border-radius:var(--radius-md);
+
+background:var(--danger);
+
+color:#fff;
+
+font-weight:700;
+
+border:none;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+/* #DC2626 = même nuance de survol assombrie que .btn-danger:hover
+dans base.css (pas de token dédié pour cette teinte foncée, valeur
+alignée à l'identique plutôt qu'une nouvelle nuance de rouge). */
+.account-danger-btn:hover{
+
+background:#DC2626;
+
+transform:translateY(-2px);
+
+box-shadow:0 14px 28px rgba(239,68,68,.28);
+
+}
+
+.account-danger-btn:disabled{
+
+opacity:.6;
+
+cursor:not-allowed;
+
+transform:none;
+
+}
+
+.account-danger-btn i{
+
+width:16px;
+
+height:16px;
+
+}
+
+/* ==========================================================
+MODALE DE CONFIRMATION FINALE
+========================================================== */
+
+.account-modal{
+
+position:fixed;
+
+inset:0;
+
+z-index:10000;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:rgba(15,23,42,.72);
+
+padding:20px;
+
+}
+
+.account-modal-card{
+
+width:100%;
+
+max-width:420px;
+
+padding:28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-lg);
+
+}
+
+.account-modal-card h2{
+
+font-size:1.1rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:10px;
+
+}
+
+.account-modal-card p{
+
+color:var(--text-light);
+
+font-size:.9rem;
+
+line-height:1.55;
+
+margin-bottom:22px;
+
+}
+
+.account-modal-actions{
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:10px;
+
+}

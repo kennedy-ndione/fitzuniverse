@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ScholarBridge | Découvrez les bourses faites pour vous</title>
+
+<meta name="description"
+content="ScholarBridge aide les étudiants africains à découvrir leur potentiel académique et les opportunités de bourses internationales qui leur correspondent, grâce à une analyse personnalisée avec Fitz.">
+
+<meta property="og:title" content="ScholarBridge | Découvrez les bourses faites pour vous">
+<meta property="og:description" content="Répondez à quelques questions, laissez Fitz analyser votre profil, et découvrez votre potentiel et vos opportunités d'études à l'international.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0A2A66">
+<link rel="canonical" href="index.html">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/hero.css">
+<link rel="stylesheet" href="css/homepage-sections.css">
+<link rel="stylesheet" href="css/animations.css">
+</head>
+
+<body>
+
+<!-- =========================
+HEADER
+========================== -->
+
+<header class="header">
+
+<div class="container header-container">
+
+<a href="index.html" class="logo">
+<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<div class="header-actions">
+
+<a href="eligibility-test.html" class="btn btn-primary">
+<i data-lucide="compass"></i>
+<span class="btn-text-full">Découvrir mes opportunités</span>
+<span class="btn-text-short">Découvrir</span>
+</a>
+
+</div>
+
+</div>
+
+</header>
+
+<!-- =========================
+MAIN
+========================== -->
+
+<main>
+
+<!-- =========================
+HERO
+========================== -->
+
+<section class="hero">
+
+<div class="hero-media" aria-hidden="true">
+<img src="assets/images/hero-bg2.jpg" alt="" class="hero-bg-image">
+<div class="hero-overlay"></div>
+</div>
+
+<div class="container hero-container">
+
+<!-- LEFT -->
+
+<div class="hero-content">
+
+<!-- Titre -->
+
+<h1 class="reveal hero-stagger">
+Trouvez les bourses d'études qui correspondent à votre profil.
+</h1>
+
+<!-- Description -->
+
+<p class="hero-description reveal hero-stagger">
+Répondez à quelques questions. Fitz analyse votre parcours, sélectionne
+les bourses et universités adaptées à votre profil et vous accompagne
+jusqu'au dépôt de votre candidature.
+</p>
+
+<!-- Avantages -->
+
+<ul class="hero-benefits reveal hero-stagger">
+
+<li class="benefit">
+<i data-lucide="scan-search"></i>
+<span>Découverte personnalisée en quelques minutes</span>
+</li>
+
+<li class="benefit">
+<i data-lucide="bot"></i>
+<span>Analyse de votre potentiel par Fitz</span>
+</li>
+
+<li class="benefit">
+<i data-lucide="sparkles"></i>
+<span>Des opportunités identifiées pour vous, pas une liste générique</span>
+</li>
+
+</ul>
+
+<!-- Statistiques -->
+
+<div class="hero-stats reveal hero-stagger">
+
+<div class="stat-card">
+<strong><span data-count-to="500">0</span>+</strong>
+<span>Bourses référencées</span>
+</div>
+
+<div class="stat-card">
+<strong><span data-count-to="30">0</span>+</strong>
+<span>Pays de destination</span>
+</div>
+
+<div class="stat-card">
+<strong>Fitz</strong>
+<span>Assistant intelligent</span>
+</div>
+
+</div>
+
+<!-- Message de confiance -->
+
+<p class="hero-note reveal hero-stagger">
+
+<i data-lucide="shield-check"></i>
+
+<span>
+Commencez gratuitement • Sans carte bancaire • Découverte personnalisée
+</span>
+
+</p>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="hero-visual">
+
+<!-- Compatibilité -->
+
+<div class="floating-card compatibility-card reveal hero-stagger">
+
+<div class="floating-icon">
+<i data-lucide="badge-check"></i>
+</div>
+
+<div>
+
+<strong>Compatibilité élevée</strong>
+
+<p>Votre profil correspond fortement aux critères recherchés.</p>
+
+</div>
+
+</div>
+
+<!-- Destination -->
+
+<div class="floating-card destination-card reveal hero-stagger">
+
+<div class="floating-icon">
+<i data-lucide="earth"></i>
+</div>
+
+<div>
+
+<strong>Régions compatibles</strong>
+
+<p>3 destinations identifiées pour votre profil</p>
+
+</div>
+
+</div>
+
+<!-- Fitz -->
+
+<div class="hero-demo reveal hero-stagger">
+
+<div class="demo-header">
+
+<div class="demo-avatar">
+
+<i data-lucide="bot"></i>
+
+</div>
+
+<div class="demo-info">
+
+<h3>Fitz</h3>
+
+<p>Votre conseiller intelligent</p>
+
+</div>
+
+</div>
+
+<div class="demo-body">
+
+<p id="fitz-message">
+
+Bonjour, je suis Fitz.
+
+</p>
+
+<div class="progress">
+
+<div id="progress-bar"></div>
+
+</div>
+
+<ul id="analysis-list"></ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+</section>
+
+<!-- ==========================================
+CONFIANCE
+=========================================== -->
+
+<section class="trust-strip reveal" aria-label="Nos engagements">
+
+<div class="container trust-strip-inner">
+
+<div class="trust-item">
+<i data-lucide="shield-check"></i>
+<span>Vos données ne servent qu'à personnaliser vos résultats</span>
+</div>
+
+<div class="trust-item">
+<i data-lucide="landmark"></i>
+<span>Bourses issues de programmes officiels</span>
+</div>
+
+<div class="trust-item">
+<i data-lucide="wand-sparkles"></i>
+<span>Une analyse basée sur vos réponses, pas un modèle générique</span>
+</div>
+
+</div>
+
+</section>
+
+<!-- ==========================================
+APERÇU DES OPPORTUNITÉS
+=========================================== -->
+
+<section id="teaser" class="teaser section">
+
+<div class="container">
+
+<div class="section-header teaser-head reveal">
+<span class="section-badge">
+<i data-lucide="sparkles"></i>
+Un aperçu, pas le catalogue entier
+</span>
+<h2>Découvrez quelques opportunités disponibles sur ScholarBridge</h2>
+<p>Universités partenaires, bourses actives, programmes compatibles — un échantillon de ce que Fitz peut analyser pour votre profil.</p>
+</div>
+
+<div class="teaser-grid reveal" id="teaserGrid">
+<div class="teaser-card teaser-card-skeleton"></div>
+<div class="teaser-card teaser-card-skeleton"></div>
+<div class="teaser-card teaser-card-skeleton"></div>
+<div class="teaser-card teaser-card-skeleton"></div>
+</div>
+
+<div class="teaser-actions reveal">
+
+<a href="universities.html" class="btn btn-secondary">
+<span>Explorer toutes les universités</span>
+<i data-lucide="arrow-right"></i>
+</a>
+
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ScholarBridge" target="_blank" rel="noopener" class="teaser-whatsapp">
+<i data-lucide="message-circle"></i>
+<span>Une question avant de commencer ? Discutez avec nous sur WhatsApp</span>
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ==========================================
+POURQUOI NOUS CHOISIR
+=========================================== -->
+
+<section id="why-us" class="why-us section">
+
+<div class="container">
+
+<div class="section-header reveal">
+
+<span class="section-badge">
+<i data-lucide="compass"></i>
+Pourquoi tant d'étudiants abandonnent ?
+</span>
+
+<h2>
+Le problème n'est pas le manque de bourses.
+Le problème est de trouver celles qui sont réellement faites pour vous.
+</h2>
+
+<p>
+Chaque année, des milliers d'étudiants passent des semaines à chercher sur Internet,
+ouvrent des dizaines de sites et finissent par abandonner sans savoir quelles
+opportunités correspondent réellement à leur profil.
+</p>
+
+</div>
+
+<div class="cards-grid">
+
+<article class="info-card reveal">
+
+<div class="card-icon">
+<i data-lucide="search-x"></i>
+</div>
+
+<h3>Vous cherchez partout</h3>
+
+<p>
+Des centaines de sites proposent des milliers de bourses, mais personne ne vous
+dit lesquelles correspondent réellement à votre parcours.
+</p>
+
+</article>
+
+<article class="info-card reveal">
+
+<div class="card-icon">
+<i data-lucide="clock-3"></i>
+</div>
+
+<h3>Vous perdez un temps précieux</h3>
+
+<p>
+Des heures de recherche sont souvent consacrées à des programmes auxquels vous
+n'êtes même pas éligible.
+</p>
+
+</article>
+
+<article class="info-card reveal">
+
+<div class="card-icon">
+<i data-lucide="circle-x"></i>
+</div>
+
+<h3>Vous passez à côté d'opportunités</h3>
+
+<p>
+Pendant que vous cherchez au hasard, certaines candidatures ferment sans que
+vous ayez eu le temps de les découvrir.
+</p>
+
+</article>
+
+</div>
+
+<p class="why-us-bridge reveal">
+<strong>ScholarBridge a été conçu pour résoudre exactement ces trois problèmes.</strong>
+Fitz analyse votre profil pour ne vous montrer que ce qui compte vraiment pour vous.
+</p>
+
+</div>
+
+</section>
+
+
+<!-- ==========================================
+COMMENT ÇA FONCTIONNE
+=========================================== -->
+
+<section id="how-it-works" class="how-it-works section">
+
+<div class="container">
+
+<div class="section-header reveal">
+
+<span class="section-badge">
+<i data-lucide="workflow"></i>
+Comment ça fonctionne
+</span>
+
+<h2>
+Votre projet d'études à l'étranger commence en seulement 3 étapes.
+</h2>
+
+<p>
+De la découverte de votre potentiel jusqu'à la préparation de votre candidature,
+ScholarBridge vous accompagne à chaque étape.
+</p>
+
+</div>
+
+<div class="steps">
+
+<article class="step reveal">
+
+<div class="step-number">01</div>
+
+<i data-lucide="compass"></i>
+
+<h3>Découvrez vos opportunités</h3>
+
+<p>
+Répondez à quelques questions sur votre parcours avec Fitz pour démarrer votre découverte personnalisée.
+</p>
+
+</article>
+
+<article class="step reveal">
+
+<div class="step-number">02</div>
+
+<i data-lucide="sparkles"></i>
+
+<h3>Analyse personnalisée</h3>
+
+<p>
+Nous révélons votre potentiel, votre niveau de préparation et le nombre d'opportunités identifiées pour votre profil.
+</p>
+
+</article>
+
+<article class="step reveal">
+
+<div class="step-number">03</div>
+
+<i data-lucide="unlock"></i>
+
+<h3>Débloquez vos opportunités</h3>
+
+<p>
+Débloquez vos bourses, universités et recommandations, avec Fitz à vos côtés jusqu'au dépôt.
+</p>
+
+</article>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ==========================================
+FONCTIONNALITÉS
+=========================================== -->
+
+<section id="features" class="features-overview section">
+
+<div class="container">
+
+<div class="section-header reveal">
+
+<span class="section-badge">
+<i data-lucide="layout-grid"></i>
+Tout ce dont vous avez besoin
+</span>
+
+<h2>
+Trouver, préparer, suivre — jusqu'au dépôt de votre dossier.
+</h2>
+
+<p>
+ScholarBridge va bien au-delà d'une liste de bourses. Fitz vous accompagne sur les trois étapes qui font vraiment la différence.
+</p>
+
+</div>
+
+<div class="pillars-grid">
+
+<div class="pillar-group reveal">
+<div class="pillar-group-head">
+<span class="pillar-group-index">01</span>
+<h3>Trouver</h3>
+</div>
+
+<div class="cards-grid features-grid">
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="graduation-cap"></i></div>
+<h3>Des bourses qui vous correspondent</h3>
+<p>Sélectionnées pour votre niveau, votre domaine et votre destination — pas une liste générique.</p>
+<span class="feature-link">Démarrer mon analyse<i data-lucide="arrow-right"></i></span>
+</a>
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="landmark"></i></div>
+<h3>Comparez les universités</h3>
+<p>Universités compatibles avec votre profil, programmes et critères d'admission inclus.</p>
+<span class="feature-link">Lancer ma découverte<i data-lucide="arrow-right"></i></span>
+</a>
+
+</div>
+</div>
+
+<div class="pillar-group reveal">
+<div class="pillar-group-head">
+<span class="pillar-group-index">02</span>
+<h3>Préparer</h3>
+</div>
+
+<div class="cards-grid features-grid">
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="file-text"></i></div>
+<h3>Préparez votre dossier</h3>
+<p>CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi — avec Fitz.</p>
+<span class="feature-link">Voir l'accompagnement<i data-lucide="arrow-right"></i></span>
+</a>
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="message-circle"></i></div>
+<h3>Posez vos questions à Fitz</h3>
+<p>Une question précise sur une université, un critère, une étape ? Fitz vous répond directement.</p>
+<span class="feature-link">Discuter avec Fitz<i data-lucide="arrow-right"></i></span>
+</a>
+
+</div>
+</div>
+
+<div class="pillar-group reveal">
+<div class="pillar-group-head">
+<span class="pillar-group-index">03</span>
+<h3>Suivre</h3>
+</div>
+
+<div class="cards-grid features-grid">
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="list-checks"></i></div>
+<h3>Suivez vos candidatures</h3>
+<p>Chaque dossier déposé avance par étapes claires — de la préparation jusqu'à la réponse de l'université.</p>
+<span class="feature-link">Voir le suivi<i data-lucide="arrow-right"></i></span>
+</a>
+
+<a href="eligibility-test.html" class="feature-card">
+<div class="card-icon"><i data-lucide="bell-ring"></i></div>
+<h3>Restez à jour sur chaque échéance</h3>
+<p>Fitz vous relance pour vérifier vos candidatures sur les portails — toutes vos échéances au même endroit.</p>
+<span class="feature-link">Activer les rappels<i data-lucide="arrow-right"></i></span>
+</a>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ==========================================
+NOTRE VISION
+=========================================== -->
+
+<section id="vision" class="vision section">
+
+<div class="container vision-container">
+
+<div class="vision-content reveal">
+
+<span class="section-badge">
+<i data-lucide="earth"></i>
+Notre vision
+</span>
+
+<h2>
+Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son avenir.
+</h2>
+
+<p>
+Chaque année, des milliers d'étudiants talentueux ont tout le potentiel pour réussir à l'international — il leur manque simplement les bonnes informations, les bons contacts et un accompagnement pour préparer une candidature solide.
+</p>
+
+<p>
+ScholarBridge existe pour réduire cet écart. Notre mission est de rendre les opportunités internationales plus accessibles grâce à une plateforme intelligente, simple à utiliser et pensée pour les étudiants africains.
+</p>
+
+</div>
+
+<div class="vision-illustration reveal">
+
+<img src="assets/images/hero-bg3.jpg" alt="" class="vision-photo">
+
+<div class="vision-card">
+
+<i data-lucide="globe"></i>
+
+<h3>Une mission, un étudiant à la fois.</h3>
+
+<p>
+Chaque étudiant accompagné représente une nouvelle opportunité saisie, une candidature déposée et un avenir qui s'ouvre au-delà des frontières.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ==========================================
+CTA FINAL
+=========================================== -->
+
+<section class="final-cta section">
+
+<div class="container">
+
+<div class="cta-box reveal">
+
+<span class="section-badge">
+<i data-lucide="sparkles"></i>
+Votre avenir commence aujourd'hui
+</span>
+
+<h2>
+Découvrez votre potentiel et le nombre d'opportunités faites pour vous.
+</h2>
+
+<p>
+Deux minutes suffisent à Fitz pour situer votre niveau de préparation et les opportunités qui vous correspondent.
+</p>
+
+<div class="cta-buttons">
+
+<a href="signup.html" class="btn btn-primary btn-lg">
+
+<i data-lucide="user-plus"></i>
+
+<span>Créer un compte</span>
+
+</a>
+
+</div>
+
+<div class="cta-trust">
+
+<div>
+<i data-lucide="shield-check"></i>
+<span>Gratuit pour commencer</span>
+</div>
+
+<div>
+<i data-lucide="clock-3"></i>
+<span>Analyse en quelques minutes</span>
+</div>
+
+<div>
+<i data-lucide="bot"></i>
+<span>Accompagnement avec Fitz</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ==========================================
+FOOTER
+=========================================== -->
+
+<footer class="footer">
+
+<div class="container">
+
+<div class="footer-top">
+
+<div class="footer-brand">
+<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge Logo">
+<p>ScholarBridge aide les étudiants africains à trouver les opportunités qui correspondent réellement à leur profil.</p>
+</div>
+
+<div class="footer-links">
+
+<div>
+<h4>Plateforme</h4>
+<ul>
+<li><a href="#why-us">Pourquoi nous choisir</a></li>
+<li><a href="#how-it-works">Comment ça fonctionne</a></li>
+<li><a href="#vision">Notre vision</a></li>
+</ul>
+</div>
+
+<div>
+<h4>Compte</h4>
+<ul>
+<li><a href="login.html">Connexion</a></li>
+</ul>
+</div>
+
+</div>
+
+</div>
+
+<div class="footer-bottom">
+
+<p>© 2026 ScholarBridge. Tous droits réservés.</p>
+
+<div class="social-links">
+<a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg></a>
+<a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 21v-7.6h2.55l.38-2.96h-2.93V8.55c0-.86.24-1.44 1.47-1.44h1.57V4.46c-.27-.04-1.2-.12-2.28-.12-2.26 0-3.8 1.38-3.8 3.9v2.18H9v2.96h2.46V21h3.04Z"/></svg></a>
+<a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/></svg></a>
+<a href="#" aria-label="Youtube"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="2.5" y="6" width="19" height="12" rx="4"/><path d="M10.5 9.5v5l4.5-2.5-4.5-2.5Z" fill="var(--primary-dark,#2B0E16)"/></svg></a>
+</div>
+
+</div>
+
+</div>
+
+</footer>
+
+<!-- ==========================================
+SCRIPTS
+=========================================== -->
+
+<script src="js/hero.js"></script>
+<script src="js/main.js"></script>
+<script src="js/header-scroll.js"></script>
+<script type="module" src="js/homepage-teaser.js"></script>
+
+</body>
+
+</html>

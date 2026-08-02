@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Bourses | ScholarBridge Control Center</title>
+
+<meta name="description" content="Gérez toutes les bourses disponibles sur ScholarBridge.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Vue d'ensemble</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<li><a href="scholarships.html" class="nav-link is-active" aria-current="page"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">À venir</span>
+
+<ul>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="folder"></i><span>Documents</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="settings"></i><span>Paramètres</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Bourses</h1>
+<p>Gérez toutes les bourses disponibles sur ScholarBridge.</p>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="page-toolbar">
+
+<div class="topbar-search">
+<i data-lucide="search"></i>
+<input type="text" id="searchScholarship" placeholder="Rechercher une bourse...">
+</div>
+
+<select id="countryFilter">
+<option value="">Tous les pays</option>
+</select>
+
+<select id="levelFilter">
+<option value="">Tous les niveaux</option>
+<option>Licence</option>
+<option>Master</option>
+<option>Doctorat</option>
+</select>
+
+<div class="page-toolbar-actions">
+<button type="button" class="btn-page-action is-secondary" id="refreshScholarships">
+<i data-lucide="rotate-cw"></i>
+<span>Actualiser</span>
+</button>
+<button type="button" class="btn-page-action" id="addScholarshipBtn">
+<i data-lucide="plus"></i>
+<span>Ajouter une bourse</span>
+</button>
+</div>
+
+</div>
+
+<div class="admin-table-wrap">
+
+<table class="table admin-table">
+<thead>
+<tr>
+<th>Titre</th>
+<th>Pays</th>
+<th>Niveaux</th>
+<th>Universités</th>
+<th>Statut</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="scholarshipsTable">
+<tr>
+<td colspan="6"><div class="admin-table-empty">Chargement des bourses...</div></td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+MODALE — Ajouter / modifier une bourse
+========================================================== -->
+
+<div id="scholarshipModal" class="modal-base" hidden>
+<div class="modal-card">
+
+<div class="modal-header">
+<h2 id="modalTitle">Ajouter une bourse</h2>
+<button type="button" class="modal-close" id="closeModal" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<form id="scholarshipForm">
+
+<div class="form-grid">
+
+<div class="field">
+<label for="title">Titre de la bourse</label>
+<input type="text" id="title" required>
+</div>
+
+<div class="field">
+<label for="country">Pays</label>
+<input type="text" id="country" required>
+</div>
+
+<div class="field">
+<label for="funding">Financement</label>
+<input type="text" id="funding" placeholder="Ex : 100 %" required>
+</div>
+
+<div class="field">
+<label for="status">Statut</label>
+<select id="status">
+<option>Ouverte</option>
+<option>Bientôt</option>
+<option>Fermée</option>
+</select>
+</div>
+
+</div>
+
+<div class="field">
+<label>Niveaux concernés</label>
+<div class="checkbox-row">
+<label class="checkbox-pill"><input type="checkbox" name="scholarshipLevel" value="Licence"><span>Licence</span></label>
+<label class="checkbox-pill"><input type="checkbox" name="scholarshipLevel" value="Master"><span>Master</span></label>
+<label class="checkbox-pill"><input type="checkbox" name="scholarshipLevel" value="Doctorat"><span>Doctorat</span></label>
+</div>
+</div>
+
+<div class="field">
+<label for="description">Description</label>
+<textarea id="description" rows="6"></textarea>
+</div>
+
+<div class="field" id="universitiesPickerGroup">
+<label>Universités partenaires</label>
+<p class="form-hint" id="universitiesPickerHint">Enregistrez d'abord la bourse pour pouvoir lui associer des universités.</p>
+<div class="checkbox-list" id="universitiesPickerList" hidden></div>
+</div>
+
+<div class="modal-footer">
+<button type="submit" class="btn-detail-action" id="saveScholarshipBtn">
+<i data-lucide="save"></i>
+<span>Enregistrer la bourse</span>
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="scholarships.js"></script>
+
+</body>
+
+</html>

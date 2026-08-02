@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fiche étudiant | ScholarBridge Control Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Vue d'ensemble</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="students.html" class="nav-link is-active" aria-current="page"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1><a href="students.html" style="color:inherit;display:inline-flex;align-items:center;gap:8px;"><i data-lucide="arrow-left"></i></a> Fiche étudiant</h1>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="detail-header">
+<div class="detail-avatar" id="detailAvatar">?</div>
+<div class="detail-header-info">
+<h2 id="detailName">—</h2>
+<p id="detailEmail">—</p>
+</div>
+<div id="detailPills"></div>
+</div>
+
+<div class="detail-tabs" role="tablist">
+<button type="button" class="tab-btn is-active" data-tab="profil">Profil</button>
+<button type="button" class="tab-btn" data-tab="progression">Progression</button>
+<button type="button" class="tab-btn" data-tab="abonnement">Abonnement</button>
+<button type="button" class="tab-btn" data-tab="activite">Activité</button>
+<button type="button" class="tab-btn" data-tab="paiements">Paiements</button>
+<button type="button" class="tab-btn" data-tab="candidatures">Candidatures</button>
+<button type="button" class="tab-btn" data-tab="documents">Documents</button>
+<button type="button" class="tab-btn" data-tab="notes">Notes internes</button>
+<button type="button" class="tab-btn" data-tab="messages">Messages</button>
+</div>
+
+<div class="tab-panel is-active" id="tab-profil">
+<div id="profileSections"></div>
+</div>
+
+<div class="tab-panel" id="tab-progression">
+<div class="detail-section">
+<h3>Progression du profil</h3>
+<p class="detail-field-value text-stat-sm" id="progressionScore" style="margin-bottom:14px;">—/10</p>
+<div id="progressionList"></div>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-abonnement">
+<div class="detail-section">
+<h3>Formule</h3>
+<div class="detail-actions-row">
+<select id="planSelect">
+<option value="">Sans formule</option>
+<option value="essentiel">Essentiel</option>
+<option value="accompagnement">Avancé</option>
+<option value="premium">Premium</option>
+</select>
+<button type="button" class="btn-detail-action" id="savePlanBtn">Enregistrer la formule</button>
+</div>
+</div>
+<div class="detail-section">
+<h3>Expiration de la formule</h3>
+<p class="detail-field-value" id="planExpiryStatus" style="margin-bottom:14px;">—</p>
+<div class="detail-actions-row">
+<input type="date" id="planExpiryInput">
+<button type="button" class="btn-detail-action" id="savePlanExpiryBtn">Enregistrer la date</button>
+</div>
+</div>
+<div class="detail-section">
+<h3>Pass Fitz Express</h3>
+<p class="detail-field-value" id="fitzExpressStatus" style="margin-bottom:14px;">—</p>
+<div class="detail-actions-row">
+<input type="date" id="fitzExpressInput">
+<button type="button" class="btn-detail-action" id="saveFitzExpressBtn">Enregistrer la date</button>
+</div>
+</div>
+<div class="detail-section">
+<h3>Candidatures accompagnées</h3>
+<p class="detail-field-value" id="quotaStatus" style="margin-bottom:0;">—</p>
+</div>
+<div class="detail-section">
+<h3>Statut du compte</h3>
+<p class="detail-field-value" id="statusLabel" style="margin-bottom:14px;">—</p>
+<button type="button" class="btn-detail-action is-danger" id="toggleDisabledBtn">Suspendre le compte</button>
+</div>
+<div class="detail-section">
+<h3>Accès test complet</h3>
+<p class="detail-field-value" style="margin-bottom:14px;">Débloque toutes les fonctionnalités des 3 formules pour ce compte précis, quelle que soit sa formule réelle — réservé aux tests internes avant lancement. N'affecte aucun autre utilisateur.</p>
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+<input type="checkbox" id="testerAccessToggle">
+<span>Activer l'accès test complet pour ce compte</span>
+</label>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-activite">
+<div class="detail-section">
+<h3>Historique d'activité</h3>
+<div class="timeline" id="activityTimeline"></div>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-paiements">
+<div class="pending-section">
+<h3><i data-lucide="wallet"></i>Paiements</h3>
+<p>Aucune collection de paiements réels n'existe encore (le paiement PayDunya est aujourd'hui un stub — voir payment.js). Cette section s'activera automatiquement dès que le backend de paiement (Phase 1 de la feuille de route) sera branché.</p>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-candidatures">
+<div class="detail-section">
+<h3>Candidatures suivies</h3>
+<div id="candidaturesList"></div>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-documents">
+<div class="pending-section">
+<h3><i data-lucide="file-text"></i>Documents générés</h3>
+<p>Les CV, lettres, e-mails et traductions générés par Fitz ne vivent aujourd'hui que dans le navigateur de l'étudiant (localStorage), jamais dans Firestore — leur contenu n'est donc pas consultable depuis l'administration. Cette section s'activera dès que ces données seront synchronisées côté serveur.</p>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-notes">
+<div class="detail-section">
+<h3>Notes internes (jamais visibles par l'étudiant)</h3>
+<div id="notesList"></div>
+<div class="compose-row">
+<textarea id="noteText" placeholder="Ajouter une note interne..."></textarea>
+<button type="button" class="btn-detail-action" id="addNoteBtn">Ajouter</button>
+</div>
+</div>
+</div>
+
+<div class="tab-panel" id="tab-messages">
+<div class="detail-section">
+<h3>Messages envoyés à l'étudiant</h3>
+<div id="messagesList"></div>
+<div class="compose-row">
+<textarea id="messageText" placeholder="Écrire un message à l'étudiant..."></textarea>
+<button type="button" class="btn-detail-action" id="sendMessageBtn">Envoyer</button>
+</div>
+</div>
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script src="../pricing-plans.js"></script>
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="student-detail.js"></script>
+
+</body>
+
+</html>

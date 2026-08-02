@@ -1,0 +1,22 @@
+{
+"firestore": {
+"rules": "firestore.rules",
+"indexes": "firestore.indexes.json"
+},
+"storage": {
+"rules": "storage.rules"
+},
+"hosting": {
+"public": ".",
+"ignore": [
+"firebase.json",
+"**/.*",
+"**/node_modules/**",
+"import-scholarships.html",
+"import-scholarships.js",
+"import-universities.html",
+"import-universities.js"
+],
+"rewrites": []
+}
+}

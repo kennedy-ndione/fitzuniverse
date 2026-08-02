@@ -1,0 +1,1189 @@
+/* ==========================================================
+SCHOLARBRIDGE — MON PROFIL (profile.html)
+Repose sur css/base.css + dashboard.css : cette page partage
+désormais la même coquille sombre (sidebar/topbar) que le reste du
+parcours authentifié — elle vivait avant sur son propre thème clair
+dupliqué (auth.css), ce qui créait une rupture visuelle en pleine
+navigation. dashboard.css fournit tokens --shell-*/sidebar/topbar ;
+ce fichier ne contient plus que ce qui est réellement propre au
+profil (nav de sections, formulaire, champs, chips...).
+========================================================== */
+
+/* ==========================================================
+MISE EN PAGE DU PROFIL — nav collante + colonne formulaire
+========================================================== */
+
+.topbar-title p{
+
+color:var(--text-light);
+
+font-size:var(--fs-meta);
+
+}
+
+.profile-layout{
+
+display:grid;
+
+grid-template-columns:240px 1fr;
+
+gap:32px;
+
+align-items:start;
+
+}
+
+.profile-nav{
+
+position:sticky;
+
+top:calc(var(--topbar-height) + 24px);
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+padding:14px;
+
+border-radius:var(--radius-lg);
+
+/* Seule surface "verre" de la page — panneau flottant sticky,
+donc justifie le glassmorphism ; les .profile-section répétées
+plus bas restent en carte plate (règle "avec parcimonie" du
+Design System 2.0). */
+background:var(--glass);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.profile-nav-score{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:10px 8px 16px;
+
+margin-bottom:8px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.profile-nav-score-ring{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:44px;
+
+height:44px;
+
+border-radius:50%;
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:.85rem;
+
+}
+
+.profile-nav-score-label{
+
+font-size:.76rem;
+
+color:var(--text-light);
+
+line-height:1.4;
+
+}
+
+.section-nav-item{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:10px 10px;
+
+border-radius:var(--radius-md);
+
+color:var(--text-light);
+
+font-weight:600;
+
+font-size:.86rem;
+
+transition:var(--transition);
+
+cursor:pointer;
+
+}
+
+.section-nav-item:hover{
+
+background:var(--background-alt);
+
+color:var(--text-color);
+
+}
+
+.section-nav-item.is-active{
+
+background:rgba(51,65,140,.22);
+
+color:#fff;
+
+}
+
+.section-nav-item-check{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:20px;
+
+height:20px;
+
+border-radius:50%;
+
+border:1.5px solid var(--border-color);
+
+color:transparent;
+
+font-size:.7rem;
+
+transition:var(--transition);
+
+}
+
+.section-nav-item-check i{
+
+width:12px;
+
+height:12px;
+
+}
+
+.section-nav-item.is-complete .section-nav-item-check{
+
+background:var(--success);
+
+border-color:var(--success);
+
+color:#fff;
+
+}
+
+/* ==========================================================
+SECTIONS DU FORMULAIRE
+========================================================== */
+
+.profile-form{
+
+display:flex;
+
+flex-direction:column;
+
+gap:24px;
+
+}
+
+.profile-section{
+
+scroll-margin-top:calc(var(--topbar-height) + 20px);
+
+padding:28px 30px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.profile-section-heading{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:14px;
+
+margin-bottom:22px;
+
+}
+
+.profile-section-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:42px;
+
+height:42px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-alt);
+
+color:var(--text-light);
+
+}
+
+.profile-section-icon i{
+
+width:20px;
+
+height:20px;
+
+}
+
+.profile-section-heading h2{
+
+font-size:1.1rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.field-hint{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:6px;
+
+color:var(--text-light);
+
+font-size:.84rem;
+
+line-height:1.55;
+
+}
+
+.field-hint i{
+
+flex-shrink:0;
+
+width:14px;
+
+height:14px;
+
+margin-top:2px;
+
+color:var(--accent-color);
+
+}
+
+.field-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:18px 20px;
+
+}
+
+.field-grid.cols-3{
+
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+
+}
+
+.field-full{
+
+grid-column:1 / -1;
+
+}
+
+/* Le champ .input-wrap/.input-group vivait dans auth.css, partagé
+avec login/signup — profile.html ne charge plus auth.css depuis la
+migration vers la coquille sombre de dashboard.css (voir en-tête de
+fichier), donc la recette du champ de base vit ici désormais, avec
+les compléments select/textarea qui n'existaient pas sur les pages
+de connexion. */
+
+.input-group{
+
+margin-bottom:20px;
+
+}
+
+.input-group label{
+
+display:block;
+
+margin-bottom:8px;
+
+font-weight:600;
+
+font-size:.86rem;
+
+color:var(--text-color);
+
+}
+
+.input-wrap{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+}
+
+.input-wrap input{
+
+width:100%;
+
+padding:14px 16px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+font-family:"Inter",sans-serif;
+
+font-size:.96rem;
+
+color:var(--text-color);
+
+background:var(--background);
+
+transition:border-color .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+}
+
+.input-wrap input:focus{
+
+outline:none;
+
+border-color:var(--primary-color);
+
+box-shadow:0 0 0 4px rgba(51,65,140,.12);
+
+}
+
+.input-wrap input::placeholder{
+
+color:var(--text-muted);
+
+}
+
+.input-wrap select,
+.input-wrap textarea{
+
+width:100%;
+
+padding:14px 16px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+font-family:"Inter",sans-serif;
+
+font-size:.94rem;
+
+color:var(--text-color);
+
+background:var(--background);
+
+transition:border-color .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+}
+
+.input-wrap textarea{
+
+resize:vertical;
+
+min-height:88px;
+
+line-height:1.55;
+
+}
+
+.input-wrap select:focus,
+.input-wrap textarea:focus{
+
+outline:none;
+
+border-color:var(--primary-color);
+
+box-shadow:0 0 0 4px rgba(51,65,140,.12);
+
+}
+
+.input-wrap input[readonly]{
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+cursor:not-allowed;
+
+}
+
+/* ==========================================================
+BLOCS CONDITIONNELS (nouveau bachelier / étudiant en cours)
+========================================================== */
+
+.status-toggle{
+
+display:flex;
+
+gap:10px;
+
+margin-bottom:20px;
+
+flex-wrap:wrap;
+
+}
+
+.status-toggle-option{
+
+flex:1;
+
+min-width:180px;
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:14px 16px;
+
+border-radius:var(--radius-md);
+
+border:1.5px solid var(--border-color);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.status-toggle-option:hover{
+
+border-color:var(--primary-color);
+
+}
+
+.status-toggle-option.is-selected{
+
+border-color:var(--primary-color);
+
+background:var(--background-light);
+
+}
+
+.status-toggle-option input{
+
+accent-color:var(--primary-color);
+
+width:16px;
+
+height:16px;
+
+}
+
+.status-toggle-option span{
+
+font-weight:600;
+
+font-size:.88rem;
+
+color:var(--text-color);
+
+}
+
+.conditional-fields{
+
+padding-top:4px;
+
+}
+
+.conditional-fields[hidden]{
+
+display:none;
+
+}
+
+/* ==========================================================
+CHIPS (langues autres, pays, continents...)
+========================================================== */
+
+.chip-select{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+.chip{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:8px 16px;
+
+border-radius:var(--radius-full);
+
+border:1.5px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-light);
+
+font-weight:600;
+
+font-size:.84rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.chip:hover{
+
+border-color:var(--primary-color);
+
+color:var(--primary-color);
+
+}
+
+.chip[aria-pressed="true"]{
+
+border-color:var(--primary-color);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+/* ==========================================================
+LANGUES — sélecteur CECRL segmenté
+========================================================== */
+
+.language-row{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+padding:14px 0;
+
+border-bottom:1px solid var(--border-color);
+
+flex-wrap:wrap;
+
+}
+
+.language-row:last-child{
+
+border-bottom:none;
+
+}
+
+.language-row-label{
+
+font-weight:700;
+
+font-size:.9rem;
+
+color:var(--text-color);
+
+min-width:110px;
+
+}
+
+.cecrl-picker{
+
+display:inline-flex;
+
+border-radius:var(--radius-full);
+
+border:1.5px solid var(--border-color);
+
+overflow:hidden;
+
+}
+
+.cecrl-picker button{
+
+padding:8px 13px;
+
+border:none;
+
+background:var(--background);
+
+color:var(--text-light);
+
+font-weight:700;
+
+font-size:.78rem;
+
+cursor:pointer;
+
+border-right:1px solid var(--border-color);
+
+transition:var(--transition);
+
+}
+
+.cecrl-picker button:last-child{
+
+border-right:none;
+
+}
+
+.cecrl-picker button:hover{
+
+color:var(--primary-color);
+
+}
+
+.cecrl-picker button[aria-pressed="true"]{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+.language-other-row{
+
+display:flex;
+
+gap:10px;
+
+align-items:center;
+
+padding-top:14px;
+
+flex-wrap:wrap;
+
+}
+
+.language-other-row input[type="text"]{
+
+flex:1;
+
+min-width:160px;
+
+padding:10px 14px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+font-family:"Inter",sans-serif;
+
+font-size:.88rem;
+
+color:var(--text-color);
+
+}
+
+/* ==========================================================
+DOCUMENTS DISPONIBLES — cases à cocher en cartes
+========================================================== */
+
+.doc-check-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+
+gap:12px;
+
+}
+
+.doc-check-card{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:14px 16px;
+
+border-radius:var(--radius-md);
+
+border:1.5px solid var(--border-color);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.doc-check-card:hover{
+
+border-color:var(--primary-color);
+
+}
+
+.doc-check-card.is-checked{
+
+border-color:var(--primary-color);
+
+background:var(--background-light);
+
+}
+
+.doc-check-card input{
+
+accent-color:var(--primary-color);
+
+width:16px;
+
+height:16px;
+
+flex-shrink:0;
+
+}
+
+.doc-check-card i{
+
+flex-shrink:0;
+
+width:18px;
+
+height:18px;
+
+color:var(--primary-color);
+
+}
+
+.doc-check-card span{
+
+font-weight:600;
+
+font-size:.86rem;
+
+color:var(--text-color);
+
+}
+
+/* ==========================================================
+CASES SIMPLES (financement, préférences)
+========================================================== */
+
+.checkbox-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:10px 20px;
+
+}
+
+.checkbox-row{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+font-size:.88rem;
+
+color:var(--text-color);
+
+font-weight:600;
+
+cursor:pointer;
+
+}
+
+.checkbox-row input{
+
+accent-color:var(--primary-color);
+
+width:16px;
+
+height:16px;
+
+}
+
+.radio-row-group{
+
+display:flex;
+
+gap:16px;
+
+flex-wrap:wrap;
+
+}
+
+.radio-row{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+font-size:.88rem;
+
+color:var(--text-color);
+
+font-weight:600;
+
+cursor:pointer;
+
+}
+
+.radio-row input{
+
+accent-color:var(--primary-color);
+
+width:16px;
+
+height:16px;
+
+}
+
+/* ==========================================================
+BOUTON D'ENREGISTREMENT
+========================================================== */
+
+.profile-save-bar{
+
+position:sticky;
+
+bottom:20px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+padding:18px 24px;
+
+margin-top:4px;
+
+border-radius:var(--radius-lg);
+
+background:rgba(15,23,42,.85);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+/* Seule barre flottante au-dessus de tout le reste de la page —
+migrée de --shadow-xl (transitoire, retiré) vers --shadow-lg (le
+nouveau plafond) + une bordure d'accent, pour marquer la hiérarchie
+par la bordure plutôt que par une ombre plus grosse (règle du
+Design System 2.0). Fond fixé en sombre (pas var(--background)) car
+cette barre doit rester lisible même si migrée vers une page claire. */
+border:1px solid rgba(126,113,216,.4);
+
+box-shadow:var(--shadow-lg);
+
+flex-wrap:wrap;
+
+}
+
+.profile-save-note{
+
+color:var(--text-light);
+
+font-size:.84rem;
+
+}
+
+.btn-profile-save{
+
+position:relative;
+
+display:inline-flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:14px 28px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-family:"Inter",sans-serif;
+
+font-weight:700;
+
+font-size:.94rem;
+
+cursor:pointer;
+
+transition:transform .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+white-space:nowrap;
+
+}
+
+.btn-profile-save:hover{
+
+transform:translateY(-2px);
+
+box-shadow:var(--shadow-md);
+
+}
+
+.btn-profile-save:disabled{
+
+opacity:.65;
+
+cursor:not-allowed;
+
+transform:none;
+
+box-shadow:none;
+
+}
+
+.btn-loading::after{
+
+content:"";
+
+width:16px;
+
+height:16px;
+
+border:3px solid rgba(255,255,255,.4);
+
+border-top:3px solid #fff;
+
+border-radius:50%;
+
+animation:profileBtnSpin .7s linear infinite;
+
+}
+
+@keyframes profileBtnSpin{
+
+100%{ transform:rotate(360deg); }
+
+}
+
+.save-toast{
+
+position:fixed;
+
+bottom:24px;
+
+right:24px;
+
+z-index:200;
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:14px 20px;
+
+border-radius:var(--radius-md);
+
+background:#0F172A;
+
+color:#fff;
+
+font-size:.86rem;
+
+font-weight:600;
+
+box-shadow:var(--shadow-lg);
+
+opacity:0;
+
+transform:translateY(10px);
+
+pointer-events:none;
+
+transition:opacity .3s var(--ease-premium), transform .3s var(--ease-premium);
+
+}
+
+.save-toast.is-visible{
+
+opacity:1;
+
+transform:translateY(0);
+
+pointer-events:auto;
+
+}
+
+.save-toast i{
+
+width:16px;
+
+height:16px;
+
+color:var(--success);
+
+}
+
+/* ==========================================================
+RESPONSIVE — TABLETTE (768–1023px)
+========================================================== */
+
+@media(max-width:1023px){
+
+.profile-layout{
+
+grid-template-columns:1fr;
+
+}
+
+.profile-nav{
+
+position:static;
+
+flex-direction:row;
+
+overflow-x:auto;
+
+gap:6px;
+
+}
+
+.profile-nav-score{
+
+display:none;
+
+}
+
+.section-nav-item{
+
+flex-shrink:0;
+
+}
+
+}
+
+/* ==========================================================
+RESPONSIVE — MOBILE (< 768px)
+========================================================== */
+
+@media(max-width:767px){
+
+.content{
+
+padding:24px 18px 100px;
+
+}
+
+.profile-section{
+
+padding:22px 18px;
+
+}
+
+.profile-save-bar{
+
+flex-direction:column;
+
+align-items:stretch;
+
+text-align:center;
+
+}
+
+.btn-profile-save{
+
+justify-content:center;
+
+}
+
+}
+
+/* ==========================================================
+ETAT DE CHARGEMENT (SKELETON)
+==========================================================
+Classe CSS prête à l'emploi pour le score de complétion
+(#navScoreValue / .profile-nav-score-ring) pendant le chargement
+du profil depuis Firestore. Pas encore branchée côté profile.js
+(hors périmètre de cette passe couleurs) : à appliquer/retirer via
+classList quand le profil est chargé. */
+.skeleton{
+color:transparent !important;
+background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
+background-size:200% 100%;
+animation:skeleton-shimmer 1.5s ease-in-out infinite;
+border-radius:var(--radius-sm);
+pointer-events:none;
+}
+
+@keyframes skeleton-shimmer{
+0%{background-position:200% 0;}
+100%{background-position:-200% 0;}
+}

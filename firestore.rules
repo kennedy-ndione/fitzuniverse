@@ -1,0 +1,281 @@
+rules_version = '2';
+
+// ============================================================
+// ScholarBridge - Règles de sécurité Firestore
+//
+// Contexte : le panneau d'administration (admin/) ne vérifie
+// aujourd'hui l'appartenance "admin" que côté client (existence
+// d'un document admins/{uid}). Sans règles serveur, n'importe quel
+// compte étudiant authentifié pourrait s'auto-promouvoir admin ou
+// écraser le catalogue de bourses/universités. Ces règles déplacent
+// le vrai contrôle d'accès ici, côté serveur :
+//
+//  - la collection "admins" n'est JAMAIS modifiable par un client
+//    (uniquement via la console Firebase ou un futur Cloud Function
+//    utilisant l'Admin SDK) ;
+//  - seuls les comptes possédant un document admins/{uid} actif
+//    peuvent écrire dans "universities"/"scholarships" ;
+//  - chaque utilisateur garde l'entière propriété de son propre
+//    document dans "users" (sauf "plan"/"disabled"/"testerAccess") et
+//    peut le supprimer définitivement ; un administrateur peut lire
+//    n'importe quel document (CRM étudiants) mais ne peut en écrire
+//    que ces trois champs réservés, jamais le reste (profil, nom,
+//    email...).
+// ============================================================
+
+service cloud.firestore {
+match /databases/{database}/documents {
+
+function isSignedIn() {
+return request.auth != null;
+}
+
+function isOwner(uid) {
+return isSignedIn() && request.auth.uid == uid;
+}
+
+function isAdmin() {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive == true;
+}
+
+// ------------------------------------------------------------
+// Profils utilisateurs (créés à l'inscription, lus/modifiés
+// depuis dashboard.js et profile.js). Depuis le Module 3 du Control
+// Center (CRM étudiants, admin/student-detail.js), un administrateur
+// peut aussi LIRE n'importe quel profil, et ÉCRIRE uniquement les
+// champs qu'il gère lui-même ("plan" = formule choisie, "disabled" =
+// suspension de compte) — jamais le reste du document (profile, name,
+// email...), qui reste la propriété exclusive de l'étudiant.
+//
+// SÉCURITÉ (corrigé lors de l'audit auth/abonnements) : "plan",
+// "disabled" et "testerAccess" sont désormais réservés à
+// l'administrateur DANS LES DEUX SENS — le propriétaire peut modifier
+// tout son document SAUF ces champs. Avant ce correctif, isOwner(uid)
+// autorisait une écriture sans restriction de champ : un étudiant
+// connecté pouvait s'auto-attribuer n'importe quelle formule (y compris
+// "premium") directement depuis la console développeur, sans jamais
+// passer par l'interface ni par un paiement. affectedKeys() garantit
+// qu'aucune écriture (admin ou propriétaire) ne peut toucher un champ
+// hors de son périmètre autorisé.
+//
+// "testerAccess" (booléen) : accès complet à toutes les formules pour
+// un compte précis, réservé aux tests internes avant lancement — voir
+// js/access-guard.js. Seul un administrateur peut le poser, jamais
+// l'étudiant lui-même : mêmes règles que "plan"/"disabled".
+//
+// allow delete : un étudiant peut désormais supprimer définitivement
+// son propre compte (js/account-actions.js, account.html) — jamais un
+// administrateur ni un autre utilisateur.
+// ------------------------------------------------------------
+// planExpiresAt/fitzExpressExpiresAt (ajoutés 2026-07-30, pricing
+// pivot) suivent exactement la même règle que "plan" : seul un
+// administrateur peut les poser — sinon un étudiant pourrait
+// s'auto-prolonger un abonnement expiré, ou s'accorder un Pass Fitz
+// Express gratuitement. Le futur backend de paiement, une fois
+// construit, agira avec des privilèges admin (Cloud Function), pas
+// avec le compte de l'étudiant.
+match /users/{uid} {
+allow read: if isOwner(uid) || isAdmin();
+allow create: if isOwner(uid);
+allow update: if (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"])) ||
+(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"]));
+allow delete: if isOwner(uid);
+}
+
+// ------------------------------------------------------------
+// Notes internes admin sur un étudiant (Module 3) : jamais visibles
+// ni modifiables par l'étudiant lui-même, append-only (pas de
+// modification/suppression, pour garder un historique fiable).
+// ------------------------------------------------------------
+match /users/{uid}/adminNotes/{noteId} {
+allow read, create: if isAdmin();
+allow update, delete: if false;
+}
+
+// ------------------------------------------------------------
+// Messages envoyés par un administrateur à un étudiant (Module 3).
+// L'étudiant peut les lire et marquer "lu" (mise à jour du seul champ
+// "read"), mais jamais en créer lui-même. Suppression : réservée au
+// propriétaire, pour lui permettre de vider sa propre messagerie lors
+// de la suppression de son compte (account.html) — un administrateur
+// ne peut toujours pas supprimer les messages qu'il a envoyés.
+// ------------------------------------------------------------
+match /users/{uid}/messages/{messageId} {
+allow create: if isAdmin();
+allow read: if isOwner(uid) || isAdmin();
+allow update: if isOwner(uid) &&
+request.resource.data.diff(resource.data).affectedKeys().hasOnly(["read"]);
+allow delete: if isOwner(uid);
+}
+
+// ------------------------------------------------------------
+// Suivi de candidatures (applications.html) — entièrement possédé et
+// géré par l'étudiant lui-même, à la différence de adminNotes/messages
+// ci-dessus. Un admin peut lire à des fins de support mais n'écrit
+// jamais dedans (c'est le suivi personnel de l'étudiant, pas un outil
+// admin).
+// ------------------------------------------------------------
+match /users/{uid}/applications/{applicationId} {
+allow read: if isOwner(uid) || isAdmin();
+allow create, update, delete: if isOwner(uid);
+}
+
+// ------------------------------------------------------------
+// Catalogue public (lu par tous les visiteurs, y compris non
+// connectés, depuis scholarships.js/universities-page.js/details.js).
+// Seuls les administrateurs déclarés peuvent le modifier.
+//
+// Architecture relationnelle (2026-07-30, remplace le champ texte
+// libre "university" sur les bourses) : "scholarships" et
+// "universities" sont chacune des fiches uniques (jamais dupliquées
+// par université ni par niveau) ; "programs" est la vraie relation
+// many-to-many entre les deux, une fiche par offre réelle
+// (université × bourse × niveau), avec ses données propres (deadline,
+// portail, langue). "universities" garde temporairement son ancien
+// sens (une fiche par offre) le temps de la migration vers "programs"
+// — les deux collections restent lisibles/écrivables selon le même
+// motif jusqu'à confirmation que "programs" est fiable.
+// ------------------------------------------------------------
+match /scholarships/{scholarshipId} {
+allow read: if true;
+allow write: if isAdmin();
+}
+
+match /universities/{universityId} {
+allow read: if true;
+allow write: if isAdmin();
+}
+
+// "programs" est la relation many-to-many (voir commentaire
+// ci-dessus) : chaque document DOIT toujours pointer vers une vraie
+// université (universityId, chaîne non vide). scholarshipId peut
+// être `null` temporairement — cas d'un document migré depuis
+// l'ancien modèle sans bourse reconnue (voir admin/migrate.js, liste
+// des "orphelins"), à rattacher manuellement depuis l'admin plutôt
+// que perdu silencieusement pendant la migration. Ce n'est pas une
+// protection contre un acteur malveillant (seul un admin, déjà
+// pleinement authentifié, peut écrire ici) mais une garde-fou contre
+// une erreur d'interface admin qui écrirait un document sans lien
+// exploitable vers une université.
+function isValidProgram() {
+return request.resource.data.keys().hasAll(["universityId", "scholarshipId"]) &&
+request.resource.data.universityId is string &&
+request.resource.data.universityId != "" &&
+(request.resource.data.scholarshipId is string || request.resource.data.scholarshipId == null);
+}
+
+match /programs/{programId} {
+allow read: if true;
+allow create, update: if isAdmin() && isValidProgram();
+allow delete: if isAdmin();
+}
+
+// "universities_draft" est la collection de transit utilisée par
+// admin/migrate.js (étape 2 "Écrire") pour préparer les profils
+// d'université propres AVANT de basculer "universities" (étape 3
+// "Finaliser") — jamais lue par le site public ni par le panneau
+// admin en usage normal, seulement par l'outil de migration lui-même.
+// OUBLIÉE lors de la première version de ces règles : le SDK
+// n'écrivait alors dans aucune règle explicite, donc tombait sur le
+// refus général tout en bas de ce fichier ("permission-denied" sur
+// l'écriture de universities_draft, cause exacte de l'échec de
+// l'étape 2 du 2026-07-30). Même motif que "universities"/
+// "scholarships" — cohérent avec le reste du catalogue.
+match /universities_draft/{draftId} {
+allow read: if isAdmin();
+allow write: if isAdmin();
+}
+
+// ------------------------------------------------------------
+// Statut administrateur : lisible uniquement par l'intéressé
+// (pour permettre la vérification côté client dans
+// admin/admin-auth.js), jamais inscriptible par un client.
+// Un nouvel administrateur ne peut être créé que depuis la
+// console Firebase ou un futur outil serveur de confiance.
+// ------------------------------------------------------------
+match /admins/{uid} {
+allow read: if isOwner(uid);
+allow write: if false;
+}
+
+// ------------------------------------------------------------
+// Suivi d'événements (js/analytics.js), fondation du futur
+// ScholarBridge Control Center admin. Écrit directement depuis le
+// client tant qu'aucun Cloud Function n'existe :
+//  - analyticsEvents est un journal brut, append-only : la création
+//    est ouverte (une vue de bourse/université peut survenir avant
+//    inscription, donc sans compte), mais aucune modification ni
+//    suppression n'est permise depuis un client. Lecture réservée
+//    aux administrateurs (c'est le futur journal d'audit).
+//  - les collections analytics*Counters contiennent des compteurs
+//    agrégés (increment()) lus par le Control Center — une collection
+//    de premier niveau par dimension (totals/jour/formule/pays/
+//    université/domaine), plutôt que des sous-chemins, car un chemin
+//    Firestore doit avoir un nombre pair de segments pour désigner
+//    un document. Limite connue et acceptée pour l'instant : ces
+//    règles ne peuvent pas garantir qu'une écriture n'incrémente que
+//    de 1 — un client malveillant pourrait fausser un chiffre. À
+//    corriger quand l'agrégation passera côté serveur (trigger
+//    Firestore) : ce jour-là, remplacer par write: if false. Lecture
+//    réservée aux administrateurs (statistiques internes).
+// ------------------------------------------------------------
+match /analyticsEvents/{eventId} {
+allow create: if true;
+allow read, update, delete: if isAdmin();
+}
+
+match /analyticsCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+match /analyticsDailyCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+match /analyticsPlanCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+match /analyticsCountryCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+match /analyticsUniversityCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+match /analyticsFieldCounters/{document} {
+allow read: if isAdmin();
+allow write: if true;
+}
+
+// ------------------------------------------------------------
+// Configuration pilotable depuis l'administration (Module 4 —
+// Gestion des formules, js/plan-features.js). config/planFeatures
+// contient quelles fonctionnalités sont activées pour chaque
+// formule : lu par chaque étudiant connecté (dashboard.js en a
+// besoin pour savoir quoi verrouiller), modifiable uniquement par
+// un administrateur (admin/plans.js). Si ce document n'existe pas
+// ou n'est pas accessible, js/plan-features.js retombe sur des
+// valeurs par défaut identiques au verrouillage codé en dur
+// d'origine — aucune régression possible.
+// ------------------------------------------------------------
+match /config/{configId} {
+allow read: if isSignedIn();
+allow write: if isAdmin();
+}
+
+// Par défaut, tout le reste est refusé.
+match /{document=**} {
+allow read, write: if false;
+}
+
+}
+}

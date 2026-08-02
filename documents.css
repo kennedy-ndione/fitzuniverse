@@ -1,0 +1,498 @@
+/* ==========================================================
+SCHOLARBRIDGE — DOCUMENTS À PRÉPARER
+========================================================== */
+
+/* Compact sub-heading (pas un second hero) — le topbar affiche déjà
+le titre de page (<h1> "Documents à préparer"), ce bloc ne sert plus
+qu'à donner une ligne de contexte immédiate, à l'échelle --fs-h4
+comme .section-heading de dashboard.css plutôt qu'à l'échelle
+marketing --fs-h2 d'avant. */
+.docs-intro{
+margin-bottom:18px;
+}
+
+.docs-intro h2{
+font-family:var(--font-display);
+font-weight:800;
+font-size:var(--fs-h4);
+line-height:var(--lh-snug);
+color:var(--text-color);
+margin-bottom:4px;
+}
+
+.docs-intro p{
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-light);
+max-width:640px;
+}
+
+/* ---------- Documents générés par Fitz ---------- */
+
+.docs-generated{
+margin-bottom:32px;
+}
+
+.docs-generated-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+gap:14px;
+}
+
+.generated-doc-card{
+display:flex;
+align-items:center;
+gap:14px;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:16px 18px;
+box-shadow:var(--shadow-sm);
+}
+
+.generated-doc-icon{
+flex:0 0 auto;
+width:38px;
+height:38px;
+border-radius:var(--radius-sm);
+background:var(--background-alt);
+color:var(--text-light);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.generated-doc-body{flex:1 1 auto;min-width:0;}
+
+.generated-doc-body h3{
+font-size:var(--fs-small);
+font-weight:600;
+color:var(--text-color);
+margin-bottom:3px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.generated-doc-date{
+display:flex;
+align-items:center;
+gap:5px;
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+
+.generated-doc-date i{width:12px;height:12px;color:var(--accent-color);}
+
+.generated-doc-actions{
+flex:0 0 auto;
+display:flex;
+gap:6px;
+}
+
+/* ---------- Recherche & filtres ---------- */
+
+.docs-toolbar{
+display:flex;
+flex-wrap:wrap;
+gap:14px;
+align-items:center;
+margin-bottom:18px;
+}
+
+/* Recette bespoke conservée telle quelle (pas de renommage vers
+.field-control) : structure différente (icône inline, input
+transparent dans un pilule bordé) plutôt que le motif icône-absolue-
+superposée de .field-control — un renommage forcerait une reprise
+visuelle non vérifiable ici (page auth-gated). Rayon aligné sur le
+token le plus proche. */
+.docs-search-field{
+flex:1 1 260px;
+display:flex;
+align-items:center;
+gap:10px;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+padding:11px 16px;
+}
+
+.docs-search-field i{width:17px;height:17px;color:var(--text-muted);flex-shrink:0;}
+
+.docs-search-field input{
+flex:1;
+background:transparent;
+border:none;
+outline:none;
+color:var(--text-color);
+font-size:var(--fs-small);
+font-family:var(--font-body);
+}
+
+.docs-search-field input::placeholder{color:var(--text-muted);}
+
+.docs-category-filters{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.docs-category-chip{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:9px 14px;
+border-radius:var(--radius-full);
+border:1px solid var(--border-color);
+background:var(--background-alt);
+color:var(--text-light);
+font-size:var(--fs-caption);
+font-weight:600;
+cursor:pointer;
+transition:var(--transition);
+}
+
+.docs-category-chip i{width:14px;height:14px;}
+
+.docs-category-chip:hover{border-color:var(--accent-color);}
+
+.docs-category-chip.is-active{
+background:var(--accent-color);
+border-color:var(--accent-color);
+color:var(--background-soft);
+}
+
+.docs-results-count{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+margin-bottom:18px;
+}
+
+/* ---------- Grille de documents ---------- */
+
+.docs-priority-section{
+margin-bottom:32px;
+}
+
+.docs-priority-heading{
+margin-bottom:14px;
+}
+
+.docs-priority-heading h3{
+display:flex;
+align-items:center;
+gap:10px;
+font-family:var(--font-display);
+font-weight:800;
+font-size:var(--fs-h4);
+color:var(--text-color);
+margin-bottom:4px;
+}
+
+.docs-priority-count{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:22px;
+height:22px;
+padding:0 6px;
+border-radius:var(--radius-full);
+background:var(--background-alt);
+color:var(--text-light);
+font-size:var(--fs-caption);
+font-weight:700;
+}
+
+.docs-priority-heading p{
+font-size:var(--fs-small);
+color:var(--text-light);
+}
+
+.docs-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+gap:16px;
+}
+
+.doc-card{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:22px 20px;
+box-shadow:var(--shadow-sm);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.doc-card:hover{
+transform:translateY(-4px);
+border-color:rgba(126,113,216,.35);
+box-shadow:var(--shadow-md);
+}
+
+.doc-card-icon{
+width:44px;
+height:44px;
+border-radius:var(--radius-md);
+background:var(--background-alt);
+color:var(--text-light);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.doc-card-icon i{width:22px;height:22px;}
+
+.doc-card-category{
+font-size:var(--fs-caption);
+font-weight:700;
+letter-spacing:.04em;
+text-transform:uppercase;
+color:var(--text-muted);
+}
+
+.doc-card h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h4);
+color:var(--text-color);
+}
+
+.doc-card p{
+font-size:var(--fs-small);
+color:var(--text-light);
+line-height:1.55;
+flex:1;
+}
+
+.doc-card-cta{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--accent-color);
+margin-top:4px;
+}
+
+.doc-card-cta i{width:14px;height:14px;transition:transform .2s ease;}
+.doc-card:hover .doc-card-cta i{transform:translateX(3px);}
+
+.docs-empty-state{
+grid-column:1/-1;
+text-align:center;
+padding:60px 24px;
+border:1px dashed var(--border-color);
+border-radius:var(--radius-lg);
+}
+
+.docs-empty-state-icon{
+width:52px;
+height:52px;
+margin:0 auto 16px;
+border-radius:50%;
+background:var(--background-alt);
+color:var(--text-muted);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.docs-empty-state h3{
+font-family:var(--font-display);
+font-weight:600;
+color:var(--text-color);
+margin-bottom:6px;
+}
+
+.docs-empty-state p{font-size:var(--fs-small);color:var(--text-muted);}
+
+/* ---------- Modale de détail ---------- */
+
+.docs-modal{
+position:fixed;
+inset:0;
+z-index:var(--z-modal);
+background:rgba(6,10,18,.6);
+backdrop-filter:blur(4px);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:24px;
+}
+
+.docs-modal[hidden]{display:none;}
+
+.docs-modal-card{
+width:100%;
+max-width:640px;
+max-height:88vh;
+overflow-y:auto;
+/* Panneau verre — seule surface glass de la page, la modale flotte
+au-dessus du fond assombri (.docs-modal), contexte qui justifie le
+glassmorphism ; les .doc-card de la grille restent plates. */
+background:var(--glass);
+border:1px solid var(--glass-border);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+border-radius:var(--radius-lg);
+padding:30px;
+box-shadow:var(--shadow-lg);
+}
+
+.docs-modal-head{
+display:flex;
+align-items:flex-start;
+gap:14px;
+margin-bottom:24px;
+position:relative;
+}
+
+.docs-modal-icon{
+flex:0 0 auto;
+width:46px;
+height:46px;
+border-radius:var(--radius-md);
+background:var(--background-alt);
+color:var(--text-light);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.docs-modal-category{
+display:block;
+font-size:var(--fs-caption);
+font-weight:700;
+letter-spacing:.04em;
+text-transform:uppercase;
+color:var(--text-muted);
+margin-bottom:4px;
+}
+
+.docs-modal-head h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h3);
+color:var(--text-color);
+}
+
+.docs-modal-close{
+position:absolute;
+top:0;
+right:0;
+width:32px;
+height:32px;
+border-radius:var(--radius-sm);
+display:flex;
+align-items:center;
+justify-content:center;
+color:var(--text-muted);
+background:transparent;
+border:none;
+cursor:pointer;
+}
+
+.docs-modal-close:hover{background:var(--background-soft);color:var(--text-color);}
+
+.docs-modal-facts{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:1px;
+background:var(--border-color);
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+overflow:hidden;
+margin-bottom:22px;
+}
+
+.docs-modal-facts > div{
+display:flex;
+flex-direction:column;
+gap:4px;
+padding:12px 14px;
+background:var(--background);
+}
+
+.docs-modal-facts span{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+
+.docs-modal-facts strong{
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+}
+
+@media(max-width:520px){
+.docs-modal-facts{grid-template-columns:repeat(2,1fr);}
+}
+
+.docs-modal-section{margin-bottom:22px;}
+
+.docs-modal-section h4{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+margin-bottom:10px;
+}
+
+.docs-modal-section h4 i{width:16px;height:16px;color:var(--accent-color);}
+
+.docs-modal-section > p{
+font-size:var(--fs-small);
+line-height:var(--lh-relaxed);
+color:var(--text-light);
+}
+
+.docs-modal-list{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.docs-modal-list li{
+display:flex;
+align-items:flex-start;
+gap:8px;
+font-size:var(--fs-small);
+color:var(--text-light);
+line-height:1.5;
+}
+
+.docs-modal-list li i{width:15px;height:15px;flex-shrink:0;margin-top:2px;color:var(--success);}
+
+.docs-modal-list.is-tips li i{color:var(--accent-color);}
+.docs-modal-list.is-mistakes li i{color:var(--warning);}
+
+.docs-modal-tip{
+display:flex;
+align-items:flex-start;
+gap:12px;
+background:var(--background-light);
+border-radius:var(--radius-md);
+padding:16px 18px;
+margin-bottom:20px;
+}
+
+.docs-modal-tip i{width:20px;height:20px;color:var(--accent-color);flex-shrink:0;}
+
+.docs-modal-tip strong{display:block;font-size:var(--fs-small);color:var(--text-color);margin-bottom:4px;}
+.docs-modal-tip p{font-size:var(--fs-small);color:var(--text-light);line-height:1.55;margin:0;}
+
+.docs-modal-generate{width:100%;justify-content:center;}
+
+@media(max-width:640px){
+
+.docs-toolbar{flex-direction:column;align-items:stretch;}
+.docs-grid{grid-template-columns:1fr;}
+
+}

@@ -1,0 +1,417 @@
+/* ==========================================================
+SCHOLARBRIDGE — SUIVI DES CANDIDATURES
+========================================================== */
+
+/* Compact sub-heading (pas un second hero) — le topbar affiche déjà
+le titre de page (<h1> "Mes candidatures"), ce bloc ne sert plus qu'à
+donner une ligne de contexte immédiate, à l'échelle --fs-h4 comme
+.section-heading de dashboard.css plutôt qu'à l'échelle marketing
+--fs-h2 d'avant. */
+.apps-intro{
+margin-bottom:18px;
+}
+
+.apps-intro h2{
+font-family:var(--font-display);
+font-weight:800;
+font-size:var(--fs-h4);
+line-height:var(--lh-snug);
+color:var(--text-color);
+margin-bottom:4px;
+}
+
+.apps-intro p{
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-light);
+max-width:640px;
+}
+
+/* ---------- Stats ---------- */
+
+.apps-stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:16px;
+margin-bottom:28px;
+}
+
+/* Icône + hover-lift alignés sur .stat-card de dashboard.css — avant
+ce correctif ces 3 blocs étaient de simples pavés de texte, sans le
+chip d'icône ni le survol que porte chaque autre carte du tableau
+de bord (incohérence relevée à l'audit Design System 2.0). */
+.apps-stat{
+display:flex;
+align-items:center;
+gap:16px;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:20px 22px;
+box-shadow:var(--shadow-sm);
+transition:var(--transition);
+}
+
+.apps-stat:hover{
+transform:translateY(-4px);
+box-shadow:var(--shadow-md);
+}
+
+.apps-stat-icon{
+flex-shrink:0;
+display:flex;
+align-items:center;
+justify-content:center;
+width:48px;
+height:48px;
+border-radius:var(--radius-md);
+background:var(--background-alt);
+color:var(--text-light);
+}
+
+.apps-stat-icon i{
+width:22px;
+height:22px;
+}
+
+.apps-stat-urgent .apps-stat-icon{
+background:var(--warning);
+}
+
+.apps-stat-body{
+min-width:0;
+display:flex;
+flex-direction:column;
+}
+
+.apps-stat strong{
+display:block;
+font-family:var(--font-display);
+font-size:var(--fs-stat);
+font-weight:var(--fw-extrabold);
+font-variant-numeric:tabular-nums;
+color:var(--text-color);
+margin-bottom:4px;
+}
+
+.apps-stat span{
+font-size:var(--fs-small);
+color:var(--text-muted);
+}
+
+.apps-stat-urgent strong{color:var(--warning);}
+
+@media(max-width:768px){
+.apps-stats{grid-template-columns:1fr;}
+}
+
+/* ---------- Toolbar ---------- */
+
+.apps-toolbar{
+margin-bottom:24px;
+}
+
+/* ---------- Empty state ---------- */
+
+.apps-empty{
+text-align:center;
+padding:64px 24px;
+border:1px dashed var(--border-color);
+border-radius:var(--radius-lg);
+}
+
+.apps-empty-icon{
+width:56px;
+height:56px;
+margin:0 auto 18px;
+border-radius:50%;
+background:var(--background-alt);
+color:var(--text-muted);
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.apps-empty h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h4);
+color:var(--text-color);
+margin-bottom:8px;
+}
+
+.apps-empty p{
+font-size:var(--fs-small);
+color:var(--text-muted);
+max-width:420px;
+margin:0 auto;
+}
+
+/* ---------- List / cards ---------- */
+
+.apps-list{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.app-card{
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:22px 24px;
+box-shadow:var(--shadow-sm);
+transition:var(--transition);
+}
+
+.app-card:hover{
+transform:translateY(-4px);
+box-shadow:var(--shadow-md);
+}
+
+.app-card-urgent{
+border-color:rgba(234,168,61,.4);
+}
+
+.app-card-top{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:16px;
+margin-bottom:12px;
+}
+
+.app-card-top h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h4);
+color:var(--text-color);
+}
+
+.app-card-scholarship{
+font-size:var(--fs-small);
+color:var(--text-muted);
+margin-top:2px;
+}
+
+.app-status-pill{
+flex:0 0 auto;
+padding:5px 12px;
+border-radius:var(--radius-full);
+font-size:var(--fs-caption);
+font-weight:600;
+white-space:nowrap;
+background:var(--background-soft);
+color:var(--text-light);
+}
+
+.app-status-deposee{color:var(--accent-color);background:rgba(126,113,216,.14);}
+.app-status-en_attente{color:var(--warning);background:rgba(234,168,61,.14);}
+.app-status-reponse_recue{color:var(--success);background:rgba(34,197,94,.14);}
+
+.app-card-meta{
+display:flex;
+flex-wrap:wrap;
+gap:16px;
+margin-bottom:10px;
+}
+
+.app-card-meta span{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:var(--fs-small);
+color:var(--text-light);
+}
+
+.app-card-meta i{width:15px;height:15px;flex-shrink:0;}
+
+.app-card-meta .is-urgent{color:var(--warning);font-weight:600;}
+.app-card-meta .is-protected{color:var(--success);font-weight:600;}
+
+.app-card-notes{
+font-size:var(--fs-small);
+color:var(--text-muted);
+background:var(--background-soft);
+border-radius:var(--radius-sm);
+padding:10px 12px;
+margin-bottom:14px;
+}
+
+.app-card-documents{
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
+font-size:var(--fs-small);
+color:var(--text-light);
+background:var(--background-light);
+border-radius:var(--radius-sm);
+padding:10px 12px;
+margin-bottom:14px;
+}
+
+.app-card-documents i{width:15px;height:15px;color:var(--accent-color);flex-shrink:0;}
+
+.app-doc-link{
+margin-left:auto;
+font-weight:700;
+color:var(--accent-color);
+}
+
+.app-card-actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+/* ---------- Compact button variants ---------- */
+
+.btn-sm{
+padding:8px 14px;
+font-size:var(--fs-small);
+border-radius:var(--radius-sm);
+}
+
+.btn-ghost{
+background:transparent;
+border:1px solid var(--border-color);
+color:var(--text-light);
+}
+
+.btn-ghost:hover{
+background:var(--background-soft);
+color:var(--text-color);
+}
+
+/* ---------- Modal ---------- */
+
+.apps-modal{
+position:fixed;
+inset:0;
+z-index:var(--z-modal);
+background:rgba(6,10,18,.6);
+backdrop-filter:blur(4px);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:24px;
+}
+
+.apps-modal[hidden]{display:none;}
+
+.apps-modal-card{
+width:100%;
+max-width:480px;
+max-height:90vh;
+overflow-y:auto;
+/* Panneau verre — seule surface glass de la page, la modale flotte
+au-dessus du fond assombri (.apps-modal) ; les .app-card de la liste
+restent plates (règle "avec parcimonie"). */
+background:var(--glass);
+border:1px solid var(--glass-border);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+border-radius:var(--radius-lg);
+padding:28px;
+box-shadow:var(--shadow-lg);
+}
+
+.apps-modal-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:20px;
+}
+
+.apps-modal-head h3{
+font-family:var(--font-display);
+font-weight:600;
+font-size:var(--fs-h4);
+color:var(--text-color);
+}
+
+.apps-modal-close{
+width:32px;
+height:32px;
+border-radius:var(--radius-sm);
+display:flex;
+align-items:center;
+justify-content:center;
+color:var(--text-muted);
+background:transparent;
+border:none;
+cursor:pointer;
+}
+
+.apps-modal-close:hover{background:var(--background-soft);color:var(--text-color);}
+
+.apps-field{
+display:flex;
+flex-direction:column;
+gap:6px;
+margin-bottom:16px;
+font-size:var(--fs-small);
+color:var(--text-light);
+}
+
+.apps-field-row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+}
+
+.apps-field input,
+.apps-field select,
+.apps-field textarea{
+font-family:var(--font-body);
+font-size:var(--fs-body);
+padding:10px 12px;
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+}
+
+.apps-field textarea{resize:vertical;}
+
+.apps-field input:focus,
+.apps-field select:focus,
+.apps-field textarea:focus{
+outline:none;
+border-color:var(--accent-color);
+}
+
+.apps-modal-actions{
+display:flex;
+justify-content:flex-end;
+gap:12px;
+margin-top:8px;
+}
+
+@media(max-width:600px){
+.apps-field-row{grid-template-columns:1fr;}
+}
+
+/* ==========================================================
+ETAT DE CHARGEMENT (SKELETON)
+==========================================================
+Classe CSS prête à l'emploi pour la liste de candidatures pendant
+fetchApplications()/loadApplications() (lecture Firestore, voir
+applications.js). Pas encore branchée côté JS (hors périmètre de
+cette passe couleurs) : à appliquer sur des cartes placeholder
+(ex. clones de .app-card sans contenu) pendant le chargement, puis
+à retirer une fois applications rendu. */
+.skeleton{
+color:transparent !important;
+background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
+background-size:200% 100%;
+animation:skeleton-shimmer 1.5s ease-in-out infinite;
+border-radius:var(--radius-sm);
+pointer-events:none;
+}
+
+@keyframes skeleton-shimmer{
+0%{background-position:200% 0;}
+100%{background-position:-200% 0;}
+}

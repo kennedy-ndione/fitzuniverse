@@ -1,0 +1,719 @@
+import { auth, db } from "../firebase-config.js";
+
+import {
+onAuthStateChanged,
+signOut
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+import {
+doc,
+getDoc
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+import {
+getUser,
+updateUserPlan,
+updateUserTesterAccess,
+setUserDisabled,
+getUserEvents,
+getAdminNotes,
+addAdminNote,
+getSentMessages,
+sendMessageToUser,
+updateUserPlanExpiry,
+updateUserFitzExpressExpiry,
+getUserApplications
+} from "./firebase-admin.js";
+
+import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
+import { initSidebarToggle } from "./sidebar-toggle.js";
+import { PLAN_LABELS } from "../js/plan-features.js";
+import { resolvePlan } from "../js/access-guard.js";
+import { hidePageLoader } from "../js/app-shell.js";
+
+initSidebarToggle();
+
+const SECTION_LABELS = [
+"Informations personnelles",
+"Parcours scolaire",
+"Niveau académique",
+"Langues",
+"Projet d'études",
+"Préférences de destination",
+"Préférences financières",
+"Documents disponibles",
+"Expériences",
+"Objectifs"
+];
+
+// Groupes de champs affichés en lecture seule dans l'onglet "Profil",
+// mêmes sections que profile.html — libellé humain + clé du champ.
+const PROFILE_DISPLAY_GROUPS = [
+{
+title: "Informations personnelles",
+fields: [
+["Prénom", "firstName"], ["Nom", "lastName"], ["Sexe", "gender"],
+["Date de naissance", "birthDate"], ["Nationalité", "nationality"],
+["Pays", "country"], ["Ville", "city"], ["Téléphone", "phone"], ["WhatsApp", "whatsapp"]
+]
+},
+{
+title: "Parcours scolaire",
+fields: [
+["Dernier diplôme", "lastDegree"], ["Établissement actuel", "currentInstitution"],
+["Année d'obtention", "graduationYear"], ["Moyenne générale", "academicAverage"],
+["Statut", "studentStatus"], ["Série du Bac", "bacSeries"], ["Mention", "bacMention"],
+["Moyenne du Bac", "bacAverage"], ["Niveau actuel", "currentLevel"]
+]
+},
+{
+title: "Niveau académique",
+fields: [
+["Classement", "ranking"], ["Matières fortes", "strongSubjects"], ["Matières faibles", "weakSubjects"],
+["Projets", "projects"], ["Mémoire", "thesis"], ["Publications", "publications"], ["Recherche", "researchExperience"]
+]
+},
+{
+title: "Projet d'études",
+fields: [
+["Domaine souhaité", "desiredField"], ["Spécialisation", "specialization"], ["Diplôme recherché", "desiredDegree"]
+]
+},
+{
+title: "Préférences financières",
+fields: [
+["Budget", "budget"], ["Sponsor", "hasSponsor"]
+]
+},
+{
+title: "Objectifs",
+fields: [
+["Pourquoi partir", "whyLeave"], ["Objectifs professionnels", "careerGoals"], ["Rêves", "dreams"]
+]
+}
+];
+
+function val(value) {
+if (Array.isArray(value)) return value.length ? value.join(", ") : "—";
+return value ? String(value) : "—";
+}
+
+function formatDateTime(timestamp) {
+
+if (!timestamp || typeof timestamp.toDate !== "function") return "-";
+
+return timestamp.toDate().toLocaleString("fr-FR");
+
+}
+
+const EVENT_LABELS = {
+signup: "Inscription",
+login: "Connexion",
+scholarship_viewed: "Consultation d'une bourse",
+university_viewed: "Consultation d'une université",
+letter_generated: "Lettre de motivation générée",
+email_generated: "E-mail généré",
+verification_run: "Vérification de dossier",
+translation_run: "Traduction effectuée",
+payment_attempted: "Tentative de paiement"
+};
+
+const params = new URLSearchParams(window.location.search);
+const uid = params.get("uid");
+
+let currentUserData = null;
+let currentAdmin = null;
+
+// ==========================================================
+// Onglets
+// ==========================================================
+
+function initTabs() {
+
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+
+btn.addEventListener("click", () => {
+
+document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("is-active"));
+document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("is-active"));
+
+btn.classList.add("is-active");
+document.getElementById(`tab-${btn.dataset.tab}`).classList.add("is-active");
+
+});
+
+});
+
+}
+
+// ==========================================================
+// En-tête + profil + progression + abonnement
+// ==========================================================
+
+function renderHeader(userData) {
+
+document.getElementById("detailName").textContent = userData.name || "Étudiant sans nom";
+document.getElementById("detailEmail").textContent = userData.email || "-";
+
+const initials = (userData.name || "?").trim().slice(0, 2).toUpperCase();
+document.getElementById("detailAvatar").textContent = initials;
+
+// resolvePlan() (js/access-guard.js) est la même fonction que celle
+// utilisée côté étudiant : la formule affichée ici est donc toujours
+// celle réellement active, expiration et défaut "gratuit" inclus —
+// jamais un calcul divergent recalculé localement.
+const planKey = resolvePlan(userData);
+const planLabel = PLAN_LABELS[planKey];
+const disabled = userData.disabled === true;
+
+document.getElementById("detailPills").innerHTML = `
+<span class="status-pill plan-${planKey}">${planLabel}</span>
+<span class="status-pill ${disabled ? "is-disabled" : "is-active"}">${disabled ? "Suspendu" : "Actif"}</span>
+${userData.testerAccess === true ? `<span class="status-pill plan-premium">Accès test complet</span>` : ""}
+`;
+
+}
+
+function renderProfile(profile) {
+
+const container = document.getElementById("profileSections");
+container.innerHTML = "";
+
+PROFILE_DISPLAY_GROUPS.forEach((group) => {
+
+const section = document.createElement("div");
+section.className = "detail-section";
+
+section.innerHTML = `<h3></h3><div class="detail-field-grid"></div>`;
+section.querySelector("h3").textContent = group.title;
+
+const grid = section.querySelector(".detail-field-grid");
+
+group.fields.forEach(([label, key]) => {
+
+const field = document.createElement("div");
+field.className = "detail-field";
+field.innerHTML = `<span class="detail-field-label"></span><span class="detail-field-value"></span>`;
+field.querySelector(".detail-field-label").textContent = label;
+field.querySelector(".detail-field-value").textContent = val(profile[key]);
+
+grid.appendChild(field);
+
+});
+
+container.appendChild(section);
+
+});
+
+}
+
+function renderProgression(profile) {
+
+const score = calculateAiScore(profile);
+document.getElementById("progressionScore").textContent = `${score}/10`;
+
+const list = document.getElementById("progressionList");
+list.innerHTML = "";
+
+PROFILE_SECTION_RULES.forEach((rule, index) => {
+
+let complete = false;
+
+try {
+complete = !!rule(profile);
+} catch {
+complete = false;
+}
+
+const row = document.createElement("div");
+row.className = "timeline-item";
+row.innerHTML = `
+<span class="timeline-dot" style="background:${complete ? "var(--success)" : "var(--border-color)"}"></span>
+<div class="timeline-body">
+<div class="timeline-label"></div>
+</div>
+`;
+
+row.querySelector(".timeline-label").textContent =
+`${SECTION_LABELS[index]} — ${complete ? "complète" : "à compléter"}`;
+
+list.appendChild(row);
+
+});
+
+}
+
+function renderSubscriptionTab(userData) {
+
+document.getElementById("planSelect").value = userData.plan || "";
+
+const disabled = userData.disabled === true;
+
+document.getElementById("statusLabel").textContent = disabled
+? "Ce compte est actuellement suspendu."
+: "Ce compte est actif.";
+
+const toggleBtn = document.getElementById("toggleDisabledBtn");
+toggleBtn.textContent = disabled ? "Réactiver le compte" : "Suspendre le compte";
+toggleBtn.classList.toggle("is-danger", !disabled);
+
+document.getElementById("testerAccessToggle").checked = userData.testerAccess === true;
+
+// Expiration de formule / Pass Fitz Express (pricing pivot 2026-07-30)
+// — planExpiresAt/fitzExpressExpiresAt sont des chaînes ISO simples
+// (voir js/access-guard.js), pas des Timestamp Firestore.
+const planExpiryInput = document.getElementById("planExpiryInput");
+const planExpiryStatus = document.getElementById("planExpiryStatus");
+
+planExpiryInput.value = userData.planExpiresAt || "";
+
+if (!userData.plan) {
+planExpiryStatus.textContent = "Aucune formule active — l'expiration ne s'applique pas.";
+} else if (!userData.planExpiresAt) {
+planExpiryStatus.textContent = "Aucune date d'expiration enregistrée.";
+} else {
+const expired = new Date(userData.planExpiresAt).getTime() < Date.now();
+planExpiryStatus.textContent = expired
+? `Formule expirée le ${formatISODate(userData.planExpiresAt)} — l'étudiant retombe sur l'accès par défaut.`
+: `Formule active jusqu'au ${formatISODate(userData.planExpiresAt)}.`;
+}
+
+const fitzExpressInput = document.getElementById("fitzExpressInput");
+const fitzExpressStatus = document.getElementById("fitzExpressStatus");
+
+fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
+
+if (!userData.fitzExpressExpiresAt) {
+fitzExpressStatus.textContent = "Aucun Pass Fitz Express actif.";
+} else {
+const expired = new Date(userData.fitzExpressExpiresAt).getTime() < Date.now();
+fitzExpressStatus.textContent = expired
+? `Pass expiré le ${formatISODate(userData.fitzExpressExpiresAt)}.`
+: `Pass actif jusqu'au ${formatISODate(userData.fitzExpressExpiresAt)} (questions à Fitz uniquement).`;
+}
+
+}
+
+function formatISODate(iso) {
+
+const date = new Date(iso);
+
+return isNaN(date) ? iso : date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+}
+
+// ==========================================================
+// Activité
+// ==========================================================
+
+async function renderActivity() {
+
+const events = await getUserEvents(uid, 50);
+const container = document.getElementById("activityTimeline");
+
+if (!events.length) {
+container.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune activité enregistrée pour le moment.</p>`;
+return;
+}
+
+container.innerHTML = events.map((event) => `
+<div class="timeline-item">
+<span class="timeline-dot"></span>
+<div class="timeline-body">
+<div class="timeline-label">${EVENT_LABELS[event.type] || event.type}</div>
+<div class="timeline-meta">${formatDateTime(event.createdAt)}</div>
+</div>
+</div>
+`).join("");
+
+}
+
+// ==========================================================
+// Notes internes
+// ==========================================================
+
+async function renderNotes() {
+
+const notes = await getAdminNotes(uid);
+const container = document.getElementById("notesList");
+
+if (!notes.length) {
+container.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune note pour le moment.</p>`;
+return;
+}
+
+container.innerHTML = notes.map((note) => `
+<div class="note-item">
+<p></p>
+<div class="note-item-meta"><span></span></div>
+</div>
+`).join("");
+
+const items = container.querySelectorAll(".note-item");
+
+notes.forEach((note, index) => {
+items[index].querySelector("p").textContent = note.text;
+items[index].querySelector(".note-item-meta span").textContent =
+`${note.authorEmail || "Admin"} — ${formatDateTime(note.createdAt)}`;
+});
+
+}
+
+// ==========================================================
+// Messages
+// ==========================================================
+
+async function renderMessages() {
+
+const messages = await getSentMessages(uid);
+const container = document.getElementById("messagesList");
+
+if (!messages.length) {
+container.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucun message envoyé pour le moment.</p>`;
+return;
+}
+
+container.innerHTML = messages.map((message) => `
+<div class="message-item ${message.read ? "" : "is-unread"}">
+<p></p>
+<div class="message-item-meta"><span></span></div>
+</div>
+`).join("");
+
+const items = container.querySelectorAll(".message-item");
+
+messages.forEach((message, index) => {
+items[index].querySelector("p").textContent = message.text;
+items[index].querySelector(".message-item-meta span").textContent =
+`${formatDateTime(message.createdAt)} — ${message.read ? "lu" : "non lu"}`;
+});
+
+}
+
+// ==========================================================
+// Candidatures suivies (Phase 5 — visibilité admin, 2026-07-30)
+// ==========================================================
+
+const APP_STATUS_LABELS = {
+a_preparer: "À préparer",
+en_cours: "En préparation",
+deposee: "Déposée",
+en_attente: "En attente de réponse",
+reponse_recue: "Réponse reçue"
+};
+
+async function renderCandidatures(userData) {
+
+const list = document.getElementById("candidaturesList");
+const quotaStatus = document.getElementById("quotaStatus");
+
+let applications = [];
+
+try {
+applications = await getUserApplications(uid);
+} catch (error) {
+console.error("Impossible de charger les candidatures :", error);
+list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Impossible de charger les candidatures.</p>`;
+return;
+}
+
+// SCHOLARBRIDGE_PLANS (pricing-plans.js) ne décrit que les formules
+// achetables — "gratuit" n'y figure pas puisqu'elle n'a ni prix ni
+// quota positif. resolvePlan() reste la source de vérité pour savoir
+// quelle formule est réellement active (gère aussi l'expiration).
+const activePlanKey = resolvePlan(userData);
+const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[activePlanKey];
+const quota = plan ? plan.maxAccompaniedApplications : 0;
+
+quotaStatus.textContent = quota
+? `${applications.length} / ${quota} candidature${quota > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} (quota de la formule ${plan.label}).`
+: `${applications.length} candidature${applications.length > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} — formule Gratuit, aucune candidature accompagnée incluse.`;
+
+if (!applications.length) {
+list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune candidature suivie pour le moment.</p>`;
+return;
+}
+
+list.innerHTML = applications.map((app) => `
+<div class="timeline-item">
+<span class="timeline-dot" style="background:${app.status === "reponse_recue" ? "var(--success)" : "var(--border-color)"}"></span>
+<div class="timeline-body">
+<div class="timeline-label">${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}</div>
+<div class="timeline-meta">${APP_STATUS_LABELS[app.status] || app.status}${app.premiumProtected ? " · suivi protégé au-delà de l'abonnement" : ""}</div>
+</div>
+</div>
+`).join("");
+
+}
+
+// ==========================================================
+// Chargement principal
+// ==========================================================
+
+const pageLoader = document.getElementById("pageLoader");
+const content = document.querySelector(".content");
+
+async function loadStudent() {
+
+currentUserData = await getUser(uid);
+
+if (!currentUserData) {
+content.innerHTML = `<div style="padding:40px;text-align:center;"><h2>Étudiant introuvable</h2></div>`;
+return;
+}
+
+const profile = currentUserData.profile || {};
+
+renderHeader(currentUserData);
+renderProfile(profile);
+renderProgression(profile);
+renderSubscriptionTab(currentUserData);
+
+await Promise.all([
+renderActivity(),
+renderNotes(),
+renderMessages(),
+renderCandidatures(currentUserData)
+]);
+
+if (window.lucide) lucide.createIcons();
+
+}
+
+onAuthStateChanged(auth, async (user) => {
+
+if (!user) {
+window.location.href = "login.html";
+return;
+}
+
+try {
+
+const adminSnap = await getDoc(doc(db, "admins", user.uid));
+
+if (!adminSnap.exists() || adminSnap.data().isActive !== true) {
+await signOut(auth);
+window.location.href = "login.html";
+return;
+}
+
+currentAdmin = { uid: user.uid, email: user.email };
+
+if (!uid) {
+content.style.display = "";
+content.innerHTML = `<div style="padding:40px;text-align:center;"><h2>Aucun étudiant sélectionné</h2><a href="students.html">Retour à la liste</a></div>`;
+hidePageLoader();
+return;
+}
+
+initTabs();
+await loadStudent();
+
+hidePageLoader();
+
+} catch (error) {
+
+console.error("Erreur de chargement de la fiche étudiant :", error);
+
+if (content) {
+content.style.display = "";
+content.innerHTML = `
+<div style="padding:40px;text-align:center;">
+<h2>Impossible de charger cette fiche</h2>
+<p>Vérifiez votre connexion Internet, puis réessayez.</p>
+<button onclick="window.location.reload()">Réessayer</button>
+</div>
+`;
+}
+
+if (pageLoader) pageLoader.style.display = "none";
+
+}
+
+});
+
+// ==========================================================
+// Actions : formule, suspension, notes, messages
+// ==========================================================
+
+document.getElementById("savePlanBtn").addEventListener("click", async () => {
+
+const value = document.getElementById("planSelect").value;
+
+try {
+
+await updateUserPlan(uid, value || null);
+currentUserData.plan = value || null;
+renderHeader(currentUserData);
+
+alert("Formule mise à jour.");
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible de mettre à jour la formule.");
+
+}
+
+});
+
+document.getElementById("savePlanExpiryBtn").addEventListener("click", async () => {
+
+const value = document.getElementById("planExpiryInput").value || null;
+
+try {
+
+await updateUserPlanExpiry(uid, value);
+currentUserData.planExpiresAt = value;
+renderSubscriptionTab(currentUserData);
+
+alert("Date d'expiration mise à jour.");
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible de mettre à jour la date d'expiration.");
+
+}
+
+});
+
+document.getElementById("saveFitzExpressBtn").addEventListener("click", async () => {
+
+const value = document.getElementById("fitzExpressInput").value || null;
+
+try {
+
+await updateUserFitzExpressExpiry(uid, value);
+currentUserData.fitzExpressExpiresAt = value;
+renderSubscriptionTab(currentUserData);
+
+alert("Pass Fitz Express mis à jour.");
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible de mettre à jour le Pass Fitz Express.");
+
+}
+
+});
+
+document.getElementById("testerAccessToggle").addEventListener("change", async (event) => {
+
+const enabled = event.target.checked;
+
+try {
+
+await updateUserTesterAccess(uid, enabled);
+currentUserData.testerAccess = enabled;
+renderHeader(currentUserData);
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible de mettre à jour l'accès test complet.");
+event.target.checked = !enabled;
+
+}
+
+});
+
+document.getElementById("toggleDisabledBtn").addEventListener("click", async () => {
+
+const nextDisabled = !(currentUserData.disabled === true);
+
+const confirmMessage = nextDisabled
+? "Suspendre ce compte ? L'étudiant sera redirigé vers une page \"Compte suspendu\" à sa prochaine connexion."
+: "Réactiver ce compte ?";
+
+if (!confirm(confirmMessage)) return;
+
+try {
+
+await setUserDisabled(uid, nextDisabled);
+currentUserData.disabled = nextDisabled;
+
+renderHeader(currentUserData);
+renderSubscriptionTab(currentUserData);
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible de mettre à jour le statut du compte.");
+
+}
+
+});
+
+document.getElementById("addNoteBtn").addEventListener("click", async () => {
+
+const textarea = document.getElementById("noteText");
+const text = textarea.value.trim();
+
+if (!text) return;
+
+try {
+
+await addAdminNote(uid, currentAdmin.uid, currentAdmin.email, text);
+textarea.value = "";
+
+await renderNotes();
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible d'ajouter la note.");
+
+}
+
+});
+
+document.getElementById("sendMessageBtn").addEventListener("click", async () => {
+
+const textarea = document.getElementById("messageText");
+const text = textarea.value.trim();
+
+if (!text) return;
+
+try {
+
+await sendMessageToUser(uid, currentAdmin.uid, currentAdmin.email, text);
+textarea.value = "";
+
+await renderMessages();
+
+} catch (error) {
+
+console.error(error);
+alert("Impossible d'envoyer le message.");
+
+}
+
+});
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+
+logoutBtn.addEventListener("click", async () => {
+
+if (logoutBtn.dataset.busy === "true") return;
+logoutBtn.dataset.busy = "true";
+
+try {
+
+await signOut(auth);
+window.location.href = "login.html";
+
+} catch (error) {
+
+console.error(error);
+alert("Erreur lors de la déconnexion.");
+logoutBtn.dataset.busy = "false";
+
+}
+
+});
+
+}

@@ -1,0 +1,657 @@
+/* ==========================================================
+SCHOLARBRIDGE — ÉCRAN D'INTRODUCTION DU TEST D'ÉLIGIBILITÉ
+Repose sur les variables et le reset définis dans css/base.css
+(même palette, même typographie, même système que index.html
+et eligibility-questions.html)
+========================================================== */
+
+body{
+
+min-height:100vh;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:40px 20px;
+
+}
+
+.container{
+
+width:100%;
+
+max-width:640px;
+
+}
+
+.card{
+
+position:relative;
+
+overflow:hidden;
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-lg);
+
+padding:52px 44px;
+
+text-align:center;
+
+box-shadow:var(--shadow-lg);
+
+}
+
+/* ==========================================================
+ENTRÉE ÉCHELONNÉE
+========================================================== */
+
+.advisor-intro,
+.logo,
+h1,
+#dynamicText,
+.trust-strip,
+.benefits,
+.trust-box,
+.progress,
+.info,
+#startButton,
+.features{
+
+opacity:0;
+
+animation:cardItemIn .7s var(--ease-premium) forwards;
+
+}
+
+.advisor-intro{ animation-delay:.05s; }
+.logo{ animation-delay:.15s; }
+h1{ animation-delay:.25s; }
+#dynamicText{ animation-delay:.35s; }
+.trust-strip{ animation-delay:.4s; }
+.benefits{ animation-delay:.48s; }
+.trust-box{ animation-delay:.58s; }
+.progress{ animation-delay:.68s; }
+.info{ animation-delay:.72s; }
+#startButton{ animation-delay:.8s; }
+.features{ animation-delay:.92s; }
+
+@keyframes cardItemIn{
+
+from{
+
+opacity:0;
+
+transform:translateY(18px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+
+/* ==========================================================
+CONSEILLER IA
+Avatar/badge/statut de "Fitz qui parle" : voir .fitz-avatar/
+.fitz-badge/.fitz-status dans css/ai-suite.css (composant partagé
+avec eligibility-questions.html et les pages ai-*.html). Ici, on ne
+garde que la mise en page locale de l'intro (positionnement du
+badge à côté de l'avatar).
+========================================================== */
+
+.advisor-intro{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+width:max-content;
+
+max-width:100%;
+
+margin:0 auto 22px;
+
+text-align:left;
+
+}
+
+.advisor-copy{
+
+min-width:0;
+
+}
+
+/* ==========================================================
+REPÈRES DE CONFIANCE
+========================================================== */
+
+.trust-strip{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+flex-wrap:wrap;
+
+gap:10px 20px;
+
+margin-bottom:28px;
+
+}
+
+.trust-strip span{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+color:var(--text-muted);
+
+font-weight:var(--fw-semibold);
+
+font-size:var(--fs-meta);
+
+}
+
+.trust-strip i{
+
+width:14px;
+
+height:14px;
+
+color:var(--accent-color);
+
+}
+
+/* ==========================================================
+LOGO
+========================================================== */
+
+/* Le drop-shadow (--shadow-md) suffit à donner de la profondeur au
+logo — pas besoin d'un anneau qui pulse en continu en plus : seul le
+halo de l'avatar Fitz (.fitz-avatar, css/ai-suite.css) reste
+l'animation en boucle du site. */
+.logo{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:76px;
+
+height:76px;
+
+margin:0 auto 22px;
+
+border-radius:22px;
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+box-shadow:var(--shadow-md);
+
+}
+
+.logo i{
+
+width:38px;
+
+height:38px;
+
+}
+
+/* ==========================================================
+TITRE & TEXTE
+========================================================== */
+
+h1{
+
+font-family:var(--font-display);
+
+font-size:clamp(1.7rem,4vw,2.2rem);
+
+line-height:1.25;
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:16px;
+
+}
+
+#dynamicText{
+
+color:var(--text-light);
+
+font-size:1.05rem;
+
+line-height:1.8;
+
+margin-bottom:32px;
+
+}
+
+/* ==========================================================
+AVANTAGES
+========================================================== */
+
+.benefits{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+margin-bottom:26px;
+
+text-align:left;
+
+}
+
+.benefit{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+padding:14px 16px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+font-weight:600;
+
+font-size:.95rem;
+
+}
+
+.benefit i{
+
+flex-shrink:0;
+
+width:20px;
+
+height:20px;
+
+color:var(--primary-color);
+
+}
+
+/* ==========================================================
+MESSAGE DE CONFIANCE
+========================================================== */
+
+.trust-box{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:16px 18px;
+
+margin-bottom:26px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-light);
+
+border:1px solid rgba(139,30,63,.14);
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+line-height:1.6;
+
+text-align:left;
+
+}
+
+.trust-box i{
+
+flex-shrink:0;
+
+width:20px;
+
+height:20px;
+
+color:var(--primary-color);
+
+}
+
+/* ==========================================================
+PROGRESSION
+========================================================== */
+
+.progress{
+
+width:100%;
+
+height:8px;
+
+background:var(--background-alt);
+
+border-radius:var(--radius-full);
+
+overflow:hidden;
+
+margin-bottom:14px;
+
+}
+
+.progress-bar{
+
+width:11%;
+
+height:100%;
+
+border-radius:var(--radius-full);
+
+background:var(--gradient-primary);
+
+transition:width .6s var(--ease-premium);
+
+}
+
+.info{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:8px;
+
+margin-bottom:28px;
+
+color:var(--text-muted);
+
+font-size:var(--fs-meta);
+
+font-weight:var(--fw-semibold);
+
+}
+
+.info i{
+
+width:16px;
+
+height:16px;
+
+}
+
+/* ==========================================================
+BOUTON
+========================================================== */
+
+button#startButton{
+
+position:relative;
+
+overflow:hidden;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:10px;
+
+width:100%;
+
+padding:18px 28px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-family:"Inter",sans-serif;
+
+font-size:1.05rem;
+
+font-weight:700;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+button#startButton i{
+
+width:20px;
+
+height:20px;
+
+}
+
+button#startButton:hover{
+
+background:var(--primary-700);
+
+transform:translateY(-2px);
+
+box-shadow:var(--shadow-md);
+
+}
+
+/* ==========================================================
+FONCTIONNALITÉS
+========================================================== */
+
+.features{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:16px;
+
+margin-top:36px;
+
+text-align:left;
+
+}
+
+.feature-card{
+
+padding:20px 18px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+background:var(--background);
+
+transition:var(--transition);
+
+}
+
+.feature-card:hover{
+
+transform:translateY(-4px);
+
+box-shadow:var(--shadow-sm);
+
+border-color:rgba(139,30,63,.18);
+
+}
+
+.feature-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:44px;
+
+height:44px;
+
+margin-bottom:14px;
+
+border-radius:12px;
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+}
+
+.feature-icon i{
+
+width:22px;
+
+height:22px;
+
+}
+
+.feature-card h3{
+
+font-size:1rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+margin-bottom:8px;
+
+}
+
+.feature-card p{
+
+font-size:.85rem;
+
+line-height:1.6;
+
+color:var(--text-light);
+
+}
+
+/* ==========================================================
+RESPONSIVE — TABLETTE (768–1023px)
+========================================================== */
+
+@media(max-width:1023px){
+
+.card{
+
+padding:44px 34px;
+
+}
+
+}
+
+/* ==========================================================
+RESPONSIVE — MOBILE (< 768px)
+========================================================== */
+
+@media(max-width:767px){
+
+body{
+
+padding:20px 14px;
+
+}
+
+.card{
+
+padding:32px 22px;
+
+border-radius:var(--radius-lg);
+
+}
+
+.features{
+
+grid-template-columns:1fr;
+
+}
+
+.logo{
+
+width:64px;
+
+height:64px;
+
+}
+
+.logo i{
+
+width:32px;
+
+height:32px;
+
+}
+
+}
+
+@media(max-width:380px){
+
+.card{
+
+padding:26px 18px;
+
+}
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.advisor-intro,
+.logo,
+h1,
+#dynamicText,
+.trust-strip,
+.benefits,
+.trust-box,
+.progress,
+.info,
+#startButton,
+.features{
+
+opacity:1;
+
+animation:none;
+
+}
+
+}

@@ -1,0 +1,969 @@
+/* ==========================================================
+SCHOLARBRIDGE — UNIVERSITÉS PARTENAIRES (universities.html)
+Repose sur css/base.css + css/header.css (thème clair public) +
+css/ai-suite.css (squelettes de chargement). Page publique, en accès
+libre depuis le 2026-07-30 : le catalogue est une information
+publique, jamais verrouillée derrière un compte ou une formule (voir
+[[portal-transparency-philosophy]] dans la mémoire du projet).
+========================================================== */
+
+/* ==========================================================
+BANNIÈRE
+========================================================== */
+
+.uni-hero{
+
+position:relative;
+
+isolation:isolate;
+
+border-radius:var(--radius-lg);
+
+overflow:hidden;
+
+padding:64px 48px;
+
+margin-bottom:28px;
+
+min-height:280px;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+}
+
+.uni-hero-bg{
+
+position:absolute;
+
+inset:0;
+
+z-index:-2;
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+filter:saturate(1.1) contrast(1.03);
+
+}
+
+.uni-hero::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+z-index:-1;
+
+background:
+
+linear-gradient(180deg, rgba(15,23,42,.55) 0%, rgba(15,23,42,.88) 100%),
+
+linear-gradient(100deg, rgba(15,23,42,.95) 0%, rgba(43,14,22,.55) 45%, rgba(15,23,42,.25) 100%);
+
+}
+
+.uni-hero-badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+width:max-content;
+
+padding:8px 16px;
+
+margin-bottom:18px;
+
+border-radius:var(--radius-full);
+
+background:rgba(255,255,255,.12);
+
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.82rem;
+
+}
+
+.uni-hero-badge i{ width:15px; height:15px; }
+
+.uni-hero h1{
+
+font-size:clamp(1.8rem,3.4vw,2.5rem);
+
+font-weight:800;
+
+color:#fff;
+
+max-width:620px;
+
+margin-bottom:12px;
+
+text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+
+}
+
+.uni-hero p{
+
+max-width:560px;
+
+color:rgba(255,255,255,.82);
+
+font-size:1rem;
+
+line-height:1.7;
+
+margin-bottom:28px;
+
+text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
+
+}
+
+.uni-hero-stats{
+
+display:flex;
+
+gap:28px;
+
+flex-wrap:wrap;
+
+}
+
+.uni-hero-stat strong{
+
+display:block;
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:var(--fw-extrabold);
+
+font-variant-numeric:tabular-nums;
+
+color:var(--accent-color);
+
+text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+
+}
+
+.uni-hero-stat span{
+
+font-size:.82rem;
+
+color:rgba(255,255,255,.75);
+
+text-shadow:0 1px 3px rgba(0,0,0,.3);
+
+}
+
+/* ==========================================================
+CONTEXTE "FILTRÉ PAR BOURSE" — apparaît quand on arrive depuis une
+carte de scholarships.html (?scholarship=...), pour que l'étudiant
+comprenne pourquoi la liste ne montre pas tout le catalogue.
+========================================================== */
+
+.uni-scholarship-context{
+
+display:flex;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+padding:14px 20px;
+
+margin-bottom:20px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+font-size:.92rem;
+
+}
+
+.uni-scholarship-context > i{ width:18px; height:18px; flex-shrink:0; }
+
+.uni-scholarship-context strong{ color:var(--text-color); }
+
+.uni-scholarship-context a{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+margin-left:auto;
+
+font-weight:700;
+
+color:var(--primary-color);
+
+}
+
+.uni-scholarship-context a i{ width:14px; height:14px; }
+
+.uni-scholarship-context a:hover{ text-decoration:underline; }
+
+/* ==========================================================
+BARRE DE RECHERCHE / FILTRES
+========================================================== */
+
+.uni-toolbar{
+
+display:grid;
+
+grid-template-columns:2fr 1fr 1fr auto;
+
+gap:12px;
+
+align-items:center;
+
+padding:16px;
+
+margin-bottom:28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.uni-toolbar-field{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+}
+
+.uni-toolbar-field i{
+
+position:absolute;
+
+left:14px;
+
+width:17px;
+
+height:17px;
+
+color:var(--text-muted);
+
+pointer-events:none;
+
+}
+
+.uni-toolbar-field input,
+.uni-toolbar-field select{
+
+width:100%;
+
+padding:12px 14px 12px 40px;
+
+border-radius:var(--radius-sm);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+font-family:"Inter",sans-serif;
+
+font-size:.88rem;
+
+transition:var(--transition);
+
+}
+
+.uni-toolbar-field input:focus,
+.uni-toolbar-field select:focus{
+
+outline:none;
+
+border-color:var(--accent-color);
+
+box-shadow:0 0 0 3px rgba(212,162,76,.18);
+
+}
+
+.uni-toolbar-reset{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:12px 16px;
+
+border-radius:var(--radius-sm);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+font-size:.84rem;
+
+font-weight:700;
+
+white-space:nowrap;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.uni-toolbar-reset:hover{
+
+border-color:var(--accent-color);
+
+color:var(--accent-color);
+
+}
+
+.uni-toolbar-reset i{ width:15px; height:15px; }
+
+.uni-results-count{
+
+margin-bottom:18px;
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+}
+
+.uni-results-count strong{ color:var(--text-color); }
+
+/* ==========================================================
+GRILLE DE CARTES
+========================================================== */
+
+.uni-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+
+gap:24px;
+
+}
+
+.uni-card{
+
+position:relative;
+
+display:flex;
+
+flex-direction:column;
+
+border-radius:var(--radius-lg);
+
+overflow:hidden;
+
+border:1px solid transparent;
+
+box-shadow:var(--shadow-sm);
+
+cursor:pointer;
+
+transition:transform .4s var(--ease-premium), box-shadow .4s var(--ease-premium), border-color .4s var(--ease-premium);
+
+}
+
+/* Le survol changeait border-color sans qu'aucune règle .uni-card ne
+déclare jamais de border — l'effet n'avait donc jamais été visible.
+Le border:1px solid transparent ci-dessus le rend enfin réel. */
+.uni-card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:var(--shadow-lg);
+
+border-color:rgba(212,162,76,.4);
+
+}
+
+.uni-card-media{
+
+position:relative;
+
+aspect-ratio:4/3;
+
+overflow:hidden;
+
+background:var(--background-alt);
+
+}
+
+.uni-card-media img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+transition:transform .7s var(--ease-premium);
+
+}
+
+.uni-card:hover .uni-card-media img{
+
+transform:scale(1.08);
+
+}
+
+/* Quand plusieurs établissements différents partagent la même photo de
+ville (même ville, écoles distinctes), chaque occurrence reçoit un
+cadrage et une teinte légèrement différents pour éviter l'effet de
+vignettes identiques côte à côte. */
+.uni-card-media--variant-1 img{object-position:30% 50%;filter:saturate(1.08);}
+.uni-card-media--variant-2 img{object-position:70% 40%;filter:saturate(.92) brightness(1.03);}
+.uni-card-media--variant-3 img{object-position:50% 65%;filter:saturate(1.04) hue-rotate(-4deg);}
+
+.uni-card-media::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background:linear-gradient(to top, rgba(15,23,42,.94) 0%, rgba(15,23,42,.25) 60%, transparent 85%);
+
+}
+
+.uni-card-rank{
+
+position:absolute;
+
+top:14px;
+
+left:14px;
+
+z-index:2;
+
+display:inline-flex;
+
+align-items:center;
+
+gap:5px;
+
+padding:6px 12px;
+
+border-radius:var(--radius-full);
+
+background:rgba(15,23,42,.72);
+
+backdrop-filter:blur(8px);
+
+-webkit-backdrop-filter:blur(8px);
+
+color:var(--accent-color);
+
+font-weight:800;
+
+font-size:.74rem;
+
+}
+
+.uni-card-rank i{ width:13px; height:13px; }
+
+.uni-card-status{
+
+position:absolute;
+
+top:14px;
+
+right:14px;
+
+z-index:2;
+
+padding:6px 12px;
+
+border-radius:var(--radius-full);
+
+font-size:.7rem;
+
+font-weight:800;
+
+text-transform:uppercase;
+
+letter-spacing:.03em;
+
+background:rgba(15,23,42,.72);
+
+backdrop-filter:blur(8px);
+
+-webkit-backdrop-filter:blur(8px);
+
+color:var(--text-muted);
+
+}
+
+.uni-card-status.is-open{
+
+color:var(--success);
+
+}
+
+.uni-card-location{
+
+position:absolute;
+
+bottom:14px;
+
+left:16px;
+
+right:16px;
+
+z-index:2;
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+color:#fff;
+
+}
+
+.uni-card-location img{
+
+width:20px;
+
+height:14px;
+
+object-fit:cover;
+
+border-radius:3px;
+
+box-shadow:0 0 0 1px rgba(255,255,255,.3);
+
+flex-shrink:0;
+
+}
+
+.uni-card-location span{
+
+font-size:.84rem;
+
+font-weight:600;
+
+text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+
+}
+
+.uni-card-body{
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+padding:20px;
+
+flex:1;
+
+}
+
+.uni-card-body h3{
+
+font-size:var(--fs-card-title);
+
+font-weight:var(--fw-extrabold);
+
+color:var(--text-color);
+
+line-height:1.35;
+
+}
+
+.uni-card-scholarship{
+
+font-size:.84rem;
+
+color:var(--text-light);
+
+line-height:1.5;
+
+}
+
+.uni-card-meta{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:7px;
+
+}
+
+.uni-card-chip{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:5px;
+
+padding:5px 10px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+font-size:.72rem;
+
+font-weight:700;
+
+}
+
+.uni-card-chip i{ width:12px; height:12px; }
+
+.uni-card-footer{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:10px;
+
+margin-top:auto;
+
+padding-top:14px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.uni-card-deadline{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+font-size:.76rem;
+
+color:var(--text-muted);
+
+}
+
+.uni-card-deadline i{ width:13px; height:13px; }
+
+.uni-card-cta{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:5px;
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.82rem;
+
+white-space:nowrap;
+
+}
+
+.uni-card-cta i{
+
+width:14px;
+
+height:14px;
+
+transition:transform .25s var(--ease-premium);
+
+}
+
+.uni-card:hover .uni-card-cta i{
+
+transform:translateX(3px);
+
+}
+
+/* ==========================================================
+SQUELETTES DE CHARGEMENT (variante locale de .ai-skeleton)
+========================================================== */
+
+.uni-card-skeleton{
+
+border-radius:var(--radius-lg);
+
+overflow:hidden;
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+}
+
+.uni-card-skeleton .uni-skel-media{
+
+aspect-ratio:4/3;
+
+}
+
+.uni-card-skeleton .uni-skel-line{
+
+height:12px;
+
+margin:16px 20px 0;
+
+border-radius:6px;
+
+}
+
+.uni-card-skeleton .uni-skel-line:last-child{
+
+margin-bottom:20px;
+
+}
+
+/* ==========================================================
+ÉTAT VIDE / ERREUR
+========================================================== */
+
+.uni-empty-state{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+text-align:center;
+
+gap:14px;
+
+padding:70px 20px;
+
+grid-column:1 / -1;
+
+}
+
+.uni-empty-state-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:56px;
+
+height:56px;
+
+border-radius:18px;
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+}
+
+.uni-empty-state-icon i{ width:26px; height:26px; }
+
+.uni-empty-state h3{
+
+font-size:1.1rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.uni-empty-state p{
+
+color:var(--text-light);
+
+font-size:.9rem;
+
+max-width:400px;
+
+}
+
+/* ==========================================================
+RESPONSIVE
+========================================================== */
+
+@media(max-width:900px){
+
+.uni-toolbar{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+.uni-toolbar-field:first-child{
+
+grid-column:1 / -1;
+
+}
+
+}
+
+@media(max-width:640px){
+
+.uni-hero{
+
+padding:44px 24px;
+
+}
+
+.uni-toolbar{
+
+grid-template-columns:1fr;
+
+}
+
+.uni-toolbar-reset{
+
+justify-content:center;
+
+}
+
+.uni-grid{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+/* ==========================================================
+BANDEAU ACCOMPAGNEMENT — sous le catalogue, jamais un mur : le
+catalogue reste entièrement consultable sans lui.
+========================================================== */
+
+.uni-accompaniment-banner{
+
+display:flex;
+
+align-items:center;
+
+gap:24px;
+
+margin:48px 0 24px;
+
+padding:28px 32px;
+
+border-radius:var(--radius-lg);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.uni-accompaniment-icon{
+
+flex:0 0 auto;
+
+width:52px;
+
+height:52px;
+
+border-radius:50%;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+}
+
+.uni-accompaniment-icon i{width:22px;height:22px;}
+
+.uni-accompaniment-copy{flex:1 1 auto;min-width:220px;}
+
+.uni-accompaniment-copy strong{
+
+display:block;
+
+font-family:var(--font-display);
+
+font-size:var(--fs-h4);
+
+font-weight:600;
+
+color:var(--primary-dark);
+
+margin-bottom:6px;
+
+}
+
+.uni-accompaniment-copy p{
+
+margin:0;
+
+font-size:var(--fs-small);
+
+color:var(--text-light);
+
+max-width:56ch;
+
+}
+
+@media(max-width:768px){
+
+.uni-accompaniment-banner{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+text-align:left;
+
+}
+
+.uni-accompaniment-banner .btn{width:100%;justify-content:center;}
+
+}

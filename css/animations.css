@@ -1,0 +1,69 @@
+/* ==========================================================
+SCHOLARBRIDGE - ANIMATIONS
+========================================================== */
+
+/* Par défaut (JS absent ou en échec) le contenu reste visible :
+la mise en retrait ci-dessous n'est activée que par js/main.js,
+qui ajoute la classe "js-ready" sur <html> dès son exécution. */
+
+.reveal{
+opacity:1;
+transform:none;
+}
+
+html.js-ready .reveal{
+opacity:0;
+transform:translateY(22px) scale(.97);
+transition:opacity .7s var(--ease-premium,ease-out), transform .7s var(--ease-premium,ease-out);
+}
+
+html.js-ready .reveal.is-visible{
+opacity:1;
+transform:translateY(0) scale(1);
+}
+
+.cards-grid .reveal:nth-child(2),
+.steps .reveal:nth-child(2){
+transition-delay:.08s;
+}
+
+.cards-grid .reveal:nth-child(3),
+.steps .reveal:nth-child(3){
+transition-delay:.16s;
+}
+
+.cards-grid .reveal:nth-child(4){
+transition-delay:.24s;
+}
+
+/* ==========================================================
+ENTRÉE ÉCHELONNÉE DU HERO
+========================================================== */
+
+.hero-content > .hero-stagger:nth-child(1){transition-delay:.05s;}
+.hero-content > .hero-stagger:nth-child(2){transition-delay:.16s;}
+.hero-content > .hero-stagger:nth-child(3){transition-delay:.27s;}
+.hero-content > .hero-stagger:nth-child(4){transition-delay:.38s;}
+.hero-content > .hero-stagger:nth-child(5){transition-delay:.49s;}
+
+.hero-visual > .hero-stagger:nth-child(1){transition-delay:.35s;}
+.hero-visual > .hero-stagger:nth-child(2){transition-delay:.5s;}
+.hero-visual > .hero-stagger:nth-child(3){transition-delay:.62s;}
+
+@media (prefers-reduced-motion: reduce){
+
+*,
+*::before,
+*::after{
+animation-duration:.01ms !important;
+animation-iteration-count:1 !important;
+transition-duration:.01ms !important;
+scroll-behavior:auto !important;
+}
+
+.reveal{
+opacity:1;
+transform:none;
+}
+
+}

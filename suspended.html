@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Compte suspendu | ScholarBridge</title>
+
+<meta name="description" content="Votre accès à ScholarBridge a été temporairement suspendu.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="auth.css">
+
+</head>
+
+<body>
+
+<div class="auth-page">
+
+<div class="auth-shell">
+
+<div class="auth-hero reveal">
+
+<div class="auth-logo-wrap">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+</div>
+
+<div class="auth-badge" style="background:rgba(239,68,68,.1);color:var(--danger);">
+<i data-lucide="shield-alert"></i>
+<span>Accès suspendu</span>
+</div>
+
+<h1>Votre compte a été suspendu</h1>
+
+<p>L'accès à votre espace ScholarBridge est temporairement désactivé par notre équipe. Si vous pensez qu'il s'agit d'une erreur, contactez le support ScholarBridge — nous reviendrons vers vous rapidement.</p>
+
+</div>
+
+<div class="auth-card reveal">
+
+<h2>Besoin d'aide ?</h2>
+<p class="auth-card-subtext">Notre équipe peut vous expliquer la raison de cette suspension et, le cas échéant, réactiver votre accès.</p>
+
+<a href="mailto:support@scholarbridge.app" class="btn-auth-submit" style="text-decoration:none;">
+<span>Contacter le support</span>
+</a>
+
+<p class="login-link">
+<a href="login.html">Retour à la page de connexion</a>
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+document.documentElement.classList.add("js-ready");
+
+const revealEls = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+
+const observer = new IntersectionObserver((entries) => {
+entries.forEach((entry) => {
+if (entry.isIntersecting) {
+entry.target.classList.add("is-visible");
+observer.unobserve(entry.target);
+}
+});
+}, { threshold: 0.1 });
+
+revealEls.forEach((el) => observer.observe(el));
+
+} else {
+
+revealEls.forEach((el) => el.classList.add("is-visible"));
+
+}
+
+if (window.lucide) lucide.createIcons();
+
+</script>
+
+</body>
+
+</html>

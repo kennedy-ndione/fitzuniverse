@@ -1,0 +1,670 @@
+/* ==========================================================
+SCHOLARBRIDGE — BOURSES (scholarships.html)
+Repose sur css/base.css + css/header.css + css/hero.css +
+css/homepage-sections.css + css/animations.css — page publique, même
+identité visuelle que index.html (même header, même thème clair).
+========================================================== */
+
+/* ==========================================================
+TITRE — bandeau minimal (pas de header/logo/CTA : l'utilisateur
+sait déjà qu'il est sur ScholarBridge, ce catalogue va droit au but).
+========================================================== */
+
+.bourses-title-bar{
+
+padding:56px 0 0;
+
+text-align:center;
+
+}
+
+.bourses-title-bar h1{
+
+font-size:clamp(1.7rem,3vw,2.1rem);
+
+letter-spacing:-.01em;
+
+color:var(--text-color);
+
+margin-bottom:28px;
+
+}
+
+/* ==========================================================
+BARRE DE RECHERCHE
+========================================================== */
+
+.bourses-search-bar{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+max-width:640px;
+
+margin:36px auto 0;
+
+padding:10px;
+
+background:rgba(255,255,255,.97);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+border-radius:var(--radius-full);
+
+box-shadow:var(--shadow-lg);
+
+}
+
+.bourses-search-field{
+
+flex:1 1 260px;
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:8px 18px;
+
+}
+
+.bourses-search-field i{
+
+width:19px;
+
+height:19px;
+
+color:var(--text-muted);
+
+flex-shrink:0;
+
+}
+
+.bourses-search-field input{
+
+flex:1;
+
+border:none;
+
+outline:none;
+
+background:transparent;
+
+font-family:"Inter",sans-serif;
+
+font-size:.96rem;
+
+color:var(--text-color);
+
+}
+
+.bourses-search-bar select{
+
+flex:0 0 170px;
+
+padding:10px 16px;
+
+border:none;
+
+border-left:1px solid var(--border-color);
+
+background:transparent;
+
+font-family:"Inter",sans-serif;
+
+font-size:.9rem;
+
+color:var(--text-color);
+
+border-radius:0;
+
+}
+
+/* ==========================================================
+RÉSULTATS
+========================================================== */
+
+.bourses-results-bar{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+flex-wrap:wrap;
+
+gap:12px;
+
+margin-bottom:32px;
+
+}
+
+.bourses-results-count{
+
+color:var(--text-light);
+
+font-size:.94rem;
+
+}
+
+.bourses-results-count strong{
+
+color:var(--text-color);
+
+}
+
+.bourses-clear-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+color:var(--primary-color);
+
+font-weight:700;
+
+font-size:.88rem;
+
+}
+
+.bourses-clear-link i{ width:15px; height:15px; }
+
+/* ==========================================================
+GRILLE DE CARTES
+========================================================== */
+
+.bourses-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+
+gap:28px;
+
+}
+
+.scholarship-card{
+
+display:flex;
+
+flex-direction:column;
+
+background:#fff;
+
+border-radius:var(--radius-lg);
+
+border:1px solid rgba(226,232,240,.8);
+
+box-shadow:var(--shadow-sm);
+
+overflow:hidden;
+
+transition:var(--transition);
+
+}
+
+.scholarship-card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:var(--shadow-lg);
+
+border-color:rgba(139,30,63,.2);
+
+}
+
+/* Bande photo — représente le pays/programme, jamais une université
+précise (voir universities.css/.uni-card-media pour la déclinaison
+"campus" utilisée sur le catalogue des universités). */
+.scholarship-card-media{
+
+position:relative;
+
+height:150px;
+
+overflow:hidden;
+
+flex-shrink:0;
+
+}
+
+.scholarship-card-media img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+transition:transform .5s var(--ease-premium);
+
+}
+
+.scholarship-card:hover .scholarship-card-media img{
+
+transform:scale(1.06);
+
+}
+
+.scholarship-card-media::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background:
+
+linear-gradient(180deg, rgba(10,4,7,.35) 0%, rgba(10,4,7,.85) 100%),
+
+linear-gradient(100deg, rgba(10,4,7,.95) 0%, rgba(20,7,12,.65) 45%, rgba(20,7,12,.3) 100%);
+
+}
+
+.scholarship-card-media .scholarship-card-status{
+
+position:absolute;
+
+top:14px;
+
+right:14px;
+
+z-index:2;
+
+background:rgba(255,255,255,.92);
+
+}
+
+.scholarship-card-media .scholarship-card-status.is-open{
+
+background:rgba(255,255,255,.92);
+
+}
+
+.scholarship-card-top{
+
+display:flex;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+gap:12px;
+
+padding:20px 26px 0;
+
+}
+
+.scholarship-card-country{
+
+display:flex;
+
+align-items:center;
+
+gap:9px;
+
+}
+
+.scholarship-card-country-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+border-radius:12px;
+
+background:rgba(139,30,63,.08);
+
+color:var(--primary-color);
+
+flex-shrink:0;
+
+}
+
+.scholarship-card-country-icon i{ width:18px; height:18px; }
+
+.scholarship-card-country span{
+
+display:block;
+
+font-weight:800;
+
+color:var(--text-color);
+
+font-size:.95rem;
+
+}
+
+.scholarship-card-status{
+
+flex-shrink:0;
+
+padding:5px 12px;
+
+border-radius:var(--radius-full);
+
+font-size:.72rem;
+
+font-weight:800;
+
+text-transform:uppercase;
+
+letter-spacing:.03em;
+
+background:rgba(148,163,184,.15);
+
+color:var(--text-muted);
+
+}
+
+.scholarship-card-status.is-open{
+
+background:rgba(34,197,94,.12);
+
+color:#178a44;
+
+}
+
+.scholarship-card-body{
+
+flex:1;
+
+display:flex;
+
+flex-direction:column;
+
+gap:14px;
+
+padding:18px 26px 26px;
+
+}
+
+.scholarship-card-body h3{
+
+font-size:var(--fs-card-title);
+
+font-weight:var(--fw-extrabold);
+
+line-height:1.35;
+
+color:var(--text-color);
+
+}
+
+.scholarship-card-desc{
+
+font-size:.88rem;
+
+line-height:1.6;
+
+color:var(--text-light);
+
+margin:0;
+
+}
+
+.scholarship-card-countries{
+
+display:flex;
+
+flex-wrap:wrap;
+
+align-items:center;
+
+gap:6px;
+
+font-size:.78rem;
+
+color:var(--text-muted);
+
+}
+
+.scholarship-card-countries strong{
+
+color:var(--text-light);
+
+font-weight:700;
+
+}
+
+.scholarship-card-meta{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+.scholarship-card-chip{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:5px;
+
+padding:6px 12px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+font-size:.78rem;
+
+font-weight:700;
+
+}
+
+.scholarship-card-chip i{ width:13px; height:13px; }
+
+.scholarship-card-chip.is-funding{
+
+background:rgba(212,162,76,.14);
+
+color:var(--accent-600);
+
+}
+
+.scholarship-card-cta{
+
+margin-top:auto;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:8px;
+
+padding:12px 20px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+color:var(--text-color);
+
+font-weight:700;
+
+font-size:.88rem;
+
+transition:var(--transition);
+
+}
+
+.scholarship-card-cta i{
+
+width:15px;
+
+height:15px;
+
+transition:transform .25s var(--ease-premium);
+
+}
+
+.scholarship-card:hover .scholarship-card-cta{
+
+background:var(--gradient-primary);
+
+border-color:transparent;
+
+color:#fff;
+
+}
+
+.scholarship-card:hover .scholarship-card-cta i{
+
+transform:translateX(3px);
+
+}
+
+/* ==========================================================
+SQUELETTES / ÉTAT VIDE
+========================================================== */
+
+.bourses-skeleton{
+
+border-radius:var(--radius-lg);
+
+overflow:hidden;
+
+background:#fff;
+
+border:1px solid rgba(226,232,240,.8);
+
+padding:26px;
+
+}
+
+.bourses-skeleton-line{
+
+height:14px;
+
+margin-bottom:14px;
+
+border-radius:7px;
+
+background:linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 37%, #F1F5F9 63%);
+
+background-size:400% 100%;
+
+animation:shimmer-sweep 1.4s ease infinite;
+
+}
+
+.bourses-empty-state{
+
+grid-column:1 / -1;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+text-align:center;
+
+gap:14px;
+
+padding:80px 20px;
+
+}
+
+.bourses-empty-state-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:60px;
+
+height:60px;
+
+border-radius:20px;
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+}
+
+.bourses-empty-state-icon i{ width:28px; height:28px; }
+
+.bourses-empty-state h3{
+
+font-size:1.15rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.bourses-empty-state p{
+
+color:var(--text-light);
+
+font-size:.94rem;
+
+max-width:400px;
+
+}
+
+/* ==========================================================
+RESPONSIVE
+========================================================== */
+
+@media(max-width:640px){
+
+.bourses-title-bar{
+
+padding:36px 0 0;
+
+}
+
+.bourses-search-bar{
+
+border-radius:var(--radius-lg);
+
+}
+
+.bourses-search-bar select{
+
+flex:1 1 100%;
+
+border-left:none;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.bourses-grid{
+
+grid-template-columns:1fr;
+
+}
+
+}

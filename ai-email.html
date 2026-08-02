@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>E-mails Fitz | ScholarBridge</title>
+
+<meta name="description" content="Générez des e-mails professionnels pour vos candidatures universitaires avec Fitz.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="ai-email.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link is-active" aria-current="page" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Fitz — E-mails</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="ai-page-header reveal">
+
+<div class="ai-page-header-main">
+
+<div class="fitz-avatar fitz-avatar--lg"><i data-lucide="mail"></i></div>
+
+<div>
+<h1>Générateur d'e-mails professionnels</h1>
+<p>Choisissez un type d'e-mail, complétez le contexte : Fitz rédige un message prêt à envoyer.</p>
+</div>
+
+</div>
+
+<span class="ai-page-header-badge"><i data-lucide="list-checks"></i><span>10 types d'e-mails</span></span>
+
+</div>
+
+<div id="lockedState" hidden></div>
+
+<div id="emailApp" class="ai-tool-layout reveal">
+
+<section class="ai-panel">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="list-checks"></i>1. Type d'e-mail</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<div class="ai-style-grid" id="emailTypeGrid"></div>
+
+<form id="emailForm">
+
+<div class="ai-field-row">
+
+<div class="ai-field">
+<label for="fieldFullName">Nom complet</label>
+<input type="text" id="fieldFullName" required>
+</div>
+
+<div class="ai-field">
+<label for="fieldNationality">Nationalité</label>
+<input type="text" id="fieldNationality">
+</div>
+
+</div>
+
+<div class="ai-field-row">
+
+<div class="ai-field">
+<label for="fieldDegree">Diplôme actuel</label>
+<input type="text" id="fieldDegree">
+</div>
+
+<div class="ai-field">
+<label for="fieldUniversity">Université</label>
+<input type="text" id="fieldUniversity" required>
+</div>
+
+</div>
+
+<div class="ai-field-row">
+
+<div class="ai-field">
+<label for="fieldProgram">Programme visé</label>
+<input type="text" id="fieldProgram">
+</div>
+
+<div class="ai-field">
+<label for="fieldCountry">Pays</label>
+<input type="text" id="fieldCountry">
+</div>
+
+</div>
+
+<div class="ai-field" id="fieldContactNameWrap" hidden>
+<label for="fieldContactName">Nom du contact</label>
+<input type="text" id="fieldContactName">
+</div>
+
+<div class="ai-field" id="fieldResearchTopicWrap" hidden>
+<label for="fieldResearchTopic">Sujet / thème de recherche</label>
+<input type="text" id="fieldResearchTopic">
+</div>
+
+<div class="ai-field" id="fieldDocumentsListWrap" hidden>
+<label for="fieldDocumentsList">Documents joints (séparés par une virgule)</label>
+<input type="text" id="fieldDocumentsList" placeholder="CV, lettre de motivation, relevé de notes">
+</div>
+
+<div class="ai-field" id="fieldContextWrap" hidden>
+<label for="fieldContext" id="fieldContextLabel">Contexte</label>
+<textarea id="fieldContext" rows="3"></textarea>
+</div>
+
+<button type="submit" class="btn btn-primary" id="generateEmailBtn" style="width:100%;" disabled>
+<i data-lucide="sparkles"></i>
+<span>Choisissez un type d'e-mail</span>
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+<section class="ai-panel" id="previewPanel">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="eye"></i>Aperçu</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<div class="ai-preview-toolbar">
+<button type="button" class="ai-icon-btn" id="copyBtn" disabled><i data-lucide="copy"></i>Copier</button>
+<button type="button" class="ai-icon-btn" id="editBtn" disabled><i data-lucide="pencil"></i>Modifier</button>
+<button type="button" class="ai-icon-btn" id="regenerateBtn" disabled><i data-lucide="refresh-cw"></i>Régénérer</button>
+<button type="button" class="ai-icon-btn" id="downloadBtn" disabled><i data-lucide="download"></i>Télécharger</button>
+</div>
+
+<div class="ai-preview-content" id="previewContent">
+<div class="ai-preview-empty">
+<i data-lucide="mail"></i>
+<span>Votre e-mail apparaîtra ici, prêt à copier ou à modifier.</span>
+</div>
+</div>
+
+<textarea class="ai-preview-edit" id="previewEdit" hidden></textarea>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="ai-email.js"></script>
+
+</body>
+
+</html>

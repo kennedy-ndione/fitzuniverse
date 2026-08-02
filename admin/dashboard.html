@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Control Center | ScholarBridge Admin</title>
+
+<meta name="description" content="Centre de contrôle ScholarBridge : statistiques en temps réel, étudiants, formules, universités, bourses et Fitz.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Chart.js (CDN, sans étape de build — même convention que le reste du site) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<!-- Loader affiché pendant la vérification de la session admin -->
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Vue d'ensemble</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link is-active" aria-current="page"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">À venir</span>
+
+<ul>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="folder"></i><span>Documents</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="settings"></i><span>Paramètres</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<main class="content" style="display:none;">
+
+<!-- ==========================================================
+HERO EXÉCUTIF
+========================================================== -->
+
+<section class="exec-hero reveal-stagger">
+
+<div class="exec-hero-identity">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="exec-avatar" id="execAvatar">—</div>
+
+<div class="exec-identity-text">
+<h1 id="execGreeting">Bonjour</h1>
+<p class="exec-role" id="execRole">Administrateur • ScholarBridge</p>
+<p class="exec-briefing" id="execBriefing">Chargement de votre briefing quotidien...</p>
+</div>
+
+</div>
+
+<div class="exec-hero-badges" id="execStatusBadges">
+<!-- badges générés par dashboard.js (date, heure, sync, infra) -->
+</div>
+
+</section>
+
+<!-- ==========================================================
+VUE D'ENSEMBLE DU JOUR
+========================================================== -->
+
+<section class="overview-card reveal-stagger">
+
+<div class="overview-card-header">
+<h2>Aujourd'hui sur ScholarBridge</h2>
+<p>Le résumé quotidien de votre plateforme, en un coup d'œil.</p>
+</div>
+
+<div class="overview-checklist" id="overviewChecklist">
+<!-- items générés par dashboard.js -->
+</div>
+
+</section>
+
+<!-- ==========================================================
+STATISTIQUES
+========================================================== -->
+
+<div class="stats-grid" id="statsGrid">
+<!-- cartes générées par dashboard.js -->
+</div>
+
+<!-- ==========================================================
+OBSERVATIONS IA
+========================================================== -->
+
+<section class="ai-observations reveal-stagger">
+<div class="ai-observations-icon"><i data-lucide="sparkles"></i></div>
+<div>
+<h2>Observations IA</h2>
+<p id="aiObservationText">Analyse en cours...</p>
+</div>
+</section>
+
+<!-- ==========================================================
+GRAPHIQUES
+========================================================== -->
+
+<div class="panels-grid">
+
+<div class="panel-card">
+<h2>Inscriptions — 30 derniers jours</h2>
+<p class="panel-card-subtext">Nouveaux comptes créés chaque jour (données réelles, écrites par js/analytics.js).</p>
+<div class="chart-wrap">
+<canvas id="signupsChart" height="110"></canvas>
+<div class="chart-empty-state" id="signupsChartEmpty" hidden>
+<i data-lucide="line-chart"></i>
+<p>Les données apparaîtront automatiquement lorsque ScholarBridge recevra davantage d'activité.</p>
+</div>
+</div>
+</div>
+
+<div class="panel-card">
+<h2>Répartition par formule</h2>
+<p class="panel-card-subtext">Tentatives d'activation enregistrées, par formule.</p>
+<div class="chart-wrap">
+<canvas id="planChart" height="180"></canvas>
+<div class="chart-empty-state" id="planChartEmpty" hidden>
+<i data-lucide="pie-chart"></i>
+<p>Les données apparaîtront automatiquement dès la première tentative d'activation.</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="panels-grid">
+
+<div class="panel-card">
+<h2>Top pays consultés</h2>
+<p class="panel-card-subtext">Pays associés aux bourses/universités les plus consultées.</p>
+<div class="top-list" id="topCountriesList"></div>
+</div>
+
+<div class="panel-card">
+<h2>Top universités consultées</h2>
+<p class="panel-card-subtext">D'après les consultations enregistrées depuis le lancement du suivi.</p>
+<div class="top-list" id="topUniversitiesList"></div>
+</div>
+
+</div>
+
+<!-- ==========================================================
+ACTIVITÉ RÉCENTE + INFRASTRUCTURE
+========================================================== -->
+
+<div class="panels-grid panels-grid--asym">
+
+<div class="panel-card">
+<h2>Activité récente</h2>
+<p class="panel-card-subtext">Ce qui s'est passé sur ScholarBridge, en temps réel.</p>
+<div class="exec-timeline" id="activityTimeline"></div>
+</div>
+
+<div class="panel-card">
+<h2>Infrastructure</h2>
+<p class="panel-card-subtext">État des services qui font fonctionner ScholarBridge.</p>
+<div class="infra-grid" id="infraGrid"></div>
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="dashboard.js"></script>
+
+</body>
+
+</html>

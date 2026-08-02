@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Détails de la bourse | ScholarBridge</title>
+<meta name="description" content="Détails, conditions et procédure de candidature pour cette bourse sur ScholarBridge.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="scholarship-details.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body>
+
+<header class="header">
+
+<div class="container header-container">
+
+<a href="index.html" class="logo">
+<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<div class="header-actions">
+
+<a href="scholarships.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour au catalogue</span>
+</a>
+
+</div>
+
+</div>
+
+</header>
+
+<main id="detailsMain" hidden>
+
+<section class="details-hero">
+
+<img id="cityImage" class="details-hero-bg" alt="">
+
+<div class="details-hero-overlay"></div>
+
+<div class="container details-hero-inner">
+
+<div class="details-hero-badge">
+<img id="flag" alt="">
+<span id="country"></span>
+</div>
+
+<h1 id="title"></h1>
+
+<p class="details-hero-sub">
+<span id="city"></span> · <span id="level"></span>
+</p>
+
+<p class="details-hero-scholarship" id="scholarship"></p>
+
+</div>
+
+</section>
+
+<div class="container details-body">
+
+<div class="details-main">
+
+<section class="details-section">
+<h2>À propos de cette opportunité</h2>
+<p id="description"></p>
+</section>
+
+<section class="details-section">
+<h2>Informations clés</h2>
+
+<div class="details-info-grid">
+
+<div class="details-info-item">
+<i data-lucide="calendar-clock"></i>
+<div><span>Date limite</span><strong id="deadline"></strong></div>
+</div>
+
+<div class="details-info-item">
+<i data-lucide="banknote"></i>
+<div><span>Couverture</span><strong id="coverage"></strong></div>
+</div>
+
+<div class="details-info-item">
+<i data-lucide="languages"></i>
+<div><span>Langue</span><strong id="language"></strong></div>
+</div>
+
+<div class="details-info-item">
+<i data-lucide="hourglass"></i>
+<div><span>Durée</span><strong id="duration"></strong></div>
+</div>
+
+<div class="details-info-item">
+<i data-lucide="trophy"></i>
+<div><span>Classement</span><strong id="ranking"></strong></div>
+</div>
+
+<div class="details-info-item">
+<i data-lucide="circle-check"></i>
+<div><span>Statut</span><strong id="status"></strong></div>
+</div>
+
+</div>
+
+</section>
+
+<!-- Avant de candidater : diagnostic Fitz -->
+<section class="details-section diagnostic-block">
+
+<div class="diagnostic-head">
+<i data-lucide="sparkles"></i>
+<h2>Avant de candidater</h2>
+</div>
+
+<p class="diagnostic-intro">Fitz peut analyser votre compatibilité avec cette université.</p>
+
+<ul class="diagnostic-checklist">
+<li><i data-lucide="check"></i>Niveau académique</li>
+<li><i data-lucide="check"></i>Langue</li>
+<li><i data-lucide="check"></i>Documents</li>
+<li><i data-lucide="check"></i>Chances de compléter votre dossier</li>
+</ul>
+
+<button type="button" class="btn btn-secondary" id="analyzeBtn">
+<i data-lucide="scan-search"></i>
+<span>Analyser mon profil</span>
+</button>
+
+<div id="diagnosticResult" class="diagnostic-result" hidden></div>
+
+</section>
+
+</div>
+
+<aside class="details-sidebar">
+
+<div class="cta-card cta-card-primary">
+
+<span class="cta-card-badge"><i data-lucide="star"></i>Recommandé</span>
+
+<h3>Être accompagné par Fitz</h3>
+
+<p>Diagnostic personnalisé, checklists, assistance étape par étape, préparation des documents.</p>
+
+<a href="offers.html" class="btn btn-primary btn-lg">
+<span>Découvrir l'accompagnement</span>
+<i data-lucide="arrow-right"></i>
+</a>
+
+</div>
+
+<div class="cta-card-secondary">
+
+<p>Vous voulez avancer par vous-même ?</p>
+
+<a id="applyBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link">
+<span>Accéder au portail officiel de l'université</span>
+<i data-lucide="external-link"></i>
+</a>
+
+<p class="portal-trust">
+<i data-lucide="shield-check"></i>
+Lien officiel, en accès libre : cette information restera toujours gratuite. Seul l'accompagnement de Fitz est payant.
+</p>
+
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+<!-- Nudge au retour depuis le portail -->
+<div class="portal-nudge" id="portalNudge" hidden>
+
+<div class="portal-nudge-icon"><i data-lucide="sparkles"></i></div>
+
+<div class="portal-nudge-copy">
+<strong>De retour du portail ?</strong>
+<p>Fitz peut vous accompagner à chaque étape pour aller encore plus loin.</p>
+</div>
+
+<div class="portal-nudge-actions">
+<a href="applications.html" class="btn btn-secondary btn-sm">Suivre cette candidature</a>
+<a href="offers.html" class="btn btn-primary btn-sm">Voir l'accompagnement</a>
+</div>
+
+<button type="button" class="portal-nudge-close" id="portalNudgeClose" aria-label="Fermer"><i data-lucide="x"></i></button>
+
+</div>
+
+<script src="js/header-scroll.js"></script>
+<script type="module" src="details.js"></script>
+
+</body>
+
+</html>

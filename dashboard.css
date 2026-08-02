@@ -1,0 +1,1971 @@
+/* ==========================================================
+SCHOLARBRIDGE — TABLEAU DE BORD (dashboard.html)
+Repose sur les variables et le reset définis dans css/base.css
+(même palette, même typographie, même système que le reste du
+parcours) mais avec sa propre identité : app-shell sidebar +
+contenu, pensé comme un véritable espace personnel plutôt
+qu'une page marketing.
+========================================================== */
+
+:root{
+
+--sidebar-width:260px;
+--sidebar-width-collapsed:80px;
+--topbar-height:72px;
+
+/* ==========================================================
+THÈME SOMBRE DU DASHBOARD — refonte 2026-08 : bleu profond / violet
+discret / gris modernes. Ces --shell-* sont redéclarés ICI (pas
+dans css/base.css) pour ne rehue QUE les pages qui chargent
+dashboard.css — admin/control-center.css et admin/login.css restent
+volontairement sur les valeurs neutres d'origine de base.css, hors
+périmètre de cette refonte. Toute page à fond sombre du shell
+étudiant doit continuer à surcharger les tokens génériques avec
+CEUX-LÀ dans son propre scope, jamais avec de nouvelles valeurs
+inventées localement.
+========================================================== */
+
+--shell-bg:#171B34;
+--shell-surface:#0D0F24;
+--shell-elevated:#232849;
+--shell-border:rgba(150,140,255,.12);
+--shell-text:#EDEBFB;
+--shell-shadow-xs:0 2px 10px rgba(8,9,28,.38), inset 0 1px 0 rgba(255,255,255,.04);
+--shell-shadow-sm:0 8px 20px rgba(8,9,28,.42);
+--shell-shadow-md:0 14px 32px rgba(8,9,28,.48);
+--shell-shadow-lg:0 22px 52px rgba(8,9,28,.54);
+
+--background:var(--shell-bg);
+--background-soft:var(--shell-surface);
+--background-alt:var(--shell-elevated);
+--background-light:rgba(51,65,140,.16);
+
+--border-color:var(--shell-border);
+
+--text-color:var(--shell-text);
+--text-light:#C4C7E8;
+--text-muted:#8B8FB8;
+
+--glass:rgba(23,27,52,.72);
+--glass-border:rgba(150,140,255,.14);
+
+--shadow-xs:var(--shell-shadow-xs);
+--shadow-sm:var(--shell-shadow-sm);
+--shadow-md:var(--shell-shadow-md);
+--shadow-lg:var(--shell-shadow-lg);
+
+}
+
+body{
+
+background:
+radial-gradient(circle at 15% -10%,rgba(51,65,140,.28),transparent 45%),
+radial-gradient(circle at 100% 0%,rgba(126,113,216,.16),transparent 40%),
+var(--background-soft);
+
+background-attachment:fixed;
+
+}
+
+/* ==========================================================
+ACCESSIBILITÉ CLAVIER — anneaux de focus visibles et cohérents
+avec le reste du site (mêmes teintes que base.css .btn:focus-visible)
+========================================================== */
+
+.nav-link:focus-visible,
+.sidebar-logout:focus-visible,
+.sidebar-collapse-btn:focus-visible,
+.topbar-menu-btn:focus-visible,
+.topbar-plan-chip:focus-visible,
+.coach-card-link:focus-visible,
+.btn-upgrade:focus-visible,
+a.tool-card:focus-visible,
+.sidebar-brand:focus-visible{
+
+outline:none;
+
+box-shadow:0 0 0 3px rgba(126,113,216,.5);
+
+}
+
+.upgrade-nudge .btn-upgrade:focus-visible{
+
+box-shadow:0 0 0 3px rgba(255,255,255,.6);
+
+}
+
+/* ==========================================================
+CHARGEMENT
+========================================================== */
+
+.auth-page-loader{
+
+position:fixed;
+
+inset:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:var(--background-soft);
+
+z-index:9999;
+
+}
+
+.loader-spinner{
+
+width:44px;
+
+height:44px;
+
+border:4px solid rgba(255,255,255,.12);
+
+border-top:4px solid var(--accent-color);
+
+border-radius:50%;
+
+animation:dashSpin .8s linear infinite;
+
+}
+
+@keyframes dashSpin{
+
+100%{ transform:rotate(360deg); }
+
+}
+
+/* ==========================================================
+RÉVÉLATION AU CHARGEMENT
+========================================================== */
+
+.reveal{
+
+opacity:1;
+
+transform:none;
+
+}
+
+html.js-ready .reveal{
+
+opacity:0;
+
+transform:translateY(20px);
+
+transition:opacity .6s var(--ease-premium), transform .6s var(--ease-premium);
+
+}
+
+html.js-ready .reveal.is-visible{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.reveal{
+
+opacity:1 !important;
+
+transform:none !important;
+
+transition:none !important;
+
+}
+
+}
+
+/* ==========================================================
+STRUCTURE GÉNÉRALE
+========================================================== */
+
+.dashboard-shell{
+
+display:flex;
+
+min-height:100vh;
+
+}
+
+.sidebar-backdrop{
+
+display:none;
+
+position:fixed;
+
+inset:0;
+
+background:rgba(15,23,42,.5);
+
+z-index:40;
+
+}
+
+/* ==========================================================
+SIDEBAR
+========================================================== */
+
+.sidebar{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+bottom:0;
+
+z-index:50;
+
+width:var(--sidebar-width);
+
+display:flex;
+
+flex-direction:column;
+
+background:var(--background);
+
+border-right:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+transition:width .3s var(--ease-premium), transform .3s var(--ease-premium);
+
+overflow-y:auto;
+
+overflow-x:hidden;
+
+}
+
+body.sidebar-collapsed .sidebar{
+
+width:var(--sidebar-width-collapsed);
+
+}
+
+.sidebar-top{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:8px;
+
+padding:22px 18px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.sidebar-brand{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+min-width:0;
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:1.05rem;
+
+color:var(--text-color);
+
+}
+
+.sidebar-brand .logo-icon{
+
+flex-shrink:0;
+
+width:36px;
+
+height:36px;
+
+object-fit:contain;
+
+border-radius:10px;
+
+}
+
+.sidebar-brand-text{
+
+white-space:nowrap;
+
+overflow:hidden;
+
+transition:opacity .2s ease;
+
+}
+
+.sidebar-brand-text .scholar{ color:var(--primary-color); }
+.sidebar-brand-text .bridge{ color:var(--accent-color); }
+
+body.sidebar-collapsed .sidebar-brand-text{
+
+opacity:0;
+
+width:0;
+
+}
+
+.sidebar-collapse-btn{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:32px;
+
+height:32px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-xs);
+
+background:var(--background);
+
+color:var(--text-muted);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.sidebar-collapse-btn:hover{
+
+color:var(--accent-color);
+
+border-color:var(--accent-color);
+
+}
+
+.sidebar-collapse-btn i{
+
+width:16px;
+
+height:16px;
+
+transition:transform .3s var(--ease-premium);
+
+}
+
+body.sidebar-collapsed .sidebar-collapse-btn i{
+
+transform:rotate(180deg);
+
+}
+
+.sidebar-plan{
+
+display:flex;
+
+flex-direction:column;
+
+gap:6px;
+
+margin:16px 18px;
+
+padding:14px 16px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-light);
+
+}
+
+body.sidebar-collapsed .sidebar-plan{
+
+padding:10px;
+
+align-items:center;
+
+}
+
+.sidebar-plan-label{
+
+font-size:.72rem;
+
+font-weight:700;
+
+color:var(--text-muted);
+
+text-transform:uppercase;
+
+letter-spacing:.05em;
+
+}
+
+body.sidebar-collapsed .sidebar-plan-label{
+
+display:none;
+
+}
+
+.sidebar-plan-badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+width:max-content;
+
+padding:5px 12px;
+
+border-radius:var(--radius-full);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:700;
+
+font-size:.82rem;
+
+}
+
+.sidebar-nav{
+
+flex:1;
+
+padding:6px 12px 12px;
+
+}
+
+.sidebar-section-label{
+
+display:block;
+
+margin:18px 10px 8px;
+
+color:var(--text-muted);
+
+font-weight:700;
+
+font-size:.7rem;
+
+text-transform:uppercase;
+
+letter-spacing:.06em;
+
+white-space:nowrap;
+
+}
+
+body.sidebar-collapsed .sidebar-section-label{
+
+opacity:0;
+
+height:0;
+
+margin:8px 0 0;
+
+overflow:hidden;
+
+}
+
+.sidebar-nav ul{
+
+display:flex;
+
+flex-direction:column;
+
+gap:3px;
+
+}
+
+.nav-link{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:11px 12px;
+
+border-radius:var(--radius-md);
+
+color:var(--text-light);
+
+font-weight:600;
+
+font-size:.92rem;
+
+white-space:nowrap;
+
+transition:var(--transition);
+
+}
+
+.nav-link i:not(.nav-lock){
+
+flex-shrink:0;
+
+width:19px;
+
+height:19px;
+
+}
+
+.nav-link span{
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+
+body.sidebar-collapsed .nav-link span{
+
+display:none;
+
+}
+
+.nav-link:hover{
+
+background:var(--background-alt);
+
+color:var(--text-color);
+
+}
+
+/* Groupe "Fitz" — un panneau légèrement teinté distingue ce sous-
+ensemble d'outils du reste de la navigation ("Mon espace"), plutôt
+qu'une simple étiquette de section au même poids visuel que l'autre.
+La teinte de la signature Fitz (--fitz-color) reste réservée à ce
+groupe : ailleurs dans la nav, le survol est neutre (voir
+.nav-link:hover ci-dessus). */
+.sidebar-nav-fitz{
+
+background:rgba(139,124,246,.06);
+
+border:1px solid rgba(139,124,246,.14);
+
+border-radius:var(--radius-md);
+
+padding:4px;
+
+}
+
+.sidebar-nav-fitz .nav-link:hover{
+
+background:rgba(139,124,246,.14);
+
+color:var(--fitz-color);
+
+}
+
+.nav-link.is-active{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+box-shadow:0 8px 18px rgba(51,65,140,.28);
+
+}
+
+.nav-lock{
+
+display:none;
+
+flex-shrink:0;
+
+width:13px !important;
+
+height:13px !important;
+
+margin-left:auto;
+
+color:var(--text-muted);
+
+}
+
+.nav-link.is-active .nav-lock{
+
+color:rgba(255,255,255,.8);
+
+}
+
+body.sidebar-collapsed .nav-lock{
+
+display:none;
+
+}
+
+.sidebar-bottom{
+
+padding:14px 12px 20px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.sidebar-logout{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+width:100%;
+
+padding:11px 12px;
+
+border:none;
+
+border-radius:var(--radius-md);
+
+background:none;
+
+color:var(--text-light);
+
+font-family:"Inter",sans-serif;
+
+font-weight:600;
+
+font-size:.92rem;
+
+cursor:pointer;
+
+white-space:nowrap;
+
+transition:var(--transition);
+
+}
+
+.sidebar-logout i{
+
+flex-shrink:0;
+
+width:19px;
+
+height:19px;
+
+}
+
+.sidebar-logout:hover{
+
+background:rgba(239,68,68,.08);
+
+color:var(--danger);
+
+}
+
+body.sidebar-collapsed .sidebar-logout span{
+
+display:none;
+
+}
+
+/* ==========================================================
+CONTENU PRINCIPAL
+========================================================== */
+
+.dashboard-main{
+
+flex:1;
+
+min-width:0;
+
+margin-left:var(--sidebar-width);
+
+transition:margin-left .3s var(--ease-premium);
+
+}
+
+body.sidebar-collapsed .dashboard-main{
+
+margin-left:var(--sidebar-width-collapsed);
+
+}
+
+.topbar{
+
+position:sticky;
+
+top:0;
+
+z-index:20;
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+height:var(--topbar-height);
+
+padding:0 32px;
+
+background:rgba(15,23,42,.72);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.topbar-menu-btn{
+
+display:none;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-sm);
+
+background:var(--background);
+
+color:var(--text-color);
+
+cursor:pointer;
+
+}
+
+.topbar-menu-btn i{
+
+width:19px;
+
+height:19px;
+
+}
+
+.topbar-title{
+
+flex:1;
+
+min-width:0;
+
+}
+
+.topbar-title h1{
+
+font-size:var(--fs-page-title);
+
+font-weight:var(--fw-bold);
+
+color:var(--text-color);
+
+white-space:nowrap;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+
+/* ==========================================================
+CLOCHE DE MESSAGES (Module 3 du Control Center admin)
+========================================================== */
+
+.messages-bell-wrap{
+
+position:relative;
+
+flex-shrink:0;
+
+}
+
+.messages-bell-btn{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:40px;
+
+height:40px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-full);
+
+background:var(--background);
+
+color:var(--text-light);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.messages-bell-btn:hover{
+
+color:var(--accent-color);
+
+border-color:var(--accent-color);
+
+}
+
+.messages-bell-btn i{
+
+width:18px;
+
+height:18px;
+
+}
+
+.messages-bell-dot{
+
+position:absolute;
+
+top:8px;
+
+right:9px;
+
+width:8px;
+
+height:8px;
+
+border-radius:50%;
+
+background:var(--danger);
+
+border:2px solid var(--background);
+
+}
+
+.messages-panel{
+
+position:absolute;
+
+top:calc(100% + 10px);
+
+right:0;
+
+z-index:60;
+
+width:320px;
+
+max-height:360px;
+
+overflow-y:auto;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-lg);
+
+}
+
+.messages-panel-header{
+
+padding:14px 18px;
+
+border-bottom:1px solid var(--border-color);
+
+font-weight:700;
+
+font-size:.86rem;
+
+color:var(--text-color);
+
+}
+
+.messages-panel-list{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.messages-panel-empty{
+
+padding:24px 18px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+}
+
+.messages-panel-item{
+
+padding:14px 18px;
+
+border-bottom:1px solid var(--border-color);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.messages-panel-item:last-child{
+
+border-bottom:none;
+
+}
+
+.messages-panel-item:hover{
+
+background:var(--background-light);
+
+}
+
+.messages-panel-item.is-unread{
+
+background:rgba(126,113,216,.08);
+
+}
+
+.messages-panel-item p{
+
+color:var(--text-color);
+
+font-size:.86rem;
+
+line-height:1.5;
+
+margin-bottom:4px;
+
+}
+
+.messages-panel-item span{
+
+color:var(--text-muted);
+
+font-size:.74rem;
+
+}
+
+.topbar-plan-chip{
+
+flex-shrink:0;
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:8px 16px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-light);
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.84rem;
+
+transition:var(--transition);
+
+}
+
+.topbar-plan-chip:hover{
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+transform:translateY(-1px);
+
+}
+
+.topbar-plan-chip i{
+
+width:15px;
+
+height:15px;
+
+}
+
+.content{
+
+max-width:1160px;
+
+margin:0 auto;
+
+padding:32px 32px 80px;
+
+}
+
+/* ==========================================================
+ALERTE DE BIENVENUE
+========================================================== */
+
+.welcome-alert{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:12px;
+
+padding:16px 20px;
+
+margin-bottom:28px;
+
+border-radius:var(--radius-lg);
+
+background:rgba(34,197,94,.14);
+
+border:1px solid rgba(34,197,94,.35);
+
+}
+
+.welcome-alert[hidden]{
+
+display:none;
+
+}
+
+.welcome-alert i{
+
+flex-shrink:0;
+
+width:20px;
+
+height:20px;
+
+margin-top:1px;
+
+color:var(--success);
+
+}
+
+.welcome-alert strong{
+
+display:block;
+
+color:var(--text-color);
+
+font-size:.95rem;
+
+margin-bottom:2px;
+
+}
+
+.welcome-alert p{
+
+color:var(--text-light);
+
+font-size:.88rem;
+
+}
+
+.welcome-alert-accompagnement{
+
+background:rgba(126,113,216,.10);
+
+border-color:rgba(126,113,216,.28);
+
+}
+
+.welcome-alert-accompagnement i{color:var(--accent-color);}
+
+.welcome-alert-cta{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+margin-top:10px;
+
+font-size:.86rem;
+
+font-weight:700;
+
+color:var(--accent-color);
+
+}
+
+.welcome-alert-cta i{
+
+width:15px;
+
+height:15px;
+
+color:inherit;
+
+transition:transform .2s ease;
+
+}
+
+.welcome-alert-cta:hover i{transform:translateX(3px);}
+
+/* ==========================================================
+SECTIONS GÉNÉRIQUES
+========================================================== */
+
+.section-heading{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+margin-bottom:6px;
+
+}
+
+.section-heading i{
+
+width:20px;
+
+height:20px;
+
+color:var(--text-muted);
+
+}
+
+.section-heading h2{
+
+font-size:1.2rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.section-subtext{
+
+color:var(--text-light);
+
+font-size:.9rem;
+
+margin-bottom:18px;
+
+}
+
+.coach-section,
+.stats-section,
+.tools-section{
+
+margin-bottom:36px;
+
+}
+
+/* ==========================================================
+COACH — "AUJOURD'HUI"
+========================================================== */
+
+.coach-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+
+gap:16px;
+
+}
+
+.coach-card{
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+padding:18px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+transition:var(--transition);
+
+}
+
+.coach-card:hover{
+
+transform:translateY(-4px);
+
+box-shadow:var(--shadow-md);
+
+border-color:rgba(139,124,246,.4);
+
+}
+
+.coach-card-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:42px;
+
+height:42px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-alt);
+
+color:var(--text-light);
+
+}
+
+.coach-card-icon i{
+
+width:20px;
+
+height:20px;
+
+}
+
+.coach-card-body h3{
+
+font-size:1rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+margin-bottom:6px;
+
+}
+
+.coach-card-body p{
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+line-height:1.55;
+
+margin-bottom:14px;
+
+min-height:2.6em;
+
+}
+
+.coach-card-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.86rem;
+
+}
+
+.coach-card-link i{
+
+width:14px;
+
+height:14px;
+
+transition:transform .25s var(--ease-premium);
+
+}
+
+.coach-card:hover .coach-card-link i{
+
+transform:translateX(3px);
+
+}
+
+/* ==========================================================
+STATISTIQUES
+========================================================== */
+
+.stats-section{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:16px;
+
+}
+
+.stat-card{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+padding:22px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+transition:var(--transition);
+
+}
+
+.stat-card:hover{
+
+transform:translateY(-4px);
+
+box-shadow:var(--shadow-md);
+
+border-color:rgba(126,113,216,.35);
+
+}
+
+.stat-card-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:48px;
+
+height:48px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-alt);
+
+color:var(--text-light);
+
+}
+
+.stat-card-icon i{
+
+width:22px;
+
+height:22px;
+
+}
+
+.stat-card-body{
+
+min-width:0;
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.stat-card-value{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:var(--fw-extrabold);
+
+font-variant-numeric:tabular-nums;
+
+color:var(--text-color);
+
+}
+
+.stat-card-value small{
+
+font-size:.95rem;
+
+font-weight:700;
+
+color:var(--text-muted);
+
+margin-left:2px;
+
+}
+
+.stat-card-label{
+
+color:var(--text-light);
+
+font-size:var(--fs-meta);
+
+font-weight:600;
+
+}
+
+/* ==========================================================
+NUDGE DE MONTÉE EN GAMME
+========================================================== */
+
+.upgrade-nudge{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:20px;
+
+padding:30px 32px;
+
+border-radius:var(--radius-lg);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+box-shadow:var(--shadow-lg);
+
+}
+
+.upgrade-nudge[hidden]{
+
+display:none;
+
+}
+
+.upgrade-nudge-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:52px;
+
+height:52px;
+
+border-radius:16px;
+
+background:rgba(255,255,255,.16);
+
+}
+
+.upgrade-nudge-icon i{
+
+width:24px;
+
+height:24px;
+
+}
+
+.upgrade-nudge-body{
+
+flex:1;
+
+min-width:0;
+
+}
+
+.upgrade-nudge-current{
+
+font-size:.86rem;
+
+opacity:.85;
+
+margin-bottom:6px;
+
+}
+
+.upgrade-nudge-title{
+
+font-family:var(--font-display);
+
+font-size:1.15rem;
+
+font-weight:800;
+
+margin-bottom:14px;
+
+}
+
+.upgrade-nudge-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
+
+margin-bottom:20px;
+
+}
+
+.upgrade-nudge-list li{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:9px;
+
+font-size:.9rem;
+
+line-height:1.5;
+
+opacity:.95;
+
+}
+
+.upgrade-nudge-list i{
+
+flex-shrink:0;
+
+width:16px;
+
+height:16px;
+
+margin-top:2px;
+
+color:var(--accent-color);
+
+}
+
+.btn-upgrade{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:9px;
+
+padding:12px 22px;
+
+border-radius:var(--radius-md);
+
+background:#fff;
+
+color:var(--primary-color);
+
+font-weight:700;
+
+font-size:.92rem;
+
+transition:var(--transition);
+
+}
+
+.btn-upgrade:hover{
+
+transform:translateY(-1px);
+
+box-shadow:var(--shadow-md);
+
+}
+
+.btn-upgrade i{
+
+width:16px;
+
+height:16px;
+
+}
+
+/* ==========================================================
+GRILLE D'OUTILS
+========================================================== */
+
+.tools-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+
+gap:18px;
+
+}
+
+.tool-card{
+
+position:relative;
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+padding:24px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+overflow:hidden;
+
+transition:var(--transition);
+
+}
+
+a.tool-card:hover{
+
+transform:translateY(-4px);
+
+box-shadow:var(--shadow-md);
+
+border-color:rgba(126,113,216,.35);
+
+}
+
+.tool-card-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:44px;
+
+height:44px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-alt);
+
+color:var(--text-light);
+
+}
+
+.tool-card-icon i{
+
+width:21px;
+
+height:21px;
+
+}
+
+/* Distinction "propulsé par Fitz" — jusqu'ici les 6 outils du groupe
+sidebar "Fitz" (ai_chat/ai_letter/ai_check/ai_email/ai_translate/
+compress) portaient exactement le même chip or que "Suivi des
+candidatures" ou "Universités partenaires", qui ne sont que des
+raccourcis de navigation. Ce modificateur reprend la signature
+gold-forward déjà établie (--gradient-fitz/--glow-fitz) pour que la
+grille d'outils distingue au premier regard ce que Fitz fait pour vous. */
+.tool-card-icon--fitz{
+
+background:var(--gradient-fitz);
+
+color:#fff;
+
+box-shadow:var(--glow-fitz);
+
+}
+
+.tool-card h3{
+
+font-size:1rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+}
+
+.tool-card p{
+
+flex:1;
+
+color:var(--text-light);
+
+font-size:.86rem;
+
+line-height:1.55;
+
+}
+
+.tool-card-cta{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+color:var(--accent-color);
+
+font-weight:700;
+
+font-size:.86rem;
+
+}
+
+.tool-card-cta i{
+
+width:14px;
+
+height:14px;
+
+transition:transform .25s var(--ease-premium);
+
+}
+
+a.tool-card:hover .tool-card-cta i{
+
+transform:translateX(3px);
+
+}
+
+.tool-card-soon-badge{
+
+color:var(--text-muted);
+
+}
+
+/* Recouvrement "verrouillé" — affiché par la CSS ci-dessous selon la
+formule active (voir règles [data-plan] plus bas), jamais par défaut. */
+.tool-card-lock{
+
+display:none;
+
+position:absolute;
+
+inset:0;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+gap:8px;
+
+text-align:center;
+
+padding:20px;
+
+background:rgba(15,23,42,.94);
+
+backdrop-filter:blur(3px);
+
+}
+
+.tool-card-lock i:first-child{
+
+width:22px;
+
+height:22px;
+
+color:var(--accent-color);
+
+}
+
+.tool-card-lock span:not(.tool-card-lock-cta){
+
+font-size:.82rem;
+
+font-weight:700;
+
+color:var(--text-color);
+
+}
+
+.tool-card-lock-cta{
+
+margin-top:4px;
+
+padding:8px 16px;
+
+border-radius:var(--radius-full);
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-size:.8rem;
+
+font-weight:700;
+
+}
+
+.tool-card-soon{
+
+opacity:.75;
+
+}
+
+.tool-card-soon:hover{
+
+transform:none;
+
+box-shadow:var(--shadow-xs);
+
+}
+
+/* ==========================================================
+VERROUILLAGE PAR FORMULE
+========================================================== */
+
+/* Module 4 : le verrouillage n'est plus déduit d'un seuil de palier
+statique (data-tier) mais d'indicateurs par fonctionnalité pilotés
+depuis admin/plans.js (js/plan-features.js) — dashboard.js calcule
+lui-même si chaque [data-feature] doit être verrouillé pour la
+formule active et pose/retire la classe .is-locked en conséquence. */
+.tool-card.is-locked .tool-card-lock{
+
+display:flex;
+
+}
+
+li.is-locked .nav-lock{
+
+display:block;
+
+}
+
+/* ==========================================================
+RESPONSIVE — TABLETTE (768–1023px)
+========================================================== */
+
+@media(max-width:1023px){
+
+.sidebar{
+
+transform:translateX(-100%);
+
+box-shadow:var(--shadow-lg);
+
+}
+
+body.sidebar-open .sidebar{
+
+transform:translateX(0);
+
+}
+
+body.sidebar-open .sidebar-backdrop{
+
+display:block;
+
+}
+
+.dashboard-main{
+
+margin-left:0;
+
+}
+
+body.sidebar-collapsed .dashboard-main{
+
+margin-left:0;
+
+}
+
+.sidebar-collapse-btn{
+
+display:none;
+
+}
+
+.topbar-menu-btn{
+
+display:flex;
+
+}
+
+.stats-section{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+}
+
+/* ==========================================================
+RESPONSIVE — MOBILE (< 768px)
+========================================================== */
+
+@media(max-width:767px){
+
+.content{
+
+padding:24px 18px 70px;
+
+}
+
+.topbar{
+
+padding:0 18px;
+
+}
+
+.topbar-plan-chip span{
+
+display:none;
+
+}
+
+.stats-section{
+
+grid-template-columns:1fr;
+
+}
+
+.upgrade-nudge{
+
+flex-direction:column;
+
+padding:24px;
+
+}
+
+.tools-grid{
+
+grid-template-columns:1fr;
+
+}
+
+}

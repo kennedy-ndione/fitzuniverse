@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ScholarBridge | Choisissez votre accompagnement</title>
+
+<meta name="description" content="Choisissez la formule adaptée au nombre de candidatures que vous souhaitez préparer : Essentiel, Avancé, Premium ou ScholarBridge Signature.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="offers.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<a href="results.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour à mon diagnostic</span>
+</a>
+
+<header class="offer-header reveal">
+
+<div class="ai-badge">
+<i data-lucide="bot"></i>
+<span>Fitz</span>
+</div>
+
+<h1>Choisissez la formule adaptée au nombre de candidatures que vous souhaitez préparer.</h1>
+
+<p class="lead">
+Chaque formule comprend un accompagnement personnalisé avec Fitz. Plus votre formule inclut de candidatures, plus vous pouvez multiplier vos opportunités. Si vous souhaitez un suivi humain dédié, choisissez ScholarBridge Signature.
+</p>
+
+</header>
+
+<!-- Fitz, le personnage principal -->
+<div class="fitz-showcase reveal">
+
+<div class="fitz-showcase-avatar"><i data-lucide="sparkles"></i></div>
+
+<div class="fitz-showcase-copy">
+<span class="fitz-showcase-label">Ce que vous financez, concrètement</span>
+<p id="fitzRotatorMessage">Fitz analyse votre profil.</p>
+</div>
+
+</div>
+
+<!-- Étape gratuite déjà réalisée -->
+<div class="free-step reveal">
+
+<div class="free-step-icon"><i data-lucide="check"></i></div>
+
+<div class="free-step-copy">
+<span class="free-step-label">Toujours gratuit</span>
+<h3>Catalogue, fiches détaillées et diagnostic</h3>
+<p>Universités, bourses, critères d'admission, portails officiels et votre score de compatibilité — sans compte, sans engagement.</p>
+</div>
+
+<a href="results.html" class="free-step-link">
+<span>Revoir mon diagnostic</span>
+<i data-lucide="arrow-right"></i>
+</a>
+
+</div>
+
+<!-- Pass Fitz Express — volontairement séparé des paliers d'accompagnement,
+jamais présenté comme une 4e formule dans la même grille. -->
+<div class="consult-banner reveal">
+
+<div class="consult-icon"><i data-lucide="zap"></i></div>
+
+<div class="consult-body">
+<span class="consult-eyebrow">Pass rapide, sans engagement</span>
+<h3>Besoin de réponses tout de suite ? Le Pass Fitz Express.</h3>
+<p>Questions illimitées à Fitz pendant 14 jours — critères, procédures, orientation. Idéal pour avancer vite avant de choisir un accompagnement complet.</p>
+</div>
+
+<div class="consult-cta-wrap">
+<span class="consult-price">7 500 FCFA<small> / 14 jours</small></span>
+<button type="button" class="btn btn-secondary plan-cta" data-plan="fitzExpress">
+<span>Activer le Pass Express</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</div>
+
+</div>
+
+<!-- Paliers d'accompagnement — Essentiel/Avancé/Premium donnent accès à
+100% des outils Fitz, seul le nombre de candidatures accompagnées de
+bout en bout change d'une formule à l'autre. Signature (ajoutée
+2026-07-31) est différente : accompagnement humain dédié en plus de
+Fitz, sans quota de candidatures fixe. -->
+<div class="pricing-grid-wrap">
+
+<div class="pricing-glow" aria-hidden="true"></div>
+
+<div class="section-heading-plans reveal">
+<h2>Nos niveaux d'accompagnement</h2>
+<p>Même Fitz, même accompagnement complet de A à Z pendant 6 mois — seul le nombre maximum de candidatures accompagnées change d'une formule à l'autre. Pour un conseiller humain en plus de Fitz, choisissez ScholarBridge Signature.</p>
+</div>
+
+<div class="pricing-grid reveal">
+
+<article class="plan-card plan-card-featured">
+
+<span class="plan-badge"><i data-lucide="star"></i>Le plus populaire</span>
+
+<div class="plan-icon"><i data-lucide="compass"></i></div>
+
+<div class="plan-head">
+<h2>Essentiel</h2>
+<p class="plan-tagline">Jusqu'à 3 candidatures accompagnées de bout en bout, avec Fitz.</p>
+</div>
+
+<div class="plan-price">
+<span class="plan-amount">25 000</span>
+<span class="plan-currency">FCFA</span>
+</div>
+<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+
+<div class="plan-quota">
+<strong>Jusqu'à 3</strong>
+<span>candidatures accompagnées de bout en bout</span>
+</div>
+
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>100% des outils Fitz : lettre, CV, e-mails, traduction</span></li>
+<li><i data-lucide="check"></i><span>Diagnostic détaillé et plan d'action personnalisé</span></li>
+<li><i data-lucide="check"></i><span>Checklists, calendrier et alertes d'échéances</span></li>
+<li><i data-lucide="check"></i><span>Vérification complète de chaque dossier</span></li>
+</ul>
+
+<button type="button" class="btn btn-primary plan-cta" data-plan="essentiel">
+<span>Choisir Essentiel</span>
+<i data-lucide="arrow-right"></i>
+</button>
+
+</article>
+
+<article class="plan-card plan-card-essentiel">
+
+<span class="plan-badge"><i data-lucide="star"></i>Jusqu'à 6 candidatures</span>
+
+<div class="plan-icon"><i data-lucide="sparkles"></i></div>
+
+<div class="plan-head">
+<h2>Avancé</h2>
+<p class="plan-tagline">Jusqu'à 6 candidatures accompagnées de bout en bout, avec Fitz.</p>
+</div>
+
+<div class="plan-price">
+<span class="plan-amount">45 000</span>
+<span class="plan-currency">FCFA</span>
+</div>
+<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+
+<div class="plan-quota">
+<strong>Jusqu'à 6</strong>
+<span>candidatures accompagnées de bout en bout</span>
+</div>
+
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>100% des outils Fitz : lettre, CV, e-mails, traduction</span></li>
+<li><i data-lucide="check"></i><span>Diagnostic détaillé et plan d'action personnalisé</span></li>
+<li><i data-lucide="check"></i><span>Checklists, calendrier et alertes d'échéances</span></li>
+<li><i data-lucide="check"></i><span>Vérification complète de chaque dossier</span></li>
+</ul>
+
+<button type="button" class="btn btn-secondary plan-cta" data-plan="accompagnement">
+<span>Choisir Avancé</span>
+<i data-lucide="arrow-right"></i>
+</button>
+
+</article>
+
+<article class="plan-card plan-card-premium">
+
+<span class="plan-badge"><i data-lucide="star"></i>Jusqu'à 12 candidatures</span>
+
+<div class="plan-icon"><i data-lucide="crown"></i></div>
+
+<div class="plan-head">
+<h2>Premium</h2>
+<p class="plan-tagline">Jusqu'à 12 candidatures accompagnées de bout en bout, avec Fitz.</p>
+</div>
+
+<div class="plan-price">
+<span class="plan-amount">80 000</span>
+<span class="plan-currency">FCFA</span>
+</div>
+<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+
+<div class="plan-quota">
+<strong>Jusqu'à 12</strong>
+<span>candidatures accompagnées de bout en bout</span>
+</div>
+
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>100% des outils Fitz : lettre, CV, e-mails, traduction</span></li>
+<li><i data-lucide="check"></i><span>Diagnostic détaillé et plan d'action personnalisé</span></li>
+<li><i data-lucide="check"></i><span>Checklists, calendrier et alertes d'échéances</span></li>
+<li><i data-lucide="check"></i><span>Vérification complète de chaque dossier</span></li>
+</ul>
+
+<button type="button" class="btn plan-cta plan-cta-premium" data-plan="premium">
+<span>Choisir Premium</span>
+<i data-lucide="arrow-right"></i>
+</button>
+
+</article>
+
+<!-- ScholarBridge Signature — seul palier avec un conseiller humain
+dédié en plus de Fitz, ajouté 2026-07-31 ; sans quota de candidatures
+fixe (contrairement aux 3 formules ci-dessus), pas de .plan-quota. -->
+<article class="plan-card">
+
+<span class="plan-badge"><i data-lucide="star"></i>Notre formule la plus complète</span>
+
+<div class="plan-icon"><i data-lucide="star"></i></div>
+
+<div class="plan-head">
+<h2>ScholarBridge Signature</h2>
+<p class="plan-tagline">Accompagnement humain personnalisé + Fitz</p>
+</div>
+
+<div class="plan-price">
+<span class="plan-amount">199 000</span>
+<span class="plan-currency">FCFA</span>
+</div>
+<p class="plan-description">Un accompagnement humain personnalisé avec un conseiller ScholarBridge, renforcé par Fitz, pour construire des candidatures d'excellence.</p>
+
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Un conseiller dédié</span></li>
+<li><i data-lucide="check"></i><span>Des échanges personnalisés (WhatsApp)</span></li>
+<li><i data-lucide="check"></i><span>Une stratégie de candidature adaptée</span></li>
+<li><i data-lucide="check"></i><span>La relecture complète des candidatures</span></li>
+<li><i data-lucide="check"></i><span>L'optimisation du CV et des lettres de motivation</span></li>
+<li><i data-lucide="check"></i><span>La vérification des documents</span></li>
+<li><i data-lucide="check"></i><span>Un accompagnement jusqu'au dépôt des candidatures</span></li>
+<li><i data-lucide="check"></i><span>L'assistance continue de Fitz tout au long du processus</span></li>
+</ul>
+
+<button type="button" class="btn btn-secondary plan-cta" data-plan="signature">
+<span>Choisir Signature</span>
+<i data-lucide="arrow-right"></i>
+</button>
+
+</article>
+
+</div>
+
+</div>
+
+<!-- Réassurance -->
+<div class="reassurance reveal">
+
+<div class="reassurance-item">
+<i data-lucide="shield-check"></i>
+<span>Un accompagnement humain et sérieux, à chaque étape de votre candidature</span>
+</div>
+
+<div class="reassurance-item">
+<i data-lucide="lock"></i>
+<span>Vos informations restent confidentielles</span>
+</div>
+
+<div class="reassurance-item">
+<i data-lucide="repeat"></i>
+<span>Vous pouvez changer de palier à tout moment</span>
+</div>
+
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20avant%20de%20choisir%20mon%20accompagnement%20ScholarBridge" target="_blank" rel="noopener" class="reassurance-item reassurance-item-whatsapp">
+<i data-lucide="message-circle"></i>
+<span>Une hésitation ? Discutez avec un conseiller ScholarBridge sur WhatsApp</span>
+</a>
+
+</div>
+
+<!-- FAQ -->
+<section class="faq reveal">
+
+<h2>Questions fréquentes</h2>
+
+<details class="faq-item">
+<summary><span>Est-ce que je suis sûr d'obtenir une bourse ?</span><i data-lucide="chevron-down"></i></summary>
+<p>La décision finale appartient toujours aux universités et aux organismes de bourses — c'est vrai pour toutes les plateformes sérieuses. Ce sur quoi Fitz s'engage pleinement, c'est la qualité de votre accompagnement : un dossier réellement plus solide, préparé avec rigueur à chaque étape.</p>
+</details>
+
+<details class="faq-item">
+<summary><span>Que se passe-t-il après mon choix ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Vous accédez à une page récapitulative avec le détail de votre offre et vos informations, puis vous réglez via PayDunya (Wave, Orange Money ou carte bancaire). Fitz commence ensuite à travailler avec vous selon le palier choisi.</p>
+</details>
+
+<details class="faq-item">
+<summary><span>Puis-je changer de palier plus tard ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Oui. Vous pouvez évoluer vers un accompagnement plus complet dès que vous le souhaitez.</p>
+</details>
+
+<details class="faq-item">
+<summary><span>Qu'est-ce qu'une "candidature accompagnée" ?</span><i data-lucide="chevron-down"></i></summary>
+<p>C'est un dossier que Fitz suit de bout en bout : analyse de compatibilité, stratégie, préparation des documents, lettre de motivation, CV, e-mails, traduction et vérification. Le nombre de candidatures accompagnées en même temps dépend de votre formule — mais les outils de Fitz, eux, sont toujours les mêmes pour tout le monde.</p>
+</details>
+
+<details class="faq-item">
+<summary><span>Que se passe-t-il si mon abonnement se termine avant d'avoir une réponse ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Quelle que soit votre formule (Essentiel, Avancé ou Premium), si une candidature accompagnée est encore en attente de réponse à la fin de vos 6 mois, son suivi reste actif jusqu'à la décision de l'université — vous ne perdez jamais l'accompagnement au moment le plus important.</p>
+</details>
+
+</section>
+
+</div>
+
+<script src="pricing-plans.js"></script>
+<script src="offers.js"></script>
+
+</body>
+
+</html>

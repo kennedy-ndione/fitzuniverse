@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ScholarBridge | Diagnostic Fitz</title>
+
+<meta name="description" content="Fitz analyse votre profil en 10 questions pour vous aider à comprendre votre potentiel et à préparer une candidature solide.">
+
+<!-- Google Fonts (identiques à index.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="eligibility-test.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<!-- Conseiller IA -->
+
+<div class="advisor-intro">
+<div class="fitz-avatar fitz-avatar--sm"><i data-lucide="sparkles"></i></div>
+<div class="advisor-copy">
+<span class="fitz-badge">
+<i data-lucide="bot"></i>
+<span>Fitz, votre conseiller intelligent</span>
+</span>
+<p id="aiStatus" class="fitz-status">
+Analyse de votre profil...
+</p>
+</div>
+</div>
+
+<!-- Logo -->
+
+<div class="logo">
+<i data-lucide="graduation-cap"></i>
+</div>
+
+<!-- Titre -->
+
+<h1>
+Diagnostic Fitz
+<br>
+ScholarBridge
+</h1>
+
+<!-- Texte dynamique -->
+
+<p id="dynamicText">
+Fitz analyse votre profil pour vous aider à comprendre votre potentiel et à construire une candidature plus solide.
+</p>
+
+<!-- Repères de confiance -->
+
+<div class="trust-strip">
+<span><i data-lucide="lock"></i>Confidentiel</span>
+<span><i data-lucide="badge-check"></i>Sans engagement</span>
+<span><i data-lucide="clock"></i>3 minutes</span>
+</div>
+
+<!-- Résultats -->
+
+<div class="benefits">
+
+<div class="benefit">
+<i data-lucide="bar-chart-3"></i>
+<span>Calcul de votre Score ScholarBridge</span>
+</div>
+
+<div class="benefit">
+<i data-lucide="target"></i>
+<span>Les opportunités compatibles avec votre profil</span>
+</div>
+
+<div class="benefit">
+<i data-lucide="landmark"></i>
+<span>Les universités qui correspondent à votre parcours</span>
+</div>
+
+<div class="benefit">
+<i data-lucide="globe"></i>
+<span>Les destinations les plus adaptées à votre profil</span>
+</div>
+
+<div class="benefit">
+<i data-lucide="trending-up"></i>
+<span>Les points à renforcer pour solidifier votre dossier</span>
+</div>
+
+</div>
+
+<!-- Message de confiance -->
+
+<div class="trust-box">
+<i data-lucide="shield-check"></i>
+<span>Vos réponses restent confidentielles et servent uniquement à personnaliser votre diagnostic. Fitz vous aide à préparer un dossier réellement plus solide, en toute honnêteté sur ce qu'il peut vous apporter.</span>
+</div>
+
+<!-- Barre de progression -->
+
+<div class="progress">
+<div class="progress-bar"></div>
+</div>
+
+<!-- Informations -->
+
+<span class="info">
+<i data-lucide="clock"></i>
+3 minutes • 10 questions • 100 % gratuit
+</span>
+
+<!-- Bouton -->
+
+<button id="startButton">
+<span>Commencer mon diagnostic</span>
+<i data-lucide="arrow-right"></i>
+</button>
+
+<!-- Les avantages -->
+
+<div class="features">
+
+<div class="feature-card">
+<div class="feature-icon"><i data-lucide="brain"></i></div>
+<h3>Analyse personnalisée</h3>
+<p>Chaque étudiant reçoit une lecture de son profil adaptée à son propre parcours, pas une réponse générique.</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon"><i data-lucide="graduation-cap"></i></div>
+<h3>Opportunités compatibles</h3>
+<p>Fitz identifie les programmes cohérents avec votre profil, avec honnêteté et rigueur.</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon"><i data-lucide="trending-up"></i></div>
+<h3>Conseils concrets</h3>
+<p>Découvrez précisément ce qui renforcerait votre dossier avant de candidater.</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="eligibility-test.js"></script>
+<script>
+if (window.lucide) lucide.createIcons();
+</script>
+
+</body>
+
+</html>

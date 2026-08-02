@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Formules | ScholarBridge Control Center</title>
+
+<meta name="description" content="Activez ou désactivez les fonctionnalités de ScholarBridge pour chaque formule, sans toucher au code.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Vue d'ensemble</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link is-active" aria-current="page"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">À venir</span>
+
+<ul>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="folder"></i><span>Documents</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="settings"></i><span>Paramètres</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Gestion des formules</h1>
+<p>Activez ou désactivez chaque fonctionnalité par formule, sans toucher au code.</p>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="plans-legend">
+<span class="plans-legend-item"><span class="status-pill plan-gratuit">Gratuit</span></span>
+<span class="plans-legend-item"><span class="status-pill plan-essentiel">Essentiel</span></span>
+<span class="plans-legend-item"><span class="status-pill plan-accompagnement">Avancé</span></span>
+<span class="plans-legend-item"><span class="status-pill plan-premium">Premium</span></span>
+</div>
+
+<p class="text-small" style="color:var(--text-muted);margin:-8px 0 20px;">La formule Gratuit est verrouillée à 0 fonctionnalité par philosophie produit (aucun outil Fitz, 0 candidature accompagnée) — les cases de sa colonne restent normalement décochées.</p>
+
+<div class="admin-table-wrap">
+
+<table class="table admin-table plans-table">
+<thead>
+<tr>
+<th>Fonctionnalité</th>
+<th>Gratuit</th>
+<th>Essentiel</th>
+<th>Avancé</th>
+<th>Premium</th>
+</tr>
+</thead>
+<tbody id="plansTableBody"></tbody>
+</table>
+
+</div>
+
+<div class="profile-save-bar" style="position:sticky;">
+<span class="profile-save-note" id="plansSaveNote">Les changements s'appliquent au prochain chargement du tableau de bord de chaque étudiant.</span>
+<button type="button" class="btn-profile-save" id="savePlansBtn">
+<i data-lucide="save"></i>
+<span>Enregistrer les modifications</span>
+</button>
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="plans.js"></script>
+
+</body>
+
+</html>

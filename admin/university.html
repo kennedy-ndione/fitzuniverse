@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Université | ScholarBridge Control Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Vue d'ensemble</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link is-active" aria-current="page"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">À venir</span>
+
+<ul>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="folder"></i><span>Documents</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="settings"></i><span>Paramètres</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1><a href="universities.html" style="color:inherit;display:inline-flex;align-items:center;gap:8px;"><i data-lucide="arrow-left"></i></a> Fiche université</h1>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="detail-header">
+<div class="detail-avatar" id="detailAvatar"><i data-lucide="landmark"></i></div>
+<div class="detail-header-info">
+<h2 id="universityName">Chargement...</h2>
+<p id="universityLocation">Chargement des informations...</p>
+</div>
+<button type="button" class="btn-detail-action" id="editUniversityBtn">
+<i data-lucide="pencil"></i>
+<span>Modifier</span>
+</button>
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="graduation-cap"></i></div>
+<div>
+<div class="stat-card-value" id="programCount">0</div>
+<div class="stat-card-label">Programmes</div>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="wallet"></i></div>
+<div>
+<div class="stat-card-value" id="scholarshipCount">0</div>
+<div class="stat-card-label">Bourses</div>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="globe"></i></div>
+<div>
+<div class="stat-card-value" id="countryName">--</div>
+<div class="stat-card-label">Pays</div>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-card-icon"><i data-lucide="star"></i></div>
+<div>
+<div class="stat-card-value" id="rankingValue">--</div>
+<div class="stat-card-label">Classement</div>
+</div>
+</div>
+
+</div>
+
+<div class="detail-tabs" role="tablist">
+<button type="button" class="tab-btn is-active" data-tab="info">Informations</button>
+<button type="button" class="tab-btn" data-tab="programs">Programmes</button>
+<button type="button" class="tab-btn" data-tab="documents">Documents</button>
+<button type="button" class="tab-btn" data-tab="images">Images</button>
+<button type="button" class="tab-btn" data-tab="statistics">Statistiques</button>
+</div>
+
+<div id="infoTab" class="tab-panel is-active">
+<div class="detail-section">
+<h3>Informations générales</h3>
+<div class="detail-field-grid">
+<div class="detail-field"><span class="detail-field-label">Université</span><span class="detail-field-value" id="infoUniversity">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Pays</span><span class="detail-field-value" id="infoCountry">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Ville</span><span class="detail-field-value" id="infoCity">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Classement</span><span class="detail-field-value" id="infoRanking">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Site officiel</span><span class="detail-field-value" id="infoWebsite">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Domaines proposés</span><span class="detail-field-value" id="infoFields">--</span></div>
+</div>
+</div>
+</div>
+
+<div id="programsTab" class="tab-panel">
+<div class="detail-section">
+<div class="detail-actions-row" style="justify-content:space-between;margin-bottom:18px;">
+<h3 style="margin-bottom:0;">Programmes</h3>
+<button type="button" class="btn-detail-action" id="addProgramBtn">
+<i data-lucide="plus"></i>
+<span>Ajouter un programme</span>
+</button>
+</div>
+
+<div class="admin-table-wrap">
+<table class="table admin-table">
+<thead>
+<tr>
+<th>Bourse</th>
+<th>Niveau</th>
+<th>Date limite</th>
+<th>Langue</th>
+<th>Statut</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="programsTable">
+<tr><td colspan="6"><div class="admin-table-empty">Chargement des programmes...</div></td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+<div id="documentsTab" class="tab-panel">
+<div class="pending-section">
+<h3><i data-lucide="file-text"></i>Documents</h3>
+<p>La gestion des documents par université n'est pas encore branchée à Firestore — cette section s'activera avec le module de gestion documentaire.</p>
+</div>
+</div>
+
+<div id="imagesTab" class="tab-panel">
+<div class="pending-section">
+<h3><i data-lucide="image"></i>Galerie</h3>
+<p>La galerie d'images par université n'est pas encore branchée à Firestore — cette section s'activera avec le module de gestion documentaire.</p>
+</div>
+</div>
+
+<div id="statisticsTab" class="tab-panel">
+<div class="detail-section">
+<h3>Statistiques</h3>
+<div class="detail-field-grid">
+<div class="detail-field"><span class="detail-field-label">Nombre de programmes</span><span class="detail-field-value" id="statsPrograms">0</span></div>
+<div class="detail-field"><span class="detail-field-label">Programmes actifs</span><span class="detail-field-value" id="statsActivePrograms">0</span></div>
+<div class="detail-field"><span class="detail-field-label">Dernière mise à jour</span><span class="detail-field-value" id="statsUpdated">--</span></div>
+</div>
+</div>
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<!-- ==========================================================
+MODALE — Ajouter / modifier un programme
+========================================================== -->
+
+<div id="programModal" class="modal-base" hidden>
+<div class="modal-card">
+
+<div class="modal-header">
+<h2 id="programModalTitle">Modifier le programme</h2>
+<button type="button" class="modal-close" id="closeProgramModal" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<div class="form-grid">
+
+<div class="field">
+<label for="editScholarship">Bourse</label>
+<select id="editScholarship" required></select>
+</div>
+
+<div class="field">
+<label for="editLevel">Niveau</label>
+<select id="editLevel">
+<option>Licence</option>
+<option>Master</option>
+<option>Doctorat</option>
+</select>
+</div>
+
+<div class="field">
+<label for="editDeadline">Date limite</label>
+<input type="date" id="editDeadline">
+</div>
+
+<div class="field">
+<label for="editLanguage">Langue</label>
+<input type="text" id="editLanguage">
+</div>
+
+<div class="field">
+<label for="editDuration">Durée</label>
+<input type="text" id="editDuration">
+</div>
+
+<div class="field">
+<label for="editApplicationUrl">Portail de candidature</label>
+<input type="text" id="editApplicationUrl" placeholder="https://...">
+</div>
+
+<div class="field">
+<label for="editStatus">Statut</label>
+<select id="editStatus">
+<option>Ouverte</option>
+<option>Bientôt</option>
+<option>Fermée</option>
+</select>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button type="button" class="btn-page-action is-secondary" id="cancelProgramEdit">Annuler</button>
+<button type="button" class="btn-detail-action" id="saveProgramEdit">
+<i data-lucide="save"></i>
+<span>Enregistrer</span>
+</button>
+</div>
+
+</div>
+</div>
+
+<!-- ==========================================================
+MODALE — Modifier le profil de l'université (collection
+"universities" — nom, ville, classement... jamais les programmes)
+========================================================== -->
+
+<div id="profileModal" class="modal-base" hidden>
+<div class="modal-card">
+
+<div class="modal-header">
+<h2>Modifier l'université</h2>
+<button type="button" class="modal-close" id="closeProfileModal" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<div class="form-grid">
+
+<div class="field">
+<label for="editName">Nom de l'université</label>
+<input type="text" id="editName" required>
+</div>
+
+<div class="field">
+<label for="editCountry">Pays</label>
+<input type="text" id="editCountry" required>
+</div>
+
+<div class="field">
+<label for="editCity">Ville</label>
+<input type="text" id="editCity">
+</div>
+
+<div class="field">
+<label for="editUniRanking">Classement</label>
+<input type="text" id="editUniRanking">
+</div>
+
+<div class="field">
+<label for="editImage">Photo (fichier dans assets/images/cities)</label>
+<input type="text" id="editImage" placeholder="ex : budapest.jpg">
+</div>
+
+<div class="field">
+<label for="editWebsite">Site officiel</label>
+<input type="text" id="editWebsite" placeholder="https://...">
+</div>
+
+</div>
+
+<div class="field">
+<label for="editFields">Domaines proposés (séparés par des virgules)</label>
+<input type="text" id="editFields">
+</div>
+
+<div class="field">
+<label for="editUniDescription">Description</label>
+<textarea id="editUniDescription" rows="5"></textarea>
+</div>
+
+<div class="modal-footer">
+<button type="button" class="btn-page-action is-secondary" id="cancelProfileEdit">Annuler</button>
+<button type="button" class="btn-detail-action" id="saveProfileEdit">
+<i data-lucide="save"></i>
+<span>Enregistrer</span>
+</button>
+</div>
+
+</div>
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="university.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Créer un compte | ScholarBridge</title>
+
+<meta name="description" content="Créez votre compte ScholarBridge pour activer votre accompagnement Fitz et suivre votre candidature.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="auth.css">
+
+</head>
+
+<body>
+
+<div class="auth-page">
+
+<div class="auth-shell">
+
+<!-- Hero -->
+<div class="auth-hero reveal">
+
+<div class="auth-logo-wrap">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+</div>
+
+<div class="auth-badge">
+<i data-lucide="sparkles"></i>
+<span>ScholarBridge</span>
+</div>
+
+<h1>Créez votre compte</h1>
+
+<p>Activez votre accompagnement Fitz et retrouvez votre diagnostic à tout moment.</p>
+
+</div>
+
+<!-- Carte -->
+<div class="auth-card reveal">
+
+<h2>Créer un compte gratuitement</h2>
+<p class="auth-card-subtext">Rejoignez les étudiants accompagnés par Fitz.</p>
+
+<form id="signupForm" class="signup-form">
+
+<div class="input-group">
+
+<label for="signupName">Nom complet</label>
+
+<div class="input-wrap">
+<i data-lucide="user" class="input-icon"></i>
+<input
+type="text"
+id="signupName"
+placeholder="Nom et prénom"
+autocomplete="name"
+required>
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label for="signupEmail">Adresse e-mail</label>
+
+<div class="input-wrap">
+<i data-lucide="mail" class="input-icon"></i>
+<input
+type="email"
+id="signupEmail"
+placeholder="vous@exemple.com"
+autocomplete="email"
+required>
+</div>
+
+</div>
+
+<div class="password-grid">
+
+<div class="input-group">
+
+<label for="signupPassword">Mot de passe</label>
+
+<div class="input-wrap has-toggle">
+
+<i data-lucide="lock" class="input-icon"></i>
+
+<input
+type="password"
+id="signupPassword"
+placeholder="Créer un mot de passe"
+autocomplete="new-password"
+required>
+
+<button
+type="button"
+id="togglePassword"
+class="password-toggle"
+aria-label="Afficher le mot de passe"
+aria-pressed="false">
+<i data-lucide="eye"></i>
+</button>
+
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label for="signupConfirmPassword">Confirmer</label>
+
+<div class="input-wrap">
+<i data-lucide="lock" class="input-icon"></i>
+<input
+type="password"
+id="signupConfirmPassword"
+placeholder="Répéter le mot de passe"
+autocomplete="new-password"
+required>
+</div>
+
+</div>
+
+</div>
+
+<div class="password-strength" id="passwordStrength">
+<div class="password-strength-bar"><span id="passwordStrengthFill"></span></div>
+<span class="password-strength-label" id="passwordStrengthLabel">Créez un mot de passe sécurisé</span>
+</div>
+
+<p class="input-hint">
+<i data-lucide="shield-check"></i>
+<span>Un mot de passe solide : 8 caractères minimum, une majuscule et un chiffre.</span>
+</p>
+
+<label class="terms-row">
+<input type="checkbox" id="terms" required>
+<span>J'accepte les Conditions d'utilisation.</span>
+</label>
+
+<button type="submit" class="btn-auth-submit">
+Créer mon compte
+</button>
+
+</form>
+
+<div class="auth-trust">
+<i data-lucide="shield-check"></i>
+<span>Vos données restent confidentielles</span>
+</div>
+
+<p class="login-link">
+Vous avez déjà un compte ?
+<a href="login.html">Se connecter</a>
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+// Bascule d'affichage du mot de passe — logique strictement inchangée.
+const togglePassword = document.querySelector('#togglePassword');
+const passwordInput = document.querySelector('#signupPassword');
+
+togglePassword.addEventListener('click', function () {
+
+const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+passwordInput.setAttribute('type', type);
+
+this.innerHTML = `<i data-lucide="${type === 'password' ? 'eye' : 'eye-off'}"></i>`;
+if (window.lucide) lucide.createIcons();
+
+const isVisible = type === 'text';
+this.setAttribute('aria-pressed', String(isVisible));
+this.setAttribute('aria-label', isVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+
+});
+
+</script>
+
+<script>
+
+// Améliorations UX purement décoratives (indicateur de force du mot de
+// passe, apparition au chargement, icônes). Aucune de ces additions ne
+// touche à signup.js : la validation et la création du compte restent
+// entièrement gérées par ce fichier, indépendamment de cet indicateur.
+(function () {
+
+const passwordInput = document.getElementById("signupPassword");
+const fill = document.getElementById("passwordStrengthFill");
+const label = document.getElementById("passwordStrengthLabel");
+
+if (passwordInput && fill && label) {
+
+const levels = [
+{ label: "Créez un mot de passe sécurisé", width: "4%", color: "var(--border-color)" },
+{ label: "Faible", width: "25%", color: "#EF4444" },
+{ label: "Moyen", width: "50%", color: "#EAA83D" },
+{ label: "Bon", width: "75%", color: "#22C55E" },
+{ label: "Excellent", width: "100%", color: "#0EA5C4" }
+];
+
+function evaluate(password) {
+
+let score = 0;
+
+if (password.length >= 8) score++;
+if (/[A-Z]/.test(password)) score++;
+if (/[0-9]/.test(password)) score++;
+if (/[^A-Za-z0-9]/.test(password) || password.length >= 12) score++;
+
+return score;
+
+}
+
+passwordInput.addEventListener("input", () => {
+
+const password = passwordInput.value;
+const level = levels[password ? evaluate(password) : 0];
+
+fill.style.width = level.width;
+fill.style.background = level.color;
+label.textContent = level.label;
+
+});
+
+}
+
+document.documentElement.classList.add("js-ready");
+
+const revealEls = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+
+const observer = new IntersectionObserver((entries) => {
+
+entries.forEach((entry) => {
+if (entry.isIntersecting) {
+entry.target.classList.add("is-visible");
+observer.unobserve(entry.target);
+}
+});
+
+}, { threshold: 0.1 });
+
+revealEls.forEach((el) => observer.observe(el));
+
+} else {
+
+revealEls.forEach((el) => el.classList.add("is-visible"));
+
+}
+
+if (window.lucide) lucide.createIcons();
+
+})();
+
+</script>
+
+<script type="module" src="signup.js"></script>
+
+</body>
+
+</html>

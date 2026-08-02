@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mon profil | ScholarBridge</title>
+
+<meta name="description" content="Complétez votre profil étudiant pour que Fitz puisse vous proposer des recommandations réellement personnalisées.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="profile.css">
+
+</head>
+
+<body>
+
+<!-- Loader affiché pendant la vérification de la session Firebase -->
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link is-active" aria-current="page">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Mon profil</h1>
+<p>Plus votre profil est complet, plus Fitz peut vous proposer des recommandations pertinentes.</p>
+</div>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<form id="profileForm">
+
+<div class="profile-layout">
+
+<!-- Navigation collante des sections -->
+<nav class="profile-nav" id="profileNav" aria-label="Sections du profil">
+
+<div class="profile-nav-score">
+<div class="profile-nav-score-ring"><span id="navScoreValue">0</span></div>
+<div class="profile-nav-score-label">sections<br>complétées</div>
+</div>
+
+<a href="#sec-personal" class="section-nav-item" data-section="sec-personal">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Informations personnelles</span>
+</a>
+
+<a href="#sec-parcours" class="section-nav-item" data-section="sec-parcours">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Parcours scolaire</span>
+</a>
+
+<a href="#sec-academique" class="section-nav-item" data-section="sec-academique">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Niveau académique</span>
+</a>
+
+<a href="#sec-langues" class="section-nav-item" data-section="sec-langues">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Langues</span>
+</a>
+
+<a href="#sec-projet" class="section-nav-item" data-section="sec-projet">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Projet d'études</span>
+</a>
+
+<a href="#sec-destination" class="section-nav-item" data-section="sec-destination">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Destination</span>
+</a>
+
+<a href="#sec-financier" class="section-nav-item" data-section="sec-financier">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Préférences financières</span>
+</a>
+
+<a href="#sec-documents" class="section-nav-item" data-section="sec-documents">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Documents disponibles</span>
+</a>
+
+<a href="#sec-experiences" class="section-nav-item" data-section="sec-experiences">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Expériences</span>
+</a>
+
+<a href="#sec-objectifs" class="section-nav-item" data-section="sec-objectifs">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Objectifs</span>
+</a>
+
+</nav>
+
+<!-- Sections du formulaire -->
+<div class="profile-form">
+
+<!-- 1. Informations personnelles -->
+<section class="profile-section" id="sec-personal">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="user"></i></div>
+<div>
+<h2>Informations personnelles</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Fitz utilise ces informations pour identifier les programmes ouverts à votre nationalité et à votre tranche d'âge.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group">
+<label for="firstName">Prénom</label>
+<div class="input-wrap"><input type="text" id="firstName" autocomplete="given-name"></div>
+</div>
+
+<div class="input-group">
+<label for="lastName">Nom</label>
+<div class="input-wrap"><input type="text" id="lastName" autocomplete="family-name"></div>
+</div>
+
+<div class="input-group">
+<label for="gender">Sexe</label>
+<div class="input-wrap">
+<select id="gender">
+<option value="">Sélectionner</option>
+<option value="femme">Femme</option>
+<option value="homme">Homme</option>
+<option value="autre">Autre / je ne souhaite pas préciser</option>
+</select>
+</div>
+</div>
+
+<div class="input-group">
+<label for="birthDate">Date de naissance</label>
+<div class="input-wrap"><input type="date" id="birthDate"></div>
+</div>
+
+<div class="input-group">
+<label for="ageDisplay">Âge</label>
+<div class="input-wrap"><input type="text" id="ageDisplay" readonly placeholder="Calculé automatiquement"></div>
+</div>
+
+<div class="input-group">
+<label for="nationality">Nationalité</label>
+<div class="input-wrap"><input type="text" id="nationality"></div>
+</div>
+
+<div class="input-group">
+<label for="country">Pays de résidence</label>
+<div class="input-wrap"><input type="text" id="country"></div>
+</div>
+
+<div class="input-group">
+<label for="city">Ville</label>
+<div class="input-wrap"><input type="text" id="city"></div>
+</div>
+
+<div class="input-group">
+<label for="phone">Téléphone</label>
+<div class="input-wrap"><input type="tel" id="phone"></div>
+</div>
+
+<div class="input-group">
+<label for="whatsapp">WhatsApp</label>
+<div class="input-wrap"><input type="tel" id="whatsapp"></div>
+</div>
+
+<div class="input-group">
+<label for="profileEmail">Adresse e-mail</label>
+<div class="input-wrap"><input type="email" id="profileEmail" readonly></div>
+</div>
+
+</div>
+
+</section>
+
+<!-- 2. Parcours scolaire -->
+<section class="profile-section" id="sec-parcours">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="graduation-cap"></i></div>
+<div>
+<h2>Parcours scolaire</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Ces informations déterminent les niveaux d'études et les programmes pour lesquels vous êtes éligible.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group">
+<label for="lastDegree">Dernier diplôme obtenu</label>
+<div class="input-wrap"><input type="text" id="lastDegree" placeholder="Ex. Baccalauréat, Licence..."></div>
+</div>
+
+<div class="input-group">
+<label for="currentInstitution">Établissement actuel</label>
+<div class="input-wrap"><input type="text" id="currentInstitution"></div>
+</div>
+
+<div class="input-group">
+<label for="graduationYear">Année d'obtention</label>
+<div class="input-wrap"><input type="number" id="graduationYear" min="1990" max="2035"></div>
+</div>
+
+<div class="input-group">
+<label for="academicAverage">Moyenne générale</label>
+<div class="input-wrap"><input type="text" id="academicAverage" placeholder="Ex. 14,5/20"></div>
+</div>
+
+</div>
+
+<div class="status-toggle" id="statusToggle" role="radiogroup" aria-label="Votre situation actuelle">
+
+<label class="status-toggle-option" data-value="nouveau_bachelier">
+<input type="radio" name="studentStatus" value="nouveau_bachelier">
+<span>Nouveau bachelier</span>
+</label>
+
+<label class="status-toggle-option" data-value="en_cours">
+<input type="radio" name="studentStatus" value="en_cours">
+<span>Étudiant en cours</span>
+</label>
+
+</div>
+
+<div class="conditional-fields" id="bacFieldsBlock" hidden>
+<div class="field-grid cols-3">
+
+<div class="input-group">
+<label for="bacSeries">Série du Bac</label>
+<div class="input-wrap"><input type="text" id="bacSeries"></div>
+</div>
+
+<div class="input-group">
+<label for="bacMention">Mention</label>
+<div class="input-wrap">
+<select id="bacMention">
+<option value="">Sélectionner</option>
+<option value="passable">Passable</option>
+<option value="assez_bien">Assez bien</option>
+<option value="bien">Bien</option>
+<option value="tres_bien">Très bien</option>
+<option value="excellent">Excellent</option>
+</select>
+</div>
+</div>
+
+<div class="input-group">
+<label for="bacAverage">Moyenne du Bac</label>
+<div class="input-wrap"><input type="text" id="bacAverage" placeholder="Ex. 13/20"></div>
+</div>
+
+</div>
+</div>
+
+<div class="conditional-fields" id="currentLevelBlock" hidden>
+<div class="field-grid">
+
+<div class="input-group field-full">
+<label for="currentLevel">Niveau actuel</label>
+<div class="input-wrap">
+<select id="currentLevel">
+<option value="">Sélectionner</option>
+<option value="L1">Licence 1</option>
+<option value="L2">Licence 2</option>
+<option value="L3">Licence 3</option>
+<option value="M1">Master 1</option>
+<option value="M2">Master 2</option>
+<option value="Doctorat">Doctorat</option>
+</select>
+</div>
+</div>
+
+</div>
+</div>
+
+</section>
+
+<!-- 3. Niveau académique -->
+<section class="profile-section" id="sec-academique">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="star"></i></div>
+<div>
+<h2>Niveau académique</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Facultatif — ces détails permettent à Fitz de mieux valoriser votre profil dans vos candidatures.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group">
+<label for="ranking">Classement éventuel</label>
+<div class="input-wrap"><input type="text" id="ranking" placeholder="Ex. 2ᵉ sur 45"></div>
+</div>
+
+<div class="input-group">
+<label for="strongSubjects">Matières fortes</label>
+<div class="input-wrap"><input type="text" id="strongSubjects"></div>
+</div>
+
+<div class="input-group">
+<label for="weakSubjects">Matières faibles</label>
+<div class="input-wrap"><input type="text" id="weakSubjects"></div>
+</div>
+
+</div>
+
+<div class="field-grid" style="margin-top:18px;">
+
+<div class="input-group field-full">
+<label for="projects">Projets réalisés</label>
+<div class="input-wrap"><textarea id="projects"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="thesis">Mémoire</label>
+<div class="input-wrap"><textarea id="thesis"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="publications">Publications scientifiques</label>
+<div class="input-wrap"><textarea id="publications"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="researchExperience">Expériences de recherche</label>
+<div class="input-wrap"><textarea id="researchExperience"></textarea></div>
+</div>
+
+</div>
+
+</section>
+
+<!-- 4. Langues -->
+<section class="profile-section" id="sec-langues">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="languages"></i></div>
+<div>
+<h2>Langues</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Le niveau CECRL détermine les programmes accessibles selon leur langue d'enseignement.</p>
+</div>
+</div>
+
+<div id="languagesList">
+<!-- lignes de langues générées par profile.js -->
+</div>
+
+<div class="language-other-row">
+<input type="text" id="otherLanguageName" placeholder="Autre langue (nom)">
+<div class="cecrl-picker" id="otherLanguagePicker" data-code="autre">
+<button type="button" data-level="A1">A1</button>
+<button type="button" data-level="A2">A2</button>
+<button type="button" data-level="B1">B1</button>
+<button type="button" data-level="B2">B2</button>
+<button type="button" data-level="C1">C1</button>
+<button type="button" data-level="C2">C2</button>
+</div>
+<button type="button" class="chip" id="addOtherLanguage">+ Ajouter</button>
+</div>
+
+<div class="chip-select" id="otherLanguagesChips" style="margin-top:12px;"></div>
+
+</section>
+
+<!-- 5. Projet d'études -->
+<section class="profile-section" id="sec-projet">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="target"></i></div>
+<div>
+<h2>Projet d'études</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Le cœur de la recherche d'opportunités : domaine, spécialisation et niveau visé.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group">
+<label for="desiredField">Domaine souhaité</label>
+<div class="input-wrap"><input type="text" id="desiredField" placeholder="Ex. Informatique, Médecine..."></div>
+</div>
+
+<div class="input-group">
+<label for="specialization">Spécialisation</label>
+<div class="input-wrap"><input type="text" id="specialization"></div>
+</div>
+
+<div class="input-group">
+<label for="desiredDegree">Diplôme recherché</label>
+<div class="input-wrap">
+<select id="desiredDegree">
+<option value="">Sélectionner</option>
+<option value="Licence">Licence</option>
+<option value="Master">Master</option>
+<option value="Doctorat">Doctorat</option>
+</select>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<!-- 6. Préférences de destination -->
+<section class="profile-section" id="sec-destination">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="map-pin"></i></div>
+<div>
+<h2>Préférences de destination</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Fitz respecte toujours les pays que vous excluez et priorise vos destinations préférées.</p>
+</div>
+</div>
+
+<div class="input-group field-full">
+<label>Pays souhaités</label>
+<div class="chip-select" id="preferredCountriesChips" data-store="preferredCountries"></div>
+</div>
+
+<div class="input-group field-full" style="margin-top:18px;">
+<label>Pays refusés</label>
+<div class="chip-select" id="excludedCountriesChips" data-store="excludedCountries"></div>
+</div>
+
+<div class="input-group field-full" style="margin-top:18px;">
+<label>Continents préférés</label>
+<div class="chip-select" id="preferredContinentsChips" data-store="preferredContinents"></div>
+</div>
+
+<div class="input-group field-full" style="margin-top:18px;">
+<label>Type d'université</label>
+<div class="radio-row-group" id="universityTypeGroup">
+<label class="radio-row"><input type="radio" name="universityType" value="publique"><span>Publique</span></label>
+<label class="radio-row"><input type="radio" name="universityType" value="privee"><span>Privée</span></label>
+<label class="radio-row"><input type="radio" name="universityType" value="les_deux"><span>Les deux</span></label>
+</div>
+</div>
+
+</section>
+
+<!-- 7. Préférences financières -->
+<section class="profile-section" id="sec-financier">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="wallet"></i></div>
+<div>
+<h2>Préférences financières</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Fitz met en avant les opportunités qui correspondent réellement à votre budget.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group">
+<label for="budget">Budget personnel</label>
+<div class="input-wrap"><input type="text" id="budget" placeholder="Ex. 2 000 000 FCFA / an"></div>
+</div>
+
+<div class="input-group field-full">
+<label>Possédez-vous déjà un sponsor ?</label>
+<div class="radio-row-group" id="hasSponsorGroup">
+<label class="radio-row"><input type="radio" name="hasSponsor" value="oui"><span>Oui</span></label>
+<label class="radio-row"><input type="radio" name="hasSponsor" value="non"><span>Non</span></label>
+</div>
+</div>
+
+</div>
+
+<div class="input-group field-full" style="margin-top:18px;">
+<label>Vous recherchez</label>
+<div class="checkbox-grid" id="fundingWantedGroup">
+<label class="checkbox-row"><input type="checkbox" value="full_scholarship"><span>Bourse complète</span></label>
+<label class="checkbox-row"><input type="checkbox" value="partial_scholarship"><span>Bourse partielle</span></label>
+<label class="checkbox-row"><input type="checkbox" value="free_university"><span>Université gratuite</span></label>
+<label class="checkbox-row"><input type="checkbox" value="housing"><span>Logement inclus</span></label>
+<label class="checkbox-row"><input type="checkbox" value="insurance"><span>Assurance incluse</span></label>
+</div>
+</div>
+
+</section>
+
+<!-- 8. Documents disponibles -->
+<section class="profile-section" id="sec-documents">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="file-check"></i></div>
+<div>
+<h2>Documents disponibles</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Cochez ce que vous possédez déjà — Fitz vous indiquera ensuite précisément ce qu'il reste à réunir pour chaque candidature.</p>
+</div>
+</div>
+
+<div class="doc-check-grid" id="documentsGroup">
+<label class="doc-check-card"><input type="checkbox" value="passport"><i data-lucide="book-key"></i><span>Passeport</span></label>
+<label class="doc-check-card"><input type="checkbox" value="national-id"><i data-lucide="id-card"></i><span>Carte nationale</span></label>
+<label class="doc-check-card"><input type="checkbox" value="degree"><i data-lucide="award"></i><span>Diplôme</span></label>
+<label class="doc-check-card"><input type="checkbox" value="transcripts"><i data-lucide="file-text"></i><span>Relevés</span></label>
+<label class="doc-check-card"><input type="checkbox" value="cv"><i data-lucide="file-user"></i><span>CV</span></label>
+<label class="doc-check-card"><input type="checkbox" value="motivation-letter"><i data-lucide="pen-line"></i><span>Lettre de motivation</span></label>
+<label class="doc-check-card"><input type="checkbox" value="language-certificate"><i data-lucide="badge-check"></i><span>Certificat de langue</span></label>
+<label class="doc-check-card"><input type="checkbox" value="photos"><i data-lucide="image"></i><span>Photos</span></label>
+<label class="doc-check-card"><input type="checkbox" value="other"><i data-lucide="plus"></i><span>Autres</span></label>
+</div>
+
+</section>
+
+<!-- 9. Expériences -->
+<section class="profile-section" id="sec-experiences">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="briefcase"></i></div>
+<div>
+<h2>Expériences</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Fitz s'appuiera sur ces expériences pour valoriser votre CV et vos lettres de motivation.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group field-full">
+<label for="internships">Stages</label>
+<div class="input-wrap"><textarea id="internships"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="workExperience">Travail</label>
+<div class="input-wrap"><textarea id="workExperience"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="associations">Associations</label>
+<div class="input-wrap"><textarea id="associations"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="volunteering">Bénévolat</label>
+<div class="input-wrap"><textarea id="volunteering"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="entrepreneurship">Entrepreneuriat</label>
+<div class="input-wrap"><textarea id="entrepreneurship"></textarea></div>
+</div>
+
+<div class="input-group">
+<label for="technicalSkills">Compétences techniques</label>
+<div class="input-wrap"><input type="text" id="technicalSkills"></div>
+</div>
+
+<div class="input-group">
+<label for="computerSkills">Compétences informatiques</label>
+<div class="input-wrap"><input type="text" id="computerSkills"></div>
+</div>
+
+</div>
+
+</section>
+
+<!-- 10. Objectifs -->
+<section class="profile-section" id="sec-objectifs">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="compass"></i></div>
+<div>
+<h2>Objectifs</h2>
+<p class="field-hint"><i data-lucide="sparkles"></i>Ces réponses permettent à Fitz de personnaliser vraiment ses conseils, vos lettres et vos échanges — pas de réponses génériques.</p>
+</div>
+</div>
+
+<div class="field-grid">
+
+<div class="input-group field-full">
+<label for="whyLeave">Pourquoi voulez-vous partir ?</label>
+<div class="input-wrap"><textarea id="whyLeave"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="careerGoals">Quels sont vos objectifs professionnels ?</label>
+<div class="input-wrap"><textarea id="careerGoals"></textarea></div>
+</div>
+
+<div class="input-group field-full">
+<label for="dreams">Quels sont vos rêves ?</label>
+<div class="input-wrap"><textarea id="dreams"></textarea></div>
+</div>
+
+</div>
+
+</section>
+
+<!-- Barre d'enregistrement -->
+<div class="profile-save-bar">
+<span class="profile-save-note">Vos données restent privées et servent uniquement à personnaliser votre accompagnement.</span>
+<button type="submit" class="btn-profile-save" id="saveProfileBtn">
+<i data-lucide="save"></i>
+<span>Enregistrer mon profil</span>
+</button>
+</div>
+
+</div>
+
+</div>
+
+</form>
+
+</main>
+
+</div>
+
+</div>
+
+<div class="save-toast" id="saveToast">
+<i data-lucide="check-circle"></i>
+<span>Profil enregistré avec succès.</span>
+</div>
+
+<script type="module" src="profile.js"></script>
+
+</body>
+
+</html>

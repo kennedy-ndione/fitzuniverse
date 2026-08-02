@@ -1,0 +1,1278 @@
+/* ==========================================================
+SCHOLARBRIDGE DESIGN SYSTEM — voir DESIGN_SYSTEM.md à la racine
+pour la documentation complète avec exemples. Ce fichier est LA
+seule source de tokens/composants partagés : toute page qui a
+besoin d'une couleur, d'un espacement, d'un rayon, d'une ombre,
+d'une taille de texte ou d'un composant (bouton, champ, carte,
+badge, tableau, modale) doit consommer ce qui est ici plutôt que
+réinventer sa propre valeur localement.
+========================================================== */
+
+:root{
+
+/* ==========================================================
+COLORS — refonte 2026-08 : palette bleu profond / violet discret /
+gris modernes (remplace l'ancien marron/or). La couleur ne sert
+plus qu'à signaler une action ou un état vraiment important — les
+icônes/cartes génériques passent en gris neutre, pas en couleur de
+marque par défaut. Les alias --primary-color/--accent-color/etc.
+restent pour compatibilité avec le code existant ; le nouveau
+travail doit préférer les noms d'échelle (--primary-600,
+--accent-500...). Voir plus bas --gradient-fitz/--glow-fitz : Fitz
+a désormais son propre système de couleur, découplé de --accent-*.
+========================================================== */
+
+--primary-50:#EEF0FB;
+--primary-600:#33418C;
+--primary-700:#262F6B;
+--primary-900:#12162E;
+
+--primary-color:var(--primary-600);
+--primary-hover:var(--primary-700);
+--primary-dark:var(--primary-900);
+
+--accent-100:#EEEAFB;
+--accent-500:#7E71D8;
+--accent-600:#6459B8;
+--accent-color:var(--accent-500);
+
+--success:#22C55E;
+--warning:#EAA83D;
+--danger:#EF4444;
+
+--text-color:#0F172A;
+--text-light:#64748B;
+--text-muted:#94A3B8;
+
+--background:#FFFFFF;
+--background-soft:#F8FAFC;
+--background-alt:#F1F5F9;
+--background-light:rgba(51,65,140,.08);
+
+--border-color:#E2E8F0;
+
+--glass:rgba(255,255,255,.72);
+--glass-border:rgba(255,255,255,.45);
+
+/* Thème "app shell" (dashboard/admin) — un seul jeu de tokens
+sombres, partagé, au lieu que chaque page reforke sa propre
+version avec des valeurs qui dérivent. Toute page à fond sombre
+doit surcharger les tokens ci-dessus avec CEUX-LÀ dans son propre
+scope (ex. `body.app-shell{ --background:var(--shell-bg); ...}`),
+jamais avec de nouvelles valeurs inventées localement. */
+--shell-bg:#1E293B;
+--shell-surface:#0F172A;
+--shell-elevated:#263449;
+--shell-border:rgba(255,255,255,.08);
+--shell-text:#F1F5F9;
+--shell-shadow-xs:0 2px 10px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.04);
+--shell-shadow-sm:0 8px 20px rgba(0,0,0,.36);
+--shell-shadow-md:0 14px 32px rgba(0,0,0,.42);
+--shell-shadow-lg:0 22px 52px rgba(0,0,0,.48);
+
+/* ==========================================================
+GRADIENTS — un jeu limité et intentionnel. Toute nouvelle surface
+qui "a besoin d'un dégradé" doit d'abord se demander si elle peut
+consommer l'un des trois ci-dessous avant d'en inventer un
+nouveau (c'est la dérive la plus commune trouvée dans l'audit :
+des dizaines de quasi-copies de --gradient-primary avec des stops
+légèrement différents).
+========================================================== */
+
+--gradient-primary:
+linear-gradient(
+135deg,
+#4A5BC4 0%,
+#33418C 45%,
+#12162E 100%
+);
+
+--gradient-hero:
+radial-gradient(circle at top left,#E9EBFA 0%,transparent 45%),
+radial-gradient(circle at bottom right,#F0EDFB 0%,transparent 35%),
+#FFFFFF;
+
+/* Signature Fitz — "la marque dans la marque" : découplée du reste
+de la palette (bleu/violet/gris) pour rester immédiatement
+reconnaissable partout où Fitz apparaît (avatar, halo, bulles de
+réponse, badges). Dégradé "aurore" violet → indigo → cyan, propre à
+Fitz — n'est réutilisé nulle part ailleurs sur le site. */
+--gradient-fitz:
+linear-gradient(135deg,#8B7CF6 0%,#6459B8 32%,#3E4FA8 66%,#22A8C9 100%);
+
+--glow-fitz:0 0 0 1px rgba(139,124,246,.35), 0 8px 20px rgba(34,168,201,.20), 0 0 18px rgba(139,124,246,.22);
+
+/* Couleur à plat (premier arrêt du dégradé) pour les cas où un
+dégradé ne s'applique pas directement (texte, icône, bordure fine). */
+--fitz-color:#8B7CF6;
+
+/* ==========================================================
+SHADOWS — élévation sobre. Une carte "mise en avant" se distingue
+par une bordure d'accent + --shadow-lg, jamais par un flou plus
+gros : le spectacle (--shadow-xl à 120px de flou) a été retiré du
+vocabulaire du site.
+========================================================== */
+
+--shadow-xs:
+0 1px 3px rgba(15,23,42,.05);
+
+--shadow-sm:
+0 4px 12px rgba(15,23,42,.08);
+
+--shadow-md:
+0 8px 20px rgba(15,23,42,.10);
+
+--shadow-lg:
+0 16px 32px rgba(15,23,42,.14);
+
+/* ==========================================================
+BORDER RADIUS — resserré.
+========================================================== */
+
+--radius-xs:6px;
+--radius-sm:10px;
+--radius-md:14px;
+--radius-lg:20px;
+--radius-full:999px;
+
+/* ==========================================================
+Z-INDEX
+========================================================== */
+
+--z-header:1000;
+--z-modal:2000;
+--z-overlay:9999;
+
+/* ==========================================================
+SPACING — grille 8pt. --space-2xs comble le seul vrai trou (rien
+en dessous de 8px n'existait alors que des gaps d'icône/badge en
+ont besoin) ; le reste de l'échelle est inchangé.
+========================================================== */
+
+--space-2xs:4px;
+--space-xs:8px;
+--space-sm:16px;
+--space-md:24px;
+--space-lg:40px;
+--space-xl:72px;
+--space-2xl:120px;
+
+/* ==========================================================
+TRANSITIONS — --ease-standard est le défaut global (sobre,
+prévisible) ; --ease-premium reste disponible mais réservé aux
+moments de signature (halo Fitz), plus au comportement par défaut
+de chaque carte/bouton du site.
+========================================================== */
+
+--ease-standard:cubic-bezier(.4,0,.2,1);
+--ease-premium:cubic-bezier(.16,1,.3,1);
+
+--transition:
+all .2s var(--ease-standard);
+
+/* ==========================================================
+TYPOGRAPHY — Sora pour les titres, Inter pour le texte courant.
+Échelle inchangée (déjà auditée et validée) : toute page qui a
+besoin d'une taille/graisse pour un rôle déjà couvert ici doit
+consommer ces tokens/classes plutôt que redéfinir sa propre valeur.
+========================================================== */
+
+--font-display:"Sora",sans-serif;
+--font-body:"Inter",sans-serif;
+
+--fs-hero:clamp(2.75rem,5.2vw,4.25rem);
+--fs-h1:clamp(2.25rem,4vw,3.4rem);
+--fs-h2:clamp(1.9rem,3.2vw,2.75rem);
+--fs-h3:1.3rem;
+--fs-h4:1.05rem;
+--fs-h5:.95rem;
+--fs-lead:clamp(1.05rem,1.3vw,1.15rem);
+--fs-body:1rem;
+--fs-small:.9rem;
+--fs-caption:.8rem;
+--fs-button:.95rem;
+--fs-label:.85rem;
+
+--fs-page-title:clamp(1.35rem,1.6vw,1.65rem);
+--fs-subtitle:1rem;
+--fs-card-title:1.1rem;
+--fs-badge:.72rem;
+--fs-nav:.92rem;
+--fs-footer:.88rem;
+--fs-meta:.82rem;
+--fs-stat:clamp(1.6rem,2.4vw,2.1rem);
+--fs-stat-sm:1.45rem;
+
+--fw-regular:400;
+--fw-medium:500;
+--fw-semibold:600;
+--fw-bold:700;
+--fw-extrabold:800;
+
+--lh-tight:1.1;
+--lh-snug:1.25;
+--lh-normal:1.5;
+--lh-relaxed:1.7;
+
+--ls-tight:-.02em;
+--ls-snug:-.01em;
+--ls-normal:0;
+--ls-wide:.05em;
+
+}
+
+
+/* ==========================================================
+RESET
+========================================================== */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+::selection{
+background:var(--primary-color);
+color:#fff;
+}
+
+html{
+scrollbar-color:var(--primary-color) var(--background-soft);
+scrollbar-width:thin;
+}
+
+::-webkit-scrollbar{
+width:11px;
+}
+
+::-webkit-scrollbar-track{
+background:var(--background-soft);
+}
+
+::-webkit-scrollbar-thumb{
+background:var(--primary-color);
+border-radius:999px;
+border:3px solid var(--background-soft);
+}
+
+::-webkit-scrollbar-thumb:hover{
+background:var(--primary-hover);
+}
+
+body{
+
+font-family:"Inter",sans-serif;
+
+color:var(--text-color);
+
+background:var(--gradient-hero);
+
+line-height:1.6;
+
+}
+
+img{
+
+max-width:100%;
+
+display:block;
+
+}
+
+a{
+
+text-decoration:none;
+
+color:inherit;
+
+}
+
+ul{
+
+list-style:none;
+
+}
+
+/* ==========================================================
+CONTAINER
+========================================================== */
+
+.container{
+
+width:min(1200px,92%);
+
+margin:auto;
+
+}
+
+/* ==========================================================
+BUTTONS — hover sobre (fond plus foncé + léger lift). L'ancien
+effet de "sweep" brillant animé au survol a été retiré : c'est
+une des signatures les plus reconnaissables du vibe coding, et
+elle n'ajoutait aucune clarté fonctionnelle.
+========================================================== */
+
+.btn{
+
+position:relative;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:10px;
+
+padding:13px 22px;
+
+border-radius:var(--radius-md);
+
+font-weight:600;
+
+transition:transform .15s var(--ease-standard),
+box-shadow .15s var(--ease-standard),
+background-color .15s var(--ease-standard),
+border-color .15s var(--ease-standard),
+color .15s var(--ease-standard);
+
+cursor:pointer;
+
+}
+
+.btn-primary{
+
+background:var(--primary-600);
+
+color:#fff;
+
+}
+
+.btn-primary:hover{
+
+background:var(--primary-700);
+
+transform:translateY(-1px);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.btn-secondary{
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-color);
+
+}
+
+.btn-secondary:hover{
+
+border-color:var(--primary-color);
+
+color:var(--primary-color);
+
+}
+
+.btn-ghost{
+
+background:transparent;
+
+color:var(--text-light);
+
+}
+
+.btn-ghost:hover{
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+}
+
+.btn-danger{
+
+background:var(--danger);
+
+color:#fff;
+
+}
+
+.btn-danger:hover{
+
+background:#DC2626;
+
+}
+
+.btn-sm{ padding:9px 16px; font-size:var(--fs-small); border-radius:var(--radius-sm); }
+.btn-lg{ padding:16px 28px; font-size:1.05rem; }
+
+.btn:active{
+
+transform:translateY(0) scale(.98);
+
+}
+
+.btn:focus-visible{
+
+outline:none;
+
+box-shadow:0 0 0 4px rgba(51,65,140,.2);
+
+}
+
+.btn:disabled,
+.btn[disabled]{
+
+opacity:.5;
+
+cursor:not-allowed;
+
+transform:none;
+
+box-shadow:none;
+
+}
+
+/* ==========================================================
+TYPOGRAPHIC HIERARCHY — rôles partagés par toute page. Une page
+ne doit redéfinir une taille/graisse de titre, de lead ou de
+libellé que si son contexte l'exige vraiment (ex. densité d'un
+tableau admin) — jamais par habitude locale.
+========================================================== */
+
+h1, h2, h3, h4, h5, h6{
+
+font-family:var(--font-display);
+
+font-weight:var(--fw-bold);
+
+letter-spacing:var(--ls-tight);
+
+color:var(--text-color);
+
+}
+
+h1{ font-size:var(--fs-h1); line-height:var(--lh-tight); }
+h2{ font-size:var(--fs-h2); line-height:var(--lh-tight); }
+h3{ font-size:var(--fs-h3); line-height:var(--lh-snug); }
+h4{ font-size:var(--fs-h4); line-height:var(--lh-snug); }
+h5, h6{ font-size:var(--fs-h5); line-height:var(--lh-snug); letter-spacing:var(--ls-snug); }
+
+p{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-body);
+
+line-height:var(--lh-relaxed);
+
+color:var(--text-light);
+
+}
+
+.lead{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-lead);
+
+font-weight:var(--fw-medium);
+
+line-height:var(--lh-relaxed);
+
+color:var(--text-light);
+
+}
+
+.text-small{ font-size:var(--fs-small); }
+
+.text-caption{
+
+font-size:var(--fs-caption);
+
+letter-spacing:var(--ls-wide);
+
+text-transform:uppercase;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-muted);
+
+}
+
+label, .label{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-label);
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-color);
+
+}
+
+button, .btn, input, select, textarea{
+
+font-family:var(--font-body);
+
+}
+
+.btn{
+
+font-size:var(--fs-button);
+
+font-family:var(--font-body);
+
+}
+
+table{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-small);
+
+}
+
+th{
+
+font-weight:var(--fw-semibold);
+
+font-size:var(--fs-caption);
+
+letter-spacing:var(--ls-wide);
+
+text-transform:uppercase;
+
+color:var(--text-muted);
+
+}
+
+/* ==========================================================
+RÔLES APPLICATIFS — titre de page (shell dashboard/admin), titre de
+carte, sous-titre, navigation, pied de page, méta-information,
+statistique.
+========================================================== */
+
+.text-page-title, .topbar-title h1{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-page-title);
+
+font-weight:var(--fw-bold);
+
+line-height:var(--lh-tight);
+
+letter-spacing:var(--ls-tight);
+
+color:var(--text-color);
+
+}
+
+.text-subtitle{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-subtitle);
+
+font-weight:var(--fw-regular);
+
+line-height:var(--lh-normal);
+
+color:var(--text-light);
+
+}
+
+.text-card-title{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:var(--fw-bold);
+
+line-height:var(--lh-snug);
+
+letter-spacing:var(--ls-snug);
+
+color:var(--text-color);
+
+}
+
+.text-badge{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-badge);
+
+font-weight:var(--fw-bold);
+
+letter-spacing:.02em;
+
+}
+
+.nav-link, .text-nav{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-nav);
+
+font-weight:var(--fw-semibold);
+
+letter-spacing:var(--ls-normal);
+
+}
+
+.text-footer, footer, .footer{
+
+font-size:var(--fs-footer);
+
+}
+
+.text-meta{
+
+font-family:var(--font-body);
+
+font-size:var(--fs-meta);
+
+font-weight:var(--fw-medium);
+
+color:var(--text-muted);
+
+letter-spacing:var(--ls-normal);
+
+}
+
+.text-stat{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat);
+
+font-weight:var(--fw-extrabold);
+
+line-height:1;
+
+letter-spacing:var(--ls-tight);
+
+font-variant-numeric:tabular-nums;
+
+color:var(--text-color);
+
+}
+
+.text-stat-sm{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:var(--fw-extrabold);
+
+line-height:1;
+
+letter-spacing:var(--ls-tight);
+
+font-variant-numeric:tabular-nums;
+
+}
+
+/* ==========================================================
+LISIBILITÉ SUR IMAGE — voile à deux couches réutilisable partout où
+du texte repose sur une photo (héros, cartes bourses/universités).
+========================================================== */
+
+.media-scrim{
+
+position:absolute;
+
+inset:0;
+
+pointer-events:none;
+
+background:
+
+linear-gradient(180deg, rgba(10,4,7,.15) 0%, rgba(10,4,7,.78) 100%),
+
+linear-gradient(100deg, rgba(10,4,7,.92) 0%, rgba(20,7,12,.55) 40%, rgba(20,7,12,.15) 75%, transparent 100%);
+
+}
+
+.media-scrim.is-full{
+
+background:
+
+linear-gradient(180deg, rgba(10,4,7,.35) 0%, rgba(10,4,7,.85) 100%),
+
+linear-gradient(100deg, rgba(10,4,7,.95) 0%, rgba(20,7,12,.65) 45%, rgba(20,7,12,.3) 100%);
+
+}
+
+.text-on-media{
+
+color:#fff;
+
+text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+
+}
+
+/* ==========================================================
+KEYFRAMES PARTAGÉS
+========================================================== */
+
+@keyframes shimmer-sweep{
+
+0%{ background-position:100% 50%; }
+
+100%{ background-position:0 50%; }
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.ai-skeleton,
+.bourses-skeleton-line{ animation:none; }
+
+}
+
+/* ==========================================================
+COMPONENTS PARTAGÉS — cartes, badges, alertes/états vides,
+champs de formulaire, tableau, base de modale. Toute nouvelle
+carte/badge/alerte/champ/tableau/modale du site doit partir d'ici
+plutôt que réinventer sa propre structure.
+========================================================== */
+
+.card{
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+box-shadow:var(--shadow-xs);
+
+transition:var(--transition);
+
+}
+
+.card:hover{
+
+box-shadow:var(--shadow-sm);
+
+transform:translateY(-1px);
+
+}
+
+/* Hiérarchie d'importance — une grille de cartes ne doit pas toutes
+peser pareil visuellement. .card--featured se distingue par une
+bordure d'accent, pas par une ombre plus spectaculaire ;
+.card--subtle pour ce qui est secondaire/désactivé. */
+
+.card--featured{
+
+border-color:rgba(126,113,216,.4);
+
+box-shadow:var(--shadow-md);
+
+}
+
+.card--featured:hover{
+
+box-shadow:var(--shadow-lg);
+
+transform:translateY(-2px);
+
+}
+
+.card--subtle{
+
+box-shadow:none;
+
+background:var(--background-soft);
+
+}
+
+.card--subtle:hover{
+
+box-shadow:var(--shadow-xs);
+
+transform:none;
+
+}
+
+/* Verre dépoli — recette unique consommant --glass/--glass-border.
+Réservé aux surfaces qui le justifient réellement (fond de header
+au scroll, backdrop de modale) — pas un décor par défaut sur les
+cartes de contenu. */
+
+.glass-panel{
+
+background:var(--glass);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+}
+
+.glass-panel--dark{
+
+background:rgba(15,23,42,.45);
+
+border:1px solid rgba(255,255,255,.16);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+}
+
+.badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:5px 12px;
+
+border-radius:var(--radius-full);
+
+font-family:var(--font-display);
+
+font-size:var(--fs-badge);
+
+font-weight:var(--fw-bold);
+
+letter-spacing:.02em;
+
+background:var(--background-light);
+
+color:var(--primary-color);
+
+white-space:nowrap;
+
+}
+
+.badge i{ width:14px; height:14px; }
+
+.badge-success{ background:rgba(34,197,94,.12); color:#178a44; }
+.badge-warning{ background:rgba(234,168,61,.15); color:#a3711d; }
+.badge-danger{ background:rgba(239,68,68,.12); color:#c53030; }
+.badge-neutral{ background:var(--background-alt); color:var(--text-light); }
+
+.alert{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:12px;
+
+padding:16px 20px;
+
+border-radius:var(--radius-sm);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+font-size:var(--fs-small);
+
+color:var(--text-light);
+
+}
+
+.alert i{ flex-shrink:0; width:18px; height:18px; color:var(--primary-color); }
+
+.alert-danger{ background:rgba(239,68,68,.06); border-color:rgba(239,68,68,.25); color:#9f1c1c; }
+.alert-danger i{ color:var(--danger); }
+
+.alert-warning{ background:rgba(234,168,61,.08); border-color:rgba(234,168,61,.3); color:#7a5216; }
+.alert-warning i{ color:var(--warning); }
+
+.alert-success{ background:rgba(34,197,94,.08); border-color:rgba(34,197,94,.3); color:#166534; }
+.alert-success i{ color:var(--success); }
+
+.empty-state{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:14px;
+
+padding:60px 24px;
+
+text-align:center;
+
+color:var(--text-light);
+
+}
+
+.empty-state i{ width:36px; height:36px; color:var(--text-muted); }
+
+.empty-state h3{ font-size:var(--fs-h4); color:var(--text-color); }
+
+/* Champ de formulaire — LE seul système de champ du site. Remplace
+les 6+ recettes indépendantes trouvées dans l'audit (.input-wrap
+dupliqué, .apps-field, .uni-toolbar-field, .bourses-search-field,
+.docs-search-field, .form-group...). Structure attendue :
+<div class="field">
+  <label>Libellé</label>
+  <div class="field-control">
+    <i data-lucide="..."></i>
+    <input/select/textarea>
+  </div>
+  <p class="field-hint">Aide ou erreur</p>
+</div>
+La div .field-control est optionnelle si aucune icône n'est
+nécessaire (l'input peut alors être un enfant direct de .field). */
+
+.field{
+
+display:flex;
+
+flex-direction:column;
+
+gap:6px;
+
+}
+
+.field label{
+
+font-size:var(--fs-label);
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-color);
+
+}
+
+.field-control{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+}
+
+.field-control i{
+
+position:absolute;
+
+left:16px;
+
+width:18px;
+
+height:18px;
+
+color:var(--text-muted);
+
+pointer-events:none;
+
+}
+
+.field input,
+.field select,
+.field textarea,
+.field-control input,
+.field-control select,
+.field-control textarea{
+
+width:100%;
+
+padding:12px 16px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-sm);
+
+background:var(--background);
+
+font-family:var(--font-body);
+
+font-size:var(--fs-body);
+
+color:var(--text-color);
+
+transition:border-color .15s var(--ease-standard), box-shadow .15s var(--ease-standard);
+
+}
+
+.field-control i + input,
+.field-control i + select,
+.field-control i + textarea{
+
+padding-left:46px;
+
+}
+
+.field textarea{
+
+resize:vertical;
+
+min-height:110px;
+
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+
+outline:none;
+
+border-color:var(--primary-color);
+
+box-shadow:0 0 0 3px rgba(51,65,140,.12);
+
+}
+
+.field input::placeholder,
+.field textarea::placeholder{
+
+color:var(--text-muted);
+
+}
+
+.field-hint{
+
+font-size:var(--fs-caption);
+
+color:var(--text-muted);
+
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea{
+
+border-color:var(--danger);
+
+}
+
+.field.has-error .field-hint{
+
+color:var(--danger);
+
+}
+
+/* Tableau partagé — bordures, en-tête, survol de ligne. Remplace
+les tableaux non tokenisés (admin notamment). */
+
+.table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+.table th{
+
+text-align:left;
+
+padding:12px 16px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.table td{
+
+padding:14px 16px;
+
+border-bottom:1px solid var(--border-color);
+
+color:var(--text-color);
+
+}
+
+.table tbody tr{
+
+transition:background-color .15s var(--ease-standard);
+
+}
+
+.table tbody tr:hover{
+
+background:var(--background-soft);
+
+}
+
+.table tbody tr:last-child td{
+
+border-bottom:none;
+
+}
+
+.modal-base{
+
+position:fixed;
+
+inset:0;
+
+z-index:var(--z-modal);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:24px;
+
+background:rgba(15,23,42,.55);
+
+backdrop-filter:blur(4px);
+
+}
+
+.modal-base[hidden]{ display:none; }
+
+.modal-base .modal-card{
+
+width:100%;
+
+max-width:520px;
+
+max-height:90vh;
+
+overflow-y:auto;
+
+background:var(--background);
+
+border-radius:var(--radius-lg);
+
+box-shadow:var(--shadow-lg);
+
+padding:32px;
+
+}
+
+.modal-base .modal-header{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+margin-bottom:18px;
+
+}
+
+.modal-base .modal-close{
+
+background:none;
+
+border:none;
+
+cursor:pointer;
+
+color:var(--text-light);
+
+}
+
+/* ==========================================================
+GLOBAL SECTIONS
+========================================================== */
+
+section{
+
+position:relative;
+
+padding:110px 0;
+
+overflow:hidden;
+
+}
+
+.section{
+
+padding:110px 0;
+
+}
+
+.section-header{
+
+max-width:760px;
+
+margin:0 auto 70px;
+
+text-align:center;
+
+}
+
+.section-header h2{
+
+font-size:clamp(2rem,4vw,3.2rem);
+
+line-height:1.15;
+
+font-weight:800;
+
+margin-bottom:20px;
+
+color:var(--text-color);
+
+}
+
+.section-header p{
+
+font-size:1.1rem;
+
+color:var(--text-light);
+
+line-height:1.8;
+
+}
+
+.section-badge{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:10px;
+
+padding:10px 18px;
+
+margin-bottom:22px;
+
+border-radius:999px;
+
+background:rgba(51,65,140,.08);
+
+color:var(--primary-color);
+
+font-weight:700;
+
+font-size:.92rem;
+
+}
+
+.section-badge i{
+
+width:18px;
+
+height:18px;
+
+}

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Paramètres du compte | ScholarBridge</title>
+
+<meta name="description" content="Gérez vos informations de connexion, votre mot de passe et votre compte ScholarBridge.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="account.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link is-active" aria-current="page">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Paramètres du compte</h1>
+<p>Connexion, mot de passe et gestion de votre compte ScholarBridge.</p>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<section class="ai-panel reveal">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="id-card"></i>Informations du compte</h2>
+</div>
+
+<div class="ai-panel-body account-info-grid">
+
+<div>
+<span class="account-info-label">Nom</span>
+<strong id="accountName">—</strong>
+</div>
+
+<div>
+<span class="account-info-label">Adresse e-mail</span>
+<strong id="accountEmail">—</strong>
+</div>
+
+<div>
+<span class="account-info-label">Formule actuelle</span>
+<strong id="accountPlan">—</strong>
+</div>
+
+<p class="ai-field-hint">
+Pour modifier votre parcours académique, vos préférences ou vos objectifs d'études, rendez-vous sur <a href="profile.html" style="color:var(--accent-color);font-weight:700;">votre profil</a>.
+</p>
+
+</div>
+
+</section>
+
+<section class="ai-panel reveal" style="margin-top:20px;">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="lock"></i>Changer le mot de passe</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<form id="passwordForm">
+
+<div class="ai-field">
+<label for="currentPassword">Mot de passe actuel</label>
+<input type="password" id="currentPassword" autocomplete="current-password" required>
+</div>
+
+<div class="ai-field-row">
+
+<div class="ai-field">
+<label for="newPassword">Nouveau mot de passe</label>
+<input type="password" id="newPassword" autocomplete="new-password" required>
+</div>
+
+<div class="ai-field">
+<label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
+<input type="password" id="confirmNewPassword" autocomplete="new-password" required>
+</div>
+
+</div>
+
+<span class="ai-field-hint">Un mot de passe solide : 8 caractères minimum, une majuscule et un chiffre.</span>
+
+<div id="passwordFormError" class="account-form-error" hidden></div>
+
+<button type="submit" class="btn btn-primary" id="passwordSubmitBtn" style="margin-top:16px;">
+<i data-lucide="check"></i>
+<span>Mettre à jour le mot de passe</span>
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+<section class="ai-panel reveal account-danger-zone" style="margin-top:20px;">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="triangle-alert"></i>Zone dangereuse</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<p class="ai-field-hint" style="margin-bottom:16px;">
+La suppression de votre compte est <strong>définitive et irréversible</strong>. Votre profil, vos préférences et vos messages seront supprimés. Certaines notes internes conservées par l'équipe ScholarBridge à des fins de suivi peuvent être conservées. Vous serez immédiatement déconnecté(e).
+</p>
+
+<form id="deleteAccountForm">
+
+<div class="ai-field">
+<label for="deletePassword">Confirmez avec votre mot de passe</label>
+<input type="password" id="deletePassword" autocomplete="current-password" required>
+</div>
+
+<div id="deleteFormError" class="account-form-error" hidden></div>
+
+<button type="submit" class="btn account-danger-btn" id="deleteAccountBtn">
+<i data-lucide="trash-2"></i>
+<span>Supprimer définitivement mon compte</span>
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+</div>
+
+<div class="account-modal" id="deleteConfirmModal" hidden>
+
+<div class="account-modal-card">
+
+<h2>Dernière confirmation</h2>
+<p>Cette action est <strong>définitive</strong>. Votre compte ScholarBridge et vos données seront supprimés immédiatement.</p>
+
+<div class="account-modal-actions">
+<button type="button" class="ai-icon-btn" id="cancelDeleteBtn">Annuler</button>
+<button type="button" class="btn account-danger-btn" id="confirmDeleteBtn">Oui, supprimer définitivement</button>
+</div>
+
+</div>
+
+</div>
+
+<script type="module" src="account.js"></script>
+
+</body>
+
+</html>

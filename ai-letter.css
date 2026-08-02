@@ -1,0 +1,35 @@
+/* ==========================================================
+AI LETTER — mise en page spécifique
+Composants (grille de styles, panneaux, aperçu...) dans css/ai-suite.css.
+========================================================== */
+
+#letterForm{
+
+margin-top:18px;
+
+}
+
+@media(max-width:520px){
+
+.ai-page-header-badge span{
+
+display:none;
+
+}
+
+}
+
+/* Verre dépoli — réservé au panneau d'aperçu (la lettre générée par
+Fitz), pas au panneau de formulaire à gauche. */
+
+#previewPanel{
+
+background:var(--glass);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(16px);
+
+-webkit-backdrop-filter:blur(16px);
+
+}

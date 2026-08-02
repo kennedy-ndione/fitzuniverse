@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fitz Chat | ScholarBridge</title>
+
+<meta name="description" content="Discutez avec Fitz, votre assistant personnel pour préparer votre candidature universitaire internationale.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="ai-chat.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link is-active" aria-current="page" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Fitz — Discuter</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content ai-chat-page" style="display:none;">
+
+<div id="lockedState" hidden></div>
+
+<div id="chatApp" class="reveal">
+
+<div class="ai-chat-shell">
+
+<aside class="ai-chat-history" id="chatHistory">
+
+<div class="ai-chat-history-header">
+
+<button type="button" class="ai-chat-new-btn" id="newConversationBtn">
+<i data-lucide="plus"></i>
+<span>Nouvelle conversation</span>
+</button>
+
+<button type="button" class="ai-chat-history-close" id="chatHistoryCloseBtn" aria-label="Fermer l'historique">
+<i data-lucide="x"></i>
+</button>
+
+</div>
+
+<div class="ai-chat-history-list" id="chatHistoryList"></div>
+
+</aside>
+
+<div class="ai-chat-history-backdrop" id="chatHistoryBackdrop"></div>
+
+<div class="ai-chat-main">
+
+<div class="ai-chat-main-topbar">
+
+<button type="button" class="ai-chat-history-toggle" id="chatHistoryToggleBtn" aria-label="Historique des conversations">
+<i data-lucide="panel-left"></i>
+</button>
+
+<span class="ai-chat-current-title" id="chatCurrentTitle">Nouvelle conversation</span>
+
+</div>
+
+<div class="ai-chat-scroll" id="chatScroll">
+
+<div class="ai-empty-state" id="chatEmptyState">
+
+<div class="fitz-avatar fitz-avatar--xl"><i data-lucide="sparkles"></i></div>
+
+<h2>Comment puis-je vous aider aujourd'hui ?</h2>
+<p>Je connais votre profil ScholarBridge et je peux vous conseiller sur toutes les étapes de votre candidature internationale. Vous pouvez aussi joindre une capture d'écran, une photo ou un PDF.</p>
+
+<div class="ai-help-cards">
+
+<button type="button" class="ai-help-card" data-prompt="Quels documents dois-je préparer pour candidater à l'étranger ?">
+<i data-lucide="file-text"></i>
+<span>Quels documents dois-je préparer pour candidater à l'étranger ?</span>
+</button>
+
+<button type="button" class="ai-help-card" data-prompt="Comment structurer une lettre de motivation efficace ?">
+<i data-lucide="pen-line"></i>
+<span>Comment structurer une lettre de motivation efficace ?</span>
+</button>
+
+<button type="button" class="ai-help-card" data-prompt="Comment trouver une bourse adaptée à mon profil ?">
+<i data-lucide="graduation-cap"></i>
+<span>Comment trouver une bourse adaptée à mon profil ?</span>
+</button>
+
+<button type="button" class="ai-help-card" data-prompt="Comment relancer une université après ma candidature ?">
+<i data-lucide="send"></i>
+<span>Comment relancer une université après ma candidature ?</span>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<button type="button" class="ai-scroll-to-bottom" id="scrollToBottomBtn" aria-label="Aller au dernier message">
+<i data-lucide="arrow-down"></i>
+</button>
+
+<div class="ai-suggestions" id="chatSuggestions"></div>
+
+<div class="ai-chat-attachments" id="chatAttachments" hidden></div>
+
+<form class="ai-chat-composer" id="chatForm">
+
+<button type="button" class="ai-chat-attach-btn" id="attachBtn" aria-label="Joindre un fichier">
+<i data-lucide="paperclip"></i>
+</button>
+
+<input type="file" id="chatFileInput" multiple hidden accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">
+
+<textarea
+class="ai-chat-textarea"
+id="chatInput"
+rows="1"
+placeholder="Écrivez votre question à Fitz…"
+maxlength="1200"></textarea>
+
+<button type="submit" class="ai-chat-send-btn" id="chatSendBtn" aria-label="Envoyer">
+<i data-lucide="arrow-up"></i>
+</button>
+
+<button type="button" class="ai-chat-stop-btn" id="chatStopBtn" aria-label="Arrêter la génération" hidden>
+<i data-lucide="square"></i>
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="ai-chat.js"></script>
+
+</body>
+
+</html>

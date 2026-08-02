@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Se connecter | ScholarBridge</title>
+
+<meta name="description" content="Connectez-vous à votre espace ScholarBridge pour retrouver votre diagnostic et poursuivre votre accompagnement avec Fitz.">
+
+<!-- Google Fonts (identiques au reste du parcours) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Design system ScholarBridge -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="auth.css">
+
+</head>
+
+<body>
+
+<div class="auth-page">
+
+<div class="auth-shell">
+
+<!-- Hero -->
+<div class="auth-hero reveal">
+
+<div class="auth-logo-wrap">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+</div>
+
+<div class="auth-badge">
+<i data-lucide="sparkles"></i>
+<span>ScholarBridge</span>
+</div>
+
+<h1>Bon retour parmi nous</h1>
+
+<p>Connectez-vous pour retrouver votre diagnostic et poursuivre votre accompagnement avec Fitz.</p>
+
+</div>
+
+<!-- Carte -->
+<div class="auth-card reveal">
+
+<h2>Se connecter</h2>
+<p class="auth-card-subtext">Accédez à votre espace personnel ScholarBridge.</p>
+
+<form id="loginForm" class="login-form">
+
+<div class="input-group">
+
+<label for="signupEmail">Adresse e-mail</label>
+
+<div class="input-wrap">
+<i data-lucide="mail" class="input-icon"></i>
+<input
+type="email"
+id="signupEmail"
+placeholder="vous@exemple.com"
+autocomplete="email"
+required>
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label for="signupPassword">Mot de passe</label>
+
+<div class="input-wrap has-toggle">
+
+<i data-lucide="lock" class="input-icon"></i>
+
+<input
+type="password"
+id="signupPassword"
+placeholder="Votre mot de passe"
+autocomplete="current-password"
+required>
+
+<button
+type="button"
+id="togglePassword"
+class="password-toggle"
+aria-label="Afficher le mot de passe"
+aria-pressed="false">
+<i data-lucide="eye"></i>
+</button>
+
+</div>
+
+</div>
+
+<div class="auth-options">
+
+<label class="remember-me">
+<input type="checkbox" id="rememberMe">
+<span>Se souvenir de moi</span>
+</label>
+
+<a href="#" class="forgot-link" id="forgotPasswordLink">Mot de passe oublié ?</a>
+
+</div>
+
+<button type="submit" class="btn-auth-submit">
+Se connecter
+</button>
+
+<p class="forgot-note" id="forgotPasswordNote" hidden></p>
+
+</form>
+
+<div class="auth-trust">
+<i data-lucide="shield-check"></i>
+<span>Connexion sécurisée</span>
+</div>
+
+<p class="login-link">
+Vous n'avez pas encore de compte ?
+<a href="signup.html">Créer un compte</a>
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+// Bascule d'affichage du mot de passe — logique strictement inchangée.
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("signupPassword");
+
+if (togglePassword && passwordInput) {
+
+togglePassword.addEventListener("click", () => {
+
+const isHidden = passwordInput.type === "password";
+
+passwordInput.type = isHidden ? "text" : "password";
+
+togglePassword.innerHTML = `<i data-lucide="${isHidden ? "eye-off" : "eye"}"></i>`;
+if (window.lucide) lucide.createIcons();
+
+togglePassword.setAttribute("aria-pressed", String(isHidden));
+
+togglePassword.setAttribute(
+"aria-label",
+isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe"
+);
+
+});
+
+}
+
+</script>
+
+<script>
+
+// Améliorations UX purement décoratives (mémorisation de l'e-mail,
+// notice "mot de passe oublié", apparition au chargement, icônes).
+// Aucun appel Firebase ici : login.js reste seul responsable de
+// l'authentification, de la validation et de la redirection.
+(function () {
+
+const REMEMBER_KEY = "scholarbridge_remembered_email";
+const emailInput = document.getElementById("signupEmail");
+const rememberCheckbox = document.getElementById("rememberMe");
+const loginForm = document.getElementById("loginForm");
+
+if (emailInput && rememberCheckbox && loginForm) {
+
+const remembered = localStorage.getItem(REMEMBER_KEY);
+
+if (remembered) {
+emailInput.value = remembered;
+rememberCheckbox.checked = true;
+}
+
+loginForm.addEventListener("submit", () => {
+
+if (rememberCheckbox.checked) {
+localStorage.setItem(REMEMBER_KEY, emailInput.value.trim());
+} else {
+localStorage.removeItem(REMEMBER_KEY);
+}
+
+});
+
+}
+
+// La logique du lien "Mot de passe oublié ?" vit désormais dans
+// login.js (envoi d'un vrai e-mail de réinitialisation Firebase),
+// pas ici — ce script reste purement décoratif (voir commentaire
+// en tête de fichier).
+
+document.documentElement.classList.add("js-ready");
+
+const revealEls = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+
+const observer = new IntersectionObserver((entries) => {
+
+entries.forEach((entry) => {
+if (entry.isIntersecting) {
+entry.target.classList.add("is-visible");
+observer.unobserve(entry.target);
+}
+});
+
+}, { threshold: 0.1 });
+
+revealEls.forEach((el) => observer.observe(el));
+
+} else {
+
+revealEls.forEach((el) => el.classList.add("is-visible"));
+
+}
+
+if (window.lucide) lucide.createIcons();
+
+})();
+
+</script>
+
+<script type="module" src="login.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Administration | ScholarBridge</title>
+
+<meta name="description" content="Connexion au Control Center ScholarBridge — accès réservé aux administrateurs.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="login.css">
+
+</head>
+
+<body>
+
+<div class="admin-auth-page">
+
+<div class="admin-auth-shell">
+
+<div class="admin-auth-hero reveal">
+
+<div class="admin-logo-wrap">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+</div>
+
+<span class="admin-auth-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<h1>Administration ScholarBridge</h1>
+
+<p>Accès réservé aux administrateurs déclarés. Connectez-vous pour piloter la plateforme.</p>
+
+</div>
+
+<div class="admin-auth-card reveal">
+
+<form id="adminLoginForm">
+
+<div class="input-group">
+<label for="email">Adresse e-mail</label>
+<div class="input-wrap">
+<i data-lucide="mail" class="input-icon"></i>
+<input type="email" id="email" placeholder="vous@scholarbridge.app" autocomplete="username" required>
+</div>
+</div>
+
+<div class="input-group">
+<label for="password">Mot de passe</label>
+<div class="input-wrap has-toggle">
+<i data-lucide="lock" class="input-icon"></i>
+<input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+<button type="button" class="password-toggle" id="togglePassword" aria-label="Afficher le mot de passe">
+<i data-lucide="eye"></i>
+</button>
+</div>
+</div>
+
+<button type="submit" class="btn btn-lg btn-admin-submit">
+<span>Se connecter au Control Center</span>
+</button>
+
+</form>
+
+<p class="admin-auth-trust"><i data-lucide="shield"></i>Connexion sécurisée — réservée à l'équipe ScholarBridge.</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module" src="login.js"></script>
+
+<script>
+
+// Bascule d'affichage du mot de passe — purement décoratif, aucune
+// dépendance à login.js (même convention que login.html/signup.html
+// à la racine du site).
+document.documentElement.classList.add("js-ready");
+
+const togglePasswordBtn = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("password");
+
+if (togglePasswordBtn && passwordInput) {
+
+togglePasswordBtn.addEventListener("click", () => {
+
+const isHidden = passwordInput.type === "password";
+
+passwordInput.type = isHidden ? "text" : "password";
+
+const icon = togglePasswordBtn.querySelector("i");
+icon.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
+
+togglePasswordBtn.setAttribute("aria-label", isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe");
+
+if (window.lucide) lucide.createIcons();
+
+});
+
+}
+
+if (window.lucide) lucide.createIcons();
+
+</script>
+
+</body>
+
+</html>
