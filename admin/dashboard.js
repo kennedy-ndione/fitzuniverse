@@ -436,7 +436,14 @@ data: {
 labels: planIds.map((id) => PLAN_LABELS[id]),
 datasets: [{
 data: planIds.map((id) => breakdown[id] || 0),
-backgroundColor: ["#94A3B8", "#8B1E3F", "#B23358", "#D4A24C"],
+// Une couleur par entrée de PLAN_LABELS, dans l'ordre de PLAN_ORDER.
+// Ce tableau n'en comptait que 4 pour 4 formules : les 3 offres
+// ajoutées le 2026-08-02 auraient eu des segments sans couleur. Les
+// valeurs sont aussi passées à la palette bleu/violet en vigueur —
+// les précédentes (#8B1E3F, #B23358, #D4A24C) venaient du thème
+// marron/or abandonné et étaient les dernières encore en place ici.
+// Progression : gris (gratuit) → bleus (formules) → violets (humain).
+backgroundColor: ["#94A3B8", "#64748B", "#4A5BC4", "#33418C", "#262F6B", "#7E71D8", "#6459B8"],
 borderColor: "#1E293B",
 borderWidth: 2
 }]

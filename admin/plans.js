@@ -30,7 +30,31 @@ initSidebarToggle();
 // l'administrateur n'a pas cliqué sur "Enregistrer".
 let featureFlags = {};
 
+// L'en-tête suit PLAN_ORDER au lieu d'être figé dans plans.html : le
+// nombre de colonnes du corps en dépend déjà, les deux ne peuvent plus
+// diverger quand une formule est ajoutée.
+function renderHead() {
+
+const head = document.getElementById("plansTableHead");
+
+if (!head) return;
+
+head.querySelectorAll("th:not(:first-child)").forEach((th) => th.remove());
+
+PLAN_ORDER.forEach((planId) => {
+
+const th = document.createElement("th");
+th.setAttribute("scope", "col");
+th.textContent = PLAN_LABELS[planId];
+head.appendChild(th);
+
+});
+
+}
+
 function renderTable() {
+
+renderHead();
 
 const tbody = document.getElementById("plansTableBody");
 tbody.innerHTML = "";

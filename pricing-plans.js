@@ -213,14 +213,19 @@ icon: "star",
 tagline: "Conseiller dédié, candidatures illimitées.",
 badge: "Notre formule la plus complète",
 priceFCFA: 199000,
-// Candidatures illimitées. `maxAccompaniedApplications` reste absent
-// volontairement : applications.js et admin/student-detail.js testent
-// ce champ par sa véracité, une valeur absente signifie donc déjà
-// "aucun plafond appliqué". `unlimitedApplications` explicite
-// l'intention pour distinguer "illimité" de "aucune candidature
-// incluse" — voir la note de suivi remise avec cette modification,
-// aucun fichier ne le lit encore.
-unlimitedApplications: true,
+// CONVENTION "ILLIMITÉ" (arrêtée 2026-08-02) : `Infinity`, jamais une
+// valeur absente ni `null`. Les deux lecteurs du champ
+// (applications.js, admin/student-detail.js) le testent par sa
+// véracité — `undefined`/`null` y sont donc indiscernables de
+// "aucune candidature incluse", ce qui faisait afficher "formule
+// Gratuit" à un client Signature. `Infinity` est truthy, et
+// `applications.length >= Infinity` est toujours faux : le plafond ne
+// se déclenche jamais sans qu'aucun cas particulier soit nécessaire
+// dans la vérification de quota. Seul l'affichage doit le traduire en
+// "illimité". Ne jamais écrire cette valeur telle quelle dans
+// Firestore ou un JSON (Infinity n'est pas sérialisable) — elle vit
+// uniquement dans ce fichier.
+maxAccompaniedApplications: Infinity,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
 highlights: [

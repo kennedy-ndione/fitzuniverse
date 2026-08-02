@@ -101,13 +101,13 @@
 <div class="admin-table-wrap">
 
 <table class="table admin-table plans-table">
+<!-- Les colonnes de formules sont générées par plans.js à partir de
+PLAN_ORDER : elles étaient codées en dur ici (4 colonnes) et ne
+suivaient donc pas l'ajout d'une formule, ce qui désalignait
+l'en-tête et le corps du tableau. -->
 <thead>
-<tr>
-<th>Fonctionnalité</th>
-<th>Gratuit</th>
-<th>Essentiel</th>
-<th>Avancé</th>
-<th>Premium</th>
+<tr id="plansTableHead">
+<th scope="col">Fonctionnalité</th>
 </tr>
 </thead>
 <tbody id="plansTableBody"></tbody>

@@ -425,9 +425,23 @@ const activePlanKey = resolvePlan(userData);
 const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[activePlanKey];
 const quota = plan ? plan.maxAccompaniedApplications : 0;
 
-quotaStatus.textContent = quota
-? `${applications.length} / ${quota} candidature${quota > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} (quota de la formule ${plan.label}).`
-: `${applications.length} candidature${applications.length > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} — formule Gratuit, aucune candidature accompagnée incluse.`;
+const suivies = `${applications.length} candidature${applications.length > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""}`;
+
+if (quota === Infinity) {
+
+// Convention "illimité" (pricing-plans.js) : afficher le mot, jamais
+// la valeur brute — `${Infinity}` rendrait littéralement "Infinity".
+quotaStatus.textContent = `${suivies} — candidatures illimitées (formule ${plan.label}).`;
+
+} else if (quota) {
+
+quotaStatus.textContent = `${applications.length} / ${quota} candidature${quota > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} (quota de la formule ${plan.label}).`;
+
+} else {
+
+quotaStatus.textContent = `${suivies} — formule Gratuit, aucune candidature accompagnée incluse.`;
+
+}
 
 if (!applications.length) {
 list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune candidature suivie pour le moment.</p>`;
