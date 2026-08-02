@@ -618,6 +618,43 @@ filter:blur(50px);
 
 }
 
+/* SECTION "POUR DÉMARRER" — deux bannières compactes empilées.
+.consult-banner porte sa propre marge basse (56px) parce qu'elle était
+jusqu'ici seule sur la page ; à l'intérieur de cette pile, c'est le gap
+qui gère l'espacement, sinon les deux offres se retrouvent séparées
+d'un écran. */
+.starter-stack{
+
+display:flex;
+
+flex-direction:column;
+
+gap:18px;
+
+margin-bottom:56px;
+
+}
+
+.starter-stack .consult-banner{
+
+margin-bottom:0;
+
+}
+
+/* Condition commerciale du Pass Express (voir `note` dans
+pricing-plans.js) — secondaire par rapport à la description. */
+.consult-note{
+
+margin-top:8px !important;
+
+font-size:13px;
+
+font-weight:600;
+
+color:var(--primary-color);
+
+}
+
 .pricing-grid{
 
 position:relative;
@@ -626,7 +663,10 @@ z-index:1;
 
 display:grid;
 
-grid-template-columns:repeat(4,1fr);
+/* 3 formules complètes. Signature a quitté cette grille le
+2026-08-02 pour la section "Accompagnement humain" (voir
+.pricing-grid--duo) : elle ne se compare pas sur le même axe. */
+grid-template-columns:repeat(3,1fr);
 
 /* stretch (pas start) : la formule Signature a une description plus
 longue que les 3 autres — étirer les 4 cartes à la même hauteur (le
@@ -991,9 +1031,17 @@ margin-top:auto;
 
 }
 
-.plan-card-essentiel .plan-cta:hover{
+/* Section "Accompagnement humain" — deux offres seulement, centrées
+plutôt qu'étirées sur toute la largeur d'une grille prévue pour trois. */
+.pricing-grid--duo{
 
-box-shadow:0 12px 26px rgba(139,30,63,.16);
+grid-template-columns:repeat(2,1fr);
+
+max-width:760px;
+
+margin-left:auto;
+
+margin-right:auto;
 
 }
 
