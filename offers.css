@@ -56,7 +56,7 @@ width:420px;
 
 height:420px;
 
-background:radial-gradient(circle,rgba(139,30,63,.24) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(51,65,140,.22) 0%,transparent 70%);
 
 animation:heroHaloA 24s ease-in-out infinite;
 
@@ -72,7 +72,7 @@ width:380px;
 
 height:380px;
 
-background:radial-gradient(circle,rgba(212,162,76,.22) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(126,113,216,.20) 0%,transparent 70%);
 
 animation:heroHaloB 28s ease-in-out infinite;
 
@@ -207,7 +207,7 @@ border-radius:var(--radius-lg);
 
 background:
 
-linear-gradient(160deg,rgba(43,14,22,.9) 0%,rgba(139,30,63,.78) 55%,rgba(43,14,22,.92) 100%),
+linear-gradient(160deg,rgba(18,22,46,.90) 0%,rgba(51,65,140,.74) 55%,rgba(18,22,46,.93) 100%),
 
 url("assets/images/hero-bg5.jpg");
 
@@ -229,7 +229,7 @@ inset:0;
 
 z-index:-1;
 
-background:radial-gradient(circle at 12% 15%,rgba(212,162,76,.2),transparent 50%);
+background:radial-gradient(circle at 12% 15%,rgba(126,113,216,.22),transparent 50%);
 
 }
 
@@ -386,7 +386,10 @@ z-index:-1;
 
 border-radius:inherit;
 
-background:conic-gradient(from 0deg, #D4A24C, #B23358, #E8C077, #D4A24C);
+/* Halo "aurore" de Fitz — mêmes teintes que --gradient-fitz
+(css/base.css). Cette page était restée sur l'ancien halo or/marron :
+Fitz y portait donc une identité différente du reste du site. */
+background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
 
 opacity:.55;
 
@@ -470,7 +473,7 @@ align-items:center;
 
 gap:18px;
 
-background:linear-gradient(135deg,rgba(139,30,63,.05),rgba(212,162,76,.05));
+background:linear-gradient(135deg,rgba(51,65,140,.05),rgba(126,113,216,.05));
 
 border:1px solid var(--border-color);
 
@@ -611,8 +614,8 @@ z-index:0;
 pointer-events:none;
 
 background:
-radial-gradient(ellipse at 60% 20%,rgba(212,162,76,.22) 0%,transparent 55%),
-radial-gradient(ellipse at 25% 75%,rgba(139,30,63,.16) 0%,transparent 55%);
+radial-gradient(ellipse at 60% 20%,rgba(51,65,140,.20) 0%,transparent 55%),
+radial-gradient(ellipse at 25% 75%,rgba(126,113,216,.16) 0%,transparent 55%);
 
 filter:blur(50px);
 
@@ -1031,8 +1034,54 @@ margin-top:auto;
 
 }
 
-/* Section "Accompagnement humain" — deux offres seulement, centrées
-plutôt qu'étirées sur toute la largeur d'une grille prévue pour trois. */
+/* ==========================================================
+ACCOMPAGNEMENT HUMAIN — IDENTITÉ À PART
+Signature Focus et Signature ne sont pas le dernier cran de la
+progression Essentiel → Avancé → Premium : elles changent d'axe (un
+conseiller réel, Fitz en renfort). D'où un violet tenu là où les
+formules sont bleues, et aucune reprise de la mise en avant "featured".
+Le violet employé est l'accent générique (--accent-*), jamais le
+dégradé ni le halo de Fitz, qui restent réservés à Fitz.
+========================================================== */
+
+.plan-card--human{
+
+background:
+linear-gradient(180deg,rgba(126,113,216,.07),transparent 42%),
+var(--background);
+
+border-color:rgba(126,113,216,.32);
+
+}
+
+.plan-card--human .plan-icon{
+
+background:var(--accent-100);
+
+color:var(--accent-600);
+
+}
+
+.plan-card--human .plan-amount{
+
+color:var(--accent-600);
+
+}
+
+.plan-card--human .plan-quota{
+
+background:rgba(126,113,216,.10);
+
+}
+
+.plan-card--human .plan-quota strong{
+
+color:var(--accent-600);
+
+}
+
+/* Deux offres seulement, centrées plutôt qu'étirées sur toute la
+largeur d'une grille prévue pour trois. */
 .pricing-grid--duo{
 
 grid-template-columns:repeat(2,1fr);
@@ -1049,14 +1098,17 @@ margin-right:auto;
 PALIER "ACCOMPAGNEMENT" — MISE EN AVANT
 ========================================================== */
 
+/* Sommet de la progression Essentiel → Avancé → Premium côté clair :
+voile bleu, bordure primaire assumée, élévation. L'emphase vient de la
+couleur et du contraste, pas d'une ombre démesurée. */
 .plan-card-featured{
 
 background:
-radial-gradient(circle at top right,rgba(212,162,76,.10),transparent 55%),
-radial-gradient(circle at bottom left,rgba(139,30,63,.07),transparent 50%),
+radial-gradient(circle at top right,rgba(51,65,140,.10),transparent 55%),
+radial-gradient(circle at bottom left,rgba(126,113,216,.07),transparent 50%),
 var(--background);
 
-border-color:rgba(212,162,76,.5);
+border-color:rgba(51,65,140,.45);
 
 box-shadow:var(--shadow-lg);
 
@@ -1064,7 +1116,7 @@ transform:scale(1.045);
 
 z-index:2;
 
---meter-track:rgba(139,30,63,.12);
+--meter-track:rgba(51,65,140,.12);
 --meter-fill:var(--gradient-primary);
 
 }
@@ -1081,7 +1133,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-box-shadow:0 10px 24px rgba(139,30,63,.35);
+box-shadow:0 10px 24px rgba(51,65,140,.32);
 
 }
 
@@ -1089,7 +1141,7 @@ box-shadow:0 10px 24px rgba(139,30,63,.35);
 
 font-size:2.7rem;
 
-background:linear-gradient(135deg,#B23358,var(--primary-color) 55%,#6B1730);
+background:linear-gradient(135deg,#4A5BC4,var(--primary-600) 55%,var(--primary-700));
 
 -webkit-background-clip:text;
 
@@ -1099,6 +1151,10 @@ color:transparent;
 
 }
 
+/* Les badges portaient tous le même aplat coloré : sept pastilles
+identiques ne hiérarchisent rien. Le badge par défaut est désormais
+neutre — c'est une étiquette de quota, une information, pas un appel.
+Un seul badge de la page est "fort" : --recommended. */
 .plan-badge{
 
 position:absolute;
@@ -1119,15 +1175,22 @@ padding:7px 18px;
 
 border-radius:var(--radius-full);
 
-background:var(--accent-color);
+background:var(--background-alt);
 
-color:#fff;
+border:1px solid var(--border-color);
+
+/* --text-light sur --background-alt ne donnait que 4,34:1, sous le
+seuil AA — et un badge de 12,8px gras ne relève pas du "grand texte".
+La pastille reste discrète par son fond, pas par un texte délavé. */
+color:var(--text-color);
 
 font-weight:700;
 
 font-size:.8rem;
 
-box-shadow:0 10px 22px rgba(212,162,76,.4);
+box-shadow:var(--shadow-xs);
+
+white-space:nowrap;
 
 }
 
@@ -1137,23 +1200,79 @@ width:13px;
 
 height:13px;
 
+color:var(--text-muted);
+
 }
+
+/* Formule recommandée — le seul badge plein de la page. */
+.plan-badge--recommended{
+
+background:var(--primary-600);
+
+border-color:transparent;
+
+color:#fff;
+
+box-shadow:0 8px 20px rgba(51,65,140,.32);
+
+}
+
+.plan-badge--recommended i{ color:#fff; }
+
+/* Sur la carte sombre, le badge neutre clair se confondrait avec le
+fond de page : version pleine violette, cohérente avec l'accent que
+Premium utilise déjà pour son prix et ses icônes. */
+/* --accent-500 + texte --primary-900 tombait à 4,44:1, juste sous AA.
+--accent-600 avec un texte blanc monte à 5,7:1 tout en restant l'accent
+violet attendu sur la carte sombre. */
+.plan-badge--premium{
+
+background:var(--accent-600);
+
+border-color:transparent;
+
+color:#fff;
+
+box-shadow:0 8px 20px rgba(100,89,184,.4);
+
+}
+
+.plan-badge--premium i{ color:#fff; }
+
+/* Section accompagnement humain — violet tenu, jamais bleu : ces deux
+offres ne se comparent pas sur l'axe des formules. */
+.plan-badge--human{
+
+background:var(--accent-100);
+
+border-color:rgba(126,113,216,.35);
+
+color:var(--accent-600);
+
+}
+
+.plan-badge--human i{ color:var(--accent-600); }
 
 /* ==========================================================
 PALIER "PREMIUM" — CARTE SOMBRE, EXCLUSIVE
 Repensée pour consommer le système de tokens existant plutôt que sa
 propre palette sombre/or en hex : --primary-900 pour le fond, une
 bordure d'accent + --shadow-lg pour l'emphase (règle "pas d'ombre
-surdimensionnée"), --accent-500/--accent-600 pour l'or. Les deux
-lueurs radiales décoratives et le sweep animé en continu ont été
-retirés — aucune nouvelle animation en boucle en dehors du halo Fitz.
+surdimensionnée"). Les deux lueurs radiales décoratives et le sweep
+animé en continu ont été retirés — aucune nouvelle animation en boucle
+en dehors du halo Fitz.
+
+Point culminant de la progression : Essentiel est clair et neutre,
+Avancé prend un voile bleu et une bordure primaire, Premium inverse le
+contraste avec un fond sombre et l'accent violet. L'or (rgba(212,162,76))
+qui servait ici appartenait à la palette abandonnée.
 ========================================================== */
 
 .plan-card-premium{
 
 background:var(--primary-900);
 
-border-color:rgba(212,162,76,.4);
+border-color:rgba(126,113,216,.42);
 
 color:rgba(255,255,255,.92);
 
@@ -1174,9 +1293,9 @@ box-shadow:var(--shadow-lg);
 
 .plan-card-premium .plan-icon{
 
-background:rgba(212,162,76,.16);
+background:rgba(126,113,216,.18);
 
-color:var(--accent-color);
+color:var(--accent-500);
 
 }
 
@@ -1220,19 +1339,22 @@ color:var(--accent-color);
 
 }
 
+/* Même correction de contraste que .plan-badge--premium : --accent-500
+avec un libellé sombre plafonnait à 4,44:1. */
 .plan-cta-premium{
 
-background:var(--accent-500);
+background:var(--accent-600);
 
-color:var(--primary-900);
+color:#fff;
 
 font-weight:700;
 
 }
 
+/* Le survol se contente de soulever le bouton. Assombrir le fond en
+--accent-600 faisait tomber le contraste du libellé sous le seuil AA
+(3,4:1 contre 4,6:1 à l'état normal) : la couleur reste donc stable. */
 .plan-cta-premium:hover{
-
-background:var(--accent-600);
 
 transform:translateY(-2px);
 
@@ -1244,6 +1366,13 @@ box-shadow:var(--shadow-md);
 À LA CARTE
 ========================================================== */
 
+/* OFFRES D'ENTRÉE — traitement volontairement sobre.
+Ces deux offres sont les moins engageantes de la page : elles doivent
+être trouvables, pas tapageuses. Fond plat plutôt que verre dépoli,
+ombre minimale, icône en aplat clair. Auparavant leur icône portait
+--gradient-primary, soit le traitement le plus fort de toute la page
+appliqué aux offres les moins chères — exactement l'inverse de la
+progression recherchée. */
 .consult-banner{
 
 position:relative;
@@ -1254,17 +1383,17 @@ align-items:center;
 
 gap:28px;
 
-background:var(--glass);
+background:var(--background-soft);
 
-border:1px solid var(--glass-border);
+border:1px solid var(--border-color);
 
 border-radius:var(--radius-lg);
 
-padding:28px 36px;
+padding:26px 32px;
 
 margin-bottom:56px;
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-xs);
 
 }
 
@@ -1272,9 +1401,9 @@ box-shadow:var(--shadow-sm);
 
 flex:0 0 auto;
 
-width:56px;
+width:48px;
 
-height:56px;
+height:48px;
 
 border-radius:var(--radius-full);
 
@@ -1284,13 +1413,13 @@ align-items:center;
 
 justify-content:center;
 
-background:var(--gradient-primary);
+background:var(--primary-50);
 
-color:#fff;
+color:var(--primary-600);
 
 }
 
-.consult-icon i{width:24px;height:24px;}
+.consult-icon i{width:21px;height:21px;}
 
 .consult-body{flex:1 1 auto;min-width:220px;}
 
@@ -1306,7 +1435,9 @@ letter-spacing:.08em;
 
 text-transform:uppercase;
 
-color:var(--primary-color);
+/* Discret sans être illisible : --text-muted ne donnait que 2,45:1 sur
+le fond clair de la bannière. --text-light passe le seuil AA. */
+color:var(--text-light);
 
 margin-bottom:6px;
 
@@ -1507,7 +1638,7 @@ transition:var(--transition);
 
 .faq-item[open]{
 
-border-color:rgba(139,30,63,.22);
+border-color:rgba(51,65,140,.22);
 
 box-shadow:var(--shadow-xs);
 
