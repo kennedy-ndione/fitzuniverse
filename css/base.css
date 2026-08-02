@@ -40,9 +40,40 @@ a désormais son propre système de couleur, découplé de --accent-*.
 --warning:#EAA83D;
 --danger:#EF4444;
 
+/* ÉCHELLE DE GRIS TEXTE — trois niveaux porteurs d'information, plus
+un quatrième strictement décoratif. Valeurs revues le 2026-08-02 après
+un audit de contraste : les anciennes (#64748B / #94A3B8) échouaient au
+niveau AA sur les fonds clairs du site.
+
+Contrastes mesurés sur --background (#FFF), --background-soft
+(#F8FAFC) et --background-alt (#F1F5F9), les trois fonds sur lesquels
+ce texte repose réellement :
+
+  --text-color       16.9 / 16.1 / 15.4
+  --text-light        7.6 /  7.2 /  6.9   (était 4.8 / 4.6 / 4.3 ✗)
+  --text-muted        5.2 /  4.9 /  4.7   (était 2.6 / 2.5 / 2.3 ✗)
+  --text-decorative   3.4 /  3.3 /  3.1   (jamais pour du texte)
+
+Il n'existe aucune valeur plus claire que --text-muted qui passe 4.5:1
+sur ces trois fonds : c'est pourquoi --text-light a dû être assombri en
+même temps, sinon les deux niveaux devenaient indiscernables.
+
+--text-decorative NE DOIT JAMAIS porter de texte lisible. Il est
+réservé au non-textuel dont le sens est déjà donné à côté : icône d'un
+champ de recherche qui a son libellé, glyphe d'illustration d'un état
+vide dont le message est écrit en dessous, pastille inactive. Il tient
+le seuil 3:1 de WCAG 1.4.11 pour les composants non textuels. Un
+libellé, une aide de formulaire, une méta-donnée, un placeholder ou
+l'icône d'un bouton d'action prennent --text-muted, jamais celui-ci.
+
+Les pages à fond sombre (dashboard.css, admin/control-center.css)
+surchargent --text-light/--text-muted dans leur propre scope : ces
+valeurs-ci sont celles du contexte CLAIR. */
+
 --text-color:#0F172A;
---text-light:#64748B;
---text-muted:#94A3B8;
+--text-light:#475569;
+--text-muted:#626E83;
+--text-decorative:#7E8CA3;
 
 --background:#FFFFFF;
 --background-soft:#F8FAFC;
@@ -925,7 +956,9 @@ color:var(--text-light);
 
 }
 
-.empty-state i{ width:36px; height:36px; color:var(--text-muted); }
+/* Glyphe d'illustration : le message de l'état vide est écrit juste
+en dessous, l'icône ne porte aucune information à elle seule. */
+.empty-state i{ width:36px; height:36px; color:var(--text-decorative); }
 
 .empty-state h3{ font-size:var(--fs-h4); color:var(--text-color); }
 
@@ -984,7 +1017,7 @@ width:18px;
 
 height:18px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 pointer-events:none;
 

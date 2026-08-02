@@ -117,7 +117,9 @@ border-radius:var(--radius-sm);
 padding:11px 16px;
 }
 
-.docs-search-field i{width:17px;height:17px;color:var(--text-muted);flex-shrink:0;}
+/* Icône ornementale du champ de recherche : le placeholder porte
+l'information. Le placeholder lui-même reste en --text-muted. */
+.docs-search-field i{width:17px;height:17px;color:var(--text-decorative);flex-shrink:0;}
 
 .docs-search-field input{
 flex:1;
@@ -296,7 +298,7 @@ height:52px;
 margin:0 auto 16px;
 border-radius:50%;
 background:var(--background-alt);
-color:var(--text-muted);
+color:var(--text-decorative);
 display:flex;
 align-items:center;
 justify-content:center;

@@ -1038,45 +1038,52 @@ margin-top:auto;
 ACCOMPAGNEMENT HUMAIN — IDENTITÉ À PART
 Signature Focus et Signature ne sont pas le dernier cran de la
 progression Essentiel → Avancé → Premium : elles changent d'axe (un
-conseiller réel, Fitz en renfort). D'où un violet tenu là où les
-formules sont bleues, et aucune reprise de la mise en avant "featured".
-Le violet employé est l'accent générique (--accent-*), jamais le
-dégradé ni le halo de Fitz, qui restent réservés à Fitz.
+conseiller réel, Fitz en renfort). D'où une famille de couleur à elles,
+et aucune reprise de la mise en avant "featured".
+
+Rose profond #A8356A, propre à cette section. Le violet initialement
+utilisé restait trop proche de Premium et de l'accent générique pour
+signaler un changement d'axe. Le rouge a été écarté (--danger est
+réservé aux erreurs) et le marron aussi (palette abandonnée). Le rose
+ne réapparaît nulle part ailleurs sur le site — comme le dégradé de
+Fitz, c'est un signal réservé.
+
+Contrastes : 6,21:1 sur blanc, 5,26:1 sur sa propre pastille pâle.
 ========================================================== */
 
 .plan-card--human{
 
 background:
-linear-gradient(180deg,rgba(126,113,216,.07),transparent 42%),
+linear-gradient(180deg,rgba(168,53,106,.06),transparent 42%),
 var(--background);
 
-border-color:rgba(126,113,216,.32);
+border-color:rgba(168,53,106,.30);
 
 }
 
 .plan-card--human .plan-icon{
 
-background:var(--accent-100);
+background:#FBE7EF;
 
-color:var(--accent-600);
+color:#A8356A;
 
 }
 
 .plan-card--human .plan-amount{
 
-color:var(--accent-600);
+color:#A8356A;
 
 }
 
 .plan-card--human .plan-quota{
 
-background:rgba(126,113,216,.10);
+background:rgba(168,53,106,.09);
 
 }
 
 .plan-card--human .plan-quota strong{
 
-color:var(--accent-600);
+color:#A8356A;
 
 }
 
@@ -1200,7 +1207,7 @@ width:13px;
 
 height:13px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 }
 
@@ -1239,19 +1246,19 @@ box-shadow:0 8px 20px rgba(100,89,184,.4);
 
 .plan-badge--premium i{ color:#fff; }
 
-/* Section accompagnement humain — violet tenu, jamais bleu : ces deux
+/* Section accompagnement humain — rose, ni bleu ni violet : ces deux
 offres ne se comparent pas sur l'axe des formules. */
 .plan-badge--human{
 
-background:var(--accent-100);
+background:#FBE7EF;
 
-border-color:rgba(126,113,216,.35);
+border-color:rgba(168,53,106,.32);
 
-color:var(--accent-600);
+color:#A8356A;
 
 }
 
-.plan-badge--human i{ color:var(--accent-600); }
+.plan-badge--human i{ color:#A8356A; }
 
 /* ==========================================================
 PALIER "PREMIUM" — CARTE SOMBRE, EXCLUSIVE

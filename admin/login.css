@@ -24,7 +24,12 @@ trois (--glass-border notamment n'avait plus la même opacité).
 
 --text-color:var(--shell-text);
 --text-light:#C2CBDE;
---text-muted:#8792A8;
+/* Aligné sur admin/control-center.css — voir la note AA du 2026-08-02. */
+--text-muted:#96A1B7;
+/* Non-textuel uniquement (seuil 3:1) — voir la note dans css/base.css.
+Sans cette déclaration, .input-icon retombait sur la valeur de contexte
+CLAIR héritée de base.css, posée sur un fond sombre. */
+--text-decorative:#79849A;
 
 --shadow-md:var(--shell-shadow-md);
 --shadow-lg:var(--shell-shadow-lg);
@@ -304,7 +309,7 @@ width:18px;
 
 height:18px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 pointer-events:none;
 

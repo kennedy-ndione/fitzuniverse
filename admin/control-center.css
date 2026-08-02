@@ -38,7 +38,12 @@ mêmes flous/opacités que le dashboard étudiant).
 
 --text-color:var(--shell-text);
 --text-light:#C2CBDE;
---text-muted:#8792A8;
+/* #8792A8 échouait AA sur --shell-elevated (4,02:1), le fond des
+panneaux surélevés de cette page. Corrigé 2026-08-02 : 5,6 / 6,9 / 4,8
+sur shell-bg / shell-surface / shell-elevated. */
+--text-muted:#96A1B7;
+/* Non-textuel uniquement (seuil 3:1) — voir la note dans css/base.css. */
+--text-decorative:#79849A;
 
 --shadow-xs:var(--shell-shadow-xs);
 --shadow-sm:var(--shell-shadow-sm);
@@ -494,7 +499,7 @@ width:16px;
 
 height:16px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 }
 
@@ -2541,7 +2546,7 @@ width:26px;
 
 height:26px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 opacity:.6;
 
@@ -2637,7 +2642,7 @@ width:16px;
 
 height:16px;
 
-color:var(--text-muted);
+color:var(--text-decorative);
 
 }
 
@@ -2830,9 +2835,12 @@ color:#fff;
 
 .modal-base .modal-card{
 
+/* Panneau CLAIR dans l'admin sombre : reprend les valeurs de contexte
+clair de css/base.css, corrigées AA le 2026-08-02. */
 --text-color:#0F172A;
---text-light:#64748B;
---text-muted:#94A3B8;
+--text-light:#475569;
+--text-muted:#626E83;
+--text-decorative:#7E8CA3;
 --border-color:#E2E8F0;
 --background-soft:#F8FAFC;
 --background-alt:#F1F5F9;
