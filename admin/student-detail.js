@@ -427,15 +427,19 @@ const quota = plan ? plan.maxAccompaniedApplications : 0;
 
 const suivies = `${applications.length} candidature${applications.length > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""}`;
 
+// Libellé d'interface (PLAN_LABELS), pas le nom de marque long de
+// pricing-plans.js : on est dans le panneau d'administration.
+const nomFormule = PLAN_LABELS[activePlanKey];
+
 if (quota === Infinity) {
 
 // Convention "illimité" (pricing-plans.js) : afficher le mot, jamais
 // la valeur brute — `${Infinity}` rendrait littéralement "Infinity".
-quotaStatus.textContent = `${suivies} — candidatures illimitées (formule ${plan.label}).`;
+quotaStatus.textContent = `${suivies} — candidatures illimitées (formule ${nomFormule}).`;
 
 } else if (quota) {
 
-quotaStatus.textContent = `${applications.length} / ${quota} candidature${quota > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} (quota de la formule ${plan.label}).`;
+quotaStatus.textContent = `${applications.length} / ${quota} candidature${quota > 1 ? "s" : ""} suivie${applications.length > 1 ? "s" : ""} (quota de la formule ${nomFormule}).`;
 
 } else {
 

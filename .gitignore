@@ -7,6 +7,11 @@
 # Dépendances
 node_modules/
 
+# Archives et sauvegardes — pas du code source.
+# admin.zip était un instantané du 2026-07-22 de admin/, déjà périmé
+# (il contient admin.css et edit-university.html, supprimés depuis).
+*.zip
+
 # Artefacts système / éditeur
 Thumbs.db
 .DS_Store

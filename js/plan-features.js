@@ -62,6 +62,19 @@ export const PLAN_ORDER = [
 "signature"
 ];
 
+// LIBELLÉS D'INTERFACE (règle arrêtée 2026-08-02).
+// PLAN_LABELS est la source pour tout ce qui est INTERFACE : badges,
+// tableaux, panneau d'administration, messages de quota, upsell du
+// tableau de bord. Les noms y sont courts pour tenir dans une colonne
+// ou une pastille — d'où "Signature" et non "ScholarBridge Signature".
+//
+// Les noms longs de marque vivent dans SCHOLARBRIDGE_PLANS[...].label
+// (pricing-plans.js) et sont réservés aux surfaces MARKETING : page
+// offres, page de paiement, e-mails.
+//
+// En cas de doute : si l'utilisateur est en train d'utiliser le
+// produit, c'est PLAN_LABELS ; s'il est en train de le choisir ou de
+// l'acheter, c'est le label de pricing-plans.js.
 export const PLAN_LABELS = {
 gratuit: "Gratuit",
 "premier-dossier": "Premier Dossier",
@@ -99,6 +112,30 @@ ai_email: { gratuit: false, "premier-dossier": true, essentiel: true, accompagne
 ai_translate: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 compress: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true }
 };
+
+// ==========================================================
+// QUOTA DE CANDIDATURES ACCOMPAGNÉES — décision pure, testable
+// ==========================================================
+// `quota` provient de SCHOLARBRIDGE_PLANS[...].maxAccompaniedApplications
+// (pricing-plans.js). Cette logique vit ici plutôt qu'en ligne dans
+// applications.js pour être vérifiable sans navigateur, sans Firebase et
+// sans écrire dans Firestore — voir test/plan-features.test.mjs.
+//
+// Trois cas, dans cet ordre :
+//   - Infinity            → illimité (Signature), ne bloque jamais
+//   - nombre fini > 0     → plafond réel de l'offre
+//   - null / undefined / 0 → aucune offre active : ne bloque pas ICI,
+//     c'est requireFeature() qui interdit l'accès à la page en amont.
+//     Le `> 0` est explicite pour qu'un futur quota à 0 ne bloque pas
+//     dès la première candidature.
+
+export function isUnlimitedQuota(quota) {
+return quota === Infinity;
+}
+
+export function isQuotaReached(quota, currentCount) {
+return Number.isFinite(quota) && quota > 0 && currentCount >= quota;
+}
 
 // Fusionne les valeurs par défaut ci-dessus avec le document Firestore
 // "config/planFeatures" (rawConfig = données du document, ou null/

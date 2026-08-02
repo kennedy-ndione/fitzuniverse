@@ -203,7 +203,9 @@ const nextPlan = SCHOLARBRIDGE_PLANS[next];
 section.hidden = false;
 
 document.getElementById("upgradeCurrentPlan").textContent = PLAN_LABELS[planId];
-document.getElementById("upgradeNextPlan").textContent = nextPlan.label;
+// Libellé d'interface (PLAN_LABELS), pas le nom de marque long porté
+// par SCHOLARBRIDGE_PLANS — voir la règle dans js/plan-features.js.
+document.getElementById("upgradeNextPlan").textContent = PLAN_LABELS[next];
 
 const list = document.getElementById("upgradeHighlights");
 list.innerHTML = "";

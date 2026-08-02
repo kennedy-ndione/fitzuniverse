@@ -30,6 +30,7 @@ serverTimestamp
 
 import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { isQuotaReached } from "./js/plan-features.js";
 
 initShellChrome();
 
@@ -404,15 +405,14 @@ await updateDoc(doc(db, "users", uid, "applications", editingId), payload);
 const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
 const quota = plan ? plan.maxAccompaniedApplications : null;
 
-// Convention "illimité" (pricing-plans.js) : le quota vaut Infinity,
-// qui n'est pas fini — aucun plafond ne se déclenche. Un quota absent
-// (aucune offre active) ne bloque pas non plus, c'est requireFeature()
-// qui garde l'accès à la page en amont. Le `> 0` évite qu'un futur
-// quota à 0 bloque dès la première candidature au lieu de ne rien
-// plafonner, ce que l'ancien test `quota &&` faisait silencieusement.
-if (Number.isFinite(quota) && quota > 0 && applications.length >= quota) {
+// La décision vit dans js/plan-features.js (fonction pure, couverte
+// par test/plan-features.test.mjs) plutôt qu'en ligne ici : elle est
+// ainsi vérifiable sans navigateur et sans écrire dans Firestore.
+if (isQuotaReached(quota, applications.length)) {
 
-alert(`Votre formule ${plan.label} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`);
+// Libellé d'interface, pas le nom de marque long — voir la règle
+// dans js/plan-features.js.
+alert(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`);
 return;
 
 }
