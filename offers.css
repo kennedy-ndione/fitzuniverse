@@ -1012,7 +1012,13 @@ color:var(--text-color);
 
 }
 
-.plan-features i{
+/* svg inclus : Lucide remplace chaque <i data-lucide> par un <svg>, si
+bien que cette règle ne s'appliquait à rien. Sans largeur ni
+flex-shrink, les icônes se comprimaient selon la longueur du texte
+voisin — elles s'affichaient à 8 tailles différentes (17 à 25px) sur
+la même liste. */
+.plan-features i,
+.plan-features svg{
 
 flex-shrink:0;
 
@@ -1022,7 +1028,12 @@ height:16px;
 
 margin-top:2px;
 
-color:var(--success);
+/* Vert foncé, pas --success. Rendre cette règle effective a révélé
+que #22C55E ne fait que 2,28:1 sur une carte blanche, sous le seuil
+de 3:1 des icônes porteuses de sens — et cette coche signifie
+"inclus". Même valeur que .compare-oui du tableau comparatif, qui
+porte exactement le même sens sur la même page. */
+color:#1B7A45;
 
 }
 
@@ -1346,9 +1357,14 @@ color:rgba(255,255,255,.86);
 
 }
 
-.plan-card-premium .plan-features i{
+/* La carte Premium est sur fond marine : le vert foncé des cartes
+claires y serait illisible. Elle reprend son accent violet, comme le
+prévoyait déjà cette règle — restée sans effet jusqu'ici faute de
+viser aussi svg. */
+.plan-card-premium .plan-features i,
+.plan-card-premium .plan-features svg{
 
-color:var(--accent-color);
+color:var(--accent-500);
 
 }
 

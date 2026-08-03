@@ -499,7 +499,10 @@ font-size:.74rem;
 
 }
 
-.uni-card-rank i{ width:13px; height:13px; }
+/* svg inclus (Lucide remplace les <i data-lucide>) + flex-shrink:0 :
+ces icônes se comprimaient de 24 à 20px selon le texte voisin. */
+.uni-card-rank i,
+.uni-card-rank svg{ width:13px; height:13px; flex-shrink:0; }
 
 .uni-card-status{
 
@@ -689,7 +692,9 @@ color:var(--text-muted);
 
 }
 
-.uni-card-deadline i{ width:13px; height:13px; }
+/* Même correctif que .uni-card-rank : svg inclus et flex-shrink:0. */
+.uni-card-deadline i,
+.uni-card-deadline svg{ width:13px; height:13px; flex-shrink:0; }
 
 .uni-card-cta{
 
