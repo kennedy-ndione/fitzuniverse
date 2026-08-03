@@ -582,6 +582,32 @@ color:var(--text-light);
 
 .text-small{ font-size:var(--fs-small); }
 
+/* Contenu réservé aux lecteurs d'écran (légende de tableau, libellé de
+contexte). Existait en double dans payment.css et
+eligibility-questions.css : remonté ici, les deux copies locales
+deviennent redondantes et pourront être retirées. */
+.visually-hidden{
+
+position:absolute;
+
+width:1px;
+
+height:1px;
+
+padding:0;
+
+margin:-1px;
+
+overflow:hidden;
+
+clip:rect(0,0,0,0);
+
+white-space:nowrap;
+
+border:0;
+
+}
+
 .text-caption{
 
 font-size:var(--fs-caption);

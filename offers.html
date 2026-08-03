@@ -102,7 +102,7 @@ doit jamais apparaître comme une colonne des formules complètes. -->
 </div>
 
 <div class="consult-cta-wrap">
-<span class="consult-price">7 500 FCFA<small> / 14 jours</small></span>
+<span class="consult-price">7 500 FCFA<small> / 14 jours</small></span>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="fitzExpress">
 <span>Activer le Pass Express</span>
 <i data-lucide="arrow-right"></i>
@@ -122,7 +122,7 @@ doit jamais apparaître comme une colonne des formules complètes. -->
 </div>
 
 <div class="consult-cta-wrap">
-<span class="consult-price">12 000 FCFA<small> / 1 candidature</small></span>
+<span class="consult-price">12 000 FCFA<small> / 1 candidature</small></span>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="premier-dossier">
 <span>Choisir Premier Dossier</span>
 <i data-lucide="arrow-right"></i>
@@ -161,10 +161,10 @@ Fitz, sans quota de candidatures fixe. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-amount">25 000</span>
+<span class="plan-amount">25 000</span>
 <span class="plan-currency">FCFA</span>
 </div>
-<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+<p class="plan-price-alt"><strong>≈ 4 200 F/mois</strong> · 6 mois d'accompagnement personnalisé avec Fitz</p>
 
 <div class="plan-quota">
 <strong>Jusqu'à 3</strong>
@@ -200,10 +200,10 @@ Elle était auparavant sur Essentiel. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-amount">45 000</span>
+<span class="plan-amount">45 000</span>
 <span class="plan-currency">FCFA</span>
 </div>
-<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+<p class="plan-price-alt"><strong>≈ 7 500 F/mois</strong> · 6 mois d'accompagnement personnalisé avec Fitz</p>
 
 <div class="plan-quota">
 <strong>Jusqu'à 6</strong>
@@ -236,10 +236,10 @@ Elle était auparavant sur Essentiel. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-amount">80 000</span>
+<span class="plan-amount">80 000</span>
 <span class="plan-currency">FCFA</span>
 </div>
-<p class="plan-price-alt">6 mois d'accompagnement personnalisé avec Fitz</p>
+<p class="plan-price-alt"><strong>≈ 13 400 F/mois</strong> · 6 mois d'accompagnement personnalisé avec Fitz</p>
 
 <div class="plan-quota">
 <strong>Jusqu'à 12</strong>
@@ -289,7 +289,7 @@ comparent pas sur le même axe. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-amount">99 000</span>
+<span class="plan-amount">99 000</span>
 <span class="plan-currency">FCFA</span>
 </div>
 
@@ -326,7 +326,7 @@ chiffré, l'illimité est porté par la liste de contenu. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-amount">199 000</span>
+<span class="plan-amount">199 000</span>
 <span class="plan-currency">FCFA</span>
 </div>
 
@@ -354,6 +354,194 @@ chiffré, l'illimité est porté par la liste de contenu. -->
 </div>
 
 </div>
+
+<!-- ==========================================
+TABLEAU COMPARATIF — LES 7 OFFRES
+Vrai <table> : chaque colonne est une offre, chaque ligne un critère.
+Les en-têtes portent scope="col" / scope="row" pour que la lecture
+vocale annonce la bonne offre sur chaque cellule.
+Sous 768px, les règles de offers.css transforment chaque colonne en
+carte empilée : chaque ligne devient une carte titrée par son critère,
+et chaque cellule annonce son offre via data-offre —
+un tableau à 8 colonnes ne tient pas sur un téléphone, et la consigne
+interdit le défilement horizontal.
+=========================================== -->
+<section class="compare-wrap reveal" aria-labelledby="compareTitre">
+
+<div class="section-heading-plans">
+<h2 id="compareTitre">Tout comparer d'un coup d'œil</h2>
+<p>Les sept offres côte à côte, avec ce que chacune inclut réellement.</p>
+</div>
+
+<div class="compare-scroll">
+
+<table class="compare-table">
+
+<caption class="visually-hidden">Comparaison des sept offres ScholarBridge : prix, durée, nombre de candidatures accompagnées et prestations incluses.</caption>
+
+<thead>
+<tr>
+<th scope="col">Critère</th>
+<th scope="col">Pass Fitz Express</th>
+<th scope="col">Premier Dossier</th>
+<th scope="col">Essentiel</th>
+<th scope="col" class="is-mise-en-avant">Avancé</th>
+<th scope="col">Premium</th>
+<th scope="col">Signature Focus</th>
+<th scope="col">Signature</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<th scope="row">Prix</th>
+<td data-offre="Pass Fitz Express"><strong>7&nbsp;500&nbsp;FCFA</strong></td>
+<td data-offre="Premier Dossier"><strong>12&nbsp;000&nbsp;FCFA</strong></td>
+<td data-offre="Essentiel"><strong>25&nbsp;000&nbsp;FCFA</strong></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><strong>45&nbsp;000&nbsp;FCFA</strong></td>
+<td data-offre="Premium"><strong>80&nbsp;000&nbsp;FCFA</strong></td>
+<td data-offre="Signature Focus"><strong>99&nbsp;000&nbsp;FCFA</strong></td>
+<td data-offre="Signature"><strong>199&nbsp;000&nbsp;FCFA</strong></td>
+</tr>
+
+<tr>
+<th scope="row">Équivalent mensuel</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel">≈&nbsp;4&nbsp;200&nbsp;F/mois</td>
+<td data-offre="Avancé" class="is-mise-en-avant">≈&nbsp;7&nbsp;500&nbsp;F/mois</td>
+<td data-offre="Premium">≈&nbsp;13&nbsp;400&nbsp;F/mois</td>
+<td data-offre="Signature Focus"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature"><span class="compare-vide" aria-label="non inclus">—</span></td>
+</tr>
+
+<tr>
+<th scope="row">Durée</th>
+<td data-offre="Pass Fitz Express">14&nbsp;jours</td>
+<td data-offre="Premier Dossier">Sans abonnement</td>
+<td data-offre="Essentiel">6&nbsp;mois</td>
+<td data-offre="Avancé" class="is-mise-en-avant">6&nbsp;mois</td>
+<td data-offre="Premium">6&nbsp;mois</td>
+<td data-offre="Signature Focus">Sans abonnement</td>
+<td data-offre="Signature">Sans abonnement</td>
+</tr>
+
+<tr>
+<th scope="row">Candidatures accompagnées</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier">1</td>
+<td data-offre="Essentiel">Jusqu'à 3</td>
+<td data-offre="Avancé" class="is-mise-en-avant">Jusqu'à 6</td>
+<td data-offre="Premium">Jusqu'à 12</td>
+<td data-offre="Signature Focus">3</td>
+<td data-offre="Signature">Illimité</td>
+</tr>
+
+<tr>
+<th scope="row">Outils Fitz</th>
+<td data-offre="Pass Fitz Express">Questions seules</td>
+<td data-offre="Premier Dossier">Tous</td>
+<td data-offre="Essentiel">Tous</td>
+<td data-offre="Avancé" class="is-mise-en-avant">Tous</td>
+<td data-offre="Premium">Tous</td>
+<td data-offre="Signature Focus">Tous</td>
+<td data-offre="Signature">Tous</td>
+</tr>
+
+<tr>
+<th scope="row">Révisions par dossier</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel">2</td>
+<td data-offre="Avancé" class="is-mise-en-avant">2</td>
+<td data-offre="Premium">Illimitées</td>
+<td data-offre="Signature Focus">Relecture complète</td>
+<td data-offre="Signature">Relecture complète</td>
+</tr>
+
+<tr>
+<th scope="row">Relecture humaine de la lettre</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Premium"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature Focus"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature"><span class="compare-oui" aria-label="inclus">✓</span></td>
+</tr>
+
+<tr>
+<th scope="row">Préparation à l'entretien</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Premium"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature Focus"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature"><span class="compare-vide" aria-label="non inclus">—</span></td>
+</tr>
+
+<tr>
+<th scope="row">Alertes sur les dates limites</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Premium"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature Focus"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature"><span class="compare-vide" aria-label="non inclus">—</span></td>
+</tr>
+
+<tr>
+<th scope="row">Aide à la préparation du visa</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premium"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature Focus"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature"><span class="compare-oui" aria-label="inclus">✓</span></td>
+</tr>
+
+<tr>
+<th scope="row">Réponse prioritaire sous 24&nbsp;h</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premium"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature Focus"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature"><span class="compare-vide" aria-label="non inclus">—</span></td>
+</tr>
+
+<tr>
+<th scope="row">Conseiller humain dédié</th>
+<td data-offre="Pass Fitz Express"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premier Dossier"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Essentiel"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Avancé" class="is-mise-en-avant"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Premium"><span class="compare-vide" aria-label="non inclus">—</span></td>
+<td data-offre="Signature Focus"><span class="compare-oui" aria-label="inclus">✓</span></td>
+<td data-offre="Signature"><span class="compare-oui" aria-label="inclus">✓</span></td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<p class="compare-note">
+<i data-lucide="credit-card"></i>
+<span>Paiement en 2 ou 3 fois disponible via Wave, Orange Money et MTN&nbsp;MoMo.</span>
+</p>
+
+<p class="compare-transparence">
+ScholarBridge ne garantit ni l'admission ni l'obtention du visa. Nous garantissons un dossier complet, solide et déposé dans les délais.
+</p>
+
+</section>
 
 <!-- Réassurance -->
 <div class="reassurance reveal">
