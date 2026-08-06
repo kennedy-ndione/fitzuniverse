@@ -61,9 +61,34 @@ observer.unobserve(entry.target);
 }
 });
 
-}, { threshold: 0.12 });
+// CAUSE B — seuil indépendant de la hauteur.
+// L'ancien `threshold: 0.12` exigeait que 12% de l'élément soit
+// visible : au-delà d'une hauteur de viewport/0.12, la condition
+// devient mathématiquement impossible et l'élément reste invisible
+// pour toujours. La section du tableau comparatif atteint 5072px en
+// mode empilé, soit 609px requis — inatteignable sur un téléphone en
+// paysage. Le rootMargin négatif conserve l'effet recherché (révéler
+// un peu après l'entrée à l'écran) sans dépendre de la hauteur.
+}, { threshold: 0, rootMargin: "0px 0px -60px 0px" });
 
-items.forEach((item) => observer.observe(item));
+items.forEach((item) => {
+
+// CAUSE A — ne jamais laisser un élément invisible faute d'avoir été vu.
+// Poser `js-ready` bascule tous les .reveal à opacity:0 : la
+// visibilité ne revient que par l'observer. Or au rechargement,
+// Chrome restaure la position de défilement, et l'observer démarre
+// donc avec une partie de la page DÉJÀ dépassée. Ces éléments-là
+// n'entreront plus jamais dans le viewport si l'utilisateur ne
+// remonte pas — le haut de la page restait blanc. On les révèle
+// immédiatement plutôt que de les laisser masqués.
+if (item.getBoundingClientRect().bottom < 0) {
+item.classList.add("is-visible");
+return;
+}
+
+observer.observe(item);
+
+});
 
 }
 
