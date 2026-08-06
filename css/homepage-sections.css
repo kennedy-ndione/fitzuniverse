@@ -207,7 +207,8 @@ font-weight:600;
 color:var(--primary-color);
 }
 
-.teaser-card-tag i{width:14px;height:14px;}
+.teaser-card-tag i,
+.teaser-card-tag svg{width:14px;height:14px;}
 
 .teaser-card-skeleton{
 aspect-ratio:3/4;
@@ -242,10 +243,17 @@ font-weight:500;
 transition:color .2s;
 }
 
-.teaser-whatsapp i{
+/* #25D366 (vert WhatsApp officiel) ne fait que 1,98:1 sur fond blanc,
+sous le seuil de 3:1 des icônes porteuses de sens. #178F43 reste
+clairement identifiable comme le vert WhatsApp (même teinte, plus
+sombre) et passe à 4,16:1. Même correction à reporter sur
+.reassurance-item-whatsapp i (offers.css), qui porte la même couleur
+et le même défaut. */
+.teaser-whatsapp i,
+.teaser-whatsapp svg{
 width:18px;
 height:18px;
-color:#25D366;
+color:#178F43;
 }
 
 .teaser-whatsapp:hover{color:var(--primary-color);}
@@ -291,7 +299,8 @@ font-size:.92rem;
 font-weight:500;
 }
 
-.trust-item i{
+.trust-item i,
+.trust-item svg{
 width:18px;
 height:18px;
 flex-shrink:0;
@@ -518,7 +527,19 @@ line-height:1;
 
 }
 
-.step>i{
+/* .step>i / .step>i svg ne ciblaient jamais rien : Lucide remplace
+<i data-lucide> par <svg> EN PLACE (même parent), il ne l'imbrique pas
+dedans — donc aucun élément n'a jamais pu être "descendant d'un i à
+l'intérieur de .step". Les deux règles présupposaient déjà la structure
+pastille (conteneur 68px) + icône (30px) qu'utilisent .card-icon/
+.plan-icon/.demo-avatar ailleurs sur le site ; il manquait seulement le
+conteneur pour la porter. Renommé en .step-icon et posé sur un vrai
+<div> dans index.html (voir les 3 articles .step) plutôt que d'agrandir
+l'icône brute à 68px, ce qui aurait fait déborder le glyphe sur toute
+la pastille au lieu de la remplir à 44%, comme ses cousines. Valeurs
+inchangées : 68px de conteneur et 30px d'icône, déjà écrites par
+l'auteur d'origine. */
+.step-icon{
 
 display:flex;
 
@@ -542,7 +563,7 @@ transition:transform .4s var(--ease-premium), background-color .4s var(--ease-pr
 
 }
 
-.step:hover>i{
+.step:hover .step-icon{
 
 transform:scale(1.1) rotate(-6deg);
 
@@ -552,7 +573,8 @@ color:#fff;
 
 }
 
-.step>i svg{
+.step-icon i,
+.step-icon svg{
 
 width:30px;
 
@@ -702,7 +724,9 @@ transition:transform .25s ease;
 "Comment ça fonctionne" et "Fonctionnalités" : l'animation de flèche
 n'était accrochée qu'au survol d'une .feature-card. */
 .step:hover .feature-link i,
-.feature-card:hover .feature-link i{
+.feature-card:hover .feature-link i,
+.step:hover .feature-link svg,
+.feature-card:hover .feature-link svg{
 transform:translateX(4px);
 }
 
@@ -711,13 +735,15 @@ color:var(--text-muted);
 font-weight:600;
 }
 
-.feature-link-soon i{
+.feature-link-soon i,
+.feature-link-soon svg{
 width:14px;
 height:14px;
 transition:none;
 }
 
-.feature-card-disabled:hover .feature-link-soon i{
+.feature-card-disabled:hover .feature-link-soon i,
+.feature-card-disabled:hover .feature-link-soon svg{
 transform:none;
 }
 
@@ -793,7 +819,8 @@ box-shadow:var(--shadow-lg);
 text-align:center;
 }
 
-.vision-card > i{
+.vision-card > i,
+.vision-card > svg{
 width:44px;
 height:44px;
 color:var(--primary-color);

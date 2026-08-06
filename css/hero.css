@@ -296,7 +296,8 @@ color:rgba(255,255,255,.72);
 
 }
 
-.hero-note i{
+.hero-note i,
+.hero-note svg{
 
 color:var(--success);
 
@@ -373,7 +374,8 @@ flex-shrink:0;
 
 }
 
-.floating-icon i{
+.floating-icon i,
+.floating-icon svg{
 
 width:22px;
 
@@ -674,7 +676,8 @@ animation:analysisItemIn .45s var(--ease-premium) both;
 
 }
 
-#analysis-list li i{
+#analysis-list li i,
+#analysis-list li svg{
 
 color:var(--primary-color);
 
