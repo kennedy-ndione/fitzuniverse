@@ -153,7 +153,17 @@ observer.unobserve(entry.target);
 }
 });
 
-}, { threshold: 0.1 });
+// Seuil indépendant de la hauteur — même valeurs qu'offers.js.
+// L'ancien `threshold: 0.1` exigeait que 10% de l'élément soit
+// visible : au-delà d'une hauteur de viewport/0.1, la condition
+// devient mathématiquement impossible et l'élément reste invisible
+// pour toujours. hidePageLoader() (ci-dessous) protège déjà les pages
+// qui l'appellent en révélant tout le contenu en bloc dès que le
+// loader disparaît, mais cet observer reste la seule protection pour
+// tout appel à initShellChrome() qui n'irait pas jusqu'à
+// bootstrapShell()/hidePageLoader() — il doit donc être fiable par
+// lui-même, pas seulement de secours.
+}, { threshold: 0, rootMargin: "0px 0px -60px 0px" });
 
 items.forEach((item) => observer.observe(item));
 
