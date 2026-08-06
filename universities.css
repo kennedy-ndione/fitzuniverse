@@ -203,7 +203,8 @@ font-size:.92rem;
 
 }
 
-.uni-scholarship-context > i{ width:18px; height:18px; flex-shrink:0; }
+.uni-scholarship-context > i,
+.uni-scholarship-context > svg{ width:18px; height:18px; flex-shrink:0; }
 
 .uni-scholarship-context strong{ color:var(--text-color); }
 
@@ -223,7 +224,8 @@ color:var(--primary-color);
 
 }
 
-.uni-scholarship-context a i{ width:14px; height:14px; }
+.uni-scholarship-context a i,
+.uni-scholarship-context a svg{ width:14px; height:14px; }
 
 .uni-scholarship-context a:hover{ text-decoration:underline; }
 
@@ -729,7 +731,8 @@ transition:transform .25s var(--ease-premium);
 
 }
 
-.uni-card:hover .uni-card-cta i{
+.uni-card:hover .uni-card-cta i,
+.uni-card:hover .uni-card-cta svg{
 
 transform:translateX(3px);
 
@@ -815,7 +818,8 @@ color:var(--accent-color);
 
 }
 
-.uni-empty-state-icon i{ width:26px; height:26px; }
+.uni-empty-state-icon i,
+.uni-empty-state-icon svg{ width:26px; height:26px; }
 
 .uni-empty-state h3{
 

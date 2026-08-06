@@ -74,7 +74,8 @@ padding:8px 18px;
 
 }
 
-.bourses-search-field i{
+.bourses-search-field i,
+.bourses-search-field svg{
 
 width:19px;
 
@@ -176,7 +177,8 @@ font-size:.88rem;
 
 }
 
-.bourses-clear-link i{ width:15px; height:15px; }
+.bourses-clear-link i,
+.bourses-clear-link svg{ width:15px; height:15px; }
 
 /* ==========================================================
 GRILLE DE CARTES
@@ -536,7 +538,8 @@ color:#fff;
 
 }
 
-.scholarship-card:hover .scholarship-card-cta i{
+.scholarship-card:hover .scholarship-card-cta i,
+.scholarship-card:hover .scholarship-card-cta svg{
 
 transform:translateX(3px);
 
@@ -614,7 +617,8 @@ color:var(--primary-color);
 
 }
 
-.bourses-empty-state-icon i{ width:28px; height:28px; }
+.bourses-empty-state-icon i,
+.bourses-empty-state-icon svg{ width:28px; height:28px; }
 
 .bourses-empty-state h3{
 
