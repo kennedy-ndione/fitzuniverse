@@ -390,7 +390,8 @@ color:#fff;
 }
 
 
-.card-icon i{
+.card-icon i,
+.card-icon svg{
 width:30px;
 height:30px;
 }

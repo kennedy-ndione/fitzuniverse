@@ -738,7 +738,8 @@ color:var(--primary-color);
 
 }
 
-.plan-icon i{
+.plan-icon i,
+.plan-icon svg{
 
 width:26px;
 

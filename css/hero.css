@@ -525,7 +525,8 @@ animation:fitzHalo 8s linear infinite;
 
 }
 
-.demo-avatar i{
+.demo-avatar i,
+.demo-avatar svg{
 
 width:28px;
 
