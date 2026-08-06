@@ -183,7 +183,8 @@ transition:var(--transition);
 
 }
 
-.back-link i{
+.back-link i,
+.back-link svg{
 
 width:16px;
 
@@ -231,7 +232,8 @@ font-size:.88rem;
 
 }
 
-.ai-badge i{
+.ai-badge i,
+.ai-badge svg{
 
 width:16px;
 
@@ -329,7 +331,8 @@ isolation:isolate;
 
 }
 
-.fitz-showcase-avatar i{
+.fitz-showcase-avatar i,
+.fitz-showcase-avatar svg{
 
 width:22px;
 
@@ -473,7 +476,8 @@ box-shadow:0 10px 24px rgba(139,30,63,.32);
 
 }
 
-.plan-summary-icon i{
+.plan-summary-icon i,
+.plan-summary-icon svg{
 
 width:28px;
 
@@ -581,7 +585,8 @@ margin-bottom:6px;
 
 }
 
-.section-heading i{
+.section-heading i,
+.section-heading svg{
 
 width:20px;
 
@@ -673,7 +678,8 @@ color:var(--primary-color);
 
 }
 
-.summary-row-icon i{
+.summary-row-icon i,
+.summary-row-icon svg{
 
 width:18px;
 
@@ -1226,7 +1232,8 @@ transition:var(--transition);
 
 }
 
-.payment-method-check i{
+.payment-method-check i,
+.payment-method-check svg{
 
 width:14px;
 
@@ -1311,7 +1318,8 @@ background:var(--background-light);
 
 }
 
-.reassurance-icon i{
+.reassurance-icon i,
+.reassurance-icon svg{
 
 width:18px;
 
@@ -1419,7 +1427,8 @@ font-size:.85rem;
 
 }
 
-.activation-note i{
+.activation-note i,
+.activation-note svg{
 
 width:15px;
 
@@ -1579,7 +1588,8 @@ text-align:left;
 
 }
 
-.activation-result i{
+.activation-result i,
+.activation-result svg{
 
 flex-shrink:0;
 
