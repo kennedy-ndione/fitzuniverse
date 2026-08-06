@@ -314,7 +314,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 3px rgba(212,162,76,.18);
+box-shadow:0 0 0 3px rgba(230,58,110,.18);
 
 }
 
@@ -352,7 +352,9 @@ transition:var(--transition);
 
 border-color:var(--accent-color);
 
-color:var(--accent-color);
+/* Libellé 13,4px/700 sur fond clair : sous le seuil "grand texte", AA
+4,5:1 requis — --accent-700 (7,75:1), pas --accent-500 (4,05:1). */
+color:var(--accent-700);
 
 }
 
@@ -655,7 +657,9 @@ border-radius:var(--radius-full);
 
 background:var(--background-light);
 
-color:var(--accent-color);
+/* Fond quasi blanc (teinte à 8%) : texte 11,5px/700 sous le seuil
+"grand texte", AA 4,5:1 requis — --accent-700, pas --accent-500. */
+color:var(--accent-700);
 
 font-size:.72rem;
 
@@ -710,7 +714,8 @@ align-items:center;
 
 gap:5px;
 
-color:var(--accent-color);
+/* Texte 13,1px/700 sur carte blanche : AA 4,5:1 requis. */
+color:var(--accent-700);
 
 font-weight:700;
 

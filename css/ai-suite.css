@@ -670,7 +670,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(230,58,110,.18);
 
 }
 
@@ -728,7 +728,7 @@ transition:var(--transition);
 
 .ai-style-card:hover{
 
-border-color:rgba(126,113,216,.45);
+border-color:rgba(230,58,110,.45);
 
 transform:translateY(-2px);
 
@@ -970,7 +970,7 @@ resize:vertical;
 
 outline:none;
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(230,58,110,.18);
 
 }
 
@@ -1509,7 +1509,7 @@ transition:var(--transition);
 
 .ai-help-card:hover{
 
-border-color:rgba(126,113,216,.45);
+border-color:rgba(230,58,110,.45);
 
 transform:translateY(-2px);
 
@@ -2158,7 +2158,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(230,58,110,.18);
 
 }
 
@@ -2861,7 +2861,7 @@ transition:var(--transition);
 
 .ai-history-item:hover{
 
-border-color:rgba(126,113,216,.4);
+border-color:rgba(230,58,110,.4);
 
 }
 

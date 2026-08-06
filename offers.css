@@ -5,6 +5,19 @@ Repose sur les variables et le reset définis dans css/base.css
 eligibility-test.html, eligibility-questions.html et results.html)
 ========================================================== */
 
+:root{
+/* Identité dédiée du palier Premium — auparavant portée par
+--accent-500/600 quand ce token voulait dire "violet discret". Depuis
+que --accent-500/600 a basculé au rose framboise (2026-08-06, même
+rose que .plan-badge--recommended et .plan-badge--human juste
+au-dessus), il fallait dissocier : le violet de Premium et le rose de
+"accompagnement humain" doivent rester deux signaux différents (voir
+commentaire original sur .plan-badge--human), donc Premium garde son
+propre violet plutôt que de suivre --accent-* vers le rose. */
+--premium-500:#7E71D8;
+--premium-600:#6459B8;
+}
+
 body{
 
 padding:60px 20px 120px;
@@ -72,7 +85,7 @@ width:380px;
 
 height:380px;
 
-background:radial-gradient(circle,rgba(126,113,216,.20) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(230,58,110,.20) 0%,transparent 70%);
 
 animation:heroHaloB 28s ease-in-out infinite;
 
@@ -230,7 +243,7 @@ inset:0;
 
 z-index:-1;
 
-background:radial-gradient(circle at 12% 15%,rgba(126,113,216,.22),transparent 50%);
+background:radial-gradient(circle at 12% 15%,rgba(230,58,110,.22),transparent 50%);
 
 }
 
@@ -476,7 +489,7 @@ align-items:center;
 
 gap:18px;
 
-background:linear-gradient(135deg,rgba(51,65,140,.05),rgba(126,113,216,.05));
+background:linear-gradient(135deg,rgba(51,65,140,.05),rgba(230,58,110,.05));
 
 border:1px solid var(--border-color);
 
@@ -620,7 +633,7 @@ pointer-events:none;
 
 background:
 radial-gradient(ellipse at 60% 20%,rgba(51,65,140,.20) 0%,transparent 55%),
-radial-gradient(ellipse at 25% 75%,rgba(126,113,216,.16) 0%,transparent 55%);
+radial-gradient(ellipse at 25% 75%,rgba(230,58,110,.16) 0%,transparent 55%);
 
 filter:blur(50px);
 
@@ -950,7 +963,7 @@ background:rgba(255,255,255,.1);
 
 .plan-card-premium .plan-quota strong{
 
-color:var(--accent-color);
+color:var(--premium-500);
 
 }
 
@@ -1128,7 +1141,7 @@ couleur et du contraste, pas d'une ombre démesurée. */
 
 background:
 radial-gradient(circle at top right,rgba(51,65,140,.10),transparent 55%),
-radial-gradient(circle at bottom left,rgba(126,113,216,.07),transparent 50%),
+radial-gradient(circle at bottom left,rgba(230,58,110,.07),transparent 50%),
 var(--background);
 
 border-color:rgba(51,65,140,.45);
@@ -1235,13 +1248,13 @@ mise en avant, elle-même bleue ; l'ambre l'en détache. Le violet
 chaque famille garde son signal. Libellé en --primary-900 : 8,24:1. */
 .plan-badge--recommended{
 
-background:var(--amber-500);
+background:var(--accent-500);
 
 border-color:transparent;
 
 color:var(--primary-900);
 
-box-shadow:0 8px 20px rgba(233,163,25,.32);
+box-shadow:0 8px 20px rgba(230,58,110,.32);
 
 }
 
@@ -1252,12 +1265,12 @@ box-shadow:0 8px 20px rgba(233,163,25,.32);
 /* Sur la carte sombre, le badge neutre clair se confondrait avec le
 fond de page : version pleine violette, cohérente avec l'accent que
 Premium utilise déjà pour son prix et ses icônes. */
-/* --accent-500 + texte --primary-900 tombait à 4,44:1, juste sous AA.
---accent-600 avec un texte blanc monte à 5,7:1 tout en restant l'accent
+/* --premium-500 + texte --primary-900 tombait à 4,44:1, juste sous AA.
+--premium-600 avec un texte blanc monte à 5,7:1 tout en restant l'accent
 violet attendu sur la carte sombre. */
 .plan-badge--premium{
 
-background:var(--accent-600);
+background:var(--premium-600);
 
 border-color:transparent;
 
@@ -1311,7 +1324,7 @@ color:rgba(255,255,255,.92);
 box-shadow:var(--shadow-lg);
 
 --meter-track:rgba(255,255,255,.14);
---meter-fill:var(--accent-500);
+--meter-fill:var(--premium-500);
 
 }
 
@@ -1327,7 +1340,7 @@ box-shadow:var(--shadow-lg);
 
 background:rgba(126,113,216,.18);
 
-color:var(--accent-500);
+color:var(--premium-500);
 
 }
 
@@ -1347,7 +1360,7 @@ color:rgba(255,255,255,.62);
 
 font-size:2.7rem;
 
-color:var(--accent-500);
+color:var(--premium-500);
 
 }
 
@@ -1372,15 +1385,15 @@ viser aussi svg. */
 .plan-card-premium .plan-features i,
 .plan-card-premium .plan-features svg{
 
-color:var(--accent-500);
+color:var(--premium-500);
 
 }
 
-/* Même correction de contraste que .plan-badge--premium : --accent-500
+/* Même correction de contraste que .plan-badge--premium : --premium-500
 avec un libellé sombre plafonnait à 4,44:1. */
 .plan-cta-premium{
 
-background:var(--accent-600);
+background:var(--premium-600);
 
 color:#fff;
 
@@ -1389,7 +1402,7 @@ font-weight:700;
 }
 
 /* Le survol se contente de soulever le bouton. Assombrir le fond en
---accent-600 faisait tomber le contraste du libellé sous le seuil AA
+--premium-600 faisait tomber le contraste du libellé sous le seuil AA
 (3,4:1 contre 4,6:1 à l'état normal) : la couleur reste donc stable. */
 .plan-cta-premium:hover{
 
@@ -1599,7 +1612,7 @@ height:18px;
 
 flex-shrink:0;
 
-color:var(--amber-700);
+color:var(--accent-700);
 
 }
 

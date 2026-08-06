@@ -521,7 +521,7 @@ font-weight:800;
 /* Chiffre d'étape en ambre translucide : purement décoratif (le titre
 de l'étape porte l'information), il réchauffe la carte sans occuper de
 surface. */
-color:rgba(233,163,25,.30);
+color:rgba(230,58,110,.30);
 
 line-height:1;
 
@@ -630,7 +630,10 @@ margin-bottom:24px;
 font-family:var(--font-display);
 font-size:var(--fs-small);
 font-weight:700;
-color:var(--accent-color);
+/* Texte 14,4px/700 : sous le seuil "grand texte" WCAG (14pt/18,66px
+gras), donc AA 4,5:1 requis — --accent-500 ne fait que 4,05:1 sur
+blanc, d'où --accent-700 (7,75:1). */
+color:var(--accent-700);
 letter-spacing:var(--ls-wide);
 }
 
@@ -870,7 +873,7 @@ content:"";
 position:absolute;
 inset:0;
 z-index:-1;
-background:radial-gradient(circle at 85% 15%,rgba(126,113,216,.24),transparent 55%);
+background:radial-gradient(circle at 85% 15%,rgba(230,58,110,.24),transparent 55%);
 }
 
 .cta-box .section-badge{
@@ -928,9 +931,10 @@ la note dans css/hero.css). */
 width:18px;
 height:18px;
 flex-shrink:0;
-/* Le bloc CTA est sur fond marine : l'ambre y ressort à plus de 8:1
-et fait écho au bouton "Créer un compte" juste au-dessus. */
-color:var(--amber-500);
+/* Le bloc CTA est sur fond marine : --accent-500 y tient 4,4:1 (AA
+icônes/composants, seuil 3:1) et fait écho au bouton "Créer un
+compte" juste au-dessus. */
+color:var(--accent-500);
 }
 
 /* ==========================================================
