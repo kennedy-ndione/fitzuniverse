@@ -206,7 +206,8 @@ letter-spacing:.06em;
 
 }
 
-.admin-auth-badge i{
+.admin-auth-badge i,
+.admin-auth-badge svg{
 
 width:14px;
 
@@ -397,7 +398,8 @@ transition:color .2s ease, background-color .2s ease;
 
 }
 
-.password-toggle i{
+.password-toggle i,
+.password-toggle svg{
 
 width:17px;
 
@@ -562,7 +564,8 @@ font-size:.8rem;
 
 }
 
-.admin-auth-trust i{
+.admin-auth-trust i,
+.admin-auth-trust svg{
 
 width:14px;
 

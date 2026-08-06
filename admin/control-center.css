@@ -292,7 +292,8 @@ transition:var(--transition);
 
 }
 
-.nav-link i{
+.nav-link i,
+.nav-link svg{
 
 flex-shrink:0;
 
@@ -398,7 +399,8 @@ transition:var(--transition);
 
 }
 
-.sidebar-logout i{
+.sidebar-logout i,
+.sidebar-logout svg{
 
 width:19px;
 
@@ -485,7 +487,8 @@ position:relative;
 
 }
 
-.topbar-search i{
+.topbar-search i,
+.topbar-search svg{
 
 position:absolute;
 
@@ -601,7 +604,8 @@ color:#fff;
 
 }
 
-.stat-card-icon i{
+.stat-card-icon i,
+.stat-card-icon svg{
 
 width:22px;
 
@@ -833,7 +837,8 @@ cursor:pointer;
 
 }
 
-.topbar-menu-btn i{
+.topbar-menu-btn i,
+.topbar-menu-btn svg{
 
 width:19px;
 
@@ -1012,7 +1017,8 @@ color:var(--warning);
 
 }
 
-.scholarship-title-missing i{
+.scholarship-title-missing i,
+.scholarship-title-missing svg{
 
 width:14px;
 
@@ -1615,7 +1621,8 @@ margin-bottom:8px;
 
 }
 
-.pending-section h3 i{
+.pending-section h3 i,
+.pending-section h3 svg{
 
 width:18px;
 
@@ -2107,7 +2114,8 @@ white-space:nowrap;
 
 }
 
-.exec-badge i{
+.exec-badge i,
+.exec-badge svg{
 
 width:13px;
 
@@ -2233,7 +2241,8 @@ color:var(--text-muted);
 
 }
 
-.overview-item-mark i{ width:14px; height:14px; }
+.overview-item-mark i,
+.overview-item-mark svg{ width:14px; height:14px; }
 
 .overview-item-text strong{
 
@@ -2468,7 +2477,8 @@ color:var(--accent-color);
 
 }
 
-.ai-observations-icon i{ width:19px; height:19px; }
+.ai-observations-icon i,
+.ai-observations-icon svg{ width:19px; height:19px; }
 
 .ai-observations h2{
 
@@ -2540,7 +2550,8 @@ background:var(--background);
 
 }
 
-.chart-empty-state i{
+.chart-empty-state i,
+.chart-empty-state svg{
 
 width:26px;
 
@@ -2636,7 +2647,8 @@ font-weight:600;
 
 }
 
-.infra-item-name i{
+.infra-item-name i,
+.infra-item-name svg{
 
 width:16px;
 
@@ -2775,7 +2787,8 @@ box-shadow:0 12px 26px rgba(139,30,63,.28);
 
 }
 
-.btn-page-action i{ width:16px; height:16px; }
+.btn-page-action i,
+.btn-page-action svg{ width:16px; height:16px; }
 
 .btn-page-action.is-secondary{
 
@@ -2831,7 +2844,8 @@ color:#fff;
 
 }
 
-.table-icon-btn i{ width:15px; height:15px; }
+.table-icon-btn i,
+.table-icon-btn svg{ width:15px; height:15px; }
 
 .modal-base .modal-card{
 
@@ -2855,7 +2869,8 @@ font-size:var(--fs-card-title);
 
 }
 
-.modal-base .modal-close i{ width:20px; height:20px; }
+.modal-base .modal-close i,
+.modal-base .modal-close svg{ width:20px; height:20px; }
 
 .modal-base .modal-close:hover{ color:var(--danger); }
 
