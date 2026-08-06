@@ -95,7 +95,8 @@ font-size:.88rem;
 
 }
 
-.ai-badge i{
+.ai-badge i,
+.ai-badge svg{
 
 width:16px;
 
@@ -165,7 +166,8 @@ color:#fff;
 
 }
 
-.narrative-card .assistant-avatar i{
+.narrative-card .assistant-avatar i,
+.narrative-card .assistant-avatar svg{
 
 width:22px;
 
@@ -345,7 +347,8 @@ line-height:1.6;
 
 }
 
-.score-note i{
+.score-note i,
+.score-note svg{
 
 flex-shrink:0;
 
@@ -421,7 +424,8 @@ justify-content:center;
 
 }
 
-.score-breakdown-icon i{
+.score-breakdown-icon i,
+.score-breakdown-icon svg{
 
 width:16px;
 
@@ -527,7 +531,8 @@ background:var(--background-alt);
 
 }
 
-.improvement-free-icon i{
+.improvement-free-icon i,
+.improvement-free-icon svg{
 
 width:20px;
 
@@ -607,7 +612,8 @@ box-shadow:var(--shadow-sm);
 
 }
 
-.reco-locked-icon i{width:18px;height:18px;}
+.reco-locked-icon i,
+.reco-locked-icon svg{width:18px;height:18px;}
 
 .reco-locked-copy{flex:1 1 220px;}
 
@@ -665,7 +671,8 @@ margin-bottom:16px;
 
 }
 
-.analysis-heading i{
+.analysis-heading i,
+.analysis-heading svg{
 
 width:20px;
 
@@ -673,13 +680,15 @@ height:20px;
 
 }
 
-.strengths-card .analysis-heading i{
+.strengths-card .analysis-heading i,
+.strengths-card .analysis-heading svg{
 
 color:var(--success);
 
 }
 
-.weaknesses-card .analysis-heading i{
+.weaknesses-card .analysis-heading i,
+.weaknesses-card .analysis-heading svg{
 
 color:var(--accent-color);
 
@@ -721,7 +730,8 @@ color:var(--text-color);
 
 }
 
-.analysis-card li i{
+.analysis-card li i,
+.analysis-card li svg{
 
 flex-shrink:0;
 
@@ -733,13 +743,15 @@ margin-top:2px;
 
 }
 
-.strengths-card li i{
+.strengths-card li i,
+.strengths-card li svg{
 
 color:var(--success);
 
 }
 
-.weaknesses-card li i{
+.weaknesses-card li i,
+.weaknesses-card li svg{
 
 color:var(--accent-color);
 
@@ -775,7 +787,8 @@ margin-bottom:14px;
 
 }
 
-.section-heading i{
+.section-heading i,
+.section-heading svg{
 
 width:22px;
 
@@ -831,7 +844,8 @@ line-height:1.6;
 
 }
 
-.section > ul li i{
+.section > ul li i,
+.section > ul li svg{
 
 flex-shrink:0;
 
@@ -893,7 +907,8 @@ font-size:.92rem;
 
 }
 
-.country-pill i{
+.country-pill i,
+.country-pill svg{
 
 width:16px;
 
@@ -973,7 +988,8 @@ color:#fff;
 
 }
 
-.opportunity-icon i{
+.opportunity-icon i,
+.opportunity-icon svg{
 
 width:22px;
 
@@ -1045,7 +1061,8 @@ color:var(--text-color);
 
 }
 
-.opportunity-reasons i{
+.opportunity-reasons i,
+.opportunity-reasons svg{
 
 flex-shrink:0;
 
@@ -1105,7 +1122,8 @@ background:rgba(255,255,255,.14);
 
 }
 
-.closing-icon i{
+.closing-icon i,
+.closing-icon svg{
 
 width:28px;
 
@@ -1173,7 +1191,8 @@ font-weight:600;
 
 }
 
-.closing-checklist i{
+.closing-checklist i,
+.closing-checklist svg{
 
 flex-shrink:0;
 
@@ -1225,7 +1244,8 @@ opacity:.85;
 
 }
 
-.closing-note i{
+.closing-note i,
+.closing-note svg{
 
 width:16px;
 
