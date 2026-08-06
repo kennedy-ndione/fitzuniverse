@@ -56,7 +56,8 @@ color:var(--text-color);
 
 }
 
-.ai-application-context i{width:16px;height:16px;color:var(--accent-color);flex-shrink:0;}
+.ai-application-context i,
+.ai-application-context svg{width:16px;height:16px;color:var(--accent-color);flex-shrink:0;}
 
 /* ==========================================================
 FITZ — POINT DE CONTACT UNIFIÉ (avatar + badge + statut)
@@ -129,7 +130,8 @@ animation:fitzHalo 8s linear infinite;
 
 }
 
-.fitz-avatar i{
+.fitz-avatar i,
+.fitz-avatar svg{
 
 width:22px;
 
@@ -154,7 +156,8 @@ border-radius:13px;
 
 }
 
-.fitz-avatar--sm i{
+.fitz-avatar--sm i,
+.fitz-avatar--sm svg{
 
 width:20px;
 
@@ -175,7 +178,8 @@ box-shadow:0 14px 30px rgba(139,124,246,.28);
 
 }
 
-.fitz-avatar--lg i{
+.fitz-avatar--lg i,
+.fitz-avatar--lg svg{
 
 width:24px;
 
@@ -194,7 +198,8 @@ border-radius:18px;
 
 }
 
-.fitz-avatar--xl i{
+.fitz-avatar--xl i,
+.fitz-avatar--xl svg{
 
 width:26px;
 
@@ -234,7 +239,8 @@ letter-spacing:-.005em;
 
 }
 
-.fitz-badge i{
+.fitz-badge i,
+.fitz-badge svg{
 
 width:16px;
 
@@ -354,7 +360,8 @@ color:var(--primary-color);
 
 }
 
-.ai-page-header-icon i{
+.ai-page-header-icon i,
+.ai-page-header-icon svg{
 
 width:22px;
 
@@ -414,7 +421,8 @@ white-space:nowrap;
 
 }
 
-.ai-page-header-badge i{
+.ai-page-header-badge i,
+.ai-page-header-badge svg{
 
 width:14px;
 
@@ -474,7 +482,8 @@ color:#fff;
 
 }
 
-.ai-locked-icon i{
+.ai-locked-icon i,
+.ai-locked-icon svg{
 
 width:28px;
 
@@ -568,7 +577,8 @@ gap:8px;
 
 }
 
-.ai-panel-header h2 i{
+.ai-panel-header h2 i,
+.ai-panel-header h2 svg{
 
 width:18px;
 
@@ -766,7 +776,8 @@ color:#fff;
 
 }
 
-.ai-style-card-icon i{
+.ai-style-card-icon i,
+.ai-style-card-icon svg{
 
 width:16px;
 
@@ -854,7 +865,8 @@ cursor:not-allowed;
 
 }
 
-.ai-icon-btn i{
+.ai-icon-btn i,
+.ai-icon-btn svg{
 
 width:14px;
 
@@ -915,7 +927,8 @@ font-size:.86rem;
 
 }
 
-.ai-preview-empty i{
+.ai-preview-empty i,
+.ai-preview-empty svg{
 
 width:26px;
 
@@ -1163,7 +1176,8 @@ color:var(--fitz-color);
 
 }
 
-.ai-chat-new-btn i{ width:16px; height:16px; }
+.ai-chat-new-btn i,
+.ai-chat-new-btn svg{ width:16px; height:16px; }
 
 .ai-chat-history-close{
 
@@ -1189,7 +1203,8 @@ cursor:pointer;
 
 }
 
-.ai-chat-history-close i{ width:18px; height:18px; }
+.ai-chat-history-close i,
+.ai-chat-history-close svg{ width:18px; height:18px; }
 
 .ai-chat-history-list{
 
@@ -1262,7 +1277,8 @@ font-weight:600;
 
 }
 
-.ai-chat-history-item-select i{
+.ai-chat-history-item-select i,
+.ai-chat-history-item-select svg{
 
 width:15px;
 
@@ -1306,7 +1322,8 @@ height:26px;
 
 }
 
-.ai-chat-history-item-actions i{ width:14px; height:14px; }
+.ai-chat-history-item-actions i,
+.ai-chat-history-item-actions svg{ width:14px; height:14px; }
 
 .ai-chat-history-backdrop{
 
@@ -1373,7 +1390,8 @@ flex-shrink:0;
 
 }
 
-.ai-chat-history-toggle i{ width:16px; height:16px; }
+.ai-chat-history-toggle i,
+.ai-chat-history-toggle svg{ width:16px; height:16px; }
 
 .ai-chat-current-title{
 
@@ -1497,7 +1515,8 @@ transform:translateY(-2px);
 
 }
 
-.ai-help-card i{
+.ai-help-card i,
+.ai-help-card svg{
 
 width:18px;
 
@@ -1589,7 +1608,8 @@ color:var(--text-color);
 
 }
 
-.ai-msg-avatar i{
+.ai-msg-avatar i,
+.ai-msg-avatar svg{
 
 width:16px;
 
@@ -1785,7 +1805,8 @@ border-color:var(--accent-color);
 
 }
 
-.ai-msg-actions button i{
+.ai-msg-actions button i,
+.ai-msg-actions button svg{
 
 width:12px;
 
@@ -1827,7 +1848,8 @@ cursor:pointer;
 
 .ai-scroll-to-bottom.is-visible{ display:flex; }
 
-.ai-scroll-to-bottom i{ width:16px; height:16px; }
+.ai-scroll-to-bottom i,
+.ai-scroll-to-bottom svg{ width:16px; height:16px; }
 
 .ai-suggestions{
 
@@ -1944,7 +1966,8 @@ flex-shrink:0;
 
 }
 
-.ai-attachment-chip-icon i{ width:14px; height:14px; }
+.ai-attachment-chip-icon i,
+.ai-attachment-chip-icon svg{ width:14px; height:14px; }
 
 .ai-attachment-chip-name{
 
@@ -1986,7 +2009,8 @@ cursor:pointer;
 
 }
 
-.ai-attachment-chip-remove i{ width:11px; height:11px; }
+.ai-attachment-chip-remove i,
+.ai-attachment-chip-remove svg{ width:11px; height:11px; }
 
 .ai-msg-attachments{
 
@@ -2036,7 +2060,8 @@ color:var(--text-light);
 
 }
 
-.ai-msg-attachment-file i{ width:14px; height:14px; }
+.ai-msg-attachment-file i,
+.ai-msg-attachment-file svg{ width:14px; height:14px; }
 
 .ai-chat-composer{
 
@@ -2098,7 +2123,8 @@ border-color:var(--fitz-color);
 
 }
 
-.ai-chat-attach-btn i{ width:18px; height:18px; }
+.ai-chat-attach-btn i,
+.ai-chat-attach-btn svg{ width:18px; height:18px; }
 
 .ai-chat-textarea{
 
@@ -2189,7 +2215,9 @@ box-shadow:var(--shadow-sm);
 }
 
 .ai-chat-send-btn i,
-.ai-chat-stop-btn i{
+.ai-chat-stop-btn i,
+.ai-chat-send-btn svg,
+.ai-chat-stop-btn svg{
 
 width:19px;
 
@@ -2379,10 +2407,13 @@ margin-bottom:10px;
 
 }
 
-.ai-insight-card h3 i{ width:16px; height:16px; }
+.ai-insight-card h3 i,
+.ai-insight-card h3 svg{ width:16px; height:16px; }
 
-.ai-insight-card.is-strengths h3 i{ color:var(--success); }
-.ai-insight-card.is-weaknesses h3 i{ color:var(--warning); }
+.ai-insight-card.is-strengths h3 i,
+.ai-insight-card.is-strengths h3 svg{ color:var(--success); }
+.ai-insight-card.is-weaknesses h3 i,
+.ai-insight-card.is-weaknesses h3 svg{ color:var(--warning); }
 
 /* Carte "Suggestions/Conseils de Fitz" — un conseil qui vient de Fitz
 lui-même (pas un simple constat force/faiblesse), donc il porte la
@@ -2396,7 +2427,8 @@ border-color:rgba(139,124,246,.3);
 
 }
 
-.ai-insight-card.is-fitz h3 i{ color:var(--accent-color); }
+.ai-insight-card.is-fitz h3 i,
+.ai-insight-card.is-fitz h3 svg{ color:var(--accent-color); }
 
 .ai-insight-card ul{
 
@@ -2448,7 +2480,8 @@ color:var(--text-light);
 
 }
 
-.ai-checklist-item i{
+.ai-checklist-item i,
+.ai-checklist-item svg{
 
 width:16px;
 
@@ -2466,7 +2499,8 @@ color:var(--text-color);
 
 }
 
-.ai-checklist-item.is-done i{
+.ai-checklist-item.is-done i,
+.ai-checklist-item.is-done svg{
 
 color:var(--success);
 
@@ -2513,7 +2547,8 @@ background:var(--background-light);
 
 }
 
-.ai-dropzone i{
+.ai-dropzone i,
+.ai-dropzone svg{
 
 width:30px;
 
@@ -2591,7 +2626,8 @@ color:var(--text-light);
 
 }
 
-.ai-file-row-icon i{ width:16px; height:16px; }
+.ai-file-row-icon i,
+.ai-file-row-icon svg{ width:16px; height:16px; }
 
 .ai-file-row-info{
 
@@ -2679,7 +2715,8 @@ color:var(--danger);
 
 }
 
-.ai-file-row-remove i{ width:15px; height:15px; }
+.ai-file-row-remove i,
+.ai-file-row-remove svg{ width:15px; height:15px; }
 
 /* ==========================================================
 TRADUCTION — inversion de langues
@@ -2737,7 +2774,8 @@ color:var(--accent-color);
 
 }
 
-.ai-lang-swap-btn i{ width:16px; height:16px; }
+.ai-lang-swap-btn i,
+.ai-lang-swap-btn svg{ width:16px; height:16px; }
 
 .ai-mode-tabs{
 
