@@ -184,7 +184,8 @@ transition:var(--transition);
 
 }
 
-.section-nav-item-check i{
+.section-nav-item-check i,
+.section-nav-item-check svg{
 
 width:12px;
 
@@ -266,7 +267,8 @@ color:var(--text-light);
 
 }
 
-.profile-section-icon i{
+.profile-section-icon i,
+.profile-section-icon svg{
 
 width:20px;
 
@@ -302,7 +304,8 @@ line-height:1.55;
 
 }
 
-.field-hint i{
+.field-hint i,
+.field-hint svg{
 
 flex-shrink:0;
 
@@ -801,7 +804,8 @@ flex-shrink:0;
 
 }
 
-.doc-check-card i{
+.doc-check-card i,
+.doc-check-card svg{
 
 flex-shrink:0;
 
@@ -1082,7 +1086,8 @@ pointer-events:auto;
 
 }
 
-.save-toast i{
+.save-toast i,
+.save-toast svg{
 
 width:16px;
 

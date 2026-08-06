@@ -61,7 +61,8 @@ border-color:var(--accent-color);
 background:var(--background-light);
 }
 
-.cpr-dropzone i{width:34px;height:34px;color:var(--accent-color);}
+.cpr-dropzone i,
+.cpr-dropzone svg{width:34px;height:34px;color:var(--accent-color);}
 
 .cpr-dropzone p{font-size:var(--fs-small);color:var(--text-light);line-height:1.5;}
 
@@ -81,7 +82,8 @@ border:1px solid var(--border-color);
 margin-bottom:22px;
 }
 
-.cpr-file-info i{width:22px;height:22px;color:var(--accent-color);flex-shrink:0;}
+.cpr-file-info i,
+.cpr-file-info svg{width:22px;height:22px;color:var(--accent-color);flex-shrink:0;}
 
 .cpr-file-info div{flex:1;min-width:0;}
 
@@ -168,7 +170,8 @@ border-radius:var(--radius-md);
 background:var(--background-light);
 }
 
-.cpr-note i{width:17px;height:17px;color:var(--accent-color);flex-shrink:0;margin-top:1px;}
+.cpr-note i,
+.cpr-note svg{width:17px;height:17px;color:var(--accent-color);flex-shrink:0;margin-top:1px;}
 
 .cpr-note p{font-size:var(--fs-caption);color:var(--text-light);line-height:1.5;margin:0;}
 
@@ -181,7 +184,8 @@ gap:10px;
 margin-bottom:20px;
 }
 
-.cpr-result-head i{width:22px;height:22px;color:var(--success);}
+.cpr-result-head i,
+.cpr-result-head svg{width:22px;height:22px;color:var(--success);}
 
 .cpr-result-head h3{
 font-family:var(--font-display);
@@ -217,7 +221,8 @@ font-weight:700;
 color:var(--text-color);
 }
 
-.cpr-result-stat i{width:20px;height:20px;color:var(--accent-color);}
+.cpr-result-stat i,
+.cpr-result-stat svg{width:20px;height:20px;color:var(--accent-color);}
 
 .cpr-result-message{
 font-size:var(--fs-small);

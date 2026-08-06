@@ -69,7 +69,8 @@ background:var(--background-alt);
 color:var(--text-light);
 }
 
-.apps-stat-icon i{
+.apps-stat-icon i,
+.apps-stat-icon svg{
 width:22px;
 height:22px;
 }
@@ -224,7 +225,8 @@ font-size:var(--fs-small);
 color:var(--text-light);
 }
 
-.app-card-meta i{width:15px;height:15px;flex-shrink:0;}
+.app-card-meta i,
+.app-card-meta svg{width:15px;height:15px;flex-shrink:0;}
 
 .app-card-meta .is-urgent{color:var(--warning);font-weight:600;}
 .app-card-meta .is-protected{color:var(--success);font-weight:600;}
@@ -251,7 +253,8 @@ padding:10px 12px;
 margin-bottom:14px;
 }
 
-.app-card-documents i{width:15px;height:15px;color:var(--accent-color);flex-shrink:0;}
+.app-card-documents i,
+.app-card-documents svg{width:15px;height:15px;color:var(--accent-color);flex-shrink:0;}
 
 .app-doc-link{
 margin-left:auto;
