@@ -368,7 +368,8 @@ isolation:isolate;
 
 }
 
-.fitz-showcase-avatar i{
+.fitz-showcase-avatar i,
+.fitz-showcase-avatar svg{
 
 width:24px;
 
@@ -1266,7 +1267,8 @@ box-shadow:0 8px 20px rgba(100,89,184,.4);
 
 }
 
-.plan-badge--premium i{ color:#fff; }
+.plan-badge--premium i,
+.plan-badge--premium svg{ color:#fff; }
 
 /* Section accompagnement humain — rose, ni bleu ni violet : ces deux
 offres ne se comparent pas sur l'axe des formules. */
@@ -1280,7 +1282,8 @@ color:#A8356A;
 
 }
 
-.plan-badge--human i{ color:#A8356A; }
+.plan-badge--human i,
+.plan-badge--human svg{ color:#A8356A; }
 
 /* ==========================================================
 PALIER "PREMIUM" — CARTE SOMBRE, EXCLUSIVE
@@ -1696,7 +1699,11 @@ transition:var(--transition);
 
 }
 
-.reassurance-item-whatsapp i{color:#25D366;}
+/* Même correction que .teaser-whatsapp (css/homepage-sections.css,
+lot 1) : #25D366 ne fait que 1,98:1 sur fond clair, sous le seuil de
+3:1. #178F43 reste identifiable comme vert WhatsApp et passe à 4,16:1. */
+.reassurance-item-whatsapp i,
+.reassurance-item-whatsapp svg{color:#178F43;}
 
 .reassurance-item-whatsapp:hover{
 
@@ -1793,7 +1800,8 @@ transition:transform .3s var(--ease-premium);
 
 }
 
-.faq-item[open] summary i{
+.faq-item[open] summary i,
+.faq-item[open] summary svg{
 
 transform:rotate(180deg);
 
