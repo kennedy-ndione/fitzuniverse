@@ -100,7 +100,8 @@ font-size:.82rem;
 
 }
 
-.uni-hero-badge i{ width:15px; height:15px; }
+.uni-hero-badge i,
+.uni-hero-badge svg{ width:15px; height:15px; }
 
 .uni-hero h1{
 
@@ -264,7 +265,8 @@ align-items:center;
 
 }
 
-.uni-toolbar-field i{
+.uni-toolbar-field i,
+.uni-toolbar-field svg{
 
 position:absolute;
 
@@ -352,7 +354,8 @@ color:var(--accent-color);
 
 }
 
-.uni-toolbar-reset i{ width:15px; height:15px; }
+.uni-toolbar-reset i,
+.uni-toolbar-reset svg{ width:15px; height:15px; }
 
 .uni-results-count{
 
@@ -658,7 +661,8 @@ font-weight:700;
 
 }
 
-.uni-card-chip i{ width:12px; height:12px; }
+.uni-card-chip i,
+.uni-card-chip svg{ width:12px; height:12px; }
 
 .uni-card-footer{
 
@@ -714,7 +718,8 @@ white-space:nowrap;
 
 }
 
-.uni-card-cta i{
+.uni-card-cta i,
+.uni-card-cta svg{
 
 width:14px;
 
@@ -925,7 +930,8 @@ color:#fff;
 
 }
 
-.uni-accompaniment-icon i{width:22px;height:22px;}
+.uni-accompaniment-icon i,
+.uni-accompaniment-icon svg{width:22px;height:22px;}
 
 .uni-accompaniment-copy{flex:1 1 auto;min-width:220px;}
 

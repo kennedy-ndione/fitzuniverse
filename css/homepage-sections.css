@@ -50,7 +50,8 @@ max-width:100%;
 text-align:center;
 }
 
-.section-badge i{
+.section-badge i,
+.section-badge svg{
 width:15px;
 height:15px;
 }
@@ -148,7 +149,8 @@ font-weight:700;
 text-shadow:0 1px 3px rgba(0,0,0,.35);
 }
 
-.teaser-card-rank i{width:12px;height:12px;}
+.teaser-card-rank i,
+.teaser-card-rank svg{width:12px;height:12px;}
 
 .teaser-card-body{
 padding:18px 18px 20px;
@@ -688,7 +690,8 @@ font-weight:600;
 color:var(--primary-color);
 }
 
-.feature-link i{
+.feature-link i,
+.feature-link svg{
 width:16px;
 height:16px;
 transition:transform .25s ease;

@@ -223,7 +223,8 @@ box-shadow:var(--shadow-md);
 
 }
 
-.header .btn i{
+.header .btn i,
+.header .btn svg{
 
 width:18px;
 

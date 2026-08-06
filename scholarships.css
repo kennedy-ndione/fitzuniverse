@@ -337,7 +337,8 @@ flex-shrink:0;
 
 }
 
-.scholarship-card-country-icon i{ width:18px; height:18px; }
+.scholarship-card-country-icon i,
+.scholarship-card-country-icon svg{ width:18px; height:18px; }
 
 .scholarship-card-country span{
 
@@ -475,7 +476,8 @@ font-weight:700;
 
 }
 
-.scholarship-card-chip i{ width:13px; height:13px; }
+.scholarship-card-chip i,
+.scholarship-card-chip svg{ width:13px; height:13px; }
 
 .scholarship-card-chip.is-funding{
 
@@ -513,7 +515,8 @@ transition:var(--transition);
 
 }
 
-.scholarship-card-cta i{
+.scholarship-card-cta i,
+.scholarship-card-cta svg{
 
 width:15px;
 

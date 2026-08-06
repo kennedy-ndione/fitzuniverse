@@ -175,7 +175,8 @@ transition:var(--transition);
 
 }
 
-.back-link i{
+.back-link i,
+.back-link svg{
 
 width:16px;
 
@@ -261,7 +262,8 @@ text-shadow:0 1px 3px rgba(0,0,0,.3);
 
 }
 
-.ai-badge i{
+.ai-badge i,
+.ai-badge svg{
 
 width:16px;
 
@@ -509,7 +511,8 @@ color:#fff;
 
 }
 
-.free-step-icon i{
+.free-step-icon i,
+.free-step-icon svg{
 
 width:18px;
 
@@ -583,7 +586,8 @@ white-space:nowrap;
 
 }
 
-.free-step-link i{
+.free-step-link i,
+.free-step-link svg{
 
 width:15px;
 
@@ -1212,7 +1216,8 @@ white-space:nowrap;
 
 }
 
-.plan-badge i{
+.plan-badge i,
+.plan-badge svg{
 
 width:13px;
 
@@ -1448,7 +1453,8 @@ color:var(--primary-600);
 
 }
 
-.consult-icon i{width:21px;height:21px;}
+.consult-icon i,
+.consult-icon svg{width:21px;height:21px;}
 
 .consult-body{flex:1 1 auto;min-width:220px;}
 
@@ -1930,7 +1936,8 @@ font-size:.85rem;
 
 }
 
-.reassurance-item i{
+.reassurance-item i,
+.reassurance-item svg{
 
 flex-shrink:0;
 
@@ -2034,7 +2041,8 @@ display:none;
 
 }
 
-.faq-item summary i{
+.faq-item summary i,
+.faq-item summary svg{
 
 flex-shrink:0;
 
