@@ -164,7 +164,8 @@ font-size:.84rem;
 
 }
 
-.auth-badge i{
+.auth-badge i,
+.auth-badge svg{
 
 width:15px;
 
@@ -379,7 +380,8 @@ transition:color .2s ease, background-color .2s ease;
 
 }
 
-.password-toggle i{
+.password-toggle i,
+.password-toggle svg{
 
 width:18px;
 
@@ -421,7 +423,8 @@ line-height:1.5;
 
 }
 
-.input-hint i{
+.input-hint i,
+.input-hint svg{
 
 flex-shrink:0;
 
@@ -821,7 +824,8 @@ font-size:.8rem;
 
 }
 
-.auth-trust i{
+.auth-trust i,
+.auth-trust svg{
 
 width:14px;
 
