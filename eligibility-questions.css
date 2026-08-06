@@ -188,7 +188,8 @@ color:var(--primary-color);
 
 }
 
-.question-icon i{
+.question-icon i,
+.question-icon svg{
 
 width:24px;
 
@@ -357,7 +358,8 @@ transition:var(--transition);
 
 }
 
-.option-card i{
+.option-card i,
+.option-card svg{
 
 flex-shrink:0;
 
@@ -393,7 +395,8 @@ box-shadow:var(--shadow-md);
 
 }
 
-.option-card.selected i{
+.option-card.selected i,
+.option-card.selected svg{
 
 color:#fff;
 
@@ -475,7 +478,8 @@ transition:var(--transition);
 
 }
 
-.nav-buttons button i{
+.nav-buttons button i,
+.nav-buttons button svg{
 
 width:18px;
 
@@ -607,7 +611,8 @@ height:38px;
 
 }
 
-.fitz-avatar i{
+.fitz-avatar i,
+.fitz-avatar svg{
 
 width:19px;
 

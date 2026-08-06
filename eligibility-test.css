@@ -170,7 +170,8 @@ font-size:var(--fs-meta);
 
 }
 
-.trust-strip i{
+.trust-strip i,
+.trust-strip svg{
 
 width:14px;
 
@@ -214,7 +215,8 @@ box-shadow:var(--shadow-md);
 
 }
 
-.logo i{
+.logo i,
+.logo svg{
 
 width:38px;
 
@@ -294,7 +296,8 @@ font-size:.95rem;
 
 }
 
-.benefit i{
+.benefit i,
+.benefit svg{
 
 flex-shrink:0;
 
@@ -338,7 +341,8 @@ text-align:left;
 
 }
 
-.trust-box i{
+.trust-box i,
+.trust-box svg{
 
 flex-shrink:0;
 
@@ -404,7 +408,8 @@ font-weight:var(--fw-semibold);
 
 }
 
-.info i{
+.info i,
+.info svg{
 
 width:16px;
 
@@ -454,7 +459,8 @@ transition:var(--transition);
 
 }
 
-button#startButton i{
+button#startButton i,
+button#startButton svg{
 
 width:20px;
 
@@ -536,7 +542,8 @@ color:var(--primary-color);
 
 }
 
-.feature-icon i{
+.feature-icon i,
+.feature-icon svg{
 
 width:22px;
 
@@ -614,7 +621,8 @@ height:64px;
 
 }
 
-.logo i{
+.logo i,
+.logo svg{
 
 width:32px;
 
