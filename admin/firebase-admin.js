@@ -453,7 +453,8 @@ return new Date().toISOString().slice(0, 10);
 }
 
 // Total d'étudiants inscrits + nouveaux inscrits aujourd'hui, à
-// partir de la collection "users" (createdAt écrit par signup.js).
+// partir de la collection "users" (createdAt écrit par payment.js,
+// seul point de création de compte depuis le retrait de signup.html).
 export async function getUserStats() {
 
 const usersCollection = collection(db, "users");

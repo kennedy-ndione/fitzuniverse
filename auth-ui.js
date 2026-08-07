@@ -1,7 +1,8 @@
 // -------- auth-ui.js --------
 // Petits utilitaires partagés par les formulaires d'authentification
-// (login.js, signup.js, admin/login.js) et par les pages qui traduisent
-// des erreurs Firebase Auth en messages français (account.js, profile.js).
+// (login.js, payment.js — création de compte désormais rattachée au
+// paiement, admin/login.js) et par les pages qui traduisent des
+// erreurs Firebase Auth en messages français (account.js, profile.js).
 // Ne fait aucun appel Firebase lui-même — uniquement de la manipulation
 // de DOM et une table de correspondance de codes d'erreur.
 
@@ -60,7 +61,7 @@ errorEl.textContent = "";
 // Bascule un bouton de soumission entre son état normal et un état
 // "en cours" (désactivé, libellé de chargement) — restaure le libellé
 // d'origine à la fin, que le bouton contienne un <span> interne
-// (admin/login.html) ou seulement du texte (login.html, signup.html).
+// (admin/login.html) ou seulement du texte (login.html).
 export function setButtonLoading(button, isLoading, loadingText) {
 
 if (!button) return;

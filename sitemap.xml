@@ -6,5 +6,5 @@
 <url><loc>https://www.scholarbridge.example/documents.html</loc><priority>0.6</priority></url>
 <url><loc>https://www.scholarbridge.example/eligibility-test.html</loc><priority>0.8</priority></url>
 <url><loc>https://www.scholarbridge.example/login.html</loc><priority>0.3</priority></url>
-<url><loc>https://www.scholarbridge.example/signup.html</loc><priority>0.7</priority></url>
+<url><loc>https://www.scholarbridge.example/offers.html</loc><priority>0.7</priority></url>
 </urlset>
