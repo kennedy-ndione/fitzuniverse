@@ -1,0 +1,100 @@
+<!-- @dsCard group="Shell application" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shell — Sidebar & Topbar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../dashboard.css">
+</head>
+<body data-plan="essentiel">
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<a href="#" class="sidebar-brand">
+<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+<button type="button" class="sidebar-collapse-btn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+<span class="sidebar-section-label">Mon espace</span>
+<ul>
+<li>
+<a href="#" class="nav-link is-active" aria-current="page">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-link">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+</a>
+</li>
+</ul>
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Bonjour Kennedy</h1>
+</div>
+<div class="messages-bell-wrap">
+<button type="button" class="messages-bell-btn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+</button>
+</div>
+<a href="#" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span>Essentiel</span>
+</a>
+</header>
+
+<main class="content" style="padding:32px;color:var(--text-color);font-family:var(--font-body);">
+<p>Zone de contenu — chaque page (dashboard, candidatures, documents, outils Fitz) s'insère ici.</p>
+</main>
+
+</div>
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

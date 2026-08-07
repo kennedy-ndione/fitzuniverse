@@ -1,0 +1,72 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulaire d'authentification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../auth.css">
+<style>body{padding:40px;display:flex;justify-content:center;}</style>
+</head>
+<body>
+
+<div class="auth-card">
+
+<h2>Se connecter</h2>
+<p class="auth-card-subtext">Accédez à votre espace personnel ScholarBridge.</p>
+
+<form class="login-form">
+
+<div class="input-group">
+<label for="dsEmail">Adresse e-mail</label>
+<div class="input-wrap">
+<i data-lucide="mail" class="input-icon"></i>
+<input type="email" id="dsEmail" placeholder="vous@exemple.com" autocomplete="email" required>
+</div>
+</div>
+
+<div class="input-group">
+<label for="dsPassword">Mot de passe</label>
+<div class="input-wrap has-toggle">
+<i data-lucide="lock" class="input-icon"></i>
+<input type="password" id="dsPassword" placeholder="Votre mot de passe" autocomplete="current-password" required>
+<button type="button" class="password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false">
+<i data-lucide="eye"></i>
+</button>
+</div>
+</div>
+
+<div class="auth-options">
+<label class="remember-me">
+<input type="checkbox">
+<span>Se souvenir de moi</span>
+</label>
+<a href="#" class="forgot-link">Mot de passe oublié ?</a>
+</div>
+
+<button type="submit" class="btn-auth-submit">
+Se connecter
+</button>
+
+</form>
+
+<div class="auth-trust">
+<i data-lucide="shield-check"></i>
+<span>Connexion sécurisée</span>
+</div>
+
+<p class="login-link">
+Vous n'avez pas encore de compte ?
+<a href="#">Créer un compte</a>
+</p>
+
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

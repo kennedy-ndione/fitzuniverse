@@ -1,0 +1,72 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>University Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../universities.css">
+<style>
+body{padding:40px;background:var(--background-soft);}
+.ds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:900px;}
+</style>
+</head>
+<body>
+
+<div class="ds-grid">
+
+<div class="card uni-card" role="button" tabindex="0">
+<div class="uni-card-media uni-card-media--variant-1">
+<img src="../assets/images/cities/rome.jpg" alt="Rome" loading="lazy">
+<span class="uni-card-rank"><i data-lucide="trophy"></i>Top 50</span>
+<span class="uni-card-status is-open">Admissions ouvertes</span>
+<div class="uni-card-location">
+<span>Rome, Italie</span>
+</div>
+</div>
+<div class="uni-card-body">
+<h3>Sapienza Università di Roma</h3>
+<p class="uni-card-scholarship">Éligible — Bourse d'excellence italienne</p>
+<div class="uni-card-meta">
+<span class="uni-card-chip"><i data-lucide="graduation-cap"></i>Master</span>
+<span class="uni-card-chip"><i data-lucide="languages"></i>Français</span>
+</div>
+<div class="uni-card-footer">
+<span class="uni-card-deadline"><i data-lucide="clock"></i>15 janv.</span>
+<span class="uni-card-cta">Voir les détails<i data-lucide="arrow-right"></i></span>
+</div>
+</div>
+</div>
+
+<div class="card uni-card" role="button" tabindex="0">
+<div class="uni-card-media uni-card-media--variant-2">
+<img src="../assets/images/cities/tokyo.jpg" alt="Tokyo" loading="lazy">
+<span class="uni-card-rank"><i data-lucide="trophy"></i>Top 20</span>
+<div class="uni-card-location">
+<span>Tokyo, Japon</span>
+</div>
+</div>
+<div class="uni-card-body">
+<h3>University of Tokyo</h3>
+<p class="uni-card-scholarship">Éligible — Bourse d'excellence japonaise</p>
+<div class="uni-card-meta">
+<span class="uni-card-chip"><i data-lucide="graduation-cap"></i>Doctorat</span>
+<span class="uni-card-chip"><i data-lucide="languages"></i>Anglais</span>
+</div>
+<div class="uni-card-footer">
+<span></span>
+<span class="uni-card-cta">Voir les détails<i data-lucide="arrow-right"></i></span>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

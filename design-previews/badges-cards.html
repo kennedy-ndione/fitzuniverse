@@ -1,0 +1,54 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Badges & Card générique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<style>
+body{padding:40px;background:var(--background-soft);}
+.ds-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:24px;}
+.ds-note{font-family:var(--font-body);font-size:.78rem;color:var(--text-muted);margin:-8px 0 24px;}
+h2{font-family:var(--font-display);font-size:1.1rem;color:var(--text-color);margin-bottom:12px;}
+.ds-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:800px;}
+.ds-card-grid .card{padding:20px;font-family:var(--font-body);color:var(--text-color);}
+.ds-card-grid .card h3{font-family:var(--font-display);font-size:1rem;margin-bottom:6px;}
+.ds-card-grid .card p{font-size:.85rem;color:var(--text-light);}
+</style>
+</head>
+<body>
+
+<h2>Badges</h2>
+<p class="ds-note">Définis dans css/base.css mais actuellement inutilisés en production — le site utilise des badges sur-mesure par page (sidebar-plan-badge, exec-badge, etc.). Prévu ici comme primitive réutilisable pour les futures pages.</p>
+<div class="ds-row">
+<span class="badge">Neutre</span>
+<span class="badge badge-success">Éligible</span>
+<span class="badge badge-warning">Bientôt clos</span>
+<span class="badge badge-danger">Fermé</span>
+<span class="badge badge-neutral">Info</span>
+</div>
+
+<h2>Card générique</h2>
+<div class="ds-card-grid">
+<div class="card">
+<h3>Card standard</h3>
+<p>Utilisée telle quelle sur eligibility-test.html, et comme base des cartes scholarship/université.</p>
+</div>
+<div class="card card--featured">
+<h3>Card featured</h3>
+<p>Variante mise en avant — définie mais pas encore instanciée dans le HTML actuel.</p>
+</div>
+<div class="card card--subtle">
+<h3>Card subtle</h3>
+<p>Variante discrète — définie mais pas encore instanciée dans le HTML actuel.</p>
+</div>
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

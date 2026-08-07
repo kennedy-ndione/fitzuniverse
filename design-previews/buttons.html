@@ -1,0 +1,45 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boutons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<style>
+body{padding:40px;background:var(--background-soft);}
+.ds-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:32px;}
+.ds-note{font-family:var(--font-body);font-size:.78rem;color:var(--text-muted);margin:-16px 0 24px;}
+h2{font-family:var(--font-display);font-size:1.1rem;color:var(--text-color);margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<h2>Variantes principales (utilisées sur le site)</h2>
+<div class="ds-row">
+<a href="#" class="btn btn-primary"><span>Découvrir l'accompagnement</span><i data-lucide="arrow-right"></i></a>
+<a href="#" class="btn btn-secondary">Voir les universités</a>
+<a href="#" class="btn btn-accent">Faire le diagnostic</a>
+<a href="#" class="btn btn-accent btn-lg">Créer mon compte</a>
+</div>
+
+<h2>Petite taille</h2>
+<div class="ds-row">
+<a href="#" class="btn btn-secondary btn-sm">Suivre cette candidature</a>
+<a href="#" class="btn btn-primary btn-sm">Voir l'accompagnement</a>
+</div>
+
+<h2>Variantes définies mais non utilisées en production</h2>
+<p class="ds-note">btn-ghost et btn-danger existent dans css/base.css mais n'apparaissent dans aucune page HTML actuelle — à garder en réserve ou à retirer si confirmé inutile.</p>
+<div class="ds-row">
+<button type="button" class="btn btn-ghost">Annuler</button>
+<button type="button" class="btn btn-danger">Supprimer</button>
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

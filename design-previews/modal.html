@@ -1,0 +1,60 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../admin/control-center.css">
+<style>body{padding:40px;background:var(--background-soft);}</style>
+</head>
+<body>
+
+<div class="modal-base">
+<div class="modal-card">
+
+<div class="modal-header">
+<h2>Ajouter une université</h2>
+<button type="button" class="modal-close" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<form>
+
+<div class="form-grid">
+<div class="field">
+<label for="dsName">Nom de l'université</label>
+<input type="text" id="dsName" required>
+</div>
+<div class="field">
+<label for="dsCountry">Pays</label>
+<input type="text" id="dsCountry" required>
+</div>
+</div>
+
+<div class="field">
+<label for="dsDesc">Description</label>
+<textarea id="dsDesc" rows="5"></textarea>
+</div>
+
+<div class="modal-footer">
+<button type="submit" class="btn-detail-action">
+<i data-lucide="save"></i>
+<span>Enregistrer</span>
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>

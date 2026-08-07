@@ -1,0 +1,102 @@
+<!-- @dsCard group="Fondations" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokens — Fondations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/base.css">
+<style>
+body{padding:40px;background:var(--background-soft);}
+.ds-section{margin-bottom:48px;}
+.ds-section h2{font-family:var(--font-display);font-size:1.4rem;margin-bottom:16px;color:var(--text-color);}
+.ds-swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
+.ds-swatch{border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);background:var(--background);}
+.ds-swatch-color{height:70px;}
+.ds-swatch-label{padding:10px 12px;font-size:.8rem;font-family:var(--font-body);color:var(--text-light);}
+.ds-swatch-label strong{display:block;color:var(--text-color);font-size:.85rem;}
+.ds-type-row{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--border-color);}
+.ds-type-row span.tag{font-family:var(--font-body);font-size:.75rem;color:var(--text-muted);width:120px;flex-shrink:0;}
+.ds-space-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.ds-space-bar{background:var(--primary-600);height:16px;border-radius:4px;}
+.ds-space-row span{font-family:var(--font-body);font-size:.8rem;color:var(--text-light);width:110px;}
+.ds-radius-row{display:flex;gap:20px;flex-wrap:wrap;}
+.ds-radius-box{width:80px;height:80px;background:var(--primary-100,var(--primary-600));display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-family:var(--font-body);}
+.ds-gradient-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.ds-gradient-box{height:90px;border-radius:var(--radius-md);display:flex;align-items:flex-end;padding:10px;color:#fff;font-family:var(--font-body);font-size:.8rem;box-shadow:var(--shadow-sm);}
+</style>
+</head>
+<body>
+
+<div class="ds-section">
+<h2>Couleurs — Primary (bleu/marine)</h2>
+<div class="ds-swatches">
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--primary-50)"></div><div class="ds-swatch-label"><strong>primary-50</strong>#EEF0FB</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--primary-600)"></div><div class="ds-swatch-label"><strong>primary-600</strong>#33418C</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--primary-700)"></div><div class="ds-swatch-label"><strong>primary-700</strong>#262F6B</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--primary-900)"></div><div class="ds-swatch-label"><strong>primary-900</strong>#12162E</div></div>
+</div>
+</div>
+
+<div class="ds-section">
+<h2>Couleurs — Accent (framboise)</h2>
+<div class="ds-swatches">
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-500)"></div><div class="ds-swatch-label"><strong>accent-500</strong>#E63A6E</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-600)"></div><div class="ds-swatch-label"><strong>accent-600</strong>#C31C57</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--accent-700)"></div><div class="ds-swatch-label"><strong>accent-700</strong>#96123F</div></div>
+</div>
+</div>
+
+<div class="ds-section">
+<h2>Couleurs — Statut</h2>
+<div class="ds-swatches">
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--success)"></div><div class="ds-swatch-label"><strong>success</strong>#22C55E</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--warning)"></div><div class="ds-swatch-label"><strong>warning</strong>#EAA83D</div></div>
+<div class="ds-swatch"><div class="ds-swatch-color" style="background:var(--danger)"></div><div class="ds-swatch-label"><strong>danger</strong>#EF4444</div></div>
+</div>
+</div>
+
+<div class="ds-section">
+<h2>Dégradés signature</h2>
+<div class="ds-gradient-row">
+<div class="ds-gradient-box" style="background:var(--gradient-primary)">gradient-primary</div>
+<div class="ds-gradient-box" style="background:var(--gradient-fitz)">gradient-fitz (signature Fitz)</div>
+</div>
+</div>
+
+<div class="ds-section">
+<h2>Typographie — Sora (titres) / Inter (texte)</h2>
+<div class="ds-type-row"><span class="tag">fs-hero</span><span style="font-family:var(--font-display);font-size:var(--fs-hero);font-weight:700;">Étudier à l'étranger</span></div>
+<div class="ds-type-row"><span class="tag">fs-h1</span><span style="font-family:var(--font-display);font-size:var(--fs-h1);font-weight:700;">Titre principal</span></div>
+<div class="ds-type-row"><span class="tag">fs-h2</span><span style="font-family:var(--font-display);font-size:var(--fs-h2);font-weight:700;">Titre de section</span></div>
+<div class="ds-type-row"><span class="tag">fs-body</span><span style="font-family:var(--font-body);font-size:var(--fs-body);">Texte courant, celui des paragraphes.</span></div>
+<div class="ds-type-row"><span class="tag">fs-small</span><span style="font-family:var(--font-body);font-size:var(--fs-small);color:var(--text-light);">Texte secondaire / méta-donnée.</span></div>
+<div class="ds-type-row"><span class="tag">fs-caption</span><span style="font-family:var(--font-body);font-size:var(--fs-caption);color:var(--text-muted);">Légende / label discret.</span></div>
+</div>
+
+<div class="ds-section">
+<h2>Espacement — grille 8pt</h2>
+<div class="ds-space-row"><span>space-2xs (4px)</span><div class="ds-space-bar" style="width:var(--space-2xs)"></div></div>
+<div class="ds-space-row"><span>space-xs (8px)</span><div class="ds-space-bar" style="width:var(--space-xs)"></div></div>
+<div class="ds-space-row"><span>space-sm (16px)</span><div class="ds-space-bar" style="width:var(--space-sm)"></div></div>
+<div class="ds-space-row"><span>space-md (24px)</span><div class="ds-space-bar" style="width:var(--space-md)"></div></div>
+<div class="ds-space-row"><span>space-lg (40px)</span><div class="ds-space-bar" style="width:var(--space-lg)"></div></div>
+<div class="ds-space-row"><span>space-xl (72px)</span><div class="ds-space-bar" style="width:var(--space-xl)"></div></div>
+</div>
+
+<div class="ds-section">
+<h2>Rayons de bordure</h2>
+<div class="ds-radius-row">
+<div class="ds-radius-box" style="border-radius:var(--radius-xs)">xs 6px</div>
+<div class="ds-radius-box" style="border-radius:var(--radius-sm)">sm 10px</div>
+<div class="ds-radius-box" style="border-radius:var(--radius-md)">md 14px</div>
+<div class="ds-radius-box" style="border-radius:var(--radius-lg)">lg 20px</div>
+<div class="ds-radius-box" style="border-radius:var(--radius-full)">full</div>
+</div>
+</div>
+
+</body>
+</html>

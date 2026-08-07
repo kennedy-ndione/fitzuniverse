@@ -1,0 +1,76 @@
+<!-- @dsCard group="Composants" -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scholarship Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../scholarships.css">
+<style>
+body{padding:40px;background:var(--background-soft);}
+.ds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:900px;}
+</style>
+</head>
+<body>
+
+<div class="ds-grid">
+
+<div class="card scholarship-card">
+<div class="scholarship-card-media">
+<img src="../assets/images/cities/rome.jpg" alt="" loading="lazy">
+<span class="scholarship-card-status is-open">Ouverte</span>
+</div>
+<div class="scholarship-card-top">
+<div class="scholarship-card-country">
+<span class="scholarship-card-country-icon"><i data-lucide="globe"></i></span>
+<span>Italie</span>
+</div>
+</div>
+<div class="scholarship-card-body">
+<h3>Bourse d'excellence italienne</h3>
+<p class="scholarship-card-desc">Bourse d'excellence pour étudiants internationaux en Master et Doctorat.</p>
+<div class="scholarship-card-meta">
+<span class="scholarship-card-chip"><i data-lucide="graduation-cap"></i>Master</span>
+<span class="scholarship-card-chip is-funding"><i data-lucide="coins"></i>Intégralement financé</span>
+</div>
+<button type="button" class="scholarship-card-cta details-btn">
+<span>Voir les universités partenaires</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</div>
+</div>
+
+<div class="card scholarship-card">
+<div class="scholarship-card-media">
+<img src="../assets/images/cities/tokyo.jpg" alt="" loading="lazy">
+<span class="scholarship-card-status">Fermée</span>
+</div>
+<div class="scholarship-card-top">
+<div class="scholarship-card-country">
+<span class="scholarship-card-country-icon"><i data-lucide="globe"></i></span>
+<span>Japon</span>
+</div>
+</div>
+<div class="scholarship-card-body">
+<h3>Bourse d'excellence japonaise</h3>
+<p class="scholarship-card-desc">Bourse doctorale d'excellence, ouverte aux candidats internationaux.</p>
+<div class="scholarship-card-meta">
+<span class="scholarship-card-chip"><i data-lucide="graduation-cap"></i>Doctorat</span>
+</div>
+<button type="button" class="scholarship-card-cta details-btn">
+<span>Voir les universités partenaires</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</div>
+</div>
+
+</div>
+
+<script>if (window.lucide) lucide.createIcons();</script>
+</body>
+</html>
