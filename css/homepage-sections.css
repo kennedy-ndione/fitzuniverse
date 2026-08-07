@@ -387,8 +387,7 @@ transition:transform .4s var(--ease-premium), background-color .4s var(--ease-pr
 
 }
 
-.info-card:hover .card-icon,
-.feature-card:hover .card-icon{
+.info-card:hover .card-icon{
 
 transform:scale(1.1) rotate(-6deg);
 
@@ -613,96 +612,13 @@ color:var(--text-light);
 FONCTIONNALITÉS
 ========================================================== */
 
-.pillars-grid{
-display:flex;
-flex-direction:column;
-gap:56px;
-}
-
-.pillar-group-head{
-display:flex;
-align-items:baseline;
-gap:14px;
-margin-bottom:24px;
-}
-
-.pillar-group-index{
-font-family:var(--font-display);
-font-size:var(--fs-small);
-font-weight:700;
-color:var(--accent-color);
-letter-spacing:var(--ls-wide);
-}
-
-.pillar-group-head h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h3);
-letter-spacing:var(--ls-snug);
-color:var(--primary-dark);
-}
-
-.pillar-group .features-grid{
-grid-template-columns:repeat(2,1fr);
-}
-
-@media(max-width:768px){
-.pillar-group .features-grid{grid-template-columns:1fr;}
-}
-
-.features-grid .feature-card{
-display:flex;
-flex-direction:column;
-background:var(--background);
-border:1px solid var(--border-color);
-border-radius:var(--radius-md);
-padding:32px 28px;
-box-shadow:var(--shadow-sm);
-transition:transform .25s var(--ease-premium), box-shadow .25s var(--ease-premium), border-color .25s var(--ease-premium);
-}
-
-.feature-card:hover{
-transform:translateY(-6px);
-box-shadow:var(--shadow-md);
-border-color:rgba(51,65,140,.20);
-}
-
-.feature-card-disabled{
-opacity:.6;
-cursor:default;
-}
-
-html.js-ready .feature-card-disabled.reveal.is-visible{
-opacity:.6;
-}
-
-.feature-card-disabled:hover{
-transform:none;
-box-shadow:var(--shadow-sm);
-border-color:var(--border-color);
-}
-
-.feature-card-disabled:hover .card-icon{
-transform:none;
-background:rgba(51,65,140,.07);
-color:var(--primary-color);
-}
-
-.feature-card h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-line-height:var(--lh-snug);
-margin-bottom:10px;
-color:var(--text-color);
-}
-
-.feature-card p{
-font-size:var(--fs-small);
-color:var(--text-light);
-line-height:var(--lh-relaxed);
-flex:1;
-}
+/* .pillars-grid/.pillar-group*/.features-grid/.feature-card(-disabled)/
+.feature-link-soon retirés le 2026-08-07 : confirmés morts (aucune
+référence dans index.html ni scholarships.html, les deux pages qui
+chargent ce fichier, ni dans aucun .js du dépôt) — restes de l'ancienne
+section "Fonctionnalités" d'avant sa fusion avec "Comment ça
+fonctionne". .feature-link reste : les 3 .step le réutilisent depuis
+cette fusion (voir index.html, liens "Démarrer mon analyse" etc.). */
 
 .feature-link{
 display:inline-flex;
@@ -720,31 +636,9 @@ height:16px;
 transition:transform .25s ease;
 }
 
-/* Les 3 étapes réutilisent .feature-link depuis la fusion des sections
-"Comment ça fonctionne" et "Fonctionnalités" : l'animation de flèche
-n'était accrochée qu'au survol d'une .feature-card. */
 .step:hover .feature-link i,
-.feature-card:hover .feature-link i,
-.step:hover .feature-link svg,
-.feature-card:hover .feature-link svg{
+.step:hover .feature-link svg{
 transform:translateX(4px);
-}
-
-.feature-link-soon{
-color:var(--text-muted);
-font-weight:600;
-}
-
-.feature-link-soon i,
-.feature-link-soon svg{
-width:14px;
-height:14px;
-transition:none;
-}
-
-.feature-card-disabled:hover .feature-link-soon i,
-.feature-card-disabled:hover .feature-link-soon svg{
-transform:none;
 }
 
 /* ==========================================================
