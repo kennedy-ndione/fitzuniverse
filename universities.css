@@ -537,7 +537,11 @@ backdrop-filter:blur(8px);
 
 -webkit-backdrop-filter:blur(8px);
 
-color:var(--text-muted);
+/* --text-muted (#626E83) est calibré pour un fond CLAIR — ici le
+badge est sur un fond sombre (rgba(15,23,42,.72)), où il ne tient que
+~3,5:1. rgba(255,255,255,.7) garde l'effet "discret" par l'opacité
+plutôt que par une teinte grise, et tient 9,1:1. */
+color:rgba(255,255,255,.7);
 
 }
 

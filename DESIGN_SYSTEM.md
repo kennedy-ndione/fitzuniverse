@@ -25,7 +25,7 @@ Piliers à ne jamais réintroduire sans raison :
 | Accent foncé (texte sur fond clair) | `--accent-600` | `#6459B8` |
 | Accent très clair | `--accent-100` | `#EEEAFB` |
 | Succès / Avertissement / Danger | `--success` / `--warning` / `--danger` | `#22C55E` / `#EAA83D` / `#EF4444` |
-| Texte principal / secondaire / discret | `--text-color` / `--text-light` / `--text-muted` | `#0F172A` / `#64748B` / `#94A3B8` |
+| Texte principal / secondaire / discret | `--text-color` / `--text-light` / `--text-muted` | `#0F172A` / `#475569` / `#626E83` |
 | Fonds | `--background` / `--background-soft` / `--background-alt` | `#FFFFFF` / `#F8FAFC` / `#F1F5F9` |
 | Bordure | `--border-color` | `#E2E8F0` |
 

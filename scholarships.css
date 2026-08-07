@@ -372,7 +372,9 @@ letter-spacing:.03em;
 
 background:rgba(148,163,184,.15);
 
-color:var(--text-muted);
+/* --text-muted ne tenait que 4,55:1 sur ce fond teinté — marge quasi
+nulle sous le seuil AA de 4,5:1. --text-light tient 6,7:1. */
+color:var(--text-light);
 
 }
 

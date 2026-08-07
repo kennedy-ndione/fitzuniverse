@@ -341,7 +341,9 @@ border-radius:var(--radius-sm);
 display:flex;
 align-items:center;
 justify-content:center;
-color:var(--text-muted);
+/* --text-muted ne tient que ~3,5:1 sur ce panneau verre posé sur le
+fond assombri de .apps-modal — --text-light passe l'AA (~5,1:1). */
+color:var(--text-light);
 background:transparent;
 border:none;
 cursor:pointer;
