@@ -87,7 +87,7 @@ ${checks.map((c) => `
 </li>
 `).join("")}
 </ul>
-<a href="offers.html" class="btn btn-primary btn-sm">
+<a href="offers.html" class="btn btn-secondary btn-sm">
 <span>Renforcer mon dossier avec Fitz</span>
 <i data-lucide="arrow-right"></i>
 </a>

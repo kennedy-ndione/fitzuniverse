@@ -434,9 +434,11 @@ color:var(--text-color);
 
 .btn-secondary:hover{
 
-border-color:var(--primary-color);
+border-color:var(--text-light);
 
-color:var(--primary-color);
+color:var(--text-color);
+
+background:var(--background-soft);
 
 }
 

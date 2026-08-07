@@ -443,9 +443,9 @@ border:none;
 
 border-radius:var(--radius-md);
 
-background:var(--gradient-primary);
+background:var(--amber-500);
 
-color:#fff;
+color:var(--primary-900);
 
 font-family:"Inter",sans-serif;
 
@@ -470,7 +470,7 @@ height:20px;
 
 button#startButton:hover{
 
-background:var(--primary-700);
+background:var(--amber-600);
 
 transform:translateY(-2px);
 
