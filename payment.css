@@ -1561,6 +1561,20 @@ border-radius:0;
 
 }
 
+/* Wave (2026-08-07) : logo officiel PNG (icône + wordmark), remplace
+l'ancienne icône dessinée à la main. Hauteur calée sur Orange Money
+(l'autre logo tiers "officiel" de la rangée) pour qu'aucun des deux
+ne ressorte plus gros que l'autre. */
+.trust-logo-wave img{
+
+display:block;
+
+width:auto;
+
+height:16px;
+
+}
+
 .activation-result[hidden]{
 
 display:none;
