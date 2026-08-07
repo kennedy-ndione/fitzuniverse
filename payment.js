@@ -6,13 +6,40 @@
 // dans SCHOLARBRIDGE_PLANS. Aucune clé secrète ni appel PayDunya ici :
 // voir requestActivation() plus bas pour l'architecture prévue.
 //
-// Cette page n'avait jusqu'ici aucune vérification de connexion — un
-// visiteur non identifié pouvait l'atteindre directement. Un paiement
-// devant toujours être rattaché à un compte, elle exige désormais une
-// session valide (js/access-guard.js), sans condition de formule
-// puisque c'est justement la page qui sert à en changer.
+// Compte : cette page est désormais le SEUL endroit du site où un
+// compte peut être créé (signup.html a été retiré — voir le commit
+// dédié). Un visiteur anonyme voit donc un formulaire de compte en
+// plus du récapitulatif ; un visiteur déjà connecté (qui change de
+// formule) ne le voit pas. resolveSession() ne redirige jamais ici,
+// contrairement à requireAuth() utilisé ailleurs sur le site :
+// l'absence de session est un état normal sur cette page (visiteur
+// pas encore client), pas une erreur d'accès.
+//
+// Le compte est créé (Auth + Firestore) au moment où l'activation est
+// confirmée, PAS avant — voir ensureAccount()/initActivation() plus
+// bas : tant que le vrai backend de paiement n'existe pas, aucun
+// champ `plan` n'est écrit à la création (seulement `pendingPlan`, à
+// titre informatif pour le suivi admin) pour ne jamais donner d'accès
+// payant réel sans paiement réellement vérifié.
 
-import { requireAuth } from "./js/access-guard.js";
+import { auth, db } from "./firebase-config.js";
+import { resolveSession } from "./js/access-guard.js";
+import {
+createUserWithEmailAndPassword,
+updateProfile
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+doc,
+setDoc,
+updateDoc,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {
+showFormError,
+clearFormError,
+getAuthErrorMessage
+} from "./auth-ui.js";
+import { trackEvent } from "./js/analytics.js";
 
 const FITZ_MESSAGES = [
 "Fitz vous accompagnera dès la validation de votre paiement.",
@@ -143,6 +170,139 @@ label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)
 
 }
 
+// Affiche le formulaire de compte uniquement pour un visiteur anonyme
+// — un utilisateur déjà connecté change simplement de formule.
+function initAccountSection(session) {
+
+const section = document.getElementById("accountSection");
+
+if (!section) return;
+
+section.hidden = !!session;
+
+}
+
+function buildDefaultUserDoc(uid, name, email, planId) {
+return {
+uid,
+name,
+email,
+createdAt: serverTimestamp(),
+// Intention, pas un accès : voir ensureAccount() ci-dessous.
+pendingPlan: planId,
+pendingPlanRequestedAt: serverTimestamp(),
+profile: {
+originCountry: "",
+age: "",
+currentDegree: "",
+academicAverage: "",
+englishLevel: "",
+desiredField: "",
+desiredCountry: ""
+}
+};
+}
+
+// Valide le formulaire de compte (mêmes règles que l'ancien
+// signup.js) et affiche l'erreur correspondante dans #accountForm.
+// Retourne null si invalide, {name,email,password} sinon.
+function readAccountFields() {
+
+const form = document.getElementById("accountForm");
+const nameInput = document.getElementById("accountName");
+const emailInput = document.getElementById("accountEmail");
+const passwordInput = document.getElementById("accountPassword");
+const confirmPasswordInput = document.getElementById("accountConfirmPassword");
+const termsInput = document.getElementById("accountTerms");
+
+const name = nameInput.value.trim();
+const email = emailInput.value.trim().toLowerCase();
+const password = passwordInput.value;
+const confirmPassword = confirmPasswordInput.value;
+
+if (!name || !email || !password || !confirmPassword) {
+showFormError(form, "Merci de remplir tous les champs pour continuer.");
+return null;
+}
+
+if (name.length < 2) {
+showFormError(form, "Merci d'indiquer votre nom complet.");
+nameInput.focus();
+return null;
+}
+
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+showFormError(form, "Vérifiez le format de votre adresse e-mail.");
+emailInput.focus();
+return null;
+}
+
+if (password.length < 8) {
+showFormError(form, "Votre mot de passe a besoin d'au moins 8 caractères.");
+passwordInput.focus();
+return null;
+}
+
+if (!/[A-Z]/.test(password)) {
+showFormError(form, "Votre mot de passe a besoin d'au moins une majuscule.");
+passwordInput.focus();
+return null;
+}
+
+if (!/[0-9]/.test(password)) {
+showFormError(form, "Votre mot de passe a besoin d'au moins un chiffre.");
+passwordInput.focus();
+return null;
+}
+
+if (password !== confirmPassword) {
+showFormError(form, "Vérifiez que les deux mots de passe soient identiques.");
+confirmPasswordInput.focus();
+return null;
+}
+
+if (termsInput && !termsInput.checked) {
+showFormError(form, "Merci d'accepter les conditions d'utilisation pour continuer.");
+return null;
+}
+
+clearFormError(form);
+
+return { name, email, password };
+
+}
+
+// Crée le compte (visiteur anonyme) ou associe l'intention de formule
+// au compte existant (déjà connecté). Ne pose JAMAIS `plan` lui-même,
+// à la création comme à la mise à jour : seul un backend de confiance
+// ou un administrateur (voir firestore.rules) peut activer une
+// formule payante — voir le commentaire ACTIVATION plus bas.
+async function ensureAccount(session, plan, fields) {
+
+if (session) {
+
+await updateDoc(doc(db, "users", session.user.uid), {
+pendingPlan: plan.id,
+pendingPlanRequestedAt: serverTimestamp()
+});
+
+return session.user.uid;
+
+}
+
+const credential = await createUserWithEmailAndPassword(auth, fields.email, fields.password);
+
+await updateProfile(credential.user, { displayName: fields.name });
+
+await setDoc(
+doc(db, "users", credential.user.uid),
+buildDefaultUserDoc(credential.user.uid, fields.name, fields.email, plan.id)
+);
+
+return credential.user.uid;
+
+}
+
 // ==========================================================
 // ACTIVATION — point d'entrée du futur backend (non codé ici)
 // ==========================================================
@@ -177,7 +337,7 @@ setTimeout(() => resolve({ plan: plan.id, method }), 900);
 
 }
 
-function initActivation(plan) {
+function initActivation(plan, session) {
 
 const button = document.getElementById("activateButton");
 const label = document.getElementById("activateButtonLabel");
@@ -190,35 +350,70 @@ wave: "Wave",
 card: "carte bancaire"
 };
 
-button.addEventListener("click", () => {
+button.addEventListener("click", async () => {
 
 const method = document.querySelector('input[name="paymentMethod"]:checked');
 
 if (!method) return;
 
+const isNewAccount = !session;
+let fields = null;
+
+if (isNewAccount) {
+
+fields = readAccountFields();
+
+if (!fields) return;
+
+}
+
 button.disabled = true;
 button.classList.add("is-loading");
 label.textContent = "Activation en cours...";
 
-requestActivation(plan, method.value).then(() => {
+let uid;
 
-import("./js/analytics.js").then((m) => m.trackEvent("payment_attempted", { plan: plan.id, method: method.value }));
+try {
+
+uid = await ensureAccount(session, plan, fields);
+
+} catch (error) {
+
+console.error(error);
+showFormError(document.getElementById("accountForm"), getAuthErrorMessage(error));
+button.classList.remove("is-loading");
+button.disabled = false;
+label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)} FCFA`;
+return;
+
+}
+
+await requestActivation(plan, method.value);
+
+trackEvent(isNewAccount ? "signup" : "payment_attempted", { plan: plan.id, method: method.value, uid });
 
 button.classList.remove("is-loading");
 button.disabled = false;
 label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)} FCFA`;
 
-resultText.textContent = `${plan.label} via ${methodLabels[method.value]} — le paiement sécurisé PayDunya sera activé très prochainement. Nous vous recontacterons dès l'ouverture des paiements.`;
+resultText.textContent = `${plan.label} via ${methodLabels[method.value]} — le paiement sécurisé PayDunya sera activé très prochainement. Nous vous recontacterons dès l'ouverture des paiements. Redirection vers votre tableau de bord...`;
 result.hidden = false;
 result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-});
+// Mêmes drapeaux que l'ancien signup.js / que le flux d'upgrade déjà
+// prévu dans dashboard.js — voir le commentaire ACTIVATION plus haut.
+if (isNewAccount) sessionStorage.setItem("just_created", "true");
+sessionStorage.setItem("just_upgraded", plan.label);
+
+setTimeout(() => {
+window.location.href = "dashboard.html";
+}, 2200);
 
 });
 
 }
 
-requireAuth().then(() => {
+function bootstrap(session) {
 
 const planId = getRequestedPlanId();
 
@@ -231,12 +426,24 @@ return;
 
 const plan = SCHOLARBRIDGE_PLANS[planId];
 
+initAccountSection(session);
 renderPlan(plan);
 initFitzRotator();
 initPaymentMethods(plan);
-initActivation(plan);
+initActivation(plan, session);
 initReveal();
 
 if (window.lucide) lucide.createIcons();
+
+}
+
+resolveSession().then(bootstrap).catch((error) => {
+
+// Une session qu'on n'arrive pas à vérifier doit se comporter comme
+// une absence de session (formulaire de compte affiché) plutôt que
+// de bloquer la page : voir la note en tête de fichier sur
+// resolveSession() vs requireAuth().
+console.error("Vérification de session ignorée sur la page de paiement :", error);
+bootstrap(null);
 
 });
