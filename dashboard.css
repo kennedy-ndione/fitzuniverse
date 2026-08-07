@@ -65,7 +65,7 @@ body{
 
 background:
 radial-gradient(circle at 15% -10%,rgba(51,65,140,.28),transparent 45%),
-radial-gradient(circle at 100% 0%,rgba(230,58,110,.16),transparent 40%),
+radial-gradient(circle at 100% 0%,rgba(126,113,216,.16),transparent 40%),
 var(--background-soft);
 
 background-attachment:fixed;
@@ -89,7 +89,7 @@ a.tool-card:focus-visible,
 
 outline:none;
 
-box-shadow:0 0 0 3px rgba(230,58,110,.5);
+box-shadow:0 0 0 3px rgba(126,113,216,.5);
 
 }
 
@@ -959,7 +959,7 @@ background:var(--background-light);
 
 .messages-panel-item.is-unread{
 
-background:rgba(230,58,110,.08);
+background:rgba(126,113,216,.08);
 
 }
 
@@ -1105,9 +1105,9 @@ font-size:.88rem;
 
 .welcome-alert-accompagnement{
 
-background:rgba(230,58,110,.10);
+background:rgba(126,113,216,.10);
 
-border-color:rgba(230,58,110,.28);
+border-color:rgba(126,113,216,.28);
 
 }
 
@@ -1380,7 +1380,7 @@ transform:translateY(-4px);
 
 box-shadow:var(--shadow-md);
 
-border-color:rgba(230,58,110,.35);
+border-color:rgba(126,113,216,.35);
 
 }
 
@@ -1680,7 +1680,7 @@ transform:translateY(-4px);
 
 box-shadow:var(--shadow-md);
 
-border-color:rgba(230,58,110,.35);
+border-color:rgba(126,113,216,.35);
 
 }
 

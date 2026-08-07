@@ -155,13 +155,25 @@ transition:color .3s ease;
 
 .logo .bridge{
 
-color:var(--accent-color);
+color:var(--amber-500);
+
+transition:color .3s ease;
 
 }
 
 .header.is-scrolled .logo .scholar{
 
 color:var(--primary-dark);
+
+}
+
+/* --amber-500 (2,16:1 sur blanc) ne tient l'AA que sur le voile sombre
+du hero. Une fois le header scrollé sur fond clair, on bascule sur
+--amber-700 (5,8:1), seule valeur ambre admise pour du texte sur fond
+clair — voir la note sur --amber-700 dans css/base.css. */
+.header.is-scrolled .logo .bridge{
+
+color:var(--amber-700);
 
 }
 

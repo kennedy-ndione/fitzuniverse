@@ -31,46 +31,38 @@ a désormais son propre système de couleur, découplé de --accent-*.
 --primary-hover:var(--primary-700);
 --primary-dark:var(--primary-900);
 
---accent-100:#FBE4EA;
+--accent-100:#EEEAFB;
+--accent-500:#7E71D8;
+--accent-600:#6459B8;
+--accent-color:var(--accent-500);
 
 /* ==========================================================
-ACCENT ROSE FRAMBOISE (2026-08-06) — remplace la direction bleu/violet
-+ ambre validée le 2026-08-02. Le bleu marine (--primary-*) reste le
-fond structurel dominant du site ; le rose devient LA couleur de mise
-en avant (CTA, badges, icônes de points forts), à la place du violet
-discret (--accent-500/600) et de l'ambre (--amber-*), tous deux
-retirés. Choisie pour renouer avec le rose/framboise du logo et du
-héros d'origine (avant la migration bleue).
+ACCENT AMBRE (2026-08-02) — vie et touche premium sur un site que le
+bleu rend sérieux mais un peu froid. Le bleu reste dominant.
+
+CE N'EST PAS L'ANCIEN OR. #D4A24C (thème marron/or abandonné) était
+un or éteint, désaturé, pensé pour aller avec du bordeaux. Celui-ci
+est un ambre franc, +22 points de saturation, choisi pour tenir face
+au bleu profond. Ne jamais réintroduire #D4A24C ni #8B1E3F.
 
 RÈGLE D'EMPLOI — par petites touches, jamais en fond de section
 large. Réservé au CTA principal, aux badges de mise en avant, aux
-icônes de points forts. Viser moins de 10-15% de la surface visible —
-inchangé par rapport à la règle qui régissait l'ambre.
+icônes de points forts et aux soulignements de titres clés. Viser
+moins de 10-15% de la surface visible.
 
-  --accent-500 (rose framboise)  SURFACES uniquement (fond de bouton,
-               de badge, de pastille). Avec un libellé blanc gras :
-               4,05:1 (AA texte large/composants UI, seuil 3:1). Sur
-               blanc il ne fait que 4,05:1 en couleur de TEXTE — passe
-               tout juste large/gras, insuffisant pour du texte normal
-               (<18px non gras, seuil 4,5:1) : préférer --accent-700
-               dans ce cas.
-  --accent-600 survol de ces mêmes surfaces (5,87:1 avec un libellé
-               blanc) — également utilisable comme texte rose sur fond
-               blanc (AA texte normal).
-  --accent-700 la SEULE valeur admise pour du texte ou une icône rose
-               sur fond clair quand la lisibilité prime : 7,75:1 sur
-               blanc (AAA).
-
-Sur le voile sombre du héros (~--primary-900) : --accent-500 tient
-4,4:1 (AA composants/texte large), --accent-600 8,3:1. --accent-700
-n'est PAS destiné aux fonds sombres — réservé aux fonds clairs, comme
-l'était --amber-700.
+  --amber-500  SURFACES uniquement (fond de bouton, de badge, de
+               pastille). Toujours avec un libellé --primary-900 :
+               8,24:1. Sur blanc il ne fait que 2,16:1 — donc jamais
+               en couleur de texte sur fond clair.
+  --amber-600  survol de ces mêmes surfaces (5,85:1 avec le libellé).
+  --amber-700  la SEULE valeur admise pour du texte ou une icône
+               ambre sur fond clair : 5,8 / 5,5 / 5,3 sur --background,
+               --background-soft et --background-alt.
 ========================================================== */
 
---accent-500:#E63A6E;
---accent-600:#C31C57;
---accent-700:#96123F;
---accent-color:var(--accent-500);
+--amber-500:#E9A319;
+--amber-600:#C9860B;
+--amber-700:#8A5D00;
 
 --success:#22C55E;
 --warning:#EAA83D;
@@ -448,15 +440,14 @@ color:var(--primary-color);
 
 }
 
-/* CTA principal d'une page — le rose le détache des boutons bleus
-courants. Un seul par page : si deux boutons rose se retrouvent à
-l'écran, aucun des deux ne ressort. Libellé blanc gras : 4,05:1 sur
---accent-500, seuil AA des composants/texte large respecté. */
+/* CTA principal d'une page — l'ambre le détache des boutons bleus
+courants sans que la page devienne dorée. Un seul par page : si deux
+boutons ambre se retrouvent à l'écran, aucun des deux ne ressort. */
 .btn-accent{
 
-background:var(--accent-500);
+background:var(--amber-500);
 
-color:#fff;
+color:var(--primary-900);
 
 font-weight:var(--fw-bold);
 
@@ -464,7 +455,7 @@ font-weight:var(--fw-bold);
 
 .btn-accent:hover{
 
-background:var(--accent-600);
+background:var(--amber-600);
 
 transform:translateY(-1px);
 
@@ -474,7 +465,7 @@ box-shadow:var(--shadow-sm);
 
 .btn-accent:focus-visible{
 
-box-shadow:0 0 0 4px rgba(230,58,110,.4);
+box-shadow:0 0 0 4px rgba(233,163,25,.4);
 
 }
 
@@ -903,7 +894,7 @@ bordure d'accent, pas par une ombre plus spectaculaire ;
 
 .card--featured{
 
-border-color:rgba(230,58,110,.4);
+border-color:rgba(126,113,216,.4);
 
 box-shadow:var(--shadow-md);
 

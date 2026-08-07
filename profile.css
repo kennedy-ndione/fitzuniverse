@@ -942,7 +942,7 @@ nouveau plafond) + une bordure d'accent, pour marquer la hiérarchie
 par la bordure plutôt que par une ombre plus grosse (règle du
 Design System 2.0). Fond fixé en sombre (pas var(--background)) car
 cette barre doit rester lisible même si migrée vers une page claire. */
-border:1px solid rgba(230,58,110,.4);
+border:1px solid rgba(126,113,216,.4);
 
 box-shadow:var(--shadow-lg);
 

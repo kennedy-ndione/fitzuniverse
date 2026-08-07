@@ -69,7 +69,7 @@ Elle est posée SOUS les voiles marine, jamais par-dessus le texte. */
 background:
 linear-gradient(to bottom,rgba(9,12,28,.62) 0%,rgba(9,12,28,0) 140px),
 linear-gradient(100deg,rgba(12,16,38,.92) 0%,rgba(18,24,54,.80) 30%,rgba(28,34,72,.42) 56%,rgba(28,34,72,.18) 82%,transparent 100%),
-radial-gradient(ellipse 60% 55% at 88% 10%,rgba(230,58,110,.18) 0%,transparent 62%),
+radial-gradient(ellipse 60% 55% at 88% 10%,rgba(233,163,25,.18) 0%,transparent 62%),
 linear-gradient(to top,var(--primary-dark) 0%,rgba(20,25,52,.35) 20%,transparent 42%);
 
 }
@@ -174,11 +174,10 @@ color:#fff;
 
 }
 
-/* Icônes de points forts en rose plutôt qu'en vert : le vert porte
+/* Icônes de points forts en ambre plutôt qu'en vert : le vert porte
 partout ailleurs sur le site le sens "inclus / validé" (listes de
 formules, coches). Ici ce sont des arguments, pas des cases cochées.
-Sur la photo assombrie (~--primary-900), --accent-500 tient 4,4:1 —
-au-dessus du seuil AA 3:1 des icônes/composants non textuels. */
+Sur la photo assombrie, l'ambre ressort à plus de 8:1. */
 /* Le sélecteur vise AUSSI svg : Lucide remplace chaque <i data-lucide>
 par un <svg>, donc une règle "… i{}" ne l'atteint jamais une fois la
 page initialisée. C'est pour cette raison que ces icônes étaient
@@ -190,7 +189,7 @@ width:18px;
 
 height:18px;
 
-color:var(--accent-500);
+color:var(--amber-500);
 
 }
 
