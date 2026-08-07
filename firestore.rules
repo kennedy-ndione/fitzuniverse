@@ -76,9 +76,19 @@ get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive =
 // Express gratuitement. Le futur backend de paiement, une fois
 // construit, agira avec des privilèges admin (Cloud Function), pas
 // avec le compte de l'étudiant.
+// allow create : même liste de champs interdits qu'à la mise à jour
+// (2026-08-07, retrait de l'inscription libre). Avant ce correctif,
+// isOwner(uid) suffisait SEUL à la création, sans restriction de
+// champ — le trou décrit plus haut pour "update" existait de façon
+// identique à la création : un visiteur pouvait s'inscrire (Auth) puis
+// écrire lui-même n'importe quel `plan` dans le tout premier
+// setDoc(), avant même qu'une règle "update" n'entre en jeu. Le
+// compte se crée désormais uniquement depuis payment.js
+// (ensureAccount()), qui n'écrit jamais "plan" — seul "pendingPlan"
+// (hors de cette liste, informatif, sans effet sur l'accès).
 match /users/{uid} {
 allow read: if isOwner(uid) || isAdmin();
-allow create: if isOwner(uid);
+allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"]);
 allow update: if (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"])) ||
 (isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"]));
 allow delete: if isOwner(uid);
