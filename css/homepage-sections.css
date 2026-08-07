@@ -340,7 +340,7 @@ border:1px solid rgba(226,232,240,.8);
 
 border-radius:var(--radius-lg);
 
-padding:38px 34px;
+padding:26px 24px;
 
 box-shadow:var(--shadow-sm);
 
@@ -365,9 +365,9 @@ border-color:rgba(51,65,140,.22);
 
 .card-icon{
 
-width:64px;
+width:44px;
 
-height:64px;
+height:44px;
 
 display:flex;
 
@@ -381,7 +381,7 @@ background:rgba(51,65,140,.07);
 
 color:var(--primary-color);
 
-margin-bottom:24px;
+margin-bottom:16px;
 
 transition:transform .4s var(--ease-premium), background-color .4s var(--ease-premium), color .4s var(--ease-premium);
 
@@ -400,8 +400,8 @@ color:#fff;
 
 .card-icon i,
 .card-icon svg{
-width:30px;
-height:30px;
+width:20px;
+height:20px;
 }
 
 .info-card h3{
@@ -413,7 +413,7 @@ font-weight:var(--fw-bold);
 
 letter-spacing:-.015em;
 
-margin-bottom:12px;
+margin-bottom:8px;
 
 color:var(--text-color);
 
@@ -485,7 +485,7 @@ border:1px solid rgba(226,232,240,.8);
 
 border-radius:var(--radius-lg);
 
-padding:46px 34px 34px;
+padding:32px 24px 24px;
 
 box-shadow:var(--shadow-sm);
 
@@ -509,9 +509,9 @@ border-color:rgba(51,65,140,.20);
 
 position:absolute;
 
-top:24px;
+top:16px;
 
-right:24px;
+right:16px;
 
 font-size:2rem;
 
@@ -546,11 +546,11 @@ align-items:center;
 
 justify-content:center;
 
-width:68px;
+width:46px;
 
-height:68px;
+height:46px;
 
-margin-bottom:24px;
+margin-bottom:16px;
 
 border-radius:var(--radius-lg);
 
@@ -575,9 +575,9 @@ color:#fff;
 .step-icon i,
 .step-icon svg{
 
-width:30px;
+width:20px;
 
-height:30px;
+height:20px;
 
 }
 
@@ -592,7 +592,7 @@ font-weight:var(--fw-extrabold);
 
 letter-spacing:-.015em;
 
-margin-bottom:12px;
+margin-bottom:8px;
 
 color:var(--text-color);
 
@@ -624,7 +624,7 @@ cette fusion (voir index.html, liens "Démarrer mon analyse" etc.). */
 display:inline-flex;
 align-items:center;
 gap:6px;
-margin-top:18px;
+margin-top:12px;
 font-weight:600;
 color:var(--primary-color);
 }
@@ -708,17 +708,17 @@ backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
 border:1px solid rgba(255,255,255,.6);
 border-radius:var(--radius-lg);
-padding:32px 28px;
+padding:22px 20px;
 box-shadow:var(--shadow-lg);
 text-align:center;
 }
 
 .vision-card > i,
 .vision-card > svg{
-width:44px;
-height:44px;
+width:30px;
+height:30px;
 color:var(--primary-color);
-margin:0 auto 20px;
+margin:0 auto 14px;
 }
 
 .vision-card h3{
@@ -726,7 +726,7 @@ font-family:var(--font-display);
 font-weight:600;
 font-size:var(--fs-h3);
 letter-spacing:var(--ls-snug);
-margin-bottom:12px;
+margin-bottom:8px;
 color:var(--text-color);
 }
 
