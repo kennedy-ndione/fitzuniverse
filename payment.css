@@ -57,7 +57,7 @@ width:360px;
 
 height:360px;
 
-background:radial-gradient(circle,rgba(139,30,63,.22) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(51,65,140,.22) 0%,transparent 70%);
 
 animation:heroHaloA 24s ease-in-out infinite;
 
@@ -73,7 +73,7 @@ width:320px;
 
 height:320px;
 
-background:radial-gradient(circle,rgba(212,162,76,.2) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(126,113,216,.2) 0%,transparent 70%);
 
 animation:heroHaloB 28s ease-in-out infinite;
 
@@ -298,11 +298,12 @@ box-shadow:var(--shadow-md);
 
 }
 
-/* Fitz porte partout sur le site la même identité or-dominante
-(--gradient-fitz/--glow-fitz) et le même halo conique animé — voir
-css/hero.css .demo-avatar et css/ai-suite.css .fitz-avatar. Cet avatar
-utilisait encore --gradient-primary générique + un anneau qui pulse,
-une signature bespoke qui dupliquait sans réutiliser celle établie. */
+/* Fitz porte partout sur le site la même identité "aurore" violet/
+indigo/cyan (--gradient-fitz/--glow-fitz) et le même halo conique
+animé — voir css/hero.css .demo-avatar et css/ai-suite.css
+.fitz-avatar. Cet avatar avait son propre anneau ::before resté sur
+l'ancien halo or/marron abandonné au lieu de reprendre ces mêmes
+teintes. */
 .fitz-showcase-avatar{
 
 position:relative;
@@ -352,7 +353,7 @@ z-index:-1;
 
 border-radius:inherit;
 
-background:conic-gradient(from 0deg, #D4A24C, #B23358, #E8C077, #D4A24C);
+background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
 
 opacity:.55;
 
@@ -443,10 +444,10 @@ margin-bottom:36px;
 border-radius:var(--radius-lg);
 
 background:
-radial-gradient(circle at top right,rgba(212,162,76,.1),transparent 55%),
+radial-gradient(circle at top right,rgba(51,65,140,.1),transparent 55%),
 var(--background);
 
-border:1px solid rgba(212,162,76,.4);
+border:1px solid rgba(51,65,140,.4);
 
 box-shadow:var(--shadow-lg);
 
@@ -472,7 +473,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-box-shadow:0 10px 24px rgba(139,30,63,.32);
+box-shadow:0 10px 24px rgba(51,65,140,.32);
 
 }
 
@@ -623,7 +624,7 @@ RÉCAPITULATIF
 .summary-card{
 
 background:
-radial-gradient(circle at 100% 0%,rgba(139,30,63,.04),transparent 45%),
+radial-gradient(circle at 100% 0%,rgba(51,65,140,.04),transparent 45%),
 var(--background);
 
 border:1px solid var(--border-color);
@@ -689,9 +690,9 @@ height:18px;
 
 .summary-row-icon-accent{
 
-background:linear-gradient(135deg,rgba(212,162,76,.22),rgba(212,162,76,.1));
+background:linear-gradient(135deg,rgba(233,163,25,.22),rgba(233,163,25,.1));
 
-color:var(--accent-600);
+color:var(--amber-700);
 
 }
 
@@ -741,7 +742,7 @@ padding:16px 18px;
 
 border-radius:var(--radius-lg);
 
-background:linear-gradient(135deg,rgba(212,162,76,.1),rgba(139,30,63,.05));
+background:linear-gradient(135deg,rgba(233,163,25,.1),rgba(233,163,25,.05));
 
 border-bottom:none;
 
@@ -840,7 +841,7 @@ border:0;
 .payment-method{
 
 --method-color:var(--primary-color);
---method-glow:rgba(139,30,63,.28);
+--method-glow:rgba(51,65,140,.28);
 --method-tint:var(--background-light);
 
 display:block;

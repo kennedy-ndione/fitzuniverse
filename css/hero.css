@@ -470,9 +470,10 @@ margin-bottom:22px;
 }
 
 /* Ce premier "Fitz" que voit un visiteur doit porter la même
-signature or-dominant que le reste du site (dashboard, outils Fitz) —
-avant ce correctif il utilisait encore --gradient-primary générique,
-la seule apparition de Fitz sur le site à ne pas porter son identité. */
+signature "aurore" violet/indigo/cyan que le reste du site (dashboard,
+outils Fitz) — avant ce correctif il utilisait encore
+--gradient-primary générique, la seule apparition de Fitz sur le site
+à ne pas porter son identité. */
 .demo-avatar{
 
 position:relative;

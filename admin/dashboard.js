@@ -393,8 +393,8 @@ labels: days.map((d) => d.slice(5)),
 datasets: [{
 label: "Inscriptions",
 data: values,
-borderColor: "#D4A24C",
-backgroundColor: "rgba(212,162,76,.15)",
+borderColor: "#E9A319",
+backgroundColor: "rgba(233,163,25,.15)",
 tension: .35,
 fill: true,
 pointRadius: 0

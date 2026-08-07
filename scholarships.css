@@ -220,7 +220,7 @@ transform:translateY(-8px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(139,30,63,.2);
+border-color:rgba(51,65,140,.2);
 
 }
 
@@ -267,9 +267,9 @@ inset:0;
 
 background:
 
-linear-gradient(180deg, rgba(10,4,7,.35) 0%, rgba(10,4,7,.85) 100%),
+linear-gradient(180deg, rgba(9,12,28,.35) 0%, rgba(9,12,28,.85) 100%),
 
-linear-gradient(100deg, rgba(10,4,7,.95) 0%, rgba(20,7,12,.65) 45%, rgba(20,7,12,.3) 100%);
+linear-gradient(100deg, rgba(9,12,28,.95) 0%, rgba(18,22,46,.65) 45%, rgba(18,22,46,.3) 100%);
 
 }
 
@@ -331,7 +331,7 @@ height:38px;
 
 border-radius:12px;
 
-background:rgba(139,30,63,.08);
+background:rgba(51,65,140,.08);
 
 color:var(--primary-color);
 
@@ -483,9 +483,9 @@ font-weight:700;
 
 .scholarship-card-chip.is-funding{
 
-background:rgba(212,162,76,.14);
+background:rgba(233,163,25,.14);
 
-color:var(--accent-600);
+color:var(--amber-700);
 
 }
 

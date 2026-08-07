@@ -17,7 +17,7 @@ trois (--glass-border notamment n'avait plus la même opacité).
 
 --background:var(--shell-bg);
 --background-soft:var(--shell-surface);
---background-light:rgba(212,162,76,.12);
+--background-light:rgba(233,163,25,.12);
 
 --border-color:var(--shell-border);
 --glass-border:rgba(255,255,255,.08);
@@ -52,9 +52,9 @@ overflow-x:hidden;
 
 background:
 
-radial-gradient(circle at 15% -10%,rgba(139,30,63,.28),transparent 45%),
+radial-gradient(circle at 15% -10%,rgba(51,65,140,.28),transparent 45%),
 
-radial-gradient(circle at 100% 10%,rgba(212,162,76,.16),transparent 40%),
+radial-gradient(circle at 100% 10%,rgba(233,163,25,.16),transparent 40%),
 
 linear-gradient(155deg,#12192B 0%,#0F172A 55%,#0B1120 100%);
 
@@ -151,7 +151,7 @@ inset:-16px;
 
 border-radius:50%;
 
-background:radial-gradient(circle,rgba(212,162,76,.28) 0%,transparent 72%);
+background:radial-gradient(circle,rgba(233,163,25,.28) 0%,transparent 72%);
 
 filter:blur(18px);
 
@@ -364,7 +364,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 4px rgba(212,162,76,.15);
+box-shadow:0 0 0 4px rgba(233,163,25,.15);
 
 }
 
@@ -419,7 +419,7 @@ background:var(--background-light);
 
 outline:none;
 
-box-shadow:0 0 0 3px rgba(212,162,76,.25);
+box-shadow:0 0 0 3px rgba(233,163,25,.25);
 
 }
 
@@ -474,11 +474,9 @@ BOUTON PRINCIPAL
 /* .btn-admin-submit s'appuie sur .btn (css/base.css, structure/
 padding/rayon/transitions/états actif-désactivé partagés — voir
 class="btn btn-lg btn-admin-submit" dans login.html) et ne garde ici
-que ses deltas réels : dégradé maroon→or plutôt que le remplissage
-uni de .btn-primary (identité visuelle du Control Center, cohérente
-sur tous ses boutons pleins — .btn-detail-action, .btn-page-action,
-.btn-profile-save), pleine largeur, icône flèche décorative, et
-lueur au survol/focus teintée accent plutôt que la teinte par défaut
+que ses deltas réels : dégradé --gradient-primary (identité bleue du
+Control Center), pleine largeur, icône flèche décorative, et lueur au
+survol/focus assortie à ce même bleu plutôt que la teinte par défaut
 de .btn. */
 
 .btn-admin-submit{
@@ -523,13 +521,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 
 transform:translateY(-2px);
 
-box-shadow:0 16px 34px rgba(139,30,63,.4);
+box-shadow:0 16px 34px rgba(51,65,140,.4);
 
 }
 
 .btn-admin-submit:focus-visible{
 
-box-shadow:0 0 0 4px rgba(212,162,76,.3);
+box-shadow:0 0 0 4px rgba(51,65,140,.3);
 
 }
 

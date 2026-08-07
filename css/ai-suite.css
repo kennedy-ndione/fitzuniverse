@@ -745,9 +745,9 @@ box-shadow:0 0 0 1px var(--accent-color) inset;
 }
 
 /* Icône neutre par défaut — seule la carte sélectionnée (voir
-.is-selected ci-dessous) porte la signature or/marron ; une icône de
-catégorie non sélectionnée est purement décorative, pas un point de
-présence Fitz. */
+.is-selected ci-dessous) porte la signature bleu/violet de l'accent ;
+une icône de catégorie non sélectionnée est purement décorative, pas
+un point de présence Fitz. */
 .ai-style-card-icon{
 
 display:flex;

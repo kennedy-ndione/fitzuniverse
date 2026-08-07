@@ -107,8 +107,8 @@ les pages ai-*.html. Le conteneur de conversation et la bulle de
 message restent propres à cette page.
 ========================================================== */
 
-/* Fond de la bulle "Fitz vous parle" — même renversement or-en-tête
-que --gradient-fitz (voir css/ai-suite.css), pas l'aplat
+/* Fond de la bulle "Fitz vous parle" — même identité violet/bleu que
+--gradient-fitz (voir .fitz-badge dans css/ai-suite.css), pas l'aplat
 --background-light générique utilisé ailleurs sur le site. */
 .chat-box{
 
@@ -118,9 +118,9 @@ align-items:flex-start;
 
 gap:16px;
 
-background:linear-gradient(100deg, rgba(212,162,76,.12) 0%, rgba(139,30,63,.07) 100%);
+background:linear-gradient(100deg, rgba(139,124,246,.12) 0%, rgba(51,65,140,.07) 100%);
 
-border:1px solid rgba(212,162,76,.28);
+border:1px solid rgba(139,124,246,.28);
 
 border-left:3px solid var(--accent-color);
 
@@ -251,7 +251,7 @@ outline:none;
 
 border-color:var(--primary-color);
 
-box-shadow:0 0 0 4px rgba(139,30,63,.12);
+box-shadow:0 0 0 4px rgba(51,65,140,.12);
 
 }
 

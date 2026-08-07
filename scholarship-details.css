@@ -40,8 +40,8 @@ object-fit:cover;
 position:absolute;
 inset:0;
 background:
-linear-gradient(180deg,rgba(43,14,22,.35) 0%,rgba(43,14,22,.88) 100%),
-linear-gradient(100deg,rgba(43,14,22,.9) 0%,rgba(43,14,22,.5) 45%,rgba(43,14,22,.15) 100%);
+linear-gradient(180deg,rgba(15,23,42,.35) 0%,rgba(15,23,42,.88) 100%),
+linear-gradient(100deg,rgba(15,23,42,.9) 0%,rgba(28,34,72,.5) 45%,rgba(15,23,42,.15) 100%);
 }
 
 .details-hero-inner{
@@ -198,7 +198,7 @@ font-weight:500;
 .diagnostic-result{
 margin-top:22px;
 padding-top:22px;
-border-top:1px solid rgba(139,30,63,.15);
+border-top:1px solid rgba(51,65,140,.15);
 }
 
 .diagnostic-score{
