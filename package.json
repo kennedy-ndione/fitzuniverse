@@ -4,9 +4,16 @@
   "private": true,
   "description": "ScholarBridge - plateforme d'orientation vers les bourses et universites internationales.",
   "scripts": {
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test \"test/*.test.mjs\"",
+    "emulators": "firebase emulators:start --project scholarbridge-e0d84 --only auth,firestore",
+    "seed:emulator": "cross-env FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node scripts/seed-emulator.mjs"
   },
   "dependencies": {
     "firebase": "^12.16.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "firebase-admin": "^14.2.0",
+    "firebase-tools": "^15.26.0"
   }
 }

@@ -1,11 +1,20 @@
 # Secrets et variables d'environnement — ne jamais versionner.
-# Les identifiants du compte de test vivent dans .env.local.
+# Le compte de test pour l'émulateur Firebase (voir TESTING.md) n'a pas
+# besoin de secret ici — ses identifiants ne fonctionnent que contre un
+# émulateur local (scripts/seed-emulator.mjs). .env.local reste réservé
+# aux vrais secrets, si/quand ce projet en a besoin.
 .env
 .env.*
 !.env.example
 
 # Dépendances
 node_modules/
+
+# Émulateurs Firebase (locaux, éphémères — voir TESTING.md)
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 
 # Archives et sauvegardes — pas du code source.
 # admin.zip était un instantané du 2026-07-22 de admin/, déjà périmé
