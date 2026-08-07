@@ -1095,7 +1095,10 @@ box-shadow:0 8px 18px rgba(15,23,42,.1);
 
 }
 
-.payment-method-logo.payment-method-logo-official svg{
+.payment-method-logo.payment-method-logo-official svg,
+.payment-method-logo.payment-method-logo-official img{
+
+display:block;
 
 width:auto;
 
