@@ -316,7 +316,10 @@ transition:opacity .2s ease;
 }
 
 .sidebar-brand-text .scholar{ color:var(--primary-color); }
-.sidebar-brand-text .bridge{ color:var(--accent-color); }
+/* --amber-500 tient 7,8:1 sur --shell-bg (#171B34) — largement AA,
+cohérent avec le "Bridge" doré du logo ailleurs sur le site (voir
+.logo .bridge dans css/header.css). */
+.sidebar-brand-text .bridge{ color:var(--amber-500); }
 
 body.sidebar-collapsed .sidebar-brand-text{
 

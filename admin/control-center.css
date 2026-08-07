@@ -202,7 +202,10 @@ line-height:1;
 }
 
 .sidebar-brand-text .scholar{ color:var(--primary-color); }
-.sidebar-brand-text .bridge{ color:var(--accent-color); }
+/* --amber-500 tient 6,8:1 sur --shell-bg (#1E293B) — largement AA,
+cohérent avec le "Bridge" doré du logo ailleurs sur le site (voir
+.logo .bridge dans css/header.css). */
+.sidebar-brand-text .bridge{ color:var(--amber-500); }
 
 .sidebar-badge{
 
