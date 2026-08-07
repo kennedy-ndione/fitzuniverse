@@ -42,6 +42,11 @@ import { PLAN_ORDER, PLAN_LABELS, resolveFeatureFlags } from "./plan-features.js
 
 export { PLAN_ORDER, PLAN_LABELS };
 
+// Formule résolue pour le compte propriétaire (voir la note dans
+// resolveSession() ci-dessous) — la plus complète de PLAN_ORDER,
+// jamais stockée dans Firestore.
+const OWNER_FREE_PLAN = PLAN_ORDER[PLAN_ORDER.length - 1];
+
 export function createDefaultProfile(user) {
 return {
 name: (user && user.name) || "",
@@ -222,11 +227,36 @@ createDefaultProfile(userData),
 userData.profile || {}
 );
 
+// Exception propriétaire (2026-08-07, retrait de l'inscription
+// gratuite) : le compte admin de ScholarBridge résout toujours sur la
+// formule complète, sans jamais écrire `plan` sur son propre document
+// users/{uid} — voir firestore.rules /admins/{uid} : lecture possible
+// UNIQUEMENT pour soi-même (isOwner(uid)), écriture toujours refusée
+// côté client (allow write: if false, console/Admin SDK uniquement).
+// Personne ne peut donc s'ajouter à cette collection ni se
+// l'attribuer par ce chemin — la formule gratuite pour ce compte
+// précis ne rouvre pas la brèche que ce commit referme pour tous les
+// autres.
+let planId = resolvePlan(userData);
+
+try {
+
+const ownerSnap = await getDoc(doc(db, "admins", firebaseUser.uid));
+
+if (ownerSnap.exists() && ownerSnap.data().isActive === true) {
+planId = OWNER_FREE_PLAN;
+}
+
+} catch (ownerCheckError) {
+// Pas admin, ou lecture refusée : comportement normal, la formule
+// reste celle résolue depuis users/{uid} ci-dessus.
+}
+
 resolve({
 user: firebaseUser,
 userData,
 profile,
-planId: resolvePlan(userData),
+planId,
 disabled: userData.disabled === true,
 testerAccess: userData.testerAccess === true,
 hasFitzExpress: hasFitzExpressAccess(userData)
