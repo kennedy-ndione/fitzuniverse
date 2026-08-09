@@ -780,6 +780,12 @@ line-height:1.12;
 letter-spacing:-.028em;
 max-width:680px;
 text-wrap:balance;
+/* La règle globale h1-h6 (css/base.css) cible h2 directement et gagne
+sur le color:#fff hérité de .cta-box (une valeur héritée perd toujours
+face à une règle déclarée sur l'élément, quelle que soit sa spécificité)
+— sans ce color explicite le titre restait bleu marine sur son propre
+fond bleu marine, quasi illisible. Même chose pour .cta-box p ci-dessous. */
+color:#fff;
 text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.2);
 }
 
@@ -788,6 +794,7 @@ font-size:var(--fs-lead);
 max-width:600px;
 opacity:.92;
 line-height:var(--lh-relaxed);
+color:#fff;
 text-shadow:0 1px 3px rgba(0,0,0,.25);
 }
 
