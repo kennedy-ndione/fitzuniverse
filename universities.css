@@ -496,7 +496,14 @@ backdrop-filter:blur(8px);
 
 -webkit-backdrop-filter:blur(8px);
 
-color:var(--accent-color);
+/* var(--accent-color) (#7E71D8) donnait un ratio réel d'environ 1,8:1
+une fois le fond composité à 72% d'opacité sur une photo claire (le
+ratio calculé contre la valeur navy déclarée sans tenir compte de
+l'alpha semblait correct à 4,46:1, mais c'est un artefact de mesure :
+la vraie couleur perçue, une fois mélangée à la photo derrière, est
+bien plus claire). Blanc = même traitement que .uni-card-location
+juste à côté, qui s'en sort très bien sur le même fond. */
+color:#fff;
 
 font-weight:800;
 
@@ -659,7 +666,10 @@ border-radius:var(--radius-full);
 
 background:var(--background-light);
 
-color:var(--accent-color);
+/* var(--accent-color) (#7E71D8, ratio ~3.5:1 réel sur ce fond une fois
+composité) ne tenait pas l'AA (4,5:1) pour du texte normal — accent-600,
+plus foncé, passe à ~5:1 sans changer la teinte perçue. */
+color:var(--accent-600);
 
 font-size:.72rem;
 
@@ -714,7 +724,9 @@ align-items:center;
 
 gap:5px;
 
-color:var(--accent-color);
+/* var(--accent-color) ne tient l'AA (4,5:1) que de justesse (4,01:1) sur
+fond blanc — accent-600 passe à 5,73:1, voir .uni-card-chip juste au-dessus. */
+color:var(--accent-600);
 
 font-weight:700;
 
