@@ -76,10 +76,19 @@ une nuance pensée pour le fond blanc du header une fois scrollé, donc
 illisible sur la photo avant ça. Miroir de .logo .scholar (déjà blanc par
 défaut) juste au-dessus. */
 .header:not(.header-on-light):not(.is-scrolled) .header-link{color:rgba(255,255,255,.94);}
-.header:not(.header-on-light):not(.is-scrolled) .header-link:hover{color:#fff;text-decoration:underline;}
+/* Pilule fantôme plutôt que le soulignement d'origine (rendu "lien de
+texte" daté) : fond blanc translucide à faible opacité, dans le même
+esprit que la pilule du bouton "Découvrir" juste à côté mais nettement
+plus discret. Le texte reste blanc, contraste inchangé — le fond ajouté
+est trop clair pour le faire varier de façon significative. */
+.header:not(.header-on-light):not(.is-scrolled) .header-link:hover{color:#fff;background:rgba(255,255,255,.14);}
 
 .header.is-scrolled .header-link{color:var(--text-light);}
-.header.is-scrolled .header-link:hover{color:var(--primary-color);text-decoration:none;}
+/* Même traitement pilule sur fond clair (header scrollé ou
+.header-on-light, voir règle générique .header-link:hover plus bas) :
+teinte sombre à faible opacité au lieu du fond blanc (invisible sur
+blanc). */
+.header.is-scrolled .header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
 
 /* scholarships.html (.header-on-light) : pas de hero photo, fond clair
 dès le premier pixel — contrairement à index.html/universities.html, le
@@ -230,11 +239,24 @@ display:flex;
 
 align-items:center;
 
-gap:16px;
+/* Réduit de 16px : les liens (.header-link) ont désormais leur propre
+padding horizontal pour la pilule au survol, un gap identique aurait
+doublé l'espacement visuel et écarté le CTA "Découvrir" du reste. */
+gap:4px;
 
 }
 
 .header-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:8px 14px;
+
+border-radius:var(--radius-full);
 
 font-size:var(--fs-small,.92rem);
 
@@ -242,9 +264,18 @@ font-weight:600;
 
 color:var(--text-light);
 
+text-decoration:none;
+
+transition:background-color 150ms ease, color 150ms ease;
+
 }
 
-.header-link:hover{color:var(--primary-color);}
+/* Contexte générique (.header-on-light avant scroll notamment, pas de
+hero photo dessous) : même pilule fantôme que les autres contextes,
+teinte sombre à faible opacité puisque le fond est clair ici. Les
+contextes hero-photo / is-scrolled ci-dessus surchargent avec leur
+propre variante — voir les notes plus haut. */
+.header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
 
 @media(max-width:640px){
 .header-link{display:none;}
@@ -349,12 +380,6 @@ height:42px;
 .logo-text{
 
 font-size:1.08rem;
-
-}
-
-.header-actions{
-
-gap:8px;
 
 }
 
