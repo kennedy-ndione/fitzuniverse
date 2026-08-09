@@ -142,12 +142,33 @@ assert.equal(OFFRES.gratuit, undefined, "gratuit ne doit pas être une offre ach
 
 test("toute offre payante donne 100% des outils Fitz", () => {
 
+// "advisor" (ajouté 2026-08-07) est dans FEATURE_CATALOG pour réutiliser
+// le même mécanisme de verrouillage, mais ce n'est PAS un outil Fitz —
+// voir la note dans js/plan-features.js. Il a sa propre assertion
+// ci-dessous et ne doit pas casser celle-ci.
+const OUTILS_FITZ = FEATURE_CATALOG.filter(({ key }) => key !== "advisor");
+
 const flags = resolveFeatureFlags(null);
 
 for (const id of OFFRES_PAYANTES) {
-for (const { key } of FEATURE_CATALOG) {
+for (const { key } of OUTILS_FITZ) {
 assert.equal(flags[key][id], true, `"${key}" doit être inclus dans ${id}`);
 }
+}
+
+});
+
+test("\"advisor\" (conseiller humain) n'est vrai que pour les offres d'accompagnement humain", () => {
+
+const flags = resolveFeatureFlags(null);
+const OFFRES_AVEC_CONSEILLER = ["signature-focus", "signature"];
+
+for (const id of OFFRES_PAYANTES) {
+assert.equal(
+flags.advisor[id],
+OFFRES_AVEC_CONSEILLER.includes(id),
+`"advisor" pour ${id} devrait être ${OFFRES_AVEC_CONSEILLER.includes(id)}`
+);
 }
 
 });

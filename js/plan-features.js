@@ -26,6 +26,13 @@
 * services ne sont pas pilotables ici : ce fichier ne modélise que les
 * outils Fitz. Voir pricing-plans.js pour la grille complète.
 *
+* EXCEPTION "advisor" (ajoutée 2026-08-07, refonte du dashboard par
+* formule) : ce n'est pas un outil Fitz, mais l'accès à la messagerie
+* avec un conseiller humain (advisor.html) suit exactement le même
+* mécanisme booléen par formule que les 8 outils ci-dessous — inutile
+* d'inventer un système parallèle pour une seule fonctionnalité de
+* plus. Vrai seulement pour signature-focus/signature.
+*
 * "gratuit" (ajouté 2026-07-30, audit d'harmonisation) : palier réel
 * pour tout compte sans abonnement payant actif — 0 outil Fitz, 0
 * candidature accompagnée. Avant ce palier, resolvePlan() (voir
@@ -93,7 +100,8 @@ export const FEATURE_CATALOG = [
 { key: "ai_check", label: "Vérification du dossier", description: "Analyse de cohérence des documents avant envoi." },
 { key: "ai_email", label: "E-mails Fitz", description: "Génération d'e-mails professionnels pour les candidatures." },
 { key: "ai_translate", label: "Traduction de documents", description: "Traduction des documents pour les candidatures internationales." },
-{ key: "compress", label: "Compression de fichiers", description: "Réduction de la taille d'un PDF ou d'une image à la taille demandée par un portail universitaire." }
+{ key: "compress", label: "Compression de fichiers", description: "Réduction de la taille d'un PDF ou d'une image à la taille demandée par un portail universitaire." },
+{ key: "advisor", label: "Mon conseiller", description: "Messagerie avec un conseiller humain dédié à l'accompagnement." }
 ];
 
 // Toute offre payante donne 100% des outils Fitz — y compris Premier
@@ -110,7 +118,11 @@ ai_letter: { gratuit: false, "premier-dossier": true, essentiel: true, accompagn
 ai_check: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 ai_email: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 ai_translate: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-compress: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true }
+compress: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
+// Seule fonctionnalité de ce fichier qui N'EST PAS un outil Fitz — accès
+// à un conseiller humain, vrai uniquement pour les deux offres
+// "human" de pricing-plans.js. Voir la note en tête de fichier.
+advisor: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": true, signature: true }
 };
 
 // ==========================================================
