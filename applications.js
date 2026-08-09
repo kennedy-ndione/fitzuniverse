@@ -31,6 +31,7 @@ serverTimestamp
 import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { isQuotaReached } from "./js/plan-features.js";
+import { recommendPrograms } from "./js/recommend-programs.js";
 
 initShellChrome();
 
@@ -196,7 +197,115 @@ URL.revokeObjectURL(url);
 
 }
 
-function initApplicationsPage(uid, planId) {
+function nextCheckFromToday(frequencyDays) {
+const d = new Date();
+d.setDate(d.getDate() + parseInt(frequencyDays, 10));
+return d.toISOString().slice(0, 10);
+}
+
+// ==========================================================
+// CRÉNEAUX RECOMMANDÉS — réutilise le quota déjà existant
+// (SCHOLARBRIDGE_PLANS[planId].maxAccompaniedApplications), pas un
+// second système de comptage. Un compte dont le quota est fini
+// (Premier Dossier, Essentiel, Avancé, Premium, Signature Focus) et qui
+// a moins de candidatures que ce quota se voit pré-remplir les
+// créneaux manquants avec des suggestions réelles (jointure
+// programs → universities/scholarships, même pattern que
+// scholarships.js/universities-page.js/details.js — jamais une
+// deuxième façon de résoudre bourse↔université).
+//
+// Signature (quota Infinity) n'est délibérément jamais pré-rempli :
+// "3 créneaux" n'a de sens que pour un quota fini. isQuotaReached()
+// (js/plan-features.js) traite déjà Infinity comme "jamais atteint" —
+// même esprit ici : pas de créneaux à combler quand il n'y a pas de
+// plafond.
+//
+// isRecommendation:true marque un créneau que Fitz a rempli lui-même
+// (badge "Suggéré par Fitz" + bouton "Suggérer une autre université"
+// dans renderCard) — purement informatif, ne change RIEN au quota : le
+// document compte comme n'importe quelle candidature dès sa création,
+// conformément à l'option retenue (pas d'état "recommandation non
+// confirmée" distinct, pour ne pas dupliquer isQuotaReached()).
+async function seedRecommendedSlots(uid, planId, existingApplications, profile) {
+
+const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
+const quota = plan ? plan.maxAccompaniedApplications : null;
+
+if (!Number.isFinite(quota) || quota <= 0) return false;
+
+const missing = quota - existingApplications.length;
+
+if (missing <= 0) return false;
+
+let programsSnap, universitiesSnap, scholarshipsSnap;
+
+try {
+
+[programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
+getDocs(collection(db, "programs")),
+getDocs(collection(db, "universities")),
+getDocs(collection(db, "scholarships"))
+]);
+
+} catch (error) {
+
+console.warn("Impossible de charger le catalogue pour les recommandations Fitz :", error);
+return false;
+
+}
+
+const programs = programsSnap.docs.map((d) => ({ firestoreId: d.id, ...d.data() }));
+const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+
+// Les candidatures existantes n'ont qu'un nom d'université en texte
+// libre (pas d'identifiant Firestore — voir la note du schéma en tête
+// de fichier) : seul un rapprochement par nom permet d'éviter de
+// suggérer une université déjà occupée par un autre créneau.
+const excludeNames = new Set(
+existingApplications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolean)
+);
+
+const eligiblePrograms = programs.filter((p) => {
+const uni = universitiesById.get(p.universityId);
+return uni && !excludeNames.has((uni.university || "").trim().toLowerCase());
+});
+
+const recommendations = recommendPrograms({
+profile: profile || {},
+programs: eligiblePrograms,
+universitiesById,
+scholarshipsById,
+count: missing
+});
+
+if (!recommendations.length) return false;
+
+const appsCol = collection(db, "users", uid, "applications");
+
+for (const rec of recommendations) {
+
+await addDoc(appsCol, {
+university: rec.universityName,
+scholarship: rec.scholarshipTitle,
+portalUrl: "",
+status: "a_preparer",
+deadline: null,
+reminderFrequency: 14,
+notes: "",
+premiumProtected: false,
+isRecommendation: true,
+nextCheckDate: nextCheckFromToday(14),
+createdAt: serverTimestamp()
+});
+
+}
+
+return true;
+
+}
+
+function initApplicationsPage(uid, planId, profile) {
 
 const listEl = document.getElementById("applicationsList");
 const emptyEl = document.getElementById("applicationsEmpty");
@@ -246,12 +355,6 @@ editingId = null;
 form.reset();
 }
 
-function nextCheckFromToday(frequencyDays) {
-const d = new Date();
-d.setDate(d.getDate() + parseInt(frequencyDays, 10));
-return d.toISOString().slice(0, 10);
-}
-
 function renderStats() {
 
 statTracked.textContent = applications.length;
@@ -266,10 +369,12 @@ const urgency = urgencyLabel(app);
 
 const card = document.createElement("article");
 card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
+card.dataset.appId = app.id;
 
 card.innerHTML = `
 <div class="app-card-top">
 <div>
+${app.isRecommendation ? `<span class="app-recommendation-badge"><i data-lucide="sparkles"></i>Suggéré par Fitz</span>` : ""}
 <h3>${app.university}</h3>
 ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : ""}
 </div>
@@ -292,6 +397,7 @@ ${app.generatedLetter
 </div>
 
 <div class="app-card-actions">
+${app.isRecommendation ? `<button type="button" class="btn btn-secondary btn-sm app-replace-btn"><i data-lucide="refresh-cw"></i><span>Suggérer une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
 ${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Portail</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
@@ -304,6 +410,7 @@ card.querySelector(".app-checkin-btn").addEventListener("click", () => checkIn(a
 card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(app));
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
 card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
+card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
 
 return card;
 
@@ -332,7 +439,81 @@ if (window.lucide) lucide.createIcons();
 async function loadApplications() {
 
 applications = await fetchApplications(uid);
+
+const seeded = await seedRecommendedSlots(uid, planId, applications, profile);
+if (seeded) applications = await fetchApplications(uid);
+
 render();
+
+}
+
+// Remplace le créneau `app` par une autre suggestion réelle (même
+// jointure programs que seedRecommendedSlots), en excluant les
+// universités déjà occupées par les autres créneaux — jamais de
+// créneau supplémentaire créé, jamais le quota dépassé : c'est une
+// mise à jour du document existant (même id), pas une création.
+async function replaceRecommendation(app) {
+
+const button = document.querySelector(`[data-app-id="${app.id}"] .app-replace-btn`);
+if (button) { button.disabled = true; button.querySelector("span").textContent = "Recherche..."; }
+
+try {
+
+let programsSnap, universitiesSnap, scholarshipsSnap;
+
+[programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
+getDocs(collection(db, "programs")),
+getDocs(collection(db, "universities")),
+getDocs(collection(db, "scholarships"))
+]);
+
+const programs = programsSnap.docs.map((d) => ({ firestoreId: d.id, ...d.data() }));
+const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+
+const excludeNames = new Set(
+applications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolean)
+);
+
+const eligiblePrograms = programs.filter((p) => {
+const uni = universitiesById.get(p.universityId);
+return uni && !excludeNames.has((uni.university || "").trim().toLowerCase());
+});
+
+const [alternative] = recommendPrograms({
+profile: profile || {},
+programs: eligiblePrograms,
+universitiesById,
+scholarshipsById,
+count: 1
+});
+
+if (!alternative) {
+alert("Aucune autre université compatible avec votre profil n'est disponible pour le moment.");
+return;
+}
+
+await updateDoc(doc(db, "users", uid, "applications", app.id), {
+university: alternative.universityName,
+scholarship: alternative.scholarshipTitle,
+isRecommendation: true,
+updatedAt: serverTimestamp()
+});
+
+trackEvent("application_recommendation_replaced", {});
+
+await loadApplications();
+
+} catch (error) {
+
+console.error("Impossible de proposer une autre université :", error);
+alert("Un souci est survenu — réessayez dans un instant.");
+
+} finally {
+
+if (button) { button.disabled = false; button.querySelector("span").textContent = "Suggérer une autre université"; }
+
+}
 
 }
 
@@ -388,6 +569,12 @@ deadline: fields.deadline.value || null,
 reminderFrequency: parseInt(fields.frequency.value, 10),
 notes: fields.notes.value.trim(),
 premiumProtected: SCHOLARBRIDGE_PLANS[planId]?.extendsPendingApplications === true && fields.status.value === "en_attente",
+// Un enregistrement manuel (création ou modification via ce formulaire)
+// est un choix délibéré de l'étudiant — même si ce créneau avait été
+// pré-rempli par Fitz (isRecommendation), il perd ce statut dès qu'il
+// est touché ici. Seul replaceRecommendation() (bouton "Suggérer une
+// autre université") repose le flag.
+isRecommendation: false,
 updatedAt: serverTimestamp()
 };
 
@@ -462,6 +649,6 @@ return;
 
 }
 
-initApplicationsPage(ctx.user.uid, ctx.planId);
+initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile);
 
 });

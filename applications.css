@@ -195,6 +195,25 @@ color:var(--text-muted);
 margin-top:2px;
 }
 
+/* Créneau pré-rempli par la recommandation de Fitz (voir
+applications.js:seedRecommendedSlots) — dégradé --gradient-fitz déjà
+réservé à tout ce qui vient de Fitz (avatar, halo, badges), jamais
+réutilisé ailleurs sur le site pour rester immédiatement identifiable. */
+.app-recommendation-badge{
+display:inline-flex;
+align-items:center;
+gap:5px;
+padding:4px 10px;
+border-radius:var(--radius-full);
+margin-bottom:6px;
+font-size:var(--fs-caption);
+font-weight:700;
+color:#fff;
+background:var(--gradient-fitz);
+}
+
+.app-recommendation-badge i{width:12px;height:12px;}
+
 .app-status-pill{
 flex:0 0 auto;
 padding:5px 12px;
