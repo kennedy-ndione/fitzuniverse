@@ -26,8 +26,8 @@
 * de page — sticky forcerait un espace réservé dans le flux, ce que
 * fixed évite déjà (voir le padding-top des sections héros).
 *
-* Partagé par index.html, universities.html et scholarship-details.html
-* — les 3 seules pages qui chargent encore css/header.css. Remplace le
+* Partagé par index.html, universities.html, scholarship-details.html
+* et scholarships.html — les pages qui chargent css/header.css. Remplace le
 * bloc "HEADER TRANSPARENT SUR LA PHOTO" qui vivait auparavant en
 * double dans js/main.js (index.html uniquement) : centralisé ici pour
 * que les 2 autres pages en bénéficient enfin, au lieu de rester figées.
