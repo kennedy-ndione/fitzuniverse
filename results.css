@@ -1145,6 +1145,10 @@ margin-left:auto;
 
 margin-right:auto;
 
+/* Sans ce color explicite, la règle globale h1-h6 (css/base.css) bat
+le color:#fff hérité de .closing-card — même bug que .cta-box. */
+color:#fff;
+
 }
 
 .closing-card p{
@@ -1156,6 +1160,8 @@ margin:0 auto 16px;
 line-height:1.75;
 
 opacity:.92;
+
+color:#fff;
 
 }
 

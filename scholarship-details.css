@@ -76,6 +76,12 @@ line-height:var(--lh-snug);
 letter-spacing:var(--ls-tight);
 margin-bottom:10px;
 text-wrap:balance;
+/* La règle globale h1-h6 (css/base.css) cible h1 directement et gagne
+sur le color:#fff de .details-hero-inner (une valeur héritée perd
+toujours face à une règle déclarée sur l'élément) — sans ce color
+explicite le titre de la bourse restait bleu marine sur sa propre
+photo de héros, quasi illisible. Même bug que .cta-box. */
+color:#fff;
 text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
 }
 
@@ -290,6 +296,9 @@ font-family:var(--font-display);
 font-weight:600;
 font-size:var(--fs-h4);
 margin-bottom:8px;
+/* Sans ce color explicite, la règle globale h1-h6 (css/base.css) bat
+le color:#fff hérité de .cta-card-primary — même bug que .cta-box. */
+color:#fff;
 }
 
 .cta-card-primary p{
@@ -297,6 +306,7 @@ font-size:var(--fs-small);
 opacity:.9;
 line-height:var(--lh-relaxed);
 margin-bottom:20px;
+color:#fff;
 }
 
 .cta-card-primary .btn{width:100%;}
