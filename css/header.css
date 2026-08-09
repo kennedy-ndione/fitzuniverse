@@ -19,6 +19,17 @@ border-bottom:1px solid transparent;
 
 box-shadow:none;
 
+/* Voile local, indépendant de celui du hero (.hero-overlay dans
+hero.css/celui de .uni-hero) : le header est un élément fixed dans sa
+propre pile d'empilement, au-dessus de tout — sans son propre fond, sa
+lisibilité dépend entièrement de ce qui se trouve DESSOUS au pixel près
+(bas d'une photo, zone claire...), imprévisible. Ce dégradé garantit un
+minimum de contraste au texte clair (.header-link, logo) quel que soit
+le contenu en dessous, sur les pages à hero photo. Exclu sur
+.header-on-light (scholarships.html : fond clair uni, aucun hero photo
+— ce voile sombre y détonnerait) et une fois .is-scrolled (fond blanc
+opaque déjà géré plus bas). */
+
 transform:translateY(0);
 
 opacity:1;
@@ -46,6 +57,38 @@ border-bottom:1px solid rgba(226,232,240,.75);
 box-shadow:var(--shadow-sm);
 
 }
+
+/* 62% plat sur les 3/4 supérieurs (où le texte est réellement centré
+verticalement) puis dégradé vers la photo sur le dernier quart, plutôt
+qu'un fade linéaire sur toute la hauteur : calculé pour garantir 4,5:1
+même dans le pire cas (photo blanc pur juste en dessous) — un fade
+continu retombait sous l'AA au niveau du texte, voir le calcul en
+commit. */
+.header:not(.header-on-light):not(.is-scrolled){
+
+background:linear-gradient(to bottom,rgba(9,12,28,.62) 0%,rgba(9,12,28,.62) 75%,rgba(9,12,28,.15) 100%);
+
+}
+
+/* Texte clair par défaut (hero photo dessous, .header:not(.header-on-light)
+ci-dessus) — Bourses/Universités/Connexion utilisaient var(--text-light),
+une nuance pensée pour le fond blanc du header une fois scrollé, donc
+illisible sur la photo avant ça. Miroir de .logo .scholar (déjà blanc par
+défaut) juste au-dessus. */
+.header:not(.header-on-light):not(.is-scrolled) .header-link{color:rgba(255,255,255,.94);}
+.header:not(.header-on-light):not(.is-scrolled) .header-link:hover{color:#fff;text-decoration:underline;}
+
+.header.is-scrolled .header-link{color:var(--text-light);}
+.header.is-scrolled .header-link:hover{color:var(--primary-color);text-decoration:none;}
+
+/* scholarships.html (.header-on-light) : pas de hero photo, fond clair
+dès le premier pixel — contrairement à index.html/universities.html, le
+logo blanc par défaut (.logo .scholar plus haut) y est illisible sur le
+fond lavande pâle. Mêmes couleurs que l'état .is-scrolled des autres
+pages, appliquées dès le départ ici puisqu'il n'y a rien à "scroller
+avant" un fond sombre. */
+.header-on-light .logo .scholar{color:var(--primary-dark);}
+.header-on-light .logo .bridge{color:var(--amber-700);}
 
 /* Immersion catalogue : dès que le visiteur commence à descendre, le
 header s'efface (translation verticale + opacité) pour laisser toute
@@ -329,13 +372,23 @@ font-size:.88rem;
 
 .header-container{
 
-gap:6px;
+gap:4px;
+
+}
+
+/* Sous 520px, logo + CTA + pastille Connexion dépassaient de la
+largeur du header (mesuré : ~14px de débordement à 375px, la pastille
+Connexion touchait quasiment le bord de l'écran) — resserré ici plutôt
+que de toucher le logo. */
+.header-actions{
+
+gap:4px;
 
 }
 
 .header .btn{
 
-padding:11px 16px;
+padding:10px 12px;
 
 font-size:.88rem;
 
@@ -350,6 +403,20 @@ display:none;
 .header .btn-text-short{
 
 display:inline;
+
+}
+
+.header-link-login{
+
+width:32px;
+height:32px;
+
+}
+
+.header-link-login i{
+
+width:16px;
+height:16px;
 
 }
 
