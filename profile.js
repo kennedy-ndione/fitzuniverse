@@ -15,7 +15,7 @@ serverTimestamp
 
 import { setButtonLoading } from "./auth-ui.js";
 import { hidePageLoader } from "./js/app-shell.js";
-import { resolvePlan, PLAN_LABELS } from "./js/access-guard.js";
+import { resolvePlan, PLAN_LABELS, fetchFeatureFlags } from "./js/access-guard.js";
 
 // ==========================================================
 // Listes fixes pour les chips / sélecteurs
@@ -749,7 +749,29 @@ const userData = userSnap.data();
 // fonction pure sans effet de bord : l'utiliser ici pour éviter un
 // badge figé sur "Essentiel" quelle que soit la vraie formule.
 const planBadge = document.getElementById("planBadge");
-if (planBadge) planBadge.textContent = PLAN_LABELS[resolvePlan(userData)];
+const planId = resolvePlan(userData);
+if (planBadge) planBadge.textContent = PLAN_LABELS[planId];
+
+// "Mon conseiller" masqué entièrement plutôt que grisé — même règle
+// que dashboard.js:applyAdvisorVisibility() (profile.js ne passe pas
+// par bootstrapShell(), voir le commentaire ci-dessus). Isolé dans son
+// propre try/catch : un souci réseau ici ne doit jamais empêcher le
+// reste de la page profil de s'afficher.
+try {
+
+const featureFlags = await fetchFeatureFlags();
+const advisorLabel = document.getElementById("advisorSectionLabel");
+const advisorNav = document.getElementById("advisorSectionNav");
+
+if (advisorLabel && advisorNav) {
+const hasAdvisor = userData.testerAccess === true || (featureFlags.advisor && featureFlags.advisor[planId] === true);
+advisorLabel.hidden = !hasAdvisor;
+advisorNav.hidden = !hasAdvisor;
+}
+
+} catch (error) {
+console.warn("Impossible de déterminer l'accès au conseiller :", error);
+}
 
 // Suspension de compte (Module 3 du Control Center admin) : même
 // vérification que dashboard.js — voir son commentaire pour le détail

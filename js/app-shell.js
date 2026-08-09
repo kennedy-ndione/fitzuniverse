@@ -42,6 +42,27 @@ fetchFeatureFlags
 
 export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked };
 
+// "Mon conseiller" (Signature Focus / Signature) est masqué entièrement
+// plutôt que grisé-avec-CTA comme les autres [data-feature] — voir la
+// même logique/le même raisonnement dans dashboard.js
+// (applyAdvisorVisibility). Les deux copies existent parce que
+// dashboard.js n'utilise délibérément pas ce module (voir la note en
+// tête de fichier) ; à garder synchronisées si la règle change.
+function applyAdvisorVisibility(planId, featureFlags, testerAccess) {
+
+const label = document.getElementById("advisorSectionLabel");
+const nav = document.getElementById("advisorSectionNav");
+
+if (!label || !nav) return;
+
+const flags = featureFlags.advisor;
+const hasAdvisor = !!flags && (testerAccess || flags[planId] === true);
+
+label.hidden = !hasAdvisor;
+nav.hidden = !hasAdvisor;
+
+}
+
 // Identique à dashboard.js : verrouille/déverrouille chaque [data-feature]
 // (essentiellement les liens de la sidebar ici) selon la formule active.
 function applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress) {
@@ -302,6 +323,7 @@ const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
 
 applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress);
+applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess);
 
 if (window.lucide) lucide.createIcons();
 

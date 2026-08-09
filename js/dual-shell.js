@@ -105,6 +105,17 @@ link.setAttribute("href", targetPlan ? `offers.html#${targetPlan}` : "offers.htm
 link.setAttribute("href", link.dataset.realHref);
 }
 });
+
+// "Mon conseiller" masqué entièrement plutôt que grisé — même règle
+// que dashboard.js:applyAdvisorVisibility() / app-shell.js.
+const advisorLabel = document.getElementById("advisorSectionLabel");
+const advisorNav = document.getElementById("advisorSectionNav");
+if (advisorLabel && advisorNav) {
+const advisorFlags = featureFlags.advisor;
+const hasAdvisor = !!advisorFlags && (session.testerAccess || advisorFlags[session.planId] === true);
+advisorLabel.hidden = !hasAdvisor;
+advisorNav.hidden = !hasAdvisor;
+}
 }
 
 initMessagesPanel(session.user.uid);
