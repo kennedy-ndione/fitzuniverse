@@ -10,9 +10,12 @@ TITRE — bandeau minimal (pas de header/logo/CTA : l'utilisateur
 sait déjà qu'il est sur ScholarBridge, ce catalogue va droit au but).
 ========================================================== */
 
+/* padding-top calé sur la hauteur du header public fixe ajouté au-dessus
+(~77px mesuré) + marge de respiration — cette page n'avait pas d'en-tête
+public avant (voir plus haut) donc pas de dégagement prévu à l'origine. */
 .bourses-title-bar{
 
-padding:56px 0 0;
+padding:100px 0 0;
 
 text-align:center;
 
@@ -650,7 +653,7 @@ RESPONSIVE
 
 .bourses-title-bar{
 
-padding:36px 0 0;
+padding:100px 0 0;
 
 }
 

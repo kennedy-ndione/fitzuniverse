@@ -5,6 +5,25 @@ collection,
 getDocs
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+// Résout, pour une université, une bourse compatible réelle via
+// "programs" (université × bourse × niveau) — même pattern que
+// universities-page.js/scholarships.js. Remplace l'ancien
+// university.scholarship (champ plat de l'ex-modèle pré-migration
+// 2026-07-30, où un même établissement existait en 3 documents par
+// niveau) : ce champ n'est plus fiable ni garanti présent sur les
+// documents "universities" créés depuis.
+function firstScholarshipTitle(universityFirestoreId, programs, scholarshipsById) {
+
+const program = programs.find((p) => p.universityId === universityFirestoreId && p.scholarshipId);
+
+if (!program) return "";
+
+const scholarship = scholarshipsById.get(program.scholarshipId);
+
+return scholarship ? scholarship.title : "";
+
+}
+
 const TEASER_COUNT = 4;
 
 // Un même établissement existe en 3 documents Firestore (un par niveau
@@ -66,7 +85,7 @@ return picks;
 
 }
 
-function renderCard(university) {
+function renderCard(university, scholarshipTitle) {
 
 const card = document.createElement("a");
 card.className = "teaser-card";
@@ -81,7 +100,7 @@ ${university.ranking ? `<span class="teaser-card-rank"><i data-lucide="trophy"><
 ${university.flag ? `<img class="teaser-card-flag" src="assets/flags/${university.flag}" alt="">` : ""}
 <h3>${university.university || "Université partenaire"}</h3>
 <p>${[university.city, university.country].filter(Boolean).join(", ")}</p>
-${university.scholarship ? `<span class="teaser-card-tag"><i data-lucide="award"></i>${university.scholarship}</span>` : ""}
+${scholarshipTitle ? `<span class="teaser-card-tag"><i data-lucide="award"></i>${scholarshipTitle}</span>` : ""}
 </div>
 `;
 
@@ -97,9 +116,15 @@ if (!grid) return;
 
 try {
 
-const snapshot = await getDocs(collection(db, "universities"));
+const [universitiesSnap, programsSnap, scholarshipsSnap] = await Promise.all([
+getDocs(collection(db, "universities")),
+getDocs(collection(db, "programs")),
+getDocs(collection(db, "scholarships"))
+]);
 
-const all = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+const all = universitiesSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+const programs = programsSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+const scholarshipsById = new Map(scholarshipsSnap.docs.map((docSnap) => [docSnap.id, { id: docSnap.id, ...docSnap.data() }]));
 
 if (!all.length) {
 grid.remove();
@@ -111,7 +136,7 @@ const pool = dedupeByUniversity(withPhoto.length >= TEASER_COUNT ? withPhoto : a
 const picks = pickDiverse(pool, TEASER_COUNT);
 
 grid.innerHTML = "";
-picks.forEach((university) => grid.appendChild(renderCard(university)));
+picks.forEach((university) => grid.appendChild(renderCard(university, firstScholarshipTitle(university.id, programs, scholarshipsById))));
 
 if (window.lucide) lucide.createIcons();
 

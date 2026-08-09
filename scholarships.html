@@ -25,12 +25,41 @@
 
 <body>
 
+<!-- Visiteur non connecté : en-tête public (SEO/marketing), miroir de
+celui d'universities.html — scholarships.html est le point d'entrée
+principal du catalogue public, il a besoin de la même navigation.
+Masqué par js/dual-shell.js uniquement si une session est trouvée. -->
+<header class="header" id="publicHeader">
+
+<div class="container header-container">
+
+<a href="index.html" class="logo">
+<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<div class="header-actions">
+
+<a href="universities.html" class="header-link">
+<span>Universités</span>
+</a>
+
+<a href="eligibility-test.html" class="btn btn-secondary">
+<i data-lucide="compass"></i>
+<span class="btn-text-full">Découvrir mes opportunités</span>
+<span class="btn-text-short">Découvrir</span>
+</a>
+
+</div>
+
+</div>
+
+</header>
+
 <!-- Utilisateur connecté : même shell sombre que le reste de l'Espace
 Étudiant (sidebar/topbar). Masqué par défaut ([hidden]) ; dashboard.css
 n'est chargé dynamiquement par js/dual-shell.js QUE si une session est
-trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme.
-Cette page n'a pas d'en-tête public aujourd'hui (déjà le cas avant
-cette refonte) — rien à masquer pour un visiteur non connecté. -->
+trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 <div class="dashboard-shell" id="authShellRoot" hidden>
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -91,16 +120,16 @@ cette refonte) — rien à masquer pour un visiteur non connecté. -->
 </li>
 
 <li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
+<a href="scholarships.html" class="nav-link is-active" aria-current="page">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
 </a>
 </li>
 
 <li>
-<a href="scholarships.html" class="nav-link is-active" aria-current="page">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
 </a>
 </li>
 
@@ -329,7 +358,7 @@ placeholder="Rechercher un pays, une université...">
 
 <script type="module">
 import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
-applyAuthenticatedShellIfLoggedIn({ mainId: "pageMain" });
+applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" });
 </script>
 
 </body>
