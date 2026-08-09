@@ -45,6 +45,143 @@ reponse_recue: "Réponse reçue"
 
 const STATUS_ORDER = ["a_preparer", "en_cours", "deposee", "en_attente", "reponse_recue"];
 
+// ==========================================================
+// DOSSIER DE CANDIDATURE — checklist par candidature (lettres de
+// recommandation, test de langue, preuve financière). Une seule
+// structure générique (champ `checklist`, array sur le document
+// application) réutilisée pour les 3 types plutôt qu'un champ dédié
+// par fonctionnalité : le score de complétude et les repères de
+// calibration se calculent directement dessus, sans structure
+// supplémentaire. Statut à 3 valeurs partagé par tous les types
+// (manquant/en_cours/complete) — seul le libellé affiché change selon
+// le type (CHECKLIST_TYPE_META.statusLabels), pour rester lisible
+// ("Non demandée" a plus de sens que "Manquant" pour une lettre) sans
+// dupliquer la logique d'état.
+const CHECKLIST_STATUS_ORDER = ["manquant", "en_cours", "complete"];
+
+const CHECKLIST_TYPE_META = {
+recommendation: {
+title: "Lettres de recommandation",
+icon: "mail-check",
+addLabel: "Demander une lettre",
+statusLabels: { manquant: "Non demandée", en_cours: "Demandée", complete: "Reçue" }
+},
+language_test: {
+title: "Test de langue",
+icon: "languages",
+addLabel: "Ajouter un test de langue",
+statusLabels: { manquant: "Non planifié", en_cours: "Planifié", complete: "Passé" }
+},
+financial_proof: {
+title: "Preuve financière",
+icon: "banknote",
+addLabel: "Ajouter une preuve financière",
+statusLabels: { manquant: "Manquant", en_cours: "En préparation", complete: "Prêt" }
+}
+};
+
+function makeChecklistItemId() {
+if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+return `cl_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function nextChecklistStatus(status) {
+const idx = CHECKLIST_STATUS_ORDER.indexOf(status);
+return CHECKLIST_STATUS_ORDER[(idx + 1) % CHECKLIST_STATUS_ORDER.length];
+}
+
+function checklistScore(checklist) {
+const items = Array.isArray(checklist) ? checklist : [];
+return { completed: items.filter((i) => i.status === "complete").length, total: items.length };
+}
+
+// Repère de calibration (fonctionnalité 3) : compare deux valeurs
+// saisies par l'étudiant lui-même sur CE test de langue (seuil requis
+// par la bourse visée, score obtenu) — pas une comparaison contre le
+// profil général, qui ne contient qu'un niveau qualitatif
+// (débutant/avancé...), non comparable à un score TOEFL/IELTS chiffré.
+function calibrationForItem(item) {
+if (item.type !== "language_test") return null;
+const required = parseFloat(item.meta?.scoreRequired);
+const obtained = parseFloat(item.meta?.scoreObtained);
+if (!Number.isFinite(required) || !Number.isFinite(obtained)) return null;
+return obtained >= required
+? { ok: true, text: "Dans la fourchette attendue" }
+: { ok: false, text: "En dessous du seuil habituel" };
+}
+
+function checklistItemMetaLine(item) {
+if (item.type === "language_test") {
+const parts = [];
+if (item.meta?.testName) parts.push(item.meta.testName);
+if (item.meta?.testDate) parts.push(formatDateFR(item.meta.testDate));
+if (item.meta?.scoreRequired) parts.push(`Seuil requis : ${item.meta.scoreRequired}`);
+if (item.meta?.scoreObtained) parts.push(`Obtenu : ${item.meta.scoreObtained}`);
+return parts.join(" · ");
+}
+if (item.type === "financial_proof") {
+return [item.meta?.amountRequired, item.meta?.formatRequired].filter(Boolean).join(" · ");
+}
+if (item.type === "recommendation" && item.meta?.recommenderContact) {
+return item.meta.recommenderContact;
+}
+return "";
+}
+
+function renderChecklistItem(item) {
+
+const typeMeta = CHECKLIST_TYPE_META[item.type];
+const statusLabel = typeMeta.statusLabels[item.status] || item.status;
+const calibration = calibrationForItem(item);
+const metaLine = checklistItemMetaLine(item);
+
+return `
+<li class="checklist-item" data-item-id="${item.id}">
+<button type="button" class="checklist-status-chip checklist-status-${item.status}" data-action="cycle">${statusLabel}</button>
+<div class="checklist-item-body">
+<strong>${item.label}</strong>
+${metaLine ? `<span class="checklist-item-meta">${metaLine}</span>` : ""}
+${calibration ? `<span class="checklist-calibration ${calibration.ok ? "is-ok" : "is-warning"}"><i data-lucide="${calibration.ok ? "check-circle" : "alert-triangle"}"></i>${calibration.text}</span>` : ""}
+</div>
+<button type="button" class="checklist-item-remove" data-action="remove" aria-label="Supprimer cet élément"><i data-lucide="x"></i></button>
+</li>`;
+
+}
+
+function renderChecklistSection(app) {
+
+const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+const { completed, total } = checklistScore(checklist);
+
+const groups = Object.keys(CHECKLIST_TYPE_META).map((type) => {
+
+const typeMeta = CHECKLIST_TYPE_META[type];
+const items = checklist.filter((i) => i.type === type);
+
+return `
+<div class="checklist-group">
+<div class="checklist-group-head">
+<span><i data-lucide="${typeMeta.icon}"></i>${typeMeta.title}</span>
+<button type="button" class="checklist-add-btn" data-action="add" data-type="${type}"><i data-lucide="plus"></i><span>${typeMeta.addLabel}</span></button>
+</div>
+${items.length ? `<ul class="checklist-items">${items.map(renderChecklistItem).join("")}</ul>` : `<p class="checklist-group-empty">Rien pour l'instant.</p>`}
+${type === "recommendation" ? `<button type="button" class="checklist-guide-link" data-action="guide"><i data-lucide="book-open"></i><span>Guide : qui solliciter et comment</span></button>` : ""}
+</div>`;
+
+}).join("");
+
+return `
+<div class="app-checklist">
+<button type="button" class="app-checklist-toggle" data-action="toggle-checklist">
+<span><i data-lucide="clipboard-list"></i>Dossier de candidature</span>
+${total > 0 ? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>` : `<span class="app-checklist-score is-empty">Ajouter les exigences de cette bourse</span>`}
+<i data-lucide="chevron-down" class="app-checklist-chevron"></i>
+</button>
+<div class="checklist-groups" hidden>${groups}</div>
+</div>`;
+
+}
+
 async function fetchApplications(uid) {
 const snapshot = await getDocs(collection(db, "users", uid, "applications"));
 return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -396,6 +533,8 @@ ${app.generatedLetter
 : `<span>Fitz peut générer une lettre de motivation pour cette candidature.</span><a href="ai-letter.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
 </div>
 
+${renderChecklistSection(app)}
+
 <div class="app-card-actions">
 ${app.isRecommendation ? `<button type="button" class="btn btn-secondary btn-sm app-replace-btn"><i data-lucide="refresh-cw"></i><span>Suggérer une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
@@ -411,6 +550,31 @@ card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(a
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
 card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
 card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
+
+const checklistEl = card.querySelector(".app-checklist");
+const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
+
+checklistEl.querySelector('[data-action="toggle-checklist"]').addEventListener("click", () => {
+checklistGroupsEl.hidden = !checklistGroupsEl.hidden;
+checklistEl.classList.toggle("is-open", !checklistGroupsEl.hidden);
+if (window.lucide) lucide.createIcons();
+});
+
+checklistEl.querySelectorAll('[data-action="add"]').forEach((btn) => {
+btn.addEventListener("click", () => openChecklistModal(app, btn.dataset.type));
+});
+
+checklistEl.querySelectorAll('[data-action="cycle"]').forEach((btn) => {
+btn.addEventListener("click", () => cycleChecklistStatus(app, btn.closest(".checklist-item").dataset.itemId));
+});
+
+checklistEl.querySelectorAll('[data-action="remove"]').forEach((btn) => {
+btn.addEventListener("click", () => removeChecklistItem(app, btn.closest(".checklist-item").dataset.itemId));
+});
+
+checklistEl.querySelector('[data-action="guide"]')?.addEventListener("click", () => {
+document.getElementById("recommendationGuideModal").hidden = false;
+});
 
 return card;
 
@@ -538,6 +702,138 @@ await deleteDoc(doc(db, "users", uid, "applications", app.id));
 await loadApplications();
 
 }
+
+// ---------- Dossier de candidature (checklist) ----------
+
+const checklistFieldsByType = {
+recommendation: document.getElementById("clRecommendationFields"),
+language_test: document.getElementById("clLanguageFields"),
+financial_proof: document.getElementById("clFinancialFields")
+};
+
+let checklistContext = { app: null, type: null };
+
+function openChecklistModal(app, type) {
+
+checklistContext = { app, type };
+
+const typeMeta = CHECKLIST_TYPE_META[type];
+
+document.getElementById("checklistModalTitle").textContent = typeMeta.addLabel;
+document.getElementById("clType").value = type;
+document.getElementById("clItemId").value = "";
+document.getElementById("clLabelCaption").textContent = type === "recommendation" ? "Nom du recommandant" : "Intitulé";
+document.getElementById("clLabel").value = type === "language_test" ? "Test de langue" : type === "financial_proof" ? "Preuve financière" : "";
+document.getElementById("clRecommenderContact").value = "";
+document.getElementById("clTestName").value = "TOEFL";
+document.getElementById("clTestDate").value = "";
+document.getElementById("clScoreRequired").value = "";
+document.getElementById("clScoreObtained").value = "";
+document.getElementById("clAmountRequired").value = "";
+document.getElementById("clFormatRequired").value = "";
+document.getElementById("clStatus").value = "manquant";
+
+Object.entries(checklistFieldsByType).forEach(([key, el]) => { el.hidden = key !== type; });
+
+document.getElementById("checklistModal").hidden = false;
+
+}
+
+function closeChecklistModal() {
+document.getElementById("checklistModal").hidden = true;
+checklistContext = { app: null, type: null };
+}
+
+async function saveChecklist(app, newChecklist, eventType) {
+await updateDoc(doc(db, "users", uid, "applications", app.id), { checklist: newChecklist, updatedAt: serverTimestamp() });
+trackEvent("application_checklist_updated", { type: eventType || "unknown" });
+await loadApplications();
+}
+
+async function cycleChecklistStatus(app, itemId) {
+const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+const newChecklist = checklist.map((i) => (i.id === itemId ? { ...i, status: nextChecklistStatus(i.status) } : i));
+await saveChecklist(app, newChecklist, "status_cycle");
+}
+
+async function removeChecklistItem(app, itemId) {
+const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+const newChecklist = checklist.filter((i) => i.id !== itemId);
+await saveChecklist(app, newChecklist, "remove");
+}
+
+document.getElementById("checklistForm").addEventListener("submit", async (event) => {
+
+event.preventDefault();
+
+const { app, type } = checklistContext;
+if (!app || !type) return;
+
+const label = document.getElementById("clLabel").value.trim();
+if (!label) return;
+
+const item = {
+id: makeChecklistItemId(),
+type,
+label,
+status: document.getElementById("clStatus").value,
+meta: {}
+};
+
+if (type === "recommendation") {
+item.meta.recommenderContact = document.getElementById("clRecommenderContact").value.trim();
+} else if (type === "language_test") {
+item.meta.testName = document.getElementById("clTestName").value;
+item.meta.testDate = document.getElementById("clTestDate").value || "";
+item.meta.scoreRequired = document.getElementById("clScoreRequired").value.trim();
+item.meta.scoreObtained = document.getElementById("clScoreObtained").value.trim();
+} else if (type === "financial_proof") {
+item.meta.amountRequired = document.getElementById("clAmountRequired").value.trim();
+item.meta.formatRequired = document.getElementById("clFormatRequired").value.trim();
+}
+
+const newChecklist = [...(Array.isArray(app.checklist) ? app.checklist : []), item];
+
+await saveChecklist(app, newChecklist, type);
+
+closeChecklistModal();
+
+});
+
+document.getElementById("checklistModalClose").addEventListener("click", closeChecklistModal);
+document.getElementById("checklistCancelBtn").addEventListener("click", closeChecklistModal);
+
+document.getElementById("checklistModal").addEventListener("click", (event) => {
+if (event.target === document.getElementById("checklistModal")) closeChecklistModal();
+});
+
+// ---------- Guide lettres de recommandation (contenu statique) ----------
+
+document.getElementById("recommendationGuideClose").addEventListener("click", () => {
+document.getElementById("recommendationGuideModal").hidden = true;
+});
+
+document.getElementById("recommendationGuideModal").addEventListener("click", (event) => {
+if (event.target === document.getElementById("recommendationGuideModal")) document.getElementById("recommendationGuideModal").hidden = true;
+});
+
+document.getElementById("copyRecommendationTemplateBtn").addEventListener("click", async () => {
+
+const text = document.getElementById("recommendationTemplateText").value;
+const btn = document.getElementById("copyRecommendationTemplateBtn");
+const span = btn.querySelector("span");
+const original = span.textContent;
+
+try {
+await navigator.clipboard.writeText(text);
+span.textContent = "Copié !";
+} catch (error) {
+span.textContent = "Sélectionnez le texte manuellement";
+} finally {
+setTimeout(() => { span.textContent = original; }, 1800);
+}
+
+});
 
 form.addEventListener("submit", async (event) => {
 

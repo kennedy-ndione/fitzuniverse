@@ -361,6 +361,153 @@
 
 </div>
 
+<!-- Ajout / modification d'un item du dossier de candidature (lettre de
+recommandation, test de langue, preuve financière) — un seul modal,
+champs conditionnels selon le type choisi en amont (boutons "+ ..."
+dans applications.js). -->
+<div class="apps-modal" id="checklistModal" hidden>
+
+<div class="apps-modal-card">
+
+<div class="apps-modal-head">
+<h3 id="checklistModalTitle">Ajouter un élément</h3>
+<button type="button" class="apps-modal-close" id="checklistModalClose" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<form id="checklistForm">
+
+<input type="hidden" id="clType">
+<input type="hidden" id="clItemId">
+
+<label class="apps-field">
+<span id="clLabelCaption">Intitulé</span>
+<input type="text" id="clLabel" required placeholder="Ex. Pr. Dupont, directeur de mémoire">
+</label>
+
+<div id="clRecommendationFields" hidden>
+<label class="apps-field">
+<span>Lien ou e-mail de contact (optionnel)</span>
+<input type="text" id="clRecommenderContact" placeholder="Ex. m.dupont@universite.fr">
+</label>
+</div>
+
+<div id="clLanguageFields" hidden>
+<div class="apps-field-row">
+<label class="apps-field">
+<span>Test</span>
+<select id="clTestName">
+<option value="TOEFL">TOEFL</option>
+<option value="IELTS">IELTS</option>
+<option value="Autre">Autre</option>
+</select>
+</label>
+<label class="apps-field">
+<span>Date du test (optionnel)</span>
+<input type="date" id="clTestDate">
+</label>
+</div>
+<div class="apps-field-row">
+<label class="apps-field">
+<span>Seuil requis par la bourse</span>
+<input type="text" id="clScoreRequired" placeholder="Ex. 6.5">
+</label>
+<label class="apps-field">
+<span>Votre score obtenu (si connu)</span>
+<input type="text" id="clScoreObtained" placeholder="Ex. 6.0">
+</label>
+</div>
+</div>
+
+<div id="clFinancialFields" hidden>
+<div class="apps-field-row">
+<label class="apps-field">
+<span>Montant attendu</span>
+<input type="text" id="clAmountRequired" placeholder="Ex. 10 000 €">
+</label>
+<label class="apps-field">
+<span>Format attendu</span>
+<input type="text" id="clFormatRequired" placeholder="Ex. relevé bancaire des 3 derniers mois">
+</label>
+</div>
+</div>
+
+<label class="apps-field">
+<span>Statut</span>
+<select id="clStatus">
+<option value="manquant">Manquant</option>
+<option value="en_cours">En cours</option>
+<option value="complete">Complété</option>
+</select>
+</label>
+
+<div class="apps-modal-actions">
+<button type="button" class="btn btn-secondary" id="checklistCancelBtn">Annuler</button>
+<button type="submit" class="btn btn-primary" id="checklistSaveBtn">
+<span>Enregistrer</span>
+</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<!-- Guide statique lettres de recommandation + trame copiable pour le
+recommandant — contenu fixe, aucune donnée Firestore. -->
+<div class="apps-modal" id="recommendationGuideModal" hidden>
+
+<div class="apps-modal-card apps-modal-card-wide">
+
+<div class="apps-modal-head">
+<h3>Obtenir une bonne lettre de recommandation</h3>
+<button type="button" class="apps-modal-close" id="recommendationGuideClose" aria-label="Fermer">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<div class="rec-guide-body">
+
+<h4>Qui solliciter</h4>
+<ul class="rec-guide-list">
+<li><strong>Licence/Master :</strong> un enseignant qui vous a noté dans une matière liée à votre projet (mémoire, TP, cours magistral) — pas un enseignant qui vous connaît peu, même s'il a un titre prestigieux.</li>
+<li><strong>Doctorat/recherche :</strong> votre directeur de mémoire ou un chercheur avec qui vous avez collaboré, capable de parler précisément de votre travail.</li>
+<li><strong>Reconversion / expérience professionnelle :</strong> un responsable hiérarchique direct plutôt qu'un enseignant ancien — les jurys valorisent un regard récent et concret.</li>
+</ul>
+
+<h4>Comment formuler la demande</h4>
+<ul class="rec-guide-list">
+<li>Demandez au moins 3 à 4 semaines avant la date limite — une lettre bâclée nuit plus qu'elle n'aide.</li>
+<li>Rappelez le contexte précis : la bourse visée, ce qu'elle valorise (excellence académique, engagement, potentiel de recherche...), et 2-3 exemples concrets que le recommandant pourrait citer.</li>
+<li>Joignez votre CV et une trame (ci-dessous) pour lui faire gagner du temps — ça augmente réellement le taux de réponse.</li>
+</ul>
+
+<h4>Trame à envoyer au recommandant</h4>
+<textarea id="recommendationTemplateText" class="rec-guide-template" rows="10" readonly>Bonjour [Nom du recommandant],
+
+J'espère que vous allez bien. Je me permets de vous solliciter car je prépare actuellement ma candidature pour [nom de la bourse / du programme], qui nécessite une lettre de recommandation.
+
+Le programme valorise particulièrement [ex. l'excellence académique / le potentiel de recherche / l'engagement associatif]. Je pense que vous êtes bien placé(e) pour en témoigner, notamment à travers [exemple concret : un projet, un cours, une mission].
+
+Je me tiens à votre disposition pour tout complément d'information et vous transmets en pièce jointe mon CV ainsi qu'un résumé de mon projet. La date limite de dépôt est le [date] — une lettre reçue avant le [date -1 semaine] me laisserait une marge de sécurité.
+
+Je vous remercie sincèrement pour votre temps et votre soutien.
+
+Bien cordialement,
+[Votre nom]</textarea>
+<button type="button" class="btn btn-secondary btn-sm" id="copyRecommendationTemplateBtn">
+<i data-lucide="copy"></i>
+<span>Copier la trame</span>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
 <script src="pricing-plans.js"></script>
 <script type="module" src="applications.js"></script>
 
