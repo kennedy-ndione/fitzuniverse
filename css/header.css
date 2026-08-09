@@ -205,6 +205,31 @@ color:var(--text-light);
 
 @media(max-width:640px){
 .header-link{display:none;}
+/* "Connexion" (index.html) reste visible sur mobile contrairement aux
+autres liens secondaires du header (Bourses/Universités) : c'est le
+seul chemin vers login.html sur la home, il ne doit jamais disparaître.
+Logo + CTA remplissent déjà toute la largeur disponible sur un mobile
+étroit (bugs réels constatés en testant : le lien débordait hors
+viewport en texte complet ; passer à la ligne le faisait déborder du
+header, fixe en hauteur, et le faisait recouvrir par le contenu en
+dessous) — icône seule ("log-in"), sans le texte, pour tenir sur la
+même ligne que le CTA sans agrandir le header. */
+/* Même traitement visuel que le CTA (pastille claire + ombre) plutôt
+que color:var(--text-light) du .header-link générique : ce dernier est
+prévu pour un fond blanc une fois le header défilé (.is-scrolled), pas
+pour flotter directement sur la photo du hero — trop peu de contraste
+pour rester repérable, contrairement au bouton "Découvrir" à côté. */
+.header-link-login{display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border-radius:var(--radius-full); background:#fff; color:var(--primary-color); box-shadow:var(--shadow-xs);}
+.header-link-login span{
+position:absolute;
+width:1px; height:1px;
+padding:0; margin:-1px;
+overflow:hidden;
+clip:rect(0,0,0,0);
+white-space:nowrap;
+border:0;
+}
+.header-link-login i{width:18px; height:18px;}
 }
 
 .header .btn{
