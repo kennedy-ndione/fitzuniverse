@@ -13,7 +13,7 @@ serverTimestamp
 import { calculateAiScore } from "./js/profile-score.js";
 import { initMessagesPanel } from "./js/student-messages.js";
 import { PLAN_ORDER, PLAN_LABELS, resolveFeatureFlags } from "./js/plan-features.js";
-import { resolvePlan, hasFitzExpressAccess } from "./js/access-guard.js";
+import { resolvePlan, hasFitzExpressAccess, nextPlanId } from "./js/access-guard.js";
 import { hidePageLoader } from "./js/app-shell.js";
 
 // Les données utilisateur (profil, score) vivent désormais dans Firestore
@@ -103,11 +103,10 @@ const FITZ_TIPS = [
 "Préparez vos réponses aux questions d'entretien classiques avant même de recevoir une invitation."
 ];
 
-function nextPlanId(planId) {
-const index = PLAN_ORDER.indexOf(planId);
-if (index === -1 || index === PLAN_ORDER.length - 1) return null;
-return PLAN_ORDER[index + 1];
-}
+// nextPlanId() vient désormais de js/access-guard.js (source unique —
+// ce fichier définissait auparavant sa propre copie, identique mais
+// dupliquée, comme resolvePlan() avant sa migration — voir la note plus
+// haut).
 
 // Verrouillage piloté par le Module 4 du Control Center (Gestion des
 // formules, admin/plans.js) plutôt que par un seuil de palier codé en
@@ -174,6 +173,81 @@ link.setAttribute("href", link.dataset.realHref);
 }
 
 });
+
+}
+
+// "Mon conseiller" (Signature Focus / Signature) suit une règle
+// différente des outils Fitz ci-dessus : masqué entièrement plutôt que
+// grisé-avec-CTA. Proposer un conseiller humain à un compte Pass
+// Express (7 500 FCFA) ou Essentiel créerait un upsell peu crédible —
+// la carte de mise à niveau générique (renderUpgradeNudge ci-dessous,
+// qui suggère déjà Signature Focus juste après Premium via
+// nextPlanId()) suffit comme signal pour ces formules.
+function applyAdvisorVisibility(planId, featureFlags, testerAccess, hasFitzExpress) {
+
+const label = document.getElementById("advisorSectionLabel");
+const nav = document.getElementById("advisorSectionNav");
+
+if (!label || !nav) return;
+
+const flags = featureFlags.advisor;
+const hasAdvisor = !!flags && (testerAccess || flags[planId] === true);
+
+label.hidden = !hasAdvisor;
+nav.hidden = !hasAdvisor;
+
+}
+
+// Un Pass Fitz Express actif sans formule payante donne uniquement
+// accès au chat Fitz (voir applyFeatureLocks ci-dessus) — mais tant
+// qu'il reste grisé-avec-CTA comme les autres outils, la sidebar
+// affiche 7 liens verrouillés en plus du chat, ce qui ne correspond pas
+// à ce qu'est réellement le Pass Express (une assistance ponctuelle de
+// 14 jours, pas un aperçu d'un vrai espace de candidature). On masque
+// donc entièrement ces 7 fonctionnalités plutôt que de les griser —
+// seul le chat Fitz reste visible, en plus des 3 pages toujours
+// ouvertes (tableau de bord, profil, paramètres) et des pages publiques
+// (universités, bourses).
+const FITZ_EXPRESS_HIDDEN_FEATURES = ["applications", "documents", "ai_letter", "ai_check", "ai_email", "ai_translate", "compress"];
+
+function applyFitzExpressRestriction(planId, hasFitzExpress) {
+
+const isFitzExpressOnly = hasFitzExpress && planId === "gratuit";
+
+FITZ_EXPRESS_HIDDEN_FEATURES.forEach((key) => {
+
+document.querySelectorAll(`[data-feature="${key}"]`).forEach((el) => {
+el.hidden = isFitzExpressOnly;
+});
+
+});
+
+}
+
+function renderFitzExpressBanner(planId, hasFitzExpress, fitzExpressExpiresAt) {
+
+const banner = document.getElementById("fitzExpressBanner");
+
+if (!banner) return;
+
+if (!hasFitzExpress || planId !== "gratuit" || !fitzExpressExpiresAt) {
+banner.hidden = true;
+return;
+}
+
+const expiry = new Date(fitzExpressExpiresAt);
+
+if (isNaN(expiry)) {
+banner.hidden = true;
+return;
+}
+
+const daysLeft = Math.max(0, Math.ceil((expiry.getTime() - Date.now()) / 86400000));
+
+document.getElementById("fitzExpressDaysLeft").textContent =
+daysLeft <= 1 ? "moins d'1 jour" : `${daysLeft} jours`;
+
+banner.hidden = false;
 
 }
 
@@ -298,7 +372,7 @@ container.appendChild(card);
 
 }
 
-function renderPlanExperience(planId, coachData, featureFlags, testerAccess, hasFitzExpress) {
+function renderPlanExperience(planId, coachData, featureFlags, testerAccess, hasFitzExpress, fitzExpressExpiresAt) {
 
 document.body.dataset.plan = planId;
 
@@ -309,6 +383,9 @@ const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[planId];
 
 applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress);
+applyAdvisorVisibility(planId, featureFlags, testerAccess, hasFitzExpress);
+applyFitzExpressRestriction(planId, hasFitzExpress);
+renderFitzExpressBanner(planId, hasFitzExpress, fitzExpressExpiresAt);
 renderUpgradeNudge(planId, testerAccess);
 renderCoachPanel(coachData);
 
@@ -557,7 +634,7 @@ renderPlanExperience(resolvePlan(userData), {
 profileScore: aiScoreValue,
 documentsCount: documentsCountValue,
 scholarshipsCount: scholarshipsCountValue
-}, resolveFeatureFlags(planFeaturesConfig), userData.testerAccess === true, hasFitzExpressAccess(userData));
+}, resolveFeatureFlags(planFeaturesConfig), userData.testerAccess === true, hasFitzExpressAccess(userData), userData.fitzExpressExpiresAt || null);
 
 initMessagesPanel(firebaseUser.uid);
 

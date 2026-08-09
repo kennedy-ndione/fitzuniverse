@@ -21,10 +21,11 @@
 <!-- Design system ScholarBridge -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="dashboard.css">
+<style>[hidden]{display:none !important;}</style>
 
 </head>
 
-<body data-plan="essentiel">
+<body>
 
 <!-- Loader affiché pendant la vérification de la session Firebase -->
 <div id="pageLoader" class="auth-page-loader">
@@ -229,6 +230,21 @@
 <p>Pour que Fitz vous connaisse vraiment et puisse vous guider, complétez votre profil — c'est la première étape de votre accompagnement.</p>
 <a href="profile.html" class="welcome-alert-cta">
 <span>Compléter mon profil</span>
+<i data-lucide="arrow-right"></i>
+</a>
+</div>
+</div>
+
+<!-- Pass Fitz Express actif, sans formule d'accompagnement payante —
+voir dashboard.js:renderFitzExpressBanner(). Masqué pour tout autre
+cas (formule payante active, ou aucun accès du tout). -->
+<div id="fitzExpressBanner" class="welcome-alert welcome-alert-accompagnement" hidden>
+<i data-lucide="zap"></i>
+<div>
+<strong>Pass Fitz Express — <span id="fitzExpressDaysLeft">14 jours</span> restants</strong>
+<p>Questions illimitées à Fitz, sans engagement. Passez à une formule complète pour suivre vos candidatures et débloquer tous les outils Fitz — le montant du pass est intégralement déduit sous 30 jours.</p>
+<a href="offers.html" class="welcome-alert-cta">
+<span>Choisir ma formule</span>
 <i data-lucide="arrow-right"></i>
 </a>
 </div>
