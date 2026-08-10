@@ -27,6 +27,11 @@ color:var(--text-light);
 max-width:640px;
 }
 
+.apps-intro p a{
+font-weight:700;
+color:var(--accent-color);
+}
+
 /* ---------- Stats ---------- */
 
 .apps-stats{

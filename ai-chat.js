@@ -75,6 +75,7 @@ const historyListEl = document.getElementById("chatHistoryList");
 const historyToggleBtn = document.getElementById("chatHistoryToggleBtn");
 const historyCloseBtn = document.getElementById("chatHistoryCloseBtn");
 const historyBackdrop = document.getElementById("chatHistoryBackdrop");
+const historySearchInput = document.getElementById("chatHistorySearch");
 
 const attachBtn = document.getElementById("attachBtn");
 const fileInput = document.getElementById("chatFileInput");
@@ -132,11 +133,41 @@ document.body.classList.toggle("ai-chat-history-open");
 historyCloseBtn.addEventListener("click", closeHistory);
 historyBackdrop.addEventListener("click", closeHistory);
 
+historySearchInput.addEventListener("input", renderHistoryList);
+
+// Recherche par titre ET par contenu des messages — un historique de
+// plusieurs dizaines de fils redevient vite illisible en défilement
+// pur (constat de l'audit Phase 3 : "au-delà de quelques échanges,
+// retrouver une ancienne conversation devient pénible").
+function matchesHistorySearch(conversation, query) {
+
+if (!query) return true;
+
+const normalizedQuery = query.trim().toLowerCase();
+if (!normalizedQuery) return true;
+
+if (conversation.title.toLowerCase().includes(normalizedQuery)) return true;
+
+return conversation.messages.some((message) =>
+(message.content || "").toLowerCase().includes(normalizedQuery)
+);
+
+}
+
 function renderHistoryList() {
 
 historyListEl.innerHTML = "";
 
-conversations.forEach((conversation) => {
+const query = historySearchInput.value;
+const filtered = conversations.filter((conversation) => matchesHistorySearch(conversation, query));
+
+if (query.trim() && !filtered.length) {
+historyListEl.innerHTML = `<p class="ai-chat-history-empty">Aucune conversation ne correspond à « ${escapeHtml(query.trim())} ».</p>`;
+if (window.lucide) lucide.createIcons();
+return;
+}
+
+filtered.forEach((conversation) => {
 
 const item = document.createElement("div");
 item.className = `ai-chat-history-item${conversation.id === active.id ? " is-active" : ""}`;

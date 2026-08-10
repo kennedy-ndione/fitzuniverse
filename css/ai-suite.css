@@ -1206,6 +1206,61 @@ cursor:pointer;
 .ai-chat-history-close i,
 .ai-chat-history-close svg{ width:18px; height:18px; }
 
+.ai-chat-history-search{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+margin:10px 14px 4px;
+
+padding:8px 12px;
+
+border-radius:var(--radius-sm);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+}
+
+.ai-chat-history-search i,
+.ai-chat-history-search svg{width:15px;height:15px;color:var(--text-muted);flex-shrink:0;}
+
+.ai-chat-history-search input{
+
+flex:1;
+
+border:none;
+
+background:transparent;
+
+font-size:.84rem;
+
+color:var(--text-color);
+
+min-width:0;
+
+}
+
+.ai-chat-history-search input:focus{outline:none;}
+
+.ai-chat-history-empty{
+
+padding:20px 14px;
+
+font-size:.82rem;
+
+line-height:1.5;
+
+color:var(--text-muted);
+
+text-align:center;
+
+}
+
 .ai-chat-history-list{
 
 flex:1;
