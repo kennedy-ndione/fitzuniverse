@@ -254,21 +254,17 @@ gap:4px;
 /* Home (index.html) uniquement : Bourses/Universités/Découvrir/Connexion
 formaient 2 blocs disjoints (.header-nav / .header-cta-group) répartis
 par justify-content:space-between sur .header-container — l'écart entre
-les deux variait avec la largeur d'écran et les 4 éléments ne se
-lisaient jamais comme un seul groupe. .header-links les réunit en un
-seul amas à droite (justify-content:space-between ne s'applique plus
-qu'entre logo et .header-links), avec un gap fixe et volontairement
-serré entre nav et CTA — les 4 éléments lisent maintenant comme une
-even rangée de tuiles plutôt que 2 groupes espacés au hasard. Les
-autres pages gardent .header-actions (2 éléments max), inchangé
-ci-dessus. */
+les deux variait avec la largeur d'écran. .header-links les réunit en
+un seul groupe à droite (justify-content:space-between ne s'applique
+plus qu'entre logo et .header-links). Les autres pages gardent
+.header-actions (2 éléments max), inchangé ci-dessus. */
 .header-links{
 
 display:flex;
 
 align-items:center;
 
-gap:10px;
+gap:36px;
 
 }
 
@@ -278,7 +274,7 @@ display:flex;
 
 align-items:center;
 
-gap:8px;
+gap:32px;
 
 }
 
@@ -288,7 +284,7 @@ display:flex;
 
 align-items:center;
 
-gap:8px;
+gap:20px;
 
 }
 
@@ -323,28 +319,36 @@ contextes hero-photo / is-scrolled ci-dessus surchargent avec leur
 propre variante — voir les notes plus haut. */
 .header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
 
-/* Bento : les 3 tuiles fantômes (Bourses/Universités/Connexion) portent
-désormais le même contour — auparavant seule "Connexion" avait une
-bordure (voir historique ci-dessous), ce qui la faisait ressortir comme
-seul élément "bouton" à côté de deux simples liens texte. Les 3
-partagent maintenant un même traitement pilule, et "Découvrir" (.btn,
-plein) reste la seule tuile à contraste fort du groupe — hiérarchie à
-2 niveaux (3 contours + 1 plein) au lieu de 3 registres différents. */
-.header-link-login{padding:8px 16px;}
+/* Nav texte minimaliste (retour arrière sur le traitement "3 pilules à
+contour + 1 CTA plein" du commit précédent, jugé encore trop chargé) :
+Bourses/Universités/Connexion perdent leur contour et deviennent de
+simples liens texte, distingués au survol par un soulignement animé
+plutôt qu'un fond/contour de bouton — seul "Découvrir" (.btn, plein)
+reste un vrai bouton, hiérarchie à 2 niveaux nette (texte / action
+principale). Scopé à .header-links (index.html) : les autres pages
+gardent le hover-pilule générique de .header-link plus haut, inchangé. */
+.header-link-login{padding:8px 4px;}
 
-.header:not(.header-on-light):not(.is-scrolled) .header-nav .header-link,
-.header:not(.header-on-light):not(.is-scrolled) .header-link-login{border:1.5px solid rgba(255,255,255,.4);}
-.header:not(.header-on-light):not(.is-scrolled) .header-nav .header-link:hover,
-.header:not(.header-on-light):not(.is-scrolled) .header-link-login:hover{border-color:rgba(255,255,255,.7);}
+.header-links .header-link{
+position:relative;
+padding:8px 2px;
+}
 
-.header.is-scrolled .header-nav .header-link,
-.header-on-light .header-nav .header-link,
-.header.is-scrolled .header-link-login,
-.header-on-light .header-link-login{border:1.5px solid rgba(15,23,42,.18);}
-.header.is-scrolled .header-nav .header-link:hover,
-.header-on-light .header-nav .header-link:hover,
-.header.is-scrolled .header-link-login:hover,
-.header-on-light .header-link-login:hover{border-color:rgba(15,23,42,.32);}
+.header-links .header-link::after{
+content:"";
+position:absolute;
+left:2px;
+right:2px;
+bottom:2px;
+height:2px;
+border-radius:2px;
+background:currentColor;
+transform:scaleX(0);
+transition:transform .25s var(--ease-standard);
+}
+
+.header-links .header-link:hover{background:transparent;}
+.header-links .header-link:hover::after{transform:scaleX(1);}
 
 @media(max-width:640px){
 .header-link{display:none;}
