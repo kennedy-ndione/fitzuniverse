@@ -6,6 +6,7 @@ getDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { trackEvent } from "./js/analytics.js";
+import { resolveSession } from "./js/access-guard.js";
 
 // ===============================
 // Paramètres URL
@@ -281,8 +282,20 @@ language: program.language || "",
 duration: program.duration || "",
 status: program.status || "",
 applicationUrl: program.applicationUrl || "",
+officialWebsite: universityProfile.officialWebsite || "",
 description: program.description || scholarshipData.description || universityProfile.description || ""
 };
+
+// Portail de candidature réservé aux abonnés (peu importe la formule —
+// Pass Express et Premier Dossier inclus), portail université toujours
+// public : règle indépendante des restrictions de fonctionnalités par
+// formule (chat seul pour Pass Express, 1 candidature pour Premier
+// Dossier — voir js/access-guard.js/js/plan-features.js), donc pas
+// question de réutiliser isFeatureLocked() ici. resolveSession() ne
+// redirige jamais (contrairement à requireAuth/requireFeature) : cette
+// page reste 100% publique même pour vérifier ce simple statut.
+const session = await resolveSession().catch(() => null);
+const isPaidUser = !!session && (session.testerAccess || session.planId !== "gratuit" || session.hasFitzExpress);
 
 // ===============================
 // Éléments HTML
@@ -302,6 +315,8 @@ const duration = document.getElementById("duration");
 const ranking = document.getElementById("ranking");
 const status = document.getElementById("status");
 const applyBtn = document.getElementById("applyBtn");
+const universityPortalBtn = document.getElementById("universityPortalBtn");
+const applicationPortalLocked = document.getElementById("applicationPortalLocked");
 
 // ===============================
 // Remplissage des informations
@@ -359,10 +374,42 @@ document.getElementById("detailsMain").hidden = false;
 if (window.lucide) lucide.createIcons();
 
 // ===============================
-// Bouton candidature — toujours libre, jamais de friction. Le lien
+// Portail université — toujours public, jamais de friction. Le lien
 // officiel s'ouvre immédiatement, comme n'importe quel lien externe.
 // ===============================
+if (universityPortalBtn) {
+
+if (university.officialWebsite) {
+universityPortalBtn.href = university.officialWebsite;
+} else {
+universityPortalBtn.addEventListener("click", (event) => {
+event.preventDefault();
+alert("Le site de l'université sera ajouté prochainement.");
+});
+}
+
+universityPortalBtn.addEventListener("click", () => {
+trackEvent("university_portal_opened", {
+country: university.country,
+university: university.university
+});
+});
+
+}
+
+// ===============================
+// Portail de candidature — réservé aux abonnés (voir isPaidUser
+// ci-dessus), jamais visible d'un visiteur public quelle que soit la
+// page. Un abonné voit toujours les 2 liens, y compris Pass Express et
+// Premier Dossier : cette règle est indépendante de ce que leur formule
+// débloque par ailleurs dans l'espace étudiant.
+// ===============================
 if (applyBtn) {
+
+applyBtn.hidden = !isPaidUser;
+if (applicationPortalLocked) applicationPortalLocked.hidden = isPaidUser;
+
+if (isPaidUser) {
 
 if (university.applicationUrl) {
 applyBtn.href = university.applicationUrl;
@@ -379,6 +426,8 @@ country: university.country,
 university: university.university
 });
 });
+
+}
 
 }
 

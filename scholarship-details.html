@@ -172,14 +172,32 @@ repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
 
 </div>
 
+<!-- 2 portails distincts (voir details.js) : le site de l'université
+(universities.officialWebsite) est TOUJOURS visible, public compris —
+le portail de candidature (programs.applicationUrl) n'apparaît qu'aux
+abonnés (peu importe la formule, Pass Express et Premier Dossier
+inclus). Ce n'est plus le même lien qu'avant cette page : l'ancien
+bouton unique pointait déjà vers applicationUrl mais l'affichait comme
+"portail officiel de l'université", ce qui prêtait à confusion — les
+deux existent désormais séparément, correctement nommés. -->
 <div class="cta-card-secondary">
 
 <p>Vous voulez avancer par vous-même ?</p>
 
-<a id="applyBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link">
-<span>Accéder au portail officiel de l'université</span>
+<a id="universityPortalBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link">
+<span>Accéder au site de l'université</span>
 <i data-lucide="external-link"></i>
 </a>
+
+<a id="applyBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link" hidden>
+<span>Accéder au portail de candidature</span>
+<i data-lucide="external-link"></i>
+</a>
+
+<p class="portal-trust" id="applicationPortalLocked" hidden>
+<i data-lucide="lock"></i>
+Le portail de candidature est réservé aux abonnés Fitz.
+</p>
 
 <p class="portal-trust">
 <i data-lucide="shield-check"></i>
