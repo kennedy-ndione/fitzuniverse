@@ -901,14 +901,28 @@ margin-top:8px;
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:14px 32px;
+gap:12px 14px;
 margin-top:8px;
 }
 
+/* Touche verre (voir .stat-card/.floating-card du hero, css/hero.css) —
+seul emprunt de ce vocabulaire hors du hero, volontairement limité à
+ces 3 petites pastilles plutôt qu'étendu à toute la section : le fond
+du bloc CTA est déjà une photo, un blur généralisé dessus l'aurait
+floutée elle-même au lieu de simplement souligner ces badges. Le fond
+sombre du bloc (rgba(.93)/(.88), voir .cta-box) donne déjà largement
+la marge de contraste nécessaire, ce voile clair à 8% ne la réduit pas
+sous l'AA. */
 .cta-trust > div{
 display:flex;
 align-items:center;
 gap:8px;
+padding:9px 16px;
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,.16);
+border-radius:var(--radius-full);
 font-size:.92rem;
 color:rgba(255,255,255,.85);
 }
