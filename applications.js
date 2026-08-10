@@ -533,6 +533,13 @@ ${app.generatedLetter
 : `<span>Fitz peut générer une lettre de motivation pour cette candidature.</span><a href="ai-letter.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
 </div>
 
+<div class="app-card-documents">
+<i data-lucide="mail"></i>
+${app.generatedEmail
+? `<span>E-mail Fitz généré pour cette candidature.</span><a href="ai-email.html?applicationId=${app.id}" class="app-doc-link">Revoir / régénérer</a>`
+: `<span>Fitz peut rédiger un e-mail pour cette candidature.</span><a href="ai-email.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
+</div>
+
 ${renderChecklistSection(app)}
 
 <div class="app-card-actions">

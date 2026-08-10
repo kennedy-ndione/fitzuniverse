@@ -15,8 +15,14 @@ import { LANGUAGES, detectLanguage } from "./js/ai/simulated-responses.js";
 import { getTranslationHistory, addTranslationHistory, saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
+import { extractTextFromFile } from "./js/ai/extract-text.js";
 
 initShellChrome();
+
+if (window["pdfjsLib"]) {
+window["pdfjsLib"].GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 function renderLockedState(container, ctx) {
 
@@ -208,13 +214,57 @@ async function runTranslation() {
 
 const targetCode = targetLanguageSelect.value;
 
-const rawText = mode === "text"
-? sourceText.value.trim()
-: (selectedFile ? `Aperçu de démonstration pour « ${selectedFile.name} » — l'extraction complète du contenu sera disponible dès que l'IA de traduction sera connectée.` : "");
+let rawText;
+
+if (mode === "text") {
+
+rawText = sourceText.value.trim();
 
 if (!rawText) {
-showToast(mode === "text" ? "Ajoutez un texte à traduire pour continuer." : "Choisissez un document à traduire pour continuer.", { type: "error" });
+showToast("Ajoutez un texte à traduire pour continuer.", { type: "error" });
 return;
+}
+
+} else {
+
+if (!selectedFile) {
+showToast("Choisissez un document à traduire pour continuer.", { type: "error" });
+return;
+}
+
+translateBtn.disabled = true;
+translateBtn.querySelector("span").textContent = "Extraction du texte…";
+
+try {
+
+rawText = await extractTextFromFile(selectedFile);
+
+} catch (error) {
+
+translateBtn.disabled = false;
+translateBtn.querySelector("span").textContent = "Traduire";
+
+showToast(
+error.message === "UNSUPPORTED_FORMAT"
+? "L'extraction de texte n'est pas encore prise en charge pour ce format (Word, image) — collez le texte dans l'onglet « Texte » en attendant."
+: "Impossible de lire ce fichier — vérifiez qu'il n'est pas corrompu.",
+{ type: "error" }
+);
+
+return;
+
+}
+
+if (!rawText) {
+
+translateBtn.disabled = false;
+translateBtn.querySelector("span").textContent = "Traduire";
+showToast("Aucun texte n'a pu être extrait de ce document — il est peut-être scanné en image sans couche de texte.", { type: "error" });
+
+return;
+
+}
+
 }
 
 const sourceCode = autoDetect.checked ? detectLanguage(rawText) : sourceLanguageSelect.value;

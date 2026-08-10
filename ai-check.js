@@ -15,8 +15,14 @@ import { generate } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
+import { extractTextFromFile } from "./js/ai/extract-text.js";
 
 initShellChrome();
+
+if (window["pdfjsLib"]) {
+window["pdfjsLib"].GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 function renderLockedState(container, ctx) {
 
@@ -235,10 +241,31 @@ async function runAnalysis() {
 analyzeBtn.disabled = true;
 analyzeBtn.querySelector("span").textContent = "Analyse en cours…";
 
-const files = entries.map((entry) => ({
+// Extraction de contenu best-effort (PDF uniquement pour l'instant,
+// voir js/ai/extract-text.js) — le résultat simulé actuel
+// (js/ai/simulated-responses.js) ignore `content`, mais le jour où une
+// vraie analyse de contenu sera branchée, elle recevra déjà le texte
+// des PDF sans qu'il faille toucher à cette boucle. Une extraction qui
+// échoue (Word, image, PDF scanné sans texte) laisse `content`
+// undefined plutôt que de bloquer l'analyse — le nom/type déclaré
+// reste la donnée minimale garantie.
+const files = await Promise.all(entries.map(async (entry) => {
+
+let content;
+
+try {
+content = await extractTextFromFile(entry.file);
+} catch {
+content = undefined;
+}
+
+return {
 name: entry.name,
 size: (entry.size / 1024 / 1024).toFixed(2),
-type: entry.type || undefined
+type: entry.type || undefined,
+content
+};
+
 }));
 
 try {

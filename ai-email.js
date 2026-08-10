@@ -9,6 +9,8 @@
 * ============================================================
 */
 
+import { db } from "./firebase-config.js";
+import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { generate } from "./js/ai/ai-client.js";
 import { EMAIL_TYPES } from "./js/ai/simulated-responses.js";
@@ -16,6 +18,12 @@ import { renderMarkdownLite } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
+
+// Contexte candidature — même patron que ai-letter.js (voir la note
+// dans ce fichier) : première réplication du lien vers une candidature
+// précise en dehors de la lettre de motivation. ai-check.js reste à
+// faire.
+const applicationId = new URLSearchParams(window.location.search).get("applicationId");
 
 initShellChrome();
 
@@ -55,9 +63,36 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-function initEmailTool(ctx) {
+async function initEmailTool(ctx) {
 
 const { profile } = ctx;
+
+let application = null;
+
+if (applicationId) {
+
+try {
+
+const snap = await getDoc(doc(db, "users", ctx.user.uid, "applications", applicationId));
+if (snap.exists()) application = { id: snap.id, ...snap.data() };
+
+} catch (error) {
+
+console.error("Impossible de charger la candidature liée :", error);
+
+}
+
+}
+
+const contextBanner = document.getElementById("applicationContext");
+
+if (application && contextBanner) {
+
+contextBanner.hidden = false;
+contextBanner.querySelector("span").textContent =
+`Cet e-mail sera enregistré dans le suivi de "${application.university}".`;
+
+}
 
 const typeGrid = document.getElementById("emailTypeGrid");
 const form = document.getElementById("emailForm");
@@ -87,6 +122,11 @@ fieldFullName.value = [profile.firstName, profile.lastName].filter(Boolean).join
 fieldNationality.value = profile.country || profile.originCountry || "";
 fieldDegree.value = profile.lastDegree || profile.currentDegree || "";
 fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.preferredCountries[0]) || "";
+
+if (application) {
+fieldUniversity.value = application.university || "";
+if (application.scholarship) fieldProgram.value = fieldProgram.value || application.scholarship;
+}
 
 let selectedType = null;
 let currentText = "";
@@ -213,9 +253,29 @@ content: text,
 meta: { tool: "ai-email", emailType: selectedType }
 });
 
+if (application) {
+
+try {
+
+await updateDoc(doc(db, "users", ctx.user.uid, "applications", application.id), {
+generatedEmail: {
+content: text,
+emailType: selectedType,
+generatedAt: serverTimestamp()
+}
+});
+
+} catch (error) {
+
+console.error("Impossible d'enregistrer l'e-mail sur la candidature :", error);
+
+}
+
+}
+
 trackEvent("email_generated", { country: data.country, emailType: selectedType });
 
-showToast("E-mail généré avec succès.");
+showToast(application ? `E-mail généré et enregistré dans "${application.university}".` : "E-mail généré avec succès.");
 
 } catch (error) {
 
@@ -272,7 +332,7 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-bootstrapShell({ feature: "ai_email" }).then((ctx) => {
+bootstrapShell({ feature: "ai_email" }).then(async (ctx) => {
 
 if (ctx.locked) {
 
@@ -282,6 +342,6 @@ return;
 
 }
 
-initEmailTool(ctx);
+await initEmailTool(ctx);
 
 });
