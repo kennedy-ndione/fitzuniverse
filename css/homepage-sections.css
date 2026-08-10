@@ -261,6 +261,29 @@ color:#178F43;
 
 .teaser-whatsapp:hover{color:var(--primary-color);}
 
+/* Bento (desktop uniquement) : la 1re carte (meilleur classement/photo
+la plus forte du tirage, voir js/homepage-teaser.js) prend 2 colonnes
+au lieu d'être identique aux 3 autres ; la 4e devient une bannière
+pleine largeur en 2e rangée — remplace la grille à 4 colonnes égales,
+plate et répétitive. L'aspect-ratio de sa photo est réduit (bannière
+large et basse plutôt que 4/3 étiré sur toute la largeur, qui aurait
+donné une image démesurément haute). */
+@media(min-width:1024px){
+
+.teaser-grid > :nth-child(1){
+grid-column:span 2;
+}
+
+.teaser-grid > :nth-child(4){
+grid-column:1 / -1;
+}
+
+.teaser-grid > :nth-child(4) .teaser-card-media{
+aspect-ratio:21 / 6;
+}
+
+}
+
 @media(max-width:1023px){
 .teaser-grid{grid-template-columns:repeat(2,1fr);}
 }
