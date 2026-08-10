@@ -932,7 +932,32 @@ modal.addEventListener("click", (event) => {
 if (event.target === modal) closeModal();
 });
 
-loadApplications();
+// Arrivée depuis payment.js après activation de "Premier Dossier"
+// (?action=new, voir POST_ACTIVATION_TARGETS) : ouvre directement le
+// formulaire plutôt que de laisser l'étudiant chercher le bouton
+// "Ajouter" — mais seulement si le quota le permet encore (même
+// vérification qu'à l'enregistrement, isQuotaReached), sinon on laisse
+// la page se charger normalement. L'URL est nettoyée pour qu'un
+// rechargement ou un lien partagé ne rouvre pas le formulaire à chaque
+// fois.
+function maybeAutoOpenNewApplication() {
+
+const shouldOpen = new URLSearchParams(window.location.search).get("action") === "new";
+
+if (!shouldOpen) return;
+
+window.history.replaceState({}, "", window.location.pathname);
+
+const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
+const quota = plan ? plan.maxAccompaniedApplications : null;
+
+if (isQuotaReached(quota, applications.length)) return;
+
+openModal(null);
+
+}
+
+loadApplications().then(maybeAutoOpenNewApplication);
 
 }
 

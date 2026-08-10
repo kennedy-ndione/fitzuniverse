@@ -337,6 +337,22 @@ setTimeout(() => resolve({ plan: plan.id, method }), 900);
 
 }
 
+// Où atterrit l'étudiant une fois l'activation confirmée. dashboard.html
+// reste la cible par défaut (comportement inchangé pour Essentiel/Avancé/
+// Premium/Signature Focus/Signature) — Pass Express et Premier Dossier
+// ont un premier geste évident et unique, on l'ouvre directement plutôt
+// que de faire remonter le pas depuis le tableau de bord (audit du
+// 2026-08-10, chantier "accès par formule"). "?action=new" est lu par
+// applications.js pour ouvrir directement le formulaire de candidature.
+const POST_ACTIVATION_TARGETS = {
+fitzExpress: "ai-chat.html",
+"premier-dossier": "applications.html?action=new"
+};
+
+function resolvePostActivationTarget(planId) {
+return POST_ACTIVATION_TARGETS[planId] || "dashboard.html";
+}
+
 function initActivation(plan, session) {
 
 const button = document.getElementById("activateButton");
@@ -406,7 +422,7 @@ if (isNewAccount) sessionStorage.setItem("just_created", "true");
 sessionStorage.setItem("just_upgraded", plan.label);
 
 setTimeout(() => {
-window.location.href = "dashboard.html";
+window.location.href = resolvePostActivationTarget(plan.id);
 }, 2200);
 
 });
