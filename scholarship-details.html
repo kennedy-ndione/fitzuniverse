@@ -77,6 +77,38 @@
 
 <div class="details-main">
 
+<!-- Avant de candidater : diagnostic Fitz — placé en premier dans la
+colonne principale (plutôt qu'après "À propos"/"Informations clés")
+pour rester au même niveau vertical que la carte "Être accompagné par
+Fitz" de la sidebar, elle-même visible dès le premier écran sur
+desktop (colonnes alignées en haut, voir .details-body). Sans ce
+repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
+écrans de scroll, bien après le CTA payant — audit du 2026-08-10. -->
+<section class="details-section diagnostic-block">
+
+<div class="diagnostic-head">
+<i data-lucide="sparkles"></i>
+<h2>Avant de candidater</h2>
+</div>
+
+<p class="diagnostic-intro">Fitz peut analyser votre compatibilité avec cette université.</p>
+
+<ul class="diagnostic-checklist">
+<li><i data-lucide="check"></i>Niveau académique</li>
+<li><i data-lucide="check"></i>Langue</li>
+<li><i data-lucide="check"></i>Documents</li>
+<li><i data-lucide="check"></i>Chances de compléter votre dossier</li>
+</ul>
+
+<button type="button" class="btn btn-secondary" id="analyzeBtn">
+<i data-lucide="scan-search"></i>
+<span>Analyser mon profil</span>
+</button>
+
+<div id="diagnosticResult" class="diagnostic-result" hidden></div>
+
+</section>
+
 <section class="details-section">
 <h2>À propos de cette opportunité</h2>
 <p id="description"></p>
@@ -118,32 +150,6 @@
 </div>
 
 </div>
-
-</section>
-
-<!-- Avant de candidater : diagnostic Fitz -->
-<section class="details-section diagnostic-block">
-
-<div class="diagnostic-head">
-<i data-lucide="sparkles"></i>
-<h2>Avant de candidater</h2>
-</div>
-
-<p class="diagnostic-intro">Fitz peut analyser votre compatibilité avec cette université.</p>
-
-<ul class="diagnostic-checklist">
-<li><i data-lucide="check"></i>Niveau académique</li>
-<li><i data-lucide="check"></i>Langue</li>
-<li><i data-lucide="check"></i>Documents</li>
-<li><i data-lucide="check"></i>Chances de compléter votre dossier</li>
-</ul>
-
-<button type="button" class="btn btn-secondary" id="analyzeBtn">
-<i data-lucide="scan-search"></i>
-<span>Analyser mon profil</span>
-</button>
-
-<div id="diagnosticResult" class="diagnostic-result" hidden></div>
 
 </section>
 
