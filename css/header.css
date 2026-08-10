@@ -329,6 +329,15 @@ principale). Scopé à .header-links (index.html) : les autres pages
 gardent le hover-pilule générique de .header-link plus haut, inchangé. */
 .header-link-login{padding:8px 4px;}
 
+/* "Connexion" est désormais un simple lien texte au même registre que
+Bourses/Universités (voir .header-links .header-link plus haut) — une
+icône à côté du texte y faisait doublon, les 2 autres liens n'en ont
+pas. Masquée ici, réaffichée uniquement dans le média-query mobile
+plus bas où elle devient le SEUL contenu du lien (texte cliqué,
+voir cette règle). */
+.header-link-login i,
+.header-link-login svg{display:none;}
+
 .header-links .header-link{
 position:relative;
 padding:8px 2px;
@@ -376,7 +385,8 @@ clip:rect(0,0,0,0);
 white-space:nowrap;
 border:0;
 }
-.header-link-login i{width:18px; height:18px;}
+.header-link-login i,
+.header-link-login svg{display:block; width:18px; height:18px;}
 }
 
 .header .btn{
