@@ -6,13 +6,18 @@ SCHOLARBRIDGE - SECTIONS DE LA PAGE D'ACCUEIL
 padding:110px 0;
 }
 
+/* Aligné à gauche plutôt que centré (révision "décalage éditorial") :
+casse la symétrie centrée qui rendait les sections why-us/how-it-works/
+teaser visuellement plates par rapport au hero, déjà lui-même aligné à
+gauche (.hero-content). Cohérent avec cette asymétrie existante plutôt
+que d'en inventer une nouvelle. */
 .section-header{
 max-width:640px;
-margin:0 auto 64px;
-text-align:center;
+margin:0 0 64px;
+text-align:left;
 display:flex;
 flex-direction:column;
-align-items:center;
+align-items:flex-start;
 gap:20px;
 }
 
@@ -47,7 +52,7 @@ ces deux lignes, un sur-titre long ("Un aperçu, pas le catalogue
 entier") dépassait la fenêtre à 375px, la pastille étant en
 width:max-content. */
 max-width:100%;
-text-align:center;
+text-align:left;
 }
 
 .section-badge i,
@@ -72,8 +77,6 @@ color:var(--text-light);
 font-size:var(--fs-lead);
 line-height:var(--lh-relaxed);
 max-width:62ch;
-margin-left:auto;
-margin-right:auto;
 text-wrap:pretty;
 }
 
@@ -332,6 +335,25 @@ gap:32px;
 grid-template-columns:repeat(3,1fr);
 }
 
+/* Léger décalage vertical alterné (desktop large uniquement — voir le
+media query plus bas qui l'annule dès que la grille tablette/mobile
+passe à 2 ou 1 colonne) : casse l'alignement en rangée bien nette des
+3 cartes sans toucher leur taille ni leur contenu, dans le même esprit
+"décalage éditorial" que l'alignement à gauche des en-têtes ci-dessus. */
+@media(min-width:1024px){
+
+#why-us .cards-grid > :nth-child(2),
+.steps > :nth-child(2){
+margin-top:-28px;
+}
+
+#why-us .cards-grid > :nth-child(3),
+.steps > :nth-child(3){
+margin-top:20px;
+}
+
+}
+
 .info-card{
 
 background:#FFFFFF;
@@ -505,24 +527,44 @@ border-color:rgba(51,65,140,.20);
 
 }
 
+/* Agrandi de 2rem à 6rem (révision "décalage éditorial") : le chiffre
+devient un vrai motif graphique en fond de carte plutôt qu'un simple
+repère discret dans le coin — .step a déjà overflow:hidden, qui rogne
+proprement le débord côté haut/droite sans jamais créer de scroll
+horizontal. Purement décoratif (aria-hidden implicite : le h3 porte
+l'information, ce chiffre ne duplique aucun contenu qu'un lecteur
+d'écran devrait annoncer), l'opacité reste donc gouvernée par le seul
+critère esthétique, pas par l'AA. */
 .step-number{
 
 position:absolute;
 
-top:16px;
+top:-10px;
 
-right:16px;
+right:8px;
 
-font-size:2rem;
+font-size:6rem;
 
 font-weight:800;
 
-/* Chiffre d'étape en ambre translucide : purement décoratif (le titre
-de l'étape porte l'information), il réchauffe la carte sans occuper de
-surface. */
-color:rgba(233,163,25,.30);
+color:rgba(233,163,25,.16);
 
 line-height:1;
+
+z-index:0;
+
+pointer-events:none;
+
+}
+
+.step-icon,
+.step h3,
+.step p,
+.step .feature-link{
+
+position:relative;
+
+z-index:1;
 
 }
 
