@@ -68,10 +68,20 @@ verticalement) puis dégradé vers la photo sur le dernier quart, plutôt
 qu'un fade linéaire sur toute la hauteur : calculé pour garantir 4,5:1
 même dans le pire cas (photo blanc pur juste en dessous) — un fade
 continu retombait sous l'AA au niveau du texte, voir le calcul en
-commit. */
+commit. Le plateau à 75% et sa valeur .62 sont inchangés (c'est le
+calcul qui garantit l'AA, on n'y touche pas) ; un arrêt intermédiaire
+est ajouté dans le dernier quart pour adoucir sa sortie : un dégradé
+qui passe brutalement de "plat" à "en chute" à un seul point peut créer
+une bande de Mach à cet endroit précis — une ligne perçue par l'œil
+sans qu'aucun pixel n'y soit réellement plus sombre que ses voisins.
+Casser la chute en 2 étapes au lieu d'1 seule atténue cet effet. */
 .header:not(.header-on-light):not(.is-scrolled){
 
-background:linear-gradient(to bottom,rgba(9,12,28,.62) 0%,rgba(9,12,28,.62) 75%,rgba(9,12,28,.15) 100%);
+background:linear-gradient(to bottom,
+rgba(9,12,28,.62) 0%,
+rgba(9,12,28,.62) 75%,
+rgba(9,12,28,.35) 88%,
+rgba(9,12,28,.15) 100%);
 
 }
 
