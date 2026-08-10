@@ -342,14 +342,32 @@ passe à 2 ou 1 colonne) : casse l'alignement en rangée bien nette des
 "décalage éditorial" que l'alignement à gauche des en-têtes ci-dessus. */
 @media(min-width:1024px){
 
-#why-us .cards-grid > :nth-child(2),
-.steps > :nth-child(2){
+#why-us .cards-grid > :nth-child(2){
 margin-top:-28px;
 }
 
-#why-us .cards-grid > :nth-child(3),
-.steps > :nth-child(3){
+#why-us .cards-grid > :nth-child(3){
 margin-top:20px;
+}
+
+/* Bento : la 1re étape ("Trouver") devient une bannière pleine largeur —
+c'est celle qui démarre le parcours, elle porte le CTA le plus engageant
+("Démarrer mon analyse") — et "Préparer"/"Suivre" se rangent dessous en
+duo. Remplace le décalage vertical alterné ci-dessus (pensé pour 3
+colonnes égales) : la largeur suffit à distinguer la 1re carte sans
+recourir aussi à un décalage qui n'aurait plus de sens sur des cartes
+de tailles différentes. */
+.steps{
+grid-template-columns:repeat(2,1fr);
+}
+
+.steps > :nth-child(1){
+grid-column:1 / -1;
+padding:36px 44px 30px;
+}
+
+.steps > :nth-child(1) p{
+max-width:640px;
 }
 
 }
