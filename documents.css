@@ -27,6 +27,24 @@ color:var(--text-light);
 max-width:640px;
 }
 
+.docs-intro-crosslink{
+display:flex;
+align-items:flex-start;
+gap:8px;
+margin-top:10px;
+padding:10px 14px;
+background:var(--background-light);
+border-radius:var(--radius-sm);
+max-width:640px !important;
+}
+
+.docs-intro-crosslink > span{min-width:0;}
+
+.docs-intro-crosslink i,
+.docs-intro-crosslink svg{width:15px;height:15px;color:var(--accent-color);flex-shrink:0;margin-top:2px;}
+
+.docs-intro-crosslink a{font-weight:700;color:var(--accent-color);}
+
 /* ---------- Documents générés par Fitz ---------- */
 
 .docs-generated{
@@ -167,10 +185,24 @@ border-color:var(--accent-color);
 color:var(--background-soft);
 }
 
+.docs-results-bar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:18px;
+flex-wrap:wrap;
+}
+
 .docs-results-count{
 font-size:var(--fs-caption);
 color:var(--text-muted);
-margin-bottom:18px;
+}
+
+.docs-obtained-count{
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--accent-color);
 }
 
 /* ---------- Grille de documents ---------- */
@@ -238,6 +270,30 @@ transform:translateY(-4px);
 border-color:rgba(126,113,216,.35);
 box-shadow:var(--shadow-md);
 }
+
+.doc-card.is-obtained{
+border-color:rgba(34,197,94,.4);
+}
+
+.doc-card-obtained{
+display:flex;
+align-items:center;
+gap:8px;
+cursor:pointer;
+font-size:var(--fs-caption);
+font-weight:600;
+color:var(--text-light);
+}
+
+.doc-card-obtained input{
+width:15px;
+height:15px;
+accent-color:var(--success);
+cursor:pointer;
+flex-shrink:0;
+}
+
+.doc-card.is-obtained .doc-card-obtained{color:var(--success);}
 
 .doc-card-icon{
 width:44px;

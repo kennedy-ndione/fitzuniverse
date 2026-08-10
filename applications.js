@@ -177,7 +177,10 @@ return `
 ${total > 0 ? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>` : `<span class="app-checklist-score is-empty">Ajouter les exigences de cette bourse</span>`}
 <i data-lucide="chevron-down" class="app-checklist-chevron"></i>
 </button>
-<div class="checklist-groups" hidden>${groups}</div>
+<div class="checklist-groups" hidden>
+${groups}
+<a href="documents.html" class="checklist-guide-link"><i data-lucide="library"></i><span>Voir la bibliothèque de documents (passeport, diplôme, CV...)</span></a>
+</div>
 </div>`;
 
 }

@@ -1,7 +1,21 @@
+import { db } from "./firebase-config.js";
+import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { DOCUMENTS, DOCUMENT_CATEGORIES, PRIORITY_LEVELS } from "./js/documents-data.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 
 initShellChrome();
+
+// Identifiant stable pour un document de la bibliothèque statique
+// (DOCUMENTS n'a pas de champ `id` — seul `title` est unique et stable
+// dans cette liste). Utilisé comme clé du champ Firestore
+// users/{uid}.documentsObtained, une map { slug: true }.
+function slugify(title) {
+return title
+.toLowerCase()
+.normalize("NFD").replace(/[̀-ͯ]/g, "")
+.replace(/[^a-z0-9]+/g, "-")
+.replace(/^-+|-+$/g, "");
+}
 
 // Lecture défensive de "generatedDocuments" : une entrée corrompue dans
 // le localStorage d'un navigateur (ex. écriture partielle, ancienne
@@ -45,7 +59,7 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-function initDocumentsPage() {
+function initDocumentsPage(ctx) {
 
 const container = document.getElementById("documentsContainer");
 const modal = document.getElementById("documentModal");
@@ -57,10 +71,40 @@ const modalClose = document.getElementById("modalClose");
 const searchInput = document.getElementById("searchDocument");
 const categoryFilters = document.getElementById("categoryFilters");
 const resultsCount = document.getElementById("resultsCount");
+const obtainedCountEl = document.getElementById("obtainedCount");
 const generatedSection = document.getElementById("aiDocumentsSection");
 const generatedContainer = document.getElementById("generatedDocuments");
 
 let activeCategory = "";
+
+// État "obtenu" — persisté sur users/{uid}.documentsObtained (map
+// slug -> true), pas sur un document séparé : léger, jamais interrogé
+// ailleurs que sur cette page, pas besoin d'une sous-collection.
+const obtained = { ...(ctx.userData?.documentsObtained || {}) };
+
+function renderObtainedCount() {
+const total = DOCUMENTS.length;
+const count = DOCUMENTS.filter((d) => obtained[slugify(d.title)]).length;
+obtainedCountEl.textContent = `${count}/${total} documents obtenus`;
+}
+
+async function toggleObtained(docTitle) {
+
+const slug = slugify(docTitle);
+obtained[slug] = !obtained[slug];
+
+renderObtainedCount();
+applyFilters();
+
+try {
+await updateDoc(doc(db, "users", ctx.user.uid), {
+[`documentsObtained.${slug}`]: obtained[slug]
+});
+} catch (error) {
+console.error("Impossible d'enregistrer ce document comme obtenu :", error);
+}
+
+}
 
 function categoryLabel(key) {
 const found = DOCUMENT_CATEGORIES.find((c) => c.key === key);
@@ -108,18 +152,30 @@ chip.classList.toggle("is-active", chip.dataset.category === activeCategory);
 
 }
 
-function renderCard(doc, index) {
+function renderCard(docItem, index) {
 
 const card = document.createElement("article");
-card.className = "card doc-card";
+const isObtained = !!obtained[slugify(docItem.title)];
+card.className = "card doc-card" + (isObtained ? " is-obtained" : "");
 
 card.innerHTML = `
-<div class="doc-card-icon"><i data-lucide="${doc.icon}"></i></div>
-<span class="doc-card-category">${categoryLabel(doc.category)}</span>
-<h3>${doc.title}</h3>
-<p>${doc.description}</p>
+<div class="doc-card-icon"><i data-lucide="${docItem.icon}"></i></div>
+<span class="doc-card-category">${categoryLabel(docItem.category)}</span>
+<h3>${docItem.title}</h3>
+<p>${docItem.description}</p>
+<label class="doc-card-obtained" data-no-open>
+<input type="checkbox" ${isObtained ? "checked" : ""}>
+<span>J'ai ce document</span>
+</label>
 <span class="doc-card-cta">Voir les détails<i data-lucide="arrow-right"></i></span>
 `;
+
+card.querySelector(".doc-card-obtained input").addEventListener("click", (event) => {
+event.stopPropagation();
+toggleObtained(docItem.title);
+});
+
+card.querySelector(".doc-card-obtained").addEventListener("click", (event) => event.stopPropagation());
 
 card.addEventListener("click", () => openDetails(index));
 card.setAttribute("role", "button");
@@ -396,6 +452,7 @@ searchInput.addEventListener("input", applyFilters);
 
 renderCategoryFilters();
 renderGeneratedDocuments();
+renderObtainedCount();
 applyFilters();
 
 }
@@ -410,7 +467,7 @@ return;
 
 }
 
-initDocumentsPage();
+initDocumentsPage(ctx);
 
 }).catch((error) => {
 
