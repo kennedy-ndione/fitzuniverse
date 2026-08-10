@@ -22,7 +22,8 @@ getSentMessages,
 sendMessageToUser,
 updateUserPlanExpiry,
 updateUserFitzExpressExpiry,
-getUserApplications
+getUserApplications,
+updateApplicationChecklistItem
 } from "./firebase-admin.js";
 
 import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
@@ -402,6 +403,78 @@ en_attente: "En attente de réponse",
 reponse_recue: "Réponse reçue"
 };
 
+// Même structure que le "checklist" par candidature côté étudiant
+// (voir applications.js) — libellés dupliqués ici volontairement
+// plutôt qu'importés : applications.js est un script de page sans
+// exports, pas un module partageable.
+const CHECKLIST_TYPE_LABELS = {
+recommendation: "Lettre de recommandation",
+language_test: "Test de langue",
+financial_proof: "Preuve financière"
+};
+
+const CHECKLIST_STATUS_LABELS = {
+recommendation: { manquant: "Non demandée", en_cours: "Demandée", complete: "Reçue" },
+language_test: { manquant: "Non planifié", en_cours: "Planifié", complete: "Passé" },
+financial_proof: { manquant: "Manquant", en_cours: "En préparation", complete: "Prêt" }
+};
+
+function renderChecklistItemsReadOnly(app) {
+
+const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+if (!checklist.length) return "";
+
+return `
+<ul class="detail-checklist" style="list-style:none;margin-top:8px;padding-left:0;display:flex;flex-direction:column;gap:6px;">
+${checklist.map((item) => {
+
+const statusLabel = (CHECKLIST_STATUS_LABELS[item.type] || {})[item.status] || item.status;
+const typeLabel = CHECKLIST_TYPE_LABELS[item.type] || item.type;
+const canMarkReceived = item.type === "recommendation" && item.status !== "complete";
+
+return `
+<li style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--fs-caption,.8rem);color:var(--text-muted);">
+<span>${typeLabel} — ${item.label} <strong style="color:var(--text-color);">${statusLabel}</strong></span>
+${canMarkReceived ? `<button type="button" class="btn-detail-action" data-action="mark-received" data-app-id="${app.id}" data-item-id="${item.id}" style="padding:4px 10px;font-size:var(--fs-caption,.8rem);">Marquer reçue</button>` : ""}
+</li>
+`;
+
+}).join("")}
+</ul>
+`;
+
+}
+
+function renderInterviewPrepStatus(userData) {
+
+const el = document.getElementById("interviewPrepStatus");
+if (!el) return;
+
+const checklist = userData.interviewPrepChecklist || {};
+const total = 7; // CHECKLIST_ITEMS.length dans interview-prep.js — pas de source partagée, script de page sans exports.
+const done = Object.values(checklist).filter(Boolean).length;
+
+el.textContent = done > 0
+? `${done}/${total} points de préparation cochés par l'étudiant.`
+: "Aucun point de préparation coché pour le moment.";
+
+}
+
+async function handleMarkReceived(app, itemId) {
+
+const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+const newChecklist = checklist.map((item) => (item.id === itemId ? { ...item, status: "complete" } : item));
+
+try {
+await updateApplicationChecklistItem(uid, app.id, newChecklist);
+await renderCandidatures(currentUserData);
+} catch (error) {
+console.error("Impossible de marquer la lettre comme reçue :", error);
+alert("Un souci est survenu — réessayez dans un instant.");
+}
+
+}
+
 async function renderCandidatures(userData) {
 
 const list = document.getElementById("candidaturesList");
@@ -447,6 +520,8 @@ quotaStatus.textContent = `${suivies} — formule Gratuit, aucune candidature ac
 
 }
 
+renderInterviewPrepStatus(userData);
+
 if (!applications.length) {
 list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune candidature suivie pour le moment.</p>`;
 return;
@@ -458,9 +533,24 @@ list.innerHTML = applications.map((app) => `
 <div class="timeline-body">
 <div class="timeline-label">${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}</div>
 <div class="timeline-meta">${APP_STATUS_LABELS[app.status] || app.status}${app.premiumProtected ? " · suivi protégé au-delà de l'abonnement" : ""}</div>
+${renderChecklistItemsReadOnly(app)}
 </div>
 </div>
 `).join("");
+
+list.querySelectorAll('[data-action="mark-received"]').forEach((btn) => {
+
+btn.addEventListener("click", () => {
+
+const app = applications.find((a) => a.id === btn.dataset.appId);
+if (!app) return;
+
+btn.disabled = true;
+handleMarkReceived(app, btn.dataset.itemId);
+
+});
+
+});
 
 }
 

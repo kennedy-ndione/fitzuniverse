@@ -124,12 +124,19 @@ allow delete: if isOwner(uid);
 // Suivi de candidatures (applications.html) — entièrement possédé et
 // géré par l'étudiant lui-même, à la différence de adminNotes/messages
 // ci-dessus. Un admin peut lire à des fins de support mais n'écrit
-// jamais dedans (c'est le suivi personnel de l'étudiant, pas un outil
-// admin).
+// jamais dedans, à UNE exception près : le champ "checklist" (lettres
+// de recommandation, test de langue, preuve financière — voir
+// applications.js). Une lettre de recommandation arrive par un canal
+// externe (e-mail) qu'aucun backend ne surveille encore ; l'admin doit
+// pouvoir la marquer "reçue" à la place de l'étudiant si besoin (voir
+// admin/student-detail.js). Tout le reste du document (status,
+// deadline, notes...) reste strictement réservé à l'étudiant.
 // ------------------------------------------------------------
 match /users/{uid}/applications/{applicationId} {
 allow read: if isOwner(uid) || isAdmin();
-allow create, update, delete: if isOwner(uid);
+allow create, delete: if isOwner(uid);
+allow update: if isOwner(uid) ||
+(isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
 }
 
 // ------------------------------------------------------------

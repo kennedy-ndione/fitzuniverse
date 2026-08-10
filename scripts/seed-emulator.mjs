@@ -33,6 +33,16 @@ password: "TestEssentiel123!",
 plan: "essentiel" // quota attendu : 3 candidatures accompagnées (voir js/plan-features.js)
 };
 
+// Compte admin de test — nécessaire pour tester admin/*.html (l'accès
+// vérifie un document admins/{uid} avec isActive:true, voir
+// admin/student-detail.js). Ajouté le 2026-08-10 pour tester la
+// liaison admin du "Dossier de candidature enrichi" sans dépendre d'un
+// compte admin réel.
+const TEST_ADMIN = {
+email: "test.admin@scholarbridge.local",
+password: "TestAdmin123!"
+};
+
 initializeApp({ projectId: PROJECT_ID });
 
 const auth = getAuth();
@@ -76,9 +86,34 @@ appsSnap.docs.forEach((d) => batch.delete(d.ref));
 if (!appsSnap.empty) await batch.commit();
 console.log(`users/${uid}/applications vidée (${appsSnap.size} document(s) retiré(s)).`);
 
+let adminUid;
+try {
+const existingAdmin = await auth.getUserByEmail(TEST_ADMIN.email);
+adminUid = existingAdmin.uid;
+console.log(`Compte admin de test déjà présent dans l'émulateur (uid ${adminUid}), réutilisé.`);
+} catch {
+const createdAdmin = await auth.createUser({
+email: TEST_ADMIN.email,
+password: TEST_ADMIN.password,
+emailVerified: true
+});
+adminUid = createdAdmin.uid;
+console.log(`Compte admin de test créé dans l'émulateur Auth (uid ${adminUid}).`);
+}
+
+await db.collection("admins").doc(adminUid).set({
+email: TEST_ADMIN.email,
+isActive: true
+}, { merge: true });
+
+console.log(`Profil admin Firestore écrit : admins/${adminUid}.`);
+
 console.log("\nPrêt : connectez-vous sur http://localhost:5173/login.html?useEmulator=1 avec");
 console.log(` email    : ${TEST_USER.email}`);
 console.log(` password : ${TEST_USER.password}`);
+console.log("\nOu à l'administration sur http://localhost:5173/admin/login.html?useEmulator=1 avec");
+console.log(` email    : ${TEST_ADMIN.email}`);
+console.log(` password : ${TEST_ADMIN.password}`);
 }
 
 main().then(() => process.exit(0)).catch((err) => {

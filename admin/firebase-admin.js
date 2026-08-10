@@ -605,6 +605,20 @@ return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
 
 }
 
+// Exception unique au principe ci-dessus (voir firestore.rules pour la
+// même exception côté sécurité) : marquer une lettre de recommandation
+// comme reçue quand elle arrive par un canal externe (e-mail) qu'aucun
+// backend ne surveille encore. Écrase tout le champ "checklist" (même
+// approche que applications.js côté étudiant) — jamais les autres
+// champs de la candidature (status, deadline...), qui restent
+// strictement réservés à l'étudiant.
+export async function updateApplicationChecklistItem(uid, applicationId, checklist) {
+await updateDoc(doc(db, "users", uid, "applications", applicationId), {
+checklist,
+updatedAt: serverTimestamp()
+});
+}
+
 // Historique d'activité d'un étudiant, à partir du journal
 // analyticsEvents (Module 1). Nécessite l'index composite
 // (uid ASC, createdAt DESC) déclaré dans firestore.indexes.json.
