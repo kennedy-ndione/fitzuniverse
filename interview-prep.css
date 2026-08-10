@@ -1,0 +1,248 @@
+/* ==========================================================
+SCHOLARBRIDGE — PRÉPARATION AUX ENTRETIENS
+========================================================== */
+
+.ivp-intro{
+margin-bottom:18px;
+}
+
+.ivp-intro h2{
+font-family:var(--font-display);
+font-weight:800;
+font-size:var(--fs-h4);
+line-height:var(--lh-snug);
+color:var(--text-color);
+margin-bottom:4px;
+}
+
+.ivp-intro p{
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-light);
+max-width:640px;
+}
+
+.ivp-layout{
+display:grid;
+grid-template-columns:1fr 320px;
+gap:24px;
+align-items:start;
+}
+
+.ivp-section-title{
+display:flex;
+align-items:center;
+gap:8px;
+font-family:var(--font-display);
+font-weight:700;
+font-size:var(--fs-h4);
+color:var(--text-color);
+margin-bottom:14px;
+}
+
+.ivp-section-title i,
+.ivp-section-title svg{width:18px;height:18px;color:var(--accent-color);flex-shrink:0;}
+
+/* ---------- Banque de questions ---------- */
+
+.ivp-questions{
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:22px 24px;
+box-shadow:var(--shadow-sm);
+}
+
+.ivp-category{
+border-top:1px solid var(--border-color);
+}
+
+.ivp-category:first-of-type{border-top:none;}
+
+.ivp-category-head{
+width:100%;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+padding:14px 0;
+background:transparent;
+border:none;
+cursor:pointer;
+font-size:var(--fs-body);
+font-weight:600;
+color:var(--text-color);
+text-align:left;
+}
+
+.ivp-category-head > span{
+display:inline-flex;
+align-items:center;
+gap:10px;
+}
+
+.ivp-category-head i,
+.ivp-category-head svg{width:17px;height:17px;color:var(--accent-color);flex-shrink:0;}
+
+.ivp-category-chevron{
+transition:transform .2s ease;
+}
+
+.ivp-category-head.is-open .ivp-category-chevron{
+transform:rotate(180deg);
+}
+
+.ivp-question-list{
+display:flex;
+flex-direction:column;
+gap:10px;
+padding:0 0 18px 27px;
+list-style:disc;
+}
+
+.ivp-question-list li{
+font-size:var(--fs-small);
+line-height:1.6;
+color:var(--text-light);
+}
+
+/* ---------- Sidebar : checklist + entraînement ---------- */
+
+.ivp-sidebar{
+display:flex;
+flex-direction:column;
+gap:20px;
+position:sticky;
+top:24px;
+}
+
+.ivp-checklist{
+background:var(--background-alt);
+border:1px solid var(--border-color);
+border-radius:var(--radius-lg);
+padding:20px 22px;
+box-shadow:var(--shadow-sm);
+}
+
+.ivp-checklist-progress{
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--accent-color);
+margin-bottom:12px;
+}
+
+.ivp-checklist-list{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.ivp-checklist-item label{
+display:flex;
+align-items:flex-start;
+gap:10px;
+cursor:pointer;
+}
+
+.ivp-checklist-item input[type="checkbox"]{
+margin-top:3px;
+width:16px;
+height:16px;
+accent-color:var(--accent-color);
+flex-shrink:0;
+cursor:pointer;
+}
+
+.ivp-checklist-item span{
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-light);
+}
+
+.ivp-checklist-item:has(input:checked) span{
+color:var(--text-muted);
+text-decoration:line-through;
+}
+
+.ivp-practice-card{
+position:relative;
+isolation:isolate;
+background:var(--gradient-fitz);
+border-radius:var(--radius-lg);
+padding:22px;
+color:#fff;
+text-align:center;
+box-shadow:var(--shadow-sm);
+overflow:hidden;
+}
+
+/* --gradient-fitz passe du violet au cyan : certains segments (le
+violet clair ~139,124,246 et le cyan ~34,168,201) ne tiennent que
+2,8-3,3:1 pour du texte blanc, sous l'AA (4,5:1). Voile uniforme à 35%
+plutôt qu'un fond uni : garde le dégradé visible en le rendant plus
+sombre partout, calculé pour que le point le plus clair du dégradé
+tienne malgré tout ~5,2:1 minimum. */
+.ivp-practice-card::before{
+content:"";
+position:absolute;
+inset:0;
+z-index:-1;
+background:rgba(15,23,42,.35);
+}
+
+.ivp-practice-icon{
+width:44px;
+height:44px;
+margin:0 auto 12px;
+border-radius:50%;
+background:rgba(255,255,255,.16);
+display:flex;
+align-items:center;
+justify-content:center;
+color:#fff;
+}
+
+.ivp-practice-icon i,
+.ivp-practice-icon svg{width:20px;height:20px;}
+
+/* Même bug de fond que .cta-box avant correctif (voir css/homepage-sections.css)
+: h3/p hériteraient du texte sombre global (css/base.css) si on ne
+redéclare pas explicitement color:#fff ici — la règle globale h1-h6/p
+cible l'élément directement et gagne toujours sur une valeur héritée. */
+.ivp-practice-card h3{
+font-family:var(--font-display);
+font-weight:700;
+font-size:var(--fs-body);
+margin-bottom:6px;
+color:#fff;
+}
+
+.ivp-practice-card p{
+font-size:var(--fs-small);
+line-height:1.5;
+opacity:.92;
+margin-bottom:16px;
+color:#fff;
+}
+
+.ivp-practice-card .btn{
+width:100%;
+background:#fff;
+color:var(--primary-dark);
+}
+
+.ivp-practice-card .btn:hover{
+background:rgba(255,255,255,.9);
+}
+
+@media(max-width:900px){
+
+.ivp-layout{
+grid-template-columns:1fr;
+}
+
+.ivp-sidebar{
+position:static;
+}
+
+}

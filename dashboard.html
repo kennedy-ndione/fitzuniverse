@@ -167,6 +167,14 @@
 </a>
 </li>
 
+<li data-feature="interview_prep">
+<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
+<i data-lucide="mic"></i>
+<span>Préparation entretien</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
 </ul>
 
 <span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
@@ -447,25 +455,20 @@ En passant à <strong id="upgradeNextPlan">Avancé</strong>, vous débloquez :
 </div>
 </a>
 
-<!--
-Le suivi multi-candidatures a été construit le 2026-07-29
-(applications.html, carte "Suivi des candidatures" plus haut dans
-cette grille) — l'ancienne carte "Bientôt disponible" qui vivait ici
-a été retirée pour ne pas contredire une fonctionnalité qui existe et
-fonctionne réellement. La préparation aux entretiens, elle, n'a
-toujours pas de page : carte volontairement non cliquable (pas de
-<a>, pas de href mensonger) tant que cet outil n'existe pas
-réellement. Pour l'activer plus tard : créer la page dédiée,
-remplacer ce <div> par un <a href="..." class="tool-card"
-data-feature="..."> (ajouter la clé dans js/plan-features.js) et
-retirer tool-card-soon / le badge "Bientôt disponible".
--->
-<div class="tool-card tool-card-soon">
+<!-- Activée le 2026-08-10 (lot "dossier de candidature enrichi") :
+même palier que le reste du lot (Essentiel+), pas Premium comme
+l'ancienne copie du placeholder le laissait entendre. -->
+<a href="interview-prep.html" class="tool-card" data-feature="interview_prep" data-real-href="interview-prep.html">
 <div class="tool-card-icon"><i data-lucide="mic"></i></div>
 <h3>Préparation aux entretiens</h3>
-<p>Entraînez-vous aux questions d'entretien avec Fitz. Fonctionnalité Premium en préparation.</p>
-<span class="tool-card-cta tool-card-soon-badge">Bientôt disponible</span>
+<p>Banque de questions par thème, checklist de préparation, entraînement avec Fitz.</p>
+<span class="tool-card-cta"><span>Préparer mon entretien</span><i data-lucide="arrow-right"></i></span>
+<div class="tool-card-lock">
+<i data-lucide="lock"></i>
+<span></span>
+<span class="tool-card-lock-cta"></span>
 </div>
+</a>
 
 </div>
 

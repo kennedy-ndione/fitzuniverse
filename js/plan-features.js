@@ -101,6 +101,7 @@ export const FEATURE_CATALOG = [
 { key: "ai_email", label: "E-mails Fitz", description: "Génération d'e-mails professionnels pour les candidatures." },
 { key: "ai_translate", label: "Traduction de documents", description: "Traduction des documents pour les candidatures internationales." },
 { key: "compress", label: "Compression de fichiers", description: "Réduction de la taille d'un PDF ou d'une image à la taille demandée par un portail universitaire." },
+{ key: "interview_prep", label: "Préparation aux entretiens", description: "Banque de questions par type de bourse et checklist de préparation avant un entretien." },
 { key: "advisor", label: "Mon conseiller", description: "Messagerie avec un conseiller humain dédié à l'accompagnement." }
 ];
 
@@ -119,6 +120,11 @@ ai_check: { gratuit: false, "premier-dossier": true, essentiel: true, accompagne
 ai_email: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 ai_translate: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 compress: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
+// Décision validée le 2026-08-10 : même palier que le reste du lot
+// "dossier de candidature enrichi" (Essentiel+, pas de palier dédié
+// malgré le "Premium en préparation" affiché jusqu'ici sur le
+// placeholder dashboard — copie mise à jour en conséquence).
+interview_prep: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
 // Seule fonctionnalité de ce fichier qui N'EST PAS un outil Fitz — accès
 // à un conseiller humain, vrai uniquement pour les deux offres
 // "human" de pricing-plans.js. Voir la note en tête de fichier.

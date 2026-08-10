@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Préparation aux entretiens | ScholarBridge</title>
+
+<meta name="description" content="Préparez votre entretien de bourse ou d'admission : banque de questions par thème, checklist de préparation, entraînement avec Fitz.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="interview-prep.css">
+<style>[hidden]{display:none !important;}</style>
+
+</head>
+
+<body data-plan="essentiel">
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="interview_prep">
+<a href="interview-prep.html" class="nav-link is-active" aria-current="page" data-real-href="interview-prep.html">
+<i data-lucide="mic"></i>
+<span>Préparation entretien</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
+
+<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
+
+<li data-feature="advisor">
+<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
+<i data-lucide="user-check"></i>
+<span>Mon conseiller</span>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Préparation aux entretiens</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<main class="content" style="display:none;">
+
+<div id="lockedState" hidden></div>
+
+<div id="interviewPrepApp" class="reveal">
+
+<section class="ivp-intro">
+<h2>Entraînez-vous avant le grand jour</h2>
+<p>La plupart des entretiens de bourse posent les mêmes types de questions. Préparez vos réponses à l'avance, cochez ce qui est prêt, puis entraînez-vous à voix haute avec Fitz.</p>
+</section>
+
+<div class="ivp-layout">
+
+<div class="ivp-main">
+
+<section class="ivp-questions" aria-label="Banque de questions d'entretien">
+
+<h3 class="ivp-section-title"><i data-lucide="help-circle"></i>Questions fréquentes par thème</h3>
+
+<div class="ivp-category">
+<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
+<span><i data-lucide="user"></i>Motivation et parcours</span>
+<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
+</button>
+<ul class="ivp-question-list">
+<li>Parlez-moi de vous en deux minutes.</li>
+<li>Pourquoi avez-vous choisi ce domaine d'études ?</li>
+<li>Qu'est-ce qui vous a motivé à candidater à cette bourse en particulier, plutôt qu'à une autre ?</li>
+<li>Quel est votre plus grand échec académique, et qu'en avez-vous retenu ?</li>
+</ul>
+</div>
+
+<div class="ivp-category">
+<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
+<span><i data-lucide="target"></i>Projet académique et professionnel</span>
+<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
+</button>
+<ul class="ivp-question-list">
+<li>Quel est votre projet d'études ou de recherche ?</li>
+<li>Où vous voyez-vous dans cinq ans ?</li>
+<li>En quoi cette formation s'inscrit-elle dans votre projet professionnel ?</li>
+<li>Comptez-vous rentrer dans votre pays d'origine après vos études ? (question très fréquente pour les bourses gouvernementales — préparez une réponse honnête et argumentée)</li>
+</ul>
+</div>
+
+<div class="ivp-category">
+<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
+<span><i data-lucide="landmark"></i>Pourquoi cette université et ce pays</span>
+<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
+</button>
+<ul class="ivp-question-list">
+<li>Pourquoi avoir choisi cette université en particulier ?</li>
+<li>Que savez-vous du programme ou du département auquel vous candidatez ?</li>
+<li>Pourquoi ce pays plutôt qu'un autre ?</li>
+</ul>
+</div>
+
+<div class="ivp-category">
+<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
+<span><i data-lucide="award"></i>Compétences et réalisations</span>
+<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
+</button>
+<ul class="ivp-question-list">
+<li>Présentez un projet ou une réalisation dont vous êtes particulièrement fier(ère).</li>
+<li>Comment expliquez-vous une baisse de niveau visible sur votre relevé de notes, le cas échéant ?</li>
+<li>Quelle est votre plus grande qualité, et votre plus grand axe d'amélioration ?</li>
+</ul>
+</div>
+
+<div class="ivp-category">
+<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
+<span><i data-lucide="alert-triangle"></i>Questions difficiles</span>
+<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
+</button>
+<ul class="ivp-question-list">
+<li>Comment gérez-vous le stress ou des délais serrés ?</li>
+<li>Que ferez-vous si vous n'obtenez pas cette bourse ?</li>
+<li>Avez-vous des questions pour nous ? (préparez 2 à 3 questions précises — c'est presque toujours la dernière question posée)</li>
+</ul>
+</div>
+
+</section>
+
+</div>
+
+<aside class="ivp-sidebar">
+
+<section class="ivp-checklist" aria-label="Checklist de préparation">
+
+<h3 class="ivp-section-title"><i data-lucide="clipboard-check"></i>Checklist avant l'entretien</h3>
+<p class="ivp-checklist-progress" id="ivpChecklistProgress"></p>
+
+<ul class="ivp-checklist-list" id="ivpChecklistList"></ul>
+
+</section>
+
+<section class="ivp-practice-card">
+<div class="ivp-practice-icon"><i data-lucide="message-circle"></i></div>
+<h3>Entraînez-vous à voix haute</h3>
+<p>Discutez avec Fitz pour vous entraîner sur ces questions et recevoir des pistes d'amélioration sur vos réponses.</p>
+<a href="ai-chat.html" class="btn btn-primary">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+</a>
+</section>
+
+</aside>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="interview-prep.js"></script>
+
+</body>
+
+</html>
