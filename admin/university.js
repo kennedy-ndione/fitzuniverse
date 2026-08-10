@@ -56,6 +56,7 @@ const infoCountry = document.getElementById("infoCountry");
 const infoCity = document.getElementById("infoCity");
 const infoRanking = document.getElementById("infoRanking");
 const infoWebsite = document.getElementById("infoWebsite");
+const infoApplicationPortalUrl = document.getElementById("infoApplicationPortalUrl");
 const infoFields = document.getElementById("infoFields");
 
 const programsTable = document.getElementById("programsTable");
@@ -143,6 +144,7 @@ infoCountry.textContent = university.country || "--";
 infoCity.textContent = university.city || "--";
 infoRanking.textContent = university.ranking || "--";
 infoWebsite.textContent = university.officialWebsite || "--";
+infoApplicationPortalUrl.textContent = university.applicationPortalUrl || "--";
 infoFields.textContent = (university.fields && university.fields.length) ? university.fields.join(", ") : "--";
 
 statsPrograms.textContent = universityPrograms.length;
@@ -441,6 +443,7 @@ const editCity = document.getElementById("editCity");
 const editUniRanking = document.getElementById("editUniRanking");
 const editImage = document.getElementById("editImage");
 const editWebsite = document.getElementById("editWebsite");
+const editApplicationPortalUrl = document.getElementById("editApplicationPortalUrl");
 const editFields = document.getElementById("editFields");
 const editUniDescription = document.getElementById("editUniDescription");
 
@@ -460,6 +463,7 @@ editCity.value = university.city || "";
 editUniRanking.value = university.ranking || "";
 editImage.value = university.image || "";
 editWebsite.value = university.officialWebsite || "";
+editApplicationPortalUrl.value = university.applicationPortalUrl || "";
 editFields.value = (university.fields || []).join(", ");
 editUniDescription.value = university.description || "";
 
@@ -489,6 +493,7 @@ city: editCity.value.trim(),
 ranking: editUniRanking.value.trim(),
 image: editImage.value.trim(),
 officialWebsite: editWebsite.value.trim(),
+applicationPortalUrl: editApplicationPortalUrl.value.trim(),
 fields: editFields.value.split(",").map((f) => f.trim()).filter(Boolean),
 description: editUniDescription.value.trim()
 });

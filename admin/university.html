@@ -151,6 +151,7 @@
 <div class="detail-field"><span class="detail-field-label">Ville</span><span class="detail-field-value" id="infoCity">--</span></div>
 <div class="detail-field"><span class="detail-field-label">Classement</span><span class="detail-field-value" id="infoRanking">--</span></div>
 <div class="detail-field"><span class="detail-field-label">Site officiel</span><span class="detail-field-value" id="infoWebsite">--</span></div>
+<div class="detail-field"><span class="detail-field-label">Portail de candidature (par défaut)</span><span class="detail-field-value" id="infoApplicationPortalUrl">--</span></div>
 <div class="detail-field"><span class="detail-field-label">Domaines proposés</span><span class="detail-field-value" id="infoFields">--</span></div>
 </div>
 </div>
@@ -264,8 +265,8 @@ MODALE — Ajouter / modifier un programme
 </div>
 
 <div class="field">
-<label for="editApplicationUrl">Portail de candidature</label>
-<input type="text" id="editApplicationUrl" placeholder="https://...">
+<label for="editApplicationUrl">Portail de candidature — si différent de celui de l'université</label>
+<input type="text" id="editApplicationUrl" placeholder="Laisser vide pour hériter du portail par défaut de l'université">
 </div>
 
 <div class="field">
@@ -337,7 +338,18 @@ MODALE — Modifier le profil de l'université (collection
 <input type="text" id="editWebsite" placeholder="https://...">
 </div>
 
+<div class="field">
+<label for="editApplicationPortalUrl">Portail de candidature (par défaut)</label>
+<input type="text" id="editApplicationPortalUrl" placeholder="https://...">
 </div>
+
+</div>
+
+<!-- Migration "Option B" (2026-08-10) : la valeur ci-dessus s'applique
+à tous les programmes de cette université, sauf ceux qui portent leur
+propre "Portail de candidature" dans leur fiche programme (override —
+voir la modale Programme) — cas réel : Politecnico di Milano, dont le
+doctorat a un portail distinct du Licence/Master. -->
 
 <div class="field">
 <label for="editFields">Domaines proposés (séparés par des virgules)</label>
