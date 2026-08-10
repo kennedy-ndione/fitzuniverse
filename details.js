@@ -136,27 +136,50 @@ if (window.lucide) lucide.createIcons();
 // effectivement cliqué sur le lien du portail avant de revenir sur
 // l'onglet, pas à chaque changement d'onglet anodin.
 // ===============================
+// Fenêtre de validité du nudge : au-delà, un retour sur l'onglet n'a
+// plus grand-chose à voir avec ce clic précis (l'étudiant est probablement
+// revenu pour une tout autre raison) — évite un nudge hors contexte
+// après une longue absence.
+const PORTAL_NUDGE_MAX_AGE_MS = 30 * 60 * 1000;
+
 function initPortalNudge() {
 
 const nudge = document.getElementById("portalNudge");
 const closeBtn = document.getElementById("portalNudgeClose");
+const applyBtn = document.getElementById("applyBtn");
 
-let portalWasOpened = false;
+let portalOpenedAt = null;
 
-document.getElementById("applyBtn").addEventListener("click", () => {
-portalWasOpened = true;
+applyBtn.addEventListener("click", () => {
+
+// Ne pose le marqueur que si un vrai portail est sur le point de
+// s'ouvrir (href réel) — pas sur le cas où applicationUrl est encore
+// absent, où ce même clic ne fait qu'afficher une alerte "lien à
+// venir" (voir plus bas) sans jamais quitter l'onglet : sans cette
+// condition, n'importe quel changement d'onglet ultérieur déclenchait
+// à tort "De retour du portail ?" alors qu'aucun portail n'a été
+// ouvert.
+const href = applyBtn.getAttribute("href");
+
+if (href && href !== "#") {
+portalOpenedAt = Date.now();
+}
+
 });
 
 document.addEventListener("visibilitychange", () => {
 
-if (document.visibilityState === "visible" && portalWasOpened) {
+if (document.visibilityState !== "visible" || !portalOpenedAt) return;
+
+const withinWindow = Date.now() - portalOpenedAt < PORTAL_NUDGE_MAX_AGE_MS;
+
+portalOpenedAt = null;
+
+if (!withinWindow) return;
 
 nudge.hidden = false;
-portalWasOpened = false;
 
 if (window.lucide) lucide.createIcons();
-
-}
 
 });
 
