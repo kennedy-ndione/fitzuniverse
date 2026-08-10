@@ -2,7 +2,7 @@
 // ScholarBridge Admin - Firestore
 // ============================================
 
-import { db } from "../firebase-config.js";
+import { auth, db } from "../firebase-config.js";
 
 import {
 collection,
@@ -240,9 +240,20 @@ return profileId;
 
 }
 
+// updatedAt/updatedBy ajoutés le 2026-08-10 : un changement de valeur
+// non expliqué sur applicationPortalUrl (Politecnico di Milano) n'a pu
+// être ni daté ni attribué faute de trace — aucune écriture sur
+// "universities" n'en portait jusqu'ici (updateDoc brut). Ne remplace
+// pas un vrai journal d'audit (Firestore n'expose aucun historique de
+// document côté client), mais au moins CE champ précis sera
+// désormais traçable : qui, quand, pour la prochaine fois.
 export async function updateUniversityProfile(universityId, profileData) {
 
-await updateDoc(doc(db, "universities", universityId), profileData);
+await updateDoc(doc(db, "universities", universityId), {
+...profileData,
+updatedAt: serverTimestamp(),
+updatedBy: auth.currentUser?.email || auth.currentUser?.uid || null
+});
 
 }
 
