@@ -190,6 +190,101 @@ color:var(--primary-color);
 
 }
 
+/* Bandeau contextuel (offers-context.js) — même gabarit que .free-step
+plus bas (icône ronde + texte en ligne) mais teinté de l'identité
+"aurore" propre à Fitz (--gradient-fitz/--glow-fitz, voir css/base.css)
+plutôt que du vert générique de .free-step-icon : ce bandeau reprend
+un diagnostic que Fitz vient de produire, pas un simple repère "étape
+gratuite déjà faite". */
+.context-banner{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+background:linear-gradient(135deg,rgba(139,124,246,.08),rgba(34,168,201,.08));
+
+border:1px solid rgba(139,124,246,.25);
+
+border-radius:var(--radius-lg);
+
+padding:18px 24px;
+
+margin-bottom:28px;
+
+}
+
+.context-banner-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:40px;
+
+height:40px;
+
+border-radius:50%;
+
+background:var(--gradient-fitz);
+
+color:#fff;
+
+box-shadow:var(--glow-fitz);
+
+}
+
+.context-banner-icon i,
+.context-banner-icon svg{
+
+width:19px;
+
+height:19px;
+
+}
+
+.context-banner p{
+
+margin:0;
+
+color:var(--text-color);
+
+font-size:.96rem;
+
+font-weight:500;
+
+line-height:1.5;
+
+}
+
+.context-banner strong{
+
+color:var(--fitz-color);
+
+}
+
+@media(max-width:600px){
+
+.context-banner{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+text-align:left;
+
+padding:18px 20px;
+
+}
+
+}
+
 .offer-header{
 
 position:relative;

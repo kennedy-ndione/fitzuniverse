@@ -33,6 +33,17 @@
 <span>Retour à mon diagnostic</span>
 </a>
 
+<!-- Bandeau contextuel — visible uniquement si on arrive avec
+?program=<id>[&score=<percent>] (voir scholarship-details.html/
+details.js : sidebar, résultat du diagnostic, nudge de retour portail).
+Rempli par offers-context.js ; reste caché et la page se comporte
+exactement comme avant si ces paramètres sont absents (parcours normal
+depuis le header/les offres). -->
+<div id="offersContextBanner" class="context-banner" hidden>
+<div class="context-banner-icon"><i data-lucide="sparkles"></i></div>
+<p id="offersContextText"></p>
+</div>
+
 <header class="offer-header reveal">
 
 <div class="ai-badge">
@@ -437,6 +448,7 @@ ScholarBridge ne garantit ni l'admission ni l'obtention du visa. Nous garantisso
 
 <script src="pricing-plans.js"></script>
 <script src="offers.js"></script>
+<script type="module" src="offers-context.js"></script>
 
 </body>
 
