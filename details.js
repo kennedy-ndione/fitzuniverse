@@ -62,6 +62,38 @@ return { checks, percent };
 
 }
 
+// Transmet le programme (et le score de compatibilité, une fois connu)
+// aux 3 CTA de cette page qui mènent à offers.html — sans ça, cliquer
+// "Découvrir l'accompagnement" perdait le contexte ("cette université
+// précise", "ce diagnostic") au moment où il aurait le plus servi
+// l'argument (audit du 2026-08-10).
+function buildOffersUrl(programId, score) {
+
+const searchParams = new URLSearchParams({ program: programId });
+
+if (typeof score === "number") searchParams.set("score", score);
+
+return `offers.html?${searchParams.toString()}`;
+
+}
+
+// Met à jour les 2 CTA statiques de la page (sidebar + nudge de retour
+// portail) avec le programme courant, et le score dès qu'un diagnostic
+// a été calculé cette session. Le 3e CTA (résultat du diagnostic,
+// construit dynamiquement) porte déjà son propre lien avec le score —
+// voir renderDiagnostic.
+function updateFitzCtas(programId, score) {
+
+const primary = document.getElementById("fitzCtaPrimary");
+const nudge = document.getElementById("fitzCtaNudge");
+
+const url = buildOffersUrl(programId, score);
+
+if (primary) primary.href = url;
+if (nudge) nudge.href = url;
+
+}
+
 // URL de retour transmise à eligibility-test.html : cette page +
 // fromTest=1, pour que chargerUniversite() sache relancer le
 // diagnostic automatiquement une fois le test terminé (voir plus bas).
@@ -119,13 +151,19 @@ ${checks.map((c) => `
 </li>
 `).join("")}
 </ul>
-<a href="offers.html" class="btn btn-secondary btn-sm">
+<a href="${buildOffersUrl(university.id, percent)}" class="btn btn-secondary btn-sm">
 <span>Renforcer mon dossier avec Fitz</span>
 <i data-lucide="arrow-right"></i>
 </a>
 `;
 
 container.hidden = false;
+
+// Le score vient d'être calculé pour ce programme : les 2 autres CTA
+// (sidebar, nudge de retour portail) en profitent aussi, plutôt que de
+// rester sur un lien "programme seul" pendant que celui-ci ci-dessus
+// porte déjà le score.
+updateFitzCtas(university.id, percent);
 
 if (window.lucide) lucide.createIcons();
 
@@ -304,6 +342,11 @@ if (language) language.textContent = university.language || "—";
 if (duration) duration.textContent = university.duration || "—";
 if (ranking) ranking.textContent = university.ranking || "—";
 if (status) status.textContent = university.status || "—";
+
+// Sans score pour l'instant (le diagnostic n'a pas encore tourné) —
+// renderDiagnostic() les remettra à jour avec le score dès qu'il sera
+// disponible.
+updateFitzCtas(university.id);
 
 trackEvent("scholarship_viewed", {
 country: university.country,
