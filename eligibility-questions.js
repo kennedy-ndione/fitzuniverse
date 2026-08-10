@@ -227,6 +227,17 @@ render();
 
 }
 
+// N'accepte qu'un chemin relatif interne ("/scholarship-details.html?...")
+// — jamais une URL absolue ("https://…") ni protocol-relative ("//…") :
+// returnTo vient de l'URL (potentiellement modifiable à la main), ce
+// garde-fou évite qu'un lien forgé ne fasse atterrir l'étudiant sur un
+// site externe une fois le test terminé.
+function isSafeReturnTo(value) {
+
+return typeof value === "string" && value.startsWith("/") && !value.startsWith("//");
+
+}
+
 function finish() {
 
 sessionStorage.setItem(
@@ -234,7 +245,12 @@ sessionStorage.setItem(
 JSON.stringify(engine.answers)
 );
 
-window.location.href = "results.html";
+// returnTo (voir eligibility-test.js) : ramène directement à la fiche
+// qui a envoyé l'étudiant faire le test, plutôt que vers le résultat
+// générique — c'est cette fiche précise qui l'intéressait.
+const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+
+window.location.href = returnTo && isSafeReturnTo(returnTo) ? returnTo : "results.html";
 
 }
 

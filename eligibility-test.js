@@ -2,9 +2,18 @@
 // il redirige maintenant vers le questionnaire.
 const startButton = document.getElementById("startButton");
 
+// returnTo (voir scholarship-details.html/details.js) : transmis tel
+// quel au questionnaire, qui le relaiera à son tour à la fin du test
+// (eligibility-questions.js/finish()) pour ramener l'étudiant sur la
+// fiche précise qui l'a envoyé ici, plutôt que sur results.html par
+// défaut.
+const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+
 if (startButton) {
 startButton.addEventListener("click", () => {
-window.location.href = "eligibility-questions.html";
+window.location.href = returnTo
+? `eligibility-questions.html?returnTo=${encodeURIComponent(returnTo)}`
+: "eligibility-questions.html";
 });
 }
 

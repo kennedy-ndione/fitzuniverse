@@ -62,12 +62,44 @@ return { checks, percent };
 
 }
 
+// URL de retour transmise à eligibility-test.html : cette page +
+// fromTest=1, pour que chargerUniversite() sache relancer le
+// diagnostic automatiquement une fois le test terminé (voir plus bas).
+function buildReturnUrl() {
+
+const url = new URL(window.location.href);
+url.searchParams.set("fromTest", "1");
+
+return `${url.pathname}${url.search}`;
+
+}
+
+// Remplace l'ancien redirect silencieux (window.location.href direct) :
+// explique pourquoi un test est nécessaire et laisse l'étudiant décider
+// de continuer, plutôt que de le faire disparaître de la page sans
+// préavis.
+function renderDiagnosticPrompt(container) {
+
+container.innerHTML = `
+<p class="diagnostic-intro">Pour analyser votre compatibilité avec cette université, Fitz a besoin de connaître votre profil — un test rapide (2 minutes), à faire une seule fois. Vous reviendrez directement ici ensuite.</p>
+<a href="eligibility-test.html?returnTo=${encodeURIComponent(buildReturnUrl())}" class="btn btn-secondary btn-sm">
+<span>Faire le test (2 min)</span>
+<i data-lucide="arrow-right"></i>
+</a>
+`;
+
+container.hidden = false;
+
+if (window.lucide) lucide.createIcons();
+
+}
+
 function renderDiagnostic(container, university) {
 
 const rawResponses = sessionStorage.getItem("eligibilityResponses");
 
 if (!rawResponses) {
-window.location.href = "eligibility-test.html";
+renderDiagnosticPrompt(container);
 return;
 }
 
@@ -294,6 +326,15 @@ const diagnosticResult = document.getElementById("diagnosticResult");
 
 if (analyzeBtn) {
 analyzeBtn.addEventListener("click", () => renderDiagnostic(diagnosticResult, university));
+}
+
+// Retour automatique depuis eligibility-test.html (voir buildReturnUrl/
+// renderDiagnosticPrompt) : le test vient d'être complété pour CE
+// programme précis, pas la peine de faire recliquer "Analyser mon
+// profil" — le diagnostic se relance de lui-même et défile jusqu'à lui.
+if (params.get("fromTest") === "1" && sessionStorage.getItem("eligibilityResponses") && diagnosticResult) {
+renderDiagnostic(diagnosticResult, university);
+diagnosticResult.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 } catch (error) {
