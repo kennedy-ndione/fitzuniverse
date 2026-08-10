@@ -15,7 +15,7 @@ z-index:var(--z-header);
 
 background:transparent;
 
-border-bottom:1px solid transparent;
+border-bottom:none;
 
 box-shadow:none;
 
@@ -39,20 +39,25 @@ will-change:transform, opacity;
 transition:
 background .35s var(--ease-premium),
 box-shadow .35s var(--ease-premium),
-border-color .35s var(--ease-premium),
 transform .45s var(--ease-premium),
 opacity .4s var(--ease-premium);
 
 }
 
+/* Séparateur au scroll porté par le seul box-shadow (plus de
+border-bottom) : un bord de 1px sur un élément fixed en transform
+(voir will-change ci-dessus) pouvait, selon le sous-pixel où retombait
+sa hauteur (82.63px mesuré, jamais un entier), se rasteriser en fine
+ligne visible même hors de l'état scrollé — signalé sur index.html,
+scholarships.html et universities.html à la fois, donc porté par une
+règle commune plutôt que par un état particulier. --shadow-sm donne la
+même séparation visuelle sans dépendre d'un bord à l'échelle du pixel. */
 .header.is-scrolled{
 
 background:rgba(255,255,255,.82);
 
 backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
-
-border-bottom:1px solid rgba(226,232,240,.75);
 
 box-shadow:var(--shadow-sm);
 
