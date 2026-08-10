@@ -246,6 +246,33 @@ gap:4px;
 
 }
 
+/* Home (index.html) uniquement : .header-container passe de 2 à 3
+blocs (logo / nav secondaire / groupe CTA+Connexion) en
+justify-content:space-between (voir .header-container plus haut) — la
+nav "Bourses"/"Universités" se détache ainsi visuellement du CTA
+principal au lieu d'être alignée à plat avec lui dans une seule
+rangée. Les autres pages gardent .header-actions (2 éléments max),
+inchangé ci-dessus. */
+.header-nav{
+
+display:flex;
+
+align-items:center;
+
+gap:4px;
+
+}
+
+.header-cta-group{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+}
+
 .header-link{
 
 display:inline-flex;
@@ -276,6 +303,22 @@ teinte sombre à faible opacité puisque le fond est clair ici. Les
 contextes hero-photo / is-scrolled ci-dessus surchargent avec leur
 propre variante — voir les notes plus haut. */
 .header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
+
+/* "Connexion" se distingue désormais de Bourses/Universités par un
+contour (bouton fantôme) plutôt qu'un simple lien texte, pour ne plus
+sembler être un 4e élément identique dans la même rangée que le CTA
+principal. Couleur héritée de .header-link (déjà garantie AA dans
+chaque contexte ci-dessus) — seule la bordure change selon le fond,
+comme les autres surcharges contextuelles de cette page. */
+.header-link-login{padding:8px 16px;}
+
+.header:not(.header-on-light):not(.is-scrolled) .header-link-login{border:1.5px solid rgba(255,255,255,.4);}
+.header:not(.header-on-light):not(.is-scrolled) .header-link-login:hover{border-color:rgba(255,255,255,.7);}
+
+.header.is-scrolled .header-link-login,
+.header-on-light .header-link-login{border:1.5px solid rgba(15,23,42,.18);}
+.header.is-scrolled .header-link-login:hover,
+.header-on-light .header-link-login:hover{border-color:rgba(15,23,42,.32);}
 
 @media(max-width:640px){
 .header-link{display:none;}
