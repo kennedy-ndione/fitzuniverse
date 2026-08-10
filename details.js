@@ -281,7 +281,13 @@ coverage: program.coverage || "",
 language: program.language || "",
 duration: program.duration || "",
 status: program.status || "",
-applicationUrl: program.applicationUrl || "",
+// Modèle "Option B" (migration du 2026-08-10, voir admin/migrate-portal.js) :
+// applicationUrl vit par défaut au niveau université
+// (applicationPortalUrl), le champ programme ne reste rempli que pour
+// une vraie exception (ex. Politecnico di Milano : portail PhD
+// distinct du portail Licence/Master). Le programme gagne toujours
+// s'il porte une valeur — sinon on retombe sur le défaut université.
+applicationUrl: program.applicationUrl || universityProfile.applicationPortalUrl || "",
 officialWebsite: universityProfile.officialWebsite || "",
 description: program.description || scholarshipData.description || universityProfile.description || ""
 };
