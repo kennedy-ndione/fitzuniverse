@@ -678,6 +678,13 @@ height:16px;
 transition:transform .25s ease;
 }
 
+/* La transition ci-dessus n'était déclenchée par rien : aucune règle
+:hover ne changeait jamais le transform de l'icône. */
+.feature-link:hover i,
+.feature-link:hover svg{
+transform:translateX(4px);
+}
+
 .step:hover .feature-link i,
 .step:hover .feature-link svg{
 transform:translateX(4px);
