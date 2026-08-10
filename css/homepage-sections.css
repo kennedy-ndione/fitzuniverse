@@ -527,11 +527,12 @@ border-color:rgba(51,65,140,.20);
 
 }
 
-/* Agrandi de 2rem à 6rem (révision "décalage éditorial") : le chiffre
-devient un vrai motif graphique en fond de carte plutôt qu'un simple
-repère discret dans le coin — .step a déjà overflow:hidden, qui rogne
-proprement le débord côté haut/droite sans jamais créer de scroll
-horizontal. Purement décoratif (aria-hidden implicite : le h3 porte
+/* Motif graphique discret en fond de carte (révision "décalage
+éditorial") plutôt qu'un simple repère dans le coin — .step a déjà
+overflow:hidden, qui rogne proprement le débord côté haut/droite sans
+jamais créer de scroll horizontal. Un premier passage à 6rem dominait
+trop visuellement le texte des cartes ; ramené à 3.5rem pour rester en
+arrière-plan. Purement décoratif (aria-hidden implicite : le h3 porte
 l'information, ce chiffre ne duplique aucun contenu qu'un lecteur
 d'écran devrait annoncer), l'opacité reste donc gouvernée par le seul
 critère esthétique, pas par l'AA. */
@@ -539,11 +540,11 @@ critère esthétique, pas par l'AA. */
 
 position:absolute;
 
-top:-10px;
+top:2px;
 
-right:8px;
+right:16px;
 
-font-size:6rem;
+font-size:3.5rem;
 
 font-weight:800;
 
