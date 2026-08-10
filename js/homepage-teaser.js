@@ -85,15 +85,39 @@ return picks;
 
 }
 
-function renderCard(university, scholarshipTitle) {
+// Largeur réelle de chaque carte selon son slot dans la grille bento
+// (voir css/homepage-sections.css .teaser-grid) : la carte 0 fait ~2x
+// une carte normale sur desktop, la carte 3 devient une bannière pleine
+// largeur en 2e rangée — sizes doit refléter ces 2 cas particuliers,
+// sinon le navigateur choisirait une variante srcset trop petite pour
+// ces slots-là.
+function sizesForSlot(index) {
+
+if (index === 0) return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 570px";
+if (index === 3) return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 1160px";
+
+return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 275px";
+
+}
+
+function renderCard(university, scholarshipTitle, index) {
 
 const card = document.createElement("a");
 card.className = "teaser-card";
 card.href = "universities.html";
 
+const image = university.image || "default.jpg";
+const base = image.replace(/\.jpe?g$/i, "");
+
+// Variantes générées par scripts/generate-city-srcset.mjs (400/800/1200px)
+// à partir des photos ~2000px/300-580KB d'origine : la 1re carte de
+// l'aperçu (index 0) est la seule à charger avant le scroll, elle seule
+// reçoit fetchpriority/loading="eager" — les 3 autres restent lazy.
+const srcset = [400, 800, 1200].map((w) => `assets/images/cities/${base}-${w}w.jpg ${w}w`).join(", ");
+
 card.innerHTML = `
 <div class="teaser-card-media">
-<img src="assets/images/cities/${university.image || "default.jpg"}" alt="${university.city || university.university || ""}" loading="lazy">
+<img src="assets/images/cities/${base}-800w.jpg" srcset="${srcset}" sizes="${sizesForSlot(index)}" alt="${university.city || university.university || ""}" ${index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>
 ${university.ranking ? `<span class="teaser-card-rank"><i data-lucide="trophy"></i>${university.ranking}</span>` : ""}
 </div>
 <div class="teaser-card-body">
@@ -136,7 +160,7 @@ const pool = dedupeByUniversity(withPhoto.length >= TEASER_COUNT ? withPhoto : a
 const picks = pickDiverse(pool, TEASER_COUNT);
 
 grid.innerHTML = "";
-picks.forEach((university) => grid.appendChild(renderCard(university, firstScholarshipTitle(university.id, programs, scholarshipsById))));
+picks.forEach((university, index) => grid.appendChild(renderCard(university, firstScholarshipTitle(university.id, programs, scholarshipsById), index)));
 
 if (window.lucide) lucide.createIcons();
 
