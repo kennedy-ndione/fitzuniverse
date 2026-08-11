@@ -464,6 +464,21 @@ box-shadow:var(--shadow-lg);
 
 z-index:6;
 
+display:block;
+
+transition:var(--transition);
+
+}
+
+/* Mène vers eligibility-test.html (voir index.html) — même traitement
+au survol que .info-card/.teaser-card, pour que le seul aperçu concret
+de Fitz sur la page se signale comme cliquable. */
+.hero-demo:hover{
+
+transform:translateY(-6px);
+
+box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.4);
+
 }
 
 .demo-header{
