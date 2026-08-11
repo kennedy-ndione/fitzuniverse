@@ -32,6 +32,7 @@ rel="stylesheet">
 <link rel="stylesheet" href="css/hero.css">
 <link rel="stylesheet" href="css/homepage-sections.css">
 <link rel="stylesheet" href="css/animations.css">
+<style>[hidden]{display:none !important;}</style>
 </head>
 
 <body>
@@ -40,7 +41,9 @@ rel="stylesheet">
 HEADER
 ========================== -->
 
-<header class="header">
+<!-- Visiteur non connecté : en-tête public inchangé (SEO/marketing).
+Masqué par js/dual-shell.js uniquement si une session est trouvée. -->
+<header class="header" id="publicHeader">
 
 <div class="container header-container">
 
@@ -84,11 +87,223 @@ HEADER
 
 </header>
 
+<!-- Utilisateur connecté : même shell sombre que le reste de l'Espace
+Étudiant (sidebar/topbar). Masqué par défaut ([hidden]) ; dashboard.css
+n'est chargé dynamiquement par js/dual-shell.js QUE si une session est
+trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
+<div class="dashboard-shell" id="authShellRoot" hidden>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+
+<a href="dashboard.html" class="sidebar-brand">
+<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+</a>
+
+<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
+<i data-lucide="panel-left-close"></i>
+</button>
+
+</div>
+
+<div class="sidebar-plan">
+<span class="sidebar-plan-label">Votre formule</span>
+<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
+</div>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Mon espace</span>
+
+<ul>
+
+<li>
+<a href="dashboard.html" class="nav-link">
+<i data-lucide="layout-dashboard"></i>
+<span>Tableau de bord</span>
+</a>
+</li>
+
+<li>
+<a href="profile.html" class="nav-link">
+<i data-lucide="user"></i>
+<span>Mon profil</span>
+</a>
+</li>
+
+<li>
+<a href="account.html" class="nav-link">
+<i data-lucide="settings"></i>
+<span>Paramètres</span>
+</a>
+</li>
+
+<li data-feature="applications">
+<a href="applications.html" class="nav-link" data-real-href="applications.html">
+<i data-lucide="list-checks"></i>
+<span>Mes candidatures</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li>
+<a href="scholarships.html" class="nav-link">
+<i data-lucide="graduation-cap"></i>
+<span>Bourses</span>
+</a>
+</li>
+
+<li>
+<a href="universities.html" class="nav-link">
+<i data-lucide="landmark"></i>
+<span>Universités</span>
+</a>
+</li>
+
+<li data-feature="documents">
+<a href="documents.html" class="nav-link" data-real-href="documents.html">
+<i data-lucide="file-text"></i>
+<span>Documents</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label">Fitz</span>
+
+<ul class="sidebar-nav-fitz">
+
+<li data-feature="ai_chat">
+<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
+<i data-lucide="message-circle"></i>
+<span>Discuter avec Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_letter">
+<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
+<i data-lucide="pen-line"></i>
+<span>Lettre de motivation</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_check">
+<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
+<i data-lucide="shield-check"></i>
+<span>Vérification</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_email">
+<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
+<i data-lucide="mail"></i>
+<span>E-mails Fitz</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="ai_translate">
+<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
+<i data-lucide="languages"></i>
+<span>Traduction</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="compress">
+<a href="compress.html" class="nav-link" data-real-href="compress.html">
+<i data-lucide="file-archive"></i>
+<span>Compression</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+<li data-feature="interview_prep">
+<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
+<i data-lucide="mic"></i>
+<span>Préparation entretien</span>
+<i data-lucide="lock" class="nav-lock"></i>
+</a>
+</li>
+
+</ul>
+
+<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
+
+<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
+
+<li data-feature="advisor">
+<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
+<i data-lucide="user-check"></i>
+<span>Mon conseiller</span>
+</a>
+</li>
+
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main" id="dashboardMainContent">
+
+<header class="topbar">
+
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+
+<div class="topbar-title">
+<h1>Accueil</h1>
+</div>
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<i data-lucide="sparkles"></i>
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+</header>
+
+<!-- <main id="pageMain"> est déplacé ici par js/dual-shell.js -->
+
+</div>
+
+</div>
+
 <!-- =========================
 MAIN
 ========================== -->
 
-<main>
+<main id="pageMain">
 
 <!-- =========================
 HERO
@@ -613,6 +828,7 @@ dans la 2e puce ci-dessous. -->
 
 </section>
 
+</main>
 
 <!-- ==========================================
 FOOTER
@@ -679,6 +895,11 @@ SCRIPTS
 <script src="js/main.js"></script>
 <script src="js/header-scroll.js"></script>
 <script type="module" src="js/homepage-teaser.js"></script>
+
+<script type="module">
+import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
+applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" });
+</script>
 
 </body>
 
