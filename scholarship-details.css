@@ -120,7 +120,11 @@ font-family:var(--font-display);
 font-weight:600;
 font-size:var(--fs-h3);
 letter-spacing:var(--ls-snug);
-color:var(--primary-dark);
+/* var(--text-color), pas --primary-dark : le fond de la page est un
+token adaptatif qui devient sombre sous le shell authentifié
+(dashboard.css) — --primary-dark ne l'est pas et restait sombre sur
+fond devenu sombre pour un utilisateur connecté. */
+color:var(--text-color);
 margin-bottom:14px;
 }
 

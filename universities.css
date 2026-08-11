@@ -965,7 +965,11 @@ font-size:var(--fs-h4);
 
 font-weight:600;
 
-color:var(--primary-dark);
+/* var(--text-color), pas --primary-dark : .glass-panel (le fond de ce
+bandeau) est un token adaptatif qui devient sombre sous le shell
+authentifié (dashboard.css) — --primary-dark ne l'est pas et restait
+sombre sur fond devenu sombre pour un utilisateur connecté. */
+color:var(--text-color);
 
 margin-bottom:6px;
 
