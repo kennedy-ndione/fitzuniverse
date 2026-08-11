@@ -28,7 +28,24 @@ const COUNTRY_FALLBACK_IMAGE = {
 "Italie": "rome.jpg",
 "Turquie": "istanbul.jpg",
 "Roumanie": "bucharest.jpg",
-"Arabie Saoudite": "riyadh.jpg"
+"Arabie Saoudite": "riyadh.jpg",
+// Ajoutés le 2026-08-11 (lot 1 d'élargissement du catalogue) : France,
+// Canada, États-Unis avaient jusqu'ici 0 bourse liée à une université,
+// donc retombaient sur un fond de hero générique (hero-bg*.jpg) plutôt
+// qu'une vraie photo de ville. Toronto (pas Ottawa) et New York (pas
+// Washington) : déroge volontairement à la convention "capitale" —
+// choisi pour la qualité/cohérence de style avec le reste du
+// catalogue (voir la conversation associée) plutôt que pour
+// l'exactitude protocolaire.
+"France": "paris.jpg",
+"Canada": "toronto.jpg",
+"États-Unis": "newyork.jpg",
+// Ajoutés le 2026-08-11 (lot 2). Allemagne suit la convention
+// "capitale" à la lettre (Berlin) ; Suisse en déroge comme
+// Toronto/New York avant elle — Zurich (pas Berne) est la seule
+// photo suisse en stock à ce jour.
+"Allemagne": "berlin.jpg",
+"Suisse": "zurich.jpg"
 };
 
 const GENERIC_FALLBACK_IMAGES = ["hero-bg.jpg", "hero-bg2.jpg", "hero-bg3.jpg", "hero-bg4.jpg", "hero-bg5.jpg"];

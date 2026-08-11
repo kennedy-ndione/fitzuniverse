@@ -289,7 +289,8 @@ status: program.status || "",
 // s'il porte une valeur — sinon on retombe sur le défaut université.
 applicationUrl: program.applicationUrl || universityProfile.applicationPortalUrl || "",
 officialWebsite: universityProfile.officialWebsite || "",
-description: program.description || scholarshipData.description || universityProfile.description || ""
+description: program.description || scholarshipData.description || universityProfile.description || "",
+securityNotice: scholarshipData.securityNotice || ""
 };
 
 // Portail de candidature réservé aux abonnés (peu importe la formule —
@@ -323,6 +324,8 @@ const status = document.getElementById("status");
 const applyBtn = document.getElementById("applyBtn");
 const universityPortalBtn = document.getElementById("universityPortalBtn");
 const applicationPortalLocked = document.getElementById("applicationPortalLocked");
+const securityNotice = document.getElementById("securityNotice");
+const securityNoticeText = document.getElementById("securityNoticeText");
 
 // ===============================
 // Remplissage des informations
@@ -346,6 +349,11 @@ if (level) level.textContent = university.level || "Niveau non renseigné";
 if (scholarship) scholarship.textContent = university.scholarship || "";
 
 if (description) description.textContent = university.description || "Aucune description disponible.";
+
+if (securityNotice && securityNoticeText && university.securityNotice) {
+securityNoticeText.textContent = university.securityNotice;
+securityNotice.hidden = false;
+}
 
 if (flag) {
 flag.src = `assets/flags/${university.flag || "default.svg"}`;
