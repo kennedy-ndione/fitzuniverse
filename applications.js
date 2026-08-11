@@ -257,7 +257,7 @@ container.innerHTML = `
 <p>Débloquez le suivi de vos candidatures avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"} : gardez chaque étape sous contrôle, avec les rappels de Fitz pour ne rien manquer.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
 <i data-lucide="sparkles"></i>
-<span>Découvrir nos formules</span>
+<span>Choisir ma formule</span>
 </a>
 </div>
 `;

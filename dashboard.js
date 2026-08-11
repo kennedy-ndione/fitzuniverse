@@ -161,7 +161,7 @@ label.textContent = unlockingPlans.length
 }
 
 if (cta) {
-cta.textContent = targetPlan ? `Découvrir ${PLAN_LABELS[targetPlan]}` : "Découvrir nos formules";
+cta.textContent = "Choisir ma formule";
 }
 
 }

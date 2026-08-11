@@ -36,7 +36,7 @@ container.innerHTML = `
 <p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour traduire vos documents avec Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
 <i data-lucide="sparkles"></i>
-<span>Découvrir nos formules</span>
+<span>Choisir ma formule</span>
 </a>
 </div>
 `;

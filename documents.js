@@ -48,7 +48,7 @@ container.innerHTML = `
 <p>Débloquez les checklists détaillées de Fitz avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"} : préparez chaque document sans rien laisser au hasard.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
 <i data-lucide="sparkles"></i>
-<span>Découvrir nos formules</span>
+<span>Choisir ma formule</span>
 </a>
 </div>
 `;

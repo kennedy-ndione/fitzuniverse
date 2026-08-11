@@ -65,9 +65,9 @@ return { checks, percent };
 
 // Transmet le programme (et le score de compatibilité, une fois connu)
 // aux 3 CTA de cette page qui mènent à offers.html — sans ça, cliquer
-// "Découvrir l'accompagnement" perdait le contexte ("cette université
-// précise", "ce diagnostic") au moment où il aurait le plus servi
-// l'argument (audit du 2026-08-10).
+// "Choisir ma formule" perdait le contexte ("cette université précise",
+// "ce diagnostic") au moment où il aurait le plus servi l'argument
+// (audit du 2026-08-10).
 function buildOffersUrl(programId, score) {
 
 const searchParams = new URLSearchParams({ program: programId });
