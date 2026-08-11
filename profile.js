@@ -1,21 +1,12 @@
-import { auth, db } from "./firebase-config.js";
-
-import {
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { db } from "./firebase-config.js";
 
 import {
 doc,
-getDoc,
-setDoc,
-updateDoc,
-serverTimestamp
+updateDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { setButtonLoading } from "./auth-ui.js";
-import { hidePageLoader } from "./js/app-shell.js";
-import { resolvePlan, PLAN_LABELS, fetchFeatureFlags } from "./js/access-guard.js";
+import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 
 // ==========================================================
 // Listes fixes pour les chips / sélecteurs
@@ -655,139 +646,26 @@ setTimeout(() => toast.classList.remove("is-visible"), 2600);
 
 }
 
-// ==========================================================
-// Sidebar — repli desktop, tiroir mobile
-// ==========================================================
-
-function initSidebar() {
-
-const SIDEBAR_COLLAPSE_KEY = "scholarbridge_sidebar_collapsed";
-
-const collapseBtn = document.getElementById("sidebarCollapseBtn");
-const openBtn = document.getElementById("sidebarOpenBtn");
-const backdrop = document.getElementById("sidebarBackdrop");
-
-if (localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "true") {
-document.body.classList.add("sidebar-collapsed");
-if (collapseBtn) collapseBtn.setAttribute("aria-expanded", "false");
-}
-
-if (collapseBtn) {
-
-collapseBtn.addEventListener("click", () => {
-
-const collapsed = document.body.classList.toggle("sidebar-collapsed");
-
-collapseBtn.setAttribute("aria-expanded", String(!collapsed));
-localStorage.setItem(SIDEBAR_COLLAPSE_KEY, String(collapsed));
-
-});
-
-}
-
-function closeMobileSidebar() {
-document.body.classList.remove("sidebar-open");
-}
-
-if (openBtn) {
-openBtn.addEventListener("click", () => document.body.classList.add("sidebar-open"));
-}
-
-if (backdrop) {
-backdrop.addEventListener("click", closeMobileSidebar);
-}
-
-document.addEventListener("keydown", (event) => {
-if (event.key === "Escape") closeMobileSidebar();
-});
-
-document.querySelectorAll(".sidebar .nav-link, .sidebar-logout").forEach((el) => {
-el.addEventListener("click", closeMobileSidebar);
-});
-
-}
-
-initSidebar();
-
-if (window.lucide) lucide.createIcons();
+initShellChrome();
 
 // ==========================================================
 // FIREBASE
 // ==========================================================
 
-onAuthStateChanged(auth, async (currentUser) => {
+bootstrapShell().then((session) => {
 
-if (!currentUser) {
-window.location.href = "login.html";
-return;
-}
+if (!session) return;
 
-try {
+const { user, userData } = session;
 
-const userRef = doc(db, "users", currentUser.uid);
-let userSnap = await getDoc(userRef);
-
-if (!userSnap.exists()) {
-
-await setDoc(userRef, {
-uid: currentUser.uid,
-name: currentUser.displayName || "",
-email: currentUser.email || "",
-createdAt: serverTimestamp(),
-profile: defaultProfile({ name: currentUser.displayName || "", email: currentUser.email || "" })
-});
-
-userSnap = await getDoc(userRef);
-
-}
-
-const userData = userSnap.data();
-
-// Badge de formule dans la sidebar : profile.js ne passe pas par
-// bootstrapShell() (voir js/app-shell.js — dashboard.js/profile.js ne
-// sont volontairement pas migrés dessus), mais resolvePlan() est une
-// fonction pure sans effet de bord : l'utiliser ici pour éviter un
-// badge figé sur "Essentiel" quelle que soit la vraie formule.
-const planBadge = document.getElementById("planBadge");
-const planId = resolvePlan(userData);
-if (planBadge) planBadge.textContent = PLAN_LABELS[planId];
-
-// "Mon conseiller" masqué entièrement plutôt que grisé — même règle
-// que dashboard.js:applyAdvisorVisibility() (profile.js ne passe pas
-// par bootstrapShell(), voir le commentaire ci-dessus). Isolé dans son
-// propre try/catch : un souci réseau ici ne doit jamais empêcher le
-// reste de la page profil de s'afficher.
-try {
-
-const featureFlags = await fetchFeatureFlags();
-const advisorLabel = document.getElementById("advisorSectionLabel");
-const advisorNav = document.getElementById("advisorSectionNav");
-
-if (advisorLabel && advisorNav) {
-const hasAdvisor = userData.testerAccess === true || (featureFlags.advisor && featureFlags.advisor[planId] === true);
-advisorLabel.hidden = !hasAdvisor;
-advisorNav.hidden = !hasAdvisor;
-}
-
-} catch (error) {
-console.warn("Impossible de déterminer l'accès au conseiller :", error);
-}
-
-// Suspension de compte (Module 3 du Control Center admin) : même
-// vérification que dashboard.js — voir son commentaire pour le détail
-// de la limite actuelle (drapeau Firestore, pas encore une vraie
-// désactivation Firebase Auth).
-if (userData.disabled === true) {
-window.location.replace("suspended.html");
-return;
-}
+const userRef = doc(db, "users", user.uid);
 
 const profile = Object.assign(
 defaultProfile(userData),
 userData.profile || {}
 );
 
-hydrateForm(profile, currentUser);
+hydrateForm(profile, user);
 
 // Recalcule les coches de complétion à chaque saisie.
 document.getElementById("profileForm").addEventListener("input", updateCompletion);
@@ -837,49 +715,6 @@ setButtonLoading(saveButton, false);
 
 });
 
-const logoutBtn = document.getElementById("logoutBtn");
-
-if (logoutBtn) {
-
-logoutBtn.addEventListener("click", async () => {
-
-if (logoutBtn.dataset.busy === "true") return;
-logoutBtn.dataset.busy = "true";
-
-try {
-
-await signOut(auth);
-window.location.href = "login.html";
-
-} catch (error) {
-
-console.error(error);
-alert("Une erreur est survenue lors de la déconnexion. Veuillez réessayer.");
-logoutBtn.dataset.busy = "false";
-
-}
-
-});
-
-}
-
 if (window.lucide) lucide.createIcons();
-
-hidePageLoader();
-
-} catch (error) {
-
-console.error(error);
-hidePageLoader();
-
-document.body.innerHTML = `
-<div style="padding:40px;text-align:center;">
-<h2>Chargement interrompu</h2>
-<p>Vérifiez votre connexion Internet, puis réessayez pour retrouver votre profil.</p>
-<button onclick="window.location.reload()">Réessayer</button>
-</div>
-`;
-
-}
 
 });
