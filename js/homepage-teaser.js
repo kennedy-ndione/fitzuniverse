@@ -26,6 +26,19 @@ return scholarship ? scholarship.title : "";
 
 const TEASER_COUNT = 4;
 
+// Sélection éditoriale (2026-08-11) plutôt qu'un tirage arbitraire :
+// l'ordre de retour Firestore plaçait souvent 2 villes chinoises côte à
+// côte (peu de diversité perçue) pour la toute première impression du
+// site. 4 pays visuellement distincts, photos les plus abouties du
+// catalogue. Retombe sur pickDiverse() si l'un de ces identifiants
+// disparaît un jour (désinscription d'université, etc.).
+const FEATURED_UNIVERSITY_IDS = [
+"university-of-oxford-oxford",
+"eth-zurich-zurich",
+"sciences-po-paris",
+"university-of-toronto-toronto"
+];
+
 // Un même établissement existe en 3 documents Firestore (un par niveau
 // Licence/Master/Doctorat) — sans ce regroupement, le tirage pourrait
 // afficher le même établissement (et la même photo) plusieurs fois.
@@ -157,7 +170,15 @@ return;
 
 const withPhoto = all.filter((u) => u.image);
 const pool = dedupeByUniversity(withPhoto.length >= TEASER_COUNT ? withPhoto : all);
-const picks = pickDiverse(pool, TEASER_COUNT);
+
+const featured = FEATURED_UNIVERSITY_IDS
+.map((id) => pool.find((u) => u.id === id))
+.filter(Boolean);
+
+const remainingPool = pool.filter((u) => !featured.includes(u));
+const picks = featured.length >= TEASER_COUNT
+? featured.slice(0, TEASER_COUNT)
+: featured.concat(pickDiverse(remainingPool, TEASER_COUNT - featured.length));
 
 grid.innerHTML = "";
 picks.forEach((university, index) => grid.appendChild(renderCard(university, firstScholarshipTitle(university.id, programs, scholarshipsById), index)));
