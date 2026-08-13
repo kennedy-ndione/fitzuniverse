@@ -45,7 +45,14 @@ const COUNTRY_FALLBACK_IMAGE = {
 // Toronto/New York avant elle — Zurich (pas Berne) est la seule
 // photo suisse en stock à ce jour.
 "Allemagne": "berlin.jpg",
-"Suisse": "zurich.jpg"
+"Suisse": "zurich.jpg",
+// Ajoutés le 2026-08-13 (lot 3), en prévision de l'ajout prochain du
+// Maroc et de la Belgique au catalogue (bourses + universités
+// partenaires). Rabat et Bruxelles suivent la convention "capitale" ;
+// casablanca.jpg et leuven.jpg ne sont pas branchés ici — réservés à
+// des universités précises une fois ces pays importés.
+"Maroc": "rabat.jpg",
+"Belgique": "brussels.jpg"
 };
 
 const GENERIC_FALLBACK_IMAGES = ["hero-bg.jpg", "hero-bg2.jpg", "hero-bg3.jpg", "hero-bg4.jpg", "hero-bg5.jpg"];
@@ -111,13 +118,32 @@ linkedUniversities.map((u) => u.country).filter(Boolean).concat(scholarship.coun
 
 const withImage = linkedUniversities.find((u) => u.image);
 
-const image = withImage
-? `assets/images/cities/${withImage.image}`
-: COUNTRY_FALLBACK_IMAGE[scholarship.country]
-? `assets/images/cities/${COUNTRY_FALLBACK_IMAGE[scholarship.country]}`
-: `assets/images/${GENERIC_FALLBACK_IMAGES[Math.abs(hashCode(scholarship.title || scholarship.id)) % GENERIC_FALLBACK_IMAGES.length]}`;
+let image;
+let imageSrcset = "";
 
-return { ...scholarship, countries, image, partnerCount: linkedUniversities.length };
+if (withImage) {
+
+image = `assets/images/cities/${withImage.image}`;
+
+} else if (COUNTRY_FALLBACK_IMAGE[scholarship.country]) {
+
+image = `assets/images/cities/${COUNTRY_FALLBACK_IMAGE[scholarship.country]}`;
+
+} else {
+
+// hero-bg*.jpg pèsent jusqu'à 3,3 Mo en plein format — variantes
+// 400/800/1200w déjà générées (voir scripts/generate-city-srcset.mjs,
+// lancé sur assets/images/ le 2026-08-13), donc srcset/sizes comme
+// pour les photos de ville plutôt que le fichier source brut.
+const file = GENERIC_FALLBACK_IMAGES[Math.abs(hashCode(scholarship.title || scholarship.id)) % GENERIC_FALLBACK_IMAGES.length];
+const base = file.replace(/\.jpe?g$/i, "");
+
+image = `assets/images/${base}-800w.jpg`;
+imageSrcset = [400, 800, 1200].map((w) => `assets/images/${base}-${w}w.jpg ${w}w`).join(", ");
+
+}
+
+return { ...scholarship, countries, image, imageSrcset, partnerCount: linkedUniversities.length };
 
 }
 
@@ -223,9 +249,13 @@ const levelChips = (scholarship.levels || [])
 const otherCountries = (scholarship.countries || []).filter((c) => c !== scholarship.country);
 const showCountriesRow = otherCountries.length > 0;
 
+const srcsetAttr = scholarship.imageSrcset
+? ` srcset="${scholarship.imageSrcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 380px"`
+: "";
+
 card.innerHTML = `
 <div class="scholarship-card-media">
-<img src="${scholarship.image}" alt="" loading="lazy">
+<img src="${scholarship.image}"${srcsetAttr} alt="" loading="lazy">
 <span class="scholarship-card-status ${isOpen ? "is-open" : ""}">${isOpen ? "Ouverte" : "Fermée"}</span>
 </div>
 
