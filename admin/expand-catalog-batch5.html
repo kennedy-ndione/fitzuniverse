@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Élargissement catalogue — Lot 5 (universités MEXT/GKS/Türkiye/Roumanie/Arabie Saoudite) | ScholarBridge Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div class="migrate-header">
+<h1>Élargissement du catalogue — Lot 5</h1>
+<p>Donne enfin une université partenaire aux 5 bourses restées sans établissement depuis l'import initial : MEXT (Japon → University of Tokyo, Waseda University), Global Korea Scholarship (Corée du Sud → Yonsei University, Korea University), Türkiye Bursları (Turquie → Boğaziçi University, Istanbul University), Romanian Government Scholarship (Roumanie → Université de Bucarest), et King Abdulaziz Scholarship (Arabie Saoudite → King Saud University, bourse renommée "Bourses du gouvernement saoudien pour étudiants internationaux" car l'ancien nom ne correspondait à aucun programme officiel réel). Ces 5 bourses sont des mises à jour de stubs déjà existants, retrouvés par titre (pas par id en dur) — l'étape d'analyse affiche le titre exact trouvé pour chacune avant toute écriture. Les 5 passent à isActive: false (deadlines passées ou fenêtres non confirmées). Liste validée en conversation le 2026-08-13. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Retrouve les 5 bourses stub par correspondance de titre normalisée et affiche l'id + le titre exact trouvés en base pour chacune. Vérifie ensuite qu'aucun des 8 identifiants d'université ni des 8 identifiants de programme ne collisionne avec un document existant.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Crée les 8 profils d'université, met à jour les 5 bourses existantes, et crée les 8 programmes.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit Firestore après écriture et compare chaque document écrit à ce qui était attendu — pas un simple "existe". Doit confirmer 0 écart.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch5.js"></script>
+
+</body>
+
+</html>
