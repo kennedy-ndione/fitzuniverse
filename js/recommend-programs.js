@@ -94,7 +94,14 @@ const scholarship = entry.program.scholarshipId ? scholarshipsById.get(entry.pro
 
 picked.push({
 universityId: entry.program.universityId,
-universityName: entry.university.university || "Université partenaire",
+// Bug corrigé (audit du 2026-08-14) : lisait entry.university.university,
+// qui n'a jamais existé sur le schéma relationnel ("universities" porte
+// name, pas university — university était le nom du champ dans l'ancien
+// schéma à plat, avant migrate.js). Le fallback masquait silencieusement
+// le problème : universityName retombait toujours sur "Université
+// partenaire", jamais sur le vrai nom. Même bug corrigé dans
+// applications.js (uni.university -> uni.name, 2 occurrences).
+universityName: entry.university.name || "Université partenaire",
 scholarshipTitle: scholarship ? scholarship.title : "",
 deadline: entry.program.deadline || null
 });

@@ -28,6 +28,24 @@
 
 <div class="container">
 
+<!-- État de chargement — le catalogue (programs/universities/
+scholarships) doit être chargé depuis Firestore avant de pouvoir
+afficher de vraies opportunités (recommendPrograms(), voir
+js/recommend-programs.js) : ce n'est plus un calcul synchrone. Visible
+par défaut, masqué par results.js dès que le rendu réel est prêt (y
+compris si le catalogue échoue à charger — jamais de chargement
+infini). -->
+<div class="results-loading" id="resultsLoading">
+<div class="ai-badge">
+<i data-lucide="bot"></i>
+<span>Fitz</span>
+</div>
+<div class="results-loading-spinner" aria-hidden="true"></div>
+<p>Fitz croise votre profil avec le catalogue…</p>
+</div>
+
+<div id="resultsContent" hidden>
+
 <!-- Badge -->
 <div class="ai-badge">
 <i data-lucide="bot"></i>
@@ -192,8 +210,9 @@ Aucun engagement à cette étape — découvrez simplement comment fonctionne l'
 
 </div>
 
-<script src="eligibility-ai.js"></script>
-<script src="results.js"></script>
+</div>
+
+<script type="module" src="results.js"></script>
 
 </body>
 

@@ -1,4 +1,71 @@
-class EligibilityAI {
+// ============================================================
+// EligibilityAI — calcule le score de diagnostic (points forts/
+// faibles/recommandations) à partir des réponses de
+// eligibility-questions.html.
+//
+// Reconnexion aux données réelles (audit du 2026-08-14) : cette classe
+// ne détermine plus elle-même "quelles bourses/universités" — c'était
+// jusqu'ici calculateDestination() + matchScholarships(), qui ne
+// reconnaissaient que 4 pays codés en dur (Canada/Chine/Hongrie/
+// Turquie) par mot-clé, tous les autres pays du vrai catalogue
+// retombant sur "Analyse personnalisée nécessaire". Cette
+// responsabilité est déplacée vers results.js, qui appelle
+// recommendPrograms() (js/recommend-programs.js) sur le catalogue
+// Firestore réel — la même jointure programs/universities/scholarships
+// déjà utilisée par applications.js, jamais une 4e implémentation.
+// EligibilityAI garde uniquement le score global (académique, langue,
+// documents...) et matchReasons(), qui explique honnêtement — à partir
+// des réponses réelles, jamais d'un pourcentage de compatibilité
+// inventé par bourse — pourquoi une opportunité correspond.
+// ============================================================
+
+// Table de conversion vers un pourcentage 0-100 commun, pour comparer
+// équitablement des moyennes saisies dans des systèmes différents avant
+// d'appliquer les mêmes seuils de score. Approximations documentées,
+// pas des équivalences officielles (aucune table universelle n'existe) :
+// - "20" (système francophone, /20) : pourcentage = (valeur/20)*100
+// - "100" (/100) ou "other" (autre système, déjà exprimé en %) : valeur
+//   inchangée
+// - "gpa4" (GPA nord-américain /4) : conversion linéaire, pourcentage =
+//   (valeur/4)*100 — la correspondance réelle GPA↔% varie selon les
+//   établissements, cette conversion reste une approximation simple
+// - "letters" (lettres A-F) : mapping fixe par lettre, valeur médiane
+//   indicative de la plage que chaque lettre couvre habituellement
+//   (A=95, B=85, C=75, D=65, F=40)
+// Par défaut (scale absent ou inconnu) : traité comme /20, pour rester
+// compatible avec les réponses enregistrées avant l'ajout du sélecteur
+// d'échelle.
+const LETTER_GRADE_PERCENT = { A: 95, B: 85, C: 75, D: 65, F: 40 };
+
+export function normalizeAverageToPercent(rawValue, scale) {
+
+if (scale === "letters") {
+const letter = String(rawValue || "").trim().toUpperCase();
+return Object.prototype.hasOwnProperty.call(LETTER_GRADE_PERCENT, letter) ? LETTER_GRADE_PERCENT[letter] : null;
+}
+
+const value = parseFloat(String(rawValue || "").replace(",", "."));
+
+if (isNaN(value)) return null;
+
+switch (scale) {
+
+case "100":
+case "other":
+return Math.max(0, Math.min(100, value));
+
+case "gpa4":
+return Math.max(0, Math.min(100, (value / 4) * 100));
+
+case "20":
+default:
+return Math.max(0, Math.min(100, (value / 20) * 100));
+
+}
+
+}
+
+export class EligibilityAI {
 
 constructor(responses) {
 this.responses = responses;
@@ -10,10 +77,7 @@ const result = {
 score: 0,
 strengths: [],
 weaknesses: [],
-recommendations: [],
-eligibleCountries: [],
-eligibleScholarships: [],
-scholarshipDetails: []
+recommendations: []
 };
 
 result.score += this.calculateStudyLevel(result);
@@ -24,9 +88,8 @@ result.score += this.calculateStudyField(result);
 result.score += this.calculateDestination(result);
 result.score += this.calculateGoal(result);
 
-this.matchScholarships(result);
-
 return result;
+
 }
 
 calculateStudyLevel(result) {
@@ -40,36 +103,39 @@ return 10;
 
 calculateAverage(result) {
 
-const average = parseFloat(
-String(this.responses.average || "").replace(",", ".")
-);
+const percent = normalizeAverageToPercent(this.responses.average, this.responses.averageScale);
 
-if (isNaN(average)) {
+if (percent === null) {
 result.weaknesses.push("Votre moyenne n'a pas pu être analysée.");
 return 0;
 }
 
-if (average >= 18) {
+// Seuils identiques à l'ancienne échelle /20 (18, 16, 14, 12, 10),
+// exprimés ici en % — pour une réponse saisie en /20, le résultat est
+// rigoureusement inchangé ; les autres systèmes sont désormais évalués
+// avec la même exigence relative plutôt que d'être mal interprétés
+// comme des valeurs /20.
+if (percent >= 90) {
 result.strengths.push("Excellent dossier académique.");
 return 30;
 }
 
-if (average >= 16) {
+if (percent >= 80) {
 result.strengths.push("Très bonne moyenne générale.");
 return 27;
 }
 
-if (average >= 14) {
+if (percent >= 70) {
 result.strengths.push("Bon niveau académique.");
 return 24;
 }
 
-if (average >= 12) {
+if (percent >= 60) {
 result.weaknesses.push("Une meilleure moyenne augmentera vos chances.");
 return 18;
 }
 
-if (average >= 10) {
+if (percent >= 50) {
 result.weaknesses.push("Essayez d'améliorer vos résultats scolaires.");
 return 12;
 }
@@ -141,49 +207,23 @@ result.strengths.push(`Domaine d'études identifié : ${this.responses.studyCate
 return 10;
 }
 
+// Ne détermine plus quelles bourses/universités correspondent (voir
+// results.js/recommendPrograms) — se contente de noter le fait d'avoir,
+// ou non, déjà une préférence de destination.
 calculateDestination(result) {
 
-const country = (this.responses.destinationCountry || "").toLowerCase();
+const country = this.responses.destinationCountry;
 
-if (country.includes("canada")) {
-
-result.eligibleCountries.push("Canada");
-result.eligibleScholarships.push("Bourses du gouvernement canadien");
+if (country && country !== "Je ne sais pas encore") {
+result.strengths.push(`Destination déjà identifiée : ${country}`);
 return 10;
-
 }
 
-if (country.includes("chine")) {
-
-result.eligibleCountries.push("Chine");
-result.eligibleScholarships.push("Chinese Government Scholarship (CSC)");
-return 10;
-
-}
-
-if (country.includes("hongrie")) {
-
-result.eligibleCountries.push("Hongrie");
-result.eligibleScholarships.push("Stipendium Hungaricum");
-return 10;
-
-}
-
-if (country.includes("turquie")) {
-
-result.eligibleCountries.push("Turquie");
-result.eligibleScholarships.push("Türkiye Bursları");
-return 10;
-
-}
-
-result.eligibleCountries.push("Plusieurs destinations possibles");
-result.eligibleScholarships.push("Analyse personnalisée nécessaire");
+result.recommendations.push("Fitz peut vous proposer plusieurs destinations compatibles avec votre profil.");
 
 return 8;
 
 }
-
 
 calculateGoal(result) {
 
@@ -207,13 +247,16 @@ return 10;
 
 }
 
-// Construit, pour chaque programme déjà identifié par calculateDestination()
-// (les seules bourses réelles connues à ce stade), une explication basée
-// uniquement sur les réponses effectivement données par l'étudiant.
-// Aucun critère d'éligibilité par bourse n'est inventé ici : ScholarBridge
-// ne dispose pas encore d'une base fiable de critères par programme, donc
-// on ne fabrique pas de faux pourcentage de compatibilité par bourse.
-matchScholarships(result) {
+// Explique, pour une opportunité réelle trouvée par recommendPrograms()
+// (results.js), pourquoi elle correspond — uniquement à partir des
+// réponses effectivement données par l'étudiant. Aucun critère
+// d'éligibilité par bourse n'est inventé ici : ScholarBridge ne dispose
+// pas encore d'une base fiable de critères par programme, donc on ne
+// fabrique pas de faux pourcentage de compatibilité par bourse. Les
+// mêmes raisons s'appliquent à chaque opportunité affichée : ce sont
+// des faits sur le profil de l'étudiant, pas un score propre au
+// programme.
+matchReasons() {
 
 const reasons = [];
 
@@ -221,11 +264,9 @@ if (this.responses.studyLevel) {
 reasons.push(`Niveau d'études compatible : ${this.responses.studyLevel}`);
 }
 
-const average = parseFloat(
-String(this.responses.average || "").replace(",", ".")
-);
+const percent = normalizeAverageToPercent(this.responses.average, this.responses.averageScale);
 
-if (!isNaN(average) && average >= 12) {
+if (percent !== null && percent >= 60) {
 reasons.push("Moyenne académique suffisante pour la majorité des programmes");
 }
 
@@ -239,15 +280,7 @@ if (!reasons.length) {
 reasons.push("Profil compatible avec les critères généraux de ce programme.");
 }
 
-result.eligibleScholarships.forEach((name, index) => {
-
-result.scholarshipDetails.push({
-name,
-country: result.eligibleCountries[index] || result.eligibleCountries[0] || "",
-reasons
-});
-
-});
+return reasons;
 
 }
 

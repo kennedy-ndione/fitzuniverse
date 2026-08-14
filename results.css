@@ -104,6 +104,72 @@ height:16px;
 
 }
 
+/* ==========================================================
+ÉTAT DE CHARGEMENT — le temps que results.js charge le catalogue
+Firestore et calcule de vraies opportunités (voir results.js). Seule
+animation en boucle de cette page : transitoire, jamais montrée plus
+de quelques secondes, retirée du DOM visuel dès que le rendu réel est
+prêt.
+========================================================== */
+
+.results-loading{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:18px;
+
+padding:120px 20px;
+
+text-align:center;
+
+}
+
+.results-loading p{
+
+color:var(--text-light);
+
+font-weight:600;
+
+font-size:.95rem;
+
+}
+
+.results-loading-spinner{
+
+width:36px;
+
+height:36px;
+
+border-radius:50%;
+
+border:3px solid var(--background-alt);
+
+border-top-color:var(--fitz-color);
+
+animation:resultsSpin .8s linear infinite;
+
+}
+
+@keyframes resultsSpin{
+to{ transform:rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.results-loading-spinner{
+
+animation:none;
+
+border-top-color:var(--background-alt);
+
+}
+
+}
+
 h1{
 
 text-align:center;
@@ -1016,6 +1082,45 @@ font-size:.85rem;
 color:var(--text-light);
 
 font-weight:600;
+
+}
+
+/* Deadline réelle du programme (recommendPrograms(), results.js) —
+absente tant que les opportunités venaient des 4 pays codés en dur. */
+.opportunity-deadline{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+margin:10px 0 14px;
+
+padding:8px 12px;
+
+border-radius:var(--radius-sm);
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+font-size:.82rem;
+
+font-weight:600;
+
+}
+
+.opportunity-deadline i,
+.opportunity-deadline svg{
+
+flex-shrink:0;
+
+width:14px;
+
+height:14px;
+
+color:var(--primary-color);
 
 }
 

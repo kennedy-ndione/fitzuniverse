@@ -1,24 +1,164 @@
 // -------- results.js --------
 // Calcule et affiche un résultat réel à partir des réponses laissées
-// par l'utilisateur sur eligibility-questions.html (sessionStorage),
-// analysées par EligibilityAI (eligibility-ai.js). Si aucune réponse
-// n'est disponible, on renvoie proprement vers le test plutôt que
-// d'afficher une page vide ou des données inventées.
+// par l'utilisateur sur eligibility-questions.html (sessionStorage).
+// Le score global (académique, langue, documents...) vient de
+// EligibilityAI (eligibility-ai.js) — inchangé, synchrone, aucune
+// donnée externe. Les opportunités concrètes (nom d'université, bourse,
+// deadline) viennent en revanche du vrai catalogue Firestore, via
+// recommendPrograms() (js/recommend-programs.js) — la même jointure
+// programs/universities/scholarships déjà utilisée par applications.js,
+// jamais une 2e façon de résoudre bourse↔université (audit du
+// 2026-08-14, remplace l'ancien calculateDestination() qui ne
+// reconnaissait que 4 pays codés en dur).
 //
-// Ce fichier ne modifie jamais le calcul de EligibilityAI : il se
-// contente de mettre en récit et en forme le résultat qu'elle produit.
+// Devient nécessairement asynchrone (comme chargerUniversite() dans
+// details.js) : impossible d'afficher les vraies opportunités avant
+// d'avoir attendu la lecture Firestore. Un état de chargement dédié
+// (#resultsLoading) reste visible jusque-là.
+
+import { db } from "./firebase-config.js";
+
+import {
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+import { EligibilityAI, normalizeAverageToPercent } from "./eligibility-ai.js";
+import { recommendPrograms } from "./js/recommend-programs.js";
 
 const rawResponses = sessionStorage.getItem("eligibilityResponses");
 
 if (!rawResponses) {
+
 window.location.replace("eligibility-test.html");
+
 } else {
 
 const responses = JSON.parse(rawResponses);
 
+main(responses);
+
+}
+
+// ==========================================================
+// PROFIL — traduit les réponses du diagnostic gratuit dans le même
+// format que profile.js (profil Firestore persistant), pour que
+// recommendPrograms()/scoreProgram() n'aient besoin d'aucune variante :
+// même fonction, deux sources de profil différentes selon le contexte
+// (session anonyme ici, profil connecté dans applications.js).
+// ==========================================================
+function buildProfileFromResponses(responses) {
+
+return {
+lastDegree: responses.studyLevel || "",
+preferredCountries: responses.destinationCountry && responses.destinationCountry !== "Je ne sais pas encore"
+? [responses.destinationCountry]
+: [],
+// scoreProgram() ne vérifie que la présence d'"Anglais" dans
+// program.language — un niveau "Débutant" ne mérite pas le bonus de
+// compatibilité linguistique réservé à un enseignement en anglais.
+languages: responses.english && responses.english !== "Débutant" ? ["Anglais"] : []
+};
+
+}
+
+// ==========================================================
+// CHARGEMENT DU CATALOGUE + RECOMMANDATIONS RÉELLES
+// ==========================================================
+const OPPORTUNITIES_COUNT = 6;
+
+async function loadRealOpportunities(responses) {
+
+const [programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
+getDocs(collection(db, "programs")),
+getDocs(collection(db, "universities")),
+getDocs(collection(db, "scholarships"))
+]);
+
+const programs = programsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+
+const profile = buildProfileFromResponses(responses);
+
+const picks = recommendPrograms({
+profile,
+programs,
+universitiesById,
+scholarshipsById,
+excludeUniversityIds: new Set(),
+count: OPPORTUNITIES_COUNT
+});
+
+const reasons = new EligibilityAI(responses).matchReasons();
+
+const scholarshipDetails = picks.map((pick) => ({
+name: pick.scholarshipTitle || `Programme à ${pick.universityName}`,
+university: pick.universityName,
+country: (universitiesById.get(pick.universityId) || {}).country || "",
+deadline: pick.deadline,
+reasons
+}));
+
+const eligibleCountries = [...new Set(scholarshipDetails.map((s) => s.country).filter(Boolean))];
+
+// Filet minimal si le catalogue n'a produit aucune correspondance (ex.
+// destination très spécifique sans programme encore en base) : la
+// destination déclarée reste affichée, sans jamais inventer d'opportunité.
+if (!eligibleCountries.length && responses.destinationCountry && responses.destinationCountry !== "Je ne sais pas encore") {
+eligibleCountries.push(responses.destinationCountry);
+}
+
+return { scholarshipDetails, eligibleCountries };
+
+}
+
+// ==========================================================
+// ÉTAT DE CHARGEMENT
+// ==========================================================
+function setLoading(isLoading) {
+
+const loading = document.getElementById("resultsLoading");
+const content = document.getElementById("resultsContent");
+
+if (loading) loading.hidden = !isLoading;
+if (content) content.hidden = isLoading;
+
+}
+
+async function main(responses) {
+
+setLoading(true);
+
 const result = new EligibilityAI(responses).analyze();
 
 const score = Math.max(0, Math.min(100, Math.round(result.score)));
+
+try {
+
+const { scholarshipDetails, eligibleCountries } = await loadRealOpportunities(responses);
+
+result.scholarshipDetails = scholarshipDetails;
+result.eligibleScholarships = scholarshipDetails.map((s) => s.name);
+result.eligibleCountries = eligibleCountries;
+
+} catch (error) {
+
+console.error("Erreur Firestore (catalogue) :", error);
+
+result.scholarshipDetails = [];
+result.eligibleScholarships = [];
+result.eligibleCountries = [];
+
+}
+
+render(responses, result, score);
+
+setLoading(false);
+
+}
+
+function render(responses, result, score) {
 
 // ==========================================================
 // RÉCIT D'OUVERTURE — Fitz présente son diagnostic
@@ -190,8 +330,8 @@ const IMPROVEMENT_TIPS = {
 
 function buildScoreBreakdown() {
 
-const average = parseFloat(String(responses.average || "").replace(",", "."));
-const academicFromGrades = isNaN(average) ? null : Math.round(Math.min(20, Math.max(0, average)) * 5);
+const percent = normalizeAverageToPercent(responses.average, responses.averageScale);
+const academicFromGrades = percent === null ? null : Math.round(percent);
 
 return [
 {
@@ -369,6 +509,12 @@ const reasonsHtml = scholarship.reasons
 .map((reason) => `<li><i data-lucide="check"></i><span>${reason}</span></li>`)
 .join("");
 
+// university/deadline : n'existaient pas tant que les opportunités
+// venaient des 4 pays codés en dur — le catalogue réel (via
+// recommendPrograms) fournit désormais une université et une deadline
+// précises, affichées ici sans changer la structure de la carte.
+const subtitleParts = [scholarship.university, scholarship.country].filter(Boolean);
+
 card.innerHTML = `
 <div class="opportunity-head">
 <div class="opportunity-icon"><i data-lucide="graduation-cap"></i></div>
@@ -377,12 +523,16 @@ card.innerHTML = `
 <span class="opportunity-country"></span>
 </div>
 </div>
+${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
 <p class="opportunity-reasons-label">Pourquoi cette opportunité vous correspond :</p>
 <ul class="opportunity-reasons">${reasonsHtml}</ul>
 `;
 
 card.querySelector("h3").textContent = scholarship.name;
-card.querySelector(".opportunity-country").textContent = scholarship.country;
+card.querySelector(".opportunity-country").textContent = subtitleParts.join(" — ");
+
+const deadlineEl = card.querySelector(".opportunity-deadline span");
+if (deadlineEl) deadlineEl.textContent = `Échéance : ${scholarship.deadline}`;
 
 wrapper.appendChild(card);
 

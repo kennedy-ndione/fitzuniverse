@@ -408,7 +408,11 @@ existingApplications.map((a) => (a.university || "").trim().toLowerCase()).filte
 
 const eligiblePrograms = programs.filter((p) => {
 const uni = universitiesById.get(p.universityId);
-return uni && !excludeNames.has((uni.university || "").trim().toLowerCase());
+// Bug corrigé (audit du 2026-08-14) : lisait uni.university, qui n'existe
+// pas sur le schéma relationnel ("universities" porte name) — le filtre
+// n'excluait donc jamais rien en pratique. Voir la même correction dans
+// js/recommend-programs.js.
+return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
 });
 
 const recommendations = recommendPrograms({
@@ -651,7 +655,8 @@ applications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolea
 
 const eligiblePrograms = programs.filter((p) => {
 const uni = universitiesById.get(p.universityId);
-return uni && !excludeNames.has((uni.university || "").trim().toLowerCase());
+// uni.name, pas uni.university (voir la note plus haut dans ce fichier).
+return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
 });
 
 const [alternative] = recommendPrograms({
