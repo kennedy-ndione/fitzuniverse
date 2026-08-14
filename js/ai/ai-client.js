@@ -29,6 +29,7 @@ generateMotivationLetter,
 generateEmail,
 translateText,
 computeApplicationReport,
+computeApplicationReadiness,
 generateChatReply
 } from "./simulated-responses.js";
 
@@ -73,6 +74,9 @@ return translateText(input).text;
 case "check":
 return computeApplicationReport(input);
 
+case "readiness":
+return computeApplicationReadiness(input);
+
 case "chat":
 return generateChatReply(input);
 
@@ -97,7 +101,7 @@ return text
 
 /**
 * @param {Object} params
-* @param {"letter"|"email"|"translate"|"check"|"chat"} params.task
+* @param {"letter"|"email"|"translate"|"check"|"readiness"|"chat"} params.task
 * @param {Object} params.input - voir js/ai/prompts.js pour la forme attendue par tâche
 * @param {(partialText: string) => void} [params.onToken] - appelé à chaque bloc de texte reçu (tâches texte uniquement)
 * @param {AbortSignal} [params.signal] - permet d'arrêter la génération en cours
@@ -110,9 +114,10 @@ await wait(280 + Math.random() * 320, signal);
 
 const result = runSimulatedTask(task, input);
 
-// La vérification de dossier renvoie une structure (score, catégories...)
-// et n'a pas de sens à "streamer" mot par mot.
-if (task === "check") {
+// La vérification de dossier et la vérification finale avant dépôt
+// renvoient une structure (score/verdict, pas du texte à composer) et
+// n'ont pas de sens à "streamer" mot par mot.
+if (task === "check" || task === "readiness") {
 return { data: result };
 }
 

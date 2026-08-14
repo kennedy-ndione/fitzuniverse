@@ -70,8 +70,10 @@ name: "Testeur Essentiel",
 email: TEST_USER.email,
 plan: TEST_USER.plan,
 planExpiresAt: null,
+profile: {
 originCountry: "Sénégal",
-currentDegree: "Licence",
+currentDegree: "Licence"
+},
 createdAt: new Date().toISOString()
 }, { merge: true });
 

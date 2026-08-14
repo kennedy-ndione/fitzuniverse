@@ -125,6 +125,30 @@ describeProfile(input.profile)
 
 },
 
+readiness(input) {
+
+const checklistLines = (input.checklist || []).length
+? input.checklist.map((item) => `- ${item.label} (${item.type}) : ${item.status}`).join("\n")
+: "Aucun élément de dossier ajouté pour l'instant.";
+
+return {
+system: `${BASE_SYSTEM} Tu évalues si UNE candidature précise est prête à être déposée, à partir de son état réel (dossier de candidature, lettre de motivation, délai, profil) — pas une analyse de documents importés comme pour la tâche "check". Réponse structurée : un verdict clair (prêt / presque prêt) et la liste concrète de ce qu'il reste à faire.`,
+user: [
+`Université : ${input.university || "non précisée"}`,
+`Bourse : ${input.scholarship || "non précisée"}`,
+`Date limite : ${input.deadline || "non précisée"}`,
+`Lettre de motivation générée pour cette candidature : ${input.hasGeneratedLetter ? "oui" : "non"}`,
+"",
+"Dossier de candidature (checklist) :",
+checklistLines,
+"",
+"Profil de l'étudiant :",
+describeProfile(input.profile)
+].join("\n")
+};
+
+},
+
 chat(input) {
 
 return {

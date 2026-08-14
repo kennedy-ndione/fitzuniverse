@@ -17,6 +17,8 @@
 * ============================================================
 */
 
+import { PROFILE_READY_THRESHOLD } from "../profile-score.js";
+
 // ==========================================================
 // Outils internes
 // ==========================================================
@@ -499,6 +501,90 @@ checklist,
 strengths,
 weaknesses,
 suggestions
+};
+
+}
+
+// ==========================================================
+// VÉRIFICATION FINALE AVANT DÉPÔT — une candidature précise, pas des
+// documents importés (voir computeApplicationReport ci-dessus, pour la
+// tâche "check"). Calcul réel sur l'état Firestore de la candidature
+// (checklist, lettre générée, délai, score de profil) — même honnêteté
+// que le reste de la simulation : aucune analyse de contenu, mais un
+// verdict qui reflète exactement ce que l'étudiant a réellement fait.
+// ==========================================================
+
+function daysUntil(isoDate) {
+
+if (!isoDate) return null;
+
+const target = new Date(`${isoDate}T00:00:00`);
+const today = new Date();
+
+target.setHours(0, 0, 0, 0);
+today.setHours(0, 0, 0, 0);
+
+return Math.round((target - today) / 86400000);
+
+}
+
+export function computeApplicationReadiness({
+checklist = [],
+hasGeneratedLetter = false,
+deadline = null,
+profileScore = 0,
+applicationId = null
+} = {}) {
+
+const items = Array.isArray(checklist) ? checklist : [];
+const checklistTotal = items.length;
+const checklistDone = items.filter((i) => i.status === "complete").length;
+const checklistComplete = checklistTotal > 0 && checklistDone === checklistTotal;
+
+const missingItems = [];
+
+if (!hasGeneratedLetter) {
+missingItems.push({
+id: "letter",
+text: "La lettre de motivation de cette candidature n'a pas encore été générée.",
+actionLabel: "Générer avec Fitz",
+actionHref: applicationId ? `ai-letter.html?applicationId=${applicationId}` : "ai-letter.html"
+});
+}
+
+if (checklistTotal === 0) {
+missingItems.push({
+id: "checklist-empty",
+text: "Le dossier de candidature (lettres de recommandation, test de langue, preuve financière) n'a pas encore été renseigné.",
+actionLabel: "Ouvrir le dossier de candidature",
+actionHref: null
+});
+} else if (!checklistComplete) {
+const remaining = checklistTotal - checklistDone;
+missingItems.push({
+id: "checklist-incomplete",
+text: `${remaining} élément${remaining > 1 ? "s" : ""} du dossier de candidature encore incomplet${remaining > 1 ? "s" : ""}.`,
+actionLabel: "Voir le dossier de candidature",
+actionHref: null
+});
+}
+
+if (profileScore < PROFILE_READY_THRESHOLD) {
+missingItems.push({
+id: "profile",
+text: "Votre profil général n'est pas encore assez complet — Fitz s'appuie dessus pour personnaliser vos documents.",
+actionLabel: "Compléter mon profil",
+actionHref: "profile.html"
+});
+}
+
+return {
+ready: missingItems.length === 0,
+missingItems,
+checklistDone,
+checklistTotal,
+hasGeneratedLetter,
+daysLeft: deadline ? daysUntil(deadline) : null
 };
 
 }

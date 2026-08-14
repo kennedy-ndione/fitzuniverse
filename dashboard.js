@@ -1,5 +1,8 @@
+import { db } from "./firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { calculateAiScore } from "./js/profile-score.js";
 import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, unlockingPlans } from "./js/app-shell.js";
+import { computeJourneySteps, isJourneyComplete } from "./js/application-journey.js";
 
 // Les données utilisateur (profil, score) vivent désormais dans Firestore
 // (collection "users", comme sur profile.js) et non plus dans localStorage.
@@ -208,13 +211,72 @@ document.getElementById("upgradeCta").setAttribute("href", `offers.html#${next}`
 
 }
 
-function renderCoachPanel({ profileScore, documentsCount, scholarshipsCount }) {
+function daysUntilDeadline(deadline) {
+
+if (!deadline) return null;
+
+const target = new Date(`${deadline}T00:00:00`);
+const today = new Date();
+
+target.setHours(0, 0, 0, 0);
+today.setHours(0, 0, 0, 0);
+
+return Math.round((target - today) / 86400000);
+
+}
+
+// Candidature dont l'échéance approche (deadline dans les 14 jours,
+// ou déjà dépassée) ET dont le parcours guidé (js/application-journey.js)
+// n'est pas encore complet — l'étudiant ne doit pas la découvrir tout
+// seul sur applications.html. N'inclut pas l'étape "Revue conseiller"
+// (js/application-journey.js) dans ce calcul grossier : elle
+// nécessiterait de charger users/{uid}/advisorRequests en plus, pour
+// une carte qui ne fait de toute façon que pointer vers
+// applications.html (seule cette page affiche le détail des 5 étapes).
+function findUrgentIncompleteApplication(applications, profileScore) {
+
+const candidates = applications
+.map((app) => {
+
+const daysLeft = daysUntilDeadline(app.deadline);
+if (daysLeft === null || daysLeft > 14) return null;
+
+const steps = computeJourneySteps(app, { profileScore });
+if (isJourneyComplete(steps)) return null;
+
+return { app, daysLeft };
+
+})
+.filter(Boolean)
+.sort((a, b) => a.daysLeft - b.daysLeft);
+
+return candidates[0] || null;
+
+}
+
+function renderCoachPanel({ profileScore, documentsCount, scholarshipsCount, urgentApplication }) {
 
 const container = document.getElementById("coachList");
 
 if (!container) return;
 
 const items = [];
+
+if (urgentApplication) {
+
+const { app, daysLeft } = urgentApplication;
+
+items.push({
+icon: "alarm-clock",
+title: `${app.university} approche de sa date limite`,
+text: daysLeft < 0
+? `Date limite dépassée de ${Math.abs(daysLeft)} j — le parcours de cette candidature n'est pas encore complet.`
+: `Encore ${daysLeft} j avant la date limite, et le parcours de cette candidature n'est pas encore complet.`,
+href: "applications.html",
+cta: "Voir ma candidature"
+});
+
+}
 
 if (profileScore < 7) {
 items.push({
@@ -297,7 +359,7 @@ if (window.lucide) lucide.createIcons();
 
 initShellChrome();
 
-bootstrapShell().then((session) => {
+bootstrapShell().then(async (session) => {
 
 if (!session) return;
 
@@ -360,10 +422,26 @@ sessionStorage.removeItem("just_upgraded");
 
 }
 
+let urgentApplication = null;
+
+try {
+
+const applicationsSnap = await getDocs(collection(db, "users", user.uid, "applications"));
+const applications = applicationsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+urgentApplication = findUrgentIncompleteApplication(applications, aiScoreValue);
+
+} catch (error) {
+
+console.error("Impossible de charger les candidatures pour le panneau coach :", error);
+
+}
+
 renderPlanExperience(planId, {
 profileScore: aiScoreValue,
 documentsCount: documentsCountValue,
-scholarshipsCount: scholarshipsCountValue
+scholarshipsCount: scholarshipsCountValue,
+urgentApplication
 }, featureFlags, testerAccess, hasFitzExpress, userData.fitzExpressExpiresAt || null);
 
 });

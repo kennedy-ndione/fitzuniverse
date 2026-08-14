@@ -29,9 +29,14 @@ serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { trackEvent } from "./js/analytics.js";
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
 import { isQuotaReached } from "./js/plan-features.js";
 import { recommendPrograms } from "./js/recommend-programs.js";
+import { generate } from "./js/ai/ai-client.js";
+import { calculateAiScore } from "./js/profile-score.js";
+import { showToast } from "./js/ai/toast.js";
+import { FITZ_READINESS_PHRASES } from "./js/fitz-voice.js";
+import { computeJourneySteps } from "./js/application-journey.js";
 
 initShellChrome();
 
@@ -181,6 +186,85 @@ ${total > 0 ? `<span class="app-checklist-score">${completed}/${total} complét�
 ${groups}
 <a href="documents.html" class="checklist-guide-link"><i data-lucide="library"></i><span>Voir la bibliothèque de documents (passeport, diplôme, CV...)</span></a>
 </div>
+</div>`;
+
+}
+
+// ==========================================================
+// VÉRIFICATION FINALE AVANT DÉPÔT (Fitz) — panneau persisté sur
+// `fitzReadiness` (voir runReadinessCheck). Réutilise le langage
+// visuel .ai-checklist-item (css/ai-suite.css, déjà établi par
+// ai-check.js) plutôt qu'un nouveau composant ; les textes viennent
+// tous de js/fitz-voice.js, jamais codés en dur ici.
+// ==========================================================
+
+function formatDateTimeFR(timestamp) {
+if (!timestamp || typeof timestamp.toDate !== "function") return "à l'instant";
+return timestamp.toDate().toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+}
+
+function deadlineNote(daysLeft) {
+if (daysLeft === null || daysLeft === undefined) return "";
+if (daysLeft < 0) return FITZ_READINESS_PHRASES.deadlinePassed(daysLeft);
+if (daysLeft === 0) return FITZ_READINESS_PHRASES.deadlineToday;
+return FITZ_READINESS_PHRASES.deadlineSoon(daysLeft);
+}
+
+function renderReadinessItem(item) {
+
+if (item.actionHref) {
+return `
+<a href="${item.actionHref}" class="ai-checklist-item app-readiness-item">
+<i data-lucide="arrow-right-circle"></i>
+<span>${item.text}</span>
+</a>`;
+}
+
+return `
+<button type="button" class="ai-checklist-item app-readiness-item" data-action="focus-checklist">
+<i data-lucide="arrow-right-circle"></i>
+<span>${item.text}</span>
+</button>`;
+
+}
+
+function renderReadinessPanel(app, advisorUnlocked) {
+
+const result = app.fitzReadiness;
+
+if (!result) return `<div class="app-readiness" hidden></div>`;
+
+const note = deadlineNote(result.daysLeft);
+
+return `
+<div class="app-readiness ${result.ready ? "is-ready" : "is-not-ready"}">
+<div class="app-readiness-verdict">
+<i data-lucide="${result.ready ? "check-circle-2" : "alert-circle"}"></i>
+<span>${result.ready ? FITZ_READINESS_PHRASES.readyTitle : FITZ_READINESS_PHRASES.notReadyTitle(result.missingItems.length)}</span>
+</div>
+${result.missingItems.length ? `<ul class="ai-checklist app-readiness-items">${result.missingItems.map(renderReadinessItem).join("")}</ul>` : ""}
+${note ? `<span class="app-readiness-meta">${note}</span>` : ""}
+<span class="app-readiness-meta">${FITZ_READINESS_PHRASES.checkedAtLabel} : ${formatDateTimeFR(result.checkedAt)}</span>
+${!result.ready && advisorUnlocked ? `<a href="advisor.html?applicationId=${app.id}&university=${encodeURIComponent(app.university || "")}" class="app-readiness-advisor-cta"><i data-lucide="user-check"></i><span>${FITZ_READINESS_PHRASES.advisorCta}</span></a>` : ""}
+</div>`;
+
+}
+
+// ==========================================================
+// PARCOURS GUIDÉ — stepper 5 étapes (js/application-journey.js),
+// repère visuel de ce qu'il reste à faire avant le dépôt.
+// ==========================================================
+
+function renderJourneyStepper(app, steps) {
+
+return `
+<div class="application-journey">
+${steps.map((step) => `
+<button type="button" class="journey-step${step.done ? " is-done" : ""}${step.isFitz ? " is-fitz" : ""}" data-journey-step="${step.id}" title="${step.label}">
+<span class="journey-step-dot"><i data-lucide="${step.done ? "check" : step.icon}"></i></span>
+<span class="journey-step-label">${step.label}</span>
+</button>
+`).join("")}
 </div>`;
 
 }
@@ -449,7 +533,23 @@ return true;
 
 }
 
-function initApplicationsPage(uid, planId, profile) {
+function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress) {
+
+const profileScore = calculateAiScore(profile);
+const advisorUnlocked = !isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress);
+
+let advisorRequests = [];
+
+async function loadAdvisorRequests() {
+if (!advisorUnlocked) { advisorRequests = []; return; }
+try {
+const snapshot = await getDocs(collection(db, "users", uid, "advisorRequests"));
+advisorRequests = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+} catch (error) {
+console.error("Impossible de charger les demandes de revue conseiller :", error);
+advisorRequests = [];
+}
+}
 
 const listEl = document.getElementById("applicationsList");
 const emptyEl = document.getElementById("applicationsEmpty");
@@ -510,9 +610,11 @@ statPending.textContent = applications.filter((a) => a.status === "en_attente").
 function renderCard(app) {
 
 const urgency = urgencyLabel(app);
+const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests });
 
 const card = document.createElement("article");
 card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
+card.id = app.id;
 card.dataset.appId = app.id;
 
 card.innerHTML = `
@@ -524,6 +626,8 @@ ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : "
 </div>
 <span class="app-status-pill app-status-${app.status}">${STATUS_LABELS[app.status] || app.status}</span>
 </div>
+
+${renderJourneyStepper(app, journeySteps)}
 
 <div class="app-card-meta">
 ${app.deadline ? `<span><i data-lucide="calendar"></i>Date limite : ${formatDateFR(app.deadline)}</span>` : ""}
@@ -549,9 +653,12 @@ ${app.generatedEmail
 
 ${renderChecklistSection(app)}
 
+${renderReadinessPanel(app, advisorUnlocked)}
+
 <div class="app-card-actions">
 ${app.isRecommendation ? `<button type="button" class="btn btn-secondary btn-sm app-replace-btn"><i data-lucide="refresh-cw"></i><span>Suggérer une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
+<button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>
 ${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Portail</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
 <button type="button" class="btn btn-ghost btn-sm app-edit-btn"><i data-lucide="pen-line"></i></button>
@@ -564,8 +671,37 @@ card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(a
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
 card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
 card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
+card.querySelector(".app-readiness-btn").addEventListener("click", () => runReadinessCheck(app));
 
 const checklistEl = card.querySelector(".app-checklist");
+
+function focusChecklist() {
+const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
+checklistGroupsEl.hidden = false;
+checklistEl.classList.add("is-open");
+checklistEl.scrollIntoView({ behavior: "smooth", block: "center" });
+if (window.lucide) lucide.createIcons();
+}
+
+card.querySelectorAll('[data-action="focus-checklist"]').forEach((btn) => {
+btn.addEventListener("click", focusChecklist);
+});
+
+card.querySelectorAll('[data-journey-step]').forEach((btn) => {
+
+const stepId = btn.dataset.journeyStep;
+const step = journeySteps.find((s) => s.id === stepId);
+if (!step) return;
+
+if (step.href) {
+btn.addEventListener("click", () => { window.location.href = step.href; });
+} else if (step.action === "focus-checklist") {
+btn.addEventListener("click", focusChecklist);
+} else if (step.action === "run-readiness") {
+btn.addEventListener("click", () => runReadinessCheck(app));
+}
+
+});
 const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
 
 checklistEl.querySelector('[data-action="toggle-checklist"]').addEventListener("click", () => {
@@ -621,7 +757,64 @@ applications = await fetchApplications(uid);
 const seeded = await seedRecommendedSlots(uid, planId, applications, profile);
 if (seeded) applications = await fetchApplications(uid);
 
+await loadAdvisorRequests();
+
 render();
+
+}
+
+async function runReadinessCheck(app) {
+
+const btn = document.getElementById(app.id)?.querySelector(".app-readiness-btn");
+
+if (btn) { btn.disabled = true; btn.querySelector("span").textContent = "Vérification..."; }
+
+try {
+
+const { data } = await generate({
+task: "readiness",
+input: {
+university: app.university,
+scholarship: app.scholarship,
+checklist: app.checklist || [],
+hasGeneratedLetter: !!app.generatedLetter,
+deadline: app.deadline,
+profileScore,
+applicationId: app.id,
+profile
+}
+});
+
+await updateDoc(doc(db, "users", uid, "applications", app.id), {
+fitzReadiness: {
+ready: data.ready,
+missingItems: data.missingItems,
+checklistDone: data.checklistDone,
+checklistTotal: data.checklistTotal,
+daysLeft: data.daysLeft,
+checkedAt: serverTimestamp()
+}
+});
+
+trackEvent("application_readiness_checked", { ready: data.ready });
+
+showToast(
+data.ready ? "Candidature prête à être déposée." : "Fitz a trouvé des points à régler avant le dépôt.",
+{ type: data.ready ? "success" : "error" }
+);
+
+await loadApplications();
+
+} catch (error) {
+
+console.error("Impossible de vérifier cette candidature avant dépôt :", error);
+showToast("La vérification n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+
+} finally {
+
+if (btn) { btn.disabled = false; btn.querySelector("span").textContent = "Vérifier avant de déposer"; }
+
+}
 
 }
 
@@ -962,7 +1155,22 @@ openModal(null);
 
 }
 
-loadApplications().then(maybeAutoOpenNewApplication);
+// Arrivée depuis ai-letter.js/ai-email.js via "Retour à ma candidature"
+// (applications.html#<applicationId>) : fait défiler jusqu'à la carte
+// concernée plutôt que de laisser l'étudiant la rechercher dans la liste.
+function maybeScrollToHash() {
+
+const id = window.location.hash.slice(1);
+if (!id) return;
+
+document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+}
+
+loadApplications().then(() => {
+maybeAutoOpenNewApplication();
+maybeScrollToHash();
+});
 
 }
 
@@ -985,6 +1193,6 @@ return;
 
 }
 
-initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile);
+initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress);
 
 });

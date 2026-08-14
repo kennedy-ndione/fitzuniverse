@@ -9,6 +9,16 @@ margin-top:18px;
 
 }
 
+/* Lien "Retour à ma candidature" (contexte ?applicationId=...) — même
+langage que .app-doc-link d'applications.css, redéclaré ici car cette
+page ne charge pas applications.css. */
+#applicationContextBackLink{
+margin-left:auto;
+font-weight:700;
+color:var(--accent-color);
+flex-shrink:0;
+}
+
 @media(max-width:520px){
 
 .ai-page-header-badge span{

@@ -35,6 +35,13 @@ export const PROFILE_SECTION_RULES = [
 (p) => isFilled(p.whyLeave) && isFilled(p.careerGoals) && isFilled(p.dreams)
 ];
 
+// Seuil au-delà duquel un profil est considéré "assez complet" pour que
+// Fitz s'appuie dessus (lettre, vérification avant dépôt...) — utilisé à
+// la fois par js/ai/simulated-responses.js (computeApplicationReadiness)
+// et js/application-journey.js, pour ne jamais afficher deux verdicts
+// contradictoires sur le même profil.
+export const PROFILE_READY_THRESHOLD = 7;
+
 export function calculateAiScore(profile) {
 
 const completed = PROFILE_SECTION_RULES.filter((rule) => {
