@@ -4,6 +4,13 @@ Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html)
 ========================================================== */
 
+/* Fond navy (audit du 2026-08-15) : même identité que eligibility-test.css
+(voir son commentaire pour le détail) — --gradient-primary, déjà le
+fond de repli du hero d'index.html sous sa photo, remplace le
+--gradient-hero clair par défaut de body. .container garde son fond
+clair (var(--background)) : seul l'arrière-plan de la page change,
+jamais la lisibilité du champ de saisie, des cartes de choix ou du
+curseur. */
 body{
 
 min-height:100vh;
@@ -15,6 +22,8 @@ align-items:center;
 justify-content:center;
 
 padding:40px 20px;
+
+background:var(--gradient-primary);
 
 }
 

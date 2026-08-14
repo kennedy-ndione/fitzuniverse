@@ -5,6 +5,18 @@ Repose sur les variables et le reset définis dans css/base.css
 et eligibility-questions.html)
 ========================================================== */
 
+/* Fond navy (audit du 2026-08-15) : reprend l'identité du hero
+d'index.html — --gradient-primary est déjà ce que .hero (css/hero.css)
+utilise comme fond de repli sous sa photo, le même bleu→marine sans
+photo ni overlay en couches convient donc directement ici, aucune
+nouvelle valeur. Remplace --gradient-hero (fond clair par défaut de
+body, css/base.css) qui donnait à ces 2 pages un ton "app générique"
+déconnecté du reste de la marque. L'accent ambré du hero n'est pas
+reproduit en halo décoratif (aurait réintroduit le blob radial retiré
+au lot précédent) : #startButton est déjà en --amber-500 plus bas,
+qui fait cet écho sans décor supplémentaire. .card garde son fond
+clair (var(--background)) : seul l'arrière-plan de la page change,
+jamais la lisibilité du contenu du questionnaire. */
 body{
 
 min-height:100vh;
@@ -16,6 +28,8 @@ align-items:center;
 justify-content:center;
 
 padding:40px 20px;
+
+background:var(--gradient-primary);
 
 }
 
