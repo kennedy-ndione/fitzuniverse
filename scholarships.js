@@ -104,7 +104,7 @@ container.appendChild(card);
 // représentative — jamais le nom/logo d'une université précise,
 // volontairement, pour ne pas empiéter sur le rôle du catalogue
 // Universités.
-function enrichWithProgramData(scholarship, programs, universitiesById) {
+function enrichWithProgramData(scholarship, programs, universitiesById, flagByCountry) {
 
 const linkedPrograms = programs.filter((p) => p.scholarshipId === scholarship.id);
 
@@ -119,10 +119,14 @@ linkedUniversities.map((u) => u.country).filter(Boolean).concat(scholarship.coun
 const withImage = linkedUniversities.find((u) => u.image);
 
 // Même résolution que la photo ci-dessus (première université liée qui
-// porte le champ), pas une 2e façon de faire pays -> drapeau : jamais de
-// table de correspondance nom de pays -> code ISO à maintenir à la main.
+// porte le champ) en priorité — reste la plus précise, propre à cette
+// bourse. Repli sur flagByCountry (voir chargerBourses) si la bourse n'a
+// aucun programme lié (stub, ex. Mastercard Foundation UM6P) ou si son
+// université liée n'a pas de flag : toujours pas de table de
+// correspondance pays -> code ISO écrite à la main, juste un 2e passage
+// sur les universités déjà chargées, cette fois sans filtrer par lien.
 const withFlag = linkedUniversities.find((u) => u.flag);
-const flag = withFlag ? withFlag.flag : null;
+const flag = withFlag ? withFlag.flag : (flagByCountry.get(scholarship.country) || null);
 
 let image;
 let imageSrcset = "";
@@ -184,9 +188,20 @@ getDocs(collection(db, "universities"))
 const programs = programsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
 
+// Repli drapeau par pays (voir enrichWithProgramData) : première
+// université de tout le catalogue — pas seulement celles liées à cette
+// bourse précise — qui porte ce pays et un flag. Construit une seule
+// fois ici plutôt qu'à chaque bourse.
+const flagByCountry = new Map();
+for (const university of universitiesById.values()) {
+if (university.country && university.flag && !flagByCountry.has(university.country)) {
+flagByCountry.set(university.country, university.flag);
+}
+}
+
 allScholarships = scholarshipsSnap.docs
 .map((d) => ({ id: d.id, ...d.data() }))
-.map((s) => enrichWithProgramData(s, programs, universitiesById));
+.map((s) => enrichWithProgramData(s, programs, universitiesById, flagByCountry));
 
 applyFilters();
 
