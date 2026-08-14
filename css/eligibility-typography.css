@@ -1,0 +1,77 @@
+/* ==========================================================
+SCHOLARBRIDGE — SYSTÈME TYPOGRAPHIQUE FITZ (2026-08-14)
+eligibility-test.html + eligibility-questions.html UNIQUEMENT. Étend
+le système posé sur index.html (voir css/homepage-typography.css) et
+scholarships.html/universities.html (css/catalog-typography.css) sans
+Fraunces : mêmes raisons que le catalogue — ces 2 pages sont un
+parcours conversationnel avec Fitz, pas une section "récit" équivalente
+à "Le problème"/"Notre vision".
+
+Avant ce fichier, les deux pages chargeaient Inter/Sora en commentant
+"identiques à index.html" — plus vrai depuis l'audit du 2026-08-13
+d'index.html (passé à Plus Jakarta Sans/Space Grotesk/Fraunces) : une
+dérive silencieuse que corrige ce fichier, en les alignant sur la même
+identité que le reste des pages déjà modernisées plutôt que de figer
+un "identiques à index.html" qui ne l'était déjà plus.
+
+results.html garde Inter/Sora pour l'instant : hors scope de cet audit
+(voir la consigne), page volontairement laissée visuellement telle
+quelle sauf son état de chargement.
+
+Même technique que les 2 fichiers cités plus haut : redéfinir
+--font-display/--font-body (css/base.css) au niveau :root plutôt que
+de multiplier les sélecteurs.
+========================================================== */
+
+:root{
+
+/* Mêmes noms/valeurs que css/homepage-typography.css et
+css/catalog-typography.css, redéclarés ici plutôt que partagés entre
+fichiers (même raison : chaque page autonome charge son propre
+fichier). Pas de --font-narrative — Fraunces n'est pas chargée par le
+<link> Google Fonts de ces 2 pages, volontairement. */
+--font-affirmation:'Space Grotesk', sans-serif;
+--font-product:'Plus Jakarta Sans', sans-serif;
+--font-body:'Plus Jakarta Sans', sans-serif;
+
+--font-display:var(--font-product);
+
+}
+
+body{
+font-family:var(--font-body);
+}
+
+/* ==========================================================
+AFFIRMATION — les titres qui portent la voix de Fitz au démarrage de
+chaque étape : le h1 de l'écran d'intro (eligibility-test.html) et la
+question courante (eligibility-questions.html), même rôle que la
+bannière .bourses-hero/.uni-hero ou le hero de la home : point d'entrée
+de l'écran. Space Grotesk ne charge que 600/700 (voir le <link> Google
+Fonts des 2 pages) : les poids plus lourds retombent sur 700.
+========================================================== */
+
+h1,
+.question-header h2{
+
+font-family:var(--font-affirmation);
+letter-spacing:-.02em;
+
+}
+
+/* ==========================================================
+"Inter" codé en dur à plusieurs endroits (bouton principal, champ de
+réponse, puces d'échelle, boutons de navigation) : ne suit donc pas
+--font-body automatiquement comme le reste — override explicite pour
+ne pas laisser ces éléments seuls sur l'ancienne police pendant que
+tout le reste de la page passe à Plus Jakarta Sans.
+========================================================== */
+
+button#startButton,
+input#answer,
+.scale-chip,
+.nav-buttons button{
+
+font-family:var(--font-body);
+
+}
