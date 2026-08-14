@@ -2,6 +2,7 @@ import { db } from "./firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { DOCUMENTS, DOCUMENT_CATEGORIES, PRIORITY_LEVELS } from "./js/documents-data.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 
 initShellChrome();
 
@@ -45,10 +46,10 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Documents à préparer</h2>
-<p>Débloquez les checklists détaillées de Fitz avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"} : préparez chaque document sans rien laisser au hasard.</p>
+<p>Débloquez les checklists détaillées de Fitz avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)} : préparez chaque document sans rien laisser au hasard.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
 <i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;

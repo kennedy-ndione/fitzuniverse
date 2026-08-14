@@ -32,6 +32,7 @@ import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { isQuotaReached } from "./js/plan-features.js";
 import { recommendPrograms } from "./js/recommend-programs.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 
 initShellChrome();
 
@@ -254,10 +255,10 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Suivi des candidatures</h2>
-<p>Débloquez le suivi de vos candidatures avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"} : gardez chaque étape sous contrôle, avec les rappels de Fitz pour ne rien manquer.</p>
+<p>Débloquez le suivi de vos candidatures avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)} : gardez chaque étape sous contrôle, avec les rappels de Fitz pour ne rien manquer.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
 <i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;

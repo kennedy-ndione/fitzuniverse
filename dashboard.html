@@ -271,6 +271,22 @@ cas (formule payante active, ou aucun accès du tout). -->
 </div>
 </div>
 
+<!-- Affiché tant que l'étudiant n'a pas activé les notifications
+e-mail dans Paramètres — voir dashboard.js:renderEmailNudge(). Même
+famille visuelle que welcomeAlert/accompagnementAlert/fitzExpressBanner
+ci-dessus, pas un nouveau style. -->
+<div id="emailNudge" class="welcome-alert" hidden>
+<i data-lucide="mail"></i>
+<div>
+<strong>Fitz peut aussi vous prévenir par e-mail.</strong>
+<p>Rappels de candidatures, messages de l'équipe : activez les notifications e-mail dans vos paramètres pour ne rien manquer, même quand vous n'êtes pas connecté(e).</p>
+<a href="account.html#emailNotifications" class="welcome-alert-cta">
+<span>Aller aux paramètres</span>
+<i data-lucide="arrow-right"></i>
+</a>
+</div>
+</div>
+
 <!-- Coach — "Aujourd'hui" -->
 <section class="coach-section reveal">
 

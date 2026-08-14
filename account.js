@@ -11,7 +11,7 @@
 */
 
 import { initShellChrome, bootstrapShell, PLAN_LABELS } from "./js/app-shell.js";
-import { changePassword, deleteAccount } from "./js/account-actions.js";
+import { changePassword, deleteAccount, setEmailNotifications } from "./js/account-actions.js";
 import { getAuthErrorMessage } from "./auth-ui.js";
 import { showToast } from "./js/ai/toast.js";
 
@@ -46,6 +46,45 @@ document.getElementById("accountEmail").textContent = user.email || "—";
 document.getElementById("accountPlan").textContent = ctx.testerAccess
 ? `${PLAN_LABELS[planId]} · Accès test complet`
 : PLAN_LABELS[planId];
+
+// ==========================================================
+// Notifications e-mail
+// ==========================================================
+
+const emailToggle = document.getElementById("emailNotificationsToggle");
+const emailStatus = document.getElementById("emailNotificationsStatus");
+
+emailToggle.checked = ctx.userData.emailNotifications === true;
+
+emailToggle.addEventListener("change", async () => {
+
+const enabled = emailToggle.checked;
+
+emailToggle.disabled = true;
+
+try {
+
+await setEmailNotifications(user.uid, enabled);
+
+emailStatus.textContent = enabled
+? "Notifications e-mail activées."
+: "Notifications e-mail désactivées.";
+
+showToast(enabled ? "Notifications e-mail activées." : "Notifications e-mail désactivées.");
+
+} catch (error) {
+
+console.error(error);
+emailToggle.checked = !enabled;
+emailStatus.textContent = "Un souci est survenu — réessayez dans un instant.";
+
+} finally {
+
+emailToggle.disabled = false;
+
+}
+
+});
 
 // ==========================================================
 // Changement de mot de passe

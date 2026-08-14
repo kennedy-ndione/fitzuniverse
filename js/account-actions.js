@@ -40,6 +40,7 @@ deleteUser
 import {
 doc,
 deleteDoc,
+updateDoc,
 collection,
 getDocs,
 writeBatch
@@ -80,6 +81,19 @@ export async function changePassword(currentPassword, newPassword) {
 await reauthenticate(currentPassword);
 await updatePassword(auth.currentUser, newPassword);
 
+}
+
+// Réglage "Fitz peut me prévenir par e-mail" (account.html). N'importe
+// aucune action de réauthentification comme les deux fonctions
+// ci-dessus/dessous : ce n'est pas une action sensible, un simple champ
+// booléen sur users/{uid}, déjà autorisé en écriture par le
+// propriétaire (firestore.rules — seul un jeu de champs réservé à
+// l'admin, plan/disabled/testerAccess/..., est bloqué). Aucun e-mail
+// n'est envoyé aujourd'hui quand ce réglage est activé — voir
+// js/fitz-voice.js (FITZ_EMAIL_TEMPLATES) pour le texte déjà prêt pour
+// la future Cloud Function qui le consommera.
+export async function setEmailNotifications(uid, enabled) {
+await updateDoc(doc(db, "users", uid), { emailNotifications: enabled === true });
 }
 
 export async function deleteAccount(password) {

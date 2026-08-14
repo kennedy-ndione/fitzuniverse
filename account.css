@@ -66,6 +66,56 @@ color:var(--text-color);
 
 }
 
+.account-toggle-row{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+padding:12px 14px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-sm);
+
+cursor:pointer;
+
+}
+
+.account-toggle-row strong{
+
+display:block;
+
+font-size:.94rem;
+
+color:var(--text-color);
+
+}
+
+.account-toggle-row .ai-field-hint{
+
+margin-top:2px;
+
+}
+
+.account-toggle-row input[type="checkbox"]{
+
+width:20px;
+
+height:20px;
+
+flex-shrink:0;
+
+accent-color:var(--accent-color);
+
+cursor:pointer;
+
+}
+
 .account-form-error{
 
 margin-top:12px;

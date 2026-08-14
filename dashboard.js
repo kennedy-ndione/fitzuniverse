@@ -1,5 +1,10 @@
+import { db } from "./firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
 import { calculateAiScore } from "./js/profile-score.js";
 import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, unlockingPlans } from "./js/app-shell.js";
+import { recommendPrograms } from "./js/recommend-programs.js";
+import { randomFitzTip } from "./js/fitz-voice.js";
 
 // Les données utilisateur (profil, score) vivent désormais dans Firestore
 // (collection "users", comme sur profile.js) et non plus dans localStorage.
@@ -17,46 +22,46 @@ return fallback;
 }
 }
 
-const scholarshipLevels = [
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat",
-"Licence","Master","Doctorat"
-];
+// Nombre réel d'opportunités compatibles avec le profil de l'étudiant
+// — même jointure programs/universities/scholarships et même moteur
+// de score que seedRecommendedSlots()/replaceRecommendation() dans
+// applications.js (js/recommend-programs.js), jamais une deuxième
+// façon de compter. On ne garde que les entrées dont le score est
+// strictement positif (au moins un critère de profil réellement
+// atteint — niveau, pays, langue, ou statut ouvert) : sans ce filtre,
+// recommendPrograms() renverrait une entrée par université du
+// catalogue entier, compatible ou non.
+async function countCompatibleOpportunities(profile) {
 
-function normalizeLevel(level) {
+try {
 
-const text = String(level || "").toLowerCase();
+const [programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
+getDocs(collection(db, "programs")),
+getDocs(collection(db, "universities")),
+getDocs(collection(db, "scholarships"))
+]);
 
-if (text.includes("doctor") || text.includes("phd"))
-return "Doctorat";
+const programs = programsSnap.docs.map((d) => ({ firestoreId: d.id, ...d.data() }));
+const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
 
-if (text.includes("master"))
-return "Master";
+const matches = recommendPrograms({
+profile: profile || {},
+programs,
+universitiesById,
+scholarshipsById,
+count: programs.length
+});
 
-if (text.includes("licence") || text.includes("bachelor"))
-return "Licence";
+return matches.filter((m) => m.score > 0).length;
 
-return "";
+} catch (error) {
+
+console.warn("Impossible de calculer les opportunités compatibles :", error);
+return 0;
+
 }
 
-function countRecommendations(profile) {
-
-const selectedLevel = normalizeLevel(profile.currentDegree);
-
-if (!selectedLevel) {
-return scholarshipLevels.length;
-}
-
-return scholarshipLevels.filter(level =>
-level === selectedLevel
-).length;
 }
 
 // ==========================================================
@@ -68,13 +73,6 @@ level === selectedLevel
 // visibilité de "Mon conseiller" — dashboard.js n'a plus qu'à compléter
 // le texte des tuiles Fitz (voir renderToolCardLockOverlays ci-dessous),
 // spécifique à ce balisage "tool-card" que les autres pages n'ont pas.
-
-const FITZ_TIPS = [
-"Une lettre de motivation efficace commence toujours par une accroche personnelle, unique à votre parcours.",
-"Vérifiez régulièrement les dates limites de vos candidatures suivies pour garder une longueur d'avance sur vos échéances.",
-"Un dossier avec des documents traduits et certifiés a plus de chances d'être traité rapidement.",
-"Préparez vos réponses aux questions d'entretien classiques avant même de recevoir une invitation."
-];
 
 // Complète, pour les tuiles "tool-card" du tableau de bord uniquement, le
 // texte de l'overlay de verrouillage (label + CTA) — le verrouillage
@@ -236,20 +234,28 @@ cta: "Voir mes documents"
 });
 }
 
+// Pointe vers universities.html plutôt que results.html : cette
+// dernière dépend du sessionStorage du diagnostic anonyme
+// (eligibility-questions.html), pas du profil Firestore persistant —
+// un étudiant connecté dont la session a expiré (autre appareil,
+// cache vidé) s'y retrouvait renvoyé au questionnaire alors qu'il a
+// déjà un profil rempli. universities.html est public et déjà
+// pensé pour explorer librement le catalogue (voir memory
+// universities_ungated_2026-07-30), sans dépendre d'aucune session.
 items.push({
 icon: "compass",
 title: "Découvrez vos opportunités",
 text: scholarshipsCount > 0
 ? `${scholarshipsCount} opportunité${scholarshipsCount > 1 ? "s" : ""} correspondent actuellement à votre profil.`
 : "Complétez votre profil pour révéler vos opportunités compatibles.",
-href: "results.html",
-cta: "Voir mon diagnostic"
+href: "universities.html",
+cta: "Explorer les universités"
 });
 
 items.push({
 icon: "sparkles",
 title: "Conseil Fitz",
-text: FITZ_TIPS[Math.floor(Math.random() * FITZ_TIPS.length)],
+text: randomFitzTip(),
 href: "ai-chat.html",
 cta: "Discuter avec Fitz"
 });
@@ -297,7 +303,7 @@ if (window.lucide) lucide.createIcons();
 
 initShellChrome();
 
-bootstrapShell().then((session) => {
+bootstrapShell().then(async (session) => {
 
 if (!session) return;
 
@@ -322,10 +328,16 @@ document.getElementById("welcomeMessage").textContent =
 
 const aiScoreValue = calculateAiScore(profile);
 const documentsCountValue = readStorage("generatedDocuments", []).length;
-const scholarshipsCountValue = countRecommendations(profile);
 
 document.getElementById("aiScore").textContent = aiScoreValue;
 document.getElementById("documentsCount").textContent = documentsCountValue;
+
+// Calculé après les compteurs synchrones ci-dessus (pas de dépendance
+// réseau) pour ne pas retarder leur affichage — le tableau de bord se
+// peuple progressivement plutôt que d'attendre Firestore pour tout
+// afficher d'un coup.
+const scholarshipsCountValue = await countCompatibleOpportunities(profile);
+
 document.getElementById("totalScholarships").textContent = scholarshipsCountValue;
 
 const welcomeAlert = document.getElementById("welcomeAlert");
@@ -359,6 +371,12 @@ accompagnementAlert.hidden = false;
 sessionStorage.removeItem("just_upgraded");
 
 }
+
+// Discret, jamais bloquant : n'affiche rien si le réglage n'existe pas
+// encore dans Firestore (comptes créés avant son ajout — voir
+// js/account-actions.js) ni si l'étudiant l'a déjà activé.
+const emailNudge = document.getElementById("emailNudge");
+if (emailNudge) emailNudge.hidden = userData.emailNotifications === true;
 
 renderPlanExperience(planId, {
 profileScore: aiScoreValue,

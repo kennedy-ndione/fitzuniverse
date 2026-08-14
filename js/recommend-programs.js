@@ -94,6 +94,12 @@ const scholarship = entry.program.scholarshipId ? scholarshipsById.get(entry.pro
 
 picked.push({
 universityId: entry.program.universityId,
+// Exposé pour countCompatibleOpportunities() (dashboard.js), qui a
+// besoin de savoir combien d'entrées correspondent réellement au
+// profil (score > 0) plutôt que de compter tout le catalogue — champ
+// ignoré sans risque par les appelants existants (applications.js) qui
+// ne lisent pas cette clé.
+score: entry.score,
 // Bug corrigé (audit du 2026-08-14) : lisait entry.university.university,
 // qui n'a jamais existé sur le schéma relationnel ("universities" porte
 // name, pas university — university était le nom du champ dans l'ancien
