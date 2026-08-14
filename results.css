@@ -835,9 +835,31 @@ font-style:italic;
 SECTIONS GÉNÉRIQUES
 ========================================================== */
 
+/* Alternance de fond entre sections (audit du 2026-08-15) : la page
+enchaînait 6 <section class="section"> sans aucune rupture visuelle
+(toutes sur --background, blanc uni), malgré le nombre de sujets
+traités (score, points forts, destinations, opportunités, axes à
+renforcer, recommandations). Aucun pattern d'alternance de section
+équivalent n'existait déjà ailleurs sur le site (vérifié :
+universities.html/scholarships.html/index.html n'alternent pas leurs
+sections par couleur) — celui-ci reste dans les 3 tons déjà définis
+dans css/base.css (--background/--background-soft/--background-alt),
+aucune nouvelle couleur. .section-tint marque une section sur deux
+(voir results.html) en --background-soft ; les autres restent
+transparentes (le --gradient-hero du body, déjà très clair, transparaît). */
 .section{
 
 margin-bottom:32px;
+
+padding:36px 32px;
+
+border-radius:var(--radius-lg);
+
+}
+
+.section.section-tint{
+
+background:var(--background-soft);
 
 }
 
@@ -1032,15 +1054,14 @@ margin-bottom:16px;
 
 }
 
-.opportunity-icon{
+/* Vignette de ville réelle (results.js, scholarship.image — même champ
+"universities".image déjà utilisé par universities-page.js/details.js),
+remplace l'ancienne icône générique --gradient-primary. object-fit:cover
++ dimensions fixes : les photos sources ont des ratios variés (voir
+scripts/generate-city-srcset.mjs), jamais de déformation. */
+.opportunity-thumb{
 
 flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
 
 width:46px;
 
@@ -1048,18 +1069,9 @@ height:46px;
 
 border-radius:14px;
 
-background:var(--gradient-primary);
+object-fit:cover;
 
-color:#fff;
-
-}
-
-.opportunity-icon i,
-.opportunity-icon svg{
-
-width:22px;
-
-height:22px;
+background:var(--background-alt);
 
 }
 
@@ -1077,11 +1089,31 @@ margin-bottom:2px;
 
 .opportunity-country{
 
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
 font-size:.85rem;
 
 color:var(--text-light);
 
 font-weight:600;
+
+}
+
+.opportunity-flag{
+
+flex-shrink:0;
+
+width:16px;
+
+height:16px;
+
+border-radius:3px;
+
+object-fit:cover;
 
 }
 
@@ -1415,6 +1447,12 @@ gap:12px;
 .score-section{
 
 padding:26px;
+
+}
+
+.section{
+
+padding:24px 20px;
 
 }
 

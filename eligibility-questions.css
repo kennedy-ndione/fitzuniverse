@@ -18,59 +18,11 @@ padding:40px 20px;
 
 }
 
-/* ==========================================================
-IDENTITÉ FITZ — halo de fond (audit du 2026-08-14). Même traitement
-que eligibility-test.css (voir son commentaire pour le détail) : étend
---gradient-fitz à l'arrière-plan de toute la page plutôt qu'au seul
-badge/à la bulle de conversation. Statique, jamais animé.
-========================================================== */
-
-body::before,
-body::after{
-
-content:"";
-
-position:fixed;
-
-z-index:-1;
-
-border-radius:50%;
-
-pointer-events:none;
-
-filter:blur(80px);
-
-}
-
-body::before{
-
-top:-160px;
-
-left:-12%;
-
-width:460px;
-
-height:460px;
-
-background:radial-gradient(circle,rgba(139,124,246,.22) 0%,transparent 70%);
-
-}
-
-body::after{
-
-bottom:-160px;
-
-right:-12%;
-
-width:420px;
-
-height:420px;
-
-background:radial-gradient(circle,rgba(34,168,201,.18) 0%,transparent 70%);
-
-}
-
 .container{
+
+position:relative;
+
+overflow:hidden;
 
 width:100%;
 
@@ -85,6 +37,31 @@ border-radius:var(--radius-lg);
 padding:48px;
 
 box-shadow:var(--shadow-lg);
+
+}
+
+/* Identité Fitz (corrigé le 2026-08-15 — un halo body::before/::after en
+radial-gradient flou, retiré, enfreignait DESIGN_SYSTEM.md : "Trois
+dégradés, pas plus — jamais de nouveau blob radial", et ses couleurs
+étaient les 2 arrêts de --gradient-fitz extraits en dur plutôt que le
+token consommé tel quel). Même liseré que eligibility-test.css (voir
+son commentaire pour le détail) : accent de signature en tête de
+carte, --gradient-fitz consommé directement. */
+.container::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+
+left:0;
+
+right:0;
+
+height:4px;
+
+background:var(--gradient-fitz);
 
 }
 

@@ -92,13 +92,27 @@ count: OPPORTUNITIES_COUNT
 
 const reasons = new EligibilityAI(responses).matchReasons();
 
-const scholarshipDetails = picks.map((pick) => ({
+// image/flag : déjà vérifiées et utilisées pour cette même université
+// ailleurs sur le site (universities-page.js, details.js) — aucune
+// nouvelle photo à sourcer, on rend simplement visible ici la
+// reconnexion au vrai catalogue. Même repli que details.js
+// (default.jpg/default.svg) pour ne jamais casser l'affichage si un
+// document a ces champs vides.
+const scholarshipDetails = picks.map((pick) => {
+
+const university = universitiesById.get(pick.universityId) || {};
+
+return {
 name: pick.scholarshipTitle || `Programme à ${pick.universityName}`,
 university: pick.universityName,
-country: (universitiesById.get(pick.universityId) || {}).country || "",
+country: university.country || "",
 deadline: pick.deadline,
+image: university.image || "default.jpg",
+flag: university.flag || "default.svg",
 reasons
-}));
+};
+
+});
 
 const eligibleCountries = [...new Set(scholarshipDetails.map((s) => s.country).filter(Boolean))];
 
@@ -515,12 +529,16 @@ const reasonsHtml = scholarship.reasons
 // précises, affichées ici sans changer la structure de la carte.
 const subtitleParts = [scholarship.university, scholarship.country].filter(Boolean);
 
+// Vignette de ville + drapeau : mêmes images déjà vérifiées et
+// utilisées pour cette université sur universities.html/
+// scholarship-details.html, rendent ici visible la reconnexion au vrai
+// catalogue plutôt qu'une icône générique.
 card.innerHTML = `
 <div class="opportunity-head">
-<div class="opportunity-icon"><i data-lucide="graduation-cap"></i></div>
+<img class="opportunity-thumb" src="assets/images/cities/${scholarship.image}" alt="" loading="lazy">
 <div>
 <h3></h3>
-<span class="opportunity-country"></span>
+<span class="opportunity-country"><img class="opportunity-flag" src="assets/flags/${scholarship.flag}" alt=""><span></span></span>
 </div>
 </div>
 ${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
@@ -529,7 +547,7 @@ ${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calend
 `;
 
 card.querySelector("h3").textContent = scholarship.name;
-card.querySelector(".opportunity-country").textContent = subtitleParts.join(" — ");
+card.querySelector(".opportunity-country span").textContent = subtitleParts.join(" — ");
 
 const deadlineEl = card.querySelector(".opportunity-deadline span");
 if (deadlineEl) deadlineEl.textContent = `Échéance : ${scholarship.deadline}`;
