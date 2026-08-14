@@ -345,6 +345,23 @@ flex-shrink:0;
 .scholarship-card-country-icon i,
 .scholarship-card-country-icon svg{ width:18px; height:18px; }
 
+/* Drapeau réel (scholarships.js, enrichWithProgramData -> flag) — même
+traitement déjà validé sur .details-hero-badge img (scholarship-details.css),
+pas une nouvelle taille inventée. Repli sur l'icône globe ci-dessus géré
+côté JS quand aucune université liée ne porte de champ flag. Le carré
+teinté 38x38 ci-dessus est pensé pour l'icône globe générique : gardé
+pour ce cas, mais retiré ici (:has(img)) — un vrai drapeau (déjà coloré,
+déjà son propre border-radius) n'a pas besoin d'un cadre supplémentaire
+plus grand que lui, qui le rendait mal centré/flottant dans la case. */
+.scholarship-card-country-icon:has(img){
+width:auto;
+height:auto;
+background:none;
+border-radius:0;
+}
+
+.scholarship-card-country-icon img{ width:20px; height:14px; object-fit:cover; border-radius:2px; }
+
 .scholarship-card-country span{
 
 display:block;

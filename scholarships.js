@@ -118,6 +118,12 @@ linkedUniversities.map((u) => u.country).filter(Boolean).concat(scholarship.coun
 
 const withImage = linkedUniversities.find((u) => u.image);
 
+// Même résolution que la photo ci-dessus (première université liée qui
+// porte le champ), pas une 2e façon de faire pays -> drapeau : jamais de
+// table de correspondance nom de pays -> code ISO à maintenir à la main.
+const withFlag = linkedUniversities.find((u) => u.flag);
+const flag = withFlag ? withFlag.flag : null;
+
 let image;
 let imageSrcset = "";
 
@@ -143,7 +149,7 @@ imageSrcset = [400, 800, 1200].map((w) => `assets/images/${base}-${w}w.jpg ${w}w
 
 }
 
-return { ...scholarship, countries, image, imageSrcset, partnerCount: linkedUniversities.length };
+return { ...scholarship, countries, image, imageSrcset, flag, partnerCount: linkedUniversities.length };
 
 }
 
@@ -253,6 +259,13 @@ const srcsetAttr = scholarship.imageSrcset
 ? ` srcset="${scholarship.imageSrcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 380px"`
 : "";
 
+// Repli sur l'icône globe si aucune université liée ne porte de champ
+// flag (en théorie jamais atteint, chaque bourse du catalogue a au
+// moins un programme lié) — jamais d'image cassée.
+const countryIconHtml = scholarship.flag
+? `<img src="assets/flags/${scholarship.flag}" alt="">`
+: `<i data-lucide="globe"></i>`;
+
 card.innerHTML = `
 <div class="scholarship-card-media">
 <img src="${scholarship.image}"${srcsetAttr} alt="" loading="lazy">
@@ -262,7 +275,7 @@ card.innerHTML = `
 <div class="scholarship-card-top">
 
 <div class="scholarship-card-country">
-<span class="scholarship-card-country-icon"><i data-lucide="globe"></i></span>
+<span class="scholarship-card-country-icon">${countryIconHtml}</span>
 <span>${scholarship.country || "—"}</span>
 </div>
 
