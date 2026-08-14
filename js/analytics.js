@@ -74,6 +74,8 @@ ai_chat_message_sent: { counters: ["totals", "byDay"] },
 
 application_added: { counters: ["totals", "byDay"] },
 application_checked_in: { counters: ["totals", "byDay"] },
+application_readiness_checked: { counters: ["totals", "byDay"] },
+advisor_request_sent: { counters: ["totals", "byDay"] },
 file_compressed: { counters: ["totals", "byDay"] },
 
 payment_attempted: { counters: ["totals", "byDay", "byPlan"] }

@@ -121,6 +121,28 @@ allow delete: if isOwner(uid);
 }
 
 // ------------------------------------------------------------
+// Demandes de revue conseiller (Signature / Signature Focus) —
+// contrepartie étudiant -> admin de users/{uid}/messages ci-dessus
+// (qui va admin -> étudiant), donc les mêmes règles mais inversées.
+// L'étudiant crée sa demande (texte + candidature concernée
+// optionnelle), toujours avec status "nouveau" imposé à la création
+// pour qu'il ne puisse pas se marquer lui-même "traité" ; seul un
+// administrateur peut ensuite faire évoluer ce statut (voir
+// admin/student-detail.js). Suppression réservée au propriétaire, même
+// raisonnement que pour "messages" (vider sa propre messagerie lors de
+// la suppression de compte, account.html).
+// ------------------------------------------------------------
+match /users/{uid}/advisorRequests/{requestId} {
+allow create: if isOwner(uid) &&
+request.resource.data.keys().hasOnly(["text", "applicationId", "university", "status", "createdAt"]) &&
+request.resource.data.text is string && request.resource.data.text != "" &&
+request.resource.data.status == "nouveau";
+allow read: if isOwner(uid) || isAdmin();
+allow update: if isAdmin();
+allow delete: if isOwner(uid);
+}
+
+// ------------------------------------------------------------
 // Suivi de candidatures (applications.html) — entièrement possédé et
 // géré par l'étudiant lui-même, à la différence de adminNotes/messages
 // ci-dessus. Un admin peut lire à des fins de support mais n'écrit

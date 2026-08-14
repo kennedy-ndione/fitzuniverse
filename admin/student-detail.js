@@ -23,7 +23,9 @@ sendMessageToUser,
 updateUserPlanExpiry,
 updateUserFitzExpressExpiry,
 getUserApplications,
-updateApplicationChecklistItem
+updateApplicationChecklistItem,
+getAdvisorRequests,
+markAdvisorRequestProcessed
 } from "./firebase-admin.js";
 
 import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
@@ -392,6 +394,62 @@ items[index].querySelector(".message-item-meta span").textContent =
 }
 
 // ==========================================================
+// Demandes de revue conseiller — contrepartie de renderMessages()
+// ci-dessus (même pattern visuel), avec une action de traitement.
+// ==========================================================
+
+async function handleMarkAdvisorRequestProcessed(requestId, button) {
+
+button.disabled = true;
+
+try {
+
+await markAdvisorRequestProcessed(uid, requestId);
+await renderAdvisorRequests();
+
+} catch (error) {
+
+console.error("Impossible de marquer la demande comme traitée :", error);
+alert("Un souci est survenu — réessayez dans un instant.");
+button.disabled = false;
+
+}
+
+}
+
+async function renderAdvisorRequests() {
+
+const requests = await getAdvisorRequests(uid);
+const container = document.getElementById("advisorRequestsList");
+
+if (!requests.length) {
+container.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune demande de revue conseiller pour le moment.</p>`;
+return;
+}
+
+container.innerHTML = requests.map((request) => `
+<div class="message-item ${request.status === "nouveau" ? "is-unread" : ""}">
+<p></p>
+<div class="message-item-meta"><span></span>${request.status === "nouveau" ? `<button type="button" class="btn-detail-action" data-action="mark-processed" data-request-id="${request.id}" style="padding:4px 10px;font-size:var(--fs-caption,.8rem);margin-left:8px;">Marquer traité</button>` : ""}</div>
+</div>
+`).join("");
+
+const items = container.querySelectorAll(".message-item");
+
+requests.forEach((request, index) => {
+items[index].querySelector("p").textContent =
+`${request.university ? `[${request.university}] ` : ""}${request.text}`;
+items[index].querySelector(".message-item-meta span").textContent =
+`${formatDateTime(request.createdAt)} — ${request.status === "nouveau" ? "nouveau" : "traité"}`;
+});
+
+container.querySelectorAll('[data-action="mark-processed"]').forEach((btn) => {
+btn.addEventListener("click", () => handleMarkAdvisorRequestProcessed(btn.dataset.requestId, btn));
+});
+
+}
+
+// ==========================================================
 // Candidatures suivies (Phase 5 — visibilité admin, 2026-07-30)
 // ==========================================================
 
@@ -581,6 +639,7 @@ await Promise.all([
 renderActivity(),
 renderNotes(),
 renderMessages(),
+renderAdvisorRequests(),
 renderCandidatures(currentUserData)
 ]);
 

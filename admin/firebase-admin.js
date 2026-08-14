@@ -716,6 +716,33 @@ read: false
 }
 
 // ============================================
+// DEMANDES DE REVUE CONSEILLER — écrites par l'étudiant (voir
+// advisor.js), lues et traitées ici (voir firestore.rules pour la
+// contrepartie sécurité). Contrepartie inversée de getSentMessages/
+// sendMessageToUser ci-dessus.
+// ============================================
+
+export async function getAdvisorRequests(uid) {
+
+const requestsQuery = query(
+collection(db, "users", uid, "advisorRequests"),
+orderBy("createdAt", "desc")
+);
+
+const snapshot = await getDocs(requestsQuery);
+
+return snapshot.docs.map((docSnap) => ({
+id: docSnap.id,
+...docSnap.data()
+}));
+
+}
+
+export async function markAdvisorRequestProcessed(uid, requestId) {
+await updateDoc(doc(db, "users", uid, "advisorRequests", requestId), { status: "traite" });
+}
+
+// ============================================
 // FORMULES (Module 4) — configuration des fonctionnalités activées
 // par formule, lue/écrite via js/plan-features.js (source unique des
 // clés de fonctionnalités et des valeurs par défaut). Ce fichier ne

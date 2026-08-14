@@ -142,3 +142,38 @@ Fitz`
 }
 
 };
+
+// ==========================================================
+// VÉRIFICATION FINALE AVANT DÉPÔT — texte du panneau de résultat
+// de "Vérifier avant de déposer" (applications.js), voir
+// js/ai/simulated-responses.js:computeApplicationReadiness pour le
+// calcul qui alimente ces formulations.
+// ==========================================================
+
+export const FITZ_READINESS_PHRASES = {
+
+readyTitle: "Cette candidature est prête à être déposée.",
+readyBody: "Fitz n'a rien détecté de bloquant : dossier complet, lettre générée, profil assez renseigné.",
+
+notReadyTitle(count) {
+return `Encore ${count} point${count > 1 ? "s" : ""} à régler avant de déposer.`;
+},
+
+notReadyBody: "Voici ce qu'il reste à faire :",
+
+deadlineToday: "La date limite est aujourd'hui.",
+
+deadlineSoon(days) {
+return `Il reste ${days} jour${days > 1 ? "s" : ""} avant la date limite.`;
+},
+
+deadlinePassed(days) {
+const abs = Math.abs(days);
+return `La date limite est dépassée depuis ${abs} jour${abs > 1 ? "s" : ""}.`;
+},
+
+checkedAtLabel: "Dernière vérification Fitz",
+
+advisorCta: "Demander une revue à mon conseiller avant de déposer"
+
+};

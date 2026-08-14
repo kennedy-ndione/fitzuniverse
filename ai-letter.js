@@ -93,12 +93,18 @@ console.error("Impossible de charger la candidature liée :", error);
 }
 
 const contextBanner = document.getElementById("applicationContext");
+const contextBackLink = document.getElementById("applicationContextBackLink");
 
 if (application && contextBanner) {
 
 contextBanner.hidden = false;
 contextBanner.querySelector("span").textContent =
 `Cette lettre sera enregistrée dans le suivi de "${application.university}".`;
+
+if (contextBackLink) {
+contextBackLink.href = `applications.html#${application.id}`;
+contextBackLink.hidden = false;
+}
 
 }
 

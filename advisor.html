@@ -255,6 +255,29 @@ Un conseiller humain suit vos candidatures aux côtés de Fitz. Les messages qu'
 <span>Contacter mon conseiller sur WhatsApp</span>
 </a>
 
+<p class="ai-field-hint" style="margin-top:24px;">Pour une demande tracée (à consulter par votre conseiller à tête reposée, hors urgence) : décrivez ce que vous souhaitez faire relire ou vérifier avant de déposer une candidature.</p>
+
+<form id="advisorRequestForm">
+
+<div class="ai-field">
+<label for="advisorRequestApplication">Candidature concernée (optionnel)</label>
+<select id="advisorRequestApplication">
+<option value="">Aucune en particulier</option>
+</select>
+</div>
+
+<div class="ai-field">
+<label for="advisorRequestText">Votre message</label>
+<textarea id="advisorRequestText" rows="3" required placeholder="Ex. Pouvez-vous relire ma lettre avant que je dépose ma candidature à l'Université X ?"></textarea>
+</div>
+
+<button type="submit" class="btn btn-secondary" id="advisorRequestSubmit">
+<i data-lucide="send"></i>
+<span>Envoyer ma demande</span>
+</button>
+
+</form>
+
 </div>
 
 </section>

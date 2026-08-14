@@ -675,6 +675,157 @@ margin-top:8px;
 .apps-field-row{grid-template-columns:1fr;}
 }
 
+/* ---------- Vérification finale avant dépôt (Fitz) ---------- */
+
+.app-readiness{
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+padding:12px 14px;
+margin-bottom:14px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.app-readiness.is-ready{border-color:rgba(34,197,94,.35);}
+.app-readiness.is-not-ready{border-color:rgba(234,168,61,.35);}
+
+.app-readiness-verdict{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+}
+
+.app-readiness-verdict i,
+.app-readiness-verdict svg{width:17px;height:17px;flex-shrink:0;}
+
+.app-readiness.is-ready .app-readiness-verdict i{color:var(--success);}
+.app-readiness.is-not-ready .app-readiness-verdict i{color:var(--warning);}
+
+.app-readiness-items{margin:0;}
+
+/* Variante cliquable de .ai-checklist-item (css/ai-suite.css) — même
+langage visuel, juste un curseur et un léger hover, pas un nouveau
+composant. */
+.app-readiness-item{
+width:100%;
+text-align:left;
+cursor:pointer;
+transition:var(--transition);
+}
+
+.app-readiness-item:hover{border-color:var(--accent-color);color:var(--text-color);}
+
+.app-readiness-meta{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+
+.app-readiness-advisor-cta{
+display:inline-flex;
+align-items:center;
+gap:6px;
+align-self:flex-start;
+font-size:var(--fs-caption);
+font-weight:700;
+color:#fff;
+background:var(--gradient-fitz);
+border-radius:var(--radius-full);
+padding:6px 14px;
+box-shadow:var(--glow-fitz);
+}
+
+.app-readiness-advisor-cta i,
+.app-readiness-advisor-cta svg{width:13px;height:13px;}
+
+/* ---------- Parcours guidé (stepper 5 étapes) ---------- */
+
+.application-journey{
+display:flex;
+align-items:flex-start;
+gap:4px;
+margin-bottom:14px;
+overflow-x:auto;
+padding-bottom:2px;
+}
+
+.journey-step{
+flex:1 1 0;
+min-width:76px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:6px;
+text-align:center;
+background:transparent;
+border:none;
+padding:4px;
+cursor:pointer;
+position:relative;
+}
+
+.journey-step::before{
+content:"";
+position:absolute;
+top:15px;
+left:calc(-50% + 15px);
+width:calc(100% - 30px);
+height:2px;
+background:var(--border-color);
+z-index:0;
+}
+
+.journey-step:first-child::before{display:none;}
+
+.journey-step.is-done::before{background:var(--success);}
+
+.journey-step-dot{
+width:30px;
+height:30px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:var(--background-alt);
+border:2px solid var(--border-color);
+color:var(--text-muted);
+position:relative;
+z-index:1;
+flex-shrink:0;
+}
+
+.journey-step-dot i,
+.journey-step-dot svg{width:14px;height:14px;}
+
+.journey-step.is-done .journey-step-dot{
+background:var(--success);
+border-color:var(--success);
+color:#fff;
+}
+
+.journey-step.is-fitz.is-done .journey-step-dot{
+background:var(--gradient-fitz);
+border-color:transparent;
+box-shadow:var(--glow-fitz);
+}
+
+.journey-step-label{
+font-size:var(--fs-caption);
+line-height:1.25;
+color:var(--text-muted);
+}
+
+.journey-step.is-done .journey-step-label{color:var(--text-light);font-weight:600;}
+
+@media(max-width:600px){
+.journey-step{min-width:64px;}
+.journey-step-label{font-size:.68rem;}
+}
+
 /* ==========================================================
 ETAT DE CHARGEMENT (SKELETON)
 ==========================================================

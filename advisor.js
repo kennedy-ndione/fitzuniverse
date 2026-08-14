@@ -16,7 +16,11 @@
 * ============================================================
 */
 
+import { db } from "./firebase-config.js";
+import { collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
+import { showToast } from "./js/ai/toast.js";
+import { trackEvent } from "./js/analytics.js";
 
 initShellChrome();
 
@@ -56,6 +60,92 @@ const sectionNav = document.getElementById("advisorSectionNav");
 
 if (sectionLabel) sectionLabel.hidden = false;
 if (sectionNav) sectionNav.hidden = false;
+
+initAdvisorRequestForm(ctx.user.uid);
+
+}
+
+// ==========================================================
+// Demande de revue conseiller (users/{uid}/advisorRequests) — canal
+// tracé étudiant -> conseiller, à côté du contact WhatsApp existant
+// (celui-ci reste pour l'urgence, ce formulaire pour une demande
+// qu'on veut retrouver côté admin/student-detail.js). Pré-remplissage
+// depuis applications.js (?applicationId=&university=), posé sur le
+// résultat de la vérification finale avant dépôt.
+async function initAdvisorRequestForm(uid) {
+
+const form = document.getElementById("advisorRequestForm");
+if (!form) return;
+
+const select = document.getElementById("advisorRequestApplication");
+const textarea = document.getElementById("advisorRequestText");
+
+const params = new URLSearchParams(window.location.search);
+const prefillApplicationId = params.get("applicationId") || "";
+
+try {
+
+const snapshot = await getDocs(collection(db, "users", uid, "applications"));
+
+snapshot.docs.forEach((docSnap) => {
+
+const app = docSnap.data();
+const option = new Option(
+`${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}`,
+docSnap.id
+);
+
+select.add(option);
+
+});
+
+if (prefillApplicationId) select.value = prefillApplicationId;
+
+} catch (error) {
+
+console.error("Impossible de charger les candidatures pour le formulaire de revue :", error);
+
+}
+
+form.addEventListener("submit", async (event) => {
+
+event.preventDefault();
+
+const text = textarea.value.trim();
+if (!text) return;
+
+const applicationId = select.value || null;
+const university = applicationId ? select.options[select.selectedIndex].text : null;
+
+const submitBtn = document.getElementById("advisorRequestSubmit");
+submitBtn.disabled = true;
+
+try {
+
+await addDoc(collection(db, "users", uid, "advisorRequests"), {
+text,
+applicationId,
+university,
+status: "nouveau",
+createdAt: serverTimestamp()
+});
+
+form.reset();
+trackEvent("advisor_request_sent", {});
+showToast("Votre demande a été transmise à votre conseiller.");
+
+} catch (error) {
+
+console.error("Impossible d'envoyer la demande de revue conseiller :", error);
+showToast("L'envoi n'a pas abouti cette fois — réessayez dans un instant.", { type: "error" });
+
+} finally {
+
+submitBtn.disabled = false;
+
+}
+
+});
 
 }
 
