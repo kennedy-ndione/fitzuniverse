@@ -10,6 +10,24 @@
 
 <meta name="description" content="Découvrez les universités partenaires de ScholarBridge et leurs programmes de bourses internationales.">
 
+<meta name="theme-color" content="#12162E">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<!-- URL à mettre à jour si un nom de domaine personnalisé est acheté -->
+<link rel="canonical" href="https://scholarbridge-e0d84.web.app/universities.html">
+
+<meta property="og:title" content="Universités partenaires | ScholarBridge">
+<meta property="og:description" content="Découvrez les universités partenaires de ScholarBridge et leurs programmes de bourses internationales.">
+<meta property="og:type" content="website">
+<!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
+<meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Universités partenaires | ScholarBridge">
+<meta name="twitter:description" content="Découvrez les universités partenaires de ScholarBridge et leurs programmes de bourses internationales.">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
@@ -278,11 +296,24 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 
 <section class="uni-hero">
 
-<img class="uni-hero-bg" src="assets/images/cities/istanbul.jpg" alt="">
+<img
+class="uni-hero-bg"
+src="assets/images/university-hall-1920w.jpg"
+srcset="assets/images/university-hall-400w.jpg 400w, assets/images/university-hall-800w.jpg 800w, assets/images/university-hall-1200w.jpg 1200w, assets/images/university-hall-1920w.jpg 1920w"
+sizes="100vw"
+fetchpriority="high"
+alt="">
 
 <span class="uni-hero-badge"><i data-lucide="globe"></i><span>Catalogue partenaire ScholarBridge</span></span>
 
-<h1 id="title">Explorez les meilleures universités du monde</h1>
+<!-- Reformulé (audit du 2026-08-14) : "Explorez les meilleures
+universités du monde" était une formule marketing invérifiable, pas
+alignée avec l'honnêteté déjà pratiquée ailleurs sur le site (voir
+offers.html : "ScholarBridge ne garantit ni l'admission ni l'obtention
+du visa"). Fait écho au h2 de #trust sur index.html ("Un catalogue réel,
+vérifié établissement par établissement") sans le répéter mot pour
+mot. Sous-titre inchangé, déjà bon. -->
+<h1 id="title">Un catalogue vérifié établissement par établissement</h1>
 <p id="subtitle">Programmes entièrement financés, campus prestigieux, admissions ouvertes aux étudiants internationaux — parcourez le catalogue complet des universités partenaires, en accès libre.</p>
 
 <div class="uni-hero-stats">
