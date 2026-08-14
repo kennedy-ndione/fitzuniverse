@@ -72,11 +72,20 @@ Bonjour ! Commençons par savoir où vous vivez actuellement.
 <!-- Cartes de choix (cachées par défaut) -->
 <div id="cardsContainer" class="cards-container" style="display:none;"></div>
 
-<!-- Curseur (caché par défaut, utilisé pour la moyenne académique) -->
+<!-- Sélecteur d'échelle (moyenne académique — question "average") :
+puces générées par eligibility-questions.js depuis question.scales
+(questions.js), une pour /20, /100, GPA /4, Lettres (A-F), Autre. -->
+<div id="scaleSelector" class="scale-selector" style="display:none;"></div>
+
+<!-- Curseur (caché par défaut, utilisé pour la moyenne académique dans
+les échelles numériques — /20, /100, GPA /4, Autre) -->
 <div id="sliderContainer" class="slider-container" style="display:none;">
 <output id="sliderValue">10</output>
-<input type="range" id="sliderInput" aria-label="Votre moyenne générale sur 20">
+<input type="range" id="sliderInput" aria-label="Votre moyenne générale">
 </div>
+
+<!-- Boutons de lettres (échelle "Lettres (A-F)" uniquement) -->
+<div id="lettersContainer" class="letters-container" style="display:none;"></div>
 
 <!-- Bouton -->
 <div class="nav-buttons">
@@ -94,7 +103,12 @@ Bonjour ! Commençons par savoir où vous vivez actuellement.
 
 <script src="questions.js"></script>
 <script src="eligibility.engine.js"></script>
-<script src="eligibility-questions.js"></script>
+<!-- module (audit du 2026-08-14) : lit une liste de pays réelle depuis
+Firestore avant le 1er rendu (voir loadDestinationCountries) — voir le
+commentaire en tête de eligibility-questions.js pour pourquoi QUESTIONS/
+EligibilityEngine (scripts classiques ci-dessus) restent accessibles
+malgré la conversion. -->
+<script type="module" src="eligibility-questions.js"></script>
 <script>
 if (window.lucide) lucide.createIcons();
 </script>

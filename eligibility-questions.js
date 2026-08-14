@@ -5,7 +5,24 @@
 // eligibility.engine.js (EligibilityEngine). Les réponses sont
 // enregistrées dans sessionStorage puis lues par results.js, qui
 // les fait analyser par EligibilityAI (eligibility-ai.js).
+//
+// Module (audit du 2026-08-14, avant : script classique) : la question
+// "destinationCountry" a besoin d'une lecture Firestore avant son
+// premier rendu pour proposer les pays réellement présents dans le
+// catalogue (voir loadDestinationCountries ci-dessous) — impossible en
+// script classique sans un import() dynamique plus verbeux. QUESTIONS
+// (questions.js) et EligibilityEngine (eligibility.engine.js) restent
+// des scripts classiques chargés avant celui-ci : leurs déclarations
+// top-level restent visibles ici, un module lit normalement les
+// bindings globaux posés par les scripts qui le précèdent.
 // ============================================================
+
+import { db } from "./firebase-config.js";
+
+import {
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const engine = new EligibilityEngine(QUESTIONS);
 
@@ -27,6 +44,9 @@ const sliderContainer = document.getElementById("sliderContainer");
 const sliderInput = document.getElementById("sliderInput");
 const sliderValue = document.getElementById("sliderValue");
 
+const scaleSelector = document.getElementById("scaleSelector");
+const lettersContainer = document.getElementById("lettersContainer");
+
 const nextButton = document.getElementById("nextButton");
 const backButton = document.getElementById("backButton");
 
@@ -39,6 +59,39 @@ const FITZ_HINTS = [
 "Identification de vos objectifs…",
 "Recherche des opportunités les plus pertinentes…"
 ];
+
+// ==========================================================
+// PAYS DE DESTINATION — synchronisés avec le vrai catalogue (audit du
+// 2026-08-14). Remplace la liste codée en dur de questions.js par les
+// pays réellement présents dans "universities" dès que Firestore
+// répond ; en cas d'échec (hors ligne...), le filet de secours défini
+// dans questions.js reste en place plutôt que de bloquer le test.
+// ==========================================================
+async function loadDestinationCountries() {
+
+const destinationQuestion = QUESTIONS.find((q) => q.id === "destinationCountry");
+
+if (!destinationQuestion) return;
+
+try {
+
+const snap = await getDocs(collection(db, "universities"));
+
+const countries = [...new Set(
+snap.docs.map((d) => d.data().country).filter(Boolean)
+)].sort((a, b) => a.localeCompare(b, "fr"));
+
+if (countries.length) {
+destinationQuestion.suggestions = [...countries, "Je ne sais pas encore"];
+}
+
+} catch (error) {
+
+console.warn("Impossible de charger les pays du catalogue, utilisation du filet de secours :", error);
+
+}
+
+}
 
 function renderIcon(container, iconName) {
 
@@ -135,6 +188,122 @@ refreshIcons();
 
 }
 
+// ==========================================================
+// MOYENNE À ÉCHELLE VARIABLE (question "average") — sélecteur de
+// système de notation (puces) + curseur ou boutons de lettres selon le
+// système choisi. Voir le commentaire sur "scales" dans questions.js
+// et normalizeAverageToPercent() dans eligibility-ai.js pour la
+// conversion vers un pourcentage commun.
+// ==========================================================
+
+function currentScaleFor(question) {
+
+const scaleId = engine.answers[`${question.id}Scale`] || question.defaultScale;
+
+return question.scales.find((s) => s.id === scaleId) || question.scales[0];
+
+}
+
+function renderScaleSelector(question) {
+
+scaleSelector.style.display = "flex";
+scaleSelector.innerHTML = "";
+
+if (!engine.answers[`${question.id}Scale`]) {
+engine.saveAnswer(`${question.id}Scale`, question.defaultScale);
+}
+
+const current = currentScaleFor(question);
+
+question.scales.forEach((scale) => {
+
+const chip = document.createElement("button");
+chip.type = "button";
+chip.className = "scale-chip";
+chip.textContent = scale.label;
+
+if (scale.id === current.id) {
+chip.classList.add("selected");
+}
+
+chip.addEventListener("click", () => {
+
+if (scale.id === current.id) return;
+
+// Une valeur saisie dans un système ne veut rien dire dans un autre
+// (ex. "18" en /20 devient un GPA impossible si on bascule vers
+// GPA/4 sans réinitialiser) — on efface la réponse brute, pas
+// l'échelle choisie, pour repartir sur une valeur cohérente.
+delete engine.answers[question.id];
+engine.saveAnswer(`${question.id}Scale`, scale.id);
+
+renderScaleSelector(question);
+renderAverageInput(question);
+
+});
+
+scaleSelector.appendChild(chip);
+
+});
+
+}
+
+function renderAverageInput(question) {
+
+const scale = currentScaleFor(question);
+const existingAnswer = engine.answers[question.id];
+
+if (scale.kind === "letters") {
+
+sliderContainer.style.display = "none";
+lettersContainer.style.display = "flex";
+lettersContainer.innerHTML = "";
+
+scale.options.forEach((letter) => {
+
+const btn = document.createElement("button");
+btn.type = "button";
+btn.className = "letter-chip";
+btn.textContent = letter;
+
+if (letter === existingAnswer) {
+btn.classList.add("selected");
+}
+
+btn.addEventListener("click", () => {
+
+lettersContainer.querySelectorAll(".letter-chip").forEach((b) => b.classList.remove("selected"));
+btn.classList.add("selected");
+
+engine.saveAnswer(question.id, letter);
+
+});
+
+lettersContainer.appendChild(btn);
+
+});
+
+} else {
+
+lettersContainer.style.display = "none";
+sliderContainer.style.display = "block";
+
+sliderInput.min = scale.min;
+sliderInput.max = scale.max;
+sliderInput.step = scale.step;
+
+const numericExisting = parseFloat(existingAnswer);
+const value = !isNaN(numericExisting) ? numericExisting : (scale.min + scale.max) / 2;
+
+sliderInput.value = value;
+sliderValue.textContent = value;
+
+sliderInput.setAttribute("aria-label", `Votre moyenne générale ${scale.label}`);
+
+}
+
+}
+
 function render() {
 
 const question = engine.getCurrentQuestion();
@@ -150,6 +319,8 @@ updateFitzHint();
 textContainer.style.display = "none";
 cardsContainer.style.display = "none";
 sliderContainer.style.display = "none";
+scaleSelector.style.display = "none";
+lettersContainer.style.display = "none";
 suggestionsBox.style.display = "none";
 suggestionsBox.innerHTML = "";
 
@@ -168,12 +339,21 @@ renderCards(question.options, existingAnswer);
 
 } else if (question.type === "slider") {
 
+if (question.scales) {
+
+renderScaleSelector(question);
+renderAverageInput(question);
+
+} else {
+
 sliderContainer.style.display = "block";
 sliderInput.min = question.min;
 sliderInput.max = question.max;
 sliderInput.step = question.step;
 sliderInput.value = existingAnswer || (question.min + question.max) / 2;
 sliderValue.textContent = sliderInput.value;
+
+}
 
 }
 
@@ -200,7 +380,25 @@ engine.saveAnswer(question.id, value);
 
 } else if (question.type === "slider") {
 
+if (question.scales) {
+
+const scale = currentScaleFor(question);
+
+if (scale.kind === "letters") {
+
+if (!engine.answers[question.id]) return;
+
+} else {
+
 engine.saveAnswer(question.id, sliderInput.value);
+
+}
+
+} else {
+
+engine.saveAnswer(question.id, sliderInput.value);
+
+}
 
 } else if (question.type === "cards") {
 
@@ -319,5 +517,7 @@ if (!textContainer.contains(event.target)) {
 suggestionsBox.style.display = "none";
 }
 });
+
+await loadDestinationCountries();
 
 render();

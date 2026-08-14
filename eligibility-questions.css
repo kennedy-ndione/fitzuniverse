@@ -403,6 +403,137 @@ color:#fff;
 }
 
 /* ==========================================================
+SÉLECTEUR D'ÉCHELLE (MOYENNE) — audit du 2026-08-14. Une puce par
+système de notation (question.scales, questions.js) ; le curseur ou
+les boutons de lettres juste en dessous s'adaptent à la sélection
+(eligibility-questions.js).
+========================================================== */
+
+.scale-selector{
+
+display:flex;
+
+flex-wrap:wrap;
+
+justify-content:center;
+
+gap:8px;
+
+margin-bottom:24px;
+
+}
+
+.scale-chip{
+
+padding:8px 16px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-full);
+
+background:var(--background);
+
+color:var(--text-light);
+
+font-family:"Inter",sans-serif;
+
+font-size:.85rem;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.scale-chip:hover{
+
+border-color:var(--primary-color);
+
+color:var(--primary-color);
+
+}
+
+.scale-chip.selected{
+
+background:var(--gradient-primary);
+
+border-color:var(--primary-color);
+
+color:#fff;
+
+}
+
+/* ==========================================================
+BOUTONS DE LETTRES (échelle "Lettres A-F" uniquement)
+========================================================== */
+
+.letters-container{
+
+display:none;
+
+justify-content:center;
+
+gap:12px;
+
+margin-bottom:32px;
+
+}
+
+.letter-chip{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:56px;
+
+height:56px;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+background:var(--background);
+
+color:var(--text-color);
+
+font-family:var(--font-display);
+
+font-size:1.3rem;
+
+font-weight:800;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.letter-chip:hover{
+
+transform:translateY(-3px);
+
+border-color:var(--primary-color);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.letter-chip.selected{
+
+background:var(--gradient-primary);
+
+border-color:var(--primary-color);
+
+color:#fff;
+
+}
+
+/* ==========================================================
 CURSEUR (MOYENNE)
 ========================================================== */
 
@@ -637,6 +768,16 @@ height:42px;
 .slider-container output{
 
 font-size:2.4rem;
+
+}
+
+.letter-chip{
+
+width:46px;
+
+height:46px;
+
+font-size:1.1rem;
 
 }
 
