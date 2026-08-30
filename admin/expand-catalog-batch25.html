@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Photos des bourses — Lot 25 | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Outil de migration ponctuel — vérifier si encore nécessaire avant utilisation.</div>
+
+<div class="migrate-header">
+<h1>Photos des bourses — Lot 25</h1>
+<p>Pose le champ <code>image</code> sur <strong>30 bourses</strong>, après le téléchargement des photos par <code>scripts/add-lot25-scholarship-photos.ps1</code>. Aucune de ces 30 cartes n'était cassée : chacune affichait déjà une vraie photo, via l'étage 3 de la cascade de <code>js/scholarship-image.js</code> — la capitale du pays. Le défaut était la <strong>répétition</strong> : les 8 bourses italiennes montraient toutes Rome, les 6 allemandes Berlin, les 5 suisses Zurich, les 5 japonaises Tokyo, les 5 turques Istanbul, la coréenne Séoul. Six images pour trente cartes. <strong>À ne lancer qu'après le script PowerShell</strong> : renseigner <code>image</code> désactive la cascade de repli, donc écrire ce champ avant que les fichiers soient sur le disque produirait 30 images cassées. Le script compte lui-même ses 150 fichiers et refuse de rendre la main s'il en manque un. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Pour chacune des 30 bourses : vérifie qu'elle existe, que son titre est <em>exactement</em> celui lu dans l'export, qu'elle ne porte pas déjà une image, et qu'aucun fichier n'est attribué à deux bourses — la règle « un monument distinct par bourse » posée au lot 14. Affiche le sujet retenu pour chaque photo, pour relecture avant écriture.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Écrit le seul champ <code>image</code> sur les bourses confirmées à l'étape 1. Aucun autre champ n'est touché.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit chaque document et compare le champ <code>image</code>. Doit confirmer 0 écart. Ensuite seulement, ouvrir <code>scholarships.html</code> et vérifier à l'œil que les 30 cartes montrent bien 30 images différentes : aucun contrôle automatique ne peut juger qu'une photo est la bonne.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch25.js"></script>
+
+</body>
+
+</html>
