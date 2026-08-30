@@ -78,6 +78,29 @@ if ($collisions -gt 0) {
     exit 1
 }
 Write-Host "Garde anti-doublon : les 3 identifiants sont inedits dans le depot." -ForegroundColor Green
+
+# ---- BALAYAGE GLOBAL : aucun identifiant ne doit etre credite deux fois ----
+# Complement de la garde ci-dessus (qui ne teste que les identifiants DU
+# lot) : verifie que CREDITS.md lui-meme ne contient aucun doublon.
+#
+# Motif photo-\d{10,13}-[0-9a-f]{12} — la borne est {10,13} A DESSEIN, ne
+# pas la resserrer : les identifiants Unsplash ont 10 OU 13 chiffres (les
+# anciens datent en secondes, les recents en millisecondes). Une borne
+# fixe a {13} rate 12 photos reellement presentes dans CREDITS.md, dont
+# cinq utilisees aux lots 25 et 26 — un doublon sur l'une d'elles
+# passerait inapercu. Et un motif plus lache que photo-\d attrape
+# "photo-fixes" dans le nom de ce script : faux doublon garanti.
+$ids = Select-String -Path "CREDITS.md" -Pattern 'photo-\d{10,13}-[0-9a-f]{12}' -AllMatches |
+    ForEach-Object { $_.Matches } | ForEach-Object { $_.Value }
+$doublons = $ids | Group-Object | Where-Object { $_.Count -gt 1 }
+if ($doublons) {
+    foreach ($d in $doublons) {
+        Write-Host ("DOUBLON dans CREDITS.md : " + $d.Name + " (" + $d.Count + " occurrences)") -ForegroundColor Red
+    }
+    Write-Host "Aucun telechargement. Corriger CREDITS.md avant de relancer." -ForegroundColor Red
+    exit 1
+}
+Write-Host ("Balayage global : " + $ids.Count + " identifiants CDN dans CREDITS.md, zero doublon.") -ForegroundColor Green
 Write-Host ""
 
 function Get-Photo {
