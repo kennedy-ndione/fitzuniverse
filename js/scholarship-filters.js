@@ -1,0 +1,111 @@
+/**
+* ============================================================
+* Fitz — filtres dérivés du catalogue (financement, classement)
+* ============================================================
+*
+* Même principe que js/echeance.js : les champs `funding` et `ranking`
+* du catalogue sont du texte libre écrit par un humain ("100 % (scolarité
+* + logement + voyage)", "Partielle (jusqu'à 19 000 €/an)", "#45 mondial
+* (QS)", "Grande université francophone de Belgique"...). Ce module LIT
+* ce texte à l'affichage pour en tirer un critère de tri ; il ne modifie
+* aucun document Firestore et n'invente jamais une valeur que le texte
+* ne garantit pas.
+*
+* Sert le quiz d'accueil (index.html, #pathQuiz) et le filtrage de
+* scholarships.js — les deux passent par les mêmes fonctions plutôt que
+* par deux lectures différentes du même champ.
+* ============================================================
+*/
+
+/**
+* Financement intégral
+* ---------------------
+* Vérifié à la main contre les 20 valeurs RÉELLES de `funding` présentes
+* dans admin/expand-catalog-batch1..5.js (voir test/scholarship-filters.test.mjs,
+* qui les reprend mot pour mot).
+*
+* Les marqueurs d'EXCLUSION sont vérifiés EN PREMIER, avant les
+* marqueurs positifs — même ordre de priorité que MARQUEURS_CLOS dans
+* js/echeance.js, et pour la même raison : un texte peut contenir à la
+* fois un mot qui ressemble à une couverture totale ET une réserve qui
+* l'annule, et la réserve doit gagner.
+*
+* Exemple réel qui justifie cet ordre : "scolarité publique marocaine
+* déjà QUASI gratuite" — "gratuite" apparaît bien dans la phrase, mais
+* "quasi" dit explicitement que ce n'est pas le cas. Sans la priorité
+* aux exclusions, ce texte serait classé "financement intégral" à
+* cause d'un seul mot, alors que la phrase entière dit le contraire.
+*
+* Ce que ça exclut volontairement : le MEXT japonais ("...assurance
+* santé NON couverte") n'est PAS classé comme financement intégral ici,
+* alors qu'il est mondialement connu comme une bourse complète — parce
+* que le texte du catalogue signale lui-même une charge non couverte.
+* Le filtre sert à ORIENTER vers une liste, pas à trancher à la place
+* de l'étudiant : la fiche complète, avec son texte réel, reste
+* affichée sur chaque carte quel que soit le résultat de ce filtre.
+*/
+const MARQUEURS_FINANCEMENT_EXCLUS = [
+/non\s+couvert/i,
+/non\s+compris/i,
+/non\s+inclus/i,
+/non\s+pris\s+en\s+charge/i,
+/non\s+quantifié/i,
+/quasi/i,
+/variable/i
+];
+
+const MARQUEURS_FINANCEMENT_INTEGRAL = [
+/100\s?%/,
+/scolarité\s+gratuite/i,
+/intégralement\s+pris\s+en\s+charge/i
+];
+
+export function estFinancementIntegral(texte) {
+
+const t = texte || "";
+
+if (MARQUEURS_FINANCEMENT_EXCLUS.some((re) => re.test(t))) return false;
+
+return MARQUEURS_FINANCEMENT_INTEGRAL.some((re) => re.test(t));
+
+}
+
+/**
+* Classement mondial (QS)
+* ------------------------
+* `ranking` n'est un rang QS que pour une partie du catalogue — l'autre
+* partie porte une description sans numéro ("Université de référence
+* en agriculture et sciences de la vie"). extraireRangQS() renvoie
+* `null` dans ce cas plutôt que d'inventer un rang : ces universités
+* sont retirées du filtre "classement", jamais classées par défaut au
+* dernier rang ou à un rang moyen.
+*
+* Sur un intervalle ("#711-720 mondial (QS)"), on retient la première
+* valeur (la plus favorable) : au-delà de quelques centaines de rangs,
+* l'écart entre les deux bornes ne change de toute façon jamais le
+* résultat d'un seuil de type "top 200".
+*/
+export function extraireRangQS(texte) {
+
+const m = /#\s*(\d+)/.exec(texte || "");
+
+return m ? parseInt(m[1], 10) : null;
+
+}
+
+/**
+* Meilleur rang QS parmi les universités liées à une bourse (voir
+* enrichWithProgramData() dans scholarships.js, qui choisit déjà de la
+* même façon la photo et le drapeau les plus pertinents). Une bourse
+* reliée à plusieurs universités est aussi bonne que sa meilleure porte
+* d'entrée pour ce critère.
+*/
+export function meilleurRangQS(universites) {
+
+const rangs = (universites || [])
+.map((u) => extraireRangQS(u.ranking))
+.filter((r) => r !== null);
+
+return rangs.length ? Math.min(...rangs) : null;
+
+}
