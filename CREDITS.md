@@ -565,10 +565,62 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
   photo exploitable de la mosquée de Bursa. À remplacer si une meilleure
   source apparaît.
 
+## Photos des bourses (lot 26, 2026-08-30) — assets/images/scholarships/
+
+Dix-neuf photos ajoutées (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`) pour les bourses qui partageaient la photo de leur université liée avec une autre bourse du même pays. Voir `admin/expand-catalog-batch26.js` et `scripts/add-lot26-scholarship-photos.ps1`.
+
+Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Comme au lot 25, les noms de photographes ne figurent pas (même réserve de traçabilité) : les pages de recherche n'exposent que l'identifiant CDN.
+
+**Réutilisations relevées à la fusion (2026-08-30), à remplacer si un lot futur s'en occupe** : trois identifiants CDN de ce lot reprennent des photos déjà créditées plus haut — `jads-japan-africa-dream` reprend la traversée de Shibuya de `waseda.jpg` (lot 13), `fao-hungarian-government-scholarship` reprend le Parlement hongrois de `corvinus.jpg` (lot 13), et `hse-into-olympiad` reprend la cathédrale Saint-Basile de `open-doors-scholarship.jpg` (lot 14) — ce dernier cas fait partager le même visuel à deux bourses russes.
+
+### Royaume-Uni
+
+- `clarendon-fund-scholarships.jpg` — les toits gothiques d'Oxford vus d'en haut (identifiant CDN `photo-1472121779802-43c68a9f405f`)
+- `reach-oxford-scholarship.jpg` — une facade de college d'Oxford (identifiant CDN `photo-1568792923760-d70635a89fdc`)
+- `rhodes-scholarships-west-africa.jpg` — un quadrangle d'Oxford et sa pelouse (identifiant CDN `photo-1642612460433-a5d935c08d73`)
+- `weidenfeld-hoffmann-scholarships.jpg` — la pierre blonde d'Oxford sous un ciel bleu (identifiant CDN `photo-1612563958093-2c3bcfbd8760`)
+- `commonwealth-masters-scholarships.jpg` — Big Ben et le Parlement au couchant (identifiant CDN `photo-1745016176874-cd3ed3f5bfc6`)
+- `commonwealth-phd-scholarships.jpg` — le London Eye (identifiant CDN `photo-1546533658-8f1f550b9a4e`)
+- `commonwealth-shared-scholarships.jpg` — un pont sur la Tamise (identifiant CDN `photo-1560709889-eec6771309ff`)
+- `imperial-presidents-phd-scholarships.jpg` — une cabine telephonique rouge devant un batiment londonien (identifiant CDN `photo-1619447093155-3d646f597c91`)
+
+### Russie
+
+- `spbu-open-olympiad.jpg` — les fontaines de Peterhof, Saint-Petersbourg (identifiant CDN `photo-1610197361600-33a3a5073cad`)
+- `hse-into-olympiad.jpg` — la cathedrale Saint-Basile-le-Bienheureux (identifiant CDN `photo-1513326738677-b964603b136d`)
+- `hse-merit-scholarships.jpg` — un batiment moscovite reflete dans l'eau (identifiant CDN `photo-1561117937-45681fb935ad`)
+
+### Roumanie
+
+- `auf-eugen-ionescu.jpg` — la statue equestre de Matthias Corvin, Cluj-Napoca (identifiant CDN `photo-1678736680989-195226823176`)
+- `auf-petrache-poenaru.jpg` — le palais de la Culture et son horloge, Iasi (identifiant CDN `photo-1710877669376-7633d6f64678`)
+- `bourse-george-darie.jpg` — les maisons colorees du centre de Cluj-Napoca (identifiant CDN `photo-1583751636643-94790958040a`)
+
+### Japon
+
+- `jads-japan-africa-dream.jpg` — le carrefour de Shibuya, Tokyo (identifiant CDN `photo-1503899036084-c55cdd92da26`)
+- `jj-wbgsp.jpg` — Tokyo vue du ciel (identifiant CDN `photo-1573456373835-579c408de263`)
+
+### Corée du Sud
+
+- `snu-glo-harmony-scholarship.jpg` — un pavillon de palais seoulien (identifiant CDN `photo-1448523183439-d2ac62aca997`)
+
+### Hongrie
+
+- `fao-hungarian-government-scholarship.jpg` — le Parlement hongrois sur le Danube (identifiant CDN `photo-1616432902940-b7a1acbc60b3`)
+
+### Suisse
+
+- `epfl-edic-doctoral.jpg` — le campus de l'EPFL et les Alpes (identifiant CDN `photo-1699470762437-bd145c9042ee`)
+
+### Bourses qui conservent leur image partagée
+
+Une par groupe, pour éviter un téléchargement inutile : `mastercard-foundation-afox-oxford` garde `oxford.jpg`, `great-scholarships` garde `london.jpg`, `quota-gouvernement-russe` garde `moscow.jpg`, `politehnica-excellence-scholarship` garde `politehnica-bucuresti.jpg`, `utokyo-fellowship` garde `tokyo.jpg`, `snu-global-scholarship` garde `snu-seoul.jpg`, `ud-international-scholarship` garde `debrecen.jpg`, `epfl-master-excellence-fellowships` garde `lausanne.jpg`.
+
 ---
 
 Recadrées et redimensionnées (`scripts/generate-city-srcset.mjs`) à partir des fichiers originaux ci-dessus — le contenu visuel est inchangé, seuls le cadrage (portrait 3:4) et la résolution diffèrent des fichiers sources.
 
 Benguerir et Louvain-la-Neuve ne sont pas recadrées, seulement redimensionnées (2000px pour le fichier de référence, puis 400/800/1200/1600px), avec les mêmes réglages que le script ci-dessus (qualité 92, mozjpeg). Elles ont été générées à part plutôt qu'en le lançant, car il réencode l'intégralité du dossier `cities/` à chaque exécution et aurait touché les quarante autres villes sans raison.
 
-Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comme `student-preparing.jpg`, leurs déclinaisons sont téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`scripts/add-lot9-city-photos.ps1`), sans recadrage ni passage par `sharp`. Même chose pour les photos des lots 11 (`scripts/add-lot11-unique-photos.ps1`), 13 (`scripts/add-lot13-more-unique-photos.ps1`), 14 (`scripts/add-lot14-scholarship-photos.ps1`), 15 (`scripts/add-lot15-scholarship-photos.ps1`), 16 (`scripts/add-lot16-scholarship-photos.ps1`), 17 (`scripts/add-lot17-scholarship-photos.ps1`) et 25 (`scripts/add-lot25-scholarship-photos.ps1`) ci-dessus — les lots 14 à 17 et 25 dans leur propre dossier `assets/images/scholarships/`, distinct de `assets/images/cities/`.
+Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comme `student-preparing.jpg`, leurs déclinaisons sont téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`scripts/add-lot9-city-photos.ps1`), sans recadrage ni passage par `sharp`. Même chose pour les photos des lots 11 (`scripts/add-lot11-unique-photos.ps1`), 13 (`scripts/add-lot13-more-unique-photos.ps1`), 14 (`scripts/add-lot14-scholarship-photos.ps1`), 15 (`scripts/add-lot15-scholarship-photos.ps1`), 16 (`scripts/add-lot16-scholarship-photos.ps1`), 17 (`scripts/add-lot17-scholarship-photos.ps1`), 25 (`scripts/add-lot25-scholarship-photos.ps1`) et 26 (`scripts/add-lot26-scholarship-photos.ps1`) ci-dessus — les lots 14 à 17, 25 et 26 dans leur propre dossier `assets/images/scholarships/`, distinct de `assets/images/cities/`.
