@@ -28,15 +28,28 @@ content="ScholarBridge aide les étudiants africains à découvrir leur potentie
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/index.html">
 
-<!-- Google Fonts -->
+<!-- Google Fonts — système typographique 2026-08-13 (index.html
+uniquement, voir css/homepage-typography.css) : Plus Jakarta Sans
+(corps + titres "produit"), Space Grotesk (titres "affirmation" :
+hero + CTA final), Fraunces (titres "récit humain" : Le problème +
+Notre vision, italique chargé pour le mot-clé d'accent). display=swap
+partout — pas de FOIT, le texte reste visible avec le fallback système
+pendant le chargement. Remplace Inter/Sora (base.css --font-body/
+--font-display), qui restent le défaut du reste du site : ce lien ne
+charge que sur index.html, les autres pages gardent Inter/Sora. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap"
 rel="stylesheet">
 
-<!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Lucide Icons — version figée (pas @latest) et defer (audit du
+2026-08-13) : @latest est un CDN tiers non versionné, un changement
+cassant chez Lucide se répercuterait sans prévenir ; synchrone dans
+<head>, il bloquait aussi le rendu initial. Même correctif à reporter
+sur les autres pages du site (toutes encore en @latest) — hors
+scope de cet audit, ciblé sur index.html. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <!-- CSS -->
 <link rel="stylesheet" href="css/base.css">
@@ -44,9 +57,14 @@ rel="stylesheet">
 <link rel="stylesheet" href="css/hero.css">
 <link rel="stylesheet" href="css/homepage-sections.css">
 <link rel="stylesheet" href="css/animations.css">
+<!-- Chargé en dernier : doit gagner la cascade sur les font-family
+déclarés dans hero.css/homepage-sections.css pour les titres ci-dessus. -->
+<link rel="stylesheet" href="css/homepage-typography.css">
 </head>
 
 <body>
+
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <!-- =========================
 HEADER
@@ -105,7 +123,7 @@ abonné déjà payant — pas de shell authentifié ici, juste un aiguillage. --
 MAIN
 ========================== -->
 
-<main>
+<main id="main-content">
 
 <!-- =========================
 HERO
@@ -114,7 +132,13 @@ HERO
 <section class="hero">
 
 <div class="hero-media" aria-hidden="true">
-<img src="assets/images/hero-bg2.jpg" alt="" class="hero-bg-image">
+<img
+src="assets/images/hero-bg2-1600w.jpg"
+srcset="assets/images/hero-bg2-400w.jpg 400w, assets/images/hero-bg2-800w.jpg 800w, assets/images/hero-bg2-1200w.jpg 1200w, assets/images/hero-bg2-1600w.jpg 1600w"
+sizes="100vw"
+fetchpriority="high"
+alt=""
+class="hero-bg-image">
 <div class="hero-overlay"></div>
 </div>
 
@@ -133,7 +157,8 @@ Trouvez les <span class="hero-h1-accent">bourses d'études</span> qui correspond
 <!-- Description -->
 
 <p class="hero-description reveal hero-stagger">
-Répondez à quelques questions. Fitz analyse votre parcours, sélectionne
+Pensé en priorité pour les étudiants africains — et ouvert à tout étudiant, où qu'il soit.
+Répondez à quelques questions, Fitz analyse votre parcours, sélectionne
 les bourses et universités adaptées à votre profil et vous accompagne
 jusqu'au dépôt de votre candidature.
 </p>
@@ -159,17 +184,24 @@ jusqu'au dépôt de votre candidature.
 
 </ul>
 
-<!-- Statistiques -->
-
+<!-- Statistiques — remplies par js/homepage-teaser.js (renderTrustStats),
+mêmes données Firestore que #teaser plus bas. Anciennement "500+"/"30+"
+codés en dur ici : ne correspondaient plus aux "40+"/"10+" réels
+affichés par #teaser, contradiction visible en scrollant (audit du
+2026-08-13). Pas de compteur animé ici (contrairement à l'ancien
+data-count-to) : main.js déclenche l'animation dès que la section
+entre dans le viewport, souvent avant la fin du fetch Firestore
+asynchrone — texte posé directement une fois la vraie donnée connue,
+même choix que trustUniversityCount/trustCountryCount dans #teaser. -->
 <div class="hero-stats reveal hero-stagger">
 
 <div class="stat-card">
-<strong><span data-count-to="500">0</span>+</strong>
+<strong><span id="heroScholarshipCount">—</span></strong>
 <span>Bourses référencées</span>
 </div>
 
 <div class="stat-card">
-<strong><span data-count-to="30">0</span>+</strong>
+<strong><span id="heroCountryCount">—</span></strong>
 <span>Pays de destination</span>
 </div>
 
@@ -192,6 +224,16 @@ Commencez gratuitement • Sans carte bancaire • Découverte personnalisée
 
 </p>
 
+<!-- Le hero n'avait plus aucun élément cliquable depuis que la carte
+Fitz a été extraite vers sa propre section (#fitz-demo) — régression
+relevée à l'audit du 2026-08-13. btn-secondary (pas btn-accent) :
+l'ambre reste réservé au seul CTA final, voir le commentaire dans la
+section CTA plus bas. -->
+<a href="eligibility-test.html" class="btn btn-secondary btn-lg hero-cta reveal hero-stagger">
+<i data-lucide="compass"></i>
+<span>Commencer mon diagnostic gratuit</span>
+</a>
+
 </div>
 
 <!-- RIGHT -->
@@ -204,7 +246,16 @@ fenêtre (aspect-ratio calculé sur la largeur), laissant le bleu uni de
 .hero nu à cet endroit. Photo dédiée, indépendante du parallax du haut
 de page — diplômés déjà utilisés en filet générique de
 scholarships.js, jamais mis en avant jusqu'ici. -->
-<img src="assets/images/hero-bg5.jpg" alt="" class="hero-visual-bg" aria-hidden="true">
+<!-- Pas de loading="lazy" : fait partie de la 1re section visible
+(colonne droite du hero, à côté du h1), pas d'intérêt à en retarder
+le chargement. -->
+<img
+src="assets/images/hero-bg5-1920w.jpg"
+srcset="assets/images/hero-bg5-400w.jpg 400w, assets/images/hero-bg5-800w.jpg 800w, assets/images/hero-bg5-1200w.jpg 1200w, assets/images/hero-bg5-1920w.jpg 1920w"
+sizes="(max-width:1023px) 100vw, 50vw"
+alt=""
+class="hero-visual-bg"
+aria-hidden="true">
 <div class="hero-visual-overlay" aria-hidden="true"></div>
 
 <!-- Compatibilité -->
@@ -243,51 +294,51 @@ scholarships.js, jamais mis en avant jusqu'ici. -->
 
 </div>
 
-<!-- Fitz — mène vers le vrai diagnostic (eligibility-test.html) plutôt
-que de rester décoratif : c'est le seul aperçu concret de Fitz pour un
-premier visiteur, il doit tenir sa promesse au clic. -->
-<a href="eligibility-test.html" class="hero-demo reveal hero-stagger" aria-label="Découvrir Fitz — commencer mon diagnostic gratuit">
+</div>
 
-<div class="demo-header">
 
-<div class="demo-avatar">
+</section>
 
-<i data-lucide="bot"></i>
+<!-- ==========================================
+CONFIANCE / PREUVE SOCIALE — VERSION CONDENSÉE
+Juste après le hero : un bandeau minimaliste (badge + titre + un
+bandeau de logos en défilement continu, une seule ligne, aucun scroll
+nécessaire pour le voir en entier). Anciennement une section complète
+avec la liste intégrale des universités, les compteurs et les cartes de
+transparence — trop lourd si tôt dans le parcours, avant même que le
+visiteur ait compris ce qu'est ScholarBridge. La liste détaillée
+(photos, drapeaux, noms de bourses) vit maintenant dans #teaser plus
+bas, où elle a plus sa place ; compteurs et transparence l'y ont
+rejointe (voir #teaser).
+=========================================== -->
+
+<section id="trust" class="trust section">
+
+<div class="container">
+
+<div class="section-header reveal">
+
+<span class="section-badge">
+<i data-lucide="badge-check"></i>
+Ils nous font confiance
+</span>
+
+<h2>
+Un catalogue réel, vérifié établissement par établissement.
+</h2>
 
 </div>
 
-<div class="demo-info">
-
-<h3>Fitz</h3>
-
-<p>Votre conseiller intelligent</p>
-
+<!-- Rempli par js/homepage-teaser.js (renderTrustLogos) à partir des
+vraies universités Firestore — retiré du DOM si le fetch échoue ou si
+le catalogue est vide, jamais laissé avec un contenu par défaut inventé.
+Piste dupliquée pour un défilement sans coupure ; la 2e copie est
+aria-hidden pour ne pas doubler la liste au lecteur d'écran. -->
+<div id="trustLogosRow" class="trust-marquee reveal">
+<div id="trustMarqueeTrack" class="trust-marquee-track"></div>
 </div>
 
 </div>
-
-<div class="demo-body">
-
-<p id="fitz-message">
-
-Bonjour, je suis Fitz.
-
-</p>
-
-<div class="progress">
-
-<div id="progress-bar"></div>
-
-</div>
-
-<ul id="analysis-list"></ul>
-
-</div>
-
-</a>
-
-</div>
-
 
 </section>
 
@@ -314,7 +365,7 @@ Pourquoi tant d'étudiants abandonnent ?
 
 <h2>
 Le problème n'est pas le manque de bourses.
-Le problème est de trouver celles qui sont réellement faites pour vous.
+Le problème est de trouver celles qui sont <em>réellement</em> faites pour vous.
 </h2>
 
 <p>
@@ -375,10 +426,94 @@ vous ayez eu le temps de les découvrir.
 </div>
 
 <!-- La 2e phrase ("Fitz analyse votre profil pour ne vous montrer
-que ce qui compte") répétait mot pour mot la description du héros. -->
+que ce qui compte") répétait mot pour mot la description du héros.
+Reformulée le 2026-08-13 (audit) pour porter aussi le positionnement
+"étudiants africains" jusqu'ici cantonné au hero/vision/footer — sans
+répéter tel quel la phrase du hero, en l'ancrant plutôt dans le
+problème que cette section vient de poser. -->
 <p class="why-us-bridge reveal">
-<strong>ScholarBridge a été conçu pour résoudre exactement ces trois problèmes.</strong>
+<strong>ScholarBridge a été conçu pour résoudre exactement ces trois problèmes — en particulier pour les étudiants africains, qui les rencontrent le plus durement.</strong>
 </p>
+
+</div>
+
+</section>
+
+
+<!-- ==========================================
+FITZ EN ACTION
+Le mockup "Fitz" (auparavant superposé en position absolue à la photo
+du hero, à droite) devient sa propre section, en flux normal : le hero
+avait déjà beaucoup à montrer d'entrée (titre, avantages, stats, 2
+cartes flottantes), et "Le problème" doit être lu avant la démo pour
+que celle-ci réponde à quelque chose. Design de la carte inchangé —
+seul son conteneur change (voir .fitz-demo .hero-demo, css/hero.css :
+override position:absolute -> static, tout le reste de .hero-demo est
+repris tel quel). js/hero.js cible les mêmes id (#fitz-message,
+#progress-bar, #analysis-list), qu'importe où la carte vit dans le DOM.
+=========================================== -->
+
+<section id="fitz-demo" class="fitz-demo section">
+
+<div class="container fitz-demo-panel">
+
+<div class="fitz-demo-intro reveal">
+
+<span class="section-badge">
+<i data-lucide="sparkles"></i>
+Fitz en action
+</span>
+
+<h2>
+Voyez Fitz analyser un profil, en direct.
+</h2>
+
+<p>
+Aucune inscription nécessaire pour voir comment ça marche : cliquez pour lancer votre propre diagnostic gratuit.
+</p>
+
+</div>
+
+<a href="eligibility-test.html" class="hero-demo reveal" aria-label="Découvrir Fitz — commencer mon diagnostic gratuit">
+
+<div class="demo-header">
+
+<div class="demo-avatar"></div>
+
+<div class="demo-info">
+
+<h3 class="fitz-name">Fitz</h3>
+
+<p>Votre conseiller intelligent</p>
+
+</div>
+
+<span class="demo-status">
+<span class="demo-status-dot" aria-hidden="true"></span>
+Analyse en direct
+</span>
+
+</div>
+
+<div class="demo-body">
+
+<p id="fitz-message">
+
+Bonjour, je suis Fitz.
+
+</p>
+
+<div class="progress">
+
+<div id="progress-bar"></div>
+
+</div>
+
+<ul id="analysis-list"></ul>
+
+</div>
+
+</a>
 
 </div>
 
@@ -392,6 +527,13 @@ COMMENT ÇA FONCTIONNE
 <section id="how-it-works" class="how-it-works section">
 
 <div class="container">
+
+<!-- Photo d'accompagnement (international-students.jpg, remplace
+hero-bg.jpg le 2026-08-13 — hero-bg.jpg reste utilisée ailleurs,
+voir scholarships.js) : à côté de l'intro, pas en fond de la grille
+.steps ci-dessous — un fond derrière les 3 cartes aurait nui à la
+lisibilité de leur texte. -->
+<div class="how-it-works-intro">
 
 <div class="section-header reveal">
 
@@ -410,10 +552,28 @@ Trois étapes, et Fitz à vos côtés sur chacune.
 
 </div>
 
+<div class="how-it-works-photo reveal">
+<img
+src="assets/images/international-students-800w.jpg"
+srcset="assets/images/international-students-400w.jpg 400w, assets/images/international-students-800w.jpg 800w, assets/images/international-students-1200w.jpg 1200w"
+sizes="(max-width:900px) 100vw, 420px"
+alt="Groupe d'étudiants internationaux souriants devant leur université"
+loading="lazy">
+</div>
+
+</div>
+
 <!-- Ces 3 étapes remplacent DEUX sections qui racontaient le même
 parcours : "Comment ça fonctionne" (Découvrez / Analyse / Débloquez)
 et "Fonctionnalités" (Trouver / Préparer / Suivre, 6 cartes). Les
-6 cartes sont condensées ici, aucune capacité n'a disparu. -->
+6 cartes sont condensées ici, aucune capacité n'a disparu.
+
+Les 3 liens pointent tous vers eligibility-test.html (seul point
+d'entrée du parcours à ce jour — pas de contenu dédié "accompagnement"
+ou "suivi" séparé). Ils portaient jusqu'ici 3 libellés différents
+("Voir l'accompagnement", "Voir le suivi"...) qui laissaient croire à
+3 destinations distinctes ; uniformisés sur le même libellé (audit du
+2026-08-13) plutôt que de sur-promettre. -->
 <div class="steps">
 
 <article class="step reveal">
@@ -430,7 +590,7 @@ et les universités réellement compatibles avec votre profil, critères
 d'admission inclus — pas une liste générique.
 </p>
 
-<a href="eligibility-test.html" class="feature-link">Démarrer mon analyse<i data-lucide="arrow-right"></i></a>
+<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
 
 </article>
 
@@ -448,7 +608,7 @@ Et pour toute question précise sur une université ou un critère, Fitz vous
 répond directement.
 </p>
 
-<a href="eligibility-test.html" class="feature-link">Voir l'accompagnement<i data-lucide="arrow-right"></i></a>
+<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
 
 </article>
 
@@ -465,7 +625,7 @@ Chaque candidature avance par étapes claires, de la préparation jusqu'à la
 réponse de l'université — avec toutes vos échéances au même endroit.
 </p>
 
-<a href="eligibility-test.html" class="feature-link">Voir le suivi<i data-lucide="arrow-right"></i></a>
+<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
 
 </article>
 
@@ -480,6 +640,10 @@ réponse de l'université — avec toutes vos échéances au même endroit.
 APERÇU CONCRET
 Remonté ici depuis le haut de page : montrer le catalogue avant même
 d'avoir expliqué le service arrivait trop tôt pour un premier visiteur.
+Compteurs + transparence + témoignages, anciennement dans la section
+"Confiance" juste après le hero, rejoignent ici la liste détaillée
+(photos, drapeaux, noms de bourses) qu'ils accompagnaient déjà, une
+fois le visiteur arrivé au bon endroit du parcours pour les lire.
 =========================================== -->
 
 <section id="teaser" class="teaser section">
@@ -495,11 +659,66 @@ Un aperçu, pas le catalogue entier
 <p>Universités partenaires, bourses actives, programmes compatibles — voici ce que Fitz pourra analyser pour votre profil.</p>
 </div>
 
+<!-- Rempli par js/homepage-teaser.js (renderTrustStats) — mêmes données
+Firestore que le bandeau de logos plus haut, pas de second aller-retour
+réseau. -->
+<div id="trustStats" class="trust-stats reveal hero-stagger">
+
+<div class="trust-stat">
+<strong id="trustUniversityCount">—</strong>
+<span>Universités suivies</span>
+</div>
+
+<div class="trust-stat">
+<strong id="trustCountryCount">—</strong>
+<span>Pays couverts</span>
+</div>
+
+<div class="trust-stat">
+<strong id="trustScholarshipCount">—</strong>
+<span>Bourses actives</span>
+</div>
+
+</div>
+
 <div class="teaser-grid reveal" id="teaserGrid">
 <div class="teaser-card teaser-card-skeleton"></div>
 <div class="teaser-card teaser-card-skeleton"></div>
 <div class="teaser-card teaser-card-skeleton"></div>
 <div class="teaser-card teaser-card-skeleton"></div>
+</div>
+
+<div class="cards-grid trust-transparency reveal">
+
+<div class="info-card">
+<div class="card-icon"><i data-lucide="search-check"></i></div>
+<h3>Vérifié à la main</h3>
+<p>Portail de candidature, critères d'éligibilité et échéances confirmés à la source pour chaque fiche — pas de collecte automatique invisible.</p>
+</div>
+
+<div class="info-card">
+<div class="card-icon"><i data-lucide="link-2"></i></div>
+<h3>Le portail officiel reste accessible</h3>
+<p>Chaque fiche renvoie vers le site de l'université elle-même, gratuitement, abonné ou non.</p>
+</div>
+
+<div class="info-card">
+<div class="card-icon"><i data-lucide="bot"></i></div>
+<h3>Fitz s'appuie sur ces données</h3>
+<p>Ses recommandations sont basées sur les bourses et critères réellement enregistrés dans ce catalogue, pas générées au hasard.</p>
+</div>
+
+</div>
+
+<!-- Témoignages réels — vide tant qu'aucun n'a été recueilli, voir
+js/testimonials-data.js. Reste "hidden" jusqu'à ce que
+renderTestimonials() y trouve au moins une entrée. -->
+<div id="trustTestimonials" class="trust-testimonials" hidden>
+
+<h3>Ce que disent les premiers étudiants accompagnés</h3>
+
+<div id="testimonialGrid" class="cards-grid testimonial-grid"></div>
+
 </div>
 
 <div class="teaser-actions reveal">
@@ -509,7 +728,7 @@ Un aperçu, pas le catalogue entier
 <i data-lucide="arrow-right"></i>
 </a>
 
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ScholarBridge" target="_blank" rel="noopener" class="teaser-whatsapp">
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ScholarBridge" target="_blank" rel="noopener" class="teaser-whatsapp" hidden>
 <i data-lucide="message-circle"></i>
 <span>Une question avant de commencer ? Discutez avec nous sur WhatsApp</span>
 </a>
@@ -536,7 +755,7 @@ Notre vision
 </span>
 
 <h2>
-Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son avenir.
+Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son <em>avenir</em>.
 </h2>
 
 <!-- Les deux paragraphes d'origine disaient la même chose : le premier
@@ -550,7 +769,13 @@ Des milliers d'étudiants talentueux ont tout pour réussir à l'international :
 
 <div class="vision-illustration reveal">
 
-<img src="assets/images/hero-bg3.jpg" alt="" class="vision-photo">
+<img
+src="assets/images/hero-bg3-1200w.jpg"
+srcset="assets/images/hero-bg3-400w.jpg 400w, assets/images/hero-bg3-800w.jpg 800w, assets/images/hero-bg3-1200w.jpg 1200w, assets/images/hero-bg3-1920w.jpg 1920w"
+sizes="(max-width:992px) 100vw, 420px"
+alt=""
+class="vision-photo"
+loading="lazy">
 
 <div class="vision-card">
 
@@ -580,6 +805,16 @@ CTA FINAL
 <div class="container">
 
 <div class="cta-box reveal">
+
+<img
+class="cta-box-bg"
+src="assets/images/graduation-1920w.jpg"
+srcset="assets/images/graduation-400w.jpg 400w, assets/images/graduation-800w.jpg 800w, assets/images/graduation-1200w.jpg 1200w, assets/images/graduation-1920w.jpg 1920w"
+sizes="(max-width:1200px) 100vw, 1200px"
+alt=""
+loading="lazy">
+
+<div class="cta-box-panel">
 
 <span class="section-badge">
 <i data-lucide="sparkles"></i>
@@ -638,6 +873,8 @@ dans la 2e puce ci-dessous. -->
 
 </div>
 
+</div>
+
 </section>
 
 </main>
@@ -646,21 +883,31 @@ dans la 2e puce ci-dessous. -->
 FOOTER
 =========================================== -->
 
-<footer class="footer">
+<footer class="footer footer-photo-feature">
+
+<div class="footer-photo">
+<img
+class="footer-photo-img"
+src="assets/images/hero-bg4-800w.jpg"
+srcset="assets/images/hero-bg4-400w.jpg 400w, assets/images/hero-bg4-800w.jpg 800w, assets/images/hero-bg4-1200w.jpg 1200w"
+sizes="100vw"
+alt=""
+loading="lazy">
+</div>
 
 <div class="container">
 
 <div class="footer-top">
 
 <div class="footer-brand">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge Logo">
-<p>ScholarBridge aide les étudiants africains à trouver les opportunités qui correspondent réellement à leur profil.</p>
+<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<p>ScholarBridge accompagne en priorité les étudiants africains vers les bourses et universités faites pour eux — une plateforme ouverte à tout étudiant, où qu'il soit.</p>
 </div>
 
 <div class="footer-links">
 
 <div>
-<h4>Plateforme</h4>
+<h3>Plateforme</h3>
 <ul>
 <li><a href="scholarships.html">Bourses</a></li>
 <li><a href="universities.html">Universités</a></li>
@@ -670,19 +917,15 @@ FOOTER
 </ul>
 </div>
 
+<!-- Icônes LinkedIn/Facebook/Instagram/Youtube retirées (audit du
+2026-08-13) : elles pointaient vers "#", ScholarBridge n'a pas encore
+de comptes actifs sur ces réseaux. À réintroduire avec de vrais liens
+le jour où ils existent, pas avant. -->
 <div>
-<h4>Compte</h4>
+<h3>Compte</h3>
 <ul>
 <li><a href="login.html">Connexion</a></li>
 </ul>
-
-<div class="social-links">
-<a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg></a>
-<a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 21v-7.6h2.55l.38-2.96h-2.93V8.55c0-.86.24-1.44 1.47-1.44h1.57V4.46c-.27-.04-1.2-.12-2.28-.12-2.26 0-3.8 1.38-3.8 3.9v2.18H9v2.96h2.46V21h3.04Z"/></svg></a>
-<a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/></svg></a>
-<a href="#" aria-label="Youtube"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="2.5" y="6" width="19" height="12" rx="4"/><path d="M10.5 9.5v5l4.5-2.5-4.5-2.5Z" fill="var(--primary-dark)"/></svg></a>
-</div>
-
 </div>
 
 </div>
@@ -691,7 +934,7 @@ FOOTER
 
 <div class="footer-bottom">
 
-<p>© 2026 ScholarBridge. Tous droits réservés.</p>
+<p>© 2026 ScholarBridge. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
 
 </div>
 
@@ -714,9 +957,17 @@ est la destination naturelle après login.js. Pas de garde bloquante ici
 (page publique en premier lieu) : le contenu s'affiche normalement, la
 redirection n'intervient qu'une fois la session Firebase résolue. -->
 <script type="module">
-import { resolveSession } from "./js/access-guard.js";
-resolveSession().then((session) => {
+import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
+resolveSession().then(async (session) => {
 if (session && !session.disabled) {
+try {
+const featureFlags = await fetchFeatureFlags();
+if (!isFeatureLocked(session.planId, featureFlags, "advisor", session.testerAccess, session.hasFitzExpress)) {
+document.querySelector(".teaser-whatsapp")?.removeAttribute("hidden");
+}
+} catch (error) {
+console.warn("Vérification de l'accès WhatsApp ignorée :", error);
+}
 window.location.replace("dashboard.html");
 }
 }).catch((error) => {

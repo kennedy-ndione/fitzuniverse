@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600">
+<rect width="900" height="300" fill="#DE3831"/>
+<rect y="300" width="900" height="300" fill="#002395"/>
+<polygon points="0,0 0,600 330,300" fill="#000000"/>
+<path d="M0,0 L330,300 L900,300 M0,600 L330,300" fill="none" stroke="#FFFFFF" stroke-width="110" stroke-linejoin="miter"/>
+<path d="M0,0 L330,300 L900,300 M0,600 L330,300" fill="none" stroke="#007A4D" stroke-width="60" stroke-linejoin="miter"/>
+</svg>
