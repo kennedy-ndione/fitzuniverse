@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Niveaux d'études — Lot 28 | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Outil de migration ponctuel — vérifier si encore nécessaire avant utilisation.</div>
+
+<div class="migrate-header">
+<h1>Niveaux d'études — Lot 28</h1>
+<p>Renseigne le champ <code>levels</code> sur les <strong>24 bourses</strong> que l'export du catalogue listait avec <code>niveaux: []</code> — 18 % du catalogue. Le défaut est net : <code>scholarships.js:365</code> filtre par <code>(s.levels || []).includes(niveau)</code>, si bien qu'une bourse au tableau vide ne passe <strong>aucun</strong> filtre de niveau. Un doctorant qui coche « Doctorat » perd d'un coup les onze bourses de doctorat italiennes, précisément ce qu'il cherche. Le moteur de recommandation n'est pas concerné : il compare <code>program.level</code>, le niveau du <em>programme</em>, et n'en tire qu'un bonus, jamais un filtre. <strong>Ce sont les programmes qui tranchent, pas ce lot</strong> : pour 23 des 24 bourses, l'étape 1 lit les programmes réellement en base, normalise leur <code>level</code> avec le vocabulaire du moteur, et refuse d'écrire si l'observation ne correspond pas à ce qui est attendu. La valeur inscrite dans le lot n'est qu'une hypothèse. La 24<sup>e</sup>, <code>vanier-canada-graduate-scholarship</code>, n'a aucun programme lié : son niveau vient de la source, et l'étape 1 le signale au lieu de taire l'absence de preuve. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Lit toute la collection <code>programs</code>, regroupe les niveaux par bourse, puis pour chacune des 24 : vérifie qu'elle existe, que son titre est exactement celui de l'export, qu'elle ne porte pas déjà des niveaux, et que <strong>les programmes liés confirment</strong> la valeur attendue. Toute divergence bloque le lot en nommant l'écart.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Écrit le seul champ <code>levels</code> sur les bourses confirmées à l'étape 1. Aucun autre champ n'est touché.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit chaque document et compare le tableau <code>levels</code>, élément par élément et dans l'ordre. Doit confirmer 0 écart. Ensuite, sur <code>scholarships.html</code>, cocher « Doctorat » : les onze bourses de doctorat italiennes doivent rester affichées.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch28.js"></script>
+
+</body>
+
+</html>
