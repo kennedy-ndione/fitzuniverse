@@ -571,7 +571,9 @@ Dix-neuf photos ajoutées (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`) pour
 
 Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Comme au lot 25, les noms de photographes ne figurent pas (même réserve de traçabilité) : les pages de recherche n'exposent que l'identifiant CDN.
 
-**Réutilisations relevées à la fusion (2026-08-30), à remplacer si un lot futur s'en occupe** : trois identifiants CDN de ce lot reprennent des photos déjà créditées plus haut — `jads-japan-africa-dream` reprend la traversée de Shibuya de `waseda.jpg` (lot 13), `fao-hungarian-government-scholarship` reprend le Parlement hongrois de `corvinus.jpg` (lot 13), et `hse-into-olympiad` reprend la cathédrale Saint-Basile de `open-doors-scholarship.jpg` (lot 14) — ce dernier cas fait partager le même visuel à deux bourses russes.
+**Correctif lot 27 (2026-08-30)** : trois des dix-neuf identifiants de ce lot reprenaient une photo déjà utilisée ailleurs dans le dépôt (`hse-into-olympiad` ← la Saint-Basile d'`open-doors-scholarship.jpg`, `jads-japan-africa-dream` ← la Shibuya de `waseda.jpg`, `fao-hungarian-government-scholarship` ← le Parlement hongrois de `corvinus.jpg`) — le lot recréait, dans trois pays, exactement le défaut qu'il devait supprimer. Les trois fichiers ont été réécrits avec des photos inédites (`scripts/add-lot27-photo-fixes.ps1`) ; le champ `image` en base n'a pas changé — même nom de fichier — donc aucun lot Firestore n'accompagne ce correctif. Les trois entrées ci-dessous sont celles du lot 27.
+
+**Pourquoi le contrôle du lot 26 ne l'avait pas vu, et le garde-fou à reprendre dans tout futur lot de photos** : le script du lot 26 comparait les tailles des fichiers *du lot* entre eux — deux fichiers de noms différents portant la même photo sont invisibles à ce test dès lors que l'un des deux vient d'un lot antérieur. Le contrôle mesurait un indice (le nom de fichier) et non la chose (l'identifiant de la photo). `scripts/add-lot27-photo-fixes.ps1` ajoute le contrôle qui manquait : avant tout téléchargement, chaque identifiant CDN est cherché dans CE fichier, où toutes les photos du dépôt sont créditées avec le leur ; une occurrence sur une autre bourse arrête le script sans rien écrire. C'est le seul garde-fou qui attrape ce défaut.
 
 ### Royaume-Uni
 
@@ -587,7 +589,7 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 ### Russie
 
 - `spbu-open-olympiad.jpg` — les fontaines de Peterhof, Saint-Petersbourg (identifiant CDN `photo-1610197361600-33a3a5073cad`)
-- `hse-into-olympiad.jpg` — la cathedrale Saint-Basile-le-Bienheureux (identifiant CDN `photo-1513326738677-b964603b136d`)
+- `hse-into-olympiad.jpg` — une station ornée du métro de Moscou (identifiant CDN `photo-1741171469811-553adc364411`, lot 27)
 - `hse-merit-scholarships.jpg` — un batiment moscovite reflete dans l'eau (identifiant CDN `photo-1561117937-45681fb935ad`)
 
 ### Roumanie
@@ -598,7 +600,7 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 ### Japon
 
-- `jads-japan-africa-dream.jpg` — le carrefour de Shibuya, Tokyo (identifiant CDN `photo-1503899036084-c55cdd92da26`)
+- `jads-japan-africa-dream.jpg` — un torii rouge sur un chemin forestier (identifiant CDN `photo-1601823984263-b87b59798b70`, lot 27)
 - `jj-wbgsp.jpg` — Tokyo vue du ciel (identifiant CDN `photo-1573456373835-579c408de263`)
 
 ### Corée du Sud
@@ -607,7 +609,7 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 ### Hongrie
 
-- `fao-hungarian-government-scholarship.jpg` — le Parlement hongrois sur le Danube (identifiant CDN `photo-1616432902940-b7a1acbc60b3`)
+- `fao-hungarian-government-scholarship.jpg` — champs et lac vus du ciel, région du Balaton (identifiant CDN `photo-1725801719382-1e9db44b0066`, lot 27)
 
 ### Suisse
 
@@ -623,4 +625,4 @@ Recadrées et redimensionnées (`scripts/generate-city-srcset.mjs`) à partir de
 
 Benguerir et Louvain-la-Neuve ne sont pas recadrées, seulement redimensionnées (2000px pour le fichier de référence, puis 400/800/1200/1600px), avec les mêmes réglages que le script ci-dessus (qualité 92, mozjpeg). Elles ont été générées à part plutôt qu'en le lançant, car il réencode l'intégralité du dossier `cities/` à chaque exécution et aurait touché les quarante autres villes sans raison.
 
-Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comme `student-preparing.jpg`, leurs déclinaisons sont téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`scripts/add-lot9-city-photos.ps1`), sans recadrage ni passage par `sharp`. Même chose pour les photos des lots 11 (`scripts/add-lot11-unique-photos.ps1`), 13 (`scripts/add-lot13-more-unique-photos.ps1`), 14 (`scripts/add-lot14-scholarship-photos.ps1`), 15 (`scripts/add-lot15-scholarship-photos.ps1`), 16 (`scripts/add-lot16-scholarship-photos.ps1`), 17 (`scripts/add-lot17-scholarship-photos.ps1`), 25 (`scripts/add-lot25-scholarship-photos.ps1`) et 26 (`scripts/add-lot26-scholarship-photos.ps1`) ci-dessus — les lots 14 à 17, 25 et 26 dans leur propre dossier `assets/images/scholarships/`, distinct de `assets/images/cities/`.
+Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comme `student-preparing.jpg`, leurs déclinaisons sont téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`scripts/add-lot9-city-photos.ps1`), sans recadrage ni passage par `sharp`. Même chose pour les photos des lots 11 (`scripts/add-lot11-unique-photos.ps1`), 13 (`scripts/add-lot13-more-unique-photos.ps1`), 14 (`scripts/add-lot14-scholarship-photos.ps1`), 15 (`scripts/add-lot15-scholarship-photos.ps1`), 16 (`scripts/add-lot16-scholarship-photos.ps1`), 17 (`scripts/add-lot17-scholarship-photos.ps1`), 25 (`scripts/add-lot25-scholarship-photos.ps1`), 26 (`scripts/add-lot26-scholarship-photos.ps1`) et 27 (`scripts/add-lot27-photo-fixes.ps1`) ci-dessus — les lots 14 à 17 et 25 à 27 dans leur propre dossier `assets/images/scholarships/`, distinct de `assets/images/cities/`.
