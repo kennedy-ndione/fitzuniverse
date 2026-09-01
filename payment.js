@@ -48,17 +48,28 @@ const FITZ_MESSAGES = [
 "Fitz reste disponible à chaque étape de votre accompagnement."
 ];
 
+// Une offre `deprecated: true` (pricing-plans.js) n'est plus vendue —
+// jamais publiquement (retirée de offers.html), jamais via une URL
+// devinée ou un lien ancien encore partagé (?plan=premium). Un compte
+// qui la détient déjà n'initie pas de nouvel achat via cette page : sa
+// formule est déjà active, résolue ailleurs par identifiant
+// (dashboard.js, admin/student-detail.js), jamais ici.
+function isSellablePlan(planId) {
+const plan = SCHOLARBRIDGE_PLANS[planId];
+return !!plan && plan.deprecated !== true;
+}
+
 function getRequestedPlanId() {
 
 const fromUrl = new URLSearchParams(window.location.search).get("plan");
 
-if (fromUrl && SCHOLARBRIDGE_PLANS[fromUrl]) return fromUrl;
+if (fromUrl && isSellablePlan(fromUrl)) return fromUrl;
 
 try {
 
 const stored = JSON.parse(sessionStorage.getItem("scholarbridgeCheckout") || "null");
 
-if (stored && SCHOLARBRIDGE_PLANS[stored.plan]) return stored.plan;
+if (stored && isSellablePlan(stored.plan)) return stored.plan;
 
 } catch (e) {}
 
@@ -72,15 +83,61 @@ return amount.toLocaleString("fr-FR");
 
 }
 
+// Parité FIXE entre l'euro et le franc CFA (XOF), garantie par accord
+// monétaire : 1 € = 655,957 FCFA. Ce n'est pas un taux de marché, il n'y
+// a donc rien à rafraîchir ni aucun appel réseau à faire — la constante
+// est exacte tant que la parité tient.
+const EUR_PER_XOF = 655.957;
+
+// L'euro est arrondi à l'unité : personne ne règle 44,21 €, et une
+// décimale donnerait une fausse impression de précision sur un montant
+// qui n'est de toute façon qu'une conversion. Le montant ENGAGEANT
+// reste le FCFA (voir formatPriceHTML).
+function formatEUR(amountFCFA) {
+
+return Math.round(amountFCFA / EUR_PER_XOF).toLocaleString("fr-FR");
+
+}
+
+// Affichage du prix : l'euro porte le montant, le FCFA le surmonte en
+// petit (demande du 2026-08-22, cohérent avec offers.html).
+//
+// Le FCFA n'est jamais masqué, et c'est délibéré : Wave, Orange Money et
+// MTN MoMo sont des rails en francs CFA, c'est donc ce montant-là qui
+// sera réellement débité. Afficher uniquement l'euro sur une page de
+// paiement laisserait croire à un prélèvement en euros — sur l'écran
+// précis où l'utilisateur s'engage, l'ambiguïté ne serait pas
+// acceptable.
+//
+// MTN MoMo est cité ci-dessus comme EXEMPLE de rail en FCFA, pas comme
+// moyen de paiement du produit : il n'est proposé nulle part. Les seuls
+// moyens offerts sont les trois clés du sélecteur ci-dessous
+// (initActivation) — wave, orange-money, card. offers.html doit citer
+// cette liste-là et rien d'autre ; test/offers-plans.test.mjs le vérifie.
+function formatPriceHTML(amountFCFA) {
+
+return `<span class="price-local">${formatFCFA(amountFCFA)} FCFA</span>`
++ `<span class="price-main">${formatEUR(amountFCFA)}<span class="price-currency">€</span></span>`;
+
+}
+
+// Libellé du bouton d'activation. L'euro annonce, le FCFA précise ce qui
+// part du compte — les deux sur la même ligne, jamais l'un sans l'autre.
+function activationLabel(plan) {
+
+return `Activer mon accompagnement — ${formatEUR(plan.priceFCFA)} € (${formatFCFA(plan.priceFCFA)} FCFA)`;
+
+}
+
 function renderPlan(plan) {
 
 document.getElementById("planSummaryIcon").setAttribute("data-lucide", plan.icon);
 document.getElementById("planSummaryBadge").textContent = plan.badge;
 document.getElementById("planSummaryLabel").textContent = plan.label;
-document.getElementById("planSummaryAmount").textContent = formatFCFA(plan.priceFCFA);
+document.getElementById("planSummaryAmount").innerHTML = formatPriceHTML(plan.priceFCFA);
 
 document.getElementById("summaryOffer").textContent = plan.label;
-document.getElementById("summaryPrice").textContent = `${formatFCFA(plan.priceFCFA)} FCFA`;
+document.getElementById("summaryPrice").textContent = `${formatEUR(plan.priceFCFA)} € — ${formatFCFA(plan.priceFCFA)} FCFA débités`;
 // Toutes les offres n'ont pas de durée : Premier Dossier, Signature
 // Focus et Signature achètent un nombre de candidatures, pas une
 // période. La ligne entière est masquée dans ce cas — la page
@@ -145,9 +202,23 @@ observer.unobserve(entry.target);
 }
 });
 
-}, { threshold: 0.12 });
+// Mêmes deux causes que sur offers.js (voir le commentaire détaillé
+// là-bas, 2026-08-15/2026-08-29) : un seuil proportionnel devient
+// inatteignable sur les blocs très hauts, et un élément déjà dépassé
+// au moment où l'observer démarre (restauration de la position de
+// défilement, arrivée par ancre) ne serait jamais révélé.
+}, { threshold: 0, rootMargin: "0px 0px -60px 0px" });
 
-items.forEach((item) => observer.observe(item));
+items.forEach((item) => {
+
+if (item.getBoundingClientRect().bottom < 0) {
+item.classList.add("is-visible");
+return;
+}
+
+observer.observe(item);
+
+});
 
 }
 
@@ -162,7 +233,7 @@ radios.forEach((radio) => {
 radio.addEventListener("change", () => {
 
 button.disabled = false;
-label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)} FCFA`;
+label.textContent = activationLabel(plan);
 
 });
 
@@ -318,7 +389,7 @@ return credential.user.uid;
 // 5. Le backend vérifie la signature, le montant, le plan et le statut.
 // 6. Seulement alors, le backend met à jour Firestore (offre, date,
 //    statut, historique) et active le niveau d'accompagnement.
-// 7. L'utilisateur est redirigé vers le tableau de bord ScholarBridge.
+// 7. L'utilisateur est redirigé vers le tableau de bord Fitz.
 //    À cette étape, poser sessionStorage.setItem("just_upgraded", plan.label)
 //    avant la redirection : dashboard.js l'utilise déjà pour afficher le
 //    message d'accueil "votre accompagnement est activé" (voir
@@ -399,7 +470,7 @@ console.error(error);
 showFormError(document.getElementById("accountForm"), getAuthErrorMessage(error));
 button.classList.remove("is-loading");
 button.disabled = false;
-label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)} FCFA`;
+label.textContent = activationLabel(plan);
 return;
 
 }
@@ -410,7 +481,7 @@ trackEvent(isNewAccount ? "signup" : "payment_attempted", { plan: plan.id, metho
 
 button.classList.remove("is-loading");
 button.disabled = false;
-label.textContent = `Activer mon accompagnement — ${formatFCFA(plan.priceFCFA)} FCFA`;
+label.textContent = activationLabel(plan);
 
 resultText.textContent = `${plan.label} via ${methodLabels[method.value]} — le paiement sécurisé PayDunya sera activé très prochainement. Nous vous recontacterons dès l'ouverture des paiements. Redirection vers votre tableau de bord...`;
 result.hidden = false;

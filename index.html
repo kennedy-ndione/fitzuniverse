@@ -5,21 +5,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ScholarBridge | Découvrez les bourses faites pour vous</title>
+<title>FitzUniverse | Découvrez les bourses faites pour vous</title>
 
 <meta name="description"
-content="ScholarBridge aide les étudiants africains à découvrir leur potentiel académique et les opportunités de bourses internationales qui leur correspondent, grâce à une analyse personnalisée avec Fitz.">
+content="FitzUniverse aide les étudiants africains à découvrir leur potentiel académique et les opportunités de bourses internationales qui leur correspondent, grâce à une analyse personnalisée.">
 
-<meta property="og:title" content="ScholarBridge | Découvrez les bourses faites pour vous">
+<meta property="og:title" content="FitzUniverse | Découvrez les bourses faites pour vous">
 <meta property="og:description" content="Répondez à quelques questions, laissez Fitz analyser votre profil, et découvrez votre potentiel et vos opportunités d'études à l'international.">
 <meta property="og:type" content="website">
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ScholarBridge | Découvrez les bourses faites pour vous">
+<meta name="twitter:title" content="FitzUniverse | Découvrez les bourses faites pour vous">
 <meta name="twitter:description" content="Répondez à quelques questions, laissez Fitz analyser votre profil, et découvrez votre potentiel et vos opportunités d'études à l'international.">
 
-<meta name="theme-color" content="#12162E">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
 
 <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
@@ -28,19 +29,22 @@ content="ScholarBridge aide les étudiants africains à découvrir leur potentie
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/index.html">
 
-<!-- Google Fonts — système typographique 2026-08-13 (index.html
-uniquement, voir css/homepage-typography.css) : Plus Jakarta Sans
-(corps + titres "produit"), Space Grotesk (titres "affirmation" :
-hero + CTA final), Fraunces (titres "récit humain" : Le problème +
-Notre vision, italique chargé pour le mot-clé d'accent). display=swap
-partout — pas de FOIT, le texte reste visible avec le fallback système
-pendant le chargement. Remplace Inter/Sora (base.css --font-body/
---font-display), qui restent le défaut du reste du site : ce lien ne
-charge que sur index.html, les autres pages gardent Inter/Sora. -->
+<!-- Google Fonts — refonte visuelle 2026-08-29 (index.html uniquement,
+voir css/homepage-redesign.css) : Newsreader (tous les titres — remplace
+le système à 3 polices du 2026-08-13, Fraunces/Space Grotesk/Plus
+Jakarta Sans, par une seule police de titre pour toute la page) +
+Public Sans (corps de texte + noms propres du catalogue, ex. les cartes
+d'université). Poids 400 à 800 chargés pour les deux : la règle globale
+h1-h6 (base.css) pose --fw-extrabold (800) par défaut sur la plupart des
+titres. display=swap partout — pas de FOIT, le texte reste visible avec
+le fallback système pendant le chargement. Remplace Inter/Sora
+(base.css --font-body/--font-display), qui restent le défaut du reste
+du site : ce lien ne charge que sur index.html, les autres pages
+gardent Inter/Sora. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap"
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap"
 rel="stylesheet">
 
 <!-- Lucide Icons — version figée (pas @latest) et defer (audit du
@@ -56,10 +60,18 @@ scope de cet audit, ciblé sur index.html. -->
 <link rel="stylesheet" href="css/header.css">
 <link rel="stylesheet" href="css/hero.css">
 <link rel="stylesheet" href="css/homepage-sections.css">
+<link rel="stylesheet" href="css/opportunites.css">
 <link rel="stylesheet" href="css/animations.css">
 <!-- Chargé en dernier : doit gagner la cascade sur les font-family
-déclarés dans hero.css/homepage-sections.css pour les titres ci-dessus. -->
+déclarés dans hero.css/homepage-sections.css pour les titres ci-dessus,
+et porte aussi .kicker (voir plus bas). -->
 <link rel="stylesheet" href="css/homepage-typography.css">
+<!-- Refonte visuelle 2026-08-29 — fond beige, terracotta à la place de
+l'ambre, encre chaude à la place du marine résiduel. Chargée en tout
+dernier : doit gagner la cascade sur homepage-typography.css elle-même
+(elle redéfinit certaines des mêmes variables de police) en plus des
+autres feuilles de la page. Voir son en-tête pour le détail. -->
+<link rel="stylesheet" href="css/homepage-redesign.css">
 </head>
 
 <body>
@@ -79,9 +91,15 @@ abonné déjà payant — pas de shell authentifié ici, juste un aiguillage. --
 
 <div class="container header-container">
 
-<a href="index.html" class="logo">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
 </a>
 
 <div class="header-links">
@@ -105,11 +123,10 @@ abonné déjà payant — pas de shell authentifié ici, juste un aiguillage. --
 <span>Connexion</span>
 </a>
 
-<a href="eligibility-test.html" class="btn btn-secondary">
-<i data-lucide="compass"></i>
-<span class="btn-text-full">Découvrir mes opportunités</span>
-<span class="btn-text-short">Découvrir</span>
-</a>
+<!-- CTA d'en-tête retiré le 2026-08-31 (décision utilisateur) : il
+menait à la même page que le bouton du hero juste en dessous et
+encombrait la zone du hero, surtout sur mobile. Le geste vit
+désormais uniquement dans le hero (« Découvrir mes opportunités »). -->
 
 </div>
 
@@ -123,7 +140,10 @@ abonné déjà payant — pas de shell authentifié ici, juste un aiguillage. --
 MAIN
 ========================== -->
 
-<main id="main-content">
+<!-- tabindex="-1" (2026-08-29) : sans lui, l'Entrée sur le lien
+d'évitement ne DÉPLACE pas le focus — la tabulation suivante repartait
+du début de la navigation, ce que le lien devait justement éviter. -->
+<main id="main-content" tabindex="-1">
 
 <!-- =========================
 HERO
@@ -131,14 +151,38 @@ HERO
 
 <section class="hero">
 
+<!-- Photo de fond — permutée avec celle de la section "Notre vision"
+le 2026-08-23. hero-bg2.jpg était ici alors que son original ne fait
+que 1672 x 941 : sur un écran de 1920px, et plus encore en DPR 2,
+elle était agrandie au-delà de sa définition et apparaissait molle —
+la seule photo du site dans ce cas, les autres originaux allant de
+5040 à 6720 px de large.
+
+hero-bg3.jpg (5040 x 3360) prend sa place et permet enfin une
+variante 1920w. Les deux photos n'ont pas été choisies au hasard :
+celle-ci a du ciel et de la pelouse à gauche, là où le titre se
+pose, tandis que les visages de hero-bg2 valent mieux dans le petit
+cadre 4:5 de la vision, où ils illustrent littéralement le propos
+(voir #vision plus bas).
+
+Le 2560w n'existe qu'en AVIF et WebP, pas en JPEG. C'est l'image LCP
+de la page, et une bonne part du public visé navigue sur un forfait
+mobile compté : les 281 Ko de l'AVIF ne partent que vers un écran
+large en DPR 2, qui sait forcément décoder l'AVIF. Un JPEG 2560w
+aurait pesé le triple pour les navigateurs qui en ont le moins les
+moyens — le repli JPEG s'arrête donc à 1920w. -->
 <div class="hero-media" aria-hidden="true">
+<picture>
+<source type="image/avif" srcset="assets/images/hero-bg3-400w.avif 400w, assets/images/hero-bg3-800w.avif 800w, assets/images/hero-bg3-1200w.avif 1200w, assets/images/hero-bg3-1600w.avif 1600w, assets/images/hero-bg3-1920w.avif 1920w, assets/images/hero-bg3-2560w.avif 2560w" sizes="100vw">
+<source type="image/webp" srcset="assets/images/hero-bg3-400w.webp 400w, assets/images/hero-bg3-800w.webp 800w, assets/images/hero-bg3-1200w.webp 1200w, assets/images/hero-bg3-1600w.webp 1600w, assets/images/hero-bg3-1920w.webp 1920w, assets/images/hero-bg3-2560w.webp 2560w" sizes="100vw">
 <img
-src="assets/images/hero-bg2-1600w.jpg"
-srcset="assets/images/hero-bg2-400w.jpg 400w, assets/images/hero-bg2-800w.jpg 800w, assets/images/hero-bg2-1200w.jpg 1200w, assets/images/hero-bg2-1600w.jpg 1600w"
+src="assets/images/hero-bg3-1600w.jpg" width="1600" height="1067"
+srcset="assets/images/hero-bg3-400w.jpg 400w, assets/images/hero-bg3-800w.jpg 800w, assets/images/hero-bg3-1200w.jpg 1200w, assets/images/hero-bg3-1600w.jpg 1600w, assets/images/hero-bg3-1920w.jpg 1920w"
 sizes="100vw"
 fetchpriority="high"
 alt=""
 class="hero-bg-image">
+</picture>
 <div class="hero-overlay"></div>
 </div>
 
@@ -157,30 +201,21 @@ Trouvez les <span class="hero-h1-accent">bourses d'études</span> qui correspond
 <!-- Description -->
 
 <p class="hero-description reveal hero-stagger">
-Pensé en priorité pour les étudiants africains — et ouvert à tout étudiant, où qu'il soit.
-Répondez à quelques questions, Fitz analyse votre parcours, sélectionne
-les bourses et universités adaptées à votre profil et vous accompagne
-jusqu'au dépôt de votre candidature.
+Votre bourse existe peut-être déjà. Le plus dur, c'est de la trouver —
+c'est exactement ce que Fitz fait avec vous. Conçu d'abord pour les
+étudiants africains et ouvert également à tous.
 </p>
 
-<!-- Avantages -->
-
+<!-- Points forts — refonte 2026-08-22 : rangée de texte séparée par des
+traits verticaux (voir css/hero.css .hero-benefits/.benefit) plutôt que
+3 puces à icône ambre. Même contenu, 3 icônes de moins. -->
 <ul class="hero-benefits reveal hero-stagger">
 
-<li class="benefit">
-<i data-lucide="scan-search"></i>
-<span>Découverte personnalisée en quelques minutes</span>
-</li>
+<li class="benefit">Découverte personnalisée en quelques minutes</li>
 
-<li class="benefit">
-<i data-lucide="bot"></i>
-<span>Analyse de votre potentiel par Fitz</span>
-</li>
+<li class="benefit">Analyse de votre potentiel par Fitz</li>
 
-<li class="benefit">
-<i data-lucide="sparkles"></i>
-<span>Des opportunités identifiées pour vous, pas une liste générique</span>
-</li>
+<li class="benefit">Des opportunités identifiées pour vous, pas une liste générique</li>
 
 </ul>
 
@@ -205,23 +240,29 @@ même choix que trustUniversityCount/trustCountryCount dans #teaser. -->
 <span>Pays de destination</span>
 </div>
 
+<!-- Était "Fitz / Assistant intelligent" (2026-08-22). Ce n'était
+pas une statistique : deux chiffres suivis d'un nom de produit
+dans une rangée qui annonce la taille du catalogue. Le lecteur
+lit "10+ / 10+ / Fitz" et bute sur le troisième.
+Le nombre d'universités partenaires est la troisième mesure
+naturelle, il vient des mêmes données déjà chargées par
+renderTrustStats() (js/homepage-teaser.js) — aucun fetch de plus —
+et c'est le même trio que la bannière de scholarships.html.
+Fitz n'y perd rien : il est nommé dans le paragraphe juste
+au-dessus, dans les puces, et il a sa section entière plus bas. -->
 <div class="stat-card">
-<strong>Fitz</strong>
-<span>Assistant intelligent</span>
+<strong><span id="heroUniversityCount">—</span></strong>
+<span>Établissements vérifiés</span>
 </div>
 
 </div>
 
-<!-- Message de confiance -->
-
+<!-- Message de confiance — icône shield-check retirée (refonte
+2026-08-22) : c'était la seule icône de la page sans taille explicite,
+affichée à 24px par défaut à côté d'un texte de .95rem — l'exemple le
+plus net de l'audit "icônes trop grandes". Le texte suffit. -->
 <p class="hero-note reveal hero-stagger">
-
-<i data-lucide="shield-check"></i>
-
-<span>
 Commencez gratuitement • Sans carte bancaire • Découverte personnalisée
-</span>
-
 </p>
 
 <!-- Le hero n'avait plus aucun élément cliquable depuis que la carte
@@ -231,7 +272,7 @@ l'ambre reste réservé au seul CTA final, voir le commentaire dans la
 section CTA plus bas. -->
 <a href="eligibility-test.html" class="btn btn-secondary btn-lg hero-cta reveal hero-stagger">
 <i data-lucide="compass"></i>
-<span>Commencer mon diagnostic gratuit</span>
+<span>Découvrir mes opportunités</span>
 </a>
 
 </div>
@@ -244,39 +285,39 @@ section CTA plus bas. -->
 écran) ne descend pas toujours jusqu'ici selon la hauteur de la
 fenêtre (aspect-ratio calculé sur la largeur), laissant le bleu uni de
 .hero nu à cet endroit. Photo dédiée, indépendante du parallax du haut
-de page — diplômés déjà utilisés en filet générique de
-scholarships.js, jamais mis en avant jusqu'ici. -->
-<!-- Pas de loading="lazy" : fait partie de la 1re section visible
+de page.
+university-hall.jpg remplace hero-bg5.jpg (choix explicite utilisateur
+2026-08-22, préféré à amphitheatre.jpg) : bâtiment collégial de style
+gothique anglais, sans blason ni texte identifiant visibles sur ce
+cadrage — même prudence que pour university-building.jpg (Harvard Law
+School, bannières "HLS" lisibles, écarté ailleurs sur le site) et
+hero-bg5.jpg (retiré plus tôt car ses teintes vives ne matchaient pas
+les badges), mais l'architecture reste distinctive au point qu'un
+visiteur connaissant ce campus pourrait le reconnaître — à surveiller
+si ça devient un point de friction. -->
+<!-- Pas de loading="lazy" decoding="async" : fait partie de la 1re section visible
 (colonne droite du hero, à côté du h1), pas d'intérêt à en retarder
 le chargement. -->
+<picture>
+<source type="image/avif" srcset="assets/images/university-hall-400w.avif 400w, assets/images/university-hall-800w.avif 800w, assets/images/university-hall-1200w.avif 1200w, assets/images/university-hall-1600w.avif 1600w, assets/images/university-hall-1920w.avif 1920w" sizes="(max-width:1023px) 100vw, 50vw">
+<source type="image/webp" srcset="assets/images/university-hall-400w.webp 400w, assets/images/university-hall-800w.webp 800w, assets/images/university-hall-1200w.webp 1200w, assets/images/university-hall-1600w.webp 1600w, assets/images/university-hall-1920w.webp 1920w" sizes="(max-width:1023px) 100vw, 50vw">
 <img
-src="assets/images/hero-bg5-1920w.jpg"
-srcset="assets/images/hero-bg5-400w.jpg 400w, assets/images/hero-bg5-800w.jpg 800w, assets/images/hero-bg5-1200w.jpg 1200w, assets/images/hero-bg5-1920w.jpg 1920w"
+src="assets/images/university-hall-1920w.jpg" width="1920" height="1280"
+srcset="assets/images/university-hall-400w.jpg 400w, assets/images/university-hall-800w.jpg 800w, assets/images/university-hall-1200w.jpg 1200w, assets/images/university-hall-1600w.jpg 1600w, assets/images/university-hall-1920w.jpg 1920w"
 sizes="(max-width:1023px) 100vw, 50vw"
 alt=""
 class="hero-visual-bg"
 aria-hidden="true">
+</picture>
 <div class="hero-visual-overlay" aria-hidden="true"></div>
 
-<!-- Compatibilité -->
-
-<div class="floating-card compatibility-card reveal hero-stagger">
-
-<div class="floating-icon">
-<i data-lucide="badge-check"></i>
-</div>
-
-<div>
-
-<strong>Compatibilité élevée</strong>
-
-<p>Votre profil correspond fortement aux critères recherchés.</p>
-
-</div>
-
-</div>
-
-<!-- Destination -->
+<!-- Ordre + emphase inversés (choix explicite utilisateur 2026-08-22) :
+Régions compatibles passe en premier (carte "avant", position haute,
+entre dans l'animation la première) et Compatibilité élevée devient la
+seconde carte, en retrait. L'ordre DOM suit l'ordre visuel voulu — les
+positions/délais restent portés par .destination-card/.compatibility-card
+dans hero.css, pas par cet ordre en lui-même, mais le faire correspondre
+évite toute confusion pour la prochaine personne qui lit ce fichier. -->
 
 <div class="floating-card destination-card reveal hero-stagger">
 
@@ -294,62 +335,92 @@ aria-hidden="true">
 
 </div>
 
+<!-- Compatibilité — icône resserrée 48px→42px (refonte 2026-08-22). -->
+
+<div class="floating-card compatibility-card reveal hero-stagger">
+
+<div class="floating-icon">
+<i data-lucide="badge-check"></i>
+</div>
+
+<div>
+
+<strong>Compatibilité élevée</strong>
+
+<p>Votre profil correspond fortement aux critères recherchés.</p>
+
+</div>
+
+</div>
+
 </div>
 
 
 </section>
 
 <!-- ==========================================
-CONFIANCE / PREUVE SOCIALE — VERSION CONDENSÉE
-Juste après le hero : un bandeau minimaliste (badge + titre + un
-bandeau de logos en défilement continu, une seule ligne, aucun scroll
-nécessaire pour le voir en entier). Anciennement une section complète
-avec la liste intégrale des universités, les compteurs et les cartes de
-transparence — trop lourd si tôt dans le parcours, avant même que le
-visiteur ait compris ce qu'est ScholarBridge. La liste détaillée
-(photos, drapeaux, noms de bourses) vit maintenant dans #teaser plus
-bas, où elle a plus sa place ; compteurs et transparence l'y ont
-rejointe (voir #teaser).
+OPPORTUNITÉS OUVERTES — ajouté le 2026-08-27
+
+La première phrase du site, et la seule qui réponde à « qu'est-ce que
+ce site fait pour moi ? » sans qu'on ait à faire défiler. Le hero dit
+la promesse ; ce bandeau la prouve, avec des bourses réellement
+ouvertes et le nombre de jours qui restent sur chacune.
+
+Ordre volontaire : AVANT #trust. La preuve sociale répond à « peut-on
+vous croire ? », question qui n'a de sens qu'après « qu'avez-vous à
+m'offrir ? ». Deux frises défilantes se suivent donc — celle-ci sur
+fond sombre, celle des logos sur fond clair, à des vitesses très
+différentes (88s contre 34s) : elles se lisent comme deux moments, pas
+comme un même effet répété.
+
+hidden par défaut, retiré par js/opportunites-bandeau.js dès qu'il a
+de quoi le remplir. Si Firestore ne répond pas — le cas que
+js/catalog-watchdog.js traite ailleurs sur ce site — la section reste
+simplement invisible. Aucun contenu de repli inventé : un bandeau
+titré « ouvert en ce moment » qui montrerait des exemples fictifs
+mentirait dans son titre même.
 =========================================== -->
 
-<section id="trust" class="trust section">
+<section class="opportunites" id="opportunites" aria-labelledby="opportunitesTitre" hidden>
 
-<div class="container">
+<div class="opportunites-head">
 
-<div class="section-header reveal">
+<span class="opportunites-live"><i aria-hidden="true"></i>Ouvert en ce moment</span>
 
-<span class="section-badge">
-<i data-lucide="badge-check"></i>
-Ils nous font confiance
+<h2 id="opportunitesTitre">Des bourses dont les candidatures sont encore ouvertes</h2>
+
+<!-- Retiré du DOM par le script tant qu'aucune fiche ne porte de date
+de vérification réelle : mieux vaut ne rien promettre que promettre
+une fraîcheur qu'on ne peut pas prouver. -->
+<span class="opportunites-verif" id="opportunitesFraicheur">
+Échéances vérifiées le <b id="opportunitesVerif"></b>
 </span>
 
-<h2>
-Un catalogue réel, vérifié établissement par établissement.
-</h2>
-
 </div>
 
-<!-- Rempli par js/homepage-teaser.js (renderTrustLogos) à partir des
-vraies universités Firestore — retiré du DOM si le fetch échoue ou si
-le catalogue est vide, jamais laissé avec un contenu par défaut inventé.
-Piste dupliquée pour un défilement sans coupure ; la 2e copie est
-aria-hidden pour ne pas doubler la liste au lecteur d'écran. -->
-<div id="trustLogosRow" class="trust-marquee reveal">
-<div id="trustMarqueeTrack" class="trust-marquee-track"></div>
+<div class="opportunites-marquee">
+<div class="opportunites-track" id="opportunitesTrack" role="list"></div>
 </div>
+
+<div class="opportunites-foot">
+
+<a class="btn-opportunites" id="opportunitesLien" href="scholarships.html">Voir les opportunités ouvertes</a>
+
+<button type="button" class="opportunites-pause" id="opportunitesPause" aria-pressed="false" hidden>
+Arrêter le défilement
+</button>
 
 </div>
 
 </section>
 
 <!-- ==========================================
-LE PROBLÈME
-Anciennement précédé d'une bande "CONFIANCE" (3 engagements) et de
-l'aperçu des opportunités. La bande répétait les mêmes garanties que
-la note du héros et celles du CTA final — supprimée, son seul argument
-distinct ("bourses issues de programmes officiels") a rejoint le CTA.
-L'aperçu, lui, est descendu après "Comment ça marche" : montrer le
-catalogue avant d'avoir expliqué le service arrivait trop tôt.
+LE PROBLÈME — refonte structurelle 2026-08-22
+Anciennement une grille de 3 cartes à pastille+icône (search-x/clock-3/
+circle-x). Devient une liste numérotée au trait (.problem-list, voir
+css/homepage-sections.css) : même constat en 3 points, sans les 3
+icônes qui les portaient — un vrai changement de structure, pas
+seulement d'habillage.
 =========================================== -->
 
 <section id="why-us" class="why-us section">
@@ -358,10 +429,7 @@ catalogue avant d'avoir expliqué le service arrivait trop tôt.
 
 <div class="section-header reveal">
 
-<span class="section-badge">
-<i data-lucide="compass"></i>
-Pourquoi tant d'étudiants abandonnent ?
-</span>
+<span class="kicker">Pourquoi tant d'étudiants abandonnent ?</span>
 
 <h2>
 Le problème n'est pas le manque de bourses.
@@ -376,51 +444,39 @@ opportunités correspondent réellement à leur profil.
 
 </div>
 
-<div class="cards-grid">
+<div class="problem-list">
 
-<article class="info-card reveal">
-
-<div class="card-icon">
-<i data-lucide="search-x"></i>
-</div>
-
+<article class="problem-item reveal">
+<span class="problem-number" aria-hidden="true">01</span>
+<div>
 <h3>Vous cherchez partout</h3>
-
 <p>
 Des centaines de sites proposent des milliers de bourses, mais personne ne vous
 dit lesquelles correspondent réellement à votre parcours.
 </p>
-
+</div>
 </article>
 
-<article class="info-card reveal">
-
-<div class="card-icon">
-<i data-lucide="clock-3"></i>
-</div>
-
+<article class="problem-item reveal">
+<span class="problem-number" aria-hidden="true">02</span>
+<div>
 <h3>Vous perdez un temps précieux</h3>
-
 <p>
 Des heures de recherche sont souvent consacrées à des programmes auxquels vous
 n'êtes même pas éligible.
 </p>
-
+</div>
 </article>
 
-<article class="info-card reveal">
-
-<div class="card-icon">
-<i data-lucide="circle-x"></i>
-</div>
-
+<article class="problem-item reveal">
+<span class="problem-number" aria-hidden="true">03</span>
+<div>
 <h3>Vous passez à côté d'opportunités</h3>
-
 <p>
 Pendant que vous cherchez au hasard, certaines candidatures ferment sans que
 vous ayez eu le temps de les découvrir.
 </p>
-
+</div>
 </article>
 
 </div>
@@ -432,7 +488,7 @@ Reformulée le 2026-08-13 (audit) pour porter aussi le positionnement
 répéter tel quel la phrase du hero, en l'ancrant plutôt dans le
 problème que cette section vient de poser. -->
 <p class="why-us-bridge reveal">
-<strong>ScholarBridge a été conçu pour résoudre exactement ces trois problèmes — en particulier pour les étudiants africains, qui les rencontrent le plus durement.</strong>
+<strong>FitzUniverse a été conçu pour résoudre exactement ces trois problèmes — en particulier pour les étudiants africains, qui les rencontrent le plus durement.</strong>
 </p>
 
 </div>
@@ -459,10 +515,7 @@ repris tel quel). js/hero.js cible les mêmes id (#fitz-message,
 
 <div class="fitz-demo-intro reveal">
 
-<span class="section-badge">
-<i data-lucide="sparkles"></i>
-Fitz en action
-</span>
+<span class="kicker kicker--on-dark">Fitz en action</span>
 
 <h2>
 Voyez Fitz analyser un profil, en direct.
@@ -482,7 +535,7 @@ Aucune inscription nécessaire pour voir comment ça marche : cliquez pour lance
 
 <div class="demo-info">
 
-<h3 class="fitz-name">Fitz</h3>
+<p class="fitz-name">Fitz</p>
 
 <p>Votre conseiller intelligent</p>
 
@@ -528,19 +581,17 @@ COMMENT ÇA FONCTIONNE
 
 <div class="container">
 
-<!-- Photo d'accompagnement (international-students.jpg, remplace
-hero-bg.jpg le 2026-08-13 — hero-bg.jpg reste utilisée ailleurs,
-voir scholarships.js) : à côté de l'intro, pas en fond de la grille
-.steps ci-dessous — un fond derrière les 3 cartes aurait nui à la
-lisibilité de leur texte. -->
+<!-- Photo d'accompagnement placée à côté de l'intro, pas en fond de la
+grille .steps ci-dessous — un fond derrière les 3 cartes aurait nui à
+la lisibilité de leur texte. Le fichier lui-même a changé deux fois
+(hero-bg.jpg -> international-students.jpg le 2026-08-13, puis
+-> student-preparing.jpg le 2026-08-28) : le raisonnement du dernier
+choix est au-dessus de la balise <img>, pas ici. -->
 <div class="how-it-works-intro">
 
 <div class="section-header reveal">
 
-<span class="section-badge">
-<i data-lucide="workflow"></i>
-Comment ça fonctionne
-</span>
+<span class="kicker">Comment ça fonctionne</span>
 
 <h2>
 Trouver, préparer, suivre — jusqu'au dépôt de votre dossier.
@@ -552,13 +603,36 @@ Trois étapes, et Fitz à vos côtés sur chacune.
 
 </div>
 
+<!-- student-preparing.jpg depuis le 2026-08-28, en remplacement de
+international-students.jpg (trois diplômés en toge prenant un selfie).
+
+Cette section s'appelle « Comment ça fonctionne » et ses trois étapes
+s'appellent Trouver, Préparer, Suivre — c'est-à-dire le TRAVAIL. Elle
+l'illustrait avec le jour de la remise des diplômes, seul moment du
+parcours où Fitz n'intervient plus. La photo montre
+désormais ce que la section décrit : quelqu'un à sa table, un
+document dans une main, l'écran dans l'autre, en train de préparer un
+dossier.
+
+Cadrage 4:3 imposé par .how-it-works-photo (400x300, object-fit:cover)
+alors que la source est en 3:2 : le rognage retire des bandes en haut
+et en bas, le sujet est au centre et survit. Variantes servies
+directement par le CDN Unsplash aux largeurs voulues — le projet n'a
+déclinaisons avif/webp ajoutées le 2026-08-29 (l'absence d'outil de
+redimensionnement local, invoquée ici, n'a plus lieu d'être) :
+51 Ko en JPEG 800w contre 18 Ko en AVIF, soit -65 %. Licence et
+source dans CREDITS.md. -->
 <div class="how-it-works-photo reveal">
+<picture>
+<source type="image/avif" srcset="assets/images/student-preparing-400w.avif 400w, assets/images/student-preparing-800w.avif 800w, assets/images/student-preparing-1200w.avif 1200w, assets/images/student-preparing-1600w.avif 1600w" sizes="(max-width:900px) 100vw, 420px">
+<source type="image/webp" srcset="assets/images/student-preparing-400w.webp 400w, assets/images/student-preparing-800w.webp 800w, assets/images/student-preparing-1200w.webp 1200w, assets/images/student-preparing-1600w.webp 1600w" sizes="(max-width:900px) 100vw, 420px">
 <img
-src="assets/images/international-students-800w.jpg"
-srcset="assets/images/international-students-400w.jpg 400w, assets/images/international-students-800w.jpg 800w, assets/images/international-students-1200w.jpg 1200w"
+src="assets/images/student-preparing-800w.jpg" width="800" height="534"
+srcset="assets/images/student-preparing-400w.jpg 400w, assets/images/student-preparing-800w.jpg 800w, assets/images/student-preparing-1200w.jpg 1200w, assets/images/student-preparing-1600w.jpg 1600w"
 sizes="(max-width:900px) 100vw, 420px"
-alt="Groupe d'étudiants internationaux souriants devant leur université"
-loading="lazy">
+alt="Un étudiant à sa table de travail, un document à la main, prépare son dossier de candidature devant son ordinateur portable"
+loading="lazy" decoding="async">
+</picture>
 </div>
 
 </div>
@@ -568,66 +642,67 @@ parcours : "Comment ça fonctionne" (Découvrez / Analyse / Débloquez)
 et "Fonctionnalités" (Trouver / Préparer / Suivre, 6 cartes). Les
 6 cartes sont condensées ici, aucune capacité n'a disparu.
 
-Les 3 liens pointent tous vers eligibility-test.html (seul point
-d'entrée du parcours à ce jour — pas de contenu dédié "accompagnement"
-ou "suivi" séparé). Ils portaient jusqu'ici 3 libellés différents
-("Voir l'accompagnement", "Voir le suivi"...) qui laissaient croire à
-3 destinations distinctes ; uniformisés sur le même libellé (audit du
-2026-08-13) plutôt que de sur-promettre. -->
-<div class="steps">
+Refonte 2026-08-22 (retour utilisateur : 3 cartes séparées répétant
+chacune "Commencer mon diagnostic" faisaient doublon, un seul geste
+suffit pour les 3) : les 3 étapes ont quitté leurs cartes
+individuelles pour UNE SEULE carte, avec un unique CTA en pied plutôt
+qu'un lien répété 3 fois vers la même page. eligibility-test.html
+reste l'unique destination (seul point d'entrée du parcours à ce
+jour). btn-primary, pas btn-accent : l'ambre reste réservé au seul
+CTA final (voir hero-cta plus haut, même règle).
 
-<article class="step reveal">
+Second passage le même jour, sur retour : la première version de cette
+carte unique était une timeline verticale, chaque étape marquée d'un
+rond de 40px rempli en --gradient-primary. Rejetée sur trois points —
+les ronds, la structure empilée, et ce bleu foncé qui pesait lourd.
+Remplacée par trois colonnes séparées d'un simple filet : plus de
+pastille, l'étape est portée par un libellé typographique et un trait
+ambré court. Le regroupement en une carte et le CTA unique, eux, ne
+changent pas — c'était le vrai acquis du premier passage. -->
+<div class="steps-card reveal">
 
-<div class="step-number">01</div>
+<div class="steps-cols">
 
-<div class="step-icon"><i data-lucide="compass"></i></div>
-
+<div class="step-col">
+<span class="step-label">Étape 01</span>
+<span class="step-rule" aria-hidden="true"></span>
 <h3>Trouver</h3>
-
 <p>
 Répondez à quelques questions sur votre parcours. Fitz identifie les bourses
 et les universités réellement compatibles avec votre profil, critères
 d'admission inclus — pas une liste générique.
 </p>
+</div>
 
-<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
-
-</article>
-
-<article class="step reveal">
-
-<div class="step-number">02</div>
-
-<div class="step-icon"><i data-lucide="file-text"></i></div>
-
+<div class="step-col">
+<span class="step-label">Étape 02</span>
+<span class="step-rule" aria-hidden="true"></span>
 <h3>Préparer</h3>
-
 <p>
 CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi.
 Et pour toute question précise sur une université ou un critère, Fitz vous
 répond directement.
 </p>
+</div>
 
-<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
-
-</article>
-
-<article class="step reveal">
-
-<div class="step-number">03</div>
-
-<div class="step-icon"><i data-lucide="list-checks"></i></div>
-
+<div class="step-col">
+<span class="step-label">Étape 03</span>
+<span class="step-rule" aria-hidden="true"></span>
 <h3>Suivre</h3>
-
 <p>
 Chaque candidature avance par étapes claires, de la préparation jusqu'à la
 réponse de l'université — avec toutes vos échéances au même endroit.
 </p>
+</div>
 
-<a href="eligibility-test.html" class="feature-link">Commencer mon diagnostic<i data-lucide="arrow-right"></i></a>
+</div>
 
-</article>
+<div class="steps-footer">
+<a href="eligibility-test.html" class="btn btn-primary btn-lg steps-cta">
+<span>Découvrir mes opportunités</span>
+<span class="steps-cta-arrow" aria-hidden="true">→</span>
+</a>
+</div>
 
 </div>
 
@@ -637,13 +712,19 @@ réponse de l'université — avec toutes vos échéances au même endroit.
 
 
 <!-- ==========================================
-APERÇU CONCRET
-Remonté ici depuis le haut de page : montrer le catalogue avant même
-d'avoir expliqué le service arrivait trop tôt pour un premier visiteur.
-Compteurs + transparence + témoignages, anciennement dans la section
-"Confiance" juste après le hero, rejoignent ici la liste détaillée
-(photos, drapeaux, noms de bourses) qu'ils accompagnaient déjà, une
-fois le visiteur arrivé au bon endroit du parcours pour les lire.
+APERÇU CONCRET — ouvre le bloc "preuve" (2026-08-28)
+Compteurs + transparence + témoignages rejoignent ici la liste
+détaillée (photos, drapeaux, noms de bourses) qu'ils accompagnaient
+déjà, une fois le visiteur arrivé au bon endroit du parcours.
+
+Depuis la réorganisation du 2026-08-28, #trust (établissements
+vérifiés + bandeau de logos) suit IMMÉDIATEMENT cette section au lieu
+d'ouvrir la page : les deux disent "notre catalogue est réel", et les
+séparer par quatre sections faisait tenir deux fois le même argument à
+deux endroits sans que l'un renforce l'autre. Lus à la suite, ils
+forment un seul temps de preuve : voici l'échantillon, voici les
+chiffres, voici les témoignages — et chaque établissement derrière a
+été vérifié un par un.
 =========================================== -->
 
 <section id="teaser" class="teaser section">
@@ -651,12 +732,9 @@ fois le visiteur arrivé au bon endroit du parcours pour les lire.
 <div class="container">
 
 <div class="section-header teaser-head reveal">
-<span class="section-badge">
-<i data-lucide="sparkles"></i>
-Un aperçu, pas le catalogue entier
-</span>
+<span class="kicker">Un aperçu, pas le catalogue entier</span>
 <h2>Un échantillon de ce qui vous attend</h2>
-<p>Universités partenaires, bourses actives, programmes compatibles — voici ce que Fitz pourra analyser pour votre profil.</p>
+<p>Universités du catalogue, bourses actives, programmes compatibles — voici ce que Fitz pourra analyser pour votre profil.</p>
 </div>
 
 <!-- Rempli par js/homepage-teaser.js (renderTrustStats) — mêmes données
@@ -688,22 +766,22 @@ réseau. -->
 <div class="teaser-card teaser-card-skeleton"></div>
 </div>
 
-<div class="cards-grid trust-transparency reveal">
+<!-- Garanties — .cards-grid.trust-transparency (3 cartes à pastille+
+icône search-check/link-2/bot) → .assurance-list (refonte 2026-08-22,
+voir css/homepage-sections.css) : liste au trait, mêmes 3 messages. -->
+<div class="assurance-list reveal">
 
-<div class="info-card">
-<div class="card-icon"><i data-lucide="search-check"></i></div>
+<div class="assurance-item">
 <h3>Vérifié à la main</h3>
 <p>Portail de candidature, critères d'éligibilité et échéances confirmés à la source pour chaque fiche — pas de collecte automatique invisible.</p>
 </div>
 
-<div class="info-card">
-<div class="card-icon"><i data-lucide="link-2"></i></div>
+<div class="assurance-item">
 <h3>Le portail officiel reste accessible</h3>
 <p>Chaque fiche renvoie vers le site de l'université elle-même, gratuitement, abonné ou non.</p>
 </div>
 
-<div class="info-card">
-<div class="card-icon"><i data-lucide="bot"></i></div>
+<div class="assurance-item">
 <h3>Fitz s'appuie sur ces données</h3>
 <p>Ses recommandations sont basées sur les bourses et critères réellement enregistrés dans ce catalogue, pas générées au hasard.</p>
 </div>
@@ -712,7 +790,10 @@ réseau. -->
 
 <!-- Témoignages réels — vide tant qu'aucun n'a été recueilli, voir
 js/testimonials-data.js. Reste "hidden" jusqu'à ce que
-renderTestimonials() y trouve au moins une entrée. -->
+renderTestimonials() y trouve au moins une entrée. .info-card/
+.cards-grid : classes générées par homepage-teaser.js, toujours
+définies dans css/homepage-sections.css (voir le commentaire à côté de
+.info-card) même si le reste de la page ne les utilise plus. -->
 <div id="trustTestimonials" class="trust-testimonials" hidden>
 
 <h3>Ce que disent les premiers étudiants accompagnés</h3>
@@ -728,11 +809,66 @@ renderTestimonials() y trouve au moins une entrée. -->
 <i data-lucide="arrow-right"></i>
 </a>
 
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20ScholarBridge" target="_blank" rel="noopener" class="teaser-whatsapp" hidden>
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20FitzUniverse" target="_blank" rel="noopener" class="teaser-whatsapp" hidden>
 <i data-lucide="message-circle"></i>
 <span>Une question avant de commencer ? Discutez avec nous sur WhatsApp</span>
 </a>
 
+</div>
+
+</div>
+
+</section>
+
+<!-- ==========================================
+CONFIANCE / PREUVE SOCIALE — VERSION CONDENSÉE
+Un bandeau minimaliste (kicker + titre + logos en défilement continu,
+une seule ligne, aucun scroll nécessaire pour le voir en entier).
+
+Déplacé le 2026-08-28 : ouvrait la page juste après le hero, ferme
+maintenant le bloc de preuve entamé par #teaser (voir son commentaire
+pour le raisonnement). Ce que le visiteur voit désormais juste après
+le hero, c'est #opportunites — de vraies bourses datées, nommées,
+avec le pays et la photo : une preuve plus spécifique qu'une frise de
+logos d'établissements avec lesquels FitzUniverse n'a aucune
+relation, et qui n'a donc rien perdu à descendre.
+=========================================== -->
+
+<section id="trust" class="trust section">
+
+<div class="container">
+
+<!-- section-badge (pastille + icône badge-check) → .kicker (refonte
+2026-08-22, voir css/homepage-typography.css) : un trait ambre et un
+libellé plutôt qu'un pictogramme de plus.
+
+Le libellé était « Ils nous font confiance » jusqu'au 2026-08-23. Le
+bandeau est rempli par renderTrustLogos() avec les universités du
+CATALOGUE : aucune d'elles n'a de relation avec FitzUniverse, et
+aucune ne nous a accordé sa confiance. La phrase affirmait donc à des
+étudiants qui vont payer une chose qui n'est pas vraie — et le titre
+juste en dessous disait déjà correctement ce que le bandeau montre.
+Le nouveau libellé promet exactement ce qui est livré — et la phrase
+est répartie entre le kicker et le titre plutôt que répétée dans les
+deux, l'ancien titre disant déjà « vérifié établissement par
+établissement ». -->
+<div class="section-header reveal">
+
+<span class="kicker">Des établissements réels</span>
+
+<h2>
+Vérifiés un par un, avant d'apparaître dans votre catalogue.
+</h2>
+
+</div>
+
+<!-- Rempli par js/homepage-teaser.js (renderTrustLogos) à partir des
+vraies universités Firestore — retiré du DOM si le fetch échoue ou si
+le catalogue est vide, jamais laissé avec un contenu par défaut inventé.
+Piste dupliquée pour un défilement sans coupure ; la 2e copie est
+aria-hidden pour ne pas doubler la liste au lecteur d'écran. -->
+<div id="trustLogosRow" class="trust-marquee reveal">
+<div id="trustMarqueeTrack" class="trust-marquee-track"></div>
 </div>
 
 </div>
@@ -749,10 +885,7 @@ NOTRE VISION
 
 <div class="vision-content reveal">
 
-<span class="section-badge">
-<i data-lucide="earth"></i>
-Notre vision
-</span>
+<span class="kicker">Notre vision</span>
 
 <h2>
 Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son <em>avenir</em>.
@@ -762,21 +895,60 @@ Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la quali
 reprenait le constat déjà posé par la section "Le problème" plus haut,
 le second énonçait la mission. Fusionnés sur la mission seule. -->
 <p>
-Des milliers d'étudiants talentueux ont tout pour réussir à l'international : il leur manque les bonnes informations et un accompagnement pour bâtir une candidature solide. ScholarBridge existe pour réduire cet écart, avec une plateforme pensée pour les étudiants africains.
+Des milliers d'étudiants talentueux ont tout pour réussir à l'international : il leur manque les bonnes informations et un accompagnement pour bâtir une candidature solide. FitzUniverse existe pour réduire cet écart, avec une plateforme pensée pour les étudiants africains.
 </p>
 
 </div>
 
 <div class="vision-illustration reveal">
 
+<!-- amphitheatre.jpg depuis le 2026-08-28, en remplacement de
+vision-etudiants.jpg (recadrage 4:5 de hero-bg2.jpg : cinq étudiants
+souriants, bras dessus bras dessous, devant un bâtiment de campus).
+
+POURQUOI CHANGER — la page portait CINQ photos, dont quatre disaient
+la même chose : toges et chapeaux lancés en l'air, ou groupe
+d'étudiants posant en souriant (#how-it-works, #vision, le CTA final,
+le pied de page). Le site explique qu'il aide à CHERCHER une bourse et
+à MONTER un dossier, et n'illustrait que l'instant du diplôme —
+c'est-à-dire le seul moment où il n'intervient plus. Cette section-ci
+en était la quatrième variation.
+
+POURQUOI CELLE-CI — le titre dit « le lieu de naissance ne détermine
+plus la qualité de son avenir ». Des rangées de sièges identiques
+disent exactement cela : aucun n'est meilleur qu'un autre, aucun n'est
+réservé d'avance. La salle vide n'est pas un manque de sujet, elle EST
+le sujet — et la carte posée par-dessus (« Une mission, un étudiant à
+la fois ») répond à ce que l'image pose. C'est aussi la seule photo du
+site qui ne sourit pas à l'objectif, ce qui la place dans le même
+registre sobre que le reste de la refonte.
+
+CADRAGE — seul endroit de la page où object-fit:cover est le BON outil,
+là où la photo précédente exigeait un recadrage manuel : la
+composition est symétrique et son point de fuite tombe au centre
+exact. Le rognage 16/9 -> 4/5 fait par le navigateur garde l'allée
+centrale et le mur du fond, donc l'intégralité du sujet.
+
+POIDS — variantes avif/webp ajoutées le 2026-08-29. La note
+précédente concluait l'inverse, mais elle comparait le JPEG 800w de
+CETTE photo (60 Ko) à l'AVIF 752w de la photo PRÉCÉDENTE, plus
+chargée. À taille égale, mesuré : 60 Ko en JPEG 800w contre 17 Ko en
+AVIF 800w, soit -72 %. -->
+<picture>
+<source type="image/avif" srcset="assets/images/amphitheatre-400w.avif 400w, assets/images/amphitheatre-800w.avif 800w, assets/images/amphitheatre-1200w.avif 1200w" sizes="(max-width:992px) 100vw, 420px">
+<source type="image/webp" srcset="assets/images/amphitheatre-400w.webp 400w, assets/images/amphitheatre-800w.webp 800w, assets/images/amphitheatre-1200w.webp 1200w" sizes="(max-width:992px) 100vw, 420px">
 <img
-src="assets/images/hero-bg3-1200w.jpg"
-srcset="assets/images/hero-bg3-400w.jpg 400w, assets/images/hero-bg3-800w.jpg 800w, assets/images/hero-bg3-1200w.jpg 1200w, assets/images/hero-bg3-1920w.jpg 1920w"
+src="assets/images/amphitheatre-800w.jpg" width="800" height="533"
+srcset="assets/images/amphitheatre-400w.jpg 400w, assets/images/amphitheatre-800w.jpg 800w, assets/images/amphitheatre-1200w.jpg 1200w"
 sizes="(max-width:992px) 100vw, 420px"
 alt=""
 class="vision-photo"
-loading="lazy">
+loading="lazy" decoding="async">
+</picture>
 
+<!-- Seule icône conservée dans cette section (globe) : elle accompagne
+une citation, pas un pictogramme décoratif répété — cohérent avec la
+règle "icônes rares et fonctionnelles" de la refonte 2026-08-22. -->
 <div class="vision-card">
 
 <i data-lucide="globe"></i>
@@ -806,20 +978,21 @@ CTA FINAL
 
 <div class="cta-box reveal">
 
+<picture>
+<source type="image/avif" srcset="assets/images/graduation-400w.avif 400w, assets/images/graduation-800w.avif 800w, assets/images/graduation-1200w.avif 1200w, assets/images/graduation-1600w.avif 1600w, assets/images/graduation-1920w.avif 1920w" sizes="(max-width:1200px) 100vw, 1200px">
+<source type="image/webp" srcset="assets/images/graduation-400w.webp 400w, assets/images/graduation-800w.webp 800w, assets/images/graduation-1200w.webp 1200w, assets/images/graduation-1600w.webp 1600w, assets/images/graduation-1920w.webp 1920w" sizes="(max-width:1200px) 100vw, 1200px">
 <img
 class="cta-box-bg"
-src="assets/images/graduation-1920w.jpg"
-srcset="assets/images/graduation-400w.jpg 400w, assets/images/graduation-800w.jpg 800w, assets/images/graduation-1200w.jpg 1200w, assets/images/graduation-1920w.jpg 1920w"
+src="assets/images/graduation-1920w.jpg" width="1920" height="1280"
+srcset="assets/images/graduation-400w.jpg 400w, assets/images/graduation-800w.jpg 800w, assets/images/graduation-1200w.jpg 1200w, assets/images/graduation-1600w.jpg 1600w, assets/images/graduation-1920w.jpg 1920w"
 sizes="(max-width:1200px) 100vw, 1200px"
 alt=""
-loading="lazy">
+loading="lazy" decoding="async">
+</picture>
 
 <div class="cta-box-panel">
 
-<span class="section-badge">
-<i data-lucide="sparkles"></i>
-Votre avenir commence aujourd'hui
-</span>
+<span class="kicker kicker--on-dark">Votre avenir commence aujourd'hui</span>
 
 <h2>
 Découvrez votre potentiel et le nombre d'opportunités faites pour vous.
@@ -838,34 +1011,21 @@ le compte se crée désormais au moment du paiement (payment.html),
 voir payment.js. -->
 <a href="offers.html" class="btn btn-accent btn-lg">
 
-<i data-lucide="sparkles"></i>
-
 <span>Choisir ma formule</span>
 
 </a>
 
 </div>
 
-<!-- La bande "CONFIANCE" qui suivait le héros a été supprimée : ses
-garanties étaient déjà données ici et dans la note du héros. Son seul
-argument distinct — l'origine officielle des bourses — a été repris
-dans la 2e puce ci-dessous. -->
+<!-- 3 chips verre+icône → 3 mentions texte séparées par des traits
+(refonte 2026-08-22, voir css/homepage-sections.css .cta-trust). -->
 <div class="cta-trust">
 
-<div>
-<i data-lucide="shield-check"></i>
-<span>Gratuit pour commencer</span>
-</div>
+<div>Gratuit pour commencer</div>
 
-<div>
-<i data-lucide="landmark"></i>
-<span>Bourses issues de programmes officiels</span>
-</div>
+<div>Bourses issues de programmes officiels</div>
 
-<div>
-<i data-lucide="bot"></i>
-<span>Accompagnement avec Fitz</span>
-</div>
+<div>Accompagnement avec Fitz</div>
 
 </div>
 
@@ -886,13 +1046,17 @@ FOOTER
 <footer class="footer footer-photo-feature">
 
 <div class="footer-photo">
+<picture>
+<source type="image/avif" srcset="assets/images/hero-bg4-400w.avif 400w, assets/images/hero-bg4-800w.avif 800w, assets/images/hero-bg4-1200w.avif 1200w, assets/images/hero-bg4-1600w.avif 1600w, assets/images/hero-bg4-1920w.avif 1920w" sizes="100vw">
+<source type="image/webp" srcset="assets/images/hero-bg4-400w.webp 400w, assets/images/hero-bg4-800w.webp 800w, assets/images/hero-bg4-1200w.webp 1200w, assets/images/hero-bg4-1600w.webp 1600w, assets/images/hero-bg4-1920w.webp 1920w" sizes="100vw">
 <img
 class="footer-photo-img"
-src="assets/images/hero-bg4-800w.jpg"
-srcset="assets/images/hero-bg4-400w.jpg 400w, assets/images/hero-bg4-800w.jpg 800w, assets/images/hero-bg4-1200w.jpg 1200w"
+src="assets/images/hero-bg4-800w.jpg" width="800" height="533"
+srcset="assets/images/hero-bg4-400w.jpg 400w, assets/images/hero-bg4-800w.jpg 800w, assets/images/hero-bg4-1200w.jpg 1200w, assets/images/hero-bg4-1600w.jpg 1600w, assets/images/hero-bg4-1920w.jpg 1920w"
 sizes="100vw"
 alt=""
-loading="lazy">
+loading="lazy" decoding="async">
+</picture>
 </div>
 
 <div class="container">
@@ -900,14 +1064,23 @@ loading="lazy">
 <div class="footer-top">
 
 <div class="footer-brand">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<p>ScholarBridge accompagne en priorité les étudiants africains vers les bourses et universités faites pour eux — une plateforme ouverte à tout étudiant, où qu'il soit.</p>
+<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+<p>FitzUniverse accompagne en priorité les étudiants africains vers les bourses et universités faites pour eux — une plateforme ouverte à tout étudiant, où qu'il soit.</p>
 </div>
 
 <div class="footer-links">
 
 <div>
-<h3>Plateforme</h3>
+<p class="footer-col-title">Plateforme</p>
 <ul>
 <li><a href="scholarships.html">Bourses</a></li>
 <li><a href="universities.html">Universités</a></li>
@@ -918,11 +1091,11 @@ loading="lazy">
 </div>
 
 <!-- Icônes LinkedIn/Facebook/Instagram/Youtube retirées (audit du
-2026-08-13) : elles pointaient vers "#", ScholarBridge n'a pas encore
+2026-08-13) : elles pointaient vers "#", Fitz n'a pas encore
 de comptes actifs sur ces réseaux. À réintroduire avec de vrais liens
 le jour où ils existent, pas avant. -->
 <div>
-<h3>Compte</h3>
+<p class="footer-col-title">Compte</p>
 <ul>
 <li><a href="login.html">Connexion</a></li>
 </ul>
@@ -934,7 +1107,7 @@ le jour où ils existent, pas avant. -->
 
 <div class="footer-bottom">
 
-<p>© 2026 ScholarBridge. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
+<p>© 2026 FitzUniverse. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
 
 </div>
 
@@ -950,6 +1123,47 @@ SCRIPTS
 <script src="js/main.js"></script>
 <script src="js/header-scroll.js"></script>
 <script type="module" src="js/homepage-teaser.js"></script>
+<script type="module" src="js/opportunites-bandeau.js"></script>
+
+<!-- Filet de dernier recours pour les blocs alimentés par Firestore
+(2026-08-29, audit de la page d'accueil).
+
+Le try/catch de js/homepage-teaser.js ne couvre qu'un échec de REQUÊTE.
+Il ne couvre pas le cas où le module lui-même ne se charge jamais :
+ses imports pointent vers www.gstatic.com, et si ce domaine est
+injoignable — réseau d'entreprise filtrant, connexion coupée, CDN
+bloqué — le module n'est pas exécuté du tout, donc son catch non plus.
+Reproduit en conditions réelles : les trois statistiques du hero
+restent sur « — », les cartes d'aperçu restent des rectangles vides et
+le bandeau reste muet, sans qu'aucun code ne s'en aperçoive.
+
+Ce public est justement celui qui a le plus de risques d'être sur une
+connexion contrainte. On préfère donc une page plus courte à une page
+qui a l'air cassée : passé le délai, tout bloc encore vide est retiré.
+Le délai est volontairement long (8 s) — il ne doit se déclencher
+QUE sur un vrai échec, jamais sur un réseau simplement lent. -->
+<script>
+setTimeout(function () {
+  var vide = function (el) { return !el || !el.textContent.trim() || el.textContent.trim() === "\u2014"; };
+
+  if (vide(document.getElementById("heroScholarshipCount"))) {
+    var stats = document.querySelector(".hero-stats");
+    if (stats) stats.remove();
+  }
+
+  var grille = document.getElementById("teaserGrid");
+  if (grille && !grille.querySelector(".teaser-card:not(.teaser-card-skeleton)")) {
+    var section = grille.closest("section");
+    if (section) section.remove();
+    else grille.remove();
+  }
+
+  ["trustLogosRow", "trustStats"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && !el.textContent.trim()) el.remove();
+  });
+}, 8000);
+</script>
 
 <!-- Un utilisateur déjà connecté n'a rien à faire sur le pitch
 commercial : renvoyé vers son vrai tableau de bord, comme dashboard.html

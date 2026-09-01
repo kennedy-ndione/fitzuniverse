@@ -6,53 +6,98 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Se connecter | ScholarBridge</title>
+<title>Se connecter | FitzUniverse</title>
 
-<meta name="description" content="Connectez-vous à votre espace ScholarBridge pour retrouver votre diagnostic et poursuivre votre accompagnement avec Fitz.">
+<meta name="description" content="Connectez-vous à votre espace FitzUniverse pour retrouver votre diagnostic et poursuivre votre accompagnement.">
+
+<!-- Pas de mode sombre : le design "papier chaud" est clair par choix
+(la carte de cette page est sombre, mais ses couleurs sont calibrées —
+un assombrissement automatique casserait les contrastes). -->
+<meta name="color-scheme" content="light">
+
+<!-- Page de connexion : rien d'utile à indexer. -->
+<meta name="robots" content="noindex">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 
 <!-- Google Fonts (identiques au reste du parcours) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Newsreader + Public Sans depuis le 2026-08-30 — même identité
+« éditorial chaleureux » que le reste du parcours (voir
+css/login-redesign.css). Remplace Plus Jakarta Sans/Space Grotesk. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-30) — même correctif que sur le
+reste du site : tout createIcons() de script classique doit attendre
+DOMContentLoaded. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
-<!-- Design system ScholarBridge -->
+<!-- Design system Fitz -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="auth.css">
+<!-- Chargée en dernier : identité « papier chaud » de cette page (remap
+des tokens + carte encre chaude), voir le commentaire en tête. -->
+<link rel="stylesheet" href="css/login-redesign.css">
 
 </head>
 
 <body>
 
-<div class="auth-page">
+<!-- Refonte "carte flottante sur photo plein écran" (2026-08-13),
+référence pages de connexion institutionnelles (SSO universitaire) :
+amphitheatre.jpg en fond plein écran fixe (même technique que
+.hero-media, css/hero.css), voile dégradé bleu marine par-dessus,
+carte blanche opaque (pas de verre translucide : le texte doit rester
+lisible quelle que soit la photo derrière, pas seulement "probablement
+assez sombre"). .auth-shell/.auth-hero/.auth-badge de l'ancienne mise
+en page à 2 blocs empilés ont disparu — logo/titre rejoignent
+directement la carte. payment.html charge aussi auth.css mais n'utilise
+aucune de ces classes (.auth-page/.auth-shell/.auth-hero/.auth-card),
+seulement les classes de champs de formulaire plus bas dans ce fichier
+(.input-group, .password-grid, etc.) — non affecté par cette refonte. -->
+<main class="auth-page">
 
-<div class="auth-shell">
+<img
+class="auth-page-bg"
+src="assets/images/amphitheatre-1920w.jpg"
+srcset="assets/images/amphitheatre-400w.jpg 400w, assets/images/amphitheatre-800w.jpg 800w, assets/images/amphitheatre-1200w.jpg 1200w, assets/images/amphitheatre-1920w.jpg 1920w"
+sizes="100vw"
+fetchpriority="high"
+alt="">
 
-<!-- Hero -->
-<div class="auth-hero reveal">
-
-<div class="auth-logo-wrap">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-</div>
-
-<div class="auth-badge">
-<i data-lucide="sparkles"></i>
-<span>ScholarBridge</span>
-</div>
-
-<h1>Bon retour parmi nous</h1>
-
-<p>Connectez-vous pour retrouver votre diagnostic et poursuivre votre accompagnement avec Fitz.</p>
-
-</div>
+<div class="auth-page-overlay" aria-hidden="true"></div>
 
 <!-- Carte -->
 <div class="auth-card reveal">
 
-<h2>Se connecter</h2>
-<p class="auth-card-subtext">Accédez à votre espace personnel ScholarBridge.</p>
+<!-- on-dark : la carte est encre (login-redesign.css) — la structure du
+symbole passe en papier ; l'arc ambre, lui, ne change jamais. -->
+<div class="auth-logo-wrap on-dark">
+<svg class="fitz-mark logo-icon" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+</div>
+
+<!-- Titre et sous-titre ÉCRITS PAR LE JS (voir login.js, applyGreeting).
+Le contenu ci-dessous est celui du visiteur INCONNU : c'est le cas par
+défaut, et c'est volontaire. « Bon retour parmi nous » s'affichait à
+tout le monde — y compris à quelqu'un qui découvrait le site et qui
+n'était jamais « revenu » nulle part. Une page qui salue un inconnu
+comme un habitué se trompe sur la personne à la première phrase.
+
+Le message chaleureux n'est pas supprimé : il est rendu à ceux à qui
+il s'adresse vraiment, ceux dont on garde une trace de connexion.
+Rendu sans JS : le visiteur voit la formulation neutre, qui est vraie
+pour tout le monde. Jamais l'inverse. -->
+<h1 id="authTitle">Connectez-vous à votre espace</h1>
+<p class="auth-card-subtext" id="authSubtext">Retrouvez votre diagnostic, vos candidatures et votre accompagnement avec Fitz.</p>
+
+<!-- Affiché uniquement quand un prénom est reconnu : indispensable sur
+un ordinateur partagé (cybercafé, poste familial), où saluer
+quelqu'un d'autre par son prénom est au mieux gênant. -->
+<button type="button" class="auth-not-you" id="authNotYou" hidden>Ce n'est pas vous ?</button>
 
 <form id="loginForm" class="login-form">
 
@@ -102,8 +147,12 @@ aria-pressed="false">
 
 <div class="auth-options">
 
+<!-- Coché par défaut : c'est l'attente sur son propre appareil, et
+c'est ce qui permet à la page de saluer la personne par son prénom
+au retour (voir login.js). Décoché, rien n'est conservé — ni
+session persistante, ni prénom, ni adresse. -->
 <label class="remember-me">
-<input type="checkbox" id="rememberMe">
+<input type="checkbox" id="rememberMe" checked>
 <span>Se souvenir de moi</span>
 </label>
 
@@ -125,15 +174,13 @@ Se connecter
 </div>
 
 <p class="login-link">
-Vous n'avez pas encore de compte ?
+Votre compte se crée avec votre première formule.
 <a href="offers.html">Choisir ma formule</a>
 </p>
 
 </div>
 
-</div>
-
-</div>
+</main>
 
 <script>
 
@@ -229,7 +276,13 @@ revealEls.forEach((el) => el.classList.add("is-visible"));
 
 }
 
+// lucide est chargé avec `defer` : au moment où ce script classique
+// s'exécute, la librairie n'est pas encore là — attendre
+// DOMContentLoaded (même piège que sur offers.js, corrigé le
+// 2026-08-29).
+document.addEventListener("DOMContentLoaded", () => {
 if (window.lucide) lucide.createIcons();
+});
 
 })();
 
