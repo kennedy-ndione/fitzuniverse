@@ -4,6 +4,35 @@ Les photos de villes utilisées dans le catalogue d'universités (`assets/images
 
 ## Photos de contenu (`assets/images/`)
 
+### `reading-room.jpg` (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`, en JPEG + WebP + AVIF)
+
+Ajoutée le 2026-09-01 comme bannière de `scholarships.html`, en remplacement de `assets/images/cities/riyadh.jpg` — qui choisissait un pays sur 28 pour un catalogue mondial, servait déjà dans la grille en dessous (repli pays de l'Arabie saoudite, et photo de King Saud University ci-dessous), et disait « voyage » plutôt que « bourse ». **`riyadh.jpg` n'a pas été touchée** : elle garde ses deux usages.
+
+- **Photographe** : Zoshua Colah ([@zoshuacolah](https://unsplash.com/@zoshuacolah))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/JcPr4irSk34` (identifiant CDN `photo-1741707596397-efaae09503b5`) — salle de lecture universitaire, tables en enfilade sous leurs lampes.
+- **Déclinaisons** : générées localement avec `sharp` (JPEG q92 mozjpeg, WebP q92, AVIF q62) par `scripts/add-hero-bourses-photo.mjs`, à partir d'un recadrage 2:1 de la source 2400×1603.
+- **Contrôles faits avant de la retenir** (le fichier a été REGARDÉ, y compris au zoom) : aucun blason, aucune enseigne, aucun texte lisible — les vitraux sont géométriques, et les petits motifs des baies hautes sont des marques d'imprimeurs, hors recadrage. L'établissement (University of Washington) **n'est pas au catalogue** : les deux seules universités américaines en base sont Stanford et Berkeley.
+
+
+### `campus-courtyard.jpg` (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`, en JPEG + WebP + AVIF)
+
+Ajoutée le 2026-09-01 comme bannière de `universities.html`, en remplacement de `university-hall.jpg` (voir l'entrée suivante : sa provenance n'a pas pu être établie, et elle servait déjà de hero à la page d'accueil).
+
+- **Photographe** : Tristan Bowersox ([@tbmcqueen](https://unsplash.com/@tbmcqueen))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/JunZiFy0ER0` (identifiant CDN `photo-1730145268935-34c1d833bb98`) — cour à arcades, vue symétrique depuis le pavé.
+- **Déclinaisons** : générées localement avec `sharp` (JPEG q92 mozjpeg, WebP q92, AVIF q62) par `scripts/add-hero-catalog-photos.mjs`, à partir d'un recadrage 2:1 de la source 2400×1616.
+- **Contrôles faits avant de la retenir** (le fichier a été REGARDÉ, y compris au zoom sur l'arcade centrale) : aucune plaque, aucun blason, aucune enseigne, aucun drapeau, aucune ligne d'horizon urbaine. Ce n'est **pas un établissement d'enseignement** — aucune université du catalogue ne peut donc sembler cautionner FitzUniverse. Palette pierre grise et ciel bleu, **froide**, choisie pour trancher d'un coup d'œil avec la salle de lecture chaude de `scholarships.html`.
+
+### `university-hall.jpg` — provenance NON ÉTABLIE
+
+Photo du hero de la page d'accueil (`index.html`), et bannière de `universities.html` jusqu'au 2026-09-01.
+
+- **Licence** : **inconnue.** Recherchée le 2026-09-01 sans résultat : aucune entrée d'origine dans ce fichier, aucun auteur en EXIF/IPTC (le XMP ne porte que la signature de pipeline « Go XMP SDK », compatible avec un passage par Unsplash mais qui ne prouve rien), message de commit muet (`16b22a7`, 2026-08-14), et une recherche par comparaison perceptuelle sur les résultats Unsplash correspondants n'a produit aucune correspondance (meilleur écart 36/255, très au-dessus d'un seuil d'identité).
+- **Contenu** : bâtiment collégial de style gothique anglais, sur pelouse. Aucun blason, aucune enseigne, aucun texte identifiant sur ce cadrage — mais l'architecture reste assez distinctive pour qu'un visiteur connaissant ce campus le reconnaisse.
+- **Ce qu'il reste à faire** : retrouver la source, ou remplacer le fichier sur la page d'accueil comme cela a été fait sur `universities.html`. Entrée volontairement conservée ici, vide de crédit : **un trou documenté vaut mieux qu'une attribution inventée**, et mieux qu'un silence qui ferait reposer la question à zéro à la prochaine passe.
+
 ### `student-preparing.jpg` (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`)
 
 Ajoutée le 2026-08-28 pour la section « Comment ça fonctionne » de la page d'accueil.
@@ -626,3 +655,82 @@ Recadrées et redimensionnées (`scripts/generate-city-srcset.mjs`) à partir de
 Benguerir et Louvain-la-Neuve ne sont pas recadrées, seulement redimensionnées (2000px pour le fichier de référence, puis 400/800/1200/1600px), avec les mêmes réglages que le script ci-dessus (qualité 92, mozjpeg). Elles ont été générées à part plutôt qu'en le lançant, car il réencode l'intégralité du dossier `cities/` à chaque exécution et aurait touché les quarante autres villes sans raison.
 
 Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comme `student-preparing.jpg`, leurs déclinaisons sont téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`scripts/add-lot9-city-photos.ps1`), sans recadrage ni passage par `sharp`. Même chose pour les photos des lots 11 (`scripts/add-lot11-unique-photos.ps1`), 13 (`scripts/add-lot13-more-unique-photos.ps1`), 14 (`scripts/add-lot14-scholarship-photos.ps1`), 15 (`scripts/add-lot15-scholarship-photos.ps1`), 16 (`scripts/add-lot16-scholarship-photos.ps1`), 17 (`scripts/add-lot17-scholarship-photos.ps1`), 25 (`scripts/add-lot25-scholarship-photos.ps1`), 26 (`scripts/add-lot26-scholarship-photos.ps1`) et 27 (`scripts/add-lot27-photo-fixes.ps1`) ci-dessus — les lots 14 à 17 et 25 à 27 dans leur propre dossier `assets/images/scholarships/`, distinct de `assets/images/cities/`.
+
+---
+
+## Drapeaux (`assets/flags/`) — lot 31 (2026-08-30)
+
+`rw.svg` (Rwanda), `gh.svg` (Ghana), `ke.svg` (Kenya) et `eg.svg` (Egypte) proviennent du projet **flag-icons** (Panayiotis Lipiridis), recuperes via jsDelivr (`flag-icons@7.5.0`, dossier `flags/4x3/`).
+
+- **Licence** : [MIT](https://github.com/lipis/flag-icons/blob/main/LICENSE) — usage commercial autorise.
+- **Optimisation** : attribut `id` retire et indentation supprimee, dessin inchange. Le bouclier massai du Kenya et l'aigle de Saladin egyptien sont les traces officiels du projet source, volontairement non redessines — c'est pourquoi `eg.svg` (8,5 Ko) depasse la taille des drapeaux a bandes simples, comme `us.svg` (9,3 Ko) avant lui.
+
+---
+
+## Lot 31 — Afrique (2026-08-30) : Rwanda, Ghana, Kenya, Egypte
+
+Treize photos DISTINCTES (quatre universites a Kigali, deux a Nairobi : chacune la sienne), chaque image regardee avant d'etre retenue et chaque identifiant verifie absent de ce fichier avant telechargement. References plafonnees a 2000px puis declinees en 400/800/1200/1600w (JPEG q92 mozjpeg + WebP + AVIF) par `scripts/add-lot31-photos.mjs` — jamais la taille d'origine servie. Les bourses du lot n'ont pas de photo propre (cascade : photo de l'universite rattachee), sauf Al-Azhar, orpheline volontaire.
+
+### Unsplash ([Unsplash License](https://unsplash.com/license))
+
+- `university-of-rwanda-kigali.jpg` — la skyline du centre de Kigali au couchant. Photographe : Jean Claude Akarikumutima (identifiant CDN `photo-1687986261123-b17f08f2796c`, page `b-HnOOPRfTI`)
+- `aims-kigali.jpg` — panorama des collines habitees de Kigali. Photographe : Protais Benjamin MUGENZI (identifiant CDN `photo-1708772565599-2c4e4b3ed9db`, page `K15V22xU1zs`)
+- `aims-accra.jpg` — la Black Star Gate (« Freedom and Justice »), place de l'Independance, Accra. Photographe : Ifeoluwa B. (identifiant CDN `photo-1630386226447-af0a955c1009`, page `-CgUhaShACE`)
+- `usiu-nairobi.jpg` — les tours du quartier de Westlands, Nairobi, dans la lumiere doree. Photographe : Amani Nation (identifiant CDN `photo-1611348524140-53c9a25263d6`, page `LTh5pGyvKAM`)
+- `icipe-nairobi.jpg` — girafe massai devant la skyline de Nairobi (parc national de Nairobi). Photographe : Grace Nandi (identifiant CDN `photo-1634662101368-fa8021773862`, page `7XA8SJ5ODq4`)
+- `auc-cairo.jpg` — felouque sur le Nil, la tour du Caire et la skyline, en paysage. Photographe : Alex Kotomanov (identifiant CDN `photo-1720400995876-506098f4c238`, page `987Ds8mF3JM`)
+- `senghor-alexandrie.jpg` — la citadelle de Qaitbay, Alexandrie. Photographe : Juan Nino (identifiant CDN `photo-1633624646814-3a61ed3e2847`, page `rdvqTZLaE-k`)
+- `al-azhar-cairo.jpg` (dossier `assets/images/scholarships/`) — les minarets et le dome de la mosquee Al-Azhar au-dessus des toits, Le Caire, en paysage. Photographe : Yousef Salhamoud (identifiant CDN `photo-1646763143121-1bbf5aaf2f2d`, page `1INRvy-Qg5s`)
+
+### Wikimedia Commons (licences CC a attribution obligatoire, a conserver tant que ces fichiers sont utilises)
+
+Revision du 2026-08-31, apres relecture : quatre photos remplacees. `cmu-africa-kigali` (feu d'artifice, format carre), `auc-cairo` et `al-azhar-cairo` (formats portrait, sujets coupes par le cadre 2:1 des cartes) et `alu-kigali` (meme scene de colline que `aims-kigali` — fichiers distincts n'est pas images distinctes). Les anciennes variantes ont ete supprimees ; regle appliquee aux 13 : ratio vise 3:2 ou plus large, refus sous 1,3.
+
+- `cmu-africa-kigali.jpg` — le dome du Kigali Convention Centre en vue aerienne de jour, quartier mitoyen du campus CMU-Africa. Auteur : Emmanuel Kwizera (Emmanuelkwizera), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:An aerial of Kigali Convention Center on June 19, 2019. Photo by Emmanuel Kwizera.jpg](https://commons.wikimedia.org/wiki/File:An_aerial_of_Kigali_Convention_Center_on_June_19,_2019._Photo_by_Emmanuel_Kwizera.jpg)
+- `alu-kigali.jpg` — Kigali de nuit sous la lune, skyline eclairee. Auteur : Adrien K, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/deed.en). Source : [File:Kigali2018.jpg](https://commons.wikimedia.org/wiki/File:Kigali2018.jpg)
+- `ashesi-berekuso.jpg` — la cour Archer Cornfield du campus d'Ashesi University, Berekuso, a l'heure bleue. Auteur : Gwumah, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Ashesi's Archer Cornfield Courtyard.jpg](https://commons.wikimedia.org/wiki/File:Ashesi%27s_Archer_Cornfield_Courtyard.jpg)
+- `knust-kumasi.jpg` — allee commercante arboree du campus de KNUST, Kumasi. Auteur : Jude Hammond, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Knust campus- Commercial area.jpg](https://commons.wikimedia.org/wiki/File:Knust_campus-_Commercial_area.jpg)
+- `jkuat-juja.jpg` — le batiment PAUSTI (Block B) sur le campus de la JKUAT, Juja — le sujet exact de la bourse de l'Universite panafricaine. Auteur : Gedankenstuecke, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:JKUAT - PAUSTI.jpg](https://commons.wikimedia.org/wiki/File:JKUAT_-_PAUSTI.jpg)
+
+---
+
+## Lot 32 — Italie, Suisse, Russie (2026-08-31)
+
+Onze photos de ville, une par universite du lot. Declinees par `scripts/add-lot32-photos.mjs` (reference 2000px + 400/800/1200/1600w en JPEG q92 mozjpeg, WebP et AVIF) — la taille d'origine n'est jamais servie. Chaque image regardee avant d'etre retenue, chaque identifiant verifie absent de ce fichier, chaque ratio mesure (1,33 minimum : la carte est une fente d'environ 2:1 en object-fit:cover).
+
+QUATRE VILLES ETAIENT DEJA OCCUPEES, et c'est le point de vigilance de ce lot — l'echec du lot 31 etait deux fichiers distincts montrant la meme scene :
+
+- **Milan** : `milan.jpg` (Politecnico) et `bocconi.jpg` (le Duomo) existaient deja -> ici les Navigli, de nuit.
+- **Pise** : `pisa.jpg` (Piazza dei Miracoli vue d'en haut) -> ici les quais de l'Arno, sans la tour.
+- **Lausanne** : `lausanne.jpg` (toits et lac en automne) -> ici le chateau d'Ouchy.
+- **Geneve** recoit DEUX etablissements du lot : le jet d'eau vu du lac (IHEID) et le pont du Mont-Blanc vu d'en haut (UNIGE) — deux cadrages sans rapport.
+
+La garde anti-doublon a ecarte trois candidates deja utilisees, dont le front de mer de Trieste, qui sert deja a `ardis-friuli-venezia-giulia.jpg`.
+
+### Unsplash ([Unsplash License](https://unsplash.com/license))
+
+- `unimi-milan.jpg` — le canal des Navigli a la tombee du jour, Milan. Photographe : Daniel Kirby (identifiant CDN `photo-1668784290849-aa5acd24edcd`, page `smCqxgrMeNY`)
+- `pavia.jpg` — le Ponte Coperto sur le Tessin au coucher du soleil, Pavie. Photographe : Isaac Maffeis (identifiant CDN `photo-1751098663661-da1b55e7e91f`, page `ZlhTV3OgAG0`)
+- `genes.jpg` — les toits de la vieille ville de Genes et le port au fond. Photographe : Ollie Tulett (identifiant CDN `photo-1693067038040-044640fad0f7`, page `7Xz2eY-Frg4`)
+- `bari.jpg` — le Teatro Margherita sur le vieux port de Bari, barques bleues au premier plan. Photographe : Maria Bobrova (identifiant CDN `photo-1564863756233-e90e6d2f264b`, page `wNxEJbExriM`)
+- `trieste.jpg` — le Canal Grande de Trieste au crepuscule. Photographe : Alain ROUILLER (identifiant CDN `photo-1718553124786-473af4238076`, page `DeLPPZ4VgNY`)
+- `scuola-normale-pise.jpg` — les quais de l'Arno a Pise, lumiere du soir. Photographe : alexey turenkov (identifiant CDN `photo-1540685889031-268df9f16803`, page `nYxfMY49PHg`)
+- `iheid-geneve.jpg` — le jet d'eau de Geneve vu du lac, le Saleve en arriere-plan. Photographe : Meizhi Lang (identifiant CDN `photo-1667758682790-c58fa23dc76f`, page `kk1ZpooGZqk`)
+- `fribourg.jpg` — la tour de la cathedrale et l'horloge de l'hotel de ville, vieille ville de Fribourg. Photographe : Artan (identifiant CDN `photo-1782564173527-0f435c646e72`, page `IZtimgrQlHY`)
+- `unige-geneve.jpg` — le pont du Mont-Blanc et le Rhone vus d'en haut, Geneve. Photographe : Xavier von Erlach (identifiant CDN `photo-1584200463394-bba4b2117e4d`, page `yEsQzAhDKQs`)
+- `unil-lausanne.jpg` — le chateau d'Ouchy au bord du Leman, Lausanne. Photographe : Alin Andersen (identifiant CDN `photo-1657557494887-59caee68dae8`, page `2JyQzpydsV8`)
+- `saint-petersbourg.jpg` — le palais d'Hiver et la Neva gelee, Saint-Petersbourg. Photographe : Evgenii Zolotarev (identifiant CDN `photo-1691583224443-1fefd0afaa51`, page `pj01T3IV_pM`)
+
+---
+
+## Correctif `milan.jpg` (2026-08-31) — le nom de fichier n'est pas une preuve du sujet
+
+`milan.jpg`, servie pour le Politecnico di Milano, montrait en realite **Vernazza, dans les Cinque Terre**, a 200 km de Milan et sur la cote ligure. Le fichier etait bien nomme, unique, au bon ratio et correctement servi : toutes les gardes automatiques etaient au vert, et l'image etait fausse. Seul un regard sur l'image pouvait l'attraper — c'est exactement le controle qui avait manque.
+
+Remplacee par une vraie vue de Milan, distincte a l'oeil des deux autres images milanaises du catalogue (le Duomo pour Bocconi, les Navigli de nuit pour l'Universita degli Studi au lot 32) : une troisieme scene, donc.
+
+- `milan.jpg` — le Castello Sforzesco et la fontaine de la piazza Castello, Milan. Photographe : Maria Cappelli, [Unsplash License](https://unsplash.com/license) (identifiant CDN `photo-1602059201105-276c01c1b657`, page `XsXqM4HmYxc`)
+
+Verifiees a la meme occasion, et CORRECTES : `bocconi.jpg` (le Duomo), `pisa.jpg` (la Piazza dei Miracoli et sa tour), `lausanne.jpg` (ville en terrasses au-dessus du Leman, Alpes de Savoie en face).
+
+L'ancienne photo de Vernazza n'est plus referencee nulle part.

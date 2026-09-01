@@ -5,10 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Bourses d'études internationales | ScholarBridge</title>
-<meta name="description" content="Parcourez les bourses d'études internationales disponibles sur ScholarBridge, filtrées par pays et par niveau.">
+<title>Bourses d'études internationales | FitzUniverse</title>
+<meta name="description" content="Parcourez les bourses d'études internationales disponibles sur FitzUniverse, filtrées par pays et par niveau.">
 
-<meta name="theme-color" content="#12162E">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
 
 <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
@@ -17,43 +18,80 @@
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/scholarships.html">
 
-<meta property="og:title" content="Bourses d'études internationales | ScholarBridge">
-<meta property="og:description" content="Parcourez les bourses d'études internationales disponibles sur ScholarBridge, filtrées par pays et par niveau.">
+<meta property="og:title" content="Bourses d'études internationales | FitzUniverse">
+<meta property="og:description" content="Parcourez les bourses d'études internationales disponibles sur FitzUniverse, filtrées par pays et par niveau.">
 <meta property="og:type" content="website">
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Bourses d'études internationales | ScholarBridge">
-<meta name="twitter:description" content="Parcourez les bourses d'études internationales disponibles sur ScholarBridge, filtrées par pays et par niveau.">
+<meta name="twitter:title" content="Bourses d'études internationales | FitzUniverse">
+<meta name="twitter:description" content="Parcourez les bourses d'études internationales disponibles sur FitzUniverse, filtrées par pays et par niveau.">
 
+<!-- Même système typographique que index.html depuis le 2026-08-29
+(voir css/catalog-redesign.css) : Newsreader + Public Sans, à la place
+de Plus Jakarta Sans + Space Grotesk. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-29) — remplace
+`https://unpkg.com/lucide@latest` chargé de façon synchrone dans
+<head>. Deux problèmes, tous deux relevés lors de l'audit de la page
+d'accueil du 2026-08-13, qui notait « même correctif à reporter sur
+les autres pages du site » : `@latest` est un CDN tiers non versionné,
+donc une version cassante chez Lucide se déploie sur le site sans
+prévenir ; et synchrone dans <head>, le script bloque le premier
+rendu. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/header.css">
 <link rel="stylesheet" href="css/homepage-sections.css">
 <link rel="stylesheet" href="css/animations.css">
+<!-- Système de catalogue partagé — DOIT rester avant la feuille propre
+à la page : celle-ci ne contient plus que la carte, et compte sur
+l'ordre de cascade pour pouvoir affiner un détail local sans avoir à
+surcharger la spécificité. -->
+<link rel="stylesheet" href="css/catalog.css">
 <link rel="stylesheet" href="scholarships.css">
+<!-- Chargé en dernier : doit gagner la cascade sur les font-family
+déclarés dans scholarships.css/homepage-sections.css. -->
+<link rel="stylesheet" href="css/catalog-typography.css">
+<!-- Refonte visuelle "éditorial chaleureux" (2026-08-29), même
+direction que index.html — chargée en tout dernier, voir ce fichier. -->
+<link rel="stylesheet" href="css/catalog-redesign.css">
+<!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
+la grille à sidebar et bascule la page dans l'identité papier chaud. -->
+<link rel="stylesheet" href="css/journey-shell.css">
 <style>[hidden]{display:none !important;}</style>
 
 </head>
 
 <body>
 
+<!-- Lien d'évitement (2026-08-29) : présent sur index.html depuis
+l'audit du 2026-08-13, il manquait aux pages du catalogue — un
+utilisateur au clavier devait traverser toute la navigation avant
+d'atteindre la liste. Même style .skip-link, déjà dans css/base.css. -->
+<a href="#pageMain" class="skip-link">Aller au contenu</a>
+
 <!-- Visiteur non connecté : en-tête public (SEO/marketing), miroir de
 celui d'universities.html — scholarships.html est le point d'entrée
 principal du catalogue public, il a besoin de la même navigation.
 Masqué par js/dual-shell.js uniquement si une session est trouvée. -->
-<header class="header header-on-light" id="publicHeader">
+<header class="header" id="publicHeader">
 
 <div class="container header-container">
 
-<a href="index.html" class="logo">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
 </a>
 
 <div class="header-actions">
@@ -85,184 +123,33 @@ n'est chargé dynamiquement par js/dual-shell.js QUE si une session est
 trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 <div class="dashboard-shell" id="authShellRoot" hidden>
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-<aside class="sidebar" id="sidebar">
-
-<div class="sidebar-top">
-
-<a href="dashboard.html" class="sidebar-brand">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
-</a>
-
-<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
-<i data-lucide="panel-left-close"></i>
-</button>
-
-</div>
-
-<div class="sidebar-plan">
-<span class="sidebar-plan-label">Votre formule</span>
-<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
-</div>
-
-<nav class="sidebar-nav" aria-label="Navigation principale">
-
-<span class="sidebar-section-label">Mon espace</span>
-
-<ul>
-
-<li>
-<a href="dashboard.html" class="nav-link">
-<i data-lucide="layout-dashboard"></i>
-<span>Tableau de bord</span>
-</a>
-</li>
-
-<li>
-<a href="profile.html" class="nav-link">
-<i data-lucide="user"></i>
-<span>Mon profil</span>
-</a>
-</li>
-
-<li>
-<a href="account.html" class="nav-link">
-<i data-lucide="settings"></i>
-<span>Paramètres</span>
-</a>
-</li>
-
-<li data-feature="applications">
-<a href="applications.html" class="nav-link" data-real-href="applications.html">
-<i data-lucide="list-checks"></i>
-<span>Mes candidatures</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li>
-<a href="scholarships.html" class="nav-link is-active" aria-current="page">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
-</a>
-</li>
-
-<li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
-</a>
-</li>
-
-<li data-feature="documents">
-<a href="documents.html" class="nav-link" data-real-href="documents.html">
-<i data-lucide="file-text"></i>
-<span>Documents</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label">Fitz</span>
-
-<ul class="sidebar-nav-fitz">
-
-<li data-feature="ai_chat">
-<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
-<i data-lucide="message-circle"></i>
-<span>Discuter avec Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_letter">
-<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
-<i data-lucide="pen-line"></i>
-<span>Lettre de motivation</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_check">
-<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
-<i data-lucide="shield-check"></i>
-<span>Vérification</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_email">
-<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
-<i data-lucide="mail"></i>
-<span>E-mails Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_translate">
-<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
-<i data-lucide="languages"></i>
-<span>Traduction</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="compress">
-<a href="compress.html" class="nav-link" data-real-href="compress.html">
-<i data-lucide="file-archive"></i>
-<span>Compression</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="interview_prep">
-<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
-<i data-lucide="mic"></i>
-<span>Préparation entretien</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
-
-<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
-
-<li data-feature="advisor">
-<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
-<i data-lucide="user-check"></i>
-<span>Mon conseiller</span>
-</a>
-</li>
-
-</ul>
-
-</nav>
-
-<div class="sidebar-bottom">
-<button type="button" id="logoutBtn" class="sidebar-logout">
-<i data-lucide="log-out"></i>
-<span>Déconnexion</span>
-</button>
-</div>
-
-</aside>
+<!-- La sidebar a été retirée le 2026-08-30 (refonte « parcours ») :
+la navigation de l'espace étudiant vit sur dashboard.html — chaque
+outil s'ouvre depuis la phase du parcours qui lui donne un sens.
+js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div class="dashboard-main" id="dashboardMainContent">
 
-<header class="topbar">
+<header class="journey-topbar">
 
-<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
-<i data-lucide="menu"></i>
-</button>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 
-<div class="topbar-title">
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+
 <h1>Bourses d'études</h1>
 </div>
+
+<div class="journey-topbar-actions">
 
 <div class="messages-bell-wrap">
 
@@ -272,16 +159,29 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 </button>
 
 <div class="messages-panel" id="messagesPanel" hidden>
-<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-header">Messages de l'équipe</div>
 <div class="messages-panel-list" id="messagesPanelList"></div>
 </div>
 
 </div>
 
 <a href="offers.html" class="topbar-plan-chip">
-<i data-lucide="sparkles"></i>
 <span id="topbarPlanLabel">Essentiel</span>
 </a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
 
 </header>
 
@@ -291,24 +191,98 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 
 </div>
 
-<main id="pageMain">
+<main id="pageMain" tabindex="-1">
 
-<section class="bourses-title-bar">
+<!-- Bannière photo, même traitement que .uni-hero (universities.html).
+Header public transparent flottant par-dessus, comme sur .uni-hero et
+le hero d'index.html (voir css/header.css .header).
+
+reading-room.jpg remplace riyadh.jpg (2026-09-01). Le raisonnement de
+l'audit du 2026-08-14 est CONSERVÉ : une bourse est rattachée à un
+pays, pas à un établissement précis (voir le commentaire sur
+.scholarship-card-media dans scholarships.css), donc toujours pas de
+photo de bâtiment identifiable ici. Ce que ce raisonnement n'a jamais
+justifié, c'est de choisir UN pays : le catalogue couvre 28 pays et sa
+bannière montrait l'Arabie saoudite, choix par défaut devenu permanent.
+riyadh.jpg cumulait deux autres défauts — elle sert AUSSI dans la
+grille en dessous (repli pays saoudien de js/scholarship-image.js, et
+photo de King Saud University d'après CREDITS.md), et une skyline dit
+« voyage », pas « bourse ».
+Une grande salle de lecture est la seule image universelle de l'étude
+qui ne soit ni une remise de diplôme (l'accueil a déjà celle-là) ni une
+ville (les cartes les ont toutes) ; elle porte en plus le
+positionnement « vérifié à la main » — une salle de lecture dit
+institution sérieuse. Fichier recadré en 2:1 exprès pour cette bande
+large : voir scripts/add-hero-catalog-photos.mjs, qui explique le
+recadrage, les six candidates écartées et les contrôles faits.
+riyadh.jpg N'A PAS été supprimée ni remplacée sur ses deux usages. -->
+<section class="bourses-hero">
+
+<!-- AVIF/WebP ajoutés le 2026-08-29 : cette photo est la plus lourde
+de la page. Mesuré en JPEG contre AVIF à taille égale — 718 Ko contre
+253 Ko en 1920w, 315 Ko contre 123 Ko en 1200w, soit environ -63 %.
+`width`/`height` ajoutés dans la foulée : sans eux le navigateur ne
+connaît pas le rapport de l'image avant de l'avoir reçue et réserve
+zéro pixel, ce qui fait sauter la page au chargement. -->
+<picture>
+<source type="image/avif" srcset="assets/images/reading-room-400w.avif 400w, assets/images/reading-room-800w.avif 800w, assets/images/reading-room-1200w.avif 1200w, assets/images/reading-room-1600w.avif 1600w" sizes="100vw">
+<source type="image/webp" srcset="assets/images/reading-room-400w.webp 400w, assets/images/reading-room-800w.webp 800w, assets/images/reading-room-1200w.webp 1200w, assets/images/reading-room-1600w.webp 1600w" sizes="100vw">
+<img
+class="bourses-hero-bg"
+src="assets/images/reading-room-800w.jpg"
+srcset="assets/images/reading-room-400w.jpg 400w, assets/images/reading-room-800w.jpg 800w, assets/images/reading-room-1200w.jpg 1200w, assets/images/reading-room-1600w.jpg 1600w"
+sizes="100vw"
+width="1600" height="800"
+fetchpriority="high"
+decoding="async"
+alt="">
+</picture>
 
 <div class="container">
 
-<h1 class="reveal">Bourses</h1>
+<span class="bourses-hero-badge"><i data-lucide="award"></i><span>Catalogue de bourses Fitz</span></span>
 
-<div class="bourses-search-bar reveal">
+<!-- « entièrement financées » retiré du H1 (2026-08-31) : contredit
+par les données — comptés sur scripts/export-catalog.json, 124
+programmes sur 335 ont un `coverage` vide, et au moins 42 des 211
+renseignés sont explicitement partiels (bilkent « exonération de 20 à
+100 % », bocconi-merit-award « totale ou partielle »). « vérifiées une
+par une » est, lui, tenu par le catalogue. -->
+<h1>Bourses d'études <span class="hero-h1-accent">vérifiées une par une</span></h1>
+<p>Programmes officiels, critères vérifiés, portail de candidature inclus — parcourez le catalogue complet, en accès libre.</p>
 
-<div class="bourses-search-field">
-<i data-lucide="search"></i>
+</div>
+
+</section>
+
+<!-- Filtres, raccourcis pays, compteur et grille dans UNE seule
+section (2026-08-22). Ils vivaient auparavant dans deux <section>
+successives, chacune avec le rembourrage vertical généreux de
+.section — soit ~200 px de vide entre la bannière et le premier
+résultat, et autant entre le compteur et la première carte. Sur un
+catalogue, ce blanc n'est pas de la respiration : c'est un écran
+entier gagné sur le contenu que le visiteur est venu voir.
+L'espacement est désormais tenu par .catalog-body (css/catalog.css). -->
+<section class="catalog-body">
+
+<div class="container">
+
+<div class="catalog-search-bar reveal">
+
+<div class="catalog-search-field">
+<i data-lucide="search" class="catalog-search-icon"></i>
 <input
 type="text"
 id="searchInput"
+autocomplete="off"
 aria-label="Rechercher une bourse, un pays ou une université"
 placeholder="Rechercher un pays, une université...">
+<button type="button" class="catalog-search-clear" id="searchClearBtn" hidden aria-label="Effacer la recherche"><i data-lucide="x"></i></button>
 </div>
+
+<select id="countryFilter" aria-label="Filtrer par pays">
+<option value="">Tous les pays</option>
+</select>
 
 <select id="levelFilter" aria-label="Filtrer par niveau">
 <option value="">Tous les niveaux</option>
@@ -317,15 +291,103 @@ placeholder="Rechercher un pays, une université...">
 <option value="Doctorat">Doctorat</option>
 </select>
 
-</div>
+<!-- Type de bourse (2026-08-30) — filtre exact sur le champ `funder`
+(voir correspondTypeBourse, js/scholarship-filters.js). Une bourse SANS
+champ (bailleur inconnu) reste visible sur « Tous les types » et n'est
+retirée que quand un type précis est choisi : un champ absent est un
+inconnu, jamais une valeur par défaut. Mêmes libellés que le formulaire
+admin (admin/scholarships.html). -->
+<select id="funderFilter" aria-label="Filtrer par type de bourse">
+<option value="">Tous les types</option>
+<option value="gouvernement">Gouvernement</option>
+<option value="universite">Université</option>
+<option value="region">Région ou collectivité</option>
+<option value="organisation">Organisation (fondation, ONG, UE, banque de développement)</option>
+<option value="entreprise">Entreprise</option>
+</select>
 
 </div>
 
-</section>
+<!-- Filtre d'éligibilité par nationalité (2026-08-30). Champ texte à
+suggestions (datalist alimentée par js/countries.js), jamais une liste
+fermée. Case DÉCOCHÉE par défaut : un catalogue public doit d'abord
+montrer son étendue. Cochée, elle ne retire que les bourses dont la
+restriction officielle EXCLUT cette nationalité (estEligible === false) ;
+les bourses sans restriction connue restent affichées — voir la règle
+des trois valeurs dans js/eligibility-countries.js. -->
+<div class="catalog-natio-bar reveal">
+<label class="catalog-natio-toggle" for="nationalityFilterCheck">
+<input type="checkbox" id="nationalityFilterCheck">
+<span>Ouvertes à ma nationalité</span>
+</label>
+<input
+type="text"
+id="nationalityFilterInput"
+class="catalog-natio-input"
+list="nationalityDatalist"
+autocomplete="off"
+placeholder="Votre nationalité"
+aria-label="Votre nationalité">
+<datalist id="nationalityDatalist"></datalist>
 
-<section class="section" style="padding-top:32px;">
+<!-- Filtre par limite d'âge (2026-08-30), symétrique du filtre de
+nationalité ci-dessus et même case DÉCOCHÉE par défaut : un catalogue
+public montre d'abord son étendue. Cochée, elle ne retire que les
+bourses dont le plafond ageMax est dépassé sur le niveau filtré — ou
+sur TOUS leurs niveaux quand aucun niveau n'est filtré (une bourse
+encore possible sur un seul cycle reste affichée). Les bourses sans
+limite connue restent affichées — voir bourseCompatibleAge,
+js/age-limits.js. -->
+<label class="catalog-natio-toggle" for="ageFilterCheck">
+<input type="checkbox" id="ageFilterCheck">
+<span>Compatibles avec mon âge</span>
+</label>
+<input
+type="number"
+id="ageFilterInput"
+class="catalog-natio-input catalog-age-input"
+min="10"
+max="99"
+step="1"
+inputmode="numeric"
+placeholder="Votre âge"
+aria-label="Votre âge">
+</div>
 
-<div class="container">
+<div class="catalog-country-pills" id="countryPills" hidden></div>
+
+<!-- Statistiques du catalogue — vivaient dans la bannière depuis le
+2026-08-22, sorties le 2026-08-31 : cumulées au titre, elles
+poussaient la première bourse sous la ligne de flottaison à 1366×768
+(voir .catalog-stats, css/catalog.css). Les trois valeurs restent
+écrites par scholarships.js à partir des données réellement chargées
+(voir renderHeroStats), jamais codées en dur : un chiffre d'annonce
+qui ne correspond pas au contenu se remarque tout de suite et coûte
+plus cher qu'il ne rapporte.
+Le tiret cadratin reste affiché tant que Firestore n'a pas répondu,
+et le reste si le chargement échoue — jamais de zéro trompeur.
+« Universités concernées » et non « partenaires » (2026-08-31) : ce
+chiffre compte les établissements reliés à au moins une bourse — pas
+tout le catalogue (universities.html en affiche davantage), et aucune
+université n'a de relation avec FitzUniverse (REDACTION.md §1). -->
+<div class="catalog-stats">
+
+<div class="catalog-stat">
+<strong id="statScholarships">—</strong>
+<span>Bourses référencées</span>
+</div>
+
+<div class="catalog-stat">
+<strong id="statCountries">—</strong>
+<span>Pays d'accueil</span>
+</div>
+
+<div class="catalog-stat">
+<strong id="statPartners">—</strong>
+<span>Universités concernées</span>
+</div>
+
+</div>
 
 <div class="bourses-results-bar">
 <p class="bourses-results-count" id="resultsCount"></p>
@@ -340,53 +402,28 @@ placeholder="Rechercher un pays, une université...">
 
 </main>
 
-<footer class="footer">
-
-<div class="container">
-
-<div class="footer-top">
-
-<div class="footer-brand">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge Logo">
-<p>ScholarBridge aide les étudiants africains à trouver les opportunités qui correspondent réellement à leur profil.</p>
-</div>
-
-<div class="footer-links">
-
-<div>
-<h4>Plateforme</h4>
-<ul>
-<li><a href="scholarships.html">Bourses</a></li>
-<li><a href="universities.html">Universités</a></li>
-<li><a href="offers.html">Choisir ma formule</a></li>
-</ul>
-</div>
-
-<div>
-<h4>Compte</h4>
-<ul>
-<li><a href="login.html">Connexion</a></li>
-<li><a href="offers.html">Choisir ma formule</a></li>
-</ul>
-</div>
-
-</div>
-
-</div>
-
-<div class="footer-bottom">
-
-<p>© 2026 ScholarBridge. Tous droits réservés.</p>
-
-</div>
-
-</div>
-
-</footer>
 
 <script src="js/main.js"></script>
 <script src="js/header-scroll.js"></script>
+
+<!-- Filet de sécurité — script CLASSIQUE, volontairement pas un
+module : il doit pouvoir s'exécuter précisément dans le cas où les
+modules de la page échouent. Si scholarships.js n'a jamais démarré
+(un import distant du SDK Firebase depuis www.gstatic.com a échoué),
+la grille resterait vide ET MUETTE — le bloc "Chargement interrompu"
+prévu dans scholarships.js vit à l'intérieur du module qui n'a pas
+démarré. Ce script affiche alors un message et un bouton
+"Réessayer". Ne jamais lui ajouter type="module" ni d'import : ce
+serait annuler la seule raison de son existence.
+Voir js/catalog-watchdog.js. -->
+<script src="js/catalog-watchdog.js" data-cible="scholarship-list" data-libelle="bourses"></script>
+
 <script type="module" src="scholarships.js"></script>
+
+<!-- Habille les <select> pays/niveau (voir js/catalog-select.js) —
+n'importe rien de scholarships.js, ne fait qu'écouter/déclencher le
+`change` du <select> d'origine. -->
+<script src="js/catalog-select.js"></script>
 
 <script type="module">
 import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";

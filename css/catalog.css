@@ -1,0 +1,1357 @@
+/* ==========================================================
+FITZUNIVERSE — SYSTÈME DE CATALOGUE (2026-08-22)
+==========================================================
+Source unique des composants partagés par les deux pages de
+catalogue, scholarships.html et universities.html : bannière,
+barre de filtres, raccourcis pays, groupes par pays, grille,
+cartes, squelettes et états vides.
+
+POURQUOI CE FICHIER EXISTE
+--------------------------
+Avant lui, scholarships.css et universities.css contenaient le même
+bloc `.catalog-*` recopié : 349 lignes chacune, identiques à DEUX
+valeurs de marge près (vérifié au diff). Les bannières l'étaient
+aussi, et les mêmes composants existaient en double sous deux noms
+différents — `.bourses-results-count`/`.uni-results-count`,
+`.scholarship-card-chip`/`.uni-card-chip`,
+`.bourses-empty-state`/`.uni-empty-state`,
+`.bourses-skeleton`/`.uni-card-skeleton`.
+
+Ce sont les deux pages qui intéressent le plus les utilisateurs, et
+les deux qu'un visiteur enchaîne systématiquement (une bourse mène à
+ses universités partenaires). Elles doivent se ressembler au pixel,
+et une correction faite sur l'une doit valoir pour l'autre. Deux
+copies garantissaient exactement l'inverse.
+
+CONVENTION DE NOMMAGE
+---------------------
+Les nouveaux noms sont en `.catalog-*`. Les anciens noms propres à
+chaque page sont conservés en ALIAS dans les listes de sélecteurs —
+ils sont encore écrits dans scholarships.js et universities-page.js,
+et les renommer partout n'apporterait rien que cet alias ne donne
+déjà, pour un risque de régression bien réel sur du code qui
+fonctionne. Toute NOUVELLE règle s'écrit sous le nom `.catalog-*`.
+
+RÈGLE
+-----
+Ne jamais redéfinir un de ces composants dans scholarships.css ou
+universities.css. Ce qui est propre à une page (la photo de sa
+bannière, ce que sa carte affiche) reste chez elle ; ce que les deux
+partagent vit ici.
+========================================================== */
+
+
+/* ==========================================================
+BANNIÈRE DE CATALOGUE
+==========================================================
+Photo + voile sombre + éclat ambré, même grammaire que l'en-tête
+d'offers.html : la photo donne le lieu, le voile rend le texte
+lisible, l'ambre rattache la page à la marque. */
+
+.catalog-hero,
+.bourses-hero,
+.uni-hero{
+
+position:relative;
+
+isolation:isolate;
+
+border-radius:var(--radius-lg);
+
+overflow:hidden;
+
+/* 120px en haut : le header public est fixed et flotte par-dessus
+la photo (voir css/header.css). Cette réserve l'empêche de couvrir
+le badge et le titre au chargement, avant qu'il ne s'efface au
+premier défilement. */
+padding:124px 48px 44px;
+
+margin-bottom:26px;
+
+min-height:300px;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:flex-end;
+
+}
+
+.catalog-hero-bg,
+.bourses-hero-bg,
+.uni-hero-bg{
+
+position:absolute;
+
+inset:0;
+
+z-index:-2;
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+/* Léger zoom : les photos de ville et de campus sont cadrées large,
+le recadrage rapproche le sujet et évite les bords vides. */
+transform:scale(1.04);
+
+filter:saturate(1.06) contrast(1.02);
+
+}
+
+/* Voile en trois couches, dans cet ordre :
+1. l'éclat ambré, en haut à droite, là où le texte ne va jamais —
+   c'est la seule touche de marque de la bannière ;
+2. un dégradé oblique qui assombrit fortement le côté gauche, où
+   vivent badge, titre et statistiques ;
+3. un dégradé vertical qui ancre le bas et détache la barre de
+   filtres posée juste en dessous.
+L'ancien voile (deux couches, gris ardoise pur) noyait la photo dans
+un gris uniforme : le sujet ne se lisait plus, et la bannière était
+interchangeable d'une page à l'autre. */
+.catalog-hero::after,
+.bourses-hero::after,
+.uni-hero::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+z-index:-1;
+
+background:
+radial-gradient(ellipse 58% 76% at 88% 8%, rgba(233,163,25,.30) 0%, rgba(233,163,25,.09) 46%, transparent 70%),
+linear-gradient(102deg, rgba(7,10,22,.94) 0%, rgba(18,22,46,.80) 42%, rgba(18,22,46,.34) 100%),
+linear-gradient(180deg, rgba(7,10,22,.30) 0%, transparent 34%, rgba(7,10,22,.62) 100%);
+
+}
+
+.catalog-hero-badge,
+.bourses-hero-badge,
+.uni-hero-badge{
+
+display:flex;
+
+align-items:center;
+
+gap:9px;
+
+width:max-content;
+
+max-width:100%;
+
+padding:8px 16px;
+
+margin-bottom:18px;
+
+border-radius:var(--radius-full);
+
+background:rgba(255,255,255,.10);
+
+border:1px solid rgba(255,255,255,.18);
+
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+
+/* Blanc plein (12,66:1). --accent-color a été mesuré à ~3,16:1 sur
+ce fond : sous l'AA, donc écarté ici comme partout ailleurs sur les
+fonds sombres du site. */
+color:#fff;
+
+font-family:var(--font-display);
+
+font-weight:var(--fw-bold);
+
+font-size:.82rem;
+
+letter-spacing:-.005em;
+
+}
+
+/* Icône ambrée : c'est elle, et non un fond de pastille, qui porte la
+couleur — règle « Icônes » de DESIGN_SYSTEM.md. --amber-500 tient
+7:1 à 8:1 sur ce voile, très au-dessus du seuil des composants non
+textuels. */
+.catalog-hero-badge i,
+.catalog-hero-badge svg,
+.bourses-hero-badge i,
+.bourses-hero-badge svg,
+.uni-hero-badge i,
+.uni-hero-badge svg{
+
+width:15px;
+
+height:15px;
+
+flex-shrink:0;
+
+color:var(--amber-500);
+
+}
+
+.catalog-hero h1,
+.bourses-hero h1,
+.uni-hero h1{
+
+font-size:clamp(1.9rem,3.6vw,2.65rem);
+
+line-height:1.12;
+
+font-weight:var(--fw-extrabold);
+
+letter-spacing:-.025em;
+
+color:#fff;
+
+max-width:660px;
+
+margin-bottom:12px;
+
+text-shadow:0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+
+}
+
+.catalog-hero > p,
+.bourses-hero > p,
+.uni-hero > p{
+
+max-width:580px;
+
+color:rgba(255,255,255,.84);
+
+font-size:1rem;
+
+line-height:1.7;
+
+text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.22);
+
+}
+
+/* ---- Rangée de statistiques du catalogue ----
+Vivait DANS la bannière jusqu'au 2026-08-31. Cumulés à la pastille,
+au titre et au sous-titre, les chiffres poussaient les filtres au bas
+du cadre et la première carte sous la ligne de flottaison sur un
+portable 1366×768 — sur une page de catalogue, le contenu c'est le
+catalogue. Sortis de la photo, posés sous les filtres et au-dessus de
+la grille, ils retrouvent leur sens : « 145 bourses » lu juste
+au-dessus des cartes se comprend comme un décompte de résultats, plus
+comme un argument marketing. Les identifiants (statScholarships,
+statTotal…) n'ont pas bougé : scholarships.js et universities-page.js
+les remplissent à l'identique. */
+
+.catalog-stats{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:0;
+
+margin:18px 0 2px;
+
+}
+
+.catalog-stat{
+
+padding:0 26px;
+
+/* Filet de séparation plutôt qu'un simple écart : trois nombres
+alignés sans séparateur se lisaient comme une seule suite de
+chiffres. Retiré sur le premier (voir :first-child). */
+border-left:1px solid var(--border-color);
+
+}
+
+.catalog-stat:first-child{
+
+padding-left:0;
+
+border-left:none;
+
+}
+
+.catalog-stat strong{
+
+display:block;
+
+font-family:var(--font-display);
+
+font-size:var(--fs-stat-sm);
+
+font-weight:var(--fw-extrabold);
+
+font-variant-numeric:tabular-nums;
+
+letter-spacing:-.02em;
+
+/* Hors de la bannière, plus de voile sombre : l'encre du site
+remplace l'ambre-sur-photo (et ses text-shadow) de l'ancienne
+version. L'ambre en petit chiffre sur papier clair tomberait
+sous l'AA — même mesure que --accent-color à l'époque. */
+color:var(--text-color);
+
+}
+
+.catalog-stat span{
+
+display:block;
+
+margin-top:2px;
+
+font-size:.8rem;
+
+color:var(--text-muted);
+
+}
+
+
+/* Corps de page — filtres, raccourcis, compteur et grille.
+Tient l'espacement vertical de tout ce qui suit la bannière. Avant,
+ces blocs étaient répartis dans deux <section class="section">
+successives dont le rembourrage cumulé laissait environ 200 px de
+vide entre la bannière et le premier résultat, et autant entre le
+compteur et la première carte. Sur une page d'accueil c'est de la
+respiration ; sur un catalogue c'est un écran entier pris au
+contenu que le visiteur est venu chercher. */
+.catalog-body{
+
+padding:0 0 96px;
+
+/* INDISPENSABLE à la barre de filtres collante. css/base.css donne
+`overflow:hidden` à tout élément `section` (utile aux sections
+décoratives d'une page d'accueil, dont les halos débordent). Or un
+ancêtre dont l'overflow n'est pas `visible` devient le conteneur de
+défilement de ses descendants : position:sticky s'y accroche au lieu
+de s'accrocher à la fenêtre, et ne se déclenche donc jamais.
+C'est exactement ce qui se passait ici — la barre restait collante
+sur universities.html (pas de <section> englobante) et glissait hors
+de l'écran sur scholarships.html. Symptôme identique à un `sticky`
+« qui ne marche pas », cause située trois niveaux plus haut. */
+overflow:visible;
+
+}
+
+
+/* ==========================================================
+BARRE DE FILTRES — COLLANTE
+==========================================================
+Un catalogue se parcourt sur plusieurs écrans de haut. Avant, filtrer
+après avoir descendu trois pays obligeait à remonter tout en haut.
+La barre reste désormais accessible pendant tout le défilement.
+
+top:14px et non une valeur calée sur la hauteur du header : le header
+public s'efface complètement dès le premier défilement vers le bas
+(.is-hidden, voir js/header-scroll.js), il n'y a donc rien à éviter
+au moment où la barre se colle. Le seul cas où il reste affiché est
+prefers-reduced-motion — traité en fin de fichier. */
+
+.catalog-filters,
+.catalog-search-bar{
+
+position:sticky;
+
+top:14px;
+
+z-index:20;
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+width:100%;
+
+max-width:900px;
+
+margin:0 auto 18px;
+
+padding:10px;
+
+border-radius:var(--radius-full);
+
+background:rgba(255,255,255,.86);
+
+backdrop-filter:blur(16px) saturate(1.4);
+-webkit-backdrop-filter:blur(16px) saturate(1.4);
+
+border:1px solid var(--border-color);
+
+box-shadow:0 1px 2px rgba(18,22,46,.05), 0 10px 30px -12px rgba(18,22,46,.24);
+
+transition:box-shadow var(--transition), border-color var(--transition);
+
+}
+
+.catalog-filters:focus-within,
+.catalog-search-bar:focus-within{
+
+border-color:var(--amber-500);
+
+box-shadow:0 1px 2px rgba(18,22,46,.05), 0 14px 36px -12px rgba(233,163,25,.34);
+
+}
+
+.catalog-search-field{
+
+position:relative;
+
+display:flex;
+
+align-items:center;
+
+flex:1 1 auto;
+
+min-width:0;
+
+}
+
+.catalog-search-icon{
+
+position:absolute;
+
+left:14px;
+
+width:17px;
+
+height:17px;
+
+color:var(--text-muted);
+
+pointer-events:none;
+
+transition:color var(--transition);
+
+}
+
+.catalog-filters:focus-within .catalog-search-icon,
+.catalog-search-bar:focus-within .catalog-search-icon{ color:var(--amber-700); }
+
+.catalog-search-field input{
+
+width:100%;
+
+min-width:0;
+
+padding:11px 38px 11px 40px;
+
+border:none;
+
+background:transparent;
+
+font-family:inherit;
+
+font-size:.92rem;
+
+color:var(--text-color);
+
+}
+
+.catalog-search-field input:focus{ outline:none; }
+
+.catalog-search-field input::placeholder{ color:var(--text-muted); }
+
+.catalog-search-clear{
+
+position:absolute;
+
+right:6px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:26px;
+
+height:26px;
+
+border:none;
+
+border-radius:var(--radius-full);
+
+background:transparent;
+
+color:var(--text-muted);
+
+cursor:pointer;
+
+transition:background var(--transition), color var(--transition);
+
+}
+
+.catalog-search-clear i,
+.catalog-search-clear svg{ width:15px; height:15px; }
+
+.catalog-search-clear:hover{
+
+background:var(--background-alt);
+
+color:var(--text-color);
+
+}
+
+/* Les deux listes déroulantes ne rétrécissent jamais sous leur
+libellé : flex-shrink:0. Sans lui, « Tous les niveaux » se faisait
+tronquer dès que le champ de recherche réclamait de la place. */
+.catalog-filters select,
+.catalog-search-bar select{
+
+flex:0 0 auto;
+
+max-width:170px;
+
+padding:10px 14px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-full);
+
+background:var(--background);
+
+font-family:inherit;
+
+font-size:.86rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+cursor:pointer;
+
+transition:border-color var(--transition), color var(--transition);
+
+}
+
+.catalog-filters select:hover,
+.catalog-search-bar select:hover{
+
+border-color:var(--amber-500);
+
+color:var(--text-color);
+
+}
+
+.catalog-filters select:focus-visible,
+.catalog-search-bar select:focus-visible{
+
+outline:2px solid var(--amber-700);
+
+outline-offset:2px;
+
+}
+
+/* ----------------------------------------------------------
+Filtre « Ouvertes à ma nationalité » (2026-08-30) — rangée
+compacte sous la barre-pilule (la barre est un flex SANS retour à
+la ligne, y insérer deux contrôles de plus la faisait déborder,
+cf. le commentaire de .catalog-search-reset). Texte seul + case,
+pas de pastille : règle « Icônes » du DESIGN_SYSTEM.md.
+---------------------------------------------------------- */
+.catalog-natio-bar{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+flex-wrap:wrap;
+
+gap:10px 14px;
+
+max-width:900px;
+
+margin:0 auto 16px;
+
+}
+
+.catalog-natio-toggle{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+font-size:.88rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+cursor:pointer;
+
+}
+
+.catalog-natio-toggle input{
+
+accent-color:var(--amber-500);
+
+width:16px;
+
+height:16px;
+
+cursor:pointer;
+
+}
+
+.catalog-natio-toggle:hover{ color:var(--text-color); }
+
+.catalog-natio-input{
+
+flex:0 1 200px;
+
+min-width:150px;
+
+padding:8px 14px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-full);
+
+background:var(--background);
+
+font-family:inherit;
+
+font-size:.86rem;
+
+color:var(--text-color);
+
+transition:border-color var(--transition);
+
+}
+
+.catalog-natio-input:hover,
+.catalog-natio-input:focus{ border-color:var(--amber-500); outline:none; }
+
+.catalog-natio-input:focus-visible{ outline:2px solid var(--amber-700); outline-offset:2px; }
+
+/* Le champ âge n'a pas besoin des 200px du champ nationalité. */
+.catalog-age-input{
+flex:0 1 110px;
+min-width:90px;
+}
+
+/* Mention d'inéligibilité sur une carte : une ligne de texte sous le
+titre, sans fond ni icône. On informe, on n'empêche pas — la carte
+reste cliquable et le lien officiel actif. --tone-* : voir base.css. */
+.scholarship-card-inel{
+
+font-size:.82rem;
+
+font-weight:var(--fw-semibold);
+
+/* --danger-600 : la seule valeur rouge admise pour du texte sur fond
+clair (voir la mesure dans base.css ~l.850). */
+color:var(--danger-600);
+
+margin:2px 0 0;
+
+}
+
+/* Bouton de réinitialisation. Il passait à la ligne à l'intérieur de
+la pilule sur universities.html — la barre est un flex sans wrap,
+et ce bouton était le seul élément à ne pas avoir de flex-shrink:0.
+Le libellé est masqué sous 900px, l'icône suffit alors. */
+.catalog-search-reset{
+
+flex:0 0 auto;
+
+display:flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:10px 16px;
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-full);
+
+background:var(--background);
+
+font-family:inherit;
+
+font-size:.86rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+white-space:nowrap;
+
+cursor:pointer;
+
+transition:border-color var(--transition), color var(--transition);
+
+}
+
+.catalog-search-reset i,
+.catalog-search-reset svg{ width:15px; height:15px; }
+
+.catalog-search-reset:hover{
+
+border-color:var(--amber-500);
+
+color:var(--text-color);
+
+}
+
+
+/* ==========================================================
+RACCOURCIS PAYS
+==========================================================
+Défilement horizontal plutôt que retour à la ligne : dix pays
+formaient trois rangées de pastilles qui repoussaient le catalogue
+sous la ligne de flottaison. Une seule rangée qui se fait glisser,
+c'est le geste attendu sur ce genre de rail. */
+
+.catalog-country-pills{
+
+display:flex;
+
+gap:8px;
+
+margin:0 auto 24px;
+
+padding-bottom:4px;
+
+max-width:1160px;
+
+overflow-x:auto;
+
+scrollbar-width:none;
+
+-webkit-overflow-scrolling:touch;
+
+/* Fondu au bord droit : signale qu'il reste des pays à droite sans
+ajouter de flèche ni de compteur. */
+mask-image:linear-gradient(90deg, #000 0, #000 calc(100% - 44px), transparent 100%);
+
+}
+
+.catalog-country-pills::-webkit-scrollbar{ display:none; }
+
+.catalog-country-pill{
+
+flex:0 0 auto;
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+padding:7px 14px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+font-size:.82rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+text-decoration:none;
+
+transition:border-color var(--transition), color var(--transition), background var(--transition);
+
+}
+
+.catalog-country-pill:hover{
+
+border-color:var(--amber-500);
+
+color:var(--text-color);
+
+}
+
+.catalog-country-pill.is-active{
+
+background:var(--primary-900);
+
+border-color:var(--primary-900);
+
+color:#fff;
+
+}
+
+.catalog-country-pill img{
+
+width:18px;
+
+height:13px;
+
+object-fit:cover;
+
+border-radius:2px;
+
+flex-shrink:0;
+
+}
+
+.catalog-country-pill-count{
+
+font-variant-numeric:tabular-nums;
+
+font-size:.76rem;
+
+color:var(--text-muted);
+
+}
+
+.catalog-country-pill.is-active .catalog-country-pill-count{ color:rgba(255,255,255,.72); }
+
+
+/* ==========================================================
+GROUPES PAR PAYS
+==========================================================
+LE BOGUE QUE CE BLOC CORRIGE (2026-08-22)
+
+Les deux pages posaient la classe de grille (.bourses-grid /
+.uni-grid, `display:grid` sur 3 colonnes) sur le conteneur de
+résultats. Or le JS n'y insère pas des cartes : il y insère des
+<section> « pays », chacune contenant SA propre grille.
+
+Chaque groupe pays devenait donc une CASE de la grille à 3 colonnes.
+Conséquences visibles sur les deux pages :
+
+  - universities.html : « Chine », « Hongrie » et « Italie »
+    s'affichaient côte à côte comme trois colonnes de journal. En
+    lisant une rangée de gauche à droite, on passait d'un pays à
+    l'autre — l'inverse exact de ce qu'un regroupement par pays est
+    censé donner.
+  - scholarships.html : la hauteur de chaque rangée s'alignait sur le
+    groupe le plus fourni, laissant des bandes vides de plusieurs
+    centaines de pixels entre les pays.
+
+Le conteneur redevient un simple bloc dès qu'il contient des
+groupes ; la grille reste à l'intérieur de chaque groupe. `:has()`
+plutôt qu'une classe posée par le JS : la règle vaut alors quel que
+soit le chemin de rendu (filtre, recherche, retour arrière), sans
+qu'aucun script n'ait à penser à la maintenir. Le sélecteur est déjà
+employé ailleurs dans ces feuilles. */
+
+.bourses-grid:has(> .catalog-country-group),
+.uni-grid:has(> .catalog-country-group),
+.catalog-grid:has(> .catalog-country-group){
+
+display:block;
+
+}
+
+/* Les groupes sont des <section> créées par le JS. css/base.css donne
+à TOUT élément `section` un rembourrage vertical de 110px — pensé
+pour les grandes sections d'une page d'accueil, absurde pour dix
+groupes empilés : 220px de vide par pays, soit près de deux écrans
+de blanc sur un catalogue de dix pays. On le remet à zéro et on
+tient l'écart avec la seule marge basse, qui, elle, ne se cumule
+pas entre voisins. */
+.catalog-country-group{
+
+padding:0;
+
+margin-bottom:52px;
+
+/* Le rail de raccourcis pays amène ici par ancre (#country-xxx) :
+sans cette réserve, l'en-tête du pays se retrouvait collé au bord
+haut de la fenêtre, sous la barre de filtres collante. */
+scroll-margin-top:96px;
+
+}
+
+.catalog-country-group:last-child{ margin-bottom:0; }
+
+.catalog-country-header{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+margin-bottom:20px;
+
+padding-bottom:12px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.catalog-country-header img{
+
+width:26px;
+
+height:19px;
+
+object-fit:cover;
+
+border-radius:3px;
+
+box-shadow:0 1px 3px rgba(18,22,46,.18);
+
+flex-shrink:0;
+
+}
+
+.catalog-country-header h2{
+
+font-family:var(--font-display);
+
+font-size:1.3rem;
+
+font-weight:var(--fw-extrabold);
+
+letter-spacing:-.02em;
+
+color:var(--text-color);
+
+}
+
+/* Compteur repoussé à droite, en pastille discrète : accolé au nom du
+pays, il se lisait comme une partie du titre. */
+.catalog-country-header span{
+
+margin-left:auto;
+
+padding:4px 11px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-alt);
+
+font-size:.76rem;
+
+font-weight:var(--fw-semibold);
+
+font-variant-numeric:tabular-nums;
+
+color:var(--text-muted);
+
+white-space:nowrap;
+
+}
+
+
+/* ==========================================================
+BARRE DE RÉSULTATS
+========================================================== */
+
+.catalog-results-bar,
+.bourses-results-bar{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:16px;
+
+flex-wrap:wrap;
+
+margin-bottom:22px;
+
+}
+
+/* Dans la barre, la marge du compteur ferait doublon avec celle de la
+barre elle-même. */
+.catalog-results-bar .catalog-results-count,
+.bourses-results-bar .bourses-results-count{ margin-bottom:0; }
+
+/* universities.html pose le compteur en <p> nu, hors barre de
+résultats : sans marge propre il se collait à l'en-tête du premier
+pays. La marge est portée par le compteur lui-même plutôt que par
+la barre, pour valoir dans les deux mises en page. */
+.catalog-results-count,
+.bourses-results-count,
+.uni-results-count{
+
+margin-bottom:22px;
+
+font-size:.88rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+font-variant-numeric:tabular-nums;
+
+}
+
+.catalog-clear-link,
+.bourses-clear-link{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+font-size:.84rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--amber-700);
+
+text-decoration:none;
+
+}
+
+.catalog-clear-link i,
+.catalog-clear-link svg,
+.bourses-clear-link i,
+.bourses-clear-link svg{ width:14px; height:14px; }
+
+.catalog-clear-link:hover,
+.bourses-clear-link:hover{ text-decoration:underline; }
+
+
+/* ==========================================================
+GRILLE
+==========================================================
+auto-fill + minmax plutôt qu'un nombre de colonnes figé par palier :
+la grille se réorganise à la largeur réelle disponible, sans qu'on
+ait à maintenir une liste de points de rupture. */
+
+.catalog-grid,
+.bourses-grid,
+.uni-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+
+gap:24px;
+
+}
+
+
+/* ==========================================================
+PUCES DE CARTE
+========================================================== */
+
+.catalog-chip,
+.scholarship-card-chip,
+.uni-card-chip{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:5px 11px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-alt);
+
+font-size:.75rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--text-light);
+
+white-space:nowrap;
+
+}
+
+.catalog-chip i,
+.catalog-chip svg,
+.scholarship-card-chip i,
+.scholarship-card-chip svg,
+.uni-card-chip i,
+.uni-card-chip svg{
+
+width:13px;
+
+height:13px;
+
+flex-shrink:0;
+
+color:var(--text-muted);
+
+}
+
+/* Puce « financement » : la seule information de la carte qui décide
+vraiment si l'étudiant clique. Elle est donc la seule colorée. */
+.catalog-chip.is-funding,
+.scholarship-card-chip.is-funding{
+
+background:var(--amber-50, rgba(233,163,25,.13));
+
+color:var(--amber-700);
+
+}
+
+.catalog-chip.is-funding i,
+.catalog-chip.is-funding svg,
+.scholarship-card-chip.is-funding i,
+.scholarship-card-chip.is-funding svg{ color:var(--amber-700); }
+
+
+/* ==========================================================
+SQUELETTES DE CHARGEMENT
+========================================================== */
+
+.catalog-skeleton,
+.bourses-skeleton,
+.uni-card-skeleton{
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+padding:0 0 20px;
+
+overflow:hidden;
+
+}
+
+.catalog-skeleton-line,
+.bourses-skeleton-line,
+.uni-card-skeleton .uni-skel-line,
+.uni-card-skeleton .uni-skel-media{
+
+background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
+
+background-size:200% 100%;
+
+animation:shimmer-sweep 1.4s linear infinite;
+
+border-radius:6px;
+
+height:13px;
+
+margin:10px 18px 0;
+
+}
+
+.uni-card-skeleton .uni-skel-media,
+.bourses-skeleton .bourses-skeleton-line:first-child{
+
+height:170px;
+
+margin:0;
+
+border-radius:0;
+
+}
+
+
+/* ==========================================================
+ÉTAT VIDE / ERREUR
+==========================================================
+Il occupe toute la largeur de la grille (grid-column:1/-1) : posé
+dans une case de 300px, le message se retrouvait tassé dans une
+colonne avec deux tiers de la page vides à côté. */
+
+.catalog-empty,
+.bourses-empty-state,
+.uni-empty-state{
+
+grid-column:1 / -1;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:12px;
+
+padding:64px 24px;
+
+text-align:center;
+
+border:1px dashed var(--border-color);
+
+border-radius:var(--radius-lg);
+
+background:var(--background-soft);
+
+}
+
+/* Icône nue et ambrée — ces états signalent tous une interruption ou
+une absence de résultat. Pas de pastille : règle « Icônes ». */
+.catalog-empty-icon,
+.bourses-empty-state-icon,
+.uni-empty-state-icon{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+color:var(--amber-700);
+
+}
+
+.catalog-empty-icon i,
+.catalog-empty-icon svg,
+.bourses-empty-state-icon i,
+.bourses-empty-state-icon svg,
+.uni-empty-state-icon i,
+.uni-empty-state-icon svg{ width:34px; height:34px; }
+
+.catalog-empty h3,
+.bourses-empty-state h3,
+.uni-empty-state h3{
+
+font-family:var(--font-display);
+
+font-size:1.15rem;
+
+font-weight:var(--fw-extrabold);
+
+color:var(--text-color);
+
+}
+
+.catalog-empty p,
+.bourses-empty-state p,
+.uni-empty-state p{
+
+max-width:420px;
+
+font-size:.92rem;
+
+line-height:1.7;
+
+color:var(--text-light);
+
+}
+
+
+/* ==========================================================
+RESPONSIVE
+========================================================== */
+
+@media(max-width:900px){
+
+/* Le libellé du bouton de réinitialisation cède la place à l'icône
+seule : c'est lui qui faisait passer la barre à la ligne. */
+.catalog-search-reset span{ display:none; }
+
+.catalog-search-reset{ padding:10px 12px; }
+
+.catalog-filters select,
+.catalog-search-bar select{ max-width:130px; font-size:.8rem; padding:10px; }
+
+}
+
+@media(max-width:720px){
+
+.catalog-hero,
+.bourses-hero,
+.uni-hero{
+
+padding:104px 22px 30px;
+
+min-height:0;
+
+border-radius:var(--radius-md);
+
+}
+
+/* Les statistiques passent en grille sur mobile. En flex-wrap, la
+troisième passait à la ligne en gardant son filet de séparation à
+gauche : elle apparaissait décalée vers la droite, comme un élément
+mal aligné plutôt que comme une deuxième rangée. La grille les
+aligne en colonnes ; les filets disparaissent, l'écart suffit à
+les séparer. */
+.catalog-stats{
+
+display:grid;
+
+grid-template-columns:repeat(3, 1fr);
+
+gap:14px;
+
+margin-top:14px;
+
+}
+
+.catalog-stat{
+
+padding:0;
+
+border-left:none;
+
+}
+
+.catalog-stat span{ font-size:.74rem; line-height:1.35; }
+
+/* Sous 720px la barre cesse d'être collante : entre le clavier
+virtuel et une pilule de 3 rangées, elle mangeait la moitié de
+l'écran au moment précis où l'on lit les résultats. */
+.catalog-filters,
+.catalog-search-bar{
+
+position:static;
+
+flex-wrap:wrap;
+
+border-radius:var(--radius-lg);
+
+}
+
+.catalog-search-field{ flex:1 0 100%; }
+
+/* `min-width:0` n'est pas décoratif : sans lui, scholarships.html
+débordait de 53px à 375px (mesuré le 2026-09-01 — page large de
+428px, barre de défilement horizontale sur toute la page). Un
+<select> a une largeur MIN-CONTENT égale à sa plus longue option, et
+`min-width:auto` (défaut des éléments flex) interdit de descendre
+en dessous : #funderFilter, dont l'option la plus longue est
+« Organisation (fondation, ONG, UE, banque de développement) »,
+réclamait 401px et refusait de rétrécir malgré `flex:1 1 0`.
+universities.html y échappait par chance — ses deux seuls selects
+ont des options courtes. Même correctif que .catalog-search-field
+plus haut, et même raison. */
+/* `flex:1 1 140px` et non `1 1 0` : à trois selects sur une rangée de
+375px, une base nulle les réduisait à ~63px chacun et « Tous les
+types » se lisait « Tous le ». Avec une base de 140px, la barre
+(flex-wrap:wrap ci-dessus) en pose deux par rangée et renvoie le
+troisième à la ligne, lisible en entier. */
+.catalog-filters select,
+.catalog-search-bar select{ flex:1 1 140px; max-width:none; min-width:0; }
+
+.catalog-grid,
+.bourses-grid,
+.uni-grid{ grid-template-columns:1fr; gap:18px; }
+
+.catalog-country-group{ margin-bottom:38px; }
+
+}
+
+/* Seul cas où le header reste affiché pendant le défilement (voir
+js/header-scroll.js et le bloc prefers-reduced-motion de
+css/header.css) : la barre collante doit alors se caler SOUS lui,
+sinon elle glisse derrière. 82px de header + 12px de respiration. */
+@media (prefers-reduced-motion: reduce){
+
+.catalog-filters,
+.catalog-search-bar{ top:94px; }
+
+.catalog-hero-bg,
+.bourses-hero-bg,
+.uni-hero-bg{ transform:none; }
+
+}
