@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — mise en forme du texte généré par Fitz
+* FitzUniverse — mise en forme du texte généré par Fitz
 * ============================================================
 *
 * renderMarkdownLite() convertit un sous-ensemble volontairement
@@ -136,5 +136,57 @@ i += 1;
 }
 
 return html.join("");
+
+}
+
+/**
+* ============================================================
+* Rend cliquables les outils que Fitz cite dans une réponse
+* ============================================================
+*
+* Fitz répond souvent "vous pouvez la générer depuis **Lettre de
+* motivation**" — jusqu'ici c'était du texte mort : l'étudiant lisait
+* le nom d'un outil puis devait aller le chercher lui-même dans la
+* barre latérale. On transforme donc ces mentions en vrais liens.
+*
+* Volontairement limité au contenu des balises <strong> produites par
+* renderMarkdownLite() : les réponses de Fitz mettent déjà les noms
+* d'outils en gras, et se restreindre au gras évite de transformer en
+* lien le mot "documents" au milieu d'une phrase ordinaire.
+*
+* À n'appliquer QU'AU CHAT. Une lettre de motivation ou un e-mail
+* générés sont destinés à être copiés dans un portail universitaire :
+* y injecter des liens vers FitzUniverse n'aurait aucun sens.
+* ============================================================
+*/
+
+const OUTILS_FITZ = [
+{ motifs: ["lettre de motivation"], href: "ai-letter.html", nom: "Lettre de motivation" },
+{ motifs: ["e-mails fitz", "e-mail fitz", "générateur d'e-mails"], href: "ai-email.html", nom: "E-mails Fitz" },
+{ motifs: ["traduction de documents", "traduction"], href: "ai-translate.html", nom: "Traduction de documents" },
+{ motifs: ["vérification du dossier", "vérification de dossier"], href: "ai-check.html", nom: "Vérification du dossier" },
+{ motifs: ["compression de fichiers", "compresser un fichier"], href: "compress.html", nom: "Compression de fichiers" },
+{ motifs: ["préparation aux entretiens", "entretiens"], href: "interview-prep.html", nom: "Préparation aux entretiens" },
+{ motifs: ["mes candidatures", "suivi des candidatures"], href: "applications.html", nom: "Mes candidatures" },
+{ motifs: ["checklists & documents", "mes documents"], href: "documents.html", nom: "Documents" },
+{ motifs: ["mon profil"], href: "profile.html", nom: "Mon profil" },
+{ motifs: ["universités du catalogue", "universités"], href: "universities.html", nom: "Universités" },
+{ motifs: ["bourses"], href: "scholarships.html", nom: "Bourses" }
+];
+
+export function linkifyFitzTools(html) {
+
+return String(html ?? "").replace(/<strong>(.+?)<\/strong>/g, (entier, contenu) => {
+
+// Le contenu vient de renderMarkdownLite(), donc déjà échappé ;
+// on ne compare que du texte, on n'en réinjecte aucun.
+const nu = contenu.replace(/<[^>]+>/g, "").trim().toLowerCase();
+
+const outil = OUTILS_FITZ.find((o) => o.motifs.some((m) => nu === m || nu === m + "."));
+if (!outil) return entier;
+
+return `<a class="ai-tool-link" href="${outil.href}" data-fitz-tool="${outil.href}">${contenu}</a>`;
+
+});
 
 }

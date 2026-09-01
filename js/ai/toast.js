@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — notifications discrètes (toasts)
+* FitzUniverse — notifications discrètes (toasts)
 * ============================================================
 *
 * Remplace les alert()/confirm() des anciennes pages IA par une

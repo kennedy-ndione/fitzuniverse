@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — COMPRESSION DE FICHIERS
+FITZUNIVERSE — COMPRESSION DE FICHIERS
 ========================================================== */
 
 .cpr-intro{
@@ -23,9 +23,26 @@ color:var(--text-light);
 max-width:620px;
 }
 
+/* auto-fit, et non `1fr 1fr`. Mesuré sur la page : la grille réservait
+deux colonnes de 536px alors que deux de ses trois enfants — le
+panneau de résultat et celui de progression — sont masqués tant
+qu'aucun fichier n'a été compressé. L'étudiant arrivait donc sur un
+outil tassé dans la moitié gauche de l'écran, avec 536px de vide à
+droite : une page qui a l'air cassée avant même d'avoir servi.
+
+Un élément masqué n'est pas un élément de grille : `auto-fit`
+supprime les pistes vides, la colonne unique s'étend, et la
+deuxième réapparaît d'elle-même dès que le résultat s'affiche.
+Aucun JavaScript, et rien à maintenir quand un panneau s'ajoutera. */
+
 .cpr-layout{
 display:grid;
-grid-template-columns:1fr 1fr;
+/* Plafond à 520px par colonne : sans lui, le panneau seul s'étirait
+sur les 1096px disponibles, et une zone de dépôt aussi large qu'un
+écran est moins engageante qu'un cadre à taille humaine. Avec le
+résultat affiché, les deux colonnes reprennent 520px chacune. */
+grid-template-columns:repeat(auto-fit, minmax(320px, 520px));
+justify-content:start;
 gap:24px;
 align-items:start;
 }
@@ -53,12 +70,6 @@ border-radius:var(--radius-md);
 cursor:pointer;
 transition:var(--transition);
 margin-bottom:22px;
-}
-
-.cpr-dropzone:hover,
-.cpr-dropzone.is-dragover{
-border-color:var(--accent-color);
-background:var(--background-light);
 }
 
 .cpr-dropzone i,
@@ -187,13 +198,6 @@ margin-bottom:20px;
 .cpr-result-head i,
 .cpr-result-head svg{width:22px;height:22px;color:var(--success);}
 
-.cpr-result-head h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-color:var(--text-color);
-}
-
 .cpr-result-stats{
 display:flex;
 align-items:center;
@@ -263,13 +267,6 @@ to{transform:rotate(360deg);}
 /* ---------- Verre dépoli ---------- */
 /* Moment de révélation (fichier compressé) : seule surface du panneau
 qui mérite le glassmorphism — pas les cartes de formulaire au repos. */
-
-#resultPanel{
-background:var(--glass);
-border:1px solid var(--glass-border);
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-}
 
 @media(max-width:900px){
 .cpr-layout{grid-template-columns:1fr;}

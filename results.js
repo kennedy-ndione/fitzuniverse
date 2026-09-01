@@ -15,16 +15,77 @@
 // details.js) : impossible d'afficher les vraies opportunités avant
 // d'avoir attendu la lecture Firestore. Un état de chargement dédié
 // (#resultsLoading) reste visible jusque-là.
+//
+// Audit du 2026-08-22 ("nos questions orientent-elles vraiment tout
+// étudiant, de tout pays et de tout cycle ?") : buildProfileFromResponses()
+// transmet désormais desiredField/fundingGoal/nationality en plus du
+// niveau d'études et de la destination — trois réponses collectées par
+// le test mais jusqu'ici jamais lues par recommendPrograms(). Le
+// français rejoint l'anglais dans "languages" et dans la ligne "Langue"
+// de buildScoreBreakdown() (levelFromLanguages, meilleur des deux). La
+// réponse "motivation" personnalise désormais buildNarrative().
+//
+// Refonte de la présentation (2026-08-22, retour utilisateur) : le
+// score et chaque ligne de sa décomposition sont désormais colorés
+// vert / ambre / rouge selon leur valeur, au lieu du bleu de marque
+// uniforme qui rendait un 31/100 visuellement identique à un 92/100.
+// Ce fichier ne décide RIEN de cette couleur : il pose une classe de
+// ton d'après scoreTier()/toneForValue() (js/fitz-voice.js), et
+// results.css la traduit en couleurs. Toutes les phrases de Fitz sont
+// sorties d'ici vers ce même fichier de voix — ce module affiche, il
+// ne rédige plus.
+//
+// Refonte du questionnaire (2026-08-29) : les réponses portent désormais
+// currentLevel (5 paliers) et targetLevel (cycle VISÉ) au lieu de
+// l'ancien studyLevel unique. buildProfileFromResponses() transmet
+// targetLevel (résolu par resolveTargetLevel(), eligibility-ai.js) à
+// recommendPrograms() — le bonus de niveau va enfin au cycle que
+// l'étudiant veut intégrer, plus jamais à celui qu'il vient de terminer.
+// Chaque carte d'opportunité affiche désormais SES raisons propres
+// (pick.reasons, js/recommend-programs.js:explainMatch) au lieu des
+// mêmes raisons génériques dupliquées sous les 6 cartes ; matchReasons()
+// reste le repli quand un programme n'a aucune raison spécifique.
 
-import { db } from "./firebase-config.js";
-
-import {
-collection,
-getDocs
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-import { EligibilityAI, normalizeAverageToPercent } from "./eligibility-ai.js";
+import { EligibilityAI, normalizeAverageToPercent, resolveTargetLevel } from "./eligibility-ai.js";
 import { recommendPrograms } from "./js/recommend-programs.js";
+import { resolveCityImage } from "./js/scholarship-image.js";
+
+// Champ lexical de Fitz (js/fitz-voice.js) : ce fichier ne rédige plus
+// aucune phrase de Fitz lui-même — il ne fait que les afficher. Voir la
+// section CHAMP LEXICAL de fitz-voice.js pour la raison (deux registres
+// coexistaient pour un même personnage, et rien n'était transmissible
+// au futur moteur d'IA).
+import {
+scoreTier,
+toneForValue,
+RECIT,
+MOTIVATION_NARRATIVE,
+IMPROVEMENT_TIPS,
+ETATS_VIDES
+} from "./js/fitz-voice.js";
+
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./js/catalog-data.js";
+
+// Classe CSS correspondant à un ton (js/fitz-voice.js) — voir la
+// section "TONS D'ÉTAT" de results.css. Passer par cette fonction
+// plutôt que par une concaténation `is-${tone}` garde la liste des
+// classes réellement existantes visible en un seul endroit.
+const TONE_CLASS = {
+positive: "is-positive",
+moyen: "is-moyen",
+faible: "is-faible"
+};
+
+function applyTone(element, tone) {
+
+if (!element) return;
+
+element.classList.remove("is-positive", "is-moyen", "is-faible");
+
+if (TONE_CLASS[tone]) element.classList.add(TONE_CLASS[tone]);
+
+}
 
 const rawResponses = sessionStorage.getItem("eligibilityResponses");
 
@@ -50,14 +111,48 @@ main(responses);
 function buildProfileFromResponses(responses) {
 
 return {
-lastDegree: responses.studyLevel || "",
+// Cycle VISÉ (refonte 2026-08-29) : resolveTargetLevel() renvoie le
+// choix explicite de l'étudiant (question targetLevel) ou, s'il a
+// répondu "Je ne sais pas encore", le prochain cycle naturel dérivé de
+// son niveau actuel. C'est CE niveau que scoreProgram() compare à
+// program.level — voir js/recommend-programs.js.
+targetLevel: resolveTargetLevel(responses),
+// lastDegree conservé en repli (ancien contrat de scoreProgram) —
+// responses.studyLevel n'existe plus que pour d'anciennes sessions
+// dont le sessionStorage date d'avant la refonte.
+lastDegree: responses.currentLevel || responses.studyLevel || "",
 preferredCountries: responses.destinationCountry && responses.destinationCountry !== "Je ne sais pas encore"
 ? [responses.destinationCountry]
 : [],
-// scoreProgram() ne vérifie que la présence d'"Anglais" dans
+// scoreProgram() ne vérifie que la présence d'une langue dans
 // program.language — un niveau "Débutant" ne mérite pas le bonus de
-// compatibilité linguistique réservé à un enseignement en anglais.
-languages: responses.english && responses.english !== "Débutant" ? ["Anglais"] : []
+// compatibilité linguistique. "Français" ajoutée (audit 2026-08-22,
+// voir la question "french" dans questions.js) : jusqu'ici un
+// programme enseigné en français ne pouvait jamais recevoir ce bonus,
+// même pour un étudiant francophone confirmé.
+languages: [
+...(responses.english && responses.english !== "Débutant" ? ["Anglais"] : []),
+...(responses.french && responses.french !== "Débutant" ? ["Français"] : [])
+],
+// desiredField/fundingGoal (audit 2026-08-22) : scoreProgram() ne
+// lisait jusqu'ici ni le domaine d'études ni la préférence de
+// financement — deux réponses collectées par le test mais silencieuses
+// sur les résultats réels. Voir js/recommend-programs.js.
+desiredField: responses.studyCategory || "",
+fundingGoal: responses.goal || "",
+// nationality : consommée depuis le 2026-08-30 par scoreProgram()
+// (js/recommend-programs.js), qui écarte toute bourse dont la
+// restriction officielle exclut cette nationalité (champ eligibility
+// des bourses, posé par admin/expand-catalog-batch20).
+nationality: responses.nationality || "",
+// ageBracket : la tranche d'âge du diagnostic (questions.js) servait
+// déjà au score (calculateAge, eligibility-ai.js) mais n'atteignait
+// pas le moteur — depuis le branchement des limites d'âge
+// (2026-08-30), ageMatch() (js/recommend-programs.js) écarte toute
+// bourse dont le plafond `ageMax` est dépassé par la tranche ENTIÈRE
+// (une tranche à cheval sur la limite ne tranche pas : règle des
+// trois valeurs, js/age-limits.js).
+ageBracket: responses.ageBracket || ""
 };
 
 }
@@ -69,15 +164,11 @@ const OPPORTUNITIES_COUNT = 6;
 
 async function loadRealOpportunities(responses) {
 
-const [programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "universities")),
-getDocs(collection(db, "scholarships"))
-]);
+const catalogue = await chargerCatalogue();
 
-const programs = programsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
-const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+const programs = catalogue.programmes;
+const universitiesById = new Map(catalogue.universites.map((u) => [u.id, u]));
+const scholarshipsById = new Map(catalogue.bourses.map((s) => [s.id, s]));
 
 const profile = buildProfileFromResponses(responses);
 
@@ -90,7 +181,13 @@ excludeUniversityIds: new Set(),
 count: OPPORTUNITIES_COUNT
 });
 
-const reasons = new EligibilityAI(responses).matchReasons();
+// Repli seulement (refonte 2026-08-29) : chaque pick porte désormais
+// SES raisons propres (pick.reasons, js/recommend-programs.js:
+// explainMatch) — les raisons génériques du profil ne servent plus que
+// si un programme retenu n'a aucune correspondance spécifique (score
+// bas mais catalogue peu fourni), pour ne jamais afficher une liste
+// vide sous "Pourquoi cette opportunité vous correspond".
+const fallbackReasons = new EligibilityAI(responses).matchReasons();
 
 // image/flag : déjà vérifiées et utilisées pour cette même université
 // ailleurs sur le site (universities-page.js, details.js) — aucune
@@ -102,14 +199,19 @@ const scholarshipDetails = picks.map((pick) => {
 
 const university = universitiesById.get(pick.universityId) || {};
 
+// resolveCityImage() (js/scholarship-image.js) plutôt que le nom de
+// fichier brut : la vignette de 44 px chargeait le fichier D'ORIGINE
+// (oxford.jpg = 2,6 Mo) — LE défaut "photo servie en taille d'origine"
+// corrigé sur les pages catalogue le 2026-08-29 ; ce point d'appel
+// avait été oublié. La variante 400w suffit largement ici.
 return {
 name: pick.scholarshipTitle || `Programme à ${pick.universityName}`,
 university: pick.universityName,
 country: university.country || "",
 deadline: pick.deadline,
-image: university.image || "default.jpg",
+photo: resolveCityImage(university.image),
 flag: university.flag || "default.svg",
-reasons
+reasons: (Array.isArray(pick.reasons) && pick.reasons.length) ? pick.reasons : fallbackReasons
 };
 
 });
@@ -123,7 +225,10 @@ if (!eligibleCountries.length && responses.destinationCountry && responses.desti
 eligibleCountries.push(responses.destinationCountry);
 }
 
-return { scholarshipDetails, eligibleCountries };
+// scholarships : les documents bruts, pour que noteNationality()
+// (eligibility-ai.js) calcule « votre nationalité vous ouvre N des M
+// bourses » sur le catalogue réel plutôt qu'une phrase générique.
+return { scholarshipDetails, eligibleCountries, scholarships: [...scholarshipsById.values()] };
 
 }
 
@@ -144,21 +249,33 @@ async function main(responses) {
 
 setLoading(true);
 
-const result = new EligibilityAI(responses).analyze();
-
-const score = Math.max(0, Math.min(100, Math.round(result.score)));
+// Le catalogue est chargé AVANT analyze() (réordonné le 2026-08-30) :
+// noteNationality() s'en sert pour une phrase calculée sur les vraies
+// restrictions de nationalité. En cas d'échec réseau, analyze() tourne
+// sans catalogue, exactement comme avant — le score n'en dépend pas.
+let catalogue = null;
 
 try {
 
-const { scholarshipDetails, eligibleCountries } = await loadRealOpportunities(responses);
-
-result.scholarshipDetails = scholarshipDetails;
-result.eligibleScholarships = scholarshipDetails.map((s) => s.name);
-result.eligibleCountries = eligibleCountries;
+catalogue = await loadRealOpportunities(responses);
 
 } catch (error) {
 
 console.error("Erreur Firestore (catalogue) :", error);
+
+}
+
+const result = new EligibilityAI(responses).analyze(catalogue ? catalogue.scholarships : null);
+
+const score = Math.max(0, Math.min(100, Math.round(result.score)));
+
+if (catalogue) {
+
+result.scholarshipDetails = catalogue.scholarshipDetails;
+result.eligibleScholarships = catalogue.scholarshipDetails.map((s) => s.name);
+result.eligibleCountries = catalogue.eligibleCountries;
+
+} else {
 
 result.scholarshipDetails = [];
 result.eligibleScholarships = [];
@@ -178,38 +295,29 @@ function render(responses, result, score) {
 // RÉCIT D'OUVERTURE — Fitz présente son diagnostic
 // ==========================================================
 
+// Assemble le récit à partir des fabriques de RECIT (fitz-voice.js) :
+// l'ordre des phrases et les conditions d'affichage restent ici (c'est
+// de la logique de rendu), leur formulation vient du champ lexical.
 function buildNarrative() {
 
 const sentences = [];
 
-const oppCount = result.eligibleScholarships.length;
+sentences.push(RECIT.ouverture(result.eligibleScholarships.length, responses.studyCategory));
 
-if (oppCount > 0) {
-sentences.push(
-`Nous avons identifié ${oppCount > 1 ? oppCount + " opportunités compatibles" : "une opportunité compatible"} avec votre profil${responses.studyCategory ? " en " + responses.studyCategory : ""}.`
-);
-} else {
-sentences.push(
-"Votre profil demande une analyse plus approfondie pour identifier les meilleures opportunités."
-);
-}
+sentences.push(RECIT.atouts(result.strengths.length > 0));
 
-if (result.strengths.length) {
-sentences.push("Votre parcours présente déjà plusieurs éléments favorables.");
-} else {
-sentences.push("Votre profil est encore en construction, mais chaque parcours a ses atouts.");
-}
-
+// Uniquement s'il y a réellement des axes à renforcer — voir le
+// commentaire sur RECIT.progression.
 if (result.weaknesses.length) {
-sentences.push("Certaines améliorations pourraient augmenter significativement vos chances.");
+sentences.push(RECIT.progression);
 }
 
-if (result.eligibleCountries.length) {
-sentences.push(
-result.eligibleCountries.length > 1
-? "Voici pourquoi certaines destinations semblent particulièrement adaptées."
-: "Voici pourquoi cette destination semble particulièrement adaptée."
-);
+const destinations = RECIT.destinations(result.eligibleCountries.length);
+
+if (destinations) sentences.push(destinations);
+
+if (MOTIVATION_NARRATIVE[responses.motivation]) {
+sentences.push(MOTIVATION_NARRATIVE[responses.motivation]);
 }
 
 return sentences;
@@ -235,41 +343,38 @@ container.appendChild(p);
 // SCORE — présenté comme un indicateur, pas un verdict
 // ==========================================================
 
-function profileMessage(score) {
-
-if (score >= 80) {
-return "Votre profil est solide pour viser des bourses internationales compétitives.";
-}
-
-if (score >= 60) {
-return "Votre profil est déjà bien positionné. Quelques ajustements peuvent encore l'améliorer.";
-}
-
-if (score >= 40) {
-return "Votre profil a un vrai potentiel, mais certains points méritent d'être renforcés avant de candidater.";
-}
-
-return "Votre profil nécessite un travail de préparation avant de candidater : les recommandations ci-dessous vous montrent par où commencer.";
-
-}
-
-function scoreTierLabel(score) {
-
-if (score >= 80) return "Profil compétitif";
-if (score >= 60) return "Profil solide";
-if (score >= 40) return "Profil prometteur";
-return "Profil à préparer";
-
-}
-
+// Libellé, message ET ton viennent du même palier (scoreTier,
+// js/fitz-voice.js) : avant, les seuils étaient réécrits ici en deux
+// cascades de if parallèles — un seuil modifié dans l'une et pas dans
+// l'autre suffisait à afficher "Profil solide" avec le message d'un
+// profil à préparer.
 function renderScore() {
 
+const tier = scoreTier(score);
+
 document.getElementById("score").textContent = score;
-document.getElementById("profileMessage").textContent = profileMessage(score);
-document.getElementById("scoreTier").textContent = scoreTierLabel(score);
+document.getElementById("profileMessage").textContent = tier.message;
+document.getElementById("scoreTier").textContent = tier.label;
+
+// Le ton est posé sur la SECTION, pas sur l'anneau : la pastille du
+// palier et le chiffre, qui vivent dans la colonne de droite, lisent
+// les mêmes variables --tone-* (voir results.css).
+applyTone(document.getElementById("scoreSection"), tier.tone);
 
 const ring = document.getElementById("scoreRing");
+
+// Deux temps volontaires : la valeur est posée sur un frame séparé
+// pour que la transition CSS de stroke-dashoffset ait un état de
+// départ (0) à animer. Sans ce décalage, l'anneau apparaîtrait déjà
+// rempli — la valeur initiale et la valeur finale seraient appliquées
+// dans le même frame.
+ring.style.setProperty("--score-percent", 0);
+
+requestAnimationFrame(() => {
+requestAnimationFrame(() => {
 ring.style.setProperty("--score-percent", score);
+});
+});
 
 }
 
@@ -282,29 +387,63 @@ ring.style.setProperty("--score-percent", score);
 // EligibilityAI ; ce détail ne le recalcule jamais.
 // ==========================================================
 
-function levelFromStudyLevel(studyLevel) {
+// Refonte 2026-08-29 : lit currentLevel (les 5 nouveaux paliers de
+// questions.js) et garde les anciens libellés studyLevel en repli pour
+// une session dont le sessionStorage date d'avant la refonte.
+function levelFromCurrentLevel(responses) {
 
 const scale = {
+"Bac en cours ou obtenu": 60,
+"Licence en cours": 70,
+"Licence obtenue": 80,
+"Master en cours ou obtenu": 90,
+"Doctorat en cours ou obtenu": 95,
+// anciens libellés (question "studyLevel" retirée)
 "Nouveau bachelier": 60,
 "Licence": 75,
 "Master": 90,
 "Doctorat": 95
 };
 
-return scale[studyLevel] || 55;
+return scale[responses.currentLevel || responses.studyLevel] || 55;
 
 }
 
-function levelFromEnglish(english) {
+// Remplace l'ancien levelFromEnglish (audit 2026-08-22, ajout de la
+// question "french") : prend le meilleur des deux tiers plutôt que de
+// ne lire que l'anglais, même principe que calculateLanguage() dans
+// eligibility-ai.js. Les libellés "Courant / Bilingue" (english) et
+// "Courant / Langue maternelle" (french) partagent le même palier 100 —
+// ce sont les deux formulations d'un niveau natif/bilingue pour chaque
+// langue, voir questions.js.
+function languageTierScore(level) {
 
 const scale = {
 "Débutant": 25,
 "Intermédiaire": 55,
 "Bon niveau": 80,
-"Courant / Bilingue": 100
+"Courant / Bilingue": 100,
+"Courant / Langue maternelle": 100
 };
 
-return scale[english] || 40;
+return scale[level] || 0;
+
+}
+
+function levelFromLanguages(responses) {
+
+const best = Math.max(languageTierScore(responses.english), languageTierScore(responses.french));
+
+const base = best || 40;
+
+// Certification officielle (question "langCert", refonte 2026-08-29) :
+// un test reconnu (IELTS, TOEFL, DELF, TCF…) est une exigence
+// documentaire de la plupart des bourses — il rehausse la ligne Langue
+// sans jamais dépasser 100. Même esprit que calculateCertification()
+// dans eligibility-ai.js, sans recalculer le score global.
+const hasCert = responses.langCert && responses.langCert !== "Pas encore";
+
+return hasCert ? Math.min(100, base + 10) : base;
 
 }
 
@@ -334,14 +473,6 @@ return scale[timeline] || 40;
 
 }
 
-const IMPROVEMENT_TIPS = {
-"Niveau académique": "Mettez en avant vos meilleurs résultats et, si possible, complétez votre dossier avec des certificats ou projets qui renforcent votre moyenne.",
-"Langue": "Un test de langue certifié (TOEFL, IELTS, TCF...) peut faire progresser ce score plus vite qu'un niveau auto-déclaré.",
-"Formation": "Précisez votre domaine d'études : plus il est défini, plus Fitz peut cibler des programmes réellement compatibles.",
-"Documents": "Un passeport valide (ou en cours de renouvellement) est souvent le premier document demandé — anticipez cette étape tôt.",
-"Préparation": "Fixer une échéance claire pour candidater aide à structurer le reste de votre préparation."
-};
-
 function buildScoreBreakdown() {
 
 const percent = normalizeAverageToPercent(responses.average, responses.averageScale);
@@ -352,11 +483,11 @@ return [
 label: "Niveau académique",
 icon: "graduation-cap",
 value: academicFromGrades !== null
-? Math.round((academicFromGrades + levelFromStudyLevel(responses.studyLevel)) / 2)
-: levelFromStudyLevel(responses.studyLevel)
+? Math.round((academicFromGrades + levelFromCurrentLevel(responses)) / 2)
+: levelFromCurrentLevel(responses)
 },
-{ label: "Langue", icon: "languages", value: levelFromEnglish(responses.english) },
-{ label: "Formation", icon: "book-open", value: levelFromStudyLevel(responses.studyLevel) },
+{ label: "Langue", icon: "languages", value: levelFromLanguages(responses) },
+{ label: "Formation", icon: "book-open", value: levelFromCurrentLevel(responses) },
 { label: "Documents", icon: "file-text", value: levelFromPassport(responses.passport) },
 { label: "Préparation", icon: "hourglass", value: levelFromTimeline(responses.timeline) }
 ];
@@ -378,13 +509,32 @@ breakdown.forEach((row) => {
 const item = document.createElement("div");
 item.className = "score-breakdown-row";
 
+// Chaque ligne est colorée d'après SA propre valeur, pas d'après le
+// score global : sur un même diagnostic, "Langue 100%" s'affiche en
+// vert pendant que "Formation 60%" s'affiche en ambre. C'est ce qui
+// rend la décomposition lisible d'un coup d'œil (retour utilisateur
+// du 2026-08-22 sur "le trait progressif").
+applyTone(item, toneForValue(row.value));
+
 item.innerHTML = `
 <span class="score-breakdown-label"><span class="score-breakdown-icon"><i data-lucide="${row.icon}"></i></span>${row.label}</span>
-<span class="score-breakdown-bar"><span style="width:${row.value}%"></span></span>
+<span class="score-breakdown-bar"><span></span></span>
 <span class="score-breakdown-pct">${row.value}%</span>
 `;
 
 container.appendChild(item);
+
+// Largeur posée après insertion, pour la même raison que
+// --score-percent dans renderScore() : appliquée dans l'attribut
+// style du gabarit, la barre naîtrait déjà pleine et la transition
+// CSS n'aurait rien à animer.
+const fill = item.querySelector(".score-breakdown-bar span");
+
+requestAnimationFrame(() => {
+requestAnimationFrame(() => {
+fill.style.width = `${row.value}%`;
+});
+});
 
 });
 
@@ -410,8 +560,14 @@ if (!freeContainer || !locked) return;
 const sorted = [...breakdown].sort((a, b) => a.value - b.value);
 const [weakest, ...rest] = sorted;
 
+// Le panneau prend le ton de l'axe qu'il désigne : un point faible à
+// 60% se présente en ambre, à 25% en rouge. Il porte donc la même
+// couleur que sa ligne dans la décomposition juste au-dessus, ce qui
+// fait le lien entre les deux sans avoir à l'expliquer.
+applyTone(freeContainer, toneForValue(weakest.value));
+
 freeContainer.innerHTML = `
-<div class="improvement-free-icon"><i data-lucide="${weakest.icon}"></i></div>
+<i class="improvement-free-icon" data-lucide="${weakest.icon}"></i>
 <div class="improvement-free-copy">
 <strong>Point à améliorer en priorité : ${weakest.label} (${weakest.value}%)</strong>
 <p>${IMPROVEMENT_TIPS[weakest.label] || ""}</p>
@@ -474,7 +630,7 @@ if (!result.eligibleCountries.length) {
 
 const li = document.createElement("li");
 li.className = "empty";
-li.textContent = "Aucune destination identifiée pour le moment.";
+li.textContent = ETATS_VIDES.countries;
 list.appendChild(li);
 
 return;
@@ -507,7 +663,7 @@ if (!result.scholarshipDetails.length) {
 
 const empty = document.createElement("p");
 empty.className = "empty";
-empty.textContent = "Aucune opportunité précise identifiée pour le moment : élargissez vos critères pour en découvrir davantage.";
+empty.textContent = ETATS_VIDES.opportunities;
 wrapper.appendChild(empty);
 
 return;
@@ -535,10 +691,10 @@ const subtitleParts = [scholarship.university, scholarship.country].filter(Boole
 // catalogue plutôt qu'une icône générique.
 card.innerHTML = `
 <div class="opportunity-head">
-<img class="opportunity-thumb" src="assets/images/cities/${scholarship.image}" alt="" loading="lazy">
+<img class="opportunity-thumb" src="${scholarship.photo.src}" srcset="${scholarship.photo.srcset}" sizes="44px" width="800" height="533" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${scholarship.photo.fallbackOriginal}'">
 <div>
 <h3></h3>
-<span class="opportunity-country"><img class="opportunity-flag" src="assets/flags/${scholarship.flag}" alt=""><span></span></span>
+<span class="opportunity-country"><img class="opportunity-flag" src="assets/flags/${scholarship.flag}" alt="" onerror="this.onerror=null;this.src='assets/flags/default.svg'"><span></span></span>
 </div>
 </div>
 ${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
@@ -598,9 +754,9 @@ renderNarrative();
 renderScore();
 renderScoreBreakdown();
 
-fillList("strengths", result.strengths, "Complétez le test pour identifier vos points forts.", "check-circle");
-fillList("weaknesses", result.weaknesses, "Aucun axe de progression majeur identifié.", "arrow-up-circle");
-fillList("recommendations", result.recommendations, "Aucune recommandation pour le moment.", "lightbulb");
+fillList("strengths", result.strengths, ETATS_VIDES.strengths, "check-circle");
+fillList("weaknesses", result.weaknesses, ETATS_VIDES.weaknesses, "arrow-up-circle");
+fillList("recommendations", result.recommendations, ETATS_VIDES.recommendations, "lightbulb");
 
 renderCountries();
 renderOpportunities();

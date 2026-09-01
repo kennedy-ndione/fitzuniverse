@@ -16,6 +16,11 @@ const mime = {
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
   ".webp": "image/webp",
+  // Sans ce type, l'AVIF partait en application/octet-stream : le
+  // navigateur rejetait la <source> et retombait sur le WebP, donc la
+  // vérification à l'écran ne montrait jamais ce que sert vraiment
+  // Firebase Hosting.
+  ".avif": "image/avif",
 };
 
 http

@@ -57,18 +57,17 @@ const OFFRES_PAYANTES = PLAN_ORDER.filter((id) => id !== "gratuit");
 // 1. Décision de quota
 // ============================================================
 
-test("Essentiel : les 3 premières candidatures passent, la 4e est bloquée", () => {
+test("Standard (essentiel) : les 5 premières candidatures passent, la 6e est bloquée", () => {
 
 const quota = OFFRES.essentiel.maxAccompaniedApplications;
 
-assert.equal(quota, 3, "la grille doit accorder 3 candidatures à Essentiel");
+assert.equal(quota, 5, "la grille 2026-08-15 doit accorder 5 candidatures à Standard");
 
 // `currentCount` = nombre de candidatures DÉJÀ enregistrées.
 assert.equal(isQuotaReached(quota, 0), false, "1re candidature");
-assert.equal(isQuotaReached(quota, 1), false, "2e candidature");
-assert.equal(isQuotaReached(quota, 2), false, "3e candidature");
-assert.equal(isQuotaReached(quota, 3), true, "4e candidature : doit être bloquée");
-assert.equal(isQuotaReached(quota, 4), true, "au-delà : reste bloquée");
+assert.equal(isQuotaReached(quota, 4), false, "5e candidature");
+assert.equal(isQuotaReached(quota, 5), true, "6e candidature : doit être bloquée");
+assert.equal(isQuotaReached(quota, 6), true, "au-delà : reste bloquée");
 
 });
 
@@ -194,10 +193,53 @@ assert.deepEqual(prix, trie, `l'ordre conditionne l'upsell : ${prix.join(" → "
 
 });
 
-test("la première offre proposée à un compte gratuit est Premier Dossier", () => {
+// Reproduit nextPlanId() (js/access-guard.js) : l'entrée suivante dans
+// l'échelle, en sautant les offres `deprecated` — non importable
+// directement ici, ce module dépend de firebase-config.js (voir l'en-tête
+// de ce fichier sur pricing-plans.js chargé en `vm`, même raisonnement).
+function nextPlanIdReproduit(planId) {
+const index = PLAN_ORDER.indexOf(planId);
+if (index === -1) return null;
+for (let i = index + 1; i < PLAN_ORDER.length; i++) {
+const offre = OFFRES[PLAN_ORDER[i]];
+if (!offre || offre.deprecated !== true) return PLAN_ORDER[i];
+}
+return null;
+}
 
-// Reproduit nextPlanId() : l'entrée suivante dans l'échelle.
-assert.equal(PLAN_ORDER[PLAN_ORDER.indexOf("gratuit") + 1], "premier-dossier");
+// Remis en vente le 2026-09-01 (décision utilisateur) : il manquait
+// une marche entre le Pass Découverte et Standard. L'assertion inverse
+// vivait ici depuis la dépréciation du 2026-08-15 — elle prévoyait
+// elle-même sa mise à jour, c'est fait.
+test("premier-dossier est vendable : c'est la première offre proposée à un compte gratuit", () => {
+
+assert.notEqual(OFFRES["premier-dossier"].deprecated, true, "cette assertion doit être mise à jour si premier-dossier repart de la vente — et son bouton doit quitter offers.html en même temps (test/offers-plans.test.mjs)");
+assert.equal(nextPlanIdReproduit("gratuit"), "premier-dossier", "l'upsell d'un compte gratuit doit mener à la marche la moins chère, pas la sauter");
+
+});
+
+test("premium est déprécié : la formule suivante après Avancé est désormais Renforcé", () => {
+
+assert.equal(OFFRES.premium.deprecated, true, "cette assertion doit être mise à jour si premium redevient vendable");
+assert.equal(nextPlanIdReproduit("accompagnement"), "signature-focus", "premium (déprécié) doit être sauté par l'upsell");
+
+});
+
+test("une offre dépréciée reste résolvable par identifiant (compte existant)", () => {
+
+// C'est tout le sens de la convention `deprecated` : ne jamais
+// supprimer l'entrée, seulement l'exclure des surfaces de vente.
+// Liste dérivée de la grille, plus codée en dur : le 2026-09-01,
+// premier-dossier a quitté les dépréciées et cette boucle aurait
+// continué de le tester sous un nom devenu faux.
+const depreciees = Object.keys(OFFRES).filter((id) => OFFRES[id].deprecated === true);
+
+assert.ok(depreciees.length > 0, "au moins une offre dépréciée doit exister pour que cette garde ait un sens");
+
+for (const id of depreciees) {
+assert.ok(OFFRES[id], `${id} doit rester dans SCHOLARBRIDGE_PLANS malgré deprecated:true`);
+assert.equal(typeof OFFRES[id].maxAccompaniedApplications, "number", `${id} doit garder un quota résolvable`);
+}
 
 });
 
@@ -227,10 +269,13 @@ Object.keys(DEFAULT_FEATURE_CONFIG[key]).sort(),
 // 4. Règles de libellé et de devise
 // ============================================================
 
-test("Signature : libellé court en interface, nom de marque en marketing", () => {
+// « Signature » partout depuis le 2026-08-30 (distinction FitzUniverse/
+// Fitz, DESIGN_SYSTEM.md) : seul forfait avec conseiller humain, il ne
+// porte le nom ni de l'assistant ni de l'ancienne marque.
+test("Signature : le même libellé court en interface et dans la grille", () => {
 
 assert.equal(PLAN_LABELS.signature, "Signature");
-assert.equal(OFFRES.signature.label, "ScholarBridge Signature");
+assert.equal(OFFRES.signature.label, "Signature");
 
 });
 

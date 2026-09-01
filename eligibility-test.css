@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — ÉCRAN D'INTRODUCTION DU TEST D'ÉLIGIBILITÉ
+FITZUNIVERSE — ÉCRAN D'INTRODUCTION DU TEST D'ÉLIGIBILITÉ
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html
 et eligibility-questions.html)
@@ -11,29 +11,81 @@ utilise comme fond de repli sous sa photo, le même bleu→marine sans
 photo ni overlay en couches convient donc directement ici, aucune
 nouvelle valeur. Remplace --gradient-hero (fond clair par défaut de
 body, css/base.css) qui donnait à ces 2 pages un ton "app générique"
-déconnecté du reste de la marque. L'accent ambré du hero n'est pas
-reproduit en halo décoratif (aurait réintroduit le blob radial retiré
-au lot précédent) : #startButton est déjà en --amber-500 plus bas,
-qui fait cet écho sans décor supplémentaire. .card garde son fond
-clair (var(--background)) : seul l'arrière-plan de la page change,
-jamais la lisibilité du contenu du questionnaire. */
+déconnecté du reste de la marque. .card garde son fond clair
+(var(--background)) : seul l'arrière-plan de la page change, jamais la
+lisibilité du contenu du questionnaire. L'accent ambré du hero, un
+temps limité à #startButton (--amber-500) pour éviter de réintroduire
+un blob radial, est revenu en halo décoratif sur .container le
+2026-08-15 (même jour, demande explicite malgré l'audit initial) —
+voir le commentaire sur .container::after plus bas. */
 body{
 
 min-height:100vh;
 
 display:flex;
 
+/* "safe center" et non "center" seul : quand la carte est plus haute
+que la fenêtre (petit écran, zoom, question à longue liste d'options),
+un centrage classique la fait déborder des DEUX côtés — et le haut,
+sorti par le bord supérieur, devient inatteignable au défilement. Le
+mot-clé safe bascule automatiquement en alignement haut dans ce cas.
+La ligne "center" nue juste avant sert de repli : un navigateur qui ne
+comprend pas "safe" ignore la seconde déclaration et garde la
+première. */
 align-items:center;
+
+align-items:safe center;
 
 justify-content:center;
 
+/* Le halo ambré (.container::after / .container-wrap::after) est posé
+avec inset:-70px, donc il déborde volontairement de 70px hors de la
+carte pour se fondre en douceur. Sans ce clip, ces 70px comptaient dans
+la largeur de défilement et provoquaient une barre horizontale de ~50px
+sur une page qui n'a rien à faire défiler latéralement (mesuré :
+scrollWidth 1330 pour un viewport de 1280). On ne coupe que la part
+hors écran, le halo visible est intact. */
+overflow-x:hidden;
+
 padding:40px 20px;
 
-background:var(--gradient-primary);
+/* box-sizing:border-box (css/base.css) fait entrer le padding DANS les
+100vh du min-height : la hauteur réellement offerte au contenu n'est
+donc pas 100vh mais 100vh - 80px. Une carte de 541px dans une fenêtre
+de 600px passait ainsi à 621px de body, soit 21px de défilement pour
+une carte qui tenait visuellement — un ascenseur pour presque rien.
+Sur les fenêtres basses (portable en 720p, navigateur zoomé), on rend
+ces marges au contenu plutôt que de déclencher un défilement. */
+
+/* --gradient-deep depuis le 2026-08-22 (retour utilisateur : "ramène
+le fond noir"). Le fond couvre tout l'écran autour de la carte : avec
+--gradient-primary, le haut de page tombait sur son stop clair
+(#4A5BC4) et virait au bleu vif, tandis que le bas — le marine presque
+noir qui a été retenu — n'apparaissait qu'une fois défilé. D'où
+l'impression de deux fonds différents selon l'endroit de la page.
+--gradient-deep est sombre sur toute sa longueur. */
+background:var(--gradient-deep);
+
+}
+
+@media(max-height:760px){
+
+body{
+
+padding:20px 16px;
+
+}
 
 }
 
 .container{
+
+position:relative;
+
+/* Au-dessus du halo fixe de body::before (voir plus haut). */
+z-index:1;
+
+isolation:isolate;
 
 width:100%;
 
@@ -41,15 +93,66 @@ max-width:640px;
 
 }
 
+/* Halo ambré derrière la carte. Passé en position:fixed sur body le
+2026-08-22 (retour utilisateur : "ce sont ces débordements qui me
+gênent") — il était auparavant un ::after absolu à inset:-70px sur le
+conteneur de la carte.
+
+Le problème n'était pas visuel mais de mise en page : un élément
+absolu à inset négatif AGRANDIT la zone de défilement de son ancêtre.
+Ces 70px de débord comptaient donc dans scrollWidth ET scrollHeight,
+et faisaient apparaître des barres de défilement sur une page dont le
+contenu tenait à l'écran (mesuré à 1000x600 : 50px de trop en largeur,
+30px en hauteur, pour une carte qui tenait sans peine).
+
+position:fixed règle ça par construction : un élément fixe est retiré
+du flux ET ne contribue jamais à la taille de défilement, quelle que
+soit sa dimension. Le halo couvre désormais toute la fenêtre et son
+dégradé radial rayonne depuis le centre — c'est-à-dire exactement où la
+carte est centrée, donc le rendu est le même qu'avant.
+
+z-index:0 + source order : le pseudo-élément est déclaré avant tout
+contenu, il passe donc sous la carte sans qu'on ait à empiler
+davantage. pointer-events:none pour ne rien intercepter. */
+body::before{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+z-index:0;
+
+background:radial-gradient(circle at center, rgba(233,163,25,.55) 0%, rgba(233,163,25,.22) 38%, transparent 62%);
+
+filter:blur(24px);
+
+pointer-events:none;
+
+}
+
+/* Fond vitré, même traitement que .hero-demo (css/hero.css, carte
+"Fitz en action" d'index.html) plutôt que le var(--background) opaque
+par défaut : cohérent avec le halo ambré juste au-dessus, qui a besoin
+de transparence pour se voir légèrement à travers le bord de la carte
+plutôt que de s'arrêter net dessous. Ombre reprise à l'identique
+(3 couches, dont le liseré clair inset qui donne l'effet "carte qui
+flotte") plutôt que var(--shadow-lg) — c'est elle, pas seulement le
+fond, qui donne à .hero-demo son relief. */
 .card{
 
 position:relative;
 
 overflow:hidden;
 
-background:var(--background);
+background:rgba(255,255,255,.97);
 
-border:1px solid var(--border-color);
+backdrop-filter:blur(20px);
+
+-webkit-backdrop-filter:blur(20px);
+
+border:1px solid rgba(255,255,255,.6);
 
 border-radius:var(--radius-lg);
 
@@ -57,44 +160,23 @@ padding:52px 44px;
 
 text-align:center;
 
-box-shadow:var(--shadow-lg);
+box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 }
 
-/* Identité Fitz (corrigé le 2026-08-15 — un halo body::before/::after en
-radial-gradient flou, retiré, enfreignait DESIGN_SYSTEM.md : "Trois
-dégradés, pas plus — jamais de nouveau blob radial", et ses couleurs
-étaient les 2 arrêts de --gradient-fitz extraits en dur plutôt que le
-token consommé tel quel). Liseré fin en tête de carte, même principe
-déjà validé par le design system pour les bulles de réponse Fitz
-(.ai-msg-bot .ai-msg-bubble, css/ai-suite.css : "bordure/accent gauche
-sur --gradient-fitz") — un accent de signature, pas un décor : signale
-que cette carte est "l'espace Fitz" avant même de lire le badge.
---gradient-fitz consommé directement, aucune déclinaison recomposée. */
-.card::before{
-
-content:"";
-
-position:absolute;
-
-top:0;
-
-left:0;
-
-right:0;
-
-height:4px;
-
-background:var(--gradient-fitz);
-
-}
+/* Le liseré --gradient-fitz de 4px en tête de carte a été retiré le
+2026-08-22 (retour utilisateur : "enlève le trait bleu qui est en haut
+de la carte"). Il datait du 2026-08-15 et servait d'accent de signature
+"espace Fitz" ; depuis, la carte a gagné le lavage ambré (.fitz-surface)
+qui remplit ce rôle de façon moins appuyée, et le badge Fitz dit déjà
+qui parle. Rien d'autre ne dépendait de ce ::before — .card garde son
+overflow:hidden, utile au lavage ambré. */
 
 /* ==========================================================
 ENTRÉE ÉCHELONNÉE
 ========================================================== */
 
 .advisor-intro,
-.logo,
 h1,
 #dynamicText,
 .trust-strip,
@@ -111,17 +193,23 @@ animation:cardItemIn .7s var(--ease-premium) forwards;
 
 }
 
+/* Cascade resserrée de 0,10s après le retrait de la pastille .logo
+(2026-08-22), qui occupait le palier .15s. Sans ce décalage, la
+cascade gardait un trou de 0,20s entre .advisor-intro et h1 là où
+tous les autres paliers sont espacés de 0,10s — une hésitation
+visible au chargement, à l'endroit exact où l'élément avait
+disparu. Tous les écarts d'origine sont conservés à l'identique,
+l'ensemble se termine juste 0,10s plus tôt. */
 .advisor-intro{ animation-delay:.05s; }
-.logo{ animation-delay:.15s; }
-h1{ animation-delay:.25s; }
-#dynamicText{ animation-delay:.35s; }
-.trust-strip{ animation-delay:.4s; }
-.benefits{ animation-delay:.48s; }
-.trust-box{ animation-delay:.58s; }
-.progress{ animation-delay:.68s; }
-.info{ animation-delay:.72s; }
-#startButton{ animation-delay:.8s; }
-.features{ animation-delay:.92s; }
+h1{ animation-delay:.15s; }
+#dynamicText{ animation-delay:.25s; }
+.trust-strip{ animation-delay:.3s; }
+.benefits{ animation-delay:.38s; }
+.trust-box{ animation-delay:.48s; }
+.progress{ animation-delay:.58s; }
+.info{ animation-delay:.62s; }
+#startButton{ animation-delay:.7s; }
+.features{ animation-delay:.82s; }
 
 @keyframes cardItemIn{
 
@@ -154,6 +242,12 @@ badge à côté de l'avatar).
 
 .advisor-intro{
 
+position:relative;
+
+isolation:isolate;
+
+overflow:hidden;
+
 display:flex;
 
 align-items:center;
@@ -165,6 +259,8 @@ width:max-content;
 max-width:100%;
 
 margin:0 auto 22px;
+
+padding:16px 20px;
 
 text-align:left;
 
@@ -224,47 +320,18 @@ color:var(--accent-color);
 }
 
 /* ==========================================================
-LOGO
-========================================================== */
+LOGO — supprimé le 2026-08-22
+==========================================================
+La pastille bleue de 76 px à mortier de diplômé qui vivait ici a
+été retirée du HTML (voir le commentaire dans eligibility-test.html
+pour le raisonnement). Ces règles n'avaient plus de cible : elles
+sont retirées plutôt que laissées en place, sinon la prochaine
+lecture du fichier laisse croire que la pastille existe encore.
 
-/* Le drop-shadow (--shadow-md) suffit à donner de la profondeur au
-logo — pas besoin d'un anneau qui pulse en continu en plus : seul le
-halo de l'avatar Fitz (.fitz-avatar, css/ai-suite.css) reste
-l'animation en boucle du site. */
-.logo{
-
-position:relative;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:76px;
-
-height:76px;
-
-margin:0 auto 22px;
-
-border-radius:22px;
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-box-shadow:var(--shadow-md);
-
-}
-
-.logo i,
-.logo svg{
-
-width:38px;
-
-height:38px;
-
-}
+L'espace qu'elle occupait n'est pas remplacé : l'avatar Fitz de
+.advisor-intro est désormais la seule marque visuelle du haut de
+carte, ce qui est le but. Ne pas y remettre une icône "pour
+équilibrer" — c'est ce raisonnement qui avait mis le mortier là. */
 
 /* ==========================================================
 TITRE & TEXTE
@@ -554,31 +621,29 @@ transition:var(--transition);
 
 .feature-card:hover{
 
-transform:translateY(-4px);
+transform:translateY(-10px);
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-lg);
 
 border-color:rgba(51,65,140,.18);
 
 }
 
+/* Plus de pastille ronde derrière l'icône (règle « Icônes » de
+DESIGN_SYSTEM.md, arrêtée le 2026-08-22) : le disque de 44px ajoutait
+une forme à lire pour zéro information. Le <div> reste dans le HTML
+comme simple ancre de mise en page — il ne dessine plus rien, seul le
+glyphe est visible.
+
+L'icône passe de 22 à 26px : privé de son disque, un glyphe doit être
+plus grand pour garder le même poids visuel dans la carte. */
 .feature-icon{
 
 display:flex;
 
 align-items:center;
 
-justify-content:center;
-
-width:44px;
-
-height:44px;
-
 margin-bottom:14px;
-
-border-radius:12px;
-
-background:var(--background-light);
 
 color:var(--primary-color);
 
@@ -587,9 +652,9 @@ color:var(--primary-color);
 .feature-icon i,
 .feature-icon svg{
 
-width:22px;
+width:26px;
 
-height:22px;
+height:26px;
 
 }
 
@@ -655,22 +720,8 @@ grid-template-columns:1fr;
 
 }
 
-.logo{
-
-width:64px;
-
-height:64px;
-
-}
-
-.logo i,
-.logo svg{
-
-width:32px;
-
-height:32px;
-
-}
+/* (le rétrécissement mobile de .logo est parti avec la pastille,
+supprimée le 2026-08-22 — voir la section LOGO plus haut) */
 
 }
 
@@ -684,10 +735,51 @@ padding:26px 18px;
 
 }
 
+/* Avatar Fitz de l'en-tête, sans icône ET sans carré : même
+indicateur "de réflexion" flou que .chat-box .fitz-avatar
+(eligibility-questions.css) — voir son commentaire pour le détail.
+Scopé à .advisor-intro pour ne pas toucher .fitz-avatar--sm ailleurs
+sur le site. */
+.advisor-intro .fitz-avatar{
+
+background:none;
+
+box-shadow:none;
+
+overflow:visible;
+
+}
+
+.advisor-intro .fitz-avatar::before{
+
+display:none;
+
+}
+
+.advisor-intro .fitz-avatar::after{
+
+content:"";
+
+position:absolute;
+
+inset:4px;
+
+border-radius:50%;
+
+/* Ambre et non violet (2026-08-27) : halo copié de --gradient-fitz
+(css/base.css), qui est passé du violet à l'ambre ce même jour —
+voir la note à cet endroit. */
+background:radial-gradient(circle, #E9A319 0%, #8A5D00 45%, transparent 72%);
+
+filter:blur(6px);
+
+animation:fitzPulse 2.2s ease-in-out infinite;
+
+}
+
 @media (prefers-reduced-motion: reduce){
 
 .advisor-intro,
-.logo,
 h1,
 #dynamicText,
 .trust-strip,
@@ -699,6 +791,12 @@ h1,
 .features{
 
 opacity:1;
+
+animation:none;
+
+}
+
+.advisor-intro .fitz-avatar::after{
 
 animation:none;
 

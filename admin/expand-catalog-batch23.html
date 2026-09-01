@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Éligibilité par nationalité — Lot 23 | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Outil de migration ponctuel — vérifier si encore nécessaire avant utilisation.</div>
+
+<div class="migrate-header">
+<h1>Éligibilité par nationalité — Lot 23</h1>
+<p>Dernière passe d'éligibilité : renseigne le champ <code>eligibility</code> sur les <strong>82 bourses</strong> que l'export du catalogue listait encore sans restriction de nationalité. Avec le lot 20, <strong>129 des 131 bourses</strong> du catalogue portent alors une éligibilité. Ne crée aucun document, n'en supprime aucun, n'écrit qu'un seul champ en <code>setDoc merge</code>, et ne touche jamais une bourse qui en porte déjà une. Les identifiants viennent tous de l'export JSON de la base, jamais d'une reconstruction de mémoire — celle-ci avait déjà échoué deux fois. Un seul principe, inchangé : <strong>ne jamais dire « non » à tort</strong>. Une seule bourse du lot reçoit une liste de pays fermée, <em>Invest Your Talent in Italy</em>, dont les 18 pays sont publiés tels quels par la source officielle — et le Sénégal n'y figure pas. 57 bourses reçoivent <code>scope:"monde"</code>, parce qu'elles n'ont pas de critère de nationalité : bourses régionales italiennes de droit à l'étude, bourses de doctorat attachées à une place de concours, bourses propres à une université suisse, hongroise, roumaine ou canadienne. 24 reçoivent une <code>note</code> seule, qui s'affiche sans exclure personne, quand une restriction existe mais que la liste est trop mouvante ou n'a pas pu être lue à la source aujourd'hui (ARES, VLIR-UOS, WBI, DAAD, Stipendium Hungaricum, ESKAS, NAWA, SISGP…). Deux bourses ne reçoivent <strong>rien du tout</strong> et l'étape 1 les nomme : un champ absent n'exclut personne, et il vaut mieux se taire qu'inventer une liste de pays. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Pour chacune des 82 bourses : vérifie qu'elle existe, que son titre est <em>exactement</em> celui lu dans l'export — garde contre un identifiant réutilisé — et qu'elle ne porte pas déjà une éligibilité posée par un lot précédent, auquel cas elle est ignorée et non écrasée. Affiche ensuite la répartition des trois formes et nomme les deux bourses laissées volontairement sans éligibilité.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Écrit le seul champ <code>eligibility</code> sur les bourses confirmées à l'étape 1. Aucun autre champ n'est touché.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit chaque document et compare <code>scope</code>, <code>note</code>, <code>groups</code>, <code>include</code> et <code>exclude</code> un par un — pas un simple « le champ existe ». Doit confirmer 0 écart.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch23.js"></script>
+
+</body>
+
+</html>

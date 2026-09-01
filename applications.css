@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — SUIVI DES CANDIDATURES
+FITZUNIVERSE — SUIVI DES CANDIDATURES
 ========================================================== */
 
 /* Compact sub-heading (pas un second hero) — le topbar affiche déjà
@@ -7,24 +7,13 @@ le titre de page (<h1> "Mes candidatures"), ce bloc ne sert plus qu'à
 donner une ligne de contexte immédiate, à l'échelle --fs-h4 comme
 .section-heading de dashboard.css plutôt qu'à l'échelle marketing
 --fs-h2 d'avant. */
+/* Le stepper vient de css/app-shell.css. Seule différence ici : il est
+suivi de la checklist, donc il lui faut une respiration en dessous.
+Sur le tableau de bord il termine sa carte et n'en a pas besoin. */
+.application-journey{margin-bottom:14px;}
+
 .apps-intro{
 margin-bottom:18px;
-}
-
-.apps-intro h2{
-font-family:var(--font-display);
-font-weight:800;
-font-size:var(--fs-h4);
-line-height:var(--lh-snug);
-color:var(--text-color);
-margin-bottom:4px;
-}
-
-.apps-intro p{
-font-size:var(--fs-small);
-line-height:1.5;
-color:var(--text-light);
-max-width:640px;
 }
 
 .apps-intro p a{
@@ -58,30 +47,25 @@ transition:var(--transition);
 }
 
 .apps-stat:hover{
-transform:translateY(-4px);
-box-shadow:var(--shadow-md);
+transform:translateY(-8px);
+box-shadow:var(--shadow-lg);
 }
 
-.apps-stat-icon{
-flex-shrink:0;
-display:flex;
-align-items:center;
-justify-content:center;
-width:48px;
-height:48px;
-border-radius:var(--radius-md);
-background:var(--background-alt);
-color:var(--text-light);
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .apps-stat-icon i,
-.apps-stat-icon svg{
-width:22px;
-height:22px;
-}
+.apps-stat-icon svg{ width:22px; height:22px; }
 
+/* Variante « urgent » : c'était un FOND ambre sur la pastille, qui
+survivait à la suppression de celle-ci et redonnait un carré coloré
+à cette seule statistique. C'est l'ICÔNE qui porte l'alerte
+maintenant — --warning-700, la seule valeur de cette famille lisible
+sur fond clair (--warning n'y tient que 2,07:1). */
 .apps-stat-urgent .apps-stat-icon{
-background:var(--warning);
+color:var(--warning-700);
 }
 
 .apps-stat-body{
@@ -126,13 +110,17 @@ border:1px dashed var(--border-color);
 border-radius:var(--radius-lg);
 }
 
+.apps-empty-icon i,
+.apps-empty-icon svg{ width:34px; height:34px; }
+
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .apps-empty-icon{
-width:56px;
-height:56px;
 margin:0 auto 18px;
-border-radius:50%;
-background:var(--background-alt);
-color:var(--text-decorative);
+color:var(--amber-700);
 display:flex;
 align-items:center;
 justify-content:center;
@@ -171,8 +159,8 @@ transition:var(--transition);
 }
 
 .app-card:hover{
-transform:translateY(-4px);
-box-shadow:var(--shadow-md);
+transform:translateY(-8px);
+box-shadow:var(--shadow-lg);
 }
 
 .app-card-urgent{
@@ -187,13 +175,6 @@ gap:16px;
 margin-bottom:12px;
 }
 
-.app-card-top h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-color:var(--text-color);
-}
-
 .app-card-scholarship{
 font-size:var(--fs-small);
 color:var(--text-muted);
@@ -203,7 +184,11 @@ margin-top:2px;
 /* Créneau pré-rempli par la recommandation de Fitz (voir
 applications.js:seedRecommendedSlots) — dégradé --gradient-fitz déjà
 réservé à tout ce qui vient de Fitz (avatar, halo, badges), jamais
-réutilisé ailleurs sur le site pour rester immédiatement identifiable. */
+réutilisé ailleurs sur le site pour rester immédiatement identifiable.
+--gradient-fitz est ambre depuis le 2026-08-27 (voir css/base.css) :
+libellé en --primary-900, pas en blanc — même règle que --amber-500
+en fond de bouton (2,16:1 en blanc contre 8,24:1 en --primary-900,
+voir la note sur l'échelle ambre dans css/base.css). */
 .app-recommendation-badge{
 display:inline-flex;
 align-items:center;
@@ -213,7 +198,7 @@ border-radius:var(--radius-full);
 margin-bottom:6px;
 font-size:var(--fs-caption);
 font-weight:700;
-color:#fff;
+color:var(--primary-900);
 background:var(--gradient-fitz);
 }
 
@@ -230,9 +215,19 @@ background:var(--background-soft);
 color:var(--text-light);
 }
 
-.app-status-deposee{color:var(--accent-color);background:rgba(126,113,216,.14);}
+/* Ambre et non violet (2026-08-27) : le texte utilisait déjà
+var(--accent-color), donc déjà l'ambre — c'est le fond qui était
+resté violet, en décalage avec lui. */
+.app-status-deposee{color:var(--accent-color);background:rgba(233,163,25,.14);}
 .app-status-en_attente{color:var(--warning);background:rgba(234,168,61,.14);}
 .app-status-reponse_recue{color:var(--success);background:rgba(34,197,94,.14);}
+
+/* Issues de réponse (2026-08-30) : l'admission en vert affirmé, la
+liste d'attente dans la famille « attente », le refus sobre — un refus
+est une information, pas une alarme rouge vif. */
+.app-status-admise{color:var(--success);background:rgba(34,197,94,.18);font-weight:700;}
+.app-status-liste_attente{color:var(--warning);background:rgba(234,168,61,.14);}
+.app-status-refusee{color:#8F3E22;background:rgba(143,62,34,.12);}
 
 .app-card-meta{
 display:flex;
@@ -511,10 +506,10 @@ padding:0;
 font-size:var(--fs-caption);
 font-weight:700;
 /* var(--accent-600)/var(--accent-color) tombent sous l'AA (~3,3-3,6:1)
-sur le fond de carte sombre du tableau de bord — var(--text-light) du
-thème sombre (#C4C7E8) tient ~8,6:1 ; l'icône reste accentuée pour la
-touche de couleur, elle n'a pas besoin de tenir le même ratio à côté
-d'un texte déjà lisible. */
+sur les fonds de carte du tableau de bord — var(--text-light) tient
+largement l'AA (7,6/7,2/6,9:1, voir css/base.css) ; l'icône reste
+accentuée pour la touche de couleur, elle n'a pas besoin de tenir le
+même ratio à côté d'un texte déjà lisible. */
 color:var(--text-light);
 cursor:pointer;
 }
@@ -566,18 +561,6 @@ margin-bottom:10px;
 
 /* ---------- Modal ---------- */
 
-.apps-modal{
-position:fixed;
-inset:0;
-z-index:var(--z-modal);
-background:rgba(6,10,18,.6);
-backdrop-filter:blur(4px);
-display:flex;
-align-items:center;
-justify-content:center;
-padding:24px;
-}
-
 .apps-modal[hidden]{display:none;}
 
 .apps-modal-card{
@@ -602,13 +585,6 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 margin-bottom:20px;
-}
-
-.apps-modal-head h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-color:var(--text-color);
 }
 
 .apps-modal-close{
@@ -725,6 +701,8 @@ font-size:var(--fs-caption);
 color:var(--text-muted);
 }
 
+/* color:var(--primary-900) et non blanc depuis le 2026-08-27, comme
+.app-recommendation-badge plus haut — --gradient-fitz est ambre. */
 .app-readiness-advisor-cta{
 display:inline-flex;
 align-items:center;
@@ -732,7 +710,7 @@ gap:6px;
 align-self:flex-start;
 font-size:var(--fs-caption);
 font-weight:700;
-color:#fff;
+color:var(--primary-900);
 background:var(--gradient-fitz);
 border-radius:var(--radius-full);
 padding:6px 14px;
@@ -744,88 +722,6 @@ box-shadow:var(--glow-fitz);
 
 /* ---------- Parcours guidé (stepper 5 étapes) ---------- */
 
-.application-journey{
-display:flex;
-align-items:flex-start;
-gap:4px;
-margin-bottom:14px;
-overflow-x:auto;
-padding-bottom:2px;
-}
-
-.journey-step{
-flex:1 1 0;
-min-width:76px;
-display:flex;
-flex-direction:column;
-align-items:center;
-gap:6px;
-text-align:center;
-background:transparent;
-border:none;
-padding:4px;
-cursor:pointer;
-position:relative;
-}
-
-.journey-step::before{
-content:"";
-position:absolute;
-top:15px;
-left:calc(-50% + 15px);
-width:calc(100% - 30px);
-height:2px;
-background:var(--border-color);
-z-index:0;
-}
-
-.journey-step:first-child::before{display:none;}
-
-.journey-step.is-done::before{background:var(--success);}
-
-.journey-step-dot{
-width:30px;
-height:30px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-background:var(--background-alt);
-border:2px solid var(--border-color);
-color:var(--text-muted);
-position:relative;
-z-index:1;
-flex-shrink:0;
-}
-
-.journey-step-dot i,
-.journey-step-dot svg{width:14px;height:14px;}
-
-.journey-step.is-done .journey-step-dot{
-background:var(--success);
-border-color:var(--success);
-color:#fff;
-}
-
-.journey-step.is-fitz.is-done .journey-step-dot{
-background:var(--gradient-fitz);
-border-color:transparent;
-box-shadow:var(--glow-fitz);
-}
-
-.journey-step-label{
-font-size:var(--fs-caption);
-line-height:1.25;
-color:var(--text-muted);
-}
-
-.journey-step.is-done .journey-step-label{color:var(--text-light);font-weight:600;}
-
-@media(max-width:600px){
-.journey-step{min-width:64px;}
-.journey-step-label{font-size:.68rem;}
-}
-
 /* ==========================================================
 ETAT DE CHARGEMENT (SKELETON)
 ==========================================================
@@ -835,16 +731,3 @@ applications.js). Pas encore branchée côté JS (hors périmètre de
 cette passe couleurs) : à appliquer sur des cartes placeholder
 (ex. clones de .app-card sans contenu) pendant le chargement, puis
 à retirer une fois applications rendu. */
-.skeleton{
-color:transparent !important;
-background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
-background-size:200% 100%;
-animation:skeleton-shimmer 1.5s ease-in-out infinite;
-border-radius:var(--radius-sm);
-pointer-events:none;
-}
-
-@keyframes skeleton-shimmer{
-0%{background-position:200% 0;}
-100%{background-position:-200% 0;}
-}

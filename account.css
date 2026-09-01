@@ -159,7 +159,11 @@ padding:12px 22px;
 
 border-radius:var(--radius-md);
 
-background:var(--danger);
+/* --danger-600 et non --danger : mesuré, #EF4444 ne tient que 3,76:1
+avec du blanc. C'est le bouton qui supprime définitivement un compte —
+son libellé doit être le plus lisible de la page, pas le moins.
+#DC2626 tient 4,83:1. Même correction que .btn-danger dans base.css. */
+background:var(--danger-600);
 
 color:#fff;
 
@@ -173,12 +177,11 @@ transition:var(--transition);
 
 }
 
-/* #DC2626 = même nuance de survol assombrie que .btn-danger:hover
-dans base.css (pas de token dédié pour cette teinte foncée, valeur
-alignée à l'identique plutôt qu'une nouvelle nuance de rouge). */
+/* Le survol descend d'un cran de plus, l'état au repos ayant pris
+--danger-600. */
 .account-danger-btn:hover{
 
-background:#DC2626;
+background:var(--danger-700);
 
 transform:translateY(-2px);
 

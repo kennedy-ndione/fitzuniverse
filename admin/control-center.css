@@ -10,7 +10,7 @@ sert TOUTES les pages du Control Center (dashboard, étudiants,
 formules, bourses, universités, fiche université, édition
 d'université) — admin/admin.css a été supprimé, son thème vert
 ("--primary:#16a34a") ne correspondait plus à l'identité
-ScholarBridge (maroon/or définie dans css/base.css).
+Fitz (encre/ambre définie dans css/base.css).
 ========================================================== */
 
 :root{
@@ -195,17 +195,10 @@ border-radius:var(--radius-sm);
 
 }
 
-.sidebar-brand-text{
-
-line-height:1;
-
-}
-
-.sidebar-brand-text .scholar{ color:var(--primary-color); }
-/* --amber-500 tient 6,8:1 sur --shell-bg (#1E293B) — largement AA,
-cohérent avec le "Bridge" doré du logo ailleurs sur le site (voir
-.logo .bridge dans css/header.css). */
-.sidebar-brand-text .bridge{ color:var(--amber-500); }
+/* Le lockup vit dans css/base.css (.fitz-lockup) ; .sidebar-brand est
+dans la liste .on-dark, donc le descripteur y prend l'accent tout seul.
+Les regles supprimees coloraient « Fitz » en --primary-color et
+« UNIVERSE » en --amber-500 : une quatrieme variante de la marque. */
 
 .sidebar-badge{
 
@@ -2958,6 +2951,38 @@ display:flex;
 flex-wrap:wrap;
 
 gap:8px;
+
+}
+
+/* Limite d'âge (admin/scholarships.html) : 4 petits champs number sur
+une ligne, chacun sous son intitulé de cycle. */
+.age-limit-row{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:12px;
+
+}
+
+.age-limit-cell{
+
+display:flex;
+
+flex-direction:column;
+
+gap:4px;
+
+font-size:.8rem;
+
+color:var(--text-muted);
+
+}
+
+.age-limit-cell input{
+
+width:90px;
 
 }
 

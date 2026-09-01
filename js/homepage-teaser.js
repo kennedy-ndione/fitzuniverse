@@ -1,9 +1,7 @@
-import { db } from "../firebase-config.js";
+import { TESTIMONIALS } from "./testimonials-data.js";
 
-import {
-collection,
-getDocs
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./catalog-data.js";
 
 // Résout, pour une université, une bourse compatible réelle via
 // "programs" (université × bourse × niveau) — même pattern que
@@ -49,7 +47,7 @@ const result = [];
 
 list.forEach((entry) => {
 
-const key = `${entry.university || ""}|${entry.city || ""}`;
+const key = `${entry.name || ""}|${entry.city || ""}`;
 
 if (seen.has(key)) return;
 
@@ -104,12 +102,18 @@ return picks;
 // largeur en 2e rangée — sizes doit refléter ces 2 cas particuliers,
 // sinon le navigateur choisirait une variante srcset trop petite pour
 // ces slots-là.
+// (max-width:599px) 80vw et non 100vw : en dessous de 600px, les
+// cartes sont un carrousel horizontal (voir css/homepage-sections.css,
+// correctif "carrousel mobile") où chaque carte ne prend que 80 % de
+// l'écran, plafonné à 300px — jamais toute la largeur. Le bento
+// (colonne 2 / bannière 4) ne s'applique qu'à partir de 1024px, donc
+// les 3 tailles de slot ne divergent qu'à partir de ce palier.
 function sizesForSlot(index) {
 
-if (index === 0) return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 570px";
-if (index === 3) return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 1160px";
+if (index === 0) return "(max-width:599px) 80vw, (max-width:1023px) 50vw, 570px";
+if (index === 3) return "(max-width:599px) 80vw, (max-width:1023px) 50vw, 1160px";
 
-return "(max-width:599px) 100vw, (max-width:1023px) 50vw, 275px";
+return "(max-width:599px) 80vw, (max-width:1023px) 50vw, 275px";
 
 }
 
@@ -122,20 +126,31 @@ card.href = "universities.html";
 const image = university.image || "default.jpg";
 const base = image.replace(/\.jpe?g$/i, "");
 
-// Variantes générées par scripts/generate-city-srcset.mjs (400/800/1200px)
-// à partir des photos ~2000px/300-580KB d'origine : la 1re carte de
-// l'aperçu (index 0) est la seule à charger avant le scroll, elle seule
-// reçoit fetchpriority/loading="eager" — les 3 autres restent lazy.
-const srcset = [400, 800, 1200].map((w) => `assets/images/cities/${base}-${w}w.jpg ${w}w`).join(", ");
+// Variantes générées par scripts/generate-city-srcset.mjs à partir des
+// photos ~2000px d'origine. La 1re carte (index 0) est la seule à
+// charger avant le scroll : elle seule reçoit fetchpriority/eager.
+//
+// 1600w AJOUTÉ le 2026-08-22. La liste s'arrêtait à 1200w alors que la
+// variante 1600w existe pour TOUTES les villes du dossier. Or la 4e
+// carte occupe toute la largeur de la grille (grid-column:1/-1) et son
+// `sizes` annonce 1160px : sur un écran à densité 2 — la majorité des
+// portables aujourd'hui — le navigateur avait besoin de 2320px réels et
+// n'avait rien de mieux que 1200. La bannière la plus grande de la page
+// d'accueil était donc agrandie d'un facteur 2. C'est ce qui la faisait
+// paraître molle, pas la photo elle-même.
+const srcset = [400, 800, 1200, 1600].map((w) => `assets/images/cities/${base}-${w}w.jpg ${w}w`).join(", ");
 
+// university.name (pas .university, champ inexistant sur le document —
+// voir universities-page.js qui lit le même champ) : sans ce correctif
+// chaque carte retombait sur "Université partenaire" au lieu du vrai nom.
 card.innerHTML = `
 <div class="teaser-card-media">
-<img src="assets/images/cities/${base}-800w.jpg" srcset="${srcset}" sizes="${sizesForSlot(index)}" alt="${university.city || university.university || ""}" ${index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>
+<img src="assets/images/cities/${base}-800w.jpg" srcset="${srcset}" sizes="${sizesForSlot(index)}" alt="${university.city || university.name || ""}" ${index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>
 ${university.ranking ? `<span class="teaser-card-rank"><i data-lucide="trophy"></i>${university.ranking}</span>` : ""}
 </div>
 <div class="teaser-card-body">
-${university.flag ? `<img class="teaser-card-flag" src="assets/flags/${university.flag}" alt="">` : ""}
-<h3>${university.university || "Université partenaire"}</h3>
+${university.flag ? `<img class="teaser-card-flag" src="assets/flags/${university.flag}" alt="" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : ""}
+<h3>${university.name || "Établissement"}</h3>
 <p>${[university.city, university.country].filter(Boolean).join(", ")}</p>
 ${scholarshipTitle ? `<span class="teaser-card-tag"><i data-lucide="award"></i>${scholarshipTitle}</span>` : ""}
 </div>
@@ -145,23 +160,149 @@ return card;
 
 }
 
+// ==========================================================
+// SECTION CONFIANCE (bandeau "Des établissements réels, vérifiés un par un")
+// Réutilise le fetch Firestore de loadTeaser() ci-dessous plutôt qu'un
+// second aller-retour réseau : mêmes universités/bourses, juste agrégées
+// différemment (logos + compteurs au lieu de 4 cartes).
+// ==========================================================
+
+function renderTrustLogos(universities) {
+
+const track = document.getElementById("trustMarqueeTrack");
+
+if (!track) return;
+
+const names = dedupeByUniversity(universities)
+.map((u) => u.name)
+.filter(Boolean)
+.sort((a, b) => a.localeCompare(b, "fr"));
+
+if (!names.length) {
+document.getElementById("trustLogosRow")?.remove();
+return;
+}
+
+// Nom seul, sans vignette ni code pays : la version "vignette" essayée
+// le 2026-08-22 (bloc encadré + code pays + pays) a été écartée au
+// rendu — elle alourdissait le bandeau et le faisait ressembler à une
+// grille de cartes plutôt qu'à une frise. L'identité visuelle demandée
+// passe uniquement par la couleur, voir .trust-logo dans
+// css/homepage-sections.css.
+const itemsHtml = names.map((name) => `<span class="trust-logo">${name}</span>`).join("");
+
+// 2 copies identiques pour un défilement CSS sans coupure (voir
+// @keyframes trust-marquee-scroll, css/homepage-sections.css : la piste
+// glisse de -50%, donc la 2e moitié doit être une répétition exacte de
+// la 1re). La 2e est aria-hidden pour ne pas doubler la liste au
+// lecteur d'écran, qui lit déjà la 1re normalement.
+track.innerHTML = `
+<div class="trust-marquee-set">${itemsHtml}</div>
+<div class="trust-marquee-set" aria-hidden="true">${itemsHtml}</div>
+`;
+
+}
+
+// Alimente aussi les 2 chiffres du hero (Bourses référencées / Pays de
+// destination) — anciennement "500+"/"30+" codés en dur dans
+// index.html, en contradiction avec les vrais chiffres affichés plus
+// bas par cette même fonction (audit du 2026-08-13). Mêmes données,
+// pas de 2e fetch : simplement 2 cibles DOM de plus.
+function renderTrustStats(universities, scholarshipCount) {
+
+const universityCountEl = document.getElementById("trustUniversityCount");
+const countryCountEl = document.getElementById("trustCountryCount");
+const scholarshipCountEl = document.getElementById("trustScholarshipCount");
+const heroScholarshipCountEl = document.getElementById("heroScholarshipCount");
+const heroCountryCountEl = document.getElementById("heroCountryCount");
+const heroUniversityCountEl = document.getElementById("heroUniversityCount");
+
+if (!universityCountEl && !countryCountEl && !scholarshipCountEl && !heroScholarshipCountEl && !heroCountryCountEl && !heroUniversityCountEl) return;
+
+const deduped = dedupeByUniversity(universities);
+const countryCount = new Set(deduped.map((u) => u.country).filter(Boolean)).size;
+
+if (!deduped.length) {
+document.getElementById("trustStats")?.remove();
+return;
+}
+
+if (universityCountEl) universityCountEl.textContent = `${deduped.length}+`;
+if (countryCountEl) countryCountEl.textContent = `${countryCount}+`;
+if (scholarshipCountEl) scholarshipCountEl.textContent = `${scholarshipCount}+`;
+if (heroScholarshipCountEl) heroScholarshipCountEl.textContent = `${scholarshipCount}+`;
+if (heroCountryCountEl) heroCountryCountEl.textContent = `${countryCount}+`;
+if (heroUniversityCountEl) heroUniversityCountEl.textContent = `${deduped.length}+`;
+
+}
+
+// ==========================================================
+// TÉMOIGNAGES
+// Source statique locale (js/testimonials-data.js), pas Firestore : ce
+// sont des citations qui n'existeront qu'après validation humaine
+// explicite de l'étudiant·e, pas un contenu qui doit pouvoir apparaître
+// via une écriture Firestore quelconque. Indépendant du fetch de
+// loadTeaser() ci-dessous — n'a pas besoin des données université.
+// ==========================================================
+
+function initials(firstName) {
+return (firstName || "?").trim().charAt(0).toUpperCase();
+}
+
+function renderTestimonialCard(testimonial) {
+
+const card = document.createElement("article");
+card.className = "info-card testimonial-card";
+
+const meta = [testimonial.country, testimonial.university].filter(Boolean).join(" · ");
+
+card.innerHTML = `
+<div class="testimonial-avatar" aria-hidden="true">${initials(testimonial.firstName)}</div>
+<blockquote>“${testimonial.quote}”</blockquote>
+<footer>
+<strong>${testimonial.firstName}</strong>
+<span>${meta}${testimonial.status === "obtenue" ? " — bourse obtenue" : ""}</span>
+</footer>
+`;
+
+return card;
+
+}
+
+// Reste "hidden" (voir index.html) tant que TESTIMONIALS est vide — pas
+// de carte vide ni de placeholder qui ressemblerait à un vrai témoignage.
+function renderTestimonials() {
+
+const section = document.getElementById("trustTestimonials");
+const grid = document.getElementById("testimonialGrid");
+
+if (!section || !grid || !TESTIMONIALS.length) return;
+
+grid.innerHTML = "";
+TESTIMONIALS.forEach((testimonial) => grid.appendChild(renderTestimonialCard(testimonial)));
+section.hidden = false;
+
+}
+
 async function loadTeaser() {
 
 const grid = document.getElementById("teaserGrid");
 
-if (!grid) return;
-
 try {
 
-const [universitiesSnap, programsSnap, scholarshipsSnap] = await Promise.all([
-getDocs(collection(db, "universities")),
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "scholarships"))
-]);
+// Passe par le chargeur partagé (js/catalog-data.js) : ce module et
+// js/opportunites-bandeau.js lisaient chacun les trois collections
+// entières sur la MÊME page, soit le double du nécessaire.
+const { universites, programmes, bourses } = await chargerCatalogue();
 
-const all = universitiesSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-const programs = programsSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-const scholarshipsById = new Map(scholarshipsSnap.docs.map((docSnap) => [docSnap.id, { id: docSnap.id, ...docSnap.data() }]));
+const all = universites;
+const programs = programmes;
+const scholarshipsById = new Map(bourses.map((b) => [b.id, b]));
+
+renderTrustLogos(all);
+renderTrustStats(all, bourses.length);
+
+if (!grid) return;
 
 if (!all.length) {
 grid.remove();
@@ -188,10 +329,25 @@ if (window.lucide) lucide.createIcons();
 } catch (error) {
 
 console.error("Aperçu des opportunités : échec du chargement", error);
-grid.remove();
+if (grid) grid.remove();
+document.getElementById("trustLogosRow")?.remove();
+document.getElementById("trustStats")?.remove();
+
+// La rangée de statistiques DU HERO n'était pas couverte par ce
+// filet (2026-08-29) : elle est remplie par la même requête, mais
+// vit dans une autre section, et restait donc bloquée sur ses trois
+// tirets « — » — la toute première chose que voit un visiteur si
+// Firestore est lent, bloqué par un réseau d'entreprise ou hors
+// ligne. Trois tirets au-dessus de la ligne de flottaison font lire
+// « site cassé », pas « chiffres en cours de chargement ». On les
+// retire : ne pas annoncer un chiffre qu'on n'a pas est plus honnête
+// que d'en inventer un, et le hero reste complet sans eux (titre,
+// promesse, bénéfices, visuel, bouton).
+document.querySelector(".hero-stats")?.remove();
 
 }
 
 }
 
+renderTestimonials();
 loadTeaser();

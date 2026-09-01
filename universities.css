@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — UNIVERSITÉS PARTENAIRES (universities.html)
+FITZUNIVERSE — UNIVERSITÉS PARTENAIRES (universities.html)
 Repose sur css/base.css + css/header.css (thème clair public) +
 css/ai-suite.css (squelettes de chargement). Page publique, en accès
 libre depuis le 2026-07-30 : le catalogue est une information
@@ -11,167 +11,20 @@ publique, jamais verrouillée derrière un compte ou une formule (voir
 BANNIÈRE
 ========================================================== */
 
-.uni-hero{
-
-position:relative;
-
-isolation:isolate;
-
-border-radius:var(--radius-lg);
-
-overflow:hidden;
-
-padding:64px 48px;
-
-margin-bottom:28px;
-
-min-height:280px;
-
-display:flex;
-
-flex-direction:column;
-
-justify-content:center;
-
-}
-
-.uni-hero-bg{
-
-position:absolute;
-
-inset:0;
-
-z-index:-2;
-
-width:100%;
-
-height:100%;
-
-object-fit:cover;
-
-filter:saturate(1.1) contrast(1.03);
-
-}
-
-.uni-hero::after{
-
-content:"";
-
-position:absolute;
-
-inset:0;
-
-z-index:-1;
-
-background:
-
-linear-gradient(180deg, rgba(15,23,42,.55) 0%, rgba(15,23,42,.88) 100%),
-
-linear-gradient(100deg, rgba(15,23,42,.95) 0%, rgba(28,34,72,.55) 45%, rgba(15,23,42,.25) 100%);
-
-}
-
-.uni-hero-badge{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-width:max-content;
-
-padding:8px 16px;
-
-margin-bottom:18px;
-
-border-radius:var(--radius-full);
-
-background:rgba(255,255,255,.12);
-
-backdrop-filter:blur(10px);
--webkit-backdrop-filter:blur(10px);
-
-color:var(--accent-color);
-
-font-weight:700;
-
-font-size:.82rem;
-
-}
-
-.uni-hero-badge i,
-.uni-hero-badge svg{ width:15px; height:15px; }
-
-.uni-hero h1{
-
-font-size:clamp(1.8rem,3.4vw,2.5rem);
-
-font-weight:800;
-
-color:#fff;
-
-max-width:620px;
-
-margin-bottom:12px;
-
-text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
-
-}
-
-.uni-hero p{
-
-max-width:560px;
-
-color:rgba(255,255,255,.82);
-
-font-size:1rem;
-
-line-height:1.7;
-
-margin-bottom:28px;
-
-text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
-
-}
-
-.uni-hero-stats{
-
-display:flex;
-
-gap:28px;
-
-flex-wrap:wrap;
-
-}
-
-.uni-hero-stat strong{
-
-display:block;
-
-font-family:var(--font-display);
-
-font-size:var(--fs-stat-sm);
-
-font-weight:var(--fw-extrabold);
-
-font-variant-numeric:tabular-nums;
-
-color:var(--accent-color);
-
-text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
-
-}
-
-.uni-hero-stat span{
-
-font-size:.82rem;
-
-color:rgba(255,255,255,.75);
-
-text-shadow:0 1px 3px rgba(0,0,0,.3);
-
-}
+/* ==========================================================
+BANNIÈRE — voir css/catalog.css
+==========================================================
+Ce bloc a déménagé dans css/catalog.css le 2026-08-22 (section
+« BANNIÈRE DE CATALOGUE »). Il était recopié à l'identique dans
+scholarships.css ET universities.css — 349 lignes, identiques à deux
+valeurs de marge près, vérifié au diff. Les deux pages de catalogue
+doivent se ressembler au pixel et une correction sur l'une doit
+valoir pour l'autre ; deux copies garantissaient l'inverse.
+
+Ne rien redéfinir ici : css/catalog.css est chargée AVANT cette
+feuille, toute règle réintroduite à cet endroit écraserait
+silencieusement le système commun sur cette seule page.
+========================================================== */
 
 /* ==========================================================
 CONTEXTE "FILTRÉ PAR BOURSE" — apparaît quand on arrive depuis une
@@ -230,144 +83,27 @@ color:var(--primary-color);
 .uni-scholarship-context a:hover{ text-decoration:underline; }
 
 /* ==========================================================
-BARRE DE RECHERCHE / FILTRES
+BARRE DE RECHERCHE UNIFIÉE (partagée avec scholarships.css —
+même classe .catalog-search-bar sur les deux pages, voir audit
+du 2026-08-16 : les deux catalogues avaient chacun leur propre
+recette de barre de recherche, désormais une seule).
+========================================================== */
+/* ==========================================================
+RECHERCHE, RACCOURCIS PAYS, GROUPES — voir css/catalog.css
+==========================================================
+Ce bloc a déménagé dans css/catalog.css le 2026-08-22 (section
+« BARRE DE FILTRES / RACCOURCIS PAYS / GROUPES PAR PAYS »). Il était recopié à l'identique dans
+scholarships.css ET universities.css — 349 lignes, identiques à deux
+valeurs de marge près, vérifié au diff. Les deux pages de catalogue
+doivent se ressembler au pixel et une correction sur l'une doit
+valoir pour l'autre ; deux copies garantissaient l'inverse.
+
+Ne rien redéfinir ici : css/catalog.css est chargée AVANT cette
+feuille, toute règle réintroduite à cet endroit écraserait
+silencieusement le système commun sur cette seule page.
 ========================================================== */
 
-.uni-toolbar{
 
-display:grid;
-
-grid-template-columns:2fr 1fr 1fr auto;
-
-gap:12px;
-
-align-items:center;
-
-padding:16px;
-
-margin-bottom:28px;
-
-border-radius:var(--radius-lg);
-
-background:var(--background);
-
-border:1px solid var(--border-color);
-
-box-shadow:var(--shadow-xs);
-
-}
-
-.uni-toolbar-field{
-
-position:relative;
-
-display:flex;
-
-align-items:center;
-
-}
-
-.uni-toolbar-field i,
-.uni-toolbar-field svg{
-
-position:absolute;
-
-left:14px;
-
-width:17px;
-
-height:17px;
-
-color:var(--text-decorative);
-
-pointer-events:none;
-
-}
-
-.uni-toolbar-field input,
-.uni-toolbar-field select{
-
-width:100%;
-
-padding:12px 14px 12px 40px;
-
-border-radius:var(--radius-sm);
-
-border:1px solid var(--border-color);
-
-background:var(--background-soft);
-
-color:var(--text-color);
-
-font-family:"Inter",sans-serif;
-
-font-size:.88rem;
-
-transition:var(--transition);
-
-}
-
-.uni-toolbar-field input:focus,
-.uni-toolbar-field select:focus{
-
-outline:none;
-
-border-color:var(--accent-color);
-
-box-shadow:0 0 0 3px rgba(233,163,25,.18);
-
-}
-
-.uni-toolbar-reset{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:6px;
-
-padding:12px 16px;
-
-border-radius:var(--radius-sm);
-
-border:1px solid var(--border-color);
-
-background:var(--background-soft);
-
-color:var(--text-light);
-
-font-size:.84rem;
-
-font-weight:700;
-
-white-space:nowrap;
-
-cursor:pointer;
-
-transition:var(--transition);
-
-}
-
-.uni-toolbar-reset:hover{
-
-border-color:var(--accent-color);
-
-color:var(--accent-color);
-
-}
-
-.uni-toolbar-reset i,
-.uni-toolbar-reset svg{ width:15px; height:15px; }
-
-.uni-results-count{
-
-margin-bottom:18px;
-
-color:var(--text-light);
-
-font-size:.88rem;
-
-}
 
 .uni-results-count strong{ color:var(--text-color); }
 
@@ -375,15 +111,21 @@ font-size:.88rem;
 GRILLE DE CARTES
 ========================================================== */
 
-.uni-grid{
 
-display:grid;
+/* ==========================================================
+CARTE D'UNIVERSITÉ
+==========================================================
+Alignée le 2026-08-22 sur la carte de bourse (scholarships.css) :
+mêmes rayons, même ombre, même bordure ambrée au survol, même
+translation. Les deux catalogues s'enchaînent — une bourse mène à
+ses universités partenaires — et deux cartes qui ne se ressemblent
+pas donnaient l'impression de changer de site en cours de route.
 
-grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-
-gap:24px;
-
-}
+Ce qui reste propre à cette carte : la photo en 4/3 (un campus se
+regarde, une bourse est un document), le classement, l'échéance et
+les variantes de cadrage quand plusieurs établissements partagent
+la photo de leur ville.
+========================================================== */
 
 .uni-card{
 
@@ -393,30 +135,39 @@ display:flex;
 
 flex-direction:column;
 
+background:var(--background);
+
 border-radius:var(--radius-lg);
 
 overflow:hidden;
 
-border:1px solid transparent;
+border:1px solid var(--border-color);
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-xs);
 
 cursor:pointer;
 
-transition:transform .4s var(--ease-premium), box-shadow .4s var(--ease-premium), border-color .4s var(--ease-premium);
+transition:transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 
 }
 
-/* Le survol changeait border-color sans qu'aucune règle .uni-card ne
-déclare jamais de border — l'effet n'avait donc jamais été visible.
-Le border:1px solid transparent ci-dessus le rend enfin réel. */
+/* -6px, comme la carte de bourse : sur une grille dense un saut de
+8px donne l'impression que la grille bouge sous le curseur. */
 .uni-card:hover{
 
-transform:translateY(-8px);
+transform:translateY(-6px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(233,163,25,.4);
+border-color:var(--amber-500);
+
+}
+
+.uni-card:focus-visible{
+
+outline:2px solid var(--amber-700);
+
+outline-offset:3px;
 
 }
 
@@ -424,7 +175,10 @@ border-color:rgba(233,163,25,.4);
 
 position:relative;
 
-aspect-ratio:4/3;
+/* 16/10 plutôt que 4/3 : en trois colonnes, le 4/3 donnait une
+vignette de 285px de haut — la photo occupait plus de place que le
+nom de l'université, l'échéance et les niveaux réunis. */
+aspect-ratio:16/10;
 
 overflow:hidden;
 
@@ -440,15 +194,11 @@ height:100%;
 
 object-fit:cover;
 
-transition:transform .7s var(--ease-premium);
+transition:transform .55s var(--ease-premium);
 
 }
 
-.uni-card:hover .uni-card-media img{
-
-transform:scale(1.08);
-
-}
+.uni-card:hover .uni-card-media img{ transform:scale(1.05); }
 
 /* Quand plusieurs établissements différents partagent la même photo de
 ville (même ville, écoles distinctes), chaque occurrence reçoit un
@@ -458,6 +208,10 @@ vignettes identiques côte à côte. */
 .uni-card-media--variant-2 img{object-position:70% 40%;filter:saturate(.92) brightness(1.03);}
 .uni-card-media--variant-3 img{object-position:50% 65%;filter:saturate(1.04) hue-rotate(-4deg);}
 
+/* Voile allégé (l'ancien montait à 94% d'opacité en bas : la moitié
+basse de chaque photo disparaissait sous un aplat gris-bleu). Il
+n'assombrit plus que ce qu'il doit rendre lisible — la ligne de
+localisation posée en bas. */
 .uni-card-media::after{
 
 content:"";
@@ -466,107 +220,130 @@ position:absolute;
 
 inset:0;
 
-background:linear-gradient(to top, rgba(15,23,42,.94) 0%, rgba(15,23,42,.25) 60%, transparent 85%);
+background:linear-gradient(to top, rgba(7,10,22,.80) 0%, rgba(7,10,22,.24) 46%, transparent 72%);
 
 }
 
+/* ---- Classement, en haut à gauche ---- */
 .uni-card-rank{
 
 position:absolute;
 
-top:14px;
+top:12px;
 
-left:14px;
+left:12px;
 
 z-index:2;
 
-display:inline-flex;
+display:flex;
 
 align-items:center;
 
 gap:5px;
 
-padding:6px 12px;
+padding:5px 11px;
 
 border-radius:var(--radius-full);
 
-background:rgba(15,23,42,.72);
+background:rgba(7,10,22,.66);
 
-backdrop-filter:blur(8px);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
 
--webkit-backdrop-filter:blur(8px);
-
-/* var(--accent-color) (#7E71D8) donnait un ratio réel d'environ 1,8:1
-une fois le fond composité à 72% d'opacité sur une photo claire (le
-ratio calculé contre la valeur navy déclarée sans tenir compte de
-l'alpha semblait correct à 4,46:1, mais c'est un artefact de mesure :
-la vraie couleur perçue, une fois mélangée à la photo derrière, est
-bien plus claire). Blanc = même traitement que .uni-card-location
-juste à côté, qui s'en sort très bien sur le même fond. */
+/* Blanc plein. --accent-color a été mesuré ici à ~1,8:1 une fois le
+fond composité à 66% sur une photo claire — le 4,46:1 calculé
+contre la valeur navy déclarée est un artefact qui ignore l'alpha. */
 color:#fff;
 
-font-weight:800;
+font-weight:var(--fw-bold);
 
-font-size:.74rem;
+font-size:.73rem;
 
 }
 
-/* svg inclus (Lucide remplace les <i data-lucide>) + flex-shrink:0 :
-ces icônes se comprimaient de 24 à 20px selon le texte voisin. */
 .uni-card-rank i,
-.uni-card-rank svg{ width:13px; height:13px; flex-shrink:0; }
+.uni-card-rank svg{
 
+width:13px;
+
+height:13px;
+
+flex-shrink:0;
+
+/* L'ambre est le seul point de couleur de la vignette, et il tombe
+sur le signal qui hiérarchise vraiment — le classement. */
+color:var(--amber-500);
+
+}
+
+/* ---- Statut, en haut à droite ---- */
 .uni-card-status{
 
 position:absolute;
 
-top:14px;
+top:12px;
 
-right:14px;
+right:12px;
 
 z-index:2;
 
-padding:6px 12px;
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:5px 11px 5px 9px;
 
 border-radius:var(--radius-full);
 
-font-size:.7rem;
+background:rgba(7,10,22,.66);
 
-font-weight:800;
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
 
-text-transform:uppercase;
+font-size:.72rem;
 
-letter-spacing:.03em;
+font-weight:var(--fw-bold);
 
-background:rgba(15,23,42,.72);
-
-backdrop-filter:blur(8px);
-
--webkit-backdrop-filter:blur(8px);
-
-/* --text-muted (#626E83) est calibré pour un fond CLAIR — ici le
-badge est sur un fond sombre (rgba(15,23,42,.72)), où il ne tient que
-~3,5:1. rgba(255,255,255,.7) garde l'effet "discret" par l'opacité
-plutôt que par une teinte grise, et tient 9,1:1. */
-color:rgba(255,255,255,.7);
+/* Plus de capitales espacées : « OUVERT » criait plus fort que le nom
+de l'université, qui est pourtant ce qu'on vient lire.
+rgba(255,255,255,.78) tient 9:1 sur ce fond — --text-muted, calibré
+pour un fond clair, n'y tenait que ~3,5:1. */
+color:rgba(255,255,255,.78);
 
 }
 
-.uni-card-status.is-open{
+.uni-card-status::before{
 
-color:var(--success);
+content:"";
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+background:rgba(255,255,255,.5);
+
+flex-shrink:0;
 
 }
 
+.uni-card-status.is-open{ color:#fff; }
+
+.uni-card-status.is-open::before{ background:var(--success-500); }
+
+/* ---- Ville et pays, posés sur la photo ---- */
 .uni-card-location{
 
 position:absolute;
 
-bottom:14px;
+bottom:13px;
 
-left:16px;
+left:14px;
 
-right:16px;
+right:14px;
 
 z-index:2;
 
@@ -590,7 +367,7 @@ object-fit:cover;
 
 border-radius:3px;
 
-box-shadow:0 0 0 1px rgba(255,255,255,.3);
+box-shadow:0 0 0 1px rgba(255,255,255,.35);
 
 flex-shrink:0;
 
@@ -600,45 +377,62 @@ flex-shrink:0;
 
 font-size:.84rem;
 
-font-weight:600;
+font-weight:var(--fw-semibold);
 
-text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+text-shadow:0 1px 3px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.28);
 
 }
 
+/* ---- Corps ---- */
 .uni-card-body{
+
+flex:1;
 
 display:flex;
 
 flex-direction:column;
 
-gap:10px;
+gap:11px;
 
-padding:20px;
-
-flex:1;
+padding:18px 20px 18px;
 
 }
 
 .uni-card-body h3{
 
+font-family:var(--font-display);
+
 font-size:var(--fs-card-title);
 
 font-weight:var(--fw-extrabold);
 
-color:var(--text-color);
+line-height:1.3;
 
-line-height:1.35;
+letter-spacing:-.015em;
+
+color:var(--text-color);
 
 }
 
+/* Bourses rattachées à cet établissement. C'est la raison pour
+laquelle il est dans ce catalogue : mis en ambre, sur deux lignes
+au maximum, plutôt qu'en gris au milieu du reste. */
 .uni-card-scholarship{
 
-font-size:.84rem;
+display:-webkit-box;
+-webkit-line-clamp:2;
+line-clamp:2;
+-webkit-box-orient:vertical;
 
-color:var(--text-light);
+overflow:hidden;
+
+font-size:.82rem;
 
 line-height:1.5;
+
+font-weight:var(--fw-semibold);
+
+color:var(--amber-700);
 
 }
 
@@ -652,35 +446,13 @@ gap:7px;
 
 }
 
-.uni-card-chip{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:5px;
-
-padding:5px 10px;
-
-border-radius:var(--radius-full);
-
-background:var(--background-light);
-
-/* var(--accent-color) (#7E71D8, ratio ~3.5:1 réel sur ce fond une fois
-composité) ne tenait pas l'AA (4,5:1) pour du texte normal — accent-600,
-plus foncé, passe à ~5:1 sans changer la teinte perçue. */
-color:var(--accent-600);
-
-font-size:.72rem;
-
-font-weight:700;
-
-}
-
-.uni-card-chip i,
-.uni-card-chip svg{ width:12px; height:12px; }
-
 .uni-card-footer{
+
+margin-top:auto;
+
+padding-top:14px;
+
+border-top:1px solid var(--border-color);
 
 display:flex;
 
@@ -689,12 +461,6 @@ align-items:center;
 justify-content:space-between;
 
 gap:10px;
-
-margin-top:auto;
-
-padding-top:14px;
-
-border-top:1px solid var(--border-color);
 
 }
 
@@ -706,31 +472,38 @@ align-items:center;
 
 gap:6px;
 
-font-size:.76rem;
+font-size:.79rem;
 
 color:var(--text-muted);
 
+font-variant-numeric:tabular-nums;
+
 }
 
-/* Même correctif que .uni-card-rank : svg inclus et flex-shrink:0. */
 .uni-card-deadline i,
-.uni-card-deadline svg{ width:13px; height:13px; flex-shrink:0; }
+.uni-card-deadline svg{
+
+width:14px;
+
+height:14px;
+
+flex-shrink:0;
+
+}
 
 .uni-card-cta{
 
-display:inline-flex;
+display:flex;
 
 align-items:center;
 
-gap:5px;
+gap:6px;
 
-/* var(--accent-color) ne tient l'AA (4,5:1) que de justesse (4,01:1) sur
-fond blanc — accent-600 passe à 5,73:1, voir .uni-card-chip juste au-dessus. */
-color:var(--accent-600);
+font-size:.84rem;
 
-font-weight:700;
+font-weight:var(--fw-bold);
 
-font-size:.82rem;
+color:var(--amber-700);
 
 white-space:nowrap;
 
@@ -739,171 +512,47 @@ white-space:nowrap;
 .uni-card-cta i,
 .uni-card-cta svg{
 
-width:14px;
+width:15px;
 
-height:14px;
+height:15px;
+
+flex-shrink:0;
 
 transition:transform .25s var(--ease-premium);
 
 }
 
 .uni-card:hover .uni-card-cta i,
-.uni-card:hover .uni-card-cta svg{
+.uni-card:hover .uni-card-cta svg{ transform:translateX(4px); }
 
-transform:translateX(3px);
 
-}
+@media(max-width:720px){
 
-/* ==========================================================
-SQUELETTES DE CHARGEMENT (variante locale de .ai-skeleton)
-========================================================== */
-
-.uni-card-skeleton{
-
-border-radius:var(--radius-lg);
-
-overflow:hidden;
-
-background:var(--background);
-
-border:1px solid var(--border-color);
+.uni-card-body{ padding:16px 16px 16px; }
 
 }
 
-.uni-card-skeleton .uni-skel-media{
 
-aspect-ratio:4/3;
+/* Pastille supprimée le 2026-08-22 : carré arrondi de 56px, exactement
+le conteneur que la règle « Icônes » de DESIGN_SYSTEM.md proscrit.
+L'icône nue et ambrée est désormais définie une seule fois dans
+css/catalog.css, comme celle de scholarships.html — les deux pages
+avaient chacune la leur, avec une taille et une couleur différentes
+pour le même état vide. */
 
-}
 
-.uni-card-skeleton .uni-skel-line{
-
-height:12px;
-
-margin:16px 20px 0;
-
-border-radius:6px;
-
-}
-
-.uni-card-skeleton .uni-skel-line:last-child{
-
-margin-bottom:20px;
-
-}
-
-/* ==========================================================
-ÉTAT VIDE / ERREUR
-========================================================== */
-
-.uni-empty-state{
-
-display:flex;
-
-flex-direction:column;
-
-align-items:center;
-
-text-align:center;
-
-gap:14px;
-
-padding:70px 20px;
-
-grid-column:1 / -1;
-
-}
-
-.uni-empty-state-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:56px;
-
-height:56px;
-
-border-radius:18px;
-
-background:var(--background-light);
-
-color:var(--accent-color);
-
-}
-
-.uni-empty-state-icon i,
-.uni-empty-state-icon svg{ width:26px; height:26px; }
-
-.uni-empty-state h3{
-
-font-size:1.1rem;
-
-font-weight:800;
-
-color:var(--text-color);
-
-}
-
-.uni-empty-state p{
-
-color:var(--text-light);
-
-font-size:.9rem;
-
-max-width:400px;
-
-}
 
 /* ==========================================================
 RESPONSIVE
 ========================================================== */
 
-@media(max-width:900px){
-
-.uni-toolbar{
-
-grid-template-columns:1fr 1fr;
-
-}
-
-.uni-toolbar-field:first-child{
-
-grid-column:1 / -1;
-
-}
-
-}
-
-@media(max-width:640px){
-
-.uni-hero{
-
-padding:44px 24px;
-
-}
-
-.uni-toolbar{
-
-grid-template-columns:1fr;
-
-}
-
-.uni-toolbar-reset{
-
-justify-content:center;
-
-}
-
-.uni-grid{
-
-grid-template-columns:1fr;
-
-}
-
-}
+/* Le bloc @media(max-width:640px) qui vivait ici a été retiré le
+2026-08-22 : bannière, barre de filtres et grille sont désormais
+gérées par css/catalog.css, points de rupture compris. Chargée
+APRÈS elle, cette feuille écrasait silencieusement le comportement
+mobile commun (barre collante, repli des libellés) et faisait
+diverger les deux catalogues sur petit écran — précisément le
+problème que la mise en commun devait faire disparaître. */
 
 /* ==========================================================
 BANDEAU ACCOMPAGNEMENT — sous le catalogue, jamais un mur : le
@@ -928,15 +577,13 @@ box-shadow:var(--shadow-sm);
 
 }
 
+/* Icône nue : le rond de 52px en dégradé bleu qui vivait ici était le
+dernier conteneur d'icône de la page (règle « Icônes » de
+DESIGN_SYSTEM.md). L'ambre porte le sens — c'est le seul bloc de la
+page qui parle de l'accompagnement payant, pas du catalogue libre. */
 .uni-accompaniment-icon{
 
 flex:0 0 auto;
-
-width:52px;
-
-height:52px;
-
-border-radius:50%;
 
 display:flex;
 
@@ -944,14 +591,12 @@ align-items:center;
 
 justify-content:center;
 
-background:var(--gradient-primary);
-
-color:#fff;
+color:var(--amber-700);
 
 }
 
 .uni-accompaniment-icon i,
-.uni-accompaniment-icon svg{width:22px;height:22px;}
+.uni-accompaniment-icon svg{width:30px;height:30px;}
 
 .uni-accompaniment-copy{flex:1 1 auto;min-width:220px;}
 
@@ -1002,3 +647,17 @@ text-align:left;
 .uni-accompaniment-banner .btn{width:100%;justify-content:center;}
 
 }
+
+/* ==========================================================
+DÉPLACÉ DANS css/catalog.css le 2026-08-22
+==========================================================
+Barre de résultats, grille, puces de carte, squelettes et état vide
+vivaient ici ET dans universities.css sous d'autres noms
+(.bourses-results-count/.uni-results-count,
+.scholarship-card-chip/.uni-card-chip,
+.bourses-empty-state/.uni-empty-state,
+.bourses-skeleton/.uni-card-skeleton) : les mêmes composants, deux
+écritures, deux évolutions séparées. css/catalog.css les définit une
+seule fois et conserve les anciens noms en alias — le JS des deux
+pages n'a donc rien eu à changer.
+Ne pas les réintroduire ici. ========================================================== */

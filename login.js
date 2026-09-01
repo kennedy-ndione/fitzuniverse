@@ -65,7 +65,17 @@ auth,
 rememberMeInput && !rememberMeInput.checked ? browserSessionPersistence : browserLocalPersistence
 );
 
-await signInWithEmailAndPassword(auth, email, password);
+const identifiants = await signInWithEmailAndPassword(auth, email, password);
+
+// Marqueur d'accueil : écrit seulement si la case est cochée, effacé
+// sinon — pour qu'un utilisateur qui la décoche sur un poste partagé
+// ne laisse aucune trace derrière lui, même celle d'une visite
+// précédente. Voir le bloc ACCUEIL PERSONNALISÉ en fin de fichier.
+if (rememberMeInput && rememberMeInput.checked) {
+memoriserVisiteur(identifiants && identifiants.user);
+} else {
+oublierVisiteur();
+}
 
 trackEvent("login");
 
@@ -154,3 +164,101 @@ forgotLink.dataset.busy = "false";
 });
 
 }
+
+// ==========================================================
+// ACCUEIL PERSONNALISÉ (2026-08-22)
+// ==========================================================
+// « Bon retour parmi nous » s'affichait à TOUT LE MONDE, y compris à
+// quelqu'un qui découvrait le site. Une page de connexion qui salue un
+// inconnu comme un habitué se trompe sur la personne dès la première
+// phrase — et le vrai habitué, lui, ne reçoit rien de particulier.
+//
+// Le marqueur ci-dessous répare les deux : le message chaleureux est
+// rendu à ceux à qui il s'adosse vraiment, et il devient personnel.
+//
+// CE QU'ON STOCKE, ET POURQUOI SI PEU
+// -----------------------------------
+// Uniquement le PRÉNOM, et uniquement si « Se souvenir de moi » est
+// coché — c'est exactement ce que cette case promet, et ça lui donne
+// enfin un effet visible.
+//
+// Pas l'adresse e-mail : sur un poste partagé (cybercafé, ordinateur
+// familial — courant dans le public de Fitz), une adresse
+// pré-remplie révèle qui utilise le service à la personne suivante.
+// Un prénom seul est bien moins identifiant, et il est effaçable en un
+// clic par le bouton « Ce n'est pas vous ? ».
+//
+// Pas de mot de passe, pas de jeton : la session reste gérée par
+// Firebase (setPersistence plus haut). Ce marqueur ne connecte
+// personne, il ne fait que choisir une phrase.
+// ==========================================================
+
+const CLE_VISITEUR = "sb_visiteur_connu";
+
+const titreEl = document.getElementById("authTitle");
+const sousTitreEl = document.getElementById("authSubtext");
+const boutonPasVous = document.getElementById("authNotYou");
+
+function lireVisiteur() {
+try {
+const brut = localStorage.getItem(CLE_VISITEUR);
+if (!brut) return null;
+const donnees = JSON.parse(brut);
+return donnees && typeof donnees.prenom === "string" ? donnees : null;
+} catch (error) {
+// localStorage indisponible (navigation privée, cookies bloqués) ou
+// contenu corrompu : on retombe sur l'accueil neutre, qui est vrai
+// pour tout le monde. Jamais l'inverse.
+return null;
+}
+}
+
+function oublierVisiteur() {
+try { localStorage.removeItem(CLE_VISITEUR); } catch (error) { /* sans effet */ }
+}
+
+function memoriserVisiteur(utilisateur) {
+try {
+const nomComplet = (utilisateur && utilisateur.displayName ? utilisateur.displayName : "").trim();
+const prenom = nomComplet ? nomComplet.split(/\s+/)[0] : "";
+localStorage.setItem(CLE_VISITEUR, JSON.stringify({ prenom }));
+} catch (error) { /* sans effet */ }
+}
+
+function appliquerAccueil() {
+
+if (!titreEl || !sousTitreEl) return;
+
+const visiteur = lireVisiteur();
+
+if (!visiteur) {
+// Cas par défaut, déjà écrit dans le HTML : on n'y touche pas.
+if (boutonPasVous) boutonPasVous.hidden = true;
+return;
+}
+
+if (visiteur.prenom) {
+titreEl.textContent = `Bon retour, ${visiteur.prenom}`;
+sousTitreEl.textContent = "Votre diagnostic et vos candidatures vous attendent.";
+if (boutonPasVous) boutonPasVous.hidden = false;
+} else {
+// Compte connu mais sans nom renseigné : on reste chaleureux sans
+// inventer un prénom.
+titreEl.textContent = "Bon retour parmi nous";
+sousTitreEl.textContent = "Votre diagnostic et vos candidatures vous attendent.";
+if (boutonPasVous) boutonPasVous.hidden = false;
+}
+
+}
+
+if (boutonPasVous) {
+boutonPasVous.addEventListener("click", () => {
+oublierVisiteur();
+if (titreEl) titreEl.textContent = "Connectez-vous à votre espace";
+if (sousTitreEl) sousTitreEl.textContent = "Retrouvez votre diagnostic, vos candidatures et votre accompagnement avec Fitz.";
+boutonPasVous.hidden = true;
+if (emailInput) emailInput.focus();
+});
+}
+
+appliquerAccueil();

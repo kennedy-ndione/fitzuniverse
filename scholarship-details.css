@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — FICHE UNIVERSITÉ
+FITZUNIVERSE — FICHE UNIVERSITÉ
 ========================================================== */
 
 .back-link{
@@ -11,7 +11,7 @@ font-weight:500;
 font-size:var(--fs-small);
 }
 
-.back-link:hover{color:var(--primary-color);}
+.back-link:hover{color:var(--amber-700);}
 .back-link i,
 .back-link svg{width:16px;height:16px;}
 
@@ -20,8 +20,27 @@ font-size:var(--fs-small);
 
 /* ---------- Hero ---------- */
 
+/* Bannière alignée le 2026-08-22 sur .catalog-hero (css/catalog.css) :
+même voile en trois couches, même éclat ambré en haut à droite, même
+badge en verre. C'est l'écran qui suit un clic depuis l'un des deux
+catalogues — il devait cesser d'avoir sa propre recette.
+Elle reste définie ICI et non dans catalog.css : la fiche n'est pas
+un catalogue (pas de filtres, pas de grille, pas de groupes), et
+l'y faire entrer aurait obligé catalog.css à connaître une page qui
+n'en est pas une. Ce sont les VALEURS qui sont partagées, via les
+tokens ; si le voile doit changer, il change aux deux endroits — et
+c'est écrit ici pour qu'on n'en oublie qu'un. */
 .details-hero{
 position:relative;
+/* padding:0 : .details-hero est un <section>, et css/base.css donne
+110px de rembourrage vertical à tout élément `section`. Ces 220px
+s'ajoutaient à ceux de .details-hero-inner (118px + 42px), d'où une
+bannière de 564px pour 344px de contenu — soit 220px de vide, dont
+une bonne moitié SOUS le titre alors que le contenu est aligné en
+bas. Troisième manifestation du même piège sur cette seule page
+(voir aussi .details-section) : `section` sert ici de conteneur de
+contenu, pas de grande section de page d'accueil. */
+padding:0;
 min-height:340px;
 display:flex;
 align-items:flex-end;
@@ -34,44 +53,76 @@ inset:0;
 width:100%;
 height:100%;
 object-fit:cover;
+transform:scale(1.04);
+filter:saturate(1.06) contrast(1.02);
 }
 
 .details-hero-overlay{
 position:absolute;
 inset:0;
 background:
-linear-gradient(180deg,rgba(15,23,42,.35) 0%,rgba(15,23,42,.88) 100%),
-linear-gradient(100deg,rgba(15,23,42,.9) 0%,rgba(28,34,72,.5) 45%,rgba(15,23,42,.15) 100%);
+radial-gradient(ellipse 58% 76% at 88% 8%, rgba(233,163,25,.30) 0%, rgba(233,163,25,.09) 46%, transparent 70%),
+linear-gradient(102deg, rgba(7,10,22,.94) 0%, rgba(18,22,46,.80) 42%, rgba(18,22,46,.34) 100%),
+linear-gradient(180deg, rgba(7,10,22,.30) 0%, transparent 34%, rgba(7,10,22,.62) 100%);
 }
 
+/* 118px en haut : le header public est fixed et flotte sur la photo.
+Sans cette réserve il couvrait le drapeau et le nom de
+l'établissement au chargement, avant de s'effacer au premier
+défilement. */
 .details-hero-inner{
 position:relative;
 z-index:1;
-padding:48px 0 40px;
+padding:118px 0 42px;
+color:#fff;
+}
+
+/* .back-link (css/base.css, 2026-08-28) : sa couleur de base
+(--text-light) est illisible posée sur une photo — même piège que le
+h1 juste plus bas (voir son commentaire), donc même correctif :
+couleur explicite plutôt qu'héritée. Opacité légère au repos (comme
+.details-hero-sub) pour rester secondaire face au badge pays/titre qui
+suivent, pleine opacité au survol pour confirmer l'interactivité. */
+.details-hero-inner .back-link{
+color:#fff;
+opacity:.82;
+margin-bottom:20px;
+text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
+}
+
+.details-hero-inner .back-link:hover{
+opacity:1;
 color:#fff;
 }
 
 .details-hero-badge{
-display:inline-flex;
+display:flex;
 align-items:center;
-gap:8px;
-background:rgba(255,255,255,.14);
-backdrop-filter:blur(6px);
--webkit-backdrop-filter:blur(6px);
-padding:6px 14px;
-border-radius:999px;
-font-size:var(--fs-small);
-font-weight:600;
-margin-bottom:16px;
-text-shadow:0 1px 3px rgba(0,0,0,.3);
+gap:9px;
+width:max-content;
+max-width:100%;
+background:rgba(255,255,255,.10);
+border:1px solid rgba(255,255,255,.18);
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+padding:8px 16px;
+border-radius:var(--radius-full);
+font-family:var(--font-display);
+font-size:.82rem;
+font-weight:var(--fw-bold);
+letter-spacing:-.005em;
+margin-bottom:18px;
 }
+
+.details-hero-badge i,
+.details-hero-badge svg{width:15px;height:15px;flex-shrink:0;color:var(--amber-500);}
 
 .details-hero-badge img{width:20px;height:14px;object-fit:cover;border-radius:2px;}
 
 .details-hero-inner h1{
 font-family:var(--font-display);
-font-weight:700;
-font-size:var(--fs-h2);
+font-weight:var(--fw-extrabold);
+font-size:clamp(1.9rem,3.6vw,2.65rem);
 line-height:var(--lh-snug);
 letter-spacing:var(--ls-tight);
 margin-bottom:10px;
@@ -92,10 +143,19 @@ margin-bottom:6px;
 text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
 }
 
+/* var(--accent-color) (#7E71D8) recalculé (2026-08-13) : 3,05 à 4,46:1
+selon la zone du dégradé de .details-hero-overlay, sous l'AA (4,5:1)
+même dans le meilleur cas — même écart que .cta-card-badge plus bas et
+que les badges de scholarships.html/universities.html. Blanc plein,
+comme le h1 juste au-dessus (color:#fff) sur ce même fond : 17,85:1. */
+/* Ambre plutôt que blanc : c'est le fil que le visiteur suit depuis
+le catalogue (.uni-card-scholarship est ambre sur la carte qu'il
+vient de cliquer). La même information garde la même couleur d'un
+écran à l'autre. --amber-500 tient 6,8:1 à 8,2:1 sur ce voile. */
 .details-hero-scholarship{
 font-size:var(--fs-body);
-color:var(--accent-color);
-font-weight:600;
+color:var(--amber-500);
+font-weight:var(--fw-bold);
 text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
 }
 
@@ -113,6 +173,117 @@ align-items:start;
 display:flex;
 flex-direction:column;
 gap:36px;
+}
+
+/* Les blocs de la colonne principale sont des éléments <section>, et
+css/base.css donne à TOUT `section` un rembourrage vertical de
+110px — pensé pour les grandes sections d'une page d'accueil.
+Empilés dans une colonne qui gère déjà son écart avec `gap:36px`,
+ils ajoutaient 220px de vide chacun : près de 700px de blanc entre
+"Avant de candidater", "À propos de cette opportunité" et
+"Informations clés", sur une fiche qui tient en un écran et demi.
+Même piège que les groupes pays des catalogues (voir
+.catalog-country-group dans css/catalog.css) — c'est la troisième
+page où il se manifeste, toujours parce que le JS ou le HTML
+utilise <section> comme simple conteneur de contenu. */
+.details-section{
+padding:0;
+}
+
+/* ==========================================================
+« VOTRE SITUATION FACE À CETTE BOURSE » (2026-08-31)
+Bloc réservé aux abonnés. Volontairement SANS cadre appuyé ni fond
+coloré : c'est une section de la fiche comme les autres, pas une
+vitrine de fonctionnalité payante. Un visiteur ne la voit jamais —
+elle reste `hidden` et details.js ne l'ouvre que pour un abonné.
+========================================================== */
+.situation-verdicts{
+list-style:none;
+margin:0 0 18px;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.situation-verdict{
+font-size:.92rem;
+line-height:1.5;
+padding-left:18px;
+position:relative;
+color:var(--text-color);
+}
+
+/* Pastille de ton, jamais une icône : le sens passe par la couleur et
+le texte. --tone-* et --danger-600 : voir css/base.css. */
+.situation-verdict::before{
+content:"";
+position:absolute;
+left:0;
+top:.55em;
+width:8px;
+height:8px;
+border-radius:50%;
+background:var(--text-light);
+}
+
+.situation-verdict.is-favorable::before{ background:var(--success); }
+.situation-verdict.is-defavorable::before{ background:var(--danger-600); }
+.situation-verdict.is-invitation::before{ background:var(--amber-700); }
+
+.situation-verdict.is-defavorable{ color:var(--danger-600); }
+
+.situation-verdict a,
+.situation-empty a,
+.situation-notice a{
+color:var(--amber-700);
+font-weight:var(--fw-semibold);
+text-decoration:underline;
+}
+
+.situation-reasons h3{
+font-family:var(--font-display);
+font-size:1rem;
+font-weight:600;
+margin:0 0 10px;
+color:var(--text-color);
+}
+
+.situation-reasons ul{
+margin:0 0 18px;
+padding-left:20px;
+display:flex;
+flex-direction:column;
+gap:6px;
+font-size:.9rem;
+line-height:1.55;
+color:var(--text-light);
+}
+
+.situation-empty,
+.situation-notice{
+font-size:.9rem;
+line-height:1.55;
+color:var(--text-light);
+margin:0 0 18px;
+}
+
+.situation-notice{ margin:14px 0 0; }
+
+.situation-actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+/* Note de limite d'âge (ageMaxNote) — texte secondaire sous la grille
+« Informations clés » : ce qu'un nombre ne dit pas (limite qui varie
+selon le candidat, cas général vs cas aménagés). */
+.details-age-note{
+margin-top:14px;
+font-size:.88rem;
+line-height:1.6;
+color:var(--text-light);
 }
 
 .details-section h2{
@@ -147,12 +318,20 @@ gap:12px;
 background:var(--background);
 border:1px solid var(--border-color);
 border-radius:var(--radius-md);
-padding:16px 18px;
+padding:15px 17px;
 box-shadow:var(--shadow-xs);
+transition:border-color var(--transition);
 }
 
+.details-info-item:hover{ border-color:var(--amber-500); }
+
+/* Gris neutre et non --primary-color : six icônes en bleu de marque
+alignées sur deux colonnes coloraient la grille sans rien
+distinguer — règle « Icônes » de DESIGN_SYSTEM.md, la couleur d'une
+icône doit signifier quelque chose. Ici elles servent de repères,
+pas de signaux : le sens est dans le libellé juste à côté. */
 .details-info-item i,
-.details-info-item svg{width:20px;height:20px;color:var(--primary-color);flex-shrink:0;margin-top:2px;}
+.details-info-item svg{width:18px;height:18px;color:var(--text-muted);flex-shrink:0;margin-top:2px;}
 
 .details-info-item span{display:block;font-size:var(--fs-caption);color:var(--text-muted);margin-bottom:2px;}
 .details-info-item strong{font-size:var(--fs-small);color:var(--text-color);font-weight:600;}
@@ -163,10 +342,14 @@ box-shadow:var(--shadow-xs);
 
 /* ---------- Diagnostic ---------- */
 
+/* --background-light est un bleu translucide (rgba(51,65,140,.08)) :
+ce bloc formait une grande zone bleutée au milieu d'une page qui ne
+l'est plus. Fond neutre + bordure, comme les cartes du catalogue. */
 .diagnostic-block{
-background:var(--background-light);
+background:var(--background-soft);
+border:1px solid var(--border-color);
 border-radius:var(--radius-lg);
-padding:28px 30px;
+padding:26px 28px;
 }
 
 .diagnostic-head{
@@ -177,7 +360,7 @@ margin-bottom:6px;
 }
 
 .diagnostic-head i,
-.diagnostic-head svg{width:20px;height:20px;color:var(--primary-color);}
+.diagnostic-head svg{width:20px;height:20px;color:var(--amber-700);}
 .diagnostic-head h2{margin:0;}
 
 .diagnostic-intro{
@@ -202,13 +385,17 @@ color:var(--text-color);
 font-weight:500;
 }
 
+/* var(--success) (#22C55E) recalculé (2026-08-13) : 2,28:1 sur ce fond
+blanc, sous le seuil non-texte (3:1) — les coches en devenaient
+quasiment invisibles. #166534 (déjà utilisé pour ce même cas par
+.alert-success, css/base.css) tient 7,13:1. */
 .diagnostic-checklist i,
-.diagnostic-checklist svg{width:16px;height:16px;color:var(--success);}
+.diagnostic-checklist svg{width:16px;height:16px;color:#166534;}
 
 .diagnostic-result{
 margin-top:22px;
 padding-top:22px;
-border-top:1px solid rgba(51,65,140,.15);
+border-top:1px solid var(--border-color);
 }
 
 .diagnostic-score{
@@ -223,7 +410,7 @@ font-family:var(--font-display);
 font-size:var(--fs-stat);
 font-weight:var(--fw-extrabold);
 font-variant-numeric:tabular-nums;
-color:var(--primary-color);
+color:var(--amber-700);
 }
 
 .diagnostic-score span{
@@ -247,10 +434,15 @@ gap:10px;
 .diagnostic-result-list i,
 .diagnostic-result-list svg{width:18px;height:18px;margin-top:1px;flex-shrink:0;}
 
+/* Même correctif de contraste que .diagnostic-checklist plus haut,
+même fond blanc : var(--success) (2,28:1) et var(--warning) (2,07:1)
+tombent tous les deux sous le seuil non-texte (3:1). #166534/#7a5216
+sont les mêmes teintes déjà utilisées pour ce cas par .alert-success/
+.alert-warning (css/base.css) : 7,13:1 et 6,89:1. */
 .diagnostic-result-list .is-ok i,
-.diagnostic-result-list .is-ok svg{color:var(--success);}
+.diagnostic-result-list .is-ok svg{color:#166534;}
 .diagnostic-result-list .is-gap i,
-.diagnostic-result-list .is-gap svg{color:var(--warning);}
+.diagnostic-result-list .is-gap svg{color:#7a5216;}
 
 .diagnostic-result-list strong{display:block;font-size:var(--fs-small);color:var(--text-color);}
 .diagnostic-result-list p{margin:2px 0 0;font-size:var(--fs-caption);color:var(--text-muted);}
@@ -274,8 +466,20 @@ padding:26px 24px;
 priorité (accompagnement payant) au-dessus de l'option autonome
 juste en dessous ; --shadow-lg la fait peser davantage que
 --shadow-md utilisé partout ailleurs sur cette page. */
+/* Fond refait le 2026-08-22. C'était --gradient-primary, l'aplat bleu
+que le reste du site a abandonné (hero, en-tête d'offers, pages
+d'éligibilité) : sur une page devenue sombre-et-ambre, cette carte
+restait le dernier grand bloc bleu vif, et elle attirait l'œil pour
+la mauvaise raison — par sa couleur, pas par son message.
+Même grammaire que l'en-tête d'offers.html : marine profond + éclat
+ambré. La carte reste la plus lourde de la colonne (--shadow-lg,
+c'est l'offre que la page pousse), mais elle appartient enfin à la
+même page que le reste. */
 .cta-card-primary{
-background:var(--gradient-primary);
+background:
+radial-gradient(ellipse 70% 80% at 84% 10%, rgba(233,163,25,.34) 0%, rgba(233,163,25,.10) 48%, transparent 72%),
+linear-gradient(150deg, #1C2246 0%, #12162E 46%, #070A16 100%);
+border:1px solid rgba(233,163,25,.22);
 color:#fff;
 box-shadow:var(--shadow-lg);
 }
@@ -292,8 +496,16 @@ font-weight:700;
 margin-bottom:14px;
 }
 
+/* var(--accent-color) (#7E71D8) recalculé (2026-08-13) : 1,04 à 2,74:1
+selon la zone du dégradé de .cta-card-primary, très sous le seuil
+non-texte (3:1) — l'icône en devenait quasiment invisible sur ce fond.
+Blanc plein, comme le reste du contenu de cette carte : 5,86 à 17,8:1. */
+/* --amber-500 tient 6,8:1 sur le nouveau fond marine de la carte (le
+commentaire ci-dessus vaut pour l'ANCIEN fond bleu, où le violet
+tombait à 1,04:1). Le libellé reste blanc ; seule l'icône est
+colorée, comme partout ailleurs depuis la règle « Icônes ». */
 .cta-card-badge i,
-.cta-card-badge svg{width:13px;height:13px;color:var(--accent-color);}
+.cta-card-badge svg{width:13px;height:13px;color:var(--amber-500);}
 
 .cta-card-primary h3{
 font-family:var(--font-display);
@@ -342,7 +554,7 @@ font-size:var(--fs-small);
 transition:var(--transition);
 }
 
-.portal-link:hover{border-color:var(--primary-color);color:var(--primary-color);}
+.portal-link:hover{border-color:var(--amber-500);color:var(--amber-700);}
 .portal-link i,
 .portal-link svg{width:16px;height:16px;flex-shrink:0;}
 
@@ -356,8 +568,22 @@ color:var(--text-muted);
 line-height:1.5;
 }
 
+/* Avertissement d'inéligibilité par nationalité (2026-08-30) — texte
+seul, sans icône ni fond (règle « Icônes »), au-dessus des liens de
+candidature qui restent tous actifs. --danger-600 : seule valeur
+rouge admise pour du texte sur fond clair (mesure dans base.css). */
+.portal-eligibility-warning{
+margin:0 0 12px;
+font-size:var(--fs-caption);
+font-weight:var(--fw-semibold);
+color:var(--danger-600);
+line-height:1.5;
+}
+
+/* Même correctif que .diagnostic-checklist plus haut : var(--success)
+tombe à 2,28:1 sur ce fond blanc (.cta-card-secondary), sous l'AA. */
 .portal-trust i,
-.portal-trust svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:var(--success);}
+.portal-trust svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:#166534;}
 
 @media(max-width:900px){
 
@@ -429,4 +655,15 @@ justify-content:center;
 
 @media(max-width:480px){
 .portal-nudge{left:16px;right:16px;max-width:none;}
+}
+
+/* La réserve de 118px protège le titre du header public fixe. Sur
+petit écran le header est plus court et la bannière plus étroite :
+la même réserve y mangeait un tiers de la hauteur utile. */
+@media(max-width:720px){
+
+.details-hero{ min-height:0; }
+
+.details-hero-inner{ padding:96px 0 30px; }
+
 }

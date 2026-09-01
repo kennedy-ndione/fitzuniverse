@@ -114,14 +114,14 @@ avatar.textContent = getInitials(fullName);
 }
 
 document.getElementById("execGreeting").textContent = `${timeOfDayGreeting()} ${firstName}`;
-document.getElementById("execRole").textContent = `${role} • ScholarBridge`;
+document.getElementById("execRole").textContent = `${role} • Fitz`;
 
 const alertNote = userStats.newToday > 0
 ? `${userStats.newToday} nouvel${userStats.newToday > 1 ? "les" : ""} étudiant${userStats.newToday > 1 ? "s" : ""} aujourd'hui`
 : "aucune nouvelle alerte aujourd'hui";
 
 document.getElementById("execBriefing").textContent =
-`Voici l'état actuel de ScholarBridge : ${formatNumber(userStats.total)} étudiant${userStats.total > 1 ? "s" : ""} inscrit${userStats.total > 1 ? "s" : ""}, ${formatNumber(universitiesCount)} universités disponibles, ${formatNumber(scholarshipsCount)} bourses publiées, ${alertNote}.`;
+`Voici l'état actuel de Fitz : ${formatNumber(userStats.total)} étudiant${userStats.total > 1 ? "s" : ""} inscrit${userStats.total > 1 ? "s" : ""}, ${formatNumber(universitiesCount)} universités disponibles, ${formatNumber(scholarshipsCount)} bourses publiées, ${alertNote}.`;
 
 }
 
@@ -331,7 +331,7 @@ const activitySum = (totals.letter_generated || 0) + (totals.email_generated || 
 let text;
 
 if (userStats.total === 0) {
-text = "ScholarBridge n'a pas encore d'étudiant inscrit. Les statistiques commenceront à évoluer dès l'arrivée des premiers comptes.";
+text = "Fitz n'a pas encore d'étudiant inscrit. Les statistiques commenceront à évoluer dès l'arrivée des premiers comptes.";
 } else if (userStats.newToday === 0 && activitySum === 0) {
 text = "Aucune anomalie détectée aujourd'hui. Le nombre d'inscriptions est stable — aucune activité inhabituelle à signaler.";
 } else if (userStats.newToday > 0) {

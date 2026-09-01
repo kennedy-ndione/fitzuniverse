@@ -1,5 +1,5 @@
 // ============================================================
-// ScholarBridge — Migration "portail de candidature par défaut"
+// Fitz — Migration "portail de candidature par défaut"
 // (2026-08-10). Voir l'audit complet dans la conversation associée :
 // 35 universités sur 36 ont EXACTEMENT la même applicationUrl sur
 // tous leurs programmes (donnée dupliquée par nécessité du modèle

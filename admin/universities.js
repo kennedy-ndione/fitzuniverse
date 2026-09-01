@@ -1,5 +1,5 @@
 // ============================================
-// ScholarBridge Admin - Universités (Control Center)
+// Fitz Admin - Universités (Control Center)
 // Architecture relationnelle (2026-07-30) : cette page gère
 // exclusivement le PROFIL d'une université (collection "universities",
 // une fiche par établissement réel). Les programmes (quelle bourse,

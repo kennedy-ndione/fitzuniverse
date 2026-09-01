@@ -1,0 +1,109 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DU QUESTIONNAIRE FITZ (2026-08-29)
+eligibility-questions.html UNIQUEMENT — chargée en dernier, après
+css/eligibility-typography.css, pour gagner la cascade sur les
+couleurs/polices déclarées dans css/base.css, css/ai-suite.css et
+eligibility-questions.css. Même identité, mêmes valeurs que
+css/eligibility-test-redesign.css (page précédente du même parcours).
+========================================================== */
+
+:root{
+
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+
+/* Famille --accent-* (2026-08-29) : le violet #7E71D8 de l'ancien
+espace connecté fuyait encore sur cette page à travers les feuilles
+historiques (icônes de réassurance, compteurs, liens) alors que tout
+le reste de la palette est déjà remappé ci-dessus. Terracotta aux
+mêmes rôles — et au passage le contraste s'améliore : #7E71D8 en
+texte sur fond clair tombait à ~3,4:1, #BE6032 tient 4,5:1+. */
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+}
+
+/* Halo de fond — body::before, même correctif que eligibility-test.html. */
+body::before{
+background:radial-gradient(circle at center, rgba(217,128,90,.55) 0%, rgba(217,128,90,.22) 38%, transparent 62%);
+}
+
+/* Carte principale — ombre portée marine → encre chaude. */
+.container{
+box-shadow:0 4px 12px rgba(33,29,24,.10), 0 24px 48px -12px rgba(33,29,24,.28), inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* Barre de progression — dégradé bleu (--gradient-primary) → terracotta,
+même correctif que .progress-bar sur eligibility-test.html. */
+.progress-bar{
+background:linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 55%, var(--amber-700) 100%);
+}
+
+/* Avatar Fitz de la bulle de conversation (.chat-box .fitz-avatar::after)
+— encore à l'ancien ambre (#E9A319/#8A5D00) : mêmes valeurs terracotta
+que le reste du site. « Mettre en avant Fitz » ici passe par cette
+cohérence de teinte : l'avatar est déjà l'élément le plus visible de
+chaque écran de question, il ne doit plus jurer avec le reste. */
+.chat-box .fitz-avatar::after{
+background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
+}
+
+/* Champ de réponse — halo de focus marine (rgba(51,65,140,…)) → terracotta,
+même geste que la bordure de focus (--primary-color, déjà redirigé par
+les tokens ci-dessus). "Inter" codé en dur → police du site. */
+input#answer{
+font-family:var(--font-body);
+}
+
+input#answer:focus{
+box-shadow:0 0 0 4px rgba(217,128,90,.14);
+}
+
+.scale-chip,
+.nav-buttons button{
+font-family:var(--font-body);
+}
+
+/* Titre de question — même signature Newsreader que le reste du parcours. */
+.question-header h2{
+font-family:var(--font-affirmation);
+font-weight:700;
+letter-spacing:-.01em;
+}
+
+/* ==========================================================
+ÉTATS SÉLECTIONNÉS (carte d'option, puce d'échelle, lettre) —
+retour utilisateur du 2026-08-29 : « le bleu au clique ne me plaît
+pas ». Les trois états sélectionnés de cette page étaient les
+derniers survivants de --gradient-primary, le dégradé BLEU MARINE
+de l'ancienne identité (base.css : #4A5BC4→#33418C→#12162E) — la
+barre de progression avait déjà été corrigée, pas eux. Même dégradé
+terracotta que le reste du parcours ; le blanc tient 4,7:1 sur le
+stop le plus clair (#BE6032), AA. Ne pas revenir à
+var(--gradient-primary) ici : ce token reste bleu tant que
+l'espace connecté ne migre pas.
+========================================================== */
+.option-card.selected,
+.scale-chip.selected,
+.letter-chip.selected{
+background:linear-gradient(135deg, var(--amber-600) 0%, var(--amber-700) 100%);
+border-color:var(--amber-700);
+color:#fff;
+}

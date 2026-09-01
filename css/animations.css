@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE - ANIMATIONS
+FITZUNIVERSE - ANIMATIONS
 ========================================================== */
 
 /* Par défaut (JS absent ou en échec) le contenu reste visible :
@@ -23,18 +23,58 @@ transform:translateY(0) scale(1);
 }
 
 .cards-grid .reveal:nth-child(2),
-.steps .reveal:nth-child(2){
+.steps .reveal:nth-child(2),
+.problem-list .reveal:nth-child(2),
+.assurance-list .reveal:nth-child(2){
 transition-delay:.08s;
 }
 
 .cards-grid .reveal:nth-child(3),
-.steps .reveal:nth-child(3){
+.steps .reveal:nth-child(3),
+.problem-list .reveal:nth-child(3),
+.assurance-list .reveal:nth-child(3){
 transition-delay:.16s;
 }
 
 .cards-grid .reveal:nth-child(4){
 transition-delay:.24s;
 }
+
+/* offers.html/payment.html (2026-08-15) : ni l'une ni l'autre ne
+chargeait cette feuille jusqu'ici — chacune garde son propre système
+.reveal local (offers.css/payment.css), chargé APRÈS celle-ci, donc
+prioritaire sur tout sélecteur qu'il redéfinit déjà. Seuls les
+sélecteurs neufs ci-dessous (absents de offers.css/payment.css)
+prennent effet ; rien du minutage existant n'est modifié.
+
+.pricing-grid/.pricing-grid--duo (offers.html) : chaque .plan-card porte
+.reveal individuellement (plus le conteneur) — mêmes délais que
+.cards-grid/.steps ci-dessus, même valeurs, aucune nouvelle inventée. */
+.pricing-grid .reveal:nth-child(2),
+.pricing-grid--duo .reveal:nth-child(2){
+transition-delay:.08s;
+}
+
+.pricing-grid .reveal:nth-child(3),
+.pricing-grid--duo .reveal:nth-child(3){
+transition-delay:.16s;
+}
+
+.pricing-grid .reveal:nth-child(4),
+.pricing-grid--duo .reveal:nth-child(4){
+transition-delay:.24s;
+}
+
+/* .summary-card (payment.html) : 6 lignes de récapitulatif, jusqu'ici
+sans aucun échelonnement. .reassurance a déjà le sien dans payment.css
+(.reassurance-item:nth-child, .04s/ligne) — non dupliqué ici. Même
+principe de délai croissant que .cards-grid, cadence adaptée à 6 lignes
+plutôt que 4 cartes. */
+.summary-card .reveal:nth-child(2){ transition-delay:.04s; }
+.summary-card .reveal:nth-child(3){ transition-delay:.08s; }
+.summary-card .reveal:nth-child(4){ transition-delay:.12s; }
+.summary-card .reveal:nth-child(5){ transition-delay:.16s; }
+.summary-card .reveal:nth-child(6){ transition-delay:.20s; }
 
 /* ==========================================================
 ENTRÉE ÉCHELONNÉE DU HERO
@@ -45,6 +85,7 @@ ENTRÉE ÉCHELONNÉE DU HERO
 .hero-content > .hero-stagger:nth-child(3){transition-delay:.27s;}
 .hero-content > .hero-stagger:nth-child(4){transition-delay:.38s;}
 .hero-content > .hero-stagger:nth-child(5){transition-delay:.49s;}
+.hero-content > .hero-stagger:nth-child(6){transition-delay:.60s;}
 
 .hero-visual > .hero-stagger:nth-child(1){transition-delay:.35s;}
 .hero-visual > .hero-stagger:nth-child(2){transition-delay:.5s;}

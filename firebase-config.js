@@ -23,6 +23,11 @@ appId: "1:226568659919:web:f390e4da7346b2f556e8ba"
 const app = initializeApp(firebaseConfig);
 
 // Services Firebase
+// L instance est exportee depuis 2026-08-21 : js/ai/ai-client.js en a
+// besoin pour cibler getFunctions(app, region) — le relais IA de Fitz est
+// deploye en europe-west1, pas dans la region par defaut.
+export { app };
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
@@ -38,5 +43,5 @@ export const storage = getStorage(app);
 if (location.hostname === "localhost" && new URLSearchParams(location.search).get("useEmulator") === "1") {
 connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
 connectFirestoreEmulator(db, "localhost", 8080);
-console.warn("[ScholarBridge] Connecté aux émulateurs Firebase locaux (Auth :9099, Firestore :8080) — voir TESTING.md.");
+console.warn("[Fitz] Connecté aux émulateurs Firebase locaux (Auth :9099, Firestore :8080) — voir TESTING.md.");
 }

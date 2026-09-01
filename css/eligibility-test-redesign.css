@@ -1,0 +1,134 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DU DIAGNOSTIC FITZ (2026-08-29)
+eligibility-test.html UNIQUEMENT — chargée en dernier, après
+css/eligibility-typography.css, pour gagner la cascade sur les
+couleurs/polices déclarées dans css/base.css, css/ai-suite.css et
+eligibility-test.css.
+
+CONTEXTE — cette page est l'étape qui suit un clic « Faire le
+diagnostic » depuis le catalogue ou la fiche détails, déjà passés à
+l'identité « éditorial chaleureux » (fond beige, titres en Newsreader,
+terracotta à la place de l'ambre, encre chaude à la place du marine —
+voir css/homepage-redesign.css, css/catalog-redesign.css,
+css/details-redesign.css). Elle restait sur l'ancienne palette Sora/
+Inter + marine/ambre : même rupture de continuité que pour la fiche
+détails avant sa refonte. Même valeurs, reprises telles quelles.
+========================================================== */
+
+:root{
+
+/* ---------------------------------------------------------
+TYPOGRAPHIE — mêmes noms/valeurs que les autres pages refaites.
+--------------------------------------------------------- */
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+/* ---------------------------------------------------------
+COULEUR DE MARQUE — même terracotta, mêmes 3 paliers.
+--------------------------------------------------------- */
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+/* ---------------------------------------------------------
+BLEU MARINE RÉSIDUEL → ENCRE CHAUDE.
+--------------------------------------------------------- */
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+/* ---------------------------------------------------------
+FOND DE PAGE — même échelle beige que le reste du site.
+--------------------------------------------------------- */
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+
+/* Famille --accent-* (2026-08-29) : le violet #7E71D8 de l'ancien
+espace connecté fuyait encore sur cette page à travers les feuilles
+historiques (icônes de réassurance, compteurs, liens) alors que tout
+le reste de la palette est déjà remappé ci-dessus. Terracotta aux
+mêmes rôles — et au passage le contraste s'améliore : #7E71D8 en
+texte sur fond clair tombait à ~3,4:1, #BE6032 tient 4,5:1+. */
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+}
+
+/* ==========================================================
+HALO DE FOND — body::before (eligibility-test.css l.117-127) : ambre
+codé en dur (pas un token), rgba(233,163,25,…) → terracotta. Même
+géométrie, même opacité.
+========================================================== */
+body::before{
+background:radial-gradient(circle at center, rgba(217,128,90,.55) 0%, rgba(217,128,90,.22) 38%, transparent 62%);
+}
+
+/* ==========================================================
+CARTE PRINCIPALE — ombre portée teintée marine (rgba(18,22,46,…),
+eligibility-test.css l.163) → encre chaude, même opacités.
+========================================================== */
+.card{
+box-shadow:0 4px 12px rgba(33,29,24,.10), 0 24px 48px -12px rgba(33,29,24,.28), inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* ==========================================================
+AVATAR FITZ — le halo qui respire (.advisor-intro .fitz-avatar::after,
+css/ai-suite.css) est encore à l'ancien ambre (#E9A319/#8A5D00) : seule
+pièce de la page à ne pas suivre les tokens terracotta ci-dessus,
+recolorée en dur dans le fichier source. Repris ici avec les mêmes
+valeurs que le reste du site (var(--amber-500)/var(--amber-700)).
+« Mettre en avant Fitz » sur cette page passe surtout par cette
+cohérence de teinte : l'avatar est déjà l'élément le plus visible du
+haut de carte, il ne doit plus jurer avec le reste.
+========================================================== */
+.advisor-intro .fitz-avatar::after{
+background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
+}
+
+/* ==========================================================
+CADRES SECONDAIRES — bordures encore teintées marine (rgba(51,65,140,…),
+eligibility-test.css l.441/628) → encre chaude, même opacités.
+========================================================== */
+.trust-box{
+border:1px solid rgba(33,29,24,.14);
+}
+
+.feature-card:hover{
+border-color:rgba(33,29,24,.18);
+}
+
+/* ==========================================================
+BARRE DE PROGRESSION — dégradé bleu (--gradient-primary,
+eligibility-test.css l.494) → terracotta, même correctif que
+#progress-bar sur index.html (css/homepage-redesign.css).
+========================================================== */
+.progress-bar{
+background:linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 55%, var(--amber-700) 100%);
+}
+
+/* ==========================================================
+BOUTON PRINCIPAL — "Inter" codé en dur (eligibility-test.css l.559),
+ne suit donc pas --font-body automatiquement.
+========================================================== */
+button#startButton{
+font-family:var(--font-body);
+}
+
+/* ==========================================================
+TITRE — même signature Newsreader que le reste du parcours.
+========================================================== */
+.card h1{
+font-family:var(--font-affirmation);
+letter-spacing:-.02em;
+}
+
+.feature-card h3{
+font-family:var(--font-affirmation);
+font-weight:700;
+}

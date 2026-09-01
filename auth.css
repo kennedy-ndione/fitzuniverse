@@ -1,14 +1,40 @@
 /* ==========================================================
-SCHOLARBRIDGE — CONNEXION / COMPTE (login.html, formulaire de compte
+FITZUNIVERSE — CONNEXION / COMPTE (login.html, formulaire de compte
 de payment.html — signup.html a été retiré, voir ce commit)
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html,
 eligibility-test.html, results.html, offers.html et payment.html)
 ========================================================== */
 
+/* min-height/overflow seulement ici : le centrage (display:flex,
+align/justify-content) vit maintenant sur .auth-page ci-dessous, pas
+sur body — voir la refonte "carte flottante sur photo plein écran"
+plus bas. payment.html charge aussi ce fichier mais redéclare son
+propre body{} dans payment.css, chargé après auth.css : la cascade lui
+donne toujours le dernier mot, ce fichier ne le concerne pas. */
 body{
 
 min-height:100vh;
+
+overflow-x:hidden;
+
+}
+
+/* ==========================================================
+PAGE — carte flottante sur photo plein écran (amphitheatre.jpg),
+référence pages de connexion institutionnelles (SSO universitaire).
+Remplace l'ancienne mise en page à 2 blocs empilés (.auth-shell avec
+.auth-hero au-dessus de .auth-card, fond --gradient-hero uni) : logo +
+titre vivent maintenant dans la carte elle-même (voir CARTE plus bas).
+========================================================== */
+
+.auth-page{
+
+position:relative;
+
+min-height:100vh;
+
+width:100%;
 
 display:flex;
 
@@ -16,27 +42,56 @@ align-items:center;
 
 justify-content:center;
 
-padding:60px 20px;
+/* 40px -> 24px (2026-08-13) : avec la carte pleine hauteur, 40px de
+chaque côté poussait le total au-delà de 100vh sur des écrans courants
+et forçait un scroll — voir aussi les réductions internes de .auth-card
+plus bas, qui font l'essentiel du travail. */
+padding:24px 20px;
 
-overflow-x:hidden;
+overflow:hidden;
 
 }
 
-.auth-page{
+/* position:fixed comme .hero-media (css/hero.css) : la photo reste
+pleinement cadrée même si le contenu de la carte pousse la page à
+scroller (message d'erreur, clavier mobile qui réduit le viewport...). */
+.auth-page-bg{
 
-position:relative;
+position:fixed;
+
+inset:0;
+
+z-index:0;
 
 width:100%;
 
-display:flex;
+height:100%;
 
-justify-content:center;
+object-fit:cover;
 
 }
 
-/* Le fond de page vient déjà de --gradient-hero (base.css) — pas de
-halos supplémentaires ici : superposer un deuxième décor animé
-au-dessus du dégradé du body n'ajoutait rien, juste du bruit visuel. */
+/* Voile dégradé bleu marine (--primary-dark), pas un aplat uniforme —
+même logique que .hero-overlay (css/hero.css) : l'amphithéâtre doit
+rester identifiable en arrière-plan, pas juste deviné sous un bloc de
+couleur plat. La carte est maintenant elle-même en dégradé bleu (voir
+CARTE plus bas, 2026-08-13) : ce voile sert la cohérence de marque et
+la lisibilité du bord de carte sur une photo par endroits très claire —
+pas le contraste du texte, qui ne touche jamais directement la photo,
+seulement le fond de la carte (recalculé séparément, voir plus bas). */
+.auth-page-overlay{
+
+position:fixed;
+
+inset:0;
+
+z-index:1;
+
+background:
+linear-gradient(180deg, rgba(18,22,46,.5) 0%, rgba(18,22,46,.72) 100%),
+radial-gradient(ellipse 70% 60% at 50% 38%, rgba(18,22,46,.22) 0%, rgba(18,22,46,.58) 100%);
+
+}
 
 /* ==========================================================
 RÉVÉLATION AU CHARGEMENT
@@ -89,38 +144,133 @@ transition:none !important;
 }
 
 /* ==========================================================
-STRUCTURE
+CARTE — dégradé bleu de marque (--gradient-primary), pas blanc opaque
+(révision 2026-08-13, remplace le blanc opaque de la 1re version de
+cette refonte) : bordure ambre en accent, texte reconstruit en clair.
+Contraste recalculé précisément (pas à l'estimation) contre le point
+le plus clair du dégradé — c'est le pire cas pour du texte clair,
+--gradient-primary va de #4A5BC4 (clair) à #12162E (très sombre) :
+- blanc plein (h1, labels) : 5,86:1 minimum -> AA large
+- blanc à 85% (sous-texte, texte secondaire) : 4,74:1 -> AA (le palier
+  en dessous, .82, tombait à 4,53 — trop juste, .85 pour une vraie
+  marge, même logique que le correctif footer d'index.html)
+Les champs de saisie eux-mêmes restent sur fond blanc plein (voir
+CHAMPS DE SAISIE plus bas, inchangé) : le texte tapé et les
+placeholders ne touchent jamais ce fond bleu, donc pas concernés par
+ce recalcul — c'est le point que le brief demandait de vérifier en
+particulier, et il ne s'applique pas ici pour cette raison précise.
+L'ambre (--amber-500) reste en surface uniquement (bordure, bouton
+plus bas) — jamais en texte : recalculé aussi, un texte ambre sur le
+point le plus clair du dégradé ne tient que 2,71:1, largement sous AA.
 ========================================================== */
 
-.auth-shell{
+.auth-card{
+
+position:relative;
+
+z-index:2;
 
 width:100%;
 
-max-width:460px;
+max-width:440px;
+
+/* Fond refait le 2026-08-22. C'était --gradient-primary, l'aplat bleu
+vif que le reste du site a abandonné (hero, en-tête d'offers, pages
+d'éligibilité, fiche université). Posée sur une photo d'amphithéâtre
+déjà bleutée, cette carte devenait un rectangle bleu sur fond bleu :
+elle ne se détachait pas, et c'était le dernier grand bloc de cette
+teinte du site.
+Même grammaire que l'en-tête d'offers.html et la carte « Être
+accompagné par Fitz » : marine profond + éclat ambré en haut à
+droite. La carte se détache enfin de la photo, et l'ambre annonce le
+bouton qui l'attend plus bas. */
+background:
+radial-gradient(ellipse 74% 62% at 84% 6%, rgba(233,163,25,.26) 0%, rgba(233,163,25,.07) 48%, transparent 72%),
+linear-gradient(158deg, #1C2246 0%, #12162E 48%, #070A16 100%);
+
+border:1px solid rgba(233,163,25,.28);
+
+border-radius:var(--radius-lg);
+
+padding:34px 32px;
+
+/* Ombre portée plus profonde que --shadow-lg : la carte flotte
+au-dessus d'une photo, pas au-dessus d'un fond de page. */
+box-shadow:0 2px 4px rgba(7,10,22,.28), 0 30px 60px -18px rgba(7,10,22,.62);
 
 }
 
-/* ==========================================================
-HERO
-========================================================== */
+/* « Ce n'est pas vous ? » — n'apparaît que si un prénom est reconnu
+(voir login.js). Discret par construction : c'est une porte de
+sortie, pas une action qu'on veut encourager. Mais il doit rester
+trouvable sans effort sur un poste partagé, d'où le soulignement au
+survol plutôt qu'un simple changement de teinte. */
+.auth-not-you{
 
-.auth-hero{
+display:block;
 
-text-align:center;
+margin:-10px auto 18px;
 
-margin-bottom:32px;
+padding:4px 8px;
+
+border:none;
+
+background:none;
+
+font-family:inherit;
+
+font-size:.8rem;
+
+color:rgba(255,255,255,.62);
+
+cursor:pointer;
+
+transition:color var(--transition);
 
 }
 
+.auth-not-you:hover{
+
+color:var(--amber-500);
+
+text-decoration:underline;
+
+}
+
+.auth-not-you:focus-visible{
+
+outline:2px solid var(--amber-500);
+
+outline-offset:2px;
+
+border-radius:6px;
+
+}
+
+/* SANS CETTE RÈGLE, LE BOUTON RESTE VISIBLE POUR TOUT LE MONDE.
+`[hidden]{display:none}` est une feuille de style du NAVIGATEUR : le
+`display:block` déclaré ci-dessus, qui est un style d'auteur, la bat
+systématiquement. Le bouton « Ce n'est pas vous ? » se serait donc
+affiché aussi au visiteur inconnu — à qui il ne veut strictement rien
+dire, et qui se serait demandé de qui on parle.
+Quatrième fois que ce piège se manifeste dans ce dépôt (voir aussi
+.results-loading, .context-banner, .footnote-line) : toute règle qui
+pose un `display` sur un élément susceptible de porter `hidden` doit
+être accompagnée de son pendant `[hidden]`. */
+.auth-not-you[hidden]{ display:none; }
+
+/* text-align:center scopé au logo/titre/sous-texte ci-dessous, pas à
+.auth-card entière : les champs du formulaire plus bas (labels, inputs)
+restent alignés à gauche, comme tout formulaire normal. */
 .auth-logo-wrap{
 
 position:relative;
 
-width:84px;
+width:56px;
 
-height:84px;
+height:56px;
 
-margin:0 auto 20px;
+margin:0 auto 14px;
 
 }
 
@@ -135,105 +285,25 @@ height:100%;
 
 object-fit:contain;
 
-border-radius:var(--radius-lg);
+border-radius:var(--radius-md);
 
-filter:drop-shadow(0 10px 22px rgba(51,65,140,.28));
-
-}
-
-.auth-badge{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-margin:0 auto 18px;
-
-padding:9px 18px;
-
-border-radius:var(--radius-full);
-
-background:var(--background-light);
-
-color:var(--primary-color);
-
-font-weight:700;
-
-font-size:.84rem;
+filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));
 
 }
 
-.auth-badge i,
-.auth-badge svg{
+.auth-card h1{
 
-width:15px;
+text-align:center;
 
-height:15px;
-
-}
-
-.auth-hero h1{
-
-font-size:clamp(1.6rem,4vw,2.1rem);
+font-size:clamp(1.3rem,3vw,1.6rem);
 
 line-height:1.25;
 
 font-weight:800;
 
-color:var(--text-color);
+color:#fff;
 
-margin-bottom:12px;
-
-}
-
-.auth-hero p{
-
-max-width:380px;
-
-margin:0 auto;
-
-color:var(--text-light);
-
-font-size:.96rem;
-
-line-height:1.7;
-
-}
-
-/* ==========================================================
-CARTE
-========================================================== */
-
-.auth-card{
-
-background:rgba(255,255,255,.86);
-
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-border:1px solid var(--glass-border);
-
-border-radius:var(--radius-lg);
-
-padding:40px 36px;
-
-box-shadow:var(--shadow-lg);
-
-}
-
-.auth-card h2{
-
-font-size:1.4rem;
-
-font-weight:800;
-
-color:var(--text-color);
-
-text-align:center;
-
-margin-bottom:6px;
+margin-bottom:8px;
 
 }
 
@@ -241,11 +311,15 @@ margin-bottom:6px;
 
 text-align:center;
 
-color:var(--text-light);
+max-width:340px;
 
-font-size:.9rem;
+margin:0 auto 18px;
 
-margin-bottom:28px;
+color:rgba(255,255,255,.85);
+
+font-size:.88rem;
+
+line-height:1.55;
 
 }
 
@@ -253,9 +327,10 @@ margin-bottom:28px;
 CHAMPS DE SAISIE
 ========================================================== */
 
+/* 20px -> 14px (2026-08-13, densité verticale pour tenir en 100vh) */
 .input-group{
 
-margin-bottom:20px;
+margin-bottom:14px;
 
 }
 
@@ -263,13 +338,23 @@ margin-bottom:20px;
 
 display:block;
 
-margin-bottom:8px;
+margin-bottom:6px;
 
 font-weight:600;
 
 font-size:.86rem;
 
 color:var(--text-color);
+
+}
+
+/* Label en clair sur la carte bleue — override scopé à .auth-card
+plutôt que de changer .input-group label directement : cette classe
+est partagée avec payment.html (fond de carte différent, non touché
+par cette refonte), donc pas question de changer sa couleur de base. */
+.auth-card .input-group label{
+
+color:#fff;
 
 }
 
@@ -505,6 +590,7 @@ font-weight:600;
 OPTIONS DE CONNEXION (login)
 ========================================================== */
 
+/* margin-bottom 26px -> 18px (2026-08-13, densité verticale) */
 .auth-options{
 
 display:flex;
@@ -517,7 +603,7 @@ flex-wrap:wrap;
 
 gap:10px;
 
-margin:-4px 0 26px;
+margin:-4px 0 18px;
 
 font-size:.86rem;
 
@@ -562,6 +648,25 @@ font-weight:600;
 .forgot-link:hover{
 
 text-decoration:underline;
+
+}
+
+/* Overrides scopés à .auth-card (fond bleu) — .remember-me/.forgot-link
+sont partagés avec payment.html, base non touchée, même logique que
+.input-group label ci-dessus. .forgot-link reste blanc (pas ambre) :
+un texte ambre sur ce dégradé bleu tombe à 2,71:1 au pire endroit,
+largement sous AA — l'ambre reste réservé aux surfaces (bordure de
+carte, bouton), jamais au texte, voir le commentaire au-dessus de
+.auth-card. */
+.auth-card .remember-me{
+
+color:rgba(255,255,255,.85);
+
+}
+
+.auth-card .forgot-link{
+
+color:#fff;
 
 }
 
@@ -621,6 +726,13 @@ text-decoration:underline;
 MESSAGE D'ERREUR (créé par auth-ui.js)
 ========================================================== */
 
+/* Fond quasi-blanc plein (pas une teinte rouge à 8% d'opacité) : ce
+bloc doit rester lisible quel que soit ce qu'il y a derrière lui — sur
+la carte bleue de login.html en particulier, un rouge sombre à 8%
+d'opacité sur fond bleu marine ne tenait plus du tout le contraste
+(texte #9f1c1c dessus déjà sombre pour commencer). Surface propre,
+détachée du fond de la carte, plutôt qu'un recalcul fragile à chaque
+nouvelle couleur de carte. */
 .form-error{
 
 display:none;
@@ -629,9 +741,9 @@ align-items:center;
 
 gap:10px;
 
-background:rgba(239,68,68,.08);
+background:rgba(255,255,255,.96);
 
-border:1px solid rgba(239,68,68,.25);
+border:1px solid rgba(239,68,68,.35);
 
 border-left:3px solid var(--danger);
 
@@ -647,7 +759,7 @@ font-weight:600;
 
 line-height:1.5;
 
-margin-bottom:20px;
+margin-bottom:14px;
 
 }
 
@@ -721,9 +833,30 @@ background-position:center;
 
 }
 
+/* Trait #12162E (--primary-900), pas blanc : le bouton "Se connecter"
+est passé en fond ambre (voir .login-form .btn-auth-submit plus bas),
+l'icône doit suivre la même couleur de texte que le libellé. */
 .login-form .btn-auth-submit::before{
 
-background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4'/%3E%3Cpolyline points='10 17 15 12 10 7'/%3E%3Cline x1='15' y1='12' x2='3' y2='12'/%3E%3C/svg%3E");
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2312162E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4'/%3E%3Cpolyline points='10 17 15 12 10 7'/%3E%3Cline x1='15' y1='12' x2='3' y2='12'/%3E%3C/svg%3E");
+
+}
+
+/* Seul bouton ambre de cette page (voir la même règle sur index.html,
+css/homepage-sections.css) : "Se connecter" est l'action de la page,
+il doit ressortir sur la carte bleue — un bouton bleu s'y serait fondu.
+Texte en --primary-900 (pas blanc) sur ambre : 8,24:1, largement AA. */
+.login-form .btn-auth-submit{
+
+background:var(--amber-500);
+
+color:var(--primary-900);
+
+}
+
+.login-form .btn-auth-submit:hover{
+
+background:var(--amber-600);
 
 }
 
@@ -807,6 +940,7 @@ animation-duration:1.4s;
 CONFIANCE / LIENS
 ========================================================== */
 
+/* margin-top réduits (20/18/8 -> 14/14/6, densité verticale 2026-08-13) */
 .auth-trust{
 
 display:flex;
@@ -817,7 +951,7 @@ justify-content:center;
 
 gap:7px;
 
-margin-top:20px;
+margin-top:14px;
 
 color:var(--text-muted);
 
@@ -838,7 +972,7 @@ color:var(--primary-color);
 
 .login-link{
 
-margin-top:18px;
+margin-top:14px;
 
 text-align:center;
 
@@ -864,7 +998,7 @@ text-decoration:underline;
 
 .forgot-note{
 
-margin-top:8px;
+margin-top:6px;
 
 text-align:center;
 
@@ -876,50 +1010,70 @@ font-style:italic;
 
 }
 
-/* ==========================================================
-RESPONSIVE — TABLETTE (768–1023px)
-========================================================== */
+/* Overrides scopés à .auth-card (fond bleu), même logique que plus
+haut : .auth-trust/.login-link/.forgot-note sont partagés (ou
+potentiellement réutilisés) ailleurs, base non touchée. Icône
+.auth-trust en blanc, pas bleu (--primary-color s'y fondrait). Lien
+"Choisir ma formule" en blanc, pas ambre — même raison que
+.forgot-link plus haut (ambre-texte hors seuil AA sur ce dégradé). */
+.auth-card .auth-trust,
+.auth-card .login-link,
+.auth-card .forgot-note{
 
-@media(max-width:1023px){
-
-.auth-page::before,
-.auth-page::after{
-
-opacity:.7;
+color:rgba(255,255,255,.85);
 
 }
+
+.auth-card .auth-trust i,
+.auth-card .auth-trust svg{
+
+color:rgba(255,255,255,.85);
+
+}
+
+.auth-card .login-link a{
+
+color:#fff;
 
 }
 
 /* ==========================================================
 RESPONSIVE — MOBILE (< 768px)
+Carte pleine largeur confortable (pas de marges écrasées) : .auth-page
+garde un padding généreux plutôt que de laisser .auth-card toucher les
+bords, le fond photo reste visible tout autour. (Le palier "tablette
+768–1023px" qui vivait ici avant ne stylait que .auth-page::before/
+::after — deux pseudo-éléments jamais déclarés ailleurs dans ce
+fichier, donc du CSS mort depuis le début ; retiré au passage.)
 ========================================================== */
 
 @media(max-width:767px){
 
-body{
+.auth-page{
 
-padding:36px 16px;
+padding:16px;
 
 }
 
 .auth-card{
 
-padding:30px 24px;
+padding:24px 22px;
 
 }
 
 .auth-logo-wrap{
 
-width:72px;
+width:48px;
 
-height:72px;
+height:48px;
+
+margin-bottom:10px;
 
 }
 
-.auth-hero h1{
+.auth-card h1{
 
-font-size:1.5rem;
+font-size:1.25rem;
 
 }
 
@@ -947,7 +1101,7 @@ gap:14px;
 
 .auth-card{
 
-padding:26px 18px;
+padding:20px 16px;
 
 }
 

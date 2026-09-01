@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — actions sensibles du compte utilisateur
+* FitzUniverse — actions sensibles du compte utilisateur
 * ============================================================
 *
 * Changement de mot de passe et suppression définitive de compte,

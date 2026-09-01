@@ -27,6 +27,18 @@
 // absente pour la même raison (Louvain-la-Neuve sans photo) — seules
 // ULB/ULiège/UNamur portent ARES ce lot-ci.
 //
+// >>> PÉRIMÉ DEPUIS LE LOT 6 (2026-08-28). Les deux stubs ont été
+// débloqués par expand-catalog-batch6.js, qui a créé UM6P et
+// UCLouvain, leurs deux programmes, et RÉÉCRIT le champ
+// generalCriteria de la bourse UM6P pour en retirer la mention
+// "Stub volontaire" ci-dessous, devenue fausse.
+//
+// Ce fichier n'est pas modifié pour autant : il consigne ce qui a
+// réellement été écrit le 2026-08-13, et le réécrire lui ferait
+// mentir sur son propre passage. En revanche, LE RELANCER
+// aujourd'hui remettrait l'ancienne valeur et annulerait le lot 6 —
+// ces scripts sont ponctuels et ne sont pas censés être rejoués.
+//
 // Répartition des programmes par pertinence linguistique : ARES et
 // WBI (francophones) -> ULB/ULiège/UNamur ; VLIR-UOS (flamand) ->
 // Ghent University et KU Leuven uniquement.

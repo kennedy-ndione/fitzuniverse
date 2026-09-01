@@ -6,9 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Bourses | ScholarBridge Control Center</title>
+<title>Bourses | FitzUniverse Control Center</title>
 
-<meta name="description" content="Gérez toutes les bourses disponibles sur ScholarBridge.">
+<meta name="description" content="Gérez toutes les bourses disponibles sur FitzUniverse.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,9 +34,21 @@
 <aside class="sidebar" id="sidebar">
 
 <div class="sidebar-top">
+<!-- .sidebar-brand est le crochet .on-dark de css/base.css : c'est lui
+qui bascule --logo-structure en papier et --logo-descriptor en ambre
+sur cette sidebar sombre. Conteneur de mise en page, il n'habille
+jamais le lockup lui-meme. -->
 <div class="sidebar-brand">
-<img class="logo-icon" src="../assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — administration">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 </div>
 </div>
 
@@ -83,7 +95,7 @@
 </button>
 <div class="topbar-title">
 <h1>Bourses</h1>
-<p>Gérez toutes les bourses disponibles sur ScholarBridge.</p>
+<p>Gérez toutes les bourses disponibles sur FitzUniverse.</p>
 </div>
 </header>
 
@@ -181,6 +193,68 @@ MODALE — Ajouter / modifier une bourse
 <input type="text" id="funding" placeholder="Ex : 100 %" required>
 </div>
 
+<!-- Bailleur (2026-08-30) : QUI finance et où le dossier se dépose EN
+PREMIER. Même règle des trois valeurs que l'éligibilité ci-dessous :
+« Non renseigné » produit l'ABSENCE du champ en base (jamais ""), et
+un champ absent est un inconnu — on ne déduit rien du titre ni du
+pays. Sémantique détaillée de entryPoint : voir le bloc bailleur de
+scholarships.js. -->
+<div class="field">
+<label for="funder">Bailleur</label>
+<select id="funder">
+<option value="">Non renseigné</option>
+<option value="gouvernement">Gouvernement</option>
+<option value="universite">Université</option>
+<option value="region">Région ou collectivité</option>
+<option value="organisation">Organisation (fondation, ONG, UE, banque de développement)</option>
+<option value="entreprise">Entreprise</option>
+</select>
+</div>
+
+<div class="field">
+<label for="funderName">Nom du bailleur</label>
+<input type="text" id="funderName" placeholder="Ex : MEXT, Mastercard Foundation, Regione Lombardia">
+</div>
+
+<div class="field">
+<label for="entryPoint">Où se dépose le dossier ?</label>
+<select id="entryPoint">
+<option value="">Non renseigné</option>
+<option value="bourse">Chez le bailleur (portail d'État, fondation)</option>
+<option value="universite">Auprès de l'université (dossier d'admission)</option>
+</select>
+</div>
+
+<!-- Limite d'âge (2026-08-30) : champ `ageMax` de la bourse. Tous les
+champs sont facultatifs et vides par défaut — un champ absent est un
+INCONNU, jamais « pas de limite ». « Tous cycles » et les clés par
+cycle sont EXCLUSIFS (garde au submit). Quand la limite officielle
+varie selon le candidat, saisir LA PLUS FAVORABLE (la plus haute) et
+décrire la variation dans la note — voir js/age-limits.js. -->
+<div class="field">
+<label>Limite d'âge (années) — laisser vide si inconnue</label>
+<div class="age-limit-row">
+<label class="age-limit-cell">Tous cycles
+<input type="number" id="ageMaxTous" min="1" max="99" step="1" inputmode="numeric">
+</label>
+<label class="age-limit-cell">Licence
+<input type="number" id="ageMaxLicence" min="1" max="99" step="1" inputmode="numeric">
+</label>
+<label class="age-limit-cell">Master
+<input type="number" id="ageMaxMaster" min="1" max="99" step="1" inputmode="numeric">
+</label>
+<label class="age-limit-cell">Doctorat
+<input type="number" id="ageMaxDoctorat" min="1" max="99" step="1" inputmode="numeric">
+</label>
+</div>
+<p class="form-hint">« Tous cycles » exclut les limites par cycle. Limite variable selon le candidat ? Saisissez la plus haute et expliquez dans la note.</p>
+</div>
+
+<div class="field">
+<label for="ageMaxNote">Note limite d'âge (affichée telle quelle sur la fiche)</label>
+<input type="text" id="ageMaxNote" placeholder="Ex : 25 ans pour les candidats, 28 ans pour les candidates (appel officiel).">
+</div>
+
 <div class="field">
 <label for="status">Statut</label>
 <select id="status">
@@ -204,6 +278,45 @@ MODALE — Ajouter / modifier une bourse
 <div class="field">
 <label for="description">Description</label>
 <textarea id="description" rows="6"></textarea>
+</div>
+
+<!-- Éligibilité par nationalité (2026-08-30). Sans cette saisie, toute
+bourse créée ici repartirait sans le champ `eligibility` — donc jamais
+filtrée ni signalée. « Non renseignée » n'écrit AUCUNE restriction :
+la bourse reste visible de tous (règle des trois valeurs,
+js/eligibility-countries.js). -->
+<div class="field">
+<label for="eligibilityScope">Éligibilité par nationalité</label>
+<select id="eligibilityScope">
+<option value="">Non renseignée — aucune restriction connue</option>
+<option value="monde">Monde entier — explicitement ouverte à toutes les nationalités</option>
+<option value="groupes">Par groupes de pays</option>
+<option value="liste">Liste de pays précise</option>
+</select>
+</div>
+
+<div class="field" id="eligibilityGroupsField" hidden>
+<label>Groupes de pays éligibles</label>
+<!-- Rempli par scholarships.js depuis GROUPES (js/eligibility-countries.js) :
+une seule source de vérité, jamais de liste recopiée ici. -->
+<div class="checkbox-row" id="eligibilityGroupsList"></div>
+</div>
+
+<div class="field" id="eligibilityIncludeField" hidden>
+<label for="eligibilityInclude">Pays ajoutés (codes ISO alpha-2, séparés par des virgules)</label>
+<input type="text" id="eligibilityInclude" placeholder="Ex : SN, ML, CI">
+<p class="form-hint">S'ajoutent aux groupes cochés. Pour le scope « Liste », c'est la liste elle-même.</p>
+</div>
+
+<div class="field" id="eligibilityExcludeField" hidden>
+<label for="eligibilityExclude">Pays retirés (codes ISO alpha-2, séparés par des virgules)</label>
+<input type="text" id="eligibilityExclude" placeholder="Ex : GH">
+</div>
+
+<div class="field" id="eligibilityNoteField">
+<label for="eligibilityNote">Note d'éligibilité (affichée telle quelle sur la fiche)</label>
+<p class="form-hint">Une note SANS scope s'affiche à l'étudiant mais n'exclut personne — c'est le bon choix quand la liste officielle est trop longue ou trop mouvante pour être codée sans risque.</p>
+<input type="text" id="eligibilityNote" placeholder="Ex : Réservée aux ressortissants des pays du Commonwealth.">
 </div>
 
 <div class="field" id="universitiesPickerGroup">

@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — AI Check (ai-check.js)
+* FitzUniverse — AI Check (ai-check.js)
 * ============================================================
 * Vérification de dossier : dépôt de documents avec typage manuel,
 * analyse simulée par catégories (js/ai/simulated-responses.js via
@@ -11,7 +11,8 @@
 */
 
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
-import { generate } from "./js/ai/ai-client.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
@@ -33,10 +34,9 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Vérification du dossier</h2>
-<p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour faire vérifier votre dossier par Fitz.</p>
+<p>Cette fonctionnalité est disponible avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)}. Passez à une formule supérieure pour faire vérifier votre dossier par Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;
@@ -290,8 +290,10 @@ showToast("Analyse terminée.");
 
 } catch (error) {
 
+if (!estArret(error)) {
 console.error(error);
-showToast("L'analyse de votre dossier n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+showToast(messageErreurFitz(error), { type: "error" });
+}
 
 } finally {
 

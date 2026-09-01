@@ -1,9 +1,13 @@
 /* ==========================================================
-SCHOLARBRIDGE - SECTIONS DE LA PAGE D'ACCUEIL
+FITZUNIVERSE - SECTIONS DE LA PAGE D'ACCUEIL
 ========================================================== */
 
 .section{
-padding:110px 0;
+/* 110px -> 128px : espacement vertical plus généreux entre sections
+(révision structure 2026-08-13), la page ayant gagné 2 sections
+(bandeau logos + Fitz en action) qui doivent se lire comme des temps
+distincts plutôt que s'enchaîner trop vite. */
+padding:128px 0;
 }
 
 /* Aligné à gauche plutôt que centré (révision "décalage éditorial") :
@@ -86,7 +90,16 @@ APERÇU DES OPPORTUNITÉS
 
 .teaser{
 padding-top:80px;
-padding-bottom:80px;
+/* Padding bas réduit (80 -> 40px) plutôt que supprimé : #trust enchaîne
+sur le même fond et apporte déjà ses 80px, deux paddings pleins bout à
+bout auraient creusé 160px au milieu d'un bloc censé se lire d'une
+traite. Mais le mettre à 0 laissait .teaser-actions déborder de 21px
+sur la section suivante (marge basse s'échappant d'un parent sans
+padding) — invisible tant que les deux fonds sont identiques, faux dès
+qu'ils divergeraient. 40px = --space-lg, la valeur de rythme la plus
+proche. */
+padding-bottom:var(--space-lg);
+background:var(--background-soft);
 }
 
 .teaser-head{
@@ -112,8 +125,17 @@ transition:var(--transition);
 }
 
 .teaser-card:hover{
-transform:translateY(-6px);
+transform:translateY(-8px);
 box-shadow:var(--shadow-lg);
+}
+
+/* .teaser-card a overflow:hidden (juste au-dessus) : l'outline focus
+par défaut du navigateur peut s'y retrouver rogné selon les moteurs —
+anneau dédié pour être sûr qu'il reste visible au clavier (audit du
+2026-08-13). */
+.teaser-card:focus-visible{
+outline:none;
+box-shadow:var(--shadow-lg), 0 0 0 3px #fff, 0 0 0 6px var(--primary-color);
 }
 
 .teaser-card-media{
@@ -261,25 +283,66 @@ color:#178F43;
 
 .teaser-whatsapp:hover{color:var(--primary-color);}
 
+/* [hidden] seul ne suffit pas ici : display:inline-flex ci-dessus est
+une règle d'auteur, qui l'emporte toujours sur le display:none de
+l'agent utilisateur pour [hidden], quelle que soit la spécificité —
+restriction Signature Focus/Signature ajoutée en JS en fin de body
+(voir le script de resolveSession). Même correctif à reporter sur
+.reassurance-item-whatsapp (offers.css), qui a le même défaut. */
+.teaser-whatsapp[hidden]{display:none;}
+
 /* Bento (desktop uniquement) : la 1re carte (meilleur classement/photo
 la plus forte du tirage, voir js/homepage-teaser.js) prend 2 colonnes
 au lieu d'être identique aux 3 autres ; la 4e devient une bannière
 pleine largeur en 2e rangée — remplace la grille à 4 colonnes égales,
 plate et répétitive. L'aspect-ratio de sa photo est réduit (bannière
 large et basse plutôt que 4/3 étiré sur toute la largeur, qui aurait
-donné une image démesurément haute). */
+donné une image démesurément haute).
+
+:not(.teaser-card-skeleton) ajouté (audit 2026-08-22, repéré en testant
+la page hors-ligne/Firestore lent) : ces règles ciblent par position
+(nth-child), donc s'appliquaient aussi aux 4 skeletons pendant le
+chargement — pas seulement aux vraies cartes une fois rendues. Le
+skeleton n°1 (span 2 colonnes) et surtout le n°4 (pleine largeur)
+héritaient alors de .teaser-card-skeleton{aspect-ratio:3/4} sans le
+correctif 21/6 (qui ne vise que .teaser-card-media, absent d'un
+skeleton) : un skeleton aussi large que la grille en aspect-ratio 3/4
+devient démesurément haut, cassant toute la section le temps du
+chargement. Les skeletons restent maintenant 4 cases identiques ; seules
+les vraies cartes (jamais .teaser-card-skeleton) passent en bento. */
 @media(min-width:1024px){
 
-.teaser-grid > :nth-child(1){
+.teaser-grid > :nth-child(1):not(.teaser-card-skeleton){
 grid-column:span 2;
 }
 
-.teaser-grid > :nth-child(4){
+.teaser-grid > :nth-child(4):not(.teaser-card-skeleton){
 grid-column:1 / -1;
 }
 
 .teaser-grid > :nth-child(4) .teaser-card-media{
 aspect-ratio:21 / 6;
+}
+
+/* Recadrage vers le HAUT pour la seule vignette panoramique (2026-08-22).
+Le problème n'était pas la photo mais la fenêtre : en 21/6 sur une
+source en 3/2, `object-fit:cover` ne conserve que 43 % de la hauteur,
+pris au CENTRE. Or sur une photo de ville, ce qui identifie le lieu —
+la ligne d'horizon, le monument — est presque toujours dans le tiers
+HAUT. Toronto en était l'exemple parfait : la tour CN disparaissait, et
+il ne restait qu'une vue aérienne d'immeubles et d'un port de plaisance
+qui aurait pu être n'importe quelle ville d'Amérique du Nord.
+
+30 % et non 0 % : à 0 % la bande n'attrape souvent que du ciel sur les
+photos cadrées large. 30 % remonte assez pour garder le monument tout
+en conservant de la matière urbaine au premier plan.
+
+La règle vaut pour TOUTE ville qui passera dans cet emplacement, pas
+seulement Toronto — c'est la fenêtre 21/6 qui coupe, pas le fichier.
+Les autres vignettes restent en 4/3, centrées : elles gardent 100 % de
+la hauteur utile et n'ont pas ce problème. */
+.teaser-grid > :nth-child(4) .teaser-card-media img{
+object-position:center 30%;
 }
 
 }
@@ -288,10 +351,69 @@ aspect-ratio:21 / 6;
 .teaser-grid{grid-template-columns:repeat(2,1fr);}
 }
 
+/* En dessous de 600px, la grille à 1 colonne empilait 4 cartes pleine
+largeur, chacune dominée par une photo en 4/3 : ~450px par carte, soit
+près de 1 800px rien que pour ces 4 cartes (2 917px pour toute la
+section, l'équivalent de 3 écrans et demi sur un téléphone). Le
+problème n'était pas le nombre de cartes mais leur mise en page : une
+colonne verticale n'a aucune raison de s'imposer alors que .teaser-grid
+n'a que 4 éléments fixes (TEASER_COUNT, voir js/homepage-teaser.js) —
+pas de flux continu à faire tenir.
+
+Le carrousel horizontal résout ça sans rien retirer : mêmes 4 cartes,
+identiques à elles-mêmes, simplement rangées côte à côte et parcourues
+au doigt plutôt qu'en défilement vertical. C'est le même geste que sur
+.opportunites-track (css/opportunites.css) — déjà le vocabulaire tactile
+du reste du site — mais ici sans les mécanismes de boucle/pause de ce
+composant : la liste est courte et fixe, un simple carrousel accroché
+suffit. */
 @media(max-width:600px){
-.teaser-grid{grid-template-columns:1fr;}
-.teaser-actions{flex-direction:column;gap:18px;}
+
+.teaser-grid{
+grid-template-columns:none;
+display:flex;
+gap:16px;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-padding-left:1px;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+/* Marge basse plutôt que padding : laisse la carte du bout s'accrocher
+pile au bord tout en gardant de la place pour l'ombre au survol/focus,
+que overflow-x:auto aurait sinon rognée. */
+padding-bottom:6px;
+margin-bottom:-6px;
 }
+
+.teaser-grid::-webkit-scrollbar{display:none;}
+
+.teaser-card{
+scroll-snap-align:start;
+flex:0 0 80%;
+max-width:300px;
+}
+
+/* 4/3 -> 16/10 : sur une carte pleine largeur, 4/3 donnait une photo
+aussi haute que large sur un petit téléphone. La carte fait maintenant
+80 % de l'écran plutôt que 100 %, donc l'image aurait de toute façon
+rétréci ; 16/10 réduit en plus sa hauteur propre, la carte devenant
+plus large que haute comme le reste des vignettes du site. */
+.teaser-card-media{aspect-ratio:16/10;}
+
+.teaser-actions{flex-direction:column;gap:18px;}
+
+}
+
+/* Redéfinition de .btn-lg, composant de css/base.css (16px 28px,
+1.05rem). Elle est conservée — la page l'utilise telle quelle depuis
+longtemps et la modifier déplacerait tous les grands boutons de
+l'accueil — mais elle est signalée ici parce qu'elle a coûté du temps :
+c'est ELLE, et non la valeur de base.css, qui s'appliquait au CTA du
+hero, et css/homepage-sections.css étant chargée après css/hero.css,
+toute correction écrite sur un simple `.hero-cta` restait sans effet.
+D'où le `.btn.hero-cta` du correctif responsive (voir css/hero.css).
+Règle générale : ne pas redéfinir un composant de base.css dans une
+feuille de page — c'est la dérive que le système de design nomme. */
 
 .btn-lg{
 padding:16px 30px;
@@ -299,47 +421,433 @@ font-size:1.02rem;
 }
 
 /* ==========================================================
-BANDEAU DE CONFIANCE (sous le hero)
+CONFIANCE / PREUVE SOCIALE (bandeau après le hero) — version condensée
+Anciennement une section complète (liste intégrale des universités +
+compteurs + transparence) : trop lourde si tôt dans le parcours. Réduite
+à un badge/titre + un bandeau de logos en défilement continu, une seule
+ligne, perçu en entier sans scroll. Compteurs/transparence/témoignages
+ont rejoint #teaser plus bas (voir les règles .trust-stat,
+.trust-transparency/.testimonial-card, toujours définies ici mais
+utilisées dans #teaser désormais — inchangées, seul leur parent HTML a
+bougé). Logos calculés en direct depuis Firestore par
+js/homepage-teaser.js (renderTrustLogos), jamais codés en dur ici.
 ========================================================== */
 
-.trust-strip{
-padding:28px 0;
-border-top:1px solid var(--border-color);
-border-bottom:1px solid var(--border-color);
-background:var(--background);
+.trust{
+/* Bandeau plus compact qu'une section pleine (.section = 128px) :
+même mécanisme que .teaser plus haut (override padding-top/bottom
+après .section dans la cascade, seule et unique déclaration). 64px ->
+80px (audit du 2026-08-13) : alignée sur .teaser pour ne garder que 2
+valeurs de rythme vertical sur la page (80/128) plutôt que 3
+(64/80/128). */
+padding-top:80px;
+padding-bottom:80px;
+/* --background-light -> --background-soft le 2026-08-28, en même temps
+que .teaser juste au-dessus reçoit la même valeur. Depuis la
+réorganisation, #teaser et #trust se suivent et défendent le même
+argument (voir leurs commentaires dans index.html) : une seule teinte
+continue les fait lire comme UN bloc de preuve, là où deux fonds
+différents auraient redécoupé en deux ce qu'on venait de réunir. */
+background:var(--background-soft);
 }
 
-.trust-strip-inner{
+/* Piste en défilement continu : le conteneur masque le débordement et
+estompe les bords (fondu plutôt que coupure nette) ; la piste interne,
+deux fois plus large que son contenu (2 copies identiques, voir
+renderTrustLogos), glisse de -50% pour boucler sans à-coup. Fondu à
+plusieurs paliers (au lieu d'une rampe linéaire à 2 points) pour une
+courbe plus douce, moins mécanique. */
+.trust-marquee{
+position:relative;
+overflow:hidden;
+-webkit-mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 3%, #000 10%, #000 90%, rgba(0,0,0,.35) 97%, transparent 100%);
+mask-image:linear-gradient(to right, transparent 0%, rgba(0,0,0,.35) 3%, #000 10%, #000 90%, rgba(0,0,0,.35) 97%, transparent 100%);
+}
+
+/* Profondeur aux bords : un vrai transform:scale() par logo suivrait sa
+position réelle à chaque instant, ce qui suppose de la lire en JS à
+chaque frame (coûteux sur un défilement infini, contraire à l'objectif
+"léger en performance") — la piste avance par transform CSS, pas par
+scroll natif, donc les timelines de scroll CSS (animation-timeline:
+view()) ne s'y accrochent pas non plus. À la place : un flou qui
+s'intensifie vers les bords (masqué en dégradé, donc progressif, pas
+un bandeau flou net) — même principe qu'une profondeur de champ
+photo : la mise au point (netteté + pleine opacité) reste au centre,
+les bords se "reculent" visuellement sans qu'aucun logo ne bouge plus
+vite ni ne change réellement de taille. pointer-events:none pour ne
+jamais intercepter le survol qui met la piste en pause ci-dessus. */
+.trust-marquee::before,
+.trust-marquee::after{
+content:"";
+position:absolute;
+top:0;
+bottom:0;
+width:16%;
+z-index:2;
+pointer-events:none;
+backdrop-filter:blur(3px);
+-webkit-backdrop-filter:blur(3px);
+}
+
+.trust-marquee::before{
+left:0;
+-webkit-mask-image:linear-gradient(to right, #000 0%, transparent 100%);
+mask-image:linear-gradient(to right, #000 0%, transparent 100%);
+}
+
+.trust-marquee::after{
+right:0;
+-webkit-mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+mask-image:linear-gradient(to left, #000 0%, transparent 100%);
+}
+
+.trust-marquee-track{
+display:flex;
+width:max-content;
+animation:trust-marquee-scroll 34s linear infinite;
+}
+
+/* Pause au survol : laisse le temps de lire un nom précis sans que la
+piste continue de glisser sous le curseur. */
+.trust-marquee:hover .trust-marquee-track{
+animation-play-state:paused;
+}
+
+.trust-marquee-set{
+display:flex;
+flex-shrink:0;
+align-items:center;
+gap:40px;
+padding-right:40px;
+}
+
+/* Nom d'établissement, en frise. Retour au texte nu après un essai en
+vignettes encadrées (code pays + pays) le 2026-08-22 : jugé trop lourd,
+le bandeau se lisait comme une grille de cartes au lieu d'une frise qui
+défile.
+
+L'identité visuelle demandée tient donc à la seule couleur. Avant, ces
+noms étaient en --primary-dark à 72% d'opacité, soit un gris-marine à
+un cheveu de la couleur du titre juste au-dessus : rien ne les
+distinguait du texte de la section. --amber-700 les détache
+franchement, et raccorde la frise au trait ambré du kicker et aux
+libellés d'étapes plus bas — un même accent pour tout ce qui n'est pas
+du texte courant sur cette page.
+
+--amber-700 et pas --amber-500 : c'est du TEXTE sur fond clair, et seul
+le 700 y tient le contraste (5,8 / 5,5 / 5,3 selon le fond — voir la
+note --amber-* dans css/base.css). Plus d'opacité non plus : elle
+abaissait le contraste sans rien apporter. */
+.trust-logo{
+font-family:var(--font-display);
+font-weight:var(--fw-bold);
+font-size:1.05rem;
+letter-spacing:-.01em;
+color:var(--amber-700);
+white-space:nowrap;
+}
+
+@keyframes trust-marquee-scroll{
+from{ transform:translateX(0); }
+to{ transform:translateX(-50%); }
+}
+
+/* La règle globale (voir css/animations.css) ramène déjà toute
+animation à .01ms sous prefers-reduced-motion, ce qui figerait la piste
+à mi-défilement (liste coupée en plein milieu) plutôt que de l'arrêter
+proprement à zéro : on la fige explicitement et on rend le survol
+inutile en repassant en défilement horizontal manuel. */
+@media(prefers-reduced-motion:reduce){
+
+.trust-marquee-track{
+animation:none !important;
+}
+
+.trust-marquee{
+overflow-x:auto;
+}
+
+}
+
+.trust-stats{
 display:flex;
 flex-wrap:wrap;
-justify-content:center;
-gap:16px 40px;
+gap:36px 56px;
+margin-bottom:56px;
 }
 
-.trust-item{
+.trust-stat{
 display:flex;
-align-items:center;
-gap:10px;
-color:var(--text-light);
+flex-direction:column;
+gap:4px;
+}
+
+/* Encre plutôt que --primary-color (bleu) et chiffres tabulaires, le
+2026-08-28. Deux raisons : le bleu était un reste de l'ancienne palette
+sur une page qui n'en a plus nulle part ailleurs ; et un grand nombre
+posé en encre pleine se lit comme un fait, là où la même valeur en
+couleur d'accent se lit comme un argument de vente. tabular-nums aligne
+les chiffres d'une colonne à l'autre — sans quoi « 53 » et « 81 » ne
+tombent pas sur la même largeur et la rangée paraît bancale. */
+.trust-stat strong{
+font-family:var(--font-display);
+font-weight:var(--fw-extrabold);
+font-size:2.4rem;
+letter-spacing:-.03em;
+font-variant-numeric:tabular-nums;
+color:var(--text-color);
+}
+
+.trust-stat span{
 font-size:.92rem;
+color:var(--text-light);
 font-weight:500;
 }
 
-.trust-item i,
-.trust-item svg{
-width:18px;
-height:18px;
-flex-shrink:0;
-color:var(--primary-color);
+.trust-testimonials{
+margin-top:56px;
+padding-top:48px;
+border-top:1px solid var(--border-color);
+}
+
+.trust-testimonials h3{
+font-family:var(--font-display);
+font-weight:var(--fw-extrabold);
+font-size:var(--fs-h3);
+color:var(--primary-dark);
+margin-bottom:28px;
+}
+
+.testimonial-card{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.testimonial-avatar{
+width:40px;
+height:40px;
+border-radius:var(--radius-full);
+background:var(--amber-500);
+color:#1A1400;
+display:flex;
+align-items:center;
+justify-content:center;
+font-family:var(--font-display);
+font-weight:var(--fw-bold);
+font-size:.95rem;
+}
+
+.testimonial-card blockquote{
+font-size:var(--fs-body);
+line-height:var(--lh-relaxed);
+color:var(--text-color);
+margin:0;
+}
+
+.testimonial-card footer strong{
+display:block;
+color:var(--primary-dark);
+font-weight:var(--fw-bold);
+}
+
+.testimonial-card footer span{
+font-size:.88rem;
+color:var(--text-light);
+}
+
+/* ==========================================================
+GARANTIES — liste au trait (refonte 2026-08-22)
+Remplace .cards-grid.trust-transparency (3 .info-card à pastille+icône :
+search-check/link-2/bot) sous l'aperçu des opportunités : mêmes 3
+messages, sans les 3 icônes qui les portaient. Séparateurs verticaux
+(desktop) / horizontaux (mobile) plutôt que 3 cartes à ombre — plus
+sobre, cohérent avec .problem-list plus haut sur la page.
+========================================================== */
+
+.assurance-list{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:36px;
+padding-top:40px;
+margin-top:48px;
+border-top:1px solid var(--border-color);
+}
+
+.assurance-item{
+padding-left:28px;
+border-left:1px solid var(--border-color);
+}
+
+.assurance-item:first-child{
+padding-left:0;
+border-left:none;
+}
+
+.assurance-item h3{
+font-family:var(--font-display);
+font-size:var(--fs-h4);
+font-weight:var(--fw-bold);
+letter-spacing:-.01em;
+margin-bottom:8px;
+color:var(--text-color);
+}
+
+.assurance-item p{
+font-size:var(--fs-small);
+line-height:var(--lh-relaxed);
+color:var(--text-light);
+}
+
+@media(max-width:900px){
+
+.assurance-list{
+grid-template-columns:1fr;
+gap:28px;
+padding-top:32px;
+margin-top:40px;
+}
+
+.assurance-item{
+padding-left:0;
+padding-top:24px;
+border-left:none;
+border-top:1px solid var(--border-color);
+}
+
+.assurance-item:first-child{
+padding-top:0;
+border-top:none;
+}
+
 }
 
 @media(max-width:640px){
 
-.trust-strip-inner{
-flex-direction:column;
+.trust-marquee-set{
+gap:28px;
+padding-right:28px;
+}
+
+.trust-stats{
+gap:28px 40px;
+margin-bottom:44px;
+}
+
+.trust-stat strong{
+font-size:1.7rem;
+}
+
+}
+
+/* ==========================================================
+FITZ EN ACTION
+Carte reprise telle quelle de l'ancien .hero-visual (voir css/hero.css,
+commentaire au-dessus de .hero-demo) : sa charte visuelle ne change pas
+ici, seul son conteneur passe d'un collage en position absolue à une
+section en flux normal, sur le même dégradé bleu (--gradient-primary)
+que le hero pour lui garder le fond sombre qui fait ressortir son verre
+dépoli blanc.
+
+Fond enrichi (2026-08-13) : --gradient-primary seule lisait comme un
+aplat sur une zone aussi grande. Deux voiles neutres (blanc/noir, pas
+de nouvelle teinte — voir la règle "un jeu de dégradés limité" en tête
+de css/base.css) accentuent l'écart clair/sombre déjà présent entre les
+deux coins du 135deg existant, sans le remplacer. Contraste texte
+blanc revérifié après coup : le voile clair à 6% au coin opposé au
+texte ne l'éclaircit pas assez pour s'approcher du seuil AA. */
+/* Base passée à --gradient-deep le 2026-08-22 (même retour utilisateur
+que .hero, css/hero.css) : sur une section pleine largeur, le stop clair
+de --gradient-primary occupait tout un coin en bleu vif. Les deux voiles
+neutres ci-dessus sont conservés tels quels — ils creusent l'écart
+clair/sombre de la diagonale, et ressortent d'autant mieux sur une base
+sombre. --gradient-deep lui-même recoloré du marine vers un graphite
+neutre le 2026-08-28 (voir sa note dans css/base.css) : rien à changer
+ici, cette section suit le token. */
+.fitz-demo{
+background:
+linear-gradient(135deg, rgba(255,255,255,.07) 0%, transparent 32%),
+linear-gradient(315deg, rgba(0,0,0,.22) 0%, transparent 48%),
+var(--gradient-deep);
+color:#fff;
+}
+
+.fitz-demo-panel{
+display:flex;
+flex-wrap:wrap;
 align-items:center;
-text-align:center;
-gap:14px;
+justify-content:center;
+gap:64px;
+}
+
+.fitz-demo-intro{
+max-width:420px;
+display:flex;
+flex-direction:column;
+gap:18px;
+}
+
+.fitz-demo-intro h2{
+font-family:var(--font-display);
+font-weight:var(--fw-extrabold);
+font-size:var(--fs-h2);
+line-height:1.15;
+letter-spacing:-.026em;
+color:#fff;
+text-wrap:balance;
+}
+
+.fitz-demo-intro p{
+font-size:var(--fs-lead);
+line-height:var(--lh-relaxed);
+color:rgba(255,255,255,.82);
+}
+
+/* Neutralise le position:absolute de .hero-demo (css/hero.css, pensé
+pour un collage superposé à une photo) : ici la carte est un élément de
+flux normal, centrée à côté de son texte d'intro plutôt qu'ancrée à un
+coin. position:relative (plutôt que static) + isolation:isolate sert
+d'ancre au halo ambré ci-dessous (même technique que .demo-avatar::before,
+css/hero.css) sans réintroduire l'ancien collage — right/bottom restent
+neutralisés. */
+.fitz-demo .hero-demo{
+position:relative;
+isolation:isolate;
+right:auto;
+bottom:auto;
+width:100%;
+max-width:340px;
+flex-shrink:0;
+}
+
+/* Touche d'ambre — seul accent hors bleu de la section, en halo flouté
+derrière la carte plutôt qu'en surface pleine (voir --amber-500 dans
+css/base.css : réservé aux surfaces, jamais au texte). z-index:-1 reste
+sous la carte grâce à l'isolation ci-dessus ; inset largement négatif +
+flou pour qu'il déborde en douceur au lieu de s'arrêter net à un bord. */
+.fitz-demo .hero-demo::after{
+content:"";
+position:absolute;
+inset:-70px;
+z-index:-1;
+background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.14) 45%, transparent 72%);
+filter:blur(32px);
+pointer-events:none;
+}
+
+@media(max-width:640px){
+
+.fitz-demo-panel{
+gap:36px;
+}
+
+.fitz-demo .hero-demo{
+padding:15px;
+}
+
+.fitz-demo .hero-demo::after{
+inset:-36px;
+filter:blur(20px);
 }
 
 }
@@ -354,52 +862,30 @@ grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
 gap:32px;
 }
 
-#why-us .cards-grid{
-grid-template-columns:repeat(3,1fr);
-}
+/* #why-us .cards-grid + le décalage vertical alterné qui l'accompagnait
+ont disparu avec la grille à cartes (refonte 2026-08-22) : #why-us
+utilise désormais .problem-list, une liste au trait qui n'a plus besoin
+de ce traitement. Le bento de .steps qui suivait ici (1re étape en
+bannière pleine largeur, "Préparer"/"Suivre" en duo dessous) a disparu
+le même jour avec la grille de 3 cartes elle-même — voir .steps-card
+plus haut, une timeline à carte unique qui n'a plus besoin de mise en
+page par palier selon la largeur d'écran. */
 
-/* Léger décalage vertical alterné (desktop large uniquement — voir le
-media query plus bas qui l'annule dès que la grille tablette/mobile
-passe à 2 ou 1 colonne) : casse l'alignement en rangée bien nette des
-3 cartes sans toucher leur taille ni leur contenu, dans le même esprit
-"décalage éditorial" que l'alignement à gauche des en-têtes ci-dessus. */
-@media(min-width:1024px){
-
-#why-us .cards-grid > :nth-child(2){
-margin-top:-28px;
-}
-
-#why-us .cards-grid > :nth-child(3){
-margin-top:20px;
-}
-
-/* Bento : la 1re étape ("Trouver") devient une bannière pleine largeur —
-c'est celle qui démarre le parcours, elle porte le CTA le plus engageant
-("Démarrer mon analyse") — et "Préparer"/"Suivre" se rangent dessous en
-duo. Remplace le décalage vertical alterné ci-dessus (pensé pour 3
-colonnes égales) : la largeur suffit à distinguer la 1re carte sans
-recourir aussi à un décalage qui n'aurait plus de sens sur des cartes
-de tailles différentes. */
-.steps{
-grid-template-columns:repeat(2,1fr);
-}
-
-.steps > :nth-child(1){
-grid-column:1 / -1;
-padding:36px 44px 30px;
-}
-
-.steps > :nth-child(1) p{
-max-width:640px;
-}
-
-}
-
+/* .info-card / .cards-grid restent utilisées telles quelles par les
+témoignages (js/homepage-teaser.js renderTestimonialCard : card.className
+= "info-card testimonial-card", posée dans .cards-grid.testimonial-grid)
+— ne pas supprimer même si cette page ne les utilise plus ailleurs
+depuis la refonte 2026-08-22 (voir .problem-list/.assurance-list
+ci-dessous, qui remplacent les grilles à icônes "Pourquoi nous
+choisir"/"Vérifié à la main"). */
 .info-card{
 
-background:#FFFFFF;
+/* Tokens plutôt que valeurs en dur (2026-08-28) : le filet était
+rgba(226,232,240,.8), l'ancien slate FROID, qui ressortait en gris
+bleuté sur les neutres papier. */
+background:var(--background);
 
-border:1px solid rgba(226,232,240,.8);
+border:1px solid var(--border-color);
 
 border-radius:var(--radius-lg);
 
@@ -424,47 +910,6 @@ box-shadow:var(--shadow-lg);
 
 border-color:rgba(51,65,140,.22);
 
-}
-
-.card-icon{
-
-width:44px;
-
-height:44px;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-border-radius:var(--radius-lg);
-
-background:rgba(51,65,140,.07);
-
-color:var(--primary-color);
-
-margin-bottom:16px;
-
-transition:transform .4s var(--ease-premium), background-color .4s var(--ease-premium), color .4s var(--ease-premium);
-
-}
-
-.info-card:hover .card-icon{
-
-transform:scale(1.1) rotate(-6deg);
-
-background:var(--primary-color);
-
-color:#fff;
-
-}
-
-
-.card-icon i,
-.card-icon svg{
-width:20px;
-height:20px;
 }
 
 .info-card h3{
@@ -493,6 +938,101 @@ color:var(--text-light);
 
 }
 
+/* ==========================================================
+LE PROBLÈME — liste numérotée éditoriale (refonte 2026-08-22)
+Remplace la grille de 3 cartes à pastille+icône (.cards-grid/.info-card/
+.card-icon, toujours définies plus haut pour les témoignages) : une
+liste au trait, numéros fantômes en guise de repère plutôt que 3
+pictogrammes de plus. Change la structure de la section, pas seulement
+son habillage — c'est aussi une réponse à la consigne d'aller plus loin
+que l'habillage visuel seul.
+========================================================== */
+
+.problem-list{
+
+border-top:1px solid var(--border-color);
+
+}
+
+.problem-item{
+
+display:grid;
+
+grid-template-columns:88px 1fr;
+
+gap:24px;
+
+align-items:baseline;
+
+padding:36px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.problem-number{
+
+font-family:var(--font-display);
+
+font-size:1.7rem;
+
+font-weight:var(--fw-extrabold);
+
+letter-spacing:-.01em;
+
+color:var(--text-decorative);
+
+font-variant-numeric:tabular-nums;
+
+}
+
+.problem-item h3{
+
+font-family:var(--font-display);
+font-size:var(--fs-h3);
+
+font-weight:var(--fw-bold);
+
+letter-spacing:-.015em;
+
+margin-bottom:8px;
+
+color:var(--text-color);
+
+}
+
+.problem-item p{
+
+font-size:var(--fs-body);
+
+line-height:var(--lh-relaxed);
+
+color:var(--text-light);
+
+max-width:58ch;
+
+}
+
+@media(max-width:640px){
+
+.problem-item{
+
+grid-template-columns:44px 1fr;
+
+gap:16px;
+
+padding:26px 0;
+
+}
+
+.problem-number{
+
+font-size:1.25rem;
+
+}
+
+}
+
 .why-us-bridge{
 
 max-width:640px;
@@ -509,9 +1049,14 @@ color:var(--text-light);
 
 }
 
+/* --amber-700 plutôt que --text-color (retour utilisateur 2026-08-22 :
+"les phrases d'accroche/conclusion doivent avoir une couleur différente
+du noir") — fait aussi écho au mot-clé <em> ("réellement") du h2 juste
+au-dessus dans la même section, même teinte ambrée. 5,8:1 sur
+--background : passe l'AA. */
 .why-us-bridge strong{
 
-color:var(--text-color);
+color:var(--amber-700);
 
 }
 
@@ -526,152 +1071,190 @@ background:linear-gradient(180deg,#F8FAFC 0%,#FFFFFF 100%);
 
 }
 
-.steps{
+/* Intro texte + photo côte à côte (international-students.jpg) — la
+grille .steps plus bas reste pleine largeur et inchangée : un
+accompagnement visuel pour la section, pas un fond derrière les
+cartes. Remplace hero-bg.jpg (2026-08-13) : hero-bg.jpg reste utilisée
+ailleurs (scholarships.js, voir GENERIC_FALLBACK_IMAGES) donc jamais
+supprimée, juste retirée d'ici. */
+.how-it-works-intro{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:56px;
+margin-bottom:64px;
+}
 
-display:grid;
+.how-it-works-intro .section-header{
+margin-bottom:0;
+flex:1 1 380px;
+}
 
-grid-template-columns:repeat(3,1fr);
+.how-it-works-photo{
+flex:0 0 auto;
+width:400px;
+max-width:100%;
+}
 
+.how-it-works-photo img{
+display:block;
+width:100%;
+height:300px;
+object-fit:cover;
+border-radius:var(--radius-lg);
+box-shadow:var(--shadow-md);
+}
+
+@media(max-width:900px){
+
+.how-it-works-intro{
+flex-direction:column;
+align-items:stretch;
 gap:32px;
+margin-bottom:48px;
+}
+
+/* Sans cette ligne, le `flex:1 1 380px` déclaré plus haut continue de
+s'appliquer — mais l'axe principal vient de basculer en colonne, donc
+les 380px cessent d'être une LARGEUR pour devenir une HAUTEUR. Mesuré
+sur un écran de 390px : le titre et son paragraphe occupent 205px, et
+les 163px restants s'affichaient en blanc entre « Trois étapes, et Fitz
+à vos côtés sur chacune. » et la carte des étapes. Un demi-écran de
+vide au milieu de la section qui explique le produit.
+
+Le piège est propre au passage row → column : la même déclaration est
+correcte au-dessus de 900px et fausse en dessous. (2026-08-27) */
+.how-it-works-intro .section-header{
+flex:0 0 auto;
+}
+
+.how-it-works-photo{
+width:100%;
+order:-1;
+}
+
+.how-it-works-photo img{
+height:220px;
+}
+
+}
+
+/* Carte unique regroupant les 3 étapes (refonte 2026-08-22, remplace
+la grille de 3 cartes .step — retour utilisateur : 3 CTA identiques
+répétés faisaient doublon). .steps-card porte l'habillage "carte" que
+chaque .step portait individuellement avant ; les colonnes n'ont plus
+de fond ni d'ombre propres, seulement un filet de séparation. */
+.steps-card{
+
+/* Tokens plutôt que valeurs en dur (2026-08-28) : le filet était
+rgba(226,232,240,.8), l'ancien slate FROID, qui ressortait en gris
+bleuté sur les neutres papier. */
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+border-radius:var(--radius-lg);
+
+padding:40px 40px 32px;
+
+box-shadow:var(--shadow-sm);
 
 margin-top:20px;
 
 }
 
-.step{
+/* Trois colonnes séparées d'un filet vertical, à la place de la
+timeline verticale à repères ronds de la première version (rejetée le
+même jour : "ces ronds ne me plaisent pas, cette structure et ce bleu
+foncé me déplaisent").
 
-position:relative;
+Ce qui change, et pourquoi :
+- plus aucune pastille — l'étape est signalée par un libellé
+  typographique + un trait court, conformément à la règle « Icônes »
+  de DESIGN_SYSTEM.md (aucun conteneur, la couleur porte le sens) ;
+- structure horizontale : les 3 étapes se lisent d'un coup d'œil au
+  lieu de s'empiler, et la carte cesse d'être une longue colonne ;
+- l'accent passe du bleu foncé à l'ambre, en petite touche seulement
+  (libellé + trait de 34px), ce qui reste dans la règle --amber-500
+  de css/base.css et fait écho à la surface Fitz.
 
-background:#FFFFFF;
+Les filets sont portés par border-left des colonnes 2 et 3 plutôt que
+par des séparateurs dédiés : rien à ajouter au DOM, et ils
+disparaissent d'eux-mêmes quand la grille repasse sur une colonne. */
+.steps-cols{
 
-border:1px solid rgba(226,232,240,.8);
+display:grid;
 
-border-radius:var(--radius-lg);
-
-padding:32px 24px 24px;
-
-box-shadow:var(--shadow-sm);
-
-transition:var(--transition);
-
-overflow:hidden;
-
-}
-
-.step:hover{
-
-transform:translateY(-10px);
-
-box-shadow:var(--shadow-lg);
-
-border-color:rgba(51,65,140,.20);
+grid-template-columns:repeat(3,1fr);
 
 }
 
-/* Motif graphique discret en fond de carte (révision "décalage
-éditorial") plutôt qu'un simple repère dans le coin — .step a déjà
-overflow:hidden, qui rogne proprement le débord côté haut/droite sans
-jamais créer de scroll horizontal. Un premier passage à 6rem dominait
-trop visuellement le texte des cartes ; ramené à 3.5rem pour rester en
-arrière-plan. Purement décoratif (aria-hidden implicite : le h3 porte
-l'information, ce chiffre ne duplique aucun contenu qu'un lecteur
-d'écran devrait annoncer), l'opacité reste donc gouvernée par le seul
-critère esthétique, pas par l'AA. */
-.step-number{
+.step-col{
 
-position:absolute;
+padding:0 28px;
 
-top:2px;
-
-right:16px;
-
-font-size:3.5rem;
-
-font-weight:800;
-
-color:rgba(233,163,25,.16);
-
-line-height:1;
-
-z-index:0;
-
-pointer-events:none;
+border-left:1px solid rgba(226,232,240,.9);
 
 }
 
-.step-icon,
-.step h3,
-.step p,
-.step .feature-link{
+.step-col:first-child{
 
-position:relative;
+padding-left:0;
 
-z-index:1;
+border-left:0;
 
 }
 
-/* .step>i / .step>i svg ne ciblaient jamais rien : Lucide remplace
-<i data-lucide> par <svg> EN PLACE (même parent), il ne l'imbrique pas
-dedans — donc aucun élément n'a jamais pu être "descendant d'un i à
-l'intérieur de .step". Les deux règles présupposaient déjà la structure
-pastille (conteneur 68px) + icône (30px) qu'utilisent .card-icon/
-.plan-icon/.demo-avatar ailleurs sur le site ; il manquait seulement le
-conteneur pour la porter. Renommé en .step-icon et posé sur un vrai
-<div> dans index.html (voir les 3 articles .step) plutôt que d'agrandir
-l'icône brute à 68px, ce qui aurait fait déborder le glyphe sur toute
-la pastille au lieu de la remplir à 44%, comme ses cousines. Valeurs
-inchangées : 68px de conteneur et 30px d'icône, déjà écrites par
-l'auteur d'origine. */
-.step-icon{
+.step-col:last-child{
 
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:46px;
-
-height:46px;
-
-margin-bottom:16px;
-
-border-radius:var(--radius-lg);
-
-background:rgba(51,65,140,.07);
-
-color:var(--primary-color);
-
-transition:transform .4s var(--ease-premium), background-color .4s var(--ease-premium), color .4s var(--ease-premium);
+padding-right:0;
 
 }
 
-.step:hover .step-icon{
+/* --amber-700 et pas --amber-500 : c'est du TEXTE sur fond clair, et
+seul le 700 y tient le contraste (voir la note --amber-* dans
+css/base.css). */
+.step-label{
 
-transform:scale(1.1) rotate(-6deg);
+display:block;
 
-background:var(--primary-color);
+font-family:var(--font-affirmation);
 
-color:#fff;
+font-size:.74rem;
+
+font-weight:700;
+
+letter-spacing:.16em;
+
+text-transform:uppercase;
+
+color:var(--amber-700);
 
 }
 
-.step-icon i,
-.step-icon svg{
+/* Le trait, lui, est une SURFACE : --amber-500 y est à sa place. */
+.step-rule{
 
-width:20px;
+display:block;
 
-height:20px;
+width:34px;
+
+height:2px;
+
+margin:14px 0 18px;
+
+border-radius:2px;
+
+background:var(--amber-500);
 
 }
 
-.step h3{
+.step-col h3{
 
 font-family:var(--font-display);
-font-size:var(--fs-h3);
 
-/* Les 3 étapes sont le cœur explicatif de la page : leurs titres
-portent la graisse maximale, au même niveau que les h2 de section. */
+font-size:var(--fs-card-title);
+
 font-weight:var(--fw-extrabold);
 
 letter-spacing:-.015em;
@@ -682,9 +1265,9 @@ color:var(--text-color);
 
 }
 
-.step p{
+.step-col p{
 
-font-size:var(--fs-body);
+font-size:var(--fs-small);
 
 line-height:var(--lh-relaxed);
 
@@ -692,52 +1275,96 @@ color:var(--text-light);
 
 }
 
+/* Un seul CTA pour les 3 étapes plutôt qu'un lien répété sous chaque
+carte (retour utilisateur 2026-08-22) — séparé de la liste par un
+filet, comme le pied d'un formulaire plutôt que la suite d'une étape
+en particulier. */
+.steps-footer{
+
+margin-top:4px;
+
+padding-top:28px;
+
+border-top:1px solid rgba(226,232,240,.8);
+
+}
+
+/* Le doublet .steps-cta-text-full / .steps-cta-text-short a disparu le
+2026-09-01 : le bouton portait "Commencer mon diagnostic gratuit" (33
+caractères) qui débordait sous 640px, d'où un second libellé court
+réservé à ce palier. Le libellé est désormais "Découvrir mes
+opportunités" — le MÊME que le CTA du hero, un seul geste ne méritant
+qu'un seul libellé.
+
+Un libellé unique ne suffisait PAS à lui seul : mesuré à 360px, le
+texte réclamait 303px (233 de texte + 60 de rembourrage + 10 de gap)
+pour 281px disponibles, et le bouton repassait sur deux lignes — le
+bug même que le doublet évitait. .btn étant en
+inline-flex/align-items:center, la flèche se retrouve alors centrée
+sur la hauteur des DEUX lignes et flotte à mi-hauteur, détachée du
+texte. Le rembourrage réduit ci-dessous + white-space:nowrap tiennent
+le libellé sur une ligne jusqu'à 320px inclus (vérifié à 320, 360 et
+375px : bouton 263px, hauteur 56px, aucun débordement de page).
+Si un libellé plus long revient ici un jour, c'est cette mesure-là
+qu'il faut refaire — pas seulement compter les caractères. */
+
+.steps-cta-arrow{
+
+display:inline-block;
+
+transition:transform .25s ease;
+
+}
+
+.steps-cta:hover .steps-cta-arrow{
+
+transform:translateX(4px);
+
+}
+
 /* ==========================================================
 FONCTIONNALITÉS
 ========================================================== */
 
-/* .pillars-grid/.pillar-group*/.features-grid/.feature-card(-disabled)/
+/* Bug corrigé le 2026-08-22 : ce commentaire contenait un astérisque
+collé à une barre oblique en plein milieu du texte, juste après
+"pillar-group" — cette paire de deux caractères ferme un commentaire
+CSS dès qu'elle apparaît, où qu'elle soit. Tout ce qui suivait jusqu'au
+prochain "fin de commentaire" légitime (soit toute la phrase listant
+les classes mortes) se retrouvait donc interprété comme du vrai code
+CSS invalide. Un sélecteur invalide n'est pas juste ignoré : toute la
+RÈGLE qui suit jusqu'à la prochaine accolade fermante saute avec lui —
+ici .feature-link{...} tout entier, resté sans effet dans tous les
+navigateurs depuis sa création, bien avant cette refonte (vérifié : le
+bug était déjà présent avant le 2026-08-22).
+.pillars-grid/.pillar-group/.features-grid/.feature-card(-disabled)/
 .feature-link-soon retirés le 2026-08-07 : confirmés morts (aucune
 référence dans index.html ni scholarships.html, les deux pages qui
 chargent ce fichier, ni dans aucun .js du dépôt) — restes de l'ancienne
 section "Fonctionnalités" d'avant sa fusion avec "Comment ça
-fonctionne". .feature-link reste : les 3 .step le réutilisent depuis
-cette fusion (voir index.html, liens "Démarrer mon analyse" etc.). */
-
-.feature-link{
-display:inline-flex;
-align-items:center;
-gap:6px;
-margin-top:12px;
-font-weight:600;
-color:var(--primary-color);
-}
-
-.feature-link i,
-.feature-link svg{
-width:16px;
-height:16px;
-transition:transform .25s ease;
-}
-
-/* La transition ci-dessus n'était déclenchée par rien : aucune règle
-:hover ne changeait jamais le transform de l'icône. */
-.feature-link:hover i,
-.feature-link:hover svg{
-transform:translateX(4px);
-}
-
-.step:hover .feature-link i,
-.step:hover .feature-link svg{
-transform:translateX(4px);
-}
+fonctionne". .feature-link lui-même est parti le 2026-08-22 : les 3
+.step qui le réutilisaient depuis cette fusion sont devenues .step-col
+(carte unique à CTA unique, voir .steps-card plus haut) — plus aucune
+référence dans index.html ni scholarships.html. */
 
 /* ==========================================================
 VISION
 ========================================================== */
 
+/* --background-light -> --background-alt le 2026-08-28.
+--background-light vaut rgba(51,65,140,.08), c'est-à-dire un voile du
+bleu #33418C : après le passage des grandes surfaces sombres au
+graphite (--gradient-deep) et du sur-titre à l'or, cette section
+restait la SEULE surface teintée de bleu de toute la page d'accueil —
+un reste isolé plutôt qu'un choix. --background-alt (#F1F5F9) est le
+neutre déjà prévu par base.css pour ce rôle, et se détache du
+--background-soft de #teaser/#trust juste au-dessus.
+
+Override local volontaire : --background-light est consommé par tout
+l'espace admin et d'autres pages, le token lui-même n'est donc pas
+touché ici. */
 .vision{
-background:var(--background-light);
+background:var(--background-alt);
 }
 
 .vision-container{
@@ -831,36 +1458,49 @@ line-height:var(--lh-relaxed);
 CTA
 ========================================================== */
 
+/* Photo de remise de diplômes en plein cadre, sans voile bleu/marine :
+la lisibilité du texte vient d'un panneau verre dépoli centré
+(.cta-box-panel) plutôt que d'assombrir toute la photo, pour que la
+photo reste réellement visible sur les bords. img (pas de background
+CSS) depuis l'audit du 2026-08-13 : srcset, comme .hero-visual-bg et
+.footer-photo-img. */
 .cta-box{
 position:relative;
-isolation:isolate;
-background:
-linear-gradient(135deg,rgba(18,22,46,.93),rgba(51,65,140,.88)),
-url("../assets/images/hero-bg4.jpg");
-background-size:cover;
-background-position:center 35%;
 border-radius:var(--radius-lg);
-padding:64px 48px;
-text-align:center;
-color:#fff;
+padding:40px 22px;
+display:flex;
+justify-content:center;
+overflow:hidden;
+}
+
+.cta-box-bg{
+position:absolute;
+inset:0;
+z-index:0;
+width:100%;
+height:100%;
+object-fit:cover;
+object-position:center 42%;
+}
+
+.cta-box-panel{
+position:relative;
+z-index:1;
+max-width:660px;
+width:100%;
+background:rgba(14,14,16,.62);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+border:1px solid rgba(255,255,255,.14);
+border-radius:calc(var(--radius-lg) - 6px);
+padding:56px 40px;
 display:flex;
 flex-direction:column;
 align-items:center;
 gap:18px;
-overflow:hidden;
-}
-
-.cta-box::after{
-content:"";
-position:absolute;
-inset:0;
-z-index:-1;
-background:radial-gradient(circle at 85% 15%,rgba(126,113,216,.24),transparent 55%);
-}
-
-.cta-box .section-badge{
-background:rgba(255,255,255,.14);
+text-align:center;
 color:#fff;
+box-shadow:0 24px 60px rgba(0,0,0,.35);
 }
 
 .cta-box h2{
@@ -897,103 +1537,183 @@ justify-content:center;
 margin-top:8px;
 }
 
+/* Refonte 2026-08-22 : 3 chips verre + icône (shield-check/landmark/bot)
+→ une ligne de texte séparée par des traits verticaux. Le fond du bloc
+CTA est sombre et déjà chargé (photo + panneau verre) ; ces 3 pastilles
+supplémentaires en rajoutaient sans que l'icône n'apporte rien que le
+libellé ne dise déjà. */
 .cta-trust{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:12px 14px;
+gap:0;
 margin-top:8px;
-}
-
-/* Touche verre (voir .stat-card/.floating-card du hero, css/hero.css) —
-seul emprunt de ce vocabulaire hors du hero, volontairement limité à
-ces 3 petites pastilles plutôt qu'étendu à toute la section : le fond
-du bloc CTA est déjà une photo, un blur généralisé dessus l'aurait
-floutée elle-même au lieu de simplement souligner ces badges. Le fond
-sombre du bloc (rgba(.93)/(.88), voir .cta-box) donne déjà largement
-la marge de contraste nécessaire, ce voile clair à 8% ne la réduit pas
-sous l'AA. */
-.cta-trust > div{
-display:flex;
-align-items:center;
-gap:8px;
-padding:9px 16px;
-background:rgba(255,255,255,.08);
-backdrop-filter:blur(12px);
--webkit-backdrop-filter:blur(12px);
-border:1px solid rgba(255,255,255,.16);
-border-radius:var(--radius-full);
 font-size:.92rem;
-color:rgba(255,255,255,.85);
+color:rgba(255,255,255,.82);
 }
 
-/* svg inclus : Lucide remplace les <i data-lucide> par des <svg> (voir
-la note dans css/hero.css). */
-.cta-trust i,
-.cta-trust svg{
-width:18px;
-height:18px;
-flex-shrink:0;
-/* Le bloc CTA est sur fond marine : l'ambre y ressort à plus de 8:1
-et fait écho au bouton "Créer un compte" juste au-dessus. */
-color:var(--amber-500);
+.cta-trust > div{
+padding:4px 18px;
+border-left:1px solid rgba(255,255,255,.22);
+}
+
+.cta-trust > div:first-child{
+padding-left:0;
+border-left:none;
 }
 
 /* ==========================================================
 FOOTER
 ========================================================== */
 
+/* Footer standard (scholarships.html, et toute page qui n'ajoute pas
+.footer-photo-feature) : bleu marine simple, sans photo. */
 .footer{
+position:relative;
 background:var(--primary-dark);
 color:rgba(255,255,255,.85);
 padding:44px 0 22px;
 }
 
-.footer-top{
-display:grid;
-grid-template-columns:1.2fr 2fr;
-gap:60px;
-padding-bottom:24px;
+.footer .container{
+position:relative;
+z-index:1;
 }
 
-.footer-brand img{
+/* index.html uniquement (classe .footer-photo-feature) : fond ambre —
+la couleur du "Bridge" du logo (voir .logo .bridge, header.css) reprise
+ici en pleine surface plutôt qu'en touche, sur demande explicite — plus
+une bande photo de campus. Réservé à la page d'accueil pour ne pas
+répéter ce traitement lourd sur chaque page ; scholarships.html garde
+le footer standard ci-dessus. Contraste vérifié : blanc sur
+--amber-700 tient 5.76:1 (AA), d'où ce fond plutôt que --amber-500
+(2.16:1 sur texte blanc, illisible). */
+.footer-photo-feature{
+background:linear-gradient(160deg,#7A5000 0%, var(--amber-700) 55%, #6B4600 100%);
+color:rgba(255,255,255,.92);
+padding:0 0 22px;
+}
+
+/* Bande photo pleine largeur, au-dessus des colonnes de liens —
+diplômés divers (hero-bg4.jpg), distincte des hero-bg2/3/5.jpg déjà
+utilisées ailleurs sur index.html et des photos Oxford/Zurich/Paris/
+Toronto de l'échantillon éditorial plus haut sur la même page. Le
+dégradé en bas la fond dans l'ambre du footer plutôt que de la
+découper au cordeau (référence : footer de Sichuan University).
+Remplace university-building.jpg (2026-08-13) : c'était en réalité le
+bâtiment de Harvard Law School (bannières "HLS" visibles à l'écran),
+étiqueté "Campus universitaire" générique — Harvard n'a jamais fait
+partie du catalogue FitzUniverse, la photo suggérait une affiliation
+inexistante. hero-bg4.jpg n'avait par ailleurs encore aucun usage sur
+le site. img (pas de background CSS) pour bénéficier du srcset, comme
+.hero-visual-bg plus haut (css/hero.css) et les photos du catalogue. */
+.footer-photo{
+height:220px;
+position:relative;
+overflow:hidden;
+}
+
+.footer-photo-img{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+object-fit:cover;
+object-position:center 30%;
+}
+
+.footer-photo::after{
+content:'';
+position:absolute;
+inset:0;
+background:linear-gradient(180deg, rgba(122,80,0,0) 0%, rgba(122,80,0,.35) 55%, var(--amber-700) 100%);
+}
+
+.footer-photo-feature .container{
+padding-top:36px;
+}
+
+/* Contenu resserré sur une largeur propre (~820px) plutôt qu'étalé sur
+toute la largeur du .container (1200px) : c'était le principal défaut
+signalé — trop d'espace mort entre la marque et les colonnes de liens. */
+.footer-top{
+display:flex;
+flex-wrap:wrap;
+justify-content:space-between;
+gap:48px;
+max-width:820px;
+margin:0 auto;
+padding-bottom:28px;
+}
+
+.footer-brand{
+max-width:250px;
+}
+
+.footer-brand img,
+.footer-brand .logo-mark{
 height:38px;
+width:38px;
 margin-bottom:12px;
 }
 
+/* .65 -> .85 (audit du 2026-08-13) : sur --amber-700, .65 donnait
+3,43:1, sous le seuil AA (4,5:1) — recalculé, .85 tient 4,67:1. */
 .footer-brand p{
 font-size:var(--fs-small);
-color:rgba(255,255,255,.65);
+color:rgba(255,255,255,.85);
 line-height:var(--lh-relaxed);
-max-width:340px;
 }
 
+/* Colonnes "Plateforme" / "Compte" resserrées côte à côte plutôt
+qu'étalées sur 300px de grille — c'est ça qui créait le vide au milieu
+du footer. */
 .footer-links{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:30px;
-max-width:300px;
+display:flex;
+gap:56px;
 }
 
-.footer-links h4{
+.footer-links > div{
+min-width:120px;
+}
+
+/* Le fond du footer est maintenant ambre : les intitulés restent en
+blanc (5.76:1, AA) plutôt qu'en ambre sur ambre, qui serait illisible.
+h3 (pas h4) depuis l'audit du 2026-08-13 : le dernier titre de <main>
+est un h2 (CTA final), sauter à h4 crevait la hiérarchie de titres. */
+/* .footer-col-title (2026-08-29) : « Plateforme »/« Compte » ne sont
+pas des titres de contenu mais des étiquettes de colonnes de liens —
+passés de <h3> à <p> pour ne plus apparaître dans le plan de titres
+annoncé par un lecteur d'écran. Le sélecteur h3 est conservé à côté :
+d'autres pages partagent cette feuille. */
+.footer-links h3,
+.footer-links .footer-col-title{
 color:#fff;
 margin-bottom:10px;
 font-size:var(--fs-caption);
-font-weight:600;
+font-weight:700;
 letter-spacing:var(--ls-wide);
 text-transform:uppercase;
 }
 
+/* .65 -> .85, même correctif de contraste que .footer-brand p ci-dessus. */
 .footer-links a{
 display:block;
 font-size:var(--fs-small);
-color:rgba(255,255,255,.65);
+color:rgba(255,255,255,.85);
 padding:4px 0;
 transition:color .2s ease;
 }
 
-.footer-links a:hover{
+.footer-links a:hover,
+.footer-links a:focus-visible{
 color:#fff;
+}
+
+.footer-links a:focus-visible{
+outline:2px solid #fff;
+outline-offset:2px;
+border-radius:var(--radius-xs);
 }
 
 /* index.html uniquement : bento 3 blocs (marque / plateforme / compte)
@@ -1010,7 +1730,7 @@ align-items:center;
 flex-wrap:wrap;
 gap:16px;
 padding-top:14px;
-border-top:1px solid rgba(255,255,255,.14);
+border-top:1px solid rgba(255,255,255,.22);
 }
 
 .footer-bottom p{
@@ -1035,9 +1755,15 @@ justify-content:center;
 transition:background .2s ease, transform .2s ease;
 }
 
+/* Survol en bleu marine (le "Scholar" du logo) plutôt qu'un ambre sur
+ambre à peine visible, maintenant que le fond du footer est ambre. */
 .social-links a:hover{
-background:rgba(255,255,255,.18);
+background:var(--primary-dark);
 transform:translateY(-2px);
+}
+
+.social-links a:hover svg{
+color:#fff;
 }
 
 .social-links svg{
@@ -1053,7 +1779,7 @@ RESPONSIVE — SECTIONS
 @media(max-width:992px){
 
 .section{
-padding:80px 0;
+padding:92px 0;
 }
 
 .vision-container{
@@ -1066,50 +1792,64 @@ align-items:center;
 }
 
 .footer-top{
-grid-template-columns:1fr;
+flex-direction:column;
+align-items:center;
+text-align:center;
 gap:36px;
 }
 
-.footer-links{
+.footer-brand{
 max-width:none;
 }
 
+.footer-links{
+justify-content:center;
+text-align:left;
 }
 
-/* Tablette (768–1023px) : les grilles à 3 éléments passent en
-2 colonnes, le 3e élément centré, plutôt qu'une seule colonne
-trop large avec du vide excessif. */
+}
+
+/* .steps-card est une seule carte en flux normal (plus une grille à
+1/2/3 colonnes) : elle n'a plus besoin de paliers de mise en page par
+largeur d'écran comme l'ancienne grille .steps ci-dessus dans
+l'historique git — juste moins de padding sous 640px, où la carte
+touche presque les bords du viewport. */
 
 @media(max-width:1023px){
 
-#why-us .cards-grid,
-.steps{
-grid-template-columns:repeat(2,1fr);
-}
-
-#why-us .cards-grid > :last-child,
-.steps > :last-child{
-grid-column:1 / -1;
-max-width:calc(50% - 16px);
-margin:0 auto;
-}
-
-}
-
-/* Mobile (< 768px) : retour à une seule colonne pleine largeur. */
-
-@media(max-width:767px){
-
-#why-us .cards-grid,
-.steps{
+/* Sous 1024px, 3 colonnes de texte deviennent trop étroites : on
+repasse en pile. Les filets verticaux disparaissent avec elles et
+sont remplacés par un filet horizontal entre les étapes, pour garder
+la séparation sans la faire tourner à 90°. */
+.steps-cols{
 grid-template-columns:1fr;
 }
 
-#why-us .cards-grid > :last-child,
-.steps > :last-child{
-grid-column:auto;
-max-width:none;
-margin:0;
+.step-col{
+padding:26px 0 0;
+border-left:0;
+border-top:1px solid rgba(226,232,240,.9);
+}
+
+.step-col:first-child{
+padding-top:0;
+border-top:0;
+}
+
+}
+
+@media(max-width:640px){
+
+.steps-card{
+padding:28px 20px 24px;
+}
+
+/* Voir le commentaire de .steps-cta-arrow plus haut : c'est ce couple
+qui remplace l'ancien second libellé court. */
+.steps-cta{
+padding-left:16px;
+padding-right:16px;
+white-space:nowrap;
 }
 
 }
@@ -1117,12 +1857,41 @@ margin:0;
 @media(max-width:640px){
 
 .footer-links{
-grid-template-columns:1fr 1fr;
-max-width:none;
+gap:36px;
+justify-content:space-between;
+width:100%;
 }
 
+/* ==========================================================
+LIBELLÉS DE BOUTON COUPÉS EN DEUX SUR TÉLÉPHONE (2026-08-23)
+==========================================================
+« Choisir ma formule » — trois mots — passait à la ligne à
+l'intérieur de son bouton sur un écran de 360px. Non pas faute de
+place à l'écran, mais parce que quatre rembourrages pensés
+séparément pour le bureau s'additionnaient :
+
+   marge du conteneur   14 x 2
+   .cta-box             26 x 2
+   .cta-box-panel       40 x 2
+   .btn-lg              30 x 2   (28px + la bordure)
+   ------------------------------
+   221px de rembourrage sur 360px d'écran
+
+Il restait 139px pour un libellé qui en réclame 160. Aucun de ces
+quatre chiffres n'est aberrant pris isolément — c'est leur somme
+qui l'est, et c'est pourquoi le défaut ne se voit qu'en mesurant la
+chaîne entière plutôt qu'un élément.
+
+Les valeurs ci-dessous ramènent la somme à 165px, soit 195px utiles.
+Le rembourrage VERTICAL, lui, est conservé : c'est lui qui donne au
+bloc son air de respirer, et il ne coûte rien en largeur. */
+
 .cta-box{
-padding:44px 26px;
+padding:44px 14px;
+}
+
+.cta-box-panel{
+padding:40px 18px;
 }
 
 }

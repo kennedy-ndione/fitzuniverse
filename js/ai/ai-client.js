@@ -1,146 +1,347 @@
 /**
 * ============================================================
-* ScholarBridge — client IA (point de branchement futur)
+* FitzUniverse — client IA (le contrat)
 * ============================================================
 *
-* SEUL fichier que l'intégration d'un vrai fournisseur (OpenAI,
-* Anthropic, Gemini...) devra modifier. Toutes les pages ("ai-chat.js",
-* "ai-letter.js"...) appellent uniquement generate({task, input,
-* onToken, signal}) et ne savent rien de ce qui se passe derrière.
+* Toutes les pages de Fitz — ai-chat.js, ai-letter.js, ai-email.js,
+* ai-translate.js, ai-check.js, applications.js — passent par la
+* SEULE fonction generate() de ce fichier, et ne savent rien de ce qui
+* se trouve derrière.
 *
-* Aujourd'hui (IS_SIMULATED = true) : le texte complet est produit
-* localement par js/ai/simulated-responses.js à partir du prompt
-* construit par js/ai/prompts.js, puis "diffusé" par petits blocs avec
-* un délai, pour donner la même sensation de génération progressive
-* qu'un vrai modèle de langage (et pouvoir tester le bouton "Arrêter").
+* Derrière, deux adaptateurs interchangeables :
 *
-* Demain, pour brancher une vraie API : remplacer le corps de
-* runSimulated() par un fetch() vers le fournisseur choisi, idéalement
-* en conservant le support de `signal` (AbortController) pour ne rien
-* perdre côté UI. buildPrompt() a déjà la forme {system, user} attendue
-* par la plupart des API de chat.
+*   "simule"     → js/ai/simulated-responses.js (aujourd'hui)
+*   "passerelle" → js/ai/ai-gateway.js, vers un vrai fournisseur
+*
+* Le choix se fait par MODE dans js/ai/ai-config.js. Brancher une
+* vraie IA doit être ce changement-là, et rien d'autre.
+*
+* CE QUE CE FICHIER GARANTIT AUX PAGES, QUEL QUE SOIT L'ADAPTATEUR
+* ----------------------------------------------------------------
+*  1. La forme de la réponse : { text } pour les tâches de rédaction,
+*     { data } pour les tâches structurées. Jamais l'une pour l'autre.
+*  2. Les erreurs : toujours une FitzError avec un code stable, jamais
+*     un message technique en anglais. Voir js/ai/ai-errors.js.
+*  3. L'arrêt : `signal` interrompt la génération, et l'erreur levée
+*     est reconnaissable par estArret().
+*  4. Le délai : aucune génération ne laisse l'étudiant attendre
+*     indéfiniment, même si le fournisseur ne répond plus jamais.
+*  5. Le réessai : les échecs passagers (réseau, surcharge) sont
+*     retentés automatiquement, les autres non.
+*  6. La progression : onToken() reçoit (texteComplet, delta) — le
+*     texte entier pour l'affichage, le delta pour qui préfère
+*     ajouter plutôt que remplacer.
+*
+* CE QUI N'EST PAS ENCORE FAIT, ET POURQUOI
+* -----------------------------------------
+* Le quota par offre est vérifié ici en amont (verifierAcces), mais ce
+* contrôle est un CONFORT D'AFFICHAGE : il évite une requête inutile et
+* affiche le bon message. Il ne protège rien — la console du navigateur
+* le contourne en une ligne. Le contrôle qui fait foi est celui de la
+* passerelle, côté serveur, sur le jeton Firebase vérifié.
 * ============================================================
 */
 
-import { buildPrompt } from "./prompts.js";
-
 import {
-generateMotivationLetter,
-generateEmail,
-translateText,
-computeApplicationReport,
-computeApplicationReadiness,
-generateChatReply
-} from "./simulated-responses.js";
+MODE,
+IS_SIMULATED,
+DELAIS_MS,
+DELAI_PAR_DEFAUT_MS,
+REESSAIS_MAX,
+ATTENTE_REESSAI_MS,
+TAILLE_ENTREE_MAX,
+TACHES,
+TACHES_STRUCTUREES,
+FONCTIONNALITE_PAR_TACHE
+} from "./ai-config.js";
 
-export const IS_SIMULATED = true;
+import { FitzError, CODES, estReessayable, estArret } from "./ai-errors.js";
+import { genererViaPasserelle } from "./ai-gateway.js";
+import { genererViaSimulateur } from "./ai-simulateur.js";
 
-function wait(ms, signal) {
+export { IS_SIMULATED };
+export { CODES, FitzError, messageErreurFitz, estArret } from "./ai-errors.js";
 
-return new Promise((resolve, reject) => {
+// ==========================================================
+// CONTRÔLE D'OFFRE — point de branchement
+// ==========================================================
+// Reste volontairement vide : les pages vérifient déjà l'accès à leur
+// outil au chargement (requireFeature, js/access-guard.js), et un
+// second contrôle ici, avec une source de vérité différente, se
+// désynchroniserait du premier.
+//
+// Ce crochet existe pour le jour où un quota au NOMBRE D'APPELS
+// s'ajoutera au contrôle d'accès binaire d'aujourd'hui — « dix lettres
+// par mois » plutôt que « lettres : oui/non ». Il suffira alors de le
+// remplir, sans toucher aux six pages appelantes.
+//
+// @param {string} task
+// @returns {Promise<void>} lève une FitzError(QUOTA_PLAN) si refusé
+async function verifierAcces(task) {
 
-const timer = setTimeout(resolve, ms);
-
-if (signal) {
-signal.addEventListener("abort", () => {
-clearTimeout(timer);
-reject(new DOMException("Génération arrêtée", "AbortError"));
-}, { once: true });
+if (!FONCTIONNALITE_PAR_TACHE[task]) {
+throw new FitzError(CODES.INCONNU, { detail: `tâche inconnue : "${task}"` });
 }
 
+}
+
+// ==========================================================
+// GARDE-FOUS D'ENTRÉE
+// ==========================================================
+
+/**
+* Longueur totale du texte envoyé, pièces jointes comprises.
+*
+* Parcourt l'objet plutôt qu'un champ précis : chaque tâche a ses
+* propres champs (`text` pour la traduction, `message` + `history`
+* pour le chat, `experiences`/`motivations` pour la lettre), et une
+* liste explicite se serait périmée à la première tâche ajoutée.
+*/
+function tailleEntree(valeur, profondeur = 0) {
+
+if (profondeur > 6 || valeur == null) return 0;
+
+if (typeof valeur === "string") return valeur.length;
+
+if (Array.isArray(valeur)) {
+return valeur.reduce((total, element) => total + tailleEntree(element, profondeur + 1), 0);
+}
+
+if (typeof valeur === "object") {
+return Object.values(valeur).reduce((total, element) => total + tailleEntree(element, profondeur + 1), 0);
+}
+
+return 0;
+
+}
+
+function verifierEntree(task, input) {
+
+if (!TACHES.includes(task)) {
+throw new FitzError(CODES.INCONNU, { detail: `tâche inconnue : "${task}"` });
+}
+
+const taille = tailleEntree(input);
+
+if (taille > TAILLE_ENTREE_MAX) {
+throw new FitzError(CODES.ENTREE_TROP_LONGUE, {
+detail: `${taille} caractères envoyés, maximum ${TAILLE_ENTREE_MAX}`
 });
-
-}
-
-function runSimulatedTask(task, input) {
-
-// buildPrompt() est appelé pour que la structure {system, user} existe
-// et soit prête à être envoyée à une vraie API plus tard — le
-// simulateur lui-même n'en a pas besoin, il travaille directement sur
-// "input".
-buildPrompt(task, input);
-
-switch (task) {
-
-case "letter":
-return generateMotivationLetter(input);
-
-case "email":
-return generateEmail(input);
-
-case "translate":
-return translateText(input).text;
-
-case "check":
-return computeApplicationReport(input);
-
-case "readiness":
-return computeApplicationReadiness(input);
-
-case "chat":
-return generateChatReply(input);
-
-default:
-throw new Error(`Tâche IA inconnue : "${task}"`);
-
 }
 
 }
 
-// Découpe un texte en unités "streamables" (mots), en conservant les
-// sauts de ligne comme unités à part entière pour que la mise en forme
-// n'apparaisse pas plus tard que le texte lui-même.
-function toChunks(text) {
+// ==========================================================
+// VALIDATION DES RÉPONSES STRUCTURÉES
+// ==========================================================
+// Le simulateur renvoie toujours la bonne forme — il la fabrique. Un
+// vrai modèle, lui, peut renvoyer un score en texte, une liste absente
+// ou du JSON entouré de prose. Sans cette vérification, la page
+// afficherait « undefined » dans l'anneau de score sans que personne
+// ne sache d'où ça vient.
+//
+// La validation est volontairement MINIMALE : seuls les champs dont
+// l'absence casse l'affichage. Un champ facultatif manquant n'est pas
+// une raison de refuser toute la réponse à l'étudiant.
 
-return text
-.split(/(\n+)/)
-.filter(Boolean)
-.flatMap((part) => (part.trim() === "" ? [part] : part.split(/(?<=\s)/)));
+// Vérifié contre ce que renvoie réellement js/ai/simulated-responses.js
+// (computeApplicationReport / computeApplicationReadiness) et contre ce
+// que lisent réellement ai-check.js et applications.js.
+const CHAMPS_REQUIS = {
+check: ["overallScore", "categories"],
+readiness: ["ready", "missingItems"]
+};
+
+function verifierStructure(task, donnees) {
+
+if (!donnees || typeof donnees !== "object") {
+throw new FitzError(CODES.REPONSE_INVALIDE, {
+detail: `tâche "${task}" : réponse non structurée`
+});
+}
+
+const manquants = (CHAMPS_REQUIS[task] || []).filter(
+(champ) => donnees[champ] === undefined || donnees[champ] === null
+);
+
+if (manquants.length) {
+throw new FitzError(CODES.REPONSE_INVALIDE, {
+detail: `tâche "${task}" : champs manquants — ${manquants.join(", ")}`
+});
+}
+
+}
+
+// ==========================================================
+// DÉLAI ET RÉESSAI
+// ==========================================================
+
+function attendre(ms) {
+return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+* Combine le signal d'arrêt de l'étudiant et le délai maximum de la
+* tâche en un seul signal.
+*
+* Les deux doivent pouvoir interrompre la génération, mais ils ne
+* veulent pas dire la même chose : l'un est un choix (ne rien
+* afficher), l'autre une panne (l'expliquer). Le drapeau `expire`
+* permet de les distinguer après coup, l'AbortSignal ne portant pas
+* de motif.
+*/
+function signalAvecDelai(signalUtilisateur, delaiMs) {
+
+const controleur = new AbortController();
+const etat = { expire: false };
+
+const minuteur = setTimeout(() => {
+etat.expire = true;
+controleur.abort();
+}, delaiMs);
+
+if (signalUtilisateur) {
+
+if (signalUtilisateur.aborted) {
+controleur.abort();
+} else {
+signalUtilisateur.addEventListener("abort", () => controleur.abort(), { once: true });
+}
+
+}
+
+return {
+signal: controleur.signal,
+etat,
+liberer: () => clearTimeout(minuteur)
+};
 
 }
 
 /**
+* Transforme n'importe quelle erreur d'adaptateur en FitzError, en
+* tenant compte de la raison réelle de l'interruption.
+*/
+function normaliserErreur(erreur, etatDelai) {
+
+if (erreur instanceof FitzError) {
+
+// Un arrêt déclenché par NOTRE minuteur n'est pas un arrêt demandé
+// par l'étudiant : le lui présenter comme tel lui ferait croire
+// qu'il a annulé lui-même.
+if (erreur.code === CODES.ARRET_DEMANDE && etatDelai.expire) {
+return new FitzError(CODES.DELAI, { cause: erreur });
+}
+
+return erreur;
+
+}
+
+if (erreur?.name === "AbortError") {
+return new FitzError(etatDelai.expire ? CODES.DELAI : CODES.ARRET_DEMANDE, { cause: erreur });
+}
+
+return new FitzError(CODES.INCONNU, { cause: erreur });
+
+}
+
+// ==========================================================
+// LE CONTRAT
+// ==========================================================
+
+/**
+* Demande une génération à Fitz.
+*
 * @param {Object} params
 * @param {"letter"|"email"|"translate"|"check"|"readiness"|"chat"} params.task
 * @param {Object} params.input - voir js/ai/prompts.js pour la forme attendue par tâche
-* @param {(partialText: string) => void} [params.onToken] - appelé à chaque bloc de texte reçu (tâches texte uniquement)
-* @param {AbortSignal} [params.signal] - permet d'arrêter la génération en cours
-* @returns {Promise<{text: string} | {data: Object}>}
+* @param {(texteComplet: string, delta: string) => void} [params.onToken]
+*        Appelé à chaque fragment reçu, tâches de rédaction uniquement.
+* @param {(etat: "envoi"|"reflexion"|"redaction"|"reessai") => void} [params.onEtat]
+*        Étape en cours, pour que l'interface dise ce qui se passe
+*        plutôt que d'afficher un rond qui tourne. Un réessai silencieux
+*        est un mensonge par omission : l'étudiant doit savoir que Fitz
+*        s'y reprend à deux fois.
+* @param {AbortSignal} [params.signal] - arrête la génération en cours
+* @returns {Promise<{text: string, usage?: Object} | {data: Object, usage?: Object}>}
+* @throws {FitzError} toujours une FitzError, jamais une erreur brute
 */
-export async function generate({ task, input, onToken, signal }) {
+export async function generate({ task, input, onToken, onEtat, signal }) {
 
-// Latence simulée avant le premier token, comme un vrai appel réseau.
-await wait(280 + Math.random() * 320, signal);
+verifierEntree(task, input);
+await verifierAcces(task);
 
-const result = runSimulatedTask(task, input);
+const delaiMs = DELAIS_MS[task] || DELAI_PAR_DEFAUT_MS;
+const adaptateur = MODE === "passerelle" ? genererViaPasserelle : genererViaSimulateur;
 
-// La vérification de dossier et la vérification finale avant dépôt
-// renvoient une structure (score/verdict, pas du texte à composer) et
-// n'ont pas de sens à "streamer" mot par mot.
-if (task === "check" || task === "readiness") {
-return { data: result };
-}
+let derniereErreur = null;
 
-if (!onToken) {
-return { text: result };
-}
-
-let streamed = "";
-const chunks = toChunks(result);
-
-for (const chunk of chunks) {
+for (let tentative = 0; tentative <= REESSAIS_MAX; tentative++) {
 
 if (signal?.aborted) {
-throw new DOMException("Génération arrêtée", "AbortError");
+throw new FitzError(CODES.ARRET_DEMANDE);
 }
 
-streamed += chunk;
-onToken(streamed, chunk);
+if (tentative > 0) {
 
-await wait(14 + Math.random() * 26, signal);
+// L'attente double à chaque tour pour ne pas aggraver une
+// surcharge que l'on est en train de subir.
+await attendre(ATTENTE_REESSAI_MS * 2 ** (tentative - 1));
+
+if (onEtat) onEtat("reessai");
+
+} else if (onEtat) {
+
+onEtat("envoi");
 
 }
 
-return { text: streamed };
+const { signal: signalCombine, etat, liberer } = signalAvecDelai(signal, delaiMs);
+
+try {
+
+let premierFragment = true;
+
+const resultat = await adaptateur({
+task,
+input,
+signal: signalCombine,
+onToken: onToken
+? (texteComplet, delta) => {
+if (premierFragment) {
+premierFragment = false;
+if (onEtat) onEtat("redaction");
+}
+onToken(texteComplet, delta);
+}
+: undefined
+});
+
+if (TACHES_STRUCTUREES.includes(task)) {
+verifierStructure(task, resultat.data);
+}
+
+return resultat;
+
+} catch (erreur) {
+
+derniereErreur = normaliserErreur(erreur, etat);
+
+// Un arrêt demandé par l'étudiant n'est jamais retenté : il a dit
+// non, le relancer serait exactement le contraire de ce qu'il
+// demande.
+if (estArret(derniereErreur) || !estReessayable(derniereErreur)) {
+throw derniereErreur;
+}
+
+} finally {
+
+liberer();
+
+}
+
+}
+
+throw derniereErreur || new FitzError(CODES.INCONNU);
 
 }

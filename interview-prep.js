@@ -40,7 +40,6 @@ container.innerHTML = `
 <h2>Préparation aux entretiens</h2>
 <p>Débloquez la banque de questions et la checklist de préparation avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)} : arrivez à votre entretien de bourse déjà prêt(e).</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
 <span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>

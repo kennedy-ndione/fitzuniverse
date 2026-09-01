@@ -4,11 +4,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScholarBridge | Questionnaire</title>
+<title>Questionnaire | FitzUniverse</title>
 
-<meta name="description" content="Répondez à 10 questions pour recevoir une analyse ScholarBridge personnalisée de votre profil, réalisée par Fitz.">
+<meta name="description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 
-<meta name="theme-color" content="#12162E">
+<meta name="theme-color" content="#211D18">
+<!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
+Sans cette méta, un appareil en mode sombre applique parfois un
+assombrissement automatique qui casse les contrastes calibrés. -->
+<meta name="color-scheme" content="light">
 
 <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
@@ -17,14 +21,14 @@
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/eligibility-questions.html">
 
-<meta property="og:title" content="ScholarBridge | Questionnaire">
-<meta property="og:description" content="Répondez à 10 questions pour recevoir une analyse ScholarBridge personnalisée de votre profil, réalisée par Fitz.">
+<meta property="og:title" content="Questionnaire | FitzUniverse">
+<meta property="og:description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 <meta property="og:type" content="website">
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ScholarBridge | Questionnaire">
-<meta name="twitter:description" content="Répondez à 10 questions pour recevoir une analyse ScholarBridge personnalisée de votre profil, réalisée par Fitz.">
+<meta name="twitter:title" content="Questionnaire | FitzUniverse">
+<meta name="twitter:description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 
 <!-- Google Fonts — système typographique Fitz (voir
 css/eligibility-typography.css), même identité que
@@ -34,45 +38,86 @@ index.html est passé à cette pile, voir eligibility-test.html pour le
 détail). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-29) — remplace `@latest` chargé
+de façon synchrone : même correctif que sur l'accueil et les pages
+catalogue (une version cassante chez Lucide ne doit pas se déployer
+toute seule, et le script ne doit pas bloquer le premier rendu). Tout
+appel à lucide.createIcons() dans un script classique doit donc
+attendre DOMContentLoaded — les modules, eux, s'exécutent déjà après
+les scripts différés. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
-<!-- Design system ScholarBridge (mêmes variables, mêmes couleurs que index.html) -->
+<!-- Design system Fitz (mêmes variables, mêmes couleurs que index.html) -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/ai-suite.css">
 <link rel="stylesheet" href="eligibility-questions.css">
 <!-- Chargé en dernier : doit gagner la cascade sur les font-family
 déclarés dans eligibility-questions.css. -->
 <link rel="stylesheet" href="css/eligibility-typography.css">
+<link rel="stylesheet" href="css/eligibility-questions-redesign.css">
 </head>
 
 <body>
 
-<div class="container">
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
-<!-- Badge -->
-<div class="fitz-badge">
-<i data-lucide="bot"></i>
+<!-- Barre de marque (2026-08-31) : ces pages n'avaient AUCUN logo.
+Sur une page de PAIEMENT, c'est un defaut de confiance avant d'etre un
+defaut de style. Lien vers index.html : ces pages ne chargent aucun
+shell, la session n'y est pas connue — c'est aussi la cible de leurs
+liens de retour existants. -->
+<header class="page-brandbar page-brandbar--overlay on-dark">
+<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</header>
+
+<main class="container-wrap" id="main-content" tabindex="-1">
+
+<div class="container fitz-surface">
+
+<a href="eligibility-test.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour au diagnostic</span>
+</a>
+
+<!-- Badge — structure alignée le 2026-08-22 sur celle de results.html,
+offers.html et payment.html : le seul libellé "Fitz", sans icône,
+pour que ce soit le même badge d'un bout à l'autre du parcours et
+pas seulement la même feuille de style. Apparence : css/base.css,
+section "BADGE FITZ — signature unique". Ne rien ajouter dans cette
+pilule sur cette page seule. -->
+<div class="fitz-badge fitz-badge--breathe">
 <span>Fitz</span>
 </div>
 
 <!-- Barre de progression -->
 <div class="progress-info">
-<span id="questionNumber">Question 1 / 10</span>
-<span id="progressPercent">10%</span>
+<!-- Valeurs de départ, écrasées par updateProgress() (eligibility-questions.js)
+dès le premier rendu. Tenues à jour malgré tout : elles s'affichent le temps
+que le module se charge, et restent seules à l'écran si le script échoue.
+1/14 arrondi = 7% (getProgress(), eligibility.engine.js). -->
+<span id="questionNumber">Question 1 / 14</span>
+<span id="progressPercent">7%</span>
 </div>
 
 <div class="progress">
-<div class="progress-bar" id="progressBar" style="width: 10%;"></div>
+<div class="progress-bar" id="progressBar" style="width: 7%;"></div>
 </div>
 
 <!-- Conversation -->
 <div class="chat-box">
-<div class="fitz-avatar">
-<i data-lucide="sparkles"></i>
-</div>
+<div class="fitz-avatar"></div>
 <div class="assistant-bubble">
 <div class="assistant-message" id="assistantMessage">
 Bonjour ! Commençons par savoir où vous vivez actuellement.
@@ -127,6 +172,9 @@ les échelles numériques — /20, /100, GPA /4, Autre) -->
 
 </div>
 
+</main>
+
+<script src="js/back-link.js"></script>
 <script src="questions.js"></script>
 <script src="eligibility.engine.js"></script>
 <!-- module (audit du 2026-08-14) : lit une liste de pays réelle depuis
@@ -136,7 +184,9 @@ EligibilityEngine (scripts classiques ci-dessus) restent accessibles
 malgré la conversion. -->
 <script type="module" src="eligibility-questions.js"></script>
 <script>
+document.addEventListener("DOMContentLoaded", () => {
 if (window.lucide) lucide.createIcons();
+});
 </script>
 
 </body>

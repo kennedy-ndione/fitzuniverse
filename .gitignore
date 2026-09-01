@@ -7,6 +7,21 @@
 .env.*
 !.env.example
 
+# Clés de compte de service Firebase — il ne doit JAMAIS y en avoir
+# dans ce projet (scripts/lot.mjs réutilise la session `firebase login`,
+# aucun fichier de clé n'est nécessaire). Ceinture et bretelles : si une
+# clé était téléchargée par erreur, elle ne doit pas pouvoir être
+# committée. `.env*` était couvert plus haut, mais pas un .json posé à
+# la racine.
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# Fichiers de travail du runner de lots (scripts/lot.mjs) — locaux et
+# éphémères : le plan du trois-temps analyser/écrire/vérifier, et
+# l'instantané du catalogue produit par `export`.
+scripts/.lot-plan.json
+scripts/export-catalog.json
+
 # Dépendances
 node_modules/
 

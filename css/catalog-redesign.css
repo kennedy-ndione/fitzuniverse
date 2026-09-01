@@ -1,0 +1,315 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DU CATALOGUE (2026-08-29)
+scholarships.html + universities.html UNIQUEMENT — chargée en dernier,
+après css/catalog-typography.css (voir les deux pages), pour gagner la
+cascade sur les couleurs/polices déclarées dans css/catalog.css,
+scholarships.css, universities.css et css/header.css.
+
+CONTEXTE — même direction "éditorial chaleureux" que index.html
+(voir css/homepage-redesign.css) : fond beige, titres en Newsreader,
+terracotta comme couleur de marque à la place de l'ambre, encre chaude
+plutôt que marine/graphite. Ces deux pages partagent déjà l'essentiel
+de leur système de tokens avec index.html (css/base.css) : ce fichier
+reprend donc EXACTEMENT les mêmes valeurs que homepage-redesign.css,
+pour que Bourses/Universités/Accueil se lisent comme un seul site et
+pas trois teintes différentes du même bleu.
+
+Un seul fichier plutôt que deux (catalog-redesign.css et non
+scholarships-redesign.css/universities-redesign.css) : même raison que
+css/catalog.css et css/catalog-typography.css déjà en place — ces deux
+pages doivent se ressembler au pixel, une correction sur l'une doit
+valoir pour l'autre.
+========================================================== */
+
+:root{
+
+/* ---------------------------------------------------------
+TYPOGRAPHIE — Newsreader pour les titres (bannière, cartes),
+Public Sans pour le corps. Pas de --font-narrative à redéfinir ici :
+catalog-typography.css n'en déclare pas (Fraunces n'est pas chargée
+sur ces 2 pages, voir ce fichier).
+--------------------------------------------------------- */
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+/* ---------------------------------------------------------
+COULEUR DE MARQUE — même terracotta, mêmes 3 paliers, que
+homepage-redesign.css.
+--------------------------------------------------------- */
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+/* ---------------------------------------------------------
+BLEU MARINE RÉSIDUEL → ENCRE CHAUDE — pilote .uni-scholarship-context
+(couleur de texte/lien) et .catalog-country-pill.is-active (fond),
+seuls points encore marine de ces deux pages.
+--------------------------------------------------------- */
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+/* ---------------------------------------------------------
+FOND DE PAGE — même échelle beige que index.html.
+--------------------------------------------------------- */
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+}
+
+/* Accent en italique dans le titre de bannière — même traitement que
+.hero-h1-accent sur index.html (homepage-redesign.css), pour que les
+3 pages portent la même signature "mot-clé en italique". */
+.hero-h1-accent{
+font-style:italic;
+}
+
+/* ==========================================================
+BANNIÈRE DE CATALOGUE — voile écrit en dur (pas un token) : marine
+rgba(7,10,22,…) → encre chaude, ambre rgba(233,163,25,…) → terracotta.
+Même géométrie, mêmes opacités — seule la teinte change. Voir
+.hero-overlay dans homepage-redesign.css, même logique.
+========================================================== */
+.catalog-hero::after,
+.bourses-hero::after,
+.uni-hero::after{
+background:
+radial-gradient(ellipse 58% 76% at 88% 8%, rgba(217,128,90,.30) 0%, rgba(217,128,90,.09) 46%, transparent 70%),
+linear-gradient(102deg, rgba(28,22,16,.94) 0%, rgba(40,34,27,.80) 42%, rgba(40,34,27,.34) 100%),
+linear-gradient(180deg, rgba(28,22,16,.30) 0%, transparent 34%, rgba(28,22,16,.62) 100%);
+}
+
+/* Paragraphe de description — repéré illisible sur une photo claire
+(ciel/façades) : couleur sombre par défaut sur bourses, pas blanche du
+tout. Cause réelle : ce <p> est sous .bourses-hero .container (voir
+scholarships.html), jamais un enfant DIRECT de .bourses-hero — le
+sélecteur `.bourses-hero > p` de css/catalog.css ne le touche donc
+jamais, et le paragraphe hérite de la couleur de texte par défaut du
+site au lieu du blanc/ombré prévu pour une bannière photo. Sur
+universities.html le <p> EST un enfant direct de .uni-hero (structure
+différente), d'où l'écart entre les deux pages malgré une règle CSS a
+priori partagée. Sélecteur descendant plutôt que `>` ci-dessous : il
+couvre les deux structures, et ajoute une ombre resserrée sur la
+lettre (pas seulement un halo large comme l'original) pour rester
+lisible quelle que soit la photo derrière — le h1, gras et plus
+grand, s'en sortait déjà, ce paragraphe plus fin non. */
+.catalog-hero p,
+.bourses-hero p,
+.uni-hero p{
+color:rgba(255,255,255,.96);
+text-shadow:0 1px 2px rgba(0,0,0,.6), 0 2px 8px rgba(0,0,0,.55), 0 10px 26px rgba(0,0,0,.3);
+}
+
+/* ==========================================================
+CARTE DE BOURSE — voile photo, même correctif que la bannière.
+========================================================== */
+.scholarship-card-media::after{
+background:linear-gradient(180deg, rgba(28,22,16,.34) 0%, transparent 42%, rgba(28,22,16,.42) 100%);
+}
+
+/* ==========================================================
+CARTE D'UNIVERSITÉ — voile photo, classement et statut : même
+famille d'encre chaude que le reste des fonds sombres du site.
+========================================================== */
+.uni-card-media::after{
+background:linear-gradient(to top, rgba(28,22,16,.80) 0%, rgba(28,22,16,.24) 46%, transparent 72%);
+}
+
+.uni-card-rank,
+.uni-card-status{
+background:rgba(28,22,16,.66);
+}
+
+/* ==========================================================
+BARRE DE RECHERCHE / FILTRES — plus sobre, moins imposante
+(2026-08-29). La version d'origine (css/catalog.css) est une pilule
+pleine hauteur, coins à 999px, généreuse en espace : plus proche d'un
+champ de recherche grand public que d'un outil de filtrage. Coins
+nettement moins arrondis (var(--radius-md)/var(--radius-sm) plutôt que
+var(--radius-full)), espacements et police resserrés — plus proche
+d'une barre d'outils professionnelle, moins de place prise à l'écran.
+Ombre recalée sur la même encre chaude que le reste de la page
+(rgba(18,22,46,…) → rgba(28,22,16,…), même correctif que partout
+ailleurs sur ces deux pages).
+========================================================== */
+.catalog-filters,
+.catalog-search-bar{
+max-width:720px;
+gap:6px;
+padding:6px;
+border-radius:var(--radius-md);
+box-shadow:0 1px 2px rgba(28,22,16,.05), 0 8px 22px -14px rgba(28,22,16,.28);
+}
+
+.catalog-filters:focus-within,
+.catalog-search-bar:focus-within{
+box-shadow:0 1px 2px rgba(28,22,16,.05), 0 10px 26px -14px rgba(217,128,90,.34);
+}
+
+.catalog-search-field input{
+padding:8px 32px 8px 34px;
+font-size:.85rem;
+}
+
+.catalog-search-icon{
+left:12px;
+width:15px;
+height:15px;
+}
+
+.catalog-search-clear{
+right:4px;
+width:22px;
+height:22px;
+}
+
+.catalog-search-clear i,
+.catalog-search-clear svg{ width:13px; height:13px; }
+
+.catalog-search-reset{
+padding:8px 14px;
+border-radius:var(--radius-sm);
+font-size:.8rem;
+}
+
+.catalog-search-reset i,
+.catalog-search-reset svg{ width:13px; height:13px; }
+
+@media(max-width:720px){
+.catalog-filters,
+.catalog-search-bar{ border-radius:var(--radius-lg); }
+}
+
+/* ==========================================================
+MENU « PAYS » / « NIVEAU » — remplacement du <select> natif
+(2026-08-29). Un <select> HTML ne peut pas s'habiller : sa liste
+déroulante est dessinée par l'OS (fond blanc, surlignage bleu Windows
+sur la capture qui a motivé ce correctif), aucune règle CSS ne
+l'atteint. js/catalog-select.js construit à côté de chaque <select>
+un petit menu (bouton + liste) qui porte la même police/couleurs que
+le reste du site ; le <select> d'origine reste dans le DOM, cachée
+(display:none plus bas), pour que scholarships.js/universities-page.js
+continuent de lire et déclencher son évènement `change` sans aucune
+modification — seul l'habillage change, jamais la logique de filtre.
+========================================================== */
+.catalog-select-native-hidden{
+display:none;
+}
+
+.catalog-custom-select{
+position:relative;
+flex:0 0 auto;
+}
+
+.catalog-custom-select-trigger{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+width:100%;
+max-width:150px;
+padding:8px 12px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+background:var(--background);
+font-family:inherit;
+font-size:.8rem;
+font-weight:var(--fw-semibold);
+color:var(--text-light);
+cursor:pointer;
+transition:border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.catalog-custom-select-trigger:hover{
+border-color:var(--amber-500);
+color:var(--text-color);
+}
+
+.catalog-custom-select-trigger:focus-visible{
+outline:none;
+border-color:var(--amber-700);
+box-shadow:0 0 0 3px rgba(217,128,90,.22);
+}
+
+.catalog-custom-select.is-open .catalog-custom-select-trigger{
+border-color:var(--amber-600);
+color:var(--text-color);
+}
+
+.catalog-custom-select-value{
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.catalog-custom-select-caret{
+width:14px;
+height:14px;
+flex-shrink:0;
+color:var(--text-light);
+transition:transform .2s var(--ease-premium);
+}
+
+.catalog-custom-select.is-open .catalog-custom-select-caret{
+transform:rotate(180deg);
+color:var(--amber-700);
+}
+
+/* Liste — carte beige, coins arrondis, même ombre que la barre de
+recherche : elle doit se lire comme un morceau du même site, pas comme
+un composant système posé par-dessus. */
+.catalog-custom-select-list{
+position:absolute;
+top:calc(100% + 6px);
+left:0;
+z-index:40;
+min-width:100%;
+max-width:260px;
+max-height:280px;
+margin:0;
+padding:6px;
+list-style:none;
+overflow-y:auto;
+/* Sans ça, arrivé en bout de liste la molette enchaîne sur le
+défilement de la PAGE — que le script interprète comme « fermer le
+menu » (2026-08-30, même correctif que le bug du scroll interne). */
+overscroll-behavior:contain;
+background:var(--background);
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+box-shadow:0 1px 2px rgba(28,22,16,.06), 0 14px 32px -14px rgba(28,22,16,.32);
+}
+
+.catalog-custom-select-option{
+padding:8px 10px;
+border-radius:var(--radius-xs);
+font-size:.82rem;
+line-height:1.4;
+color:var(--text-color);
+cursor:pointer;
+white-space:nowrap;
+}
+
+.catalog-custom-select-option.is-focused,
+.catalog-custom-select-option:hover{
+background:var(--background-soft);
+}
+
+.catalog-custom-select-option.is-selected{
+color:var(--amber-700);
+font-weight:var(--fw-bold);
+background:rgba(217,128,90,.12);
+}
+
+@media(max-width:900px){
+.catalog-custom-select-trigger{ max-width:118px; padding:8px; font-size:.78rem; }
+}
+
+@media(max-width:720px){
+.catalog-custom-select{ flex:1 1 0; }
+.catalog-custom-select-trigger{ max-width:none; }
+}

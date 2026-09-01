@@ -6,28 +6,77 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ScholarBridge | Activer mon accompagnement</title>
+<title>Activer mon accompagnement | FitzUniverse</title>
 
-<meta name="description" content="Récapitulatif et activation de votre accompagnement Fitz — paiement sécurisé via PayDunya (Wave, Orange Money, carte bancaire).">
+<meta name="description" content="Récapitulatif et activation de votre accompagnement FitzUniverse — paiement sécurisé via PayDunya (Wave, Orange Money, carte bancaire).">
 
-<!-- Google Fonts (identiques au reste du parcours) -->
+<meta name="theme-color" content="#211D18">
+<!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
+Sans cette méta, un appareil en mode sombre applique parfois un
+assombrissement automatique qui casse les contrastes calibrés. -->
+<meta name="color-scheme" content="light">
+
+<meta name="robots" content="noindex">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<!-- Google Fonts — même identité « éditorial chaleureux » que le
+reste du parcours (voir css/payment-redesign.css). Remplace Plus
+Jakarta Sans/Space Grotesk. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-29) — remplace `@latest` chargé
+de façon synchrone : même correctif que sur l'accueil et les pages
+catalogue (une version cassante chez Lucide ne doit pas se déployer
+toute seule, et le script ne doit pas bloquer le premier rendu). Tout
+appel à lucide.createIcons() dans un script classique doit donc
+attendre DOMContentLoaded — les modules, eux, s'exécutent déjà après
+les scripts différés. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
-<!-- Design system ScholarBridge -->
+<!-- Design system Fitz -->
 <link rel="stylesheet" href="css/base.css">
+<!-- Chargée avant auth.css/payment.css : ces deux feuilles gardent la
+main sur tout sélecteur qu'elles définissent déjà (.reveal, délais
+existants) — seules les NOUVELLES règles de délai ajoutées ici
+(css/animations.css, sélecteurs que payment.css ne définit pas) prennent
+effet. Ajoutée le 2026-08-15 : cette page n'avait jamais chargé la
+feuille d'animations partagée. -->
+<link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="payment.css">
+<link rel="stylesheet" href="css/payment-redesign.css">
 
 </head>
 
 <body>
 
-<div class="container">
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<!-- Barre de marque (2026-08-31) : ces pages n'avaient AUCUN logo.
+Sur une page de PAIEMENT, c'est un defaut de confiance avant d'etre un
+defaut de style. Lien vers index.html : ces pages ne chargent aucun
+shell, la session n'y est pas connue — c'est aussi la cible de leurs
+liens de retour existants. -->
+<header class="page-brandbar">
+<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</header>
+
+<main class="container" id="main-content" tabindex="-1">
 
 <a href="offers.html" class="back-link">
 <i data-lucide="arrow-left"></i>
@@ -36,42 +85,52 @@
 
 <header class="payment-header reveal">
 
+<div class="fitz-badge-row">
+<div class="fitz-avatar" aria-hidden="true"></div>
 <div class="ai-badge">
-<i data-lucide="bot"></i>
 <span>Fitz</span>
 </div>
+</div>
 
-<h1>Vous êtes sur le point d'activer votre accompagnement ScholarBridge.</h1>
+<h1>Vous êtes sur le point d'activer votre accompagnement Fitz.</h1>
 
+<!-- Réécrit le 2026-08-22. L'ancienne accroche ouvrait la page de
+paiement sur une négation ("Aucune promesse d'admission ou de
+bourse"), donc sur un doute, à l'endroit exact où l'étudiant a
+besoin d'être rassuré. Le fond de cette phrase reste vrai et n'a
+pas été supprimé du site : il est redit, en formulation positive
+et à sa juste place, dans .activation-scope juste sous le bouton
+d'activation — là où se lisent les mentions de portée. -->
 <p class="lead">
-Aucune promesse d'admission ou de bourse : vous activez un accompagnement sérieux, assuré par Fitz, pour construire un dossier de candidature plus solide.
+Il ne reste qu'une étape. Vérifiez votre formule, choisissez votre moyen de paiement, et Fitz se met au travail dès la validation. Le montant affiché est le seul qui sera débité.
 </p>
 
 </header>
 
-<!-- Fitz, présent jusqu'au bout -->
-<div class="fitz-showcase reveal">
-
-<div class="fitz-showcase-avatar"><i data-lucide="sparkles"></i></div>
-
-<div class="fitz-showcase-copy">
-<span class="fitz-showcase-label">Ce qui commence dès l'activation</span>
-<p id="fitzRotatorMessage">Fitz vous accompagnera dès la validation de votre paiement.</p>
-</div>
-
-</div>
+<!-- La vitrine Fitz à message rotatif a été retirée le 2026-08-22, comme
+sur offers.html : sur une page de paiement elle repoussait le
+récapitulatif et le montant sans rien apprendre à qui s'apprête à
+régler. La promesse qu'elle portait ("l'accompagnement commence dès la
+validation") est déjà dite, et mieux située, dans le bloc de
+réassurance juste au-dessus du bouton d'activation.
+initFitzRotator() (payment.js) se protège par `if (!el) return` :
+l'absence de l'élément ne lève aucune erreur. -->
 
 <!-- Carte résumé du palier -->
 <div class="plan-summary reveal">
 
-<div class="plan-summary-icon"><i id="planSummaryIcon" data-lucide="sparkles"></i></div>
+<!-- Icône nue (règle « Icônes » de DESIGN_SYSTEM.md). L'id est conservé :
+payment.js y écrit le glyphe propre à la formule choisie. -->
+<i class="plan-summary-icon" id="planSummaryIcon" data-lucide="layers"></i>
 
 <div class="plan-summary-body">
 <span class="plan-summary-badge" id="planSummaryBadge">—</span>
 <h2 id="planSummaryLabel">—</h2>
+<!-- La devise n'est plus écrite ici : payment.js injecte dans
+#planSummaryAmount le FCFA en petit ET le montant en euros (voir
+formatPriceHTML). Laisser le "FCFA" en dur aurait fait doublon. -->
 <div class="plan-summary-price">
 <span id="planSummaryAmount">—</span>
-<span class="plan-summary-currency">FCFA</span>
 </div>
 </div>
 
@@ -87,48 +146,48 @@ Aucune promesse d'admission ou de bourse : vous activez un accompagnement série
 
 <dl class="summary-card">
 
-<div class="summary-row">
-<span class="summary-row-icon"><i data-lucide="layers"></i></span>
+<div class="summary-row reveal">
+<i class="summary-row-icon" data-lucide="layers"></i>
 <div class="summary-row-body">
 <dt>Offre</dt>
 <dd id="summaryOffer">—</dd>
 </div>
 </div>
 
-<div class="summary-row summary-row-price">
-<span class="summary-row-icon summary-row-icon-accent"><i data-lucide="banknote"></i></span>
+<div class="summary-row summary-row-price reveal">
+<i class="summary-row-icon summary-row-icon-accent" data-lucide="banknote"></i>
 <div class="summary-row-body">
 <dt>Prix</dt>
 <dd id="summaryPrice">—</dd>
 </div>
 </div>
 
-<div class="summary-row">
-<span class="summary-row-icon"><i data-lucide="calendar-clock"></i></span>
+<div class="summary-row reveal">
+<i class="summary-row-icon" data-lucide="calendar-clock"></i>
 <div class="summary-row-body">
 <dt>Durée</dt>
 <dd id="summaryDuration">—</dd>
 </div>
 </div>
 
-<div class="summary-row">
-<span class="summary-row-icon"><i data-lucide="list-checks"></i></span>
+<div class="summary-row reveal">
+<i class="summary-row-icon" data-lucide="list-checks"></i>
 <div class="summary-row-body">
 <dt>Accompagnement inclus</dt>
 <dd id="summaryIncluded">—</dd>
 </div>
 </div>
 
-<div class="summary-row">
-<span class="summary-row-icon"><i data-lucide="bot"></i></span>
+<div class="summary-row reveal">
+<i class="summary-row-icon" data-lucide="bot"></i>
 <div class="summary-row-body">
 <dt>Accès Fitz</dt>
 <dd id="summaryFitzAccess">—</dd>
 </div>
 </div>
 
-<div class="summary-row">
-<span class="summary-row-icon"><i data-lucide="clock"></i></span>
+<div class="summary-row reveal">
+<i class="summary-row-icon" data-lucide="clock"></i>
 <div class="summary-row-body">
 <dt>Statut</dt>
 <dd class="summary-status">
@@ -154,7 +213,7 @@ recréer un compte). -->
 <h2>Votre compte</h2>
 </div>
 
-<p class="section-subtext">Ces informations créent votre compte ScholarBridge, avec cette formule déjà associée.</p>
+<p class="section-subtext">Ces informations créent votre compte FitzUniverse, avec cette formule déjà associée.</p>
 
 <form id="accountForm" class="signup-form">
 
@@ -314,37 +373,62 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 </span>
 </label>
 
+<!-- Réécrit le 2026-08-22.
+LE PROBLÈME : Wave et Orange Money étaient représentés par LEUR
+marque ; la carte bancaire, elle, par un dessin de carte inventé —
+un carré bleu en dégradé de 48px. Trois options côte à côte, deux
+reconnaissables au premier coup d'œil, une troisième qui ne
+ressemblait à rien de connu. Ce carré violait aussi la règle
+« Icônes » (conteneur en dégradé) et c'était le dernier de la page.
+
+Et les vraies marques étaient DÉJÀ là : Visa et Mastercard, en
+minuscules pastilles sous le texte. Le dessin occupait la place du
+logo pendant que les logos étaient relégués en bas — et disaient
+deux fois la même chose.
+
+LA CORRECTION : « carte bancaire » n'est pas une marque, c'est une
+catégorie ; ce qui la représente, ce sont les RÉSEAUX qui traitent
+le paiement. Visa et Mastercard remontent donc dans l'emplacement
+du logo, dans la même vignette blanche que Wave et Orange Money.
+Les trois options sont désormais représentées de la même façon :
+par la ou les marques qui encaissent réellement.
+
+La classe .payment-method-card-official est ajoutée pour la même
+raison que sur les deux autres : mise en colonne, coche en haut à
+droite. Elle règle au passage le titre « Carte bancaire » qui
+passait à la ligne au milieu du mot, faute de largeur. -->
 <label class="payment-method method-card reveal">
 <input type="radio" name="paymentMethod" value="card">
-<span class="payment-method-card">
+<span class="payment-method-card payment-method-card-official">
 
-<span class="payment-method-logo" aria-hidden="true">
-<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-<rect width="40" height="40" rx="12" fill="url(#card-grad)"/>
-<rect x="8" y="13" width="24" height="16" rx="3" fill="#fff" fill-opacity=".96"/>
-<rect x="8" y="17" width="24" height="3.5" fill="url(#card-grad)"/>
-<rect x="11" y="24" width="8" height="2" rx="1" fill="url(#card-grad)" fill-opacity=".55"/>
-<defs>
-<linearGradient id="card-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-<stop stop-color="#33418C"/>
-<stop offset="1" stop-color="#12162E"/>
-</linearGradient>
-</defs>
+<span class="payment-method-logo payment-method-logo-official payment-method-logo-schemes" aria-hidden="true">
+
+<!-- Visa : le mot-symbole est composé en texte (italique, bleu Visa
+#1A1F71) plutôt qu'en tracé vectoriel. Un tracé « à peu près »
+serait une contrefaçon approximative du logo d'un tiers ; une
+composition typographique dans la bonne couleur est ce que font
+la plupart des pages de paiement, et elle reste nette à toute
+taille. -->
+<span class="scheme-visa">VISA</span>
+
+<span class="scheme-sep" aria-hidden="true"></span>
+
+<!-- Mastercard : les deux cercles entrelacés SONT la marque, et
+leur géométrie est simple et exacte. La zone de recouvrement
+est peinte séparément dans l'orange foncé du logo, au lieu de
+l'ancienne approximation par fill-opacity — c'est ce détail qui
+fait qu'on le reconnaît. -->
+<svg class="scheme-mastercard" viewBox="0 0 36 22" xmlns="http://www.w3.org/2000/svg">
+<circle cx="14" cy="11" r="10" fill="#EB001B"/>
+<circle cx="22" cy="11" r="10" fill="#F79E1B"/>
+<path d="M18 3.2a10 10 0 0 0 0 15.6 10 10 0 0 0 0-15.6Z" fill="#FF5F00"/>
 </svg>
+
 </span>
 
 <span class="payment-method-copy">
 <strong>Carte bancaire</strong>
 <small>Visa, Mastercard et cartes internationales</small>
-<span class="payment-method-brands" aria-hidden="true">
-<span class="brand-chip brand-chip-visa">VISA</span>
-<span class="brand-chip brand-chip-mastercard">
-<svg viewBox="0 0 24 14" xmlns="http://www.w3.org/2000/svg">
-<circle cx="8" cy="7" r="7" fill="#EB001B"/>
-<circle cx="16" cy="7" r="7" fill="#F79E1B" fill-opacity=".85"/>
-</svg>
-</span>
-</span>
 </span>
 
 <span class="payment-method-check"><i data-lucide="check"></i></span>
@@ -360,7 +444,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 <div class="reassurance">
 
 <div class="reassurance-item reveal">
-<span class="reassurance-icon"><i data-lucide="shield-check"></i></span>
+<i class="reassurance-icon" data-lucide="shield-check"></i>
 <div class="reassurance-copy">
 <strong>Paiement sécurisé</strong>
 <p>Transactions protégées via PayDunya.</p>
@@ -368,7 +452,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 </div>
 
 <div class="reassurance-item reveal">
-<span class="reassurance-icon"><i data-lucide="bot"></i></span>
+<i class="reassurance-icon" data-lucide="bot"></i>
 <div class="reassurance-copy">
 <strong>Fitz</strong>
 <p>L'accompagnement commence immédiatement après validation.</p>
@@ -376,7 +460,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 </div>
 
 <div class="reassurance-item reveal">
-<span class="reassurance-icon"><i data-lucide="headphones"></i></span>
+<i class="reassurance-icon" data-lucide="headphones"></i>
 <div class="reassurance-copy">
 <strong>Assistance</strong>
 <p>Une équipe disponible si nécessaire.</p>
@@ -384,7 +468,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 </div>
 
 <div class="reassurance-item reveal">
-<span class="reassurance-icon"><i data-lucide="repeat"></i></span>
+<i class="reassurance-icon" data-lucide="repeat"></i>
 <div class="reassurance-copy">
 <strong>Formule évolutive</strong>
 <p>Vous pourrez changer d'offre plus tard.</p>
@@ -404,6 +488,16 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 <p class="activation-note">
 <i data-lucide="shield-check"></i>
 Vous ne serez jamais facturé sans confirmation explicite.
+</p>
+
+<!-- Mention de portée. Elle porte ce que disait l'ancienne accroche
+(voir le commentaire de .lead) : Fitz accompagne, il ne
+décide pas. Formulée par ce qu'on fait plutôt que par ce qu'on ne
+promet pas, et placée sous le bouton, avec les autres mentions.
+Ne pas la retirer : c'est la seule phrase de la page qui délimite
+ce que l'étudiant achète. -->
+<p class="activation-scope">
+Fitz vous accompagne dans la construction de votre dossier. La décision d'admission et l'attribution des bourses relèvent des établissements et des organismes concernés.
 </p>
 
 <div class="trust-logos" aria-label="Moyens de paiement sécurisés par PayDunya">
@@ -443,7 +537,7 @@ Vous ne serez jamais facturé sans confirmation explicite.
 
 </div>
 
-</div>
+</main>
 
 <script>
 
@@ -475,6 +569,7 @@ this.setAttribute("aria-label", isVisible ? "Masquer le mot de passe" : "Affiche
 
 </script>
 
+<script src="js/back-link.js"></script>
 <script src="pricing-plans.js"></script>
 <script type="module" src="payment.js"></script>
 

@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — suivi d'événements (analytics)
+* FitzUniverse — suivi d'événements (analytics)
 * ============================================================
 *
 * Point d'entrée UNIQUE pour signaler qu'un événement métier vient de
@@ -25,7 +25,7 @@
 *      analyticsFieldCounters/{slug}
 *
 * RÈGLE PERMANENTE DU PROJET : avant toute nouvelle fonctionnalité sur
-* ScholarBridge, vérifier si un événement de suivi doit être créé. Si
+* FitzUniverse, vérifier si un événement de suivi doit être créé. Si
 * oui, ajouter une entrée dans EVENT_CONFIG ci-dessous et un seul
 * appel trackEvent(...) au point d'action — ne jamais modifier la
 * fonction trackEvent elle-même pour un nouveau type d'événement.

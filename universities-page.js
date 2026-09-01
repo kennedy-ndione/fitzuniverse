@@ -1,11 +1,9 @@
-import { db } from "./firebase-config.js";
-
-import {
-collection,
-getDocs
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
 import { trackEvent } from "./js/analytics.js";
+
+import { resolveCityImage } from "./js/scholarship-image.js";
+
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./js/catalog-data.js";
 
 // Page publique, en accès libre — voir la note dans universities.css.
 // Aucun garde d'authentification ici, volontairement : le catalogue est
@@ -25,6 +23,36 @@ function statusClass(status) {
 return String(status || "").toLowerCase().includes("ouvert") ? "is-open" : "";
 }
 
+function slugify(str) {
+
+return (str || "")
+.normalize("NFD")
+.replace(/[̀-ͯ]/g, "")
+.toLowerCase()
+.replace(/[^a-z0-9]+/g, "-")
+.replace(/^-+|-+$/g, "");
+
+}
+
+// Regroupe par pays, sections triées par richesse décroissante (le
+// pays le mieux fourni en premier), égalité départagée alphabétique —
+// jamais d'accordéon, toutes les sections restent ouvertes.
+function groupByCountry(items) {
+
+const groups = new Map();
+
+items.forEach((item) => {
+const country = item.country || "Autre";
+if (!groups.has(country)) groups.set(country, []);
+groups.get(country).push(item);
+});
+
+return [...groups.entries()]
+.map(([country, group]) => ({ country, items: group }))
+.sort((a, b) => b.items.length - a.items.length || a.country.localeCompare(b.country));
+
+}
+
 function renderCard(university) {
 
 const card = document.createElement("div");
@@ -40,13 +68,21 @@ const scholarshipLabel = university.scholarshipTitles.length
 ? university.scholarshipTitles.join(" · ")
 : "";
 
+// Photo de ville en variantes responsives (2026-08-29). Avant ce
+// correctif, cette ligne posait le FICHIER D'ORIGINE de
+// assets/images/cities/ — oxford.jpg fait 2,6 Mo, waseda.jpg 2,6 Mo :
+// mesuré, huit cartes suffisaient à charger 11 Mo d'images. Le
+// repli "default.jpg" visait par ailleurs un fichier absent du dépôt.
+// Voir resolveCityImage() dans js/scholarship-image.js.
+const cityPhoto = resolveCityImage(university.image);
+
 card.innerHTML = `
 <div class="uni-card-media uni-card-media--variant-${university.photoVariant || 0}">
-<img src="assets/images/cities/${university.image || "default.jpg"}" alt="${university.city || university.name}" loading="lazy">
+<img src="${cityPhoto.src}" srcset="${cityPhoto.srcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 360px" width="800" height="533" alt="${university.city || university.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${cityPhoto.fallbackOriginal}'">
 ${university.ranking ? `<span class="uni-card-rank"><i data-lucide="trophy"></i>${university.ranking}</span>` : ""}
 ${university.status ? `<span class="uni-card-status ${statusClass(university.status)}">${university.status}</span>` : ""}
 <div class="uni-card-location">
-${university.flag ? `<img src="assets/flags/${university.flag}" alt="">` : ""}
+${university.flag ? `<img src="assets/flags/${university.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : ""}
 <span>${[university.city, university.country].filter(Boolean).join(", ")}</span>
 </div>
 </div>
@@ -104,10 +140,12 @@ const scholarshipIdFilter = params.get("scholarshipId") || "";
 
 const container = document.getElementById("universities-list");
 const searchInput = document.getElementById("searchInput");
+const searchClearBtn = document.getElementById("searchClearBtn");
 const countryFilter = document.getElementById("countryFilter");
 const levelFilter = document.getElementById("levelFilter");
 const resetBtn = document.getElementById("resetFiltersBtn");
 const resultsCount = document.getElementById("resultsCount");
+const countryPills = document.getElementById("countryPills");
 const statTotal = document.getElementById("statTotal");
 const statCountries = document.getElementById("statCountries");
 const scholarshipContext = document.getElementById("scholarshipContext");
@@ -222,12 +260,80 @@ return buildCardModel(university, programsForUniversity, variant % 4);
 resultsCount.textContent = `${cards.length} établissement${cards.length > 1 ? "s" : ""} trouvé${cards.length > 1 ? "s" : ""}`;
 
 if (cards.length === 0) {
+
+countryPills.hidden = true;
+countryPills.innerHTML = "";
+
 renderEmptyState();
+
 } else {
-cards.forEach((card) => container.appendChild(renderCard(card)));
+
+const groups = groupByCountry(cards);
+
+renderCountryPills(groups, country);
+
+groups.forEach(({ country: groupCountry, items }) => {
+
+const section = document.createElement("section");
+section.className = "catalog-country-group";
+section.id = `country-${slugify(groupCountry)}`;
+
+const flagItem = items.find((item) => item.flag);
+const flagImg = flagItem ? `<img src="assets/flags/${flagItem.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
+
+section.innerHTML = `
+<div class="catalog-country-header">
+${flagImg}
+<h2>${groupCountry}</h2>
+<span>(${items.length} université${items.length > 1 ? "s" : ""})</span>
+</div>
+<div class="uni-grid"></div>
+`;
+
+const grid = section.querySelector(".uni-grid");
+items.forEach((card) => grid.appendChild(renderCard(card)));
+
+container.appendChild(section);
+
+});
+
 }
 
+// Les toutes premières cartes sont au-dessus de la ligne de
+// flottaison : les servir en `lazy` retarde la plus grande image
+// visible (LCP). Les deux premières photos rendues repassent en
+// chargement prioritaire — les suivantes restent différées.
+// (2026-08-29, passe de fluidité.)
+container.querySelectorAll(".scholarship-card-media img, .uni-card-media img").forEach((img, i) => {
+if (i < 2) {
+img.loading = "eager";
+img.setAttribute("fetchpriority", "high");
+}
+});
+
 if (window.lucide) lucide.createIcons();
+
+}
+
+function renderCountryPills(groups, activeCountry) {
+
+if (groups.length <= 1) {
+countryPills.hidden = true;
+countryPills.innerHTML = "";
+return;
+}
+
+countryPills.hidden = false;
+
+countryPills.innerHTML = groups.map(({ country: groupCountry, items }) => {
+
+const flagItem = items.find((item) => item.flag);
+const flagImg = flagItem ? `<img src="assets/flags/${flagItem.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
+const slug = slugify(groupCountry);
+
+return `<a href="#country-${slug}" class="catalog-country-pill${groupCountry === activeCountry ? " is-active" : ""}">${flagImg}<span>${groupCountry}</span><span class="catalog-country-pill-count">${items.length}</span></a>`;
+
+}).join("");
 
 }
 
@@ -258,15 +364,15 @@ renderSkeleton();
 
 try {
 
-const [universitiesSnap, programsSnap, scholarshipsSnap] = await Promise.all([
-getDocs(collection(db, "universities")),
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "scholarships"))
-]);
+const catalogue = await chargerCatalogue();
 
-allUniversities = universitiesSnap.docs.map((docSnap) => ({ firestoreId: docSnap.id, ...docSnap.data() }));
-allPrograms = programsSnap.docs.map((docSnap) => ({ firestoreId: docSnap.id, ...docSnap.data() }));
-allScholarshipsById = new Map(scholarshipsSnap.docs.map((docSnap) => [docSnap.id, { firestoreId: docSnap.id, ...docSnap.data() }]));
+// Cette page nomme l'identifiant `firestoreId` : le chargeur renvoie
+// `id`, on renomme ici plutôt que d'imposer une convention au reste.
+const renommer = ({ id, ...reste }) => ({ firestoreId: id, ...reste });
+
+allUniversities = catalogue.universites.map(renommer);
+allPrograms = catalogue.programmes.map(renommer);
+allScholarshipsById = new Map(catalogue.bourses.map((s) => [s.id, renommer(s)]));
 
 if (scholarshipIdFilter) {
 
@@ -275,7 +381,7 @@ const scholarship = allScholarshipsById.get(scholarshipIdFilter);
 scholarshipContext.hidden = false;
 scholarshipContextName.textContent = scholarship ? scholarship.title : "Bourse";
 
-if (heroTitle) heroTitle.textContent = "Universités partenaires";
+if (heroTitle) heroTitle.textContent = "Les universités du catalogue";
 if (heroSubtitle) heroSubtitle.textContent = `Établissements proposant la bourse « ${scholarship ? scholarship.title : ""} ». Affinez par pays ou par niveau si besoin.`;
 
 }
@@ -308,7 +414,18 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-searchInput.addEventListener("input", applyFilters);
+searchInput.addEventListener("input", () => {
+searchClearBtn.hidden = !searchInput.value;
+applyFilters();
+});
+
+searchClearBtn.addEventListener("click", () => {
+searchInput.value = "";
+searchClearBtn.hidden = true;
+applyFilters();
+searchInput.focus();
+});
+
 countryFilter.addEventListener("change", applyFilters);
 levelFilter.addEventListener("change", applyFilters);
 
@@ -320,6 +437,7 @@ return;
 }
 
 searchInput.value = "";
+searchClearBtn.hidden = true;
 countryFilter.value = "";
 levelFilter.value = "";
 applyFilters();

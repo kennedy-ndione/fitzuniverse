@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — double présentation (public / shell authentifié)
+* FitzUniverse — double présentation (public / shell authentifié)
 * ============================================================
 *
 * Pour les pages qui doivent rester 100% publiques pour un visiteur
@@ -67,6 +67,9 @@ const main = document.getElementById(mainId);
 if (!shellRoot || !dashboardMain || !main) return null;
 
 await loadStylesheet("dashboard.css");
+// Coquille « parcours » (2026-08-30) — même raison et même moment que
+// dashboard.css : uniquement pour la session connectée.
+await loadStylesheet("css/journey-shell.css");
 
 const publicHeader = document.getElementById(publicHeaderId);
 if (publicHeader) publicHeader.hidden = true;

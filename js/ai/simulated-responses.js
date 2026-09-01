@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — gabarits "IA" simulés
+* FitzUniverse — gabarits "IA" simulés
 * ============================================================
 *
 * Tout le contenu généré aujourd'hui par Fitz, sans dépendance
@@ -673,6 +673,6 @@ const intent = INTENTS.find((i) => i.keywords.some((kw) => lower.includes(kw)));
 
 if (intent) return intent.reply(profile);
 
-return `Merci pour votre message ! Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les bourses, documents, entretiens et délais.\n- Vous orienter vers **Lettre de motivation**, **E-mails Fitz**, **Traduction** ou **Vérification du dossier**.\n\nReformulez votre question, ou choisissez une suggestion ci-dessous pour continuer.`;
+return `Merci pour votre message ! Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les bourses, documents, entretiens et délais.\n- Vous orienter vers **Lettre de motivation**, **E-mails Fitz**, **Traduction** ou **Vérification du dossier**.\n\nReformulez votre question en une phrase, ou dites-moi simplement où vous en êtes dans votre candidature.`;
 
 }

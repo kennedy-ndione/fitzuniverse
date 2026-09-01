@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE DESIGN SYSTEM — voir DESIGN_SYSTEM.md à la racine
+FITZ DESIGN SYSTEM — voir DESIGN_SYSTEM.md à la racine
 pour la documentation complète avec exemples. Ce fichier est LA
 seule source de tokens/composants partagés : toute page qui a
 besoin d'une couleur, d'un espacement, d'un rayon, d'une ombre,
@@ -51,9 +51,11 @@ icônes de points forts et aux soulignements de titres clés. Viser
 moins de 10-15% de la surface visible.
 
   --amber-500  SURFACES uniquement (fond de bouton, de badge, de
-               pastille). Toujours avec un libellé --primary-900 :
-               8,24:1. Sur blanc il ne fait que 2,16:1 — donc jamais
-               en couleur de texte sur fond clair.
+               pastille). Toujours avec un libellé --ink-surface :
+               7,8:1 (c'était --primary-900 et 8,24:1 jusqu'au
+               2026-08-28 — voir --ink-surface plus bas). Sur blanc il
+               ne fait que 2,16:1 — donc jamais en couleur de texte
+               sur fond clair.
   --amber-600  survol de ces mêmes surfaces (5,85:1 avec le libellé).
   --amber-700  la SEULE valeur admise pour du texte ou une icône
                ambre sur fond clair : 5,8 / 5,5 / 5,3 sur --background,
@@ -68,19 +70,74 @@ moins de 10-15% de la surface visible.
 --warning:#EAA83D;
 --danger:#EF4444;
 
+/* ==========================================================
+ÉCHELLE D'ÉTAT (2026-08-22) — les trois valeurs ci-dessus sont des
+couleurs de SURFACE VIVE : mesurées sur --background/--background-soft/
+--background-alt elles donnent 2,28 / 2,07 / 3,76 — aucune ne passe le
+4,5:1 exigé pour du texte, et --success/--warning n'atteignent même pas
+le 3:1 des composants non textuels. Elles restent valides en pastille
+pleine avec un libellé sombre, jamais en couleur de texte ou d'icône
+sur fond clair.
+
+Cette échelle comble ce manque, sur le même modèle que --amber-500/600/
+700 plus haut (surface / survol-surface / texte) :
+
+  --*-500  stop clair d'un dégradé, jamais seul sur fond clair
+  --*-600  SURFACES non textuelles (anneau, barre de progression,
+           pastille) — 3,30 / 3,19 / 4,83, au-dessus du seuil 3:1 de
+           WCAG 1.4.11
+  --*-700  la SEULE valeur admise pour du TEXTE ou une icône porteuse
+           de sens sur fond clair — 5,02 / 5,02 / 6,47 sur --background
+           (4,58 / 4,58 / 5,91 sur --background-alt, le plus sombre des
+           trois fonds), donc AA partout
+  --*-50   teinte de fond très claire, pour une zone d'état entière
+
+Introduite pour le score du diagnostic (results.css) : un score ne peut
+pas être lisible en vert/ambre/rouge sans une valeur de texte qui tient
+le contraste. Toute autre page qui doit signaler un état bon/moyen/
+faible consomme CES tokens plutôt que d'inventer ses propres verts.
+========================================================== */
+
+--success-50:#ECFDF5;
+--success-500:#34D399;
+--success-600:#16A34A;
+--success-700:#15803D;
+
+--warning-50:#FFFBEB;
+--warning-500:#FBBF24;
+--warning-600:#D97706;
+--warning-700:#B45309;
+
+--danger-50:#FEF2F2;
+--danger-500:#F87171;
+--danger-600:#DC2626;
+--danger-700:#B91C1C;
+
 /* ÉCHELLE DE GRIS TEXTE — trois niveaux porteurs d'information, plus
 un quatrième strictement décoratif. Valeurs revues le 2026-08-02 après
 un audit de contraste : les anciennes (#64748B / #94A3B8) échouaient au
 niveau AA sur les fonds clairs du site.
 
-Contrastes mesurés sur --background (#FFF), --background-soft
-(#F8FAFC) et --background-alt (#F1F5F9), les trois fonds sur lesquels
-ce texte repose réellement :
+NEUTRES PAPIER — bascule du 2026-08-28
+--------------------------------------
+Toute l'échelle passe du slate FROID (bleuté : #0F172A / #475569 sur
+#FFFFFF / #F8FAFC) à un neutre PAPIER CHAUD. Le blanc pur et ses gris
+bleutés étaient le dernier vestige de la palette bleue abandonnée —
+et le fond blanc lui-même n'était pas blanc : --gradient-hero posait
+deux voiles radiaux #E9EBFA / #F0EDFB, soit du bleu et du violet, sur
+tout le site.
 
-  --text-color       16.9 / 16.1 / 15.4
-  --text-light        7.6 /  7.2 /  6.9   (était 4.8 / 4.6 / 4.3 ✗)
-  --text-muted        5.2 /  4.9 /  4.7   (était 2.6 / 2.5 / 2.3 ✗)
-  --text-decorative   3.4 /  3.3 /  3.1   (jamais pour du texte)
+La LUMINOSITÉ de chaque échelon est conservée, seule la teinte
+change : les rapports de contraste restent donc ceux qui avaient été
+validés lors de l'audit AA du 2026-08-02, à quelques centièmes près.
+
+Contrastes remesurés sur --background (#FDFCFA), --background-soft
+(#F8F6F2) et --background-alt (#F1EEE8) :
+
+  --text-color       17.6 / 17.0 / 15.6
+  --text-light        7.6 /  7.3 /  6.7
+  --text-muted        5.4 /  5.2 /  4.8
+  --text-decorative   3.7 /  3.5 /  3.3   (jamais pour du texte)
 
 Il n'existe aucune valeur plus claire que --text-muted qui passe 4.5:1
 sur ces trois fonds : c'est pourquoi --text-light a dû être assombri en
@@ -98,17 +155,31 @@ Les pages à fond sombre (dashboard.css, admin/control-center.css)
 surchargent --text-light/--text-muted dans leur propre scope : ces
 valeurs-ci sont celles du contexte CLAIR. */
 
---text-color:#0F172A;
---text-light:#475569;
---text-muted:#626E83;
---text-decorative:#7E8CA3;
+--text-color:#1A1714;
+--text-light:#57514A;
+--text-muted:#6E6760;
+--text-decorative:#8A837A;
 
---background:#FFFFFF;
---background-soft:#F8FAFC;
---background-alt:#F1F5F9;
---background-light:rgba(51,65,140,.08);
+--background:#FDFCFA;
+--background-soft:#F8F6F2;
+--background-alt:#F1EEE8;
+/* Voile neutre chaud : était rgba(51,65,140,.08), un voile du bleu
+#33418C — la dernière teinte bleue du système clair. */
+--background-light:rgba(26,23,20,.055);
 
---border-color:#E2E8F0;
+--border-color:#E5E1D9;
+
+/* ENCRE DE SURFACE (2026-08-28) — le fond des boutons pleins, et le
+libellé posé sur l'or. Distincte de --text-color (#1A1714) à dessein :
+une surface exactement de la couleur du texte qui l'entoure se lit
+comme un trou dans la page plutôt que comme un objet posé dessus.
+
+Remplace --primary-900 (#12162E, marine) partout où celui-ci servait
+d'encre sur les boutons — c'était le dernier bleu des libellés.
+Contrastes : blanc sur --ink-surface 16,8:1 ; --ink-surface sur
+--amber-500 7,8:1. */
+--ink-surface:#211D18;
+--ink-surface-hover:#342D24;
 
 --glass:rgba(255,255,255,.72);
 --glass-border:rgba(255,255,255,.45);
@@ -146,24 +217,74 @@ linear-gradient(
 #12162E 100%
 );
 
+/* ==========================================================
+DÉGRADÉ PROFOND — les GRANDES surfaces sombres (2026-08-22)
+==========================================================
+--gradient-primary reste parfait sur une petite surface : un bouton,
+une pastille, une jauge, où l'on ne voit guère que son premier stop
+lumineux (#4A5BC4). Étalé sur un écran entier, ce même stop occupe en
+revanche tout un coin en bleu vif, et c'est lui qui donnait aux pages
+Fitz leur fond « bleu électrique ».
+
+Ce token garde la même construction (135deg, trois arrêts) que
+--gradient-primary, pensée pour se lire comme du noir sur une grande
+surface sans devenir un aplat plat (`background:#000` perdrait la
+profondeur diagonale).
+
+Recoloré en graphite neutre le 2026-08-28 : la première version
+resserrait --gradient-primary vers son extrémité marine (#1C2246 /
+#12162E / #070A16), et continuait malgré tout à se lire comme "fond
+bleu foncé" à l'usage réel (retour utilisateur, sur plusieurs pages :
+hero, .fitz-demo, .opportunites, parcours eligibility-*, results.css).
+Ce token abandonne donc toute teinte bleue plutôt que la resserrer
+davantage.
+
+À réserver aux surfaces pleine page ou pleine section. Un bouton ou
+une pastille garde --gradient-primary : l'identité bleue de la marque
+reste voulue à cette échelle, seules les GRANDES surfaces sombres en
+sont détachées.
+========================================================== */
+
+--gradient-deep:
+linear-gradient(
+135deg,
+#26262C 0%,
+#18181C 45%,
+#0A0A0C 100%
+);
+
+/* Fond de page. Recoloré le 2026-08-28 : les deux voiles étaient
+#E9EBFA (bleu) et #F0EDFB (violet) sur blanc pur — c'est ce qui
+donnait au "fond blanc" du site sa dominante froide, alors même que
+le bleu et le violet avaient été abandonnés partout ailleurs. Même
+construction (2 radiaux + un aplat), en papier chaud. */
 --gradient-hero:
-radial-gradient(circle at top left,#E9EBFA 0%,transparent 45%),
-radial-gradient(circle at bottom right,#F0EDFB 0%,transparent 35%),
-#FFFFFF;
+radial-gradient(circle at top left,#F6F2EA 0%,transparent 45%),
+radial-gradient(circle at bottom right,#F3EFE6 0%,transparent 35%),
+#FDFCFA;
 
-/* Signature Fitz — "la marque dans la marque" : découplée du reste
-de la palette (bleu/violet/gris) pour rester immédiatement
-reconnaissable partout où Fitz apparaît (avatar, halo, bulles de
-réponse, badges). Dégradé "aurore" violet → indigo → cyan, propre à
-Fitz — n'est réutilisé nulle part ailleurs sur le site. */
+/* Signature Fitz — "la marque dans la marque" : reconnaissable
+partout où Fitz apparaît (avatar, halo, bulles de réponse, badges).
+REFAIT le 2026-08-27 : le dégradé "aurore" violet → indigo → cyan
+d'origine était présenté comme "découplé du reste de la palette" —
+mais la personne qui a demandé ce site a dit, deux fois, ne plus
+vouloir voir de bleu ni de violet nulle part, sans faire d'exception
+pour Fitz. Ce dégradé restait le dernier bleu/violet du site, visible
+au premier coup d'œil (badge "Suggéré par Fitz" d'applications.html,
+entre autres). Fitz garde son identité propre — un dégradé "aurore"
+qui lui est propre, pas repris ailleurs — mais entièrement dans la
+même famille ambre que le reste du site : du plus clair au plus
+foncé de l'échelle (--amber-500/600/700), plutôt qu'une couleur
+distincte. */
 --gradient-fitz:
-linear-gradient(135deg,#8B7CF6 0%,#6459B8 32%,#3E4FA8 66%,#22A8C9 100%);
+linear-gradient(135deg,var(--amber-500) 0%,var(--amber-600) 55%,var(--amber-700) 100%);
 
---glow-fitz:0 0 0 1px rgba(139,124,246,.35), 0 8px 20px rgba(34,168,201,.20), 0 0 18px rgba(139,124,246,.22);
+--glow-fitz:0 0 0 1px rgba(233,163,25,.35), 0 8px 20px rgba(233,163,25,.20), 0 0 18px rgba(233,163,25,.22);
 
-/* Couleur à plat (premier arrêt du dégradé) pour les cas où un
-dégradé ne s'applique pas directement (texte, icône, bordure fine). */
---fitz-color:#8B7CF6;
+/* Couleur à plat (pour une SURFACE, un halo ou une bordure fine) —
+alignée sur --amber-700, la seule valeur de l'échelle ambre admise
+en couleur de TEXTE sur fond clair (voir la règle plus haut). */
+--fitz-color:var(--amber-700);
 
 /* ==========================================================
 SHADOWS — élévation sobre. Une carte "mise en avant" se distingue
@@ -172,17 +293,23 @@ gros : le spectacle (--shadow-xl à 120px de flou) a été retiré du
 vocabulaire du site.
 ========================================================== */
 
+/* Teinte passée de rgba(15,23,42,…) — un slate BLEU — à l'encre chaude
+rgba(26,23,20,…) le 2026-08-28, avec les neutres papier. Une ombre
+porte la couleur de la lumière qui la crée : une ombre bleue sur un
+fond papier chaud se lit comme une salissure grise, pas comme un
+relief. Opacités et géométries inchangées. */
+
 --shadow-xs:
-0 1px 3px rgba(15,23,42,.05);
+0 1px 3px rgba(26,23,20,.05);
 
 --shadow-sm:
-0 4px 12px rgba(15,23,42,.08);
+0 4px 12px rgba(26,23,20,.08);
 
 --shadow-md:
-0 8px 20px rgba(15,23,42,.10);
+0 8px 20px rgba(26,23,20,.10);
 
 --shadow-lg:
-0 16px 32px rgba(15,23,42,.14);
+0 16px 32px rgba(26,23,20,.14);
 
 /* ==========================================================
 BORDER RADIUS — resserré.
@@ -278,6 +405,184 @@ consommer ces tokens/classes plutôt que redéfinir sa propre valeur.
 --ls-normal:0;
 --ls-wide:.05em;
 
+/* ==========================================================
+LOGO FITZUNIVERSE — source unique. Ne jamais redéfinir ces deux
+tokens ailleurs (c'est la couleur écrite en dur dans le balisage
+qui avait produit 6 habillages différents du même symbole).
+
+TROIS tokens, et trois seulement : --logo-accent (la pièce ambre du
+symbole), --logo-structure (le grand arc et le mot « Fitz »),
+--logo-descriptor (le mot « UNIVERSE »).
+
+TOUS LES TROIS SONT ÉCRITS EN LITTÉRAL, JAMAIS var(--amber-*).
+ONZE feuilles du dépôt redéfinissent l'échelle ambre en terracotta —
+recompté le 2026-08-31, le commentaire précédent n'en annonçait que
+trois : base.css elle-même, catalog-redesign, details-redesign,
+eligibility-questions-redesign, eligibility-test-redesign,
+homepage-redesign, journey-shell, login-redesign, offers-redesign,
+payment-redesign, results-redesign. Passer par un token ambre
+ramènerait instantanément les habillages multiples que ce bloc
+existe pour empêcher.
+
+--logo-accent est INVARIANT : #E9A319 sur tous les fonds, sans
+exception. C'est LE signe de reconnaissance — il ne devient jamais
+brun, jamais terracotta, jamais blanc.
+--logo-structure n'a que DEUX états : encre sur fond clair (défaut
+ci-dessous), papier sur fond sombre (variante .on-dark plus bas).
+--logo-descriptor a lui aussi DEUX états, et il est le seul ajout du
+2026-08-31 : sur fond clair un ambre foncé lisible (#8A5D00, 5,76:1
+sur papier), sur fond sombre l'accent lui-même (#E9A319, 7,75:1).
+Avant lui, « UNIVERSE » était soit la structure à 72 % d'opacité —
+donc illisible sur fond sombre — soit du terracotta selon la page.
+Aucun bleu, aucune quatrième couleur.
+========================================================== */
+--logo-accent:#E9A319;
+--logo-structure:var(--ink-surface);
+--logo-descriptor:#8A5D00;
+
+}
+
+/* Seule variante autorisée du symbole : fond sombre. .on-dark est le
+crochet générique à poser sur un conteneur sombre ponctuel (ex. la
+carte encre de login.html) ; les autres sélecteurs sont les surfaces
+sombres permanentes du site — hero (header non scrollé), pied de
+page, FAB Fitz, marque de la sidebar admin (.sidebar-brand) et logo
+de la connexion admin. */
+.on-dark,
+.header:not(.is-scrolled),
+.footer,
+.fitz-fab,
+.sidebar-brand,
+.admin-logo-wrap{
+--logo-structure:#FDFCFA;
+--logo-descriptor:#E9A319;
+}
+
+/* Balisage canonique (identique dans tous les fichiers) : un <svg
+class="fitz-mark"> sans AUCUN attribut stroke= ; le grand arc porte
+.mark-structure, la pièce ambre .mark-accent. La classe de
+dimensionnement existante reste à côté (fitz-mark logo-mark,
+fitz-mark logo-icon…). */
+.fitz-mark .mark-structure{
+stroke:var(--logo-structure);
+fill:none;
+transition:stroke .3s ease;
+}
+
+.fitz-mark .mark-accent{
+stroke:var(--logo-accent);
+fill:none;
+}
+
+
+/* ==========================================================
+LOCKUP FITZUNIVERSE — symbole + nom, un seul composant.
+
+Remplace les TROIS lockups qui coexistaient (public .logo-text
+avec styles inline, .journey-brand-text de l'espace étudiant,
+.sidebar-brand-text de l'admin) : trois balisages, trois
+typographies, trois couleurs de descripteur pour la même marque.
+
+LES POLICES SONT ÉCRITES EN LITTÉRAL, jamais var(--font-display)
+ni var(--font-body). DIX-SEPT feuilles du dépôt redéfinissent
+--font-display (recompté le 2026-08-31) en trois systèmes
+typographiques différents — Sora, Space Grotesk + Plus Jakarta,
+Newsreader + Public Sans. Le nom de la marque changeait donc de
+caractère selon la page : c'est LA cause du « pas le même rendu
+partout ». Un logo ne suit pas la typographie de la page qui
+l'accueille, c'est l'inverse.
+
+RÉGLAGE OPTIQUE : « UNIVERSE » épouse la largeur de « Fitz ». Le
+letter-spacing de .295em élargit le mot, et la marge droite
+négative de même valeur reprend l'espace que la dernière lettre
+traîne derrière elle — sans elle, le mot déborderait de son
+espacement final. Mesuré à --lockup-size:44px : « Fitz » 70,70 px,
+« UNIVERSE » 70,69 px peints (73,61 px de boîte moins 2,92 px de
+marge). Écart : 0,01 px.
+
+Trois tailles en service : 48px (en-tête et pied public), 30px
+(espace étudiant et sidebar admin), 24px (compact). Voir
+design-previews/logo-lockup.html.
+========================================================== */
+
+.fitz-lockup{
+--lockup-size:44px;
+display:inline-flex;
+align-items:center;
+gap:calc(var(--lockup-size) * .26);
+text-decoration:none;
+line-height:1;
+}
+
+.fitz-lockup .fitz-mark{
+width:var(--lockup-size);
+height:var(--lockup-size);
+flex:0 0 auto;
+display:block;
+}
+
+.fitz-lockup-text{
+display:flex;
+flex-direction:column;
+gap:calc(var(--lockup-size) * .055);
+}
+
+.fitz-lockup-name{
+font-family:"Newsreader",Georgia,serif;
+font-weight:700;
+font-size:calc(var(--lockup-size) * .60);
+letter-spacing:-.005em;
+line-height:.95;
+color:var(--logo-structure);
+}
+
+.fitz-lockup-sub{
+font-family:"Public Sans",system-ui,sans-serif;
+font-weight:600;
+font-size:calc(var(--lockup-size) * .225);
+letter-spacing:.295em;
+margin-right:-.295em;
+text-transform:uppercase;
+line-height:1;
+color:var(--logo-descriptor);
+}
+
+/* Barre de marque des pages sans en-tete (offers, payment, results,
+eligibility-questions, eligibility-test). Volontairement minimale :
+elle porte le lockup et rien d'autre, sans se substituer aux en-tetes
+existants de ces pages. */
+.page-brandbar{
+max-width:1200px;
+margin:0 auto;
+padding:22px 24px 0;
+}
+
+/* Variante pour les pages dont le body est un conteneur flex qui
+CENTRE la carte (eligibility-test, eligibility-questions :
+body{display:flex; safe center}). Laissee dans le flux, la barre y
+devenait un DEUXIEME enfant flex : logo plante a mi-hauteur a gauche,
+carte poussee hors du centre (constate le 2026-08-31). Sortie du flux,
+elle se pose en haut et le centrage d'origine est retrouve. Ces deux
+pages sont sur fond sombre (--gradient-deep) : leur barre porte aussi
+la classe on-dark, sinon « Fitz » est encre sur encre. */
+.page-brandbar--overlay{
+position:absolute;
+top:0;
+left:0;
+right:0;
+z-index:10;
+
+/* La barre est une bande PLEINE LARGEUR posee au-dessus du contenu :
+sans ceci, sa boite invisible recouvre le « Retour a l'accueil » place
+juste en dessous et avale le clic — le lien paraissait mort
+(constate le 2026-08-31, quelques minutes apres la mise en place de
+l'overlay). Seul le lockup reste cliquable ; le reste de la bande
+laisse passer les clics vers ce qu'il y a dessous. */
+pointer-events:none;
+}
+
+.page-brandbar--overlay > *{
+pointer-events:auto;
 }
 
 
@@ -333,6 +638,18 @@ background:var(--gradient-hero);
 
 line-height:1.6;
 
+/* Empêche le "scroll chaining" au bord haut/bas de la page : sans
+ça, arriver en butée du document en scrollant vite (trackpad, molette
+inertielle) transmet l'inertie restante au geste de navigation du
+navigateur (pull-to-refresh sur Chrome Android, glissement de retour
+sur certains trackpads) — d'où une sensation de scroll qui "accroche"
+ou déclenche autre chose que prévu en bout de page. --y seulement :
+--x reste au comportement par défaut pour ne pas gêner le geste de
+retour au doigt depuis le bord de l'écran (Safari iOS, Chrome
+Android), qui est une navigation voulue, pas un effet de bord du
+scroll vertical. */
+overscroll-behavior-y:contain;
+
 }
 
 img{
@@ -358,6 +675,65 @@ list-style:none;
 }
 
 /* ==========================================================
+LIEN RETOUR (.back-link) — 2026-08-28
+
+Centralisé ici : jusqu'ici défini deux fois à l'identique dans
+offers.css et payment.css (même sort que .ai-badge avant lui, voir la
+note en tête de sa règle dans payment.css — "quatre pages avaient fini
+avec quatre badges différents"). Un ".back-link" est un <a href="...">
+tout ce qu'il y a de plus normal (fonctionne sans JS, ouvrable dans un
+nouvel onglet, lisible par un lecteur d'écran) ; js/back-link.js
+l'améliore au clic pour ramener l'étudiant exactement où il en était
+sur la page précédente plutôt qu'en haut d'une page cible fixe — voir
+ce fichier pour le détail. Toute page qui ajoute un ".back-link" doit
+aussi charger js/back-link.js, sinon le lien reste fonctionnel mais
+perd cette restauration de position.
+
+Le style de base ci-dessous convient à un lien posé sur un fond clair
+(page dans .container). Pages avec un contexte visuel différent :
+- scholarship-details.html pose son ".back-link" sur la photo de héros
+  (fond sombre) — surchargé dans scholarship-details.css.
+- Les pages de l'espace étudiant (sidebar) le posent dans
+  .topbar-title, à côté d'un h1 déjà en gras — marge resserrée dans
+  dashboard.css pour ne pas alourdir la barre supérieure.
+========================================================== */
+
+.back-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+margin-bottom:32px;
+
+color:var(--text-light);
+
+font-weight:var(--fw-semibold);
+
+font-size:.9rem;
+
+transition:var(--transition);
+
+}
+
+.back-link i,
+.back-link svg{
+
+width:16px;
+
+height:16px;
+
+}
+
+.back-link:hover{
+
+color:var(--primary-color);
+
+}
+
+/* ==========================================================
 CONTAINER
 ========================================================== */
 
@@ -376,7 +752,39 @@ une des signatures les plus reconnaissables du vibe coding, et
 elle n'ajoutait aucune clarté fonctionnelle.
 ========================================================== */
 
+/* ==========================================================
+BOUTONS — physique de la pression (refonte 2026-08-28)
+==========================================================
+Chaque variante a une identité de SURFACE (voir plus bas) ; ce bloc-ci
+définit ce qu'elles partagent : la façon dont un bouton répond au
+doigt et à la souris.
+
+RELÂCHEMENT PLUS LENT QUE LA PRESSION
+Un bouton réel s'enfonce d'un coup et remonte en se détendant. Une
+transition symétrique (l'ancienne : .15s dans les deux sens) donne au
+contraire une réponse molle à l'aller et pressée au retour, exactement
+l'inverse. On sépare donc les deux temps : 200ms au repos/relâchement
+(ci-dessous), et --btn-press à l'enfoncement (voir .btn:active).
+
+--btn-press est une VARIABLE et non une valeur écrite dans .btn:active
+pour une raison précise : .btn-secondary a besoin de 0s (voir sa note),
+et .btn:active pèse le même poids que .btn-secondary:active tout en
+arrivant après dans le fichier — il l'aurait donc écrasée en silence.
+Chaque variante règle sa propre durée de pression, personne n'écrase
+personne.
+
+HYGIÈNE TACTILE
+Les trois dernières déclarations n'ont d'effet que sur écran tactile,
+et corrigent des défauts qu'on ne voit jamais en testant à la souris :
+le rectangle gris que Safari iOS peint sur tout élément pressé, la
+sélection du libellé au double-tap ou à l'appui long, et le délai de
+300ms que les navigateurs mobiles gardaient pour distinguer un
+double-tap d'un zoom.
+========================================================== */
+
 .btn{
+
+--btn-press:90ms;
 
 position:relative;
 
@@ -394,19 +802,41 @@ border-radius:var(--radius-md);
 
 font-weight:600;
 
-transition:transform .15s var(--ease-standard),
-box-shadow .15s var(--ease-standard),
-background-color .15s var(--ease-standard),
-border-color .15s var(--ease-standard),
-color .15s var(--ease-standard);
+transition:transform 200ms var(--ease-standard),
+box-shadow 200ms var(--ease-standard),
+background-color 200ms var(--ease-standard),
+border-color 200ms var(--ease-standard),
+color 200ms var(--ease-standard);
 
 cursor:pointer;
 
+-webkit-tap-highlight-color:transparent;
+
+user-select:none;
+
+touch-action:manipulation;
+
 }
 
+/* ENCRE — l'action structurante (« Continuer », « Enregistrer »).
+Passé du bleu --primary-600 à l'encre le 2026-08-28. C'était la
+dernière surface bleue de taille du site : les grands fonds sont
+graphite (--gradient-deep), les neutres sont papier chaud, le
+sur-titre est or — un bouton bleu ne renvoyait plus à rien et se
+lisait comme un vestige.
+
+C'est aussi la répartition prévue de longue date par la palette
+« encre & or » : l'encre porte les boutons, l'or reste l'accent
+unique. Deux rôles, deux couleurs, aucune concurrence — là où bleu
++ or + graphite en faisaient trois qui se disputaient la hiérarchie.
+
+Teinte volontairement plus claire que --text-color (#1A1714) : une
+surface exactement de la couleur du texte qui l'entoure paraît un
+trou dans la page plutôt qu'un objet posé dessus. Blanc sur #211D18 :
+16,8:1. */
 .btn-primary{
 
-background:var(--primary-600);
+background:var(--ink-surface);
 
 color:#fff;
 
@@ -414,7 +844,7 @@ color:#fff;
 
 .btn-primary:hover{
 
-background:var(--primary-700);
+background:var(--ink-surface-hover);
 
 transform:translateY(-1px);
 
@@ -422,7 +852,16 @@ box-shadow:var(--shadow-sm);
 
 }
 
+/* PAPIER — l'action de second rang, à côté d'une action encre ou or.
+Filet fin plutôt que surface pleine : elle doit rester lisible sans
+jamais concurrencer le bouton qui compte. Son moment à elle, c'est la
+pression (voir :active plus bas). */
 .btn-secondary{
+
+/* Pression instantanée, voir la note de .btn-secondary:active. Réglée
+ici, en variable, plutôt que dans :active — c'est ce qui la protège de
+.btn:active, qui arrive plus loin dans le fichier à poids égal. */
+--btn-press:0s;
 
 border:1px solid var(--border-color);
 
@@ -442,14 +881,58 @@ background:var(--background-soft);
 
 }
 
-/* CTA principal d'une page — l'ambre le détache des boutons bleus
-courants sans que la page devienne dorée. Un seul par page : si deux
+/* Retour visuel à l'enfoncement (2026-08-22, demande utilisateur : ces
+boutons "gardent leur couleur blanche mais changent de couleur au
+clic"). Le bouton reste donc blanc au repos ET au survol — seul le
+temps de la pression il se remplit en ambre.
+
+Doit rester APRÈS :hover dans le fichier : un bouton pressé est presque
+toujours survolé en même temps, et les deux sélecteurs pèsent le même
+poids (0,2,0). C'est l'ordre source, et lui seul, qui fait gagner
+celui-ci. Le déplacer plus haut annulerait l'effet sans rien casser
+d'autre — donc sans que ça se voie en relecture.
+
+Même piège, résolu autrement, pour la DURÉE : .btn:active arrive
+encore après cette règle, à poids égal, et écraserait un
+transition-duration écrit ici. D'où --btn-press:0s posé sur
+.btn-secondary lui-même (voir plus haut) plutôt qu'ici.
+
+--ink-surface sur --amber-500, jamais du blanc : l'ambre vif est une
+couleur de SURFACE, blanc dessus tombe à 2,16:1 alors que l'encre
+tient 7,8:1 (voir la note --amber-* plus haut). Cette teinte est par
+ailleurs réservée au CTA principal unique de chaque page (.btn-accent),
+mais la règle vise la hiérarchie AU REPOS — deux boutons ambre côte à
+côte s'annulent. Un état pressé n'existe qu'un à la fois et ne coexiste
+avec rien : l'esprit de la règle est respecté.
+
+transition-duration:0s est indispensable, pas cosmétique : .btn anime
+background-color sur .15s, or un clic ordinaire sur un LIEN dure ~50ms
+avant que la navigation ne parte. Avec l'animation par défaut, la
+couleur n'atteignait qu'un tiers de sa valeur avant de disparaître —
+c'est pourquoi le premier essai a été jugé sans effet. En instantané,
+même une pression brève affiche l'ambre à pleine intensité.
+
+L'icône suit sans rien de plus — Lucide dessine en currentColor. */
+.btn-secondary:active{
+
+background:var(--amber-500);
+
+border-color:var(--amber-500);
+
+color:var(--ink-surface);
+
+transition-duration:0s;
+
+}
+
+/* OR — le CTA principal d'une page. L'ambre le détache des boutons
+encre courants sans que la page devienne dorée. Un seul par page : si deux
 boutons ambre se retrouvent à l'écran, aucun des deux ne ressort. */
 .btn-accent{
 
 background:var(--amber-500);
 
-color:var(--primary-900);
+color:var(--ink-surface);
 
 font-weight:var(--fw-bold);
 
@@ -462,12 +945,6 @@ background:var(--amber-600);
 transform:translateY(-1px);
 
 box-shadow:var(--shadow-sm);
-
-}
-
-.btn-accent:focus-visible{
-
-box-shadow:0 0 0 4px rgba(233,163,25,.4);
 
 }
 
@@ -487,9 +964,25 @@ color:var(--text-color);
 
 }
 
+/* Le fantôme n'a pas de surface au repos : sans état pressé propre, un
+appui dessus ne renvoie rien du tout sur écran tactile, où il n'y a pas
+de survol pour préparer le geste. Assombrissement d'un cran par rapport
+au survol — le seul retour disponible ici. */
+.btn-ghost:active{
+
+background:var(--background-alt);
+
+}
+
+/* --danger-600 et non --danger : mesuré, #EF4444 ne donne que 3,76:1
+avec du blanc, sous l'AA. Le bouton porte des actions irréversibles
+(« Supprimer définitivement mon compte ») — c'est le dernier libellé
+du site qui devrait être difficile à lire. #DC2626 tient 4,83:1 et
+reste franchement rouge. */
+
 .btn-danger{
 
-background:var(--danger);
+background:var(--danger-600);
 
 color:#fff;
 
@@ -504,17 +997,47 @@ background:#DC2626;
 .btn-sm{ padding:9px 16px; font-size:var(--fs-small); border-radius:var(--radius-sm); }
 .btn-lg{ padding:16px 28px; font-size:1.05rem; }
 
+/* L'ENFONCEMENT — commun à toutes les variantes.
+Le bouton descend d'un pixel ET se contracte légèrement, au lieu de
+seulement rapetisser (ancien `translateY(0) scale(.98)`). La nuance
+compte : une échelle seule fait rétrécir l'objet sur place, comme s'il
+s'éloignait ; un pixel de descente le fait entrer dans la page, ce qui
+est le geste qu'on imite.
+
+L'ombre est annulée en même temps — un objet plaqué contre une surface
+ne projette plus rien. C'est ce qui vend l'enfoncement, davantage que
+le déplacement lui-même.
+
+.985 et non .98 : à 22px de haut de texte, 2 % de réduction suffisent à
+rendre un libellé visiblement flou le temps de la pression.
+
+var(--btn-press) : 90ms par défaut, 0s pour .btn-secondary. Voir la
+note en tête du bloc boutons. */
 .btn:active{
 
-transform:translateY(0) scale(.98);
+transform:translateY(1px) scale(.985);
+
+box-shadow:none;
+
+transition-duration:var(--btn-press);
 
 }
 
+/* Anneau de focus : outline plutôt que box-shadow, or plutôt que bleu.
+box-shadow ne dessinait rien sur les boutons à fond sombre (l'ombre
+portée se confondait avec la surface) et l'anneau bleu rgba(51,65,140)
+renvoyait à une palette abandonnée. `outline` suit le border-radius
+dans tous les moteurs actuels, se pose PAR-DESSUS toute surface quelle
+que soit sa couleur, et survit au mode contraste forcé de Windows —
+trois choses qu'une ombre portée ne fait pas.
+
+L'écart de 2px empêche l'anneau de se coller au bord du bouton, où il
+se lirait comme une bordure plutôt que comme un focus. */
 .btn:focus-visible{
 
-outline:none;
+outline:2px solid var(--amber-600);
 
-box-shadow:0 0 0 4px rgba(51,65,140,.2);
+outline-offset:2px;
 
 }
 
@@ -528,6 +1051,58 @@ cursor:not-allowed;
 transform:none;
 
 box-shadow:none;
+
+}
+
+/* ==========================================================
+ÉCRANS TACTILES
+==========================================================
+Sur un appareil sans survol, :hover ne s'annule pas au retrait du
+doigt : le navigateur le laisse actif jusqu'au prochain appui
+ailleurs. Un bouton touché restait donc soulevé et ombré, figé dans un
+état qui n'existe que pour la souris — le défaut le plus courant des
+sites qui n'ont été essayés qu'au trackpad. On neutralise le survol là
+où il n'a pas de sens ; l'état pressé, lui, reste (voir .btn:active).
+
+La hauteur minimale de 44px est la cible tactile recommandée par les
+WCAG (2.5.8) comme par Apple. .btn-sm (9px de rembourrage + .9rem de
+texte ≈ 36px) passait dessous : au doigt, on le manquait. Le
+rembourrage n'est pas touché, seule la hauteur de boîte est relevée —
+la mise en page ne bouge pas sur les écrans à souris.
+========================================================== */
+
+@media (hover:none){
+
+.btn:hover{
+
+transform:none;
+
+box-shadow:none;
+
+}
+
+}
+
+@media (pointer:coarse){
+
+.btn{ min-height:44px; }
+
+}
+
+/* Le déplacement et la contraction sont le seul retour de pression :
+les supprimer entièrement laisserait le bouton muet. On garde donc le
+changement de couleur (instantané, aucun mouvement) et on retire le
+seul mouvement — conformément à la règle globale de
+css/animations.css, qui ramène toute animation à .01ms. */
+@media (prefers-reduced-motion:reduce){
+
+.btn,
+.btn:hover,
+.btn:active{
+
+transform:none;
+
+}
 
 }
 
@@ -607,6 +1182,38 @@ clip:rect(0,0,0,0);
 white-space:nowrap;
 
 border:0;
+
+}
+
+/* Lien d'évitement — masqué comme .visually-hidden ci-dessus tant
+qu'il n'a pas le focus clavier, puis reprend sa place normale (pas de
+clip) pour être lisible. Premier élément du <body> sur les pages qui
+l'utilisent, avant même le header, pour sauter sa navigation. */
+.skip-link{
+
+position:absolute;
+
+top:-100%;
+
+left:12px;
+
+z-index:var(--z-header, 1000);
+
+padding:12px 20px;
+
+background:var(--primary-dark);
+
+color:#fff;
+
+font-weight:600;
+
+border-radius:var(--radius-sm);
+
+}
+
+.skip-link:focus{
+
+top:12px;
 
 }
 
@@ -807,37 +1414,23 @@ LISIBILITÉ SUR IMAGE — voile à deux couches réutilisable partout où
 du texte repose sur une photo (héros, cartes bourses/universités).
 ========================================================== */
 
-.media-scrim{
-
-position:absolute;
-
-inset:0;
-
-pointer-events:none;
-
-background:
-
-linear-gradient(180deg, rgba(9,12,28,.15) 0%, rgba(9,12,28,.78) 100%),
-
-linear-gradient(100deg, rgba(9,12,28,.92) 0%, rgba(28,34,72,.55) 40%, rgba(15,23,42,.15) 75%, transparent 100%);
-
-}
-
-.media-scrim.is-full{
-
-background:
-
-linear-gradient(180deg, rgba(9,12,28,.35) 0%, rgba(9,12,28,.85) 100%),
-
-linear-gradient(100deg, rgba(9,12,28,.95) 0%, rgba(28,34,72,.65) 45%, rgba(15,23,42,.3) 100%);
-
-}
-
 .text-on-media{
 
 color:#fff;
 
 text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+
+}
+
+/* Distinction du nom "Fitz" dans le texte courant, écho du "Bridge"
+doré du logo (.logo .bridge, css/header.css). --amber-700 par défaut :
+seule valeur ambre admise pour du texte sur fond clair (5,8:1 sur
+--background). Les contextes app-shell à fond sombre (dashboard.css)
+surchargent cette règle avec --amber-500, comme .sidebar-brand-text
+.bridge le fait déjà pour le même mot dans la sidebar. */
+.fitz-name{
+
+color:var(--amber-700);
 
 }
 
@@ -926,6 +1519,106 @@ transform:none;
 
 }
 
+/* ==========================================================
+SURFACE FITZ — le blanc chaud des cartes où Fitz s'exprime
+==========================================================
+Recette extraite le 2026-08-22 de `.fitz-demo .hero-demo::after`
+(css/homepage-sections.css), où elle vivait seule. Demandée à
+l'identique sur les autres pages qui incarnent Fitz : plutôt qu'une
+4e copie divergente du même dégradé, elle est déclarée ici une fois
+et consommée par une classe.
+
+CE QUE ÇA FAIT, ET POURQUOI ÇA MARCHE — le point contre-intuitif :
+le halo est un ::after en z-index:-1, mais il ne passe PAS derrière
+la carte. Dès que l'élément crée un contexte d'empilement (via
+isolation:isolate ici, ou un backdrop-filter déjà présent), le
+z-index négatif est borné à ce contexte : le halo se peint alors
+AU-DESSUS du fond de la carte et SOUS son contenu. C'est exactement
+ce qui donne à la carte sa teinte crème (mesurée : de #F6F0E4 sur
+les bords à #F4DFB8 au centre) au lieu d'un blanc pur — et non un
+simple débordement lumineux autour d'elle.
+
+Retirer isolation:isolate ferait donc basculer le halo derrière la
+carte : il ne resterait qu'une lueur périphérique, la surface
+redeviendrait blanche. Ce n'est pas un détail d'implémentation.
+
+RAPPORT À LA RÈGLE AMBRE (voir --amber-500 plus haut, "jamais en
+fond de section large") : c'est une entorse assumée et bornée, pas
+une dérive. Elle ne s'applique qu'aux surfaces où Fitz parle en son
+nom, jamais à une section de contenu ordinaire, et le halo est
+contenu par l'overflow:hidden de la carte.
+
+NE PAS l'appliquer à une surface qui porte déjà une couleur d'état :
+sur results.html, le lavage ambré rendrait indistinct un axe "moyen"
+(ambre) d'un axe "bon" (vert) dans la décomposition du score. La
+carte de récit la reçoit, la carte de score non — délibérément.
+
+Sur un élément SANS overflow:hidden, réduire `inset` sinon le halo
+déborde largement au-delà de la carte. */
+
+.fitz-surface{
+
+position:relative;
+
+/* Indispensable : c'est lui qui fait passer le halo par-dessus le
+fond de la carte (voir plus haut). Sans effet si l'élément crée
+déjà un contexte d'empilement via backdrop-filter. */
+isolation:isolate;
+
+/* Le lavage ambré assombrit la surface : mesuré au point le plus
+chaud de la carte (#F7DFB1), --text-muted tombe à 3,96:1 — sous le
+4,5:1 exigé pour du texte, alors qu'il tient 5,15:1 sur blanc. Toute
+métadonnée, aide de champ ou légende posée sur une surface Fitz
+échouerait donc AA sans rien changer d'autre.
+
+--text-muted est redéfini ici, sur la surface elle-même, plutôt que
+corrigé composant par composant : la variable cascade à toute la
+carte, donc aucun texte secondaire ne peut passer au travers, y
+compris ceux ajoutés plus tard. La valeur reprend --text-light
+(#475569), qui remonte à 5,83:1 sur le crème — pas une couleur
+inventée, le niveau de gris juste au-dessus dans l'échelle. */
+--text-muted:#475569;
+
+}
+
+.fitz-surface::after{
+
+content:"";
+
+position:absolute;
+
+inset:-70px;
+
+z-index:-1;
+
+background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.14) 45%, transparent 72%);
+
+filter:blur(32px);
+
+pointer-events:none;
+
+}
+
+@media(max-width:640px){
+
+.fitz-surface::after{
+
+inset:-36px;
+
+filter:blur(20px);
+
+}
+
+}
+
+@media (prefers-contrast: more){
+
+/* Le lavage ambré réduit le contraste du texte sur la carte : on le
+retire pour qui demande explicitement plus de contraste. */
+.fitz-surface::after{ display:none; }
+
+}
+
 /* Verre dépoli — recette unique consommant --glass/--glass-border.
 Réservé aux surfaces qui le justifient réellement (fond de header
 au scroll, backdrop de modale) — pas un décor par défaut sur les
@@ -990,6 +1683,131 @@ white-space:nowrap;
 .badge-warning{ background:rgba(234,168,61,.15); color:#a3711d; }
 .badge-danger{ background:rgba(239,68,68,.12); color:#c53030; }
 .badge-neutral{ background:var(--background-alt); color:var(--text-light); }
+
+/* ==========================================================
+BADGE FITZ — signature unique (2026-08-22)
+==========================================================
+Le badge qui annonce "c'est Fitz qui vous parle". UNE seule
+définition pour tout le site : eligibility-test, eligibility-
+questions, results, offers, payment.
+
+Avant cette règle il en existait quatre, écrites séparément :
+.fitz-badge (css/ai-suite.css, pilule violette translucide, texte
+--primary-color) et trois copies de .ai-badge — deux identiques
+(payment.css, results.css : fond --background-light) et une
+divergente (offers.css : blanc translucide sur la photo du hero).
+Sur eligibility-questions le libellé passait en plus par
+.fitz-name, donc en ambre. Résultat : quatre Fitz différents dans
+un même parcours, quand le badge est justement ce qui doit le
+rendre reconnaissable d'une page à l'autre.
+
+COULEUR — AMBRE (choix de l'utilisateur, 2026-08-22 : "pour la
+couleur, je préfère le orange"). Le badge était violet Fitz ; il
+passe à l'ambre de la marque.
+
+Ce n'est pas une entorse à la règle "Fitz a sa propre couleur,
+jamais l'ambre" : le mot "Fitz" est DÉJÀ ambre partout ailleurs sur
+le site (.fitz-name plus haut, --amber-700, "écho du Bridge doré du
+logo"). C'est la pilule violette qui était l'exception — une même
+page pouvait écrire "Fitz" en ambre dans une phrase et en violet
+dans le badge, à quelques centimètres d'écart. L'ambre les accorde.
+Le violet Fitz reste la couleur de l'AVATAR, du halo et des bulles
+de réponse : la distinction Fitz/marque ne disparaît pas, elle se
+déplace du libellé vers l'assistant lui-même.
+
+Valeurs, contraintes par la règle d'emploi de l'ambre plus haut :
+  libellé  --amber-700 (#8A5D00) — la SEULE valeur ambre admise
+           pour du texte sur fond clair. 5,76:1 sur le blanc de la
+           pilule.
+  contour  --amber-500 (#E9A319) — l'ambre franc, celui qu'on
+           reconnaît comme orange. Il ne peut pas porter le texte
+           (2,16:1 sur blanc) mais il porte parfaitement le
+           contour : c'est lui qui fait lire le badge comme orange.
+
+CE QU'ON N'A PAS FAIT : une pilule ambre PLEINE avec libellé
+marine. Elle est plus franchement orange et passe 8,24:1, mais
+--amber-500 en aplat est la surface du CTA PRINCIPAL du site. Un
+badge non cliquable habillé comme le bouton d'action principal se
+fait prendre pour un bouton — d'autant qu'il y en a un vrai plus bas
+sur offers et payment. Le contour donne l'orange sans le
+malentendu.
+
+FOND OPAQUE, volontairement. Une pilule translucide s'adapte au
+fond et change donc d'aspect d'une page à l'autre — c'est ce qui
+avait forcé la variante blanche d'offers.css sur le hero
+photographique. Un fond blanc plein tient aussi bien sur le crème
+des pages d'éligibilité que sur une photo sombre, et reste
+littéralement le même badge partout.
+
+AUCUNE MARGE ICI : l'espacement dépend de la page (badge centré
+au-dessus d'un titre, ou aligné à côté d'un avatar sur
+eligibility-test). Chaque feuille de page pose sa propre marge.
+.ai-badge est conservé comme alias : il est encore dans le HTML de
+results/offers/payment, et le renommer partout n'apporterait
+rien de plus que ce que fait cet alias. */
+
+.fitz-badge,
+.ai-badge{
+
+/* flex, pas inline-flex : combiné à width:max-content, c'est ce qui
+permet à `margin:0 auto` de centrer le badge sur results, offers et
+payment. En inline-flex les marges auto ne centrent rien et le badge
+retomberait sur le text-align du parent — centré par hasard ici,
+décalé ailleurs. */
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+width:max-content;
+
+max-width:100%;
+
+padding:9px 18px;
+
+border-radius:var(--radius-full);
+
+background:#FFFFFF;
+
+border:1.5px solid var(--amber-500);
+
+box-shadow:0 1px 2px rgba(18,22,46,.05), 0 6px 18px rgba(233,163,25,.22);
+
+color:var(--amber-700);
+
+font-family:var(--font-display);
+
+font-weight:var(--fw-bold);
+
+font-size:.88rem;
+
+letter-spacing:-.005em;
+
+/* Pas de white-space:nowrap : le libellé long d'eligibility-test
+("Fitz, votre conseiller intelligent") doit pouvoir passer à la
+ligne sur petit écran. En nowrap il dépassait la carte et
+rouvrait le débordement horizontal corrigé sur ces pages. */
+
+}
+
+/* Pas de règle d'icône ici : le badge n'en porte plus (2026-08-22,
+demande de l'utilisateur). Le robot `bot` a été retiré du HTML des
+cinq pages, pas seulement masqué — une icône masquée en CSS reste
+dans le DOM, lue par les lecteurs d'écran et rechargée par Lucide à
+chaque `createIcons()`. Règle "Icônes" de DESIGN_SYSTEM.md : une
+icône qui ne fait que décorer se retire, et celle-ci ne disait rien
+que le mot "Fitz" juste à côté ne disait déjà.
+Ne pas réintroduire de `.fitz-badge i/svg` : ce serait une règle
+sans cible tant qu'aucun badge ne porte d'icône. */
+
+/* Le nom "Fitz" est déjà ambre dans le TEXTE COURANT (.fitz-name,
+plus haut) — écho du "Bridge" doré du logo. Le badge prend donc la
+même famille de couleur : `color:inherit` suffit, et les deux
+écritures du mot "Fitz" sur une même page s'accordent enfin au lieu
+de se contredire (ambre dans la phrase, violet dans la pilule). */
+.fitz-badge .fitz-name,
+.ai-badge .fitz-name{ color:inherit; }
 
 .alert{
 
@@ -1282,6 +2100,20 @@ max-height:90vh;
 
 overflow-y:auto;
 
+/* Défilement à inertie natif sur les anciens WebKit iOS (Safari
+récent le fait déjà par défaut, mais sans cette ligne le défilement
+interne d'une modale y devient saccadé/pas-à-pas sur les versions
+encore en usage) — sans effet ailleurs, propriété ignorée par tout
+autre moteur. */
+-webkit-overflow-scrolling:touch;
+
+/* Une fois en butée haute/basse du contenu de la modale, empêche
+l'inertie restante de "passer au travers" et de faire défiler la page
+en arrière-plan — c'était le cas par défaut : fermer visuellement la
+modale en scrollant vite jusqu'au bout donnait l'impression que la
+page entière avait bougé sous elle. */
+overscroll-behavior:contain;
+
 background:var(--background);
 
 border-radius:var(--radius-lg);
@@ -1315,6 +2147,29 @@ cursor:pointer;
 color:var(--text-light);
 
 }
+
+/* ==========================================================
+<picture> — TRANSPARENT POUR LA MISE EN PAGE (2026-08-22)
+==========================================================
+Les photos de la page d'accueil sont désormais servies en AVIF, puis
+WebP, puis JPEG, via <picture><source ...><img></picture>.
+
+display:contents fait disparaître la boîte du <picture> : c'est
+l'<img> qui redevient l'enfant direct de son parent pour la mise en
+page. Sans cette règle, tout le CSS existant se serait retrouvé à
+styler un intermédiaire invisible — .vision-illustration est un
+conteneur flex dont l'enfant serait devenu le <picture> (sans
+largeur propre) au lieu de l'image, .hero-media positionne son image
+en absolu, etc. Il aurait fallu réécrire une dizaine de règles ; ici
+une seule ligne, et aucune feuille de page n'a eu à changer.
+
+<picture> n'a aucune sémantique propre (c'est un simple sélecteur de
+source) : le retirer du rendu ne retire rien à personne, ni à
+l'arbre d'accessibilité ni au sens du document. C'est exactement le
+cas d'usage prévu pour display:contents.
+========================================================== */
+
+picture{ display:contents; }
 
 /* ==========================================================
 GLOBAL SECTIONS

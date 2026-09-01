@@ -1,8 +1,8 @@
 {
-  "name": "scholarbridge",
+  "name": "fitzuniverse",
   "version": "0.2.0",
   "private": true,
-  "description": "ScholarBridge - plateforme d'orientation vers les bourses et universites internationales.",
+  "description": "FitzUniverse - plateforme d'orientation vers les bourses et universites internationales.",
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
     "emulators": "firebase emulators:start --project scholarbridge-e0d84 --only auth,firestore",
@@ -14,6 +14,7 @@
   "devDependencies": {
     "cross-env": "^10.1.0",
     "firebase-admin": "^14.2.0",
-    "firebase-tools": "^15.26.0"
+    "firebase-tools": "^15.26.0",
+    "sharp": "^0.35.4"
   }
 }

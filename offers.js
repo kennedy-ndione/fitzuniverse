@@ -1,7 +1,7 @@
 // -------- offers.js --------
 // Page de choix du niveau d'accompagnement Fitz. Aucun paiement
 // n'est traité ici : le palier choisi est transmis à payment.html
-// (pas encore créée) via l'URL et sessionStorage, prêt pour
+// via l'URL et sessionStorage, prêt pour
 // l'intégration future de PayDunya (Wave, Orange Money, carte).
 // Dépend de pricing-plans.js (SCHOLARBRIDGE_PLANS, buildCheckoutPayload).
 
@@ -117,4 +117,10 @@ initFitzRotator();
 initReveal();
 initPlanSelection();
 
+// lucide est chargé avec `defer` (2026-08-29) : ce script classique
+// s'exécute AVANT lui, un appel direct ne rendrait aucune icône (et ne
+// lèverait aucune erreur — le garde-fou window.lucide le rend
+// silencieux). DOMContentLoaded se déclenche après les scripts différés.
+document.addEventListener("DOMContentLoaded", () => {
 if (window.lucide) lucide.createIcons();
+});

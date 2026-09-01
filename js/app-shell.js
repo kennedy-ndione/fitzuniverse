@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — shell applicatif partagé (sidebar + auth + formule)
+* FitzUniverse — shell applicatif partagé (sidebar + auth + formule)
 * ============================================================
 *
 * Habillage sidebar/topbar (repli desktop, tiroir mobile, cloche de
@@ -40,7 +40,10 @@ resolveSession,
 fetchFeatureFlags
 } from "./access-guard.js";
 
-export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked };
+// applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
+// DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
+// après le bootstrap et doivent pouvoir re-appliquer les verrous.
+export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked, applyFeatureLocks };
 
 // "Mon conseiller" (Signature Focus / Signature) est masqué entièrement
 // plutôt que grisé-avec-CTA comme les autres [data-feature] — voir la
@@ -108,7 +111,22 @@ const collapseBtn = document.getElementById("sidebarCollapseBtn");
 const openBtn = document.getElementById("sidebarOpenBtn");
 const backdrop = document.getElementById("sidebarBackdrop");
 
-if (localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "true") {
+// Repliée par défaut (2026-08-27) : dix-sept liens en toutes lettres à
+// l'ouverture donnaient à l'espace étudiant un air de back-office plutôt
+// que d'application. La forme repliée (icônes seules, 80px) reste
+// entièrement navigable — chaque lien garde son intitulé en infobulle
+// native (attribut title du markup) — et un clic sur le bouton la
+// déplie à tout moment.
+//
+// Seule l'ABSENCE de préférence enregistrée déclenche ce nouveau
+// défaut : un étudiant qui a déjà déplié la sidebar avant ce
+// changement a stocké "false" dans ce créneau, et ce choix explicite
+// continue de primer. Ce n'est qu'à la toute première visite —
+// aucune clé en localStorage — que le repli s'applique.
+const storedPreference = localStorage.getItem(SIDEBAR_COLLAPSE_KEY);
+const collapsedByDefault = storedPreference === null ? true : storedPreference === "true";
+
+if (collapsedByDefault) {
 document.body.classList.add("sidebar-collapsed");
 if (collapseBtn) collapseBtn.setAttribute("aria-expanded", "false");
 }
@@ -218,6 +236,38 @@ logoutBtn.dataset.busy = "false";
 
 }
 
+// ==========================================================
+// « DISCUTER AVEC FITZ » — bouton flottant sur tout l'espace
+// ==========================================================
+// Demande utilisateur (2026-08-30) : mettre le chat en avant partout,
+// pour qu'un étudiant puisse poser une question d'où qu'il soit.
+// Injecté ici (et non dans chaque HTML) : toute page qui appelle
+// initShellChrome() l'a d'office, y compris les futures. Le wrapper
+// porte data-feature="ai_chat" AVANT applyFeatureLocks (appelé par
+// bootstrapShell) : sur une formule sans chat, le bouton se verrouille
+// tout seul et mène aux forfaits — même règle que partout.
+function initFitzFab() {
+
+// Jamais sur la page de chat elle-même, jamais deux fois.
+if (document.getElementById("chatApp") || document.getElementById("fitzFabWrap")) return;
+
+const wrap = document.createElement("span");
+wrap.id = "fitzFabWrap";
+wrap.className = "fitz-fab-wrap";
+wrap.dataset.feature = "ai_chat";
+
+wrap.innerHTML = `
+<a href="ai-chat.html" data-real-href="ai-chat.html" class="fitz-fab" aria-label="Discuter avec Fitz — poser une question">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-fab-label">Discuter avec Fitz</span>
+<span class="fitz-fab-lock"><i data-lucide="lock"></i></span>
+</a>
+`;
+
+document.body.appendChild(wrap);
+
+}
+
 // Partie de l'initialisation qui ne dépend d'aucune donnée réseau :
 // peut s'exécuter immédiatement, avant même de savoir si l'utilisateur
 // est connecté.
@@ -226,6 +276,7 @@ export function initShellChrome() {
 initSidebar();
 initReveal();
 initLogout();
+initFitzFab();
 
 if (window.lucide) lucide.createIcons();
 

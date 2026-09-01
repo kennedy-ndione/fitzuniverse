@@ -109,3 +109,42 @@ const rangs = (universites || [])
 return rangs.length ? Math.min(...rangs) : null;
 
 }
+
+/**
+* Type de bourse (bailleur)
+* --------------------------
+* `funder` est un énuméré à 5 valeurs exactes ("gouvernement" |
+* "universite" | "region" | "organisation" | "entreprise"), saisi dans
+* admin/scholarships.html — ou ABSENT. Même règle des trois valeurs que
+* `estEligible` (js/eligibility-countries.js) : un champ absent est un
+* INCONNU, jamais une valeur par défaut. On ne déduit jamais le bailleur
+* du titre, du pays ou de la description, et on n'affiche jamais
+* « bailleur non renseigné » — on n'affiche rien.
+*/
+export const LIBELLES_FUNDER = {
+gouvernement: "Gouvernement",
+universite: "Université",
+region: "Région ou collectivité",
+organisation: "Organisation",
+entreprise: "Entreprise"
+};
+
+// "" quand le champ est absent ou hors énuméré : l'appelant n'affiche
+// alors RIEN (jamais de libellé deviné, jamais de valeur par défaut).
+export function libelleFunder(funder) {
+
+return LIBELLES_FUNDER[funder] || "";
+
+}
+
+// Filtre exact sur `funder`. Sans type choisi ("" — « Tous les types »),
+// tout passe, y compris les bourses SANS champ ; un type précis ne
+// retient que les bourses portant EXACTEMENT cette valeur — une bourse
+// sans champ (inconnu) en est retirée, jamais reclassée dans un type.
+export function correspondTypeBourse(funder, filtre) {
+
+if (!filtre) return true;
+
+return funder === filtre;
+
+}

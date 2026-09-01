@@ -6,20 +6,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fitz Chat | ScholarBridge</title>
+<title>Discuter avec Fitz | FitzUniverse</title>
 
 <meta name="description" content="Discutez avec Fitz, votre assistant personnel pour préparer votre candidature universitaire internationale.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Plus Jakarta Sans + Space Grotesk depuis le 2026-08-22, comme le
+reste du site. Inter/Sora était un reste des pages non auditées :
+l'étudiant changeait de police en passant du catalogue à son espace. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version figée + defer (2026-08-30) — standard du site. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="css/ai-suite.css">
 <link rel="stylesheet" href="ai-chat.css">
+<!-- Chargé en dernier : redéfinit --font-display/--font-body au niveau
+:root, doit donc gagner sur base.css et sur les font-family
+écrits en dur dans les feuilles de l'espace. -->
+<link rel="stylesheet" href="css/app-typography.css">
+<!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
+la grille à sidebar et bascule la page dans l'identité papier chaud. -->
+<link rel="stylesheet" href="css/journey-shell.css">
+<!-- Refonte « messagerie » du 2026-08-30 (demande : un chat au niveau
+de Claude/ChatGPT) : cadre plein écran, historique daté, composer
+premium. Chargée en dernier, elle surcharge ai-suite/journey-shell
+UNIQUEMENT via :has(#chatApp) — sur l'état verrouillé (chatApp
+retiré), la page retombe sur la mise en page éditoriale normale. -->
+<link rel="stylesheet" href="css/chat-redesign.css">
 <style>[hidden]{display:none !important;}</style>
 
 </head>
@@ -32,184 +50,32 @@
 
 <div class="dashboard-shell">
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-<aside class="sidebar" id="sidebar">
-
-<div class="sidebar-top">
-
-<a href="dashboard.html" class="sidebar-brand">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
-</a>
-
-<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
-<i data-lucide="panel-left-close"></i>
-</button>
-
-</div>
-
-<div class="sidebar-plan">
-<span class="sidebar-plan-label">Votre formule</span>
-<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
-</div>
-
-<nav class="sidebar-nav" aria-label="Navigation principale">
-
-<span class="sidebar-section-label">Mon espace</span>
-
-<ul>
-
-<li>
-<a href="dashboard.html" class="nav-link">
-<i data-lucide="layout-dashboard"></i>
-<span>Tableau de bord</span>
-</a>
-</li>
-
-<li>
-<a href="profile.html" class="nav-link">
-<i data-lucide="user"></i>
-<span>Mon profil</span>
-</a>
-</li>
-
-<li>
-<a href="account.html" class="nav-link">
-<i data-lucide="settings"></i>
-<span>Paramètres</span>
-</a>
-</li>
-
-<li data-feature="applications">
-<a href="applications.html" class="nav-link" data-real-href="applications.html">
-<i data-lucide="list-checks"></i>
-<span>Mes candidatures</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li>
-<a href="scholarships.html" class="nav-link">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
-</a>
-</li>
-
-<li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
-</a>
-</li>
-
-<li data-feature="documents">
-<a href="documents.html" class="nav-link" data-real-href="documents.html">
-<i data-lucide="file-text"></i>
-<span>Documents</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label">Fitz</span>
-
-<ul class="sidebar-nav-fitz">
-
-<li data-feature="ai_chat">
-<a href="ai-chat.html" class="nav-link is-active" aria-current="page" data-real-href="ai-chat.html">
-<i data-lucide="message-circle"></i>
-<span>Discuter avec Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_letter">
-<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
-<i data-lucide="pen-line"></i>
-<span>Lettre de motivation</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_check">
-<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
-<i data-lucide="shield-check"></i>
-<span>Vérification</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_email">
-<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
-<i data-lucide="mail"></i>
-<span>E-mails Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_translate">
-<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
-<i data-lucide="languages"></i>
-<span>Traduction</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="compress">
-<a href="compress.html" class="nav-link" data-real-href="compress.html">
-<i data-lucide="file-archive"></i>
-<span>Compression</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="interview_prep">
-<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
-<i data-lucide="mic"></i>
-<span>Préparation entretien</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
-
-<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
-
-<li data-feature="advisor">
-<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
-<i data-lucide="user-check"></i>
-<span>Mon conseiller</span>
-</a>
-</li>
-
-</ul>
-
-</nav>
-
-<div class="sidebar-bottom">
-<button type="button" id="logoutBtn" class="sidebar-logout">
-<i data-lucide="log-out"></i>
-<span>Déconnexion</span>
-</button>
-</div>
-
-</aside>
+<!-- La sidebar a été retirée le 2026-08-30 (refonte « parcours ») :
+la navigation de l'espace étudiant vit sur dashboard.html — chaque
+outil s'ouvre depuis la phase du parcours qui lui donne un sens.
+js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div class="dashboard-main">
 
-<header class="topbar">
+<header class="journey-topbar">
 
-<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
-<i data-lucide="menu"></i>
-</button>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 
-<div class="topbar-title">
-<h1>Fitz — Discuter</h1>
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+<h1>Discuter avec <span class="fitz-name">Fitz</span></h1>
 </div>
+
+<div class="journey-topbar-actions">
 
 <div class="messages-bell-wrap">
 
@@ -219,16 +85,29 @@
 </button>
 
 <div class="messages-panel" id="messagesPanel" hidden>
-<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-header">Messages de l'équipe</div>
 <div class="messages-panel-list" id="messagesPanelList"></div>
 </div>
 
 </div>
 
 <a href="offers.html" class="topbar-plan-chip">
-<i data-lucide="sparkles"></i>
 <span id="topbarPlanLabel">Essentiel</span>
 </a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
 
 </header>
 
@@ -282,12 +161,24 @@
 
 <div class="ai-empty-state" id="chatEmptyState">
 
-<div class="fitz-avatar fitz-avatar--xl"><i data-lucide="sparkles"></i></div>
+<!-- Le symbole Fitz plutôt que l'ancien halo flou — la même marque
+que la barre du parcours, en grand. -->
+<svg class="fitz-mark ai-empty-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
 
-<h2>Comment puis-je vous aider aujourd'hui ?</h2>
-<p>Je connais votre profil ScholarBridge et je peux vous conseiller sur toutes les étapes de votre candidature internationale. Vous pouvez aussi joindre une capture d'écran, une photo ou un PDF.</p>
+<!-- Salutation personnalisée par le JS (prénom du profil) — repli
+générique si le JS ne démarre pas. -->
+<h2 id="chatGreeting">Comment puis-je vous aider aujourd'hui ?</h2>
+<p>Je connais votre profil, vos candidatures et le catalogue — posez-moi n'importe quelle question sur votre projet d'études. Vous pouvez aussi joindre une capture d'écran, une photo ou un PDF.</p>
 
-<div class="ai-help-cards">
+<!-- Cartes REMPLIES PAR LE JS depuis getSuggestedQuestions(profile)
+(voir renderHelpCards dans ai-chat.js). Les quatre questions
+étaient codées en dur ici, identiques pour tout le monde — alors
+que la fonction existait déjà et sait, elle, proposer « Quelles
+bourses existent pour étudier <votre domaine> à l'étranger ? » et
+« Que dois-je savoir pour candidater en <votre pays visé> ? ».
+L'intelligence était écrite mais ne s'affichait nulle part.
+Le contenu ci-dessous est le repli si le JS ne démarre pas. -->
+<div class="ai-help-cards" id="chatHelpCards">
 
 <button type="button" class="ai-help-card" data-prompt="Quels documents dois-je préparer pour candidater à l'étranger ?">
 <i data-lucide="file-text"></i>
@@ -297,16 +188,6 @@
 <button type="button" class="ai-help-card" data-prompt="Comment structurer une lettre de motivation efficace ?">
 <i data-lucide="pen-line"></i>
 <span>Comment structurer une lettre de motivation efficace ?</span>
-</button>
-
-<button type="button" class="ai-help-card" data-prompt="Comment trouver une bourse adaptée à mon profil ?">
-<i data-lucide="graduation-cap"></i>
-<span>Comment trouver une bourse adaptée à mon profil ?</span>
-</button>
-
-<button type="button" class="ai-help-card" data-prompt="Comment relancer une université après ma candidature ?">
-<i data-lucide="send"></i>
-<span>Comment relancer une université après ma candidature ?</span>
 </button>
 
 </div>
@@ -319,10 +200,24 @@
 <i data-lucide="arrow-down"></i>
 </button>
 
-<div class="ai-suggestions" id="chatSuggestions"></div>
+<!-- La rangée de pastilles de suggestions qui vivait ici a été retirée
+le 2026-08-22. Elle affichait les MÊMES questions que les cartes de
+l'état vide, à 30 cm au-dessus — et elle restait posée juste au-dessus
+du champ de saisie pendant TOUTE la conversation, y compris après
+vingt messages, alors que ses questions ne concernaient plus rien de
+ce qui venait d'être dit.
+Sur ChatGPT comme sur Claude, les suggestions appartiennent à l'écran
+d'accueil : elles disparaissent dès le premier message. C'est
+désormais le cas ici — elles vivent dans .ai-help-cards, à l'intérieur
+de l'état vide, qui est masqué au premier envoi. -->
 
 <div class="ai-chat-attachments" id="chatAttachments" hidden></div>
 
+<!-- Enveloppe ajoutée le 2026-08-22 : le filet de séparation doit
+traverser toute la largeur de la colonne, alors que le champ de
+saisie s'arrête à la largeur de lecture du fil (voir
+.ai-chat-composer-wrap dans css/ai-suite.css). -->
+<div class="ai-chat-composer-wrap">
 <form class="ai-chat-composer" id="chatForm">
 
 <button type="button" class="ai-chat-attach-btn" id="attachBtn" aria-label="Joindre un fichier">
@@ -335,8 +230,8 @@
 class="ai-chat-textarea"
 id="chatInput"
 rows="1"
-placeholder="Écrivez votre question à Fitz…"
-maxlength="1200"></textarea>
+placeholder="Demandez à Fitz…"
+maxlength="4000"></textarea>
 
 <button type="submit" class="ai-chat-send-btn" id="chatSendBtn" aria-label="Envoyer">
 <i data-lucide="arrow-up"></i>
@@ -347,6 +242,10 @@ maxlength="1200"></textarea>
 </button>
 
 </form>
+
+<p class="ai-composer-hint">Fitz s'appuie sur votre profil et vos candidatures · Entrée pour envoyer, Maj + Entrée pour une nouvelle ligne</p>
+
+</div>
 
 </div>
 
@@ -360,6 +259,7 @@ maxlength="1200"></textarea>
 
 </div>
 
+<script src="js/back-link.js"></script>
 <script type="module" src="ai-chat.js"></script>
 
 </body>

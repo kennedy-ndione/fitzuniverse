@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — DIAGNOSTIC FITZ AI (results.html)
+FITZUNIVERSE — DIAGNOSTIC FITZ AI (results.html)
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html,
 eligibility-test.html et eligibility-questions.html)
@@ -69,38 +69,15 @@ transition:none !important;
 EN-TÊTE
 ========================================================== */
 
+/* Badge Fitz : apparence définie une seule fois dans css/base.css
+(section "BADGE FITZ — signature unique"). Ne reste ici que
+l'espacement propre à cette page. Vaut pour les DEUX badges de
+results.html — celui de l'écran de chargement et celui de l'en-tête
+du diagnostic — qui doivent rester identiques entre eux : c'est le
+même Fitz avant et après le calcul. */
 .ai-badge{
 
-display:flex;
-
-align-items:center;
-
-gap:8px;
-
-width:max-content;
-
 margin:0 auto 20px;
-
-padding:10px 18px;
-
-border-radius:var(--radius-full);
-
-background:var(--background-light);
-
-color:var(--primary-color);
-
-font-weight:700;
-
-font-size:.88rem;
-
-}
-
-.ai-badge i,
-.ai-badge svg{
-
-width:16px;
-
-height:16px;
 
 }
 
@@ -125,6 +102,23 @@ gap:18px;
 padding:120px 20px;
 
 text-align:center;
+
+}
+
+/* Sans cette règle, l'attribut hidden posé par results.js:setLoading()
+n'a AUCUN effet ici : la règle navigateur [hidden]{display:none} est
+une feuille de style UA, que le display:flex ci-dessus — style
+auteur — bat systématiquement. Le spinner « Fitz croise votre profil
+avec le catalogue… » restait donc affiché en permanence AU-DESSUS du
+diagnostic terminé, sur toutes les pages de résultats.
+
+#resultsContent n'avait pas le problème (un div sans display déclaré
+suit bien [hidden]), ce qui rendait le bug d'autant plus discret :
+le contenu apparaissait normalement, il était juste précédé d'un
+chargement qui ne se terminait jamais. */
+.results-loading[hidden]{
+
+display:none;
 
 }
 
@@ -210,34 +204,40 @@ box-shadow:var(--shadow-sm);
 
 }
 
-.narrative-card .assistant-avatar{
+/* Icône nue, plus de pastille carrée en dégradé derrière elle
+(retour utilisateur du 2026-08-22 : "je ne veux plus voir des icônes
+comme celui en bleu, ils ne sont pas modernes"). Même décision que
+sur les cartes flottantes de la page d'accueil — l'icône est colorée
+par la couleur qui lui correspond au lieu d'être posée dans un
+conteneur.
+
+Couleur : --accent-600 plutôt que --fitz-color (#8B7CF6). Le violet
+Fitz ne fait que 3,33:1 sur blanc — assez pour un décor, trop juste
+pour un glyphe qui identifie qui parle. --accent-600 est le même
+violet en plus dense (5,73:1) et reste dans la famille Fitz.
+
+Le léger margin-top compense l'écart entre le haut du glyphe et la
+première ligne de texte, que le flex align-items:flex-start ne
+rattrape pas une fois le conteneur supprimé. */
+/* Ciblé par la structure (enfant direct), pas seulement par la classe :
+Lucide remplace le <i data-lucide> par un <svg> à l'exécution et ne
+garantit pas de reporter les classes de l'élément d'origine. C'est la
+convention suivie partout ailleurs dans ce dépôt ("parent i, parent
+svg") — la classe reste dans le HTML comme point d'accroche lisible,
+la mise en forme ne dépend pas d'elle. */
+.narrative-card > i,
+.narrative-card > svg,
+.narrative-card > .assistant-avatar{
 
 flex-shrink:0;
 
-display:flex;
+width:24px;
 
-align-items:center;
+height:24px;
 
-justify-content:center;
+margin-top:3px;
 
-width:44px;
-
-height:44px;
-
-border-radius:14px;
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-}
-
-.narrative-card .assistant-avatar i,
-.narrative-card .assistant-avatar svg{
-
-width:22px;
-
-height:22px;
+color:var(--accent-600);
 
 }
 
@@ -256,6 +256,94 @@ margin-bottom:10px;
 .narrative-text p:last-child{
 
 margin-bottom:0;
+
+}
+
+/* ==========================================================
+TONS D'ÉTAT — vert / ambre / rouge (2026-08-22)
+==========================================================
+Le score et chaque ligne de sa décomposition étaient rendus en bleu
+de marque, quelle que soit leur valeur : un 31/100 et un 92/100
+avaient rigoureusement le même aspect, et la couleur ne portait donc
+aucune information. Ces trois classes portent le ton — et rien
+d'autre : elles ne décrivent aucun composant, elles ne font que poser
+les 4 variables que l'anneau, les barres, le nombre et la pastille
+consomment ensuite.
+
+C'est le seul endroit du fichier où une valeur vert/ambre/rouge est
+écrite. Un composant qui doit réagir au ton lit --tone-* ; il ne
+redéclare jamais ses propres verts.
+
+  --tone-1 / --tone-2   les deux arrêts du dégradé (surfaces)
+  --tone-text           la seule valeur admise pour du texte ou une
+                        icône porteuse de sens (les *-700 de
+                        css/base.css tiennent AA sur fond clair,
+                        contrairement à --success/--warning/--danger
+                        bruts — voir la note de l'échelle d'état)
+  --tone-glow           halo, purement décoratif
+
+Le ton n'est jamais décidé ici : results.js pose is-positive/is-moyen/
+is-faible d'après scoreTier() et toneForValue() (js/fitz-voice.js),
+qui portent aussi le libellé du palier. Couleur et libellé viennent
+donc de la même déclaration et ne peuvent pas se contredire.
+========================================================== */
+
+/* Repli neutre, pour tout composant qui lit --tone-* avant que
+results.js ait posé sa classe de ton (script en erreur, rendu
+interrompu) : gris, jamais un vert ou un rouge par défaut, qui
+annoncerait un résultat non calculé.
+
+:where() est indispensable ici, pas cosmétique — il annule la
+spécificité du sélecteur. Écrit normalement, `.score-breakdown-row`
+pèse autant que `.is-positive` (0,1,0) et, comme il vient plus bas
+dans le fichier, il l'emporterait : toutes les barres restaient
+grises malgré la bonne classe de ton. Avec :where(), le repli pèse 0
+et n'importe quelle classe de ton le bat. */
+:where(.score-section, .score-breakdown-row, .improvement-free){
+
+--tone-1:var(--text-decorative);
+
+--tone-2:var(--text-muted);
+
+--tone-text:var(--text-light);
+
+--tone-glow:rgba(15,23,42,.12);
+
+}
+
+.is-positive{
+
+--tone-1:var(--success-500);
+
+--tone-2:var(--success-600);
+
+--tone-text:var(--success-700);
+
+--tone-glow:rgba(22,163,74,.28);
+
+}
+
+.is-moyen{
+
+--tone-1:var(--warning-500);
+
+--tone-2:var(--warning-600);
+
+--tone-text:var(--warning-700);
+
+--tone-glow:rgba(217,119,6,.28);
+
+}
+
+.is-faible{
+
+--tone-1:var(--danger-500);
+
+--tone-2:var(--danger-600);
+
+--tone-text:var(--danger-700);
+
+--tone-glow:rgba(220,38,38,.26);
 
 }
 
@@ -293,13 +381,9 @@ flex-shrink:0;
 
 position:relative;
 
-width:160px;
+width:168px;
 
-height:160px;
-
-border-radius:50%;
-
-background:conic-gradient(var(--primary-color) calc(var(--score-percent) * 1%), var(--background-alt) 0);
+height:168px;
 
 display:flex;
 
@@ -307,7 +391,74 @@ align-items:center;
 
 justify-content:center;
 
-transition:background 1s var(--ease-premium);
+}
+
+.score-ring-svg{
+
+position:absolute;
+
+inset:0;
+
+width:100%;
+
+height:100%;
+
+/* Le tracé d'un <circle> SVG démarre à 3 h : sans cette rotation
+l'anneau se remplirait depuis la droite au lieu du sommet. */
+transform:rotate(-90deg);
+
+overflow:visible;
+
+}
+
+/* Les deux arrêts du dégradé de l'anneau. En propriété CSS (et non en
+attribut stop-color dans le HTML, où var() n'est pas résolu) : les
+variables de ton, héritées depuis .score-section, s'appliquent alors
+normalement. */
+.score-ring-stop-1{ stop-color:var(--tone-1); }
+
+.score-ring-stop-2{ stop-color:var(--tone-2); }
+
+.score-ring-track{
+
+fill:none;
+
+stroke:var(--background-alt);
+
+stroke-width:9;
+
+}
+
+.score-ring-progress{
+
+fill:none;
+
+stroke:url(#scoreRingGradient);
+
+stroke-width:10;
+
+/* L'extrémité arrondie est la vraie différence visuelle avec
+l'ancien conic-gradient, qui coupait l'arc net. */
+stroke-linecap:round;
+
+/* 2π×52 ≈ 326.73 — voir le commentaire sur r=52 dans results.html.
+L'arc visible vaut la circonférence moins l'offset : offset plein
+(326.73) = anneau vide, offset nul = anneau complet. */
+stroke-dasharray:326.73;
+
+stroke-dashoffset:calc(326.73 - 326.73 * var(--score-percent) / 100);
+
+filter:drop-shadow(0 3px 8px var(--tone-glow));
+
+/* Part de 0 et se remplit une fois le score connu (results.js pose
+--score-percent après le rendu, sur un frame séparé). */
+transition:stroke-dashoffset 1.2s var(--ease-premium);
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.score-ring-progress{transition:none;}
 
 }
 
@@ -323,15 +474,13 @@ align-items:baseline;
 
 justify-content:center;
 
-width:128px;
+width:132px;
 
-height:128px;
+height:132px;
 
 border-radius:50%;
 
 background:var(--background);
-
-box-shadow:inset 0 0 0 1px var(--border-color);
 
 }
 
@@ -339,11 +488,18 @@ box-shadow:inset 0 0 0 1px var(--border-color);
 
 font-family:var(--font-display);
 
-font-size:2.6rem;
+font-size:2.7rem;
 
 font-weight:800;
 
-color:var(--primary-color);
+/* Le chiffre porte lui aussi le ton : c'est l'élément que l'œil lit
+en premier, il serait incohérent qu'il reste bleu dans un anneau
+rouge. --tone-text (et non --tone-1/2) parce que c'est du texte. */
+color:var(--tone-text);
+
+font-variant-numeric:tabular-nums;
+
+transition:color .6s var(--ease-premium);
 
 }
 
@@ -367,23 +523,32 @@ min-width:0;
 
 }
 
+/* Pastille du palier ("Profil compétitif"...). Fond teinté + texte
+--tone-text : le libellé et l'anneau disent alors la même chose au
+même moment. La bordure fine évite que la pastille disparaisse pour
+un daltonien — la couleur n'est jamais le seul porteur du sens ici,
+le libellé l'énonce en toutes lettres. */
 .score-label{
 
 display:inline-block;
 
-margin-bottom:8px;
+margin-bottom:10px;
 
 padding:6px 14px;
 
 border-radius:var(--radius-full);
 
-background:var(--background-light);
+background:color-mix(in srgb, var(--tone-text) 10%, transparent);
 
-color:var(--primary-color);
+border:1px solid color-mix(in srgb, var(--tone-text) 22%, transparent);
+
+color:var(--tone-text);
 
 font-weight:700;
 
 font-size:.82rem;
+
+letter-spacing:.01em;
 
 }
 
@@ -490,6 +655,9 @@ justify-content:center;
 
 }
 
+/* L'icône de l'axe prend le ton de SA ligne : sur la ligne "Langue"
+à 100% elle est verte, sur "Formation" à 60% elle est ambre. C'est
+ce qui rend la colonne de gauche lisible d'un seul coup d'œil. */
 .score-breakdown-icon i,
 .score-breakdown-icon svg{
 
@@ -497,17 +665,29 @@ width:16px;
 
 height:16px;
 
-color:var(--primary-color);
+color:var(--tone-text);
 
 }
 
+/* Le "trait progressif" (retour utilisateur du 2026-08-22). Chaque
+ligne porte is-positive/is-moyen/is-faible d'après SA propre valeur
+(toneForValue, js/fitz-voice.js) — auparavant les 5 barres
+partageaient --gradient-primary, donc un axe à 31% et un axe à 100%
+s'affichaient dans le même bleu (voir le bloc TONS D'ÉTAT). */
+
 .score-breakdown-bar{
 
-height:7px;
+position:relative;
+
+height:9px;
 
 border-radius:999px;
 
-background:var(--background-light);
+background:var(--background-alt);
+
+/* Creuse légèrement le rail pour que la barre pleine se lise comme
+posée dedans plutôt que dessinée dessus. */
+box-shadow:inset 0 1px 2px rgba(15,23,42,.07);
 
 overflow:hidden;
 
@@ -523,9 +703,38 @@ height:100%;
 
 border-radius:999px;
 
-background:var(--gradient-primary, var(--primary-color));
+background:linear-gradient(90deg,var(--tone-1) 0%,var(--tone-2) 100%);
 
-transition:width .6s var(--ease-premium,ease);
+box-shadow:0 1px 4px var(--tone-glow);
+
+transition:width .9s var(--ease-premium,ease);
+
+}
+
+/* Reflet en haut de la barre — le seul détail purement décoratif de
+la décomposition, et la raison pour laquelle la barre a gagné 2px de
+haut : en dessous de 9px le reflet devient une bouillie. */
+.score-breakdown-bar span::after{
+
+content:"";
+
+position:absolute;
+
+inset:0 0 auto 0;
+
+height:50%;
+
+border-radius:999px 999px 0 0;
+
+background:linear-gradient(180deg,rgba(255,255,255,.28),transparent);
+
+pointer-events:none;
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.score-breakdown-bar span{transition:none;}
 
 }
 
@@ -535,9 +744,9 @@ text-align:right;
 
 font-size:.88rem;
 
-font-weight:600;
+font-weight:700;
 
-color:var(--text-muted);
+color:var(--tone-text);
 
 font-variant-numeric:tabular-nums;
 
@@ -561,13 +770,14 @@ display:flex;
 
 align-items:flex-start;
 
-gap:16px;
+gap:14px;
 
 background:var(--background);
 
 border:1px solid var(--border-color);
 
-border-left:3px solid var(--primary-color);
+/* Le liseré gauche prend le ton de l'axe concerné, comme l'icône. */
+border-left:3px solid var(--tone-text);
 
 border-radius:var(--radius-lg);
 
@@ -577,34 +787,24 @@ box-shadow:var(--shadow-sm);
 
 }
 
-.improvement-free-icon{
+/* Icône nue (même retour du 2026-08-22 que .assistant-avatar), et
+colorée par le ton de l'axe qu'elle désigne : c'est le point le plus
+faible du profil, il s'affiche donc en ambre ou en rouge selon sa
+gravité réelle plutôt qu'en bleu neutre. results.js pose la classe de
+ton sur .improvement-free. */
+.improvement-free > i,
+.improvement-free > svg,
+.improvement-free > .improvement-free-icon{
 
 flex:0 0 auto;
 
-display:flex;
+width:22px;
 
-align-items:center;
+height:22px;
 
-justify-content:center;
+margin-top:2px;
 
-width:40px;
-
-height:40px;
-
-border-radius:var(--radius-md);
-
-background:var(--background-alt);
-
-}
-
-.improvement-free-icon i,
-.improvement-free-icon svg{
-
-width:20px;
-
-height:20px;
-
-color:var(--primary-color);
+color:var(--tone-text);
 
 }
 
@@ -654,32 +854,22 @@ flex-wrap:wrap;
 
 }
 
-.reco-locked-icon{
+/* Icône nue (même retour du 2026-08-22) — plus de pastille ronde
+blanche. Gris sourd : le cadenas signale un contenu non débloqué,
+pas un état bon ou mauvais du profil, il ne prend donc aucun ton. */
+.reco-locked > i,
+.reco-locked > svg,
+.reco-locked > .reco-locked-icon{
 
 flex:0 0 auto;
 
-width:42px;
+width:20px;
 
-height:42px;
+height:20px;
 
-border-radius:50%;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-background:var(--background);
-
-color:var(--primary-color);
-
-box-shadow:var(--shadow-sm);
+color:var(--text-muted);
 
 }
-
-.reco-locked-icon i,
-.reco-locked-icon svg{width:18px;height:18px;}
 
 .reco-locked-copy{flex:1 1 220px;}
 
@@ -1034,9 +1224,9 @@ transition:var(--transition);
 
 .opportunity-card:hover{
 
-transform:translateY(-3px);
+transform:translateY(-8px);
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-lg);
 
 border-color:rgba(51,65,140,.18);
 
@@ -1225,11 +1415,20 @@ font-style:italic;
 TRANSITION VERS L'ACCOMPAGNEMENT
 ========================================================== */
 
+/* Fond passé de --gradient-primary à --gradient-deep le 2026-08-23.
+La règle est déjà écrite dans css/base.css : --gradient-primary est
+fait pour les PETITES surfaces (bouton, pastille, jauge), où l'on ne
+voit guère que son premier arrêt lumineux #4A5BC4. Sur une carte de
+56px de rembourrage occupant toute la largeur de la section, ce même
+arrêt occupe un coin entier et donne le bleu électrique qui détonnait
+avec le reste de la page. --gradient-deep garde la construction et la
+profondeur diagonale, resserrées vers le bas de l'échelle. */
+
 .closing-card{
 
 text-align:center;
 
-background:var(--gradient-primary);
+background:var(--gradient-deep);
 
 border-radius:var(--radius-lg);
 
@@ -1239,32 +1438,25 @@ color:#fff;
 
 }
 
-.closing-icon{
+/* Icône nue (même retour du 2026-08-22) — plus de pastille ronde
+translucide. Sur le fond en dégradé de .closing-card le blanc plein
+suffit largement à la détacher ; le léger halo remplace le disque
+sans réintroduire de conteneur. */
+.closing-card > i,
+.closing-card > svg,
+.closing-card > .closing-icon{
 
-display:flex;
+display:block;
 
-align-items:center;
+width:34px;
 
-justify-content:center;
+height:34px;
 
-width:56px;
+margin:0 auto 20px;
 
-height:56px;
+color:#fff;
 
-margin:0 auto 22px;
-
-border-radius:16px;
-
-background:rgba(255,255,255,.14);
-
-}
-
-.closing-icon i,
-.closing-icon svg{
-
-width:28px;
-
-height:28px;
+filter:drop-shadow(0 2px 6px rgba(0,0,0,.22));
 
 }
 

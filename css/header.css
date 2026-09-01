@@ -25,10 +25,8 @@ propre pile d'empilement, au-dessus de tout — sans son propre fond, sa
 lisibilité dépend entièrement de ce qui se trouve DESSOUS au pixel près
 (bas d'une photo, zone claire...), imprévisible. Ce dégradé garantit un
 minimum de contraste au texte clair (.header-link, logo) quel que soit
-le contenu en dessous, sur les pages à hero photo. Exclu sur
-.header-on-light (scholarships.html : fond clair uni, aucun hero photo
-— ce voile sombre y détonnerait) et une fois .is-scrolled (fond blanc
-opaque déjà géré plus bas). */
+le contenu en dessous. Exclu une fois .is-scrolled (fond blanc opaque
+déjà géré plus bas). */
 
 transform:translateY(0);
 
@@ -75,7 +73,7 @@ qui passe brutalement de "plat" à "en chute" à un seul point peut créer
 une bande de Mach à cet endroit précis — une ligne perçue par l'œil
 sans qu'aucun pixel n'y soit réellement plus sombre que ses voisins.
 Casser la chute en 2 étapes au lieu d'1 seule atténue cet effet. */
-.header:not(.header-on-light):not(.is-scrolled){
+.header:not(.is-scrolled){
 
 background:linear-gradient(to bottom,
 rgba(9,12,28,.62) 0%,
@@ -85,34 +83,36 @@ rgba(9,12,28,.15) 100%);
 
 }
 
-/* Texte clair par défaut (hero photo dessous, .header:not(.header-on-light)
+/* Texte clair par défaut (hero photo dessous, .header:not(.is-scrolled)
 ci-dessus) — Bourses/Universités/Connexion utilisaient var(--text-light),
 une nuance pensée pour le fond blanc du header une fois scrollé, donc
 illisible sur la photo avant ça. Miroir de .logo .scholar (déjà blanc par
 défaut) juste au-dessus. */
-.header:not(.header-on-light):not(.is-scrolled) .header-link{color:rgba(255,255,255,.94);}
+.header:not(.is-scrolled) .header-link{color:rgba(255,255,255,.94);}
 /* Pilule fantôme plutôt que le soulignement d'origine (rendu "lien de
 texte" daté) : fond blanc translucide à faible opacité, dans le même
 esprit que la pilule du bouton "Découvrir" juste à côté mais nettement
 plus discret. Le texte reste blanc, contraste inchangé — le fond ajouté
 est trop clair pour le faire varier de façon significative. */
-.header:not(.header-on-light):not(.is-scrolled) .header-link:hover{color:#fff;background:rgba(255,255,255,.14);}
+.header:not(.is-scrolled) .header-link:hover{color:#fff;background:rgba(255,255,255,.14);}
 
 .header.is-scrolled .header-link{color:var(--text-light);}
-/* Même traitement pilule sur fond clair (header scrollé ou
-.header-on-light, voir règle générique .header-link:hover plus bas) :
-teinte sombre à faible opacité au lieu du fond blanc (invisible sur
-blanc). */
-.header.is-scrolled .header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
+/* Même traitement pilule sur fond clair (header scrollé) : teinte
+sombre à faible opacité au lieu du fond blanc (invisible sur blanc). */
+/* Encre + voile chaud (2026-08-28) : virait au bleu --primary-color
+sur un voile slate froid rgba(15,23,42,.06), deux valeurs de la
+palette abandonnée. Même correction que le survol par défaut, ligne
+~330. */
+.header.is-scrolled .header-link:hover{color:var(--text-color);background:var(--background-alt);}
 
-/* scholarships.html (.header-on-light) : pas de hero photo, fond clair
-dès le premier pixel — contrairement à index.html/universities.html, le
-logo blanc par défaut (.logo .scholar plus haut) y est illisible sur le
-fond lavande pâle. Mêmes couleurs que l'état .is-scrolled des autres
-pages, appliquées dès le départ ici puisqu'il n'y a rien à "scroller
-avant" un fond sombre. */
-.header-on-light .logo .scholar{color:var(--primary-dark);}
-.header-on-light .logo .bridge{color:var(--amber-700);}
+/* .header-on-light (fond clair uni dès le premier pixel, sans hero
+photo) a existé un temps pour scholarships.html, avant que cette page
+reçoive elle aussi une bannière photo (audit du 2026-08-13, voir
+.bourses-hero dans scholarships.css) — la classe était restée posée sur
+le <header> après coup, ce qui rendait le header illisible sur sa
+propre photo (texte marine pensé pour un fond clair, plaqué sur un
+fond sombre). Retirée de scholarships.html, et ces 2 règles avec elle :
+plus aucune page du site n'a de header sans hero photo dessous. */
 
 /* Immersion catalogue : dès que le visiteur commence à descendre, le
 header s'efface (translation verticale + opacité) pour laisser toute
@@ -156,93 +156,33 @@ gap:32px;
 LOGO
 ========================================================== */
 
-.logo{
+/* Le conteneur .logo a ete remplace par .fitz-lockup (css/base.css),
+qui porte lui-meme son display/align/gap. Ne restent ici que les
+reglages propres a l'EN-TETE : rien qui touche a la typographie ou a
+la couleur de la marque. */
 
-display:flex;
-
-align-items:center;
-
-gap:14px;
-
-font-size:1.25rem;
-
-font-weight:800;
-
-letter-spacing:-.02em;
-
-color:var(--text-color);
-
+/* Le lockup vit desormais dans css/base.css (.fitz-lockup) : un seul
+composant, un seul balisage, les memes polices partout. Les regles
+supprimees ici fixaient une largeur de 48px qui entrait en conflit avec
+--lockup-size, et un survol qui faisait BASCULER le logo
+(rotate(-4deg) scale(1.05)) — un logo d'entreprise ne bascule pas. */
+.fitz-lockup:hover{
+opacity:.85;
 }
 
-.logo img{
+/* Symbole "la pièce qui s'emboîte" (2026-08-29, refonte de marque
+ScholarBridge → Fitz) — deux arcs du MÊME cercle, découpés au
+stroke-dasharray sur un <circle> chacun : le grand arc
+(.mark-structure) est l'étudiant, le petit arc ambre (.mark-accent)
+est l'opportunité qui vient compléter le tour. « Fitz » contient
+*fit* : ce qui vous va.
 
-display:block;
-
-width:48px;
-
-height:48px;
-
-object-fit:contain;
-
-transition:transform .35s var(--ease-premium);
-
-}
-
-.logo:hover img{
-
-transform:rotate(-4deg) scale(1.05);
-
-}
-
-.logo-text{
-
-display:flex;
-
-align-items:baseline;
-
-font-family:var(--font-display);
-
-font-size:1.28rem;
-
-font-weight:800;
-
-letter-spacing:-.02em;
-
-line-height:1;
-
-}
-
-.logo .scholar{
-
-color:#fff;
-
-transition:color .3s ease;
-
-}
-
-.logo .bridge{
-
-color:var(--amber-500);
-
-transition:color .3s ease;
-
-}
-
-.header.is-scrolled .logo .scholar{
-
-color:var(--primary-dark);
-
-}
-
-/* --amber-500 (2,16:1 sur blanc) ne tient l'AA que sur le voile sombre
-du hero. Une fois le header scrollé sur fond clair, on bascule sur
---amber-700 (5,8:1), seule valeur ambre admise pour du texte sur fond
-clair — voir la note sur --amber-700 dans css/base.css. */
-.header.is-scrolled .logo .bridge{
-
-color:var(--amber-700);
-
-}
+Les couleurs ne vivent plus ici : le balisage canonique .fitz-mark et
+ses deux tokens (--logo-structure à deux états, --logo-accent
+INVARIANT #E9A319) sont définis une seule fois dans css/base.css —
+voir « Le symbole — une seule identité » dans DESIGN_SYSTEM.md.
+L'arc ambre ne bascule plus sur --amber-700 au scroll : l'accent du
+logo ne change jamais, sur aucun fond. */
 
 /* ==========================================================
 ACTIONS
@@ -322,12 +262,16 @@ transition:background-color 150ms ease, color 150ms ease;
 
 }
 
-/* Contexte générique (.header-on-light avant scroll notamment, pas de
-hero photo dessous) : même pilule fantôme que les autres contextes,
-teinte sombre à faible opacité puisque le fond est clair ici. Les
-contextes hero-photo / is-scrolled ci-dessus surchargent avec leur
-propre variante — voir les notes plus haut. */
-.header-link:hover{color:var(--primary-color);background:rgba(15,23,42,.06);}
+/* Repli générique — toujours surchargé en pratique par
+.header:not(.is-scrolled)/.header.is-scrolled ci-dessus, qui couvrent
+les 2 seuls états possibles d'un header depuis le retrait de
+.header-on-light (voir plus haut). Laissé en place au cas où un futur
+contexte de header échappe aux deux. */
+/* Même correction encre + chaud que la version .is-scrolled plus haut.
+C'est ce survol-ci que reçoit « Connexion » sur grand écran, où il
+reste un lien texte ordinaire — la pastille de .header-links l'exclut
+explicitement (voir plus bas). */
+.header-link:hover{color:var(--text-color);background:var(--background-alt);}
 
 /* Nav texte minimaliste (retour arrière sur le traitement "3 pilules à
 contour + 1 CTA plein" du commit précédent, jugé encore trop chargé) :
@@ -348,26 +292,58 @@ voir cette règle). */
 .header-link-login i,
 .header-link-login svg{display:none;}
 
-.header-links .header-link{
+/* Trait de survol retiré le 2026-08-28 (demande utilisateur). Un filet
+de 2px qui se déploie sous « Bourses » et « Universités » est le
+vocabulaire d'un lien de contenu, pas d'un élément de navigation : il
+soulignait des libellés qui sont déjà, par leur place dans l'en-tête,
+identifiés comme cliquables.
+
+Remplacé par une pastille — la surface s'allume au survol et le
+libellé passe à l'encre pleine. C'est le même vocabulaire que le reste
+du site (.btn-ghost s'éclaire de la même façon, sur le même token) et
+ça donne au doigt comme au curseur une CIBLE, là où un trait de 2px de
+haut n'offrait qu'une confirmation après coup.
+
+Rembourrage horizontal passé de 2px à 12px : sans lui, la pastille
+épouserait le texte au pixel près et se lirait comme un surlignage.
+
+:not(.header-link-login) est indispensable, pas défensif. Sous 640px,
+« Connexion » devient une pastille RONDE de 36px à rembourrage nul
+(voir le média-query plus bas) — or ces règles-ci pèsent (0,2,0)
+contre (0,1,0) là-bas, et un média-query n'ajoute aucune spécificité :
+sans l'exclusion, le border-radius et le rembourrage écrits ici
+gagneraient et rendraient le cercle rectangulaire sur mobile. */
+.header-links .header-link:not(.header-link-login){
 position:relative;
-padding:8px 2px;
+padding:8px 12px;
+border-radius:var(--radius-sm);
+transition:background-color .2s var(--ease-standard),
+color .2s var(--ease-standard);
 }
 
-.header-links .header-link::after{
-content:"";
-position:absolute;
-left:2px;
-right:2px;
-bottom:2px;
-height:2px;
-border-radius:2px;
-background:currentColor;
-transform:scaleX(0);
-transition:transform .25s var(--ease-standard);
+/* AUCUNE règle de survol ici, volontairement. Le fond de survol existe
+déjà et il DÉPEND du contexte, ce qui se perd de vue facilement :
+.header:not(.is-scrolled) pose une pastille blanche translucide,
+lisible sur la photo du hero ; .header.is-scrolled pose
+--background-alt sur l'en-tête devenu opaque (les deux en haut du
+fichier). Une pastille écrite ici pèserait le même poids qu'elles
+(0,4,0) tout en arrivant plus bas — elle les aurait donc écrasées
+toutes les deux, et collé un pavé clair opaque par-dessus la photo du
+hero. Le rembourrage et le rayon ci-dessus suffisent : ils donnent sa
+FORME à un fond que le contexte colore déjà. */
+
+/* Sur écran tactile, :hover reste collé après l'appui (même note que
+sur .btn, css/base.css) : la pastille resterait allumée sous un lien
+déjà quitté. On neutralise les deux fonds contextuels, pas un fond
+maison — voir juste au-dessus. */
+@media (hover:none){
+
+.header:not(.is-scrolled) .header-link:hover,
+.header.is-scrolled .header-link:hover{
+background:transparent;
 }
 
-.header-links .header-link:hover{background:transparent;}
-.header-links .header-link:hover::after{transform:scaleX(1);}
+}
 
 @media(max-width:640px){
 .header-link{display:none;}
@@ -386,6 +362,24 @@ prévu pour un fond blanc une fois le header défilé (.is-scrolled), pas
 pour flotter directement sur la photo du hero — trop peu de contraste
 pour rester repérable, contrairement au bouton "Découvrir" à côté. */
 .header-link-login{display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border-radius:var(--radius-full); background:#fff; color:var(--primary-color); box-shadow:var(--shadow-xs);}
+/* Bug réel trouvé le 2026-08-28 en testant sur un vrai viewport mobile
+(390px) : l'icône de ce cercle était invisible — blanche sur fond blanc.
+Cause : .header:not(.is-scrolled) .header-link et .header.is-scrolled
+.header-link (plus haut, hors média-query) pèsent chacune (0,3,0) et
+gagnaient systématiquement sur le color:var(--primary-color) ci-dessus,
+qui ne pèse que (0,1,0) — un média-query n'ajoute aucune spécificité,
+seule la sélectivité du sélecteur compte. Le commentaire au-dessus
+("Même traitement visuel que le CTA... pour rester repérable") montre
+que cette couleur sombre était déjà l'intention ; elle perdait
+silencieusement la cascade, sans erreur visible, une icône vide ne
+prévenant de rien (même famille de piège que les noms d'icônes Lucide
+erronés, voir results.html). Corrigé en ré-affirmant la même couleur
+ici, avec la même spécificité (0,3,0) que les règles qu'elle doit
+battre, mais scopée à ce média-query mobile pour ne rien changer au
+lien texte "Connexion" du grand écran (voir commentaire plus haut,
+"réaffichée uniquement dans le média-query mobile"). */
+.header:not(.is-scrolled) .header-link-login,
+.header.is-scrolled .header-link-login{color:var(--primary-color);}
 .header-link-login span{
 position:absolute;
 width:1px; height:1px;
@@ -415,7 +409,7 @@ flex-shrink:0;
 
 }
 
-.logo{
+.fitz-lockup{
 
 flex-shrink:0;
 
@@ -456,23 +450,15 @@ gap:12px;
 
 }
 
-.logo{
 
-font-size:1.05rem;
 
-}
+/* Le lockup se redimensionne par son SEUL token : la taille du symbole
+et celle du texte en decoulent (calc dans css/base.css). Avant, il
+fallait piloter les deux separement — et la largeur fixee ici entrait
+en conflit avec --lockup-size. */
+.fitz-lockup{
 
-.logo img{
-
-width:42px;
-
-height:42px;
-
-}
-
-.logo-text{
-
-font-size:1.08rem;
+--lockup-size:42px;
 
 }
 
@@ -540,11 +526,94 @@ height:16px;
 
 }
 
+/* Sous 355px, seul le symbole reste : le nom serait illisible et
+pousserait la navigation hors de l'ecran. */
 @media(max-width:355px){
 
-.logo-text{
+.fitz-lockup-text{
 
 display:none;
+
+}
+
+}
+
+/* ==========================================================
+DÉBORDEMENT DU HEADER SUR TÉLÉPHONE (corrigé le 2026-08-23)
+==========================================================
+Mesuré avant correction, sur index.html : le bloc logo + liens
+réclamait 382px alors qu'un écran de 360px n'en offre que 331 à
+l'intérieur du conteneur. Le bouton « Découvrir » sortait donc du
+cadre et se retrouvait coupé net par le bord droit — sur 360, 390,
+393 et 412px, c'est-à-dire sur la quasi-totalité des téléphones
+réellement utilisés. Seul un écran de moins de 356px y échappait,
+parce que la règle @media(max-width:355px) plus haut y masque le nom
+de la marque.
+
+Trois causes, dans l'ordre de ce qu'elles coûtaient :
+
+1. UN ESPACE FANTÔME DE 36px. À 640px et moins, .header-link passe
+   en display:none — mais .header-nav, son conteneur, reste un
+   élément flex de largeur nulle. Le `gap:36px` de .header-links
+   s'applique donc toujours entre ce vide et le groupe de boutons.
+   Mesure : .header-links faisait 208px pour un contenu de 172px.
+
+2. Des écarts pensés pour le bureau (36px et 20px) conservés tels
+   quels sur un écran quatre fois plus étroit.
+
+3. Un logo à sa taille pleine alors qu'il n'a plus à cohabiter avec
+   la navigation.
+
+Corrigé au même point de rupture que le masquage des liens (640px) :
+c'est le même changement de mise en page, il n'a pas de raison d'être
+scindé en deux seuils. */
+
+@media(max-width:640px){
+
+/* Cause n°1 : sans cela, l'espace fantôme subsiste même vide. */
+.header-nav{
+
+display:none;
+
+}
+
+.header-links{
+
+gap:10px;
+
+}
+
+.header-cta-group{
+
+gap:8px;
+
+}
+
+.fitz-lockup{
+
+--lockup-size:36px;
+
+}
+
+/* Dernier recours : si un futur libellé rallonge encore le CTA, le
+nom de la marque se laisse rogner plutôt que de repousser le bouton
+hors de l'écran. min-width:0 est indispensable — un élément flex
+refuse par défaut de descendre sous la largeur de son contenu. */
+.fitz-lockup{
+
+min-width:0;
+
+}
+
+.fitz-lockup-text{
+
+overflow:hidden;
+
+}
+
+.header-links{
+
+flex-shrink:0;
 
 }
 

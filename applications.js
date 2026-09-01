@@ -33,22 +33,38 @@ import { initShellChrome, bootstrapShell, unlockingPlans, isFeatureLocked, PLAN_
 import { isQuotaReached } from "./js/plan-features.js";
 import { recommendPrograms } from "./js/recommend-programs.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase, FITZ_READINESS_PHRASES } from "./js/fitz-voice.js";
-import { generate } from "./js/ai/ai-client.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
 import { showToast } from "./js/ai/toast.js";
 import { computeJourneySteps } from "./js/application-journey.js";
+import { qualifierEtapes, avertissementsPrematures } from "./js/next-action.js";
+// escapeHtml : ces trois chaînes sont des constantes du code, pas de la
+// saisie étudiante — mais elles traversent innerHTML, et une constante
+// d'aujourd'hui devient un libellé configurable demain.
+import { escapeHtml } from "./js/ai/format.js";
+
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./js/catalog-data.js";
 
 initShellChrome();
 
+// Depuis le 2026-08-30, l'issue d'une réponse est modélisée (admise /
+// refusée / liste d'attente) : c'est ce qui permet au parcours de
+// féliciter, d'orienter vers le visa ou de proposer un rebond.
+// `reponse_recue` reste accepté (candidatures existantes) et signifie
+// « réponse reçue, issue pas encore précisée ».
 const STATUS_LABELS = {
 a_preparer: "À préparer",
 en_cours: "En préparation",
 deposee: "Déposée",
 en_attente: "En attente de réponse",
-reponse_recue: "Réponse reçue"
+reponse_recue: "Réponse reçue (à préciser)",
+admise: "Admise",
+liste_attente: "Liste d'attente",
+refusee: "Refusée"
 };
 
-const STATUS_ORDER = ["a_preparer", "en_cours", "deposee", "en_attente", "reponse_recue"];
+const STATUS_ORDER = ["a_preparer", "en_cours", "deposee", "en_attente", "reponse_recue", "liste_attente", "admise", "refusee"];
 
 // ==========================================================
 // DOSSIER DE CANDIDATURE — checklist par candidature (lettres de
@@ -255,17 +271,57 @@ ${!result.ready && advisorUnlocked ? `<a href="advisor.html?applicationId=${app.
 // repère visuel de ce qu'il reste à faire avant le dépôt.
 // ==========================================================
 
+const LIBELLE_PREREQUIS = {
+profile: "le profil",
+checklist: "le dossier",
+letter: "la lettre",
+readiness: "la vérification"
+};
+
+// Trois états, pas deux — voir js/next-action.js. Une étape peut être
+// non cochée ET hors de portée : générer la lettre avant d'avoir
+// complété le profil produit une lettre creuse, qui s'affichera
+// pourtant du même vert qu'une lettre excellente.
+//
+// Rien n'est désactivé : l'étudiant garde la main sur l'ordre. Sous le
+// stepper, un avertissement dit ce qu'il obtiendrait en s'y prenant
+// maintenant — une conséquence, pas une interdiction.
 function renderJourneyStepper(app, steps) {
+
+const qualifiees = qualifierEtapes(steps);
+const alertes = avertissementsPrematures(steps);
+
+const avertissement = alertes.length
+? `<p class="journey-warning">
+<i data-lucide="info"></i>
+<span>${escapeHtml(alertes[0].consequence)} Commencez par ${escapeHtml(alertes[0].prerequisLisible)}.</span>
+</p>`
+: "";
 
 return `
 <div class="application-journey">
-${steps.map((step) => `
-<button type="button" class="journey-step${step.done ? " is-done" : ""}${step.isFitz ? " is-fitz" : ""}" data-journey-step="${step.id}" title="${step.label}">
-<span class="journey-step-dot"><i data-lucide="${step.done ? "check" : step.icon}"></i></span>
+${qualifiees.map((step) => {
+
+const classes = [
+"journey-step",
+step.etat === "faite" ? "is-done" : "",
+step.etat === "prematuree" ? "is-premature" : "",
+step.isFitz ? "is-fitz" : ""
+].filter(Boolean).join(" ");
+
+const infobulle = step.etat === "prematuree"
+? `${step.label} — à faire après ${step.bloquePar.map((id) => LIBELLE_PREREQUIS[id] || id).join(" et ")}`
+: step.label;
+
+return `
+<button type="button" class="${classes}" data-journey-step="${step.id}" title="${escapeHtml(infobulle)}">
+<span class="journey-step-dot"><i data-lucide="${step.etat === "faite" ? "check" : step.icon}"></i></span>
 <span class="journey-step-label">${step.label}</span>
-</button>
-`).join("")}
-</div>`;
+</button>`;
+
+}).join("")}
+</div>
+${avertissement}`;
 
 }
 
@@ -308,7 +364,10 @@ ${app.deadline ? `<span><i data-lucide="calendar"></i>Date limite : ${formatDate
 
 ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 
-${app.portalUrl ? `<div class="app-card-actions"><a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Portail</span></a></div>` : ""}
+${(app.universityWebsite || app.portalUrl) ? `<div class="app-card-actions">
+${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
+${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
+</div>` : ""}
 </article>
 `;
 
@@ -317,7 +376,6 @@ ${app.portalUrl ? `<div class="app-card-actions"><a href="${app.portalUrl}" targ
 
 <div class="apps-toolbar">
 <a href="offers.html" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
 <span>Renouveler mon abonnement</span>
 </a>
 </div>
@@ -340,7 +398,6 @@ container.innerHTML = `
 <h2>Suivi des candidatures</h2>
 <p>Débloquez le suivi de vos candidatures avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)} : gardez chaque étape sous contrôle, avec les rappels de Fitz pour ne rien manquer.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
 <span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
@@ -384,12 +441,12 @@ if (!target) return null;
 
 const dt = target.replace(/-/g, "");
 const title = `Vérifier ma candidature — ${app.university}`;
-const desc = app.scholarship ? `Bourse : ${app.scholarship}` : "Rappel ScholarBridge";
+const desc = app.scholarship ? `Bourse : ${app.scholarship}` : "Rappel Fitz";
 
 const ics = [
 "BEGIN:VCALENDAR",
 "VERSION:2.0",
-"PRODID:-//ScholarBridge//Suivi candidatures//FR",
+"PRODID:-//Fitz//Suivi candidatures//FR",
 "BEGIN:VEVENT",
 `UID:${app.id}@scholarbridge`,
 `DTSTAMP:${dt}T090000Z`,
@@ -461,15 +518,15 @@ const missing = quota - existingApplications.length;
 
 if (missing <= 0) return false;
 
-let programsSnap, universitiesSnap, scholarshipsSnap;
+// Chargeur partagé (js/catalog-data.js) : ce fichier lisait les trois
+// collections DEUX fois par page — ici, puis à nouveau dans la
+// suggestion d'alternative plus bas. Le second appel ne coûte plus
+// rien : la promesse est déjà en cache.
+let catalogueSnap;
 
 try {
 
-[programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "universities")),
-getDocs(collection(db, "scholarships"))
-]);
+catalogueSnap = await chargerCatalogue();
 
 } catch (error) {
 
@@ -478,9 +535,9 @@ return false;
 
 }
 
-const programs = programsSnap.docs.map((d) => ({ firestoreId: d.id, ...d.data() }));
-const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
-const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestoreId: id, ...reste }));
+const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
+const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 
 // Les candidatures existantes n'ont qu'un nom d'université en texte
 // libre (pas d'identifiant Firestore — voir la note du schéma en tête
@@ -516,7 +573,12 @@ for (const rec of recommendations) {
 await addDoc(appsCol, {
 university: rec.universityName,
 scholarship: rec.scholarshipTitle,
-portalUrl: "",
+// Audit du 2026-08-28 : ces deux champs étaient "" en dur alors que
+// rec porte déjà applicationUrl/universityWebsite (recommend-programs.js)
+// — un créneau suggéré par Fitz n'affichait donc jamais aucun lien tant
+// que l'étudiant n'éditait pas la carte à la main pour en coller un.
+portalUrl: rec.applicationUrl || "",
+universityWebsite: rec.universityWebsite || "",
 status: "a_preparer",
 deadline: null,
 reminderFrequency: 14,
@@ -617,10 +679,15 @@ card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
 card.id = app.id;
 card.dataset.appId = app.id;
 
+// L'étape « lettre » est-elle hors de portée pour cette candidature ?
+// (voir js/next-action.js : Fitz écrit la lettre à partir du profil)
+const lettrePrematuree = qualifierEtapes(journeySteps)
+.some((e) => e.id === "letter" && e.etat === "prematuree");
+
 card.innerHTML = `
 <div class="app-card-top">
 <div>
-${app.isRecommendation ? `<span class="app-recommendation-badge"><i data-lucide="sparkles"></i>Suggéré par Fitz</span>` : ""}
+${app.isRecommendation ? `<span class="app-recommendation-badge">Suggéré par Fitz</span>` : ""}
 <h3>${app.university}</h3>
 ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : ""}
 </div>
@@ -641,6 +708,13 @@ ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 <i data-lucide="pen-line"></i>
 ${app.generatedLetter
 ? `<span>Lettre de motivation générée pour cette candidature.</span><a href="ai-letter.html?applicationId=${app.id}" class="app-doc-link">Revoir / régénérer</a>`
+: lettrePrematuree
+// Deux messages contradictoires cohabitaient sur la même carte :
+// l'avertissement du parcours conseillait de compléter le profil
+// d'abord, et cette ligne-ci, dix pixels plus bas, invitait à
+// générer la lettre tout de suite. L'invitation est donc alignée
+// sur l'avertissement — même conseil, formulé en une ligne.
+? `<span>Complétez d'abord votre profil : Fitz y puise la matière de votre lettre.</span><a href="profile.html" class="app-doc-link">Compléter mon profil</a>`
 : `<span>Fitz peut générer une lettre de motivation pour cette candidature.</span><a href="ai-letter.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
 </div>
 
@@ -659,7 +733,8 @@ ${renderReadinessPanel(app, advisorUnlocked)}
 ${app.isRecommendation ? `<button type="button" class="btn btn-secondary btn-sm app-replace-btn"><i data-lucide="refresh-cw"></i><span>Suggérer une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
 <button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>
-${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Portail</span></a>` : ""}
+${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
+${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
 <button type="button" class="btn btn-ghost btn-sm app-edit-btn"><i data-lucide="pen-line"></i></button>
 <button type="button" class="btn btn-ghost btn-sm app-delete-btn"><i data-lucide="trash-2"></i></button>
@@ -807,8 +882,10 @@ await loadApplications();
 
 } catch (error) {
 
+if (!estArret(error)) {
 console.error("Impossible de vérifier cette candidature avant dépôt :", error);
-showToast("La vérification n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+showToast(messageErreurFitz(error), { type: "error" });
+}
 
 } finally {
 
@@ -830,17 +907,13 @@ if (button) { button.disabled = true; button.querySelector("span").textContent =
 
 try {
 
-let programsSnap, universitiesSnap, scholarshipsSnap;
+// Deuxième lecture du catalogue dans la même page : gratuite depuis
+// le chargeur partagé.
+const catalogueSnap = await chargerCatalogue();
 
-[programsSnap, universitiesSnap, scholarshipsSnap] = await Promise.all([
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "universities")),
-getDocs(collection(db, "scholarships"))
-]);
-
-const programs = programsSnap.docs.map((d) => ({ firestoreId: d.id, ...d.data() }));
-const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
-const scholarshipsById = new Map(scholarshipsSnap.docs.map((d) => [d.id, { firestoreId: d.id, ...d.data() }]));
+const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestoreId: id, ...reste }));
+const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
+const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 
 const excludeNames = new Set(
 applications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolean)
@@ -868,6 +941,12 @@ return;
 await updateDoc(doc(db, "users", uid, "applications", app.id), {
 university: alternative.universityName,
 scholarship: alternative.scholarshipTitle,
+// Audit du 2026-08-28 : manquait ici aussi (même oubli que
+// seedRecommendedSlots) — la nouvelle université suggérée gardait les
+// liens de l'ancienne, ou aucun lien si le créneau remplacé n'en avait
+// jamais eu.
+portalUrl: alternative.applicationUrl || "",
+universityWebsite: alternative.universityWebsite || "",
 isRecommendation: true,
 updatedAt: serverTimestamp()
 });
@@ -1103,7 +1182,7 @@ if (isQuotaReached(quota, applications.length)) {
 
 // Libellé d'interface, pas le nom de marque long — voir la règle
 // dans js/plan-features.js.
-alert(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`);
+showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
 return;
 
 }

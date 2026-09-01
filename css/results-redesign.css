@@ -1,0 +1,154 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DU DIAGNOSTIC RÉSULTATS (2026-08-29)
+results.html UNIQUEMENT — chargée en dernier, après results.css, pour
+gagner la cascade sur les couleurs/polices déclarées dans css/base.css
+et results.css.
+
+CONTEXTE — cette page est l'écran qui SUIT le questionnaire
+(eligibility-questions.html), déjà passé à l'identité « éditorial
+chaleureux » (voir css/eligibility-questions-redesign.css). Elle était
+restée volontairement hors scope d'un audit précédent ("results.html
+garde Inter/Sora pour l'instant", commentaire toujours présent en tête
+de css/eligibility-typography.css) : cette consigne est maintenant
+explicitement levée — le parcours doit rester cohérent jusqu'à la page
+de paiement. Même valeurs que les fichiers cités plus haut, reprises
+telles quelles.
+========================================================== */
+
+:root{
+
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+/* ---------------------------------------------------------
+FOND DE PAGE — body{background:var(--gradient-hero)
+/* Famille --accent-* (2026-08-29) : le violet #7E71D8 de l'ancien
+espace connecté fuyait encore sur cette page à travers les feuilles
+historiques (icônes de réassurance, compteurs, liens) alors que tout
+le reste de la palette est déjà remappé ci-dessus. Terracotta aux
+mêmes rôles — et au passage le contraste s'améliore : #7E71D8 en
+texte sur fond clair tombait à ~3,4:1, #BE6032 tient 4,5:1+. */
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+} (css/base.css)
+reste un papier neutre même une fois --background retinté au-dessus :
+c'est un token séparé, pas dérivé de --background. Même correctif que
+css/homepage-redesign.css (seule autre page à l'avoir déjà fait) :
+même construction (2 radiaux chauds + un aplat), recalée sur la même
+échelle beige plutôt que le papier blanc d'origine — sans ce correctif
+le fond de la page entière restait visuellement froid alors que cartes
+et bandes de section basculaient déjà en beige/terracotta au-dessus.
+--------------------------------------------------------- */
+--gradient-hero:
+radial-gradient(circle at top left,#F7F1E3 0%,transparent 45%),
+radial-gradient(circle at bottom right,#EFE6D1 0%,transparent 35%),
+#F3EEE3;
+
+}
+
+/* ==========================================================
+TITRES — même signature Newsreader que le reste du parcours (h1
+d'accueil du diagnostic, h2 de chaque section).
+========================================================== */
+h1,
+.section-heading h2,
+.analysis-heading h2,
+.closing-card h2{
+font-family:var(--font-affirmation);
+font-weight:700;
+letter-spacing:-.01em;
+}
+
+/* ==========================================================
+CARTE D'OPPORTUNITÉ — filet de survol marine (rgba(51,65,140,…),
+results.css l.1231) → terracotta.
+========================================================== */
+.opportunity-card:hover{
+border-color:rgba(217,128,90,.22);
+}
+
+/* ==========================================================
+AVATAR FITZ — cette page n'a jamais chargé css/ai-suite.css et n'a
+donc jamais eu le halo qui respire que porte le reste du parcours
+(eligibility-test.html, eligibility-questions.html, scholarship-
+details.html) : seulement une pastille "Fitz" texte (.ai-badge) et,
+plus bas, une icône "ondes" nue (voir le commentaire de
+.assistant-avatar dans results.html — signature volontaire du bloc où
+Fitz s'exprime, gardée telle quelle). Cette pastille reçoit ici le même
+avatar que le reste du site, juste au-dessus du libellé "Fitz" —
+composant dupliqué plutôt que d'ajouter ai-suite.css (bien plus lourde,
+avec ses bulles de chat et son en-tête d'outil que cette page n'utilise
+pas), même logique que css/details-redesign.css. C'est le principal
+levier pour « mettre Fitz en avant » sur cette page : jusqu'ici son
+seul signe de présence était un mot dans une pilule.
+========================================================== */
+.fitz-badge-row{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+margin:0 auto 20px;
+}
+
+.fitz-badge-row .ai-badge{
+margin:0;
+}
+
+.fitz-avatar{
+position:relative;
+flex-shrink:0;
+width:36px;
+height:36px;
+border-radius:50%;
+isolation:isolate;
+}
+
+.fitz-avatar::after{
+content:"";
+position:absolute;
+inset:3px;
+border-radius:50%;
+background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
+filter:blur(5px);
+animation:fitzPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fitzPulse{
+0%,100%{ opacity:.4; transform:scale(.85); }
+50%{ opacity:1; transform:scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce){
+.fitz-avatar::after{ animation:none; }
+}
+
+/* ==========================================================
+CARTE DE CLÔTURE — même correctif que .cta-card-primary
+(css/details-redesign.css) : --gradient-deep est déjà un graphite
+neutre (recoloré le 2026-08-28, voir css/base.css), mais reste sans
+la moindre touche chaude alors que c'est la carte qui mène vers
+l'accompagnement Fitz — même lueur terracotta que la carte
+équivalente de la fiche détails, par cohérence de parcours.
+========================================================== */
+.closing-card{
+background:
+radial-gradient(ellipse 70% 80% at 84% 10%, rgba(217,128,90,.28) 0%, rgba(217,128,90,.08) 48%, transparent 72%),
+var(--gradient-deep);
+}

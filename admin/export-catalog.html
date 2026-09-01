@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Export du catalogue | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+
+.export-out{
+width:100%; min-height:320px; margin-top:16px; padding:12px 14px;
+border-radius:10px; border:1px solid var(--border-color);
+background:var(--background-soft); color:var(--text-light);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.74rem;
+line-height:1.5; resize:vertical;
+}
+.export-summary{ margin-top:14px; font-size:.9rem; font-weight:700; color:var(--text-color); }
+.export-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div class="migrate-header">
+<h1>Export du catalogue</h1>
+<p>Produit un instantané JSON compact de <code>scholarships</code>, <code>universities</code> et <code>programs</code> — identifiants, titres, pays, niveaux, statuts, photos et présence du champ <code>eligibility</code>, sans les longs textes. Lecture seule : cet outil n'écrit rien.</p>
+<p style="margin-top:12px;">Il existe parce que <code>audit-catalog</code> audite mais n'exporte pas, et que déduire l'état de la base depuis les fichiers <code>expand-catalog-batch*.js</code> donne une image fausse : au 30 août 2026, cette reconstitution annonçait 17 pays et environ 74 bourses là où la base en contenait 100.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Générer l'export</h2>
+<p>Lit les trois collections et calcule au passage la répartition par pays, les pays à une seule bourse, et la liste des bourses dont l'éligibilité n'est pas renseignée.</p>
+<div class="export-actions">
+<button type="button" id="runBtn">Générer</button>
+<button type="button" id="copyBtn" disabled>Copier l'export</button>
+</div>
+<div class="export-summary" id="summary"></div>
+<textarea class="export-out" id="output" readonly placeholder="L'export apparaîtra ici."></textarea>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="export-catalog.js"></script>
+
+</body>
+
+</html>

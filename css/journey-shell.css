@@ -1,0 +1,318 @@
+/* ==========================================================
+FITZ — COQUILLE « PARCOURS » DE L'ESPACE ÉTUDIANT (2026-08-30)
+
+Refonte demandée par l'utilisateur : « pas de sidebar cette fois-ci,
+juste un espace qui guide étape par étape ». La sidebar de 17 liens
+disparaît de tout l'espace étudiant ; la navigation devient LE
+PARCOURS (dashboard.html), et chaque page outil porte une barre
+haute légère : marque, retour au parcours, cloche de messages,
+formule, profil/paramètres/déconnexion.
+
+Cette feuille est chargée EN DERNIER sur toutes les pages de
+l'espace (après app-shell.css/dashboard.css qu'elle surclasse par
+cascade). Elle fait trois choses :
+
+1. TOKENS — bascule l'espace étudiant dans l'identité « papier
+   chaud » du reste du site (terracotta, Newsreader/Public Sans),
+   comme les *-redesign.css l'ont fait page par page côté public.
+2. COQUILLE — neutralise la grille à sidebar de app-shell.css
+   (.dashboard-shell repasse en flux normal) et style la nouvelle
+   barre .journey-topbar.
+3. GARDE-FOUS — les éléments d'ancienne coquille encore présents
+   dans une page non migrée (aside/backdrop/bouton menu) sont
+   masqués, pour qu'un oubli de migration ne casse jamais la mise
+   en page.
+========================================================== */
+
+:root{
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+--primary-color:var(--amber-700);
+--primary-dark:#1C1610;
+--primary-900:#1C1610;
+
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+
+--background:#FDF9EF;
+--background-soft:#F3EBDA;
+--background-light:#F7F1E3;
+--background-alt:#EFE6D1;
+--border-color:#E2D5B8;
+
+--journey-ink:#1C1610;
+--journey-ink-2:#2A211A;
+--journey-paper:#FDF9EF;
+--journey-done:#2F7A46;
+}
+
+body{
+background:
+radial-gradient(circle at top left,#F7F1E3 0%,transparent 45%),
+radial-gradient(circle at bottom right,#EFE6D1 0%,transparent 35%),
+#F5EFE2;
+font-family:var(--font-body);
+}
+
+/* ==========================================================
+2. COQUILLE — plus de grille à sidebar
+========================================================== */
+.dashboard-shell{
+display:block;
+min-height:100vh;
+}
+
+.dashboard-main{
+display:block;
+min-height:auto;
+margin-left:0 !important;
+width:auto;
+}
+
+/* Garde-fous : toute trace de l'ancienne coquille disparaît, même si
+une page n'a pas (encore) été purgée de son markup. */
+.sidebar,
+.sidebar-backdrop,
+.topbar-menu-btn,
+#sidebarOpenBtn{
+display:none !important;
+}
+
+/* ==========================================================
+BARRE HAUTE DU PARCOURS
+========================================================== */
+.journey-topbar{
+position:sticky;
+top:0;
+z-index:60;
+display:flex;
+align-items:center;
+gap:18px;
+padding:12px clamp(16px, 4vw, 40px);
+background:rgba(253,249,239,.92);
+backdrop-filter:blur(10px);
+-webkit-backdrop-filter:blur(10px);
+border-bottom:1px solid var(--border-color);
+}
+
+.journey-brand{
+display:flex;
+align-items:center;
+gap:10px;
+text-decoration:none;
+color:var(--journey-ink);
+}
+
+.journey-brand .logo-icon{
+width:30px;
+height:30px;
+flex-shrink:0;
+border-radius:0;
+object-fit:unset;
+}
+
+/* Le lockup vit dans css/base.css (.fitz-lockup). Ces regles-ci
+donnaient au nom de la marque une TROISIEME typographie
+(var(--font-affirmation)) et au descripteur un terracotta
+(var(--amber-700)) propres a l'espace etudiant : la meme marque ne se
+lisait pas pareil ici et sur la page d'accueil. */
+
+/* Contexte de page (pages outils) : retour au parcours + nom d'outil. */
+.journey-context{
+display:flex;
+align-items:center;
+gap:12px;
+min-width:0;
+flex:1 1 auto;
+}
+
+.journey-context .back-link{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:.85rem;
+font-weight:600;
+color:var(--amber-700);
+text-decoration:none;
+white-space:nowrap;
+}
+
+.journey-context .back-link:hover{ text-decoration:underline; }
+
+.journey-context .back-link i,
+.journey-context .back-link svg{ width:15px; height:15px; }
+
+.journey-context h1{
+margin:0;
+font-family:var(--font-affirmation);
+font-size:1.05rem;
+font-weight:600;
+color:var(--journey-ink);
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+/* L'ancien H1 de topbar (pages non migrées) suit la même échelle. */
+.topbar-title h1{
+font-family:var(--font-affirmation);
+font-size:1.05rem;
+}
+
+.journey-topbar-actions{
+display:flex;
+align-items:center;
+gap:8px;
+margin-left:auto;
+}
+
+.journey-top-icon{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:36px;
+height:36px;
+border:1px solid transparent;
+border-radius:10px;
+background:none;
+color:var(--journey-ink);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.journey-top-icon:hover{
+background:var(--background-light);
+border-color:var(--border-color);
+}
+
+.journey-top-icon i,
+.journey-top-icon svg{ width:18px; height:18px; }
+
+/* La cloche existante reprend la géométrie des icônes voisines. */
+.journey-topbar .messages-bell-btn{
+width:36px;
+height:36px;
+border-radius:10px;
+}
+
+.journey-topbar .topbar-plan-chip{
+white-space:nowrap;
+}
+
+/* ==========================================================
+CONTENU — colonne éditoriale centrée
+========================================================== */
+.dashboard-main > .content{
+max-width:1000px;
+margin:0 auto;
+padding:28px clamp(16px, 4vw, 40px) 80px;
+}
+
+@media (max-width: 720px){
+
+.fitz-lockup-text{ display:none; }
+
+.journey-context h1{ font-size:.95rem; }
+
+/* Profil/paramètres passent dans le parcours sur mobile — la barre
+garde cloche, formule et déconnexion. */
+.journey-top-icon--secondary{ display:none; }
+
+}
+
+/* Sous-titre hérité de l'ancien topbar (profile.html) — l'information
+vit déjà dans la page, la barre reste une barre. */
+.journey-context p{ display:none; }
+
+/* ==========================================================
+« DISCUTER AVEC FITZ » — bouton flottant (2026-08-30)
+Injecté par js/app-shell.js sur toutes les pages de l'espace (sauf
+le chat lui-même). Pastille encre chaude avec le symbole Fitz —
+toujours au même endroit, comme la bulle d'aide d'une application
+moderne. Le wrapper porte data-feature="ai_chat" : verrouillé par
+applyFeatureLocks sur les formules sans chat (cadenas + lien vers
+les forfaits), sans aucune ligne de code par page.
+========================================================== */
+.fitz-fab-wrap{
+position:fixed;
+right:22px;
+bottom:22px;
+z-index:70;
+}
+
+.fitz-fab{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px 20px 12px 14px;
+border-radius:999px;
+text-decoration:none;
+color:#FDF9EF;
+background:linear-gradient(158deg, #2A211A 0%, #1E1712 60%, #15100B 100%);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.09),
+0 2px 6px rgba(21,16,11,.25),
+0 16px 32px -12px rgba(21,16,11,.5);
+transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.fitz-fab:hover{
+transform:translateY(-2px);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.09),
+0 4px 10px rgba(21,16,11,.28),
+0 22px 40px -12px rgba(21,16,11,.55);
+}
+
+.fitz-fab svg{
+width:26px;
+height:26px;
+flex-shrink:0;
+}
+
+.fitz-fab-label{
+font-family:var(--font-product, 'Public Sans', sans-serif);
+font-size:.86rem;
+font-weight:700;
+letter-spacing:.01em;
+white-space:nowrap;
+}
+
+/* Cadenas — visible seulement quand applyFeatureLocks a posé
+is-locked sur le wrapper (formule sans chat). */
+.fitz-fab-lock{ display:none; }
+
+.fitz-fab-wrap.is-locked .fitz-fab-lock{
+display:flex;
+align-items:center;
+}
+
+.fitz-fab-lock i,
+.fitz-fab-lock svg{
+width:13px;
+height:13px;
+color:#F3D9C8;
+}
+
+.fitz-fab-wrap.is-locked .fitz-fab{ opacity:.88; }
+
+/* Mobile : pastille ronde, symbole seul — le libellé prendrait la
+largeur du pouce. Remontée au-dessus de la zone de gestes. */
+@media (max-width: 720px){
+
+.fitz-fab{ padding:13px; }
+
+.fitz-fab-label{ display:none; }
+
+}
+
+@media print{ .fitz-fab-wrap{ display:none; } }

@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — persistance locale des artefacts Fitz
+* FitzUniverse — persistance locale des artefacts Fitz
 * ============================================================
 *
 * Stockage localStorage (par utilisateur pour le chat) en attendant une

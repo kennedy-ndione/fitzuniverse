@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — extraction de texte côté client (js/ai/extract-text.js)
+* FitzUniverse — extraction de texte côté client (js/ai/extract-text.js)
 * ============================================================
 * Étape volontairement indépendante de tout appel IA (traduction,
 * vérification...) : que le traitement en aval soit simulé

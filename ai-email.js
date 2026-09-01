@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — AI Email (ai-email.js)
+* FitzUniverse — AI Email (ai-email.js)
 * ============================================================
 * Générateur d'e-mails : 10 types (js/ai/simulated-responses.js),
 * champs dynamiques selon le type choisi, pré-remplissage depuis le
@@ -12,12 +12,14 @@
 import { db } from "./firebase-config.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
-import { generate } from "./js/ai/ai-client.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { EMAIL_TYPES } from "./js/ai/simulated-responses.js";
 import { renderMarkdownLite } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
+import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
 
 // Contexte candidature — même patron que ai-letter.js (voir la note
 // dans ce fichier) : première réplication du lien vers une candidature
@@ -49,10 +51,9 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>E-mails Fitz</h2>
-<p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour générer vos e-mails avec Fitz.</p>
+<p>Cette fonctionnalité est disponible avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)}. Passez à une formule supérieure pour générer vos e-mails avec Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;
@@ -63,9 +64,34 @@ if (window.lucide) lucide.createIcons();
 
 }
 
+// Voir ai-letter.js : même avertissement, même principe — on informe,
+// on n'empêche pas. Un e-mail écrit depuis un profil vide est poli et
+// creux, et c'est le genre de message qui reste sans réponse.
+function renderPrerequisNotice(profile) {
+
+const bloc = document.getElementById("prerequisNotice");
+
+if (!bloc) return;
+
+const score = calculateAiScore(profile);
+
+if (score >= PROFILE_READY_THRESHOLD) {
+bloc.hidden = true;
+return;
+}
+
+bloc.querySelector("span").textContent =
+`Votre profil est à ${score}/10. Fitz s'appuie dessus pour donner à votre e-mail de quoi vous distinguer : avec un profil incomplet, il restera poli mais interchangeable. Vous pouvez continuer, mais le compléter d'abord change tout.`;
+
+bloc.hidden = false;
+
+}
+
 async function initEmailTool(ctx) {
 
 const { profile } = ctx;
+
+renderPrerequisNotice(profile);
 
 let application = null;
 
@@ -279,9 +305,11 @@ showToast(application ? `E-mail généré et enregistré dans "${application.uni
 
 } catch (error) {
 
-if (error?.name !== "AbortError") {
+// estArret() d'abord : l'étudiant qui a appuyé sur « Arrêter »
+// n'a rien raté, lui afficher une erreur serait un contresens.
+if (!estArret(error)) {
 console.error(error);
-showToast("La génération de votre e-mail n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+showToast(messageErreurFitz(error), { type: "error" });
 }
 
 } finally {
@@ -301,7 +329,7 @@ generateEmail();
 
 copyBtn.addEventListener("click", () => copyToClipboard(isEditing ? previewEdit.value : currentText));
 
-downloadBtn.addEventListener("click", () => downloadTextFile(`email-scholarbridge-${Date.now()}.txt`, isEditing ? previewEdit.value : currentText));
+downloadBtn.addEventListener("click", () => downloadTextFile(`email-fitz-${Date.now()}.txt`, isEditing ? previewEdit.value : currentText));
 
 regenerateBtn.addEventListener("click", () => generateEmail());
 

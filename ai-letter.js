@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — AI Letter (ai-letter.js)
+* FitzUniverse — AI Letter (ai-letter.js)
 * ============================================================
 * Générateur de lettre de motivation : 5 styles
 * (js/ai/simulated-responses.js), pré-remplissage depuis le profil
@@ -13,12 +13,14 @@
 import { db } from "./firebase-config.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
-import { generate } from "./js/ai/ai-client.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { LETTER_STYLES } from "./js/ai/simulated-responses.js";
 import { renderMarkdownLite, wordCount } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
+import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
 
 // Contexte candidature (Phase 3, 2026-07-30) : si la page est ouverte
 // depuis applications.html (?applicationId=...), la lettre générée est
@@ -48,10 +50,9 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Lettre de motivation</h2>
-<p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour générer votre lettre avec Fitz.</p>
+<p>Cette fonctionnalité est disponible avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)}. Passez à une formule supérieure pour générer votre lettre avec Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;
@@ -71,9 +72,35 @@ return [profile.projects, profile.researchExperience, profile.internships, profi
 
 }
 
+// Le même avertissement que le parcours, posé là où il compte : au
+// moment où l'étudiant s'apprête à générer. Il n'empêche rien — le
+// formulaire reste utilisable, le bouton reste actif. Il dit ce que
+// l'étudiant obtiendrait, et laisse la décision là où elle doit être.
+function renderPrerequisNotice(profile) {
+
+const bloc = document.getElementById("prerequisNotice");
+
+if (!bloc) return;
+
+const score = calculateAiScore(profile);
+
+if (score >= PROFILE_READY_THRESHOLD) {
+bloc.hidden = true;
+return;
+}
+
+bloc.querySelector("span").textContent =
+`Votre profil est à ${score}/10. Fitz y puise la matière de votre lettre : avec un profil incomplet, elle restera générique — et une lettre générique est ce qui écarte une candidature. Vous pouvez continuer, mais la compléter d'abord change tout.`;
+
+bloc.hidden = false;
+
+}
+
 async function initLetterTool(ctx) {
 
 const { profile } = ctx;
+
+renderPrerequisNotice(profile);
 
 let application = null;
 
@@ -157,7 +184,7 @@ card.className = `ai-style-card${key === selectedStyle ? " is-selected" : ""}`;
 card.dataset.style = key;
 
 card.innerHTML = `
-<span class="ai-style-card-icon"><i data-lucide="${STYLE_ICONS[key] || "sparkles"}"></i></span>
+<span class="ai-style-card-icon"><i data-lucide="${STYLE_ICONS[key] || "pen-line"}"></i></span>
 <strong>${meta.label}</strong>
 <span>${meta.description}</span>
 `;
@@ -274,9 +301,11 @@ showToast(application ? `Lettre générée et enregistrée dans "${application.u
 
 } catch (error) {
 
-if (error?.name !== "AbortError") {
+// estArret() d'abord : l'étudiant qui a appuyé sur « Arrêter »
+// n'a rien raté, lui afficher une erreur serait un contresens.
+if (!estArret(error)) {
 console.error(error);
-showToast("La génération de votre lettre n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+showToast(messageErreurFitz(error), { type: "error" });
 }
 
 } finally {

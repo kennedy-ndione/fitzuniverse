@@ -1,0 +1,229 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DE LA FICHE DÉTAILS (2026-08-29)
+scholarship-details.html UNIQUEMENT — chargée en dernier, après
+css/catalog-typography.css, pour gagner la cascade sur les couleurs/
+polices déclarées dans css/base.css, css/header.css et
+scholarship-details.css.
+
+CONTEXTE — cette fiche est l'écran qui SUIT un clic depuis
+scholarships.html ou universities.html, déjà passées à l'identité
+« éditorial chaleureux » (fond beige, titres en Newsreader, terracotta
+à la place de l'ambre, encre chaude à la place du marine — voir
+css/homepage-redesign.css et css/catalog-redesign.css). Cette
+troisième page du même parcours restait sur l'ancienne palette : le
+clic depuis un catalogue redessiné retombait sur une police et des
+couleurs différentes, la rupture la plus visible qu'un site puisse
+offrir, pile au moment où l'étudiant approfondit une offre précise.
+Même valeurs que les deux fichiers ci-dessus, reprises telles quelles.
+========================================================== */
+
+:root{
+
+/* ---------------------------------------------------------
+TYPOGRAPHIE — mêmes noms/valeurs que catalog-redesign.css.
+--------------------------------------------------------- */
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+/* ---------------------------------------------------------
+COULEUR DE MARQUE — même terracotta, mêmes 3 paliers.
+--------------------------------------------------------- */
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+/* ---------------------------------------------------------
+BLEU MARINE RÉSIDUEL → ENCRE CHAUDE.
+--------------------------------------------------------- */
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+/* ---------------------------------------------------------
+FOND DE PAGE — même échelle beige que le reste du site.
+--------------------------------------------------------- */
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+}
+
+/* ==========================================================
+BANNIÈRE — même correctif que .catalog-hero::after
+(css/catalog-redesign.css) : voile écrit en dur (pas un token), marine
+rgba(7,10,22,…) → encre chaude, ambre rgba(233,163,25,…) → terracotta.
+Même géométrie, mêmes opacités — seule la teinte change.
+========================================================== */
+.details-hero-overlay{
+background:
+radial-gradient(ellipse 58% 76% at 88% 8%, rgba(217,128,90,.30) 0%, rgba(217,128,90,.09) 46%, transparent 70%),
+linear-gradient(102deg, rgba(28,22,16,.94) 0%, rgba(40,34,27,.80) 42%, rgba(40,34,27,.34) 100%),
+linear-gradient(180deg, rgba(28,22,16,.30) 0%, transparent 34%, rgba(28,22,16,.62) 100%);
+}
+
+/* Titre en Newsreader, comme la bannière des deux catalogues qui mènent
+ici (.bourses-hero h1/.uni-hero h1, css/catalog-typography.css) — cette
+règle-là ne cible que ces deux sélecteurs, jamais .details-hero-inner
+h1 : sans cet ajout, le nom de l'établissement restait en Public Sans,
+seule pièce de tout le parcours à ne pas porter la même signature. */
+.details-hero-inner h1{
+font-family:var(--font-affirmation);
+font-weight:var(--fw-extrabold);
+letter-spacing:-.02em;
+}
+
+/* Nom de la bourse sous le titre — italique, même signature que
+.hero-h1-accent ailleurs sur le site (un mot-clé en italique dans une
+bannière) : cette ligne est déjà le fil visuel que l'étudiant suit
+depuis la carte cliquée sur le catalogue (même couleur ambre/terracotta
+qu'avant) ; l'italique l'aligne aussi sur la typographie du reste du
+parcours plutôt que de rester la seule ligne droite d'un h1 penché. */
+.details-hero-scholarship{
+font-family:var(--font-affirmation);
+font-style:italic;
+font-weight:var(--fw-semibold);
+}
+
+/* ==========================================================
+CARTE « ÊTRE ACCOMPAGNÉ PAR FITZ » — même correctif que la bannière :
+c'était le dernier grand aplat marine de cette page (voir le
+commentaire de .cta-card-primary dans scholarship-details.css, déjà
+conscient du problème pour l'ancienne palette bleue). Encre chaude +
+lueur terracotta plutôt que marine + ambre, même géométrie.
+========================================================== */
+.cta-card-primary{
+background:
+radial-gradient(ellipse 70% 80% at 84% 10%, rgba(217,128,90,.32) 0%, rgba(217,128,90,.10) 48%, transparent 72%),
+linear-gradient(150deg, #2C2419 0%, #211D18 46%, #14110D 100%);
+border:1px solid rgba(217,128,90,.24);
+}
+
+.cta-card-primary h3{
+font-family:var(--font-affirmation);
+font-weight:700;
+}
+
+/* ==========================================================
+DIAGNOSTIC — l'icône à côté de « Avant de candidater » (voir
+scholarship-details.html) n'est plus une icône générique (sparkles) :
+c'est l'avatar Fitz lui-même — le même halo qui respire que sur
+ai-chat.html/ai-letter.html/etc. (.fitz-avatar, css/ai-suite.css), pour
+que « Fitz peut analyser votre compatibilité » soit signé par le
+visage que l'étudiant connaît déjà des autres outils, plutôt qu'une
+icône interchangeable. Repris ici plutôt que d'ajouter
+css/ai-suite.css (chargée par les seuls outils ai-*.html : bien plus
+lourde qu'un halo, avec ses bulles de chat et son en-tête d'outil que
+cette page n'utilise pas) — même logique que les tokens de couleur
+ci-dessus, dupliqués plutôt que partagés par fichier. Recoloré en
+terracotta (var(--amber-500)/var(--amber-700), plus haut) : l'original
+est resté à l'ancien ambre (#E9A319/#8A5D00, pas encore audité), qui
+aurait détonné seul sur une page désormais terracotta partout ailleurs. */
+.diagnostic-head{
+gap:12px;
+align-items:center;
+}
+
+.fitz-avatar{
+position:relative;
+flex-shrink:0;
+width:44px;
+height:44px;
+border-radius:50%;
+isolation:isolate;
+}
+
+.fitz-avatar::after{
+content:"";
+position:absolute;
+inset:4px;
+border-radius:50%;
+background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
+filter:blur(6px);
+animation:fitzPulse 2.2s ease-in-out infinite;
+}
+
+.fitz-avatar--sm{
+width:40px;
+height:40px;
+}
+
+.fitz-avatar--sm::after{ inset:3px; }
+
+@keyframes fitzPulse{
+0%,100%{ opacity:.4; transform:scale(.85); }
+50%{ opacity:1; transform:scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce){
+.fitz-avatar::after{ animation:none; }
+}
+
+.diagnostic-head h2{
+font-family:var(--font-affirmation);
+font-weight:700;
+}
+
+.details-section h2{
+font-family:var(--font-affirmation);
+font-weight:700;
+}
+
+/* ==========================================================
+NUDGE DE RETOUR PORTAIL — icône encore sur --primary-color (voir
+scholarship-details.css), déjà redirigé vers --amber-700 par le retint
+de tokens ci-dessus ; fond retinté pour rester dans la même famille
+chaude plutôt que le bleu translucide d'origine. */
+.portal-nudge-icon{
+background:rgba(217,128,90,.14);
+}
+
+/* ==========================================================
+CORRECTIFS D'AUDIT — 2026-08-29
+========================================================== */
+
+/* ----------------------------------------------------------
+LE HALO DE FITZ SUR UNE CARTE CLAIRE
+
+Même constat que sur la carte de démonstration de la page d'accueil
+(voir css/homepage-redesign.css, correctif 4) : le halo est un radial
+flouté à 6 px, pensé pour les fonds sombres de l'espace connecté où il
+brille. Posé sur le fond crème de la carte « Avant de candidater » et
+recoloré en terracotta, il ne brille plus — il fait une auréole brune
+qui se lit comme une tache, pas comme une présence.
+
+On garde le principe (Fitz est une présence, pas un pictogramme — voir
+DESIGN_SYSTEM.md, « Le halo — Fitz n'a pas d'icône ») en lui rendant un
+cœur net : flou réduit, arrêts resserrés, fin anneau pour lui donner un
+bord. Le battement reste, et reste désactivé sous
+prefers-reduced-motion par la règle plus haut.
+---------------------------------------------------------- */
+.diagnostic-head .fitz-avatar::after{
+inset:6px;
+background:
+radial-gradient(circle,#FBE7DC 0%,var(--amber-500) 38%,var(--amber-700) 68%,rgba(143,62,34,.22) 100%);
+filter:blur(1.5px);
+box-shadow:0 0 0 2.5px rgba(143,62,34,.14), 0 2px 8px rgba(143,62,34,.30);
+}
+
+/* ----------------------------------------------------------
+« VILLE · NIVEAU » ÉTAIT GRIS FONCÉ SUR LA PHOTO SOMBRE
+
+Mesuré sur la fiche rendue : `#city · #level` s'affichait en
+rgb(87,81,74) — soit --text-light, le gris de texte des fonds CLAIRS —
+posé sur la bande photo assombrie du haut de page. Environ 1,5:1, donc
+illisible ; les trois autres textes du même bloc (fil d'Ariane, badge
+pays, titre) sont bien en blanc.
+
+C'est le piège déjà consigné dans DESIGN_SYSTEM.md (« p{color:
+var(--text-light)} dans base.css bat l'héritage ») : .details-hero-sub
+ne déclare aucune couleur et comptait sur l'héritage du conteneur
+sombre, mais la règle d'ÉLÉMENT `p` de base.css est plus spécifique que
+la couleur héritée et l'emporte. Le correctif consigné là-bas est
+`color:inherit` — c'est celui-ci.
+---------------------------------------------------------- */
+.details-hero .details-hero-sub{
+color:inherit;
+}

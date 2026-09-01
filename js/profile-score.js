@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — score de complétion du profil
+* FitzUniverse — score de complétion du profil
 * ============================================================
 *
 * Logique partagée entre le tableau de bord étudiant (dashboard.js)

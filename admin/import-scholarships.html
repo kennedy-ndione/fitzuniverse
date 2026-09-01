@@ -3,13 +3,75 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Import ScholarBridge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import bourses (données codées en dur) | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-warning{
+margin-bottom:16px; padding:14px 16px; border-radius:10px;
+background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.3);
+color:var(--danger); font-size:.88rem; font-weight:600;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Importation des bourses...</h2>
+<div class="migrate-wrap">
 
+<div class="migrate-header">
+<h1>Import bourses (données codées en dur)</h1>
+<p>Écrase la collection Firestore <code>scholarships</code> avec le tableau codé en dur dans <code>import-scholarships.js</code>. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<p class="migrate-warning">Action irréversible : chaque bourse du tableau est écrite via <code>setDoc</code>, ce qui écrase silencieusement tout document existant avec le même identifiant. Vérifie le contenu du script avant de lancer.</p>
+<button type="button" id="runImportBtn">Lancer l'import</button>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
 <script type="module" src="import-scholarships.js"></script>
 
 </body>
