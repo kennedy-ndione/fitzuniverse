@@ -1,3 +1,11 @@
+// INCOMPLET — ne produit que du JPEG (voir ASSETS.md).
+// Les variantes WebP et AVIF servies par les <picture> du site ne sont
+// PAS reconstruites ici, et aucun autre script ne les reconstruit à
+// partir des originaux locaux : les seuls qui en produisent sont ceux
+// des lots, qui re-téléchargent depuis Unsplash une liste codée en dur.
+// C'est pourquoi les variantes sont versionnées au lieu d'être traitées
+// comme des artefacts. Un scripts/regenerate-all-variants.mjs couvrant
+// les trois formats lèverait cette dette.
 // Génère des variantes de largeur (400/800/1200px) pour chaque photo de
 // ville, consommées via srcset par js/homepage-teaser.js — les cartes
 // de l'aperçu (133 à 571px de large selon le slot bento) chargeaient

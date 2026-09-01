@@ -1,3 +1,11 @@
+// INCOMPLET — ne produit que du JPEG (voir ASSETS.md).
+// Les variantes WebP et AVIF servies par les <picture> du site ne sont
+// PAS reconstruites ici, et aucun autre script ne les reconstruit à
+// partir des originaux locaux : les seuls qui en produisent sont ceux
+// des lots, qui re-téléchargent depuis Unsplash une liste codée en dur.
+// C'est pourquoi les variantes sont versionnées au lieu d'être traitées
+// comme des artefacts. Un scripts/regenerate-all-variants.mjs couvrant
+// les trois formats lèverait cette dette.
 // Régénère les variantes responsive pour les images de la page d'accueil
 // avec une qualité JPEG supérieure (85 au lieu de 78)
 import { basename, extname, join } from "node:path";
