@@ -1,4 +1,4 @@
-import { db } from "./firebase-config.js";
+import { db } from "../firebase-config.js";
 
 import {
 doc,
@@ -4128,4 +4128,22 @@ alert("Toutes les universités ont été importées !");
 
 }
 
-importer();
+const runBtn = document.getElementById("runImportBtn");
+
+runBtn.addEventListener("click", () => {
+
+const confirmed = confirm(
+`Écraser la collection "universities" avec ${universities.length} université(s) codée(s) en dur dans ce script ? Cette action est irréversible.`
+);
+
+if (!confirmed) return;
+
+runBtn.disabled = true;
+runBtn.textContent = "Import en cours...";
+
+importer().finally(() => {
+runBtn.disabled = false;
+runBtn.textContent = "Lancer l'import";
+});
+
+});

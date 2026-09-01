@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Audit du catalogue — bourses, photos, liens | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+/* Plus large que les pages expand-catalog (760px) : celle-ci affiche
+un tableau à 5 colonnes dont une liste d'universités, illisible à
+760px. */
+.migrate-wrap{ max-width:1180px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:74ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:74ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+/* -------- Résultat -------- */
+
+.audit-summary{
+
+margin:4px 0 22px; padding:12px 14px; border-radius:10px;
+background:var(--background-light); color:var(--text-color);
+font-size:.9rem; font-weight:600; max-width:none;
+
+}
+
+.audit-section-title{
+
+color:var(--text-color); font-size:.95rem; margin:28px 0 10px;
+padding-bottom:6px; border-bottom:1px solid var(--border-color);
+
+}
+
+.audit-table{
+
+width:100%; border-collapse:collapse; font-size:.82rem;
+
+}
+
+.audit-table th{
+
+text-align:left; padding:8px 10px; color:var(--text-muted);
+font-size:.74rem; text-transform:uppercase; letter-spacing:.08em;
+border-bottom:1px solid var(--border-color); white-space:nowrap;
+
+}
+
+.audit-table td{
+
+padding:8px 10px; border-bottom:1px solid var(--border-color);
+color:var(--text-light); vertical-align:top;
+
+}
+
+.audit-table tbody tr:hover{ background:var(--background-soft); }
+
+.audit-count{
+
+font-family:"SF Mono",ui-monospace,Consolas,monospace;
+font-weight:700; text-align:right; width:44px; color:var(--text-color);
+
+}
+
+/* Les deux cas qui motivent l'outil : 0 université (rien à proposer à
+l'étudiant) et 1 seule (une seule porte d'entrée). Teintés pour être
+repérables sans lire les chiffres. */
+.audit-table tr.is-empty td{ background:rgba(220,38,38,.07); }
+.audit-table tr.is-thin td{ background:rgba(234,168,61,.07); }
+
+.audit-mismatch{ color:var(--danger); font-weight:600; }
+
+.audit-note{
+
+font-size:.84rem; color:var(--text-light);
+padding:12px 14px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+
+}
+
+.audit-note ul{ margin:8px 0 0 18px; }
+.audit-note li{ margin-bottom:4px; }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:var(--success);font-size:.88rem;font-weight:700;">Outil de LECTURE SEULE — n'écrit rien, ne modifie rien. Peut être relancé sans risque.</div>
+
+<div class="migrate-header">
+<h1>Audit du catalogue — universités par bourse, photos, liens</h1>
+<p>Compte, pour chaque bourse de la collection <code>scholarships</code>, le nombre d'universités distinctes réellement rattachées via <code>programs</code>. Le tableau est trié du plus dégarni au mieux fourni : les bourses à 0 ou 1 université arrivent en tête, ce sont celles sur lesquelles un prochain lot de recherche a le plus de valeur. Lit <strong>toute</strong> la collection, y compris les bourses antérieures au lot 1. Signale aussi les programmes dont le lien est cassé, les bourses rattachées à une université d'un autre pays, <strong>toutes les universités qui partagent encore une même photo</strong> (y compris celles importées avant cette session), et <strong>toutes les universités où le site de l'université et le portail de candidature ne sont pas clairement distincts</strong> (champs identiques, ou l'un des deux manquant). Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2>Auditer</h2>
+<p>Lit les trois collections et produit le tableau. Aucune écriture : ce fichier n'importe même pas <code>setDoc</code>. Relançable autant de fois que voulu.</p>
+<button type="button" id="auditBtn">Auditer</button>
+<div class="migrate-log" id="auditLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2>Résultat</h2>
+<div id="auditResult"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="audit-catalog.js"></script>
+
+</body>
+
+</html>

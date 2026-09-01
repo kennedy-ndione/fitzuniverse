@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge Admin — bascule de la sidebar mobile
+* Fitz Admin — bascule de la sidebar mobile
 * ============================================================
 *
 * Partagé par toutes les pages du Control Center (dashboard, étudiants,

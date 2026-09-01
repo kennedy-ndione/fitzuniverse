@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Backfill du bailleur — Lot 30 | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Outil de migration ponctuel — vérifier si encore nécessaire avant utilisation.</div>
+
+<div class="migrate-header">
+<h1>Backfill du bailleur — Lot 30</h1>
+<p>Renseigne <code>funder</code>, <code>funderName</code> et <code>entryPoint</code> sur les <strong>131 bourses du catalogue</strong>. N'écrit que ces trois champs, sur la seule collection <code>scholarships</code> : aucune université, aucun programme, aucun autre champ de bourse n'est touché. La phase 1 a introduit les champs, le formulaire admin, le filtre catalogue et le portail du bailleur sur la fiche — tant que la base ne les porte pas, les cinq valeurs du filtre renvoient 0 résultat et le bouton « portail officiel de la bourse » reste en dernier partout. <strong>Règle de classification</strong> : le bailleur est celui qui décide et paie, tel que l'étudiant le rencontre. Les opérateurs publics nationaux (DAAD, ARES, VLIR-UOS, Campus France, AMCI, NAWA, Camões, Svenska institutet, JICA, KOICA, YTB, NIIED, ICCR, CSC) sont classés <code>gouvernement</code> ; les fondations politiques allemandes, les banques de développement et les fondations privées sont classées <code>organisation</code>, car juridiquement indépendantes d'un État même quand elles reçoivent des fonds publics. Les bourses régionales italiennes portent <code>entryPoint:"bourse"</code> — le dossier se dépose sur le portail de l'organisme régional avec l'attestation ISEE, jamais auprès de l'université ; la chronologie « admission d'abord » appartient à <code>generalCriteria</code>, pas à ce champ. <strong>Deux bourses restent sans <code>entryPoint</code>, à dessein</strong> : Knight-Hennessy (deux candidatures séparées et toutes deux obligatoires) et la bourse FAO–Hongrie (porte non vérifiée à la source). Un champ absent est un inconnu, jamais une valeur par défaut — même règle que <code>estEligible</code>. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Vérifie d'abord le plan lui-même (pas de doublon d'identifiant, <code>funder</code> et <code>entryPoint</code> dans l'énuméré, <code>funderName</code> non vide), puis lit la collection <code>scholarships</code> et croise dans les <strong>deux sens</strong> : toute bourse du plan doit exister en base, et <strong>toute bourse en base doit être au plan</strong> — une bourse oubliée est une erreur bloquante, pas un avertissement, sans quoi elle resterait sans bailleur sans que rien ne le signale. Signale aussi tout <code>funder</code> déjà posé à la main qui contredirait le plan. Affiche le récapitulatif groupé par type avant toute écriture.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Écrit les trois champs par <code>updateDoc</code> (fusion partielle) sur les bourses confirmées à l'étape 1. Un <code>entryPoint</code> non renseigné n'est <strong>pas écrit</strong> : le champ reste absent en base, jamais <code>""</code>.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit chaque bourse écrite et compare les trois champs, en attendant <em>absent</em> — et non <code>""</code> — là où le plan ne renseigne pas <code>entryPoint</code>. Doit confirmer 0 écart. Trois contrôles à l'œil suivent sur le site public : le filtre « Type de bourse » du catalogue doit renvoyer des résultats sur les quatre valeurs utilisées et 0 sur « Entreprise » ; une fiche de bourse d'État doit placer le portail du bailleur <strong>en premier</strong> ; une fiche universitaire doit garder l'ordre actuel.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch30.js"></script>
+
+</body>
+
+</html>

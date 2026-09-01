@@ -1,4 +1,4 @@
-import { db } from "./firebase-config.js";
+import { db } from "../firebase-config.js";
 
 import {
 collection,
@@ -301,4 +301,22 @@ console.log("Importé :", scholarship.nom, scholarship.niveau);
 alert("Import terminé !");
 }
 
-importer();
+const runBtn = document.getElementById("runImportBtn");
+
+runBtn.addEventListener("click", () => {
+
+const confirmed = confirm(
+`Écraser la collection "scholarships" avec ${scholarships.length} bourse(s) codée(s) en dur dans ce script ? Cette action est irréversible.`
+);
+
+if (!confirmed) return;
+
+runBtn.disabled = true;
+runBtn.textContent = "Import en cours...";
+
+importer().finally(() => {
+runBtn.disabled = false;
+runBtn.textContent = "Lancer l'import";
+});
+
+});

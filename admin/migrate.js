@@ -1,5 +1,5 @@
 // ============================================
-// ScholarBridge — Migration vers l'architecture relationnelle
+// Fitz — Migration vers l'architecture relationnelle
 // (2026-07-30). Voir le contexte complet en tête de admin/migrate.html
 // et dans admin/firebase-admin.js. Outil à usage unique, non lié dans
 // la navigation, protégé par admin-auth.js comme toute page admin/.

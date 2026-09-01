@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Élargissement catalogue — Lot 9 (EPFL/King Abdulaziz) | ScholarBridge Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Préalable : lancer scripts/add-lot9-city-photos.sh avant l'étape 2 — ce script Firestore ne peut pas vérifier que lausanne.jpg et jeddah.jpg existent sur disque.</div>
+
+<div class="migrate-header">
+<h1>Élargissement du catalogue — Lot 9</h1>
+<p>Débloque les deux candidats écartés du lot 7 faute de photo : EPFL (Lausanne) rejoint Swiss Government Excellence Scholarships aux côtés d'ETH Zurich et University of Zurich ; King Abdulaziz University (Jeddah) rejoint les bourses du gouvernement saoudien aux côtés de King Saud University et Princess Nourah bint Abdulrahman University. King Abdulaziz University est un établissement réel, sans rapport avec l'ancien nom de bourse "King Abdulaziz Scholarship" corrigé au lot 5. Écrit 2 universités et 2 programmes, aucune bourse modifiée. Les deux bourses cibles sont résolues par recherche de titre. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Retrouve Swiss Government Excellence Scholarships et les bourses du gouvernement saoudien par titre, puis vérifie que les 2 identifiants de nouvelle université et les 2 identifiants de programme sont libres.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Crée les 2 profils d'université et les 2 programmes. Vérifiez d'abord que lausanne.jpg et jeddah.jpg existent dans assets/images/cities/.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit Firestore après écriture et compare chaque document écrit à ce qui était attendu, champ par champ. Doit confirmer 0 écart sur les 4 documents (2 universités + 2 programmes). Vérifiez ensuite visuellement les deux nouvelles pages université dans le navigateur.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch9.js"></script>
+
+</body>
+
+</html>

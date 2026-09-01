@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Élargissement catalogue — Lot 21 (HU/IT/RO/RU/CH) | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:760px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:64ch; }
+
+.migrate-step{
+
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:60ch; }
+
+.migrate-step button{
+
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:420px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,168,61,.1);border:1px solid rgba(234,168,61,.35);color:var(--warning);font-size:.88rem;font-weight:700;">Outil de migration ponctuel — vérifier si encore nécessaire avant utilisation.</div>
+
+<div class="migrate-header">
+<h1>Élargissement du catalogue — Lot 21</h1>
+<p>Termine les dix pays qui n'avaient qu'une seule bourse au catalogue : le lot 19 avait traité le Royaume-Uni, l'Allemagne, le Japon, la Corée et la Turquie, celui-ci traite les cinq derniers — <strong>Hongrie, Italie, Roumanie, Russie et Suisse</strong>. Crée <strong>31 bourses</strong> (5 hongroises, 8 italiennes, 5 roumaines, 4 russes, 9 suisses), corrige <strong>5 bourses existantes</strong> dont les données étaient fausses ou périmées, et crée <strong>18 programmes</strong> vers les universités déjà en base. <strong>Aucune université n'est créée</strong> — aucune photo neuve requise.</p>
+<p style="margin-top:12px;">Trois de ces cinq pays sont bien moins ouverts qu'ils n'en ont l'air pour un candidat sénégalais, et les fiches le disent sans détour : le <strong>Sénégal n'est pas pays partenaire du Stipendium Hungaricum</strong> ; l'<strong>ESKAS suisse ne lui ouvre ni master ni bourse de master</strong>, seulement le doctorat et le Research Fellowship ; et l'allocation du <strong>quota russe ne couvre même pas le loyer</strong> de la résidence universitaire, malgré 130 places attribuées au Sénégal. À l'inverse, la Roumanie cache la meilleure piste francophone du catalogue avec les bourses AUF Eugen Ionescu et Petrache Poenaru.</p>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Résout les 5 bourses à corriger par leur titre — avec priorité à l'égalité exacte, leçon du lot 20 — et les 10 universités à relier par leur nom, puis contrôle que les 31 identifiants de bourse et les 18 identifiants de programme sont libres. Une université introuvable ne bloque rien : ses programmes sont simplement omis, et l'étape le signale.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire</h2>
+<p>Crée les 31 bourses, applique les 5 corrections ciblées (uniquement les champs listés, jamais le document entier) et crée les 18 programmes.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit Firestore et compare chaque document champ par champ. Doit confirmer 0 écart sur 54 documents (31 bourses créées + 5 corrigées + 18 programmes).</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch21.js"></script>
+
+</body>
+
+</html>

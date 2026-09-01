@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Correctif catalogue — Lot 16 (photos des bourses) | ScholarBridge Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:800px; margin:0 auto; }
+
+.migrate-header{ margin-bottom:32px; }
+
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:66ch; }
+
+.migrate-step{
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+
+.migrate-step-num{
+display:inline-flex; align-items:center; justify-content:center;
+width:26px; height:26px; border-radius:8px;
+background:var(--background-light); color:var(--accent-color);
+font-family:var(--font-display); font-weight:700; font-size:.85rem; flex-shrink:0;
+}
+
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:62ch; }
+
+.migrate-step button{
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:460px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+}
+
+.migrate-log.is-visible{ display:block; }
+
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="migrate-wrap">
+
+<div class="migrate-header">
+<h1>Correctif catalogue — Lot 16</h1>
+<p>Ajoute une photo de monument à 21 bourses (les 21 bourses italiennes : Milan 5, Turin 2, Bologne 2, Rome 3, Naples/Campanie 2, Toscane/Pise/Florence 3, Padoue 1, Vénétie 1, Trente 2). Dernière vague du remplacement des photos de bourse, suite aux lots 14 et 15 — après ce lot, les 56 bourses du catalogue ont chacune leur propre photo. Réservé aux administrateurs, non lié dans la navigation.</p>
+</div>
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.3);color:var(--text-color);font-size:.88rem;">Prérequis avant de lancer l'étape 2 : les 21 fichiers doivent déjà exister dans <code>assets/images/scholarships/</code> — lancer d'abord <code>scripts\add-lot16-scholarship-photos.ps1</code>.</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">1</span>Analyser (lecture seule, aucune écriture)</h2>
+<p>Vérifie en direct les 21 bourses (id + titre), prépare le nouveau champ "image" pour chacune.</p>
+<button type="button" id="analyzeBtn">Analyser</button>
+<div class="migrate-log" id="analyzeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">2</span>Écrire (mise à jour partielle, champ "image" uniquement)</h2>
+<p>Met à jour uniquement le champ "image" des documents identifiés à l'étape 1. Vérifiez d'abord que les fichiers existent sur disque.</p>
+<button type="button" id="writeBtn" disabled>Écrire (étape 1 requise avant)</button>
+<div class="migrate-log" id="writeLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2><span class="migrate-step-num">3</span>Vérifier (non négociable)</h2>
+<p>Relit Firestore après écriture pour confirmer que chaque document a bien le nouveau champ "image". Vérifiez ensuite visuellement les cartes de ces bourses dans le navigateur.</p>
+<button type="button" id="verifyBtn" disabled>Vérifier (étape 2 requise avant)</button>
+<div class="migrate-log" id="verifyLog"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="expand-catalog-batch16.js"></script>
+
+</body>
+
+</html>

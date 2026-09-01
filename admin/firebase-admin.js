@@ -1,5 +1,5 @@
 // ============================================
-// ScholarBridge Admin - Firestore
+// Fitz Admin - Firestore
 // ============================================
 
 import { auth, db } from "../firebase-config.js";
@@ -452,7 +452,7 @@ return snapshot.data().count;
 
 // ============================================
 // ANALYTICS — lecture des compteurs écrits par js/analytics.js
-// (Module 1 du ScholarBridge Control Center). Séparation volontaire
+// (Module 1 du Fitz Control Center). Séparation volontaire
 // des responsabilités : js/analytics.js (racine du site) est la
 // SEULE partie qui écrit ces compteurs ; ce fichier ne fait que les
 // lire pour le tableau de bord admin. Les règles Firestore

@@ -1,5 +1,5 @@
 // ============================================================
-// ScholarBridge — Backfill officialWebsite (36) + remplacement ciblé
+// Fitz — Backfill officialWebsite (36) + remplacement ciblé
 // de applicationPortalUrl (13) (2026-08-10). Voir l'audit complet
 // dans la conversation associée : le backfill officialWebsite préparé
 // le 2026-08-10 n'avait jamais été écrit en base (vérifié) ; l'audit
