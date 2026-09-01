@@ -23,7 +23,7 @@ const messages = [
 "Recherche des pays compatibles...",
 "Analyse des universités adaptées...",
 "Comparaison avec les critères des bourses...",
-"Calcul de votre Score ScholarBridge...",
+"Calcul de votre Score Fitz...",
 "Génération de vos recommandations...",
 "Analyse prête."
 ];

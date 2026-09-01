@@ -1,8 +1,6 @@
 import { db, auth } from "./firebase-config.js";
 
 import {
-collection,
-getDocs,
 doc,
 getDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -11,14 +9,21 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/f
 
 import { estEligible, paysAvecArticle } from "./js/eligibility-countries.js";
 
+import { bourseCompatibleAge } from "./js/age-limits.js";
+
 import { COUNTRY_NAMES } from "./js/countries.js";
 
 import {
 estFinancementIntegral,
-meilleurRangQS
+meilleurRangQS,
+libelleFunder,
+correspondTypeBourse
 } from "./js/scholarship-filters.js";
 
 import { resolveScholarshipImage } from "./js/scholarship-image.js";
+
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./js/catalog-data.js";
 
 // Signale à js/catalog-watchdog.js que ce module a bien démarré.
 // À GARDER COMME PREMIÈRE INSTRUCTION EXÉCUTABLE du fichier, et à ne
@@ -73,17 +78,34 @@ const financementIntegralFiltre = params.get("funding") === "full";
 const rangMaxParam = parseInt(params.get("maxRank"), 10);
 const rangMaxFiltre = Number.isFinite(rangMaxParam) ? rangMaxParam : null;
 
+// Type de bourse (2026-08-30) — filtre exact sur le champ `funder` du
+// document (voir correspondTypeBourse, js/scholarship-filters.js).
+// Porté par l'URL comme les autres filtres : survit au rechargement et
+// aux navigations reconstruites par navigateWithFilters().
+const typeBourseFiltre = params.get("funder") || "";
+
+// Filtre d'âge (2026-08-30) : `age` dans l'URL coche la case et
+// pré-remplit le champ au chargement — le filtrage lui-même reste
+// vivant (sans rechargement), comme la nationalité : un âge se tape au
+// clavier. navigateWithFilters() porte la valeur d'une navigation à
+// l'autre pour que changer de pays ou de niveau ne la perde pas.
+const ageParam = parseInt(params.get("age"), 10);
+const ageFiltreInitial = Number.isFinite(ageParam) && ageParam > 0 ? ageParam : null;
+
 const container = document.getElementById("scholarship-list");
 const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const countryFilter = document.getElementById("countryFilter");
 const levelFilter = document.getElementById("levelFilter");
+const funderFilter = document.getElementById("funderFilter");
 const resultsCount = document.getElementById("resultsCount");
 const clearFiltersLink = document.getElementById("clearFiltersLink");
 const countryPills = document.getElementById("countryPills");
 const nationalityCheck = document.getElementById("nationalityFilterCheck");
 const nationalityInput = document.getElementById("nationalityFilterInput");
 const nationalityDatalist = document.getElementById("nationalityDatalist");
+const ageCheck = document.getElementById("ageFilterCheck");
+const ageInput = document.getElementById("ageFilterInput");
 
 // ============================
 // Éligibilité par nationalité (2026-08-30).
@@ -109,6 +131,20 @@ if (nationalityDatalist) {
 nationalityDatalist.innerHTML = COUNTRY_NAMES.map((n) => `<option value="${n}"></option>`).join("");
 }
 }
+
+// Âge courant du filtre « Compatibles avec mon âge » — même survie
+// d'une visite à l'autre que la nationalité (localStorage) ; le
+// paramètre d'URL `age`, quand il est là, prime ET coche la case.
+let ageCourant = ageFiltreInitial;
+if (ageCourant === null) {
+try {
+const memorise = parseInt(localStorage.getItem("fitzAge"), 10);
+if (Number.isFinite(memorise) && memorise > 0) ageCourant = memorise;
+} catch { /* stockage bloqué */ }
+}
+
+if (ageInput && ageCourant !== null) ageInput.value = ageCourant;
+if (ageCheck && ageFiltreInitial !== null) ageCheck.checked = true;
 
 // Pré-remplissage depuis le profil Firestore quand l'étudiant est
 // connecté. Arrive après le rendu initial : on re-filtre si besoin.
@@ -247,15 +283,11 @@ renderSkeleton();
 
 try {
 
-const [scholarshipsSnap, programsSnap, universitiesSnap] = await Promise.all([
-getDocs(collection(db, "scholarships")),
-getDocs(collection(db, "programs")),
-getDocs(collection(db, "universities"))
-]);
+const catalogue = await chargerCatalogue();
 
-const programs = programsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+const programs = catalogue.programmes;
 programmesCharges = programs;
-const universitiesById = new Map(universitiesSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+const universitiesById = new Map(catalogue.universites.map((u) => [u.id, u]));
 
 // Repli drapeau par pays (voir enrichWithProgramData) : première
 // université de tout le catalogue — pas seulement celles liées à cette
@@ -268,8 +300,7 @@ flagByCountry.set(university.country, university.flag);
 }
 }
 
-allScholarships = scholarshipsSnap.docs
-.map((d) => ({ id: d.id, ...d.data() }))
+allScholarships = catalogue.bourses
 .map((s) => enrichWithProgramData(s, programs, universitiesById, flagByCountry));
 
 renderHeroStats(universitiesById);
@@ -305,8 +336,12 @@ if (window.lucide) lucide.createIcons();
 //   - bourses      : le nombre de documents du catalogue ;
 //   - pays d'accueil : les pays QUI ACCORDENT une bourse (le champ
 //     `country` de la bourse), pas les pays éligibles ;
-//   - universités partenaires : le nombre d'établissements DISTINCTS
-//     reliés à au moins une bourse. Compter les `partnerCount` de
+//   - universités concernées : le nombre d'établissements DISTINCTS
+//     reliés à au moins une bourse — volontairement PAS le total du
+//     catalogue affiché par universities.html et l'accueil
+//     (« Établissements vérifiés ») : deux comptes différents portent
+//     deux libellés différents, sinon 110 ici et 111 là se lisent
+//     comme une incohérence. Compter les `partnerCount` de
 //     chaque bourse aurait compté deux fois toute université reliée
 //     à deux bourses, et gonflé le chiffre — exactement l'erreur que
 //     ce bloc doit éviter.
@@ -317,9 +352,9 @@ function renderHeroStats(universitiesById) {
 
 const elBourses = document.getElementById("statScholarships");
 const elPays = document.getElementById("statCountries");
-const elPartenaires = document.getElementById("statPartners");
+const elUniversites = document.getElementById("statPartners");
 
-if (!elBourses || !elPays || !elPartenaires) return;
+if (!elBourses || !elPays || !elUniversites) return;
 
 const pays = new Set(allScholarships.map((s) => s.country).filter(Boolean));
 
@@ -332,7 +367,7 @@ universitesLiees.add(programme.universityId);
 
 elBourses.textContent = allScholarships.length;
 elPays.textContent = pays.size;
-elPartenaires.textContent = universitesLiees.size;
+elUniversites.textContent = universitesLiees.size;
 
 }
 
@@ -385,12 +420,30 @@ if (rangMaxFiltre !== null) {
 scholarships = scholarships.filter((scholarship) => scholarship.bestRanking !== null && scholarship.bestRanking <= rangMaxFiltre);
 }
 
+// Type de bourse : correspondance EXACTE sur `funder`. Une bourse sans
+// champ (bailleur inconnu) n'est retirée que quand un type précis est
+// choisi — sur « Tous les types » elle reste visible, un champ absent
+// est un inconnu, jamais une valeur par défaut.
+if (typeBourseFiltre) {
+scholarships = scholarships.filter((scholarship) => correspondTypeBourse(scholarship.funder, typeBourseFiltre));
+}
+
 // « Ouvertes à ma nationalité » : ne retire QUE les bourses dont la
 // restriction officielle exclut cette nationalité. `!== false` est le
 // cœur de la règle — null (pas de restriction connue, nationalité
 // vide, pays non résolu) reste affiché.
 if (nationalityCheck && nationalityCheck.checked) {
 scholarships = scholarships.filter((scholarship) => estEligible(scholarship.eligibility, nationaliteCourante) !== false);
+}
+
+// « Compatibles avec mon âge » : ne retire que les bourses dont le
+// plafond ageMax est dépassé — sur le niveau filtré, ou sur TOUS les
+// niveaux de la bourse quand aucun niveau n'est filtré (possible sur
+// un seul cycle = affichée). Les bourses sans limite connue restent
+// affichées : un champ absent est un inconnu, jamais « exclu » — voir
+// bourseCompatibleAge, js/age-limits.js.
+if (ageCheck && ageCheck.checked && ageCourant !== null) {
+scholarships = scholarships.filter((scholarship) => bourseCompatibleAge(scholarship, ageCourant, niveau));
 }
 
 afficherBourses(scholarships);
@@ -426,7 +479,7 @@ const countryIconHtml = scholarship.flag
 ? `<img src="assets/flags/${scholarship.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">`
 : `<i data-lucide="globe"></i>`;
 
-// Nombre d'universités partenaires. Il était calculé depuis toujours
+// Nombre d'universités concernées. Il était calculé depuis toujours
 // par enrichWithProgramData() et n'était affiché NULLE PART — alors
 // que c'est la réponse à "est-ce que cette bourse ouvre sur beaucoup
 // de portes ?", et exactement ce que le clic va montrer.
@@ -442,8 +495,18 @@ const description = buildDescription(scholarship);
 const partnersHtml = partners > 0
 ? `<p class="scholarship-card-partners">
 <i data-lucide="landmark"></i>
-<span><strong>${partners}</strong> université${partners > 1 ? "s" : ""} partenaire${partners > 1 ? "s" : ""}</span>
+<span><strong>${partners}</strong> université${partners > 1 ? "s" : ""} concernée${partners > 1 ? "s" : ""}</span>
 </p>`
+: "";
+
+// Type de bourse — libellé texte discret, seulement quand `funder` est
+// présent en base (libelleFunder renvoie "" sinon : on n'affiche RIEN,
+// jamais « bailleur non renseigné »). Volontairement PAS un badge : le
+// badge Fitz (.fitz-badge/.ai-badge) est un composant unique défini
+// dans css/base.css et ne se redéfinit ni ne se détourne.
+const typeBourse = libelleFunder(scholarship.funder);
+const funderHtml = typeBourse
+? `<p class="scholarship-card-funder">${typeBourse}${scholarship.funderName ? ` — ${scholarship.funderName}` : ""}</p>`
 : "";
 
 // La ligne pays (drapeau + nom du pays) a été retirée le 2026-08-22 :
@@ -469,6 +532,8 @@ card.innerHTML = `
 
 <h3>${scholarship.title || "Bourse d'études"}</h3>
 
+${funderHtml}
+
 ${estEligible(scholarship.eligibility, nationaliteCourante) === false ? `<p class="scholarship-card-inel">Non ouverte aux ressortissants ${paysAvecArticle(nationaliteCourante)}</p>` : ""}
 
 ${description ? `<p class="scholarship-card-desc">${description}</p>` : ""}
@@ -483,7 +548,7 @@ ${levelChips}
 ${showCountriesRow ? `<div class="scholarship-card-countries"><strong>Aussi éligible depuis :</strong><span>${scholarship.countries.filter((c) => c !== scholarship.country).join(", ")}</span></div>` : ""}
 
 <button type="button" class="scholarship-card-cta details-btn">
-<span>Voir les universités partenaires</span>
+<span>Voir les universités concernées</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
@@ -499,7 +564,7 @@ ${showCountriesRow ? `<div class="scholarship-card-countries"><strong>Aussi éli
 // réelle.
 card.style.cursor = "pointer";
 
-function ouvrirPartenaires() {
+function ouvrirUniversites() {
 window.location.href = `universities.html?scholarshipId=${encodeURIComponent(scholarship.id)}`;
 }
 
@@ -509,10 +574,10 @@ window.location.href = `universities.html?scholarshipId=${encodeURIComponent(sch
 // devient autre chose qu'un window.location.
 card.querySelector(".details-btn").addEventListener("click", (event) => {
 event.stopPropagation();
-ouvrirPartenaires();
+ouvrirUniversites();
 });
 
-card.addEventListener("click", ouvrirPartenaires);
+card.addEventListener("click", ouvrirUniversites);
 
 return card;
 
@@ -564,7 +629,7 @@ function afficherBourses(scholarships) {
 container.innerHTML = "";
 
 resultsCount.textContent = `${scholarships.length} bourse${scholarships.length > 1 ? "s" : ""} trouvée${scholarships.length > 1 ? "s" : ""}`;
-clearFiltersLink.hidden = !(recherche || niveau || paysFiltre || financementIntegralFiltre || rangMaxFiltre !== null || (nationalityCheck && nationalityCheck.checked));
+clearFiltersLink.hidden = !(recherche || niveau || paysFiltre || typeBourseFiltre || financementIntegralFiltre || rangMaxFiltre !== null || (nationalityCheck && nationalityCheck.checked) || (ageCheck && ageCheck.checked));
 
 if (scholarships.length === 0) {
 
@@ -633,9 +698,9 @@ if (window.lucide) lucide.createIcons();
 
 // ============================
 // Barre de recherche (reconstruit l'URL à partir de l'état courant des
-// 5 filtres — recherche, pays, niveau, financement intégral, rang QS
-// maximum — pour que changer l'un ne perde jamais les autres, cf.
-// audit du 2026-08-16).
+// 6 filtres — recherche, pays, niveau, type de bourse, financement
+// intégral, rang QS maximum — pour que changer l'un ne perde jamais
+// les autres, cf. audit du 2026-08-16).
 //
 // funding/maxRank ne sont jamais TOUCHÉS par les contrôles de recherche
 // existants (aucun n'y touche) — seulement PORTÉS d'une navigation à
@@ -644,15 +709,20 @@ if (window.lucide) lucide.createIcons();
 // filtre qu'il avait choisi en arrivant.
 // ============================
 
-function navigateWithFilters({ search, country, level, funding = financementIntegralFiltre, maxRank = rangMaxFiltre }) {
+function navigateWithFilters({ search, country, level, funderType = typeBourseFiltre, funding = financementIntegralFiltre, maxRank = rangMaxFiltre }) {
 
 const url = new URL("scholarships.html", window.location.origin);
 
 if (search) url.searchParams.set("search", search);
 if (country) url.searchParams.set("country", country);
 if (level) url.searchParams.set("level", level);
+if (funderType) url.searchParams.set("funder", funderType);
 if (funding) url.searchParams.set("funding", "full");
 if (maxRank !== null && maxRank !== undefined) url.searchParams.set("maxRank", String(maxRank));
+// Le filtre d'âge est vivant (pas de rechargement à la saisie) mais
+// PORTÉ d'une navigation à l'autre dès que la case est cochée — sinon
+// changer de pays ou de niveau le décocherait en silence.
+if (ageCheck && ageCheck.checked && ageCourant !== null) url.searchParams.set("age", String(ageCourant));
 
 window.location.href = url.toString();
 
@@ -737,6 +807,27 @@ level: this.value
 }
 
 // ============================
+// Filtre type de bourse
+// ============================
+
+if (funderFilter) {
+
+funderFilter.value = typeBourseFiltre;
+
+funderFilter.addEventListener("change", function () {
+
+navigateWithFilters({
+search: recherche,
+country: paysFiltre,
+level: niveau,
+funderType: this.value
+});
+
+});
+
+}
+
+// ============================
 // Filtre « Ouvertes à ma nationalité » — vivant, sans rechargement :
 // contrairement aux filtres d'URL ci-dessus, la nationalité se tape au
 // clavier ; renaviguer à chaque frappe serait inutilisable. Le lien
@@ -761,6 +852,33 @@ if (nationalityInput) {
 nationalityInput.addEventListener("input", () => {
 nationaliteCourante = nationalityInput.value.trim();
 try { localStorage.setItem("fitzNationalite", nationaliteCourante); } catch { /* stockage bloqué */ }
+if (allScholarships.length) applyFilters();
+});
+
+}
+
+// ============================
+// Filtre « Compatibles avec mon âge » — même vie sans rechargement que
+// la nationalité juste au-dessus, mêmes raisons.
+// ============================
+
+if (ageCheck) {
+
+ageCheck.addEventListener("change", () => {
+if (allScholarships.length) applyFilters();
+});
+
+}
+
+if (ageInput) {
+
+ageInput.addEventListener("input", () => {
+const valeur = parseInt(ageInput.value, 10);
+ageCourant = Number.isFinite(valeur) && valeur > 0 ? valeur : null;
+try {
+if (ageCourant !== null) localStorage.setItem("fitzAge", String(ageCourant));
+else localStorage.removeItem("fitzAge");
+} catch { /* stockage bloqué */ }
 if (allScholarships.length) applyFilters();
 });
 

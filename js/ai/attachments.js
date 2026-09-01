@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — pièces jointes Fitz (architecture évolutive)
+* FitzUniverse — pièces jointes Fitz (architecture évolutive)
 * ============================================================
 *
 * Aujourd'hui : aperçu local uniquement. Un fichier joint (capture

@@ -1,0 +1,960 @@
+/* ==========================================================
+FITZUNIVERSE — SOCLE COMMUN DE L'ESPACE ÉTUDIANT (2026-08-23)
+==========================================================
+Source unique des composants partagés par les treize pages de
+l'espace connecté : dashboard, profil, compte, candidatures,
+documents et les sept outils Fitz.
+
+POURQUOI CE FICHIER EXISTE
+--------------------------
+Le même composant y était recopié d'une feuille à l'autre, à
+l'identique, sous des noms différents :
+
+  — le parcours de candidature (`.application-journey` et ses
+    seize règles `.journey-*`) existait DEUX FOIS dans
+    dashboard.css et applications.css, à UNE déclaration près
+    (une marge basse d'un côté seulement) — écart invisible au
+    lecteur, et impossible à maintenir volontairement ;
+  — la pastille d'icône était écrite HUIT FOIS sous huit noms
+    (`.stat-card-icon`, `.tool-card-icon`, `.doc-card-icon`,
+    `.profile-section-icon`, `.apps-stat-icon`,
+    `.ai-style-card-icon`, `.ai-page-header-icon`,
+    `.upgrade-nudge-icon`) pour deux variantes réelles :
+    neutre et ambre ;
+  — le survol de carte, l'intro de page, le titre de carte, le
+    fond de modale, le squelette de chargement et le panneau de
+    verre étaient dupliqués de la même façon.
+
+Le squelette l'était deux fois AVEC ses @keyframes, ce qui faisait
+deux animations homonymes en concurrence dans le même document dès
+qu'une page chargeait les deux feuilles.
+
+C'est l'espace où l'étudiant passe le plus de temps et où il
+enchaîne les pages sans transition : une correction faite sur l'une
+doit valoir pour toutes. Autant de copies garantissaient l'inverse.
+
+CONVENTION DE NOMMAGE
+---------------------
+Les nouveaux noms sont en `.app-*`. Les anciens noms propres à
+chaque page sont conservés en ALIAS dans les listes de sélecteurs :
+ils sont écrits dans les HTML et dans les JS qui fabriquent ces
+éléments, et les renommer partout n'apporterait rien que cet alias
+ne donne déjà, pour un risque de régression bien réel sur du code
+qui fonctionne. Toute NOUVELLE règle s'écrit sous le nom `.app-*`.
+
+Le parcours fait exception : il garde ses noms `.journey-*`, qui
+sont déjà les mêmes des deux côtés et que js/application-journey.js
+émet tels quels. Il n'y avait rien à unifier, seulement une copie
+à supprimer.
+
+ORDRE DE CHARGEMENT
+-------------------
+  css/base.css → css/app-shell.css → dashboard.css →
+  css/ai-suite.css → <page>.css → css/app-typography.css
+
+Ce fichier vient juste après base.css : les feuilles de page
+gardent donc le dernier mot sur ce qui leur est propre.
+
+RÈGLE
+-----
+Ne jamais redéfinir un de ces composants dans une feuille de page.
+Ce qui est propre à une page reste chez elle ; ce que plusieurs
+pages partagent vit ici.
+========================================================== */
+
+
+/* ==========================================================
+1. SURFACES
+==========================================================
+La carte de contenu et son survol. Le survol était identique sur
+les trois familles de cartes (statistique, outil, document) : il
+n'en reste qu'une définition.
+
+Le déplacement se fait à -8px avec l'ombre `--shadow-lg` et un
+liseré accent à 35 % d'opacité — assez pour que la carte réponde,
+pas assez pour qu'une grille entière se mette à sauter.
+========================================================== */
+
+.app-card{
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+padding:22px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+transition:var(--transition);
+
+}
+
+/* Survol — partagé. Anciennement .stat-card:hover, a.tool-card:hover
+et .doc-card:hover, à l'identique. */
+
+.app-card-lift:hover,
+.stat-card:hover,
+a.tool-card:hover,
+.doc-card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:var(--shadow-lg);
+
+/* Ambre et non violet (2026-08-27) — même oubli que .card--featured
+et les autres liserés violets recensés ce jour-là dans le reste de
+l'espace étudiant. */
+border-color:rgba(233,163,25,.35);
+
+}
+
+/* Le survol ne doit pas déplacer la carte pour qui a demandé moins
+de mouvement : l'ombre et le liseré suffisent à signaler la cible. */
+
+@media (prefers-reduced-motion: reduce){
+
+.app-card-lift:hover,
+.stat-card:hover,
+a.tool-card:hover,
+.doc-card:hover{
+
+transform:none;
+
+}
+
+}
+
+
+/* ==========================================================
+2. GLYPHES
+==========================================================
+La pastille d'icône. Deux variantes seulement, et c'est voulu :
+
+  — NEUTRE (`--text-muted`) : tout ce que fait le site lui-même,
+    une statistique, un document, une section de profil ;
+  — FITZ (`--amber-700`) : ce que fait Fitz, et rien d'autre.
+
+L'ambre est la couleur d'identité de Fitz, celle du badge défini
+dans base.css. Un glyphe ambre sur une carte qui n'est pas la
+sienne dilue ce repère : c'est la seule règle à retenir ici.
+
+Aucun fond, aucun cadre, aucune pastille pleine — l'icône se pose
+sur la surface de la carte. C'est ce qui distingue une interface
+qui respire d'un tableau de bord d'administration.
+========================================================== */
+
+.app-glyph,
+.stat-card-icon,
+.tool-card-icon,
+.doc-card-icon,
+.profile-section-icon,
+.apps-stat-icon,
+.ai-style-card-icon,
+.ai-attachment-chip-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+color:var(--text-muted);
+
+}
+
+.app-glyph--fitz,
+.upgrade-nudge-icon,
+.coach-card-icon,
+.ai-page-header-icon,
+.ai-locked-icon{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+color:var(--amber-700);
+
+}
+
+
+/* ==========================================================
+3. TITRES ET INTRODUCTIONS
+==========================================================
+L'en-tête de section — un titre, une phrase qui dit à quoi sert la
+page. Il était écrit trois fois (`.apps-intro`, `.docs-intro`,
+`.ivp-intro`) avec les mêmes valeurs.
+
+La ligne de texte est bornée à 640px : au-delà, l'œil perd le
+début de la ligne suivante.
+========================================================== */
+
+.app-intro h2,
+.apps-intro h2,
+.docs-intro h2,
+.ivp-intro h2{
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+font-size:var(--fs-h4);
+
+line-height:var(--lh-snug);
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.app-intro p,
+.apps-intro p,
+.docs-intro p,
+.ivp-intro p{
+
+font-size:var(--fs-small);
+
+line-height:1.5;
+
+color:var(--text-light);
+
+max-width:640px;
+
+}
+
+/* Titre de carte — anciennement quatre règles identiques. */
+
+.app-card-title,
+.app-card-top h3,
+.apps-modal-head h3,
+.doc-card h3,
+.cpr-result-head h3{
+
+font-family:var(--font-display);
+
+font-weight:600;
+
+font-size:var(--fs-h4);
+
+color:var(--text-color);
+
+}
+
+
+/* ==========================================================
+4. PARCOURS DE CANDIDATURE
+==========================================================
+Le repère central de l'espace étudiant : où en est cette
+candidature, et quelle est l'étape suivante. Il est rendu par
+js/application-journey.js, en <a> sur le tableau de bord (chaque
+étape mène à sa page) et en <button> sur applications.html (chaque
+étape déclenche son action).
+
+Il vivait en double dans dashboard.css et applications.css — parce
+que dashboard.html ne charge pas applications.css. Ce fichier-ci,
+lui, est chargé par les deux. La seule différence réelle entre les
+deux copies, une marge basse, est restée dans applications.css sous
+forme de surcharge explicite : là-bas le parcours est suivi de la
+checklist, ici il termine sa carte.
+
+L'étape franchie passe au vert `--success`, sauf l'étape Fitz qui
+prend son dégradé et son halo : c'est le seul endroit du parcours
+où la marque de Fitz apparaît, et elle n'apparaît qu'une fois
+l'étape réellement faite.
+========================================================== */
+
+.application-journey{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:4px;
+
+overflow-x:auto;
+
+padding-bottom:2px;
+
+}
+
+.journey-step{
+
+flex:1 1 0;
+
+min-width:76px;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:6px;
+
+text-align:center;
+
+text-decoration:none;
+
+background:transparent;
+
+border:none;
+
+padding:4px;
+
+cursor:pointer;
+
+position:relative;
+
+}
+
+/* Le trait de liaison est tiré vers l'étape PRÉCÉDENTE, pas vers la
+suivante : c'est ce qui permet de le colorer avec l'étape franchie
+sans connaître l'état de sa voisine. */
+
+.journey-step::before{
+
+content:"";
+
+position:absolute;
+
+top:15px;
+
+left:calc(-50% + 15px);
+
+width:calc(100% - 30px);
+
+height:2px;
+
+background:var(--border-color);
+
+z-index:0;
+
+}
+
+.journey-step:first-child::before{
+
+display:none;
+
+}
+
+.journey-step.is-done::before{
+
+background:var(--success);
+
+}
+
+.journey-step-dot{
+
+width:30px;
+
+height:30px;
+
+border-radius:50%;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:var(--background-alt);
+
+border:2px solid var(--border-color);
+
+color:var(--text-muted);
+
+position:relative;
+
+z-index:1;
+
+flex-shrink:0;
+
+}
+
+.journey-step-dot i,
+.journey-step-dot svg{
+
+width:14px;
+
+height:14px;
+
+}
+
+.journey-step.is-done .journey-step-dot{
+
+background:var(--success);
+
+border-color:var(--success);
+
+color:#fff;
+
+}
+
+.journey-step.is-fitz.is-done .journey-step-dot{
+
+background:var(--gradient-fitz);
+
+border-color:transparent;
+
+box-shadow:var(--glow-fitz);
+
+/* --primary-900 et non blanc (hérité de .is-done ci-dessus) depuis le
+2026-08-27 : --gradient-fitz est ambre, et l'ambre clair ne tient pas
+le contraste en blanc — même règle que --amber-500 en fond de bouton
+(voir la note sur l'échelle ambre dans css/base.css). */
+color:var(--primary-900);
+
+}
+
+.journey-step-label{
+
+font-size:var(--fs-caption);
+
+line-height:1.25;
+
+color:var(--text-muted);
+
+}
+
+.journey-step.is-done .journey-step-label{
+
+color:var(--text-light);
+
+font-weight:600;
+
+}
+
+
+/* ==========================================================
+5. ZONE DE DÉPÔT
+==========================================================
+L'état de survol et de glisser-déposer, partagé par la zone des
+outils Fitz et celle de la compression. Les deux zones gardent
+leur géométrie propre (l'une est plus haute que l'autre) ; c'est
+la RÉPONSE au geste qui doit être la même, parce que c'est elle
+qui dit à l'étudiant que le fichier sera bien accepté.
+========================================================== */
+
+.app-dropzone:hover,
+.app-dropzone.is-dragover,
+.ai-dropzone:hover,
+.ai-dropzone.is-dragover,
+.cpr-dropzone:hover,
+.cpr-dropzone.is-dragover{
+
+border-color:var(--accent-color);
+
+background:var(--background-light);
+
+}
+
+
+/* ==========================================================
+6. MODALES
+==========================================================
+Le fond de modale — voile sombre et flou léger. Il était écrit
+deux fois (`.apps-modal`, `.docs-modal`) à l'identique.
+========================================================== */
+
+.app-modal,
+.apps-modal,
+.docs-modal{
+
+position:fixed;
+
+inset:0;
+
+z-index:var(--z-modal);
+
+background:rgba(6,10,18,.6);
+
+backdrop-filter:blur(4px);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:24px;
+
+}
+
+
+/* ==========================================================
+7. SQUELETTES DE CHARGEMENT
+==========================================================
+Le bloc gris qui pulse pendant qu'une donnée arrive. Il existait
+en deux exemplaires — dans profile.css et applications.css — CHACUN
+avec sa propre déclaration @keyframes skeleton-shimmer. Deux
+animations homonymes dans un même document : la dernière chargée
+l'emportait, ce qui rendait le résultat dépendant de l'ordre des
+feuilles. Il n'y en a plus qu'une.
+
+`color:transparent` masque le texte de remplissage sans changer la
+hauteur de la ligne : le contenu réel ne fait donc pas sauter la
+mise en page en arrivant.
+========================================================== */
+
+.skeleton,
+.app-skeleton{
+
+color:transparent !important;
+
+background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
+
+background-size:200% 100%;
+
+animation:skeleton-shimmer 1.5s ease-in-out infinite;
+
+border-radius:var(--radius-sm);
+
+pointer-events:none;
+
+}
+
+@keyframes skeleton-shimmer{
+
+0%{ background-position:200% 0; }
+
+100%{ background-position:-200% 0; }
+
+}
+
+/* Le scintillement est une décoration : sans lui le squelette reste
+un bloc gris, qui dit exactement la même chose. */
+
+@media (prefers-reduced-motion: reduce){
+
+.skeleton,
+.app-skeleton{
+
+animation:none;
+
+}
+
+}
+
+
+/* ==========================================================
+8. RESPONSIVE
+==========================================================
+Sous 640px le parcours se resserre : les étapes rétrécissent
+plutôt que de déborder en défilement horizontal, qui est le seul
+geste qu'un étudiant sur téléphone ne pense pas à faire.
+========================================================== */
+
+@media (max-width: 640px){
+
+.journey-step{
+
+min-width:64px;
+
+}
+
+.journey-step-label{
+
+font-size:.68rem;
+
+}
+
+}
+
+/* ==========================================================
+9. ÉTAPE PRÉMATURÉE (2026-08-23)
+==========================================================
+Le parcours ne connaissait que deux états : faite, ou pas. Il en
+manquait un troisième — l'étape que rien n'empêche de franchir, mais
+dont le résultat serait faible parce que ce qu'elle consomme n'existe
+pas encore.
+
+Fitz écrit la lettre de motivation à partir du profil. Générée avec
+un profil à 3/10, elle est creuse — et elle s'affiche pourtant du même
+vert qu'une lettre excellente. Un étudiant pouvait ainsi franchir les
+cinq étapes dans un ordre garantissant un dossier faible, avec un
+parcours entièrement vert. Voir js/next-action.js.
+
+Le traitement est volontairement DISCRET : trait pointillé, pastille
+en creux, libellé atténué. Rien n'est désactivé, aucun rouge, aucun
+cadenas — l'étudiant garde la main sur l'ordre de son travail. Le
+signal dit « pas encore le bon moment », pas « interdit ».
+========================================================== */
+
+.journey-step.is-premature .journey-step-dot{
+
+border-style:dashed;
+
+border-color:var(--border-color);
+
+background:transparent;
+
+color:var(--text-muted);
+
+opacity:.75;
+
+}
+
+.journey-step.is-premature .journey-step-label{
+
+color:var(--text-muted);
+
+opacity:.75;
+
+}
+
+/* Le trait qui MÈNE à une étape prématurée reste gris : colorer le
+chemin vers une étape hors de portée suggérerait une progression
+qui n'a pas eu lieu. */
+.journey-step.is-premature::before{
+
+background:var(--border-color);
+
+}
+
+/* L'étape reste survolable et cliquable — c'est le fond de la
+décision : on informe, on n'empêche pas. */
+.journey-step.is-premature:hover .journey-step-dot,
+.journey-step.is-premature:focus-visible .journey-step-dot{
+
+opacity:1;
+
+border-color:var(--amber-500);
+
+color:var(--amber-700);
+
+}
+
+/* L'avertissement sous le stepper — une phrase, pas un encadré
+d'alerte. C'est un conseil de méthode, pas un incident. */
+.journey-warning{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:9px;
+
+margin-top:12px;
+
+padding:11px 14px;
+
+border-radius:var(--radius-md);
+
+/* Pas de --amber-50 dans base.css : l'échelle ambre n'y expose que
+500, 600 et 700 (voir sa note — 700 est la seule valeur admise pour
+du texte). On pose donc l'ambre à 8 % plutôt que d'inventer un
+token de plus, ce que le système de design déconseille
+explicitement. */
+background:rgba(233,163,25,.08);
+
+border:1px solid rgba(233,163,25,.28);
+
+color:var(--text-light);
+
+font-size:var(--fs-small);
+
+line-height:1.5;
+
+}
+
+.journey-warning i,
+.journey-warning svg{
+
+flex-shrink:0;
+
+width:16px;
+
+height:16px;
+
+margin-top:2px;
+
+color:var(--amber-700);
+
+}
+
+
+/* ==========================================================
+10. ACTION PRINCIPALE (2026-08-23)
+==========================================================
+La carte de tête du panneau « Aujourd'hui ». Une seule, toujours
+présente, et visuellement détachée des suggestions qui la suivent.
+
+Avant, quatre cartes de conseil se partageaient le panneau à poids
+égal et dans un ordre fixe : un étudiant à quatre jours d'une date
+limite y voyait exactement ce que voyait celui qui venait de
+s'inscrire. Le classement vient maintenant de js/next-action.js.
+
+Quatre niveaux d'urgence, distingués par le seul liseré gauche. Pas
+de fond coloré : le panneau en compte déjà quatre cartes, et quatre
+fonds de couleurs différentes se neutralisent. Un trait de 3px sur
+une carte blanche se voit mieux qu'un aplat pastel.
+========================================================== */
+
+/* .coach-card.coach-card--principale, et non .coach-card--principale
+seul. Mesuré sur la page, pas supposé : le liseré restait gris à 1px
+et la carte en colonne. .coach-card est défini dans dashboard.css,
+feuille chargée APRÈS css/app-shell.css — à spécificité égale, c'est
+elle qui l'emporte, et son `border` raccourci écrase le
+`border-left` posé ici.
+
+C'est la deuxième fois que ce piège se referme sur ce projet (voir
+.btn-lg dans css/homepage-sections.css). Deux classes suffisent à
+trancher, sans !important. */
+
+.coach-card.coach-card--principale{
+
+grid-column:1 / -1;
+
+flex-direction:row;
+
+align-items:flex-start;
+
+gap:16px;
+
+padding:22px 24px;
+
+border-left-width:3px;
+
+border-left-style:solid;
+
+border-left-color:var(--border-color);
+
+}
+
+.coach-card-kicker{
+
+display:block;
+
+margin-bottom:6px;
+
+font-family:var(--font-display);
+
+font-size:.72rem;
+
+font-weight:var(--fw-bold);
+
+letter-spacing:.08em;
+
+text-transform:uppercase;
+
+color:var(--text-muted);
+
+}
+
+.coach-card.coach-card--critique{ border-left-color:var(--danger); }
+.coach-card.coach-card--haute{ border-left-color:var(--amber-500); }
+.coach-card.coach-card--normale{ border-left-color:var(--primary-color); }
+.coach-card.coach-card--exploration{ border-left-color:var(--border-color); }
+
+.coach-card--critique .coach-card-kicker{ color:var(--danger-700); }
+.coach-card--haute .coach-card-kicker{ color:var(--amber-700); }
+
+/* Le titre de l'action principale est plus fort que celui d'une
+suggestion : c'est la seule hiérarchie qui doit se lire d'un coup
+d'œil, avant même que la phrase soit lue. */
+.coach-card.coach-card--principale h3{
+
+font-size:1.12rem;
+
+line-height:1.3;
+
+}
+
+@media(max-width:640px){
+
+.coach-card.coach-card--principale{
+
+flex-direction:column;
+
+padding:20px;
+
+}
+
+}
+
+/* ==========================================================
+11. PALETTE DE L'ESPACE ÉTUDIANT (2026-08-23)
+==========================================================
+« Je ne veux plus de ces couleurs bleu et violet qui ne donnent pas
+l'impression de quelque chose de moderne. »
+
+CE QUI ÉTAIT À L'ÉCRAN, MESURÉ
+------------------------------
+Deux valeurs, et deux seulement, produisaient toute cette impression :
+
+  #7E71D8 (--accent-500), le VIOLET — la couleur de TOUS les liens de
+  l'espace : « Voir mes candidatures », « Améliorer ma lettre »,
+  « Discuter avec Fitz », la pastille de formule, les compteurs, les
+  puces de catégorie actives. Mesuré à 117 000 px² sur la seule page
+  Documents.
+
+  --gradient-primary (#4A5BC4 → #33418C), le BLEU VIF — en bandeau sur
+  les cartes d'outils, sur l'élément actif de la barre latérale, sur le
+  bouton d'enregistrement du profil, sur l'anneau de score. 342 000 px²
+  sur le tableau de bord. C'est lui, le bandeau bleu-violet en haut des
+  cartes.
+
+CE QUI LES REMPLACE
+-------------------
+Le système déjà validé sur les pages publiques : encre, blanc, ambre.
+
+  — L'ENCRE (#161B33) prend la place du bleu vif. Ce n'est pas « du
+    bleu plus foncé » : à cette valeur l'œil lit du noir bleuté, pas
+    une couleur. Le dégradé est conservé, resserré vers le bas de
+    l'échelle — un aplat pur perdrait la profondeur diagonale sans
+    rien gagner.
+  — L'AMBRE prend la place du violet sur les liens. C'est la couleur
+    chaude de FitzUniverse, celle des pages publiques, et --amber-700
+    est la seule valeur de l'échelle admise pour du texte (5,8:1 sur
+    blanc — vérifié à nouveau après ce changement).
+
+CONSÉQUENCE ASSUMÉE SUR L'IDENTITÉ DE FITZ
+------------------------------------------
+La section 2 de ce fichier posait « ambre = ce que fait Fitz, et rien
+d'autre ». Cette règle ne tient plus telle quelle, et il faut le dire
+plutôt que de laisser deux règles se contredire en silence : l'ambre
+devient la couleur de TOUT CE QUI RÉPOND — liens, actions, accents.
+
+Ce que Fitz garde en propre, et qui le distingue bien mieux qu'une
+teinte partagée : son HALO en dégradé aurore (--gradient-fitz) et la
+forme de son badge. Dans un espace désormais plat et encre, un dégradé
+qui pulse est le seul élément vivant de l'écran — impossible à
+confondre avec un lien.
+
+PORTÉE
+------
+Ces redéfinitions vivent dans css/app-shell.css, chargée par les
+treize pages connectées et par elles seules. Les pages publiques, que
+ces couleurs n'ont jamais gênées, gardent la palette d'origine. Un
+seul endroit à relire, aucune règle recopiée.
+========================================================== */
+
+:root{
+
+/* Le violet disparaît de l'espace. Tout ce qui consomme
+--accent-color / --accent-500 suit sans qu'aucune règle change. */
+--accent-500:var(--amber-700);
+--accent-600:var(--amber-600);
+--accent-color:var(--amber-700);
+
+/* Le bleu vif devient de l'encre. Même construction — 135deg, trois
+arrêts — resserrée sous le seuil où l'œil perçoit encore une
+couleur plutôt qu'un noir. */
+--gradient-primary:
+linear-gradient(
+135deg,
+#232A4D 0%,
+#161B33 55%,
+#0E1226 100%
+);
+
+/* Les surfaces pleines (boutons principaux, puces actives) prennent
+la même encre.
+
+C'est --primary-600 qu'il faut redéfinir, pas --primary-color :
+.btn-primary lit `var(--primary-600)` directement (css/base.css),
+et redéfinir seulement l'alias laissait le bouton principal en
+#33418C — vérifié à l'écran, pas supposé. En passant par l'échelle,
+--primary-color et --primary-hover suivent d'eux-mêmes. */
+--primary-600:#161B33;
+--primary-700:#0E1226;
+
+}
+
+/* Un lien en ambre sur blanc reste lisible, mais l'ambre seul ne dit
+pas « ceci est cliquable » aussi nettement que le bleu le faisait par
+convention. Un filet sous le libellé le rétablit — discret au repos,
+franc au survol. */
+
+.coach-card-link,
+.tool-card-cta,
+.doc-card-cta,
+.app-doc-link,
+.welcome-alert-cta{
+
+text-decoration:underline;
+
+text-decoration-color:rgba(233,163,25,.45);
+
+text-decoration-thickness:1.5px;
+
+text-underline-offset:3px;
+
+transition:text-decoration-color .2s var(--ease-standard);
+
+}
+
+.coach-card-link:hover,
+.tool-card-cta:hover,
+.doc-card-cta:hover,
+.app-doc-link:hover,
+.welcome-alert-cta:hover{
+
+text-decoration-color:var(--amber-500);
+
+}
+
+/* La carte d'outil portait un bandeau en dégradé bleu-violet sur son
+bord haut — l'élément que le signalement désignait en premier. Il est
+retiré : la carte se distingue par sa surface et son survol, pas par
+une barre de couleur qui n'apporte aucune information. */
+
+.tool-card::before,
+.tool-card::after{
+
+background:none;
+
+}
+
+/* ==========================================================
+12. TEXTE SUR SURFACE SOMBRE (2026-08-23)
+==========================================================
+Piège de portée, trouvé en photographiant le fond réel de la page
+plutôt qu'en lisant les feuilles : css/base.css pose
+
+    p{ color:var(--text-light); }
+
+sur TOUS les paragraphes. Un conteneur sombre qui déclare
+`color:#fff` transmet bien cette couleur à ses enfants — mais un
+`<p>` ne l'hérite pas : la règle d'élément l'emporte sur l'héritage.
+
+Résultat sur le bandeau d'abonnement, mesuré au pixel : le gris
+slate-600 sur l'encre donnait 1,94:1 et 1,97:1. Les deux premières
+lignes du bandeau étaient illisibles — et elles l'étaient DÉJÀ avant
+le changement de palette, à 2,4:1 sur l'ancien bleu. Assombrir le
+panneau n'a pas créé le défaut, il l'a rendu impossible à ignorer.
+
+`color:inherit` rend au conteneur la main sur ses propres textes.
+========================================================== */
+
+.upgrade-nudge p,
+.upgrade-nudge strong,
+.upgrade-nudge li{
+
+color:inherit;
+
+}
+
+/* 4,49:1 mesuré, pour un seuil à 4,5 — l'écart est invisible à l'œil
+mais un libellé d'interface ne doit pas passer à un centième près.
+--text-light tient 7,6:1 sur cette surface. */
+
+.sidebar-plan-label{
+
+color:var(--text-light);
+
+}

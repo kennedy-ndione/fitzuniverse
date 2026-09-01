@@ -1,6 +1,6 @@
 /**
 * ==========================================================
-* ScholarBridge — comportement du header public au défilement
+* Fitz — comportement du header public au défilement
 *
 * Deux effets indépendants, tous deux pilotés par un seul écouteur de
 * scroll (throttlé via requestAnimationFrame pour rester fluide à

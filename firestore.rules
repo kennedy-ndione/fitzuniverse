@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // ============================================================
-// ScholarBridge - Règles de sécurité Firestore
+// Fitz - Règles de sécurité Firestore
 //
 // Contexte : le panneau d'administration (admin/) ne vérifie
 // aujourd'hui l'appartenance "admin" que côté client (existence
@@ -241,7 +241,7 @@ allow write: if false;
 
 // ------------------------------------------------------------
 // Suivi d'événements (js/analytics.js), fondation du futur
-// ScholarBridge Control Center admin. Écrit directement depuis le
+// Fitz Control Center admin. Écrit directement depuis le
 // client tant qu'aucun Cloud Function n'existe :
 //  - analyticsEvents est un journal brut, append-only : la création
 //    est ouverte (une vue de bourse/université peut survenir avant

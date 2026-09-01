@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — panneau de messages étudiant (Module 3)
+* FitzUniverse — panneau de messages étudiant (Module 3)
 * ============================================================
 *
 * Contrepartie côté étudiant de admin/student-detail.js : lit les

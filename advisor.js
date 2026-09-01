@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — Mon conseiller (advisor.js)
+* FitzUniverse — Mon conseiller (advisor.js)
 * ============================================================
 * Page d'accompagnement humain (Signature Focus / Signature). Ne
 * réinvente aucun système de messagerie : le fil de messages
@@ -18,7 +18,7 @@
 
 import { db } from "./firebase-config.js";
 import { collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, PLAN_LABELS } from "./js/app-shell.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
@@ -29,17 +29,47 @@ const ADVISOR_INTRO = {
 signature: "Votre conseiller dédié suit l'ensemble de vos candidatures aux côtés de Fitz, avec des points d'étape réguliers. Les messages qu'il vous envoie apparaissent dans la cloche de notifications en haut de cette page."
 };
 
+// Ce que le conseiller humain apporte RÉELLEMENT, tel que le code le
+// permet aujourd'hui — pas une promesse commerciale. Chaque ligne
+// correspond à quelque chose qui existe : la demande de revue
+// (users/{uid}/advisorRequests), les messages qui arrivent dans la
+// cloche de notifications, le suivi dans la durée d'une candidature.
+const CE_QUE_FAIT_LE_CONSEILLER = [
+"Il relit votre dossier complet et vous dit ce qui, dans votre candidature précise, fera la différence — un jugement qu'aucune analyse automatique ne rend à votre place.",
+"Il vous répond directement : ses messages arrivent dans la cloche de notifications, en haut de cette page.",
+"Il suit vos candidatures dans la durée, d'une échéance à la suivante."
+];
+
 function renderLockedState(container, ctx) {
 
+// Une page verrouillée qui ne dit que « pas disponible » est un
+// cul-de-sac : l'étudiant y arrive avec une question, et repart avec
+// un bouton d'achat pour seule réponse. Elle dit maintenant trois
+// choses — ce que le conseiller apporte, ce que Fitz fait DÈS
+// MAINTENANT à sa place, et comment y accéder. L'action gratuite est
+// mise à hauteur de l'action payante, volontairement : proposer une
+// vérification par Fitz à quelqu'un qui ne peut pas payer vaut mieux
+// que de le laisser sur un mur.
 container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
-<h2>Mon conseiller</h2>
-<p>L'accompagnement par un conseiller humain est disponible avec les formules <strong>${PLAN_LABELS["signature-focus"]}</strong> et <strong>${PLAN_LABELS.signature}</strong>. Fitz reste disponible pour vous accompagner dans votre formule actuelle.</p>
+<h2>Un conseiller humain à vos côtés</h2>
+<p>L'accompagnement par un conseiller est disponible avec les formules <strong>${PLAN_LABELS["signature-focus"]}</strong> et <strong>${PLAN_LABELS.signature}</strong>.</p>
+
+<ul class="advisor-value">
+${CE_QUE_FAIT_LE_CONSEILLER.map((ligne) => `<li>${ligne}</li>`).join("")}
+</ul>
+
+<div class="advisor-locked-actions">
 <a href="offers.html#signature-focus" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
 <span>Découvrir l'accompagnement humain</span>
 </a>
+<a href="ai-check.html" class="btn btn-secondary">
+<span>Faire vérifier mon dossier par Fitz</span>
+</a>
+</div>
+
+<p class="advisor-locked-note">En attendant, Fitz fait déjà beaucoup : il rédige votre lettre de motivation, vérifie votre dossier avant l'envoi et prépare vos réponses d'entretien. Votre formule actuelle y donne accès.</p>
 </div>
 `;
 

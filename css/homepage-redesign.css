@@ -1,0 +1,441 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DE L'ACCUEIL (2026-08-29)
+index.html UNIQUEMENT — chargée en dernier, après homepage-typography.css
+(voir index.html) pour gagner la cascade sur les couleurs/polices
+déclarées dans hero.css/homepage-sections.css/opportunites.css/header.css.
+
+CONTEXTE — direction validée par Charles sur une maquette (canevas de
+conception) : « le beige me va bien pour le fond, tu peux repenser le
+reste ». Direction retenue : "éditorial chaleureux" — fond beige, gros
+titres en serif (Newsreader), corps en sans-serif chaleureux (Public
+Sans), terracotta comme couleur de marque de cette page à la place de
+l'ambre, bandes sombres en encre chaude plutôt qu'en marine/graphite.
+
+MÉTHODE — cette page utilise déjà un système de tokens CSS presque
+entièrement neutre-chaud : --gradient-deep, --ink-surface et les ombres
+ont été recolorés du marine vers le neutre le 2026-08-28 (voir base.css),
+et le bouton plein (.btn-primary/.btn-accent) utilise déjà --ink-surface
+comme couleur de texte, jamais de bleu. Ce fichier redéfinit donc
+d'abord les tokens :root qui pilotent la plupart des surfaces (fonds,
+ambre → terracotta, bleu marine restant → encre chaude), ce qui met à
+jour d'un coup tout ce qui les consomme (kicker, boutons, logo, cartes…)
+— puis complète avec des correctifs ciblés là où une couleur était
+écrite EN DUR (dégradés de photo, halo Fitz, bandeau « ouvert en ce
+moment », pied de page) plutôt que via un token, cas où la redéfinition
+de :root seule ne suffit pas.
+========================================================== */
+
+:root{
+
+/* ---------------------------------------------------------
+TYPOGRAPHIE — un seul système de titre (Newsreader) plutôt que les
+3 polices de homepage-typography.css (Space Grotesk / Fraunces / Plus
+Jakarta) : cohérence sur toute la page, comme sur la maquette validée.
+Les règles de homepage-typography.css qui ciblent --font-affirmation/
+--font-narrative continuent de s'appliquer sans y toucher : les deux
+variables pointent maintenant vers la même police.
+--------------------------------------------------------- */
+--font-affirmation:'Newsreader', serif;
+--font-narrative:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-narrative);
+
+/* ---------------------------------------------------------
+COULEUR DE MARQUE — terracotta à la place de l'ambre. Même échelle à
+3 paliers (surface / survol-surface / texte sur fond clair) que
+l'ambre d'origine (voir base.css) : --ink-surface reste la couleur de
+texte posée sur ces surfaces, son contraste tient donc pour les mêmes
+raisons (5,7:1 mesuré, contre 7,8:1 pour l'ambre — toujours au-dessus
+du seuil AA).
+--------------------------------------------------------- */
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+/* ---------------------------------------------------------
+BLEU MARINE RÉSIDUEL → ENCRE CHAUDE. --primary-color/-dark/-900
+pilotent encore quelques titres et 2 fonds sombres (bandeau
+"opportunités", bouton associé) : réalignés sur --ink-surface, déjà
+l'encre chaude du reste du système (texte des boutons pleins).
+--------------------------------------------------------- */
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+/* ---------------------------------------------------------
+FOND DE PAGE — beige, validé explicitement par Charles. Même
+construction que --gradient-hero d'origine (2 radiaux chauds + un
+aplat), recalée plus profonde. --background/-soft/-alt gardent leur
+rôle (carte / bande de section 1 / bande de section 2) sur une échelle
+beige plutôt que papier blanc, pour que cartes et bandes se détachent
+toujours légèrement du fond de page.
+--------------------------------------------------------- */
+--gradient-hero:
+radial-gradient(circle at top left,#F7F1E3 0%,transparent 45%),
+radial-gradient(circle at bottom right,#EFE6D1 0%,transparent 35%),
+#F3EEE3;
+
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+}
+
+/* ==========================================================
+POLICE DES NOMS DE BOURSES/UNIVERSITÉS — reste en Public Sans
+(--font-product) plutôt que Newsreader : ce sont des noms propres dans
+une grille façon catalogue (Oxford, ETH Zurich…), pas un titre
+éditorial — la règle générale h1-h6 (base.css) leur donnerait sinon
+--font-display (Newsreader) comme tout le reste de la page.
+========================================================== */
+.teaser-card-body h3{
+font-family:var(--font-product);
+}
+
+/* Accent en italique dans le titre du hero — même traitement que les
+<em> de "Le problème"/"Notre vision" (homepage-typography.css), pour
+que la phrase d'accroche porte elle aussi la signature "mot-clé en
+italique" de la direction éditoriale. */
+.hero-h1-accent{
+font-style:italic;
+}
+
+/* ==========================================================
+HERO — voile de photo et halos, écrits en dur (pas des tokens) :
+marine rgba(9,12,28,…) → encre chaude, ambre rgba(233,163,25,…) →
+terracotta. Même géométrie, mêmes opacités — seule la teinte change.
+========================================================== */
+
+.hero-overlay{
+background:
+linear-gradient(to bottom,rgba(28,22,16,.62) 0%,rgba(28,22,16,0) 140px),
+linear-gradient(100deg,rgba(33,29,24,.92) 0%,rgba(40,34,27,.80) 30%,rgba(48,40,32,.42) 56%,rgba(48,40,32,.18) 82%,transparent 100%),
+radial-gradient(ellipse 60% 55% at 88% 10%,rgba(217,128,90,.20) 0%,transparent 62%),
+linear-gradient(to top,var(--ink-surface) 0%,rgba(40,34,27,.35) 20%,transparent 42%);
+}
+
+.hero-visual-bg{
+box-shadow:
+0 1px 0 rgba(255,255,255,.5) inset,
+0 30px 60px -24px rgba(28,22,16,.55),
+0 12px 28px -12px rgba(28,22,16,.35);
+}
+
+.hero-visual-overlay{
+background:linear-gradient(180deg,rgba(28,22,16,.2) 0%,rgba(28,22,16,.6) 100%);
+}
+
+/* Halo derrière la photo : le violet (--accent-600, région) et le vert
+(--success, compatibilité) restent tels quels — signal sémantique des 2
+cartes flottantes, indépendant de la couleur de marque — seule la
+touche ambre devient terracotta. */
+.hero-visual::before{
+background:
+radial-gradient(circle at 28% 18%,rgba(126,113,216,.30) 0%,transparent 55%),
+radial-gradient(circle at 78% 82%,rgba(217,128,90,.20) 0%,transparent 50%);
+}
+
+/* Halo Fitz (avatar + bulle + halo derrière la carte démo) : identité
+Fitz déjà alignée sur l'échelle ambre (voir base.css --gradient-fitz),
+donc déjà réalignée sur le terracotta via les tokens plus haut. Ces 3
+valeurs sont écrites en dur et restent à traiter à la main. */
+.demo-avatar::after{
+background:radial-gradient(circle, #D9805A 0%, #8F3E22 45%, transparent 72%);
+}
+
+#fitz-message{
+background:rgba(217,128,90,.08);
+border-color:rgba(217,128,90,.14);
+}
+
+.fitz-demo .hero-demo::after{
+background:radial-gradient(circle, rgba(217,128,90,.38) 0%, rgba(217,128,90,.14) 45%, transparent 72%);
+}
+
+/* Barre de progression + badges de la liste d'analyse : dégradé bleu
+(--gradient-primary) et pastilles rgba(51,65,140,…) → terracotta,
+seule touche encore bleue de la carte Fitz. */
+#progress-bar{
+background:linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 55%, var(--amber-700) 100%);
+box-shadow:0 0 10px rgba(217,128,90,.5);
+}
+
+#analysis-list li i,
+#analysis-list li svg{
+background:rgba(143,62,34,.10);
+}
+
+/* ==========================================================
+CARTES — filet de survol bleu (--primary-color en rgba, écrit en dur)
+→ terracotta.
+========================================================== */
+.info-card:hover{
+border-color:rgba(143,62,34,.22);
+}
+
+/* ==========================================================
+COMMENT ÇA FONCTIONNE — fond dégradé froid (#F8FAFC → blanc) → même
+rythme, teinte beige.
+========================================================== */
+.how-it-works{
+background:linear-gradient(180deg,#F7F0DE 0%,#FDF9EF 100%);
+}
+
+/* ==========================================================
+BANDEAU « OUVERT EN CE MOMENT » (css/opportunites.css) — fond marine
+(#1E2550/#161C3A/--primary-900) → encre chaude. --primary-900 est déjà
+réaligné sur --ink-surface plus haut (le bouton de pied et les 2 states
+qui le consomment directement suivent automatiquement) ; les 2 arrêts
+de dégradé ci-dessous sont écrits en dur et doivent être repris à la
+main.
+========================================================== */
+.opportunites{
+background:
+radial-gradient(120% 140% at 12% 0%, #2C2419 0%, rgba(44,36,25,0) 58%),
+linear-gradient(180deg, #241E15 0%, var(--ink-surface) 100%);
+}
+
+/* Texte secondaire — #C9CEE3 (lavande froide, pensée pour un fond
+marine) → taupe chaude, même rôle (net en retrait du blanc des titres,
+au-dessus du seuil AA : 10,5:1 mesuré sur la nouvelle encre de fond,
+contre ~11:1 pour la valeur d'origine sur marine — équivalent). */
+.opportunites-verif,
+.opportunite-pays,
+.opportunite-niveau,
+.opportunite-couv,
+.opportunite-compte.est-calme,
+.opportunites-foot p,
+.opportunites-pause{
+color:#D8CBB4;
+}
+
+.opportunite:hover,
+.opportunite:focus-visible{
+border-color:rgba(217,128,90,.42);
+}
+
+.opportunite-compte.est-proche{
+background:rgba(217,128,90,.18);
+}
+
+.opportunite-marqueur{
+color:#FBE3D2;
+background:rgba(217,128,90,.14);
+border-color:rgba(217,128,90,.3);
+}
+
+.opportunites-pause:hover{
+border-color:rgba(217,128,90,.42);
+}
+
+/* ==========================================================
+EN-TÊTE — voile marine posé sur la photo du hero (écrit en dur) → même
+famille d'encre chaude que .hero-overlay ci-dessus, pour que les deux
+se lisent comme un seul et même calque. Fond une fois défilé, légèrement
+réchauffé pour rester dans la même gamme que les fonds de carte.
+========================================================== */
+.header:not(.is-scrolled){
+background:linear-gradient(to bottom,
+rgba(28,22,16,.62) 0%,
+rgba(28,22,16,.62) 75%,
+rgba(28,22,16,.35) 88%,
+rgba(28,22,16,.15) 100%);
+}
+
+.header.is-scrolled{
+background:rgba(253,249,239,.85);
+}
+
+/* ==========================================================
+CTA FINAL — panneau verre dépoli déjà neutre (rgba(14,14,16,…), pas de
+bleu) : réchauffé pour rejoindre exactement la même encre que le reste
+de la page plutôt que rester un noir neutre isolé.
+========================================================== */
+.cta-box-panel{
+background:rgba(28,22,16,.64);
+}
+
+/* ==========================================================
+CARTES DE L'ÉCHANTILLON — pastille de classement, même correctif que
+.cta-box-panel : noir neutre → encre chaude.
+========================================================== */
+.teaser-card-rank{
+background:rgba(28,22,16,.72);
+}
+
+/* ==========================================================
+PIED DE PAGE — fond ambre (couleur du "Bridge" du logo, en pleine
+surface) → même dégradé, en terracotta. Contraste blanc revérifié sur
+les 3 arrêts : 5,2:1 / 7,3:1 / 10,1:1, tous au-dessus du seuil AA (la
+version d'origine ne tenait que 5,76:1 sur son arrêt médian).
+========================================================== */
+.footer-photo-feature{
+background:linear-gradient(160deg,#A85632 0%, var(--amber-700) 55%, #6E2F1A 100%);
+}
+
+.footer-photo::after{
+background:linear-gradient(180deg, rgba(168,86,50,0) 0%, rgba(168,86,50,.35) 55%, var(--amber-700) 100%);
+}
+
+/* ==========================================================
+CORRECTIFS D'AUDIT — 2026-08-29 (après la refonte ci-dessus)
+Relevés en mesurant la page rendue dans un navigateur, pas en la
+relisant. Chaque bloc dit ce qui n'allait pas et pourquoi.
+========================================================== */
+
+/* ----------------------------------------------------------
+1. LE SYMBOLE DU PIED DE PAGE — exception supprimée (2026-08-30)
+
+Un correctif d'audit peignait ici les DEUX arcs en blanc papier : à
+l'époque l'accent était --amber-500 = #D9805A, un terracotta noyé
+dans le dégradé terracotta du pied de page (1,3:1). Depuis la palette
+« encre & or », l'accent du logo est l'or #E9A319 (--logo-accent,
+css/base.css) — chromatiquement distinct du terracotta, il tient sur
+tout le dégradé. La règle est donc partie : l'arc ambre du logo est
+INVARIANT, sur tous les fonds (voir « Le symbole — une seule
+identité », DESIGN_SYSTEM.md) ; .footer est dans la liste on-dark de
+base.css, la structure y passe seule en papier.
+---------------------------------------------------------- */
+
+/* ----------------------------------------------------------
+2. UNE ICÔNE VIOLETTE SUR UNE PAGE TERRACOTTA
+
+.destination-card posait --card-accent-icon:var(--accent-600), le
+violet générique du système (#6459B8). La refonte a redéfini les
+--amber-*, les --primary-* et les fonds, mais pas --accent-* : le
+globe de « Régions compatibles » était donc resté le seul élément de
+toute la page hors palette.
+
+Il passe en terracotta, la couleur de marque de cette page. Le sens
+tient : terracotta = ce que Fitz a trouvé pour vous (c'est déjà la
+couleur du sur-titre et du mot accentué du titre), vert = et c'est une
+bonne correspondance. La carte voisine garde --success, qui est une
+couleur d'ÉTAT et survit à un changement de palette.
+---------------------------------------------------------- */
+.destination-card{
+--card-accent-icon:var(--amber-700);
+}
+
+/* ----------------------------------------------------------
+3. LA PASTILLE « ANALYSE EN DIRECT » S'ÉTIRAIT SUR TOUTE LA CARTE
+
+.demo-status déclare `flex-basis:100%` (pour passer à la ligne sous le
+nom) ET `width:fit-content` (pour se serrer autour du texte). Dans un
+conteneur flex, flex-basis l'emporte sur width pour la taille
+principale : le width était sans effet et le fond vert clair barrait
+toute la largeur de la carte, en s'arrêtant net à droite — on lisait
+un bandeau inachevé plutôt qu'une pastille d'état.
+
+On sépare les deux rôles : le passage à la ligne est confié à un
+élément de rupture de largeur nulle (::after, remis dans l'ordre entre
+l'en-tête et la pastille), et la pastille redevient libre de se serrer
+autour de son texte.
+---------------------------------------------------------- */
+.demo-header{
+flex-wrap:wrap;
+}
+
+.demo-avatar,
+.demo-info{
+order:-1;
+}
+
+.demo-header::after{
+content:"";
+flex-basis:100%;
+height:0;
+order:0;
+}
+
+.demo-status{
+order:1;
+flex-basis:auto;
+}
+
+/* ----------------------------------------------------------
+4. LE HALO DE FITZ LISAIT COMME UNE TACHE SUR LA CARTE CLAIRE
+
+Le halo (.demo-avatar::after) est un radial flouté à 6 px, pensé pour
+les fonds sombres de l'espace connecté, où il brille. Reposé sur le
+fond crème de la carte de démonstration et recoloré en terracotta, il
+ne brillait plus : il faisait une auréole brune de café.
+
+On garde le principe — Fitz est une présence, pas un pictogramme (voir
+DESIGN_SYSTEM.md, « Le halo — Fitz n'a pas d'icône ») — mais on lui
+rend un cœur net : flou réduit, arrêts resserrés, et un fin anneau qui
+lui donne un bord. Il redevient un point vivant plutôt qu'une bavure.
+Le fond sombre n'est pas concerné : la règle est limitée à la carte de
+démonstration de cette page.
+---------------------------------------------------------- */
+.fitz-demo .demo-avatar::after{
+inset:7px;
+background:
+radial-gradient(circle,#FBE7DC 0%,#D9805A 38%,#8F3E22 68%,rgba(143,62,34,.22) 100%);
+filter:blur(1.5px);
+box-shadow:0 0 0 2.5px rgba(143,62,34,.14), 0 2px 8px rgba(143,62,34,.30);
+}
+
+/* ----------------------------------------------------------
+5. CIBLES TACTILES
+
+Mesuré sur la page rendue : liens de navigation à 39 px de haut, liens
+du pied de page à 31 px, « Crédits photo » à 17 px. La recommandation
+courante est 44 px au doigt. On n'agrandit pas le texte — on étire la
+zone cliquable autour, et seulement sur les appareils dont le pointeur
+est grossier (`pointer:coarse`), pour ne pas déformer la mise en page
+à la souris.
+---------------------------------------------------------- */
+@media (pointer:coarse){
+
+.header-link,
+.footer-links a,
+.footer-bottom a{
+display:inline-flex;
+align-items:center;
+min-height:44px;
+}
+
+.footer-links li{
+line-height:1.2;
+}
+
+}
+
+/* ----------------------------------------------------------
+6. LE NOM « FITZ » DE LA CARTE DE DÉMONSTRATION
+
+Il vient de passer de <h3> à <p> (correctif de plan de titres, voir
+index.html) : il tombait donc sous `.demo-info p`, plus spécifique que
+`.fitz-name`, et perdait à la fois sa taille et sa couleur terracotta.
+On lui rend les deux, sans revenir au titre.
+---------------------------------------------------------- */
+.fitz-demo .demo-info .fitz-name{
+margin-bottom:2px;
+font-size:.95rem;
+font-weight:700;
+color:var(--amber-700);
+}
+
+/* ==========================================================
+PIED DE PAGE — LE TERRACOTTA PLEIN ÉTAIT TROP FORT (2026-08-30,
+retour utilisateur avec capture : « la couleur du footer est trop
+forte »). L'aplat saturé #A85632→#6E2F1A criait plus fort que tout le
+reste de la page. Retour à la famille des surfaces sombres du site :
+l'encre chaude des bandeaux (offers.html, éligibilité), à peine
+réchauffée d'une lueur terracotta en haut à droite — la marque reste
+présente, en murmure plutôt qu'en aplat. Le blanc y gagne encore en
+contraste (>13:1 partout). Le fondu de la bande photo (::after) doit
+TOUJOURS se terminer sur la couleur du premier arrêt du dégradé du
+fond, sinon une couture apparaît entre la photo et les colonnes. -->
+========================================================== */
+.footer-photo-feature{
+background:
+radial-gradient(ellipse 70% 60% at 85% 0%, rgba(217,128,90,.22) 0%, rgba(217,128,90,.07) 45%, transparent 70%),
+linear-gradient(160deg, #2A211A 0%, #1E1712 55%, #15100B 100%);
+}
+
+.footer-photo::after{
+background:linear-gradient(180deg, rgba(42,33,26,0) 0%, rgba(42,33,26,.45) 55%, #2A211A 100%);
+}

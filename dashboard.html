@@ -6,21 +6,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Dashboard | ScholarBridge</title>
+<title>Mon parcours | FitzUniverse</title>
 
-<meta name="description" content="Votre espace personnel ScholarBridge : suivez votre progression, vos documents et votre accompagnement Fitz.">
+<meta name="description" content="Votre parcours : du profil au visa, six phases qui vous guident jusqu'à l'admission et la bourse.">
 
-<!-- Google Fonts (identiques au reste du parcours) -->
+<meta name="theme-color" content="#211D18">
+<!-- Pas de mode sombre : le design "papier chaud" est clair par choix. -->
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<!-- Newsreader + Public Sans — l'identité « éditorial chaleureux » du
+reste du site rejoint enfin l'espace étudiant (refonte du 2026-08-30,
+voir css/journey-shell.css). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version figée + defer — standard du site (tout createIcons() de
+script classique attend DOMContentLoaded ; les modules sont sûrs). -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
-<!-- Design system ScholarBridge -->
+<!-- Design system Fitz. app-shell.css/dashboard.css restent chargées
+pour la cloche de messages, le loader et la pastille de formule ;
+journey-shell.css (coquille sans sidebar + tokens chauds) puis
+journey.css (le parcours) les surclassent — ordre significatif. -->
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
 <link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/journey.css">
 <style>[hidden]{display:none !important;}</style>
 
 </head>
@@ -34,184 +52,30 @@
 
 <div class="dashboard-shell">
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-<aside class="sidebar" id="sidebar">
-
-<div class="sidebar-top">
-
-<a href="dashboard.html" class="sidebar-brand">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
-</a>
-
-<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
-<i data-lucide="panel-left-close"></i>
-</button>
-
-</div>
-
-<div class="sidebar-plan">
-<span class="sidebar-plan-label">Votre formule</span>
-<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
-</div>
-
-<nav class="sidebar-nav" aria-label="Navigation principale">
-
-<span class="sidebar-section-label">Mon espace</span>
-
-<ul>
-
-<li>
-<a href="dashboard.html" class="nav-link is-active" aria-current="page">
-<i data-lucide="layout-dashboard"></i>
-<span>Tableau de bord</span>
-</a>
-</li>
-
-<li>
-<a href="profile.html" class="nav-link">
-<i data-lucide="user"></i>
-<span>Mon profil</span>
-</a>
-</li>
-
-<li>
-<a href="account.html" class="nav-link">
-<i data-lucide="settings"></i>
-<span>Paramètres</span>
-</a>
-</li>
-
-<li data-feature="applications">
-<a href="applications.html" class="nav-link" data-real-href="applications.html">
-<i data-lucide="list-checks"></i>
-<span>Mes candidatures</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li>
-<a href="scholarships.html" class="nav-link">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
-</a>
-</li>
-
-<li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
-</a>
-</li>
-
-<li data-feature="documents">
-<a href="documents.html" class="nav-link" data-real-href="documents.html">
-<i data-lucide="file-text"></i>
-<span>Documents</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label">Fitz</span>
-
-<ul class="sidebar-nav-fitz">
-
-<li data-feature="ai_chat">
-<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
-<i data-lucide="message-circle"></i>
-<span>Discuter avec Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_letter">
-<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
-<i data-lucide="pen-line"></i>
-<span>Lettre de motivation</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_check">
-<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
-<i data-lucide="shield-check"></i>
-<span>Vérification</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_email">
-<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
-<i data-lucide="mail"></i>
-<span>E-mails Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_translate">
-<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
-<i data-lucide="languages"></i>
-<span>Traduction</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="compress">
-<a href="compress.html" class="nav-link" data-real-href="compress.html">
-<i data-lucide="file-archive"></i>
-<span>Compression</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="interview_prep">
-<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
-<i data-lucide="mic"></i>
-<span>Préparation entretien</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
-
-<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
-
-<li data-feature="advisor">
-<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
-<i data-lucide="user-check"></i>
-<span>Mon conseiller</span>
-</a>
-</li>
-
-</ul>
-
-</nav>
-
-<div class="sidebar-bottom">
-<button type="button" id="logoutBtn" class="sidebar-logout">
-<i data-lucide="log-out"></i>
-<span>Déconnexion</span>
-</button>
-</div>
-
-</aside>
-
 <div class="dashboard-main">
 
-<header class="topbar">
+<!-- ==========================================================
+BARRE HAUTE — remplace la sidebar (refonte du 2026-08-30).
+La navigation de l'espace étudiant, c'est LE PARCOURS ci-dessous :
+chaque outil s'ouvre depuis la phase qui lui donne un sens, jamais
+depuis un inventaire de liens. Les identifiants (messagesBellBtn,
+topbarPlanLabel, logoutBtn) sont conservés : js/app-shell.js et
+js/student-messages.js les pilotent sans modification.
+========================================================== -->
+<header class="journey-topbar">
 
-<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
-<i data-lucide="menu"></i>
-</button>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 
-<div class="topbar-title">
-<h1 id="welcomeMessage">Bonjour</h1>
-</div>
+<div class="journey-topbar-actions">
 
 <div class="messages-bell-wrap">
 
@@ -221,34 +85,49 @@
 </button>
 
 <div class="messages-panel" id="messagesPanel" hidden>
-<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-header">Messages de l'équipe</div>
 <div class="messages-panel-list" id="messagesPanelList"></div>
 </div>
 
 </div>
 
 <a href="offers.html" class="topbar-plan-chip">
-<i data-lucide="sparkles"></i>
-<span id="topbarPlanLabel">Essentiel</span>
+<span id="topbarPlanLabel">…</span>
 </a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
 
 </header>
 
 <main class="content" style="display:none;">
 
+<!-- Bannières d'état (bienvenue, activation, Pass Express, e-mail) —
+mêmes identifiants et même logique qu'avant la refonte
+(dashboard.js), seule la mise en forme les a rejoints. -->
 <div id="welcomeAlert" class="welcome-alert" hidden>
 <i data-lucide="check-circle"></i>
 <div>
-<strong>Bienvenue sur ScholarBridge !</strong>
+<strong>Bienvenue sur FitzUniverse !</strong>
 <p>Votre compte a été créé avec succès.</p>
 </div>
 </div>
 
 <div id="accompagnementAlert" class="welcome-alert welcome-alert-accompagnement" hidden>
-<i data-lucide="sparkles"></i>
 <div>
 <strong id="accompagnementAlertTitle">Votre accompagnement est activé.</strong>
-<p>Pour que Fitz vous connaisse vraiment et puisse vous guider, complétez votre profil — c'est la première étape de votre accompagnement.</p>
+<p>Pour que Fitz vous connaisse vraiment et puisse vous guider, complétez votre profil — c'est la première phase de votre parcours.</p>
 <a href="profile.html" class="welcome-alert-cta">
 <span>Compléter mon profil</span>
 <i data-lucide="arrow-right"></i>
@@ -256,14 +135,11 @@
 </div>
 </div>
 
-<!-- Pass Fitz Express actif, sans formule d'accompagnement payante —
-voir dashboard.js:renderFitzExpressBanner(). Masqué pour tout autre
-cas (formule payante active, ou aucun accès du tout). -->
 <div id="fitzExpressBanner" class="welcome-alert welcome-alert-accompagnement" hidden>
 <i data-lucide="zap"></i>
 <div>
-<strong>Pass Fitz Express — <span id="fitzExpressDaysLeft">14 jours</span> restants</strong>
-<p>Questions illimitées à Fitz, sans engagement. Passez à une formule complète pour suivre vos candidatures et débloquer tous les outils Fitz — le montant du pass est intégralement déduit sous 30 jours.</p>
+<strong>Pass Découverte — <span id="fitzExpressDaysLeft">14 jours</span> restants</strong>
+<p>Questions illimitées à Fitz, sans engagement. Passez à un forfait complet pour suivre vos candidatures et débloquer tous les outils.</p>
 <a href="offers.html" class="welcome-alert-cta">
 <span>Choisir ma formule</span>
 <i data-lucide="arrow-right"></i>
@@ -271,15 +147,11 @@ cas (formule payante active, ou aucun accès du tout). -->
 </div>
 </div>
 
-<!-- Affiché tant que l'étudiant n'a pas activé les notifications
-e-mail dans Paramètres — voir dashboard.js:renderEmailNudge(). Même
-famille visuelle que welcomeAlert/accompagnementAlert/fitzExpressBanner
-ci-dessus, pas un nouveau style. -->
 <div id="emailNudge" class="welcome-alert" hidden>
 <i data-lucide="mail"></i>
 <div>
 <strong>Fitz peut aussi vous prévenir par e-mail.</strong>
-<p>Rappels de candidatures, messages de l'équipe : activez les notifications e-mail dans vos paramètres pour ne rien manquer, même quand vous n'êtes pas connecté(e).</p>
+<p>Rappels de candidatures, messages de l'équipe : activez les notifications e-mail pour ne rien manquer.</p>
 <a href="account.html#emailNotifications" class="welcome-alert-cta">
 <span>Aller aux paramètres</span>
 <i data-lucide="arrow-right"></i>
@@ -287,208 +159,191 @@ ci-dessus, pas un nouveau style. -->
 </div>
 </div>
 
-<!-- Coach — "Aujourd'hui" -->
-<section class="coach-section reveal">
+<!-- Salutation + phase du moment -->
+<header class="jy-hello">
+<h1 id="welcomeMessage">Bonjour</h1>
+<p id="jyPhaseLine">Chargement de votre parcours…</p>
+</header>
 
-<div class="section-heading">
-<i data-lucide="compass"></i>
-<h2>Aujourd'hui</h2>
-</div>
-
-<p class="section-subtext">Voici ce que Fitz vous recommande de faire ensuite.</p>
-
-<div class="coach-grid" id="coachList"></div>
-
-</section>
-
-<!-- Statistiques -->
-<section class="stats-section reveal">
-
-<div class="stat-card">
-<div class="stat-card-icon"><i data-lucide="target"></i></div>
-<div class="stat-card-body">
-<span class="stat-card-value"><span id="aiScore">0</span><small>/10</small></span>
-<span class="stat-card-label">Profil complété</span>
-</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-card-icon"><i data-lucide="graduation-cap"></i></div>
-<div class="stat-card-body">
-<span class="stat-card-value" id="totalScholarships">0</span>
-<span class="stat-card-label">Opportunités compatibles</span>
-</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-card-icon"><i data-lucide="file-text"></i></div>
-<div class="stat-card-body">
-<span class="stat-card-value" id="documentsCount">0</span>
-<span class="stat-card-label">Documents préparés</span>
-</div>
-</div>
-
-</section>
-
-<!-- Nudge de montée en gamme (masqué en Premium) -->
-<section class="upgrade-nudge reveal" id="upgradeNudge" hidden>
-
-<div class="upgrade-nudge-icon"><i data-lucide="rocket"></i></div>
-
-<div class="upgrade-nudge-body">
-
-<p class="upgrade-nudge-current">
-Votre profil est actuellement accompagné avec la formule <strong id="upgradeCurrentPlan">Essentiel</strong>.
-</p>
-
-<p class="upgrade-nudge-title">
-En passant à <strong id="upgradeNextPlan">Avancé</strong>, vous débloquez :
-</p>
-
-<ul class="upgrade-nudge-list" id="upgradeHighlights"></ul>
-
-<a href="offers.html" class="btn-upgrade" id="upgradeCta">
-<span>Choisir ma formule</span>
+<!-- LA prochaine action (js/next-action.js) — une seule, avec son
+urgence et sa raison. Remplie par dashboard.js. -->
+<section class="jy-action" id="jyAction" hidden>
+<span class="jy-action-kicker" id="jyActionKicker"></span>
+<h2 id="jyActionTitle"></h2>
+<p id="jyActionText"></p>
+<a class="jy-action-cta" id="jyActionCta" href="#">
+<span id="jyActionCtaLabel"></span>
 <i data-lucide="arrow-right"></i>
 </a>
-
-</div>
-
 </section>
 
-<!-- Outils -->
-<section class="tools-section reveal">
+<!-- Rail du voyage — 6 phases (js/journey-map.js). -->
+<nav class="jy-rail" id="jyRail" aria-label="Les phases de votre parcours"></nav>
+<p class="jy-progress-line" id="jyProgressLine"></p>
 
-<div class="section-heading">
-<i data-lucide="layout-grid"></i>
-<h2>Vos outils</h2>
+<!-- Radar d'échéances -->
+<div class="jy-radar" id="jyRadar" hidden>
+<span class="jy-radar-label"><i data-lucide="calendar-clock"></i>Échéances</span>
+<span id="jyRadarChips" style="display:contents;"></span>
 </div>
 
-<p class="section-subtext">Les outils inclus dans votre formule, et ceux que vous pouvez encore débloquer.</p>
-
-<div class="tools-grid">
-
-<a href="applications.html" class="tool-card" data-feature="applications" data-real-href="applications.html">
-<div class="tool-card-icon"><i data-lucide="list-checks"></i></div>
-<h3>Suivi des candidatures</h3>
-<p>Suivez chaque candidature par étapes, avec des rappels pour vérifier vos portails.</p>
-<span class="tool-card-cta"><span>Voir mes candidatures</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
+<!-- ==========================================================
+PHASE 1 — PROFIL
+========================================================== -->
+<section class="jy-phase" id="phase-profil">
+<div class="jy-phase-head">
+<span class="jy-phase-num">01</span>
+<h2>Votre profil</h2>
+<span class="jy-phase-state" id="stateProfil"></span>
 </div>
-</a>
+<p class="jy-phase-sub">Tout part d'ici : Fitz lit votre profil pour trouver vos opportunités, écrire vos lettres et vérifier vos dossiers. Un profil complet, c'est un accompagnement précis.</p>
 
-<a href="documents.html" class="tool-card" data-feature="documents" data-real-href="documents.html">
-<div class="tool-card-icon"><i data-lucide="file-text"></i></div>
-<h3>Checklists &amp; documents</h3>
-<p>Suivez les documents attendus pour chaque candidature.</p>
-<span class="tool-card-cta"><span>Voir mes documents</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
+<div class="jy-card jy-profile">
+<div class="jy-profile-score"><strong id="jyProfileScore">0</strong><span>/10</span></div>
+<div class="jy-profile-copy"><p id="jyProfileCopy"></p></div>
+<a href="profile.html" class="jy-btn" id="jyProfileCta"><span>Compléter mon profil</span><i data-lucide="arrow-right"></i></a>
 </div>
-</a>
-
-<a href="ai-chat.html" class="tool-card" data-feature="ai_chat" data-real-href="ai-chat.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="message-circle"></i></div>
-<h3>Questions à Fitz</h3>
-<p>Posez vos questions ponctuelles sur votre candidature.</p>
-<span class="tool-card-cta"><span>Discuter avec Fitz</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<a href="universities.html" class="tool-card">
-<div class="tool-card-icon"><i data-lucide="landmark"></i></div>
-<h3>Universités partenaires</h3>
-<p>Parcourez librement l'ensemble des universités partenaires de ScholarBridge, au-delà de vos opportunités compatibles.</p>
-<span class="tool-card-cta"><span>Explorer les universités</span><i data-lucide="arrow-right"></i></span>
-</a>
-
-<a href="ai-letter.html" class="tool-card" data-feature="ai_letter" data-real-href="ai-letter.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="pen-line"></i></div>
-<h3>Lettre de motivation</h3>
-<p>Fitz relit et améliore votre lettre de motivation.</p>
-<span class="tool-card-cta"><span>Améliorer ma lettre</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<a href="ai-check.html" class="tool-card" data-feature="ai_check" data-real-href="ai-check.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="shield-check"></i></div>
-<h3>Vérification du dossier</h3>
-<p>Fitz vérifie la cohérence de vos documents avant l'envoi.</p>
-<span class="tool-card-cta"><span>Vérifier mon dossier</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<a href="ai-email.html" class="tool-card" data-feature="ai_email" data-real-href="ai-email.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="mail"></i></div>
-<h3>E-mails Fitz</h3>
-<p>Générez des e-mails professionnels pour vos candidatures.</p>
-<span class="tool-card-cta"><span>Rédiger un e-mail</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<a href="ai-translate.html" class="tool-card" data-feature="ai_translate" data-real-href="ai-translate.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="languages"></i></div>
-<h3>Traduction de documents</h3>
-<p>Traduisez vos documents pour vos candidatures internationales.</p>
-<span class="tool-card-cta"><span>Traduire un document</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<a href="compress.html" class="tool-card" data-feature="compress" data-real-href="compress.html">
-<div class="tool-card-icon tool-card-icon--fitz"><i data-lucide="file-archive"></i></div>
-<h3>Compression de fichiers</h3>
-<p>Réduisez un PDF ou une image à la taille exacte demandée par un portail universitaire.</p>
-<span class="tool-card-cta"><span>Compresser un fichier</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-<!-- Activée le 2026-08-10 (lot "dossier de candidature enrichi") :
-même palier que le reste du lot (Essentiel+), pas Premium comme
-l'ancienne copie du placeholder le laissait entendre. -->
-<a href="interview-prep.html" class="tool-card" data-feature="interview_prep" data-real-href="interview-prep.html">
-<div class="tool-card-icon"><i data-lucide="mic"></i></div>
-<h3>Préparation aux entretiens</h3>
-<p>Banque de questions par thème, checklist de préparation, entraînement avec Fitz.</p>
-<span class="tool-card-cta"><span>Préparer mon entretien</span><i data-lucide="arrow-right"></i></span>
-<div class="tool-card-lock">
-<i data-lucide="lock"></i>
-<span></span>
-<span class="tool-card-lock-cta"></span>
-</div>
-</a>
-
-</div>
-
 </section>
+
+<!-- ==========================================================
+PHASE 2 — OPPORTUNITÉS
+========================================================== -->
+<section class="jy-phase" id="phase-opportunites">
+<div class="jy-phase-head">
+<span class="jy-phase-num">02</span>
+<h2>Vos opportunités</h2>
+<span class="jy-phase-state" id="stateOpportunites"></span>
+</div>
+<p class="jy-phase-sub" id="jyOppsSub">Fitz croise votre profil avec le catalogue pour repérer les bourses et universités où votre dossier est compétitif.</p>
+
+<div class="jy-opps" id="jyOpps"></div>
+
+<div class="jy-phase-actions">
+<a href="universities.html" class="jy-btn"><i data-lucide="landmark"></i><span>Explorer les universités</span></a>
+<a href="scholarships.html" class="jy-btn"><i data-lucide="graduation-cap"></i><span>Explorer les bourses</span></a>
+<span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une candidature</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
+</section>
+
+<!-- ==========================================================
+PHASE 3 — DOSSIERS
+========================================================== -->
+<section class="jy-phase" id="phase-dossiers">
+<div class="jy-phase-head">
+<span class="jy-phase-num">03</span>
+<h2>Vos dossiers</h2>
+<span class="jy-phase-state" id="stateDossiers"></span>
+</div>
+<p class="jy-phase-sub">Chaque candidature suit les mêmes étapes, dans le bon ordre — Fitz vous prévient quand une étape lancée trop tôt produirait un travail à refaire.</p>
+
+<div id="jyApps"></div>
+
+<!-- La boîte à outils du dossier : chaque outil s'ouvre depuis la
+phase qui lui donne un sens. Verrouillage par formule inchangé
+(data-feature → applyFeatureLocks, js/app-shell.js). -->
+<div class="jy-card">
+<p class="jy-app-meta" style="margin:0 0 10px;">La boîte à outils de vos dossiers :</p>
+<div class="jy-tools">
+<span data-feature="ai_letter"><a href="ai-letter.html" data-real-href="ai-letter.html" class="jy-tool"><i data-lucide="pen-line"></i><span>Lettre de motivation</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<a href="test-prep.html" class="jy-tool"><i data-lucide="graduation-cap"></i><span>Préparation aux tests</span></a>
+<span data-feature="ai_check"><a href="ai-check.html" data-real-href="ai-check.html" class="jy-tool"><i data-lucide="shield-check"></i><span>Vérification du dossier</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="documents"><a href="documents.html" data-real-href="documents.html" class="jy-tool"><i data-lucide="file-text"></i><span>Mes documents</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_translate"><a href="ai-translate.html" data-real-href="ai-translate.html" class="jy-tool"><i data-lucide="languages"></i><span>Traduction</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>E-mails officiels</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="compress"><a href="compress.html" data-real-href="compress.html" class="jy-tool"><i data-lucide="file-archive"></i><span>Compression de pièces</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-tool"><i data-lucide="message-circle"></i><span>Une question ? Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
+</div>
+</section>
+
+<!-- ==========================================================
+PHASE 4 — DÉPÔT
+========================================================== -->
+<section class="jy-phase" id="phase-depot">
+<div class="jy-phase-head">
+<span class="jy-phase-num">04</span>
+<h2>Le dépôt</h2>
+<span class="jy-phase-state" id="stateDepot"></span>
+</div>
+<p class="jy-phase-sub">Le moment où le dossier part sur le portail officiel. Fitz vérifie tout avant, vous déposez ensuite — et chaque candidature déposée reste suivie ici jusqu'à la réponse.</p>
+
+<div id="jyDepot"></div>
+
+<div class="jy-card">
+<ul class="jy-list">
+<li><i data-lucide="check-circle"></i><span>Déposez toujours depuis le <strong>portail officiel</strong> de l'université ou de la bourse — le lien exact est sur la fiche de chaque candidature.</span></li>
+<li><i data-lucide="inbox"></i><span>Gardez l'<strong>e-mail de confirmation</strong> du portail : c'est votre preuve de dépôt, certaines bourses la demandent.</span></li>
+<li><i data-lucide="calendar-check"></i><span>Après le dépôt, passez la candidature au statut « Déposée » dans vos dossiers — Fitz bascule alors son suivi sur la réponse.</span></li>
+</ul>
+</div>
+</section>
+
+<!-- ==========================================================
+PHASE 5 — RÉPONSE & BOURSE
+========================================================== -->
+<section class="jy-phase" id="phase-reponse">
+<div class="jy-phase-head">
+<span class="jy-phase-num">05</span>
+<h2>Réponse &amp; bourse</h2>
+<span class="jy-phase-state" id="stateReponse"></span>
+</div>
+<p class="jy-phase-sub">Entre le dépôt et la décision, il reste des cartes à jouer : les entretiens se préparent, et une admission ne devient une bourse que quand ses documents sont confirmés.</p>
+
+<div id="jyReponse"></div>
+
+<div class="jy-card">
+<ul class="jy-list">
+<li><i data-lucide="mic"></i><span>Beaucoup de bourses sélectives convoquent un <strong>entretien</strong> — préparez-le avant d'être convoqué(e), pas après.</span></li>
+<li><i data-lucide="award"></i><span>Admission reçue ? Vérifiez si la <strong>bourse est automatique ou séparée</strong> : certaines demandent une confirmation ou des pièces supplémentaires sous quelques semaines.</span></li>
+<li><i data-lucide="file-badge"></i><span>Conservez la <strong>lettre d'admission et l'attestation de bourse</strong> : ce sont les deux pièces maîtresses de votre demande de visa.</span></li>
+</ul>
+<div class="jy-tools" style="margin-top:14px;">
+<span data-feature="interview_prep"><a href="interview-prep.html" data-real-href="interview-prep.html" class="jy-tool"><i data-lucide="mic"></i><span>Préparer l'entretien</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>Répondre à une université</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
+</div>
+</section>
+
+<!-- ==========================================================
+PHASE 6 — VISA & DÉPART (guide)
+========================================================== -->
+<section class="jy-phase" id="phase-depart">
+<div class="jy-phase-head">
+<span class="jy-phase-num">06</span>
+<h2>Visa &amp; départ</h2>
+<span class="jy-phase-state" id="stateDepart"></span>
+</div>
+<p class="jy-phase-sub">L'admission en poche, il reste le dernier kilomètre. Cochez chaque démarche accomplie — votre parcours avance jusqu'au départ. Les détails exacts dépendent du pays : Fitz répond à vos questions pays par pays.</p>
+
+<!-- Checklist visa COCHABLE (2026-08-30) : chaque étape porte un
+data-visa-step aligné sur VISA_ETAPES (js/journey-map.js) ; l'état
+coché est persisté dans le champ `visaChecklist` du document
+utilisateur, et nourrit l'état de la phase 06 (etatDesPhases). -->
+<p class="jy-phase-sub" id="jyVisaProgress" style="font-weight:700;"></p>
+
+<div class="jy-card jy-guide" id="jyVisaGuide">
+<div class="jy-guide-step" data-visa-step="pieces"><h3><i data-lucide="file-badge"></i>1 · Les pièces d'admission</h3><p>Lettre d'admission officielle et attestation de bourse — demandez les originaux si le consulat les exige.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+<div class="jy-guide-step" data-visa-step="finances"><h3><i data-lucide="banknote"></i>2 · La preuve financière</h3><p>L'attestation de bourse sert souvent de justificatif de ressources ; sinon, le consulat précise le montant à démontrer.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+<div class="jy-guide-step" data-visa-step="rdv_visa"><h3><i data-lucide="building-2"></i>3 · Le rendez-vous visa</h3><p>Prenez rendez-vous tôt : dans beaucoup de pays, les créneaux d'été partent des semaines à l'avance.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+<div class="jy-guide-step" data-visa-step="assurance"><h3><i data-lucide="heart-pulse"></i>4 · L'assurance santé</h3><p>Exigée pour la plupart des titres de séjour étudiants — certains pays l'incluent dans la bourse, vérifiez avant de payer.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+<div class="jy-guide-step" data-visa-step="logement"><h3><i data-lucide="home"></i>5 · Le logement</h3><p>Résidence universitaire d'abord (souvent incluse ou prioritaire pour les boursiers), parc privé ensuite.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+<div class="jy-guide-step" data-visa-step="depart"><h3><i data-lucide="plane"></i>6 · Le départ</h3><p>Billet, copies de tous les documents (papier + téléphone), et l'adresse de votre premier logement notée hors ligne.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
+</div>
+
+<div class="jy-phase-actions">
+<span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-btn"><i data-lucide="message-circle"></i><span>Poser une question à Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<a href="advisor.html" class="jy-btn" id="jyAdvisorBtn" hidden><i data-lucide="user-check"></i><span>Mon conseiller</span></a>
+</div>
+</section>
+
+<!-- Montée en gamme — discrète, en fin de parcours. -->
+<aside class="jy-upgrade" id="upgradeNudge" hidden>
+<i class="jy-upgrade-icon" data-lucide="rocket"></i>
+<div>
+<p>Vous avancez avec le forfait <strong id="upgradeCurrentPlan">…</strong>. En passant à <strong id="upgradeNextPlan">…</strong>, vous débloquez notamment : <span id="upgradeHighlightsInline"></span></p>
+<a href="offers.html" id="upgradeCta">Voir les forfaits →</a>
+</div>
+</aside>
 
 </main>
 

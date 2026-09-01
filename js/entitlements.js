@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — source unique de vérité des droits d'un compte
+* FitzUniverse — source unique de vérité des droits d'un compte
 * ============================================================
 *
 * Ne fait AUCUN appel Firebase et ne redéfinit AUCUNE règle : compose

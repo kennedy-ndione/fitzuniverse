@@ -1,12 +1,21 @@
 /* ==========================================================
 SCHOLARBRIDGE — MON PROFIL (profile.html)
 Repose sur css/base.css + dashboard.css : cette page partage
-désormais la même coquille sombre (sidebar/topbar) que le reste du
+désormais la même coquille (sidebar/topbar) que le reste du
 parcours authentifié — elle vivait avant sur son propre thème clair
 dupliqué (auth.css), ce qui créait une rupture visuelle en pleine
-navigation. dashboard.css fournit tokens --shell-*/sidebar/topbar ;
-ce fichier ne contient plus que ce qui est réellement propre au
-profil (nav de sections, formulaire, champs, chips...).
+navigation. dashboard.css fournit les tokens de coquille, la sidebar
+et le topbar ; ce fichier ne contient plus que ce qui est réellement
+propre au profil (nav de sections, formulaire, champs, chips…).
+
+CE COMMENTAIRE SE FERMAIT TOUT SEUL (corrigé 2026-08-22), comme celui
+de css/ai-suite.css : il abrégeait le préfixe des tokens de coquille
+en le terminant par une étoile, immédiatement suivie de la barre
+oblique du mot suivant. Les commentaires CSS ne s'imbriquent pas — la
+première étoile-barre rencontrée ferme le bloc. Les trois lignes
+suivantes se retrouvaient analysées comme du CSS et la règle placée
+juste après était avalée par la récupération d'erreur.
+Ne jamais faire figurer cette séquence dans un commentaire.
 ========================================================== */
 
 /* ==========================================================
@@ -134,10 +143,17 @@ border-bottom:1px solid var(--border-color);
 
 font-weight:700;
 
-/* var(--accent-color) ne tient que 4,37:1 sur ce fond (panneau verre
-sombre) — sous l'AA (4,5:1). accent-100, plus clair, tient ~14,8:1
-tout en gardant une teinte distincte du texte environnant. */
-color:var(--accent-100);
+/* Corrigé le 2026-08-23. Le commentaire d'origine justifiait
+--accent-100 par un « panneau verre sombre » : ce panneau est
+clair depuis longtemps — mesuré rgba(255,255,255,.72). Sur ce
+fond-là, ce lavande très pâle tombait à 1,18:1. Le lien était
+invisible, et rien ne le signalait puisque le raisonnement écrit
+juste au-dessus paraissait solide.
+
+--amber-700 est la valeur de l'échelle prévue pour du texte :
+5,8:1 sur blanc, et c'est désormais la couleur des liens de tout
+l'espace. */
+color:var(--amber-700);
 
 text-decoration:underline;
 
@@ -177,9 +193,19 @@ color:var(--text-color);
 
 .section-nav-item.is-active{
 
-background:rgba(51,65,140,.22);
+/* Ambre plutôt que bleu : dans l'espace étudiant, l'ambre est
+désormais la couleur de ce qui est actif ou cliquable (voir la
+section 11 de css/app-shell.css). */
+background:rgba(233,163,25,.20);
 
-color:#fff;
+/* Encre et non blanc. L'ancien fond était un bleu à 22 % — assez
+sombre pour porter du blanc. Le lavis ambre, lui, est CLAIR :
+mesuré au pixel, du blanc dessus tombe à 1,17:1. C'est le piège
+d'un changement de teinte à opacité égale — la lisibilité ne suit
+pas la couleur. */
+color:var(--text-color);
+
+font-weight:700;
 
 }
 
@@ -270,36 +296,13 @@ margin-bottom:22px;
 
 }
 
-.profile-section-icon{
-
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:42px;
-
-height:42px;
-
-border-radius:var(--radius-md);
-
-background:var(--background-alt);
-
-color:var(--text-light);
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .profile-section-icon i,
-.profile-section-icon svg{
-
-width:20px;
-
-height:20px;
-
-}
+.profile-section-icon svg{ width:22px; height:22px; }
 
 .profile-section-heading h2{
 
@@ -413,7 +416,7 @@ border:1.5px solid var(--border-color);
 
 border-radius:var(--radius-md);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.96rem;
 
@@ -431,7 +434,7 @@ outline:none;
 
 border-color:var(--primary-color);
 
-box-shadow:0 0 0 4px rgba(51,65,140,.12);
+box-shadow:0 0 0 4px rgba(233,163,25,.22);
 
 }
 
@@ -452,7 +455,7 @@ border:1.5px solid var(--border-color);
 
 border-radius:var(--radius-md);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.94rem;
 
@@ -481,7 +484,7 @@ outline:none;
 
 border-color:var(--primary-color);
 
-box-shadow:0 0 0 4px rgba(51,65,140,.12);
+box-shadow:0 0 0 4px rgba(233,163,25,.22);
 
 }
 
@@ -761,7 +764,7 @@ border:1.5px solid var(--border-color);
 
 border-radius:var(--radius-md);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.88rem;
 
@@ -967,7 +970,9 @@ nouveau plafond) + une bordure d'accent, pour marquer la hiérarchie
 par la bordure plutôt que par une ombre plus grosse (règle du
 Design System 2.0). Fond fixé en sombre (pas var(--background)) car
 cette barre doit rester lisible même si migrée vers une page claire. */
-border:1px solid rgba(126,113,216,.4);
+/* Liseré ambre : le violet #7E71D8 a quitté l'espace étudiant
+(voir css/app-shell.css section 11). */
+border:1px solid rgba(233,163,25,.42);
 
 box-shadow:var(--shadow-lg);
 
@@ -975,9 +980,13 @@ flex-wrap:wrap;
 
 }
 
+/* La barre de sauvegarde est sombre (rgba(15,23,42,.85)) : cette note
+retombait sur la couleur de `p{}` de css/base.css — 1,53:1, mesuré
+au pixel. Même piège que le bandeau d'abonnement, voir la section 12
+de css/app-shell.css. */
 .profile-save-note{
 
-color:var(--text-light);
+color:rgba(255,255,255,.78);
 
 font-size:.84rem;
 
@@ -1003,7 +1012,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-weight:700;
 
@@ -1205,16 +1214,213 @@ Classe CSS prête à l'emploi pour le score de complétion
 du profil depuis Firestore. Pas encore branchée côté profile.js
 (hors périmètre de cette passe couleurs) : à appliquer/retirer via
 classList quand le profil est chargé. */
-.skeleton{
-color:transparent !important;
-background:linear-gradient(90deg, var(--background-alt) 25%, var(--background-soft) 50%, var(--background-alt) 75%);
-background-size:200% 100%;
-animation:skeleton-shimmer 1.5s ease-in-out infinite;
-border-radius:var(--radius-sm);
-pointer-events:none;
+
+/* ==========================================================
+TÉLÉPHONE INTERNATIONAL (2026-08-23)
+==========================================================
+Le sélecteur de pays et le numéro national forment UNE seule ligne
+visuelle : deux champs collés, séparés par un simple filet, avec un
+liseré de focus qui entoure l'ensemble. C'est un numéro, pas deux
+informations — l'interface doit le dire.
+
+La colonne du sélecteur est fixée à 168px plutôt que dimensionnée
+sur son contenu : sans cela, elle change de largeur à chaque
+sélection (« Mali » puis « République démocratique du Congo ») et
+le champ du numéro sautille sous le curseur.
+
+Voir js/phone-international.js pour ce qui est enregistré, et
+js/phone-field.js pour le montage.
+========================================================== */
+
+/* .input-wrap est en display:flex avec align-items:center — le message
+d'erreur ajouté à l'intérieur s'y plaçait donc À CÔTÉ du champ, sur
+la même ligne, et poussait le numéro hors de sa colonne (constaté à
+l'écran, pas en lisant le code). L'enveloppe qui contient un champ
+téléphone passe en colonne : la rangée d'abord, le message dessous. */
+
+.input-wrap:has(.tel-rangee){
+
+flex-direction:column;
+
+align-items:stretch;
+
 }
 
-@keyframes skeleton-shimmer{
-0%{background-position:200% 0;}
-100%{background-position:-200% 0;}
+.tel-rangee{
+
+display:flex;
+
+align-items:stretch;
+
+width:100%;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+background:var(--background);
+
+transition:border-color .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+overflow:hidden;
+
+}
+
+/* Le focus est porté par l'ENVELOPPE, pas par chacun des deux champs :
+un liseré autour du seul sélecteur, alors que le curseur clignote
+dans le champ voisin, désigne le mauvais élément. */
+.tel-rangee:focus-within{
+
+border-color:var(--primary-color);
+
+box-shadow:0 0 0 4px rgba(233,163,25,.22);
+
+}
+
+.tel-rangee .tel-pays{
+
+/* 148px et non 168 : le formulaire du profil est sur trois colonnes,
+et une colonne fait environ 330px. Au-delà, il ne reste plus assez
+de place au numéro lui-même — mesuré, le champ n'affichait que
+« 6 71 ». La base reste fixe plutôt qu'adaptée au contenu : sans
+cela la colonne changerait de largeur à chaque sélection
+(« Mali », puis « République démocratique du Congo ») et le champ
+du numéro sauterait sous le curseur. */
+/* flex:0 0 — le sélecteur ne rétrécit JAMAIS. Mesuré avec une base
+souple : c'est lui que le flex comprimait, jusqu'à afficher
+« Cam… » à la place de « Cameroun ». Or c'est la seule chose que
+l'étudiant doit pouvoir lire d'un coup d'œil pour vérifier que
+l'indicatif est le bon. C'est au champ du numéro d'absorber la
+contrainte (flex:1 1 0 plus bas), pas à l'étiquette du pays. */
+flex:0 0 148px;
+
+width:148px;
+
+padding:14px 8px 14px 12px;
+
+border:none;
+
+border-right:1.5px solid var(--border-color);
+
+border-radius:0;
+
+background:var(--background-soft);
+
+font-family:inherit;
+
+/* .85rem et non .9 : à 148px de large, « Cameroun +237 » se faisait
+tronquer sur l'indicatif. L'indicatif compte autant que le nom —
+c'est lui que l'étudiant compare à ce qu'il connaît de son propre
+numéro. Réduire d'un demi-point fait tenir les deux, et le
+sélecteur n'est pas le texte que l'on lit longtemps. */
+font-size:.85rem;
+
+color:var(--text-light);
+
+cursor:pointer;
+
+/* Le nom du pays est tronqué plutôt que de forcer la colonne à
+s'élargir : l'indicatif, lui, reste lisible dans la liste ouverte,
+et c'est la liste qui sert à choisir. */
+text-overflow:ellipsis;
+
+}
+
+.tel-rangee .tel-pays:focus{
+
+outline:none;
+
+}
+
+.tel-rangee .tel-national{
+
+/* base 0 : le numéro prend tout ce qui reste, et c'est lui qui cède
+quand la colonne est étroite — un numéro tronqué à l'affichage
+reste lisible au défilement, un pays tronqué ne se lit plus. */
+flex:1 1 0;
+
+min-width:0;   /* sans lui, un flex refuse de descendre sous son contenu */
+
+padding:14px 16px;
+
+border:none;
+
+border-radius:0;
+
+background:transparent;
+
+font-family:inherit;
+
+font-size:.96rem;
+
+color:var(--text-color);
+
+/* Les numéros se lisent par groupes de chiffres : un espacement
+très légèrement ouvert aide l'œil à les regrouper, sans donner
+l'air d'un champ de code à usage unique. */
+letter-spacing:.01em;
+
+}
+
+.tel-rangee .tel-national:focus{
+
+outline:none;
+
+box-shadow:none;
+
+}
+
+.tel-rangee .tel-national.is-invalide{
+
+color:var(--danger-700);
+
+}
+
+.tel-rangee:has(.is-invalide){
+
+border-color:var(--danger);
+
+}
+
+.tel-rangee:has(.is-invalide):focus-within{
+
+box-shadow:0 0 0 4px rgba(217,45,32,.12);
+
+}
+
+.tel-erreur{
+
+margin-top:7px;
+
+font-size:.84rem;
+
+line-height:1.45;
+
+color:var(--danger-700);
+
+}
+
+@media(max-width:520px){
+
+/* Sous 520px, 168px de sélecteur ne laissent plus assez de place au
+numéro : les deux champs passent l'un au-dessus de l'autre, et le
+filet vertical devient horizontal. */
+.tel-rangee{
+
+flex-direction:column;
+
+}
+
+.tel-rangee .tel-pays{
+
+flex:0 0 auto;
+
+width:100%;
+
+border-right:none;
+
+border-bottom:1.5px solid var(--border-color);
+
+}
+
 }

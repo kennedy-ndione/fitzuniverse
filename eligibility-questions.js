@@ -17,12 +17,8 @@
 // bindings globaux posés par les scripts qui le précèdent.
 // ============================================================
 
-import { db } from "./firebase-config.js";
-
-import {
-collection,
-getDocs
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerUniversites } from "./js/catalog-data.js";
 
 const engine = new EligibilityEngine(QUESTIONS);
 
@@ -75,10 +71,12 @@ if (!destinationQuestion) return;
 
 try {
 
-const snap = await getDocs(collection(db, "universities"));
+// Universités SEULES : router cette page vers le catalogue complet la
+// ferait passer d'environ 111 à 591 lectures pour rien.
+const universites = await chargerUniversites();
 
 const countries = [...new Set(
-snap.docs.map((d) => d.data().country).filter(Boolean)
+universites.map((u) => u.country).filter(Boolean)
 )].sort((a, b) => a.localeCompare(b, "fr"));
 
 if (countries.length) {
@@ -148,8 +146,13 @@ card.className = "option-card";
 card.setAttribute("role", "button");
 card.tabIndex = 0;
 
+// Icône FACULTATIVE (refonte du questionnaire, 2026-08-29) : les
+// échelles ordonnées (niveau actuel, âge, niveaux de langue) n'en
+// portent plus — cinq pictogrammes quasi identiques n'aidaient pas à
+// choisir, le libellé suffit (règle "Icônes" de DESIGN_SYSTEM.md). Un
+// nom absent aurait produit un <i data-lucide="undefined"> silencieux.
 card.innerHTML = `
-<i data-lucide="${option.icon}"></i>
+${option.icon ? `<i data-lucide="${option.icon}"></i>` : ""}
 <span>${option.label}</span>
 `;
 

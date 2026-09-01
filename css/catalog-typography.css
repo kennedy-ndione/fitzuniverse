@@ -1,0 +1,87 @@
+/* ==========================================================
+FITZUNIVERSE — SYSTÈME TYPOGRAPHIQUE CATALOGUE (2026-08-13)
+scholarships.html + universities.html UNIQUEMENT. Étend le système
+posé sur index.html (voir css/homepage-typography.css) sans Fraunces :
+ces 2 pages sont des outils de recherche/catalogue (bannière + grille
+de cartes + filtres), pas de section "récit" équivalente à
+"Le problème"/"Notre vision" — donc seulement 2 des 3 identités du
+système d'index.html s'y appliquent.
+
+Fichier partagé plutôt que 2 fichiers séparés (scholarships-typography.
+css / universities-typography.css) : la structure des 2 pages est
+assez proche pour ce système précis (une bannière .bourses-hero/
+.uni-hero au même rôle que le hero de la home, une grille de cartes,
+des champs de filtre) pour ne pas dupliquer les 3 mêmes règles deux
+fois. Si l'une des deux pages a un jour besoin d'un traitement
+vraiment différent, scinder redevient pertinent.
+
+Vérifié avant d'écrire ce fichier (régression anticipée façon
+payment.html/login.html) : scholarship-details.html a sa propre
+feuille (scholarship-details.css), ne charge ni homepage-sections.css
+ni scholarships.css ni universities.css — non concerné. Les pages
+design-previews/*.html (scholarship-card.html, university-card.html)
+chargent scholarships.css/universities.css directement mais pas ce
+fichier — non concernées non plus, elles restent sur Sora/Inter.
+
+Même technique qu'index.html : redéfinir --font-display/--font-body
+(css/base.css) au niveau :root plutôt que de multiplier les sélecteurs
+— tout titre h1-h6 sans override plus spécifique hérite déjà de
+Plus Jakarta Sans (titres de carte université/bourse notamment,
+.uni-card-body h3/.scholarship-card-body h3, aucune règle dédiée
+nécessaire ici).
+========================================================== */
+
+:root{
+
+/* Mêmes noms que css/homepage-typography.css (index.html), redéclarés
+ici avec les mêmes valeurs plutôt que partagés entre fichiers : chaque
+page qui a besoin de ce système charge son propre fichier autonome,
+scholarships.html/universities.html ne chargent pas
+homepage-typography.css (ni l'inverse). Pas de --font-narrative ici —
+Fraunces n'est pas chargée par le <link> Google Fonts de ces 2 pages,
+volontairement (voir plus haut). */
+--font-affirmation:'Space Grotesk', sans-serif;
+--font-product:'Plus Jakarta Sans', sans-serif;
+--font-body:'Plus Jakarta Sans', sans-serif;
+
+--font-display:var(--font-product);
+
+}
+
+body{
+font-family:var(--font-body);
+}
+
+/* ==========================================================
+AFFIRMATION — bannière d'en-tête (.bourses-hero/.uni-hero), même rôle
+que le hero de la home : point d'entrée de page. Space Grotesk ne
+charge que 600/700 (voir le <link> dans scholarships.html/
+universities.html) : le 800 par défaut de ces h1 (scholarships.css/
+universities.css) est plafonné à 700 ici, pas de poids plus lourd
+disponible dans cette police.
+========================================================== */
+
+.bourses-hero h1,
+.uni-hero h1{
+
+font-family:var(--font-affirmation);
+font-weight:700;
+letter-spacing:-.02em;
+
+}
+
+/* ==========================================================
+CHAMPS DE RECHERCHE / FILTRE — "Inter" codé en dur dans scholarships.
+css (.bourses-search-bar input/select) et universities.css
+(.uni-toolbar-field input/select), ne suit donc pas --font-body
+automatiquement comme le reste : override explicite nécessaire ici.
+========================================================== */
+
+.bourses-search-bar input,
+.bourses-search-bar select,
+.uni-toolbar-field input,
+.uni-toolbar-field select{
+
+font-family:var(--font-body);
+
+}

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockup FitzUniverse — spécimen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;600;700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#211D18;
+  --paper:#FDFCFA;
+  --rule:#E5E0D8;
+  --muted:#6B6459;
+  --page:#F7F5F1;
+
+  /* Les trois tokens du logo */
+  --logo-accent:#E9A319;      /* INVARIANT sur tous les fonds */
+  --logo-structure:#211D18;   /* encre sur fond clair */
+  --logo-descriptor:#8A5D00;  /* NOUVEAU — famille ambre, texte sur fond clair */
+}
+.on-dark{
+  --logo-structure:#FDFCFA;
+  --logo-descriptor:#E9A319;
+}
+/* Variante à comparer : descripteur terracotta (couleur de thème de page) */
+.opt-terracotta{ --logo-descriptor:#8F3E22; }
+.opt-terracotta.on-dark{ --logo-descriptor:#D9805A; }
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font-family:"Public Sans",system-ui,sans-serif; font-size:15px; line-height:1.6;
+}
+.wrap{max-width:980px;margin:0 auto;padding:48px 24px 96px}
+h1{font-family:"Newsreader",Georgia,serif;font-size:2.1rem;font-weight:700;letter-spacing:-.01em;margin:0 0 6px}
+h2{font-family:"Newsreader",Georgia,serif;font-size:1.35rem;font-weight:700;margin:56px 0 6px}
+h3{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+p.lede{color:var(--muted);margin:0 0 8px;max-width:64ch}
+hr{border:0;border-top:1px solid var(--rule);margin:14px 0 0}
+
+.panel{border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--paper);margin-top:18px}
+.panel-light{padding:30px 28px;background:var(--paper)}
+.panel-dark{padding:30px 28px;background:#211D18;background-image:linear-gradient(135deg,#2C2620,#181410)}
+.panel-head{padding:10px 16px;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:#EFEBE4;border-bottom:1px solid var(--rule)}
+.row{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-end}
+.cell{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:.7rem;color:var(--muted);letter-spacing:.04em}
+.panel-dark .cap{color:#A79E90}
+
+/* ==== LE LOCKUP PROPOSÉ ==== */
+.fitz-lockup{
+  --lockup-size:44px;
+  display:inline-flex; align-items:center;
+  gap:calc(var(--lockup-size) * .26);
+  text-decoration:none; line-height:1;
+}
+.fitz-lockup .fitz-mark{width:var(--lockup-size);height:var(--lockup-size);flex:0 0 auto;display:block}
+.fitz-mark .mark-structure{stroke:var(--logo-structure);fill:none;transition:stroke .3s ease}
+.fitz-mark .mark-accent{stroke:var(--logo-accent);fill:none}
+.fitz-lockup-text{display:flex;flex-direction:column;gap:calc(var(--lockup-size) * .055)}
+.fitz-lockup-name{
+  font-family:"Newsreader",Georgia,serif;
+  font-weight:700;
+  font-size:calc(var(--lockup-size) * .60);
+  letter-spacing:-.005em; line-height:.95;
+  color:var(--logo-structure);
+}
+.fitz-lockup-sub{
+  font-family:"Public Sans",system-ui,sans-serif;
+  font-weight:600;
+  font-size:calc(var(--lockup-size) * .225);
+  letter-spacing:.295em; margin-right:-.295em;
+  text-transform:uppercase; line-height:1;
+  color:var(--logo-descriptor);
+}
+
+/* ==== REPRODUCTION DES 3 LOCKUPS ACTUELS (valeurs réelles du dépôt) ==== */
+.cur{display:inline-flex;align-items:center;gap:14px;line-height:1}
+.cur svg{display:block;flex:0 0 auto}
+.cur-text{display:inline-flex;flex-direction:column}
+
+/* public — css/header.css + styles inline de index.html */
+.cur-public svg{width:48px;height:48px}
+.cur-public .cur-text{align-items:baseline;flex-direction:column;line-height:1.05}
+.cur-public .n{font-family:"Newsreader",Georgia,serif;font-size:1.28rem;font-weight:800;letter-spacing:-.02em;color:var(--logo-structure)}
+.cur-public .s{font-family:"Public Sans",sans-serif;font-size:.6rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--logo-structure);opacity:.72}
+
+/* espace étudiant — css/journey-shell.css */
+.cur-journey svg{width:30px;height:30px}
+.cur-journey .cur-text{line-height:1.05}
+.cur-journey .n{font-family:"Newsreader",Georgia,serif;font-size:1.15rem;font-weight:700;color:var(--logo-structure)}
+.cur-journey .s{font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8F3E22}
+
+/* admin — styles inline de admin/dashboard.html */
+.cur-admin svg{width:30px;height:30px}
+.cur-admin .cur-text{line-height:1.15}
+.cur-admin .n{font-family:"Newsreader",Georgia,serif;font-size:1.25rem;font-weight:800;letter-spacing:-.02em;color:#FDFCFA}
+.cur-admin .s{font-family:"Public Sans",sans-serif;font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--logo-structure);opacity:.72}
+
+table{border-collapse:collapse;width:100%;margin-top:16px;font-size:.86rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82em;background:#EFEBE4;padding:1px 5px;border-radius:4px}
+.bad{color:#8F3E22;font-weight:600}
+.good{color:#2F6B4F;font-weight:600}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.12)}
+.note{background:#FFF8E8;border:1px solid #F0DFB4;border-radius:10px;padding:14px 18px;margin-top:18px;font-size:.9rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Lockup FitzUniverse</h1>
+<p class="lede">Spécimen de comparaison — l'état actuel, la proposition, et la seule décision qui reste à prendre : la couleur du descripteur.</p>
+<hr>
+
+<h2>1. Ce que le site affiche aujourd'hui</h2>
+<p class="lede">Trois balisages différents, trois jeux de classes, trois tailles de symbole, quatre tailles de descripteur. Ce ne sont pas des variantes voulues : ce sont trois écritures indépendantes du même logo.</p>
+
+<div class="panel">
+<div class="panel-head">Fond sombre — en-tête de l'accueil (index.html)</div>
+<div class="panel-dark on-dark">
+<div class="row">
+<div class="cell">
+<span class="cur cur-public">
+<svg viewBox="0 0 100 100" fill="none" class="fitz-mark"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="cur-text"><span class="n">Fitz</span><span class="s">UNIVERSE</span></span>
+</span>
+<span class="cap">« Fitz » et « UNIVERSE » sont la même couleur. Le 72&nbsp;% d'opacité ne se voit pas sur une photo — c'est exactement ce que montre ta capture.</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head">Fond clair — barre de l'espace étudiant (dashboard.html) &nbsp;·&nbsp; barre sombre de l'admin</div>
+<div class="two">
+<div class="panel-light">
+<div class="cell">
+<span class="cur cur-journey">
+<svg viewBox="0 0 100 100" fill="none" class="fitz-mark"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="cur-text"><span class="n">Fitz</span><span class="s">UNIVERSE</span></span>
+</span>
+<span class="cap">Celui que tu aimes. Le descripteur est terracotta&nbsp;<code>#8F3E22</code> — mais cette couleur n'appartient pas au logo : elle vient de <code>--amber-700</code>, que 11 feuilles de style redéfinissent.</span>
+</div>
+</div>
+<div class="panel-dark on-dark">
+<div class="cell">
+<span class="cur cur-admin">
+<svg viewBox="0 0 100 100" fill="none" class="fitz-mark"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="cur-text"><span class="n">Fitz</span><span class="s">UNIVERSE</span></span>
+</span>
+<span class="cap">Troisième écriture, en styles inline, avec « Fitz » forcé sur <code>--shell-text</code> : le token du logo est court-circuité.</span>
+</div>
+</div>
+</div>
+</div>
+
+<h2>2. La proposition</h2>
+<p class="lede">Un seul balisage, une seule classe, une seule feuille — et le descripteur qui porte enfin sa propre couleur, sur fond clair comme sur fond sombre.</p>
+
+<div class="panel">
+<div class="panel-head">Fond sombre — hero, pied de page, sidebar admin</div>
+<div class="panel-dark on-dark">
+<div class="row">
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">44&nbsp;px — en-tête</span>
+</div>
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:30px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">30&nbsp;px — barres d'application</span>
+</div>
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:24px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">24&nbsp;px — mobile</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head">Fond clair — en-tête scrollé, espace étudiant, offres, paiement</div>
+<div class="panel-light">
+<div class="row">
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">44&nbsp;px</span>
+</div>
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:30px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">30&nbsp;px</span>
+</div>
+<div class="cell">
+<span class="fitz-lockup" style="--lockup-size:24px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<span class="cap">24&nbsp;px</span>
+</div>
+</div>
+</div>
+</div>
+
+<h2>3. La seule décision qui reste : la couleur du descripteur</h2>
+<p class="lede">Les deux options tiennent le contraste. La différence est une question d'identité : l'ambre est la couleur de la marque, la terracotta est la couleur d'un thème de page.</p>
+
+<div class="two">
+
+<div class="panel">
+<div class="panel-head">Option A — famille ambre &nbsp;·&nbsp; recommandée</div>
+<div class="panel-light">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<p class="cap" style="margin:14px 0 0"><span class="swatch" style="background:#8A5D00"></span><code>#8A5D00</code> — contraste <b>5,76:1</b></p>
+</div>
+<div class="panel-dark on-dark">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<p class="cap" style="margin:14px 0 0"><span class="swatch" style="background:#E9A319"></span><code>#E9A319</code> — contraste <b>7,75:1</b> · le descripteur porte exactement la couleur de l'arc</p>
+</div>
+</div>
+
+<div class="panel opt-terracotta">
+<div class="panel-head">Option B — terracotta, comme aujourd'hui dans l'espace étudiant</div>
+<div class="panel-light">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<p class="cap" style="margin:14px 0 0"><span class="swatch" style="background:#8F3E22"></span><code>#8F3E22</code> — contraste <b>7,29:1</b></p>
+</div>
+<div class="panel-dark on-dark">
+<span class="fitz-lockup" style="--lockup-size:44px">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</span>
+<p class="cap" style="margin:14px 0 0"><span class="swatch" style="background:#D9805A"></span><code>#D9805A</code> — le lockup porte alors <b>deux</b> couleurs d'accent différentes : l'arc ambre et le mot terracotta.</p>
+</div>
+</div>
+
+</div>
+
+<div class="note">
+<b>Ce qui se joue.</b> L'ambre <code>#E9A319</code> est déjà déclaré « invariant, sur tous les fonds, sans exception » dans <code>css/base.css</code> : c'est le signe de reconnaissance de la marque. La terracotta, elle, n'existe que parce que 11 feuilles de style écrasent <code>--amber-700</code> — c'est la couleur du <i>thème de la page</i>, pas celle du logo. Lui confier le descripteur, c'est accepter que le logo change de couleur selon la page où on se trouve : précisément le défaut que tu veux corriger.
+</div>
+
+<h2>4. Ce que « professionnel » veut dire ici, concrètement</h2>
+
+<table>
+<tr><th>Détail</th><th>Aujourd'hui</th><th>Proposition</th></tr>
+<tr><td>Balisage</td><td class="bad">3 écritures différentes</td><td class="good">1 seule, <code>.fitz-lockup</code></td></tr>
+<tr><td>Police du nom</td><td class="bad"><code>var(--font-display)</code> — résolu en 4 polices différentes selon la page</td><td class="good">Newsreader, écrit en littéral</td></tr>
+<tr><td>Styles inline</td><td class="bad">5 copies dans le HTML</td><td class="good">aucun</td></tr>
+<tr><td>Couleur du descripteur</td><td class="bad">structure à 72&nbsp;% (invisible sur fond sombre) ou terracotta selon la page</td><td class="good">token <code>--logo-descriptor</code>, deux états</td></tr>
+<tr><td>Largeur du descripteur</td><td class="bad">non alignée sur le nom</td><td class="good">interlettrage réglé pour épouser la largeur de « Fitz » (à ±2&nbsp;px)</td></tr>
+<tr><td>Tailles</td><td class="bad">48 / 30&nbsp;px et 4 tailles de descripteur</td><td class="good">une variable <code>--lockup-size</code></td></tr>
+<tr><td>Survol</td><td class="bad">rotation −4° + agrandissement</td><td class="good">pas de rotation — un logo d'entreprise ne bascule pas</td></tr>
+<tr><td>Pages sans logo</td><td class="bad">offres, paiement, résultats, éligibilité ×2</td><td class="good">le lockup partout</td></tr>
+</table>
+
+<p class="lede" style="margin-top:26px">L'alignement optique du descripteur sur la largeur du nom est le détail qui sépare un logo bricolé d'un logo dessiné. C'est le réglage à vérifier à l'œil une fois posé.</p>
+
+</div>
+</body>
+</html>

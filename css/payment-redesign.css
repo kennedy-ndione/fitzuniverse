@@ -1,0 +1,194 @@
+/* ==========================================================
+FITZUNIVERSE — REFONTE VISUELLE DE L'ACTIVATION (2026-08-29)
+payment.html UNIQUEMENT — chargée en dernier, après payment.css, pour
+gagner la cascade sur les couleurs/polices déclarées dans css/base.css,
+auth.css et payment.css.
+
+CONTEXTE — dernière étape du parcours (eligibility-test → eligibility-
+questions → results → offers → payment), toutes déjà passées à
+l'identité « éditorial chaleureux ». payment.css redéfinit déjà ses
+propres tokens de police en tête de fichier (Plus Jakarta Sans/Space
+Grotesk, ajoutés le 2026-08-22) plutôt que de charger un fichier de
+typographie séparé — ce fichier fait de même, à la suite, pour rester
+cohérent avec cette page précise.
+
+FITZ — cette page a une histoire différente du reste du parcours :
+une vitrine Fitz à message rotatif a été délibérément retirée le
+2026-08-22 (voir le commentaire au-dessus de #planSummaryIcon dans
+payment.html) parce qu'elle repoussait le récapitulatif et le montant
+sur l'écran où l'étudiant s'apprête à payer. Ce fichier ajoute donc
+le même petit avatar que results.html/offers.html — pas plus grand,
+juste à côté du badge existant — jamais un nouvel élément qui
+reprendrait de la place au récapitulatif ou au bouton d'activation.
+========================================================== */
+
+:root{
+
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+--primary-color:var(--amber-700);
+--primary-dark:var(--ink-surface);
+--primary-900:var(--ink-surface);
+
+--background:#FDF9EF;
+--background-soft:#EEE4CE;
+--background-alt:#E7DAB9;
+--border-color:#E2D5B8;
+
+--gradient-hero:
+radial-gradient(circle at top left,#F7F1E3 0%,transparent 45%),
+radial-gradient(circle at bottom right,#EFE6D1 0%,transparent 35%),
+#F3EEE3;
+
+
+/* Famille --accent-* (2026-08-29) : le violet #7E71D8 de l'ancien
+espace connecté fuyait encore sur cette page à travers les feuilles
+historiques (icônes de réassurance, compteurs, liens) alors que tout
+le reste de la palette est déjà remappé ci-dessus. Terracotta aux
+mêmes rôles — et au passage le contraste s'améliore : #7E71D8 en
+texte sur fond clair tombait à ~3,4:1, #BE6032 tient 4,5:1+. */
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+}
+
+/* ==========================================================
+TITRES — même signature Newsreader que le reste du parcours.
+========================================================== */
+.section-heading h2{
+font-family:var(--font-affirmation);
+font-weight:700;
+letter-spacing:-.01em;
+}
+
+/* ==========================================================
+HALOS DÉCORATIFS — dernières traces de l'ère bleu marine/violet
+(rgba(51,65,140,…) / rgba(126,113,216,…)) → terracotta, même correctif
+que css/offers-redesign.css.
+========================================================== */
+.container::before{
+background:radial-gradient(circle,rgba(217,128,90,.22) 0%,transparent 70%);
+}
+
+.container::after{
+background:radial-gradient(circle,rgba(190,96,50,.20) 0%,transparent 70%);
+}
+
+.plan-summary{
+background:
+radial-gradient(circle at top right,rgba(217,128,90,.10),transparent 55%),
+var(--background);
+border:1px solid rgba(217,128,90,.35);
+}
+
+.summary-card{
+background:
+radial-gradient(circle at 100% 0%,rgba(217,128,90,.04),transparent 45%),
+var(--background);
+}
+
+/* ==========================================================
+LIGNE « PRIX » DU RÉCAPITULATIF — voile ambre écrit en dur (valeur
+brute, pas un token) → terracotta ; le montant lui-même est découpé
+dans --gradient-primary (marine → bleu vif), remplacé par le même
+dégradé terracotta que .progress-bar/.plan-amount ailleurs sur le site.
+========================================================== */
+.summary-row-price{
+background:linear-gradient(135deg,rgba(217,128,90,.10),rgba(217,128,90,.05));
+}
+
+.summary-row-price dd{
+background:linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 55%, var(--amber-700) 100%);
+-webkit-background-clip:text;
+background-clip:text;
+}
+
+/* ==========================================================
+MOYEN DE PAIEMENT « CARTE BANCAIRE » — seule des trois options sans
+couleur de marque propre (Wave/Orange Money gardent la leur, réelle et
+volontairement inchangée) : elle hérite par défaut de --method-glow
+écrit en dur en marine (rgba(51,65,140,.28)) plutôt que dérivé du
+token --primary-color, déjà redirigé vers le terracotta plus haut.
+========================================================== */
+.payment-method{
+--method-glow:rgba(217,128,90,.28);
+}
+
+/* ==========================================================
+BOUTON D'ACTIVATION — dernier CTA du parcours, encore sur
+--gradient-primary (marine → bleu vif) : même dégradé terracotta que
+le reste du site.
+========================================================== */
+.activation-cta{
+background:linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 55%, var(--amber-700) 100%);
+}
+
+.activation-cta:hover{
+background:var(--amber-700);
+}
+
+/* ==========================================================
+AVATAR FITZ — restreint, volontairement : voir la note en tête de ce
+fichier. Même composant que results.html/offers.html, même taille,
+juste à côté du badge existant.
+========================================================== */
+.fitz-badge-row{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+margin-bottom:16px;
+}
+
+.payment-header .fitz-badge-row .ai-badge{
+margin:0;
+}
+
+.fitz-avatar{
+position:relative;
+flex-shrink:0;
+width:32px;
+height:32px;
+border-radius:50%;
+isolation:isolate;
+}
+
+.fitz-avatar::after{
+content:"";
+position:absolute;
+inset:3px;
+border-radius:50%;
+background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
+filter:blur(4px);
+animation:fitzPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fitzPulse{
+0%,100%{ opacity:.4; transform:scale(.85); }
+50%{ opacity:1; transform:scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce){
+.fitz-avatar::after{ animation:none; }
+}
+
+/* ==========================================================
+BADGE DE LA FORMULE (« Le plus populaire »…) — dernier violet de la
+page (2026-08-29) : payment.css le peint en var(--accent-color), le
+violet #7E71D8 de l'ancien espace connecté, alors que le même badge
+sur offers.html est ambre (--amber-500, libellé --primary-900, 8,24:1).
+On aligne les deux : l'étudiant voit le même badge sur la formule
+choisie que sur la grille où il l'a choisie.
+========================================================== */
+.plan-summary-badge{
+background:var(--amber-500);
+color:var(--primary-900);
+}

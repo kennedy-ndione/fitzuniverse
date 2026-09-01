@@ -1,15 +1,72 @@
 /* ==========================================================
-SCHOLARBRIDGE — CHOIX DE L'ACCOMPAGNEMENT (offers.html)
+FITZUNIVERSE — CHOIX DE L'ACCOMPAGNEMENT (offers.html)
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html,
 eligibility-test.html, eligibility-questions.html et results.html)
 ========================================================== */
 
+/* ==========================================================
+TYPOGRAPHIE — alignement sur la pile du reste du site (2026-08-22)
+==========================================================
+offers.html chargeait encore Inter/Sora. Ce n'était pas un choix propre
+à la page mais un reste : index.html, universities.html,
+scholarships.html et les 2 pages d'éligibilité sont passées à Plus
+Jakarta Sans / Space Grotesk lors de leurs audits, chacune via son
+propre fichier de typographie (css/homepage-typography.css,
+css/catalog-typography.css, css/eligibility-typography.css).
+
+Redéfini ici plutôt que dans un 4e fichier quasi identique : offers.css
+EST la feuille propre à cette page, et elle ne consomme les polices que
+par tokens (aucun font-family en dur), donc cinq lignes suffisent là où
+un fichier séparé n'aurait ajouté qu'un aller-retour réseau.
+
+Fraunces n'est pas chargée : elle sert au registre "récit" de la page
+d'accueil, pas à une grille tarifaire.
+========================================================== */
+
+:root{
+
+--font-affirmation:'Space Grotesk', sans-serif;
+
+--font-product:'Plus Jakarta Sans', sans-serif;
+
+--font-body:'Plus Jakarta Sans', sans-serif;
+
+--font-display:var(--font-product);
+
+}
+
 body{
 
-padding:60px 20px 120px;
+font-family:var(--font-body);
 
+}
+
+/* Le h1 porte la voix de la page, comme le h1 de l'écran d'intro du
+diagnostic (css/eligibility-typography.css) : Space Grotesk. */
+.offer-header h1{
+
+font-family:var(--font-affirmation);
+
+letter-spacing:-.02em;
+
+}
+
+
+body{
+
+/* Les deux halos décoratifs .container::before/::after sont posés à
+left:-8% / right:-10%, donc volontairement hors de la colonne pour
+diffuser aux bords de la page. Comme tout élément absolu à retrait
+négatif, ils AGRANDISSENT la zone de défilement : mesuré à 1240px de
+large, scrollWidth montait à 1316 et une barre horizontale apparaissait
+sur une page qui n'a rien à faire défiler latéralement.
+
+Même correction que sur eligibility-*.css : on ne coupe que la part
+déjà hors écran, les halos visibles sont intacts. */
 overflow-x:hidden;
+
+padding:60px 20px 120px;
 
 }
 
@@ -29,6 +86,13 @@ margin:0 auto;
 PROFONDEUR — HALOS DE FOND (hero)
 ========================================================== */
 
+/* Halos statiques (plus d'animation en boucle) : ces deux blobs
+tournaient indéfiniment (translate+scale, 24-28s) même hors écran et
+même une fois le défilement commencé — exactement le genre de coût de
+compositing continu (filter:blur(70px) sur 420/380px, jamais mis en
+pause) qui rendait le scroll de cette page saccadé. Cohérent avec la
+règle déjà en place plus bas sur cette page (voir .plan-card-premium) :
+« aucune nouvelle animation en boucle en dehors du halo Fitz ». */
 .container::before,
 .container::after{
 
@@ -58,8 +122,6 @@ height:420px;
 
 background:radial-gradient(circle,rgba(51,65,140,.22) 0%,transparent 70%);
 
-animation:heroHaloA 24s ease-in-out infinite;
-
 }
 
 .container::after{
@@ -73,33 +135,6 @@ width:380px;
 height:380px;
 
 background:radial-gradient(circle,rgba(126,113,216,.20) 0%,transparent 70%);
-
-animation:heroHaloB 28s ease-in-out infinite;
-
-}
-
-@keyframes heroHaloA{
-
-0%,100%{ transform:translate(0,0) scale(1); }
-50%{ transform:translate(30px,20px) scale(1.08); }
-
-}
-
-@keyframes heroHaloB{
-
-0%,100%{ transform:translate(0,0) scale(1); }
-50%{ transform:translate(-24px,26px) scale(1.06); }
-
-}
-
-@media (prefers-reduced-motion: reduce){
-
-.container::before,
-.container::after{
-
-animation:none;
-
-}
 
 }
 
@@ -133,9 +168,11 @@ transform:translateY(0);
 
 }
 
-html.js-ready .fitz-showcase.reveal{ transition-delay:.1s; }
 html.js-ready .free-step.reveal{ transition-delay:.05s; }
-html.js-ready .pricing-grid.reveal{ transition-delay:.06s; }
+/* .pricing-grid ne porte plus .reveal lui-même (2026-08-15) : chaque
+.plan-card la porte désormais individuellement pour un stagger par
+carte plutôt qu'un fondu de bloc unique — voir css/animations.css
+(.pricing-grid .reveal:nth-child). */
 
 @media (prefers-reduced-motion: reduce){
 
@@ -155,40 +192,11 @@ transition:none !important;
 EN-TÊTE
 ========================================================== */
 
-.back-link{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-margin-bottom:32px;
-
-color:var(--text-light);
-
-font-weight:600;
-
-font-size:.9rem;
-
-transition:var(--transition);
-
-}
-
-.back-link i,
-.back-link svg{
-
-width:16px;
-
-height:16px;
-
-}
-
-.back-link:hover{
-
-color:var(--primary-color);
-
-}
+/* .back-link centralisé dans css/base.css (2026-08-28) — vivait ici en
+double, à l'identique, avec la copie de payment.css (même sort que
+.ai-badge avant lui, voir la note en tête de sa règle dans
+payment.css). Rien à redéfinir ici : le style de base convient tel
+quel à un lien posé en haut de .container comme celui-ci. */
 
 /* Bandeau contextuel (offers-context.js) — même gabarit que .free-step
 plus bas (icône ronde + texte en ligne) mais teinté de l'identité
@@ -196,6 +204,9 @@ plus bas (icône ronde + texte en ligne) mais teinté de l'identité
 plutôt que du vert générique de .free-step-icon : ce bandeau reprend
 un diagnostic que Fitz vient de produire, pas un simple repère "étape
 gratuite déjà faite". */
+/* Ambre et non violet/cyan (2026-08-27) : identité "aurore" de Fitz,
+comme --gradient-fitz (css/base.css), qui est passé du violet à
+l'ambre ce même jour — voir la note à cet endroit. */
 .context-banner{
 
 display:flex;
@@ -204,9 +215,9 @@ align-items:center;
 
 gap:16px;
 
-background:linear-gradient(135deg,rgba(139,124,246,.08),rgba(34,168,201,.08));
+background:rgba(233,163,25,.08);
 
-border:1px solid rgba(139,124,246,.25);
+border:1px solid rgba(233,163,25,.25);
 
 border-radius:var(--radius-lg);
 
@@ -216,27 +227,31 @@ margin-bottom:28px;
 
 }
 
+/* Sans cette règle, l'attribut hidden posé dans le HTML n'a AUCUN effet :
+[hidden]{display:none} est une feuille de style navigateur, que le
+display:flex ci-dessus — style auteur — bat systématiquement. Le bandeau
+s'affichait donc VIDE en haut de page pour tout visiteur arrivé sans
+?program dans l'URL, c'est-à-dire le parcours normal. Même bug, même
+correction que .results-loading dans results.css. */
+.context-banner[hidden]{
+
+display:none;
+
+}
+
+
+/* Icône nue — le disque de 40px en dégradé Fitz a disparu le 2026-08-22
+(règle « Icônes » de DESIGN_SYSTEM.md : aucun conteneur, la couleur
+porte le sens). */
 .context-banner-icon{
 
 flex-shrink:0;
 
-display:flex;
+width:22px;
 
-align-items:center;
+height:22px;
 
-justify-content:center;
-
-width:40px;
-
-height:40px;
-
-border-radius:50%;
-
-background:var(--gradient-fitz);
-
-color:#fff;
-
-box-shadow:var(--glow-fitz);
+color:var(--accent-600);
 
 }
 
@@ -303,13 +318,29 @@ border-radius:var(--radius-lg);
 
 background:
 
-linear-gradient(160deg,rgba(18,22,46,.90) 0%,rgba(51,65,140,.74) 55%,rgba(18,22,46,.93) 100%),
+/* Le bleu de marque du voile central (rgba(51,65,140,.74)) a laissé
+place à un marine presque noir réchauffé d'une lueur ambrée, le
+2026-08-22. Même recette que le héros d'index.html et que le fond des
+pages d'éligibilité : l'ambre est devenu le signal de chaleur de
+FitzUniverse — on le retrouve sur le kicker de la page d'accueil, les
+libellés d'étapes, la frise des universités, les surfaces Fitz et l'état
+pressé des boutons. Le voile reste sombre et opaque : la lueur passe
+au-dessus mais à 20%, assez pour réchauffer la photo de remise de
+diplômes, trop peu pour entamer le contraste du texte blanc (mesuré
+plus bas). */
+radial-gradient(ellipse 66% 78% at 82% 14%,rgba(233,163,25,.30) 0%,rgba(233,163,25,.10) 45%,transparent 68%),
+linear-gradient(155deg,rgba(10,13,28,.88) 0%,rgba(19,24,50,.76) 52%,rgba(8,11,24,.91) 100%),
 
-url("assets/images/hero-bg5.jpg");
+/* graduation-1600w depuis le 2026-08-29 (remplace hero-bg5 : ses
+visages en gros plan étaient tranchés par le recadrage du bandeau —
+retour utilisateur avec capture). La mer de toques est une texture :
+elle se recadre sans jamais rien couper d'important. Variante 1600w,
+jamais le fichier d'origine (1,4 Mo). */
+url("assets/images/graduation-1600w.jpg");
 
 background-size:cover;
 
-background-position:center 30%;
+background-position:center 45%;
 
 box-shadow:var(--shadow-lg);
 
@@ -329,40 +360,18 @@ background:radial-gradient(circle at 12% 15%,rgba(126,113,216,.22),transparent 5
 
 }
 
+/* Badge Fitz : apparence définie une seule fois dans css/base.css
+(section "BADGE FITZ — signature unique"). Ne reste ici que
+l'espacement propre à cette page.
+Cette page portait la variante la plus éloignée des autres — blanc
+translucide + text-shadow — parce que le badge se pose ici sur une
+photo sombre et qu'un fond clair translucide y aurait disparu. La
+pilule blanche opaque de base.css règle le problème à la source :
+elle tient sur la photo comme sur un fond clair, donc plus besoin
+de variante locale. Ne pas réintroduire de fond translucide ici. */
 .ai-badge{
 
-display:flex;
-
-align-items:center;
-
-gap:8px;
-
-width:max-content;
-
 margin:0 auto 22px;
-
-padding:10px 18px;
-
-border-radius:var(--radius-full);
-
-background:rgba(255,255,255,.14);
-
-color:#fff;
-
-font-weight:700;
-
-font-size:.88rem;
-
-text-shadow:0 1px 3px rgba(0,0,0,.3);
-
-}
-
-.ai-badge i,
-.ai-badge svg{
-
-width:16px;
-
-height:16px;
 
 }
 
@@ -398,168 +407,11 @@ text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
 
 }
 
-/* ==========================================================
-FITZ AI — LE PERSONNAGE PRINCIPAL
-========================================================== */
-
-.fitz-showcase{
-
-display:flex;
-
-align-items:center;
-
-gap:20px;
-
-max-width:640px;
-
-margin:0 auto 48px;
-
-padding:22px 28px;
-
-border-radius:var(--radius-lg);
-
-background:var(--glass);
-
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-border:1px solid var(--glass-border);
-
-box-shadow:var(--shadow-md);
-
-}
-
-/* Fitz porte partout sur le site la même identité or-dominante
-(--gradient-fitz/--glow-fitz) et le même halo conique animé — voir
-css/hero.css .demo-avatar et css/ai-suite.css .fitz-avatar. Cet
-avatar utilisait encore --gradient-primary générique + un anneau qui
-pulse, une signature bespoke qui dupliquait sans réutiliser celle
-déjà établie. */
-.fitz-showcase-avatar{
-
-position:relative;
-
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:52px;
-
-height:52px;
-
-border-radius:16px;
-
-background:var(--gradient-fitz);
-
-color:#fff;
-
-box-shadow:var(--glow-fitz);
-
-isolation:isolate;
-
-}
-
-.fitz-showcase-avatar i,
-.fitz-showcase-avatar svg{
-
-width:24px;
-
-height:24px;
-
-}
-
-.fitz-showcase-avatar::before{
-
-content:"";
-
-position:absolute;
-
-inset:-3px;
-
-z-index:-1;
-
-border-radius:inherit;
-
-/* Halo "aurore" de Fitz — mêmes teintes que --gradient-fitz
-(css/base.css). Cette page était restée sur l'ancien halo or/marron :
-Fitz y portait donc une identité différente du reste du site. */
-background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
-
-opacity:.55;
-
-filter:blur(6px);
-
-animation:fitzHalo 8s linear infinite;
-
-}
-
 @keyframes fitzHalo{
 
 100%{ transform:rotate(360deg); }
 
-}
-
-.fitz-showcase-copy{
-
-min-width:0;
-
-}
-
-.fitz-showcase-label{
-
-display:block;
-
-margin-bottom:4px;
-
-color:var(--text-muted);
-
-font-weight:700;
-
-font-size:.74rem;
-
-text-transform:uppercase;
-
-letter-spacing:.05em;
-
-}
-
-.fitz-showcase-copy p{
-
-color:var(--text-color);
-
-font-weight:700;
-
-font-size:1.05rem;
-
-min-height:1.4em;
-
-opacity:1;
-
-transform:translateY(0);
-
-transition:opacity .4s var(--ease-premium), transform .4s var(--ease-premium);
-
-}
-
-.fitz-showcase-copy p.is-swapping{
-
-opacity:0;
-
-transform:translateY(6px);
-
-}
-
-@media (prefers-reduced-motion: reduce){
-
-.fitz-showcase-avatar::before{ animation:none; }
-
-}
-
-/* ==========================================================
+}/* ==========================================================
 ÉTAPE GRATUITE DÉJÀ RÉALISÉE
 ========================================================== */
 
@@ -585,25 +437,19 @@ box-shadow:var(--shadow-xs);
 
 }
 
+/* Icône nue, verte : elle signale un état déjà acquis (« toujours
+gratuit »), pas un décor. --success-700 et non --success brut : c'est
+une icône porteuse de sens sur fond clair, le vert vif ne tient pas le
+contraste (voir l'échelle d'état dans css/base.css). */
 .free-step-icon{
 
 flex-shrink:0;
 
-display:flex;
+width:20px;
 
-align-items:center;
+height:20px;
 
-justify-content:center;
-
-width:38px;
-
-height:38px;
-
-border-radius:50%;
-
-background:var(--success);
-
-color:#fff;
+color:var(--success-700);
 
 }
 
@@ -613,52 +459,6 @@ color:#fff;
 width:18px;
 
 height:18px;
-
-}
-
-.free-step-copy{
-
-flex:1;
-
-min-width:0;
-
-}
-
-.free-step-label{
-
-display:inline-block;
-
-margin-bottom:4px;
-
-color:var(--text-muted);
-
-font-weight:700;
-
-font-size:.76rem;
-
-text-transform:uppercase;
-
-letter-spacing:.04em;
-
-}
-
-.free-step-copy h3{
-
-font-size:1.02rem;
-
-font-weight:700;
-
-color:var(--text-color);
-
-margin-bottom:2px;
-
-}
-
-.free-step-copy p{
-
-color:var(--text-light);
-
-font-size:.9rem;
 
 }
 
@@ -744,20 +544,6 @@ margin-bottom:0;
 
 }
 
-/* Condition commerciale du Pass Express (voir `note` dans
-pricing-plans.js) — secondaire par rapport à la description. */
-.consult-note{
-
-margin-top:8px !important;
-
-font-size:13px;
-
-font-weight:600;
-
-color:var(--primary-color);
-
-}
-
 .pricing-grid{
 
 position:relative;
@@ -766,10 +552,11 @@ z-index:1;
 
 display:grid;
 
-/* 3 formules complètes. Signature a quitté cette grille le
-2026-08-02 pour la section "Accompagnement humain" (voir
-.pricing-grid--duo) : elle ne se compare pas sur le même axe. */
-grid-template-columns:repeat(3,1fr);
+/* 2 formules autonomes (Standard/Avancé) depuis la grille 2026-08-15 —
+Premium en a été retiré (déprécié, voir pricing-plans.js) et Signature
+n'a jamais fait partie de cette grille (section "Accompagnement humain",
+.pricing-grid--duo : elle ne se compare pas sur le même axe). */
+grid-template-columns:repeat(2,1fr);
 
 /* stretch (pas start) : la formule Signature a une description plus
 longue que les 3 autres — étirer les 4 cartes à la même hauteur (le
@@ -806,40 +593,9 @@ transition:var(--transition);
 
 .plan-card:hover{
 
-transform:translateY(-6px);
+transform:translateY(-8px);
 
-box-shadow:var(--shadow-md);
-
-}
-
-.plan-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:56px;
-
-height:56px;
-
-margin-bottom:22px;
-
-border-radius:18px;
-
-background:var(--background-light);
-
-color:var(--primary-color);
-
-}
-
-.plan-icon i,
-.plan-icon svg{
-
-width:26px;
-
-height:26px;
+box-shadow:var(--shadow-lg);
 
 }
 
@@ -875,37 +631,55 @@ line-height:1.5;
 .plan-tagline mais sans l'italique, pour un paragraphe de plusieurs
 lignes plutôt qu'une accroche courte. */
 
-/* Signature est la seule formule sans .plan-price-alt sous son prix
-(cette ligne ne portait que la conversion en euros, supprimée) : sans
-elle, la description remontait à 2px du montant. Reprend l'espacement
-que .plan-price-alt fournissait (margin-bottom:24px). */
-.plan-price + .plan-description{
+/* ==========================================================
+PRIX — l'euro porte le montant, le FCFA le surmonte en petit
+==========================================================
+Inversion demandée le 2026-08-22. Elle renverse une décision inverse
+documentée dans pricing-plans.js (le champ priceEUR y avait été supprimé
+le 2026-08-02, au motif que le FCFA est "la seule devise réellement
+utilisée par les étudiants concernés") — c'est un choix commercial, pas
+technique, et il appartient au propriétaire du produit.
 
-margin-top:24px;
+Le FCFA reste affiché, et au-dessus : c'est lui qui sera réellement
+prélevé (Wave / Orange Money / MTN MoMo sont des rails FCFA), l'euro
+n'est qu'une conversion à parité fixe. Le supprimer aurait affiché un
+prix dans une devise que personne ne paie.
 
-}
-
-.plan-description{
-
-color:var(--text-light);
-
-font-size:.88rem;
-
-line-height:1.55;
-
-margin-bottom:20px;
-
-}
-
+Empilé en colonne, pas en ligne : les trois niveaux (référence locale,
+montant, durée) se lisent de haut en bas sans que l'œil ait à revenir. */
 .plan-price{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:2px;
+
+margin-bottom:22px;
+
+}
+
+.plan-price-local{
+
+font-size:.78rem;
+
+font-weight:600;
+
+letter-spacing:.02em;
+
+color:var(--text-muted);
+
+}
+
+.plan-price-main{
 
 display:flex;
 
 align-items:baseline;
 
-gap:8px;
-
-margin-bottom:2px;
+gap:4px;
 
 }
 
@@ -913,83 +687,37 @@ margin-bottom:2px;
 
 font-family:var(--font-display);
 
-font-size:2.3rem;
+font-size:2.5rem;
 
 font-weight:800;
 
-color:var(--primary-color);
+color:var(--primary-dark);
 
-letter-spacing:-.01em;
+letter-spacing:-.02em;
+
+line-height:1;
 
 }
 
 .plan-currency{
 
-font-weight:700;
-
-color:var(--text-muted);
-
-font-size:.95rem;
-
-}
-
-.plan-price-alt{
-
-color:var(--text-muted);
-
-font-size:.84rem;
-
-margin-bottom:24px;
-
-}
-
-.plan-meter{
-
-margin-bottom:26px;
-
-}
-
-.plan-meter-label{
-
-display:block;
-
-margin-bottom:8px;
-
-color:var(--text-muted);
+font-family:var(--font-display);
 
 font-weight:700;
 
-font-size:.72rem;
+color:var(--primary-dark);
 
-text-transform:uppercase;
-
-letter-spacing:.05em;
+font-size:1.3rem;
 
 }
 
-.plan-meter-bar{
+.plan-price-term{
 
-height:6px;
+margin-top:4px;
 
-border-radius:var(--radius-full);
+font-size:.82rem;
 
-overflow:hidden;
-
-background:var(--meter-track,var(--background-alt));
-
-}
-
-.plan-meter-bar span{
-
-display:block;
-
-height:100%;
-
-border-radius:inherit;
-
-background:var(--meter-fill,var(--primary-color));
-
-transition:width 1s var(--ease-premium);
+color:var(--text-muted);
 
 }
 
@@ -1172,14 +900,6 @@ border-color:rgba(168,53,106,.30);
 
 }
 
-.plan-card--human .plan-icon{
-
-background:#FBE7EF;
-
-color:#A8356A;
-
-}
-
 .plan-card--human .plan-amount{
 
 color:#A8356A;
@@ -1241,17 +961,9 @@ z-index:2;
 
 .plan-card-featured:hover{
 
-transform:scale(1.045) translateY(-6px);
+transform:scale(1.045) translateY(-8px);
 
-}
-
-.plan-card-featured .plan-icon{
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-box-shadow:0 10px 24px rgba(51,65,140,.32);
+box-shadow:var(--shadow-lg);
 
 }
 
@@ -1344,27 +1056,6 @@ box-shadow:0 8px 20px rgba(233,163,25,.32);
 .plan-badge--recommended i,
 .plan-badge--recommended svg{ color:var(--primary-900); }
 
-/* Sur la carte sombre, le badge neutre clair se confondrait avec le
-fond de page : version pleine violette, cohérente avec l'accent que
-Premium utilise déjà pour son prix et ses icônes. */
-/* --accent-500 + texte --primary-900 tombait à 4,44:1, juste sous AA.
---accent-600 avec un texte blanc monte à 5,7:1 tout en restant l'accent
-violet attendu sur la carte sombre. */
-.plan-badge--premium{
-
-background:var(--accent-600);
-
-border-color:transparent;
-
-color:#fff;
-
-box-shadow:0 8px 20px rgba(100,89,184,.4);
-
-}
-
-.plan-badge--premium i,
-.plan-badge--premium svg{ color:#fff; }
-
 /* Section accompagnement humain — rose, ni bleu ni violet : ces deux
 offres ne se comparent pas sur l'axe des formules. */
 .plan-badge--human{
@@ -1412,17 +1103,9 @@ box-shadow:var(--shadow-lg);
 
 .plan-card-premium:hover{
 
-transform:translateY(-6px);
+transform:translateY(-8px);
 
 box-shadow:var(--shadow-lg);
-
-}
-
-.plan-card-premium .plan-icon{
-
-background:rgba(126,113,216,.18);
-
-color:var(--accent-500);
 
 }
 
@@ -1446,14 +1129,6 @@ color:var(--accent-500);
 
 }
 
-.plan-card-premium .plan-currency,
-.plan-card-premium .plan-price-alt,
-.plan-card-premium .plan-meter-label{
-
-color:rgba(255,255,255,.5);
-
-}
-
 .plan-card-premium .plan-features li{
 
 color:rgba(255,255,255,.86);
@@ -1471,8 +1146,8 @@ color:var(--accent-500);
 
 }
 
-/* Même correction de contraste que .plan-badge--premium : --accent-500
-avec un libellé sombre plafonnait à 4,44:1. */
+/* --accent-500 avec un libellé sombre plafonnait à 4,44:1, juste sous
+AA ; --accent-600 avec un texte blanc monte à 5,7:1. */
 .plan-cta-premium{
 
 background:var(--accent-600);
@@ -1531,23 +1206,13 @@ box-shadow:var(--shadow-xs);
 
 .consult-icon{
 
-flex:0 0 auto;
+flex-shrink:0;
 
-width:48px;
+width:24px;
 
-height:48px;
+height:24px;
 
-border-radius:var(--radius-full);
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-background:var(--primary-50);
-
-color:var(--primary-600);
+color:var(--amber-700);
 
 }
 
@@ -1555,26 +1220,6 @@ color:var(--primary-600);
 .consult-icon svg{width:21px;height:21px;}
 
 .consult-body{flex:1 1 auto;min-width:220px;}
-
-.consult-eyebrow{
-
-display:block;
-
-font-size:12px;
-
-font-weight:700;
-
-letter-spacing:.08em;
-
-text-transform:uppercase;
-
-/* Discret sans être illisible : --text-muted ne donnait que 2,45:1 sur
-le fond clair de la bannière. --text-light passe le seuil AA. */
-color:var(--text-light);
-
-margin-bottom:6px;
-
-}
 
 .consult-body h3{
 
@@ -1612,32 +1257,6 @@ gap:10px;
 
 }
 
-.consult-price{
-
-font-size:20px;
-
-font-weight:700;
-
-color:var(--primary-color);
-
-font-variant-numeric:tabular-nums;
-
-}
-
-.consult-price small{
-
-display:block;
-
-font-size:12px;
-
-font-weight:500;
-
-color:var(--text-muted);
-
-text-align:right;
-
-}
-
 @media(max-width:768px){
 
 .consult-banner{
@@ -1654,161 +1273,7 @@ text-align:left;
 
 .consult-cta-wrap .btn{width:100%;justify-content:center;}
 
-}
-
-
-/* Conteneur des mentions, autrefois porté par la section du tableau
-comparatif (supprimée). */
-.offer-mentions{
-
-margin-bottom:56px;
-
-}
-
-.compare-note{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-gap:9px;
-
-margin-top:20px;
-
-color:var(--text-color);
-
-font-size:.9rem;
-
-font-weight:var(--fw-semibold);
-
-}
-
-.compare-note i,
-.compare-note svg{
-
-width:18px;
-
-height:18px;
-
-flex-shrink:0;
-
-color:var(--amber-700);
-
-}
-
-.compare-transparence{
-
-max-width:70ch;
-
-margin:12px auto 0;
-
-text-align:center;
-
-font-size:.85rem;
-
-line-height:1.65;
-
-color:var(--text-muted);
-
-}
-
-/* --- Repli en cartes empilées ---
-Bascule à 1023px et non 768px : mesuré, le tableau à 8 colonnes réclame
-environ 970px de large. À 768px il débordait de son conteneur et
-l'overflow:hidden en coupait le contenu sans aucun moyen d'y accéder —
-un défaut pire qu'un défilement horizontal. 1023px est aussi le point
-de bascule déjà utilisé par .pricing-grid sur cette page. */
-
-
-}
-
-/* ==========================================================
-RÉASSURANCE
-========================================================== */
-
-.reassurance{
-
-display:flex;
-
-flex-wrap:wrap;
-
-justify-content:center;
-
-gap:14px;
-
-margin-bottom:72px;
-
-}
-
-.reassurance-item{
-
-display:flex;
-
-align-items:center;
-
-gap:9px;
-
-padding:12px 20px;
-
-border-radius:var(--radius-full);
-
-background:var(--glass);
-
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-border:1px solid var(--glass-border);
-
-box-shadow:var(--shadow-xs);
-
-color:var(--text-color);
-
-font-weight:600;
-
-font-size:.85rem;
-
-}
-
-.reassurance-item i,
-.reassurance-item svg{
-
-flex-shrink:0;
-
-width:17px;
-
-height:17px;
-
-color:var(--primary-color);
-
-}
-
-.reassurance-item-whatsapp{
-
-text-decoration:none;
-
-cursor:pointer;
-
-transition:var(--transition);
-
-}
-
-/* Même correction que .teaser-whatsapp (css/homepage-sections.css,
-lot 1) : #25D366 ne fait que 1,98:1 sur fond clair, sous le seuil de
-3:1. #178F43 reste identifiable comme vert WhatsApp et passe à 4,16:1. */
-.reassurance-item-whatsapp i,
-.reassurance-item-whatsapp svg{color:#178F43;}
-
-.reassurance-item-whatsapp:hover{
-
-transform:translateY(-2px);
-
-box-shadow:var(--shadow-sm);
-
-}
-
-/* ==========================================================
+}/* ==========================================================
 FAQ (accordéon natif)
 ========================================================== */
 
@@ -1936,12 +1401,6 @@ margin-bottom:32px;
 
 }
 
-.fitz-showcase{
-
-margin-bottom:32px;
-
-}
-
 .free-step{
 
 margin-bottom:40px;
@@ -1951,12 +1410,6 @@ margin-bottom:40px;
 .pricing-grid-wrap{
 
 margin-bottom:40px;
-
-}
-
-.reassurance{
-
-margin-bottom:48px;
 
 }
 
@@ -1998,16 +1451,6 @@ RESPONSIVE — MOBILE (< 768px)
 body{
 
 padding:36px 16px 90px;
-
-}
-
-.fitz-showcase{
-
-flex-direction:column;
-
-text-align:center;
-
-padding:26px 22px;
 
 }
 
@@ -2056,5 +1499,169 @@ padding:0 20px;
 max-width:100%;
 
 }
+
+}
+
+/* ==========================================================
+BLOCS INTRODUITS PAR LA RESTRUCTURATION DU 2026-08-22
+==========================================================
+La page enchaînait avant : bandeau contextuel, en-tête, vitrine Fitz à
+message rotatif, rappel du gratuit sur 3 niveaux, question filtrante
+"seul ou accompagné" avec 2 boutons d'ancre, puis 3 intertitres à
+paragraphe, puis les 5 offres, puis mentions, puis réassurance, puis
+FAQ. Soit sept blocs de mise en condition avant le premier prix.
+
+Retirés : la vitrine Fitz (décorative, elle repoussait les prix sans
+rien dire du produit) et la question filtrante (un clic de plus pour
+atteindre des offres déjà toutes visibles plus bas). Fusionnés :
+mentions et réassurance, qui disaient la même chose sur deux mises en
+page. Allégés : les intertitres, passés d'un paragraphe à un libellé
+court. Aucune offre, aucun tarif et aucune mention légale n'a été
+supprimé — uniquement de l'emballage.
+========================================================== */
+
+/* Libellé d'intertitre, même langage que le kicker de la page d'accueil
+(css/homepage-typography.css) : ambre, majuscules espacées. --amber-700
+et non --amber-500 — c'est du texte sur fond clair. */
+.plans-kicker{
+
+display:block;
+
+margin-bottom:10px;
+
+font-family:var(--font-display);
+
+font-size:.74rem;
+
+font-weight:700;
+
+letter-spacing:.16em;
+
+text-transform:uppercase;
+
+color:var(--amber-700);
+
+}
+
+/* Rappel du gratuit — une seule ligne désormais (voir le commentaire
+dans offers.html). */
+.free-step p{
+
+flex:1;
+
+min-width:0;
+
+margin:0;
+
+font-size:.95rem;
+
+line-height:1.6;
+
+color:var(--text-light);
+
+}
+
+.free-step p strong{
+
+color:var(--text-color);
+
+}
+
+/* Pied de page fusionné (mentions + réassurance). Icônes nues alignées
+sur la première ligne de leur texte. */
+.offer-footnotes{
+
+max-width:760px;
+
+margin:56px auto 0;
+
+padding-top:28px;
+
+border-top:1px solid var(--border-color);
+
+display:flex;
+
+flex-direction:column;
+
+gap:14px;
+
+}
+
+.footnote-line{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:12px;
+
+margin:0;
+
+font-size:.88rem;
+
+line-height:1.6;
+
+color:var(--text-muted);
+
+text-decoration:none;
+
+}
+
+.footnote-line > i,
+.footnote-line > svg{
+
+flex-shrink:0;
+
+width:17px;
+
+height:17px;
+
+margin-top:2px;
+
+color:var(--text-decorative);
+
+}
+
+/* La mention "aucune garantie d'admission" est la seule du lot qui
+engage juridiquement : elle se lit en texte courant, pas en gris pâle
+de bas de page. */
+.footnote-line--strong{
+
+color:var(--text-color);
+
+font-weight:500;
+
+}
+
+.footnote-line--strong > i,
+.footnote-line--strong > svg{
+
+color:var(--success-700);
+
+}
+
+/* Le lien WhatsApp de cette liste porte l'attribut hidden et n'est
+révélé qu'aux abonnés Renforcé/Signature par le script en pied de
+offers.html. Sans cette règle il resterait VISIBLE POUR TOUS :
+[hidden]{display:none} est une feuille de style navigateur, que le
+display:flex de .footnote-line — style auteur — bat systématiquement.
+Ce n'est pas cosmétique, c'est une fuite de contenu réservé. Même piège
+que .results-loading (results.css) et .context-banner plus haut. */
+.footnote-line[hidden]{
+
+display:none;
+
+}
+
+a.footnote-line:hover{
+
+color:var(--primary-color);
+
+}
+
+a.footnote-line:hover > i,
+a.footnote-line:hover > svg{
+
+color:var(--primary-color);
 
 }

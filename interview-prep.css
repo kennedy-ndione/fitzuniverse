@@ -1,25 +1,9 @@
 /* ==========================================================
-SCHOLARBRIDGE — PRÉPARATION AUX ENTRETIENS
+FITZUNIVERSE — PRÉPARATION AUX ENTRETIENS
 ========================================================== */
 
 .ivp-intro{
 margin-bottom:18px;
-}
-
-.ivp-intro h2{
-font-family:var(--font-display);
-font-weight:800;
-font-size:var(--fs-h4);
-line-height:var(--lh-snug);
-color:var(--text-color);
-margin-bottom:4px;
-}
-
-.ivp-intro p{
-font-size:var(--fs-small);
-line-height:1.5;
-color:var(--text-light);
-max-width:640px;
 }
 
 .ivp-layout{
@@ -176,26 +160,28 @@ box-shadow:var(--shadow-sm);
 overflow:hidden;
 }
 
-/* --gradient-fitz passe du violet au cyan : certains segments (le
-violet clair ~139,124,246 et le cyan ~34,168,201) ne tiennent que
-2,8-3,3:1 pour du texte blanc, sous l'AA (4,5:1). Voile uniforme à 35%
-plutôt qu'un fond uni : garde le dégradé visible en le rendant plus
-sombre partout, calculé pour que le point le plus clair du dégradé
-tienne malgré tout ~5,2:1 minimum. */
+/* --gradient-fitz est ambre depuis le 2026-08-27 (voir css/base.css) —
+recalculé à cette occasion : son point le plus clair (--amber-500,
+#E9A319) ne tenait que ~4,3:1 pour du texte blanc sous ce voile à 35%
+d'origine (calibré pour l'ancien dégradé violet/cyan), sous l'AA
+(4,5:1). Voile porté à 45% : le même point tient désormais ~5,4:1.
+Voile uniforme plutôt qu'un fond uni : garde le dégradé visible en le
+rendant plus sombre partout. */
 .ivp-practice-card::before{
 content:"";
 position:absolute;
 inset:0;
 z-index:-1;
-background:rgba(15,23,42,.35);
+background:rgba(15,23,42,.45);
 }
 
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ivp-practice-icon{
-width:44px;
-height:44px;
 margin:0 auto 12px;
-border-radius:50%;
-background:rgba(255,255,255,.16);
 display:flex;
 align-items:center;
 justify-content:center;
@@ -203,7 +189,7 @@ color:#fff;
 }
 
 .ivp-practice-icon i,
-.ivp-practice-icon svg{width:20px;height:20px;}
+.ivp-practice-icon svg{ width:22px; height:22px; }
 
 /* Même bug de fond que .cta-box avant correctif (voir css/homepage-sections.css)
 : h3/p hériteraient du texte sombre global (css/base.css) si on ne

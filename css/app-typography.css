@@ -1,0 +1,84 @@
+/* ==========================================================
+FITZUNIVERSE — TYPOGRAPHIE DE L'ESPACE ÉTUDIANT (2026-08-22)
+==========================================================
+Plus Jakarta Sans + Space Grotesk, comme le reste du site.
+
+POURQUOI CE FICHIER
+-------------------
+Les treize pages de l'espace authentifié chargeaient encore
+Inter + Sora — un reste des pages non auditées. Un étudiant qui
+passait du catalogue à son tableau de bord changeait de police au
+clic, exactement la rupture déjà corrigée sur la fiche université,
+offers et payment. Vérifié dans le navigateur avant correction : le
+fil de discussion de Fitz s'affichait bien en Inter.
+
+Même technique que css/catalog-typography.css : on redéclare les
+tokens au niveau :root plutôt que de multiplier les sélecteurs. Tout
+titre et tout texte qui consomme --font-display / --font-body suit
+automatiquement, sans qu'aucune règle de page n'ait à changer.
+
+À charger EN DERNIER dans chaque page de l'espace : ces tokens
+doivent gagner sur ceux de css/base.css et sur les font-family
+écrits en dur dans dashboard.css et consorts.
+========================================================== */
+
+:root{
+
+/* Mêmes valeurs que css/catalog-typography.css et
+css/homepage-typography.css, redéclarées ici plutôt que partagées :
+chaque famille de pages charge son propre fichier autonome, et
+aucune ne charge celui d'une autre. */
+--font-affirmation:'Space Grotesk', system-ui, sans-serif;
+
+--font-product:'Plus Jakarta Sans', system-ui, sans-serif;
+
+--font-body:var(--font-product);
+
+--font-display:var(--font-product);
+
+}
+
+body{
+
+font-family:var(--font-body);
+
+}
+
+/* Les feuilles de l'espace écrivent "Inter" en dur à plusieurs
+endroits (champs de formulaire, zones de saisie) : un input
+n'hérite pas de la police de son parent, il faut la lui donner
+explicitement. Sans cette règle, les champs restaient en Inter au
+milieu d'une page passée en Plus Jakarta Sans. */
+input,
+textarea,
+select,
+button{
+
+font-family:inherit;
+
+}
+
+/* Les titres de page de l'espace prennent Space Grotesk, comme les
+h1 des bannières de catalogue et des pages d'offre — c'est la
+police qui dit "affirmation" dans le système.
+
+CORRIGÉ LE 2026-08-23. Cette règle visait `.dashboard-greeting h1`
+et `.page-title` : deux sélecteurs qui n'existent dans AUCUNE des
+treize pages, vérifié fichier par fichier. Seul `.ai-page-header h1`
+en trouvait, sur quatre pages. Space Grotesk, introduite comme la
+voix d'affirmation de l'espace, ne s'appliquait donc qu'à quatre
+en-têtes internes sur treize titres de page — exactement
+l'incohérence que la refonte typographique devait supprimer.
+
+Le vrai titre de page vit dans `.topbar-title h1`, sur les treize
+pages sans exception. Le défaut ne se voyait pas en relisant le CSS :
+il fallait mesurer la police effectivement calculée sur chaque page. */
+
+.topbar-title h1,
+.ai-page-header h1{
+
+font-family:var(--font-affirmation);
+
+letter-spacing:-.02em;
+
+}

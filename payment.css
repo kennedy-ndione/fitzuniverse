@@ -1,10 +1,46 @@
 /* ==========================================================
-SCHOLARBRIDGE — ACTIVATION DE L'ACCOMPAGNEMENT (payment.html)
+FITZUNIVERSE — ACTIVATION DE L'ACCOMPAGNEMENT (payment.html)
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html,
 eligibility-test.html, eligibility-questions.html, results.html
 et offers.html)
 ========================================================== */
+
+/* ==========================================================
+TYPOGRAPHIE — même pile que le reste du site (2026-08-22)
+==========================================================
+payment.html chargeait encore Inter/Sora, comme offers.html avant elle :
+un reste des pages non auditées, pas un choix propre au tunnel. Tokens
+redéfinis ici plutôt que dans un fichier de typographie séparé — la
+feuille de la page suffit, et ça évite un aller-retour réseau de plus.
+========================================================== */
+
+:root{
+
+--font-affirmation:'Space Grotesk', sans-serif;
+
+--font-product:'Plus Jakarta Sans', sans-serif;
+
+--font-body:'Plus Jakarta Sans', sans-serif;
+
+--font-display:var(--font-product);
+
+}
+
+body{
+
+font-family:var(--font-body);
+
+}
+
+.payment-header h1{
+
+font-family:var(--font-affirmation);
+
+letter-spacing:-.02em;
+
+}
+
 
 body{
 
@@ -134,7 +170,6 @@ transform:translateY(0);
 
 }
 
-html.js-ready .fitz-showcase.reveal{ transition-delay:.05s; }
 html.js-ready .plan-summary.reveal{ transition-delay:.1s; }
 
 html.js-ready .payment-methods .payment-method:nth-child(2){ transition-delay:.06s; }
@@ -163,40 +198,12 @@ transition:none !important;
 EN-TÊTE
 ========================================================== */
 
-.back-link{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-margin-bottom:28px;
-
-color:var(--text-light);
-
-font-weight:600;
-
-font-size:.9rem;
-
-transition:var(--transition);
-
-}
-
-.back-link i,
-.back-link svg{
-
-width:16px;
-
-height:16px;
-
-}
-
-.back-link:hover{
-
-color:var(--primary-color);
-
-}
+/* .back-link centralisé dans css/base.css (2026-08-28) — vivait ici en
+double, à l'identique à 4px de marge près (28px ici, 32px sur la copie
+d'offers.css), avec le même sort que .ai-badge avant lui (voir la note
+en tête de sa règle un peu plus bas sur cette page). La valeur de base
+(32px) s'applique désormais aux deux pages — écart invisible à l'œil,
+et les deux pages sont enfin identiques au pixel près sur ce point. */
 
 .payment-header{
 
@@ -206,38 +213,14 @@ margin-bottom:36px;
 
 }
 
+/* Badge Fitz : apparence définie une seule fois dans css/base.css
+(section "BADGE FITZ — signature unique"). Ne reste ici que
+l'espacement propre à cette page. Le bloc complet qui vivait à cet
+endroit était une copie de celui de results.css — c'est ainsi que
+les quatre pages avaient fini avec quatre badges différents. */
 .ai-badge{
 
-display:flex;
-
-align-items:center;
-
-gap:8px;
-
-width:max-content;
-
 margin:0 auto 20px;
-
-padding:10px 18px;
-
-border-radius:var(--radius-full);
-
-background:var(--background-light);
-
-color:var(--primary-color);
-
-font-weight:700;
-
-font-size:.88rem;
-
-}
-
-.ai-badge i,
-.ai-badge svg{
-
-width:16px;
-
-height:16px;
 
 }
 
@@ -269,163 +252,11 @@ line-height:1.75;
 
 }
 
-/* ==========================================================
-FITZ AI — TOUJOURS PRÉSENT
-========================================================== */
-
-.fitz-showcase{
-
-display:flex;
-
-align-items:center;
-
-gap:18px;
-
-margin:0 0 32px;
-
-padding:20px 24px;
-
-border-radius:var(--radius-lg);
-
-background:var(--glass);
-
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-border:1px solid var(--glass-border);
-
-box-shadow:var(--shadow-md);
-
-}
-
-/* Fitz porte partout sur le site la même identité "aurore" violet/
-indigo/cyan (--gradient-fitz/--glow-fitz) et le même halo conique
-animé — voir css/hero.css .demo-avatar et css/ai-suite.css
-.fitz-avatar. Cet avatar avait son propre anneau ::before resté sur
-l'ancien halo or/marron abandonné au lieu de reprendre ces mêmes
-teintes. */
-.fitz-showcase-avatar{
-
-position:relative;
-
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:48px;
-
-height:48px;
-
-border-radius:15px;
-
-background:var(--gradient-fitz);
-
-color:#fff;
-
-box-shadow:var(--glow-fitz);
-
-isolation:isolate;
-
-}
-
-.fitz-showcase-avatar i,
-.fitz-showcase-avatar svg{
-
-width:22px;
-
-height:22px;
-
-}
-
-.fitz-showcase-avatar::before{
-
-content:"";
-
-position:absolute;
-
-inset:-3px;
-
-z-index:-1;
-
-border-radius:inherit;
-
-background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
-
-opacity:.55;
-
-filter:blur(6px);
-
-animation:fitzHalo 8s linear infinite;
-
-}
-
 @keyframes fitzHalo{
 
 100%{ transform:rotate(360deg); }
 
-}
-
-.fitz-showcase-copy{
-
-min-width:0;
-
-}
-
-.fitz-showcase-label{
-
-display:block;
-
-margin-bottom:4px;
-
-color:var(--text-muted);
-
-font-weight:700;
-
-font-size:.72rem;
-
-text-transform:uppercase;
-
-letter-spacing:.05em;
-
-}
-
-.fitz-showcase-copy p{
-
-color:var(--text-color);
-
-font-weight:700;
-
-font-size:1rem;
-
-min-height:1.4em;
-
-opacity:1;
-
-transform:translateY(0);
-
-transition:opacity .4s var(--ease-premium), transform .4s var(--ease-premium);
-
-}
-
-.fitz-showcase-copy p.is-swapping{
-
-opacity:0;
-
-transform:translateY(6px);
-
-}
-
-@media (prefers-reduced-motion: reduce){
-
-.fitz-showcase-avatar::before{ animation:none; }
-
-}
-
-/* ==========================================================
+}/* ==========================================================
 CARTE RÉSUMÉ DU PALIER
 ========================================================== */
 
@@ -453,27 +284,18 @@ box-shadow:var(--shadow-lg);
 
 }
 
+/* Icône nue — le disque de 60px en --gradient-primary a disparu le
+2026-08-22 (règle « Icônes » de DESIGN_SYSTEM.md). payment.js écrit
+dans cet élément le glyphe propre à la formule choisie. */
 .plan-summary-icon{
 
 flex-shrink:0;
 
-display:flex;
+width:26px;
 
-align-items:center;
+height:26px;
 
-justify-content:center;
-
-width:60px;
-
-height:60px;
-
-border-radius:18px;
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-box-shadow:0 10px 24px rgba(51,65,140,.32);
+color:var(--primary-color);
 
 }
 
@@ -524,43 +346,65 @@ margin-bottom:6px;
 
 }
 
+/* Prix du résumé — l'euro porte le montant, le FCFA le surmonte en
+petit. Le balisage vient de payment.js (formatPriceHTML) et non du
+HTML : la page ne connaît pas la formule choisie avant l'exécution.
+
+Le dégradé sur le chiffre a été retiré au passage : sur un montant de
+2,4rem, le -webkit-background-clip:text tirait le texte vers un bleu
+délavé au milieu du dégradé, moins lisible qu'un aplat sur un écran de
+paiement. */
 .plan-summary-price{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:2px;
+
+}
+
+.price-local{
+
+font-size:.78rem;
+
+font-weight:600;
+
+letter-spacing:.02em;
+
+color:var(--text-muted);
+
+}
+
+.price-main{
 
 display:flex;
 
 align-items:baseline;
 
-gap:8px;
-
-}
-
-.plan-summary-price span:first-child{
+gap:4px;
 
 font-family:var(--font-display);
 
-font-size:2rem;
+font-size:2.4rem;
 
 font-weight:800;
 
-letter-spacing:-.01em;
+letter-spacing:-.02em;
 
-background:var(--gradient-primary);
+line-height:1;
 
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent;
+color:var(--primary-dark);
 
 }
 
-.plan-summary-currency{
+.price-currency{
+
+font-size:1.25rem;
 
 font-weight:700;
-
-color:var(--text-muted);
-
-font-size:.9rem;
 
 }
 
@@ -657,25 +501,21 @@ border-bottom:none;
 
 }
 
+/* Teinte primaire douce + ombre plutôt qu'un contenant nu — même
+recette que .plan-icon (offers.css) sur la carte Standard, pour une
+cohérence de bout en bout du parcours d'achat. Tokens existants
+uniquement (--primary-50/--primary-color/--shadow-xs). */
 .summary-row-icon{
 
 flex-shrink:0;
 
-display:flex;
+width:19px;
 
-align-items:center;
+height:19px;
 
-justify-content:center;
+margin-top:2px;
 
-width:38px;
-
-height:38px;
-
-border-radius:12px;
-
-background:var(--background-light);
-
-color:var(--primary-color);
+color:var(--text-decorative);
 
 }
 
@@ -688,9 +528,10 @@ height:18px;
 
 }
 
+/* Fond retiré le 2026-08-22 avec les autres pastilles : il ne restait
+que la couleur pour distinguer la ligne du prix, ce qui suffit — la
+ligne entière porte déjà un fond ambré (.summary-row-price). */
 .summary-row-icon-accent{
-
-background:linear-gradient(135deg,rgba(233,163,25,.22),rgba(233,163,25,.1));
 
 color:var(--amber-700);
 
@@ -976,9 +817,9 @@ pointer-events:none;
 
 border-color:var(--method-color);
 
-transform:translateY(-4px);
+transform:translateY(-8px);
 
-box-shadow:var(--shadow-md);
+box-shadow:var(--shadow-lg);
 
 }
 
@@ -998,7 +839,7 @@ background:var(--method-tint);
 
 box-shadow:0 16px 36px var(--method-glow);
 
-transform:translateY(-4px);
+transform:translateY(-8px);
 
 }
 
@@ -1144,95 +985,74 @@ line-height:1.4;
 
 }
 
-.payment-method-brands{
+/* ==========================================================
+LOGOS DES RÉSEAUX DE CARTE (2026-08-22)
+==========================================================
+Remplace .payment-method-brands / .brand-chip, deux pastilles
+minuscules posées SOUS le texte pendant qu'un dessin de carte
+inventé occupait l'emplacement du logo. « Carte bancaire » n'est
+pas une marque, c'est une catégorie : ce qui la représente, ce sont
+les réseaux qui traitent le paiement. Ils remontent donc dans la
+vignette blanche, exactement comme le lockup Wave et le lockup
+Orange Money à côté. */
 
-display:flex;
+.payment-method-logo-schemes{
 
-align-items:center;
-
-gap:6px;
-
-margin-top:6px;
-
-}
-
-.brand-chip{
-
-display:inline-flex;
-
-align-items:center;
-
-justify-content:center;
-
-height:20px;
-
-padding:0 7px;
-
-border-radius:6px;
-
-background:var(--background-soft);
-
-border:1px solid var(--border-color);
+gap:10px;
 
 }
 
-.brand-chip-visa{
-
-color:#1A1F71;
+/* Composition typographique du mot-symbole Visa : italique appuyée,
+crénage resserré, bleu Visa. Un tracé vectoriel « à peu près »
+serait une contrefaçon approximative du logo d'un tiers ; du texte
+dans la bonne couleur est ce que fait la plupart des pages de
+paiement, et ça reste net à toute taille et à tout zoom. */
+.scheme-visa{
 
 font-family:var(--font-display);
+
+font-size:1.05rem;
 
 font-weight:800;
 
 font-style:italic;
 
-font-size:.62rem;
+letter-spacing:-.02em;
 
-letter-spacing:.02em;
+line-height:1;
 
-}
-
-.brand-chip-mastercard{
-
-padding:0 6px;
+color:#1A1F71;
 
 }
 
-.brand-chip-mastercard svg{
+/* Filet de séparation : sans lui, le mot VISA et les cercles
+Mastercard se lisaient comme un seul logo composite qui n'existe
+pas. Deux réseaux distincts, deux marques distinctes. */
+.scheme-sep{
 
-width:20px;
+width:1px;
 
-height:12px;
+height:16px;
 
-display:block;
-
-}
-
-.payment-method-check{
+background:var(--border-color);
 
 flex-shrink:0;
 
-display:flex;
+}
 
-align-items:center;
+.scheme-mastercard{
 
-justify-content:center;
+display:block;
 
-width:24px;
+width:auto;
 
-height:24px;
+height:20px;
 
-border-radius:50%;
+border-radius:0;
 
-background:var(--method-color);
+box-shadow:none;
 
-color:#fff;
-
-opacity:0;
-
-transform:scale(.6);
-
-transition:var(--transition);
+flex-shrink:0;
 
 }
 
@@ -1296,29 +1116,25 @@ transition:transform .25s var(--ease-premium), box-shadow .25s var(--ease-premiu
 
 .reassurance-item:hover{
 
-transform:translateY(-3px);
+transform:translateY(-8px);
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-lg);
 
 }
 
+/* Même recette que .summary-row-icon ci-dessus — cohérence de bout en
+bout du parcours d'achat, tokens existants uniquement. */
 .reassurance-icon{
 
 flex-shrink:0;
 
-display:flex;
+width:20px;
 
-align-items:center;
+height:20px;
 
-justify-content:center;
+margin-top:2px;
 
-width:38px;
-
-height:38px;
-
-border-radius:12px;
-
-background:var(--background-light);
+color:var(--primary-color);
 
 }
 
@@ -1439,6 +1255,27 @@ width:15px;
 height:15px;
 
 color:var(--primary-color);
+
+}
+
+/* Mention de portée (ajoutée le 2026-08-22, voir payment.html).
+Volontairement plus discrète que .activation-note : c'est une
+délimitation, pas un argument de vente. Pas d'icône et pas de flex —
+le texte tient sur deux ou trois lignes, et .activation-note, qui est
+un flex row centré, l'aurait mal cadré. */
+.activation-scope{
+
+max-width:520px;
+
+margin:10px auto 0;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.78rem;
+
+line-height:1.65;
 
 }
 
@@ -1666,14 +1503,6 @@ RESPONSIVE — MOBILE (< 768px)
 body{
 
 padding:36px 16px 90px;
-
-}
-
-.fitz-showcase{
-
-flex-direction:column;
-
-text-align:center;
 
 }
 

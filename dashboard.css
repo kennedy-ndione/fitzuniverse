@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — TABLEAU DE BORD (dashboard.html)
+FITZUNIVERSE — TABLEAU DE BORD (dashboard.html)
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que le reste du
 parcours) mais avec sa propre identité : app-shell sidebar +
@@ -14,45 +14,54 @@ qu'une page marketing.
 --topbar-height:72px;
 
 /* ==========================================================
-THÈME SOMBRE DU DASHBOARD — refonte 2026-08 : bleu profond / violet
-discret / gris modernes. Ces --shell-* sont redéclarés ICI (pas
-dans css/base.css) pour ne rehue QUE les pages qui chargent
-dashboard.css — admin/control-center.css et admin/login.css restent
-volontairement sur les valeurs neutres d'origine de base.css, hors
-périmètre de cette refonte. Toute page à fond sombre du shell
-étudiant doit continuer à surcharger les tokens génériques avec
-CEUX-LÀ dans son propre scope, jamais avec de nouvelles valeurs
-inventées localement.
+THÈME CLAIR/GLASS DU DASHBOARD — refonte 2026-08-20 : aligné sur
+la palette claire de css/base.css plutôt qu'un thème sombre dédié,
+pour une cohérence visuelle avec le reste du site (hero, catalogue).
+Ces --shell-* restent redéclarés ICI (pas dans css/base.css) pour ne
+rehue QUE les pages qui chargent dashboard.css — admin/control-center.css
+et admin/login.css restent volontairement sur les valeurs neutres
+sombres d'origine de base.css, hors périmètre de cette refonte. Toute
+page du shell étudiant doit continuer à surcharger les tokens
+génériques avec CEUX-LÀ dans son propre scope, jamais avec de
+nouvelles valeurs inventées localement.
 ========================================================== */
 
---shell-bg:#171B34;
---shell-surface:#0D0F24;
---shell-elevated:#232849;
---shell-border:rgba(150,140,255,.12);
---shell-text:#EDEBFB;
---shell-shadow-xs:0 2px 10px rgba(8,9,28,.38), inset 0 1px 0 rgba(255,255,255,.04);
---shell-shadow-sm:0 8px 20px rgba(8,9,28,.42);
---shell-shadow-md:0 14px 32px rgba(8,9,28,.48);
---shell-shadow-lg:0 22px 52px rgba(8,9,28,.54);
+/* Alignés sur les neutres PAPIER CHAUD de css/base.css le 2026-08-28
+(voir le bloc "NEUTRES PAPIER" là-bas). Ces tokens sont redéclarés ici
+et gagnent donc la cascade : les laisser en slate froid aurait rendu
+le site public chaud et l'espace étudiant froid, avec la bascule
+visible au moment exact de la connexion. Mêmes luminosités que les
+valeurs slate qu'ils remplacent — les contrastes validés tiennent. */
+--shell-bg:#FDFCFA;
+--shell-surface:#F8F6F2;
+--shell-elevated:#F1EEE8;
+--shell-border:#E5E1D9;
+--shell-text:#1A1714;
+--shell-shadow-xs:0 1px 3px rgba(26,23,20,.05);
+--shell-shadow-sm:0 4px 12px rgba(26,23,20,.08);
+--shell-shadow-md:0 8px 20px rgba(26,23,20,.10);
+--shell-shadow-lg:0 16px 32px rgba(26,23,20,.14);
 
 --background:var(--shell-bg);
 --background-soft:var(--shell-surface);
 --background-alt:var(--shell-elevated);
---background-light:rgba(51,65,140,.16);
+/* Encre à 5 % et non bleu à 8 % (2026-08-23). Ce token est la surface
+douce de TOUT l'espace : puce de formule, fond des blocs documents,
+carte de style sélectionnée, badge d'en-tête. À 8 % d'un bleu franc,
+il posait un voile lavande sur 90 000 px² de la page Candidatures —
+la moitié de l'impression « bleu et violet », pour une valeur que
+personne n'aurait été chercher. */
+--background-light:rgba(26,23,20,.055);
 
 --border-color:var(--shell-border);
 
 --text-color:var(--shell-text);
---text-light:#C4C7E8;
-/* #8B8FB8 échouait AA sur --shell-elevated (4,02:1), le fond des
-cartes surélevées du shell. Corrigé 2026-08-02 : 5,7 / 7,0 / 4,9 sur
-shell-bg / shell-surface / shell-elevated. */
---text-muted:#9BA0C6;
-/* Non-textuel uniquement (seuil 3:1) — voir la note dans css/base.css. */
---text-decorative:#7E82A8;
+--text-light:#57514A;
+--text-muted:#6E6760;
+--text-decorative:#8A837A;
 
---glass:rgba(23,27,52,.72);
---glass-border:rgba(150,140,255,.14);
+--glass:rgba(255,255,255,.72);
+--glass-border:rgba(255,255,255,.45);
 
 --shadow-xs:var(--shell-shadow-xs);
 --shadow-sm:var(--shell-shadow-sm);
@@ -63,10 +72,7 @@ shell-bg / shell-surface / shell-elevated. */
 
 body{
 
-background:
-radial-gradient(circle at 15% -10%,rgba(51,65,140,.28),transparent 45%),
-radial-gradient(circle at 100% 0%,rgba(126,113,216,.16),transparent 40%),
-var(--background-soft);
+background:var(--gradient-hero);
 
 background-attachment:fixed;
 
@@ -84,12 +90,14 @@ avec le reste du site (mêmes teintes que base.css .btn:focus-visible)
 .topbar-plan-chip:focus-visible,
 .coach-card-link:focus-visible,
 .btn-upgrade:focus-visible,
-a.tool-card:focus-visible,
 .sidebar-brand:focus-visible{
 
 outline:none;
 
-box-shadow:0 0 0 3px rgba(126,113,216,.5);
+/* Ambre et non violet (2026-08-27) : anneau de focus aligné sur
+--amber-500, comme le reste des accents de l'espace étudiant depuis
+le 2026-08-23 — cet anneau-ci avait été oublié dans cette passe. */
+box-shadow:0 0 0 3px rgba(233,163,25,.5);
 
 }
 
@@ -235,7 +243,10 @@ display:flex;
 
 flex-direction:column;
 
-background:var(--background);
+background:var(--glass);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
 
 border-right:1px solid var(--border-color);
 
@@ -316,10 +327,17 @@ transition:opacity .2s ease;
 }
 
 .sidebar-brand-text .scholar{ color:var(--primary-color); }
-/* --amber-500 tient 7,8:1 sur --shell-bg (#171B34) — largement AA,
-cohérent avec le "Bridge" doré du logo ailleurs sur le site (voir
-.logo .bridge dans css/header.css). */
-.sidebar-brand-text .bridge{ color:var(--amber-500); }
+/* --amber-700 (pas --amber-500) : le shell est désormais à fond clair,
+seul --amber-700 tient l'AA en couleur de texte sur fond clair (voir
+la règle dans css/base.css ~L53-60) — même bascule que .logo .bridge
+dans css/header.css. */
+.sidebar-brand-text .bridge{ color:var(--amber-700); }
+
+/* Même bascule que ci-dessus pour le nom "Fitz" dans le topbar (h1
+"Fitz — Discuter" etc.) : app-shell est désormais à fond clair, donc
+--amber-700 (seule valeur ambre admise comme texte sur fond clair)
+plutôt que --amber-500, réservé aux fonds sombres. */
+.topbar-title .fitz-name{ color:var(--amber-700); }
 
 body.sidebar-collapsed .sidebar-brand-text{
 
@@ -415,7 +433,13 @@ font-size:.72rem;
 
 font-weight:700;
 
-color:var(--text-muted);
+/* --text-light et non --text-muted : mesuré 4,49:1 sur le fond de
+cette carte, pour un seuil à 4,5. L'écart est invisible à l'œil,
+mais un libellé d'interface ne se joue pas au centième. 7,6:1 ici.
+Corrigé DANS dashboard.css et non dans css/app-shell.css : cette
+feuille est chargée après, une correction posée en amont y serait
+restée sans effet (piège déjà rencontré trois fois). */
+color:var(--text-light);
 
 text-transform:uppercase;
 
@@ -567,12 +591,13 @@ ensemble d'outils du reste de la navigation ("Mon espace"), plutôt
 qu'une simple étiquette de section au même poids visuel que l'autre.
 La teinte de la signature Fitz (--fitz-color) reste réservée à ce
 groupe : ailleurs dans la nav, le survol est neutre (voir
-.nav-link:hover ci-dessus). */
+.nav-link:hover ci-dessus). Ambre et non violet depuis le 2026-08-27,
+comme --fitz-color lui-même (voir css/base.css). */
 .sidebar-nav-fitz{
 
-background:rgba(139,124,246,.06);
+background:rgba(233,163,25,.06);
 
-border:1px solid rgba(139,124,246,.14);
+border:1px solid rgba(233,163,25,.14);
 
 border-radius:var(--radius-md);
 
@@ -582,7 +607,7 @@ padding:4px;
 
 .sidebar-nav-fitz .nav-link:hover{
 
-background:rgba(139,124,246,.14);
+background:rgba(233,163,25,.14);
 
 color:var(--fitz-color);
 
@@ -594,7 +619,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-box-shadow:0 8px 18px rgba(51,65,140,.28);
+box-shadow:0 8px 18px rgba(22,27,51,.24);
 
 }
 
@@ -654,7 +679,7 @@ background:none;
 
 color:var(--text-light);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-weight:600;
 
@@ -733,7 +758,7 @@ height:var(--topbar-height);
 
 padding:0 32px;
 
-background:rgba(15,23,42,.72);
+background:var(--glass);
 
 backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
@@ -780,6 +805,23 @@ height:19px;
 flex:1;
 
 min-width:0;
+
+}
+
+/* .back-link (css/base.css, 2026-08-28) posé ici : sa marge par défaut
+(32px, pensée pour un lien seul en haut d'un .container) est bien trop
+généreuse une fois glissé au-dessus d'un h1 déjà dense dans la topbar —
+resserrée à la taille d'un simple repère, pas d'un élément à part
+entière. white-space:nowrap comme le h1 juste en dessous : la topbar
+ne grandit jamais en hauteur, même sur un intitulé long ou un petit
+écran (voir overflow:hidden/text-overflow:ellipsis du h1). */
+.topbar-title .back-link{
+
+margin-bottom:2px;
+
+font-size:.8rem;
+
+white-space:nowrap;
 
 }
 
@@ -962,7 +1004,9 @@ background:var(--background-light);
 
 .messages-panel-item.is-unread{
 
-background:rgba(126,113,216,.08);
+/* Ambre et non violet (2026-08-27) — même oubli que l'anneau de
+focus plus haut dans ce fichier. */
+background:rgba(233,163,25,.08);
 
 }
 
@@ -1108,9 +1152,13 @@ font-size:.88rem;
 
 .welcome-alert-accompagnement{
 
-background:rgba(126,113,216,.10);
+/* Ambre et non violet (2026-08-27) — l'icône juste en dessous
+utilisait déjà var(--accent-color), donc déjà l'ambre : c'est le
+fond et la bordure qui étaient restés violets, en décalage avec
+elle. Même oubli que l'anneau de focus plus haut dans ce fichier. */
+background:rgba(233,163,25,.10);
 
-border-color:rgba(126,113,216,.28);
+border-color:rgba(233,163,25,.28);
 
 }
 
@@ -1199,8 +1247,7 @@ margin-bottom:18px;
 }
 
 .coach-section,
-.stats-section,
-.tools-section{
+.journey-section{
 
 margin-bottom:36px;
 
@@ -1244,42 +1291,23 @@ transition:var(--transition);
 
 .coach-card:hover{
 
-transform:translateY(-4px);
+transform:translateY(-8px);
 
-box-shadow:var(--shadow-md);
+box-shadow:var(--shadow-lg);
 
-border-color:rgba(139,124,246,.4);
-
-}
-
-.coach-card-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:42px;
-
-height:42px;
-
-border-radius:var(--radius-md);
-
-background:var(--background-alt);
-
-color:var(--text-light);
+/* Ambre et non violet (2026-08-27) — même oubli que l'anneau de
+focus plus haut dans ce fichier. */
+border-color:rgba(233,163,25,.4);
 
 }
 
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .coach-card-icon i,
-.coach-card-icon svg{
-
-width:20px;
-
-height:20px;
-
-}
+.coach-card-icon svg{ width:22px; height:22px; }
 
 .coach-card-body h3{
 
@@ -1342,28 +1370,21 @@ transform:translateX(3px);
 }
 
 /* ==========================================================
-STATISTIQUES
+PARCOURS — CANDIDATURE MISE EN AVANT
+La CARTE qui porte le parcours sur le tableau de bord. Le stepper
+lui-même (.application-journey / .journey-step) vit désormais dans
+css/app-shell.css, chargé par les deux pages : il en existait ici
+une copie mot pour mot de celle d'applications.css.
+
+Ce qui reste propre au tableau de bord : les étapes y sont rendues
+en <a> par js/application-journey.js — chacune mène à sa page — là
+où applications.html les rend en <button> déclenchant une action
+(focus-checklist, run-readiness).
 ========================================================== */
 
-.stats-section{
+.journey-card{
 
-display:grid;
-
-grid-template-columns:repeat(3,1fr);
-
-gap:16px;
-
-}
-
-.stat-card{
-
-display:flex;
-
-align-items:center;
-
-gap:16px;
-
-padding:22px;
+padding:22px 24px;
 
 border-radius:var(--radius-lg);
 
@@ -1373,96 +1394,48 @@ border:1px solid var(--border-color);
 
 box-shadow:var(--shadow-xs);
 
-transition:var(--transition);
-
 }
 
-.stat-card:hover{
-
-transform:translateY(-4px);
-
-box-shadow:var(--shadow-md);
-
-border-color:rgba(126,113,216,.35);
-
-}
-
-.stat-card-icon{
-
-flex-shrink:0;
+.journey-card-top{
 
 display:flex;
 
-align-items:center;
+align-items:flex-start;
 
-justify-content:center;
+justify-content:space-between;
 
-width:48px;
+gap:16px;
 
-height:48px;
+flex-wrap:wrap;
 
-border-radius:var(--radius-md);
-
-background:var(--background-alt);
-
-color:var(--text-light);
+margin-bottom:16px;
 
 }
 
-.stat-card-icon i,
-.stat-card-icon svg{
+.journey-card-top h3{
 
-width:22px;
+font-size:1.05rem;
 
-height:22px;
-
-}
-
-.stat-card-body{
-
-min-width:0;
-
-display:flex;
-
-flex-direction:column;
-
-}
-
-.stat-card-value{
-
-font-family:var(--font-display);
-
-font-size:var(--fs-stat-sm);
-
-font-weight:var(--fw-extrabold);
-
-font-variant-numeric:tabular-nums;
+font-weight:700;
 
 color:var(--text-color);
 
 }
 
-.stat-card-value small{
-
-font-size:.95rem;
-
-font-weight:700;
-
-color:var(--text-muted);
-
-margin-left:2px;
-
-}
-
-.stat-card-label{
+.journey-card-meta{
 
 color:var(--text-light);
 
-font-size:var(--fs-meta);
+font-size:.86rem;
 
-font-weight:600;
+margin-top:4px;
 
 }
+
+/* La section « STATISTIQUES » (.stats-section/.stat-card et ses
+sous-éléments) a été retirée le 2026-08-27, avec les cartes qu'elle
+mettait en forme — voir la note dans dashboard.html à l'endroit où
+vivait cette section. */
 
 /* ==========================================================
 NUDGE DE MONTÉE EN GAMME
@@ -1494,34 +1467,13 @@ display:none;
 
 }
 
-.upgrade-nudge-icon{
-
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:52px;
-
-height:52px;
-
-border-radius:16px;
-
-background:rgba(255,255,255,.16);
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .upgrade-nudge-icon i,
-.upgrade-nudge-icon svg{
-
-width:24px;
-
-height:24px;
-
-}
+.upgrade-nudge-icon svg{ width:26px; height:26px; }
 
 .upgrade-nudge-body{
 
@@ -1637,244 +1589,11 @@ height:16px;
 
 }
 
-/* ==========================================================
-GRILLE D'OUTILS
-========================================================== */
-
-.tools-grid{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-
-gap:18px;
-
-}
-
-.tool-card{
-
-position:relative;
-
-display:flex;
-
-flex-direction:column;
-
-gap:10px;
-
-padding:24px;
-
-border-radius:var(--radius-lg);
-
-background:var(--background);
-
-border:1px solid var(--border-color);
-
-box-shadow:var(--shadow-xs);
-
-overflow:hidden;
-
-transition:var(--transition);
-
-}
-
-a.tool-card:hover{
-
-transform:translateY(-4px);
-
-box-shadow:var(--shadow-md);
-
-border-color:rgba(126,113,216,.35);
-
-}
-
-.tool-card-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:44px;
-
-height:44px;
-
-border-radius:var(--radius-md);
-
-background:var(--background-alt);
-
-color:var(--text-light);
-
-}
-
-.tool-card-icon i,
-.tool-card-icon svg{
-
-width:21px;
-
-height:21px;
-
-}
-
-/* Distinction "propulsé par Fitz" — jusqu'ici les 6 outils du groupe
-sidebar "Fitz" (ai_chat/ai_letter/ai_check/ai_email/ai_translate/
-compress) portaient exactement le même chip or que "Suivi des
-candidatures" ou "Universités partenaires", qui ne sont que des
-raccourcis de navigation. Ce modificateur reprend la signature
-gold-forward déjà établie (--gradient-fitz/--glow-fitz) pour que la
-grille d'outils distingue au premier regard ce que Fitz fait pour vous. */
-.tool-card-icon--fitz{
-
-background:var(--gradient-fitz);
-
-color:#fff;
-
-box-shadow:var(--glow-fitz);
-
-}
-
-.tool-card h3{
-
-font-size:1rem;
-
-font-weight:700;
-
-color:var(--text-color);
-
-}
-
-.tool-card p{
-
-flex:1;
-
-color:var(--text-light);
-
-font-size:.86rem;
-
-line-height:1.55;
-
-}
-
-.tool-card-cta{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:6px;
-
-color:var(--accent-color);
-
-font-weight:700;
-
-font-size:.86rem;
-
-}
-
-.tool-card-cta i,
-.tool-card-cta svg{
-
-width:14px;
-
-height:14px;
-
-transition:transform .25s var(--ease-premium);
-
-}
-
-a.tool-card:hover .tool-card-cta i,
-a.tool-card:hover .tool-card-cta svg{
-
-transform:translateX(3px);
-
-}
-
-.tool-card-soon-badge{
-
-color:var(--text-muted);
-
-}
-
-/* Recouvrement "verrouillé" — affiché par la CSS ci-dessous selon la
-formule active (voir règles [data-plan] plus bas), jamais par défaut. */
-.tool-card-lock{
-
-display:none;
-
-position:absolute;
-
-inset:0;
-
-flex-direction:column;
-
-align-items:center;
-
-justify-content:center;
-
-gap:8px;
-
-text-align:center;
-
-padding:20px;
-
-background:rgba(15,23,42,.94);
-
-backdrop-filter:blur(3px);
-
-}
-
-.tool-card-lock i:first-child,
-.tool-card-lock svg:first-child{
-
-width:22px;
-
-height:22px;
-
-color:var(--accent-color);
-
-}
-
-.tool-card-lock span:not(.tool-card-lock-cta){
-
-font-size:.82rem;
-
-font-weight:700;
-
-color:var(--text-color);
-
-}
-
-.tool-card-lock-cta{
-
-margin-top:4px;
-
-padding:8px 16px;
-
-border-radius:var(--radius-full);
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-font-size:.8rem;
-
-font-weight:700;
-
-}
-
-.tool-card-soon{
-
-opacity:.75;
-
-}
-
-.tool-card-soon:hover{
-
-transform:none;
-
-box-shadow:var(--shadow-xs);
-
-}
+/* La « GRILLE D'OUTILS » (.tools-grid/.tool-card et ses sous-éléments,
+dont l'overlay .tool-card-lock) a été retirée le 2026-08-27 : elle
+dupliquait sur la page d'accueil exactement ce que la sidebar affiche
+déjà en permanence. Voir la note dans dashboard.html à l'endroit où
+vivait cette section. */
 
 /* ==========================================================
 VERROUILLAGE PAR FORMULE
@@ -1882,15 +1601,10 @@ VERROUILLAGE PAR FORMULE
 
 /* Module 4 : le verrouillage n'est plus déduit d'un seuil de palier
 statique (data-tier) mais d'indicateurs par fonctionnalité pilotés
-depuis admin/plans.js (js/plan-features.js) — dashboard.js calcule
-lui-même si chaque [data-feature] doit être verrouillé pour la
-formule active et pose/retire la classe .is-locked en conséquence. */
-.tool-card.is-locked .tool-card-lock{
-
-display:flex;
-
-}
-
+depuis admin/plans.js (js/plan-features.js) — bootstrapShell()
+(js/app-shell.js) calcule si chaque [data-feature] doit être verrouillé
+pour la formule active et pose/retire la classe .is-locked en
+conséquence, sur la sidebar. */
 li.is-locked .nav-lock{
 
 display:block;
@@ -1947,12 +1661,6 @@ display:flex;
 
 }
 
-.stats-section{
-
-grid-template-columns:1fr 1fr;
-
-}
-
 }
 
 /* ==========================================================
@@ -1979,23 +1687,11 @@ display:none;
 
 }
 
-.stats-section{
-
-grid-template-columns:1fr;
-
-}
-
 .upgrade-nudge{
 
 flex-direction:column;
 
 padding:24px;
-
-}
-
-.tools-grid{
-
-grid-template-columns:1fr;
 
 }
 

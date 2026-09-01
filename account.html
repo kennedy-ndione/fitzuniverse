@@ -6,20 +6,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Paramètres du compte | ScholarBridge</title>
+<title>Paramètres du compte | FitzUniverse</title>
 
-<meta name="description" content="Gérez vos informations de connexion, votre mot de passe et votre compte ScholarBridge.">
+<meta name="description" content="Gérez vos informations de connexion, votre mot de passe et votre compte FitzUniverse.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Plus Jakarta Sans + Space Grotesk depuis le 2026-08-22, comme le
+reste du site. Inter/Sora était un reste des pages non auditées :
+l'étudiant changeait de police en passant du catalogue à son espace. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version figée + defer (2026-08-30) — standard du site. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="css/ai-suite.css">
 <link rel="stylesheet" href="account.css">
+<!-- Chargé en dernier : redéfinit --font-display/--font-body au niveau
+:root, doit donc gagner sur base.css et sur les font-family
+écrits en dur dans les feuilles de l'espace. -->
+<link rel="stylesheet" href="css/app-typography.css">
+<!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
+la grille à sidebar et bascule la page dans l'identité papier chaud. -->
+<link rel="stylesheet" href="css/journey-shell.css">
 <style>[hidden]{display:none !important;}</style>
 
 </head>
@@ -32,185 +44,33 @@
 
 <div class="dashboard-shell">
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-<aside class="sidebar" id="sidebar">
-
-<div class="sidebar-top">
-
-<a href="dashboard.html" class="sidebar-brand">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
-</a>
-
-<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
-<i data-lucide="panel-left-close"></i>
-</button>
-
-</div>
-
-<div class="sidebar-plan">
-<span class="sidebar-plan-label">Votre formule</span>
-<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
-</div>
-
-<nav class="sidebar-nav" aria-label="Navigation principale">
-
-<span class="sidebar-section-label">Mon espace</span>
-
-<ul>
-
-<li>
-<a href="dashboard.html" class="nav-link">
-<i data-lucide="layout-dashboard"></i>
-<span>Tableau de bord</span>
-</a>
-</li>
-
-<li>
-<a href="profile.html" class="nav-link">
-<i data-lucide="user"></i>
-<span>Mon profil</span>
-</a>
-</li>
-
-<li>
-<a href="account.html" class="nav-link is-active" aria-current="page">
-<i data-lucide="settings"></i>
-<span>Paramètres</span>
-</a>
-</li>
-
-<li data-feature="applications">
-<a href="applications.html" class="nav-link" data-real-href="applications.html">
-<i data-lucide="list-checks"></i>
-<span>Mes candidatures</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li>
-<a href="scholarships.html" class="nav-link">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
-</a>
-</li>
-
-<li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
-</a>
-</li>
-
-<li data-feature="documents">
-<a href="documents.html" class="nav-link" data-real-href="documents.html">
-<i data-lucide="file-text"></i>
-<span>Documents</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label">Fitz</span>
-
-<ul class="sidebar-nav-fitz">
-
-<li data-feature="ai_chat">
-<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
-<i data-lucide="message-circle"></i>
-<span>Discuter avec Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_letter">
-<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
-<i data-lucide="pen-line"></i>
-<span>Lettre de motivation</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_check">
-<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
-<i data-lucide="shield-check"></i>
-<span>Vérification</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_email">
-<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
-<i data-lucide="mail"></i>
-<span>E-mails Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_translate">
-<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
-<i data-lucide="languages"></i>
-<span>Traduction</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="compress">
-<a href="compress.html" class="nav-link" data-real-href="compress.html">
-<i data-lucide="file-archive"></i>
-<span>Compression</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="interview_prep">
-<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
-<i data-lucide="mic"></i>
-<span>Préparation entretien</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
-
-<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
-
-<li data-feature="advisor">
-<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
-<i data-lucide="user-check"></i>
-<span>Mon conseiller</span>
-</a>
-</li>
-
-</ul>
-
-</nav>
-
-<div class="sidebar-bottom">
-<button type="button" id="logoutBtn" class="sidebar-logout">
-<i data-lucide="log-out"></i>
-<span>Déconnexion</span>
-</button>
-</div>
-
-</aside>
+<!-- La sidebar a été retirée le 2026-08-30 (refonte « parcours ») :
+la navigation de l'espace étudiant vit sur dashboard.html — chaque
+outil s'ouvre depuis la phase du parcours qui lui donne un sens.
+js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div class="dashboard-main">
 
-<header class="topbar">
+<header class="journey-topbar">
 
-<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
-<i data-lucide="menu"></i>
-</button>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 
-<div class="topbar-title">
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
 <h1>Paramètres du compte</h1>
-<p>Connexion, mot de passe et gestion de votre compte ScholarBridge.</p>
+<p>Connexion, mot de passe et gestion de votre compte FitzUniverse.</p>
 </div>
+
+<div class="journey-topbar-actions">
 
 <div class="messages-bell-wrap">
 
@@ -220,16 +80,29 @@
 </button>
 
 <div class="messages-panel" id="messagesPanel" hidden>
-<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-header">Messages de l'équipe</div>
 <div class="messages-panel-list" id="messagesPanelList"></div>
 </div>
 
 </div>
 
 <a href="offers.html" class="topbar-plan-chip">
-<i data-lucide="sparkles"></i>
 <span id="topbarPlanLabel">Essentiel</span>
 </a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
 
 </header>
 
@@ -319,7 +192,7 @@ Pour modifier votre parcours académique, vos préférences ou vos objectifs d'�
 <div class="ai-panel-body">
 
 <p class="ai-field-hint" style="margin-bottom:16px;">
-Fitz peut vous prévenir par e-mail des échéances de candidatures à venir, des documents de dossier encore manquants, et des messages de l'équipe ScholarBridge. Ces e-mails ne sont pas encore envoyés automatiquement — ce réglage sera actif dès que ce service sera branché.
+Fitz peut vous prévenir par e-mail des échéances de candidatures à venir, des documents de dossier encore manquants, et des messages de l'équipe FitzUniverse. Ces e-mails ne sont pas encore envoyés automatiquement — ce réglage sera actif dès que ce service sera branché.
 </p>
 
 <label class="account-toggle-row" for="emailNotificationsToggle">
@@ -345,7 +218,7 @@ Fitz peut vous prévenir par e-mail des échéances de candidatures à venir, de
 <div class="ai-panel-body">
 
 <p class="ai-field-hint" style="margin-bottom:16px;">
-La suppression de votre compte est <strong>définitive et irréversible</strong>. Votre profil, vos préférences et vos messages seront supprimés. Certaines notes internes conservées par l'équipe ScholarBridge à des fins de suivi peuvent être conservées. Vous serez immédiatement déconnecté(e).
+La suppression de votre compte est <strong>définitive et irréversible</strong>. Votre profil, vos préférences et vos messages seront supprimés. Certaines notes internes conservées par l'équipe FitzUniverse à des fins de suivi peuvent être conservées. Vous serez immédiatement déconnecté(e).
 </p>
 
 <form id="deleteAccountForm">
@@ -379,7 +252,7 @@ La suppression de votre compte est <strong>définitive et irréversible</strong>
 <div class="account-modal-card">
 
 <h2>Dernière confirmation</h2>
-<p>Cette action est <strong>définitive</strong>. Votre compte ScholarBridge et vos données seront supprimés immédiatement.</p>
+<p>Cette action est <strong>définitive</strong>. Votre compte FitzUniverse et vos données seront supprimés immédiatement.</p>
 
 <div class="account-modal-actions">
 <button type="button" class="ai-icon-btn" id="cancelDeleteBtn">Annuler</button>
@@ -390,6 +263,7 @@ La suppression de votre compte est <strong>définitive et irréversible</strong>
 
 </div>
 
+<script src="js/back-link.js"></script>
 <script type="module" src="account.js"></script>
 
 </body>

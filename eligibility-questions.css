@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — QUESTIONNAIRE D'ÉLIGIBILITÉ
+FITZUNIVERSE — QUESTIONNAIRE D'ÉLIGIBILITÉ
 Repose sur les variables et le reset définis dans css/base.css
 (même palette, même typographie, même système que index.html)
 ========================================================== */
@@ -17,16 +17,129 @@ min-height:100vh;
 
 display:flex;
 
+/* "safe center" et non "center" seul : quand la carte est plus haute
+que la fenêtre (petit écran, zoom, question à longue liste d'options),
+un centrage classique la fait déborder des DEUX côtés — et le haut,
+sorti par le bord supérieur, devient inatteignable au défilement. Le
+mot-clé safe bascule automatiquement en alignement haut dans ce cas.
+La ligne "center" nue juste avant sert de repli : un navigateur qui ne
+comprend pas "safe" ignore la seconde déclaration et garde la
+première. */
 align-items:center;
+
+align-items:safe center;
 
 justify-content:center;
 
+/* Le halo ambré (.container::after / .container-wrap::after) est posé
+avec inset:-70px, donc il déborde volontairement de 70px hors de la
+carte pour se fondre en douceur. Sans ce clip, ces 70px comptaient dans
+la largeur de défilement et provoquaient une barre horizontale de ~50px
+sur une page qui n'a rien à faire défiler latéralement (mesuré :
+scrollWidth 1330 pour un viewport de 1280). On ne coupe que la part
+hors écran, le halo visible est intact. */
+overflow-x:hidden;
+
 padding:40px 20px;
 
-background:var(--gradient-primary);
+/* box-sizing:border-box (css/base.css) fait entrer le padding DANS les
+100vh du min-height : la hauteur réellement offerte au contenu n'est
+donc pas 100vh mais 100vh - 80px. Une carte de 541px dans une fenêtre
+de 600px passait ainsi à 621px de body, soit 21px de défilement pour
+une carte qui tenait visuellement — un ascenseur pour presque rien.
+Sur les fenêtres basses (portable en 720p, navigateur zoomé), on rend
+ces marges au contenu plutôt que de déclencher un défilement. */
+
+/* --gradient-deep depuis le 2026-08-22 — même changement et même
+raison que le body de eligibility-test.css (voir son commentaire) :
+sur un fond plein écran, le stop clair de --gradient-primary donnait
+un bleu vif en haut de page, alors que c'est le marine presque noir de
+l'autre extrémité qui a été retenu. */
+background:var(--gradient-deep);
 
 }
 
+@media(max-height:760px){
+
+body{
+
+padding:20px 16px;
+
+}
+
+}
+
+/* Enveloppe non-clippée autour de .container, seule pour porter le
+halo ambré ci-dessous : .container a overflow:hidden (nécessaire à
+son liseré de tête, .container::before) qui aurait rogné un halo posé
+directement dessus. Suit .container dans le flux (aucune dimension
+propre) au lieu d'un centrage en position:absolute sur body, qui se
+désynchronisait de la carte dès que le contenu dépassait 100vh
+(1re tentative, corrigée le 2026-08-15). */
+.container-wrap{
+
+position:relative;
+
+/* Au-dessus du halo fixe de body::before (voir plus haut). */
+z-index:1;
+
+isolation:isolate;
+
+display:flex;
+
+justify-content:center;
+
+width:100%;
+
+}
+
+/* Halo ambré derrière la carte. Passé en position:fixed sur body le
+2026-08-22 (retour utilisateur : "ce sont ces débordements qui me
+gênent") — il était auparavant un ::after absolu à inset:-70px sur le
+conteneur de la carte.
+
+Le problème n'était pas visuel mais de mise en page : un élément
+absolu à inset négatif AGRANDIT la zone de défilement de son ancêtre.
+Ces 70px de débord comptaient donc dans scrollWidth ET scrollHeight,
+et faisaient apparaître des barres de défilement sur une page dont le
+contenu tenait à l'écran (mesuré à 1000x600 : 50px de trop en largeur,
+30px en hauteur, pour une carte qui tenait sans peine).
+
+position:fixed règle ça par construction : un élément fixe est retiré
+du flux ET ne contribue jamais à la taille de défilement, quelle que
+soit sa dimension. Le halo couvre désormais toute la fenêtre et son
+dégradé radial rayonne depuis le centre — c'est-à-dire exactement où la
+carte est centrée, donc le rendu est le même qu'avant.
+
+z-index:0 + source order : le pseudo-élément est déclaré avant tout
+contenu, il passe donc sous la carte sans qu'on ait à empiler
+davantage. pointer-events:none pour ne rien intercepter. */
+body::before{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+z-index:0;
+
+background:radial-gradient(circle at center, rgba(233,163,25,.55) 0%, rgba(233,163,25,.22) 38%, transparent 62%);
+
+filter:blur(24px);
+
+pointer-events:none;
+
+}
+
+/* Fond vitré, même traitement que .hero-demo (css/hero.css, carte
+"Fitz en action" d'index.html) plutôt que le var(--background) opaque
+par défaut : cohérent avec le halo ambré du .container-wrap parent, qui
+a besoin de transparence pour se voir légèrement à travers le bord de
+la carte plutôt que de s'arrêter net dessous. Ombre reprise à
+l'identique (3 couches, dont le liseré clair inset qui donne l'effet
+"carte qui flotte") plutôt que var(--shadow-lg) — c'est elle, pas
+seulement le fond, qui donne à .hero-demo son relief. */
 .container{
 
 position:relative;
@@ -37,42 +150,30 @@ width:100%;
 
 max-width:720px;
 
-background:var(--background);
+background:rgba(255,255,255,.97);
 
-border:1px solid var(--border-color);
+backdrop-filter:blur(20px);
+
+-webkit-backdrop-filter:blur(20px);
+
+border:1px solid rgba(255,255,255,.6);
 
 border-radius:var(--radius-lg);
 
 padding:48px;
 
-box-shadow:var(--shadow-lg);
+box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 }
 
-/* Identité Fitz (corrigé le 2026-08-15 — un halo body::before/::after en
-radial-gradient flou, retiré, enfreignait DESIGN_SYSTEM.md : "Trois
-dégradés, pas plus — jamais de nouveau blob radial", et ses couleurs
-étaient les 2 arrêts de --gradient-fitz extraits en dur plutôt que le
-token consommé tel quel). Même liseré que eligibility-test.css (voir
-son commentaire pour le détail) : accent de signature en tête de
-carte, --gradient-fitz consommé directement. */
-.container::before{
+/* Le liseré --gradient-fitz de 4px en tête de carte a été retiré le
+2026-08-22, en même temps que son jumeau dans eligibility-test.css
+(retour utilisateur). Voir le commentaire là-bas pour le détail.
 
-content:"";
-
-position:absolute;
-
-top:0;
-
-left:0;
-
-right:0;
-
-height:4px;
-
-background:var(--gradient-fitz);
-
-}
+Note : .container garde overflow:hidden, qui existait à l'origine POUR
+ce liseré (l'empêcher de dépasser des angles arrondis). Il sert
+désormais au lavage ambré de .fitz-surface — à ne pas retirer en
+croyant nettoyer un reste. */
 
 /* ==========================================================
 BADGE IA
@@ -150,17 +251,17 @@ message restent propres à cette page.
 --background-light générique utilisé ailleurs sur le site. */
 .chat-box{
 
+position:relative;
+
+isolation:isolate;
+
+overflow:hidden;
+
 display:flex;
 
 align-items:flex-start;
 
 gap:16px;
-
-background:linear-gradient(100deg, rgba(139,124,246,.12) 0%, rgba(51,65,140,.07) 100%);
-
-border:1px solid rgba(139,124,246,.28);
-
-border-left:3px solid var(--accent-color);
 
 padding:22px;
 
@@ -204,6 +305,20 @@ margin-bottom:26px;
 
 }
 
+/* Plus de pastille ronde derrière l'icône de la question (règle
+« Icônes » de DESIGN_SYSTEM.md, arrêtée le 2026-08-22).
+
+Le <div id="questionIcon"> est conservé, contrairement à ce que la
+règle « aucun conteneur » suggérerait : eligibility-questions.js le
+cible par son id et y réinjecte un <i data-lucide> à CHAQUE question
+(renderIcon(), le glyphe change d'une question à l'autre et un <svg>
+déjà transformé par Lucide n'est pas réutilisable). Le supprimer
+casserait ce rendu. Il ne dessine plus rien : ni fond, ni rayon, ni
+dimensions — c'est une ancre, plus une pastille.
+
+28px au lieu de 24 : l'icône occupe seule la place que tenait le
+disque de 48px, elle doit grandir pour ne pas paraître perdue à côté
+d'un titre de question en 1.7rem. */
 .question-icon{
 
 flex-shrink:0;
@@ -212,16 +327,6 @@ display:flex;
 
 align-items:center;
 
-justify-content:center;
-
-width:48px;
-
-height:48px;
-
-border-radius:14px;
-
-background:var(--background-light);
-
 color:var(--primary-color);
 
 }
@@ -229,9 +334,9 @@ color:var(--primary-color);
 .question-icon i,
 .question-icon svg{
 
-width:24px;
+width:28px;
 
-height:24px;
+height:28px;
 
 }
 
@@ -795,11 +900,16 @@ gap:12px;
 
 }
 
-.question-icon{
+/* Réduisait le disque de 48 à 42px ; celui-ci n'existe plus (voir la
+règle .question-icon plus haut), la surcharge ne faisait donc plus
+rien. Reportée sur le glyphe lui-même, qui est désormais le seul
+élément visible. */
+.question-icon i,
+.question-icon svg{
 
-width:42px;
+width:24px;
 
-height:42px;
+height:24px;
 
 }
 
@@ -843,6 +953,72 @@ padding:22px 16px;
 
 }
 
+/* Badge "Fitz" — respiration légère, propre à cette page (le badge
+identique d'eligibility-test.html n'est pas concerné). Juste un
+scale + micro-décalage vertical, jamais assez pour distraire de la
+question. Neutralisé comme toute animation par la règle
+prefers-reduced-motion globale (animations.css) et locale ci-dessous. */
+@keyframes fitzBadgeBreathe{
+
+0%,100%{ transform:translateY(0) scale(1); }
+
+50%{ transform:translateY(-2px) scale(1.02); }
+
+}
+
+.fitz-badge--breathe{
+
+animation:fitzBadgeBreathe 4s var(--ease-standard) infinite;
+
+}
+
+/* Avatar de la bulle Fitz, sans icône ET sans carré : plus proche
+d'un indicateur "de réflexion" façon Claude qu'un logo — un halo flou
+qui respire, sans contour ni fond plein. Scopé à .chat-box .fitz-avatar
+(le .fitz-avatar générique, css/ai-suite.css, garde sa forme carrée et
+son icône partout ailleurs, ex. en-têtes d'outils ai-*.html). Même
+traitement sur .advisor-intro .fitz-avatar (eligibility-test.html,
+eligibility-test.css) pour rester cohérent entre les deux pages du
+parcours diagnostic. Réutilise les couleurs de --gradient-fitz et le
+keyframe fitzPulse déjà en place (voir ai-suite.css, .fitz-status)
+plutôt que d'inventer une nouvelle animation. */
+.chat-box .fitz-avatar{
+
+background:none;
+
+box-shadow:none;
+
+overflow:visible;
+
+}
+
+.chat-box .fitz-avatar::before{
+
+display:none;
+
+}
+
+.chat-box .fitz-avatar::after{
+
+content:"";
+
+position:absolute;
+
+inset:4px;
+
+border-radius:50%;
+
+/* Ambre et non violet (2026-08-27) : halo copié de --gradient-fitz
+(css/base.css), qui est passé du violet à l'ambre ce même jour —
+voir la note à cet endroit. */
+background:radial-gradient(circle, #E9A319 0%, #8A5D00 45%, transparent 72%);
+
+filter:blur(6px);
+
+animation:fitzPulse 2.2s ease-in-out infinite;
+
+}
+
 /* ==========================================================
 ACCESSIBILITÉ — prefers-reduced-motion (audit du 2026-08-14). Absent
 jusqu'ici sur cette page, contrairement à eligibility-test.css : les
@@ -869,6 +1045,13 @@ transition:none;
 .nav-buttons button:hover{
 
 transform:none;
+
+}
+
+.fitz-badge--breathe,
+.chat-box .fitz-avatar::after{
+
+animation:none;
 
 }
 

@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — AI Chat (ai-chat.js)
+* FitzUniverse — AI Chat (ai-chat.js)
 * ============================================================
 * Assistant conversationnel Fitz : historique multi-conversations
 * persistant (js/ai/chat-store.js), pièces jointes en aperçu local
@@ -12,7 +12,8 @@
 */
 
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
-import { generate } from "./js/ai/ai-client.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { getSuggestedQuestions } from "./js/ai/simulated-responses.js";
 import { renderMarkdownLite, escapeHtml } from "./js/ai/format.js";
 import {
@@ -37,10 +38,9 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Discuter avec Fitz</h2>
-<p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour poser toutes vos questions à Fitz.</p>
+<p>Cette fonctionnalité est disponible avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)}. Passez à une formule supérieure pour poser toutes vos questions à Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;
@@ -55,13 +55,52 @@ function uid() {
 return `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Le symbole Fitz (deux arcs), en taille avatar — la même marque que la
+// barre du parcours, pour que chaque réponse soit signée visuellement.
+const FITZ_MARK_SVG = `<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>`;
+
+// ==========================================================
+// Historique daté — groupes façon ChatGPT/Claude
+// ==========================================================
+function libelleGroupe(timestamp, maintenant = new Date()) {
+
+const jour = new Date(maintenant);
+jour.setHours(0, 0, 0, 0);
+
+const date = new Date(timestamp || 0);
+date.setHours(0, 0, 0, 0);
+
+const ecartJours = Math.round((jour - date) / 86400000);
+
+if (ecartJours <= 0) return "Aujourd'hui";
+if (ecartJours === 1) return "Hier";
+if (ecartJours <= 7) return "7 derniers jours";
+if (ecartJours <= 30) return "30 derniers jours";
+return "Plus ancien";
+
+}
+
+// Aperçu d'une conversation : le dernier message, débarrassé du
+// balisage Markdown léger — jamais interprété (textContent côté rendu).
+function apercuConversation(conversation) {
+
+const dernier = [...conversation.messages].reverse().find((m) => m.content && m.content.trim());
+if (!dernier) return "Conversation vide";
+
+const texte = dernier.content.replace(/[*_#`>-]/g, "").replace(/\s+/g, " ").trim();
+const prefixe = dernier.role === "assistant" ? "Fitz : " : "Vous : ";
+
+return prefixe + (texte.length > 64 ? `${texte.slice(0, 64)}…` : texte);
+
+}
+
 function initChat(ctx) {
 
 const { user, profile } = ctx;
 
 const scrollEl = document.getElementById("chatScroll");
 const emptyState = document.getElementById("chatEmptyState");
-const suggestionsEl = document.getElementById("chatSuggestions");
+const helpCardsEl = document.getElementById("chatHelpCards");
 const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");
 const sendBtn = document.getElementById("chatSendBtn");
@@ -167,7 +206,20 @@ if (window.lucide) lucide.createIcons();
 return;
 }
 
+// Groupes datés (Aujourd'hui / Hier / …) — la liste est déjà triée de
+// la plus récente à la plus ancienne par listConversations().
+let groupeCourant = null;
+
 filtered.forEach((conversation) => {
+
+const groupe = libelleGroupe(conversation.updatedAt || conversation.createdAt);
+if (groupe !== groupeCourant) {
+groupeCourant = groupe;
+const label = document.createElement("p");
+label.className = "ai-chat-history-group";
+label.textContent = groupe;
+historyListEl.appendChild(label);
+}
 
 const item = document.createElement("div");
 item.className = `ai-chat-history-item${conversation.id === active.id ? " is-active" : ""}`;
@@ -175,8 +227,8 @@ item.dataset.id = conversation.id;
 
 item.innerHTML = `
 <button type="button" class="ai-chat-history-item-select">
-<i data-lucide="message-square"></i>
-<span>${escapeHtml(conversation.title)}</span>
+<span class="ai-chat-history-item-title">${escapeHtml(conversation.title)}</span>
+<span class="ai-chat-history-item-preview">${escapeHtml(apercuConversation(conversation))}</span>
 </button>
 <div class="ai-chat-history-item-actions">
 <button type="button" class="ai-icon-btn" data-action="rename" aria-label="Renommer"><i data-lucide="pen-line"></i></button>
@@ -328,26 +380,51 @@ event.preventDefault();
 if (event.dataTransfer.files.length) handleFiles(event.dataTransfer.files);
 });
 
-function renderSuggestions() {
+/* Remplit les cartes de l'état vide à partir du profil.
+Remplace renderSuggestions(), qui peuplait une rangée de pastilles
+posée au-dessus du champ de saisie : les mêmes questions que les
+cartes juste au-dessus, et qui restaient affichées pendant toute la
+conversation même après vingt messages.
+
+getSuggestedQuestions() était déjà sensible au profil — elle place en
+tête une question sur le domaine visé par l'étudiant et ajoute une
+question sur son pays de destination. Cette intelligence existait
+dans le code mais n'atteignait que les pastilles ; elle alimente
+maintenant les cartes, c'est-à-dire l'endroit qu'on regarde. */
+
+const ICONES_SUGGESTION = ["graduation-cap", "file-text", "pen-line", "send", "globe"];
+
+function renderHelpCards() {
+
+if (!helpCardsEl) return;
 
 const questions = getSuggestedQuestions(profile);
+if (!questions.length) return;
 
-suggestionsEl.innerHTML = "";
+helpCardsEl.innerHTML = "";
 
-questions.forEach((question) => {
+questions.forEach((question, index) => {
 
-const chip = document.createElement("button");
-chip.type = "button";
-chip.className = "ai-suggestion-chip";
-chip.textContent = question;
-chip.addEventListener("click", () => {
-input.value = question;
-form.requestSubmit();
+const carte = document.createElement("button");
+carte.type = "button";
+carte.className = "ai-help-card";
+carte.dataset.prompt = question;
+
+// textContent et non innerHTML : la question peut contenir le
+// domaine ou le pays saisis par l'étudiant dans son profil, donc
+// du texte qu'il contrôle. Il ne doit jamais être interprété.
+const glyphe = document.createElement("i");
+glyphe.setAttribute("data-lucide", ICONES_SUGGESTION[index % ICONES_SUGGESTION.length]);
+
+const libelle = document.createElement("span");
+libelle.textContent = question;
+
+carte.append(glyphe, libelle);
+helpCardsEl.appendChild(carte);
+
 });
 
-suggestionsEl.appendChild(chip);
-
-});
+if (window.lucide) lucide.createIcons();
 
 }
 
@@ -358,7 +435,9 @@ const initial = (profile.firstName || user.displayName || "V").trim().charAt(0).
 return `<div class="ai-msg-avatar">${initial || "V"}</div>`;
 }
 
-return `<div class="ai-msg-avatar"><i data-lucide="sparkles"></i></div>`;
+// Chaque réponse est signée du symbole Fitz — l'étudiant sait
+// toujours qui parle, comme sur Claude ou ChatGPT.
+return `<div class="ai-msg-avatar ai-msg-avatar--fitz">${FITZ_MARK_SVG}</div>`;
 
 }
 
@@ -429,7 +508,15 @@ updateCurrentTitle();
 
 if (window.lucide) lucide.createIcons();
 
-scrollToBottom(false);
+// Un défilement vers le bas n'a de sens que s'il y a des messages à
+// faire défiler. Sans cette condition, sur un écran mobile étroit où
+// l'état vide (avatar + titre + texte d'intro + cartes) dépasse la
+// hauteur visible de #chatScroll, ce scrollToBottom(false) défilait
+// quand même jusqu'en bas — masquant l'avatar de Fitz et le titre
+// « Comment puis-je vous aider aujourd'hui ? » dès l'arrivée sur la
+// page, sans qu'aucun message ne le justifie (bug constaté le 2026-08-27
+// lors de la vérification mobile demandée par l'utilisateur).
+if (messages.length > 0) scrollToBottom(false);
 
 }
 
@@ -499,14 +586,17 @@ assistantMessage.stopped = false;
 
 } catch (error) {
 
-if (error?.name === "AbortError") {
+if (estArret(error)) {
 assistantMessage.pending = false;
 assistantMessage.stopped = true;
 if (!assistantMessage.content) assistantMessage.content = "_Réponse interrompue._";
 } else {
 console.error("Fitz a rencontré une erreur :", error);
 assistantMessage.pending = false;
-assistantMessage.content = "Fitz n'a pas pu terminer sa réponse cette fois — réessayez dans un instant.";
+// Le message précis remplace le « réessayez » générique : sur un
+// quota atteint ou un texte trop long, réessayer est un mauvais
+// conseil, et l'étudiant le suivrait.
+assistantMessage.content = messageErreurFitz(error);
 }
 
 } finally {
@@ -633,7 +723,17 @@ showToast("Nouvelle conversation démarrée.");
 
 });
 
-renderSuggestions();
+// Salutation personnalisée de l'écran d'accueil — le prénom vient du
+// profil (textContent : jamais interprété).
+const greetingEl = document.getElementById("chatGreeting");
+if (greetingEl) {
+const prenom = (profile.firstName || user.displayName || "").trim().split(/\s+/)[0];
+greetingEl.textContent = prenom
+? `Bonjour ${prenom} — comment puis-je vous aider ?`
+: "Comment puis-je vous aider aujourd'hui ?";
+}
+
+renderHelpCards();
 renderAll();
 renderHistoryList();
 

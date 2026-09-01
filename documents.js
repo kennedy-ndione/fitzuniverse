@@ -48,7 +48,6 @@ container.innerHTML = `
 <h2>Documents à préparer</h2>
 <p>Débloquez les checklists détaillées de Fitz avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)} : préparez chaque document sans rien laisser au hasard.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
 <span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
@@ -320,14 +319,13 @@ ${doc.mistakes.map((item) => `<li><i data-lucide="x"></i><span>${item}</span></l
 <div class="docs-modal-tip">
 <i data-lucide="graduation-cap"></i>
 <div>
-<strong>Conseil ScholarBridge</strong>
+<strong>Conseil Fitz</strong>
 <p>${doc.scholarBridgeTip}</p>
 </div>
 </div>
 
 ${doc.title === "Lettre de motivation" ? `
 <a href="ai-letter.html" class="btn btn-primary docs-modal-generate">
-<i data-lucide="sparkles"></i>
 <span>Générer ma lettre avec Fitz</span>
 </a>
 ` : ""}
@@ -373,7 +371,7 @@ card.innerHTML = `
 <div class="generated-doc-icon"><i data-lucide="${doc.icon || "file-text"}"></i></div>
 <div class="generated-doc-body">
 <h3>${doc.title}</h3>
-<span class="generated-doc-date"><i data-lucide="sparkles"></i>Généré par Fitz · ${doc.date || ""}</span>
+<span class="generated-doc-date">Généré par Fitz · ${doc.date || ""}</span>
 </div>
 <div class="generated-doc-actions">
 <button type="button" class="btn-ghost btn-sm" data-action="view"><i data-lucide="eye"></i></button>

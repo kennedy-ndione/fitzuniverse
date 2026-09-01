@@ -21,15 +21,3 @@ display:none;
 
 /* Verre dépoli — réservé au panneau d'aperçu (l'e-mail généré par
 Fitz), pas au panneau de formulaire à gauche. */
-
-#previewPanel{
-
-background:var(--glass);
-
-border:1px solid var(--glass-border);
-
-backdrop-filter:blur(16px);
-
--webkit-backdrop-filter:blur(16px);
-
-}

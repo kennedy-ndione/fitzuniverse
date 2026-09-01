@@ -1,6 +1,6 @@
 /**
 * ==========================================================
-* ScholarBridge - Hero Demo
+* Fitz - Hero Demo
 * Fitz Demo v1.0
 * ==========================================================
 */
@@ -91,6 +91,14 @@ progress: 100
 
 let currentStep = 0;
 let interval = null;
+let pendingTimeout = null;
+
+function stopDemo() {
+
+if (interval) { clearInterval(interval); interval = null; }
+if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
+
+}
 
 function setMessage(text) {
 
@@ -136,8 +144,9 @@ currentStep++;
 if (currentStep >= steps.length) {
 
 clearInterval(interval);
+interval = null;
 
-setTimeout(resetDemo, 3000);
+pendingTimeout = setTimeout(resetDemo, 3000);
 
 }
 
@@ -153,7 +162,7 @@ progressBar.style.width = "0%";
 
 setMessage("Bonjour, je suis Fitz. Commençons par comprendre votre profil.");
 
-setTimeout(startDemo, 1000);
+pendingTimeout = setTimeout(startDemo, 1000);
 
 }
 
@@ -165,6 +174,38 @@ interval = setInterval(updateStep, 1500);
 
 }
 
+// Pause hors écran (audit du 2026-08-13) : sans ça, le cycle tournait
+// en continu même section loin hors du viewport ou onglet en
+// arrière-plan — impact réel faible (mise à jour DOM légère toutes
+// les 1,5s) mais consommait CPU/batterie en continu pour rien.
+// reduceMotion (déjà défini plus haut pour le fondu du hero) : pas de
+// cycle du tout dans ce cas, le message d'accueil statique suffit.
+const fitzDemoSection = document.getElementById("fitz-demo");
+
+if (reduceMotion) {
+
+// Rien : #fitz-message garde son texte initial, la carte reste figée.
+
+} else if (fitzDemoSection && "IntersectionObserver" in window) {
+
+const demoObserver = new IntersectionObserver((entries) => {
+
+entries.forEach((entry) => {
+
+stopDemo();
+
+if (entry.isIntersecting) resetDemo();
+
+});
+
+}, { threshold: 0.2 });
+
+demoObserver.observe(fitzDemoSection);
+
+} else {
+
 resetDemo();
+
+}
 
 });

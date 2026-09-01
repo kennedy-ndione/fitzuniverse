@@ -1,6 +1,6 @@
 /**
 * ==========================================================
-* ScholarBridge - Homepage init
+* Fitz - Homepage init
 * Révélation au scroll, compteurs animés, icônes Lucide.
 * ==========================================================
 */

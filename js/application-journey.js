@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — parcours guidé par candidature (5 étapes)
+* FitzUniverse — parcours guidé par candidature (5 étapes)
 * ============================================================
 *
 * Calcule l'état RÉEL des 5 étapes de dépôt d'une candidature, à

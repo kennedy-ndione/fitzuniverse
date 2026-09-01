@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — AI Translate (ai-translate.js)
+* FitzUniverse — AI Translate (ai-translate.js)
 * ============================================================
 * Traduction texte/fichier entre 6 langues (js/ai/simulated-responses.js
 * fournit le lexique et l'heuristique de détection), inversion des
@@ -10,7 +10,8 @@
 */
 
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
-import { generate } from "./js/ai/ai-client.js";
+import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
+import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { LANGUAGES, detectLanguage } from "./js/ai/simulated-responses.js";
 import { getTranslationHistory, addTranslationHistory, saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
@@ -33,10 +34,9 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Traduction de documents</h2>
-<p>Cette fonctionnalité est disponible avec ${target ? `la formule <strong>${PLAN_LABELS[target]}</strong>` : "une formule supérieure"}. Passez à une formule supérieure pour traduire vos documents avec Fitz.</p>
+<p>Cette fonctionnalité est disponible avec ${unlockPlanPhrase(target ? PLAN_LABELS[target] : null)}. Passez à une formule supérieure pour traduire vos documents avec Fitz.</p>
 <a href="${target ? `offers.html#${target}` : "offers.html"}" class="btn btn-primary">
-<i data-lucide="sparkles"></i>
-<span>Choisir ma formule</span>
+<span>${FITZ_UNLOCK_CTA}</span>
 </a>
 </div>
 `;
@@ -342,9 +342,11 @@ showToast("Traduction terminée.");
 
 } catch (error) {
 
-if (error?.name !== "AbortError") {
+// estArret() d'abord : l'étudiant qui a appuyé sur « Arrêter »
+// n'a rien raté, lui afficher une erreur serait un contresens.
+if (!estArret(error)) {
 console.error(error);
-showToast("La traduction n'a pas abouti cette fois — réessayez, Fitz reste à votre disposition.", { type: "error" });
+showToast(messageErreurFitz(error), { type: "error" });
 }
 
 } finally {

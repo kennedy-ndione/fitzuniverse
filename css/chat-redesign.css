@@ -1,0 +1,272 @@
+/* ==========================================================
+FITZ — REFONTE « MESSAGERIE » DU CHAT (2026-08-30)
+==========================================================
+Demande utilisateur : « construis Discuter avec Fitz au même niveau
+ou semblable à la messagerie de Claude ou ChatGPT ».
+
+Ce que fait cette feuille — et rien d'autre :
+1. Le CADRE : sous la barre du parcours, le chat occupe TOUT
+   l'écran (l'écrin 1000 px de journey-shell.css transformait
+   l'application en carte flottante au milieu de la page).
+2. L'HISTORIQUE : colonne pleine hauteur, groupes datés
+   (Aujourd'hui / Hier / …), titre + aperçu du dernier message.
+3. LE FIL : chaque réponse signée du symbole Fitz, bulle étudiante
+   encre chaude.
+4. LE COMPOSER : pilule élevée, bouton d'envoi terracotta,
+   indication discrète sous le champ.
+
+Tout est scopé à :has(#chatApp) quand la règle est structurelle :
+sur l'état verrouillé (le JS retire #chatApp), la page retombe sur
+la mise en page éditoriale normale de journey-shell.css.
+========================================================== */
+
+/* ==========================================================
+1. LE CADRE — plein écran sous la barre du parcours
+========================================================== */
+.dashboard-main:has(#chatApp){
+height:100dvh;
+display:flex;
+flex-direction:column;
+}
+
+/* La barre n'a plus besoin d'être collante : le cadre est figé, la
+page ne défile jamais. */
+.dashboard-main:has(#chatApp) .journey-topbar{
+position:static;
+flex:none;
+}
+
+/* Neutralise la colonne éditoriale (1000 px + gouttières) ET le
+height:calc(100vh - var(--topbar-height)) de ai-suite.css, dont la
+variable (72px, l'ancien topbar) ne correspond plus à la barre du
+parcours : flex 1 mesure la hauteur réelle restante, quelle que
+soit la hauteur de la barre. */
+.dashboard-main:has(#chatApp) > .content{
+flex:1 1 auto;
+height:auto;
+min-height:0;
+max-width:none;
+margin:0;
+padding:0;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+}
+
+/* ==========================================================
+2. L'HISTORIQUE — colonne datée avec aperçus
+========================================================== */
+.ai-chat-history{
+flex:0 0 284px;
+background:var(--background-light);
+}
+
+.ai-chat-history-group{
+margin:14px 10px 4px;
+font-size:.68rem;
+font-weight:800;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:var(--text-muted);
+}
+
+.ai-chat-history-group:first-child{ margin-top:4px; }
+
+.ai-chat-history-item-select{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:3px;
+min-width:0;
+}
+
+.ai-chat-history-item-title{
+max-width:100%;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+font-size:.84rem;
+font-weight:700;
+color:var(--text-color);
+}
+
+.ai-chat-history-item-preview{
+max-width:100%;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+font-size:.74rem;
+font-weight:500;
+color:var(--text-muted);
+}
+
+.ai-chat-history-item.is-active{
+background:var(--background-alt);
+}
+
+.ai-chat-history-item.is-active .ai-chat-history-item-title{
+color:var(--amber-700);
+}
+
+/* ==========================================================
+3. LE FIL — réponses signées, bulle étudiante encre chaude
+========================================================== */
+.ai-msg-bot .ai-msg-avatar{
+display:flex;
+align-items:center;
+justify-content:center;
+width:30px;
+height:30px;
+flex-shrink:0;
+border-radius:50%;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+color:var(--journey-ink, #1C1610);
+margin-top:2px;
+}
+
+.ai-msg-avatar--fitz svg{
+width:17px;
+height:17px;
+}
+
+/* La question de l'étudiant : encre chaude, comme la carte d'action
+du parcours — sa voix est identifiable d'un coup d'œil. */
+.ai-msg-user .ai-msg-bubble{
+background:linear-gradient(158deg, #2A211A 0%, #1E1712 100%);
+color:#FDF9EF;
+border:none;
+border-radius:18px 18px 4px 18px;
+padding:12px 16px;
+}
+
+.ai-msg-user .ai-msg-bubble p{ color:#FDF9EF; }
+
+.ai-msg-user .ai-msg-avatar{
+display:flex;
+align-items:center;
+justify-content:center;
+width:30px;
+height:30px;
+flex-shrink:0;
+border-radius:50%;
+background:var(--background-alt);
+border:1px solid var(--border-color);
+font-size:.78rem;
+font-weight:800;
+color:var(--amber-700);
+margin-top:2px;
+}
+
+/* ==========================================================
+4. LE COMPOSER — pilule élevée + indication
+========================================================== */
+.ai-chat-composer-wrap{
+padding:10px 24px 14px;
+background:linear-gradient(to top, var(--background) 70%, transparent);
+border-top:none;
+}
+
+.ai-chat-composer{
+max-width:760px;
+margin-inline:auto;
+display:flex;
+align-items:flex-end;
+gap:8px;
+padding:8px 8px 8px 10px;
+border-radius:24px;
+background:var(--journey-paper, #FDF9EF);
+border:1px solid var(--border-color);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.85),
+0 2px 4px rgba(33,29,24,.06),
+0 14px 30px -16px rgba(33,29,24,.28);
+transition:border-color .15s ease, box-shadow .15s ease;
+}
+
+.ai-chat-composer:focus-within{
+border-color:var(--amber-600);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.85),
+0 2px 4px rgba(33,29,24,.06),
+0 14px 30px -16px rgba(33,29,24,.28),
+0 0 0 4px rgba(217,128,90,.14);
+}
+
+.ai-chat-composer.is-dragover{
+border-color:var(--amber-600);
+background:var(--accent-100, #F7E4D3);
+}
+
+.ai-chat-textarea{
+border:none;
+background:transparent;
+box-shadow:none;
+padding:9px 4px;
+}
+
+.ai-chat-textarea:focus{ outline:none; box-shadow:none; }
+
+.ai-chat-send-btn,
+.ai-chat-stop-btn{
+width:38px;
+height:38px;
+border-radius:50%;
+background:var(--amber-600);
+color:#FDF9EF;
+border:none;
+flex-shrink:0;
+transition:background .15s ease, transform .15s ease;
+}
+
+.ai-chat-send-btn:hover,
+.ai-chat-stop-btn:hover{
+background:var(--amber-700);
+transform:translateY(-1px);
+}
+
+.ai-composer-hint{
+max-width:760px;
+margin:8px auto 0;
+text-align:center;
+font-size:.72rem;
+color:var(--text-muted);
+}
+
+/* Un tableau dans une réponse défile dans SA bulle, jamais la page
+(constaté sur mobile : la colonne « Format conseillé » était coupée
+net, sans aucun moyen de la lire). */
+.ai-msg-bot .ai-msg-bubble table{
+display:block;
+max-width:100%;
+overflow-x:auto;
+}
+
+/* ==========================================================
+ÉCRAN D'ACCUEIL — le symbole Fitz + salutation
+========================================================== */
+.ai-empty-mark{
+width:56px;
+height:56px;
+margin:0 auto 18px;
+display:block;
+}
+
+.ai-empty-state h2{
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-weight:700;
+color:var(--journey-ink, #1C1610);
+}
+
+/* ==========================================================
+MOBILE — le composer garde ses coudées franches
+========================================================== */
+@media (max-width: 767px){
+
+.ai-chat-composer-wrap{ padding:8px 12px 10px; }
+
+.ai-composer-hint{ display:none; }
+
+.ai-empty-mark{ width:46px; height:46px; }
+
+}

@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // ============================================================
-// ScholarBridge - Règles de sécurité Storage
+// Fitz - Règles de sécurité Storage
 //
 // Storage est initialisé (firebase-config.js) mais aucune
 // fonctionnalité du site n'y écrit encore aujourd'hui. Ces règles

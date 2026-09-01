@@ -6,23 +6,70 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Détails de la bourse | ScholarBridge</title>
-<meta name="description" content="Détails, conditions et procédure de candidature pour cette bourse sur ScholarBridge.">
+<title>Détails de la bourse | FitzUniverse</title>
+<meta name="description" content="Détails, conditions et procédure de candidature pour cette bourse sur FitzUniverse.">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+
+<!-- Canonical et Open Graph (2026-08-29) : valeurs génériques mises à
+jour par details.js avec l'id du programme dès que la fiche est
+chargée. URL à mettre à jour si un nom de domaine personnalisé est
+acheté (voir la même note dans index.html). -->
+<link rel="canonical" href="https://scholarbridge-e0d84.web.app/scholarship-details.html">
+<meta property="og:title" content="Détails de la bourse | FitzUniverse">
+<meta property="og:description" content="Conditions, couverture, échéances et portail de candidature pour cette opportunité du catalogue FitzUniverse.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Newsreader + Public Sans (2026-08-29), même identité « éditorial
+chaleureux » que index.html/scholarships.html/universities.html : cette
+fiche est l'écran qui SUIT un clic depuis l'un des deux catalogues, et
+la police/couleur changeait à ce clic précis — la rupture la plus
+visible qu'un site puisse offrir, pile au moment où l'on approfondit.
+Cette page restait sur Plus Jakarta Sans/Space Grotesk (et sur
+l'ancien bleu marine/ambre) alors que les deux catalogues qui y mènent
+avaient déjà changé — voir css/details-redesign.css. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-29) — remplace
+`https://unpkg.com/lucide@latest` chargé de façon synchrone dans
+<head>. Deux problèmes, tous deux relevés lors de l'audit de la page
+d'accueil du 2026-08-13, qui notait « même correctif à reporter sur
+les autres pages du site » : `@latest` est un CDN tiers non versionné,
+donc une version cassante chez Lucide se déploie sur le site sans
+prévenir ; et synchrone dans <head>, le script bloque le premier
+rendu. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/header.css">
 <link rel="stylesheet" href="scholarship-details.css">
+<!-- Chargé en dernier : redéfinit --font-display/--font-body au niveau
+:root. Le commentaire en tête de ce fichier disait "scholarship-
+details.html a sa propre feuille, non concerné" — c'était vrai tant
+que la fiche n'était pas alignée sur les catalogues ; ça ne l'est
+plus depuis qu'elle l'est. -->
+<link rel="stylesheet" href="css/catalog-typography.css">
+<!-- Chargée en tout dernier : reprend la palette terracotta/encre de
+css/homepage-redesign.css et css/catalog-redesign.css sur cette
+troisième page du même parcours (voir ce fichier). -->
+<link rel="stylesheet" href="css/details-redesign.css">
+<!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
+la grille à sidebar et bascule la page dans l'identité papier chaud. -->
+<link rel="stylesheet" href="css/journey-shell.css">
 <style>[hidden]{display:none !important;}</style>
 
 </head>
 
 <body>
+
+<!-- Lien d'évitement (2026-08-29) : présent sur index.html depuis
+l'audit du 2026-08-13, il manquait aux pages du catalogue — un
+utilisateur au clavier devait traverser toute la navigation avant
+d'atteindre la liste. Même style .skip-link, déjà dans css/base.css. -->
+<a href="#detailsMain" class="skip-link">Aller au contenu</a>
 
 <!-- Visiteur non connecté : en-tête public minimal inchangé (page de
 détail, pas un point d'entrée du catalogue). Masqué par js/dual-shell.js
@@ -31,9 +78,15 @@ uniquement si une session est trouvée. -->
 
 <div class="container header-container">
 
-<a href="index.html" class="logo">
-<img src="assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="logo-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
+<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
 </a>
 
 <div class="header-actions">
@@ -55,184 +108,33 @@ n'est chargé dynamiquement par js/dual-shell.js QUE si une session est
 trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 <div class="dashboard-shell" id="authShellRoot" hidden>
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-<aside class="sidebar" id="sidebar">
-
-<div class="sidebar-top">
-
-<a href="dashboard.html" class="sidebar-brand">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
-<span class="sidebar-brand-text"><span class="scholar">Scholar</span><span class="bridge">Bridge</span></span>
-</a>
-
-<button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Réduire la barre latérale" aria-expanded="true">
-<i data-lucide="panel-left-close"></i>
-</button>
-
-</div>
-
-<div class="sidebar-plan">
-<span class="sidebar-plan-label">Votre formule</span>
-<span class="sidebar-plan-badge" id="planBadge">Essentiel</span>
-</div>
-
-<nav class="sidebar-nav" aria-label="Navigation principale">
-
-<span class="sidebar-section-label">Mon espace</span>
-
-<ul>
-
-<li>
-<a href="dashboard.html" class="nav-link">
-<i data-lucide="layout-dashboard"></i>
-<span>Tableau de bord</span>
-</a>
-</li>
-
-<li>
-<a href="profile.html" class="nav-link">
-<i data-lucide="user"></i>
-<span>Mon profil</span>
-</a>
-</li>
-
-<li>
-<a href="account.html" class="nav-link">
-<i data-lucide="settings"></i>
-<span>Paramètres</span>
-</a>
-</li>
-
-<li data-feature="applications">
-<a href="applications.html" class="nav-link" data-real-href="applications.html">
-<i data-lucide="list-checks"></i>
-<span>Mes candidatures</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li>
-<a href="scholarships.html" class="nav-link">
-<i data-lucide="graduation-cap"></i>
-<span>Bourses</span>
-</a>
-</li>
-
-<li>
-<a href="universities.html" class="nav-link">
-<i data-lucide="landmark"></i>
-<span>Universités</span>
-</a>
-</li>
-
-<li data-feature="documents">
-<a href="documents.html" class="nav-link" data-real-href="documents.html">
-<i data-lucide="file-text"></i>
-<span>Documents</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label">Fitz</span>
-
-<ul class="sidebar-nav-fitz">
-
-<li data-feature="ai_chat">
-<a href="ai-chat.html" class="nav-link" data-real-href="ai-chat.html">
-<i data-lucide="message-circle"></i>
-<span>Discuter avec Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_letter">
-<a href="ai-letter.html" class="nav-link" data-real-href="ai-letter.html">
-<i data-lucide="pen-line"></i>
-<span>Lettre de motivation</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_check">
-<a href="ai-check.html" class="nav-link" data-real-href="ai-check.html">
-<i data-lucide="shield-check"></i>
-<span>Vérification</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_email">
-<a href="ai-email.html" class="nav-link" data-real-href="ai-email.html">
-<i data-lucide="mail"></i>
-<span>E-mails Fitz</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="ai_translate">
-<a href="ai-translate.html" class="nav-link" data-real-href="ai-translate.html">
-<i data-lucide="languages"></i>
-<span>Traduction</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="compress">
-<a href="compress.html" class="nav-link" data-real-href="compress.html">
-<i data-lucide="file-archive"></i>
-<span>Compression</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-<li data-feature="interview_prep">
-<a href="interview-prep.html" class="nav-link" data-real-href="interview-prep.html">
-<i data-lucide="mic"></i>
-<span>Préparation entretien</span>
-<i data-lucide="lock" class="nav-lock"></i>
-</a>
-</li>
-
-</ul>
-
-<span class="sidebar-section-label" id="advisorSectionLabel" hidden>Accompagnement</span>
-
-<ul class="sidebar-nav-fitz" id="advisorSectionNav" hidden>
-
-<li data-feature="advisor">
-<a href="advisor.html" class="nav-link" data-real-href="advisor.html">
-<i data-lucide="user-check"></i>
-<span>Mon conseiller</span>
-</a>
-</li>
-
-</ul>
-
-</nav>
-
-<div class="sidebar-bottom">
-<button type="button" id="logoutBtn" class="sidebar-logout">
-<i data-lucide="log-out"></i>
-<span>Déconnexion</span>
-</button>
-</div>
-
-</aside>
+<!-- La sidebar a été retirée le 2026-08-30 (refonte « parcours ») :
+la navigation de l'espace étudiant vit sur dashboard.html — chaque
+outil s'ouvre depuis la phase du parcours qui lui donne un sens.
+js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div class="dashboard-main" id="dashboardMainContent">
 
-<header class="topbar">
+<header class="journey-topbar">
 
-<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
-<i data-lucide="menu"></i>
-</button>
+<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
 
-<div class="topbar-title">
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+
 <h1>Détails de la bourse</h1>
 </div>
+
+<div class="journey-topbar-actions">
 
 <div class="messages-bell-wrap">
 
@@ -242,16 +144,29 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 </button>
 
 <div class="messages-panel" id="messagesPanel" hidden>
-<div class="messages-panel-header">Messages de ScholarBridge</div>
+<div class="messages-panel-header">Messages de l'équipe</div>
 <div class="messages-panel-list" id="messagesPanelList"></div>
 </div>
 
 </div>
 
 <a href="offers.html" class="topbar-plan-chip">
-<i data-lucide="sparkles"></i>
 <span id="topbarPlanLabel">Essentiel</span>
 </a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
 
 </header>
 
@@ -261,7 +176,7 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 
 </div>
 
-<main id="detailsMain" hidden>
+<main id="detailsMain" tabindex="-1" hidden>
 
 <section class="details-hero">
 
@@ -271,8 +186,13 @@ trouvée, pour ne jamais teinter les tokens vus par un visiteur anonyme. -->
 
 <div class="container details-hero-inner">
 
+<a href="scholarships.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour aux bourses</span>
+</a>
+
 <div class="details-hero-badge">
-<img id="flag" alt="">
+<img id="flag" width="20" height="15" decoding="async" alt="">
 <span id="country"></span>
 </div>
 
@@ -309,7 +229,7 @@ repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
 <section class="details-section diagnostic-block">
 
 <div class="diagnostic-head">
-<i data-lucide="sparkles"></i>
+<div class="fitz-avatar fitz-avatar--sm" aria-hidden="true"></div>
 <h2>Avant de candidater</h2>
 </div>
 
@@ -334,6 +254,73 @@ repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
 <section class="details-section">
 <h2>À propos de cette opportunité</h2>
 <p id="description"></p>
+</section>
+
+<!-- Conditions à connaître (2026-08-30) — le champ generalCriteria de
+la BOURSE, jusqu'ici jamais affiché côté public alors qu'il porte de
+l'information DISQUALIFIANTE (« le Sénégal n'est pas pays partenaire »,
+filières exclues, dates de clôture réelles) : elle passe donc AVANT les
+détails pratiques. Rempli en textContent par details.js ; la section
+reste hidden quand le champ est vide ou absent. Le padding:110px que
+css/base.css applique à tout <section> est déjà neutralisé par
+.details-section (padding:0 dans scholarship-details.css). -->
+<section class="details-section" id="criteriaSection" hidden>
+<h2>Conditions à connaître</h2>
+<p id="generalCriteria"></p>
+</section>
+
+<!-- « Votre situation face à cette bourse » (2026-08-31) — RÉSERVÉ AUX
+ABONNÉS, et invisible autrement : pour un visiteur, cette section
+n'existe pas. Pas de titre, pas d'aperçu, pas de cadenas — la règle
+du bloc des portails vaut ici aussi.
+
+Tout ce qu'elle affiche EXISTE DÉJÀ ailleurs : estEligible()
+(js/eligibility-countries.js), respecteLimiteAge()/computeAge()
+(js/age-limits.js), explainMatch() (js/recommend-programs.js),
+createApplicationFromRecommendation() (js/application-actions.js) et
+isQuotaReached() (js/plan-features.js). Aucun moteur nouveau —
+details.js ne fait que les appeler et rendre leurs réponses.
+
+Placée AVANT « Informations clés » : ce qui concerne l'étudiant lui-
+même passe avant les caractéristiques de l'offre. -->
+<section class="details-section situation-section" id="situationSection" hidden>
+
+<h2>Votre situation face à cette bourse</h2>
+
+<!-- Verdicts nationalité et âge. Remplis en textContent par
+details.js ; un verdict inconnu (null) n'est tout simplement pas
+rendu — jamais « aucune limite », jamais « vous êtes éligible ». -->
+<ul class="situation-verdicts" id="situationVerdicts"></ul>
+
+<div class="situation-reasons" id="situationReasons" hidden>
+<h3>Pourquoi cette bourse vous correspond</h3>
+<ul id="situationReasonsList"></ul>
+</div>
+
+<!-- Affiché à la place des raisons quand explainMatch() ne renvoie
+rien : un cadre vide sur une fonctionnalité payante est pire que pas
+de cadre du tout. -->
+<p class="situation-empty" id="situationEmpty" hidden></p>
+
+<div class="situation-actions" id="situationActions">
+<button type="button" class="btn btn-secondary" id="addToJourneyBtn" hidden>
+<i data-lucide="plus"></i>
+<span>Ajouter à mon parcours</span>
+</button>
+<a class="btn btn-secondary" id="letterBtn" hidden>
+<i data-lucide="pen-line"></i>
+<span>Rédiger ma lettre avec Fitz</span>
+</a>
+<a class="btn btn-secondary" href="documents.html" id="documentsBtn">
+<i data-lucide="folder-open"></i>
+<span>Voir les pièces du dossier</span>
+</a>
+</div>
+
+<!-- Quota atteint, candidature déjà présente, erreur d'écriture :
+jamais un échec silencieux. -->
+<p class="situation-notice" id="situationNotice" hidden></p>
+
 </section>
 
 <section class="details-section">
@@ -371,7 +358,29 @@ repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
 <div><span>Statut</span><strong id="status"></strong></div>
 </div>
 
+<!-- Limite d'âge (2026-08-30) — champ ageMax de la BOURSE. N'apparaît
+que si libelleLimiteAge() renvoie un libellé (limite réellement
+renseignée en base) : un champ absent est un inconnu, jamais
+« pas de limite » — voir js/age-limits.js. -->
+<div class="details-info-item" id="ageLimitItem" hidden>
+<i data-lucide="calendar-range"></i>
+<div><span>Limite d'âge</span><strong id="ageLimitLabel"></strong></div>
 </div>
+
+<!-- N'apparaît que si la bourse porte une restriction de nationalité
+en base (libelleEligibilite renvoie une valeur) — jamais de
+« éligibilité inconnue », voir js/eligibility-countries.js. -->
+<div class="details-info-item" id="eligibilityItem" hidden>
+<i data-lucide="globe"></i>
+<div><span>Nationalités éligibles</span><strong id="eligibilityLabel"></strong></div>
+</div>
+
+</div>
+
+<!-- Ce qu'un nombre ne dit pas (champ ageMaxNote) : la variation de la
+limite selon le candidat — ageMax retient la plus favorable, la note
+explique le cas général. Rempli en textContent par details.js. -->
+<p class="details-age-note" id="ageLimitNote" hidden></p>
 
 </section>
 
@@ -394,17 +403,47 @@ repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
 
 </div>
 
-<!-- 2 portails distincts (voir details.js) : le site de l'université
-(universities.officialWebsite) est TOUJOURS visible, public compris —
-le portail de candidature (programs.applicationUrl) n'apparaît qu'aux
-abonnés (peu importe la formule, Pass Express et Premier Dossier
-inclus). Ce n'est plus le même lien qu'avant cette page : l'ancien
-bouton unique pointait déjà vers applicationUrl mais l'affichait comme
-"portail officiel de l'université", ce qui prêtait à confusion — les
-deux existent désormais séparément, correctement nommés. -->
-<div class="cta-card-secondary">
+<!-- RÈGLE DU 2026-08-31, elle prime sur tout le reste de ce bloc :
+un visiteur NON ABONNÉ ne voit AUCUN cadenas, AUCUNE mention qu'un
+lien lui est refusé, AUCUN aperçu grisé. La page se lit pour lui
+comme si rien n'existait de plus — on ne cache pas une porte fermée,
+on fait qu'il n'y ait pas de porte. La vente se fait par la carte
+« Choisir ma formule » juste au-dessus, jamais par un manque affiché.
 
-<p>Vous voulez avancer par vous-même ?</p>
+Concrètement, pour un visiteur : le SEUL lien est le site de
+l'université. Le portail du bailleur et le portail de candidature
+sont réservés aux abonnés — le premier l'était par erreur en public
+depuis le 2026-08-30, c'est corrigé ici. Le bloc entier disparaît
+s'il ne reste aucun lien à montrer (voir details.js). -->
+<div class="cta-card-secondary" id="portalBlock">
+
+<!-- Texte remplacé par details.js quand entryPoint est renseigné (la
+porte d'entrée réelle du parcours) — sinon il reste tel quel. -->
+<p id="portalIntro">Vous voulez avancer par vous-même ?</p>
+
+<!-- Rempli par details.js quand estEligible === false pour la
+nationalité connue de l'étudiant. Texte seul, boutons et liens
+INTACTS : on informe, on n'empêche pas — même posture que
+l'avertissement de profil faible sur ai-letter.html. -->
+<p class="portal-eligibility-warning" id="eligibilityWarning" hidden></p>
+
+<!-- Même posture pour la limite d'âge : rempli par details.js quand
+l'âge du profil connecté dépasse le plafond ageMax sur TOUS les
+cycles du programme (jamais sur un simple « on ne sait pas »).
+Texte seul, boutons et liens INTACTS. -->
+<p class="portal-eligibility-warning" id="ageLimitWarning" hidden></p>
+
+<!-- Portail du BAILLEUR : le champ officialWebsite de la BOURSE — pour
+une bourse d'État, l'étudiant était sinon envoyé vers l'université,
+la mauvaise porte. Deux conditions cumulées : la bourse porte un site
+officiel ET le visiteur est abonné (2026-08-31 : il était public
+depuis le 2026-08-30, par déduction et non par demande). details.js
+le déplace en PREMIER quand entryPoint="bourse", en dernier sinon
+(voir ordonnerPortails) — pour les abonnés, seuls à le voir. -->
+<a id="funderPortalBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link" hidden>
+<span id="funderPortalLabel"></span>
+<i data-lucide="external-link"></i>
+</a>
 
 <a id="universityPortalBtn" href="#" target="_blank" rel="noopener noreferrer" class="portal-link">
 <span>Accéder au site de l'université</span>
@@ -416,14 +455,16 @@ deux existent désormais séparément, correctement nommés. -->
 <i data-lucide="external-link"></i>
 </a>
 
-<p class="portal-trust" id="applicationPortalLocked" hidden>
-<i data-lucide="lock"></i>
-Le portail de candidature est réservé aux abonnés Fitz.
-</p>
+<!-- La mention « Le portail de candidature est réservé aux abonnés
+Fitz », avec son cadenas, a été SUPPRIMÉE le 2026-08-31 : elle
+annonçait à un visiteur une porte qu'on lui fermait. Ne pas la
+réintroduire — voir la règle en tête de ce bloc.
 
+La phrase ci-dessous parle de l'ACCOMPAGNEMENT qui est payant,
+jamais d'un lien caché. -->
 <p class="portal-trust">
 <i data-lucide="shield-check"></i>
-Lien officiel, en accès libre : cette information restera toujours gratuite. Seul l'accompagnement de Fitz est payant.
+Lien officiel, en accès libre : les informations de cette fiche restent gratuites. Seul l'accompagnement de Fitz est payant.
 </p>
 
 </div>
@@ -437,7 +478,7 @@ Lien officiel, en accès libre : cette information restera toujours gratuite. Se
 <!-- Nudge au retour depuis le portail -->
 <div class="portal-nudge" id="portalNudge" hidden>
 
-<div class="portal-nudge-icon"><i data-lucide="sparkles"></i></div>
+<div class="portal-nudge-icon"></div>
 
 <div class="portal-nudge-copy">
 <strong>De retour du portail ?</strong>
@@ -454,6 +495,12 @@ Lien officiel, en accès libre : cette information restera toujours gratuite. Se
 </div>
 
 <script src="js/header-scroll.js"></script>
+<script src="js/back-link.js"></script>
+<!-- Expose window.SCHOLARBRIDGE_PLANS, d'où details.js tire le quota de
+candidatures accompagnées de la formule active (même lecture que
+applications.js et dashboard.js). Sans lui, le quota serait `null` et
+isQuotaReached() ne bloquerait jamais — un dépassement silencieux. -->
+<script src="pricing-plans.js"></script>
 <script type="module" src="details.js"></script>
 
 <script type="module">

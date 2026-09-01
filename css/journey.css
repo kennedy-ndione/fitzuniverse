@@ -1,0 +1,684 @@
+/* ==========================================================
+FITZ — « MON PARCOURS » (dashboard.html, refonte 2026-08-30)
+
+Le hub de l'espace étudiant : plus un tableau de bord, un VOYAGE en
+six phases (profil → opportunités → dossiers → dépôt → réponse &
+bourse → visa & départ). Identité « papier chaud » du reste du site.
+Chargée après journey-shell.css ; ne s'applique qu'au hub (les
+classes .jy-* n'existent nulle part ailleurs).
+========================================================== */
+
+/* ==========================================================
+EN-TÊTE — salutation + phase du moment
+========================================================== */
+.jy-hello{
+margin:8px 0 22px;
+}
+
+.jy-hello h1{
+margin:0 0 4px;
+font-family:var(--font-affirmation);
+font-size:clamp(1.6rem, 3.4vw, 2.1rem);
+font-weight:700;
+letter-spacing:-.01em;
+color:var(--journey-ink);
+}
+
+.jy-hello p{
+margin:0;
+font-size:.92rem;
+color:var(--text-light);
+}
+
+.jy-hello p strong{ color:var(--amber-700); }
+
+/* ==========================================================
+PROCHAINE ACTION — la carte de tête, encre chaude
+========================================================== */
+.jy-action{
+position:relative;
+overflow:hidden;
+border-radius:18px;
+padding:26px 28px;
+margin-bottom:26px;
+color:#FDF9EF;
+background:
+radial-gradient(ellipse 70% 90% at 88% 0%, rgba(217,128,90,.34) 0%, rgba(217,128,90,.1) 45%, transparent 70%),
+linear-gradient(158deg, #2A211A 0%, #1E1712 55%, #15100B 100%);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.08),
+0 2px 4px rgba(21,16,11,.18),
+0 24px 48px -20px rgba(21,16,11,.5);
+}
+
+.jy-action-kicker{
+display:inline-flex;
+align-items:center;
+gap:7px;
+margin-bottom:10px;
+padding:5px 12px;
+border-radius:999px;
+font-size:.72rem;
+font-weight:700;
+letter-spacing:.08em;
+text-transform:uppercase;
+background:rgba(253,249,239,.12);
+color:#F3D9C8;
+}
+
+.jy-action--critique .jy-action-kicker{ background:rgba(202,64,42,.35); color:#FFD9CE; }
+.jy-action--haute .jy-action-kicker{ background:rgba(217,128,90,.3); color:#F8D8C5; }
+
+.jy-action h2{
+margin:0 0 8px;
+font-family:var(--font-affirmation);
+font-size:clamp(1.25rem, 2.6vw, 1.55rem);
+font-weight:700;
+line-height:1.25;
+color:#FDF9EF;
+}
+
+.jy-action p{
+margin:0 0 18px;
+max-width:60ch;
+font-size:.94rem;
+line-height:1.6;
+color:rgba(253,249,239,.85);
+}
+
+.jy-action-cta{
+display:inline-flex;
+align-items:center;
+gap:9px;
+padding:12px 22px;
+border-radius:12px;
+background:var(--amber-500);
+color:var(--journey-ink);
+font-weight:700;
+font-size:.95rem;
+text-decoration:none;
+transition:var(--transition);
+}
+
+.jy-action-cta:hover{ background:#E08F6C; transform:translateY(-1px); }
+
+.jy-action-cta i,
+.jy-action-cta svg{ width:17px; height:17px; }
+
+/* ==========================================================
+RAIL DU VOYAGE — 6 phases
+========================================================== */
+.jy-rail{
+display:flex;
+align-items:flex-start;
+gap:0;
+margin-bottom:10px;
+overflow-x:auto;
+padding-bottom:6px;
+-webkit-overflow-scrolling:touch;
+}
+
+.jy-rail-item{
+position:relative;
+flex:1 1 0;
+min-width:96px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:7px;
+text-decoration:none;
+padding:4px 6px 8px;
+}
+
+/* Le trait qui relie les nœuds. */
+.jy-rail-item::before{
+content:"";
+position:absolute;
+top:19px;
+left:calc(-50% + 19px);
+width:calc(100% - 38px);
+height:2px;
+background:var(--border-color);
+}
+
+.jy-rail-item:first-child::before{ display:none; }
+
+.jy-rail-item.is-done::before{ background:var(--journey-done); opacity:.45; }
+
+.jy-rail-dot{
+position:relative;
+z-index:1;
+display:flex;
+align-items:center;
+justify-content:center;
+width:38px;
+height:38px;
+border-radius:50%;
+background:var(--background);
+border:2px solid var(--border-color);
+color:var(--text-light);
+transition:var(--transition);
+}
+
+.jy-rail-dot i,
+.jy-rail-dot svg{ width:16px; height:16px; }
+
+.jy-rail-item.is-done .jy-rail-dot{
+background:#EAF3EC;
+border-color:var(--journey-done);
+color:var(--journey-done);
+}
+
+.jy-rail-item.is-current .jy-rail-dot{
+background:var(--amber-600);
+border-color:var(--amber-600);
+color:#FDF9EF;
+box-shadow:0 0 0 5px rgba(217,128,90,.18);
+}
+
+.jy-rail-label{
+font-size:.72rem;
+font-weight:700;
+text-align:center;
+color:var(--text-light);
+line-height:1.25;
+}
+
+.jy-rail-item.is-current .jy-rail-label{ color:var(--amber-700); }
+.jy-rail-item.is-done .jy-rail-label{ color:var(--journey-done); }
+
+.jy-progress-line{
+margin:0 0 26px;
+font-size:.8rem;
+color:var(--text-light);
+}
+
+.jy-progress-line strong{ color:var(--journey-ink); }
+
+/* ==========================================================
+RADAR D'ÉCHÉANCES
+========================================================== */
+.jy-radar{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px;
+margin-bottom:34px;
+}
+
+.jy-radar-label{
+display:inline-flex;
+align-items:center;
+gap:7px;
+font-size:.8rem;
+font-weight:700;
+color:var(--text-light);
+}
+
+.jy-radar-label i,
+.jy-radar-label svg{ width:15px; height:15px; color:var(--amber-700); }
+
+.jy-radar-chip{
+display:inline-flex;
+align-items:baseline;
+gap:7px;
+padding:7px 13px;
+border-radius:999px;
+font-size:.8rem;
+font-weight:600;
+text-decoration:none;
+background:var(--background);
+border:1px solid var(--border-color);
+color:var(--text-color);
+}
+
+.jy-radar-chip strong{ font-weight:800; }
+
+.jy-radar-chip--haute{ border-color:rgba(190,96,50,.5); }
+.jy-radar-chip--haute strong{ color:var(--amber-700); }
+
+.jy-radar-chip--critique{ background:#FBEAE4; border-color:rgba(178,58,32,.5); }
+.jy-radar-chip--critique strong{ color:#A93A20; }
+
+/* ==========================================================
+SECTIONS DE PHASE — numéro + titre Newsreader, rail vertical
+========================================================== */
+.jy-phase{
+position:relative;
+padding:30px 0 8px;
+border-top:1px solid var(--border-color);
+scroll-margin-top:84px;
+}
+
+.jy-phase-head{
+display:flex;
+align-items:baseline;
+gap:14px;
+margin-bottom:6px;
+}
+
+.jy-phase-num{
+font-family:var(--font-affirmation);
+font-size:1rem;
+font-weight:700;
+color:var(--amber-600);
+letter-spacing:.04em;
+}
+
+.jy-phase-head h2{
+margin:0;
+font-family:var(--font-affirmation);
+font-size:clamp(1.2rem, 2.4vw, 1.45rem);
+font-weight:700;
+color:var(--journey-ink);
+}
+
+.jy-phase-state{
+margin-left:auto;
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:.74rem;
+font-weight:700;
+letter-spacing:.05em;
+text-transform:uppercase;
+color:var(--text-light);
+white-space:nowrap;
+}
+
+.jy-phase-state i,
+.jy-phase-state svg{ width:14px; height:14px; }
+
+.jy-phase.is-done .jy-phase-state{ color:var(--journey-done); }
+.jy-phase.is-current .jy-phase-state{ color:var(--amber-700); }
+
+.jy-phase-sub{
+margin:0 0 18px;
+max-width:70ch;
+font-size:.9rem;
+line-height:1.6;
+color:var(--text-light);
+}
+
+/* Carte générique d'une phase. */
+.jy-card{
+background:var(--background);
+border:1px solid var(--border-color);
+border-radius:16px;
+padding:20px 22px;
+margin-bottom:14px;
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.85),
+0 1px 2px rgba(33,29,24,.05),
+0 12px 28px -18px rgba(33,29,24,.2);
+}
+
+.jy-empty{
+border-style:dashed;
+text-align:center;
+color:var(--text-light);
+font-size:.9rem;
+padding:26px 22px;
+}
+
+.jy-empty a{ color:var(--amber-700); font-weight:700; }
+
+/* ---------- Phase 1 : profil ---------- */
+.jy-profile{
+display:flex;
+align-items:center;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.jy-profile-score{
+display:flex;
+align-items:baseline;
+gap:4px;
+font-family:var(--font-affirmation);
+color:var(--journey-ink);
+}
+
+.jy-profile-score strong{ font-size:2.2rem; font-weight:800; line-height:1; }
+.jy-profile-score span{ font-size:1rem; color:var(--text-light); }
+
+.jy-profile-copy{ flex:1 1 260px; }
+
+.jy-profile-copy p{
+margin:0;
+font-size:.9rem;
+line-height:1.55;
+color:var(--text-color);
+}
+
+/* ---------- Boutons ---------- */
+.jy-btn{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:10px 18px;
+border-radius:11px;
+border:1px solid var(--border-color);
+background:var(--background);
+color:var(--journey-ink);
+font-weight:700;
+font-size:.88rem;
+text-decoration:none;
+cursor:pointer;
+transition:var(--transition);
+white-space:nowrap;
+}
+
+.jy-btn:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+
+.jy-btn--primary{
+background:var(--amber-600);
+border-color:var(--amber-600);
+color:#FDF9EF;
+}
+
+.jy-btn--primary:hover{ background:var(--amber-700); border-color:var(--amber-700); color:#FDF9EF; }
+
+.jy-btn i,
+.jy-btn svg{ width:15px; height:15px; }
+
+/* ---------- Phase 2 : opportunités ---------- */
+.jy-opps{
+display:grid;
+grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+gap:14px;
+margin-bottom:14px;
+}
+
+.jy-opp h3{
+margin:0 0 2px;
+font-size:.98rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+
+.jy-opp-uni{
+margin:0 0 10px;
+font-size:.8rem;
+color:var(--text-light);
+}
+
+.jy-opp-reason{
+display:flex;
+align-items:flex-start;
+gap:7px;
+margin:0 0 12px;
+font-size:.82rem;
+line-height:1.5;
+color:var(--text-color);
+}
+
+.jy-opp-reason i,
+.jy-opp-reason svg{ flex-shrink:0; width:14px; height:14px; margin-top:2px; color:var(--journey-done); }
+
+.jy-phase-actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+/* ---------- Phase 3 : dossiers (cartes + mini-stepper) ---------- */
+.jy-app-top{
+display:flex;
+align-items:baseline;
+gap:12px;
+flex-wrap:wrap;
+margin-bottom:12px;
+}
+
+.jy-app-top h3{
+margin:0;
+font-size:1rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+
+.jy-app-meta{
+font-size:.8rem;
+color:var(--text-light);
+}
+
+.jy-app-deadline{ margin-left:auto; font-size:.8rem; font-weight:700; color:var(--text-light); white-space:nowrap; }
+.jy-app-deadline.is-haute{ color:var(--amber-700); }
+.jy-app-deadline.is-critique{ color:#A93A20; }
+
+.jy-steps{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-bottom:4px;
+}
+
+.jy-step{
+display:inline-flex;
+align-items:center;
+gap:7px;
+padding:7px 12px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--background-light);
+font-size:.78rem;
+font-weight:700;
+color:var(--text-light);
+text-decoration:none;
+transition:var(--transition);
+}
+
+.jy-step:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+
+.jy-step i,
+.jy-step svg{ width:13px; height:13px; }
+
+.jy-step.is-done{
+background:#EAF3EC;
+border-color:rgba(47,122,70,.4);
+color:var(--journey-done);
+}
+
+/* Prématurée : faisable mais déconseillée — même sémantique que le
+stepper historique (js/next-action.js), rendue par un pointillé. */
+.jy-step.is-premature{
+border-style:dashed;
+opacity:.75;
+}
+
+/* ---------- Boîte à outils du dossier ---------- */
+.jy-tools{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-top:14px;
+}
+
+.jy-tool{
+display:inline-flex;
+align-items:center;
+gap:7px;
+padding:8px 13px;
+border-radius:10px;
+border:1px solid var(--border-color);
+background:var(--background);
+font-size:.8rem;
+font-weight:600;
+color:var(--text-color);
+text-decoration:none;
+transition:var(--transition);
+}
+
+.jy-tool:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+
+.jy-tool i,
+.jy-tool svg{ width:14px; height:14px; color:var(--amber-700); }
+
+/* Verrouillage par formule — même mécanique data-feature/is-locked que
+l'ancienne sidebar (js/app-shell.js:applyFeatureLocks), habillée pour
+les chips : cadenas visible, teinte en retrait, lien vers l'offre. */
+[data-feature].is-locked .jy-tool,
+[data-feature].is-locked.jy-tool,
+[data-feature].is-locked .jy-btn{
+opacity:.55;
+}
+
+[data-feature] .jy-lock{ display:none; width:12px; height:12px; }
+[data-feature].is-locked .jy-lock{ display:inline-block; }
+
+/* ---------- Phases 4-6 : listes + guides ---------- */
+.jy-list{
+list-style:none;
+margin:0;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.jy-list li{
+display:flex;
+align-items:flex-start;
+gap:10px;
+font-size:.88rem;
+line-height:1.55;
+color:var(--text-color);
+}
+
+.jy-list li i,
+.jy-list li svg{ flex-shrink:0; width:16px; height:16px; margin-top:2px; color:var(--amber-700); }
+
+.jy-guide{
+display:grid;
+grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+gap:14px;
+}
+
+.jy-guide-step h3{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 6px;
+font-size:.92rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+
+.jy-guide-step h3 i,
+.jy-guide-step h3 svg{ width:15px; height:15px; color:var(--amber-700); }
+
+.jy-guide-step p{
+margin:0;
+font-size:.83rem;
+line-height:1.55;
+color:var(--text-light);
+}
+
+/* ---- Checklist visa cochable (2026-08-30) ---- */
+.jy-visa-check{
+display:inline-flex;
+align-items:center;
+gap:7px;
+margin-top:10px;
+padding:6px 12px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--journey-paper);
+font-family:inherit;
+font-size:.76rem;
+font-weight:700;
+color:var(--text-light);
+cursor:pointer;
+transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+
+.jy-visa-check:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+
+.jy-visa-check i,
+.jy-visa-check svg{ width:14px; height:14px; }
+
+.jy-guide-step.is-done .jy-visa-check{
+background:#EAF3EC;
+border-color:rgba(47,122,70,.4);
+color:var(--journey-done);
+}
+
+.jy-guide-step.is-done h3,
+.jy-guide-step.is-done p{ opacity:.62; }
+.jy-guide-step.is-done h3{ text-decoration:line-through; text-decoration-thickness:1px; }
+
+/* ---- Cartes d'issue de la phase 05 (2026-08-30) ---- */
+.jy-reponse h3{
+display:flex;
+align-items:center;
+gap:9px;
+margin:0 0 12px;
+font-family:"Newsreader", Georgia, serif;
+font-size:1.15rem;
+font-weight:700;
+color:var(--journey-ink);
+}
+
+.jy-reponse h3 i,
+.jy-reponse h3 svg{ width:19px; height:19px; color:var(--amber-700); }
+
+.jy-reponse--admise{
+border-color:rgba(47,122,70,.45);
+background:linear-gradient(160deg, #F2F8F3 0%, var(--background) 60%);
+}
+
+.jy-reponse--admise h3 i,
+.jy-reponse--admise h3 svg{ color:var(--journey-done); }
+
+.jy-reponse .jy-tools{ margin-top:14px; }
+
+.jy-status-pill{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:4px 10px;
+border-radius:999px;
+font-size:.72rem;
+font-weight:700;
+background:var(--background-light);
+border:1px solid var(--border-color);
+color:var(--text-light);
+}
+
+.jy-status-pill.is-positive{ background:#EAF3EC; border-color:rgba(47,122,70,.4); color:var(--journey-done); }
+
+/* ==========================================================
+BANNIÈRES (bienvenue, express, e-mail, upgrade) — plus discrètes
+========================================================== */
+.welcome-alert{
+border-radius:14px;
+}
+
+.jy-upgrade{
+margin-top:36px;
+display:flex;
+align-items:flex-start;
+gap:14px;
+padding:18px 20px;
+border-radius:14px;
+background:var(--background-soft);
+border:1px solid var(--border-color);
+}
+
+.jy-upgrade i.jy-upgrade-icon,
+.jy-upgrade svg.jy-upgrade-icon{ flex-shrink:0; width:18px; height:18px; margin-top:2px; color:var(--amber-700); }
+
+.jy-upgrade p{ margin:0 0 6px; font-size:.86rem; line-height:1.5; color:var(--text-color); }
+
+.jy-upgrade a{ font-weight:700; color:var(--amber-700); }
+
+@media (max-width: 640px){
+
+.jy-action{ padding:22px 18px; }
+
+.jy-phase-state{ display:none; }
+
+.jy-app-deadline{ margin-left:0; width:100%; }
+
+}

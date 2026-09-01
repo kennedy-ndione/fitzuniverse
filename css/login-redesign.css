@@ -1,0 +1,72 @@
+/* ==========================================================
+LOGIN — REFONTE « ÉDITORIAL CHALEUREUX » (2026-08-30)
+Dernière page publique encore sur l'identité marine/ambre d'origine
+(carte #1C2246→#070A16, éclat #E9A319) alors que tout le parcours —
+accueil, catalogue, éligibilité, offres, paiement — est passé au
+papier chaud/terracotta. Même méthode que les autres *-redesign.css :
+feuille chargée en DERNIER, remap des tokens dans :root, puis
+correctifs ciblés. auth.css n'est pas modifié (payment.html partage
+ses classes de formulaire).
+========================================================== */
+:root{
+--font-affirmation:'Newsreader', serif;
+--font-product:'Public Sans', sans-serif;
+--font-body:'Public Sans', sans-serif;
+--font-display:var(--font-product);
+
+--amber-500:#D9805A;
+--amber-600:#BE6032;
+--amber-700:#8F3E22;
+
+--primary-color:var(--amber-700);
+--primary-dark:#1C1610;
+--primary-900:#1C1610;
+
+--accent-100:#F7E4D3;
+--accent-500:var(--amber-600);
+--accent-600:var(--amber-700);
+--accent-color:var(--amber-600);
+}
+
+/* Voile sur la photo d'amphithéâtre — marine → encre chaude, mêmes
+opacités (le calcul de contraste de la carte ne dépend pas du voile,
+la carte est opaque). */
+.auth-page-overlay{
+background:
+linear-gradient(180deg, rgba(28,22,16,.5) 0%, rgba(28,22,16,.74) 100%),
+radial-gradient(ellipse 70% 60% at 50% 38%, rgba(28,22,16,.22) 0%, rgba(28,22,16,.58) 100%);
+}
+
+/* Carte — même grammaire que l'en-tête d'offers.html et le pied de
+page de l'accueil : encre chaude + lueur terracotta en haut à droite.
+Contraste du blanc recalculé contre le point le plus CLAIR (#2A211A) :
+blanc plein 14,4:1, blanc 85 % 10,2:1 — très au-dessus des 5,86/4,74
+de l'ancienne carte marine. */
+.auth-card{
+background:
+radial-gradient(ellipse 74% 62% at 84% 6%, rgba(217,128,90,.26) 0%, rgba(217,128,90,.08) 48%, transparent 72%),
+linear-gradient(158deg, #2A211A 0%, #1E1712 48%, #15100B 100%);
+border:1px solid rgba(217,128,90,.3);
+box-shadow:0 2px 4px rgba(21,16,11,.3), 0 30px 60px -18px rgba(21,16,11,.65);
+}
+
+/* Titre — la signature Newsreader du parcours. */
+.auth-card h1{
+font-family:var(--font-affirmation);
+font-weight:700;
+letter-spacing:-.01em;
+}
+
+/* Symbole Fitz sur la carte sombre : plus aucune règle de couleur ici.
+Le wrap porte la classe on-dark (login.html) — la structure passe en
+papier via --logo-structure (css/base.css), et l'arc ambre
+--logo-accent ne change jamais, sur aucun fond. L'ancienne version
+« deux arcs blanc papier séparés par la valeur » datait de l'accent
+terracotta #D9805A, invisible sur fond chaud ; l'or #E9A319 tient. */
+
+/* "Inter" codé en dur dans auth.css (bouton, champs) → police du site,
+même correctif que sur les champs du catalogue. */
+.btn-auth-submit,
+.input-wrap input{
+font-family:var(--font-body);
+}

@@ -1,0 +1,162 @@
+/**
+* ============================================================
+* Fitz — la carte du voyage (6 phases, de l'inscription au départ)
+* ============================================================
+*
+* Refonte de l'espace étudiant du 2026-08-30 : l'espace n'est plus un
+* tableau de bord à sidebar mais UN PARCOURS — six phases qui couvrent
+* le voyage entier, du profil jusqu'au visa. Ce module calcule l'état
+* de chaque phase à partir des données RÉELLES (mêmes sources que
+* js/application-journey.js et js/next-action.js — jamais une deuxième
+* définition d'une étape) : aucune phase ne peut s'afficher « faite »
+* sans l'être.
+*
+* Fonctions pures : aucun DOM, aucun Firestore — testables, et
+* réutilisables le jour où une autre surface (admin, e-mails) voudra
+* dire où en est un étudiant.
+* ============================================================
+*/
+
+import { PROFILE_READY_THRESHOLD } from "./profile-score.js";
+import { isJourneyComplete } from "./application-journey.js";
+
+/**
+* Statuts d'une candidature.
+*
+* Depuis le 2026-08-30, l'issue d'une réponse est modélisée : `admise`,
+* `refusee`, `liste_attente`. `reponse_recue` reste accepté (données
+* existantes) et signifie « réponse reçue, issue pas encore précisée » —
+* le hub invite alors à préciser. Ces listes sont EXPORTÉES : tout
+* filtre par statut dans l'espace étudiant doit venir d'ici, jamais
+* d'une liste recopiée à la main.
+*/
+export const STATUTS_REPONSE = ["reponse_recue", "admise", "refusee", "liste_attente"];
+export const STATUTS_DEPOSES = ["deposee", "en_attente", ...STATUTS_REPONSE];
+
+/**
+* La checklist visa & départ (phase 06) — les 6 étapes du guide de
+* dashboard.html, avec un `id` stable : l'état coché est persisté dans
+* le document utilisateur (champ `visaChecklist`, map id → bool).
+* Le contenu pédagogique vit dans dashboard.html ; ici, seulement ce
+* qu'il faut pour mesurer la phase.
+*/
+export const VISA_ETAPES = ["pieces", "finances", "rdv_visa", "assurance", "logement", "depart"];
+
+/** Vrai quand les 6 étapes visa sont cochées. */
+export function visaComplete(visaChecklist = {}) {
+return VISA_ETAPES.every((id) => visaChecklist && visaChecklist[id] === true);
+}
+
+/**
+* Les 6 phases du voyage. `id` est stable (ancres, classes CSS) ;
+* le contenu marketing vit dans dashboard.html, pas ici.
+*/
+export const PHASES = [
+{ id: "profil", label: "Profil", icon: "user-round" },
+{ id: "opportunites", label: "Opportunités", icon: "compass" },
+{ id: "dossiers", label: "Dossiers", icon: "clipboard-list" },
+{ id: "depot", label: "Dépôt", icon: "send" },
+{ id: "reponse", label: "Réponse & bourse", icon: "award" },
+{ id: "depart", label: "Visa & départ", icon: "plane" }
+];
+
+/**
+* État des 6 phases.
+*
+* Définitions — chacune adossée à une donnée réelle :
+*  1. profil       : calculateAiScore(profil) ≥ seuil (PROFILE_READY_THRESHOLD)
+*  2. opportunites : au moins une candidature suivie (l'étudiant a CHOISI)
+*  3. dossiers     : au moins une candidature dont toutes les étapes de
+*                    préparation sont faites (computeJourneySteps), ou
+*                    déjà déposée — le dossier a atteint l'état « prêt »
+*  4. depot        : au moins une candidature au statut déposé ou au-delà
+*  5. reponse      : au moins une réponse reçue (issue précisée ou non)
+*  6. depart       : les 6 étapes de la checklist visa sont cochées
+*                    (champ `visaChecklist` du document utilisateur —
+*                    depuis le 2026-08-30, la phase est mesurable).
+*
+* `courante` = la première phase non faite. Les phases après la
+* courante ne sont pas verrouillées (l'étudiant reste libre), elles
+* sont simplement « à venir ».
+*
+* @param {Object} ctx
+* @param {number} ctx.profileScore
+* @param {Array}  ctx.applications - chacune avec `etapes` (computeJourneySteps) déjà calculées
+* @returns {{phases: Array, couranteId: string, progressionPct: number}}
+*/
+export function etatDesPhases({ profileScore = 0, applications = [], visaChecklist = {} } = {}) {
+
+const aUneCandidature = applications.length > 0;
+
+const dossierPret = applications.some((app) =>
+STATUTS_DEPOSES.includes(app.status) ||
+(Array.isArray(app.etapes) && app.etapes.length > 0 && isJourneyComplete(app.etapes))
+);
+
+const aDepose = applications.some((app) => STATUTS_DEPOSES.includes(app.status));
+const aReponse = applications.some((app) => STATUTS_REPONSE.includes(app.status));
+
+const faits = {
+profil: profileScore >= PROFILE_READY_THRESHOLD,
+opportunites: aUneCandidature,
+dossiers: dossierPret,
+depot: aDepose,
+reponse: aReponse,
+depart: visaComplete(visaChecklist)
+};
+
+let couranteId = PHASES[PHASES.length - 1].id;
+
+for (const phase of PHASES) {
+if (!faits[phase.id]) { couranteId = phase.id; break; }
+}
+
+const phases = PHASES.map((phase) => ({
+...phase,
+faite: faits[phase.id],
+courante: phase.id === couranteId
+}));
+
+// Depuis que la checklist visa existe (2026-08-30), les 6 phases
+// sont mesurables : la progression se calcule sur toutes.
+const progressionPct = Math.round(
+(phases.filter((p) => p.faite).length / phases.length) * 100
+);
+
+return { phases, couranteId, progressionPct };
+
+}
+
+/**
+* Radar d'échéances : les candidatures non encore déposées, triées par
+* proximité de leur date limite. Les dates viennent du champ `deadline`
+* des candidatures (saisi au format date sur applications.html) —
+* jamais une date devinée.
+*
+* @returns {Array<{app, jours:number}>} au plus `max` entrées datées
+*/
+export function radarEcheances(applications = [], max = 3, aujourdhui = new Date()) {
+
+const jour = new Date(aujourdhui);
+jour.setHours(0, 0, 0, 0);
+
+return applications
+.filter((app) => !STATUTS_DEPOSES.includes(app.status) && app.deadline)
+.map((app) => {
+const cible = new Date(`${app.deadline}T00:00:00`);
+if (Number.isNaN(cible.getTime())) return null;
+cible.setHours(0, 0, 0, 0);
+return { app, jours: Math.round((cible - jour) / 86400000) };
+})
+.filter(Boolean)
+.sort((a, b) => a.jours - b.jours)
+.slice(0, max);
+
+}
+
+/** Ton d'une échéance — mêmes fenêtres que js/next-action.js. */
+export function tonEcheance(jours) {
+if (jours < 0 || jours <= 3) return "critique";
+if (jours <= 14) return "haute";
+return "normale";
+}

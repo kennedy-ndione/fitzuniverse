@@ -1,12 +1,37 @@
 /* ==========================================================
-SCHOLARBRIDGE — SUITE FITZ AI (composants partagés)
-Repose sur css/base.css + dashboard.css (thème sombre bleu ardoise +
-or, sidebar/topbar, tokens --primary-color/--accent-color/--radius-*/
---shadow-*/--ease-premium). Chargé par ai-chat.html, ai-letter.html,
+FITZUNIVERSE — SUITE FITZ AI (composants partagés)
+Repose sur css/base.css + dashboard.css : sidebar/topbar et les
+tokens --primary-color, --accent-color, --radius-…, --shadow-…,
+--ease-premium. Chargé par ai-chat.html, ai-letter.html,
 ai-email.html, ai-translate.html, ai-check.html en plus de leur propre
 CSS de mise en page. Aucune nouvelle couleur : uniquement les tokens
 existants, pour que ces pages semblent avoir été créées avec le reste
 du site.
+
+ATTENTION — CE COMMENTAIRE SE FERMAIT TOUT SEUL (corrigé 2026-08-22).
+Il écrivait deux noms de tokens abrégés en terminant par une étoile,
+immédiatement suivie de la barre oblique de fin de ligne. Or les
+commentaires CSS ne s'imbriquent PAS : la toute première séquence
+étoile-barre rencontrée ferme le commentaire, où qu'elle se trouve.
+Le commentaire se refermait donc dès sa 4e ligne, et les six lignes
+suivantes se retrouvaient analysées comme du CSS.
+
+Conséquence mesurée dans le navigateur, en relisant la liste des
+règles réellement analysées : la PREMIÈRE était
+.ai-application-context — tout le bloc garde-fou [hidden] juste en
+dessous avait été avalé par la récupération d'erreur de l'analyseur.
+Il n'a donc jamais été appliqué, sur aucune page, depuis sa création.
+Les éléments .ai-field, .ai-tool-layout, .ai-panel,
+.ai-preview-content et .ai-preview-edit restaient visibles alors que
+le JavaScript les avait masqués.
+
+RÈGLE : ne jamais faire figurer la séquence de fermeture d'un
+commentaire à l'intérieur d'un commentaire, pas même dans un nom de
+token abrégé. Écrire --radius-… avec des points de suspension.
+
+Cette note elle-même est tombée dans le piège à sa première
+rédaction : elle citait la séquence entre guillemets, ce qui la
+refermait au même endroit. D'où la formulation en toutes lettres.
 ========================================================== */
 
 /* ==========================================================
@@ -70,6 +95,30 @@ pour que le vrai Fitz (pas encore branché) puisse s'installer
 partout sans retouche visuelle.
 ========================================================== */
 
+/* ==========================================================
+LE HALO — Fitz n'a pas d'icône (2026-08-22)
+==========================================================
+Fitz était représenté par un carré arrondi de 44px en dégradé, avec
+une étincelle dedans. Trois choses n'allaient pas :
+
+  1. C'est un CONTENEUR d'icône, précisément ce que la règle
+     « Icônes » de DESIGN_SYSTEM.md proscrit depuis août.
+  2. L'étincelle est le cliché de l'IA depuis 2023 — le glyphe que
+     tout le monde utilise, donc celui qui n'appartient à personne.
+  3. Un assistant n'est pas un bouton. Lui donner la forme d'une
+     tuile d'application le range visuellement du côté des outils,
+     alors qu'il est censé être une présence.
+
+Le traitement retenu existait déjà sur eligibility-questions.html —
+un halo flou qui respire, sans contour, sans fond plein, sans
+glyphe. Il est remonté ici pour valoir sur TOUTES les pages Fitz :
+en-têtes d'outils, fil de discussion, états vides.
+
+Ce n'est pas un logo, c'est un signal de présence : on ne le lit
+pas, on le remarque. Et il ne peut ressembler à aucun autre service,
+parce qu'il n'emprunte aucun symbole.
+========================================================== */
+
 .fitz-avatar{
 
 position:relative;
@@ -86,64 +135,69 @@ width:44px;
 
 height:44px;
 
-border-radius:14px;
+/* Ni fond, ni ombre, ni rayon : la boîte est invisible, elle ne
+sert plus qu'à réserver la place du halo. */
+background:none;
 
-background:var(--gradient-fitz);
+box-shadow:none;
 
-color:#fff;
+border-radius:50%;
 
-box-shadow:var(--glow-fitz);
+overflow:visible;
 
 isolation:isolate;
 
 }
 
-/* Halo doux, en rotation très lente — signature "présence vivante"
-de Fitz, jamais utilisée ailleurs sur le site. Discret par design :
-un utilisateur ne doit jamais le décrire comme "une animation",
-seulement sentir que ce point précis de l'interface est différent. */
-.fitz-avatar::before{
+/* Le glyphe éventuellement laissé dans le HTML est masqué plutôt que
+retiré de chaque page : ai-chat, ai-letter, ai-check, ai-email,
+ai-translate et les deux pages d'éligibilité en portent un. Une
+seule règle ici évite sept modifications de balisage, et empêche
+surtout qu'une future page réintroduise l'étincelle sans le voir. */
+.fitz-avatar > i,
+.fitz-avatar > svg{
+
+display:none;
+
+}
+
+/* L'ancien anneau conique en rotation est remplacé par un halo radial
+qui respire : une rotation suppose un contour, or il n'y en a plus.
+La pulsation est lente et de faible amplitude — on doit la sentir,
+jamais la décrire comme « une animation ». */
+.fitz-avatar::after{
 
 content:"";
 
 position:absolute;
 
-inset:-3px;
+inset:4px;
 
-z-index:-1;
+border-radius:50%;
 
-border-radius:inherit;
-
-background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
-
-opacity:.55;
+/* Ambre et non violet (2026-08-27) : halo copié de --gradient-fitz
+(css/base.css), qui est passé du violet à l'ambre ce même jour —
+voir la note à cet endroit. */
+background:radial-gradient(circle, #E9A319 0%, #8A5D00 45%, transparent 72%);
 
 filter:blur(6px);
 
-animation:fitzHalo 8s linear infinite;
+animation:fitzPulse 2.2s ease-in-out infinite;
 
 }
 
 @media (prefers-reduced-motion: reduce){
 
-.fitz-avatar::before{ animation:none; }
+.fitz-avatar::after{ animation:none; }
 
 }
 
-.fitz-avatar i,
-.fitz-avatar svg{
+/* (les règles de taille de glyphe ont été retirées : le halo n'en
+contient plus — voir .fitz-avatar > i ci-dessus) */
 
-width:22px;
-
-height:22px;
-
-}
-
-@keyframes fitzHalo{
-
-100%{ transform:rotate(360deg); }
-
-}
+/* @keyframes fitzHalo retiré : il faisait tourner l'anneau conique
+du carré, qui n'existe plus. Le halo respire (fitzPulse) au lieu de
+tourner — une rotation suppose un contour. */
 
 /* Compact — badge d'intro (ex. eligibility-test.html) */
 .fitz-avatar--sm{
@@ -152,18 +206,10 @@ width:40px;
 
 height:40px;
 
-border-radius:13px;
-
 }
 
-.fitz-avatar--sm i,
-.fitz-avatar--sm svg{
-
-width:20px;
-
-height:20px;
-
-}
+/* halo mis à l'échelle plutôt qu'un glyphe */
+.fitz-avatar--sm::after{ inset:3px; }
 
 /* Grand — en-tête de page outil (ai-*.html) */
 .fitz-avatar--lg{
@@ -172,83 +218,36 @@ width:52px;
 
 height:52px;
 
-border-radius:16px;
-
-box-shadow:0 14px 30px rgba(139,124,246,.28);
-
 }
 
-.fitz-avatar--lg i,
-.fitz-avatar--lg svg{
-
-width:24px;
-
-height:24px;
-
-}
+/* halo mis à l'échelle plutôt qu'un glyphe */
+.fitz-avatar--lg::after{ inset:5px; }
 
 /* Très grand — état vide / accueil d'un outil */
+/* Le halo de l'état vide est le plus grand point de la page : c'est
+lui qui dit « Fitz est là » avant qu'un mot ne soit échangé. */
 .fitz-avatar--xl{
 
-width:56px;
+width:64px;
 
-height:56px;
-
-border-radius:18px;
+height:64px;
 
 }
 
-.fitz-avatar--xl i,
-.fitz-avatar--xl svg{
+/* halo mis à l'échelle plutôt qu'un glyphe */
+.fitz-avatar--xl::after{ inset:6px; }
 
-width:26px;
-
-height:26px;
-
-}
-
-.fitz-badge{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-width:max-content;
-
-max-width:100%;
-
-padding:8px 16px;
-
-border-radius:var(--radius-full);
-
-background:linear-gradient(100deg, rgba(139,124,246,.16) 0%, rgba(51,65,140,.1) 100%);
-
-border:1px solid rgba(139,124,246,.3);
-
-color:var(--primary-color);
-
-font-family:var(--font-display);
-
-font-weight:var(--fw-bold);
-
-font-size:.86rem;
-
-letter-spacing:-.005em;
-
-}
-
-.fitz-badge i,
-.fitz-badge svg{
-
-width:16px;
-
-height:16px;
-
-flex-shrink:0;
-
-}
+/* .fitz-badge a déménagé dans css/base.css le 2026-08-22 (section
+"BADGE FITZ — signature unique"), avec .ai-badge en alias.
+Raison du déménagement : results.html, offers.html et payment.html
+affichent le même badge mais ne chargent PAS cette feuille — la
+définition ne pouvait donc pas les atteindre d'ici, et chacune
+avait fini par réécrire la sienne. base.css est chargée par les
+cinq pages concernées, et se donne déjà pour rôle d'héberger les
+composants partagés.
+Ne pas redéfinir .fitz-badge ici : cette feuille est chargée APRÈS
+base.css, toute règle réintroduite ici écraserait silencieusement
+la signature commune sur les seules pages d'éligibilité. */
 
 .fitz-status{
 
@@ -338,36 +337,13 @@ gap:16px;
 /* account.html référence cette classe pour son icône d'en-tête
 (page de réglages, pas un outil Fitz) sans qu'aucune règle n'existe
 jamais eu — l'icône s'affichait nue, sans chip, à côté du titre. */
-.ai-page-header-icon{
-
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:48px;
-
-height:48px;
-
-border-radius:var(--radius-md);
-
-background:var(--background-light);
-
-color:var(--primary-color);
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ai-page-header-icon i,
-.ai-page-header-icon svg{
-
-width:22px;
-
-height:22px;
-
-}
+.ai-page-header-icon svg{ width:24px; height:24px; }
 
 .ai-page-header h1{
 
@@ -462,34 +438,13 @@ box-shadow:var(--shadow-md);
 
 }
 
-.ai-locked-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:64px;
-
-height:64px;
-
-border-radius:var(--radius-lg);
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ai-locked-icon i,
-.ai-locked-icon svg{
-
-width:28px;
-
-height:28px;
-
-}
+.ai-locked-icon svg{ width:34px; height:34px; }
 
 .ai-locked-hero h2{
 
@@ -644,7 +599,7 @@ background:var(--background-soft);
 
 color:var(--text-color);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.9rem;
 
@@ -670,7 +625,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(233,163,25,.18);
 
 }
 
@@ -728,7 +683,7 @@ transition:var(--transition);
 
 .ai-style-card:hover{
 
-border-color:rgba(126,113,216,.45);
+border-color:rgba(233,163,25,.45);
 
 transform:translateY(-2px);
 
@@ -748,26 +703,11 @@ box-shadow:0 0 0 1px var(--accent-color) inset;
 .is-selected ci-dessous) porte la signature bleu/violet de l'accent ;
 une icône de catégorie non sélectionnée est purement décorative, pas
 un point de présence Fitz. */
-.ai-style-card-icon{
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:32px;
-
-height:32px;
-
-border-radius:var(--radius-sm);
-
-background:var(--background-alt);
-
-color:var(--text-light);
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ai-style-card.is-selected .ai-style-card-icon{
 
 background:var(--gradient-primary);
@@ -777,13 +717,7 @@ color:#fff;
 }
 
 .ai-style-card-icon i,
-.ai-style-card-icon svg{
-
-width:16px;
-
-height:16px;
-
-}
+.ai-style-card-icon svg{ width:18px; height:18px; }
 
 .ai-style-card strong{
 
@@ -954,7 +888,7 @@ border:1px solid var(--accent-color);
 
 color:var(--text-color);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.92rem;
 
@@ -970,7 +904,7 @@ resize:vertical;
 
 outline:none;
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(233,163,25,.18);
 
 }
 
@@ -1054,13 +988,61 @@ hauteur de .ai-page-header au-dessus, contrairement à un calc() en
 dur qui devait deviner cette hauteur.
 ========================================================== */
 
+/* ==========================================================
+TROIS ZONES DE DÉFILEMENT DISTINCTES (refonte 2026-08-22)
+==========================================================
+Modèle ChatGPT / Claude : la PAGE ne défile jamais. Trois zones
+défilent indépendamment à l'intérieur d'un cadre figé à la hauteur
+de la fenêtre :
+
+  1. la liste des conversations, à gauche ;
+  2. le fil de messages, au centre ;
+  3. rien d'autre — l'en-tête et le champ de saisie restent fixes,
+     toujours au même endroit, quel que soit le nombre de messages.
+
+CE QUI NE MARCHAIT PAS
+----------------------
+Deux causes, qui se cumulaient :
+
+a) `min-height` au lieu de `height` sur le conteneur. min-height
+   fixe un plancher, pas un plafond : à partir du 15e message la
+   page entière s'allongeait au lieu de garder son cadre. Mesuré
+   avec 30 messages : .content passait à 3562px de haut et c'est la
+   FENÊTRE qui défilait, emportant l'en-tête et le champ de saisie
+   hors de l'écran. L'inverse exact d'une application de chat.
+
+b) `.ai-chat-scroll` avait bien `overflow-y:auto`, mais pas
+   `min-height:0`. Un élément flex a `min-height:auto` par défaut :
+   il refuse de descendre sous la taille de son contenu, donc il
+   pousse au lieu de défiler et l'overflow ne se déclenche jamais.
+   C'est LE piège classique du flex imbriqué, et il fallait le
+   corriger à CHAQUE étage de la chaîne — un seul maillon oublié et
+   toute la colonne repart en hauteur.
+
+Le cadre perd aussi ses arrondis, sa bordure et son ombre : une
+application de chat occupe toute la surface qu'on lui donne, elle
+ne flotte pas au milieu d'une page comme une carte de contenu.
+========================================================== */
+
 main.content:has(#chatApp){
 
 display:flex;
 
 flex-direction:column;
 
-min-height:calc(100vh - var(--topbar-height));
+/* height, PAS min-height : c'est ce qui plafonne le cadre. */
+height:calc(100vh - var(--topbar-height));
+
+min-height:0;
+
+/* Le cadre ne déborde jamais : tout défilement se passe à
+l'intérieur, dans les zones prévues pour ça. */
+overflow:hidden;
+
+/* Plein cadre : le rembourrage de .content laissait une gouttière
+autour du chat, qui le faisait ressembler à une carte posée sur
+une page plutôt qu'à une application. */
+padding:0;
 
 }
 
@@ -1086,14 +1068,11 @@ flex-direction:row;
 
 min-height:0;
 
-border-radius:var(--radius-lg);
-
 background:var(--background);
 
-border:1px solid var(--border-color);
-
-box-shadow:var(--shadow-md);
-
+/* Ni arrondi, ni ombre, ni bordure extérieure : le cadre touche
+les bords de la zone de contenu. Seule reste la séparation
+verticale entre l'historique et le fil (voir .ai-chat-history). */
 overflow:hidden;
 
 position:relative;
@@ -1468,9 +1447,24 @@ white-space:nowrap;
 
 flex:1;
 
+/* min-height:0 — SANS LUI, RIEN NE DÉFILE. Un élément flex a
+min-height:auto par défaut et refuse de descendre sous la hauteur
+de son contenu : il pousse la colonne au lieu de défiler, et
+`overflow-y:auto` ne se déclenche jamais. */
+min-height:0;
+
 overflow-y:auto;
 
-padding:24px;
+/* Le défilement s'arrête aux extrémités du fil au lieu de se
+propager à la page derrière — le « scroll chaining » qui fait
+sauter l'arrière-plan quand on arrive en haut de la conversation. */
+overscroll-behavior:contain;
+
+/* Le fil garde sa propre gouttière maintenant que le cadre n'en a
+plus. Colonne de lecture centrée et bornée : au-delà d'environ
+760px une ligne de texte devient pénible à suivre — même largeur
+utile que ChatGPT ou Claude. */
+padding:26px 24px 8px;
 
 display:flex;
 
@@ -1480,13 +1474,33 @@ gap:18px;
 
 position:relative;
 
+/* scroll-padding : quand le JS fait défiler vers un message, il ne
+se colle pas au bord haut de la zone. */
+scroll-padding-block:20px;
+
 }
 
+.ai-chat-scroll > *{
+
+width:100%;
+
+max-width:760px;
+
+margin-inline:auto;
+
+}
+
+/* Respiration (2026-08-22, demande utilisateur « je veux que ça
+respire »). L'écran d'accueil de Fitz est le premier contact : il
+doit paraître calme, pas rempli. Écarts et largeur augmentés,
+colonne de lecture élargie à 560px, et un vrai blanc au-dessus du
+halo plutôt qu'un centrage mathématique qui collait le bloc au
+milieu exact. */
 .ai-empty-state{
 
 margin:auto;
 
-max-width:520px;
+max-width:560px;
 
 text-align:center;
 
@@ -1496,9 +1510,9 @@ flex-direction:column;
 
 align-items:center;
 
-gap:14px;
+gap:22px;
 
-padding:20px;
+padding:40px 24px;
 
 }
 
@@ -1506,11 +1520,19 @@ padding:20px;
 
 font-family:var(--font-display);
 
-font-size:1.15rem;
+font-size:1.5rem;
 
-font-weight:800;
+font-weight:var(--fw-extrabold);
+
+letter-spacing:-.02em;
+
+line-height:1.25;
 
 color:var(--text-color);
+
+/* Le titre suivait immédiatement le halo, à 14px. Il lui faut de
+l'air : c'est la phrase qu'on lit en premier. */
+margin-top:2px;
 
 }
 
@@ -1528,13 +1550,13 @@ line-height:1.6;
 
 display:grid;
 
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(232px,1fr));
 
-gap:10px;
+gap:12px;
 
 width:100%;
 
-margin-top:6px;
+margin-top:10px;
 
 }
 
@@ -1546,11 +1568,11 @@ flex-direction:column;
 
 gap:6px;
 
-padding:14px;
+padding:16px 18px;
 
 border-radius:var(--radius-md);
 
-background:var(--background-soft);
+background:var(--background);
 
 border:1px solid var(--border-color);
 
@@ -1558,36 +1580,43 @@ text-align:left;
 
 cursor:pointer;
 
-transition:var(--transition);
+transition:border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 
 }
 
+/* Bordure ambrée au survol, comme les cartes des catalogues : c'est
+la couleur d'interaction du site, le violet reste celle de Fitz. */
 .ai-help-card:hover{
 
-border-color:rgba(126,113,216,.45);
+border-color:var(--amber-500);
 
 transform:translateY(-2px);
 
+box-shadow:var(--shadow-sm);
+
 }
 
-.ai-help-card i,
-.ai-help-card svg{
+/* Icônes retirées des cartes de suggestion (2026-08-22). Chaque carte
+portait un petit glyphe violet au-dessus de sa question — une
+décoration qui n'ajoutait rien : la question se lit, elle ne
+s'identifie pas par un pictogramme. Règle « Icônes ».
+Masquées en CSS plutôt que supprimées du JS : renderHelpCards()
+peut continuer à les poser sans qu'on ait à y toucher, et le repli
+HTML statique en contient aussi. */
+.ai-help-card > i,
+.ai-help-card > svg{
 
-width:18px;
-
-height:18px;
-
-color:var(--accent-color);
+display:none;
 
 }
 
 .ai-help-card span{
 
-font-size:.82rem;
+font-size:.88rem;
 
-color:var(--text-light);
+color:var(--text-color);
 
-line-height:1.4;
+line-height:1.5;
 
 }
 
@@ -1597,7 +1626,10 @@ display:flex;
 
 gap:12px;
 
-max-width:80%;
+/* La réponse de Fitz occupe TOUTE la colonne de lecture — c'est un
+texte long, il n'a aucune raison d'être bridé à 80%. Seule la
+question de l'étudiant reste courte (voir .ai-msg-user). */
+width:100%;
 
 animation:aiMsgIn .4s var(--ease-premium) both;
 
@@ -1623,35 +1655,33 @@ align-self:flex-end;
 
 flex-direction:row-reverse;
 
+/* La bulle de l'étudiant s'arrête à 78% : une question tient en une
+ou deux lignes, l'étirer sur toute la largeur en ferait un bloc
+aussi lourd que la réponse. */
+width:auto;
+
+max-width:78%;
+
 }
 
+/* ==========================================================
+PLUS D'AVATAR DANS LE FIL (2026-08-22)
+==========================================================
+Claude n'en met pas, et la raison tient en une phrase : répéter le
+même symbole à côté de chaque message n'apprend rien après le
+premier, et vole de la largeur de lecture à chaque ligne.
+
+L'alternance suffit à dire qui parle — la question de l'étudiant est
+une bulle alignée à droite, la réponse de Fitz est du texte à plat
+sur toute la colonne. On ne confond pas.
+
+Les avatars sont masqués plutôt que retirés du JS : messageAvatar()
+(ai-chat.js) continue de les produire, et les conversations déjà
+enregistrées en localStorage contiennent l'ancien balisage. Une
+règle ici couvre les deux cas. */
 .ai-msg-avatar{
 
-flex-shrink:0;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-width:34px;
-
-height:34px;
-
-border-radius:var(--radius-full);
-
-/* Avatar Fitz dans le fil de discussion — même dégradé or-en-tête
-que .fitz-avatar (voir en-tête de page), pour que "Fitz vous parle"
-reste identifiable même réduit à 34px dans une liste de messages.
-Surchargé ci-dessous pour l'utilisateur (.ai-msg-user). */
-background:var(--gradient-fitz);
-
-color:#fff;
-
-font-size:.85rem;
-
-font-weight:800;
+display:none;
 
 }
 
@@ -1684,21 +1714,46 @@ min-width:0;
 
 }
 
+/* ==========================================================
+LE FIL — MODÈLE CLAUDE (refonte 2026-08-22)
+==========================================================
+Ce qui définit le fil de Claude, et qui manquait ici : **la réponse
+de l'assistant n'est PAS dans une bulle**. Elle coule comme un
+document, sur le fond de la page, en pleine largeur de lecture.
+Seul le message de l'étudiant est une bulle, discrète, alignée à
+droite.
+
+Pourquoi ça compte, au-delà du style : une réponse de Fitz fait
+souvent quinze lignes avec des titres, des listes et du gras.
+Enfermée dans une boîte grise à bord arrondi, elle se lit comme une
+notification. Posée à plat, elle se lit comme un conseil — et c'est
+exactement ce qu'elle est.
+
+Corollaire : plus d'avatar dans le fil. Claude n'en met pas, et pour
+une bonne raison — répéter le même halo à côté de chaque réponse
+n'apprend rien après le premier message, et vole 42px de largeur de
+lecture à chaque ligne.
+
+TAILLE DE TEXTE : 0,9rem (14,4px) mesurés avant correction. C'est
+une taille d'interface, pas une taille de lecture. Un étudiant lit
+ici des paragraphes entiers de conseils : 1rem avec une interligne
+de 1,7, comme un article. */
+
 .ai-msg-bubble{
 
-padding:13px 16px;
+padding:0;
 
-border-radius:var(--radius-md);
+border:none;
 
-background:var(--background-soft);
+background:none;
 
-border:1px solid var(--border-color);
+border-radius:0;
 
 color:var(--text-color);
 
-font-size:.9rem;
+font-size:1rem;
 
-line-height:1.65;
+line-height:1.72;
 
 }
 
@@ -1780,30 +1835,43 @@ color:var(--accent-color);
 
 }
 
+/* Message de l'étudiant — la SEULE bulle du fil.
+Elle était en --gradient-primary avec du texte blanc : un rectangle
+bleu saturé, la chose la plus lourde de l'écran alors que c'est la
+plus courte à lire. Sur la capture d'un écran réel, le texte y
+devenait difficile à distinguer.
+Fond neutre très clair et texte sombre : 15,4:1, et surtout la
+question de l'étudiant cesse de crier plus fort que la réponse
+qu'il attend. */
 .ai-msg-user .ai-msg-bubble{
 
-background:var(--gradient-primary);
+padding:11px 16px;
 
-color:#fff;
+border-radius:18px;
 
-border-color:transparent;
+background:var(--background-alt);
+
+color:var(--text-color);
+
+font-size:.97rem;
 
 }
 
-.ai-msg-user .ai-msg-bubble strong{ color:#fff; }
+.ai-msg-user .ai-msg-bubble strong{ color:var(--text-color); }
 
 /* Bulle de Fitz — dégradé Fitz (violet→indigo), pas un aplat gris
 générique comme le reste du site, pour qu'un "moment Fitz parle" se
 reconnaisse même sans l'avatar dans le cadre (liste longue, mobile...). */
+/* La réponse de Fitz n'a plus de cadre du tout : ni fond, ni bordure,
+ni liséré violet à gauche. C'est du texte posé sur la page.
+Le liséré disait « ceci vient de Fitz » — mais dans un fil, un
+message sur deux vient de Fitz : l'alternance suffit à le dire, et
+c'est comme ça que le lisent ChatGPT et Claude. */
 .ai-msg-bot .ai-msg-bubble{
 
-background:
-linear-gradient(100deg, rgba(139,124,246,.09) 0%, rgba(62,79,168,.045) 55%, transparent 100%),
-var(--background-soft);
+background:none;
 
-border-color:var(--border-color);
-
-border-left:2px solid rgba(139,124,246,.55);
+border:none;
 
 }
 
@@ -1906,47 +1974,14 @@ cursor:pointer;
 .ai-scroll-to-bottom i,
 .ai-scroll-to-bottom svg{ width:16px; height:16px; }
 
-.ai-suggestions{
-
-display:flex;
-
-flex-wrap:wrap;
-
-gap:8px;
-
-padding:0 24px 16px;
-
-}
-
-.ai-suggestion-chip{
-
-padding:8px 14px;
-
-border-radius:var(--radius-full);
-
-background:var(--background-light);
-
-border:1px solid transparent;
-
-color:var(--accent-color);
-
-font-size:.8rem;
-
-font-weight:600;
-
-cursor:pointer;
-
-transition:var(--transition);
-
-}
-
-.ai-suggestion-chip:hover{
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-}
+/* .ai-suggestions / .ai-suggestion-chip retirées le 2026-08-22.
+La rangée de pastilles qu'elles habillaient a disparu du HTML : elle
+répétait les questions des cartes de l'état vide et restait collée
+au-dessus du champ de saisie pendant toute la conversation. Plus
+aucune page ne porte ces classes (vérifié) — règles supprimées
+plutôt que laissées en place, pour qu'on ne croie pas le composant
+encore vivant. Les suggestions vivent désormais dans
+.ai-help-cards, à l'intérieur de l'état vide. */
 
 /* ==========================================================
 PIÈCES JOINTES — aperçu local uniquement (js/ai/attachments.js),
@@ -1999,30 +2034,13 @@ flex-shrink:0;
 
 }
 
-.ai-attachment-chip-icon{
-
-width:26px;
-
-height:26px;
-
-border-radius:var(--radius-xs);
-
-background:var(--background-soft);
-
-color:var(--text-muted);
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-flex-shrink:0;
-
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ai-attachment-chip-icon i,
-.ai-attachment-chip-icon svg{ width:14px; height:14px; }
+.ai-attachment-chip-icon svg{ width:16px; height:16px; }
 
 .ai-attachment-chip-name{
 
@@ -2118,7 +2136,12 @@ color:var(--text-light);
 .ai-msg-attachment-file i,
 .ai-msg-attachment-file svg{ width:14px; height:14px; }
 
+/* Le champ de saisie ne défile jamais : il est le seul point fixe de
+la colonne, comme sur ChatGPT ou Claude. flex-shrink:0 l'empêche
+d'être comprimé par un fil de messages qui grandit. */
 .ai-chat-composer{
+
+flex-shrink:0;
 
 display:flex;
 
@@ -2126,9 +2149,17 @@ align-items:flex-end;
 
 gap:10px;
 
-padding:16px 20px;
+/* Aligné sur la colonne de lecture du fil (max-width:760px) : sans
+ça, le champ s'étalait sur toute la largeur pendant que les
+messages restaient centrés au milieu — deux axes différents dans
+la même colonne. */
+width:100%;
 
-border-top:1px solid var(--border-color);
+max-width:808px;
+
+margin-inline:auto;
+
+padding:14px 24px 18px;
 
 background:var(--background);
 
@@ -2136,9 +2167,22 @@ transition:background-color .15s var(--ease-standard);
 
 }
 
+/* La bordure haute est portée par un conteneur pleine largeur, pas par
+le composer lui-même : le filet doit traverser toute la colonne,
+alors que le champ, lui, s'arrête à la largeur de lecture. */
+.ai-chat-composer-wrap{
+
+flex-shrink:0;
+
+border-top:1px solid var(--border-color);
+
+background:var(--background);
+
+}
+
 .ai-chat-composer.is-dragover{
 
-background:rgba(139,124,246,.08);
+background:rgba(233,163,25,.08);
 
 }
 
@@ -2199,7 +2243,7 @@ background:var(--background-soft);
 
 color:var(--text-color);
 
-font-family:"Inter",sans-serif;
+font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
 
 font-size:.92rem;
 
@@ -2213,7 +2257,7 @@ outline:none;
 
 border-color:var(--accent-color);
 
-box-shadow:0 0 0 3px rgba(126,113,216,.18);
+box-shadow:0 0 0 3px rgba(233,163,25,.18);
 
 }
 
@@ -2476,9 +2520,13 @@ même signature chaude que le reste de l'identité Fitz plutôt que le
 fond neutre générique de .ai-insight-card. */
 .ai-insight-card.is-fitz{
 
-background:linear-gradient(100deg, rgba(139,124,246,.1) 0%, rgba(51,65,140,.05) 100%);
+/* Passée du lavis violet au lavis ambre (2026-08-23). Le commentaire
+au-dessus disait déjà « la même signature chaude que le reste de
+l'identité Fitz » — mais la recette, elle, était violette. Elle l'est
+désormais vraiment. */
+background:linear-gradient(100deg, rgba(233,163,25,.14) 0%, rgba(233,163,25,.05) 100%);
 
-border-color:rgba(139,124,246,.3);
+border-color:rgba(233,163,25,.34);
 
 }
 
@@ -2593,15 +2641,6 @@ transition:var(--transition);
 
 }
 
-.ai-dropzone:hover,
-.ai-dropzone.is-dragover{
-
-border-color:var(--accent-color);
-
-background:var(--background-light);
-
-}
-
 .ai-dropzone i,
 .ai-dropzone svg{
 
@@ -2659,6 +2698,11 @@ border:1px solid var(--border-color);
 
 }
 
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .ai-file-row-icon{
 
 flex-shrink:0;
@@ -2669,20 +2713,15 @@ align-items:center;
 
 justify-content:center;
 
-width:34px;
 
-height:34px;
 
-border-radius:var(--radius-sm);
 
-background:var(--background-alt);
 
-color:var(--text-light);
-
+color:var(--text-muted);
 }
 
 .ai-file-row-icon i,
-.ai-file-row-icon svg{ width:16px; height:16px; }
+.ai-file-row-icon svg{ width:20px; height:20px; }
 
 .ai-file-row-info{
 
@@ -2916,7 +2955,7 @@ transition:var(--transition);
 
 .ai-history-item:hover{
 
-border-color:rgba(126,113,216,.4);
+border-color:rgba(233,163,25,.4);
 
 }
 
@@ -3126,7 +3165,7 @@ inset:0;
 
 z-index:19;
 
-background:rgba(8,9,28,.5);
+background:rgba(15,23,42,.5);
 
 }
 
@@ -3163,6 +3202,142 @@ transform:rotate(90deg);
 .ai-msg{
 
 max-width:92%;
+
+}
+
+}
+
+/* ==========================================================
+ÉTAT VERROUILLÉ — CONSEILLER (2026-08-23)
+==========================================================
+La carte ne disait que « pas disponible avec votre formule », suivie
+d'un bouton d'achat. Un étudiant y arrivait avec une question et en
+repartait avec un tarif : un cul-de-sac, au milieu d'un écran vide.
+
+Elle porte maintenant ce que le conseiller apporte réellement, deux
+actions à hauteur égale — dont une gratuite — et ce que Fitz fait
+déjà. D'où l'élargissement : 520px suffisaient à une phrase, pas à
+trois arguments.
+
+Le texte passe à gauche : trois lignes centrées se lisent mal, l'œil
+perd le début de chaque ligne. Seuls le titre et l'icône restent
+centrés.
+========================================================== */
+
+.ai-locked-hero:has(.advisor-value){
+
+max-width:620px;
+
+text-align:left;
+
+align-items:stretch;
+
+}
+
+.ai-locked-hero:has(.advisor-value) > .ai-locked-icon,
+.ai-locked-hero:has(.advisor-value) > h2{
+
+align-self:center;
+
+text-align:center;
+
+}
+
+.advisor-value{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+margin:4px 0 8px;
+
+padding:0;
+
+list-style:none;
+
+}
+
+/* Un trait ambre en tête de ligne plutôt qu'une puce ou une icône :
+la règle « icônes rares » de DESIGN_SYSTEM.md vaut ici comme
+ailleurs, et trois pictogrammes n'auraient rien dit de plus que
+les trois phrases. */
+.advisor-value li{
+
+position:relative;
+
+padding-left:18px;
+
+color:var(--text-light);
+
+font-size:.92rem;
+
+line-height:1.6;
+
+}
+
+.advisor-value li::before{
+
+content:"";
+
+position:absolute;
+
+left:0;
+
+top:.62em;
+
+width:9px;
+
+height:2px;
+
+border-radius:1px;
+
+background:var(--amber-500);
+
+}
+
+.advisor-locked-actions{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:12px;
+
+margin-top:4px;
+
+}
+
+.advisor-locked-note{
+
+margin-top:4px;
+
+padding-top:16px;
+
+border-top:1px solid var(--border-color);
+
+font-size:.86rem;
+
+}
+
+@media(max-width:560px){
+
+/* Les deux actions passent l'une sous l'autre et prennent toute la
+largeur : sur un téléphone, deux boutons côte à côte se
+rétrécissent jusqu'à couper leurs libellés (défaut déjà corrigé
+sur l'accueil le 2026-08-23). */
+.advisor-locked-actions{
+
+flex-direction:column;
+
+}
+
+.advisor-locked-actions .btn{
+
+width:100%;
+
+justify-content:center;
 
 }
 

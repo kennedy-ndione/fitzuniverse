@@ -1,0 +1,480 @@
+/* ==========================================================
+   FitzUniverse — bandeau « Ouvert en ce moment »
+   ==========================================================
+
+   Placé juste sous le hero d'index.html. Son rôle n'est pas
+   décoratif : c'est la première phrase du site. Avant lui, un
+   visiteur devait faire défiler quatre sections pour comprendre que
+   FitzUniverse parle d'opportunités datées ; il voyait d'abord
+   Oxford, l'ETH Zurich, Sciences Po et Toronto — les quatre
+   établissements les plus chers du catalogue — et pouvait
+   raisonnablement conclure que le site n'était pas pour lui.
+
+   Le bandeau montre l'inverse : des bourses réellement ouvertes,
+   avec le nombre de jours qui restent, celles qui financent tout et
+   celles qui visent explicitement les étudiants africains d'abord.
+
+   DEUX CONVENTIONS REPRISES DE .trust-marquee
+   -------------------------------------------
+   Ce n'est pas la première frise défilante de cette page, et il ne
+   faut pas qu'elle en soit une deuxième espèce. On reprend donc
+   telles quelles : la piste dupliquée avec animation de 0 à -50 %,
+   la pause au survol, le masque en dégradé sur les bords, et le
+   figeage explicite sous prefers-reduced-motion.
+
+   CE QUI CHANGE, ET POURQUOI
+   --------------------------
+   Fond sombre (--primary-900) alors que #trust est sur fond clair.
+   Deux frises identiques qui se suivent se liraient comme une seule
+   zone confuse ; le contraste de fond les sépare franchement et
+   donne au bandeau le poids d'une annonce plutôt que d'un ornement.
+
+   Vitesse plus lente aussi — 88s contre 34s. Un logo se reconnaît
+   d'un coup d'œil ; une carte d'opportunité se LIT, avec un nom, une
+   couverture et un décompte. À 34s, elle sortirait du cadre avant
+   d'avoir été lue.
+   ========================================================== */
+
+.opportunites{
+position:relative;
+padding:var(--space-md) 0 calc(var(--space-md) + 4px);
+background:
+radial-gradient(120% 140% at 12% 0%, #1E2550 0%, rgba(30,37,80,0) 58%),
+linear-gradient(180deg, #161C3A 0%, var(--primary-900) 100%);
+overflow:hidden;
+}
+
+/* ----------------------------------------------------------
+   En-tête
+   ---------------------------------------------------------- */
+
+.opportunites-head{
+max-width:1240px;
+margin:0 auto var(--space-sm);
+padding:0 var(--space-md);
+display:flex;
+flex-wrap:wrap;
+align-items:baseline;
+gap:10px 18px;
+}
+
+/* --amber-500 en TEXTE, alors que css/base.css réserve le 500 aux
+   surfaces et impose --amber-700 pour le texte. Ce n'est pas une
+   dérive : cette règle est écrite pour les fonds CLAIRS, où le 500
+   ne tient pas le contraste. Ici le fond est --primary-900, et le
+   rapport mesuré est de 8,23:1 — largement au-dessus du seuil AA.
+   Le 700 (#8A5D00), lui, tomberait à 1,5:1 et serait illisible. */
+.opportunites-live{
+display:inline-flex;
+align-items:center;
+gap:7px;
+font-family:var(--font-display);
+font-size:.68rem;
+font-weight:var(--fw-bold);
+letter-spacing:.13em;
+text-transform:uppercase;
+color:var(--amber-500);
+}
+
+.opportunites-live i{
+width:7px;
+height:7px;
+border-radius:var(--radius-full);
+background:var(--amber-500);
+animation:opportunites-pouls 2.6s ease-out infinite;
+}
+
+@keyframes opportunites-pouls{
+0%{ box-shadow:0 0 0 0 rgba(233,163,25,.5); }
+70%{ box-shadow:0 0 0 9px rgba(233,163,25,0); }
+100%{ box-shadow:0 0 0 0 rgba(233,163,25,0); }
+}
+
+.opportunites-head h2{
+font-family:var(--font-display);
+font-size:1.02rem;
+font-weight:var(--fw-semibold);
+color:#F4F5FA;
+margin:0;
+letter-spacing:-.01em;
+}
+
+/* Texte secondaire du bandeau — pays, niveau, résumé, décompte
+   « calme », date de vérification — éclairci le 2026-08-29 (retour
+   utilisateur : illisible sur son écran). #AEB4C9 mesurait ~7,5:1 sur
+   le fond réel de la carte, en théorie conforme AA, mais entre le
+   petit corps de texte, les majuscules espacées des libellés et
+   l'absence de tout repère à proximité (pas de titre juste au-dessus,
+   contrairement à --text-light ailleurs sur le site), il restait dur
+   à lire en usage réel. #C9CEE3 remonte le contraste à ~11:1 sans
+   changer sa place dans la hiérarchie : toujours net en retrait du
+   blanc quasi-pur des titres (#F4F5FA) et de l'ambre des accents. */
+
+/* La date de vérification n'est pas un détail d'ingénieur : c'est la
+   seule chose que le site affiche et que ses concurrents n'affichent
+   pas. Un étudiant méfiant — et il a raison de l'être — cherche
+   d'abord à savoir si l'information est encore vraie. */
+.opportunites-verif{
+margin-left:auto;
+font-size:.78rem;
+color:#C9CEE3;
+}
+
+.opportunites-verif b{
+color:#F4F5FA;
+font-weight:var(--fw-medium);
+}
+
+/* ----------------------------------------------------------
+   La piste
+   ---------------------------------------------------------- */
+
+.opportunites-marquee{
+position:relative;
+overflow:hidden;
+-webkit-mask-image:linear-gradient(to right, transparent 0%, #000 68px, #000 calc(100% - 68px), transparent 100%);
+mask-image:linear-gradient(to right, transparent 0%, #000 68px, #000 calc(100% - 68px), transparent 100%);
+}
+
+.opportunites-track{
+display:flex;
+gap:14px;
+width:max-content;
+padding:2px var(--space-md);
+animation:opportunites-scroll 88s linear infinite;
+}
+
+/* Pause au survol ET au focus clavier : sans :focus-within, un
+   utilisateur qui tabule dans la piste verrait la carte qu'il vient
+   de sélectionner sortir du cadre toute seule. */
+.opportunites-marquee:hover .opportunites-track,
+.opportunites-marquee:focus-within .opportunites-track{
+animation-play-state:paused;
+}
+
+@keyframes opportunites-scroll{
+from{ transform:translate3d(0,0,0); }
+to{ transform:translate3d(-50%,0,0); }
+}
+
+/* ----------------------------------------------------------
+   La carte
+   ---------------------------------------------------------- */
+
+.opportunite{
+flex:0 0 auto;
+width:306px;
+min-height:300px;
+display:flex;
+flex-direction:column;
+background:rgba(255,255,255,.055);
+border:1px solid rgba(255,255,255,.11);
+border-radius:var(--radius-md);
+overflow:hidden;
+text-decoration:none;
+transition:var(--transition);
+}
+
+.opportunite:hover,
+.opportunite:focus-visible{
+background:rgba(255,255,255,.085);
+border-color:rgba(233,163,25,.42);
+transform:translateY(-2px);
+outline:none;
+}
+
+.opportunite:focus-visible{
+box-shadow:0 0 0 2px var(--amber-500);
+}
+
+.opportunite-media{
+position:relative;
+height:118px;
+overflow:hidden;
+flex-shrink:0;
+border-radius:var(--radius-md) var(--radius-md) 0 0;
+}
+
+.opportunite-media img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.opportunite-body{
+padding:17px 18px 16px;
+display:flex;
+flex-direction:column;
+gap:9px;
+flex:1;
+}
+
+.opportunite-haut{
+display:flex;
+align-items:center;
+gap:9px;
+}
+
+.opportunite-flag{
+width:22px;
+height:15px;
+object-fit:cover;
+border-radius:2px;
+flex-shrink:0;
+}
+
+.opportunite-pays{
+font-family:var(--font-display);
+font-size:.68rem;
+font-weight:var(--fw-bold);
+letter-spacing:.11em;
+text-transform:uppercase;
+color:#C9CEE3;
+}
+
+.opportunite-niveau{
+margin-left:auto;
+font-size:.68rem;
+color:#C9CEE3;
+border:1px solid rgba(255,255,255,.11);
+border-radius:var(--radius-full);
+padding:2px 8px;
+white-space:nowrap;
+}
+
+.opportunite h3{
+font-family:var(--font-display);
+font-size:.97rem;
+font-weight:var(--fw-semibold);
+color:#F4F5FA;
+margin:0;
+line-height:1.28;
+letter-spacing:-.01em;
+}
+
+.opportunite-couv{
+font-size:.82rem;
+line-height:1.5;
+color:#C9CEE3;
+margin:0;
+display:-webkit-box;
+-webkit-line-clamp:2;
+-webkit-box-orient:vertical;
+overflow:hidden;
+}
+
+.opportunite-bas{
+margin-top:auto;
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
+}
+
+/* ----------------------------------------------------------
+   Le décompte
+   ----------------------------------------------------------
+   La pastille « critique » est volontairement PLUS saturée que la
+   « proche ». À opacités égales, l'ambre est plus lumineux que le
+   rouge sur ce fond : une échéance à 40 jours attirait l'œil plus
+   qu'une échéance à 4, ce qui est exactement l'inverse de ce qu'on
+   veut dire. */
+
+.opportunite-compte{
+display:inline-flex;
+align-items:baseline;
+gap:5px;
+font-family:var(--font-display);
+font-size:.76rem;
+font-weight:var(--fw-bold);
+padding:4px 10px;
+border-radius:var(--radius-xs);
+white-space:nowrap;
+}
+
+.opportunite-compte b{ font-size:.9rem; }
+
+.opportunite-compte.est-critique{
+color:#FFFFFF;
+background:rgba(239,68,68,.42);
+box-shadow:inset 0 0 0 1px rgba(239,68,68,.55);
+}
+
+.opportunite-compte.est-proche{
+color:#FFF0D2;
+background:rgba(233,163,25,.18);
+}
+
+.opportunite-compte.est-calme{
+color:#C9CEE3;
+background:rgba(255,255,255,.11);
+}
+
+.opportunite-compte.est-continue{
+color:#D6F5E2;
+background:rgba(34,197,94,.16);
+}
+
+/* Le marqueur qui applique la consigne : ce qui vise explicitement
+   les étudiants africains se voit avant d'être lu. */
+.opportunite-marqueur{
+font-size:.7rem;
+color:#FFE9BF;
+background:rgba(233,163,25,.14);
+border:1px solid rgba(233,163,25,.3);
+border-radius:var(--radius-xs);
+padding:3px 8px;
+}
+
+/* ----------------------------------------------------------
+   Pied
+   ---------------------------------------------------------- */
+
+.opportunites-foot{
+max-width:1240px;
+margin:var(--space-sm) auto 0;
+padding:0 var(--space-md);
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px 18px;
+}
+
+.opportunites-foot .btn-opportunites{
+font-family:var(--font-display);
+font-size:.84rem;
+font-weight:var(--fw-bold);
+color:var(--primary-900);
+background:var(--amber-500);
+text-decoration:none;
+padding:10px 18px;
+border-radius:var(--radius-sm);
+transition:var(--transition);
+}
+
+.opportunites-foot .btn-opportunites:hover{
+background:var(--amber-600);
+}
+
+.opportunites-foot p{
+margin:0;
+font-size:.83rem;
+color:#C9CEE3;
+}
+
+.opportunites-pause{
+margin-left:auto;
+font-family:var(--font-body);
+font-size:.78rem;
+color:#C9CEE3;
+background:none;
+border:1px solid rgba(255,255,255,.11);
+border-radius:var(--radius-sm);
+padding:8px 13px;
+cursor:pointer;
+transition:var(--transition);
+}
+
+.opportunites-pause:hover{
+color:#F4F5FA;
+border-color:rgba(233,163,25,.42);
+}
+
+/* ----------------------------------------------------------
+   Mouvement réduit et arrêt manuel
+   ----------------------------------------------------------
+   Même raison que pour .trust-marquee : la règle globale de
+   css/animations.css ramène toute animation à .01ms, ce qui figerait
+   la piste au milieu d'une carte. On l'arrête proprement à zéro et
+   on rend le défilement manuel. */
+
+@media (prefers-reduced-motion: reduce){
+
+.opportunites-track{
+animation:none !important;
+overflow-x:auto;
+}
+
+.opportunites-marquee{
+overflow-x:auto;
+-webkit-mask-image:none;
+mask-image:none;
+padding-bottom:var(--space-xs);
+}
+
+.opportunites-live i{ animation:none !important; }
+
+}
+
+/* ----------------------------------------------------------
+   Écrans tactiles : on ne défile pas tout seul
+   ----------------------------------------------------------
+   La pause au survol n'existe pas sur un téléphone : il n'y a pas de
+   curseur à poser sur une carte. Or ces cartes sont des liens, et une
+   cible qui glisse sous le pouce au moment où on la touche est une
+   cible qu'on rate.
+
+   Sur pointeur grossier, le bandeau devient donc ce qu'il aurait
+   toujours dû être sur mobile : un carrousel qu'on fait défiler au
+   doigt, avec accrochage carte par carte. Le geste est celui que
+   l'utilisateur connaît déjà, et plus rien ne bouge sans lui. */
+
+@media (pointer: coarse){
+
+.opportunites-track{
+animation:none;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+}
+
+.opportunites-track::-webkit-scrollbar{ display:none; }
+
+.opportunite{ scroll-snap-align:start; }
+
+/* Le masque en dégradé suggérait un mouvement automatique ; ici, la
+   carte coupée au bord dit déjà « ça continue à droite ». */
+.opportunites-marquee{
+overflow:visible;
+-webkit-mask-image:none;
+mask-image:none;
+}
+
+/* Plus rien à arrêter. */
+.opportunites-pause{ display:none; }
+
+}
+
+/* Arrêt demandé explicitement par le visiteur (bouton du pied). */
+.opportunites.est-figee .opportunites-track{
+animation:none;
+}
+
+.opportunites.est-figee .opportunites-marquee{
+overflow-x:auto;
+-webkit-mask-image:none;
+mask-image:none;
+}
+
+@media (max-width:640px){
+
+/* Masque resserré : 68px de dégradé sur 390px de large, c'est 17 %
+   de l'écran, et la première carte arrivait déjà estompée. */
+.opportunites-marquee{
+-webkit-mask-image:linear-gradient(to right, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
+mask-image:linear-gradient(to right, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
+}
+
+.opportunite{ width:268px; }
+
+.opportunite-media{ height:96px; }
+
+.opportunites-verif{
+margin-left:0;
+width:100%;
+}
+
+.opportunites-pause{ margin-left:0; }
+
+}

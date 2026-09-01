@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — catalogue des fonctionnalités pilotables par formule
+* Fitz — catalogue des fonctionnalités pilotables par formule
 * ============================================================
 *
 * Source unique de vérité pour le Module 4 du Control Center (Gestion
@@ -52,9 +52,11 @@
 // L'ORDRE COMPTE : ce tableau est une échelle croissante, pas une simple
 // liste. nextPlanId() renvoie l'élément suivant pour proposer la montée
 // en gamme, et unlockingPlans() prend le premier élément débloquant une
-// fonctionnalité comme cible d'upsell. L'ordre suit donc le prix
-// croissant (voir pricing-plans.js) : 0 → 12 000 → 25 000 → 45 000 →
-// 80 000 → 99 000 → 199 000 FCFA.
+// fonctionnalité comme cible d'upsell — les deux excluent désormais les
+// offres `deprecated` (voir js/access-guard.js et la convention dans
+// pricing-plans.js). L'ordre suit le prix croissant de la grille
+// commerciale (voir pricing-plans.js) : 0 → 12 000 (déprécié) → 29 000 →
+// 75 000 → 80 000 (déprécié) → 150 000 → 250 000 FCFA (grille du 2026-08-29).
 //
 // `fitzExpress` n'y figure volontairement pas : c'est un pass ponctuel,
 // pas une formule — il ne touche jamais le champ `plan` et son accès est
@@ -73,7 +75,7 @@ export const PLAN_ORDER = [
 // PLAN_LABELS est la source pour tout ce qui est INTERFACE : badges,
 // tableaux, panneau d'administration, messages de quota, upsell du
 // tableau de bord. Les noms y sont courts pour tenir dans une colonne
-// ou une pastille — d'où "Signature" et non "ScholarBridge Signature".
+// ou une pastille — d'où "Signature", sans le nom de l'assistant devant.
 //
 // Les noms longs de marque vivent dans SCHOLARBRIDGE_PLANS[...].label
 // (pricing-plans.js) et sont réservés aux surfaces MARKETING : page
@@ -82,13 +84,21 @@ export const PLAN_ORDER = [
 // En cas de doute : si l'utilisateur est en train d'utiliser le
 // produit, c'est PLAN_LABELS ; s'il est en train de le choisir ou de
 // l'acheter, c'est le label de pricing-plans.js.
+// essentiel/"signature-focus" renommés "Standard"/"Renforcé" par la grille
+// 2026-08-15 (pricing-plans.js) — mis à jour ici aussi pour qu'un même
+// compte ne voie jamais deux noms différents pour sa propre formule
+// (badge sidebar, panneau admin) selon la page. `premium`/"premier-dossier"
+// gardent leur nom historique : dépréciées, jamais renommées.
+// Renommage du 2026-08-29 (série « Forfait » de pricing-plans.js) :
+// Standard→Essentiel, Avancé→Ambition, Renforcé→Conseiller — sans le
+// préfixe « Forfait » ici, même logique que "Signature" sans "Fitz".
 export const PLAN_LABELS = {
 gratuit: "Gratuit",
 "premier-dossier": "Premier Dossier",
 essentiel: "Essentiel",
-accompagnement: "Avancé",
+accompagnement: "Ambition",
 premium: "Premium",
-"signature-focus": "Signature Focus",
+"signature-focus": "Conseiller",
 signature: "Signature"
 };
 

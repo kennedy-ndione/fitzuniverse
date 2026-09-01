@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — DOCUMENTS À PRÉPARER
+FITZUNIVERSE — DOCUMENTS À PRÉPARER
 ========================================================== */
 
 /* Compact sub-heading (pas un second hero) — le topbar affiche déjà
@@ -9,22 +9,6 @@ comme .section-heading de dashboard.css plutôt qu'à l'échelle
 marketing --fs-h2 d'avant. */
 .docs-intro{
 margin-bottom:18px;
-}
-
-.docs-intro h2{
-font-family:var(--font-display);
-font-weight:800;
-font-size:var(--fs-h4);
-line-height:var(--lh-snug);
-color:var(--text-color);
-margin-bottom:4px;
-}
-
-.docs-intro p{
-font-size:var(--fs-small);
-line-height:1.5;
-color:var(--text-light);
-max-width:640px;
 }
 
 .docs-intro-crosslink{
@@ -68,13 +52,17 @@ padding:16px 18px;
 box-shadow:var(--shadow-sm);
 }
 
+.generated-doc-icon i,
+.generated-doc-icon svg{ width:20px; height:20px; }
+
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .generated-doc-icon{
 flex:0 0 auto;
-width:38px;
-height:38px;
-border-radius:var(--radius-sm);
-background:var(--background-alt);
-color:var(--text-light);
+color:var(--text-muted);
 display:flex;
 align-items:center;
 justify-content:center;
@@ -265,12 +253,6 @@ cursor:pointer;
 transition:var(--transition);
 }
 
-.doc-card:hover{
-transform:translateY(-4px);
-border-color:rgba(126,113,216,.35);
-box-shadow:var(--shadow-md);
-}
-
 .doc-card.is-obtained{
 border-color:rgba(34,197,94,.4);
 }
@@ -295,19 +277,13 @@ flex-shrink:0;
 
 .doc-card.is-obtained .doc-card-obtained{color:var(--success);}
 
-.doc-card-icon{
-width:44px;
-height:44px;
-border-radius:var(--radius-md);
-background:var(--background-alt);
-color:var(--text-light);
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .doc-card-icon i,
-.doc-card-icon svg{width:22px;height:22px;}
+.doc-card-icon svg{ width:22px; height:22px; }
 
 .doc-card-category{
 font-size:var(--fs-caption);
@@ -315,13 +291,6 @@ font-weight:700;
 letter-spacing:.04em;
 text-transform:uppercase;
 color:var(--text-muted);
-}
-
-.doc-card h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-color:var(--text-color);
 }
 
 .doc-card p{
@@ -354,13 +323,17 @@ border:1px dashed var(--border-color);
 border-radius:var(--radius-lg);
 }
 
+.docs-empty-state-icon i,
+.docs-empty-state-icon svg{ width:34px; height:34px; }
+
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .docs-empty-state-icon{
-width:52px;
-height:52px;
 margin:0 auto 16px;
-border-radius:50%;
-background:var(--background-alt);
-color:var(--text-decorative);
+color:var(--amber-700);
 display:flex;
 align-items:center;
 justify-content:center;
@@ -376,18 +349,6 @@ margin-bottom:6px;
 .docs-empty-state p{font-size:var(--fs-small);color:var(--text-muted);}
 
 /* ---------- Modale de détail ---------- */
-
-.docs-modal{
-position:fixed;
-inset:0;
-z-index:var(--z-modal);
-background:rgba(6,10,18,.6);
-backdrop-filter:blur(4px);
-display:flex;
-align-items:center;
-justify-content:center;
-padding:24px;
-}
 
 .docs-modal[hidden]{display:none;}
 
@@ -416,13 +377,17 @@ margin-bottom:24px;
 position:relative;
 }
 
+.docs-modal-icon i,
+.docs-modal-icon svg{ width:22px; height:22px; }
+
+/* Pastille supprimée le 2026-08-22 — règle « Icônes » de
+DESIGN_SYSTEM.md : aucun conteneur derrière une icône. L'icône
+porte elle-même la couleur, et cette couleur signifie quelque
+chose. Le fond, la taille fixe et le rayon ont été retirés ;
+la mise en page (flex, marges) reste. */
 .docs-modal-icon{
 flex:0 0 auto;
-width:46px;
-height:46px;
-border-radius:var(--radius-md);
-background:var(--background-alt);
-color:var(--text-light);
+color:var(--amber-700);
 display:flex;
 align-items:center;
 justify-content:center;

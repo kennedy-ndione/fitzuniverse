@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — Paramètres du compte (account.js)
+* FitzUniverse — Paramètres du compte (account.js)
 * ============================================================
 * Affichage des informations de compte, changement de mot de passe et
 * suppression définitive de compte. La logique sensible (réauth,

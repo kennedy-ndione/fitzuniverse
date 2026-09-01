@@ -6,15 +6,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Compte suspendu | ScholarBridge</title>
+<title>Compte suspendu | FitzUniverse</title>
 
-<meta name="description" content="Votre accès à ScholarBridge a été temporairement suspendu.">
+<meta name="description" content="Votre accès à FitzUniverse a été temporairement suspendu.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version figée + defer — standard du site. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="auth.css">
@@ -30,7 +31,7 @@
 <div class="auth-hero reveal">
 
 <div class="auth-logo-wrap">
-<img class="logo-icon" src="./assets/logo/scholarbridge-logo.png" alt="ScholarBridge">
+<svg class="fitz-mark logo-icon" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
 </div>
 
 <div class="auth-badge" style="background:rgba(239,68,68,.1);color:var(--danger);">
@@ -40,7 +41,7 @@
 
 <h1>Votre compte a été suspendu</h1>
 
-<p>L'accès à votre espace ScholarBridge est temporairement désactivé par notre équipe. Si vous pensez qu'il s'agit d'une erreur, contactez le support ScholarBridge — nous reviendrons vers vous rapidement.</p>
+<p>L'accès à votre espace FitzUniverse est temporairement désactivé par notre équipe. Si vous pensez qu'il s'agit d'une erreur, contactez le support FitzUniverse — nous reviendrons vers vous rapidement.</p>
 
 </div>
 
@@ -49,7 +50,10 @@
 <h2>Besoin d'aide ?</h2>
 <p class="auth-card-subtext">Notre équipe peut vous expliquer la raison de cette suspension et, le cas échéant, réactiver votre accès.</p>
 
-<a href="mailto:support@scholarbridge.app" class="btn-auth-submit" style="text-decoration:none;">
+<!-- Contact via WhatsApp (le même numéro que l'accompagnement) tant
+qu'aucune adresse support n'existe sur un domaine propre — à repasser
+en mailto: quand le nom de domaine FitzUniverse sera acheté. -->
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20mon%20compte%20FitzUniverse%20est%20suspendu%20et%20je%20souhaite%20en%20conna%C3%AEtre%20la%20raison" target="_blank" rel="noopener" class="btn-auth-submit" style="text-decoration:none;">
 <span>Contacter le support</span>
 </a>
 
@@ -88,7 +92,10 @@ revealEls.forEach((el) => el.classList.add("is-visible"));
 
 }
 
+// lucide est chargé en defer : il n'existe qu'après DOMContentLoaded.
+document.addEventListener("DOMContentLoaded", () => {
 if (window.lucide) lucide.createIcons();
+});
 
 </script>
 

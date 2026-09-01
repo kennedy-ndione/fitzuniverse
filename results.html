@@ -6,27 +6,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ScholarBridge | Votre diagnostic Fitz</title>
+<title>Votre diagnostic | FitzUniverse</title>
 
 <meta name="description" content="Découvrez le diagnostic personnalisé de Fitz sur votre profil : vos points forts, vos opportunités, et comment renforcer votre candidature.">
 
-<!-- Google Fonts (identiques à index.html) -->
+<meta name="theme-color" content="#211D18">
+<!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
+Sans cette méta, un appareil en mode sombre applique parfois un
+assombrissement automatique qui casse les contrastes calibrés. -->
+<meta name="color-scheme" content="light">
+
+<meta name="robots" content="noindex">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<!-- Google Fonts — même identité « éditorial chaleureux » que le
+reste du parcours (voir css/results-redesign.css). Remplace Inter/Sora. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Version FIGÉE et `defer` (2026-08-29) — remplace `@latest` chargé
+de façon synchrone : même correctif que sur l'accueil et les pages
+catalogue (une version cassante chez Lucide ne doit pas se déployer
+toute seule, et le script ne doit pas bloquer le premier rendu). Tout
+appel à lucide.createIcons() dans un script classique doit donc
+attendre DOMContentLoaded — les modules, eux, s'exécutent déjà après
+les scripts différés. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
-<!-- Design system ScholarBridge -->
+<!-- Design system Fitz -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="results.css">
+<link rel="stylesheet" href="css/results-redesign.css">
 
 </head>
 
 <body>
 
-<div class="container">
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<!-- Barre de marque (2026-08-31) : ces pages n'avaient AUCUN logo.
+Sur une page de PAIEMENT, c'est un defaut de confiance avant d'etre un
+defaut de style. Lien vers index.html : ces pages ne chargent aucun
+shell, la session n'y est pas connue — c'est aussi la cible de leurs
+liens de retour existants. -->
+<header class="page-brandbar">
+<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</header>
+
+<main class="container" id="main-content" tabindex="-1">
+
+<a href="index.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour à l'accueil</span>
+</a>
 
 <!-- État de chargement — le catalogue (programs/universities/
 scholarships) doit être chargé depuis Firestore avant de pouvoir
@@ -36,9 +82,11 @@ par défaut, masqué par results.js dès que le rendu réel est prêt (y
 compris si le catalogue échoue à charger — jamais de chargement
 infini). -->
 <div class="results-loading" id="resultsLoading">
+<div class="fitz-badge-row">
+<div class="fitz-avatar" aria-hidden="true"></div>
 <div class="ai-badge">
-<i data-lucide="bot"></i>
 <span>Fitz</span>
+</div>
 </div>
 <div class="results-loading-spinner" aria-hidden="true"></div>
 <p>Fitz croise votre profil avec le catalogue…</p>
@@ -47,31 +95,93 @@ infini). -->
 <div id="resultsContent" hidden>
 
 <!-- Badge -->
+<div class="fitz-badge-row">
+<div class="fitz-avatar" aria-hidden="true"></div>
 <div class="ai-badge">
-<i data-lucide="bot"></i>
 <span>Fitz</span>
+</div>
 </div>
 
 <h1>Votre diagnostic est terminé</h1>
 
-<!-- Récit d'ouverture de Fitz -->
-<div class="narrative-card" id="narrativeIntro">
-<div class="assistant-avatar"><i data-lucide="sparkles"></i></div>
+<!-- Récit d'ouverture de Fitz — l'icône n'a plus de pastille carrée
+en dégradé derrière elle (retour utilisateur du 2026-08-22 : "des
+icônes comme celui en bleu ne sont pas modernes", même décision que
+sur les cartes de la page d'accueil). Icône nue, colorée à la
+couleur de Fitz, alignée sur la première ligne du texte.
+
+La marque elle-même a ensuite remplacé l'étincelle (sparkles), jugée
+datée — c'est le cliché visuel de l'IA depuis 2023, et il servait
+encore de glyphe Fitz à 59 endroits du site. Ici seulement, à la
+demande : ces ondes ne sont donc PAS un changement de marque, juste
+la signature du bloc où Fitz s'exprime. Les autres pages gardent
+sparkles pour l'instant.
+
+SVG intégré plutôt qu'un <i data-lucide> comme partout ailleurs, pour
+une raison précise : un nom d'icône erroné ou absent du jeu Lucide ne
+lève aucune erreur, il n'affiche simplement rien — et l'environnement
+qui a produit ce changement ne pouvait pas joindre le CDN pour le
+vérifier. Tracé en dur, le glyphe est certain de s'afficher, y compris
+si unpkg est lent ou injoignable. Il suit la métrique Lucide (24×24,
+stroke-width 2, bouts arrondis) pour rester homogène avec les icônes
+voisines, et currentColor le laisse piloté par la couleur CSS. -->
+<div class="narrative-card fitz-surface" id="narrativeIntro">
+
+<svg class="assistant-avatar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+<path d="M3 10.5v3"/>
+<path d="M8 6v12"/>
+<path d="M13 3.5v17"/>
+<path d="M18 7.5v9"/>
+<path d="M22.5 10.5v3"/>
+</svg>
+
 <div class="narrative-text" id="narrativeText"></div>
 </div>
 
-<!-- Score -->
-<section class="score-section reveal">
+<!-- Score — l'anneau est un SVG depuis le 2026-08-22 (avant : un
+conic-gradient CSS). Trois raisons : le conic-gradient ne sait pas
+arrondir l'extrémité de l'arc (bord net, peu premium), il ne peut
+pas porter un dégradé le long du tracé, et il était figé sur
+--primary-color donc toujours bleu quel que soit le score. Le SVG
+règle les trois : linecap arrondi, dégradé à deux arrêts pilotés
+par le palier, et animation de remplissage via stroke-dashoffset.
+
+r=52 → circonférence 2π×52 ≈ 326.73, valeur reprise telle quelle
+dans stroke-dasharray/stroke-dashoffset (results.css). Changer r
+oblige à recalculer ces deux valeurs.
+
+La couleur vient de la classe is-<ton> posée sur .score-section par
+results.js, d'après scoreTier() (js/fitz-voice.js) — jamais décidée
+ici ni dans la feuille de style, pour que le libellé du palier et sa
+couleur ne puissent pas se contredire. -->
+<section class="score-section reveal" id="scoreSection">
 
 <div class="score-ring" id="scoreRing">
+
+<svg class="score-ring-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+<defs>
+<!-- Les deux arrêts sont colorés depuis results.css, PAS ici :
+var() n'est pas résolu dans un attribut de présentation SVG
+(stop-color="var(...)" reste littéral et l'arrêt tombe en noir),
+uniquement dans une propriété CSS. D'où les classes. -->
+<linearGradient id="scoreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop class="score-ring-stop-1" offset="0%"></stop>
+<stop class="score-ring-stop-2" offset="100%"></stop>
+</linearGradient>
+</defs>
+<circle class="score-ring-track" cx="60" cy="60" r="52"></circle>
+<circle class="score-ring-progress" cx="60" cy="60" r="52"></circle>
+</svg>
+
 <div class="score-ring-inner">
 <span id="score">0</span>
 <span class="score-suffix">/100</span>
 </div>
+
 </div>
 
 <div class="score-copy">
-<span class="score-label" id="scoreTier">Indicateur ScholarBridge</span>
+<span class="score-label" id="scoreTier">Indicateur Fitz</span>
 <p id="profileMessage"></p>
 <p class="score-note">
 <i data-lucide="info"></i>
@@ -94,7 +204,7 @@ Ce score est un point de départ pour comprendre votre profil — pas un verdict
 <div class="improvement-free" id="improvementFree"></div>
 
 <div class="reco-locked" id="recoLocked" hidden>
-<div class="reco-locked-icon"><i data-lucide="lock"></i></div>
+<i class="reco-locked-icon" data-lucide="lock"></i>
 <div class="reco-locked-copy">
 <strong id="recoLockedCount"></strong>
 <p>Réservé aux étudiants accompagnés — chaque axe restant a sa propre piste d'amélioration.</p>
@@ -174,7 +284,7 @@ Ce score est un point de départ pour comprendre votre profil — pas un verdict
 <!-- Transition vers l'accompagnement -->
 <section class="closing-card reveal">
 
-<div class="closing-icon"><i data-lucide="shield-check"></i></div>
+<i class="closing-icon" data-lucide="shield-check"></i>
 
 <h2>De l'opportunité identifiée à la candidature qui se démarque</h2>
 
@@ -183,7 +293,7 @@ Ce qui fait vraiment la différence face à des programmes recherchés, c'est la
 </p>
 
 <p>
-C'est exactement ce que ScholarBridge propose : Fitz va bien au-delà d'une liste d'opportunités, il travaille avec vous sur votre dossier.
+C'est exactement ce que Fitz propose : bien plus qu'une liste d'opportunités, un travail avec vous sur votre dossier.
 </p>
 
 <ul class="closing-checklist">
@@ -210,8 +320,9 @@ Aucun engagement à cette étape — découvrez simplement comment fonctionne l'
 
 </div>
 
-</div>
+</main>
 
+<script src="js/back-link.js"></script>
 <script type="module" src="results.js"></script>
 
 </body>

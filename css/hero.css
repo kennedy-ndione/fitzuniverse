@@ -10,7 +10,19 @@ padding:168px 0 120px;
 
 color:#fff;
 
-background:var(--primary-dark);
+/* Couvre les zones que la photo fixe du héros ne recouvre pas
+(.hero-media ne descend pas toujours jusqu'à .hero-visual selon la
+hauteur d'écran, voir hero-note/.hero-visual).
+
+--gradient-deep depuis le 2026-08-22, à la place de --gradient-primary
+(retour utilisateur : "au lieu de fond bleu derrière, ramène le fond
+noir"). Sur une surface aussi haute, le premier stop de
+--gradient-primary (#4A5BC4) occupait tout le bas du héros en bleu vif
+dès que la photo s'arrêtait. --gradient-deep garde la même diagonale et
+la même profondeur, en marine presque noir. Voir sa note dans
+css/base.css pour pourquoi le token existe séparément plutôt qu'en
+remplacement. */
+background:var(--gradient-deep);
 
 }
 
@@ -33,6 +45,22 @@ overflow:hidden;
 pointer-events:none;
 
 will-change:opacity, transform;
+
+/* Fondu en pied d'image (audit 2026-08-22) : sous 1024px le contenu du
+hero passe en colonne unique et devient plus haut que .hero-media
+(hauteur pilotée par aspect-ratio × largeur de viewport), donc la photo
+s'arrête toujours avant la fin du texte. .hero-overlay tentait déjà un
+dégradé vers --primary-dark en bas, mais en tant que calque opaque
+au-dessus de l'image il ne peut que se fondre dans SA PROPRE couleur de
+destination — s'il ne matche pas exactement le dégradé de .hero à cet
+endroit précis (il ne matche pas : --gradient-primary est encore proche
+de son stop clair #4A5BC4 à cette hauteur), la coupure reste nette et
+tombe en plein milieu du H1 sur mobile. Un masque alpha sur .hero-media
+lui-même fait disparaître PROGRESSIVEMENT l'image (photo + overlay
+ensemble) plutôt que de la couper net : peu importe la couleur exacte
+en dessous, l'œil ne voit plus de ligne. */
+-webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
+mask-image:linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
 
 }
 
@@ -148,6 +176,24 @@ font-size:var(--fs-lead);
 
 line-height:var(--lh-relaxed);
 
+/* Alignement sur le rôle .lead de css/base.css (2026-08-28). Cette
+règle reprenait déjà --fs-lead et --lh-relaxed, mais avait toujours
+omis le troisième ingrédient du rôle : --fw-medium. Le paragraphe
+retombait donc sur le 400 par défaut, seul texte d'accroche du site
+dans ce cas — d'où son aspect plus plat que partout ailleurs.
+
+--ls-snug avec lui, comme sur h5/h6 (base.css) : à 500, les contreformes
+s'épaississent et le mot paraît se dilater ; le resserrement compense.
+
+La hiérarchie du hero reste intacte et strictement décroissante :
+h1 (700) > .benefit (600) > ce paragraphe (500) > le reste (400).
+700 et non 800 pour le h1 : css/homepage-typography.css le passe en
+Space Grotesk sur cette page, et cette police ne charge que 600/700
+(mesuré, pas supposé). L'écart avec 500 reste de deux crans. */
+font-weight:var(--fw-medium);
+
+letter-spacing:var(--ls-snug);
+
 /* Remonté de .82 à .90 : l'écart de graisse avec le h1 en 800 suffit
 désormais à créer la hiérarchie, le texte n'a plus besoin d'être
 délavé pour paraître secondaire — et il reste lisible sur la photo. */
@@ -157,13 +203,20 @@ text-shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 20px rgba(0,0,0,.2);
 
 }
 
+/* Refonte 2026-08-22 : rangée "méta" typographique (séparateurs traits
+verticaux) plutôt que 3 puces à icône ambre. C'étaient 3 des 35 icônes
+de l'ancienne page pour un rôle que le texte seul porte déjà très bien
+— l'audit visuel qui a déclenché cette refonte pointait précisément
+cette accumulation de pictogrammes. */
 .hero-benefits{
 
 display:flex;
 
 flex-wrap:wrap;
 
-gap:16px 28px;
+align-items:center;
+
+gap:8px 0;
 
 margin-top:6px;
 
@@ -171,34 +224,44 @@ margin-top:6px;
 
 .benefit{
 
-display:flex;
+position:relative;
 
-align-items:center;
-
-gap:10px;
+padding:0 20px;
 
 font-weight:600;
 
-color:#fff;
+font-size:.95rem;
+
+color:rgba(255,255,255,.92);
 
 }
 
-/* Icônes de points forts en ambre plutôt qu'en vert : le vert porte
-partout ailleurs sur le site le sens "inclus / validé" (listes de
-formules, coches). Ici ce sont des arguments, pas des cases cochées.
-Sur la photo assombrie, l'ambre ressort à plus de 8:1. */
-/* Le sélecteur vise AUSSI svg : Lucide remplace chaque <i data-lucide>
-par un <svg>, donc une règle "… i{}" ne l'atteint jamais une fois la
-page initialisée. C'est pour cette raison que ces icônes étaient
-blanches et non vertes malgré la règle d'origine. */
-.benefit i,
-.benefit svg{
+.benefit:first-child{
 
-width:18px;
+padding-left:0;
 
-height:18px;
+}
 
-color:var(--amber-500);
+/* Séparateur : un trait fin plutôt qu'une icône, posé sur le bord
+gauche de chaque élément sauf le premier (voir padding-left:0 ci-dessus,
+qui laisse justement la place à ce trait sur les suivants). */
+.benefit + .benefit::before{
+
+content:"";
+
+position:absolute;
+
+left:0;
+
+top:50%;
+
+transform:translateY(-50%);
+
+width:1px;
+
+height:14px;
+
+background:rgba(255,255,255,.32);
 
 }
 
@@ -241,9 +304,11 @@ transition:var(--transition);
 
 .stat-card:hover{
 
-transform:translateY(-6px);
+transform:translateY(-8px);
 
 background:rgba(255,255,255,.15);
+
+box-shadow:var(--shadow-lg);
 
 }
 
@@ -261,7 +326,16 @@ font-variant-numeric:tabular-nums;
 
 margin-bottom:4px;
 
-color:var(--accent-color);
+/* Était --accent-color (#7E71D8) : 4,44:1 sur ce voile, juste SOUS
+le seuil AA de 4,5:1 — les trois chiffres les plus regardés de la
+page d'accueil échouaient de peu, et le violet n'a de toute façon
+aucun rôle sur cette page (il est réservé à Fitz, voir
+--gradient-fitz dans css/base.css).
+--amber-500 tient 6,8:1 à 8,2:1 selon l'endroit du voile, et c'est
+la couleur de marque : les chiffres deviennent le point ambré du
+héros, cohérent avec les statistiques des bannières de catalogue
+qui viennent d'être alignées dessus. */
+color:var(--amber-500);
 
 }
 
@@ -289,13 +363,13 @@ line-height:1.5;
 NOTE
 ========================================================== */
 
+/* Icône shield-check retirée (refonte 2026-08-22) : c'était la seule
+icône de toute la page sans width/height explicite, donc affichée à la
+taille par défaut de Lucide (24px) — nettement plus grosse que le
+texte de .95rem à côté, l'exemple le plus net de l'audit "icônes trop
+grandes". Le texte porte déjà entièrement le message, pas besoin d'un
+repère visuel ici. */
 .hero-note{
-
-display:flex;
-
-align-items:center;
-
-gap:10px;
 
 margin-top:8px;
 
@@ -305,25 +379,52 @@ color:rgba(255,255,255,.72);
 
 }
 
-.hero-note i,
-.hero-note svg{
-
-color:var(--success);
-
-}
-
 /* ==========================================================
 RIGHT COLUMN
 ========================================================== */
 
+/* min-height conservé tel quel après le départ de .hero-demo (déplacée
+dans #fitz-demo, voir plus bas) : la photo + les 2 cartes flottantes
+restent une composition cohérente sur cette hauteur, sans élément
+d'ancrage en bas à droite — le bas de la photo reste simplement visible. */
 .hero-visual{
 
 position:relative;
 
 min-height:600px;
 
+isolation:isolate;
+
 }
 
+/* Halo doux derrière la photo (retour utilisateur 2026-08-22 : "rendu
+visuel plus percutant, plus premium") — profondeur discrète plutôt
+qu'un cadre dur. isolation:isolate ci-dessus contient son z-index:-1 :
+il reste derrière la photo/les cartes sans fuir sous le hero. */
+.hero-visual::before{
+
+content:"";
+
+position:absolute;
+
+inset:-48px;
+
+z-index:-1;
+
+background:
+radial-gradient(circle at 28% 18%,rgba(126,113,216,.30) 0%,transparent 55%),
+radial-gradient(circle at 78% 82%,rgba(233,163,25,.20) 0%,transparent 50%);
+
+filter:blur(48px);
+
+pointer-events:none;
+
+}
+
+/* Cadre + ombre à deux couches (au lieu d'un radius plat sans relief) :
+même vocabulaire "premium" que .hero-demo (voir plus bas), pour que la
+photo se lise comme une vraie pièce du produit plutôt qu'une image
+posée telle quelle. */
 .hero-visual-bg{
 
 position:absolute;
@@ -337,6 +438,11 @@ height:100%;
 object-fit:cover;
 
 border-radius:var(--radius-lg);
+
+box-shadow:
+0 1px 0 rgba(255,255,255,.5) inset,
+0 30px 60px -24px rgba(9,12,28,.55),
+0 12px 28px -12px rgba(9,12,28,.35);
 
 z-index:1;
 
@@ -352,14 +458,30 @@ background:linear-gradient(180deg,rgba(9,12,28,.2) 0%,rgba(9,12,28,.6) 100%);
 
 border-radius:var(--radius-lg);
 
+/* Liseré interne clair : sépare visuellement la photo du halo derrière
+elle, effet "verre poli" plutôt qu'un bord qui se fond dans le fond. */
+box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+
 z-index:2;
 
 }
 
 
 /* ==========================================================
-FLOATING CARDS
-========================================================== */
+FLOATING CARDS — historique de refontes le 2026-08-22, toutes retour
+utilisateur la même journée : (1) pastille à teinte plate + liseré
+latéral → badge en dégradé propre à chaque carte, icône blanche dessus,
+ombre à deux couches comme .hero-demo ; (2) cartes réduites (256px→
+224px→188px au fil des passes suivantes) et liseré d'accent en haut de
+carte ; (3) pastille ronde → squircle avec anneau blanc, lueur ambiante
+et reflet verni ("les cercles sont un peu basiques") ; (4) liseré du
+haut retiré ("les lignes colorées") ; (5) squircle retiré à son tour —
+l'icône porte elle-même la couleur d'accent, sans contenant ("que
+l'icône soit colorée par la couleur appropriée" plutôt que par un
+cercle ou un carré). Ne reste de tout cet historique que ce que la
+dernière passe utilise réellement : voir le commentaire au-dessus de
+.floating-icon (icône nue) et celui au-dessus de .destination-card
+(--card-accent-icon, seule variable encore consommée). */
 
 .floating-card{
 
@@ -369,28 +491,44 @@ display:flex;
 
 align-items:flex-start;
 
-gap:14px;
+gap:10px;
 
-padding:18px;
+padding:13px;
 
-width:250px;
+width:188px;
 
-background:rgba(255,255,255,.95);
+background:rgba(255,255,255,.97);
 
-backdrop-filter:blur(16px);
+backdrop-filter:blur(20px);
+-webkit-backdrop-filter:blur(20px);
 
-border:1px solid rgba(255,255,255,.55);
+border:1px solid rgba(255,255,255,.6);
 
 border-radius:var(--radius-lg);
 
-box-shadow:var(--shadow-md);
+box-shadow:
+0 4px 12px rgba(18,22,46,.10),
+0 20px 40px -14px rgba(18,22,46,.30),
+inset 0 1px 0 rgba(255,255,255,.85);
 
 animation:float 5s ease-in-out infinite;
+
+overflow:hidden;
 
 z-index:5;
 
 }
 
+/* Pastille (cercle, puis squircle) → icône nue (retour utilisateur
+2026-08-22 : "au lieu des cercles ou carrés, que l'icône soit colorée
+par la couleur appropriée"). Plus de fond/anneau/ombre de contenant :
+chaque carte pose juste --card-accent-icon (une teinte pleine, lisible
+en tant que trait d'icône — pas le --card-accent-gradient utilisé
+ailleurs, un dégradé ne se lit pas correctement sur les fins traits
+d'un glyphe Lucide) et l'icône porte seule la couleur. Agrandie
+14px→22px pour compenser l'absence de contenant : à 14px sur fond
+blanc nu, sans pastille pour lui donner du poids, l'icône se serait
+perdue dans la carte. */
 .floating-icon{
 
 display:flex;
@@ -399,17 +537,11 @@ align-items:center;
 
 justify-content:center;
 
-width:48px;
+padding-top:2px;
 
-height:48px;
+color:var(--card-accent-icon, var(--primary-color));
 
-border-radius:var(--radius-md);
-
-background:rgba(51,65,140,.12);
-
-color:var(--primary-color);
-
-font-size:1.25rem;
+filter:drop-shadow(0 2px 3px rgba(18,22,46,.18));
 
 flex-shrink:0;
 
@@ -428,11 +560,13 @@ height:22px;
 
 display:block;
 
-margin-bottom:6px;
+margin-bottom:3px;
 
-font-size:1rem;
+font-size:.84rem;
 
-font-weight:700;
+font-weight:800;
+
+letter-spacing:-.01em;
 
 color:var(--text-color);
 
@@ -440,31 +574,63 @@ color:var(--text-color);
 
 .floating-card p{
 
-font-size:.9rem;
+font-size:.76rem;
 
-line-height:1.55;
+line-height:1.4;
 
 color:var(--text-light);
 
 }
 
-.compatibility-card{
+/* Couleurs recalées sur la palette du site (retour utilisateur
+2026-08-22 : "les couleurs des icônes ne matchent pas avec les couleurs
+du site") — les hex improvisés du premier essai (#34D399/#15803D,
+#A79AF0/#6459B8) sortaient de la palette documentée dans
+DESIGN_SYSTEM.md. --success (vert, déjà la couleur "compatible/validé"
+du reste du site — badges, statut Fitz en direct) et --accent-600
+(violet, déjà un token officiel d'accent) remplacent ces valeurs.
+--card-accent-gradient/--card-accent-shadow (dégradé de pastille +
+ombre colorée assortie) ont existé le temps des deux passes de refonte
+suivantes (badge plat puis squircle) et sont partis avec elles — retour
+utilisateur du jour même : "que l'icône soit colorée par la couleur
+appropriée" plutôt qu'un contenant. --card-accent-icon est la seule
+variable restante, une teinte pleine consommée par .floating-icon
+juste plus haut.
+
+Positions + délais échangés entre les deux cartes (retour utilisateur
+suivant, même jour) : Régions compatibles passe devant — position haute
+(top:10px/left:0, la plus visible au premier coup d'œil), première à
+entrer (transition-delay le plus court) et première à flotter
+(animation-delay le plus court). Compatibilité élevée hérite de
+l'ancienne position/du timing de Régions compatibles, en retrait. Un
+transition-delay explicite est posé sur chaque carte plutôt que de
+compter sur le nth-child générique de animations.css (.hero-visual >
+.hero-stagger) : cet ordre-là suit la position dans le DOM, pas le rôle
+de chaque carte, et aurait fallu être recalculé à chaque futur
+changement d'ordre — plus fragile que deux règles explicites ici. */
+.destination-card{
+
+--card-accent-icon:var(--accent-600);
 
 top:10px;
 
 left:0;
 
 animation-delay:1.1s;
+transition-delay:.35s;
 
 }
 
-.destination-card{
+.compatibility-card{
+
+--card-accent-icon:var(--success);
 
 right:0;
 
 top:150px;
 
 animation-delay:3.1s;
+transition-delay:.5s;
 
 }
 
@@ -472,6 +638,23 @@ animation-delay:3.1s;
 FITZ AI CARD
 ========================================================== */
 
+/* Refonte "carte produit" — l'ancienne carte (fond blanc plat, liste
+brute, aucune hiérarchie) lisait comme un composant de maquette plutôt
+qu'un vrai produit. Deux changements : une ombre en deux couches façon
+carte flottante premium plutôt que --shadow-lg seule, et un statut "en
+direct" (voir .demo-status) emprunté au vocabulaire des vrais outils IA
+(badge + point qui pulse) pour que la démo se lise comme un produit qui
+tourne réellement, pas une capture figée. (Le bandeau d'accent Fitz en
+haut de carte, présent un temps, a été retiré — retour utilisateur
+2026-08-22, même chose sur .floating-card juste plus haut : trop
+chargé visuellement sur les deux familles de cartes.)
+
+Composant repris tel quel par la section #fitz-demo (index.html,
+css/homepage-sections.css) : ce fichier définit toujours son apparence
+(couleurs, ombre, contenu), mais elle n'habite plus .hero-visual — le
+position:absolute ci-dessous est neutralisé pour ce nouveau contexte par
+.fitz-demo .hero-demo (css/homepage-sections.css), qui repasse la carte
+en flux normal. */
 .hero-demo{
 
 position:absolute;
@@ -480,23 +663,27 @@ right:0;
 
 bottom:0;
 
-width:300px;
+width:312px;
 
-padding:18px;
+padding:20px 20px 22px;
 
-background:rgba(255,255,255,.95);
+background:rgba(255,255,255,.97);
 
-backdrop-filter:blur(16px);
+backdrop-filter:blur(20px);
 
-border:1px solid rgba(255,255,255,.55);
+-webkit-backdrop-filter:blur(20px);
+
+border:1px solid rgba(255,255,255,.6);
 
 border-radius:var(--radius-lg);
 
-box-shadow:var(--shadow-lg);
+box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 z-index:6;
 
 display:block;
+
+overflow:hidden;
 
 transition:var(--transition);
 
@@ -509,7 +696,19 @@ de Fitz sur la page se signale comme cliquable. */
 
 transform:translateY(-6px);
 
-box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.4);
+box-shadow:0 4px 12px rgba(18,22,46,.10), 0 30px 56px -12px rgba(18,22,46,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 1px rgba(255,255,255,.4);
+
+}
+
+/* overflow:hidden ci-dessus : anneau dédié plutôt que l'outline par
+défaut du navigateur, pour être sûr qu'il reste visible au clavier
+(audit du 2026-08-13) — même couleur d'anneau que .btn:focus-visible
+(css/base.css). */
+.hero-demo:focus-visible{
+
+outline:none;
+
+box-shadow:0 4px 12px rgba(18,22,46,.10), 0 30px 56px -12px rgba(18,22,46,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 4px rgba(51,65,140,.45);
 
 }
 
@@ -517,11 +716,81 @@ box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.4);
 
 display:flex;
 
+flex-wrap:wrap;
+
 align-items:center;
 
-gap:10px;
+gap:10px 10px;
 
-margin-bottom:14px;
+margin-bottom:16px;
+
+}
+
+/* Statut "en direct" — pastille qui pulse + libellé, pour que la carte
+se lise comme un outil réellement actif plutôt qu'une image statique.
+Passe sur sa propre ligne (flex-basis:100%) et s'aligne sous le texte
+du titre (margin-left = largeur avatar + gap) plutôt que de forcer
+"Votre conseiller intelligent" à partager sa ligne avec un badge : à
+312px de large la carte n'a pas la place pour les deux sans wrap
+disgracieux. */
+.demo-status{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+flex-basis:100%;
+
+margin-left:52px;
+
+padding:5px 10px 5px 8px;
+
+background:rgba(34,197,94,.10);
+
+border-radius:var(--radius-full);
+
+font-size:.68rem;
+
+font-weight:700;
+
+letter-spacing:.01em;
+
+color:#15803D;
+
+white-space:nowrap;
+
+width:fit-content;
+
+}
+
+.demo-status-dot{
+
+width:6px;
+
+height:6px;
+
+border-radius:50%;
+
+background:var(--success);
+
+flex-shrink:0;
+
+animation:demoStatusPulse 1.8s ease-in-out infinite;
+
+}
+
+@keyframes demoStatusPulse{
+
+0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(34,197,94,.45); }
+50%{ opacity:.7; box-shadow:0 0 0 4px rgba(34,197,94,0); }
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+.demo-status-dot{ animation:none; }
 
 }
 
@@ -530,6 +799,13 @@ signature "aurore" violet/indigo/cyan que le reste du site (dashboard,
 outils Fitz) — avant ce correctif il utilisait encore
 --gradient-primary générique, la seule apparition de Fitz sur le site
 à ne pas porter son identité. */
+/* Sans icône ET sans carré : même indicateur "de réflexion" flou que
+.chat-box .fitz-avatar (eligibility-questions.css) / .advisor-intro
+.fitz-avatar (eligibility-test.css) — un halo qui pulse plutôt qu'un
+glyphe dans une pastille pleine. Garde position/dimensions d'origine
+pour ne pas décaler .demo-info à côté. fitzPulse redéfini ici (pas de
+lien vers css/ai-suite.css sur cette page) : même définition que
+.fitz-status là-bas. */
 .demo-avatar{
 
 position:relative;
@@ -544,58 +820,42 @@ width:42px;
 
 height:42px;
 
-border-radius:14px;
-
-background:var(--gradient-fitz);
-
-color:#fff;
-
-box-shadow:var(--glow-fitz);
-
 isolation:isolate;
 
 }
 
-.demo-avatar::before{
+.demo-avatar::after{
 
 content:"";
 
 position:absolute;
 
-inset:-3px;
+inset:4px;
 
-z-index:-1;
+border-radius:50%;
 
-border-radius:inherit;
-
-background:conic-gradient(from 0deg, #8B7CF6, #3E4FA8, #22A8C9, #8B7CF6);
-
-opacity:.55;
+/* Ambre et non violet (2026-08-27) : halo copié de --gradient-fitz
+(css/base.css), qui est passé du violet à l'ambre ce même jour —
+voir la note à cet endroit. */
+background:radial-gradient(circle, #E9A319 0%, #8A5D00 45%, transparent 72%);
 
 filter:blur(6px);
 
-animation:fitzHalo 8s linear infinite;
+animation:fitzPulse 2.2s ease-in-out infinite;
 
 }
 
 @media (prefers-reduced-motion: reduce){
 
-.demo-avatar::before{ animation:none; }
+.demo-avatar::after{ animation:none; }
 
 }
 
-.demo-avatar i,
-.demo-avatar svg{
+@keyframes fitzPulse{
 
-width:20px;
+0%,100%{ opacity:.4; transform:scale(.85); }
 
-height:20px;
-
-}
-
-@keyframes fitzHalo{
-
-100%{ transform:rotate(360deg); }
+50%{ opacity:1; transform:scale(1); }
 
 }
 
@@ -608,6 +868,14 @@ font-weight:700;
 margin-bottom:2px;
 
 color:var(--text-color);
+
+}
+
+/* .demo-info h3 (élément+classe) est plus spécifique que .fitz-name
+(classe seule, css/base.css) et l'écraserait sinon. */
+.demo-info h3.fitz-name{
+
+color:var(--amber-700);
 
 }
 
@@ -629,11 +897,31 @@ gap:11px;
 
 }
 
+/* Bulle de message plutôt que du texte brut posé sur la carte — même
+vocabulaire qu'une vraie interface de chat IA (fond teinté Fitz à
+faible opacité, coin inférieur gauche resserré pour évoquer une bulle
+"reçue"), pour que le message se lise comme une conversation en cours
+plutôt qu'une légende statique. */
 #fitz-message{
 
-min-height:48px;
+min-height:44px;
 
-line-height:1.55;
+margin-bottom:2px;
+
+padding:12px 14px;
+
+/* Ambre et non violet/cyan (2026-08-27) : identité Fitz, comme
+--gradient-fitz (css/base.css), qui est passé du violet à l'ambre ce
+même jour — voir la note à cet endroit. */
+background:rgba(233,163,25,.08);
+
+border:1px solid rgba(233,163,25,.14);
+
+border-radius:14px 14px 14px 4px;
+
+line-height:1.5;
+
+font-size:.9rem;
 
 font-weight:500;
 
@@ -723,26 +1011,52 @@ display:flex;
 
 align-items:center;
 
-gap:7px;
+gap:9px;
 
-font-size:.85rem;
+font-size:.83rem;
 
-color:var(--text-light);
+font-weight:600;
+
+color:var(--text-color);
 
 animation:analysisItemIn .45s var(--ease-premium) both;
 
 }
 
+/* Icône dans un badge teinté plutôt qu'à nu — même logique que les
+puces .cta-trust/.floating-icon ailleurs sur la page : un pictogramme
+seul sur fond blanc lit comme une liste à puces générique, le badge le
+transforme en étape de progression identifiable au premier coup d'œil. */
 #analysis-list li i,
 #analysis-list li svg{
 
-width:18px;
+width:15px;
 
-height:18px;
+height:15px;
 
 flex-shrink:0;
 
+padding:4px;
+
+box-sizing:content-box;
+
+background:rgba(51,65,140,.10);
+
+border-radius:8px;
+
 color:var(--primary-color);
+
+}
+
+/* La dernière étape ("12 opportunités trouvées") est un résultat, pas
+une étape d'analyse comme les autres : badge vert pour la distinguer
+plutôt que le même bleu neutre que "langues prises en compte" etc. */
+#analysis-list li:last-child i,
+#analysis-list li:last-child svg{
+
+background:rgba(34,197,94,.12);
+
+color:var(--success);
 
 }
 
@@ -832,9 +1146,32 @@ max-width:100%;
 
 }
 
+/* Colonne plutôt que rangée centrée qui wrap (audit 2026-08-22, testé
+sur mobile) : dès que les libellés (assez longs en français) tombaient
+sur 2+ lignes, le séparateur en trait (.benefit + .benefit::before,
+calé sur le bord gauche de l'élément suivant) se retrouvait orphelin,
+détaché de tout texte adjacent. Empilée et centrée, chaque élément n'a
+plus besoin de séparateur : l'espacement vertical suffit à les
+distinguer. */
 .hero-benefits{
 
-justify-content:center;
+flex-direction:column;
+
+align-items:center;
+
+gap:10px;
+
+}
+
+.benefit{
+
+padding:0;
+
+}
+
+.benefit + .benefit::before{
+
+display:none;
 
 }
 
@@ -855,22 +1192,6 @@ justify-content:center;
 .destination-card{
 
 display:none;
-
-}
-
-.hero-demo{
-
-position:relative;
-
-right:auto;
-
-bottom:auto;
-
-width:100%;
-
-max-width:340px;
-
-margin:10px auto 0;
 
 }
 
@@ -898,10 +1219,302 @@ width:100%;
 
 }
 
-.hero-demo{
+}
 
-padding:15px;
+/* ==========================================================
+LE CTA DU HERO SUR TÉLÉPHONE (2026-08-23)
+==========================================================
+« Commencer mon diagnostic gratuit » réclame environ 270px de texte ;
+sur un écran de 360px, le bouton n'en offrait que 261 une fois ses
+propres rembourrages retirés. Le libellé se coupait donc en deux au
+milieu de la phrase, juste sous le titre — le premier bouton que voit
+un visiteur, et celui qui décide de tout le reste.
+
+Le bouton prend toute la largeur disponible plutôt qu'une largeur
+dictée par son contenu : c'est de toute façon le geste attendu sur un
+écran tactile étroit, où une cible pleine largeur est plus sûre à
+atteindre qu'une pastille centrée. Le libellé n'est pas raccourci —
+il dit ce que l'on obtient, et « gratuit » est le mot qui fait
+cliquer. */
+
+@media(max-width:640px){
+
+/* .btn.hero-cta et non .hero-cta seul : .btn-lg (css/base.css) pose
+padding:16px 28px avec la même spécificité, et css/base.css est
+chargée APRÈS css/hero.css — à égalité, c'est elle qui l'emporte.
+Mesuré : le rembourrage restait à 30px et la correction n'avait
+aucun effet. Deux classes suffisent à trancher, sans !important. */
+
+.btn.hero-cta{
+
+width:100%;
+
+justify-content:center;
+
+padding-left:16px;
+
+padding-right:16px;
 
 }
+
+}
+
+/* Sous 360px (iPhone SE et assimilés), il manque encore une vingtaine de
+pixels : le libellé, la boussole et l'écart entre les deux ne tiennent
+pas ensemble. C'est l'icône qui saute, pas le texte — elle est
+décorative, le libellé porte seul le sens, et la refonte du 2026-08-22
+avait déjà retiré les icônes qui ne disaient rien de plus que leur
+étiquette. */
+
+@media(max-width:360px){
+
+.btn.hero-cta i,
+.btn.hero-cta svg{
+
+display:none;
+
+}
+
+/* Même à icône retirée, il manquait encore une dizaine de pixels :
+253px de libellé pour 254px utiles, la casse se jouait à un cheveu.
+Le corps passe de 1,02rem à 0,95rem — soit 240px, une marge franche
+plutôt qu'une valeur qui retombe sur deux lignes au premier libellé
+un peu plus long. À cette taille le bouton occupe toute la largeur
+de l'écran : il ne risque pas de passer inaperçu pour autant. */
+
+.btn.hero-cta{
+
+font-size:.95rem;
+
+padding-left:12px;
+
+padding-right:12px;
+
+}
+
+}
+
+/* ==========================================================
+LE HERO SUR TÉLÉPHONE — REFONTE 2026-08-27
+==========================================================
+Retour de Charles : « la plupart de mes utilisateurs vont visiter le
+site à partir de leur téléphone, j'aimerais que le rendu soit plus
+professionnel et un peu identique à celui du PC, surtout le hero ».
+
+CE QUI N'ALLAIT PAS, MESURÉ SUR 390 px
+--------------------------------------
+1. La photo du hero avait disparu. `.hero-visual` gardait
+   `min-height:auto` en dessous de 1023px, or son image
+   (`.hero-visual-bg`) est en `position:absolute; inset:0` : elle ne
+   contribue à aucune hauteur. Mesuré : hauteur du bloc = 0 px. Les
+   deux cartes flottantes, elles, étaient explicitement masquées.
+   Le hero mobile n'avait donc AUCUN visuel de produit — alors que
+   `sizes="(max-width:1023px) 100vw, 50vw"` dans le HTML montre bien
+   que l'image était censée s'y afficher en pleine largeur.
+
+2. Tout était centré. Un paragraphe de cinq lignes centré sur un
+   écran étroit se lit mal et fait « page d'atterrissage générique » ;
+   la version bureau est alignée à gauche, et c'est elle qui a l'air
+   professionnelle.
+
+3. Les trois statistiques passaient en colonne pleine largeur :
+   426 px à elles seules, soit la moitié d'un écran de haut avant
+   d'atteindre le bouton, pour trois chiffres qui tiennent sur une
+   ligne au format du bureau.
+
+CE QU'ON FAIT
+-------------
+On rapproche la structure de celle du bureau plutôt que de la
+simplifier : même ordre de lecture, même alignement, même rangée de
+statistiques, et surtout le visuel de nouveau présent — avec ses deux
+cartes flottantes, qui sont la seule chose du hero qui montre à quoi
+sert réellement le produit.
+
+`display:contents` sur `.hero-content` est le pivot : ses enfants
+deviennent des éléments de la grille `.hero-container`, ce qui permet
+d'intercaler `.hero-visual` juste après le paragraphe — là où il
+prouve la promesse — sans toucher au HTML. Les sélecteurs de
+`css/animations.css` (`.hero-content > .hero-stagger:nth-child(n)`)
+continuent de s'appliquer : `display:contents` ne change que la
+génération des boîtes, jamais l'arbre du document.
+
+Ce bloc est volontairement placé en FIN de fichier : il doit
+l'emporter, à spécificité égale, sur les règles des requêtes média
+précédentes qui centraient et empilaient.
+========================================================== */
+
+@media(max-width:1023px){
+
+.hero{
+padding:104px 0 56px;
+}
+
+.hero-container{
+gap:22px;
+}
+
+/* Les enfants de .hero-content deviennent des éléments de la grille. */
+.hero-content{
+display:contents;
+text-align:left;
+}
+
+.hero h1,
+.hero-description,
+.hero-benefits,
+.hero-stats,
+.hero-note{
+text-align:left;
+}
+
+/* Ordre de lecture : titre, promesse, PREUVE, bénéfices, chiffres,
+mention, action. Le visuel remonte au-dessus des chiffres — sous le
+bouton, il n'aurait plus été qu'une décoration de fin de section. */
+.hero h1{ order:1; }
+.hero-description{ order:2; }
+.hero-visual{ order:3; }
+.hero-benefits{ order:4; }
+.hero-stats{ order:5; }
+.hero-note{ order:6; }
+.hero .hero-cta{ order:7; }
+
+/* --- Le visuel, de nouveau visible --- */
+
+/* `aspect-ratio` plutôt qu'une hauteur fixe : la photo occupe toute la
+largeur de l'écran, sa hauteur doit suivre. 4/3 tient dans un écran
+de téléphone sans repousser les chiffres hors de vue (269 px sur un
+écran de 390). */
+.hero-visual{
+min-height:0;
+aspect-ratio:4/3;
+margin:2px 0 4px;
+}
+
+/* Le halo de -48px débordait de la largeur de l'écran une fois le
+visuel en pleine largeur. Resserré, il garde sa profondeur sans
+créer de défilement horizontal. */
+.hero-visual::before{
+inset:-20px;
+filter:blur(34px);
+}
+
+/* --- Les deux cartes flottantes --- */
+
+.destination-card,
+.compatibility-card{
+display:flex;
+width:min(62%, 196px);
+padding:11px;
+}
+
+.destination-card{
+top:12px;
+left:12px;
+}
+
+/* En bas à droite plutôt qu'à `top:150px` : sur un visuel de 269 px,
+la valeur du bureau l'aurait posée à cheval sur le bord inférieur. */
+.compatibility-card{
+top:auto;
+bottom:12px;
+right:12px;
+}
+
+.floating-card strong{ font-size:.82rem; }
+.floating-card p{ font-size:.76rem; line-height:1.4; }
+.floating-icon i,
+.floating-icon svg{ width:18px; height:18px; }
+
+/* --- Les bénéfices, alignés à gauche avec leur repère --- */
+
+/* Le séparateur d'origine (`.benefit + .benefit::before`) était un
+trait VERTICAL entre deux éléments d'une rangée ; empilés, il restait
+orphelin — d'où sa suppression en août. Le repère ci-dessous n'est pas
+le même objet : c'est une puce en trait ambré posée devant CHAQUE
+ligne, y compris la première. Elle donne à la colonne l'axe gauche que
+le centrage lui avait retiré. */
+.hero-benefits{
+align-items:flex-start;
+gap:9px;
+}
+
+/* `.hero-benefits .benefit` et non `.benefit` seul : la règle
+`.benefit:first-child{padding-left:0}` plus haut (qui réservait la
+place du trait séparateur aux éléments SUIVANTS, dans la version en
+rangée) a une classe et une pseudo-classe. Mesuré : la première ligne
+gardait 0 de rembourrage et sa puce passait sous le « D » de
+« Découverte ». Deux classes suffisent à trancher. */
+.hero-benefits .benefit{
+padding-left:14px;
+}
+
+/* Deux sélecteurs, et c'est nécessaire : `.benefit + .benefit::before`
+plus haut pose `display:none` avec DEUX classes. Un simple
+`.benefit::before` n'en a qu'une et perdrait la cascade sur les
+deuxième et troisième lignes — mesuré : seule la premiere puce
+s'affichait. On rétablit donc explicitement le cas « frère », à
+spécificité égale ; ce bloc étant en fin de fichier, il l'emporte. */
+.benefit::before,
+.benefit + .benefit::before{
+content:"";
+position:absolute;
+left:0;
+top:50%;
+transform:translateY(-50%);
+display:block;
+width:3px;
+height:13px;
+border-radius:2px;
+background:var(--amber-500);
+}
+
+/* --- Les chiffres, en rangée comme sur le bureau --- */
+
+.hero-stats{
+flex-direction:row;
+flex-wrap:nowrap;
+justify-content:flex-start;
+gap:8px;
+width:100%;
+}
+
+.stat-card{
+flex:1 1 0;
+min-width:0;
+width:auto;
+padding:12px 10px;
+border-radius:var(--radius-md);
+}
+
+.stat-card strong{
+font-size:1.45rem;
+margin-bottom:2px;
+}
+
+.stat-card span{
+font-size:.76rem;
+line-height:1.35;
+}
+
+.hero-note{
+justify-content:flex-start;
+}
+
+}
+
+/* Sous 400px, les trois libellés ("Bourses référencées", "Pays de
+destination", "Universités partenaires") tombent chacun sur deux
+lignes et les cartes deviennent hautes et étroites. On resserre encore
+le corps plutôt que de repasser en colonne : trois chiffres alignés
+disent « catalogue », trois blocs empilés disent « formulaire ». */
+@media(max-width:400px){
+
+.hero-stats{ gap:6px; }
+
+.stat-card{ padding:11px 8px; }
+
+.stat-card strong{ font-size:1.32rem; }
+
+.stat-card span{ font-size:.71rem; }
 
 }

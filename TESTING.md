@@ -65,7 +65,7 @@ conditions suivantes sont vraies :
 
 Le domaine réel du site ne correspond jamais à `localhost`, donc cette
 branche est **structurellement inatteignable** en production, quelle que
-soit l'URL. Un avertissement console (`[ScholarBridge] Connecté aux
+soit l'URL. Un avertissement console (`[Fitz] Connecté aux
 émulateurs Firebase locaux...`) confirme quand c'est actif.
 
 `scripts/seed-emulator.mjs` refuse de s'exécuter si les variables

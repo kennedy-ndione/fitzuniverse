@@ -1,0 +1,291 @@
+/* ==========================================================
+FITZUNIVERSE — SYSTÈME TYPOGRAPHIQUE DE LA PAGE D'ACCUEIL (2026-08-13)
+index.html UNIQUEMENT — chargé en dernier (voir index.html) pour
+gagner la cascade sur les font-family déclarés dans hero.css et
+css/homepage-sections.css.
+
+Trois identités de titre par groupe de sections + une police de corps
+partagée, plutôt que la seule paire Sora/Inter (css/base.css, toujours
+le défaut du reste du site — non touché ici, voir plus bas) :
+
+- --font-affirmation (Space Grotesk)  : Hero + CTA final
+- --font-narrative    (Fraunces)       : Le problème + Notre vision
+- --font-product       (Plus Jakarta Sans) : Fitz en action + Comment
+  ça fonctionne — et le défaut de tout le reste (voir --font-display
+  ci-dessous), y compris le bandeau logos et l'échantillon
+  d'universités, qui n'appartiennent à aucun des 3 groupes.
+- --font-body          (Plus Jakarta Sans) : corps de texte partout.
+
+Technique : base.css définit déjà --font-display/--font-body et les
+applique via `h1,h2,h3,h4,h5,h6{font-family:var(--font-display)}` et
+`body{font-family:"Inter"}` — plutôt que de dupliquer un sélecteur par
+titre, on REDÉFINIT ces deux variables au niveau :root ci-dessous. La
+cascade CSS (ce fichier charge après base.css) fait le reste pour tous
+les titres qui n'ont pas d'override plus spécifique — d'où le nombre
+réduit de règles ci-dessous : seuls les groupes Affirmation et Récit
+Humain ont besoin d'un override explicite, "Produit" et "tout le
+reste" héritent déjà du nouveau défaut. base.css lui-même n'est pas
+modifié : les autres pages (qui ne chargent pas ce fichier) gardent
+Sora/Inter sans rien changer.
+========================================================== */
+
+:root{
+
+--font-affirmation:'Space Grotesk', sans-serif;
+--font-narrative:'Fraunces', serif;
+--font-product:'Plus Jakarta Sans', sans-serif;
+--font-body:'Plus Jakarta Sans', sans-serif;
+
+/* Redéfinit les 2 variables de base.css pour cette page : tout titre
+h1-h6 qui n'a pas d'override plus bas devient Plus Jakarta Sans au
+lieu de Sora (bandeau logos, échantillon, sous-titres de carte h3...). */
+--font-display:var(--font-product);
+
+}
+
+body{
+font-family:var(--font-body);
+}
+
+/* ==========================================================
+AFFIRMATION — Hero + CTA final
+Space Grotesk ne charge que 600/700 (voir index.html) : pas de 800
+disponible, fw-bold (700) est déjà le poids maximal ici. Tracking
+resserré mais moins que l'ancien -.035em/-.028em (réglé pour Sora) —
+Space Grotesk a des formes de lettres plus larges nativement, un
+resserrement identique l'aurait fait paraître compressé plutôt que
+"affirmé".
+========================================================== */
+
+.hero h1,
+.cta-box h2{
+
+font-family:var(--font-affirmation);
+font-weight:var(--fw-bold);
+letter-spacing:-.02em;
+
+}
+
+/* ==========================================================
+RÉCIT HUMAIN — Le problème + Notre vision
+Fraunces en 600 (medium/semibold disponible), jamais 400 : à ces
+tailles de titre (--fs-h2, jusqu'à 2.75rem), un serif display en 400
+se serait lu comme fin/fragile à côté du reste de la page en 700/800.
+Tracking neutre plutôt que négatif : un tracking serré comme sur les
+titres sans-serif écrase le dessin d'un serif display et casse le ton
+"récit" recherché. em = mot-clé en italique (voir index.html), pour
+appuyer le ton narratif sans tout mettre en italique.
+Ni l'un ni l'autre de ces 2 titres n'est sur fond sombre dans la
+maquette actuelle (why-us : texte marine sur blanc, déjà 17,8:1 ;
+vision : texte marine sur --background-light, un blanc teinté à 8% —
+donc l'avertissement du brief sur "Fraunces sur fond sombre" ne
+s'applique pas ici tel quel. Le contraste texte/fond ne dépend de
+toute façon jamais de la graisse de police (seule la lisibilité
+perçue en dépend) — 600 plutôt que 400 couvre ce risque perceptif
+séparément, voir plus haut. */
+
+#why-us .section-header h2,
+.vision-content h2{
+
+font-family:var(--font-narrative);
+font-weight:600;
+line-height:1.18;
+letter-spacing:-.006em;
+
+}
+
+/* --amber-700 sur les deux fonds concernés : 5,8:1 sur --background
+(blanc pur, "Le problème") et 5,06:1 sur --background-light
+(rgba(51,65,140,.08) sur blanc → effectivement rgb(239,240,246),
+"Notre vision") — les deux au-dessus du seuil AA 4,5:1. */
+#why-us .section-header h2 em,
+.vision-content h2 em{
+
+font-style:italic;
+font-weight:400;
+color:var(--amber-700);
+
+}
+
+/* ==========================================================
+PRODUIT/FONCTIONNEL — Fitz en action + Comment ça fonctionne
+Déjà Plus Jakarta Sans via --font-display ci-dessus (aucun override
+de font-family nécessaire) : ces 2 titres utilisent encore
+--fw-extrabold (800) déclaré dans hero.css/homepage-sections.css,
+directement dans le nouveau système, "sans fioriture" comme demandé —
+rien à faire de plus ici. Section conservée pour la documentation, pas
+pour le code : voir .fitz-demo-intro h2 (css/homepage-sections.css) et
+.how-it-works-intro h2 (idem) pour la déclaration de poids réelle.
+========================================================== */
+
+/* ==========================================================
+KICKER — refonte 2026-08-22 (structure + visuel, audit "trop d'icônes,
+trop grandes"). Remplace .section-badge (pastille arrondie + icône
+Lucide, css/base.css) partout sur index.html : un simple repère
+typographique (trait ambre + libellé capitales) plutôt qu'une pastille
+avec pictogramme. .section-badge portait un data-lucide différent par
+section (compass/workflow/sparkles/earth...) — 6 icônes rien que pour
+ces sur-titres, la moitié du total de la page pour un rôle purement
+décoratif (le libellé se suffit à lui-même). .section-badge reste
+inchangé dans base.css : scholarships.html/universities.html le
+chargent encore tel quel, aucune page hors index.html n'est concernée
+par ce remplacement.
+========================================================== */
+
+/* Libellé passé de --primary-color (bleu) à --amber-700 le 2026-08-28.
+Le repère portait jusqu'ici DEUX accents dans un seul élément de trois
+centimètres : un trait ambre suivi d'un libellé bleu. Aucun des deux
+ne renforçait l'autre — l'œil lisait deux signaux là où il n'y a qu'un
+rôle ("ceci ouvre une section"). Tout passe à l'or, celui du logo et
+du CTA principal, désormais la seule couleur d'accent des grandes
+surfaces sombres de la page (voir --gradient-deep, css/base.css).
+Contraste #8A5D00 sur blanc : 5,8:1, au-dessus du seuil AA — c'est
+d'ailleurs la seule valeur ambre que base.css admet comme texte.
+
+Corps resserré (.78 -> .72rem) et interlettrage ouvert (.14 -> .18em) :
+à ce format, un sur-titre en capitales se lit mieux petit et aéré que
+grand et compact — il doit signaler sans concurrencer le h2 qu'il
+annonce. */
+.kicker{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+width:max-content;
+max-width:100%;
+
+font-family:var(--font-body);
+
+font-weight:var(--fw-bold);
+
+font-size:.72rem;
+
+letter-spacing:.18em;
+
+text-transform:uppercase;
+
+color:var(--amber-700);
+
+}
+
+/* Trait plutôt que pictogramme : un seul vocabulaire de repère visuel
+pour indiquer "ceci ouvre une nouvelle section", sans les 6 glyphes
+différents que portait .section-badge. Ambre pour faire écho au CTA
+final/logo plutôt que le bleu déjà très présent dans le corps de page. */
+/* ==========================================================
+NUMÉROTATION ÉDITORIALE — 2026-08-28
+==========================================================
+Le repère devient « 01 —— LE PROBLÈME » au lieu de « —— LE PROBLÈME ».
+
+Pourquoi : une page longue faite de neuf sections ne dit nulle part au
+visiteur où il en est. Le numéro transforme une suite de blocs en un
+sommaire implicite — on sait qu'on avance, et combien il reste. C'est
+le signal le plus économique qui existe pour ça : deux caractères, et
+aucun élément d'interface en plus.
+
+Compteur CSS et non nombres écrits dans index.html : les sections ont
+déjà été réordonnées deux fois ce mois-ci (voir les commentaires de
+#teaser/#trust), et des numéros en dur seraient faux dès le prochain
+déplacement, en silence. Ici l'ordre du DOM fait foi.
+
+Le trait ambre d'origine est CONSERVÉ, dessiné en fond du même
+pseudo-élément (dégradé plat de 22x2 calé à droite, padding-right pour
+lui faire la place) plutôt que dans un second pseudo : ::after aurait
+atterri après le libellé, et l'ordre flex ne permet pas de l'insérer
+entre le numéro et le texte sans découper ce dernier.
+
+decimal-leading-zero pour le « 0 » de 01..09 (registre éditorial), et
+tabular-nums pour que tous les numéros occupent la même largeur — sans
+quoi le « 1 » de 01 étant plus étroit, les libellés ne s'aligneraient
+pas verticalement d'une section à l'autre.
+========================================================== */
+
+main{
+counter-reset:sb-section;
+}
+
+/* Le parent DIRECT de chaque repère numéroté, quel qu'il soit : les
+sept .kicker de la page ne vivent pas tous dans un .section-header —
+« Notre vision » est dans .vision-content, « Fitz en action » dans
+.fitz-demo-intro, le CTA final dans .cta-box-panel. Une première
+version visait .section-header et laissait donc « Notre vision » sans
+numéro, pendant que les deux panneaux sombres héritaient d'un numéro
+périmé (celui de la section précédente), affiché en double.
+
+Sont EXCLUS les .kicker--on-dark : ni la démo Fitz ni le CTA de
+clôture ne sont des étapes du récit numéroté. La démo illustre ce
+qu'on vient de lire, le CTA ferme la page — leur donner un rang les
+ferait passer pour des sections de plus dans un sommaire qui compte
+les temps de l'argumentation. Ils gardent le trait seul (voir plus
+bas). */
+:has(> .kicker:not(.kicker--on-dark)){
+counter-increment:sb-section;
+}
+
+.kicker::before{
+
+content:counter(sb-section,decimal-leading-zero);
+
+/* Neutralise le carré de 22x2 de la version "trait seul". */
+width:auto;
+height:auto;
+border-radius:0;
+
+flex-shrink:0;
+
+font-variant-numeric:tabular-nums;
+
+/* Le trait, désormais en fond : 22px de large, 2px de haut, calé à
+droite de la boîte ; les 34px de padding = 22 de trait + 12 d'écart. */
+padding-right:34px;
+
+background:linear-gradient(var(--amber-500),var(--amber-500)) no-repeat right center/22px 2px;
+
+}
+
+/* Repli pour les moteurs sans :has() — le numéro ne s'incrémenterait
+pas et toutes les sections afficheraient « 01 ». Mieux vaut alors le
+repère d'origine (trait seul) qu'une numérotation fausse. */
+@supports not selector(:has(*)){
+
+.kicker::before{
+content:"";
+width:22px;
+height:2px;
+padding-right:0;
+border-radius:1px;
+background:var(--amber-500);
+}
+
+}
+
+/* Sur fond sombre (.fitz-demo, .cta-box) : le bleu --primary-color de la
+règle par défaut n'a presque aucun contraste sur --gradient-primary
+(bleu sur bleu). Blanc translucide, même valeur que .fitz-demo-intro p/
+.cta-box p juste à côté. */
+.kicker--on-dark{
+
+color:rgba(255,255,255,.85);
+
+}
+
+/* Pas de numéro sur fond sombre : voir la note de la numérotation plus
+haut (la démo Fitz et le CTA final ne sont pas des étapes du récit).
+Retour au repère d'origine, le trait ambre seul. */
+.kicker--on-dark::before{
+
+content:"";
+
+width:22px;
+height:2px;
+
+padding-right:0;
+
+border-radius:1px;
+
+background:var(--amber-500);
+
+}

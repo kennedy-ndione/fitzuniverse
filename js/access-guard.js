@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* ScholarBridge — garde d'accès (auth + formule), sans dépendance au shell
+* FitzUniverse — garde d'accès (auth + formule), sans dépendance au shell
 * ============================================================
 *
 * Couche la plus basse de la vérification d'accès : session Firebase,
@@ -104,14 +104,30 @@ return !isNaN(expiry) && expiry.getTime() >= Date.now();
 
 }
 
+// Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER
+// pour que les comptes qui la détiennent déjà continuent de fonctionner,
+// mais ne doit plus jamais être SUGGÉRÉE à l'achat — ni comme prochain
+// palier (nextPlanId, panneau coach du tableau de bord), ni comme cible
+// de déverrouillage d'une fonctionnalité (unlockingPlans, CTA "Choisir
+// ma formule" un peu partout). `window.SCHOLARBRIDGE_PLANS` peut être
+// absent sur une page qui ne charge pas pricing-plans.js (ex. panneau
+// admin) : dans ce cas rien n'est filtré, comportement inchangé.
+function isSellablePlan(planId) {
+const plan = typeof SCHOLARBRIDGE_PLANS !== "undefined" && SCHOLARBRIDGE_PLANS[planId];
+return !plan || plan.deprecated !== true;
+}
+
 export function nextPlanId(planId) {
 const index = PLAN_ORDER.indexOf(planId);
-if (index === -1 || index === PLAN_ORDER.length - 1) return null;
-return PLAN_ORDER[index + 1];
+if (index === -1) return null;
+for (let i = index + 1; i < PLAN_ORDER.length; i++) {
+if (isSellablePlan(PLAN_ORDER[i])) return PLAN_ORDER[i];
+}
+return null;
 }
 
 export function unlockingPlans(planId, flags) {
-return PLAN_ORDER.filter((p) => p !== planId && flags[p]);
+return PLAN_ORDER.filter((p) => p !== planId && flags[p] && isSellablePlan(p));
 }
 
 // testerAccess (users/{uid}.testerAccess, réservé à l'admin — voir
@@ -228,7 +244,7 @@ userData.profile || {}
 );
 
 // Exception propriétaire (2026-08-07, retrait de l'inscription
-// gratuite) : le compte admin de ScholarBridge résout toujours sur la
+// gratuite) : le compte admin de FitzUniverse résout toujours sur la
 // formule complète, sans jamais écrire `plan` sur son propre document
 // users/{uid} — voir firestore.rules /admins/{uid} : lecture possible
 // UNIQUEMENT pour soi-même (isOwner(uid)), écriture toujours refusée
