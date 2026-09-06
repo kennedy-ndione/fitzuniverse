@@ -575,6 +575,45 @@ function parallaxe() {
 * qu'une navigation ordinaire.
 */
 
+/* UN SKIP N'EST PAS UNE ERREUR (2026-09-06)
+ *
+ * Constaté en ligne : `AbortError: Transition was skipped. Navigation
+ * aborted` remontait en rejet NON ATTRAPÉ dès qu'une navigation en
+ * interrompait une autre — devenu fréquent depuis que les pastilles de
+ * pays naviguent au lieu de faire défiler (js/catalogue-vue.js).
+ *
+ * Il n'y a pourtant AUCUN `document.startViewTransition()` dans ce
+ * dépôt : la transition est ouverte par le navigateur lui-même, sur la
+ * foi du `@view-transition { navigation: auto }` de css/vivant.css. Le
+ * rejet appartient donc à une promesse que rien, côté site, ne tenait —
+ * d'où le bruit. `pageswap` (page qui part) et `pagereveal` (page qui
+ * arrive) sont les deux seuls endroits où cette promesse nous est
+ * tendue : on la prend, et on la relâche.
+ *
+ * On n'AVALE rien d'autre : seules les promesses de CETTE transition
+ * sont marquées comme traitées. Une vraie erreur applicative continue
+ * de remonter — c'est tout l'intérêt de ne pas poser un
+ * `unhandledrejection` global.
+ */
+function transitionSansBruit(evenement) {
+
+  var t = evenement && evenement.viewTransition;
+  if (!t) return;
+
+  var rien = function () {};
+
+  if (t.finished && t.finished.catch) t.finished.catch(rien);
+  if (t.ready && t.ready.catch) t.ready.catch(rien);
+  if (t.updateCallbackDone && t.updateCallbackDone.catch) t.updateCallbackDone.catch(rien);
+
+}
+
+// Hors du garde `mouvementReduit` de morphe() : le navigateur peut
+// ouvrir la transition sans nous, le rejet doit être tenu dans tous les
+// cas.
+window.addEventListener("pageswap", transitionSansBruit);
+window.addEventListener("pagereveal", transitionSansBruit);
+
 function morphe() {
   if (mouvementReduit) return;
   if (!("startViewTransition" in document)) return;

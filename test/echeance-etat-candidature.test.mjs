@@ -304,3 +304,110 @@ test("une seule échéance + echeanceVariable : c'est la fiche de cet établisse
   assert.ok(r.jours > 0);
 
 });
+
+/* ------------------------------------------------------------------
+ * LA PONCTUATION APPARTIENT À L'AFFICHAGE (2026-09-06)
+ * ------------------------------------------------------------------
+ * 88 des 129 `periodeOuverture` du catalogue se terminent déjà par un
+ * point, les 41 autres non — elles ont été écrites à la main, une par
+ * une. Le site produisait « … pour tous les admis.. » sur 88 fiches.
+ * On ne retouche AUCUNE donnée : c'est la phrase qui pose son point,
+ * et elle n'en pose qu'un.
+ * ------------------------------------------------------------------ */
+
+/** Toutes les fins de phrase de `detail`, pour compter les points doubles. */
+function ponctuationDouble(detail) {
+  return /[.!?]\s*\.|\.\.(?!\.)/.test(detail);
+}
+
+test("PONCTUATION — une periodeOuverture déjà ponctuée ne produit pas de double point", () => {
+
+  const r = etatCandidature({
+    statut: "Fermée",
+    echeances: ["24 novembre 2025"],
+    periodeOuverture: "Appel annuel, clôture mi-mars ; bourse complète pour tous les admis."
+  }, LE_JOUR);
+
+  assert.equal(r.ton, "close");
+  assert.ok(!ponctuationDouble(r.detail), `double ponctuation dans « ${r.detail} »`);
+  assert.match(r.detail, /admis\.$|admis\. /, "la note garde son sens, elle perd seulement le point en trop");
+
+});
+
+test("PONCTUATION — une periodeOuverture NON ponctuée reçoit son point", () => {
+
+  const r = etatCandidature({
+    statut: "Fermée",
+    echeances: ["24 novembre 2025"],
+    periodeOuverture: "Appel annuel, clôture mi-mars"
+  }, LE_JOUR);
+
+  assert.match(r.detail, /Réouverture attendue : Appel annuel, clôture mi-mars\./);
+  assert.ok(!ponctuationDouble(r.detail));
+
+});
+
+test("PONCTUATION — les deux formes produisent EXACTEMENT la même fin de phrase", () => {
+
+  const avec = etatCandidature({ statut: "Fermée", echeances: ["24 novembre 2025"], periodeOuverture: "en février-mars." }, LE_JOUR);
+  const sans = etatCandidature({ statut: "Fermée", echeances: ["24 novembre 2025"], periodeOuverture: "en février-mars" }, LE_JOUR);
+
+  assert.equal(avec.detail, sans.detail, "la ponctuation de la donnée ne doit rien changer à l'affichage");
+
+});
+
+test("PONCTUATION — « pas encore ouverte » termine sa phrase, ponctuée ou non", () => {
+
+  const sans = etatCandidature({
+    statut: "Fermée", echeances: ["15 janvier 2027"], periodeOuverture: "ouverture en novembre"
+  }, LE_JOUR);
+
+  const avec = etatCandidature({
+    statut: "Fermée", echeances: ["15 janvier 2027"], periodeOuverture: "ouverture en novembre."
+  }, LE_JOUR);
+
+  assert.equal(sans.ton, "attente");
+  assert.match(sans.detail, /Ouverture attendue : ouverture en novembre\.$/);
+  assert.equal(avec.detail, sans.detail);
+  assert.ok(!ponctuationDouble(avec.detail));
+
+});
+
+test("PONCTUATION — échéance variable agrégée : un seul point après la période", () => {
+
+  const avec = etatCandidature({
+    statut: "Ouverte", echeanceVariable: "pays",
+    echeances: ["15 octobre 2026", "30 novembre 2026"],
+    periodeOuverture: "selon le pays."
+  }, LE_JOUR);
+
+  const sans = etatCandidature({
+    statut: "Ouverte", echeanceVariable: "pays",
+    echeances: ["15 octobre 2026", "30 novembre 2026"],
+    periodeOuverture: "selon le pays"
+  }, LE_JOUR);
+
+  assert.equal(avec.detail, sans.detail);
+  assert.ok(!ponctuationDouble(avec.detail), `« ${avec.detail} »`);
+
+});
+
+test("PONCTUATION — statut ouvert sans date, échéance variable : idem", () => {
+
+  const avec = etatCandidature({ statut: "Ouverte", echeanceVariable: "etablissement", periodeOuverture: "à confirmer auprès de l'établissement." }, LE_JOUR);
+  const sans = etatCandidature({ statut: "Ouverte", echeanceVariable: "etablissement", periodeOuverture: "à confirmer auprès de l'établissement" }, LE_JOUR);
+
+  assert.equal(avec.detail, sans.detail);
+  assert.ok(!ponctuationDouble(avec.detail), `« ${avec.detail} »`);
+
+});
+
+test("PONCTUATION — une période rendue SEULE garde son texte intact", () => {
+
+  // Ici `periodeOuverture` n'est pas cousue dans une phrase : elle EST
+  // la phrase. On ne lui retire rien.
+  const r = etatCandidature({ statut: "Ouverte", periodeOuverture: "Dossier examiné à réception." }, LE_JOUR);
+
+  assert.equal(r.detail, "Dossier examiné à réception.");
+
+});

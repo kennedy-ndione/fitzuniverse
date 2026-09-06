@@ -513,6 +513,29 @@ return etat === "critique" || etat === "proche"
 const RE_STATUT_FERME = /^\s*(fermee|close|cloturee|suspendue)/;
 
 /**
+* LA PONCTUATION APPARTIENT À L'AFFICHAGE, PAS À LA DONNÉE (2026-09-06)
+* --------------------------------------------------------------------
+* 88 des 129 `periodeOuverture` du catalogue se terminent déjà par un
+* point, les 41 autres non — parce qu'elles ont été écrites à la main,
+* une par une, en vérifiant la bourse. C'est très bien ainsi : ce sont
+* des notes, pas des fragments de phrase calibrés.
+*
+* Le défaut était de notre côté : `Réouverture attendue : ${periode}.`
+* produisait « … bourse complète pour tous les admis.. » sur 88 fiches.
+* On a donc DEUX choix : retoucher 88 documents, ou retirer la
+* ponctuation finale au moment de composer la phrase. Le second est le
+* bon — une migration fige une décision d'affichage dans la donnée, et
+* la prochaine tournure de phrase la retrouverait de travers.
+*
+* Cette fonction retire ce qui traîne en fin de note (points, espaces),
+* pour que l'appelant pose SON point, un seul. Elle ne touche ni aux
+* points de milieu de phrase, ni aux « ... » ailleurs que tout à la fin.
+*/
+function phrase(texte) {
+return String(texte || "").trim().replace(/[.\s]+$/, "");
+}
+
+/**
  * QUAND LA DATE N'EST PAS UNE PROPRIÉTÉ DE LA BOURSE (2026-09-05)
  * ---------------------------------------------------------------
  * Vérification du lot 38 : sur cinq grandes bourses, la date limite
@@ -608,7 +631,7 @@ badge: "Candidatures pas encore ouvertes",
 etiquette: prochaine ? "Clôture annoncée" : "Candidatures",
 valeur: prochaine ? formaterDate(prochaine.date) : "Closes",
 detail: periode
-? `Le cycle en cours est clos. Ouverture attendue : ${periode}`
+? `Le cycle en cours est clos. Ouverture attendue : ${phrase(periode)}.`
 : "Le cycle en cours est clos et la prochaine ouverture n'est pas annoncée. La date ci-dessus est la clôture attendue, pas l'ouverture.",
 verifie
 };
@@ -647,7 +670,7 @@ ouvert: true, ton: "ouverte", jours: null,
 badge: "Candidatures ouvertes",
 etiquette: "Date limite",
 valeur: e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement",
-detail: `La date limite dépend ${MENTION_VARIABLE[e.echeanceVariable]}${periode ? ` — ${periode}` : ""}.${exemple}`,
+detail: `La date limite dépend ${MENTION_VARIABLE[e.echeanceVariable]}${periode ? ` — ${phrase(periode)}` : ""}.${exemple}`,
 verifie
 };
 
@@ -699,7 +722,7 @@ badge: "Candidatures ouvertes",
 etiquette: "Date limite",
 valeur: variable ? (e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement") : "Non publiée",
 detail: variable
-? `La date limite dépend ${variable}${periode ? ` — ${periode}` : ""}. À lire sur le portail officiel avant toute démarche.`
+? `La date limite dépend ${variable}${periode ? ` — ${phrase(periode)}` : ""}. À lire sur le portail officiel avant toute démarche.`
 : (periode || "Aucune date limite publiée à ce jour — à confirmer sur le portail officiel."),
 verifie
 };
@@ -729,7 +752,7 @@ const mention = variable ? ` La date limite dépend ${variable}.` : "";
 // Le point avant la mention : sans lui, « … octobre-novembre La date
 // limite dépend … » se lisait d'une traite.
 const suite = (periode
-? `Réouverture attendue : ${periode}.`
+? `Réouverture attendue : ${phrase(periode)}.`
 : "Prochaine ouverture non annoncée — à surveiller sur le portail officiel.") + mention;
 
 if (derniere) {
