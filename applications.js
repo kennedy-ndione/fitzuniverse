@@ -68,6 +68,10 @@ import { chargerCatalogue } from "./js/catalog-data.js";
 // bouton qu'il clique lui-même.
 import { indexerCatalogue, lierCandidature, etatDeLaCandidature } from "./js/candidature-catalogue.js";
 import { formaterDate } from "./js/echeance.js";
+// Passe 3/3 : `exigences` (99 bourses) trouve enfin un destinataire.
+// Vocabulaire et libellés dans js/exigences.js — jamais deux façons de
+// dire la même exigence.
+import { lireExigences, groupees, elementsAAjouter } from "./js/exigences.js";
 
 initShellChrome();
 
@@ -253,10 +257,111 @@ ${calibration ? `<span class="checklist-calibration ${calibration.ok ? "is-ok" :
 
 }
 
-function renderChecklistSection(app) {
+// ==========================================================
+// CE QUE LA BOURSE EXIGE (passe espace étudiant 3/3, 2026-09-06)
+// ==========================================================
+// `exigences` était renseigné sur 99 bourses et lu par personne. Le
+// vocabulaire et les libellés vivent dans js/exigences.js — un seul
+// endroit, pour que la fiche publique et l'espace disent la même chose.
+//
+// RÈGLE DES TROIS VALEURS : une bourse sans le champ (57 sur 156)
+// n'affiche RIEN. Pas de bloc vide, pas de « aucune exigence » — une
+// bourse dont personne n'a relevé les exigences n'est pas une bourse
+// sans exigences.
+
+/**
+* Le bloc le plus utile de cette passe : sur 27 bourses, l'étudiant NE
+* DÉPOSE PAS son dossier lui-même. Sans cette phrase, il peut surveiller
+* pendant des mois l'ouverture d'un portail qui ne le concerne pas.
+*
+* Ton informatif, jamais alarmant : ce n'est pas une mauvaise nouvelle,
+* c'est une démarche différente — et savoir laquelle fait gagner du
+* temps.
+*/
+function renderExigences(lecture) {
+
+if (!lecture || !lecture.lie || !lecture.bourse) return "";
+
+const codes = lireExigences(lecture.bourse);
+
+if (!codes.length) return "";
+
+const g = groupees(codes);
+
+const voie = g.voie.length
+? `
+<div class="app-exigence-voie">
+<i data-lucide="users"></i>
+<div>
+<strong>Vous ne déposez pas ce dossier vous-même.</strong>
+${g.voie.map((e) => `<p>${escapeHtml(e.explication)}</p>`).join("")}
+</div>
+</div>`
+: "";
+
+const ordre = g.ordre.length
+? `
+<p class="app-exigence-ordre">
+<i data-lucide="arrow-right-circle"></i>
+<span>${escapeHtml(g.ordre[0].explication)}</span>
+</p>`
+: "";
+
+// Conditions et pièces : une liste sobre. Ce ne sont pas des cases à
+// cocher — traiter une condition d'éligibilité comme une tâche
+// laisserait croire qu'on peut la « faire ».
+const reste = [...g.condition, ...g.piece];
+
+const liste = reste.length
+? `
+<div class="app-exigence-liste">
+<span class="app-exigence-titre">Ce que cette bourse exige</span>
+<ul>
+${reste.map((e) => `<li><strong>${escapeHtml(e.libelle)}</strong><span>${escapeHtml(e.explication)}</span></li>`).join("")}
+</ul>
+</div>`
+: "";
+
+if (!voie && !ordre && !liste) return "";
+
+return `<div class="app-exigences">${voie}${ordre}${liste}</div>`;
+
+}
+
+/**
+* La suggestion de dossier — SUGGÉRER, JAMAIS ÉCRIRE.
+*
+* Même doctrine que la date limite de la passe 1 : le dossier appartient
+* à l'étudiant. On dit ce que la bourse demande, et c'est SON clic qui
+* écrit. Le bouton ne propose que ce qui manque, et disparaît quand il
+* n'y a plus rien à ajouter.
+*/
+function renderSuggestionDossier(app, lecture) {
+
+if (!lecture || !lecture.lie || !lecture.bourse) return "";
+
+const aAjouter = elementsAAjouter(lireExigences(lecture.bourse), app.checklist);
+
+if (!aAjouter.length) return "";
+
+const noms = aAjouter.map((e) => e.label.toLowerCase()).join(", ");
+
+return `
+<div class="app-exigence-suggestion">
+<i data-lucide="list-plus"></i>
+<p>Cette bourse demande : ${escapeHtml(noms)}.</p>
+<button type="button" class="app-exigence-ajouter" data-ajouter-dossier="${escapeHtml(app.id)}">
+<i data-lucide="plus"></i><span>Ajouter à mon dossier</span>
+</button>
+</div>`;
+
+}
+
+function renderChecklistSection(app, lecture) {
 
 const checklist = Array.isArray(app.checklist) ? app.checklist : [];
 const { completed, total } = checklistScore(checklist);
+const suggestion = renderSuggestionDossier(app, lecture);
 
 const groups = Object.keys(CHECKLIST_TYPE_META).map((type) => {
 
@@ -279,10 +384,19 @@ return `
 <div class="app-checklist">
 <button type="button" class="app-checklist-toggle" data-action="toggle-checklist">
 <span><i data-lucide="clipboard-list"></i>Dossier de candidature</span>
-${total > 0 ? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>` : `<span class="app-checklist-score is-empty">Ajouter les exigences de cette bourse</span>`}
+${total > 0
+? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>`
+// L'état vide disait « Ajouter les exigences de cette bourse » sans
+// jamais dire LESQUELLES. Quand le catalogue les connaît, la
+// suggestion ci-dessous les nomme — l'invite générique n'a plus lieu
+// d'être.
+: suggestion
+? `<span class="app-checklist-score is-empty">Fitz connaît les exigences de cette bourse</span>`
+: `<span class="app-checklist-score is-empty">Ajouter les exigences de cette bourse</span>`}
 <i data-lucide="chevron-down" class="app-checklist-chevron"></i>
 </button>
 <div class="checklist-groups" hidden>
+${suggestion}
 ${groups}
 <a href="documents.html" class="checklist-guide-link"><i data-lucide="library"></i><span>Voir la bibliothèque de documents (passeport, diplôme, CV...)</span></a>
 </div>
@@ -835,6 +949,11 @@ return {
 ...pick,
 programId,
 etat,
+// Passe 3/3 : de quoi dire, AVANT d'ouvrir un créneau, qu'une bourse
+// ne se dépose pas soi-même. Seuls les codes « voie » et l'ordre
+// d'admission sont retenus ici — le reste appartient à la carte, une
+// fois la candidature créée.
+exigences: lecture && lecture.bourse ? lireExigences(lecture.bourse) : [],
 country: uni.country || "",
 deadlineText: pick.deadline || "",
 // Pré-remplissage du champ date UNIQUEMENT quand l'état dit le cycle
@@ -919,6 +1038,27 @@ if (entry) selectPickerEntry(entry);
 
 }
 
+// CE QU'ON DOIT SAVOIR AVANT D'OUVRIR UN CRÉNEAU (passe 3/3)
+//
+// Une bourse qu'on ne dépose pas soi-même, ça se sait AVANT — pas après
+// avoir consommé un créneau de sa formule. On ne montre ici que les
+// deux faits qui changent la démarche : la voie de dépôt, et l'ordre
+// admission/bourse. Le détail complet attend la carte.
+function lignePreDepot(entry) {
+
+const g = groupees(entry.exigences || []);
+
+const bouts = [];
+
+if (g.voie.length) bouts.push(g.voie[0].libelle);
+if (g.ordre.length) bouts.push(g.ordre[0].libelle);
+
+if (!bouts.length) return "";
+
+return `<li class="apps-selection-depot"><i data-lucide="users"></i><span>${escapeHtml(bouts.join(" · "))}</span></li>`;
+
+}
+
 function selectPickerEntry(entry) {
 
 pickedEntry = entry;
@@ -950,6 +1090,7 @@ pickerSummary.innerHTML = `
 <ul class="apps-selection-facts">
 ${entry.applicationUrl ? `<li><i data-lucide="link"></i><span>Portail officiel de candidature renseigné automatiquement</span></li>` : ""}
 ${entry.etat ? `<li class="apps-selection-etat is-${escapeHtml(entry.etat.ton)}"><i data-lucide="calendar-check"></i><span><strong>${escapeHtml(entry.etat.etiquette)} : ${escapeHtml(entry.etat.valeur)}</strong>${entry.etat.detail ? ` — ${escapeHtml(entry.etat.detail)}` : ""}${entry.etat.verifie ? ` (${escapeHtml(entry.etat.verifie)})` : ""}</span></li>` : ""}
+${lignePreDepot(entry)}
 ${entry.deadlineText ? `<li><i data-lucide="calendar-clock"></i><span>Échéance du catalogue : ${escapeHtml(entry.deadlineText)}${entry.deadlineISO ? " — date limite pré-remplie" : ""}</span></li>` : ""}
 ${entry.reasons && entry.reasons.length ? `<li><i data-lucide="target"></i><span>${escapeHtml(entry.reasons[0])}</span></li>` : ""}
 </ul>`;
@@ -1097,6 +1238,8 @@ ${app.premiumProtected ? `<span class="is-protected"><i data-lucide="shield-chec
 
 ${renderDivergence(app, lecture)}
 
+${renderExigences(lecture)}
+
 ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 
 <div class="app-card-documents">
@@ -1120,7 +1263,7 @@ ${app.generatedEmail
 : `<span>Fitz peut rédiger un e-mail pour cette candidature.</span><a href="ai-email.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
 </div>
 
-${renderChecklistSection(app)}
+${renderChecklistSection(app, lecture)}
 
 ${renderReadinessPanel(app, advisorUnlocked)}
 
@@ -1164,6 +1307,39 @@ await loadApplications();
 } catch (error) {
 console.error("Impossible de reprendre la date du catalogue :", error);
 showToast("La date n'a pas pu être mise à jour — réessayez dans un instant.", { type: "error" });
+btn.disabled = false;
+}
+
+});
+
+// SUGGÉRER, JAMAIS ÉCRIRE — le seul chemin par lequel une exigence du
+// catalogue entre dans le dossier de l'étudiant est ce clic. Même
+// doctrine que le bouton « Reprendre la date » de la passe 1.
+card.querySelector("[data-ajouter-dossier]")?.addEventListener("click", async (event) => {
+
+const btn = event.currentTarget;
+const aAjouter = lecture && lecture.lie && lecture.bourse
+? elementsAAjouter(lireExigences(lecture.bourse), app.checklist)
+: [];
+
+if (!aAjouter.length) return;
+
+btn.disabled = true;
+
+const nouveaux = aAjouter.map((e) => ({
+id: makeChecklistItemId(),
+type: e.type,
+label: e.label,
+status: "manquant",
+meta: {}
+}));
+
+try {
+await saveChecklist(app, [...(Array.isArray(app.checklist) ? app.checklist : []), ...nouveaux], "exigences_catalogue");
+showToast(`${nouveaux.length} élément${nouveaux.length > 1 ? "s" : ""} ajouté${nouveaux.length > 1 ? "s" : ""} à votre dossier.`, { type: "success" });
+} catch (error) {
+console.error("Impossible d'ajouter les exigences au dossier :", error);
+showToast("Ces éléments n'ont pas pu être ajoutés — réessayez dans un instant.", { type: "error" });
 btn.disabled = false;
 }
 

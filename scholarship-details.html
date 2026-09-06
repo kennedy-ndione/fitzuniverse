@@ -282,6 +282,23 @@ css/base.css applique à tout <section> est déjà neutralisé par
 <p id="generalCriteria"></p>
 </section>
 
+<!-- Comment cette bourse se demande (passe espace étudiant 3/3,
+2026-09-06). Le champ `exigences` est renseigné sur 99 bourses sur 156
+et n'était lu nulle part. Sur 27 d'entre elles, l'étudiant NE DÉPOSE PAS
+son dossier lui-même — c'est le fait le plus utile de toute la fiche, et
+il n'apparaissait pas.
+
+PUBLIC, comme le reste de cette page : ce sont des faits, pas un
+service. La doctrine du verrou abonné ne porte que sur les portails
+(voir le bloc « Votre situation face à cette bourse » plus bas).
+
+RÈGLE DES TROIS VALEURS : la section reste hidden pour les 57 bourses
+sans le champ — pas de bloc vide, pas de « aucune exigence ». -->
+<section class="details-section" id="exigencesSection" hidden>
+<h2>Comment cette bourse se demande</h2>
+<div id="exigencesContent"></div>
+</section>
+
 <!-- « Votre situation face à cette bourse » (2026-08-31) — RÉSERVÉ AUX
 ABONNÉS, et invisible autrement : pour un visiteur, cette section
 n'existe pas. Pas de titre, pas d'aperçu, pas de cadenas — la règle

@@ -743,3 +743,46 @@ padding-left: 10px;
 border-left: 2px solid var(--border-color, #e5e1d9);
 color: var(--text-muted, #6b6257);
 }
+
+/* ==========================================================
+   COMMENT CETTE BOURSE SE DEMANDE (passe 3/3, 2026-09-06)
+   ==========================================================
+   Le champ `exigences` (99 bourses sur 156) trouve enfin un lecteur.
+   Cinq formes, une seule qui change vraiment la démarche : la voie de
+   dépôt, quand l'étudiant ne dépose pas lui-même (27 bourses).
+   Libellés et explications viennent de js/exigences.js — jamais deux
+   façons de dire la même exigence.
+   ========================================================== */
+.details-exigence{
+padding:12px 0;
+border-bottom:1px solid var(--border-color);
+}
+.details-exigence:last-child{border-bottom:none;padding-bottom:0;}
+.details-exigence:first-child{padding-top:0;}
+
+.details-exigence strong{
+display:block;
+margin-bottom:4px;
+font-family:var(--font-display);
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+
+.details-exigence p{
+margin:0;
+font-size:var(--fs-small);
+color:var(--text-muted);
+}
+
+/* La voie de dépôt d'abord, et signalée : c'est elle qui décide de ce
+   que l'étudiant doit surveiller. Ambre, jamais rouge — on informe. */
+.details-exigence--voie{
+padding:12px 14px;
+margin-bottom:12px;
+border:1px solid var(--amber-500);
+border-bottom:1px solid var(--amber-500);
+border-radius:var(--radius-sm);
+background:var(--warning-50);
+}
+.details-exigence--voie strong{color:var(--amber-700);}
+.details-exigence--voie p{color:var(--text-color);}

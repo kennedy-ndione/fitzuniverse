@@ -411,3 +411,47 @@ test("PONCTUATION — une période rendue SEULE garde son texte intact", () => {
   assert.equal(r.detail, "Dossier examiné à réception.");
 
 });
+
+test("PONCTUATION — une période rendue SEULE termine sa phrase (branche « ouverte »)", () => {
+
+  // 9 bourses affichaient un detail qui s'arrêtait dans le vide, mesuré
+  // le 2026-09-06 : « … suit les trois sessions d'admission de KAIST ».
+  // La période n'était pas cousue dans une phrase, elle ÉTAIT la phrase,
+  // et rien ne la terminait.
+  const r = etatCandidature({
+    statut: "Ouverte",
+    periodeOuverture: "Le calendrier suit les trois sessions d'admission de KAIST"
+  }, LE_JOUR);
+
+  assert.equal(r.detail, "Le calendrier suit les trois sessions d'admission de KAIST.");
+
+});
+
+test("PONCTUATION — une période SEULE déjà ponctuée ne gagne pas un second point", () => {
+
+  const avec = etatCandidature({ statut: "Ouverte", periodeOuverture: "Sessions d'admission de KAIST." }, LE_JOUR);
+  const sans = etatCandidature({ statut: "Ouverte", periodeOuverture: "Sessions d'admission de KAIST" }, LE_JOUR);
+
+  assert.equal(avec.detail, sans.detail);
+  assert.ok(!ponctuationDouble(avec.detail));
+
+});
+
+test("PONCTUATION — une période SEULE finissant par une parenthèse reste lisible", () => {
+
+  const r = etatCandidature({
+    statut: "Ouverte",
+    periodeOuverture: "Ouverture en septembre (à recouper sur le bando)"
+  }, LE_JOUR);
+
+  assert.equal(r.detail, "Ouverture en septembre (à recouper sur le bando).");
+
+});
+
+test("PONCTUATION — sans période, le texte de repli reste celui d'avant", () => {
+
+  const r = etatCandidature({ statut: "Ouverte" }, LE_JOUR);
+
+  assert.match(r.detail, /Aucune date limite publiée à ce jour/);
+
+});

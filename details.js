@@ -28,6 +28,7 @@ import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits
 // fonction qui explique les recommandations du tableau de bord, et
 // createApplicationFromRecommendation la même écriture que le bouton
 // « Candidater » — jamais une seconde façon de faire la même chose.
+import { lireExigences, groupees, ORDRE_FORMES } from "./js/exigences.js";
 import { explainMatch } from "./js/recommend-programs.js";
 import { createApplicationFromRecommendation } from "./js/application-actions.js";
 import { isQuotaReached } from "./js/plan-features.js";
@@ -315,6 +316,56 @@ const t = (texte || "").trim();
 if (!sectionEl || !texteEl || !t) return;
 
 texteEl.textContent = t;
+sectionEl.hidden = false;
+
+}
+
+// « Comment cette bourse se demande » — le champ `exigences`, lu par le
+// même module que l'espace connecté (js/exigences.js) pour que la fiche
+// publique et la carte de candidature disent EXACTEMENT la même chose de
+// la même bourse.
+//
+// La voie de dépôt passe en premier et en gras : sur 27 bourses,
+// l'étudiant ne dépose pas lui-même, et l'ignorer lui fait surveiller un
+// portail qui ne le concerne pas.
+//
+// Règle des trois valeurs : sans exigence exploitable, la section reste
+// hidden. Un code inconnu est écarté par lireExigences(), jamais rendu
+// brut sur une page publique.
+function afficherExigences(bourse, sectionEl, contenuEl) {
+
+if (!sectionEl || !contenuEl) return;
+
+const codes = lireExigences(bourse);
+
+if (!codes.length) return;
+
+const g = groupees(codes);
+
+contenuEl.innerHTML = "";
+
+for (const forme of ORDRE_FORMES) {
+
+for (const e of g[forme]) {
+
+const bloc = document.createElement("div");
+bloc.className = `details-exigence details-exigence--${forme}`;
+
+const titre = document.createElement("strong");
+titre.textContent = e.libelle;
+
+const texte = document.createElement("p");
+// textContent, jamais innerHTML : ces libellés sont des constantes du
+// code, mais la règle de cette page ne souffre pas d'exception.
+texte.textContent = e.explication;
+
+bloc.append(titre, texte);
+contenuEl.append(bloc);
+
+}
+
+}
+
 sectionEl.hidden = false;
 
 }
@@ -779,6 +830,9 @@ funderName: scholarshipData.funderName || "",
 entryPoint: scholarshipData.entryPoint || "",
 scholarshipWebsite: scholarshipData.officialWebsite || "",
 generalCriteria: scholarshipData.generalCriteria || "",
+// Les exigences de dépôt, portées par la BOURSE. Tableau absent =
+// inconnu : lireExigences() rendra [] et la section restera masquée.
+exigences: Array.isArray(scholarshipData.exigences) ? scholarshipData.exigences : null,
 // Limite d'âge de la bourse (2026-08-30) — même règle des trois
 // valeurs : ageMax absent reste null, un inconnu, jamais « pas de
 // limite » (voir js/age-limits.js).
@@ -869,6 +923,8 @@ if (scholarship) scholarship.textContent = university.scholarship || "";
 if (description) description.textContent = university.description || "Aucune description disponible.";
 
 afficherCriteresGeneraux(university.generalCriteria, criteriaSection, generalCriteriaEl);
+
+afficherExigences(university, document.getElementById("exigencesSection"), document.getElementById("exigencesContent"));
 
 if (securityNotice && securityNoticeText && university.securityNotice) {
 securityNoticeText.textContent = university.securityNotice;

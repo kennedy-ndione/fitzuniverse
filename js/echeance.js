@@ -685,7 +685,7 @@ return {
 ouvert: true, ton: "ouverte", jours: null,
 badge: "Candidatures au fil de l'eau",
 etiquette: "Candidatures", valeur: "Sans date limite",
-detail: periode || "Le dossier s'examine à réception, à confirmer sur le portail officiel.",
+detail: phraseSeule(periode) || "Le dossier s'examine à réception, à confirmer sur le portail officiel.",
 verifie
 };
 }
@@ -723,7 +723,7 @@ etiquette: "Date limite",
 valeur: variable ? (e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement") : "Non publiée",
 detail: variable
 ? `La date limite dépend ${variable}${periode ? ` — ${phrase(periode)}` : ""}. À lire sur le portail officiel avant toute démarche.`
-: (periode || "Aucune date limite publiée à ce jour — à confirmer sur le portail officiel."),
+: (phraseSeule(periode) || "Aucune date limite publiée à ce jour — à confirmer sur le portail officiel."),
 verifie
 };
 }
@@ -732,10 +732,29 @@ return {
 ouvert: null, ton: "inconnue", jours: null,
 badge: "Calendrier à confirmer",
 etiquette: "Date limite", valeur: "À confirmer",
-detail: periode || "Le calendrier de cette bourse n'est pas publié — à confirmer sur le portail officiel.",
+detail: phraseSeule(periode) || "Le calendrier de cette bourse n'est pas publié — à confirmer sur le portail officiel.",
 verifie
 };
 
+}
+
+/**
+* La période rendue SEULE — elle EST la phrase, alors elle doit se
+* terminer comme une phrase.
+*
+* Mesure du 2026-09-06 : 9 bourses affichaient un `detail` qui s'arrêtait
+* dans le vide (« … suit les trois sessions d'admission de KAIST »),
+* parce que le gabarit n'ajoutait rien et que la note, écrite à la main,
+* n'était pas ponctuée. phrase() retire ce qui traîne, ce point-ci
+* termine — exactement ce que fait ferme() depuis le même jour.
+*
+* Une note déjà ponctuée ressort identique : on ne double jamais le
+* point. Une note vide reste vide, pour que le `||` de l'appelant fasse
+* son office.
+*/
+function phraseSeule(texte) {
+const t = phrase(texte);
+return t ? `${t}.` : "";
 }
 
 /**

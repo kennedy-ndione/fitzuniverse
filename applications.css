@@ -1010,3 +1010,108 @@ cursor:pointer;
 .apps-pick-deadline.is-close{color:var(--text-muted);}
 .apps-pick-deadline.is-attente{color:var(--amber-700);}
 .apps-pick-deadline.is-ouverte{color:var(--success-700);}
+
+/* ==========================================================
+   CE QUE LA BOURSE EXIGE (passe espace étudiant 3/3, 2026-09-06)
+   ==========================================================
+   `exigences` était renseigné sur 99 bourses et lu par personne. Le
+   bloc le plus important est le premier : sur 27 bourses, l'étudiant ne
+   dépose pas son dossier lui-même. Ton informatif — ce n'est pas une
+   mauvaise nouvelle, c'est une démarche différente.
+   ========================================================== */
+.app-exigences{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin:0 0 14px;
+}
+
+/* La voie de dépôt : encadré, parce qu'il change la nature de ce que
+   l'étudiant doit surveiller. Ambre et non rouge : on informe. */
+.app-exigence-voie{
+display:flex;
+gap:10px;
+padding:12px 14px;
+border:1px solid var(--amber-500);
+border-radius:var(--radius-sm);
+background:var(--warning-50);
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+.app-exigence-voie > i,
+.app-exigence-voie > svg{width:17px;height:17px;flex-shrink:0;color:var(--amber-700);margin-top:1px;}
+.app-exigence-voie strong{display:block;margin-bottom:4px;}
+.app-exigence-voie p{margin:0;color:var(--text-muted);}
+.app-exigence-voie p + p{margin-top:6px;}
+
+.app-exigence-ordre{
+display:flex;
+align-items:flex-start;
+gap:8px;
+margin:0;
+font-size:var(--fs-small);
+color:var(--text-muted);
+}
+.app-exigence-ordre i,
+.app-exigence-ordre svg{width:15px;height:15px;flex-shrink:0;color:var(--amber-700);margin-top:2px;}
+
+/* Conditions et pièces : une liste sobre, jamais des cases à cocher —
+   on ne « fait » pas une condition d'éligibilité. */
+.app-exigence-liste{
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+padding:12px 14px;
+background:var(--background-soft);
+}
+.app-exigence-titre{
+display:block;
+margin-bottom:8px;
+font-size:var(--fs-caption);
+font-weight:700;
+letter-spacing:.02em;
+text-transform:uppercase;
+color:var(--text-light);
+}
+.app-exigence-liste ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;}
+.app-exigence-liste li{font-size:var(--fs-small);color:var(--text-color);}
+.app-exigence-liste li strong{display:block;}
+.app-exigence-liste li span{color:var(--text-muted);}
+
+/* La suggestion de dossier : SUGGÉRER, JAMAIS ÉCRIRE. Le bouton est le
+   seul chemin par lequel une exigence entre dans le dossier. */
+.app-exigence-suggestion{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px 14px;
+margin-bottom:14px;
+padding:10px 14px;
+border:1px dashed var(--amber-500);
+border-radius:var(--radius-sm);
+background:var(--background);
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+.app-exigence-suggestion > i,
+.app-exigence-suggestion > svg{width:16px;height:16px;flex-shrink:0;color:var(--amber-700);}
+.app-exigence-suggestion p{margin:0;flex:1 1 220px;}
+.app-exigence-ajouter{
+display:inline-flex;
+align-items:center;
+gap:6px;
+min-height:36px;
+padding:6px 14px;
+border:1px solid var(--amber-700);
+border-radius:var(--radius-xs);
+background:transparent;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--amber-700);
+cursor:pointer;
+}
+.app-exigence-ajouter:hover,
+.app-exigence-ajouter:focus-visible{background:var(--amber-500);color:var(--primary-900);}
+.app-exigence-ajouter[disabled]{opacity:.6;cursor:default;}
+
+/* Le sélecteur : la voie de dépôt, dite avant d'ouvrir un créneau. */
+.apps-selection-facts .apps-selection-depot span{font-weight:700;color:var(--amber-700);}

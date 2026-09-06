@@ -37,6 +37,7 @@ import { fileURLToPath } from "node:url";
 import { couperLeReseau } from "./hors-ligne.mjs";
 import { indexerCatalogue, etatDeLaCandidature, normaliserTitre } from "../../js/candidature-catalogue.js";
 import { etatCandidature } from "../../js/echeance.js";
+import { lireExigences, deposeParUnTiers, elementsAAjouter } from "../../js/exigences.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -88,6 +89,14 @@ function preparer() {
     return freres.length === 1 && index.bourseParTitreNorm.has(normaliserTitre(titre));
   });
 
+  // TÉMOINS DE LA PASSE 3/3 — choisis dans le catalogue réel :
+  //   voie   : une bourse que l'étudiant NE DÉPOSE PAS lui-même (27 au
+  //            catalogue). Elle doit afficher le bloc qui le dit.
+  //   nue    : une bourse SANS `exigences` (57 au catalogue). Elle ne
+  //            doit afficher AUCUN bloc — règle des trois valeurs.
+  const avecVoie = lectures.find((x) => deposeParUnTiers(lireExigences(x.lecture.bourse)));
+  const nue = lectures.find((x) => lireExigences(x.lecture.bourse).length === 0);
+
   const commun = {
     status: "a_preparer",
     reminderFrequency: 14,
@@ -132,6 +141,30 @@ function preparer() {
     });
   }
 
+  if (avecVoie) {
+    applications.push({
+      ...commun,
+      id: "slot-4",
+      university: uniParId.get(avecVoie.p.universityId).name,
+      scholarship: avecVoie.lecture.bourse.title,
+      scholarshipId: avecVoie.p.scholarshipId,
+      programId: avecVoie.p.id,
+      deadline: null
+    });
+  }
+
+  if (nue) {
+    applications.push({
+      ...commun,
+      id: "slot-5",
+      university: uniParId.get(nue.p.universityId).name,
+      scholarship: nue.lecture.bourse.title,
+      scholarshipId: nue.p.scholarshipId,
+      programId: nue.p.id,
+      deadline: null
+    });
+  }
+
   applications.push({
     ...commun,
     id: "slot-3",
@@ -171,7 +204,10 @@ function preparer() {
     }).badge);
   }
 
-  return { index, applications, userData, clos, ouvert, dateDecalee, badgeParTitre, totalBourses: brut.scholarships.length };
+  return { index, applications, userData, clos, ouvert, dateDecalee, badgeParTitre, avecVoie, nue,
+    totalBourses: brut.scholarships.length,
+    totalVoie: brut.scholarships.filter((b) => deposeParUnTiers(lireExigences(b))).length,
+    totalSansExigence: brut.scholarships.filter((b) => lireExigences(b).length === 0).length };
 
 }
 
@@ -257,6 +293,16 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
             liee: !!carte("slot-3")?.querySelector(".app-echeance"),
             texte: texte(carte("slot-3")?.querySelector(".app-card-meta"))
           },
+          // PASSE 3/3 — les exigences
+          voie: {
+            bloc: !!carte("slot-4")?.querySelector(".app-exigence-voie"),
+            texte: texte(carte("slot-4")?.querySelector(".app-exigence-voie"))
+          },
+          nue: {
+            present: !!carte("slot-5"),
+            blocs: carte("slot-5") ? carte("slot-5").querySelectorAll(".app-exigences, .app-exigence-suggestion").length : -1
+          },
+          suggestions: [...document.querySelectorAll("[data-ajouter-dossier]")].map((b) => b.dataset.ajouterDossier),
           ecritures: (window.__harnaisEcritures || []).map((e) => ({ op: e.op, chemin: e.chemin, cles: Object.keys(e.data || {}) }))
         };
 
@@ -286,6 +332,45 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         }
         notes.push(`slot-2 ouvert (${cible.ouvert.p.id}) : clé écrite par rattrapage, bouton vers le ${cible.ouvert.lecture.dateCatalogue}`);
       }
+
+      // ---- PASSE 3/3 : les exigences ----
+      //
+      // Chaque assertion « aucun X » commence par affirmer qu'il y avait
+      // bien quelque chose à examiner : le contrôle « aucune bourse close
+      // suggérée » de la passe 1 passait au vert parce que l'ensemble
+      // était vide (leçon du 2026-09-06).
+
+      if (!cible.avecVoie) {
+        notes.push("aucune bourse « déposée par un tiers » dans le catalogue — contrôle sauté.");
+      } else {
+        notes.push(`témoin voie : ${cible.avecVoie.lecture.bourse.title.slice(0, 40)} (${cible.totalVoie} bourses concernées au catalogue)`);
+        if (!vu.voie.bloc) {
+          anomalies.push(`slot-4 : la bourse « ${cible.avecVoie.lecture.bourse.title.slice(0, 46)} » ne se dépose pas par l'étudiant, et la carte ne le dit pas.`);
+        } else if (!/ne déposez pas/i.test(vu.voie.texte)) {
+          anomalies.push(`slot-4 : bloc présent mais muet — « ${vu.voie.texte.slice(0, 80)} »`);
+        }
+      }
+
+      if (!cible.nue) {
+        notes.push("aucune bourse sans exigences dans le catalogue — contrôle sauté.");
+      } else {
+        notes.push(`témoin sans exigence : ${cible.nue.lecture.bourse.title.slice(0, 40)} (${cible.totalSansExigence} bourses sans le champ)`);
+        if (!vu.nue.present) {
+          anomalies.push("slot-5 : la candidature témoin « sans exigences » est absente.");
+        } else if (vu.nue.blocs !== 0) {
+          anomalies.push(`slot-5 : ${vu.nue.blocs} bloc(s) d'exigences affiché(s) pour une bourse SANS le champ — la règle des trois valeurs est violée.`);
+        }
+      }
+
+      // Le bouton « Ajouter à mon dossier » n'écrit RIEN tant qu'il n'est
+      // pas cliqué : on le vérifie sur le journal d'écritures, pas sur
+      // l'apparence.
+      const ecrituresChecklist = vu.ecritures.filter((e) => e.cles.includes("checklist"));
+      if (ecrituresChecklist.length) {
+        anomalies.push(`${ecrituresChecklist.length} écriture(s) de checklist SANS clic : ${ecrituresChecklist.map((e) => e.chemin).join(", ")}`);
+      }
+
+      notes.push(`suggestions de dossier proposées : ${vu.suggestions.length ? vu.suggestions.join(", ") : "aucune"}`);
 
       // LA règle : aucune écriture de `deadline` sans clic.
       const deadlines = vu.ecritures.filter((e) => e.cles.includes("deadline") && e.op !== "set");
@@ -317,6 +402,61 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
         if (ecrite) notes.push(`clic « Reprendre » : deadline ${ecrite.deadline} écrite sur ${ecrite.chemin.split("/").pop()} — et seulement là`);
 
+      }
+
+      // ---- Le clic « Ajouter à mon dossier » : et LÀ, ça écrit ----
+      //
+      // L'autre moitié de la preuve. Vérifier qu'on n'écrit pas sans clic
+      // ne vaut que si l'on montre aussi que le clic, lui, écrit — sinon
+      // un bouton mort passerait le contrôle haut la main.
+      if (vu.suggestions.length) {
+
+        const cible2 = vu.suggestions[0];
+
+        // La suggestion vit DANS la section « Dossier de candidature »,
+        // repliée par défaut. L'étudiant l'ouvre avant de cliquer ; le
+        // harnais fait pareil, sinon il testerait un bouton que personne
+        // ne peut atteindre. C'est aussi ce qui justifie le libellé
+        // « Fitz connaît les exigences de cette bourse » sur l'en-tête
+        // replié : sans lui, rien n'inviterait à ouvrir.
+        await page.click(`#${cible2} [data-action="toggle-checklist"]`);
+        await page.waitForSelector(`#${cible2} [data-ajouter-dossier]`, { state: "visible", timeout: 10000 });
+
+        await page.click(`#${cible2} [data-ajouter-dossier]`);
+
+        await page.waitForFunction(
+          () => (window.__harnaisEcritures || []).some((e) => "checklist" in (e.data || {})),
+          null,
+          { timeout: 10000 }
+        ).catch(() => anomalies.push("Le clic « Ajouter à mon dossier » n'a rien écrit."));
+
+        const ecrit = await page.evaluate(() => {
+          const e = (window.__harnaisEcritures || []).find((x) => "checklist" in (x.data || {}));
+          return e ? { chemin: e.chemin, items: (e.data.checklist || []).map((i) => ({ type: i.type, status: i.status, label: i.label })) } : null;
+        });
+
+        if (ecrit) {
+
+          if (!ecrit.chemin.endsWith(`/applications/${cible2}`)) {
+            anomalies.push(`Le clic a écrit sur ${ecrit.chemin} au lieu de ${cible2}.`);
+          }
+
+          if (!ecrit.items.length) {
+            anomalies.push("Le clic a écrit une checklist VIDE.");
+          }
+
+          const mauvais = ecrit.items.filter((i) => i.status !== "manquant");
+          if (mauvais.length) anomalies.push(`${mauvais.length} élément(s) ajouté(s) avec un statut autre que « manquant ».`);
+
+          const horsType = ecrit.items.filter((i) => !["recommendation", "language_test", "financial_proof"].includes(i.type));
+          if (horsType.length) anomalies.push(`${horsType.length} élément(s) d'un type inconnu de la checklist.`);
+
+          notes.push(`clic « Ajouter à mon dossier » : ${ecrit.items.map((i) => `${i.label} [${i.status}]`).join(", ")} sur ${cible2}`);
+
+        }
+
+      } else {
+        notes.push("aucune suggestion de dossier parmi les témoins — contrôle du clic sauté.");
       }
 
       // ---- Le sélecteur ne propose plus de porte fermée
