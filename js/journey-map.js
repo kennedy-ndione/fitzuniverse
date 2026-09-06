@@ -141,8 +141,21 @@ const jour = new Date(aujourdhui);
 jour.setHours(0, 0, 0, 0);
 
 return applications
-.filter((app) => !STATUTS_DEPOSES.includes(app.status) && app.deadline)
+.filter((app) => !STATUTS_DEPOSES.includes(app.status))
+// Depuis la passe espace étudiant 1/3 (2026-09-06) : quand la
+// candidature est liée à sa fiche (`app.echeance`, posé par
+// dashboard.js), un cycle CLOS sort du radar — un radar qui compte à
+// rebours vers une porte fermée est pire que vide.
+.filter((app) => !(app.echeance && app.echeance.lie && app.echeance.etat && app.echeance.etat.ouvert === false))
 .map((app) => {
+
+// La date ferme du catalogue d'abord ; sinon (hors catalogue, ou
+// « Selon votre pays ») la date saisie par l'étudiant — calcul
+// d'origine, inchangé.
+const etat = app.echeance && app.echeance.lie ? app.echeance.etat : null;
+if (etat && etat.jours !== null && etat.jours !== undefined) return { app, jours: etat.jours };
+
+if (!app.deadline) return null;
 const cible = new Date(`${app.deadline}T00:00:00`);
 if (Number.isNaN(cible.getTime())) return null;
 cible.setHours(0, 0, 0, 0);

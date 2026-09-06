@@ -682,3 +682,13 @@ border:1px solid var(--border-color);
 .jy-app-deadline{ margin-left:0; width:100%; }
 
 }
+
+/* Passe espace étudiant 1/3 (2026-09-06) : pour une candidature liée
+   au catalogue, la pastille porte `etat.ton` (ouverte / attente / close /
+   inconnue) — plus un calcul local sur la date gelée. Les tons
+   critique / haute / normale restent pour les candidatures hors
+   catalogue. */
+.jy-app-deadline.is-ouverte{ color:var(--success-700); }
+.jy-app-deadline.is-attente{ color:var(--amber-700); }
+.jy-app-deadline.is-close{ color:var(--text-muted); font-weight:600; }
+.jy-app-deadline.is-inconnue{ color:var(--text-light); font-weight:600; }

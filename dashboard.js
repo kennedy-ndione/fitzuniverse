@@ -21,18 +21,26 @@ import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, ST
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
+// Passe espace étudiant 1/3 (2026-09-06) : chaque candidature est reliée
+// à sa fiche du catalogue et porte l'état que la fiche publie
+// (`app.echeance`) — consommé par la prochaine action, le radar et les
+// cartes de dossier. Jamais une écriture.
+import { indexerCatalogue, etatDeLaCandidature } from "./js/candidature-catalogue.js";
 
 // ==========================================================
-// CATALOGUE — un seul chargement pour les deux besoins de la page
-// (compter les opportunités compatibles ET proposer les 3 meilleures).
-// Même jointure et même moteur que applications.js — jamais une
-// deuxième façon de compter (voir js/recommend-programs.js).
+// CATALOGUE — un seul chargement pour les TROIS besoins de la page
+// (compter les opportunités compatibles, proposer les 3 meilleures,
+// et relier les candidatures à leur fiche). Même jointure et même
+// moteur que applications.js — jamais une deuxième façon de compter
+// (voir js/recommend-programs.js).
 // ==========================================================
 async function chargerOpportunites(profile) {
 
 try {
 
 const catalogue = await chargerCatalogue();
+
+const index = indexerCatalogue(catalogue);
 
 const renommer = ({ id, ...reste }) => ({ firestoreId: id, ...reste });
 
@@ -48,12 +56,12 @@ scholarshipsById,
 count: programs.length
 }).filter((m) => m.score > 0);
 
-return { count: matches.length, top: matches.slice(0, 3) };
+return { count: matches.length, top: matches.slice(0, 3), index };
 
 } catch (error) {
 
 console.warn("Impossible de charger les opportunités compatibles :", error);
-return { count: 0, top: [] };
+return { count: 0, top: [], index: null };
 
 }
 
@@ -300,9 +308,20 @@ return;
 
 wrap.innerHTML = enPreparation.map((app) => {
 
+// Candidature liée au catalogue : la pastille porte l'état publié par
+// la fiche (`etat.ton` : ouverte / attente / close / inconnue) — plus
+// jamais « Échéance dans N j » vers un cycle clos. Non liée : le
+// calcul d'origine sur la date saisie, avec tonEcheance().
+let echeance = "";
+
+if (app.echeance && app.echeance.lie && app.echeance.etat) {
+const etat = app.echeance.etat;
+echeance = `<span class="jy-app-deadline is-${etat.ton}" title="${(etat.detail || "").replace(/"/g, "&quot;")}">${etat.etiquette} : ${etat.valeur}</span>`;
+} else {
 const jours = joursRestants(app.deadline, new Date());
-const echeance = jours === null ? "" :
+echeance = jours === null ? "" :
 `<span class="jy-app-deadline is-${tonEcheance(jours)}">${jours < 0 ? `Échéance dépassée de ${Math.abs(jours)} j` : jours === 0 ? "Échéance aujourd'hui" : `Échéance dans ${jours} j`}</span>`;
+}
 
 return `
 <article class="jy-card">
@@ -404,7 +423,7 @@ blocs.push(`
 <ul class="jy-list">
 ${refus.map((app) => `<li><i data-lucide="corner-up-right"></i><span><strong>${app.university || "Candidature"}</strong> — refusée. Un refus dit rarement quelque chose de votre valeur : les taux d'admission des bourses sélectives sont très bas, et votre dossier est déjà prêt à resservir.</span></li>`).join("")}
 </ul>
-<p class="jy-opp-reason"><i data-lucide="sparkles"></i><span>${opportunitesCount > 0 ? `${opportunitesCount} autre${opportunitesCount > 1 ? "s" : ""} opportunité${opportunitesCount > 1 ? "s" : ""} du catalogue correspond${opportunitesCount > 1 ? "ent" : ""} à votre profil — vos lettres, traductions et relevés sont réutilisables tout de suite.` : "Le catalogue s'enrichit chaque semaine — votre dossier déjà constitué est réutilisable tout de suite."}</span></p>
+<p class="jy-opp-reason"><i data-lucide="target"></i><span>${opportunitesCount > 0 ? `${opportunitesCount} autre${opportunitesCount > 1 ? "s" : ""} opportunité${opportunitesCount > 1 ? "s" : ""} du catalogue correspond${opportunitesCount > 1 ? "ent" : ""} à votre profil — vos lettres, traductions et relevés sont réutilisables tout de suite.` : "Le catalogue s'enrichit chaque semaine — votre dossier déjà constitué est réutilisable tout de suite."}</span></p>
 <div class="jy-tools">
 <a href="#phase-opportunites" class="jy-btn"><i data-lucide="compass"></i><span>Voir mes autres opportunités</span></a>
 <a href="applications.html?action=new" class="jy-tool"><i data-lucide="plus"></i><span>Lancer une nouvelle candidature</span></a>
@@ -597,14 +616,19 @@ applications = applicationsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 console.error("Impossible de charger les candidatures :", error);
 }
 
+const opps = await chargerOpportunites(profile);
+
 // Étapes réelles de chaque dossier — calculées UNE fois, réutilisées
-// par la prochaine action, les phases et les cartes.
+// par la prochaine action, les phases et les cartes. Et, depuis la
+// passe 1/3, l'état publié par la fiche du catalogue (`echeance`) :
+// posé AVANT tout rendu, lu par next-action.js, journey-map.js
+// (radar) et renderDossiers. Sans catalogue, `echeance` reste absent
+// et tout se calcule comme avant sur la date saisie.
 applications = applications.map((app) => ({
 ...app,
-etapes: computeJourneySteps(app, { profileScore })
+etapes: computeJourneySteps(app, { profileScore }),
+echeance: opps.index ? etatDeLaCandidature(app, opps.index) : null
 }));
-
-const opps = await chargerOpportunites(profile);
 
 // ---- La carte du voyage ----
 const visaChecklist = userData.visaChecklist || {};

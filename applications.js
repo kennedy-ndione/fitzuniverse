@@ -20,7 +20,7 @@ import { db } from "./firebase-config.js";
 
 import {
 collection,
-addDoc,
+setDoc,
 updateDoc,
 deleteDoc,
 doc,
@@ -37,6 +37,8 @@ import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
 import { showToast } from "./js/ai/toast.js";
 import { computeJourneySteps } from "./js/application-journey.js";
+// Créneaux anti-triche "slot-N" — voir l'en-tête de ce module.
+import { slotIdLibre } from "./js/application-actions.js";
 import { qualifierEtapes, avertissementsPrematures } from "./js/next-action.js";
 // escapeHtml : ces trois chaînes sont des constantes du code, pas de la
 // saisie étudiante — mais elles traversent innerHTML, et une constante
@@ -46,7 +48,100 @@ import { escapeHtml } from "./js/ai/format.js";
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
 
+// Passe espace étudiant 1/3 (2026-09-06) : une candidature est RELIÉE à
+// sa fiche du catalogue (clé `scholarshipId` / `programId`, ou
+// rapprochement exact des titres) et affiche l'état que la fiche
+// publie — etatCandidature(), la seule autorité. La date saisie par
+// l'étudiant n'est JAMAIS écrasée : une divergence s'affiche, avec un
+// bouton qu'il clique lui-même.
+import { indexerCatalogue, lierCandidature, etatDeLaCandidature } from "./js/candidature-catalogue.js";
+import { formaterDate } from "./js/echeance.js";
+
 initShellChrome();
+
+// ==========================================================
+// LE CATALOGUE, INDEXÉ UNE FOIS PAR PAGE (0 lecture Firestore :
+// chargerCatalogue() sert l'instantané statique). Toutes les lectures
+// d'état de cette page passent par cet index.
+// ==========================================================
+let promesseIndex = null;
+
+function indexDuCatalogue() {
+if (!promesseIndex) {
+promesseIndex = chargerCatalogue()
+.then((catalogue) => indexerCatalogue(catalogue))
+.catch((error) => {
+console.warn("Catalogue indisponible : les candidatures s'affichent sans leur état du catalogue.", error);
+promesseIndex = null;
+return null;
+});
+}
+return promesseIndex;
+}
+
+// L'identifiant du programme derrière une recommandation. recommendPrograms
+// (hors périmètre de cette passe) rend universityId + scholarshipId mais
+// pas l'id du programme : on le retrouve sur le catalogue — UN seul
+// programme pour ce couple, ou celui dont la prose d'échéance est
+// exactement celle de la recommandation. Ambigu → null (l'état se
+// calcule alors à l'échelle de la bourse, jamais sur un programme
+// choisi au hasard).
+function programIdPour(programmes, universityId, scholarshipId, deadline) {
+
+if (!universityId || !scholarshipId) return null;
+
+const candidats = programmes.filter((p) => p.universityId === universityId && p.scholarshipId === scholarshipId);
+
+if (candidats.length === 1) return candidats[0].id || candidats[0].firestoreId || null;
+
+const memeProse = candidats.filter((p) => (p.deadline || "") === (deadline || ""));
+
+if (memeProse.length === 1) return memeProse[0].id || memeProse[0].firestoreId || null;
+
+return null;
+
+}
+
+// La ligne d'échéance d'une carte. Candidature liée : l'état publié par
+// la fiche, puis la date propre de l'étudiant si elle diffère.
+// Candidature non liée : rendu d'origine, strictement inchangé.
+function renderEcheanceCandidature(app, lecture) {
+
+if (!lecture || !lecture.lie || !lecture.etat) {
+return app.deadline ? `<span><i data-lucide="calendar"></i>Date limite : ${formatDateFR(app.deadline)}</span>` : "";
+}
+
+const etat = lecture.etat;
+const dateDiffere = app.deadline && lecture.dateCatalogue !== app.deadline;
+
+return `
+<span class="app-echeance is-${etat.ton}">
+<i data-lucide="calendar"></i>
+<span>${escapeHtml(etat.etiquette)} : ${escapeHtml(etat.valeur)}</span>
+${etat.detail ? `<span class="app-echeance-detail">${escapeHtml(etat.detail)}</span>` : ""}
+${etat.verifie ? `<span class="app-echeance-verifie">${escapeHtml(etat.verifie)}</span>` : ""}
+${dateDiffere ? `<span class="app-echeance-votre">Votre date : ${escapeHtml(formatDateFR(app.deadline) || app.deadline)}</span>` : ""}
+</span>`;
+
+}
+
+// Le bloc de divergence — constat, jamais écriture. Le bouton n'existe
+// que lorsqu'une date ferme du catalogue peut être reprise, et seul son
+// clic écrit (voir le gestionnaire dans renderCard).
+function renderDivergence(app, lecture, { bouton = true } = {}) {
+
+const d = lecture && lecture.divergence;
+
+if (!d) return "";
+
+return `
+<div class="app-echeance-alerte" role="status">
+<i data-lucide="alert-triangle"></i>
+<p>${escapeHtml(d.message)}</p>
+${bouton && d.dateCatalogue ? `<button type="button" class="app-echeance-reprendre" data-reprendre-date="${escapeHtml(app.id)}" data-date="${escapeHtml(d.dateCatalogue)}"><i data-lucide="calendar-check"></i><span>Reprendre le ${escapeHtml(formaterDate(d.dateCatalogue))}</span></button>` : ""}
+</div>`;
+
+}
 
 // Depuis le 2026-08-30, l'issue d'une réponse est modélisée (admise /
 // refusée / liste d'attente) : c'est ce qui permet au parcours de
@@ -330,7 +425,7 @@ const snapshot = await getDocs(collection(db, "users", uid, "applications"));
 return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-function renderProtectedReadOnlyState(container, protectedApps) {
+function renderProtectedReadOnlyState(container, protectedApps, index = null) {
 
 container.innerHTML = `
 <div class="alert alert-warning">
@@ -346,6 +441,10 @@ ${protectedApps.map((app) => {
 
 const urgency = urgencyLabel(app);
 
+// Lecture seule (abonnement expiré) : l'état du catalogue s'affiche,
+// la divergence aussi — mais sans bouton, la page ne modifie rien.
+const lecture = index ? etatDeLaCandidature(app, index) : null;
+
 return `
 <article class="card app-card">
 <div class="app-card-top">
@@ -357,10 +456,12 @@ ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : "
 </div>
 
 <div class="app-card-meta">
-${app.deadline ? `<span><i data-lucide="calendar"></i>Date limite : ${formatDateFR(app.deadline)}</span>` : ""}
+${renderEcheanceCandidature(app, lecture)}
 <span class="${urgency.urgent ? "is-urgent" : ""}"><i data-lucide="bell"></i>${urgency.text}</span>
 <span class="is-protected"><i data-lucide="shield-check"></i>Suivi maintenu même après votre abonnement</span>
 </div>
+
+${renderDivergence(app, lecture, { bouton: false })}
 
 ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 
@@ -568,11 +669,26 @@ if (!recommendations.length) return false;
 
 const appsCol = collection(db, "users", uid, "applications");
 
+// Créneaux anti-triche (audit sécurité 2026-09-02) : chaque création
+// prend l'id "slot-N" que firestore.rules borne au quota de la
+// formule — voir l'en-tête de js/application-actions.js. La liste
+// locale grandit à chaque écriture pour que deux recommandations ne
+// visent jamais le même créneau.
+const dejaCreees = [...existingApplications];
+
 for (const rec of recommendations) {
 
-await addDoc(appsCol, {
+const slotId = slotIdLibre(dejaCreees, quota);
+if (!slotId) break;
+
+await setDoc(doc(appsCol, slotId), {
 university: rec.universityName,
 scholarship: rec.scholarshipTitle,
+// La clé vers le catalogue (passe 1/3, 2026-09-06) : c'est elle qui
+// permet à la carte d'afficher l'état publié par la fiche, et à une
+// correction de catalogue d'atteindre la candidature.
+scholarshipId: rec.scholarshipId || null,
+programId: programIdPour(programs, rec.universityId, rec.scholarshipId, rec.deadline),
 // Audit du 2026-08-28 : ces deux champs étaient "" en dur alors que
 // rec porte déjà applicationUrl/universityWebsite (recommend-programs.js)
 // — un créneau suggéré par Fitz n'affichait donc jamais aucun lien tant
@@ -588,6 +704,8 @@ isRecommendation: true,
 nextCheckDate: nextCheckFromToday(14),
 createdAt: serverTimestamp()
 });
+
+dejaCreees.push({ id: slotId });
 
 }
 
@@ -638,6 +756,246 @@ const appsCol = collection(db, "users", uid, "applications");
 let applications = [];
 let editingId = null;
 
+// ==========================================================
+// SÉLECTEUR CATALOGUE (refonte 2026-09-02) — « c'est pas à
+// l'étudiant de remplir des universités auxquelles candidater ni le
+// lien de candidature » : le modal de création ne demande plus de
+// taper quoi que ce soit. Fitz propose les universités du catalogue
+// classées par compatibilité avec le profil (recommendPrograms —
+// exactement les mêmes règles que les créneaux qu'il pré-remplit
+// lui-même : nationalité et âge filtrés en dur, cycle visé, pays
+// souhaités, langue, financement), la recherche couvre tout le
+// catalogue, et la sélection remplit université, bourse, portail
+// officiel, site de l'université et échéance d'un coup.
+//
+// L'enregistrement passe par les MÊMES champs cachés (#fieldUniversity
+// etc.) : un seul chemin de soumission, que la valeur vienne du
+// catalogue ou du repli manuel « hors catalogue ». L'édition d'une
+// candidature existante ouvre directement les champs libres — on ne
+// force jamais un re-choix de catalogue sur un dossier déjà en route.
+// ==========================================================
+const pickerSection = document.getElementById("pickerSection");
+const pickerList = document.getElementById("pickerList");
+const pickerSearch = document.getElementById("pickerSearch");
+const pickerSummary = document.getElementById("pickerSummary");
+const manualFields = document.getElementById("manualFields");
+const detailsSection = document.getElementById("detailsSection");
+const manualModeBtn = document.getElementById("manualModeBtn");
+const saveBtn = document.getElementById("applicationSaveBtn");
+
+let pickerEntries = null;
+let pickedEntry = null;
+let manualMode = false;
+
+async function ensurePickerEntries() {
+
+if (pickerEntries) return pickerEntries;
+
+// Chargeur partagé (js/catalog-data.js) : si seedRecommendedSlots a
+// déjà lu le catalogue sur cette page, cet appel ne coûte rien.
+const catalogueSnap = await chargerCatalogue();
+
+const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestoreId: id, ...reste }));
+const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
+const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
+
+// count: Infinity — on veut TOUT le catalogue éligible, classé. Les
+// bourses fermées à la nationalité ou au-delà de la limite d'âge sont
+// écartées par recommendPrograms (score sentinelle) : Fitz ne propose
+// jamais une porte fermée, même via la recherche.
+const picks = recommendPrograms({
+profile: profile || {},
+programs,
+universitiesById,
+scholarshipsById,
+count: Infinity
+});
+
+// L'état complet de chaque bourse (etatCandidature via le module de
+// liaison), mémoïsé par couple bourse/programme : c'est l'état que la
+// fiche publie, pas une deuxième lecture de la date.
+const index = indexerCatalogue(catalogueSnap);
+const etatsMemo = new Map();
+
+function lectureDe(scholarshipId, programId) {
+const cle = `${scholarshipId}|${programId || ""}`;
+if (!etatsMemo.has(cle)) etatsMemo.set(cle, etatDeLaCandidature({ scholarshipId, programId }, index));
+return etatsMemo.get(cle);
+}
+
+pickerEntries = picks.map((pick) => {
+
+const uni = universitiesById.get(pick.universityId) || {};
+const programId = programIdPour(programs, pick.universityId, pick.scholarshipId, pick.deadline);
+const lecture = pick.scholarshipId ? lectureDe(pick.scholarshipId, programId) : null;
+const etat = lecture && lecture.lie ? lecture.etat : null;
+
+return {
+...pick,
+programId,
+etat,
+country: uni.country || "",
+deadlineText: pick.deadline || "",
+// Pré-remplissage du champ date UNIQUEMENT quand l'état dit le cycle
+// ouvert ET porte un décompte — donc jamais sur une échéance par
+// pays agrégée (« Selon votre pays »), jamais sur « pas encore
+// ouverte », jamais sur un cycle clos. L'ISO vient du même calcul
+// que l'état (dateCatalogue), au format d'un <input type="date">.
+deadlineISO: (etat && etat.ouvert === true && etat.jours !== null && lecture.dateCatalogue) ? lecture.dateCatalogue : ""
+};
+
+});
+
+return pickerEntries;
+
+}
+
+function renderPickerList() {
+
+if (!pickerEntries) return;
+
+const q = (pickerSearch.value || "").trim().toLowerCase();
+
+// Le sélecteur ne propose plus de porte fermée (passe 1/3) :
+//  - « Suggérées pour votre profil » écarte les cycles clos — Fitz ne
+//    propose pas un train déjà parti ;
+//  - la RECHERCHE les garde (un étudiant peut vouloir suivre une bourse
+//    qui rouvrira), avec la pastille honnête et classées après les
+//    ouvertes.
+const estClose = (e) => e.etat && e.etat.ton === "close";
+const rang = (e) => (!e.etat ? 2 : e.etat.ton === "ouverte" ? 0 : e.etat.ton === "attente" ? 1 : e.etat.ton === "close" ? 3 : 2);
+
+const matches = q
+? pickerEntries
+.filter((e) =>
+e.universityName.toLowerCase().includes(q) ||
+(e.country || "").toLowerCase().includes(q) ||
+(e.scholarshipTitle || "").toLowerCase().includes(q))
+.sort((a, b) => rang(a) - rang(b))
+: pickerEntries.filter((e) => !estClose(e));
+
+const shown = matches.slice(0, q ? 12 : 6);
+
+if (!shown.length) {
+pickerList.innerHTML = `<p class="apps-picker-empty">Aucune université du catalogue ne correspond à « ${escapeHtml(q)} ». Si votre candidature est ailleurs, utilisez le lien hors catalogue ci-dessous.</p>`;
+return;
+}
+
+pickerList.innerHTML = (q ? "" : `<p class="apps-picker-label">Suggérées pour votre profil</p>`) + shown.map((e) => {
+
+// La pastille d'échéance porte déjà la date : la raison affichée est
+// la première qui ne la répète pas (l'explication « candidatures
+// ouvertes (échéance : …) » ferait doublon sur la même carte).
+const reason = (e.reasons || []).find((r) => !r.toLowerCase().includes("chéance")) || "";
+
+// La pastille : « Échéance : … » seulement sur une date ferme d'un
+// cycle ouvert ; sinon le badge de l'état (« Candidatures closes »,
+// « pas encore ouvertes », « Selon votre pays »…) — jamais une date
+// sur une porte fermée.
+const deadlineShort = e.deadlineISO
+? `Échéance : ${formatDateFR(e.deadlineISO)}`
+: e.etat ? (e.etat.ton === "ouverte" ? `${e.etat.etiquette} : ${e.etat.valeur}` : e.etat.badge) : e.deadlineText;
+const tonPastille = e.etat ? ` is-${e.etat.ton}` : "";
+
+return `
+<button type="button" class="apps-pick" data-university-id="${escapeHtml(e.universityId)}">
+<span class="apps-pick-main">
+<strong>${escapeHtml(e.universityName)}</strong>
+<span class="apps-pick-meta">${escapeHtml([e.country, e.scholarshipTitle].filter(Boolean).join(" · "))}</span>
+${reason ? `<span class="apps-pick-reason">${escapeHtml(reason)}</span>` : ""}
+</span>
+${deadlineShort ? `<span class="apps-pick-deadline${tonPastille}">${escapeHtml(deadlineShort)}</span>` : ""}
+</button>`;
+
+}).join("");
+
+pickerList.querySelectorAll(".apps-pick").forEach((btn) => {
+btn.addEventListener("click", () => {
+const entry = pickerEntries.find((e) => e.universityId === btn.dataset.universityId);
+if (entry) selectPickerEntry(entry);
+});
+});
+
+}
+
+function selectPickerEntry(entry) {
+
+pickedEntry = entry;
+manualMode = false;
+
+fields.university.value = entry.universityName;
+fields.scholarship.value = entry.scholarshipTitle || "";
+fields.portalUrl.value = entry.applicationUrl || "";
+// Pré-rempli UNIQUEMENT sur une date ferme d'un cycle ouvert (voir
+// ensurePickerEntries) ; sinon le champ reste vide et l'état s'explique
+// dans le résumé ci-dessous.
+fields.deadline.value = entry.deadlineISO || "";
+
+pickerSection.hidden = true;
+manualFields.hidden = true;
+fields.university.required = false;
+detailsSection.hidden = false;
+saveBtn.disabled = false;
+
+pickerSummary.innerHTML = `
+<div class="apps-selection-head">
+<i data-lucide="check-circle"></i>
+<div>
+<strong>${escapeHtml(entry.universityName)}</strong>
+<span>${escapeHtml([entry.country, entry.scholarshipTitle].filter(Boolean).join(" · "))}</span>
+</div>
+<button type="button" class="apps-selection-change" id="pickerChangeBtn">Changer</button>
+</div>
+<ul class="apps-selection-facts">
+${entry.applicationUrl ? `<li><i data-lucide="link"></i><span>Portail officiel de candidature renseigné automatiquement</span></li>` : ""}
+${entry.etat ? `<li class="apps-selection-etat is-${escapeHtml(entry.etat.ton)}"><i data-lucide="calendar-check"></i><span><strong>${escapeHtml(entry.etat.etiquette)} : ${escapeHtml(entry.etat.valeur)}</strong>${entry.etat.detail ? ` — ${escapeHtml(entry.etat.detail)}` : ""}${entry.etat.verifie ? ` (${escapeHtml(entry.etat.verifie)})` : ""}</span></li>` : ""}
+${entry.deadlineText ? `<li><i data-lucide="calendar-clock"></i><span>Échéance du catalogue : ${escapeHtml(entry.deadlineText)}${entry.deadlineISO ? " — date limite pré-remplie" : ""}</span></li>` : ""}
+${entry.reasons && entry.reasons.length ? `<li><i data-lucide="target"></i><span>${escapeHtml(entry.reasons[0])}</span></li>` : ""}
+</ul>`;
+
+pickerSummary.hidden = false;
+pickerSummary.querySelector("#pickerChangeBtn").addEventListener("click", showPickerAgain);
+
+if (window.lucide) lucide.createIcons();
+
+}
+
+function showPickerAgain() {
+
+pickedEntry = null;
+manualMode = false;
+
+pickerSummary.hidden = true;
+pickerSummary.innerHTML = "";
+manualFields.hidden = true;
+detailsSection.hidden = true;
+saveBtn.disabled = true;
+pickerSection.hidden = false;
+
+renderPickerList();
+
+}
+
+function enterManualMode() {
+
+pickedEntry = null;
+manualMode = true;
+
+pickerSection.hidden = true;
+pickerSummary.hidden = true;
+pickerSummary.innerHTML = "";
+manualFields.hidden = false;
+fields.university.required = true;
+detailsSection.hidden = false;
+saveBtn.disabled = false;
+
+fields.university.focus();
+
+}
+
+pickerSearch.addEventListener("input", renderPickerList);
+manualModeBtn.addEventListener("click", enterManualMode);
+
 function openModal(app) {
 
 editingId = app ? app.id : null;
@@ -651,6 +1009,38 @@ fields.deadline.value = app?.deadline || "";
 fields.frequency.value = app?.reminderFrequency || "14";
 fields.notes.value = app?.notes || "";
 
+pickedEntry = null;
+pickerSummary.hidden = true;
+pickerSummary.innerHTML = "";
+
+if (app) {
+
+// Édition : champs libres directement — jamais de re-choix forcé.
+manualMode = true;
+pickerSection.hidden = true;
+manualFields.hidden = false;
+fields.university.required = true;
+detailsSection.hidden = false;
+saveBtn.disabled = false;
+
+} else {
+
+manualMode = false;
+manualFields.hidden = true;
+fields.university.required = false;
+detailsSection.hidden = true;
+saveBtn.disabled = true;
+pickerSection.hidden = false;
+pickerSearch.value = "";
+pickerList.innerHTML = `<p class="apps-picker-empty">Fitz lit le catalogue…</p>`;
+
+ensurePickerEntries().then(renderPickerList).catch((error) => {
+console.warn("Catalogue indisponible pour le sélecteur de candidature :", error);
+pickerList.innerHTML = `<p class="apps-picker-empty">Le catalogue est momentanément indisponible. Vous pouvez saisir votre candidature via le lien hors catalogue ci-dessous.</p>`;
+});
+
+}
+
 modal.hidden = false;
 
 }
@@ -658,6 +1048,8 @@ modal.hidden = false;
 function closeModal() {
 modal.hidden = true;
 editingId = null;
+pickedEntry = null;
+manualMode = false;
 form.reset();
 }
 
@@ -669,7 +1061,7 @@ statPending.textContent = applications.filter((a) => a.status === "en_attente").
 
 }
 
-function renderCard(app) {
+function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
 const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests });
@@ -697,10 +1089,12 @@ ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : "
 ${renderJourneyStepper(app, journeySteps)}
 
 <div class="app-card-meta">
-${app.deadline ? `<span><i data-lucide="calendar"></i>Date limite : ${formatDateFR(app.deadline)}</span>` : ""}
+${renderEcheanceCandidature(app, lecture)}
 <span class="${urgency.urgent ? "is-urgent" : ""}"><i data-lucide="bell"></i>${urgency.text}</span>
 ${app.premiumProtected ? `<span class="is-protected"><i data-lucide="shield-check"></i>Suivi maintenu même après votre abonnement</span>` : ""}
 </div>
+
+${renderDivergence(app, lecture)}
 
 ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 
@@ -747,6 +1141,32 @@ card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(ap
 card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
 card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
 card.querySelector(".app-readiness-btn").addEventListener("click", () => runReadinessCheck(app));
+
+// LE SEUL ENDROIT où une date du catalogue atteint la fiche de
+// l'étudiant : son clic, sur la date affichée dans le bouton. Aucune
+// écriture automatique ailleurs — même doctrine que le moteur de
+// fraîcheur (constat, jamais écriture).
+card.querySelector("[data-reprendre-date]")?.addEventListener("click", async (event) => {
+
+const btn = event.currentTarget;
+const dateCatalogue = btn.dataset.date;
+
+if (!dateCatalogue) return;
+
+btn.disabled = true;
+
+try {
+await updateDoc(doc(db, "users", uid, "applications", app.id), { deadline: dateCatalogue, updatedAt: serverTimestamp() });
+trackEvent("application_deadline_reprise", {});
+showToast(`Date limite mise à jour : ${formatDateFR(dateCatalogue)}.`, { type: "success" });
+await loadApplications();
+} catch (error) {
+console.error("Impossible de reprendre la date du catalogue :", error);
+showToast("La date n'a pas pu être mise à jour — réessayez dans un instant.", { type: "error" });
+btn.disabled = false;
+}
+
+});
 
 const checklistEl = card.querySelector(".app-checklist");
 
@@ -817,11 +1237,48 @@ listEl.innerHTML = "";
 
 emptyEl.hidden = applications.length > 0;
 
-applications.forEach((app) => listEl.appendChild(renderCard(app)));
+applications.forEach((app) => listEl.appendChild(renderCard(app, catalogueIndex ? etatDeLaCandidature(app, catalogueIndex) : null)));
 
 renderStats();
 
 if (window.lucide) lucide.createIcons();
+
+}
+
+// L'index du catalogue de cette page (null si le catalogue est
+// indisponible : les cartes s'affichent alors comme avant).
+let catalogueIndex = null;
+
+// RATTRAPAGE des candidatures existantes (passe 1/3) : celles créées
+// avant l'écriture de la clé n'ont qu'un titre en texte. Quand le
+// rapprochement EXACT désigne une bourse sans ambiguïté, la clé est
+// écrite UNE fois (catalogueLieLe marque l'essai) ; ambigu ou
+// introuvable → rien n'est écrit, la candidature reste hors catalogue
+// et s'affiche comme aujourd'hui. Aucune règle Firestore à changer :
+// l'étudiant est propriétaire du document et rien n'y contraint les
+// champs. La `deadline` n'est jamais touchée ici.
+async function rattraperLiaisons() {
+
+if (!catalogueIndex) return;
+
+for (const app of applications) {
+
+if (app.scholarshipId || app.catalogueLieLe) continue;
+
+const lien = lierCandidature(app, catalogueIndex);
+
+if (lien.source !== "deduit" || lien.ambigu) continue;
+
+const patch = { scholarshipId: lien.scholarshipId, programId: lien.programId, catalogueLieLe: serverTimestamp() };
+
+try {
+await updateDoc(doc(db, "users", uid, "applications", app.id), patch);
+Object.assign(app, { scholarshipId: lien.scholarshipId, programId: lien.programId, catalogueLieLe: new Date() });
+} catch (error) {
+console.warn(`Liaison au catalogue non enregistrée pour ${app.id} :`, error);
+}
+
+}
 
 }
 
@@ -831,6 +1288,10 @@ applications = await fetchApplications(uid);
 
 const seeded = await seedRecommendedSlots(uid, planId, applications, profile);
 if (seeded) applications = await fetchApplications(uid);
+
+if (!catalogueIndex) catalogueIndex = await indexDuCatalogue();
+
+await rattraperLiaisons();
 
 await loadAdvisorRequests();
 
@@ -1161,11 +1622,41 @@ isRecommendation: false,
 updatedAt: serverTimestamp()
 };
 
+// Sélection catalogue (2026-09-02) : le site officiel de l'université
+// et son identifiant Firestore accompagnent la candidature — même
+// paire de champs que les créneaux suggérés par Fitz
+// (seedRecommendedSlots), pour que la carte affiche les mêmes liens.
+if (pickedEntry) {
+payload.universityWebsite = pickedEntry.universityWebsite || "";
+payload.universityId = pickedEntry.universityId || null;
+// La clé vers le catalogue (passe 1/3) — même paire que les créneaux
+// suggérés par Fitz (seedRecommendedSlots).
+payload.scholarshipId = pickedEntry.scholarshipId || null;
+payload.programId = pickedEntry.programId || null;
+}
+
 if (!payload.university) return;
 
 if (editingId) {
 
+// Issue de candidature (Control Center 2026-09-02) : quand l'étudiant
+// fait BASCULER le statut vers admise/refusée/liste d'attente, on le
+// signale au suivi — une fois par transition (jamais re-compté quand
+// on ré-enregistre une candidature déjà dans cet état).
+const OUTCOME_EVENTS = {
+admise: "application_admitted",
+refusee: "application_rejected",
+liste_attente: "application_waitlisted"
+};
+
+const previous = applications.find((a) => a.id === editingId);
+const outcomeEvent = OUTCOME_EVENTS[payload.status];
+
 await updateDoc(doc(db, "users", uid, "applications", editingId), payload);
+
+if (outcomeEvent && previous && previous.status !== payload.status) {
+trackEvent(outcomeEvent, { university: payload.university || "" });
+}
 
 } else {
 
@@ -1190,9 +1681,33 @@ return;
 payload.nextCheckDate = nextCheckFromToday(payload.reminderFrequency);
 payload.createdAt = serverTimestamp();
 
-await addDoc(appsCol, payload);
+// Créneau anti-triche (audit sécurité 2026-09-02) : l'id "slot-N" est
+// borné au quota de la formule par firestore.rules — la seule voie de
+// création acceptée par le serveur. isQuotaReached ci-dessus garantit
+// qu'un créneau est libre ; la garde ci-dessous couvre le cas limite
+// (données locales périmées) avec le même message que le quota.
+const slotId = slotIdLibre(applications, quota);
+
+if (!slotId) {
+showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
+return;
+}
+
+await setDoc(doc(appsCol, slotId), payload);
 
 trackEvent("application_added", { status: payload.status });
+
+// Cas rare mais réel : une candidature créée directement avec une
+// issue (l'étudiant enregistre a posteriori un dossier déjà tranché).
+const CREATION_OUTCOME_EVENTS = {
+admise: "application_admitted",
+refusee: "application_rejected",
+liste_attente: "application_waitlisted"
+};
+
+if (CREATION_OUTCOME_EVENTS[payload.status]) {
+trackEvent(CREATION_OUTCOME_EVENTS[payload.status], { university: payload.university || "" });
+}
 
 }
 
@@ -1263,7 +1778,10 @@ const existingApplications = await fetchApplications(ctx.user.uid);
 const protectedApplications = existingApplications.filter((app) => app.premiumProtected === true);
 
 if (protectedApplications.length > 0) {
-renderProtectedReadOnlyState(document.getElementById("lockedState"), protectedApplications);
+// L'index du catalogue (0 lecture Firestore) pour afficher l'état
+// publié par la fiche, même en lecture seule.
+const index = await indexDuCatalogue();
+renderProtectedReadOnlyState(document.getElementById("lockedState"), protectedApplications, index);
 } else {
 renderLockedState(document.getElementById("lockedState"), ctx);
 }

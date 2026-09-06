@@ -565,7 +565,9 @@ margin-bottom:10px;
 
 .apps-modal-card{
 width:100%;
-max-width:480px;
+/* 480 -> 560px (2026-09-02) : le sélecteur catalogue a besoin de
+respirer — nom d'université + pays/bourse + échéance sur une carte. */
+max-width:560px;
 max-height:90vh;
 overflow-y:auto;
 /* Panneau verre — seule surface glass de la page, la modale flotte
@@ -731,3 +733,280 @@ applications.js). Pas encore branchée côté JS (hors périmètre de
 cette passe couleurs) : à appliquer sur des cartes placeholder
 (ex. clones de .app-card sans contenu) pendant le chargement, puis
 à retirer une fois applications rendu. */
+
+/* ==========================================================
+SÉLECTEUR CATALOGUE (refonte 2026-09-02) — le modal « Nouvelle
+candidature » ne fait plus taper l'étudiant : Fitz propose les
+universités du catalogue classées par compatibilité, la recherche
+couvre tout le catalogue, la sélection remplit le reste. Voir le
+commentaire du bloc dans applications.js.
+========================================================== */
+
+.sr-only{
+position:absolute;
+width:1px;height:1px;
+padding:0;margin:-1px;
+overflow:hidden;
+clip:rect(0,0,0,0);
+white-space:nowrap;
+border:0;
+}
+
+.apps-picker-lead{
+display:flex;
+align-items:flex-start;
+gap:10px;
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-color);
+background:rgba(233,163,25,.08);
+border:1px solid rgba(233,163,25,.28);
+border-radius:var(--radius-sm);
+padding:10px 12px;
+margin-bottom:14px;
+}
+
+.apps-picker-lead i,
+.apps-picker-lead svg{width:16px;height:16px;color:var(--amber-700);flex-shrink:0;margin-top:2px;}
+
+.apps-picker-searchfield{margin-bottom:10px;}
+
+.apps-picker-list{
+display:flex;
+flex-direction:column;
+gap:8px;
+max-height:300px;
+overflow-y:auto;
+margin-bottom:12px;
+}
+
+.apps-picker-label{
+font-size:var(--fs-caption);
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:.06em;
+color:var(--text-muted);
+margin:2px 0 2px;
+}
+
+.apps-pick{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:10px;
+width:100%;
+text-align:left;
+padding:12px 14px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+background:var(--background-soft);
+cursor:pointer;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.apps-pick:hover,
+.apps-pick:focus-visible{border-color:var(--accent-color);background:#FFFFFF;}
+
+.apps-pick-main{display:flex;flex-direction:column;gap:3px;min-width:0;}
+
+.apps-pick strong{
+font-family:var(--font-display);
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+}
+
+.apps-pick-meta{font-size:var(--fs-caption);color:var(--text-light);}
+
+/* --amber-700 : la seule valeur ambre admise pour du texte (voir
+css/app-shell.css §11) — ici sur fond crème, largement AA en
+caption grasse. */
+.apps-pick-reason{font-size:var(--fs-caption);font-weight:600;color:var(--amber-700);}
+
+.apps-pick-deadline{
+flex-shrink:0;
+max-width:132px;
+text-align:right;
+font-size:var(--fs-caption);
+font-weight:600;
+color:var(--text-light);
+}
+
+.apps-picker-manual{
+background:none;
+border:none;
+padding:0;
+margin-bottom:14px;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--text-light);
+text-decoration:underline;
+text-decoration-color:rgba(233,163,25,.45);
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.apps-picker-manual:hover{color:var(--text-color);text-decoration-color:var(--amber-500);}
+
+.apps-picker-empty{
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-light);
+padding:14px;
+border:1px dashed var(--border-color);
+border-radius:var(--radius-sm);
+}
+
+/* Résumé de la sélection — la carte ambrée confirme ce que Fitz a
+rempli, avant les détails (statut, date, relances). */
+
+.apps-selection{
+border:1px solid rgba(233,163,25,.35);
+background:rgba(233,163,25,.07);
+border-radius:var(--radius-sm);
+padding:14px;
+margin-bottom:16px;
+}
+
+.apps-selection-head{display:flex;align-items:flex-start;gap:10px;}
+
+.apps-selection-head > i,
+.apps-selection-head > svg{width:18px;height:18px;color:var(--amber-700);flex-shrink:0;margin-top:2px;}
+
+.apps-selection-head strong{
+display:block;
+font-family:var(--font-display);
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+}
+
+.apps-selection-head span{font-size:var(--fs-caption);color:var(--text-light);}
+
+.apps-selection-change{
+margin-left:auto;
+flex-shrink:0;
+background:none;
+border:none;
+padding:0;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--text-light);
+text-decoration:underline;
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.apps-selection-change:hover{color:var(--text-color);}
+
+.apps-selection-facts{
+list-style:none;
+display:flex;
+flex-direction:column;
+gap:6px;
+margin:10px 0 0;
+padding:0;
+}
+
+.apps-selection-facts li{
+display:flex;
+align-items:flex-start;
+gap:8px;
+font-size:var(--fs-caption);
+line-height:1.45;
+color:var(--text-light);
+}
+
+.apps-selection-facts i,
+.apps-selection-facts svg{width:13px;height:13px;color:var(--amber-700);flex-shrink:0;margin-top:2px;}
+
+/* Mobile (doctrine regles_mobile) : cartes en colonne, échéance
+rapatriée sous le nom — jamais de débordement horizontal. */
+@media(max-width:600px){
+
+.apps-pick{flex-direction:column;}
+
+.apps-pick-deadline{max-width:none;text-align:left;}
+
+}
+
+/* Texte libre d'échéance parfois long (« rentrée de printemps —
+prochaine échéance ») : borné à 2 lignes, jamais de débordement. */
+.apps-pick-deadline{
+display:-webkit-box;
+-webkit-line-clamp:2;
+-webkit-box-orient:vertical;
+overflow:hidden;
+}
+
+/* ==========================================================
+   ÉCHÉANCE LUE DANS LE CATALOGUE (passe espace étudiant 1/3, 2026-09-06)
+   Une candidature liée à sa fiche affiche l'état que la fiche publie
+   (etatCandidature, js/echeance.js) — le ton vient de `etat.ton`, jamais
+   d'un calcul local sur la date gelée. Tokens encre chaude / ambre
+   uniquement, aucune couleur en dur.
+   ========================================================== */
+.app-card-meta .app-echeance{
+display:inline-flex;
+flex-wrap:wrap;
+align-items:baseline;
+gap:4px 8px;
+font-weight:600;
+color:var(--text-color);
+}
+.app-card-meta .app-echeance.is-ouverte{color:var(--success-700);}
+.app-card-meta .app-echeance.is-attente{color:var(--amber-700);}
+.app-card-meta .app-echeance.is-close{color:var(--text-muted);}
+.app-card-meta .app-echeance.is-inconnue{color:var(--text-light);}
+
+.app-echeance-detail,
+.app-echeance-verifie,
+.app-echeance-votre{
+display:block;
+width:100%;
+font-size:var(--fs-caption);
+font-weight:500;
+color:var(--text-muted);
+}
+.app-echeance-votre{color:var(--text-light);font-weight:600;}
+
+/* La divergence : constat + un bouton que l'étudiant clique lui-même.
+   Le seul chemin par lequel une date du catalogue atteint sa fiche. */
+.app-echeance-alerte{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px 14px;
+margin:0 0 12px;
+padding:10px 14px;
+border:1px solid var(--warning-500);
+border-radius:var(--radius-sm);
+background:var(--warning-50);
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+.app-echeance-alerte > i,
+.app-echeance-alerte > svg{width:16px;height:16px;flex-shrink:0;color:var(--warning-700);}
+.app-echeance-alerte p{margin:0;flex:1 1 240px;}
+.app-echeance-alerte .app-echeance-reprendre{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 12px;
+border:1px solid var(--warning-700);
+border-radius:var(--radius-xs);
+background:transparent;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--warning-700);
+cursor:pointer;
+}
+.app-echeance-alerte .app-echeance-reprendre:hover,
+.app-echeance-alerte .app-echeance-reprendre:focus-visible{background:var(--warning-500);color:var(--primary-900);}
+.app-echeance-alerte .app-echeance-reprendre[disabled]{opacity:.6;cursor:default;}
+
+/* Le sélecteur : une bourse close ou pas encore ouverte le dit sur la
+   pastille au lieu d'une « Échéance : … » qui ment. */
+.apps-pick-deadline.is-close{color:var(--text-muted);}
+.apps-pick-deadline.is-attente{color:var(--amber-700);}
+.apps-pick-deadline.is-ouverte{color:var(--success-700);}

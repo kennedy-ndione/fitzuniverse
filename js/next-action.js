@@ -184,6 +184,40 @@ export const JOURS_CRITIQUE = 3;
 /** Fenêtre en deçà de laquelle une échéance devient prioritaire. */
 export const JOURS_PROCHE = 14;
 
+/**
+* Jours restants d'une candidature, EN PRÉFÉRANT l'état du catalogue.
+*
+* Depuis la passe espace étudiant 1/3 (2026-09-06), dashboard.js pose
+* sur chaque candidature `app.echeance` = etatDeLaCandidature()
+* (js/candidature-catalogue.js). Quand la candidature est liée à sa
+* fiche :
+*   - un cycle CLOS rend null, quoi que dise la date saisie par
+*     l'étudiant — compter à rebours vers une porte fermée est le
+*     défaut que cette passe corrige ;
+*   - une date ferme du catalogue l'emporte sur la date gelée ;
+*   - « Selon votre pays » (jours null, cycle ouvert) laisse parler la
+*     date de l'étudiant : c'est lui qui connaît celle de son pays.
+* Sans `echeance` (candidature hors catalogue, tests), le calcul
+* d'origine sur `app.deadline` reste inchangé.
+*/
+function joursDeLaCandidature(app, aujourdhui) {
+
+const e = app && app.echeance;
+const etat = e && e.lie ? e.etat : null;
+
+if (etat && etat.ouvert === false) return null;
+if (etat && etat.jours !== null && etat.jours !== undefined) return etat.jours;
+
+return joursRestants(app.deadline, aujourdhui);
+
+}
+
+/** Vrai quand la fiche du catalogue dit le cycle clos. */
+function cycleClos(app) {
+const e = app && app.echeance;
+return !!(e && e.lie && e.etat && e.etat.ouvert === false);
+}
+
 function actionEtape(etape, app, urgence, raison) {
 
 return {
@@ -210,6 +244,9 @@ urgence
 *  1. une échéance dépassée ou à trois jours sur une candidature
 *     incomplète — tout le reste peut attendre ;
 *  2. une échéance à deux semaines sur une candidature incomplète ;
+*  2 bis. un dossier en préparation vers un cycle que le catalogue dit
+*     clos (`app.echeance`, posé par dashboard.js) — jamais compté
+*     comme « pressé », jamais « Il reste N jours » ;
 *  3. un profil sous le seuil ALORS QU'une candidature est en cours —
 *     c'est lui qui dégrade tout ce qui vient après ;
 *  4. l'étape faisable de la candidature la plus proche de son
@@ -243,16 +280,24 @@ app,
 etapes,
 complete: etapes.length > 0 && restantes.length === 0,
 faisable: prochaineEtapeFaisable(etapes),
-jours: joursRestants(app.deadline, aujourdhui)
+jours: joursDeLaCandidature(app, aujourdhui),
+clos: cycleClos(app)
 };
 
 })
 .filter((c) => !c.complete);
 
+// Une candidature dont le catalogue dit le cycle clos n'entre dans
+// AUCUN classement par échéance : elle n'est jamais « pressée », ne
+// produit jamais « Il reste N jours ». Elle a sa propre action, plus
+// bas — après une vraie urgence sur un dossier encore ouvert.
+const closes = enCours.filter((c) => c.clos);
+const ouvertes = enCours.filter((c) => !c.clos);
+
 // Les candidatures sans date limite passent après celles qui en ont
 // une : une échéance connue est une contrainte réelle, une échéance
 // absente n'est qu'une information manquante.
-const parEcheance = [...enCours].sort((a, b) => {
+const parEcheance = [...ouvertes].sort((a, b) => {
 if (a.jours === null) return b.jours === null ? 0 : 1;
 if (b.jours === null) return -1;
 return a.jours - b.jours;
@@ -283,6 +328,31 @@ pressee.app,
 critique ? "critique" : "haute",
 `${quand}${ou}, et il manque ${NOM_ETAPE[pressee.faisable.id] || "une étape"}.`
 );
+
+}
+
+// ---- 2 bis : un dossier en préparation vers un cycle clos ----
+//
+// L'étudiant prépare un dossier que l'organisme n'accepte plus. Ce
+// n'est pas une échéance à tenir, c'est une décision à prendre — et
+// elle passe avant le profil : tout ce qu'il produirait pour ce
+// dossier serait produit pour rien.
+if (closes.length) {
+
+const c = closes[0];
+const bourse = c.app.scholarship || c.app.university || "cette bourse";
+
+return {
+cle: `cycle-clos:${c.app.id}`,
+etapeId: null,
+applicationId: c.app.id,
+titre: `Le cycle de ${bourse} est clos`,
+texte: `Le cycle de ${bourse} est clos. Vérifiez la prochaine ouverture ou choisissez une autre opportunité.`,
+cta: "Voir cette candidature",
+href: `applications.html#${c.app.id}`,
+action: null,
+urgence: "haute"
+};
 
 }
 

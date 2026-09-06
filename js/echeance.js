@@ -436,3 +436,327 @@ return etat === "critique" || etat === "proche"
 });
 
 }
+
+/* ------------------------------------------------------------------
+* 8. L'ÉTAT DE CANDIDATURE AFFICHÉ — la seule source de vérité
+* ------------------------------------------------------------------
+*
+* Ajouté le 2026-09-05, après une mesure : sur les cartes du
+* catalogue, la pastille « Candidatures ouvertes / fermées » était
+* calculée sur `scholarship.isActive`, un drapeau éditorial qui n'a
+* jamais voulu dire « le cycle est ouvert ». Résultat mesuré sur
+* l'instantané du 2026-09-04 : **42 bourses dont le champ `status` dit
+* « Fermée » s'affichaient « Candidatures ouvertes »**, et une le
+* contraire. À quoi s'ajoutaient 4 bourses annoncées ouvertes dont
+* l'échéance était derrière nous — dont l'Eiffel, dépassée de neuf
+* mois.
+*
+* Un étudiant qui prépare un dossier pour une bourse close perd des
+* semaines. C'est la faute la plus grave que ce site puisse commettre.
+*
+* L'ORDRE DE DÉCISION, ET POURQUOI IL EST DANS CET ORDRE
+* -----------------------------------------------------
+*  1. `actif === false` ferme. C'est le seul retrait volontaire, il
+*     n'est jamais contredit.
+*  2. TOUTES LES DATES LUES DÉPASSÉES FERMENT — même si le statut dit
+*     « Ouverte ». C'est ici que la date prime sur la prose, et c'est
+*     tout l'objet de ce module.
+*  3. Une date encore À VENIR ouvre — SAUF si le statut dit que le
+*     cycle est clos : on affiche alors « pas encore ouverte ».
+*  4. À défaut de toute date exploitable seulement, on lit le statut.
+*
+* `statut` accepte UNE chaîne ou PLUSIEURS. La fiche d'une opportunité
+* en passe deux — celui du programme et celui de la bourse — et il
+* suffit qu'UN SEUL dise « fermée » pour que le cycle soit tenu pour
+* clos. Trouvé en production le 2026-09-05 : les 33 programmes de
+* Stipendium Hungaricum portent `status: "Ouverte"` pendant que la
+* bourse porte « Fermée ». La carte du catalogue (qui lit la bourse)
+* affichait « pas encore ouvertes » et la fiche (qui lisait le
+* programme) affichait « Candidatures ouvertes · il vous reste
+* 132 jours ». Le même site disait deux choses contraires du même
+* dossier. Le doute penche du côté prudent : on ne promet pas un
+* portail ouvert sur la foi du champ le plus optimiste.
+*
+* UNE DATE PROUVE QU'UN CYCLE EST FINI, JAMAIS QU'IL A COMMENCÉ
+* -------------------------------------------------------------
+* Première version de ce module (matin du 2026-09-05) : « une date
+* encore à venir ouvre, quoi que dise le statut ». La première
+* vérification réelle l'a mise en défaut le jour même.
+*
+* Stipendium Hungaricum — la bourse la plus exposée du catalogue,
+* retenue pour 360 profils sur 360 — porte `status: "Fermée"` ET
+* l'échéance « 15 janvier 2027 ». Les deux sont VRAIS : l'appel
+* 2026/27 s'est clos le 15 janvier 2026, et l'appel 2027/28 n'ouvre
+* qu'en novembre 2026 pour se clore le 15 janvier 2027. Une date future
+* ne dit donc pas « on peut candidater », elle dit « voilà quand ça
+* fermera ». Afficher « Candidatures ouvertes » envoyait l'étudiant
+* vers un portail qui n'accepte rien.
+*
+* La règle corrigée est DISSYMÉTRIQUE, et c'est volontaire : une date
+* dépassée prouve à elle seule que le cycle est fini — rien ne peut
+* plus y être déposé — tandis qu'une date à venir ne prouve rien sur
+* l'ouverture. Le doute penche donc du côté prudent : l'état « pas
+* encore ouverte » dit la date sans promettre le portail.
+*
+* CE QUE CE MODULE NE FAIT JAMAIS : inventer une date, ni transformer
+* « on ne sait pas » en « non ». `ouvert` vaut true, false ou **null**,
+* et null n'est pas false — même règle que estEligible()
+* (js/eligibility-countries.js).
+*
+* CHAMPS DE TRAÇABILITÉ (lot C2) : `periodeOuverture` et `verifieLe`
+* sont FACULTATIFS. Tant qu'ils sont absents, l'affichage reste juste,
+* simplement moins précis — il dit « prochaine ouverture non
+* annoncée » au lieu de « réouverture attendue en octobre ». Aucune
+* migration n'est nécessaire pour que ce fichier serve.
+*/
+
+const RE_STATUT_FERME = /^\s*(fermee|close|cloturee|suspendue)/;
+
+/**
+ * QUAND LA DATE N'EST PAS UNE PROPRIÉTÉ DE LA BOURSE (2026-09-05)
+ * ---------------------------------------------------------------
+ * Vérification du lot 38 : sur cinq grandes bourses, la date limite
+ * n'appartient pas au programme de bourses mais au couple
+ * (bourse, pays de l'étudiant) ou (bourse, établissement) —
+ *   DAAD : une date par pays de résidence ;
+ *   Eiffel : chaque établissement français fixe la sienne, et
+ *     Sorbonne Université écrit noir sur blanc de ne PAS se fier à
+ *     celle de Campus France ;
+ *   Shanghai : dépôt université par université.
+ * Afficher une date unique est structurellement faux pour un site
+ * ouvert à tout étudiant où qu'il soit. `echeanceVariable` dit
+ * laquelle des deux, et la page le formule au lieu d'inventer.
+ */
+const MENTION_VARIABLE = {
+pays: "de votre pays de résidence",
+etablissement: "de l'établissement choisi"
+};
+const RE_STATUT_OUVERT = /^\s*(ouverte|ouvert|en cours|reouverture)/;
+
+/**
+* @param {Object} entree
+* @param {string|string[]} [entree.statut]   status, texte libre — une
+*        chaîne, ou plusieurs (programme ET bourse) : « fermée »
+*        quelque part suffit à fermer
+* @param {boolean} [entree.actif]            scholarship.isActive
+* @param {string[]} [entree.echeances]       les program.deadline de cette bourse
+* @param {string} [entree.periodeOuverture]  « appel annuel, en février-mars »
+* @param {string} [entree.verifieLe]         ISO « 2026-09-05 »
+* @param {"pays"|"etablissement"} [entree.echeanceVariable] quand la
+*        date limite n'est pas une propriété de la bourse
+* @param {Date} [aujourdhui]
+* @returns {{
+*   ouvert: boolean|null, ton: "ouverte"|"attente"|"close"|"inconnue",
+*   badge: string, etiquette: string, valeur: string,
+*   detail: string, verifie: string, jours: number|null
+* }}
+*/
+export function etatCandidature(entree, aujourdhui = new Date()) {
+
+const e = entree || {};
+
+const periode = (e.periodeOuverture || "").trim();
+const verifie = e.verifieLe ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
+
+// Un statut ou plusieurs — voir l'en-tête. « Fermée » quelque part
+// ferme ; « Ouverte » ne vaut que si personne ne dit le contraire.
+const statuts = [].concat(e.statut || [])
+.filter((t) => typeof t === "string" && t.trim())
+.map((t) => sansAccent(t.toLowerCase()));
+
+const ditFerme = statuts.some((t) => RE_STATUT_FERME.test(t));
+const ditOuvert = !ditFerme && statuts.some((t) => RE_STATUT_OUVERT.test(t));
+
+const lues = (e.echeances || [])
+.filter((t) => typeof t === "string" && t.trim())
+.map((t) => analyserEcheance(t));
+
+const ouvertes = lues.filter((ech) => {
+const etat = etatAffichable(ech, aujourdhui);
+return etat === "critique" || etat === "proche" || etat === "ouverte" || etat === "continue";
+});
+
+const closes = lues.filter((ech) => etatAffichable(ech, aujourdhui) === "close");
+
+// --- 1. Le retrait volontaire ---
+if (e.actif === false) {
+return ferme({ lues, closes, periode, verifie, variable: MENTION_VARIABLE[e.echeanceVariable] });
+}
+
+// --- 2. Toutes les dates lues sont derrière nous : le cycle est fini ---
+//
+// Placé AVANT l'ouverture : une date dépassée est une PREUVE, elle
+// passe donc en premier et rien ne la contredit.
+if (!ouvertes.length && closes.length) {
+return ferme({ lues, closes, periode, verifie, variable: MENTION_VARIABLE[e.echeanceVariable] });
+}
+
+// --- 3. Une date à venir, mais le statut dit le cycle clos ---
+//
+// « Pas encore ouverte » : la date est réelle, le portail ne l'est pas.
+if (ouvertes.length && ditFerme) {
+
+const datees = ouvertes
+.filter((ech) => ech.etat === "datee")
+.sort((a, b) => (joursAvant(a, aujourdhui) - joursAvant(b, aujourdhui)));
+
+const prochaine = datees[0];
+
+return {
+ouvert: false, ton: "attente", jours: null,
+badge: "Candidatures pas encore ouvertes",
+etiquette: prochaine ? "Clôture annoncée" : "Candidatures",
+valeur: prochaine ? formaterDate(prochaine.date) : "Closes",
+detail: periode
+? `Le cycle en cours est clos. Ouverture attendue : ${periode}`
+: "Le cycle en cours est clos et la prochaine ouverture n'est pas annoncée. La date ci-dessus est la clôture attendue, pas l'ouverture.",
+verifie
+};
+
+}
+
+// --- 4. Une date encore à venir ouvre ---
+if (ouvertes.length) {
+
+// SAUF si la date n'appartient pas à la bourse et qu'on en agrège
+// plusieurs. Vu le 2026-09-05 sur la page d'accueil : le
+// Deutschlandstipendium annonçait « 25 jours restants » parce que
+// l'UN de ses trois établissements (Hanovre) publie sa fenêtre —
+// les deux autres ont leur propre calendrier. Une date valable
+// pour une université était présentée comme celle du programme.
+//
+// Une seule échéance transmise = on regarde UNE fiche, et cette
+// date est bien la sienne : on la garde. Plusieurs = c'est une
+// vue d'ensemble (carte du catalogue, bandeau), et la seule
+// réponse honnête est la mention. La date connue la plus proche
+// reste dite, mais comme exemple, pas comme échéance.
+const variableAgregee = MENTION_VARIABLE[e.echeanceVariable] && lues.length > 1;
+
+if (variableAgregee) {
+
+const datees = ouvertes
+.filter((ech) => ech.etat === "datee")
+.sort((a, b) => (joursAvant(a, aujourdhui) - joursAvant(b, aujourdhui)));
+
+const exemple = datees[0]
+? ` Le premier calendrier publié ferme le ${formaterDate(datees[0].date)}.`
+: "";
+
+return {
+ouvert: true, ton: "ouverte", jours: null,
+badge: "Candidatures ouvertes",
+etiquette: "Date limite",
+valeur: e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement",
+detail: `La date limite dépend ${MENTION_VARIABLE[e.echeanceVariable]}${periode ? ` — ${periode}` : ""}.${exemple}`,
+verifie
+};
+
+}
+
+// La plus proche des dates encore ouvertes : c'est celle que
+// l'étudiant doit tenir.
+const datees = ouvertes.filter((ech) => ech.etat === "datee");
+
+if (!datees.length) {
+return {
+ouvert: true, ton: "ouverte", jours: null,
+badge: "Candidatures au fil de l'eau",
+etiquette: "Candidatures", valeur: "Sans date limite",
+detail: periode || "Le dossier s'examine à réception, à confirmer sur le portail officiel.",
+verifie
+};
+}
+
+datees.sort((a, b) => (joursAvant(a, aujourdhui) - joursAvant(b, aujourdhui)));
+
+const prochaine = datees[0];
+const jours = joursAvant(prochaine, aujourdhui);
+
+return {
+ouvert: true, ton: "ouverte", jours,
+badge: "Candidatures ouvertes",
+etiquette: "Date limite",
+valeur: formaterDate(prochaine.date),
+detail: jours === 0
+? "Dernier jour pour candidater."
+: `Il vous reste ${jours} jour${jours > 1 ? "s" : ""}.`,
+verifie
+};
+
+}
+
+// --- 5. Aucune date exploitable : le statut, faute de mieux ---
+if (ditFerme) {
+return ferme({ lues, closes, periode, verifie, variable: MENTION_VARIABLE[e.echeanceVariable] });
+}
+
+if (ditOuvert) {
+const variable = MENTION_VARIABLE[e.echeanceVariable];
+
+return {
+ouvert: true, ton: "ouverte", jours: null,
+badge: "Candidatures ouvertes",
+etiquette: "Date limite",
+valeur: variable ? (e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement") : "Non publiée",
+detail: variable
+? `La date limite dépend ${variable}${periode ? ` — ${periode}` : ""}. À lire sur le portail officiel avant toute démarche.`
+: (periode || "Aucune date limite publiée à ce jour — à confirmer sur le portail officiel."),
+verifie
+};
+}
+
+return {
+ouvert: null, ton: "inconnue", jours: null,
+badge: "Calendrier à confirmer",
+etiquette: "Date limite", valeur: "À confirmer",
+detail: periode || "Le calendrier de cette bourse n'est pas publié — à confirmer sur le portail officiel.",
+verifie
+};
+
+}
+
+/**
+* La forme fermée, factorisée : elle doit dire la MÊME chose partout,
+* et surtout ne jamais présenter la date dépassée sous l'étiquette
+* « Date limite » — c'est cette étiquette-là qui trompait.
+*/
+function ferme({ lues, closes, periode, verifie, variable }) {
+
+const derniere = [...closes, ...lues].find((ech) => ech && ech.etat === "datee" && ech.date);
+
+const mention = variable ? ` La date limite dépend ${variable}.` : "";
+
+// Le point avant la mention : sans lui, « … octobre-novembre La date
+// limite dépend … » se lisait d'une traite.
+const suite = (periode
+? `Réouverture attendue : ${periode}.`
+: "Prochaine ouverture non annoncée — à surveiller sur le portail officiel.") + mention;
+
+if (derniere) {
+return {
+ouvert: false, ton: "close", jours: null,
+// « Candidatures closes — prochaine session à surveiller » plutôt
+// que « fermées » tout court : une bourse close n'est pas une
+// bourse perdue, c'est une bourse à préparer. Le dire ferme la
+// porte du mensonge sans fermer celle de l'espoir.
+badge: "Candidatures closes",
+etiquette: "Dernière échéance connue",
+valeur: formaterDate(derniere.date),
+detail: `Les candidatures de ce cycle sont closes. ${suite}`,
+verifie
+};
+}
+
+// La même phrase d'ouverture que la forme datée : sans elle, la
+// fiche d'un cycle clos SANS date connue n'expliquait rien, elle
+// enchaînait directement sur la réouverture. Les deux formes
+// doivent dire la même chose.
+return {
+ouvert: false, ton: "close", jours: null,
+badge: "Candidatures closes",
+etiquette: "Candidatures", valeur: "Closes",
+detail: `Les candidatures de ce cycle sont closes. ${suite}`,
+verifie
+};
+
+}
