@@ -1,41 +1,47 @@
 /**
- * Import function triggers from their respective submodules:
+ * ============================================================
+ * FitzUniverse — point d'entrée des Cloud Functions
+ * ============================================================
  *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ * Ce fichier ne contient AUCUNE logique : il déclare seulement les
+ * réglages communs et expose les fonctions écrites ailleurs. Chaque
+ * module déclare lui-même les secrets dont il a besoin, au plus près
+ * de l'endroit où ils sont lus — c'est ce qui permet de savoir, en
+ * ouvrant un fichier, à quoi il a accès.
  */
 
 const { setGlobalOptions } = require("firebase-functions");
 const { onRequest } = require("firebase-functions/v2/https");
-const { defineSecret } = require("firebase-functions/params");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
+// Plafond de concurrence, par fonction. Un pic de trafic dégrade la
+// vitesse au lieu de faire exploser la facture — arbitrage assumé.
 setGlobalOptions({ maxInstances: 10 });
 
-// Clés PayDunya (mode Test pour l'instant, mode Live plus tard — voir
-// paydunya.com > Mon compte > API/Intégration). Valeurs à définir avec
-// `firebase functions:secrets:set NOM_DU_SECRET` une fois le compte
-// PayDunya créé — jamais codées en dur ici, jamais commitées.
-const paydunyaMasterKey = defineSecret("PAYDUNYA_MASTER_KEY");
-const paydunyaPrivateKey = defineSecret("PAYDUNYA_PRIVATE_KEY");
-const paydunyaPublicKey = defineSecret("PAYDUNYA_PUBLIC_KEY");
-const paydunyaToken = defineSecret("PAYDUNYA_TOKEN");
-
-// Fonction de vérification uniquement — confirme que Cloud Functions est
-// bien opérationnel (Blaze actif, déploiement OK) avant qu'on y ajoute la
-// vraie logique PayDunya (créer transaction + webhook). À supprimer une
-// fois ces 2 fonctions en place.
+// ------------------------------------------------------------
+// Vérification d'infrastructure. Déployée le 2026-09-04 pour prouver
+// que la chaîne Blaze → Cloud Build → Cloud Run fonctionnait.
+// À SUPPRIMER une fois le premier paiement de test passé de bout en
+// bout : une URL publique qui ne sert plus à rien n'a pas à rester.
+// ------------------------------------------------------------
 exports.ping = onRequest((req, res) => {
   res.json({ ok: true, message: "Cloud Functions opérationnel" });
 });
 
-// Relais IA de Fitz — voir functions/fitz.js pour la marche à suivre
-// (npm install, secret, deploy) avant de basculer IS_SIMULATED côté client.
+// ------------------------------------------------------------
+// Paiements PayDunya — voir functions/paiement.js.
+// creerPaiement   : le navigateur demande une facture (onCall)
+// paydunyaWebhook : PayDunya confirme le paiement (onRequest)
+// Les deux vivent en europe-west1, bien plus proche de Dakar que la
+// région par défaut.
+// ------------------------------------------------------------
+exports.creerPaiement = require("./paiement").creerPaiement;
+exports.paydunyaWebhook = require("./paiement").paydunyaWebhook;
+
+// ------------------------------------------------------------
+// Relais IA de Fitz — voir functions/fitz.js.
+// ÉCRIT MAIS NON BRANCHÉ : le client (js/ai/ai-gateway.js) attend un
+// endpoint HTTP en flux SSE, alors que fitz.js est un onCall. Les deux
+// contrats sont incompatibles — il faudra trancher avant d'activer
+// MODE="passerelle" dans js/ai/ai-config.js.
+// ------------------------------------------------------------
 exports.fitzGenerate = require("./fitz").fitzGenerate;

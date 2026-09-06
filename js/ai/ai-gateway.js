@@ -3,265 +3,277 @@
 * FitzUniverse — adaptateur « passerelle » (vrai fournisseur)
 * ============================================================
 *
-* Implémentation de l'appel réel, écrite d'avance et INACTIVE tant que
-* MODE vaut "simule" dans js/ai/ai-config.js.
+* Implémentation de l'appel réel, active dès que MODE vaut
+* "passerelle" dans js/ai/ai-config.js.
 *
-* Elle est écrite maintenant, alors qu'aucun fournisseur n'est encore
-* choisi, pour une raison précise : c'est en l'écrivant que l'on
-* découvre ce que le contrat de generate() doit prévoir. Les erreurs
-* typées, le délai par tâche, la validation des réponses structurées et
-* le découpage en deltas ne sont pas des suppositions — ce sont les
-* besoins réels d'un appel HTTP en flux, constatés ici.
+* CE QUI A CHANGÉ LE 2026-09-04, ET POURQUOI
+* -------------------------------------------
+* Ce fichier appelait auparavant un endpoint HTTP en flux SSE, avec un
+* en-tête Authorization posé à la main et des statuts HTTP à traduire.
+* Cet endpoint n'a jamais existé : la fonction serveur écrite en face
+* (functions/fitz.js) est un CALLABLE Firebase, pas un endpoint HTTP.
+* Les deux contrats étaient incompatibles, et passer MODE à
+* "passerelle" n'aurait rien donné d'autre qu'une erreur réseau.
 *
-* CE QUE LA PASSERELLE DOIT RENVOYER
-* ----------------------------------
-* Une réponse en flux (Server-Sent Events), une ligne par événement :
+* Le callable a été conservé, et c'est ce fichier qui a été réécrit.
+* Trois raisons :
 *
-*     data: {"delta":"Bonjour"}
-*     data: {"delta":" Aminata"}
-*     data: {"usage":{"entree":812,"sortie":465}}
-*     data: [DONE]
+*   1. Le SDK attache lui-même le jeton d'identité Firebase. Aucun
+*      en-tête à poser, aucun jeton à rafraîchir, aucun moyen de se
+*      tromper.
+*   2. Pas de CORS : l'appel n'est pas une requête HTTP ordinaire.
+*   3. Le flux est géré par le SDK (`.stream()`), en face de
+*      `response.sendChunk()` côté serveur.
 *
-* Et pour une tâche structurée (« check », « readiness »), un seul
-* événement portant l'objet complet :
+* CE QUI N'A PAS CHANGÉ : le contrat rendu à js/ai/ai-client.js.
+* Mêmes retours ({text} ou {data}, plus `usage`), mêmes onze erreurs
+* typées, même signal d'arrêt, même onToken. Les six pages appelantes
+* n'ont pas bougé d'une ligne.
 *
-*     data: {"data":{"overallScore":78,...}}
-*     data: [DONE]
-*
-* En cas d'échec, un statut HTTP parlant (voir codeDepuisStatutHttp
-* dans js/ai/ai-errors.js) plutôt qu'un 200 contenant un message
-* d'erreur : le navigateur doit pouvoir distinguer « quota épuisé » de
-* « panne » sans lire le corps de la réponse.
-*
-* AUTHENTIFICATION
-* ----------------
-* Le jeton Firebase de l'étudiant est envoyé en en-tête `Authorization`.
-* La passerelle le vérifie, en déduit l'identité — et ne fait JAMAIS
-* confiance à un identifiant qui viendrait du corps de la requête, que
-* n'importe qui peut réécrire depuis la console du navigateur.
+* LA RÉGION EST DÉLIBÉRÉE
+* -----------------------
+* fitzGenerate vit en europe-west1, pas dans la région par défaut.
+* Cibler la mauvaise région donne un "not-found" qui ressemble à s'y
+* méprendre à un bug de code — et fait perdre une heure.
 * ============================================================
 */
 
 import { buildPrompt } from "./prompts.js";
-import { ENDPOINT, MODELE, TACHES_STRUCTUREES } from "./ai-config.js";
-import { FitzError, CODES, codeDepuisStatutHttp } from "./ai-errors.js";
+import { TACHES_STRUCTUREES } from "./ai-config.js";
+import { FitzError, CODES } from "./ai-errors.js";
+
+const REGION = "europe-west1";
+const NOM_FONCTION = "fitzGenerate";
 
 /**
-* Jeton d'identité de l'étudiant connecté.
+* Le callable, construit une seule fois.
 *
-* Import dynamique : ce module doit rester chargeable dans un test
-* Node sans Firebase. Toute panne d'authentification devient un échec
-* AUTH explicite plutôt qu'une exception brute au milieu d'un fetch.
+* Import dynamique du SDK et de firebase-config : ce module doit rester
+* chargeable dans un test Node sans Firebase — c'est ce qui permet à
+* test/ai-client.test.mjs de vérifier la forme du contrat sans réseau.
+* Toute panne d'initialisation devient un échec AUTH explicite plutôt
+* qu'une exception brute au milieu d'une génération.
 */
-async function jetonIdentite() {
+let callablePromise = null;
+
+function obtenirCallable() {
+
+if (callablePromise) return callablePromise;
+
+callablePromise = (async () => {
 
 try {
 
-const { auth } = await import("../../firebase-config.js");
-const utilisateur = auth.currentUser;
+const { app } = await import("../../firebase-config.js");
 
-if (!utilisateur) {
-throw new FitzError(CODES.AUTH, { detail: "aucun utilisateur connecté" });
-}
+const { getFunctions, httpsCallable } = await import(
+"https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js"
+);
 
-return await utilisateur.getIdToken();
+return httpsCallable(getFunctions(app, REGION), NOM_FONCTION);
 
-} catch (erreur) {
+} catch (cause) {
 
-if (erreur instanceof FitzError) throw erreur;
+// Ne pas mémoriser un échec : une coupure réseau au premier appel
+// ne doit pas condamner la session entière.
+callablePromise = null;
 
 throw new FitzError(CODES.AUTH, {
-cause: erreur,
-detail: "jeton d'identité indisponible"
+cause,
+detail: "initialisation de la passerelle impossible"
 });
 
 }
 
+})();
+
+return callablePromise;
+
 }
 
 /**
-* Lit un flux SSE et appelle `surEvenement` pour chaque objet reçu.
+* Les captures d'écran que l'étudiant joint à sa question.
 *
-* Le découpage se fait sur les lignes, pas sur les blocs reçus : un
-* chunk réseau coupe volontiers un événement en deux, et concaténer
-* naïvement produirait du JSON tronqué. Le reliquat est donc conservé
-* d'un tour à l'autre.
+* Elles ne passent PAS par buildPrompt : les prompts construisent du
+* texte, les images sont un canal séparé jusqu'au modèle. Le serveur
+* les valide à nouveau (type, taille, nombre) — ce filtrage-ci évite
+* seulement un aller-retour perdu.
 */
-async function lireFluxSSE(reponse, surEvenement, signal) {
+function normaliserImages(images) {
 
-const lecteur = reponse.body.getReader();
-const decodeur = new TextDecoder();
+if (!Array.isArray(images)) return [];
 
-let reliquat = "";
+return images
+.filter((image) => image && typeof image.data === "string" && image.data.length)
+.map((image) => ({
+mediaType: image.mediaType || image.type || "image/jpeg",
+data: image.data
+}));
 
-try {
+}
 
-while (true) {
+/**
+* Traduit une erreur du callable en code Fitz.
+*
+* L'ORDRE COMPTE. On lit d'abord `details.fitzCode`, que le serveur
+* pose lui-même (voir refus() dans functions/fitz.js) : c'est la seule
+* source qui sache si un "permission-denied" veut dire « formule
+* insuffisante » ou « compte suspendu ». Les codes callable ne servent
+* que de repli, pour une erreur venue du SDK ou du réseau et non de
+* notre code.
+*/
+function codeFitz(erreur) {
+
+const annonce = erreur?.details?.fitzCode;
+
+if (typeof annonce === "string" && CODES[annonce]) return CODES[annonce];
+
+const code = String(erreur?.code || "").replace(/^functions\//, "");
+
+if (code === "unauthenticated") return CODES.AUTH;
+if (code === "permission-denied") return CODES.QUOTA_PLAN;
+if (code === "resource-exhausted") return CODES.QUOTA_FOURNISSEUR;
+if (code === "invalid-argument") return CODES.ENTREE_TROP_LONGUE;
+if (code === "failed-precondition") return CODES.CONTENU_REFUSE;
+if (code === "deadline-exceeded") return CODES.DELAI;
+if (code === "unavailable") return CODES.FOURNISSEUR_INDISPONIBLE;
+if (code === "cancelled") return CODES.ARRET_DEMANDE;
+
+// Le SDK rend "internal" aussi bien pour une panne serveur que pour
+// une requête qui n'est jamais partie. On ne peut pas les distinguer
+// ici — INCONNU est réessayable, ce qui est le bon choix par défaut.
+return CODES.INCONNU;
+
+}
+
+function enFitzError(erreur) {
+
+if (erreur instanceof FitzError) return erreur;
+
+// Un abandon traverse le SDK sans passer par nous.
+if (erreur?.name === "AbortError") {
+return new FitzError(CODES.ARRET_DEMANDE, { cause: erreur });
+}
+
+return new FitzError(codeFitz(erreur), {
+cause: erreur,
+detail: String(erreur?.message || "")
+});
+
+}
+
+/**
+* Appelle Fitz.
+*
+* @param {Object} params
+* @param {string} params.task
+* @param {Object} params.input - voir js/ai/prompts.js ; `input.images`
+*        est extrait à part et transmis au modèle comme pièces jointes
+* @param {AbortSignal} [params.signal]
+* @param {(texteComplet: string, delta: string) => void} [params.onToken]
+* @returns {Promise<{text: string, usage?: Object} | {data: Object, usage?: Object}>}
+*/
+export async function genererViaPasserelle({ task, input, signal, onToken }) {
 
 if (signal?.aborted) {
 throw new FitzError(CODES.ARRET_DEMANDE);
 }
 
-const { done, value } = await lecteur.read();
-
-if (done) break;
-
-reliquat += decodeur.decode(value, { stream: true });
-
-const lignes = reliquat.split("\n");
-reliquat = lignes.pop() || "";
-
-for (const ligne of lignes) {
-
-const contenu = ligne.trim();
-
-if (!contenu || !contenu.startsWith("data:")) continue;
-
-const charge = contenu.slice(5).trim();
-
-if (charge === "[DONE]") return;
+let system;
+let user;
 
 try {
-surEvenement(JSON.parse(charge));
+
+({ system, user } = buildPrompt(task, input));
+
+} catch (cause) {
+
+// Une tâche sans prompt est un défaut de programmation, pas une
+// panne : le dire clairement plutôt que de l'envoyer au serveur.
+throw new FitzError(CODES.INCONNU, { cause, detail: `prompt absent pour "${task}"` });
+
+}
+
+const charge = { task, system, user };
+const images = normaliserImages(input?.images);
+
+if (images.length) charge.images = images;
+
+const callable = await obtenirCallable();
+const structuree = TACHES_STRUCTUREES.includes(task);
+
+try {
+
+// Une tâche structurée n'est jamais diffusée : un JSON à moitié
+// écrit n'est pas du JSON, et le serveur ne l'envoie pas en flux.
+// On évite donc l'aller-retour d'un flux qui resterait vide.
+if (structuree || typeof callable.stream !== "function") {
+
+const reponse = await callable(charge);
+return lireResultat(task, reponse?.data, "", structuree);
+
+}
+
+const { stream, data } = await callable.stream(charge, { signal });
+
+let texte = "";
+
+for await (const fragment of stream) {
+
+const delta = fragment?.delta;
+
+if (typeof delta !== "string" || !delta) continue;
+
+texte += delta;
+
+if (onToken) onToken(texte, delta);
+
+}
+
+// La valeur de retour de la fonction fait foi : le flux sert à
+// l'affichage progressif, pas à reconstituer la réponse. Un
+// fragment perdu en route ne doit pas amputer le résultat.
+const resultat = await data;
+
+return lireResultat(task, resultat, texte, structuree);
+
 } catch (erreur) {
-throw new FitzError(CODES.REPONSE_INVALIDE, {
-cause: erreur,
-detail: `événement illisible : ${charge.slice(0, 120)}`
-});
-}
 
-}
-
-}
-
-} finally {
-
-// Libère la connexion même sur arrêt ou erreur : sans cela, un
-// étudiant qui arrête trois générations de suite laisse trois
-// connexions ouvertes jusqu'au rechargement de la page.
-try { await lecteur.cancel(); } catch { /* déjà close */ }
+throw enFitzError(erreur);
 
 }
 
 }
 
 /**
-* Appelle la passerelle et renvoie le même contrat que l'adaptateur
-* simulé : { text, usage } ou { data, usage }.
+* Vérifie que la réponse a la forme promise aux pages appelantes.
 *
-* @param {Object} params
-* @param {string} params.task
-* @param {Object} params.input
-* @param {(texteComplet: string, delta: string) => void} [params.onToken]
-* @param {AbortSignal} [params.signal]
+* js/ai/ai-client.js revalidera le CONTENU des tâches structurées
+* (CHAMPS_REQUIS). Ici on ne contrôle que la forme : { text } d'un
+* côté, { data } de l'autre, jamais l'une pour l'autre.
 */
-export async function genererViaPasserelle({ task, input, onToken, signal }) {
+function lireResultat(task, resultat, texteDuFlux, structuree) {
 
-if (!ENDPOINT) {
-throw new FitzError(CODES.AUTH, {
-detail: "ENDPOINT vide dans js/ai/ai-config.js — passerelle non déployée"
-});
-}
+if (structuree) {
 
-const prompt = buildPrompt(task, input);
-const jeton = await jetonIdentite();
-
-let reponse;
-
-try {
-
-reponse = await fetch(ENDPOINT, {
-method: "POST",
-signal,
-headers: {
-"Content-Type": "application/json",
-"Authorization": `Bearer ${jeton}`
-},
-body: JSON.stringify({
-tache: task,
-prompt,
-modele: MODELE.nom,
-temperature: MODELE.temperature,
-maxTokensSortie: MODELE.maxTokensSortie,
-flux: !TACHES_STRUCTUREES.includes(task)
-})
-});
-
-} catch (erreur) {
-
-// fetch() ne rejette que sur un échec réseau ou un arrêt — jamais
-// sur un statut HTTP d'erreur, qui arrive en réponse normale.
-if (erreur?.name === "AbortError") {
-throw new FitzError(CODES.ARRET_DEMANDE, { cause: erreur });
-}
-
-throw new FitzError(CODES.RESEAU, { cause: erreur });
-
-}
-
-if (!reponse.ok) {
-
-throw new FitzError(codeDepuisStatutHttp(reponse.status), {
-detail: `passerelle HTTP ${reponse.status}`
-});
-
-}
-
-if (!reponse.body) {
-throw new FitzError(CODES.REPONSE_INVALIDE, { detail: "réponse sans corps" });
-}
-
-let texte = "";
-let donnees = null;
-let usage = null;
-
-await lireFluxSSE(reponse, (evenement) => {
-
-if (typeof evenement.delta === "string") {
-texte += evenement.delta;
-if (onToken) onToken(texte, evenement.delta);
-return;
-}
-
-if (evenement.data !== undefined) {
-donnees = evenement.data;
-return;
-}
-
-if (evenement.usage) {
-usage = evenement.usage;
-return;
-}
-
-// Une passerelle peut aussi signaler un échec en cours de flux,
-// après avoir déjà renvoyé un 200 : un filtre de contenu qui se
-// déclenche au milieu d'une génération, par exemple.
-if (evenement.erreur) {
-throw new FitzError(evenement.erreur.code || CODES.INCONNU, {
-detail: evenement.erreur.detail || ""
-});
-}
-
-}, signal);
-
-if (TACHES_STRUCTUREES.includes(task)) {
-
-if (!donnees || typeof donnees !== "object") {
+if (!resultat || typeof resultat.data !== "object" || resultat.data === null) {
 throw new FitzError(CODES.REPONSE_INVALIDE, {
 detail: `tâche "${task}" : aucune structure reçue`
 });
 }
 
-return { data: donnees, usage };
+return { data: resultat.data, usage: resultat.usage };
 
 }
 
-if (!texte) {
+const texte = typeof resultat?.text === "string" && resultat.text ? resultat.text : texteDuFlux;
+
+if (!texte.trim()) {
 throw new FitzError(CODES.REPONSE_INVALIDE, {
 detail: `tâche "${task}" : réponse vide`
 });
 }
 
-return { text: texte, usage };
+return { text: texte, usage: resultat?.usage };
 
 }

@@ -533,3 +533,12 @@ margin-bottom:20px;
 .docs-grid{grid-template-columns:1fr;}
 
 }
+
+/* Champ de recherche sur téléphone (2026-09-03, capture iPhone) : la
+barre d'outils passe en COLONNE ≤640px, et `flex:1 1 260px` (pensé
+pour une rangée) devenait alors une HAUTEUR de base de 260px qui
+grandissait encore — un pavé vide de 370px avec le champ au milieu.
+En colonne, le champ reprend sa hauteur naturelle. */
+@media(max-width:640px){
+.docs-search-field{ flex:0 0 auto; }
+}

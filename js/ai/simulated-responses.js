@@ -593,7 +593,214 @@ daysLeft: deadline ? daysUntil(deadline) : null
 // CHAT — réponses par intention
 // ==========================================================
 
+// ==========================================================
+// CONTEXTE RÉEL DE L'ÉTUDIANT (2026-09-02) — le chat reçoit désormais
+// ses candidatures (input.applications) : échéances, statuts,
+// universités. Fitz répond avec SES données, plus jamais en généralités
+// quand du concret existe.
+// ==========================================================
+
+import { TESTS, testDepuisNom } from "../test-prep-data.js";
+
+function parseDeadline(app) {
+
+if (!app || !app.deadline) return null;
+
+const d = new Date(`${app.deadline}T23:59:59`);
+
+return Number.isNaN(d.getTime()) ? null : d;
+
+}
+
+function joursRestants(date) {
+return Math.ceil((date.getTime() - Date.now()) / 86400000);
+}
+
+function formatFr(date) {
+return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// Candidatures à échéance FUTURE, triées de la plus proche à la plus
+// lointaine.
+function upcomingApplications(applications) {
+
+return (Array.isArray(applications) ? applications : [])
+.map((app) => ({ app, date: parseDeadline(app) }))
+.filter((x) => x.date && joursRestants(x.date) >= 0)
+.sort((a, b) => a.date - b.date);
+
+}
+
+function appLabel(app) {
+
+const parts = [app.university, app.scholarship].filter(Boolean);
+
+return parts.length ? parts.join(" — ") : "votre candidature";
+
+}
+
+const STATUS_FR = {
+a_preparer: "à préparer",
+en_cours: "en cours de préparation",
+deposee: "déposée",
+en_attente: "en attente de réponse",
+reponse_recue: "réponse reçue",
+liste_attente: "en liste d'attente",
+admise: "admise 🎉",
+refusee: "refusée"
+};
+
+// ==========================================================
+// BRIEFING D'ENTRAÎNEMENT (page Préparation aux tests →
+// « M'entraîner avec Fitz ») : stratégie calée sur les VRAIES
+// échéances de l'étudiant (bourse/université), pas un plan générique.
+// ==========================================================
+
+export function buildTestPrepBriefing({ testId, profile, applications }) {
+
+const fiche = TESTS.find((t) => t.id === testId) || testDepuisNom(testId);
+
+if (!fiche) {
+return "Je n'ai pas reconnu ce test. Dites-moi lequel vous préparez (IELTS, TOEFL, TOPIK, JLPT, HSK, DELF, TCF, TestDaF, Duolingo) et je vous monte un plan.";
+}
+
+const prenom = profile && profile.firstName ? ` ${String(profile.firstName).trim().split(/\s+/)[0]}` : "";
+const lignes = [];
+
+lignes.push(`Très bien${prenom}, on prépare le **${fiche.nom}**. Voici votre stratégie :`);
+lignes.push("");
+
+// Préférer une candidature EN RAPPORT avec le test (une échéance
+// italienne ne doit pas cadencer une préparation au TOPIK) ; à
+// défaut, la plus proche.
+const AFFINITES = {
+topik: /gks|cor[ée]e|korea|seoul|kaist|yonsei|postech/i,
+jlpt: /mext|japon|japan|tokyo|kyoto|osaka/i,
+hsk: /csc|chin|beijing|shanghai|nanjing|tsinghua|beihang|zhejiang/i,
+testdaf: /daad|allemagne|germany|berlin|m[üu]nchen|heidelberg|aachen/i,
+"delf-dalf": /france|eiffel|paris|lyon|belgique|bruxelles|qu[ée]bec/i,
+tcf: /france|paris|campus france|qu[ée]bec/i
+};
+
+const upcomingAll = upcomingApplications(applications);
+const affinite = AFFINITES[fiche.id];
+const upcoming = affinite
+? (upcomingAll.filter((x) => affinite.test(`${x.app.university || ""} ${x.app.scholarship || ""}`)).length
+? upcomingAll.filter((x) => affinite.test(`${x.app.university || ""} ${x.app.scholarship || ""}`))
+: upcomingAll)
+: upcomingAll;
+
+if (upcoming.length) {
+
+const { app, date } = upcoming[0];
+const jours = joursRestants(date);
+const semaines = Math.max(0, Math.floor(jours / 7));
+
+lignes.push(`**Votre échéance de référence : ${appLabel(app)}**, dossier attendu le **${formatFr(date)}** — soit **${jours} jour${jours > 1 ? "s" : ""}** (${semaines} semaine${semaines > 1 ? "s" : ""}).`);
+lignes.push("");
+
+if (semaines >= 10) {
+
+const coeur = semaines - 3;
+
+lignes.push(`Avec ${semaines} semaines devant vous, on travaille confortablement en trois phases :`);
+lignes.push("");
+lignes.push(`1. **Semaine 1 — diagnostic.** ${fiche.plan[0]}`);
+lignes.push(`2. **Semaines 2 à ${1 + coeur} — le cœur.** ${fiche.plan[1]} ${fiche.plan[2] || ""}`);
+lignes.push(`3. **Les 2 dernières semaines — conditions réelles.** ${fiche.plan[fiche.plan.length - 1]}`);
+
+} else if (semaines >= 4) {
+
+lignes.push(`${semaines} semaines, c'est jouable mais serré — plan condensé :`);
+lignes.push("");
+lignes.push(`1. **Cette semaine — diagnostic express.** ${fiche.plan[0]}`);
+lignes.push(`2. **Semaines suivantes.** ${fiche.plan[1]}`);
+lignes.push(`3. **Dernière semaine.** ${fiche.plan[fiche.plan.length - 1]}`);
+
+} else {
+
+lignes.push(`⚠️ **${jours} jours, c'est très court.** Deux vérifications AVANT de vous lancer :`);
+lignes.push("");
+lignes.push(`- **Sessions** : ${fiche.sessions}`);
+lignes.push(`- **Résultats** : ${fiche.resultats} — comparez ce délai à votre échéance : si les résultats arrivent après la date limite, contactez l'université pour savoir si un envoi différé du score est accepté (c'est fréquent), et concentrez-vous sur le reste du dossier en parallèle.`);
+
+}
+
+lignes.push("");
+lignes.push(`Rappel utile : **${fiche.exigenceHabituelle}**`);
+
+} else {
+
+lignes.push(`Je ne vois pas encore d'échéance dans vos candidatures suivies — ajoutez votre date limite dans **Mes candidatures** et je calerai ce plan dessus au jour près.`);
+lignes.push("");
+lignes.push(`En attendant, préparation type (${fiche.dureePrepa}) :`);
+lignes.push("");
+fiche.plan.forEach((etape, i) => lignes.push(`${i + 1}. ${etape}`));
+
+}
+
+lignes.push("");
+lignes.push(`**Bon à savoir** : sessions — ${fiche.sessions} Résultats : ${fiche.resultats}`);
+lignes.push("");
+lignes.push(`On commence maintenant ? ${fiche.fitz}`);
+
+return lignes.join("\n");
+
+}
+
 const INTENTS = [
+
+// PRIORITAIRE — l'étudiant demande où il en est : on répond avec SES
+// candidatures réelles (statuts + prochaine échéance), pas une leçon.
+{
+id: "status",
+keywords: ["mes candidatures", "où j'en suis", "ou j'en suis", "mon avancement", "statut de", "point sur mon dossier"],
+reply: (profile, ctx) => {
+
+const apps = Array.isArray(ctx?.applications) ? ctx.applications : [];
+
+if (!apps.length) {
+return `Vous ne suivez pas encore de candidature dans **Mes candidatures**. C'est la première étape : ajoutez-y les programmes qui vous intéressent (le catalogue peut vous en suggérer), et je pourrai suivre vos échéances avec vous.`;
+}
+
+const lignes = [`Voici où vous en êtes, sur ${apps.length} candidature${apps.length > 1 ? "s" : ""} suivie${apps.length > 1 ? "s" : ""} :`, ""];
+
+apps.slice(0, 6).forEach((app) => {
+const date = parseDeadline(app);
+const echeance = date ? ` — échéance le ${formatFr(date)} (${joursRestants(date) >= 0 ? `J-${joursRestants(date)}` : "dépassée"})` : "";
+lignes.push(`- **${appLabel(app)}** : ${STATUS_FR[app.status] || app.status || "statut inconnu"}${echeance}`);
+});
+
+const next = upcomingApplications(apps)[0];
+
+if (next) {
+lignes.push("", `👉 Priorité : **${appLabel(next.app)}** (J-${joursRestants(next.date)}). Un contrôle avant dépôt ? Passez par **Vérification du dossier**.`);
+}
+
+return lignes.join("\n");
+
+}
+},
+
+// PRIORITAIRE — préparation d'un test précis : mini-stratégie calée
+// sur les échéances réelles (le grand briefing arrive via la page
+// Préparation aux tests → « M'entraîner avec Fitz »).
+{
+id: "test-prep",
+keywords: ["topik", "ielts", "toefl", "jlpt", "hsk", "testdaf", "goethe", "delf", "dalf", "tcf", "duolingo", "m'entraîner", "m'entrainer", "test de langue", "préparer un test", "preparer un test"],
+reply: (profile, ctx) => {
+
+const fiche = testDepuisNom(ctx?.message || "") || null;
+
+if (fiche) {
+return buildTestPrepBriefing({ testId: fiche.id, profile, applications: ctx?.applications });
+}
+
+return `Dites-moi quel test vous préparez (IELTS, TOEFL, TOPIK, JLPT, HSK, DELF/DALF, TCF, TestDaF ou Duolingo) et je vous monte un plan calé sur vos échéances. La page **Préparation aux tests** de votre parcours compare aussi les fiches complètes.`;
+
+}
+},
+
 {
 id: "greeting",
 keywords: ["bonjour", "salut", "hello", "coucou"],
@@ -635,8 +842,31 @@ reply: () => `Pour préparer un entretien d'admission :\n\n1. Relisez votre lett
 },
 {
 id: "deadline",
-keywords: ["délai", "date limite", "deadline"],
-reply: () => `Les délais varient énormément selon les universités et les pays — certains programmes ferment leurs candidatures 8 à 10 mois avant la rentrée. Je vous conseille de vérifier systématiquement la page "Admissions" officielle de chaque université visée, et de vous y prendre le plus tôt possible.`
+keywords: ["délai", "date limite", "deadline", "échéance", "echeance"],
+reply: (profile, ctx) => {
+
+const upcoming = upcomingApplications(ctx?.applications);
+
+if (upcoming.length) {
+
+const lignes = ["Vos prochaines échéances réelles :", ""];
+
+upcoming.slice(0, 3).forEach(({ app, date }) => {
+lignes.push(`- **${appLabel(app)}** — ${formatFr(date)} (**J-${joursRestants(date)}**)`);
+});
+
+const first = upcoming[0];
+lignes.push("", joursRestants(first.date) <= 21
+? `⚠️ La première arrive vite : passez votre dossier ${appLabel(first.app)} par **Vérification du dossier** cette semaine.`
+: `Vous avez de la marge — profitez-en pour finaliser lettre de motivation et lettres de recommandation en avance.`);
+
+return lignes.join("\n");
+
+}
+
+return `Les délais varient énormément selon les universités et les pays — certains programmes ferment leurs candidatures 8 à 10 mois avant la rentrée. Ajoutez vos dates limites dans **Mes candidatures** : je pourrai alors vous répondre avec VOS échéances, au jour près.`;
+
+}
 },
 {
 id: "thanks",
@@ -665,14 +895,390 @@ return suggestions.slice(0, 4);
 
 }
 
-export function generateChatReply({ message, profile }) {
+// Un message est « illisible » quand il ne contient presque aucun mot
+// réel — suite de consonnes, martèlement de clavier. On répond alors
+// par une clarification courte et polie, jamais par un enthousiasme
+// générique (constaté sur capture utilisateur : « JNJHSJHF NKZJKZ »
+// recevait un paragraphe promotionnel — non professionnel).
+function looksUnreadable(message) {
+
+const cleaned = String(message || "").trim();
+
+if (cleaned.length < 2) return true;
+
+const words = cleaned.split(/\s+/);
+const readable = words.filter((w) => /[aeiouyàâäéèêëîïôöùûü]/i.test(w) && w.length >= 2);
+
+return readable.length === 0;
+
+}
+
+export function generateChatReply({ message, profile, applications, testPrep, history }) {
+
+// Arrivée depuis « M'entraîner avec Fitz » (Préparation aux tests) :
+// Fitz sait POURQUOI l'étudiant est là et ouvre directement la
+// stratégie, calée sur ses échéances réelles.
+if (testPrep) {
+return buildTestPrepBriefing({ testId: testPrep, profile, applications });
+}
+
+if (looksUnreadable(message)) {
+return `Je n'ai pas réussi à lire votre message — il s'est peut-être envoyé trop vite. Reformulez en une phrase, ou choisissez un point de départ :\n\n- « Où j'en suis dans mes candidatures ? »\n- « Quelles sont mes prochaines échéances ? »\n- « Aide-moi à préparer mon test de langue. »`;
+}
 
 const lower = String(message || "").toLowerCase();
+const ctx = { applications, message, history };
 
 const intent = INTENTS.find((i) => i.keywords.some((kw) => lower.includes(kw)));
 
-if (intent) return intent.reply(profile);
+if (intent) return intent.reply(profile, ctx);
 
-return `Merci pour votre message ! Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les bourses, documents, entretiens et délais.\n- Vous orienter vers **Lettre de motivation**, **E-mails Fitz**, **Traduction** ou **Vérification du dossier**.\n\nReformulez votre question en une phrase, ou dites-moi simplement où vous en êtes dans votre candidature.`;
+return `Merci pour votre message ! Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les bourses, documents, entretiens et délais — dites « où j'en suis » pour un point sur VOS candidatures.\n- Vous orienter vers **Lettre de motivation**, **E-mails Fitz**, **Traduction** ou **Vérification du dossier**.\n\nReformulez votre question en une phrase, ou dites-moi simplement où vous en êtes dans votre candidature.`;
+
+}
+
+// ==========================================================
+// LECTURE DU DIAGNOSTIC (bloc « L'analyse de Fitz » de results.html)
+// ==========================================================
+//
+// Compose les quatre sections attendues par le bloc #fitzAnalysis à
+// partir des SEULES valeurs déjà calculées : le score et ses
+// sous-scores viennent de js/eligibility-ai.js (moteur déterministe,
+// sans IA), les opportunités et leurs échéances viennent du catalogue.
+//
+// ⚠️ RIEN N'EST INVENTÉ ICI, et ce n'est pas négociable : aucune date,
+// aucun montant, aucun nom d'établissement n'est produit par ce
+// fichier — tout vient de `input`. Quand une échéance manque, on écrit
+// qu'elle est à vérifier sur le portail ; on ne la devine jamais. Une
+// date fausse coûte une année à un étudiant. C'est exactement la règle
+// que le prompt `diagnostic` impose au vrai modèle : la lecture reste
+// donc de même nature le jour où la passerelle sera rebranchée.
+//
+// PAS DE PLAN DE PROGRESSION : la page en propose déjà un, réservé aux
+// étudiants accompagnés. Le doubler ici le viderait de sa valeur.
+
+function sousScoresTries(sousScores) {
+
+return (Array.isArray(sousScores) ? sousScores : [])
+.filter((s) => s && s.libelle && Number.isFinite(Number(s.valeur)))
+.map((s) => ({ libelle: String(s.libelle), valeur: Number(s.valeur) }))
+.sort((a, b) => b.valeur - a.valeur);
+
+}
+
+// Une échéance du catalogue peut être une date ISO ou un texte libre.
+// On ne s'en sert pour TRIER que lorsqu'elle est réellement lisible ;
+// à l'affichage, on la recopie telle quelle, sans reformulation.
+function dateEcheance(valeur) {
+
+if (!valeur) return null;
+
+const d = new Date(valeur);
+
+return Number.isNaN(d.getTime()) ? null : d;
+
+}
+
+// Le premier dossier à ouvrir est celui dont l'échéance FUTURE est la
+// plus proche : c'est celui qui se referme en premier. À défaut de
+// date exploitable, on garde l'ordre du moteur, qui classe déjà par
+// pertinence.
+function opportunitePrioritaire(opportunites) {
+
+const liste = Array.isArray(opportunites) ? opportunites.filter(Boolean) : [];
+
+if (!liste.length) return null;
+
+const datees = liste
+.map((o) => ({ o, d: dateEcheance(o.echeance) }))
+.filter((x) => x.d && x.d.getTime() >= Date.now())
+.sort((a, b) => a.d - b.d);
+
+return datees.length ? datees[0].o : liste[0];
+
+}
+
+function lieuOpportunite(o) {
+return [o.universite, o.pays].filter(Boolean).join(", ");
+}
+
+// L'échéance est RECOPIÉE, jamais reconstruite : on se contente de la
+// mettre en français quand elle est lisible comme date, et on la laisse
+// telle quelle sinon. Aucune date n'est complétée ni arrondie.
+function echeanceLisible(valeur) {
+
+const d = dateEcheance(valeur);
+
+return d ? formatFr(d) : String(valeur);
+
+}
+
+/**
+* Les obstacles lisibles dans le PARCOURS déclaré — pas dans le
+* barème. Aucune invention : chaque phrase découle d'une réponse
+* explicite de l'étudiant, et le silence vaut silence.
+*/
+function freinsDuParcours(parcours) {
+
+const p = parcours || {};
+const freins = [];
+
+const exp = String(p.experienceProfessionnelle || "").toLowerCase();
+
+if (exp.includes("aucune") || exp.includes("moins d'un an")) {
+// Fait vérifié le 2026-09-05 sur chevening.org : « at least two
+// years' work experience […] equivalent to 2,800 hours ».
+freins.push("Votre expérience professionnelle est encore courte : plusieurs bourses de master en font un critère éliminatoire — Chevening exige 2 800 heures, soit environ deux ans acquis après la licence.");
+}
+
+const adm = String(p.candidaturesUniversitaires || "").toLowerCase();
+
+if (adm.includes("aucune")) {
+freins.push("Aucune candidature universitaire n'est encore déposée : plusieurs bourses ne financent qu'un étudiant DÉJÀ admis, ce qui met l'admission avant la bourse dans votre calendrier.");
+}
+
+const rech = String(p.projetDeRecherche || "").toLowerCase();
+
+if (rech.includes("pas encore") || rech.includes("pas de sujet")) {
+freins.push("Votre projet de recherche n'est pas encore écrit : c'est la pièce qu'un comité de doctorat lit en premier, avant vos notes.");
+}
+
+const dir = String(p.directeurOuLaboratoire || "").toLowerCase();
+
+if (dir.includes("non") || dir.includes("ne sais pas")) {
+freins.push("Sans directeur de thèse ni laboratoire d'accueil, un dossier de doctorat n'a pas de destinataire — c'est ce contact qui conditionne le reste.");
+}
+
+const passeport = String(p.passeport || "").toLowerCase();
+
+if (passeport.includes("pas encore") || passeport.includes("expiré")) {
+freins.push("Votre passeport n'est pas en règle : les délais se comptent en mois et bloquent aussi bien la candidature que le visa.");
+}
+
+return freins;
+
+}
+
+export function generateDiagnosticReading(input = {}) {
+
+const score = Number.isFinite(Number(input.score)) ? Number(input.score) : null;
+const classes = sousScoresTries(input.sousScores);
+const meilleur = classes[0] || null;
+const plusFaible = classes.length > 1 ? classes[classes.length - 1] : null;
+
+const forces = (input.strengths || []).filter(Boolean);
+const freins = (input.weaknesses || []).filter(Boolean);
+const compatibles = Number(input.nombreRetenu) || Number(input.totalCompatible) || 0;
+const choisie = opportunitePrioritaire(input.opportunites);
+
+const domaine = input.profile?.desiredField || "";
+const destination = input.profile?.desiredCountry || "";
+const cycle = input.niveauVise || "";
+
+const lignes = [];
+
+// ---------- Votre situation ----------
+
+lignes.push("### Votre situation");
+lignes.push("");
+
+const situation = [];
+
+if (score !== null) {
+situation.push(`Votre dossier obtient **${score} sur 100**.`);
+}
+
+if (cycle || domaine) {
+situation.push(
+`Vous visez ${[cycle, domaine].filter(Boolean).join(" en ")}${destination ? `, avec ${destination} en tête` : ""}.`
+);
+} else if (destination) {
+situation.push(`Vous visez ${destination}.`);
+}
+
+if (compatibles > 0) {
+const ouvertes = Number(input.echeancesOuvertes) || 0;
+situation.push(
+`Fitz a retenu ${compatibles} opportunité${compatibles > 1 ? "s" : ""} pour vous${ouvertes > 0 ? `, dont ${ouvertes} dont les candidatures sont encore ouvertes` : ""}.`
+);
+} else {
+situation.push("Aucune opportunité du catalogue ne correspond à ce profil aujourd'hui.");
+}
+
+if (meilleur && plusFaible) {
+situation.push(
+`Le détail est plus parlant que le total : « ${meilleur.libelle} » à ${meilleur.valeur} %, « ${plusFaible.libelle} » à ${plusFaible.valeur} %. Un comité lit cet écart avant de lire la moyenne.`
+);
+}
+
+lignes.push(situation.join(" "));
+lignes.push("");
+
+// ---------- Ce qui rend votre dossier crédible ----------
+
+lignes.push("### Ce qui rend votre dossier crédible");
+lignes.push("");
+
+if (forces.length) {
+
+forces.slice(0, 3).forEach((f) => lignes.push(`- ${f}`));
+lignes.push("");
+lignes.push(
+"Ces points comptent parce qu'un comité cherche d'abord la cohérence d'un parcours, pas la performance brute : il veut comprendre pourquoi ce candidat demande ce programme-là."
+);
+
+} else if (meilleur) {
+
+lignes.push(
+`Le point sur lequel vous pouvez vous appuyer est « ${meilleur.libelle} » (${meilleur.valeur} %). C'est peu, mais c'est un appui réel : un dossier se construit à partir de ce qui tient, pas à partir de ce qui manque.`
+);
+
+} else {
+
+lignes.push(
+"L'analyse n'a pas encore relevé de point d'appui net. Ce n'est pas un verdict sur vos capacités : c'est le signe que le questionnaire manque d'éléments sur votre parcours."
+);
+
+}
+
+lignes.push("");
+
+// ---------- Ce qui va vous coûter des places ----------
+
+lignes.push("### Ce qui va vous coûter des places");
+lignes.push("");
+
+if (freins.length) {
+
+freins.slice(0, 2).forEach((f) => lignes.push(`- ${f}`));
+lignes.push("");
+
+}
+
+// Les freins tirés du PARCOURS déclaré (questionnaire par niveau,
+// 2026-09-05). Ils ne viennent pas du barème mais des réponses
+// propres au cycle — et ce sont souvent les plus décisifs : deux
+// candidats au même score n'ont pas le même dossier selon qu'ils ont
+// ou non l'expérience professionnelle qu'une bourse exige.
+const duParcours = freinsDuParcours(input.parcours);
+
+if (duParcours.length) {
+duParcours.slice(0, 2).forEach((f) => lignes.push(`- ${f}`));
+lignes.push("");
+}
+
+if (plusFaible && plusFaible.valeur < 60) {
+
+lignes.push(
+`Le point le plus faible est « ${plusFaible.libelle} », à ${plusFaible.valeur} %. C'est le genre d'élément qui écarte un dossier avant même sa lecture au fond, parce qu'il se vérifie en trente secondes.`
+);
+
+} else if (!freins.length && score !== null && score < 50) {
+
+// Silence du moteur + score bas = questionnaire incomplet, pas
+// dossier sain. Écrire « aucun frein » ici serait un mensonge par
+// omission, et le pire service à rendre à un étudiant.
+lignes.push(
+`L'analyse n'a pas isolé de frein nommé, mais un total de ${score} sur 100 ne s'explique pas tout seul : il signifie que plusieurs éléments attendus par les comités manquent encore à votre dossier ou n'ont pas été renseignés dans le questionnaire.`
+);
+
+} else if (!freins.length) {
+
+lignes.push(
+"L'analyse ne relève pas de frein bloquant. Le risque qui reste est celui du calendrier : un dossier moyen déposé tôt passe devant un dossier solide déposé trop tard."
+);
+
+} else {
+
+lignes.push(
+"Aucun de ces points n'est éliminatoire, à une condition : que le calendrier soit tenu. Les certifications de langue et les documents officiels se demandent des semaines à l'avance."
+);
+
+}
+
+lignes.push("");
+
+// ---------- Les trois dossiers à ouvrir ----------
+
+lignes.push("### Les trois dossiers à ouvrir");
+lignes.push("");
+
+const dossiers = (Array.isArray(input.opportunites) ? input.opportunites : []).filter(Boolean).slice(0, 3);
+
+if (dossiers.length) {
+
+// Une première action DIFFÉRENTE pour chacun : trois fois le même
+// conseil sous trois noms de bourse, c'est le contraire d'une
+// lecture personnalisée.
+const premieresActions = [
+"ouvrez sa fiche et relevez la liste exacte des pièces demandées, puis repérez celle qui ne dépend pas de vous — c'est toujours celle-là qui fait rater une échéance",
+"vérifiez la date de clôture sur le portail officiel et notez-la dans votre calendrier avec un rappel trois semaines avant",
+"identifiez dès maintenant qui écrira votre lettre de recommandation, et prévenez cette personne : c'est le délai le plus long de tout le dossier"
+];
+
+dossiers.forEach((o, i) => {
+
+const lieu = lieuOpportunite(o);
+const raison = (o.raisons || []).filter(Boolean)[0] || "";
+
+lignes.push(`**${o.nom}**${lieu ? ` — ${lieu}` : ""}.`);
+lignes.push("");
+
+const corps = [];
+
+// Minuscule sur la PREMIÈRE lettre seulement : tout passer en
+// minuscules écrivait « programme de niveau master » et « domaine
+// (commerce) », en abîmant les noms propres.
+if (raison) corps.push(`Pourquoi celle-là : ${raison.charAt(0).toLowerCase()}${raison.slice(1)}.`);
+
+if (o.candidaturesOuvertes && typeof o.joursRestants === "number") {
+corps.push(
+o.joursRestants <= 14
+? `Il ne reste que ${o.joursRestants} jour${o.joursRestants > 1 ? "s" : ""} : n'engagez ce dossier que si vos pièces sont déjà réunies.`
+: `Les candidatures sont ouvertes et il vous reste ${o.joursRestants} jours.`
+);
+} else if (o.echeance) {
+corps.push(`L'échéance annoncée dans notre catalogue est le ${echeanceLisible(o.echeance)} — confirmez-la sur le portail officiel avant toute autre chose.`);
+} else {
+corps.push("Aucune date de clôture ne figure dans notre catalogue : votre première tâche est d'aller la chercher sur le portail officiel — nous ne la devinons pas pour vous.");
+}
+
+corps.push(`Cette semaine : ${premieresActions[i] || premieresActions[0]}.`);
+
+lignes.push(corps.join(" "));
+lignes.push("");
+
+});
+
+// L'échéance la PLUS PROCHE commande l'ordre, pas le score : c'est
+// la seule contrainte qu'on ne peut pas rattraper.
+const ouverts = dossiers
+.filter((o) => o.candidaturesOuvertes && typeof o.joursRestants === "number")
+.sort((a, b) => a.joursRestants - b.joursRestants);
+
+const commencerPar = ouverts[0] || dossiers[0];
+
+if (ouverts.length === 1) {
+lignes.push(`Commencez par **${commencerPar.nom}** : c'est la seule des trois dont les candidatures sont ouvertes aujourd'hui, donc la seule sur laquelle vous pouvez agir cette semaine.`);
+} else if (ouverts.length > 1) {
+lignes.push(`Commencez par **${commencerPar.nom}** : c'est celle qui ferme le plus tôt, dans ${commencerPar.joursRestants} jours. Les autres attendront sans rien vous coûter ; celle-ci, non.`);
+} else {
+lignes.push(`Commencez par **${commencerPar.nom}** : c'est celle dont votre profil est le plus proche. Aucune de ces trois n'affiche de date confirmée — allez la chercher sur les portails avant de rédiger quoi que ce soit.`);
+}
+
+} else {
+
+lignes.push(
+"Nous n'avons pas d'opportunité à vous désigner aujourd'hui : aucune de celles du catalogue ne correspond à la combinaison de votre nationalité, de votre cycle et de votre destination, ou leurs candidatures de cette année sont closes. Élargir la destination visée est ce qui change le plus vite cet éventail."
+);
+
+}
+
+lignes.push("");
+lignes.push(
+"Nous accompagnons un dossier, nous n'attribuons aucune bourse et n'influençons aucune décision d'admission."
+);
+
+return lignes.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 
 }

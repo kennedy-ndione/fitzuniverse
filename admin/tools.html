@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Outils techniques | FitzUniverse Control Center</title>
+
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F6F3ED">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — administration">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Pilotage</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="messages.html" class="nav-link"><i data-lucide="messages-square"></i><span>Messages</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Catalogue</span>
+
+<ul>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Système</span>
+
+<ul>
+<li><a href="tools.html" class="nav-link is-active" aria-current="page"><i data-lucide="wrench"></i><span>Outils techniques</span></a></li>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Outils techniques</h1>
+<p>Audits, exports, migrations et lots historiques — tout l'outillage du catalogue, réuni ici.</p>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<div class="tools-grid">
+
+<!-- Radar des échéances (2026-09-05) — placé AVANT l'audit du
+catalogue : c'est celui des deux qu'il faut ouvrir le plus souvent.
+Une date de clôture se périme toute seule, sans que personne y
+touche. -->
+<div class="tool-card" style="--tool-color:var(--danger);">
+<div class="tool-card-head">
+<i data-lucide="radar"></i>
+<h3>Radar des échéances</h3>
+</div>
+<p>Quelles bourses revérifier, et dans quel ordre : ce qui vient de fermer, ce qui ferme dans quinze jours, et les contradictions entre le statut affiché et l'échéance réelle. Classé par risque × exposition. Lecture seule, zéro lecture Firestore.</p>
+<div class="tool-card-links">
+<a href="radar.html" class="tool-link"><i data-lucide="arrow-right"></i>Lancer le radar</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--amber-700);">
+<div class="tool-card-head">
+<i data-lucide="search-check"></i>
+<h3>Audit du catalogue</h3>
+</div>
+<p>Contrôle transversal des bourses, universités et programmes : photos partagées, liens identiques, incohérences de données.</p>
+<div class="tool-card-links">
+<a href="audit-catalog.html" class="tool-link"><i data-lucide="arrow-right"></i>Lancer l'audit</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--success-600);">
+<div class="tool-card-head">
+<i data-lucide="download"></i>
+<h3>Export du catalogue</h3>
+</div>
+<p>Instantané complet des trois collections (bourses, universités, programmes) — l'état réel de la base, à exiger avant tout nouveau lot.</p>
+<div class="tool-card-links">
+<a href="export-catalog.html" class="tool-link"><i data-lucide="arrow-right"></i>Exporter</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--warning-600);">
+<div class="tool-card-head">
+<i data-lucide="upload"></i>
+<h3>Imports historiques</h3>
+</div>
+<p>Chargements initiaux du catalogue. Conservés pour mémoire — les ajouts passent désormais par les formulaires Bourses/Universités ou par le runner.</p>
+<div class="tool-card-links">
+<a href="import-scholarships.html" class="tool-link"><i data-lucide="graduation-cap"></i>Bourses</a>
+<a href="import-universities.html" class="tool-link"><i data-lucide="landmark"></i>Universités</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--accent-600);">
+<div class="tool-card-head">
+<i data-lucide="database"></i>
+<h3>Migrations</h3>
+</div>
+<p>Transformations de structure déjà exécutées (modèle relationnel, portails). Ne relancer qu'en connaissance de cause.</p>
+<div class="tool-card-links">
+<a href="migrate.html" class="tool-link"><i data-lucide="arrow-right"></i>Modèle relationnel</a>
+<a href="migrate-portal.html" class="tool-link"><i data-lucide="arrow-right"></i>Portails</a>
+<a href="backfill-portal-data.html" class="tool-link"><i data-lucide="arrow-right"></i>Backfill portails</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--danger-600);">
+<div class="tool-card-head">
+<i data-lucide="stethoscope"></i>
+<h3>Diagnostics</h3>
+</div>
+<p>Sondes ponctuelles de cohérence, créées au fil des lots pour vérifier un point précis de la base.</p>
+<div class="tool-card-links">
+<a href="diag-scholarships.html" class="tool-link"><i data-lucide="arrow-right"></i>Bourses</a>
+<a href="diag-missing-portal.html" class="tool-link"><i data-lucide="arrow-right"></i>Portails manquants</a>
+<a href="diag-lot12.html" class="tool-link"><i data-lucide="arrow-right"></i>Lot 12</a>
+</div>
+</div>
+
+<div class="tool-card" style="--tool-color:var(--text-muted);">
+<div class="tool-card-head">
+<i data-lucide="terminal"></i>
+<h3>Runner de lots (recommandé)</h3>
+</div>
+<p>Depuis le 2026-08-31, les nouveaux lots du catalogue passent par <strong>scripts/lot.mjs</strong> (analyser / ecrire / verifier / export) en ligne de commande — plus fiable et moins coûteux en lectures que les pages ci-dessous.</p>
+<div class="tool-card-links">
+<span class="tool-link" style="cursor:default;"><i data-lucide="info"></i>node scripts/lot.mjs</span>
+</div>
+</div>
+
+</div>
+
+<details class="tools-batch-details">
+<summary>Lots d'extension historiques (pages « expand-catalog-batch », déjà exécutés)</summary>
+<div class="tools-batch-list" id="batchList">
+<!-- liens générés par tools.js -->
+</div>
+</details>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="tools.js"></script>
+
+</body>
+
+</html>

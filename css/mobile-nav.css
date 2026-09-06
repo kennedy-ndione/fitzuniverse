@@ -1,0 +1,1061 @@
+/* ==========================================================
+FITZUNIVERSE — NAVIGATION MOBILE (2026-09-03)
+==========================================================
+Demande utilisateur : « reperfectionner à 100 % la navigation côté
+mobile sur tout le site comme le font les grands sites web modernes ».
+
+Un seul système, trois pièces, une seule feuille (chargée EN DERNIER
+sur toutes les pages, après header.css / journey-shell.css qu'elle
+complète) et un seul script (js/mobile-nav.js) qui INJECTE le
+balisage — aucune page n'a à recopier un menu :
+
+1. SITE PUBLIC — bouton « menu » animé (hamburger → croix) dans
+   l'en-tête, qui ouvre une FEUILLE PLEIN ÉCRAN (pattern Stripe /
+   Airbnb / Linear) : grandes entrées éditoriales, section « Votre
+   espace », CTA principal ancré en bas. Fermeture : croix, Échap,
+   voile, clic sur un lien, retour au format bureau. Défilement du
+   corps verrouillé pendant l'ouverture.
+
+2. ESPACE ÉTUDIANT — BARRE D'ONGLETS BASSE (pattern natif iOS /
+   Android, Airbnb / Revolut / Instagram) : Parcours · Candidatures ·
+   Documents · Fitz · Menu. Toujours visible, sous le pouce, avec
+   l'onglet courant marqué. « Fitz » remplace le bouton flottant sur
+   mobile (même verrou de formule, data-feature="ai_chat"). « Menu »
+   ouvre une FEUILLE BASSE (bottom sheet) : profil, paramètres,
+   formule, messages, tests, entretien, déconnexion.
+
+3. Les pages « tunnel » (questionnaire, paiement, connexion, compte
+   suspendu) gardent volontairement leur lien de retour seul, comme le
+   font les checkouts et formulaires des grands sites : pas de
+   distraction quand on est au milieu d'un geste.
+
+Doctrine mobile (regles_mobile.md) respectée : cibles ≥ 44px, icônes
+Lucide bornées 18-22px, zéro débordement, prefers-reduced-motion
+respecté, zone de gestes (safe-area) réservée.
+========================================================== */
+
+:root{
+--mnav-bp:640px;                 /* même seuil que header.css */
+--mnav-tabbar-h:62px;
+--mnav-ink:#1A1714;
+--mnav-ink-2:#57514A;
+--mnav-paper:#FDF9EF;
+--mnav-paper-2:#F5EFE2;
+--mnav-line:#E5DCC8;
+--mnav-accent:#C9860B;
+--mnav-accent-ink:#8A5D00;
+--mnav-ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ==========================================================
+0. Bouton « menu » (public) — hamburger animé → croix
+========================================================== */
+.mnav-toggle{
+display:none;
+position:relative;
+align-items:center;
+justify-content:center;
+width:40px;
+height:40px;
+padding:0;
+border:0;
+border-radius:999px;
+background:#fff;
+color:var(--mnav-ink);
+box-shadow:0 1px 3px rgba(26,23,20,.12);
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+flex-shrink:0;
+}
+
+.mnav-toggle:focus-visible{
+outline:2px solid var(--mnav-accent);
+outline-offset:2px;
+}
+
+.mnav-toggle-bars{
+position:relative;
+display:block;
+width:18px;
+height:12px;
+}
+
+.mnav-toggle-bars span{
+position:absolute;
+left:0;
+width:18px;
+height:2px;
+border-radius:2px;
+background:currentColor;
+transition:transform .32s var(--mnav-ease), opacity .2s ease, top .32s var(--mnav-ease);
+}
+
+.mnav-toggle-bars span:nth-child(1){ top:0; }
+.mnav-toggle-bars span:nth-child(2){ top:5px; }
+.mnav-toggle-bars span:nth-child(3){ top:10px; }
+
+.mnav-toggle[aria-expanded="true"] .mnav-toggle-bars span:nth-child(1){ top:5px; transform:rotate(45deg); }
+.mnav-toggle[aria-expanded="true"] .mnav-toggle-bars span:nth-child(2){ opacity:0; transform:scaleX(.2); }
+.mnav-toggle[aria-expanded="true"] .mnav-toggle-bars span:nth-child(3){ top:5px; transform:rotate(-45deg); }
+
+/* Menu ouvert : l'en-tête réel s'efface (la feuille porte sa propre
+rangée logo + croix, voir ci-dessous) — on évite ainsi un bandeau
+d'en-tête posé par-dessus la feuille, dont la couleur dépendrait de
+l'état scrollé/non scrollé. */
+body.mnav-open .header,
+body.mnav-open .page-brandbar{
+visibility:hidden;
+}
+
+/* Barre de marque en overlay (diagnostic) : la bande laisse passer les
+clics (pointer-events:none, base.css) — le bouton, lui, doit les
+recevoir. Et .page-brandbar n'est pas une rangée flex par défaut. */
+.page-brandbar{ display:flex; align-items:center; }
+.page-brandbar .mnav-toggle{
+pointer-events:auto;
+margin-left:auto;
+}
+
+/* Sur fond sombre (diagnostic, .on-dark), la pastille blanche du
+bouton garde l'encre : même pastille que « Connexion » sur l'accueil. */
+
+/* ==========================================================
+1. Feuille plein écran (public) — encre chaude, comme les heros
+========================================================== */
+.mnav-sheet{
+position:fixed;
+inset:0;
+z-index:2100;
+display:flex;
+flex-direction:column;
+padding:env(safe-area-inset-top, 0px) 0 calc(20px + env(safe-area-inset-bottom, 0px));
+background:linear-gradient(160deg,#2C2419 0%,#1C1710 48%,#0D0A06 100%);
+color:#FDF9EF;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+overscroll-behavior:contain;
+opacity:0;
+visibility:hidden;
+transform:translateY(-10px);
+transition:opacity .28s var(--mnav-ease), transform .4s var(--mnav-ease), visibility 0s linear .4s;
+}
+
+.mnav-sheet.is-open{
+opacity:1;
+visibility:visible;
+transform:none;
+transition:opacity .28s var(--mnav-ease), transform .4s var(--mnav-ease), visibility 0s;
+}
+
+/* Halo ambré très discret en haut à droite, même vocabulaire que
+le bandeau « ouvert en ce moment ». */
+.mnav-sheet::before{
+content:"";
+position:absolute;
+inset:0;
+pointer-events:none;
+background:radial-gradient(60% 40% at 100% 0%,rgba(233,163,25,.16) 0%,transparent 70%);
+}
+
+.mnav-sheet > *{ position:relative; }
+
+/* Rangée haute : lockup + croix, même géométrie que l'en-tête (76px). */
+.mnav-sheet-top{
+display:flex;
+align-items:center;
+justify-content:space-between;
+height:76px;
+padding:0 16px 0 20px;
+flex-shrink:0;
+}
+
+.mnav-sheet-top .fitz-lockup{ --lockup-size:28px; }
+
+/* Le nom complet reste visible dans la feuille, même là où l'en-tête
+le masque (journey-shell.css ≤720, header.css ≤355). */
+.mnav-sheet-top .fitz-lockup-text{ display:flex !important; }
+
+.mnav-close{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:40px;
+height:40px;
+padding:0;
+border:1px solid rgba(255,255,255,.18);
+border-radius:999px;
+background:rgba(255,255,255,.08);
+color:#FDF9EF;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
+.mnav-close svg, .mnav-close i{ width:18px; height:18px; }
+
+.mnav-close:focus-visible{ outline:2px solid #E9A319; outline-offset:2px; }
+
+.mnav-sheet-inner{
+display:flex;
+flex-direction:column;
+flex:1 1 auto;
+padding:8px 24px 0;
+}
+
+.mnav-eyebrow{
+margin:8px 0 6px;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.7rem;
+font-weight:700;
+letter-spacing:.16em;
+text-transform:uppercase;
+color:#E9A319;
+}
+
+.mnav-list{
+list-style:none;
+margin:0;
+padding:0;
+}
+
+.mnav-list li{
+border-bottom:1px solid rgba(255,255,255,.09);
+}
+
+.mnav-list li:last-child{ border-bottom:0; }
+
+.mnav-link{
+display:flex;
+align-items:center;
+gap:14px;
+min-height:60px;
+padding:12px 2px;
+text-decoration:none;
+color:#FDF9EF;
+-webkit-tap-highlight-color:transparent;
+/* Entrée en cascade à l'ouverture, comme un menu natif. */
+opacity:0;
+transform:translateY(12px);
+transition:opacity .3s ease, transform .45s var(--mnav-ease);
+}
+
+.mnav-sheet.is-open .mnav-link{
+opacity:1;
+transform:none;
+}
+
+.mnav-sheet.is-open .mnav-list li:nth-child(1) .mnav-link{ transition-delay:.06s; }
+.mnav-sheet.is-open .mnav-list li:nth-child(2) .mnav-link{ transition-delay:.10s; }
+.mnav-sheet.is-open .mnav-list li:nth-child(3) .mnav-link{ transition-delay:.14s; }
+.mnav-sheet.is-open .mnav-list li:nth-child(4) .mnav-link{ transition-delay:.18s; }
+.mnav-sheet.is-open .mnav-list li:nth-child(5) .mnav-link{ transition-delay:.22s; }
+.mnav-sheet.is-open .mnav-section .mnav-link{ transition-delay:.28s; }
+
+.mnav-link-icon{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:42px;
+height:42px;
+flex-shrink:0;
+border-radius:13px;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.12);
+color:#E9A319;
+}
+
+.mnav-link-icon svg,
+.mnav-link-icon i{ width:19px; height:19px; }
+
+.mnav-link-text{
+display:flex;
+flex-direction:column;
+min-width:0;
+flex:1 1 auto;
+}
+
+.mnav-link-title{
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-size:1.42rem;
+font-weight:600;
+line-height:1.12;
+letter-spacing:-.01em;
+}
+
+.mnav-link-sub{
+margin-top:3px;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.8rem;
+color:rgba(253,249,239,.62);
+}
+
+.mnav-link-arrow{
+color:rgba(253,249,239,.35);
+flex-shrink:0;
+}
+
+.mnav-link-arrow svg,
+.mnav-link-arrow i{ width:18px; height:18px; }
+
+.mnav-link[aria-current="page"] .mnav-link-icon{
+background:#FDF9EF;
+border-color:#FDF9EF;
+color:#1A1714;
+}
+
+.mnav-link[aria-current="page"] .mnav-link-arrow{ color:#E9A319; }
+
+.mnav-section{ margin-top:22px; }
+
+/* Pied de feuille : CTA ancré en bas, comme la barre d'action d'une
+application. Ambre plein = le CTA principal du site (base.css). */
+.mnav-footer{
+margin-top:auto;
+padding-top:28px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.mnav-cta,
+.mnav-cta-ghost{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+min-height:50px;
+padding:12px 18px;
+border-radius:999px;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.98rem;
+font-weight:700;
+text-decoration:none;
+-webkit-tap-highlight-color:transparent;
+transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.mnav-cta{
+background:#E9A319;
+color:#1A1714;
+box-shadow:0 12px 28px -12px rgba(233,163,25,.55);
+}
+
+.mnav-cta:active{ transform:scale(.985); }
+
+.mnav-cta-ghost{
+background:transparent;
+color:#FDF9EF;
+border:1px solid rgba(255,255,255,.22);
+}
+
+.mnav-cta svg, .mnav-cta i,
+.mnav-cta-ghost svg, .mnav-cta-ghost i{ width:17px; height:17px; }
+
+.mnav-fineprint{
+margin:4px 0 0;
+text-align:center;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.74rem;
+color:rgba(253,249,239,.55);
+}
+
+/* Le corps ne défile plus derrière la feuille. */
+body.mnav-open{
+overflow:hidden;
+}
+
+/* Bureau : rien de tout cela n'existe. */
+@media (min-width:641px){
+.mnav-toggle{ display:none !important; }
+.mnav-sheet{ display:none !important; }
+}
+
+@media (max-width:640px){
+.mnav-toggle{ display:inline-flex; }
+
+/* L'ancien bouton rond + panneau déroulant de l'accueil sont
+remplacés par ce système (index.html, js/main.js). Garde-fou si un
+balisage ancien subsiste quelque part. */
+.header-menu-btn,
+.header-menu-panel{ display:none !important; }
+}
+
+/* ==========================================================
+2. Barre d'onglets basse (espace étudiant)
+========================================================== */
+.mnav-tabbar{
+display:none;
+}
+
+.mnav-menu-sheet{
+display:none;
+}
+
+@media (max-width:720px){
+
+.mnav-tabbar{
+position:fixed;
+left:0;
+right:0;
+bottom:0;
+z-index:1500;
+display:grid;
+grid-template-columns:repeat(5, 1fr);
+height:calc(var(--mnav-tabbar-h) + env(safe-area-inset-bottom, 0px));
+padding:0 4px env(safe-area-inset-bottom, 0px);
+background:rgba(253,249,239,.94);
+-webkit-backdrop-filter:blur(14px) saturate(1.2);
+backdrop-filter:blur(14px) saturate(1.2);
+border-top:1px solid var(--mnav-line);
+box-shadow:0 -6px 20px -10px rgba(26,23,20,.18);
+}
+
+.mnav-tab{
+position:relative;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:3px;
+min-height:44px;
+padding:6px 2px 4px;
+border:0;
+background:none;
+font:inherit;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.66rem;
+font-weight:600;
+letter-spacing:.01em;
+line-height:1.1;
+color:var(--mnav-ink-2);
+text-decoration:none;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+transition:color .18s ease;
+}
+
+.mnav-tab svg,
+.mnav-tab i{
+width:22px;
+height:22px;
+stroke-width:1.9;
+transition:transform .18s var(--mnav-ease);
+}
+
+.mnav-tab:active svg{ transform:scale(.92); }
+
+.mnav-tab[aria-current="page"],
+.mnav-tab.is-active{
+color:var(--mnav-ink);
+}
+
+.mnav-tab[aria-current="page"]::after,
+.mnav-tab.is-active::after{
+content:"";
+position:absolute;
+top:0;
+left:50%;
+width:22px;
+height:3px;
+border-radius:0 0 3px 3px;
+background:var(--mnav-accent);
+transform:translateX(-50%);
+}
+
+/* Onglet Fitz : le symbole de la marque, comme le bouton flottant
+qu'il remplace ici. Le cadenas apparaît quand applyFeatureLocks a posé
+is-locked sur l'onglet (formule sans chat) — même mécanique que le
+FAB (journey-shell.css). */
+.mnav-tab .fitz-mark{ width:24px; height:24px; }
+
+.mnav-tab-lock{
+position:absolute;
+top:6px;
+right:calc(50% - 20px);
+display:none;
+align-items:center;
+justify-content:center;
+width:14px;
+height:14px;
+border-radius:999px;
+background:var(--mnav-ink);
+color:#F3D9C8;
+}
+
+.mnav-tab-lock svg, .mnav-tab-lock i{ width:8px; height:8px; }
+
+.mnav-tab.is-locked .mnav-tab-lock{ display:flex; }
+
+.mnav-tab.is-locked .fitz-mark{ opacity:.6; }
+
+/* Point rouge « messages non lus » recopié depuis la cloche. */
+.mnav-tab-dot{
+position:absolute;
+top:7px;
+right:calc(50% - 15px);
+width:8px;
+height:8px;
+border-radius:999px;
+background:#C2410C;
+border:2px solid var(--mnav-paper);
+}
+
+.mnav-tab-dot[hidden]{ display:none; }
+
+/* Le contenu de l'espace réserve la hauteur de la barre. */
+body.mnav-has-tabbar .dashboard-main > .content,
+body.mnav-has-tabbar main.content,
+body.mnav-has-tabbar #pageMain{
+padding-bottom:calc(var(--mnav-tabbar-h) + env(safe-area-inset-bottom, 0px) + 28px) !important;
+}
+
+/* Le bouton flottant « Discuter avec Fitz » cède la place à l'onglet
+Fitz (deux accès au même endroit de l'écran = encombrement). */
+body.mnav-has-tabbar .fitz-fab-wrap{ display:none !important; }
+
+/* La barre haute perd la déconnexion (elle vit dans la feuille Menu)
+et les icônes secondaires déjà masquées ≤720 par journey-shell.css. */
+body.mnav-has-tabbar .journey-topbar #logoutBtn{ display:none; }
+
+/* Barre haute des pages outils, façon barre de navigation native :
+[‹]  Titre de la page ............ [cloche] [formule]. Le lien « Mon
+parcours » devient une pastille flèche (l'onglet Parcours dit déjà où
+elle mène), le titre retrouve la place qu'il perdait (« B… » mesuré à
+375px), et le symbole de marque — doublon de l'onglet Parcours — se
+retire quand un contexte de page est présent. */
+body.mnav-has-tabbar .journey-topbar:has(.journey-context) > .fitz-lockup{ display:none; }
+
+body.mnav-has-tabbar .journey-topbar{ gap:10px; padding-left:12px; padding-right:12px; }
+
+body.mnav-has-tabbar .journey-context{ gap:10px; }
+
+body.mnav-has-tabbar .journey-context .back-link{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:38px;
+height:38px;
+flex-shrink:0;
+border:1px solid var(--mnav-line);
+border-radius:11px;
+background:#fff;
+color:var(--mnav-ink);
+}
+
+body.mnav-has-tabbar .journey-context .back-link:hover{ text-decoration:none; }
+
+body.mnav-has-tabbar .journey-context .back-link i,
+body.mnav-has-tabbar .journey-context .back-link svg{ width:18px; height:18px; }
+
+body.mnav-has-tabbar .journey-context .back-link span{
+position:absolute;
+width:1px; height:1px;
+padding:0; margin:-1px;
+overflow:hidden;
+clip:rect(0,0,0,0);
+white-space:nowrap;
+border:0;
+}
+
+body.mnav-has-tabbar .journey-context h1{
+font-size:1.02rem;
+min-width:0;
+}
+
+/* Les pages plein cadre (chat Fitz, messagerie) sont des
+conversations : comme dans toute application de messagerie, la barre
+d'onglets s'efface pour laisser le composer au bord de l'écran. Le
+lien « ← Mon parcours » de leur barre haute reste le chemin de sortie. */
+body:has(#chatApp) .mnav-tabbar,
+body:has(.messages-page-card) .mnav-tabbar{ display:none; }
+
+body:has(#chatApp).mnav-has-tabbar .fitz-fab-wrap,
+body:has(.messages-page-card).mnav-has-tabbar .fitz-fab-wrap{ display:none !important; }
+
+/* ==========================================================
+3. Feuille basse « Menu » (espace étudiant)
+========================================================== */
+.mnav-menu-backdrop{
+position:fixed;
+inset:0;
+z-index:1600;
+background:rgba(26,23,20,.42);
+opacity:0;
+visibility:hidden;
+transition:opacity .25s ease, visibility 0s linear .25s;
+}
+
+.mnav-menu-backdrop.is-open{
+opacity:1;
+visibility:visible;
+transition:opacity .25s ease, visibility 0s;
+}
+
+.mnav-menu-sheet{
+position:fixed;
+left:0;
+right:0;
+bottom:0;
+z-index:1601;
+display:block;
+max-height:calc(100dvh - 48px);
+overflow-y:auto;
+overscroll-behavior:contain;
+padding:10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+background:var(--mnav-paper);
+color:var(--mnav-ink);
+border-radius:22px 22px 0 0;
+box-shadow:0 -12px 40px -12px rgba(26,23,20,.35);
+transform:translateY(105%);
+visibility:hidden;
+transition:transform .38s var(--mnav-ease), visibility 0s linear .38s;
+}
+
+.mnav-menu-sheet.is-open{
+transform:none;
+visibility:visible;
+transition:transform .38s var(--mnav-ease), visibility 0s;
+}
+
+.mnav-menu-grip{
+display:block;
+width:40px;
+height:4px;
+margin:2px auto 14px;
+border-radius:999px;
+background:#D9CFB8;
+}
+
+.mnav-menu-head{
+display:flex;
+align-items:center;
+gap:12px;
+padding:4px 2px 14px;
+border-bottom:1px solid var(--mnav-line);
+}
+
+.mnav-menu-avatar{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:44px;
+height:44px;
+flex-shrink:0;
+border-radius:999px;
+background:var(--mnav-ink);
+color:#FDF9EF;
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-size:1.1rem;
+font-weight:600;
+}
+
+.mnav-menu-who{ min-width:0; flex:1 1 auto; }
+
+.mnav-menu-name{
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-size:1.08rem;
+font-weight:600;
+line-height:1.2;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.mnav-menu-plan{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin-top:3px;
+font-size:.76rem;
+font-weight:700;
+color:var(--mnav-accent-ink);
+text-decoration:none;
+}
+
+.mnav-menu-plan svg, .mnav-menu-plan i{ width:13px; height:13px; }
+
+.mnav-menu-close{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:40px;
+height:40px;
+flex-shrink:0;
+border:1px solid var(--mnav-line);
+border-radius:999px;
+background:#fff;
+color:var(--mnav-ink);
+cursor:pointer;
+}
+
+.mnav-menu-close svg, .mnav-menu-close i{ width:18px; height:18px; }
+
+.mnav-menu-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+padding:14px 0 6px;
+}
+
+.mnav-menu-item{
+display:flex;
+align-items:center;
+gap:10px;
+min-height:54px;
+padding:10px 12px;
+border:1px solid var(--mnav-line);
+border-radius:14px;
+background:#fff;
+color:var(--mnav-ink);
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.88rem;
+font-weight:600;
+text-decoration:none;
+-webkit-tap-highlight-color:transparent;
+transition:background .15s ease;
+}
+
+.mnav-menu-item:active{ background:var(--mnav-paper-2); }
+
+.mnav-menu-item svg, .mnav-menu-item i{
+width:18px;
+height:18px;
+flex-shrink:0;
+color:var(--mnav-accent-ink);
+}
+
+.mnav-menu-item[aria-current="page"]{
+border-color:var(--mnav-ink);
+}
+
+.mnav-menu-item.is-locked{ opacity:.72; }
+
+.mnav-menu-item .mnav-item-lock{ display:none; margin-left:auto; color:var(--mnav-ink-2); }
+.mnav-menu-item .mnav-item-lock svg{ width:13px; height:13px; color:inherit; }
+.mnav-menu-item.is-locked .mnav-item-lock{ display:inline-flex; }
+
+.mnav-menu-item--wide{ grid-column:1 / -1; }
+
+.mnav-menu-logout{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+width:100%;
+min-height:48px;
+margin-top:8px;
+padding:10px 14px;
+border:0;
+border-radius:999px;
+background:var(--mnav-paper-2);
+color:var(--mnav-ink);
+font:inherit;
+font-family:var(--font-product, var(--font-body, sans-serif));
+font-size:.9rem;
+font-weight:700;
+cursor:pointer;
+}
+
+.mnav-menu-logout svg, .mnav-menu-logout i{ width:16px; height:16px; }
+
+.mnav-menu-site{
+display:flex;
+justify-content:center;
+gap:18px;
+margin-top:12px;
+}
+
+.mnav-menu-site a{
+font-size:.76rem;
+font-weight:600;
+color:var(--mnav-ink-2);
+text-decoration:none;
+}
+
+body.mnav-menu-open{ overflow:hidden; }
+
+}
+
+/* Au-dessus de 720px : aucune trace de la barre ni de la feuille. */
+@media (min-width:721px){
+.mnav-tabbar,
+.mnav-menu-sheet,
+.mnav-menu-backdrop{ display:none !important; }
+}
+
+/* ==========================================================
+4. Mouvement réduit
+========================================================== */
+@media (prefers-reduced-motion: reduce){
+body:has(#chatApp) .dashboard-shell,
+body:has(.messages-page-card) .dashboard-shell{ transition:none; }
+.mnav-sheet,
+.mnav-sheet .mnav-link,
+.mnav-menu-sheet,
+.mnav-menu-backdrop,
+.mnav-tab svg{
+transition-duration:.01ms !important;
+transition-delay:0s !important;
+}
+.mnav-sheet, .mnav-sheet .mnav-link{ transform:none !important; }
+.mnav-toggle-bars span{ transition-duration:.01ms !important; }
+}
+
+@media print{
+.mnav-toggle, .mnav-sheet, .mnav-tabbar, .mnav-menu-sheet, .mnav-menu-backdrop{ display:none !important; }
+}
+
+/* ==========================================================
+5. CIBLES TACTILES — audit du 2026-09-03 (375 et 360px)
+==========================================================
+Relevé automatique sur 28 pages : les gestes suivants mesuraient
+23-35px de haut, sous le minimum tactile (44px Apple, 48dp Android).
+Là où la géométrie visible est voulue (lien texte fin, pastille),
+la zone de toucher est agrandie par rembourrage + marge négative :
+le rendu ne bouge pas d'un pixel, seul le doigt y gagne. */
+@media (max-width:720px){
+
+/* Liens « Retour » texte (offers, results, diagnostic, catalogue). */
+a.back-link:not(.journey-context .back-link){
+padding-block:10px;
+margin-block:-10px;
+}
+
+/* Pastilles de la barre haute de l'espace : 40px (36/38 avant). */
+/* padding/marge remis à zéro : la règle « zone tactile » juste
+au-dessus les élargit pour les liens Retour EN TEXTE, et son exclusion
+:not(.journey-context .back-link) ne suffit pas ici — la pastille se
+retrouvait 16px au-dessus de sa rangée (mesuré : top -8 dans une barre
+qui commence à 8). Ce sélecteur (0,3,0) tranche pour toutes les pages
+de l'espace. */
+body.mnav-has-tabbar .journey-context .back-link{ width:40px; height:40px; padding:0; margin:0; }
+body.mnav-has-tabbar .journey-topbar .messages-bell-btn{ width:40px; height:40px; }
+
+/* Filtres du catalogue : champ de recherche 31px, sélecteurs 32px,
+bouton de réinitialisation 31px → 44px. */
+.catalog-search-bar input[type="search"],
+.catalog-search-bar input[type="text"],
+.catalog-search-bar .catalog-custom-select-trigger,
+.catalog-search-bar .catalog-search-reset,
+.catalog-natio-input{
+min-height:44px;
+}
+
+/* Puces de catégorie (documents) et puces de profil : 40px. */
+.docs-category-chip,
+.profile-layout .chip{
+min-height:40px;
+}
+
+/* Liens d'action posés dans un texte (alerte de bienvenue, étape
+gratuite des formules, outils du parcours). */
+.welcome-alert-cta,
+.free-step-link,
+.jy-tool{
+padding-block:8px;
+margin-block:-8px;
+}
+
+/* Libellés de la barre d'onglets : 10,6px → 11,5px (Android : 12sp,
+iOS : 10pt) — lisibles sans grossir la barre. */
+.mnav-tab{ font-size:.72rem; }
+
+}
+
+/* Outils Fitz : boutons d'action des résultats (copier, modifier,
+régénérer, télécharger) 32px, onglets de mode 31px, boutons du chat
+32-38px, « Ajuster » 15px, champs de recherche 15-16px → 40-44px. */
+@media (max-width:720px){
+.ai-icon-btn,
+.ai-mode-tab,
+.ai-chat-history-close,
+.ai-chat-history-toggle,
+.ai-chat-send-btn{ min-width:40px; min-height:40px; }
+.ai-context-adjust{ padding-block:12px; margin-block:-12px; }
+#chatHistorySearch,
+#searchDocument{ min-height:40px; }
+/* Étiquettes de contexte et groupes d'historique : 11px → 11,5px. */
+.ai-context-card dt,
+.ai-context-list dt,
+.ai-chat-history-group{ font-size:.72rem; }
+}
+
+/* ==========================================================
+6. CLAVIER ET PAGES PLEIN CADRE (2026-09-03, captures iPhone)
+========================================================== */
+@media (max-width:720px){
+
+/* Les pages plein cadre (chat Fitz, messagerie) n'ont PAS la barre
+d'onglets : la réserve basse n'a rien à réserver — elle laissait une
+bande vide sous le composer. */
+body.mnav-has-tabbar:has(#chatApp) .dashboard-main > .content,
+body.mnav-has-tabbar:has(#chatApp) main.content,
+body.mnav-has-tabbar:has(.messages-page-card) .dashboard-main > .content,
+body.mnav-has-tabbar:has(.messages-page-card) main.content{
+padding-bottom:16px !important;
+}
+
+/* La hauteur des deux pages de conversation est traitée au §7 :
+100dvh ne suffit pas sur iOS, et le cadre doit en plus SUIVRE le
+viewport visible quand Safari le décale. */
+
+/* Panneau de la cloche : ancré au bouton (right:0, 320px), il sortait
+de l'écran par la gauche sur un téléphone. Il devient une feuille
+FIXE pleine largeur sous la barre haute. */
+.journey-topbar .messages-panel{
+position:fixed;
+top:74px;
+left:12px;
+right:12px;
+width:auto;
+max-height:min(62vh, 480px);
+z-index:1700;
+}
+
+}
+
+/* ==========================================================
+7. LES DEUX PAGES DE CONVERSATION FACE AU CLAVIER (2026-09-03)
+==========================================================
+Deuxième passe, sur captures iPhone de l'utilisateur : le chat Fitz et
+la messagerie restaient cassés dès l'ouverture du clavier — barre haute
+coupée en deux, composer au milieu de l'écran, grand vide beige en
+dessous.
+
+CE QUI SE PASSE VRAIMENT SUR iOS (et que 100dvh ni --vvh seuls ne
+règlent) : quand le clavier s'ouvre, Safari ne redimensionne PAS le
+viewport de mise en page. Il rétrécit le viewport VISIBLE et, comme le
+champ de saisie se retrouve sous le clavier, il DÉCALE ce viewport
+visible vers le bas (visualViewport.offsetTop devient > 0). La page
+n'a pas bougé d'un pixel : c'est la fenêtre qui a glissé sur elle.
+D'où les deux symptômes exacts des captures — le haut du cadre (la
+barre du parcours) passe au-dessus de la zone visible, et sous le bas
+du cadre on voit le fond du document.
+
+LA PARADE, en trois temps :
+1. VERROUILLER le document (html + body figés, sans débordement) : il
+   n'y a alors plus rien à faire défiler, ce qui supprime la moitié des
+   déplacements parasites.
+2. Faire du cadre un CALQUE FIXE qui SUIT le viewport visible :
+   hauteur = --vvh, position = translateY(--vvtop). Les deux variables
+   sont posées par js/mobile-nav.js depuis visualViewport, à chaque
+   redimensionnement ET à chaque défilement de ce viewport.
+3. DÉGAGER de la place pendant la frappe (html.kb-open) : sur un cadre
+   qui tombe à ~360px, l'avis « réponse sous 24 h » de la messagerie
+   mangeait 150px et coupait le dernier message.
+========================================================== */
+@media (max-width:720px){
+
+/* 1. Document verrouillé — plus rien à faire défiler derrière. */
+html:has(#chatApp),
+html:has(.messages-page-card){
+height:100%;
+overflow:hidden;
+}
+
+body:has(#chatApp),
+body:has(.messages-page-card){
+position:fixed;
+inset:0;
+width:100%;
+height:100%;
+margin:0;
+overflow:hidden;
+overscroll-behavior:none;
+}
+
+/* 2. Le cadre suit le viewport visible. */
+body:has(#chatApp) .dashboard-shell,
+body:has(.messages-page-card) .dashboard-shell{
+position:fixed;
+top:0;
+left:0;
+right:0;
+height:var(--vvh, 100%);
+min-height:0;
+transform:translateY(var(--vvtop, 0px));
+display:flex;
+flex-direction:column;
+overflow:hidden;
+/* Amortisseur (2026-09-03, « la barre de saisie tremble quelques
+secondes ») : pendant l'ouverture du clavier, iOS envoie des dizaines
+de positions intermédiaires et son décalage dépasse avant de revenir.
+js/mobile-nav.js n'applique plus ce décalage qu'une fois la valeur
+stabilisée ; cette transition très courte absorbe le reste — assez
+lente pour lisser une oscillation, assez rapide pour rester
+imperceptible. Le cadre est promu sur son propre calque pour que le
+navigateur n'ait qu'à le composer, jamais à le repeindre. */
+transition:transform .12s linear;
+will-change:transform;
+backface-visibility:hidden;
+}
+
+body:has(#chatApp) .dashboard-main,
+body:has(.messages-page-card) .dashboard-main{
+height:auto;
+min-height:0;
+flex:1 1 auto;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+/* La barre du parcours est le haut FIXE du cadre : ni collante (elle
+n'a rien sous quoi glisser), ni compressible. */
+body:has(#chatApp) .journey-topbar,
+body:has(.messages-page-card) .journey-topbar{
+position:static;
+flex:0 0 auto;
+}
+
+/* Le contenu ne porte plus de réserve basse : la barre d'onglets
+n'existe pas sur ces deux pages. */
+body:has(#chatApp) .dashboard-main > .content,
+body:has(.messages-page-card) .dashboard-main > .content{
+flex:1 1 auto;
+min-height:0;
+overflow:hidden;
+}
+
+/* 3. Le cadre se resserre : sur ces deux pages, chaque pixel de chrome
+est un pixel de conversation en moins. La barre du parcours mesurait
+97px (rembourrage de 12 + une rangée de contexte qui ne tenait pas sa
+hauteur) : géométrie fixée ici, 56px. */
+body:has(#chatApp) .journey-topbar,
+body:has(.messages-page-card) .journey-topbar{
+padding-top:8px;
+padding-bottom:8px;
+}
+
+body:has(#chatApp) .journey-context,
+body:has(.messages-page-card) .journey-context{
+height:40px;
+align-items:center;
+}
+
+/* L'accueil du chat (« Bonjour … » + cartes d'aide) est centré par
+`margin:auto` : dès qu'il dépasse la hauteur du cadre — ce qui arrive
+sur tout téléphone —, un enfant flex centré déborde des DEUX côtés et
+son haut devient INATTEIGNABLE au défilement (le titre coupé des
+captures). Sur téléphone il part donc du haut et défile normalement. */
+.ai-chat-scroll .ai-empty-state{
+margin:0 auto;
+padding-top:18px;
+padding-bottom:8px;
+}
+
+/* 4. Pendant la frappe, la conversation prend toute la place. */
+html.kb-open .messages-page-notice,
+html.kb-open .ai-chat-main-topbar{
+display:none;
+}
+
+html.kb-open .messages-page-card .ai-panel-header{
+padding-top:10px;
+padding-bottom:10px;
+}
+
+html.kb-open .messages-page-card .ai-panel-header h2{
+font-size:.95rem;
+}
+
+}

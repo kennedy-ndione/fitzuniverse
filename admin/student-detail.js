@@ -34,6 +34,10 @@ import { PLAN_LABELS } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
+// Interaction directe admin → étudiant, comptée pour les courbes du
+// Control Center (2026-09-02). trackEvent avale ses erreurs.
+import { trackEvent } from "../js/analytics.js";
+
 initSidebarToggle();
 
 const SECTION_LABELS = [
@@ -250,6 +254,32 @@ function renderSubscriptionTab(userData) {
 
 document.getElementById("planSelect").value = userData.plan || "";
 
+// Demande de changement déposée par l'étudiant (2026-09-02) : le
+// point d'entrée du système « changer de formule » de l'espace
+// étudiant. pendingPlan est une INTENTION (jamais un accès) — c'est
+// ici que l'équipe la voit, vérifie le paiement, puis active la
+// formule via le sélecteur ci-dessous.
+const pendingStatus = document.getElementById("pendingPlanStatus");
+
+if (pendingStatus) {
+
+const pending = userData.pendingPlan;
+
+if (pending && pending !== userData.plan) {
+
+const requestedAt = userData.pendingPlanRequestedAt && typeof userData.pendingPlanRequestedAt.toDate === "function"
+? ` — demandée le ${userData.pendingPlanRequestedAt.toDate().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
+: "";
+
+const pendingName = PLAN_LABELS[pending] || (window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[pending] && window.SCHOLARBRIDGE_PLANS[pending].label) || pending;
+pendingStatus.innerHTML = `⏳ <strong>Demande de l'étudiant : ${pendingName}</strong>${requestedAt}. Vérifiez le paiement puis enregistrez cette formule ci-dessous pour l'activer.`;
+
+} else {
+pendingStatus.textContent = "Aucune demande de changement en attente.";
+}
+
+}
+
 const disabled = userData.disabled === true;
 
 document.getElementById("statusLabel").textContent = disabled
@@ -371,12 +401,18 @@ async function renderMessages() {
 const messages = await getSentMessages(uid);
 const container = document.getElementById("messagesList");
 
+// Depuis la messagerie bidirectionnelle (2026-09-02), le fil contient
+// aussi les RÉPONSES de l'étudiant (fromStudent:true). Le centre de
+// messages (admin/messages.html) est l'endroit principal pour
+// converser ; cet onglet reste un aperçu fidèle du même fil.
+const centerLink = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);margin-bottom:12px;">Fil complet et réponse rapide dans le <a href="messages.html?uid=${uid}" style="color:var(--amber-700);font-weight:700;">centre de messages</a>. Chaque envoi est signé FitzUniverse.</p>`;
+
 if (!messages.length) {
-container.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucun message envoyé pour le moment.</p>`;
+container.innerHTML = `${centerLink}<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucun message échangé pour le moment.</p>`;
 return;
 }
 
-container.innerHTML = messages.map((message) => `
+container.innerHTML = centerLink + messages.map((message) => `
 <div class="message-item ${message.read ? "" : "is-unread"}">
 <p></p>
 <div class="message-item-meta"><span></span></div>
@@ -386,9 +422,13 @@ container.innerHTML = messages.map((message) => `
 const items = container.querySelectorAll(".message-item");
 
 messages.forEach((message, index) => {
+
+const fromStudent = message.fromStudent === true;
+
 items[index].querySelector("p").textContent = message.text;
 items[index].querySelector(".message-item-meta span").textContent =
-`${formatDateTime(message.createdAt)} — ${message.read ? "lu" : "non lu"}`;
+`${fromStudent ? "Réponse de l'étudiant" : "FitzUniverse"} — ${formatDateTime(message.createdAt)} — ${message.read ? "lu" : "non lu"}`;
+
 });
 
 }
@@ -847,6 +887,8 @@ try {
 
 await sendMessageToUser(uid, currentAdmin.uid, currentAdmin.email, text);
 textarea.value = "";
+
+trackEvent("admin_message_sent", {});
 
 await renderMessages();
 

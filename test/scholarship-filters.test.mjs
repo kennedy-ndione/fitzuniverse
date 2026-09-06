@@ -267,6 +267,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import vm from "node:vm";
 import { resolveScholarshipImage } from "../js/scholarship-image.js";
+import { etatCandidature } from "../js/echeance.js";
 
 function chargerEnrichWithProgramData() {
 
@@ -282,7 +283,13 @@ if (source[i] === "}") profondeur--;
 i++;
 } while (profondeur > 0 && i < source.length);
 
-const contexte = { resolveScholarshipImage, meilleurRangQS };
+// etatCandidature ajoutée le 2026-09-05 : enrichWithProgramData
+// calcule désormais l'état réel des candidatures (voir la pastille des
+// cartes). La fonction est extraite du fichier et exécutée dans un vm
+// sans ses imports — toute nouvelle dépendance doit être déclarée ici,
+// sinon le test échoue sur « ... is not defined » et non sur ce qu'il
+// prétend vérifier.
+const contexte = { resolveScholarshipImage, meilleurRangQS, etatCandidature };
 vm.createContext(contexte);
 vm.runInContext(`${source.slice(debut, i)}\nthis.enrichWithProgramData = enrichWithProgramData;`, contexte);
 return contexte.enrichWithProgramData;

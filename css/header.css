@@ -456,9 +456,14 @@ gap:12px;
 et celle du texte en decoulent (calc dans css/base.css). Avant, il
 fallait piloter les deux separement — et la largeur fixee ici entrait
 en conflit avec --lockup-size. */
-.fitz-lockup{
+.header .fitz-lockup{
 
---lockup-size:42px;
+/* 32 et non 42 : la base est passée de 48 à 36 le 2026-09-01, le
+palier descend d'autant. Sélecteur .header .fitz-lockup : à un seul
+niveau, cette règle perdait contre la taille de contexte de
+css/base.css — et à l'époque des styles inline, elle ne s'appliquait
+tout simplement jamais. */
+--lockup-size:32px;
 
 }
 
@@ -589,9 +594,9 @@ gap:8px;
 
 }
 
-.fitz-lockup{
+.header .fitz-lockup{
 
---lockup-size:36px;
+--lockup-size:28px;
 
 }
 
@@ -618,3 +623,12 @@ flex-shrink:0;
 }
 
 }
+
+/* ==========================================================
+MENU MOBILE
+==========================================================
+Le bouton rond + panneau déroulant du 2026-09-01 (.header-menu-btn /
+.header-menu-panel) ont été remplacés le 2026-09-03 par la navigation
+mobile commune à tout le site : css/mobile-nav.css + js/mobile-nav.js
+(bouton animé injecté dans .header-cta-group / .header-actions, feuille
+plein écran). Plus aucune règle ici. */

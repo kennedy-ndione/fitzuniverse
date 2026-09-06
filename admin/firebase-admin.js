@@ -14,6 +14,7 @@ setDoc,
 updateDoc,
 deleteDoc,
 doc,
+documentId,
 query,
 where,
 orderBy,
@@ -505,6 +506,56 @@ return snapshot.exists() ? snapshot.data() : {};
 
 }
 
+// Historique des compteurs quotidiens sur N jours, pour les courbes
+// évolutives du tableau de bord (refonte 2026-09-02). Les documents
+// sont indexés par clé yyyy-mm-dd : une requête sur documentId()
+// suffit, sans index composite. COÛT : au plus un document lu PAR
+// JOUR EXISTANT (les jours sans activité n'ont pas de document) —
+// soit ≤ N lectures, une seule fois par affichage du tableau de bord.
+export async function getDailyCounterHistory(days = 90) {
+
+const start = new Date();
+start.setDate(start.getDate() - (days - 1));
+
+const startKey = start.toISOString().slice(0, 10);
+
+const historyQuery = query(
+collection(db, "analyticsDailyCounters"),
+where(documentId(), ">=", startKey)
+);
+
+const snapshot = await getDocs(historyQuery);
+
+const history = {};
+
+snapshot.docs.forEach((docSnap) => {
+history[docSnap.id] = docSnap.data();
+});
+
+return history;
+
+}
+
+// Derniers événements du journal brut (analyticsEvents) pour la
+// chronologie d'activité réelle du tableau de bord. Lecture réservée
+// aux administrateurs par firestore.rules.
+export async function getRecentEvents(max = 20) {
+
+const eventsQuery = query(
+collection(db, "analyticsEvents"),
+orderBy("createdAt", "desc"),
+limit(max)
+);
+
+const snapshot = await getDocs(eventsQuery);
+
+return snapshot.docs.map((docSnap) => ({
+id: docSnap.id,
+...docSnap.data()
+}));
+
+}
+
 // Répartition des tentatives de paiement par formule.
 export async function getPlanBreakdown() {
 
@@ -705,6 +756,9 @@ id: docSnap.id,
 
 export async function sendMessageToUser(uid, authorUid, authorEmail, text) {
 
+// Côté étudiant, ce message est toujours AFFICHÉ « FitzUniverse »
+// (js/student-messages.js) — fromAdminUid/fromAdminEmail ne servent
+// qu'à la traçabilité interne, jamais à l'affichage public.
 await addDoc(collection(db, "users", uid, "messages"), {
 fromAdminUid: authorUid,
 fromAdminEmail: authorEmail,
@@ -713,6 +767,53 @@ createdAt: serverTimestamp(),
 read: false
 });
 
+}
+
+// ============================================
+// CENTRE DE MESSAGES (2026-09-02) — la messagerie FitzUniverse
+// bidirectionnelle. Les réponses étudiantes portent fromStudent:true
+// (forme imposée par firestore.rules) ; l'admin peut marquer ces
+// réponses lues (clé "read" uniquement, comme côté étudiant).
+// ============================================
+
+// Dernier message d'un fil (1 lecture) — pour trier la liste des
+// conversations sans charger tous les fils.
+export async function getLatestMessage(uid) {
+
+const latestQuery = query(
+collection(db, "users", uid, "messages"),
+orderBy("createdAt", "desc"),
+limit(1)
+);
+
+const snapshot = await getDocs(latestQuery);
+
+if (snapshot.empty) return null;
+
+const docSnap = snapshot.docs[0];
+
+return { id: docSnap.id, ...docSnap.data() };
+
+}
+
+// Nombre de réponses étudiantes non lues d'un fil (agrégation
+// serveur : 1 lecture, jamais les documents eux-mêmes).
+export async function getUnreadStudentMessagesCount(uid) {
+
+const unreadQuery = query(
+collection(db, "users", uid, "messages"),
+where("fromStudent", "==", true),
+where("read", "==", false)
+);
+
+const snapshot = await getCountFromServer(unreadQuery);
+
+return snapshot.data().count;
+
+}
+
+export async function markUserMessageRead(uid, messageId) {
+await updateDoc(doc(db, "users", uid, "messages", messageId), { read: true });
 }
 
 // ============================================

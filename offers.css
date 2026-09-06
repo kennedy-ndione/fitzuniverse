@@ -120,7 +120,7 @@ width:420px;
 
 height:420px;
 
-background:radial-gradient(circle,rgba(51,65,140,.22) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(233,163,25,.20) 0%,transparent 70%);
 
 }
 
@@ -423,7 +423,7 @@ align-items:center;
 
 gap:18px;
 
-background:linear-gradient(135deg,rgba(51,65,140,.05),rgba(126,113,216,.05));
+background:linear-gradient(135deg,rgba(233,163,25,.06),rgba(126,113,216,.05));
 
 border:1px solid var(--border-color);
 
@@ -514,7 +514,7 @@ z-index:0;
 pointer-events:none;
 
 background:
-radial-gradient(ellipse at 60% 20%,rgba(51,65,140,.20) 0%,transparent 55%),
+radial-gradient(ellipse at 60% 20%,rgba(233,163,25,.16) 0%,transparent 55%),
 radial-gradient(ellipse at 25% 75%,rgba(126,113,216,.16) 0%,transparent 55%);
 
 filter:blur(50px);
@@ -937,16 +937,16 @@ PALIER "ACCOMPAGNEMENT" — MISE EN AVANT
 ========================================================== */
 
 /* Sommet de la progression Essentiel → Avancé → Premium côté clair :
-voile bleu, bordure primaire assumée, élévation. L'emphase vient de la
+voile ambre chaud, bordure ambre assumée, élévation. L'emphase vient de la
 couleur et du contraste, pas d'une ombre démesurée. */
 .plan-card-featured{
 
 background:
-radial-gradient(circle at top right,rgba(51,65,140,.10),transparent 55%),
+radial-gradient(circle at top right,rgba(233,163,25,.10),transparent 55%),
 radial-gradient(circle at bottom left,rgba(126,113,216,.07),transparent 50%),
 var(--background);
 
-border-color:rgba(51,65,140,.45);
+border-color:rgba(233,163,25,.55);
 
 box-shadow:var(--shadow-lg);
 
@@ -954,7 +954,7 @@ transform:scale(1.045);
 
 z-index:2;
 
---meter-track:rgba(51,65,140,.12);
+--meter-track:rgba(26,23,20,.10);
 --meter-fill:var(--gradient-primary);
 
 }
@@ -971,7 +971,7 @@ box-shadow:var(--shadow-lg);
 
 font-size:2.7rem;
 
-background:linear-gradient(135deg,#4A5BC4,var(--primary-600) 55%,var(--primary-700));
+background:linear-gradient(135deg,var(--amber-600),var(--ink-surface) 60%,var(--primary-900));
 
 -webkit-background-clip:text;
 
@@ -1309,7 +1309,7 @@ transition:var(--transition);
 
 .faq-item[open]{
 
-border-color:rgba(51,65,140,.22);
+border-color:rgba(26,23,20,.18);
 
 box-shadow:var(--shadow-xs);
 
@@ -1664,4 +1664,75 @@ a.footnote-line:hover > svg{
 
 color:var(--primary-color);
 
+}
+
+/* ==========================================================
+EN-TÊTE DES FORMULES SUR TÉLÉPHONE (2026-09-01, passe mobile lot 5)
+==========================================================
+La carte d'introduction gardait ses 72px de rembourrage de bureau et
+un titre à plancher 2rem : sur 375px, six lignes de titre dans une
+colonne étroite, la carte occupait plus d'un écran (capture
+utilisateur). Rembourrage resserré + titre aligné sur l'échelle
+mobile de css/base.css (~1.7rem pour un h1 de page) : la carte tient
+dans un écran, la photo de fond reste lisible. */
+@media(max-width:576px){
+
+.offer-header{
+
+padding:44px 20px;
+
+}
+
+.offer-header h1{
+
+font-size:1.7rem;
+
+}
+
+}
+
+/* ==========================================================
+FORMULE ACTUELLE / DEMANDE EN COURS (2026-09-02) — marquage posé par
+js/offers-current-plan.js pour l'étudiant connecté : sa carte porte
+un badge et son CTA devient un état (on ne « choisit » pas ce qu'on
+a déjà). La demande de changement en cours (pendingPlan) est
+signalée pareil, en attente.
+========================================================== */
+
+.plan-card--current,
+.plan-card--pending{
+position:relative;
+border-color:rgba(233,163,25,.55);
+box-shadow:0 0 0 1px rgba(233,163,25,.35), var(--shadow-sm);
+}
+
+.plan-current-badge{
+display:inline-flex;
+align-items:center;
+align-self:flex-start;
+gap:6px;
+padding:4px 12px;
+border-radius:var(--radius-full);
+background:var(--amber-500);
+color:#211D18;
+font-size:.72rem;
+font-weight:800;
+text-transform:uppercase;
+letter-spacing:.05em;
+margin-bottom:10px;
+}
+
+.plan-current-badge.is-pending{
+background:rgba(233,163,25,.14);
+color:var(--amber-700);
+border:1px dashed rgba(233,163,25,.5);
+}
+
+.plan-cta--inactive{
+pointer-events:none;
+background:var(--background-soft) !important;
+color:var(--text-light) !important;
+border:1px dashed var(--border-color) !important;
+box-shadow:none !important;
+transform:none !important;
 }

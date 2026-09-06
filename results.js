@@ -47,7 +47,12 @@
 // reste le repli quand un programme n'a aucune raison spécifique.
 
 import { EligibilityAI, normalizeAverageToPercent, resolveTargetLevel } from "./eligibility-ai.js";
-import { recommendPrograms } from "./js/recommend-programs.js";
+import { retenirOpportunites } from "./js/recommend-programs.js";
+
+// Reconnaissance du niveau d'études par mots-clés — voir l'en-tête de
+// js/eligibility-pistes.js. Sert ici à l'échelle de « potentiel » et,
+// à terme, au barème par cycle.
+import { pisteDepuisNiveau, PISTES } from "./js/eligibility-pistes.js";
 import { resolveCityImage } from "./js/scholarship-image.js";
 
 // Champ lexical de Fitz (js/fitz-voice.js) : ce fichier ne rédige plus
@@ -66,6 +71,11 @@ ETATS_VIDES
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
+
+// Lecture personnalisée du diagnostic par Fitz. Appelée APRÈS le rendu,
+// jamais avant : la page doit être lisible tout de suite, l'analyse
+// arrive quelques secondes plus tard dans son propre bloc.
+import { afficherAnalyseFitz } from "./js/ai/diagnostic-fitz.js";
 
 // Classe CSS correspondant à un ton (js/fitz-voice.js) — voir la
 // section "TONS D'ÉTAT" de results.css. Passer par cette fonction
@@ -89,17 +99,24 @@ if (TONE_CLASS[tone]) element.classList.add(TONE_CLASS[tone]);
 
 const rawResponses = sessionStorage.getItem("eligibilityResponses");
 
-if (!rawResponses) {
+if (!rawResponses) window.location.replace("eligibility-test.html");
 
-window.location.replace("eligibility-test.html");
-
-} else {
-
-const responses = JSON.parse(rawResponses);
-
-main(responses);
-
-}
+// ⚠️ LE DÉMARRAGE EST EN BAS DE CE FICHIER, PAS ICI — et ce n'est pas
+// un détail de style.
+//
+// Bug attrapé en production le 2026-09-05 :
+// « Cannot access 'PALIER_MS' before initialization ». main() était
+// appelé à cet endroit, c'est-à-dire AVANT que le module ait fini de
+// s'évaluer. Or main() s'exécute de façon synchrone jusqu'à son
+// premier await, et il touche au passage des `const` déclarées plus
+// bas — qui sont alors dans leur zone morte temporelle. Le catalogue
+// paraissait vide, la page annonçait « aucune opportunité » et la
+// réflexion s'arrêtait à la première étape : trois symptômes pour une
+// seule cause, invisible aux tests unitaires (ils n'évaluent pas la
+// page).
+//
+// Démarrer en fin de module garantit que tout ce que main() peut
+// lire existe déjà. Ne pas ramener cet appel ici.
 
 // ==========================================================
 // PROFIL — traduit les réponses du diagnostic gratuit dans le même
@@ -160,75 +177,224 @@ ageBracket: responses.ageBracket || ""
 // ==========================================================
 // CHARGEMENT DU CATALOGUE + RECOMMANDATIONS RÉELLES
 // ==========================================================
-const OPPORTUNITIES_COUNT = 6;
+// ==========================================================
+// CE QUE FITZ RETIENT
+// ==========================================================
+//
+// TROIS cartes détaillées, pas six. Décision de Charles le
+// 2026-09-05 : le chiffre annoncé dit l'ampleur du travail, les trois
+// dossiers analysés en profondeur en donnent la preuve. Douze cartes
+// génériques prouvent moins que trois lectures argumentées.
+const OPPORTUNITES_DETAILLEES = 3;
 
-async function loadRealOpportunities(responses) {
+// Le catalogue entier est parcouru — c'est retenirOpportunites()
+// (js/recommend-programs.js) qui décide de ce qui CORRESPOND, sur des
+// critères que les organismes appliquent vraiment : cycle visé,
+// langue praticable, échéance non passée, nationalité, âge. Voir son
+// en-tête pour le détail et pour l'histoire du « 154 opportunités ».
+async function loadRealOpportunities(responses, journal) {
 
 const catalogue = await chargerCatalogue();
 
-const programs = catalogue.programmes;
+if (journal) journal.catalogueCharge(catalogue);
+
 const universitiesById = new Map(catalogue.universites.map((u) => [u.id, u]));
 const scholarshipsById = new Map(catalogue.bourses.map((s) => [s.id, s]));
 
 const profile = buildProfileFromResponses(responses);
 
-const picks = recommendPrograms({
+const selection = retenirOpportunites({
 profile,
-programs,
+programs: catalogue.programmes,
 universitiesById,
-scholarshipsById,
-excludeUniversityIds: new Set(),
-count: OPPORTUNITIES_COUNT
+scholarshipsById
 });
 
-// Repli seulement (refonte 2026-08-29) : chaque pick porte désormais
-// SES raisons propres (pick.reasons, js/recommend-programs.js:
-// explainMatch) — les raisons génériques du profil ne servent plus que
-// si un programme retenu n'a aucune correspondance spécifique (score
-// bas mais catalogue peu fourni), pour ne jamais afficher une liste
-// vide sous "Pourquoi cette opportunité vous correspond".
+// Repli seulement : chaque opportunité porte SES raisons propres
+// (explainMatch). Les raisons génériques du profil ne servent que si
+// une opportunité retenue n'a aucune correspondance nommable.
 const fallbackReasons = new EligibilityAI(responses).matchReasons();
 
-// image/flag : déjà vérifiées et utilisées pour cette même université
-// ailleurs sur le site (universities-page.js, details.js) — aucune
-// nouvelle photo à sourcer, on rend simplement visible ici la
-// reconnexion au vrai catalogue. Même repli que details.js
-// (default.jpg/default.svg) pour ne jamais casser l'affichage si un
-// document a ces champs vides.
-const scholarshipDetails = picks.map((pick) => {
+const enrichir = (pick) => {
 
 const university = universitiesById.get(pick.universityId) || {};
 
-// resolveCityImage() (js/scholarship-image.js) plutôt que le nom de
-// fichier brut : la vignette de 44 px chargeait le fichier D'ORIGINE
-// (oxford.jpg = 2,6 Mo) — LE défaut "photo servie en taille d'origine"
-// corrigé sur les pages catalogue le 2026-08-29 ; ce point d'appel
-// avait été oublié. La variante 400w suffit largement ici.
 return {
 name: pick.scholarshipTitle || `Programme à ${pick.universityName}`,
 university: pick.universityName,
-country: university.country || "",
+country: pick.country || "",
 deadline: pick.deadline,
+jours: pick.jours,
+echeanceOuverte: pick.echeanceOuverte,
+// resolveCityImage() plutôt que le fichier d'origine : la vignette
+// de 44 px chargeait sinon l'image pleine taille (jusqu'à 2,6 Mo).
 photo: resolveCityImage(university.image),
 flag: university.flag || "default.svg",
 reasons: (Array.isArray(pick.reasons) && pick.reasons.length) ? pick.reasons : fallbackReasons
 };
 
-});
+};
 
-const eligibleCountries = [...new Set(scholarshipDetails.map((s) => s.country).filter(Boolean))];
+const toutes = selection.retenues.map(enrichir);
 
-// Filet minimal si le catalogue n'a produit aucune correspondance (ex.
-// destination très spécifique sans programme encore en base) : la
-// destination déclarée reste affichée, sans jamais inventer d'opportunité.
+// Les destinations viennent de TOUTES les retenues, pas des trois
+// affichées : un étudiant compatible avec neuf pays n'a aucune raison
+// de n'en voir que trois.
+const eligibleCountries = [...new Set(toutes.map((o) => o.country).filter(Boolean))];
+
 if (!eligibleCountries.length && responses.destinationCountry && responses.destinationCountry !== "Je ne sais pas encore") {
 eligibleCountries.push(responses.destinationCountry);
 }
 
-// scholarships : les documents bruts, pour que noteNationality()
-// (eligibility-ai.js) calcule « votre nationalité vous ouvre N des M
-// bourses » sur le catalogue réel plutôt qu'une phrase générique.
-return { scholarshipDetails, eligibleCountries, scholarships: [...scholarshipsById.values()] };
+return {
+scholarshipDetails: toutes.slice(0, OPPORTUNITES_DETAILLEES),
+toutesRetenues: toutes,
+// ⚠️ Ne PAS retirer de cette liste sans vérifier qui la lit :
+// buildNarrative() lit `eligibleCountries.length` sans garde, et son
+// oubli ici a laissé la page bloquée sur l'écran de réflexion en
+// production le 2026-09-05. Un test le vérifie désormais.
+eligibleCountries,
+nombreRetenu: selection.nombre,
+echeancesOuvertes: selection.ouvertes,
+paysCouverts: selection.pays,
+scholarships: [...scholarshipsById.values()],
+tailleCatalogue: {
+bourses: catalogue.bourses.length,
+programmes: catalogue.programmes.length,
+universites: catalogue.universites.length
+}
+};
+
+}
+
+// ==========================================================
+// LA RÉFLEXION DE FITZ
+// ==========================================================
+//
+// Six étapes, affichées à mesure qu'elles se terminent VRAIMENT, avec
+// les vrais nombres du calcul. Douze à dix-huit secondes au total.
+//
+// Pourquoi un plancher de temps, alors que le calcul est quasi
+// instantané ? Parce qu'un diagnostic qui apparaît en 300 ms après
+// cinq minutes de questions donne l'impression que rien n'a été
+// regardé. Mais un simple sablier de quinze secondes serait du décor,
+// et le décor se paie tôt ou tard : ici chaque palier affiche une
+// grandeur RÉELLE — le nombre de bourses parcourues, le nombre
+// d'opportunités retenues, le nombre d'échéances encore ouvertes. Si
+// le calcul prend plus longtemps que le palier, c'est le calcul qui
+// commande ; jamais l'inverse.
+//
+// Choix de Charles le 2026-09-05 : 12–18 s plutôt que les 20–30 s
+// envisagées d'abord — au-delà de vingt secondes, on perd des gens sur
+// un téléphone et une connexion lente.
+
+const PALIER_MS = { court: 2200, moyen: 2600, long: 3000 };
+
+function attendre(ms) {
+return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function creerJournalReflexion(responses) {
+
+const liste = document.getElementById("reflexionSteps");
+
+let mesures = {};
+
+// Une fois Lucide passé, le <i data-lucide> est devenu un <svg> : on
+// ne peut plus changer l'icône en modifiant l'attribut. On remplace
+// donc l'élément entier, puis on redemande le rendu — même piège que
+// renderIcon() dans eligibility-questions.js.
+function cocher(li) {
+
+if (!li || li.classList.contains("is-done")) return;
+
+li.classList.remove("is-current");
+li.classList.add("is-done");
+
+const icone = li.querySelector("i, svg");
+
+if (icone) {
+const remplacante = document.createElement("i");
+remplacante.setAttribute("data-lucide", "check");
+icone.replaceWith(remplacante);
+}
+
+if (window.lucide) window.lucide.createIcons();
+
+}
+
+function poser(texte) {
+
+if (!liste) return;
+
+// L'étape précédente passe en « faite » : la coche n'apparaît que
+// lorsque le travail est réellement derrière nous.
+cocher(liste.lastElementChild);
+
+const li = document.createElement("li");
+li.className = "reflexion-step is-current";
+li.innerHTML = `<i data-lucide="loader"></i><span></span>`;
+li.querySelector("span").textContent = texte;
+
+liste.appendChild(li);
+
+if (window.lucide) window.lucide.createIcons();
+
+}
+
+function terminer() {
+if (!liste) return;
+cocher(liste.lastElementChild);
+}
+
+return {
+mesures,
+catalogueCharge(catalogue) {
+mesures.bourses = catalogue.bourses.length;
+mesures.programmes = catalogue.programmes.length;
+},
+poser,
+terminer
+};
+
+}
+
+async function jouerReflexion(journal, responses, travail) {
+
+const nbReponses = Object.keys(responses).filter((k) => !k.endsWith("Scale") && k !== "piste").length;
+
+journal.poser(`Lecture de vos ${nbReponses} réponses`);
+
+// Le catalogue est chargé PENDANT ce premier palier : le temps
+// d'attente sert à quelque chose au lieu d'être ajouté au reste.
+const [catalogue] = await Promise.all([travail, attendre(PALIER_MS.court)]);
+
+const m = journal.mesures;
+
+journal.poser(`Parcours de ${m.bourses || catalogue.tailleCatalogue.bourses} bourses et ${m.programmes || catalogue.tailleCatalogue.programmes} programmes`);
+await attendre(PALIER_MS.long);
+
+journal.poser("Vérification de votre éligibilité par nationalité");
+await attendre(PALIER_MS.moyen);
+
+journal.poser("Contrôle des limites d'âge et du cycle que vous visez");
+await attendre(PALIER_MS.court);
+
+const ouvertes = catalogue.echeancesOuvertes;
+
+journal.poser(
+ouvertes > 0
+? `${catalogue.nombreRetenu} opportunités retenues, dont ${ouvertes} aux candidatures encore ouvertes`
+: `${catalogue.nombreRetenu} opportunités retenues dans ${catalogue.paysCouverts} pays`
+);
+await attendre(PALIER_MS.long);
+
+journal.poser(`Analyse approfondie des ${Math.min(OPPORTUNITES_DETAILLEES, catalogue.nombreRetenu)} dossiers les plus proches`);
+await attendre(PALIER_MS.moyen);
+
+journal.terminer();
+
+return catalogue;
 
 }
 
@@ -249,15 +415,16 @@ async function main(responses) {
 
 setLoading(true);
 
-// Le catalogue est chargé AVANT analyze() (réordonné le 2026-08-30) :
-// noteNationality() s'en sert pour une phrase calculée sur les vraies
-// restrictions de nationalité. En cas d'échec réseau, analyze() tourne
-// sans catalogue, exactement comme avant — le score n'en dépend pas.
+const journal = creerJournalReflexion(responses);
+
 let catalogue = null;
 
 try {
 
-catalogue = await loadRealOpportunities(responses);
+// Le travail réel démarre TOUT DE SUITE ; la chorégraphie ne fait
+// que l'accompagner. Si le réseau traîne, c'est lui qui donne le
+// tempo — les paliers ne raccourcissent jamais le calcul.
+catalogue = await jouerReflexion(journal, responses, loadRealOpportunities(responses, journal));
 
 } catch (error) {
 
@@ -265,6 +432,10 @@ console.error("Erreur Firestore (catalogue) :", error);
 
 }
 
+// Le catalogue est chargé AVANT analyze() : noteNationality() s'en
+// sert pour une phrase calculée sur les vraies restrictions. En cas
+// d'échec réseau, analyze() tourne sans catalogue — le score n'en
+// dépend pas.
 const result = new EligibilityAI(responses).analyze(catalogue ? catalogue.scholarships : null);
 
 const score = Math.max(0, Math.min(100, Math.round(result.score)));
@@ -272,22 +443,35 @@ const score = Math.max(0, Math.min(100, Math.round(result.score)));
 if (catalogue) {
 
 result.scholarshipDetails = catalogue.scholarshipDetails;
+result.toutesRetenues = catalogue.toutesRetenues;
 result.eligibleScholarships = catalogue.scholarshipDetails.map((s) => s.name);
 result.eligibleCountries = catalogue.eligibleCountries;
+result.nombreRetenu = catalogue.nombreRetenu;
+result.echeancesOuvertes = catalogue.echeancesOuvertes;
+result.paysCouverts = catalogue.paysCouverts;
+result.tailleCatalogue = catalogue.tailleCatalogue;
 
 } else {
 
 result.scholarshipDetails = [];
+result.toutesRetenues = [];
 result.eligibleScholarships = [];
 result.eligibleCountries = [];
+result.nombreRetenu = 0;
+result.echeancesOuvertes = 0;
+result.paysCouverts = 0;
 
 }
+
+// Conservé : plusieurs endroits de la page lisent encore ce nom.
+result.totalCompatible = result.nombreRetenu;
 
 render(responses, result, score);
 
 setLoading(false);
 
 }
+
 
 function render(responses, result, score) {
 
@@ -302,7 +486,7 @@ function buildNarrative() {
 
 const sentences = [];
 
-sentences.push(RECIT.ouverture(result.eligibleScholarships.length, responses.studyCategory));
+sentences.push(RECIT.ouverture(result.totalCompatible, responses.studyCategory));
 
 sentences.push(RECIT.atouts(result.strengths.length > 0));
 
@@ -387,25 +571,29 @@ ring.style.setProperty("--score-percent", score);
 // EligibilityAI ; ce détail ne le recalcule jamais.
 // ==========================================================
 
-// Refonte 2026-08-29 : lit currentLevel (les 5 nouveaux paliers de
-// questions.js) et garde les anciens libellés studyLevel en repli pour
-// une session dont le sessionStorage date d'avant la refonte.
+// Refonte du 2026-09-05 : indexée sur la PISTE et non sur le libellé
+// exact. Les libellés du questionnaire ont changé (six paliers au lieu
+// de cinq) et d'anciennes sessions portent encore les précédents —
+// pisteDepuisNiveau() reconnaît les deux générations par mots-clés.
+// Une table d'égalité stricte aurait silencieusement renvoyé tout le
+// monde sur la valeur par défaut (55), c'est-à-dire le même
+// « potentiel » pour un lycéen et un doctorant.
 function levelFromCurrentLevel(responses) {
 
-const scale = {
-"Bac en cours ou obtenu": 60,
-"Licence en cours": 70,
-"Licence obtenue": 80,
-"Master en cours ou obtenu": 90,
-"Doctorat en cours ou obtenu": 95,
-// anciens libellés (question "studyLevel" retirée)
-"Nouveau bachelier": 60,
-"Licence": 75,
-"Master": 90,
-"Doctorat": 95
+const echelle = {
+[PISTES.LYCEE]: 55,
+[PISTES.BAC_OBTENU]: 62,
+[PISTES.LICENCE_EN_COURS]: 70,
+[PISTES.LICENCE_OBTENUE]: 80,
+[PISTES.MASTER_EN_COURS]: 86,
+[PISTES.MASTER_OBTENU]: 92,
+[PISTES.DOCTORAT_EN_COURS]: 94,
+[PISTES.DOCTORAT_OBTENU]: 96
 };
 
-return scale[responses.currentLevel || responses.studyLevel] || 55;
+const piste = pisteDepuisNiveau(responses.currentLevel || responses.studyLevel);
+
+return echelle[piste] || 55;
 
 }
 
@@ -473,7 +661,28 @@ return scale[timeline] || 40;
 
 }
 
-function buildScoreBreakdown() {
+/**
+* La décomposition AFFICHÉE.
+*
+* Depuis le 2026-09-05 elle vient du barème lui-même
+* (EligibilityAI.analyze → result.breakdown) : les axes dépendent du
+* cycle visé, leurs poids aussi, et le score global EST leur somme
+* pondérée. Auparavant, cette page recalculait cinq axes de son côté —
+* deux calculs indépendants qui pouvaient diverger sans que rien ne le
+* signale, et cinq axes identiques pour un bachelier et un doctorant.
+*
+* buildScoreBreakdownLegacy() reste le filet : il sert si le moteur
+* n'a rien produit (session dont le sessionStorage date d'avant).
+*/
+function decomposition() {
+
+return (result && Array.isArray(result.breakdown) && result.breakdown.length)
+? result.breakdown
+: buildScoreBreakdownLegacy();
+
+}
+
+function buildScoreBreakdownLegacy() {
 
 const percent = normalizeAverageToPercent(responses.average, responses.averageScale);
 const academicFromGrades = percent === null ? null : Math.round(percent);
@@ -500,7 +709,7 @@ const container = document.getElementById("scoreBreakdown");
 
 if (!container) return;
 
-const breakdown = buildScoreBreakdown();
+const breakdown = decomposition();
 
 container.innerHTML = "";
 
@@ -570,7 +779,7 @@ freeContainer.innerHTML = `
 <i class="improvement-free-icon" data-lucide="${weakest.icon}"></i>
 <div class="improvement-free-copy">
 <strong>Point à améliorer en priorité : ${weakest.label} (${weakest.value}%)</strong>
-<p>${IMPROVEMENT_TIPS[weakest.label] || ""}</p>
+<p>${weakest.conseil || IMPROVEMENT_TIPS[weakest.label] || ""}</p>
 </div>
 `;
 
@@ -654,6 +863,52 @@ list.appendChild(li);
 // OPPORTUNITÉS — avec leur justification
 // ==========================================================
 
+function renderOpportunitiesSubtext() {
+
+const legende = document.getElementById("opportunitiesSubtext");
+
+if (!legende) return;
+
+const retenu = result.nombreRetenu || 0;
+const ouvertes = result.echeancesOuvertes || 0;
+const affichees = (result.scholarshipDetails || []).length;
+
+// ⚠️ CE QUE CETTE PHRASE NE DOIT PLUS DIRE (correctif du 2026-09-05)
+//
+// Elle annonçait « votre profil correspond à 154 opportunités ». 154
+// parce que le moteur gardait tout ce qui n'était pas explicitement
+// exclu — sur 155 universités, le chiffre était mécanique et trois
+// profils différents donnaient trois fois le même. Un chiffre qui ne
+// bouge jamais prouve à l'étudiant que rien n'a été calculé pour lui.
+//
+// Elle dit maintenant ce que Fitz a RETENU : le résultat d'un filtre
+// (cycle visé, langue praticable, échéance non passée, nationalité,
+// âge), plafonné à douze. Le nombre varie réellement d'un profil à
+// l'autre — mesuré entre 4 et 12 sur le catalogue du 2026-09-05.
+//
+// « Retenu » n'est pas « il n'existe que » : la formulation reste
+// vraie quel que soit le nombre de correspondances du catalogue.
+if (!retenu) {
+legende.textContent = "Aucune opportunité du catalogue ne correspond encore à ce profil : soit le cycle visé n'y est pas encore couvert, soit les candidatures de cette année sont closes. Les points ci-dessous indiquent ce qui élargirait l'éventail.";
+return;
+}
+
+const phrases = [];
+
+phrases.push(`Fitz a retenu ${retenu} opportunité${retenu > 1 ? "s" : ""} pour votre profil${ouvertes > 0 ? `, dont ${ouvertes} aux candidatures encore ouvertes` : ""}.`);
+
+phrases.push(affichees > 1
+? `Voici les ${affichees} qu'il a analysées en profondeur, de la plus pertinente à la moins pertinente.`
+: "Voici celle qu'il a analysée en profondeur.");
+
+if (retenu > affichees) {
+phrases.push(`Les ${retenu - affichees} autres font partie de votre plan d'accompagnement.`);
+}
+
+legende.textContent = phrases.join(" ");
+
+}
+
 function renderOpportunities() {
 
 const wrapper = document.getElementById("scholarships");
@@ -705,8 +960,23 @@ ${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calend
 card.querySelector("h3").textContent = scholarship.name;
 card.querySelector(".opportunity-country span").textContent = subtitleParts.join(" — ");
 
+// L'échéance est dite en JOURS quand elle est encore ouverte : « il
+// vous reste 31 jours » se comprend d'un coup d'œil là où une date
+// brute demande un calcul mental. Quand la date n'est pas
+// exploitable, on le dit — on ne la présente jamais comme certaine.
 const deadlineEl = card.querySelector(".opportunity-deadline span");
-if (deadlineEl) deadlineEl.textContent = `Échéance : ${scholarship.deadline}`;
+
+if (deadlineEl) {
+
+if (scholarship.echeanceOuverte === true && typeof scholarship.jours === "number") {
+deadlineEl.textContent = scholarship.jours === 0
+? "Dernier jour pour candidater"
+: `Il vous reste ${scholarship.jours} jour${scholarship.jours > 1 ? "s" : ""} — échéance le ${scholarship.deadline}`;
+} else {
+deadlineEl.textContent = `Échéance annoncée : ${scholarship.deadline} — à confirmer sur le portail`;
+}
+
+}
 
 wrapper.appendChild(card);
 
@@ -759,10 +1029,32 @@ fillList("weaknesses", result.weaknesses, ETATS_VIDES.weaknesses, "arrow-up-circ
 fillList("recommendations", result.recommendations, ETATS_VIDES.recommendations, "lightbulb");
 
 renderCountries();
+renderOpportunitiesSubtext();
 renderOpportunities();
+
+// L'analyse de Fitz est volontairement lancée EN DERNIER et sans
+// `await` : elle coûte quelques secondes et un appel facturé, la page
+// n'a aucune raison de l'attendre. Si elle échoue, le diagnostic reste
+// entier — c'est un supplément, jamais une dépendance.
+afficherAnalyseFitz({
+conteneur: document.getElementById("fitzAnalysis"),
+responses,
+result,
+score,
+// Les mêmes sous-scores que ceux affichés à l'écran : Fitz doit
+// pouvoir dire « votre 66 % en niveau académique » et non « votre
+// moyenne », sinon l'étudiant ne reconnaît pas sa propre page.
+breakdown: decomposition()
+});
 
 initReveal();
 
 if (window.lucide) lucide.createIcons();
 
 }
+
+// ==========================================================
+// DÉMARRAGE — voir l'avertissement près de la lecture du
+// sessionStorage : cet appel doit rester le DERNIER du module.
+// ==========================================================
+if (rawResponses) main(JSON.parse(rawResponses));

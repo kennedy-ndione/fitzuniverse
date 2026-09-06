@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+<title>Mes messages | FitzUniverse</title>
+
+<!-- Page privée de l'espace connecté — mêmes standards que le reste
+de l'espace (noindex, theme-color, favicons). -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<meta name="description" content="Votre conversation avec l'équipe FitzUniverse — messages en temps réel, à un seul endroit.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Version figée + defer — standard du site. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<!-- Chargé en dernier : redéfinit --font-display/--font-body au niveau
+:root, doit donc gagner sur base.css. -->
+<link rel="stylesheet" href="css/app-typography.css">
+<!-- Coquille « parcours » : retire la grille à sidebar et bascule la
+page dans l'identité papier chaud. -->
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<style>[hidden]{display:none !important;}</style>
+
+<script src="js/mobile-nav.js" defer></script>
+</head>
+
+<body>
+
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="dashboard-main">
+
+<header class="journey-topbar">
+
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+<h1>Mes messages</h1>
+<p>Votre conversation avec l'équipe FitzUniverse.</p>
+</div>
+
+<div class="journey-topbar-actions">
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de l'équipe</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<span id="topbarPlanLabel">…</span>
+</a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
+
+</header>
+
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
+
+<section class="ai-panel reveal messages-page-card">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="messages-square"></i>Conversation avec FitzUniverse</h2>
+</div>
+
+<div class="ai-panel-body messages-page-body">
+
+<div class="messages-page-notice">
+<i data-lucide="badge-check"></i>
+<span>Vos messages arrivent directement à l'équipe FitzUniverse, en temps réel. Nous vous répondons en général <strong>sous 24 h ouvrées</strong> — la réponse apparaîtra ici et dans la cloche, où que vous soyez sur le site.</span>
+</div>
+
+<div class="messages-page-thread" id="messagesPageThread">
+<!-- fil rendu par js/student-messages.js (temps réel) -->
+</div>
+
+<div id="messagesPageComposerHost"></div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="js/messages-page.js"></script>
+
+</body>
+
+</html>

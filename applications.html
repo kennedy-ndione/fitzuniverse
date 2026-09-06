@@ -4,9 +4,18 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Suivi des candidatures | FitzUniverse</title>
+
+<!-- Ajouts de l'audit 2026-09-01 : page privée de l'espace connecté —
+noindex (rien à indexer derrière une session), theme-color et favicons
+alignés sur le standard du site (mêmes valeurs que index.html). -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 
 <meta name="description" content="Suivez chacune de vos candidatures étape par étape, avec des rappels pour vérifier vos portails universitaires.">
 
@@ -32,11 +41,18 @@ l'étudiant changeait de police en passant du catalogue à son espace. -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body data-plan="essentiel">
+
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <div id="pageLoader" class="auth-page-loader">
 <div class="loader-spinner"></div>
@@ -53,7 +69,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -105,7 +121,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </header>
 
-<main class="content" style="display:none;">
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
 
 <div id="lockedState" hidden></div>
 
@@ -181,9 +197,41 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <form id="applicationForm">
 
+<!-- ÉTAPE 1 — LE CHOIX VIENT DU CATALOGUE, PAS DU CLAVIER
+(refonte 2026-09-02). L'étudiant ne tape plus un nom d'université ni
+un lien de portail : Fitz propose les universités du catalogue les
+plus compatibles avec son profil (js/recommend-programs.js, mêmes
+règles que les créneaux suggérés), la recherche couvre tout le
+catalogue, et la sélection remplit bourse/portail/échéance d'un coup.
+La saisie manuelle reste possible en repli (candidature hors
+catalogue) — mais ce n'est plus le chemin par défaut. -->
+<div id="pickerSection">
+
+<p class="apps-picker-lead"><i data-lucide="zap"></i><span>Choisissez une université du catalogue : Fitz remplit la bourse, le portail officiel et l'échéance pour vous.</span></p>
+
+<label class="apps-field apps-picker-searchfield">
+<span class="sr-only">Rechercher dans le catalogue</span>
+<input type="search" id="pickerSearch" placeholder="Rechercher une université, un pays, une bourse…" autocomplete="off">
+</label>
+
+<div id="pickerList" class="apps-picker-list" aria-live="polite"></div>
+
+<button type="button" class="apps-picker-manual" id="manualModeBtn">Ma candidature ne figure pas dans le catalogue</button>
+
+</div>
+
+<!-- Sélection faite : résumé confirmable, rempli par applications.js -->
+<div id="pickerSummary" class="apps-selection" hidden></div>
+
+<!-- Champs libres — visibles uniquement en repli hors catalogue ou en
+modification d'une candidature existante. En création via le
+catalogue, ils restent cachés mais PORTENT les valeurs choisies :
+le chemin d'enregistrement est le même dans tous les cas. -->
+<div id="manualFields" hidden>
+
 <label class="apps-field">
 <span>Université</span>
-<input type="text" id="fieldUniversity" required placeholder="Ex. Budapest University of Technology">
+<input type="text" id="fieldUniversity" placeholder="Ex. Budapest University of Technology">
 </label>
 
 <label class="apps-field">
@@ -195,6 +243,10 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <span>Lien du portail de candidature (optionnel)</span>
 <input type="url" id="fieldPortalUrl" placeholder="https://...">
 </label>
+
+</div>
+
+<div id="detailsSection" hidden>
 
 <div class="apps-field-row">
 
@@ -240,9 +292,11 @@ et cap sur le visa en cas d'admission, rebond en cas de refus. -->
 <textarea id="fieldNotes" rows="2" placeholder="Identifiants du portail, documents déjà envoyés..."></textarea>
 </label>
 
+</div>
+
 <div class="apps-modal-actions">
 <button type="button" class="btn btn-secondary" id="applicationCancelBtn">Annuler</button>
-<button type="submit" class="btn btn-primary" id="applicationSaveBtn">
+<button type="submit" class="btn btn-primary" id="applicationSaveBtn" disabled>
 <span>Enregistrer</span>
 </button>
 </div>

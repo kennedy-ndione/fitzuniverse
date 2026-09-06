@@ -180,6 +180,9 @@ document.getElementById("fichesList").innerHTML = TESTS.map((t) => `
 <li><i data-lucide="layout-list"></i><span><strong>Format :</strong> ${t.format}</span></li>
 <li><i data-lucide="target"></i><span><strong>Exigence habituelle :</strong> ${t.exigenceHabituelle}</span></li>
 <li><i data-lucide="calendar-check"></i><span><strong>Validité :</strong> ${t.validite}</span></li>
+<li><i data-lucide="calendar-days"></i><span><strong>Sessions :</strong> ${t.sessions}</span></li>
+<li><i data-lucide="timer"></i><span><strong>Résultats :</strong> ${t.resultats}</span></li>
+<li><i data-lucide="hourglass"></i><span><strong>Préparation conseillée :</strong> ${t.dureePrepa}</span></li>
 </ul>
 <p class="jy-app-meta" style="margin:14px 0 8px;font-weight:700;">Le plan de préparation :</p>
 <ul class="jy-list">
@@ -188,7 +191,7 @@ ${t.plan.map((etape, i) => `<li><i data-lucide="chevron-right"></i><span><strong
 <p class="jy-opp-reason" style="margin-top:14px;"><i data-lucide="message-circle"></i><span>${t.fitz}</span></p>
 <div class="jy-tools">
 <a href="${t.url}" target="_blank" rel="noopener" class="jy-tool"><i data-lucide="external-link"></i><span>Site officiel &amp; inscription</span></a>
-<span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-tool"><i data-lucide="message-circle"></i><span>M'entraîner avec Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_chat"><a href="ai-chat.html?prep=${t.id}" data-real-href="ai-chat.html?prep=${t.id}" class="jy-tool"><i data-lucide="message-circle"></i><span>M'entraîner avec Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 </div>
 </article>
 `).join("");

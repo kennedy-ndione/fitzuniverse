@@ -166,7 +166,7 @@ loaderEl.setAttribute("id", "accessGuardLoader");
 loaderEl.style.cssText = [
 "position:fixed", "inset:0", "z-index:99999",
 "display:flex", "align-items:center", "justify-content:center",
-"background:#0F172A", "color:#F1F5F9",
+"background:#211D18", "color:#F5F1E8",
 "font-family:Inter,Arial,sans-serif", "font-size:15px"
 ].join(";");
 

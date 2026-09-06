@@ -22,6 +22,8 @@ correspondTypeBourse
 
 import { resolveScholarshipImage } from "./js/scholarship-image.js";
 
+import { etatCandidature } from "./js/echeance.js";
+
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
 
@@ -238,7 +240,26 @@ const partnerCount = new Set(
 linkedPrograms.map((p) => p.universityId).filter((id) => universitiesById.has(id))
 ).size;
 
-return { ...scholarship, countries, image, imageSrcset, flag, partnerCount, bestRanking };
+// L'ÉTAT RÉEL DES CANDIDATURES (2026-09-05). Cette carte affichait
+// « Candidatures ouvertes » dès que `isActive` n'était pas false —
+// un drapeau éditorial qui ne dit rien du cycle. Mesuré sur
+// l'instantané du 2026-09-04 : 42 bourses dont le champ `status`
+// disait « Fermée » s'affichaient « ouvertes », et 4 autres dont
+// l'échéance était derrière nous. On lit désormais les ÉCHÉANCES des
+// programmes liés, et le statut seulement à défaut — voir
+// etatCandidature() dans js/echeance.js pour l'ordre de décision.
+const candidature = etatCandidature({
+statut: scholarship.status,
+actif: scholarship.isActive,
+echeances: linkedPrograms.map((p) => p.deadline),
+periodeOuverture: scholarship.periodeOuverture,
+verifieLe: scholarship.verifieLe,
+// « pays » ou « etablissement » : quand la date limite n'appartient
+// pas à la bourse (DAAD, Eiffel, Shanghai — vérifié le 2026-09-05).
+echeanceVariable: scholarship.echeanceVariable
+});
+
+return { ...scholarship, countries, image, imageSrcset, flag, partnerCount, bestRanking, candidature };
 
 }
 
@@ -456,7 +477,14 @@ const card = document.createElement("div");
 
 card.className = "card scholarship-card";
 
-const isOpen = scholarship.isActive !== false;
+// `candidature` est posé par enrichWithProgramData ; le repli garde
+// la carte affichable si un appelant l'oublie un jour.
+const candidature = scholarship.candidature || etatCandidature({
+statut: scholarship.status,
+actif: scholarship.isActive
+});
+
+const isOpen = candidature.ouvert === true;
 
 const levelChips = (scholarship.levels || [])
 .map((level) => `<span class="scholarship-card-chip"><i data-lucide="graduation-cap"></i>${level}</span>`)
@@ -525,7 +553,7 @@ const funderHtml = typeBourse
 card.innerHTML = `
 <div class="scholarship-card-media">
 <img src="${scholarship.image}"${srcsetAttr} width="800" height="533" alt="" loading="lazy" decoding="async">
-<span class="scholarship-card-status ${isOpen ? "is-open" : ""}">${isOpen ? "Candidatures ouvertes" : "Candidatures fermées"}</span>
+<span class="scholarship-card-status ${isOpen ? "is-open" : ""}" title="${candidature.detail}">${candidature.badge}</span>
 </div>
 
 <div class="scholarship-card-body">
@@ -583,9 +611,49 @@ return card;
 
 }
 
-// Regroupe par pays, sections triées par richesse décroissante (le
-// pays le mieux fourni en premier), égalité départagée alphabétique —
-// jamais d'accordéon, toutes les sections restent ouvertes.
+// Regroupe par pays — jamais d'accordéon, toutes les sections restent
+// dépliées. Le tri des sections a changé le 2026-09-05 : ce n'est plus
+// la richesse (nombre de bourses) qui commande, mais le nombre de
+// candidatures OUVERTES ; la richesse ne départage plus qu'à égalité.
+//
+// ORDRE D'AFFICHAGE — les candidatures ouvertes d'abord (2026-09-05)
+//
+// Le même jour, la pastille des cartes a cessé de mentir : 73 bourses
+// sur 156 sont réellement closes. Les laisser mêlées aux ouvertes
+// aurait fait payer l'honnêteté à l'étudiant, qui aurait dû ouvrir
+// cinq fiches pour trouver une bourse sur laquelle agir cette semaine.
+//
+// QUATRE RANGS : ouverte, PAS ENCORE OUVERTE, inconnue, close.
+//
+// « Pas encore ouverte » (cycle clos mais clôture du suivant déjà
+// annoncée, ex. Stipendium Hungaricum au 15 janvier 2027) se range
+// juste derrière les ouvertes et devant les inconnues : c'est la
+// bourse la plus préparable qui soit — on connaît la date, il reste
+// des mois. La reléguer avec les closes serait perdre l'étudiant qui
+// a justement le temps de monter un dossier.
+//
+// Un calendrier non publié n'est pas un refus non plus : même règle
+// des trois valeurs que estEligible() — `null` ne se range jamais
+// avec `false`.
+//
+// À l'intérieur d'un rang, l'ordre reçu est CONSERVÉ (tri stable). On
+// ne remonte délibérément pas l'échéance la plus proche : voir la
+// section 6 de js/echeance.js — une bourse qui ferme dans quatre jours
+// n'est pas une opportunité pour qui découvre le site aujourd'hui.
+const RANGS = { ouverte: 0, attente: 1, inconnue: 2, close: 3 };
+
+function rangCandidature(item) {
+
+const ton = item.candidature ? item.candidature.ton : "inconnue";
+
+return RANGS[ton] ?? RANGS.inconnue;
+
+}
+
+function compterOuvertes(items) {
+return items.filter((item) => rangCandidature(item) === 0).length;
+}
+
 function groupByCountry(items) {
 
 const groups = new Map();
@@ -597,8 +665,19 @@ groups.get(country).push(item);
 });
 
 return [...groups.entries()]
-.map(([country, group]) => ({ country, items: group }))
-.sort((a, b) => b.items.length - a.items.length || a.country.localeCompare(b.country));
+.map(([country, group]) => ({
+country,
+items: [...group].sort((a, b) => rangCandidature(a) - rangCandidature(b)),
+ouvertes: compterOuvertes(group)
+}))
+// Les pays où l'on peut candidater MAINTENANT passent devant. Le
+// volume ne départage plus qu'à nombre d'ouvertes égal : un pays qui
+// porte quinze bourses toutes closes n'a rien à faire en tête.
+.sort((a, b) =>
+b.ouvertes - a.ouvertes ||
+b.items.length - a.items.length ||
+a.country.localeCompare(b.country, "fr")
+);
 
 }
 
@@ -654,7 +733,7 @@ const groups = groupByCountry(scholarships);
 
 renderCountryPills(groups);
 
-groups.forEach(({ country, items }) => {
+groups.forEach(({ country, items, ouvertes }) => {
 
 const section = document.createElement("section");
 section.className = "catalog-country-group";
@@ -667,7 +746,7 @@ section.innerHTML = `
 <div class="catalog-country-header">
 ${flagImg}
 <h2>${country}</h2>
-<span>(${items.length} bourse${items.length > 1 ? "s" : ""})</span>
+<span>(${items.length} bourse${items.length > 1 ? "s" : ""} · ${ouvertes ? `${ouvertes} ouverte${ouvertes > 1 ? "s" : ""}` : "aucune ouverte"})</span>
 </div>
 <div class="bourses-grid"></div>
 `;

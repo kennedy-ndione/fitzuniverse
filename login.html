@@ -4,9 +4,12 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Se connecter | FitzUniverse</title>
+
+<!-- Audit 2026-09-01 : theme-color aligné sur le standard du site. -->
+<meta name="theme-color" content="#211D18">
 
 <meta name="description" content="Connectez-vous à votre espace FitzUniverse pour retrouver votre diagnostic et poursuivre votre accompagnement.">
 
@@ -47,6 +50,11 @@ des tokens + carte encre chaude), voir le commentaire en tête. -->
 
 <body>
 
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
 <!-- Refonte "carte flottante sur photo plein écran" (2026-08-13),
 référence pages de connexion institutionnelles (SSO universitaire) :
 amphitheatre.jpg en fond plein écran fixe (même technique que
@@ -59,7 +67,7 @@ directement la carte. payment.html charge aussi auth.css mais n'utilise
 aucune de ces classes (.auth-page/.auth-shell/.auth-hero/.auth-card),
 seulement les classes de champs de formulaire plus bas dans ce fichier
 (.input-group, .password-grid, etc.) — non affecté par cette refonte. -->
-<main class="auth-page">
+<main id="main-content" tabindex="-1" class="auth-page">
 
 <img
 class="auth-page-bg"
@@ -70,6 +78,18 @@ fetchpriority="high"
 alt="">
 
 <div class="auth-page-overlay" aria-hidden="true"></div>
+
+<!-- Retour vers l'accueil (audit mobile 2026-09-01) : cette page
+n'offrait AUCUN chemin de sortie — ni en-tête, ni logo cliquable ;
+les seuls liens étaient « Mot de passe oublié ? » et « Choisir ma
+formule ». Doctrine regles_mobile.md : une navigation de sortie
+toujours visible sur chaque page. Pastille posée SUR la photo
+(au-dessus du voile, voir .auth-back-link dans login-redesign.css),
+même grammaire flèche+libellé que les .back-link du site. -->
+<a href="index.html" class="auth-back-link">
+<i data-lucide="arrow-left" aria-hidden="true"></i>
+<span>Accueil</span>
+</a>
 
 <!-- Carte -->
 <div class="auth-card reveal">

@@ -293,6 +293,33 @@ erreurs.push(`Lien "${lien.scholarshipId}" sans universityIds.`);
 continue;
 }
 
+// NIVEAUX RESTREINTS (2026-09-05) — une université peut ne participer
+// à une bourse que sur CERTAINS cycles. Le Global Korea Scholarship
+// en est l'exemple : la liste des universités désignées n'est pas la
+// même en licence (GKS-U) et en master/doctorat (GKS-G) ; lier SNU,
+// KAIST ou POSTECH sur les trois niveaux inventerait une licence qui
+// n'existe pas. Sans ce champ, un lien crée un programme par niveau
+// de la bourse — ce qui reste le défaut, `niveaux` étant facultatif.
+const restriction = "niveaux" in lien ? lien.niveaux : null;
+
+if (restriction !== null) {
+if (!Array.isArray(restriction) || !restriction.length) {
+erreurs.push(`Lien "${lien.scholarshipId}" : "niveaux" doit être un tableau non vide — omettre le champ pour tous les niveaux de la bourse.`);
+continue;
+}
+const inattendus = restriction.filter((n) => !SLUG_NIVEAU[n]);
+if (inattendus.length) {
+erreurs.push(`Lien "${lien.scholarshipId}" : niveau restreint inattendu "${inattendus.join(", ")}" (attendu : Licence, Master, Doctorat).`);
+continue;
+}
+if (bourse && !niveaux.some((n) => restriction.includes(n))) {
+erreurs.push(`Lien "${lien.scholarshipId}" : "niveaux" ne recoupe aucun niveau de la bourse (${niveaux.join(", ")}).`);
+continue;
+}
+}
+
+const niveauxDuLien = restriction ? niveaux.filter((n) => restriction.includes(n)) : niveaux;
+
 // Universités retenues pour un lien externe, après la garde pays.
 const universitesValidees = [];
 
@@ -328,7 +355,7 @@ universitesValidees.push(uid);
 continue;
 }
 
-for (const niveau of niveaux) {
+for (const niveau of niveauxDuLien) {
 const id = `${uid}__${lien.scholarshipId}__${SLUG_NIVEAU[niveau]}`;
 if (idsP.has(id)) {
 erreurs.push(`Collision d'identifiant de programme : "${id}".`);
@@ -349,6 +376,9 @@ liensExternes.push({
 scholarshipId: lien.scholarshipId,
 universityIds: universitesValidees,
 language: lien.language || "",
+// Les niveaux de la bourse se lisent en base : la RESTRICTION, elle,
+// est déclarée par le lot et doit voyager jusqu'à `analyser`.
+niveaux: restriction,
 motif: lien.motif || ""
 });
 }

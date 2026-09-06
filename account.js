@@ -15,6 +15,13 @@ import { changePassword, deleteAccount, setEmailNotifications } from "./js/accou
 import { getAuthErrorMessage } from "./auth-ui.js";
 import { showToast } from "./js/ai/toast.js";
 
+// Section « Mon abonnement » (2026-09-02) : quota utilisé (lecture des
+// candidatures), demande de changement en cours (pendingPlan) et son
+// annulation. deleteField : retirer proprement pendingPlan du document
+// plutôt que d'y laisser un null qui traîne.
+import { db } from "./firebase-config.js";
+import { doc, updateDoc, deleteField, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
 initShellChrome();
 
 function validatePassword(password) {
@@ -46,6 +53,118 @@ document.getElementById("accountEmail").textContent = user.email || "—";
 document.getElementById("accountPlan").textContent = ctx.testerAccess
 ? `${PLAN_LABELS[planId]} · Accès test complet`
 : PLAN_LABELS[planId];
+
+// ==========================================================
+// Mon abonnement (2026-09-02) — changer de formule sans friction :
+// état actuel + échéance + quota utilisé, demande en cours annulable,
+// CTA vers le comparatif. Le choix d'une formule n'écrit jamais
+// `plan` (réservé à l'équipe, firestore.rules) : il écrit
+// `pendingPlan` (payment.js), affiché ici jusqu'à l'activation.
+// ==========================================================
+
+initSubscriptionSection();
+
+async function initSubscriptionSection() {
+
+const planMeta = document.getElementById("subPlanMeta");
+const quotaWrap = document.getElementById("subQuotaWrap");
+const quotaValue = document.getElementById("subQuotaValue");
+const pendingBanner = document.getElementById("subPendingBanner");
+const pendingLabel = document.getElementById("subPendingLabel");
+const pendingCancelBtn = document.getElementById("subPendingCancelBtn");
+const changeBtn = document.getElementById("subChangeBtn");
+
+const plans = window.SCHOLARBRIDGE_PLANS || {};
+const plan = plans[planId];
+
+// Ligne d'état sous la formule : échéance quand elle existe, situation
+// claire pour la formule gratuite.
+const formatDateFR = (iso) => {
+const d = new Date(iso);
+return isNaN(d) ? iso : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+};
+
+if (planId === "gratuit") {
+planMeta.textContent = "Les outils Fitz et le suivi de candidatures s'ouvrent avec une formule payante.";
+planMeta.hidden = false;
+changeBtn.querySelector("span").textContent = "Choisir ma formule";
+} else if (userData.planExpiresAt) {
+const expired = new Date(userData.planExpiresAt).getTime() < Date.now();
+planMeta.textContent = expired
+? `Expirée le ${formatDateFR(userData.planExpiresAt)} — choisissez une formule pour reprendre votre accompagnement.`
+: `Active jusqu'au ${formatDateFR(userData.planExpiresAt)}.`;
+planMeta.hidden = false;
+} else if (plan && plan.duration) {
+planMeta.textContent = `Accompagnement de ${plan.duration}.`;
+planMeta.hidden = false;
+}
+
+// Quota de candidatures accompagnées — mesuré sur les vraies données.
+// Lecture bornée par le quota lui-même (petite sous-collection).
+const quota = plan ? plan.maxAccompaniedApplications : null;
+
+if (quota && (Number.isFinite(quota) || quota === Infinity)) {
+
+try {
+
+const appsSnap = await getDocs(collection(db, "users", user.uid, "applications"));
+quotaValue.textContent = Number.isFinite(quota)
+? `${appsSnap.size} / ${quota} utilisée${appsSnap.size > 1 ? "s" : ""}`
+: `${appsSnap.size} · illimitées`;
+quotaWrap.hidden = false;
+
+} catch (error) {
+console.error("Quota de candidatures illisible :", error);
+}
+
+}
+
+// Demande de changement en cours. Cas particulier : la demande
+// correspond à la formule DÉJÀ active (l'équipe a activé sans que le
+// champ soit nettoyé) — on l'efface silencieusement, il n'y a plus
+// rien « en cours ».
+const pending = userData.pendingPlan;
+
+async function clearPending() {
+await updateDoc(doc(db, "users", user.uid), {
+pendingPlan: deleteField(),
+pendingPlanRequestedAt: deleteField()
+});
+}
+
+if (pending && pending === planId) {
+clearPending().catch(() => { /* nettoyage best-effort */ });
+} else if (pending) {
+
+const requestedAt = userData.pendingPlanRequestedAt && typeof userData.pendingPlanRequestedAt.toDate === "function"
+? ` (demandée le ${userData.pendingPlanRequestedAt.toDate().toLocaleDateString("fr-FR", { day: "numeric", month: "long" })})`
+: "";
+
+const pendingName = PLAN_LABELS[pending] || (plans[pending] && plans[pending].label) || pending;
+pendingLabel.textContent = pending === "fitzExpress"
+? `Activation du ${pendingName} en cours${requestedAt}.`
+: `Passage à la formule ${pendingName} en cours d'activation${requestedAt}.`;
+pendingBanner.hidden = false;
+
+pendingCancelBtn.addEventListener("click", async () => {
+
+pendingCancelBtn.disabled = true;
+
+try {
+await clearPending();
+pendingBanner.hidden = true;
+showToast("Demande de changement annulée — votre formule actuelle continue normalement.");
+} catch (error) {
+console.error(error);
+pendingCancelBtn.disabled = false;
+showToast("L'annulation n'a pas abouti. Réessayez dans un instant.", { type: "error" });
+}
+
+});
+
+}
+
+}
 
 // ==========================================================
 // Notifications e-mail

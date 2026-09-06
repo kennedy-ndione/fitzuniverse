@@ -70,3 +70,56 @@ même correctif que sur les champs du catalogue. */
 .input-wrap input{
 font-family:var(--font-body);
 }
+
+/* ==========================================================
+RETOUR VERS L'ACCUEIL (audit mobile 2026-09-01)
+La page n'avait aucun chemin de sortie (voir le commentaire du lien
+dans login.html). Pastille fixe en haut à gauche, posée au-dessus du
+voile (.auth-page-overlay n'a pas de z-index ; on en donne un ici pour
+ne dépendre d'aucun ordre DOM), fond encre translucide pour rester
+lisible quelle que soit la photo. Grammaire commune aux .back-link du
+site : flèche 16px + libellé, cible tactile ≥ 44px de haut via le
+rembourrage.
+========================================================== */
+.auth-back-link{
+position:fixed;
+top:16px;
+left:16px;
+z-index:5;
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:10px 16px;
+border-radius:999px;
+background:rgba(21,16,11,.55);
+border:1px solid rgba(255,255,255,.22);
+color:rgba(255,255,255,.94);
+font-family:var(--font-body);
+font-size:.88rem;
+font-weight:600;
+text-decoration:none;
+backdrop-filter:blur(6px);
+-webkit-backdrop-filter:blur(6px);
+transition:background .2s ease;
+}
+
+.auth-back-link:hover,
+.auth-back-link:focus-visible{
+background:rgba(21,16,11,.78);
+color:#fff;
+}
+
+.auth-back-link > i,
+.auth-back-link > svg{
+width:16px;
+height:16px;
+flex-shrink:0;
+}
+
+/* Cibles tactiles (audit 2026-09-03) : l'œil du mot de passe faisait
+30px, le lien « Mot de passe oublié » 22px. */
+@media (max-width:720px){
+.password-toggle{ width:40px; height:40px; }
+.forgot-link{ padding-block:10px; margin-block:-10px; display:inline-block; }
+a.back-link{ padding-block:10px; margin-block:-10px; }
+}

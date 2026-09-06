@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>FitzUniverse | Découvrez les bourses faites pour vous</title>
 
@@ -50,9 +50,10 @@ rel="stylesheet">
 <!-- Lucide Icons — version figée (pas @latest) et defer (audit du
 2026-08-13) : @latest est un CDN tiers non versionné, un changement
 cassant chez Lucide se répercuterait sans prévenir ; synchrone dans
-<head>, il bloquait aussi le rendu initial. Même correctif à reporter
-sur les autres pages du site (toutes encore en @latest) — hors
-scope de cet audit, ciblé sur index.html. -->
+<head>, il bloquait aussi le rendu initial. Le report du correctif sur
+les autres pages, annoncé ici comme hors scope, a été fait depuis :
+vérifié à l'audit du 2026-09-01, les 25 pages du site sont en
+1.31.0 + defer. -->
 <script src="https://unpkg.com/lucide@1.31.0" defer></script>
 
 <!-- CSS -->
@@ -72,6 +73,13 @@ dernier : doit gagner la cascade sur homepage-typography.css elle-même
 (elle redéfinit certaines des mêmes variables de police) en plus des
 autres feuilles de la page. Voir son en-tête pour le détail. -->
 <link rel="stylesheet" href="css/homepage-redesign.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<script src="js/mobile-nav.js" defer></script>
+<!-- Couche « vivant » (2026-09-03) : mouvement, retour au geste,
+progression de lecture. EN DERNIER — elle se pose par-dessus tout le
+reste et n'utilise donc aucun !important hors mouvement réduit.
+Voir css/vivant.css. -->
+<link rel="stylesheet" href="css/vivant.css">
 </head>
 
 <body>
@@ -91,7 +99,7 @@ abonné déjà payant — pas de shell authentifié ici, juste un aiguillage. --
 
 <div class="container header-container">
 
-<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -128,11 +136,16 @@ menait à la même page que le bouton du hero juste en dessous et
 encombrait la zone du hero, surtout sur mobile. Le geste vit
 désormais uniquement dans le hero (« Découvrir mes opportunités »). -->
 
-</div>
+<!-- Menu mobile : injecté par js/mobile-nav.js (2026-09-03) — bouton
+animé + feuille plein écran, communs à tout le site. -->
 
 </div>
 
 </div>
+
+</div>
+
+
 
 </header>
 
@@ -223,11 +236,17 @@ traits verticaux (voir css/hero.css .hero-benefits/.benefit) plutôt que
 mêmes données Firestore que #teaser plus bas. Anciennement "500+"/"30+"
 codés en dur ici : ne correspondaient plus aux "40+"/"10+" réels
 affichés par #teaser, contradiction visible en scrollant (audit du
-2026-08-13). Pas de compteur animé ici (contrairement à l'ancien
-data-count-to) : main.js déclenche l'animation dès que la section
-entre dans le viewport, souvent avant la fin du fetch Firestore
-asynchrone — texte posé directement une fois la vraie donnée connue,
-même choix que trustUniversityCount/trustCountryCount dans #teaser. -->
+2026-08-13).
+
+Compteur animé au scroll RÉTABLI le 2026-09-01 (demande utilisateur),
+mais côté homepage-teaser.js (setCount) et non plus via l'ancien
+data-count-to de main.js : celui-ci se déclenchait à l'entrée dans le
+viewport, souvent avant la fin du fetch Firestore, et animait un
+chiffre faux ou vide — c'est pour ça qu'il avait été débranché. Le
+nouveau n'observe l'élément qu'une fois la vraie valeur connue, la
+course a disparu. « — » reste le contenu initial (donnée pas encore
+chargée, surveillé par le filet de secours en fin de page) ; il passe
+à « 0 » quand la donnée arrive, puis compte à l'apparition. -->
 <div class="hero-stats reveal hero-stagger">
 
 <div class="stat-card">
@@ -244,7 +263,7 @@ même choix que trustUniversityCount/trustCountryCount dans #teaser. -->
 pas une statistique : deux chiffres suivis d'un nom de produit
 dans une rangée qui annonce la taille du catalogue. Le lecteur
 lit "10+ / 10+ / Fitz" et bute sur le troisième.
-Le nombre d'universités partenaires est la troisième mesure
+Le nombre d'établissements vérifiés est la troisième mesure
 naturelle, il vient des mêmes données déjà chargées par
 renderTrustStats() (js/homepage-teaser.js) — aucun fetch de plus —
 et c'est le même trio que la bannière de scholarships.html.
@@ -355,6 +374,11 @@ dans hero.css, pas par cet ordre en lui-même, mais le faire correspondre
 
 </div>
 
+<!-- Ferme .container.hero-container (ouvert avant .hero-content) —
+</div> manquant depuis l'origine, repéré à l'audit du 2026-09-01 : le
+parseur HTML rattrapait l'erreur en refermant la div au </section>,
+d'où un rendu correct par accident. -->
+</div>
 
 </section>
 
@@ -404,7 +428,11 @@ une fraîcheur qu'on ne peut pas prouver. -->
 
 <div class="opportunites-foot">
 
-<a class="btn-opportunites" id="opportunitesLien" href="scholarships.html">Voir les opportunités ouvertes</a>
+<!-- Libellé dans un <span> dédié (passe mobile 2026-09-01) : le compte
+réel est injecté par js/opportunites-bandeau.js, qui écrivait
+lien.textContent — ce qui aurait effacé l'icône. Il cible désormais
+#opportunitesLienLabel, et la flèche survit à la mise à jour. -->
+<a class="btn-opportunites" id="opportunitesLien" href="scholarships.html"><span id="opportunitesLienLabel">Voir les opportunités ouvertes</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
 
 <button type="button" class="opportunites-pause" id="opportunitesPause" aria-pressed="false" hidden>
 Arrêter le défilement
@@ -429,7 +457,7 @@ seulement d'habillage.
 
 <div class="section-header reveal">
 
-<span class="kicker">Pourquoi tant d'étudiants abandonnent ?</span>
+<span class="kicker"><i data-lucide="circle-alert" aria-hidden="true"></i>Pourquoi tant d'étudiants abandonnent ?</span>
 
 <h2>
 Le problème n'est pas le manque de bourses.
@@ -447,7 +475,7 @@ opportunités correspondent réellement à leur profil.
 <div class="problem-list">
 
 <article class="problem-item reveal">
-<span class="problem-number" aria-hidden="true">01</span>
+<i data-lucide="search" aria-hidden="true"></i>
 <div>
 <h3>Vous cherchez partout</h3>
 <p>
@@ -458,7 +486,7 @@ dit lesquelles correspondent réellement à votre parcours.
 </article>
 
 <article class="problem-item reveal">
-<span class="problem-number" aria-hidden="true">02</span>
+<i data-lucide="hourglass" aria-hidden="true"></i>
 <div>
 <h3>Vous perdez un temps précieux</h3>
 <p>
@@ -469,7 +497,7 @@ n'êtes même pas éligible.
 </article>
 
 <article class="problem-item reveal">
-<span class="problem-number" aria-hidden="true">03</span>
+<i data-lucide="target" aria-hidden="true"></i>
 <div>
 <h3>Vous passez à côté d'opportunités</h3>
 <p>
@@ -591,7 +619,7 @@ choix est au-dessus de la balise <img>, pas ici. -->
 
 <div class="section-header reveal">
 
-<span class="kicker">Comment ça fonctionne</span>
+<span class="kicker"><i data-lucide="route" aria-hidden="true"></i>Comment ça fonctionne</span>
 
 <h2>
 Trouver, préparer, suivre — jusqu'au dépôt de votre dossier.
@@ -658,14 +686,18 @@ les ronds, la structure empilée, et ce bleu foncé qui pesait lourd.
 Remplacée par trois colonnes séparées d'un simple filet : plus de
 pastille, l'étape est portée par un libellé typographique et un trait
 ambré court. Le regroupement en une carte et le CTA unique, eux, ne
-changent pas — c'était le vrai acquis du premier passage. -->
+changent pas — c'était le vrai acquis du premier passage.
+
+2026-09-01 : le libellé « Étape 0N » + le trait cèdent à leur tour la
+place à une icône Lucide par étape (demande explicite de retirer les
+chiffres de toute la page d'accueil). Voir le commentaire au-dessus de
+.step-col > i dans css/homepage-sections.css pour le détail. -->
 <div class="steps-card reveal">
 
 <div class="steps-cols">
 
 <div class="step-col">
-<span class="step-label">Étape 01</span>
-<span class="step-rule" aria-hidden="true"></span>
+<i data-lucide="search" aria-hidden="true"></i>
 <h3>Trouver</h3>
 <p>
 Répondez à quelques questions sur votre parcours. Fitz identifie les bourses
@@ -675,8 +707,7 @@ d'admission inclus — pas une liste générique.
 </div>
 
 <div class="step-col">
-<span class="step-label">Étape 02</span>
-<span class="step-rule" aria-hidden="true"></span>
+<i data-lucide="clipboard-check" aria-hidden="true"></i>
 <h3>Préparer</h3>
 <p>
 CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi.
@@ -686,8 +717,7 @@ répond directement.
 </div>
 
 <div class="step-col">
-<span class="step-label">Étape 03</span>
-<span class="step-rule" aria-hidden="true"></span>
+<i data-lucide="list-checks" aria-hidden="true"></i>
 <h3>Suivre</h3>
 <p>
 Chaque candidature avance par étapes claires, de la préparation jusqu'à la
@@ -699,7 +729,7 @@ réponse de l'université — avec toutes vos échéances au même endroit.
 
 <div class="steps-footer">
 <a href="eligibility-test.html" class="btn btn-primary btn-lg steps-cta">
-<span>Découvrir mes opportunités</span>
+<span>Commencer gratuitement</span>
 <span class="steps-cta-arrow" aria-hidden="true">→</span>
 </a>
 </div>
@@ -731,32 +761,29 @@ chiffres, voici les témoignages — et chaque établissement derrière a
 
 <div class="container">
 
+<!-- REVU le 2026-09-01. Trois corrections d'un coup :
+
+1. Le kicker (« Un aperçu, pas le catalogue entier ») et le titre
+   (« Un échantillon de ce qui vous attend ») disaient la MÊME chose,
+   l'un au-dessus de l'autre. Le titre nomme maintenant ce qui est
+   réellement montré — quatre cartes, pas un « échantillon » flou.
+
+2. Le sous-titre disait « Universités partenaires ». Aucune université
+   du catalogue n'a de relation avec FitzUniverse : le mot avait été
+   retiré des deux pages catalogue mais cette occurrence-ci avait été
+   oubliée. Voir REDACTION.md §1.
+
+3. Les TROIS compteurs sont réduits à UN. Le hero de la même page
+   affiche déjà bourses / pays / universités : les répéter ici
+   n'apprenait rien. Cette section parle d'universités — les cartes en
+   montrent quatre, le bouton mène à leur catalogue — donc un seul
+   nombre, celui-là. Il est remonté DANS l'en-tête, à droite du texte :
+   .section-header est une colonne de 640px dans un conteneur de 1240,
+   et cette moitié droite était vide. -->
 <div class="section-header teaser-head reveal">
-<span class="kicker">Un aperçu, pas le catalogue entier</span>
-<h2>Un échantillon de ce qui vous attend</h2>
-<p>Universités du catalogue, bourses actives, programmes compatibles — voici ce que Fitz pourra analyser pour votre profil.</p>
-</div>
-
-<!-- Rempli par js/homepage-teaser.js (renderTrustStats) — mêmes données
-Firestore que le bandeau de logos plus haut, pas de second aller-retour
-réseau. -->
-<div id="trustStats" class="trust-stats reveal hero-stagger">
-
-<div class="trust-stat">
-<strong id="trustUniversityCount">—</strong>
-<span>Universités suivies</span>
-</div>
-
-<div class="trust-stat">
-<strong id="trustCountryCount">—</strong>
-<span>Pays couverts</span>
-</div>
-
-<div class="trust-stat">
-<strong id="trustScholarshipCount">—</strong>
-<span>Bourses actives</span>
-</div>
-
+<span class="kicker"><i data-lucide="layout-grid" aria-hidden="true"></i>Le catalogue</span>
+<h2>Quatre exemples de ce qui vous attend</h2>
+<p>Des établissements réels, des bourses ouvertes, des programmes compatibles avec votre parcours — c'est là-dedans que Fitz cherche pour vous.</p>
 </div>
 
 <div class="teaser-grid reveal" id="teaserGrid">
@@ -771,19 +798,30 @@ icône search-check/link-2/bot) → .assurance-list (refonte 2026-08-22,
 voir css/homepage-sections.css) : liste au trait, mêmes 3 messages. -->
 <div class="assurance-list reveal">
 
+<!-- RÉÉCRIT le 2026-09-01 — les deux premières affirmations ne
+tenaient plus devant les données. Mesuré sur scripts/export-catalog.json :
+354 programmes, dont 143 sans échéance et 143 sans couverture (40 %), et
+4 universités sans portail de candidature (les 3 marocaines publiques et
+l'IHEID — aucune n'en a, c'est un blanc voulu, pas un oubli). Promettre
+« critères et échéances confirmés POUR CHAQUE FICHE » était donc faux
+quatre fois sur dix.
+Ce qui EST vrai à 100 %, vérifié dans le même export : 0 bourse et 0
+université sans lien officiel. La deuxième carte s'appuie désormais sur
+ce chiffre-là, et la première dit la vérité plus forte — un champ vide
+est un champ qu'on n'a pas inventé. -->
 <div class="assurance-item">
-<h3>Vérifié à la main</h3>
-<p>Portail de candidature, critères d'éligibilité et échéances confirmés à la source pour chaque fiche — pas de collecte automatique invisible.</p>
+<h3>Saisi à la main, jamais aspiré</h3>
+<p>Chaque bourse et chaque université sont entrées une par une, depuis leur source officielle. Aucune collecte automatique — et ce qui n'a pas pu être confirmé reste vide plutôt qu'inventé.</p>
 </div>
 
 <div class="assurance-item">
-<h3>Le portail officiel reste accessible</h3>
-<p>Chaque fiche renvoie vers le site de l'université elle-même, gratuitement, abonné ou non.</p>
+<h3>Le lien officiel reste accessible</h3>
+<p>Depuis chaque fiche, le site de l'université ou de l'organisme qui finance s'ouvre gratuitement, que vous soyez abonné ou non.</p>
 </div>
 
 <div class="assurance-item">
 <h3>Fitz s'appuie sur ces données</h3>
-<p>Ses recommandations sont basées sur les bourses et critères réellement enregistrés dans ce catalogue, pas générées au hasard.</p>
+<p>Ses recommandations viennent des bourses et des critères réellement enregistrés dans ce catalogue — jamais d'une réponse inventée.</p>
 </div>
 
 </div>
@@ -854,7 +892,7 @@ deux, l'ancien titre disant déjà « vérifié établissement par
 établissement ». -->
 <div class="section-header reveal">
 
-<span class="kicker">Des établissements réels</span>
+<span class="kicker"><i data-lucide="shield-check" aria-hidden="true"></i>Des établissements réels</span>
 
 <h2>
 Vérifiés un par un, avant d'apparaître dans votre catalogue.
@@ -885,7 +923,7 @@ NOTRE VISION
 
 <div class="vision-content reveal">
 
-<span class="kicker">Notre vision</span>
+<span class="kicker"><i data-lucide="telescope" aria-hidden="true"></i>Notre vision</span>
 
 <h2>
 Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son <em>avenir</em>.
@@ -1012,6 +1050,11 @@ voir payment.js. -->
 <a href="offers.html" class="btn btn-accent btn-lg">
 
 <span>Choisir ma formule</span>
+<!-- Flèche directionnelle (passe mobile 2026-09-01) : même vocabulaire
+que la .steps-cta-arrow du bloc « Comment ça fonctionne » et que les
+liens de carte du catalogue — le CTA final était le seul geste
+principal sans repère visuel. -->
+<i data-lucide="arrow-right" aria-hidden="true"></i>
 
 </a>
 
@@ -1064,7 +1107,7 @@ loading="lazy" decoding="async">
 <div class="footer-top">
 
 <div class="footer-brand">
-<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -1176,7 +1219,9 @@ resolveSession().then(async (session) => {
 if (session && !session.disabled) {
 try {
 const featureFlags = await fetchFeatureFlags();
-if (!isFeatureLocked(session.planId, featureFlags, "advisor", session.testerAccess, session.hasFitzExpress)) {
+// "whatsapp_direct" (2026-09-02) : WhatsApp réservé à Signature,
+// plus large que l'ancien verrou "advisor".
+if (!isFeatureLocked(session.planId, featureFlags, "whatsapp_direct", session.testerAccess, session.hasFitzExpress)) {
 document.querySelector(".teaser-whatsapp")?.removeAttribute("hidden");
 }
 } catch (error) {
@@ -1189,6 +1234,15 @@ console.warn("Vérification de session ignorée sur une page publique :", error)
 });
 </script>
 
+<!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
+administrateur actif (voir js/admin-access.js) — invisible et
+inexistante pour tout autre visiteur. -->
+<script type="module" src="js/admin-access.js"></script>
+
+<!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,
+volontairement : comme js/catalog-watchdog.js, il doit survivre à
+l'échec d'un téléchargement gstatic. Ne jamais lui ajouter type="module". -->
+<script src="js/vivant.js" defer></script>
 </body>
 
 </html>

@@ -1,0 +1,536 @@
+/* ==========================================================
+FITZUNIVERSE — COUCHE « VIVANT » (2026-09-03)
+==========================================================
+
+CE QUE C'EST
+Une couche de MOUVEMENT posée par-dessus le design existant. Elle
+n'invente aucune couleur, aucun espacement, aucun rayon : tout vient
+des tokens de css/base.css. Elle ne redéfinit pas la mise en page —
+elle ne touche qu'à ce qui bouge (transform, opacity, ombres) et à ce
+qui répond au geste.
+
+POURQUOI ELLE EXISTE
+Le site était juste, mais immobile. Trois manques mesurés :
+  1. les 153 cartes du catalogue sont injectées par JS APRÈS le
+     passage de l'observateur de js/main.js : elles n'ont jamais
+     porté .reveal et apparaissaient toutes d'un bloc ;
+  2. tout le retour au survol du site tenait en deux lignes
+     (.card:hover → -1px et --shadow-sm), imperceptible ;
+  3. les pages catalogue font 35 000 px sur PC et 88 000 px sur
+     téléphone, sans aucun repère de progression.
+
+RÈGLE DE SÉCURITÉ — RIEN NE S'ACTIVE SANS `html.vivant`
+Comme la classe `js-ready` de css/animations.css, tout ce qui masque,
+décale ou met en attente un élément est conditionné à la classe
+`vivant`, posée par js/vivant.js à sa première ligne. Si ce script
+n'est pas chargé, échoue, ou est bloqué, le site reste EXACTEMENT
+celui d'avant : aucun contenu caché, aucun décalage. Les
+améliorations qui ne peuvent rien casser (retour au survol, retour
+tactile, focus) s'appliquent, elles, sans condition.
+
+CHARGEMENT — cette feuille vient EN DERNIER dans le <head>, après
+toutes les autres : elle se contente ainsi de spécificité naturelle et
+n'utilise `!important` qu'à un seul endroit, le bloc
+prefers-reduced-motion final, où c'est sa raison d'être.
+
+ORDRE DU FICHIER
+  §1  Fondations (ancres, peinture différée, transitions de page)
+  §2  Révélation à l'arrivée (échelonnement automatique)
+  §3  Images qui se déposent
+  §4  Titres éditoriaux ligne à ligne
+  §5  Cartes vivantes (survol, halo au pointeur, appui tactile)
+  §6  Boutons et liens
+  §7  Barre de progression de lecture
+  §8  Parallaxe douce
+  §9  Téléphone
+  §10 prefers-reduced-motion
+========================================================== */
+
+
+/* ==========================================================
+§1 — FONDATIONS
+Rien de visible ici : de la mécanique de page.
+========================================================== */
+
+/* Les ancres du site (#opportunites, #how-it-works…) se calaient
+sous l'en-tête fixe. css/catalog.css corrigeait déjà le cas du
+catalogue (scroll-margin-top:96px) ; ceci l'étend à toute cible
+d'ancre du site, sans avoir à les énumérer. */
+:where([id]) {
+  scroll-margin-top: clamp(72px, 12vh, 108px);
+}
+
+/* PEINTURE DIFFÉRÉE — ESSAYÉE PUIS RETIRÉE (2026-09-03).
+`content-visibility:auto` sur les groupes de pays promettait de ne
+peindre que le voisinage de l'écran sur une page de 35 000 px. Vérifié
+en harnais : le contenu hors écran n'étant pas rendu, l'observateur
+d'intersection ne voyait plus les cartes des groupes suivants — elles
+restaient à opacity:0, et la page se remplissait de vides.
+
+Le remède aurait été de mesurer chaque groupe pour lui donner un
+`contain-intrinsic-size` exact ; ça reste une piste, mais pas au prix
+d'un défilement instable sur LA page centrale du site. Le vrai gain de
+performance de ce chantier est ailleurs : l'instantané statique du
+catalogue (0 lecture Firestore par visite).
+
+NE PAS RÉINTRODUIRE sans mesurer les hauteurs réelles d'abord. */
+
+/* TRANSITIONS DE PAGE — catalogue → fiche, et retour. Deux lignes
+de progressive enhancement : les navigateurs qui ne connaissent pas
+la règle l'ignorent et naviguent comme avant. Aucun JS requis. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: .28s;
+  animation-timing-function: var(--ease-standard);
+}
+
+/* La photo de la carte cliquée devient la photo de la fiche : le
+nom est posé par js/vivant.js au moment du clic, sur cette carte
+seulement, puis retiré. Un seul nom peut exister par page. */
+.vivant-morphe {
+  view-transition-name: vivant-media;
+  contain: layout;
+}
+
+
+/* ==========================================================
+§2 — RÉVÉLATION À L'ARRIVÉE
+
+css/animations.css apporte déjà `.reveal` et son observateur. Ce qui
+manquait : l'ÉCHELONNEMENT AUTOMATIQUE. Les délais y sont écrits à la
+main, nth-child(2) à nth-child(6) — au-delà, plus rien. Une grille de
+153 cartes n'en tirait aucun rythme.
+
+Ici, l'index vient de js/vivant.js (--i) : il vaut pour n'importe
+quel nombre d'éléments, et il est PLAFONNÉ par le script (voir son
+commentaire) pour qu'une longue liste ne finisse pas par attendre
+huit secondes.
+========================================================== */
+
+html.vivant .vivant-arrive {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity .55s var(--ease-premium),
+    transform .55s var(--ease-premium);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+
+html.vivant .vivant-arrive.est-la {
+  opacity: 1;
+  transform: none;
+}
+
+/* Variante latérale, pour les blocs en vis-à-vis (texte à gauche,
+image à droite) : ils entrent l'un vers l'autre au lieu de monter
+tous les deux. Le sens vient du sélecteur, pas d'une classe de plus. */
+html.vivant .vivant-arrive--gauche { transform: translate3d(-24px, 0, 0); }
+html.vivant .vivant-arrive--droite { transform: translate3d(24px, 0, 0); }
+
+html.vivant .vivant-arrive--gauche.est-la,
+html.vivant .vivant-arrive--droite.est-la { transform: none; }
+
+
+/* ==========================================================
+§3 — IMAGES QUI SE DÉPOSENT
+
+Les photos du catalogue sont en `loading="lazy"` : elles surgissent
+d'un coup, à froid, dès qu'elles arrivent. Ici elles se déposent —
+un léger flou qui se lève et un cadrage qui se stabilise. La classe
+`est-chargee` est posée par js/vivant.js sur l'événement `load`
+(et immédiatement si l'image était déjà en cache).
+
+Le conteneur `.scholarship-card-media` a déjà un ::after (le voile
+photo) : on ne touche qu'à l'<img>, jamais au conteneur.
+========================================================== */
+
+/* `> img` et non ` img` : le drapeau du pays vit dans
+.uni-card-location, à l'intérieur du même conteneur média. Avec le
+sélecteur large, les 146 drapeaux passaient en opacity:0 sans jamais
+recevoir `est-chargee`. Ne pas élargir. */
+html.vivant .scholarship-card-media > img,
+html.vivant .uni-card-media > img {
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(8px);
+  transition:
+    opacity .6s var(--ease-standard),
+    transform .8s var(--ease-premium),
+    filter .6s var(--ease-standard);
+}
+
+html.vivant .scholarship-card-media > img.est-chargee,
+html.vivant .uni-card-media > img.est-chargee {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+
+/* ==========================================================
+§4 — TITRES ÉDITORIAUX, LIGNE À LIGNE
+
+Les grands titres du site sont composés en Newsreader, sur deux à
+quatre lignes, et c'est ce qui donne au site son air de magazine.
+Les faire monter LIGNE PAR LIGNE derrière un masque — comme on
+tourne une page — au lieu de les faire apparaître d'un bloc.
+
+Le découpage en lignes est fait par js/vivant.js, qui mesure les
+lignes RÉELLES après mise en page (donc juste, quelle que soit la
+largeur de l'écran) et refait le calcul au redimensionnement.
+========================================================== */
+
+html.vivant .vivant-lignes {
+  /* Le masque : chaque ligne est un bloc dont le débordement est
+  coupé, et le mot glisse depuis le bas de ce bloc. */
+}
+
+html.vivant .vivant-ligne {
+  display: block;
+  overflow: hidden;
+}
+
+html.vivant .vivant-ligne > span {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+  transition: transform .72s var(--ease-premium);
+  transition-delay: calc(var(--l, 0) * 90ms);
+}
+
+html.vivant .vivant-lignes.est-la .vivant-ligne > span {
+  transform: none;
+}
+
+
+/* ==========================================================
+§5 — CARTES VIVANTES
+
+Le cœur de cette couche. Une carte de catalogue doit dire trois
+choses au geste : « je suis survolée », « je suis cliquable »,
+« je réponds ». Elle n'en disait aucune.
+
+Ce bloc s'applique SANS `html.vivant` : un survol plus franc ne peut
+rien casser, même si le script n'est jamais chargé.
+========================================================== */
+
+/* --- Le halo qui suit le pointeur ---------------------------
+Une nappe ambre très basse, centrée sur le curseur, PEINTE DANS LE
+FOND de la carte (background-image) et non par un élément
+superposé : impossible de recouvrir le contenu, impossible de
+perturber la mise en page, aucun z-index à arbitrer.
+
+@property rend la couleur animable — sans lui, le halo apparaît d'un
+coup au lieu de monter. Les navigateurs qui ignorent @property
+gardent le halo, sans le fondu : dégradation propre. */
+@property --vivant-halo {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba(233, 163, 25, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+  .scholarship-card,
+  .uni-card {
+    --vivant-halo: rgba(233, 163, 25, 0);
+    background-image:
+      radial-gradient(
+        260px circle at var(--mx, 50%) var(--my, 50%),
+        var(--vivant-halo),
+        transparent 72%
+      );
+    transition:
+      transform .32s var(--ease-premium),
+      box-shadow .32s var(--ease-standard),
+      border-color .32s var(--ease-standard),
+      --vivant-halo .35s var(--ease-standard);
+  }
+
+  /* Le relief. -1px et --shadow-sm ne se voyaient pas ; -5px et
+  --shadow-lg se voient, sans devenir spectaculaires. La bordure se
+  réchauffe vers l'ambre : c'est la couleur d'action du site. */
+  .scholarship-card:hover,
+  .uni-card:hover {
+    --vivant-halo: rgba(233, 163, 25, .13);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(233, 163, 25, .38);
+  }
+
+  /* La photo respire à l'intérieur de son cadre. Le zoom vit sur
+  l'<img>, le recadrage sur le conteneur qui a déjà overflow:hidden
+  pour son voile — rien de neuf à déclarer. */
+  .scholarship-card-media img,
+  .uni-card-media img {
+    transition:
+      transform .7s var(--ease-premium),
+      opacity .6s var(--ease-standard),
+      filter .6s var(--ease-standard);
+  }
+
+  .scholarship-card:hover .scholarship-card-media > img.est-chargee,
+  .uni-card:hover .uni-card-media > img.est-chargee {
+    transform: scale(1.05);
+  }
+
+}
+
+/* --- L'appui, au doigt comme à la souris --------------------
+Sur téléphone il n'y a pas de survol : l'appui est le SEUL retour
+possible, et son absence est ce qui fait qu'une interface tactile
+semble morte. La carte s'enfonce très légèrement. */
+.scholarship-card:active,
+.uni-card:active {
+  transform: scale(.985);
+  transition-duration: .1s;
+}
+
+/* --- Le focus clavier ---------------------------------------
+Un anneau ambre franc, décollé de la carte. Il ne dépend d'aucun
+script : c'est de l'accessibilité, pas de la décoration. */
+.scholarship-card:focus-visible,
+.uni-card:focus-visible,
+.scholarship-card a:focus-visible,
+.uni-card a:focus-visible {
+  outline: 2px solid var(--amber-600);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
+}
+
+
+/* ==========================================================
+§6 — BOUTONS ET LIENS
+
+Les CTA du site portent une flèche « → ». Elle est le seul endroit
+où un bouton peut bouger sans devenir bruyant : elle avance quand on
+s'apprête à la suivre.
+========================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+
+  .btn-primary,
+  .btn-secondary,
+  .cta-button,
+  .app-cta {
+    transition:
+      transform .25s var(--ease-premium),
+      box-shadow .25s var(--ease-standard),
+      background-color .25s var(--ease-standard);
+  }
+
+  .btn-primary:hover,
+  .cta-button:hover {
+    transform: translateY(-2px);
+  }
+
+  /* La flèche : +4px vers la droite. Elle est écrite dans le
+  libellé (« Commencer gratuitement → ») ou posée en <i>/<svg> —
+  les deux cas sont couverts. */
+  .btn-primary i,
+  .btn-primary svg,
+  .cta-button i,
+  .cta-button svg,
+  .app-cta i,
+  .app-cta svg,
+  .voir-plus i,
+  .voir-plus svg {
+    transition: transform .28s var(--ease-premium);
+  }
+
+  .btn-primary:hover i,
+  .btn-primary:hover svg,
+  .cta-button:hover i,
+  .cta-button:hover svg,
+  .app-cta:hover i,
+  .app-cta:hover svg,
+  .voir-plus:hover i,
+  .voir-plus:hover svg {
+    transform: translateX(4px);
+  }
+
+}
+
+/* L'appui rend le bouton — au doigt, c'est ce qui accuse réception. */
+.btn-primary:active,
+.btn-secondary:active,
+.cta-button:active,
+.app-cta:active {
+  transform: scale(.97);
+  transition-duration: .08s;
+}
+
+
+/* ==========================================================
+§7 — BARRE DE PROGRESSION DE LECTURE
+
+Sur une page de 35 000 px, savoir où l'on en est n'est pas un
+ornement : c'est la seule information qui manque. Un filet ambre de
+3 px collé au bord haut, sous l'en-tête.
+
+L'élément est créé par js/vivant.js. La largeur est pilotée par une
+propriété personnalisée mise à jour dans un requestAnimationFrame —
+donc pas de reflow, uniquement du transform.
+========================================================== */
+
+.vivant-progression {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: calc(var(--z-header, 1000) + 1);
+  pointer-events: none;
+  background: transparent;
+}
+
+.vivant-progression span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--avancement, 0));
+  background: linear-gradient(90deg, var(--amber-600), var(--amber-500));
+  box-shadow: 0 0 12px rgba(233, 163, 25, .45);
+  transition: transform .12s linear, opacity .3s var(--ease-standard);
+}
+
+/* Invisible tant qu'on n'a pas commencé à lire. */
+.vivant-progression[data-debut="1"] span { opacity: 0; }
+
+/* Page trop courte pour qu'une progression veuille dire quelque
+chose : le script pose cet attribut lui-même, en mesurant la hauteur
+RÉELLE à chaque défilement (le catalogue est vide au chargement et
+grandit ensuite — voir le commentaire de progression() dans le
+script). */
+.vivant-progression[data-court="1"] { display: none; }
+
+
+/* ==========================================================
+§8 — PARALLAXE DOUCE
+
+js/main.js fait déjà glisser la photo du pied de page. Le même
+principe, généralisé aux images de section marquées
+[data-parallaxe] : elles se déplacent d'une fraction du défilement,
+ce qui donne de la profondeur sans que rien ne « bouge » vraiment.
+
+Ratio volontairement faible (0,08 par défaut) : au-delà, l'effet se
+remarque, et un effet qui se remarque est un effet raté.
+========================================================== */
+
+html.vivant [data-parallaxe] {
+  will-change: transform;
+}
+
+
+/* ==========================================================
+§9 — TÉLÉPHONE
+
+Les dix règles mobiles du projet (voir regles_mobile.md) tiennent :
+rien ici ne change une largeur, une taille de texte ou un
+espacement. On n'ajoute que ce qui manquait au TOUCHER.
+========================================================== */
+
+@media (max-width: 720px) {
+
+  /* Les carrousels horizontaux s'arrêtent sur une carte au lieu de
+  finir n'importe où. C'est ce qui distingue un carrousel d'une
+  simple zone qui défile. */
+  .opportunites-piste,
+  .trust-marquee,
+  .catalog-carousel {
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .opportunites-piste > *,
+  .catalog-carousel > * {
+    scroll-snap-align: start;
+  }
+
+  /* Le halo au pointeur n'existe pas au doigt : on économise le
+  dégradé de fond, inutile ici. */
+  .scholarship-card,
+  .uni-card {
+    background-image: none;
+  }
+
+  /* L'échelonnement est resserré : sur un petit écran, moins de
+  cartes sont visibles à la fois, et un rythme trop lent devient une
+  attente. */
+  html.vivant .vivant-arrive {
+    transition-delay: calc(var(--i, 0) * 38ms);
+    transform: translate3d(0, 14px, 0);
+  }
+
+  /* La barre de progression descend sous la barre d'onglets basse
+  quand elle existe, pour ne jamais chevaucher l'encoche. */
+  .vivant-progression {
+    height: 2.5px;
+  }
+
+}
+
+
+/* ==========================================================
+§10 — MOUVEMENT RÉDUIT
+
+Non négociable. Quelqu'un qui a demandé moins de mouvement doit
+recevoir le site COMPLET, immobile — jamais un site amputé. Tout ce
+qui masquait ou décalait est remis à l'état final ; seul le halo au
+pointeur, qui ne bouge pas, survit.
+========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  html.vivant .vivant-arrive,
+  html.vivant .vivant-arrive--gauche,
+  html.vivant .vivant-arrive--droite {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html.vivant .vivant-ligne > span {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html.vivant .scholarship-card-media img,
+  html.vivant .uni-card-media img {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .scholarship-card:hover,
+  .uni-card:hover,
+  .btn-primary:hover,
+  .cta-button:hover {
+    transform: none !important;
+  }
+
+  .scholarship-card:active,
+  .uni-card:active,
+  .btn-primary:active,
+  .cta-button:active,
+  .app-cta:active {
+    transform: none !important;
+  }
+
+  html.vivant [data-parallaxe] {
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .vivant-progression {
+    display: none;
+  }
+
+  @view-transition {
+    navigation: none;
+  }
+
+}

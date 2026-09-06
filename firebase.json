@@ -1,41 +1,59 @@
 {
-"functions": [
-  {
-    "source": "functions",
-    "codebase": "default",
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": ".",
     "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "*.local"
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "import-scholarships.html",
+      "import-scholarships.js",
+      "import-universities.html",
+      "import-universities.js"
+    ],
+    "rewrites": [],
+    "headers": [
+      {
+        "source": "/assets/data/catalogue.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300, must-revalidate"
+          }
+        ]
+      }
     ]
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "singleProjectMode": true
   }
-],
-"firestore": {
-"rules": "firestore.rules",
-"indexes": "firestore.indexes.json"
-},
-"storage": {
-"rules": "storage.rules"
-},
-"hosting": {
-"public": ".",
-"ignore": [
-"firebase.json",
-"**/.*",
-"**/node_modules/**",
-"import-scholarships.html",
-"import-scholarships.js",
-"import-universities.html",
-"import-universities.js"
-],
-"rewrites": []
-},
-"emulators": {
-"auth": { "port": 9099 },
-"firestore": { "port": 8080 },
-"ui": { "enabled": true, "port": 4000 },
-"singleProjectMode": true
-}
 }

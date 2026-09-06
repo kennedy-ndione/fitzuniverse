@@ -18,7 +18,53 @@
 */
 
 import { db } from "../firebase-config.js";
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+// ==========================================================
+// CRÉNEAUX ANTI-TRICHE (audit sécurité 2026-09-02).
+// Le quota de candidatures (maxAccompaniedApplications) n'était
+// vérifié QUE côté client : un étudiant outillé pouvait créer autant
+// de documents qu'il voulait depuis la console développeur. Les
+// règles Firestore ne savent pas COMPTER une sous-collection — mais
+// elles savent contraindre un IDENTIFIANT. Chaque candidature est
+// donc créée sous un id de créneau "slot-N" (N = 1..quota), et
+// firestore.rules refuse toute création dont le N dépasse le quota
+// de la formule : il ne peut mécaniquement pas exister plus de
+// candidatures SIMULTANÉES que de créneaux. Supprimer une
+// candidature libère son créneau — cohérent avec la promesse
+// commerciale (« N candidatures À LA FOIS »).
+//
+// Toute création de candidature, où qu'elle soit dans le code, DOIT
+// passer par slotIdLibre() + setDoc — plus jamais addDoc (un id
+// auto-généré serait refusé par les règles).
+// ==========================================================
+
+/**
+* Premier créneau libre pour une nouvelle candidature.
+* @param {Array<{id:string}>} existingApplications - candidatures déjà chargées
+* @param {number} quota - maxAccompaniedApplications de la formule (Infinity accepté)
+* @returns {string|null} "slot-N", ou null si tous les créneaux sont pris
+*/
+export function slotIdLibre(existingApplications, quota) {
+
+const pris = new Set(
+(existingApplications || [])
+.map((a) => /^slot-(\d+)$/.exec(a.id || ""))
+.filter(Boolean)
+.map((m) => parseInt(m[1], 10))
+);
+
+// Signature (quota Infinity) : les règles serveur plafonnent à 999 —
+// bien au-delà de tout usage réel, mais fini, pour rester exprimable.
+const max = Number.isFinite(quota) ? quota : 999;
+
+for (let n = 1; n <= max; n++) {
+if (!pris.has(n)) return `slot-${n}`;
+}
+
+return null;
+
+}
 
 // Dupliqué à l'identique de applications.js plutôt qu'importé : ce
 // module est en amont d'applications.js dans le graphe de dépendances
@@ -35,13 +81,20 @@ return d.toISOString().slice(0, 10);
 /**
 * @param {string} uid
 * @param {{universityName:string, scholarshipTitle?:string}} rec - entrée de recommendPrograms() (js/recommend-programs.js)
-* @returns {Promise<string>} l'id du document de candidature créé
+* @param {{existingApplications:Array<{id:string}>, quota:number}} contexte - candidatures déjà chargées + quota de la formule (l'appelant a déjà vérifié isQuotaReached ; ces deux valeurs servent à choisir le créneau)
+* @returns {Promise<string>} l'id du document de candidature créé ("slot-N")
 */
-export async function createApplicationFromRecommendation(uid, rec) {
+export async function createApplicationFromRecommendation(uid, rec, { existingApplications, quota }) {
+
+const slotId = slotIdLibre(existingApplications, quota);
+
+if (!slotId) {
+throw new Error("Aucun créneau de candidature libre pour cette formule.");
+}
 
 const appsCol = collection(db, "users", uid, "applications");
 
-const ref = await addDoc(appsCol, {
+await setDoc(doc(appsCol, slotId), {
 university: rec.universityName,
 scholarship: rec.scholarshipTitle,
 portalUrl: "",
@@ -55,6 +108,6 @@ nextCheckDate: nextCheckFromToday(14),
 createdAt: serverTimestamp()
 });
 
-return ref.id;
+return slotId;
 
 }

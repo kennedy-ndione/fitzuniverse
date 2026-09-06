@@ -62,9 +62,22 @@ const EVENT_CONFIG = {
 signup: { counters: ["totals", "byDay"] },
 login: { counters: ["totals", "byDay"] },
 
+// Entrées/sorties du site (refonte Control Center 2026-09-02) :
+// "visit" est signalé UNE fois par session de navigateur via
+// trackVisitOnce() ci-dessous — jamais à chaque page, pour ne pas
+// gonfler les écritures ; "logout" au clic sur Déconnexion.
+visit: { counters: ["totals", "byDay"] },
+logout: { counters: ["totals", "byDay"] },
+
 scholarship_viewed: { counters: ["totals", "byDay"], dimensions: ["country", "university", "field"] },
 university_viewed: { counters: ["totals", "byDay"], dimensions: ["country", "university"] },
 application_portal_opened: { counters: ["totals", "byDay"], dimensions: ["country", "university"] },
+// Émis par details.js depuis la distinction portail université /
+// portail bailleur / portail de candidature, mais jamais déclarés
+// ici (journal seul, aucun compteur) — régularisés le 2026-09-02.
+university_portal_opened: { counters: ["totals", "byDay"], dimensions: ["country", "university"] },
+funder_portal_opened: { counters: ["totals", "byDay"], dimensions: ["country"] },
+application_created_from_details: { counters: ["totals", "byDay"], dimensions: ["country", "university"] },
 
 letter_generated: { counters: ["totals", "byDay"], dimensions: ["country"] },
 email_generated: { counters: ["totals", "byDay"], dimensions: ["country"] },
@@ -75,7 +88,23 @@ ai_chat_message_sent: { counters: ["totals", "byDay"] },
 application_added: { counters: ["totals", "byDay"] },
 application_checked_in: { counters: ["totals", "byDay"] },
 application_readiness_checked: { counters: ["totals", "byDay"] },
+// Ces deux types étaient déjà émis par applications.js mais absents
+// d'EVENT_CONFIG (le journal brut les recevait, aucun compteur ne
+// bougeait) — régularisés lors de la refonte du 2026-09-02.
+application_checklist_updated: { counters: ["totals", "byDay"] },
+application_recommendation_replaced: { counters: ["totals", "byDay"] },
+
+// Issues de candidatures (statuts admise / refusee / liste_attente
+// d'applications.js) — la matière première des courbes admissions/
+// refus du Control Center.
+application_admitted: { counters: ["totals", "byDay"] },
+application_rejected: { counters: ["totals", "byDay"] },
+application_waitlisted: { counters: ["totals", "byDay"] },
+
 advisor_request_sent: { counters: ["totals", "byDay"] },
+// Message envoyé par un administrateur à un étudiant depuis le
+// Control Center (interaction directe admin → étudiant).
+admin_message_sent: { counters: ["totals", "byDay"] },
 file_compressed: { counters: ["totals", "byDay"] },
 
 payment_attempted: { counters: ["totals", "byDay", "byPlan"] }
@@ -178,6 +207,35 @@ await Promise.all(jobs);
 // Le suivi analytics ne doit jamais faire planter la fonctionnalité
 // qui l'appelle : on se contente de logguer.
 console.warn(`[analytics] échec du suivi de l'événement "${eventType}":`, error);
+
+}
+
+}
+
+// ==========================================================
+// Entrées du site — UNE visite par session de navigateur.
+// sessionStorage sert de garde : l'événement part au premier
+// chargement d'une page qui appelle trackVisitOnce(), puis plus
+// jamais dans le même onglet (rechargements Live Server compris,
+// ce qui protège aussi le quota d'écritures en développement).
+// Comme trackEvent, ne doit jamais faire échouer l'appelant.
+// ==========================================================
+
+export function trackVisitOnce() {
+
+try {
+
+if (sessionStorage.getItem("fitzVisitTracked") === "1") return;
+
+sessionStorage.setItem("fitzVisitTracked", "1");
+
+trackEvent("visit", { page: window.location.pathname });
+
+} catch (error) {
+
+// sessionStorage indisponible (navigation privée stricte...) :
+// tant pis pour cette visite, jamais d'erreur propagée.
+console.warn("[analytics] visite non suivie :", error);
 
 }
 

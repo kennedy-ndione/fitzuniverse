@@ -160,7 +160,7 @@ padding:52px 44px;
 
 text-align:center;
 
-box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
+box-shadow:0 4px 12px rgba(20,16,13,.10), 0 24px 48px -12px rgba(20,16,13,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 }
 
@@ -438,7 +438,7 @@ border-radius:var(--radius-md);
 
 background:var(--background-light);
 
-border:1px solid rgba(51,65,140,.14);
+border:1px solid rgba(26,23,20,.12);
 
 color:var(--text-light);
 
@@ -625,7 +625,7 @@ transform:translateY(-10px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(51,65,140,.18);
+border-color:rgba(26,23,20,.16);
 
 }
 
@@ -799,6 +799,138 @@ animation:none;
 .advisor-intro .fitz-avatar::after{
 
 animation:none;
+
+}
+
+}
+
+/* ==========================================================
+MOBILE — le contenu passe SOUS la barre de marque (2026-09-01)
+==========================================================
+.page-brandbar--overlay est posée en absolu AU-DESSUS du contenu. Sur
+grand écran la carte est centrée (max-width 640px) et son lien
+« Retour à l'accueil » démarre loin du logo ; dès que la fenêtre passe
+sous ~900px, le bord gauche de la carte rejoint celui de la barre et
+le lien vient s'imprimer SUR le lockup (constaté sur capture téléphone
+de l'utilisateur, 2026-09-01). Sous ce seuil, le corps réserve donc la
+hauteur de la barre (22px de padding + lockup 30px + respiration) et
+le lien retrouve sa place, sous le logo. Posé en FIN de fichier pour
+gagner sur @media(max-height:760px), qui réécrit le padding entier. */
+@media(max-width:899px){
+
+body{
+
+padding-top:84px;
+
+}
+
+}
+
+/* Rembourrage de la carte sur téléphone (2026-09-01, lot 5) : 52x44px
+de bureau jusqu'à 380px laissait, entre 381 et 576px, une carte au
+cadre plus épais que son contenu. Palier intermédiaire aligné sur le
+reste de la passe mobile ; la règle ≤380px existante plus haut reste
+le plancher des très petits écrans. */
+@media(max-width:576px){
+
+.card{
+
+padding:34px 22px;
+
+}
+
+}
+
+/* ==========================================================
+CARTE D'INTRODUCTION DÉSENCOMBRÉE SUR TÉLÉPHONE (2026-09-01, lot 6)
+==========================================================
+Demande utilisateur, capture à l'appui : « le rendu mobile doit pas
+être encombré ». Trois gestes, tous limités au ≤576px — le bureau ne
+change pas :
+
+1. Le badge ne dit plus que « Fitz » : le rôle (« votre conseiller
+   intelligent ») est déjà raconté par le titre et le paragraphe juste
+   dessous. On masque le SPAN du descripteur, on ne redéfinit PAS
+   .fitz-badge lui-même (règle design_badge_fitz : composant unique de
+   css/base.css, jamais redéfini dans une feuille de page).
+2. L'avatar-halo est masqué : il prenait un tiers de la largeur pour
+   un signal d'activité que la ligne de statut animée porte déjà —
+   l'en-tête se centre et respire.
+3. Repères de confiance resserrés pour tenir sur UNE rangée, et lignes
+   de bénéfices allégées d'un cran. */
+@media(max-width:576px){
+
+.advisor-intro .fitz-badge-role{
+
+display:none;
+
+}
+
+.advisor-intro .fitz-avatar{
+
+display:none;
+
+}
+
+.advisor-intro{
+
+justify-content:center;
+
+text-align:center;
+
+gap:0;
+
+padding:10px 0;
+
+margin-bottom:16px;
+
+}
+
+/* text-align:center ne suffit pas pour le badge : .fitz-badge est en
+display:flex + width:max-content (css/base.css — voulu, c'est ce qui
+permet margin:0 auto sur results/offers/payment), donc c'est une boîte
+de BLOC insensible au text-align du parent — il restait collé à gauche
+(capture utilisateur : « Fitz ne doit pas aller dans tous les sens, il
+doit rester au milieu »). La colonne centrée règle le badge ET la
+ligne de statut d'un coup, sans redéfinir .fitz-badge lui-même. */
+.advisor-intro .advisor-copy{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+}
+
+.trust-strip{
+
+gap:8px 14px;
+
+margin-bottom:22px;
+
+}
+
+.trust-strip span{
+
+font-size:.74rem;
+
+}
+
+.trust-strip i,
+.trust-strip svg{
+
+width:12px;
+
+height:12px;
+
+}
+
+.benefit{
+
+padding:12px 14px;
+
+gap:12px;
 
 }
 

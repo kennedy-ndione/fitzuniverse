@@ -162,7 +162,7 @@ border-radius:var(--radius-lg);
 
 padding:48px;
 
-box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
+box-shadow:0 4px 12px rgba(20,16,13,.10), 0 24px 48px -12px rgba(20,16,13,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 }
 
@@ -394,7 +394,7 @@ outline:none;
 
 border-color:var(--primary-color);
 
-box-shadow:0 0 0 4px rgba(51,65,140,.12);
+box-shadow:0 0 0 4px rgba(233,163,25,.16);
 
 }
 
@@ -1052,6 +1052,24 @@ transform:none;
 .chat-box .fitz-avatar::after{
 
 animation:none;
+
+}
+
+}
+
+/* ==========================================================
+MOBILE — le contenu passe SOUS la barre de marque (2026-09-01)
+==========================================================
+Même correctif que sur eligibility-test.css (voir son commentaire) :
+sous ~900px, le lien « Retour au diagnostic » venait s'imprimer sur le
+lockup de .page-brandbar--overlay. Le corps réserve la hauteur de la
+barre ; posé en FIN de fichier pour gagner sur les @media précédents
+qui réécrivent le padding du body en entier. */
+@media(max-width:899px){
+
+body{
+
+padding-top:84px;
 
 }
 

@@ -23,6 +23,11 @@
 
 <body>
 
+<a href="../index.html" class="admin-back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour au site</span>
+</a>
+
 <div class="admin-auth-page">
 
 <div class="admin-auth-shell">
@@ -49,7 +54,7 @@
 <label for="email">Adresse e-mail</label>
 <div class="input-wrap">
 <i data-lucide="mail" class="input-icon"></i>
-<input type="email" id="email" placeholder="vous@scholarbridge.app" autocomplete="username" required>
+<input type="email" id="email" placeholder="vous@fitzuniverse.com" autocomplete="username" required>
 </div>
 </div>
 
@@ -98,8 +103,11 @@ const isHidden = passwordInput.type === "password";
 
 passwordInput.type = isHidden ? "text" : "password";
 
-const icon = togglePasswordBtn.querySelector("i");
-icon.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
+// Lucide REMPLACE le <i data-lucide> par un <svg> au premier
+// createIcons() : cibler « i » seul renvoyait null au clic
+// (TypeError console) — piège documenté dans DESIGN_SYSTEM.md.
+const icon = togglePasswordBtn.querySelector("i, svg");
+if (icon) icon.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
 
 togglePasswordBtn.setAttribute("aria-label", isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe");
 

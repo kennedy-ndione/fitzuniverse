@@ -812,11 +812,15 @@ CE QUI LES REMPLACE
 -------------------
 Le système déjà validé sur les pages publiques : encre, blanc, ambre.
 
-  — L'ENCRE (#161B33) prend la place du bleu vif. Ce n'est pas « du
-    bleu plus foncé » : à cette valeur l'œil lit du noir bleuté, pas
-    une couleur. Le dégradé est conservé, resserré vers le bas de
-    l'échelle — un aplat pur perdrait la profondeur diagonale sans
-    rien gagner.
+  — L'ENCRE CHAUDE (#211D18) prend la place du bleu vif. [Corrigé le
+    2026-09-02 : la première version de cette passe posait #161B33,
+    une encre encore BLEUTÉE — b>r+29 — et l'utilisateur voyait
+    toujours « du bleu foncé » sur le bouton d'enregistrement du
+    profil et l'anneau de score. L'encre de l'espace est désormais la
+    MÊME famille que base.css (#4A4032/#211D18/#14100D) : plus aucune
+    redéfinition froide nulle part.] Le dégradé est conservé, resserré
+    vers le bas de l'échelle — un aplat pur perdrait la profondeur
+    diagonale sans rien gagner.
   — L'AMBRE prend la place du violet sur les liens. C'est la couleur
     chaude de FitzUniverse, celle des pages publiques, et --amber-700
     est la seule valeur de l'échelle admise pour du texte (5,8:1 sur
@@ -857,9 +861,9 @@ couleur plutôt qu'un noir. */
 --gradient-primary:
 linear-gradient(
 135deg,
-#232A4D 0%,
-#161B33 55%,
-#0E1226 100%
+#4A4032 0%,
+#211D18 55%,
+#14100D 100%
 );
 
 /* Les surfaces pleines (boutons principaux, puces actives) prennent
@@ -869,9 +873,12 @@ C'est --primary-600 qu'il faut redéfinir, pas --primary-color :
 .btn-primary lit `var(--primary-600)` directement (css/base.css),
 et redéfinir seulement l'alias laissait le bouton principal en
 #33418C — vérifié à l'écran, pas supposé. En passant par l'échelle,
---primary-color et --primary-hover suivent d'eux-mêmes. */
---primary-600:#161B33;
---primary-700:#0E1226;
+--primary-color et --primary-hover suivent d'eux-mêmes.
+Valeurs identiques à base.css depuis le 2026-09-02 — ces deux lignes
+ne restent que comme verrou : si base.css re-dérivait, l'espace
+étudiant resterait encre chaude. */
+--primary-600:#211D18;
+--primary-700:#14100D;
 
 }
 
@@ -956,5 +963,193 @@ mais un libellé d'interface ne doit pas passer à un centième près.
 .sidebar-plan-label{
 
 color:var(--text-light);
+
+}
+
+/* ==========================================================
+MENUS DÉROULANTS (2026-09-02) — habillage des <select> de l'espace
+connecté par js/fitz-select.js (même patron que le catalogue public :
+bouton + liste, select natif masqué mais fonctionnel). Fini la liste
+blanche au surlignage bleu de l'OS, signalée par l'utilisateur sur
+ai-email (« Candidature concernée ») et ai-translate (langues).
+========================================================== */
+
+/* Le select d'origine sort du rendu, pas du DOM : il garde sa valeur,
+ses options et son évènement change pour les scripts de page. */
+select.fitz-select-native{
+display:none !important;
+}
+
+.fitz-select{
+position:relative;
+width:100%;
+/* Dans un parent flex, l'enveloppe doit pouvoir RÉTRÉCIR sous sa
+largeur de contenu — sans min-width:0, elle impose sa largeur
+minimale à la rangée (débordement constaté sur compress à 375px). */
+min-width:0;
+}
+
+.fitz-select-trigger{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+width:100%;
+font-family:var(--font-body);
+font-size:var(--fs-body);
+text-align:left;
+padding:10px 12px;
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+cursor:pointer;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.fitz-select-trigger:hover{background:#FFFFFF;}
+
+.fitz-select-trigger:focus-visible,
+.fitz-select.is-open .fitz-select-trigger{
+outline:none;
+border-color:var(--accent-color);
+}
+
+.fitz-select.is-disabled .fitz-select-trigger{
+opacity:.55;
+cursor:not-allowed;
+}
+
+.fitz-select-value{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.fitz-select-caret{
+flex-shrink:0;
+display:inline-flex;
+color:var(--text-light);
+transition:transform .18s var(--ease-standard, ease);
+}
+
+.fitz-select-caret svg{width:16px;height:16px;}
+
+.fitz-select.is-open .fitz-select-caret{transform:rotate(180deg);}
+
+/* La liste vit sous <body> en position:fixed (voir fitz-select.js) :
+aucun contexte d'empilement ni overflow de modale ne peut la rogner. */
+.fitz-select-list{
+list-style:none;
+margin:0;
+padding:6px;
+max-height:260px;
+overflow-y:auto;
+background:#FFFFFF;
+border:1px solid var(--border-color);
+border-radius:12px;
+box-shadow:var(--shadow-md);
+}
+
+.fitz-select-list[hidden]{display:none;}
+
+.fitz-select-option{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+padding:9px 12px;
+border-radius:8px;
+font-size:var(--fs-small);
+color:var(--text-color);
+cursor:pointer;
+}
+
+.fitz-select-option-text{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.fitz-select-option:hover,
+.fitz-select-option.is-focused{
+background:rgba(233,163,25,.10);
+color:var(--amber-700);
+}
+
+/* Option retenue : encre chaude pleine — le miroir du bouton principal
+de l'espace, jamais le surlignage bleu système. */
+.fitz-select-option.is-selected{
+background:var(--primary-600);
+color:#FFFFFF;
+}
+
+.fitz-select-option.is-selected:hover,
+.fitz-select-option.is-selected.is-focused{
+background:var(--primary-600);
+color:#FFFFFF;
+}
+
+.fitz-select-option.is-disabled{
+opacity:.45;
+cursor:default;
+}
+
+.fitz-select-option-check{
+flex-shrink:0;
+display:inline-flex;
+}
+
+.fitz-select-option-check svg{width:14px;height:14px;}
+
+/* Tactile : cibles ≥44px (doctrine regles_mobile). */
+@media(pointer:coarse){
+
+.fitz-select-trigger{min-height:44px;}
+
+.fitz-select-option{min-height:42px;}
+
+}
+
+/* ==========================================================
+CTA D'OUTIL — LARGEUR BORNÉE (2026-09-02)
+Retour utilisateur (photo « Analyser mon dossier ») : les boutons
+d'action des outils portaient un width:100% posé en ligne dans le
+HTML — sur un panneau pleine page, cela donnait une barre grise
+d'un bord à l'autre de l'écran. Un bouton n'est pas un bandeau :
+.app-cta le borne à 380px, centré ; il ne reprend toute la largeur
+que sur mobile (doctrine regles_mobile : CTA pleine largeur mais
+FINS ≤576px). Les width:100% en ligne ont été remplacés par cette
+classe (ai-check, ai-email, ai-letter, compress).
+========================================================== */
+
+.app-cta{
+display:flex;
+width:100%;
+max-width:380px;
+margin-left:auto;
+margin-right:auto;
+}
+
+/* État désactivé : surface neutre chaude et consigne lisible — plus
+jamais le pavé sombre semi-transparent de .btn:disabled (opacity .5
+sur le dégradé encre). Généralise la recette née sur ai-email
+(.ai-generate-btn:disabled). */
+.app-cta:disabled{
+background:var(--background-soft);
+color:var(--text-light);
+border:1px dashed var(--border-color);
+opacity:1;
+}
+
+@media(max-width:576px){
+
+.app-cta{
+max-width:none;
+padding-top:11px;
+padding-bottom:11px;
+}
 
 }

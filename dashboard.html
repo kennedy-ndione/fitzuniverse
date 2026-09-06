@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Mon parcours | FitzUniverse</title>
 
@@ -39,11 +39,18 @@ journey.css (le parcours) les surclassent — ordre significatif. -->
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="css/journey-shell.css">
 <link rel="stylesheet" href="css/journey.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body>
+
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <!-- Loader affiché pendant la vérification de la session Firebase -->
 <div id="pageLoader" class="auth-page-loader">
@@ -64,7 +71,7 @@ js/student-messages.js les pilotent sans modification.
 ========================================================== -->
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -111,7 +118,7 @@ js/student-messages.js les pilotent sans modification.
 
 </header>
 
-<main class="content" style="display:none;">
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
 
 <!-- Bannières d'état (bienvenue, activation, Pass Express, e-mail) —
 mêmes identifiants et même logique qu'avant la refonte
@@ -353,6 +360,11 @@ utilisateur, et nourrit l'état de la phase 06 (etatDesPhases). -->
 
 <script src="pricing-plans.js"></script>
 <script type="module" src="dashboard.js"></script>
+
+<!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
+administrateur actif (voir js/admin-access.js) — invisible et
+inexistante pour tout autre visiteur. -->
+<script type="module" src="js/admin-access.js"></script>
 
 </body>
 

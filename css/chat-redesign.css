@@ -270,3 +270,9 @@ MOBILE — le composer garde ses coudées franches
 .ai-empty-mark{ width:46px; height:46px; }
 
 }
+
+/* Le bouton flottant « Discuter avec Fitz » n'a aucun sens SUR la page
+du chat elle-même — c'était le rond ambre orphelin qui flottait sur la
+conversation en mobile (photo utilisateur, 2026-09-02). */
+
+body:has(#chatApp) .fitz-fab-wrap{ display:none; }

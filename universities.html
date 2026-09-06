@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Universités et programmes financés | FitzUniverse</title>
 
@@ -64,11 +64,18 @@ direction que index.html — chargée en tout dernier, voir ce fichier. -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
+<!-- Couche « vivant » (2026-09-03) : mouvement, retour au geste,
+progression de lecture. EN DERNIER — elle se pose par-dessus tout le
+reste et n'utilise donc aucun !important hors mouvement réduit.
+Voir css/vivant.css. -->
+<link rel="stylesheet" href="css/vivant.css">
 </head>
 
-<body>
+<body class="catalog-dark">
 
 <!-- Lien d'évitement (2026-08-29) : présent sur index.html depuis
 l'audit du 2026-08-13, il manquait aux pages du catalogue — un
@@ -82,7 +89,7 @@ Masqué par js/dual-shell.js uniquement si une session est trouvée. -->
 
 <div class="container header-container">
 
-<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -95,20 +102,27 @@ Masqué par js/dual-shell.js uniquement si une session est trouvée. -->
 
 <div class="header-actions">
 
+<!-- Retour à l'accueil (2026-09-01) — même motif que le « Retour au
+catalogue » du header de scholarship-details. Depuis le retrait de
+Connexion et du CTA (décision utilisateur du même jour), et les liens
+croisés étant masqués sous 640px (css/header.css), le header mobile ne
+portait plus AUCUNE navigation : seul le logo ramenait à l'accueil,
+sans le dire (constat utilisateur : « j'ai pas vu de bouton ni de
+flèche retour »). Style : .header .back-link dans css/catalog.css. -->
+<a href="index.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Accueil</span>
+</a>
+
 <a href="scholarships.html" class="header-link">
 <span>Bourses</span>
 </a>
 
-<a href="login.html" class="header-link header-link-login" aria-label="Connexion">
-<i data-lucide="log-in"></i>
-<span>Connexion</span>
-</a>
-
-<a href="eligibility-test.html" class="btn btn-secondary">
-<i data-lucide="compass"></i>
-<span class="btn-text-full">Découvrir mes opportunités</span>
-<span class="btn-text-short">Découvrir</span>
-</a>
+<!-- « Connexion » et « Découvrir mes opportunités » retirés de l'en-tête
+des deux pages catalogue (décision utilisateur, 2026-09-01) : le
+catalogue se consulte, il ne vend pas — ces deux gestes restent portés
+par l'accueil (hero + CTA final) et par login.html. Seul le lien croisé
+Bourses ↔ Universités demeure. -->
 
 </div>
 
@@ -131,7 +145,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -356,6 +370,15 @@ import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
 applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" });
 </script>
 
+<!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
+administrateur actif (voir js/admin-access.js) — invisible et
+inexistante pour tout autre visiteur. -->
+<script type="module" src="js/admin-access.js"></script>
+
+<!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,
+volontairement : comme js/catalog-watchdog.js, il doit survivre à
+l'échec d'un téléchargement gstatic. Ne jamais lui ajouter type="module". -->
+<script src="js/vivant.js" defer></script>
 </body>
 
 </html>

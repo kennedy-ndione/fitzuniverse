@@ -386,7 +386,7 @@ Toutes en [Unsplash License](https://unsplash.com/license), même méthode de t�
 - **Photographe** : Jad Limcaco (`@jadlimcaco`)
 - **Source** : `https://unsplash.com/photos/NT1mJPgni6A` (identifiant CDN `photo-1492136344046-866c85e0bf04`) — la tour Eiffel, à l'heure dorée — cohérent avec le nom de la bourse.
 
-### `bourse-emile-boutmy.jpg` — Bourse Émile Boutmy, France
+### `bourse-emile-boutmy.jpg` — Bourse Émile Boutmy, France — **REMPLACÉE le 2026-09-03** (lot 35 bis : musée d'Orsay ; l'entrée ci-dessous est caduque, la pyramide du Louvre doublait `paris.jpg` de Sciences Po)
 
 - **Photographe** : Tomáš Nožina (`@tomasnozina`)
 - **Source** : `https://unsplash.com/photos/nwT0Y-NaQ4Y` (identifiant CDN `photo-1564557823522-1319c627a1e3`) — la pyramide du Louvre — bourse Sciences Po, distincte de `paris.jpg` (déjà utilisée par Sciences Po comme photo d'université) et de la tour Eiffel ci-dessus.
@@ -734,3 +734,105 @@ Remplacee par une vraie vue de Milan, distincte a l'oeil des deux autres images 
 Verifiees a la meme occasion, et CORRECTES : `bocconi.jpg` (le Duomo), `pisa.jpg` (la Piazza dei Miracoli et sa tour), `lausanne.jpg` (ville en terrasses au-dessus du Leman, Alpes de Savoie en face).
 
 L'ancienne photo de Vernazza n'est plus referencee nulle part.
+
+---
+
+## Lot 35 — France (2026-09-03)
+
+Cinq photos de ville pour cinq des six etablissements du lot (l'Ecole polytechnique n'en a pas encore : aucune photo libre du campus de Palaiseau trouvee sur Unsplash, piste Wikimedia Commons a suivre — champ `image` vide, repli generique). Declinees par `scripts/add-lot35-photos.mjs` (reference 2000px + 400/800/1200/1600w en JPEG q92 mozjpeg, WebP et AVIF). Chaque image regardee APRES telechargement (le sandbox qui a prepare le lot n'atteint pas le CDN Unsplash), chaque ratio mesure (1,33 minimum).
+
+INCIDENT du premier passage : la candidate initiale pour l'ENS (place du Pantheon, page `3UrP2tmccEc`) etait en PORTRAIT (0,75) ; la garde de ratio a interrompu le script et trois villes n'ont pas ete telechargees, alors que les fiches avaient deja leur champ `image`. Le script a ete repris pour signaler et sauter un refus au lieu de s'arreter, et la candidate remplacee.
+
+PARIS ETAIT DEJA OCCUPEE DEUX FOIS (`paris.jpg` pour Sciences Po, `sorbonne.jpg`) : les deux parisiennes du lot prennent des sujets distincts, le Pantheon (l'ENS est rue d'Ulm, juste derriere) et les tours de la BnF (face au campus des Grands Moulins de Paris Cite).
+
+### Unsplash ([Unsplash License](https://unsplash.com/license))
+
+- `paris-saclay-gif.jpg` — les batiments Gustave-Eiffel et Francis-Bouygues de CentraleSupelec sur le campus de Paris-Saclay, Gif-sur-Yvette. Photographe : Philippe Gras (identifiant CDN `photo-1617182926345-205718965035`, page `WIHa4vSUKow`)
+- `ens-ulm-paris.jpg` — la facade et le dome du Pantheon sous un ciel de nuages, Paris. Photographe : Kreshen (identifiant CDN `photo-1565200380227-ede88b62b5a0`, page `pF7MZSCYsN4`)
+- `lyon.jpg` — Lyon en vue aerienne : la Saone, le Vieux-Lyon et la colline de Fourviere. Photographe : Willian Justen de Vasconcellos (identifiant CDN `photo-1682249301492-c117bddca579`, page `Q8W2RhZgO6U`)
+- `grenoble.jpg` — les « bulles » du telepherique de la Bastille au-dessus de la ville, montagnes enneigees au fond, Grenoble. Photographe : Fabe collage (identifiant CDN `photo-1580920950500-597f23bd6f72`, page `diqJhQtHHNk`)
+- `paris-cite-bnf.jpg` — les quatre tours de la BnF Francois-Mitterrand vues du pont de Bercy, en noir et blanc. Photographe : FELIXFELIX FELIX (identifiant CDN `photo-1768913124310-d53597c80ea3`, page `nNqG3PewSGc`)
+
+---
+
+## Lot 35 bis — photos propres des bourses francaises + campus de Polytechnique (2026-09-03)
+
+Rattrapage de la regle du catalogue : chaque bourse porte SA photo (un monument de la ville), chaque universite SA photo de ville, aucune image partagee. Le lot 35 avait laisse huit bourses sur la cascade de repli (photo de l'universite rattachee) — cartes jumelles. Dix images produites par `scripts/add-lot35-photos-bourses.mjs`, chacune regardee apres telechargement (planche des dix, cote a cote), ratios 1,33 a 1,60. Sujets choisis pour ne doubler ni les photos d'universites (Louvre, Sorbonne, Pantheon, BnF, CentraleSupelec, Lyon aerien, bulles de Grenoble) ni la tour Eiffel.
+
+`bourse-emile-boutmy.jpg` est REMPLACEE (elle montrait la pyramide du Louvre, comme `paris.jpg` de Sciences Po : meme monument, deux fichiers) — l'entree precedente de ce fichier pour cette image est caduque.
+
+### Unsplash ([Unsplash License](https://unsplash.com/license)) — dossier `assets/images/scholarships/`, JPEG 2000 + 400/800/1200/1600w
+
+- `bourse-emile-boutmy.jpg` — le musee d'Orsay vu de la Seine au couchant, Paris. Photographe : T (@t0nn) (identifiant CDN `photo-1764929316321-a920a59306df`, page `pYVT_YWvj3Y`)
+- `ens-psl-selection-internationale.jpg` — la facade du palais du Luxembourg et son jardin, Paris. Photographe : Mikael Padeiro (identifiant CDN `photo-1778397277715-5587af2a38a7`, page `s7oVdTjjKhs`)
+- `smarts-up-universite-paris-cite.jpg` — la facade de Notre-Dame de Paris sous un ciel charge. Photographe : Marcel Strauß (identifiant CDN `photo-1574870310056-79c4b3c7d449`, page `t9yW6tegIRU`)
+- `france-excellence-major.jpg` — l'Arc de Triomphe en contre-plongee, ciel bleu, Paris. Photographe : ian kelsall (identifiant CDN `photo-1595540089942-545def48cf3e`, page `KX5ZQkluQ9U`)
+- `programme-bourses-france-senegal.jpg` — les pylones dores du pont Alexandre-III et la verriere du Grand Palais, Paris. Photographe : Sinisa Lekovic (identifiant CDN `photo-1747464362908-8bc10e50ca3f`, page `arPLE2yYHRU`)
+- `polytechnique-concours-international-fui.jpg` — le dome dore des Invalides au-dessus des toits, Paris. Photographe : Mikael Padeiro (identifiant CDN `photo-1773671334580-5b61c34a7b56`, page `-1v5OV58dm0`)
+- `ens-lyon-ampere-scholarships.jpg` — la basilique de Fourviere sur sa colline boisee, Lyon. Photographe : Salya T (identifiant CDN `photo-1677389931416-9832636048ff`, page `zNnpb7NjPBs`)
+- `uga-idex-master-scholarships.jpg` — les facades colorees des quais de l'Isere, Grenoble. Photographe : Christian Attard (identifiant CDN `photo-1720717374256-cb67e1dae73b`, page `mKCXxdlAl1A`)
+- `paris-saclay-international-masters-scholarship.jpg` — la cour de Marbre du chateau de Versailles. Photographe : Louis Paulin (identifiant CDN `photo-1667752920461-a5ea0883f438`, page `FUxXFfgbyOU`)
+
+### Wikimedia Commons (licence CC a attribution obligatoire, a conserver tant que ce fichier est utilise) — dossier `assets/images/cities/`
+
+- `polytechnique-palaiseau.jpg` (+ 400/800/1200/1600w en JPEG, WebP et AVIF) — le campus de l'Ecole polytechnique vu du lac, Palaiseau. Auteur : David Monniaux, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en). Source : [File:Ecole Polytechnique France seen from lake DSC03389.JPG](https://commons.wikimedia.org/wiki/File:Ecole_Polytechnique_France_seen_from_lake_DSC03389.JPG). Original 2592x1944 (ratio 1,33), redimensionne a 2000px.
+
+---
+
+## Lot 36 — France, consolidation : 18 photos de ville (2026-09-03)
+
+Dix-huit etablissements, dix-huit photos de ville, aucune image partagee. Sujets choisis pour ne doubler aucun sujet deja en place (Paris : Louvre, Sorbonne, Pantheon, BnF, tour Eiffel, Orsay, Luxembourg, Notre-Dame, Arc de Triomphe, pont Alexandre-III, Invalides ; Lyon : vue aerienne, Fourviere ; Grenoble ; Versailles ; Gif). Produites par `scripts/add-lot36-photos.mjs` (reference 2000px + 400/800/1200/1600w en JPEG q92 mozjpeg, WebP et AVIF), chaque image regardee apres telechargement (planche des dix-huit), ratios 1,46 a 1,78.
+
+### Unsplash ([Unsplash License](https://unsplash.com/license))
+
+- `strasbourg.jpg` — maisons a colombages de la Petite France au bord de l'Ill, Strasbourg. Photographe : Lucile Noiriel (identifiant CDN `photo-1596036986070-e84592a19917`, page `Cq4BqP4IYN4`)
+- `marseille.jpg` — le Vieux-Port et ses mats, Marseille. Photographe : Sebastien Devocelle (identifiant CDN `photo-1759244569310-0c4fa51434ff`, page `qetNTyxJRcs`)
+- `toulouse.jpg` — la facade du Capitole sur sa place, Toulouse. Photographe : Korng Sok (identifiant CDN `photo-1650707199496-b02442055332`, page `vNyGKzCUfAU`)
+- `bordeaux.jpg` — la place de la Bourse reflechie dans le miroir d'eau, Bordeaux. Photographe : Wojciech Rzepka (identifiant CDN `photo-1698608216843-67ae1151b2b8`, page `ZtrpZX8ZGx8`)
+- `lille.jpg` — la Vieille Bourse et le beffroi de la chambre de commerce, Grand-Place de Lille. Photographe : Martin Robac (identifiant CDN `photo-1764671708519-447591cd8179`, page `riAzFTGPCGc`)
+- `montpellier.jpg` — la place de la Comedie et son opera, Montpellier. Photographe : Hector J. Rivas (identifiant CDN `photo-1666886677737-2cd1f108e080`, page `2DxcRRxedUQ`)
+- `nantes.jpg` — le Grand Elephant des Machines de l'ile, Nantes. Photographe : Pascal Bernardon (identifiant CDN `photo-1676283898167-addc4238bee8`, page `LxJ5FHD495Y`)
+- `rennes.jpg` — la place du Parlement de Bretagne, Rennes. Photographe : Thanh Ly (identifiant CDN `photo-1724516042952-63ee061f6980`, page `t3LUVgkXnCg`)
+- `nancy.jpg` — la place Stanislas et ses grilles dorees, Nancy. Photographe : Gerard GRIFFAY (identifiant CDN `photo-1614891202431-e4ba6b3d9edb`, page `s2bAvgNZ6vI`)
+- `nice.jpg` — la baie des Anges et la promenade des Anglais vues de la colline du Chateau, Nice. Photographe : Pierre Goiffon (identifiant CDN `photo-1784840232787-74d27de8557c`, page `aCkb4PPolGI`)
+- `lyon-tete-d-or.jpg` (Universite Claude Bernard Lyon 1) — allee de platanes du parc de la Tete d'Or en automne, Lyon. Photographe : Thomas K (identifiant CDN `photo-1761144459402-80182d476772`, page `uvCaQjAPx60`)
+- `lyon-bellecour.jpg` (INSA Lyon) — la place Bellecour, la statue de Louis XIV et Fourviere a l'horizon, Lyon. Photographe : Tuan P. (identifiant CDN `photo-1775359226314-d74827afffcb`, page `3v_bZOM_XTs`)
+- `paris-sacre-coeur.jpg` (Paris 1 Pantheon-Sorbonne) — la basilique du Sacre-Coeur entre les arbres, Montmartre. Photographe : DAVID TAPIA SAN MARTIN (identifiant CDN `photo-1561370665-7e266065fce1`, page `NgiEm-SbXZg`)
+- `paris-fondation-louis-vuitton.jpg` (Dauphine-PSL) — les voiles de verre de la Fondation Louis Vuitton, bois de Boulogne. Photographe : Louis Colbee (identifiant CDN `photo-1597041151430-e11bed3c1973`, page `N_2OP0Ul7us`)
+- `paris-pont-neuf.jpg` (Mines Paris-PSL) — le Pont-Neuf et la pointe de l'ile de la Cite au couchant, Paris. Photographe : Bastien Nvs (identifiant CDN `photo-1624209060513-2b1b76ed0caa`, page `SkgPTTk_eXE`)
+
+### Wikimedia Commons (licences CC a attribution obligatoire, a conserver tant que ces fichiers sont utilises)
+
+- `hec-jouy-en-josas.jpg` — le chateau du campus HEC Paris, facade sud, Jouy-en-Josas. Auteur : DXR, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Chateau, HEC Paris, Jouy-en-Josas, South view 20160501 1.jpg](https://commons.wikimedia.org/wiki/File:Chateau,_HEC_Paris,_Jouy-en-Josas,_South_view_20160501_1.jpg). Original 7184x4908 (ratio 1,46), redimensionne a 2000px.
+- `essec-cergy.jpg` — le batiment principal du campus ESSEC, Cergy. Auteur : Rdavout (attribution presumee d'apres la mention de copyright du fichier, aucun auteur lisible par machine), [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/deed.en). Source : [File:ESSEC campus cergy.jpg](https://commons.wikimedia.org/wiki/File:ESSEC_campus_cergy.jpg). Original 2560x1704 (ratio 1,50), redimensionne a 2000px.
+- `saint-denis-basilique.jpg` (Sorbonne Paris Nord) — l'abbaye de Saint-Denis, son jardin a la francaise et le transept sud de la basilique, Saint-Denis. Auteur : MOSSOT, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Saint-Denis - Basilique Saint-Denis et l'abbaye -2.JPG](https://commons.wikimedia.org/wiki/File:Saint-Denis_-_Basilique_Saint-Denis_et_l%27abbaye_-2.JPG). Original 4896x3672 (ratio 1,33), redimensionne a 2000px. Remplace `saint-denis-stade-de-france.jpg` (interieur du stade, refuse le 2026-09-03) — les fichiers `saint-denis-stade-de-france*` ne sont plus references : a supprimer du depot.
+
+---
+
+## Drapeaux (`assets/flags/`) — lot 37 (2026-09-03)
+
+`tn.svg` (Tunisie) et `dz.svg` (Algerie) proviennent du projet **flag-icons** (Panayiotis Lipiridis), tarball npm `flag-icons@7.5.0`, dossier `flags/4x3/`. Licence [MIT](https://github.com/lipis/flag-icons/blob/main/LICENSE). Attribut `id` retire et indentation supprimee, dessin inchange (meme traitement que rw/gh/ke/eg au lot 31).
+
+---
+
+## Lot 37 — Tunisie, Algerie, PAUWES (2026-09-03) : 9 photos de ville + 3 monuments
+
+Regle du catalogue appliquee des le lot : une photo de ville par universite (`assets/images/cities/`, JPEG + WebP + AVIF), un monument par bourse (`assets/images/scholarships/`, JPEG seul), aucune image partagee. Produites par `scripts/add-lot37-photos.mjs` (listes de candidats Unsplash puis Commons, garde de ratio 1,3), chaque image regardee apres telechargement. Deux candidates Unsplash ECARTEES apres examen : Tlemcen `FlRrOkGxAck` (mur de maison anonyme) et Oran `vEob3rMRUcQ` (cour a arcades non identifiable) ; trois fichiers Commons de Tlemcen ecartes par la garde de ratio (portraits).
+
+### Unsplash ([Unsplash License](https://unsplash.com/license))
+
+- `tunis.jpg` — facade pavoisee de Bab Bhar, centre de Tunis. Photographe : Hammami Ghazi (identifiant CDN `photo-1674764186749-ad9beea35e85`, page `6XuI9V3C51I`)
+- `carthage.jpg` (Universite de Carthage) — les ruines romaines de Carthage face a la mer. Photographe : Martin Casagrand (identifiant CDN `photo-1728361328876-74e396d3defc`, page `5jaj-mU6VW0`)
+- `sousse.jpg` — la medina et le ribat de Sousse en vue aerienne. Photographe : Amal Bourkhis (identifiant CDN `photo-1624921768886-5d12e2cdc584`, page `V87fJdumBY0`)
+- `sfax.jpg` — les toits de la medina de Sfax. Photographe : Taha Loukil (identifiant CDN `photo-1594424015009-59bef65fa9ec`, page `WFhrK6g1DKA`)
+- `alger-baie.jpg` (USTHB) — la baie d'Alger vue des hauteurs. Photographe : Sid Ahmed SAOUD (identifiant CDN `photo-1652614706616-a49396a2ee29`, page `RCsOlTBX5Tw`)
+- `alger-centre.jpg` (Universite d'Alger 1) — place et escaliers d'Alger-Centre. Photographe : Ondrej Bocek (identifiant CDN `photo-1751788109158-a46f8fbacc08`, page `YcJjjAv1TA0`)
+- `constantine.jpg` — pont suspendu et gorges du Rhummel, Constantine. Photographe : zenad nabil (identifiant CDN `photo-1664403775784-8a0b32536a0c`, page `fvqCkzsWv-4`)
+- `oran.jpg` — Oran, son port et le clocher de Santa Cruz. Photographe : Brahim Abderrahman (identifiant CDN `photo-1653815129496-445487ae0479`, page `jGlnjl6fHhQ`)
+- `bourses-cooperation-tunisie.jpg` (dossier `scholarships/`) — Sidi Bou Said, blanc et bleu au-dessus de la mer. Photographe : Noelle Guirola (identifiant CDN `photo-1607869861980-da5f9b8b4969`, page `5NqUXa6pZDM`)
+- `bourses-cooperation-algerie.jpg` (dossier `scholarships/`) — le Maqam Echahid (memorial du Martyr), Alger. Photographe : Halima Bouchouicha (identifiant CDN `photo-1658996403259-5a2dd3efc6fa`, page `ESkI6T_Ef5A`)
+- `pan-african-university-pauwes.jpg` (dossier `scholarships/`) — le minaret de Mansourah, Tlemcen. Photographe : Halima Bouchouicha (identifiant CDN `photo-1669097564242-3c6c75aea9a0`, page `ysL_MNXjJ_4`)
+
+### Wikimedia Commons (licence CC a attribution obligatoire, a conserver tant que ce fichier est utilise)
+
+- `tlemcen.jpg` (Universite Abou Bekr Belkaid) — la muraille crenelee de Mansourah, Tlemcen. Auteur : Sambott27, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en). Source : [File:Muraille de mansourah,Tlemcen..jpg](https://commons.wikimedia.org/wiki/File:Muraille_de_mansourah,Tlemcen..jpg). Original 3615x1930 (ratio 1,87), redimensionne a 2000px.

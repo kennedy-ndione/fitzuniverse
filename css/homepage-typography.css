@@ -171,94 +171,44 @@ color:var(--amber-700);
 
 }
 
-/* Trait plutôt que pictogramme : un seul vocabulaire de repère visuel
-pour indiquer "ceci ouvre une nouvelle section", sans les 6 glyphes
-différents que portait .section-badge. Ambre pour faire écho au CTA
-final/logo plutôt que le bleu déjà très présent dans le corps de page. */
 /* ==========================================================
-NUMÉROTATION ÉDITORIALE — 2026-08-28
+ICÔNE PAR SECTION — remplace la numérotation éditoriale du 2026-08-28
+— 2026-09-01
 ==========================================================
-Le repère devient « 01 —— LE PROBLÈME » au lieu de « —— LE PROBLÈME ».
+Le repère « 01 —— LE PROBLÈME » (numéro CSS auto-incrémenté) cède la
+place à une icône Lucide propre à chaque section, sur demande
+explicite de l'utilisateur : plus un seul chiffre sur la page d'accueil
+(kickers, ÉTAPE 01/02/03, numéros 01/02/03 de la liste des problèmes),
+pour un rendu plus moderne.
 
-Pourquoi : une page longue faite de neuf sections ne dit nulle part au
-visiteur où il en est. Le numéro transforme une suite de blocs en un
-sommaire implicite — on sait qu'on avance, et combien il reste. C'est
-le signal le plus économique qui existe pour ça : deux caractères, et
-aucun élément d'interface en plus.
+Le compteur CSS (main{counter-reset}, :has(){counter-increment}) et son
+repli @supports disparaissent avec lui : ils n'existaient que pour
+calculer CE numéro, et une icône n'a pas besoin d'ordre — elle porte
+son sens par elle-même. Ce qui reste vrai de la note d'origine : le
+repère doit continuer à distinguer les sections d'une page longue,
+juste par une icône propre à chacune plutôt qu'un rang.
 
-Compteur CSS et non nombres écrits dans index.html : les sections ont
-déjà été réordonnées deux fois ce mois-ci (voir les commentaires de
-#teaser/#trust), et des numéros en dur seraient faux dès le prochain
-déplacement, en silence. Ici l'ordre du DOM fait foi.
+Icône ajoutée dans index.html en premier enfant de chaque .kicker
+NUMÉROTÉ (les 5 sections en flux normal — problème/comment ça
+fonctionne/catalogue/établissements/vision), une par section, choisie
+pour son sens. Elle hérite --amber-700 du kicker via currentColor :
+aucune couleur n'est fixée ici. Ciblage par la structure
+(.kicker > i, .kicker > svg) et non par une classe posée sur le <i>,
+que Lucide ne reporte pas forcément sur le <svg> qui le remplace (voir
+DESIGN_SYSTEM.md, section « Icônes »).
 
-Le trait ambre d'origine est CONSERVÉ, dessiné en fond du même
-pseudo-élément (dégradé plat de 22x2 calé à droite, padding-right pour
-lui faire la place) plutôt que dans un second pseudo : ::after aurait
-atterri après le libellé, et l'ordre flex ne permet pas de l'insérer
-entre le numéro et le texte sans découper ce dernier.
-
-decimal-leading-zero pour le « 0 » de 01..09 (registre éditorial), et
-tabular-nums pour que tous les numéros occupent la même largeur — sans
-quoi le « 1 » de 01 étant plus étroit, les libellés ne s'aligneraient
-pas verticalement d'une section à l'autre.
+Les .kicker--on-dark (démo Fitz, CTA final) ne sont PAS concernés : ils
+n'ont jamais porté de chiffre, seulement le trait ambre seul — inchangé
+ci-dessous, ce sont les seules règles qui restent de l'ancien système.
 ========================================================== */
 
-main{
-counter-reset:sb-section;
-}
+.kicker > i,
+.kicker > svg{
 
-/* Le parent DIRECT de chaque repère numéroté, quel qu'il soit : les
-sept .kicker de la page ne vivent pas tous dans un .section-header —
-« Notre vision » est dans .vision-content, « Fitz en action » dans
-.fitz-demo-intro, le CTA final dans .cta-box-panel. Une première
-version visait .section-header et laissait donc « Notre vision » sans
-numéro, pendant que les deux panneaux sombres héritaient d'un numéro
-périmé (celui de la section précédente), affiché en double.
-
-Sont EXCLUS les .kicker--on-dark : ni la démo Fitz ni le CTA de
-clôture ne sont des étapes du récit numéroté. La démo illustre ce
-qu'on vient de lire, le CTA ferme la page — leur donner un rang les
-ferait passer pour des sections de plus dans un sommaire qui compte
-les temps de l'argumentation. Ils gardent le trait seul (voir plus
-bas). */
-:has(> .kicker:not(.kicker--on-dark)){
-counter-increment:sb-section;
-}
-
-.kicker::before{
-
-content:counter(sb-section,decimal-leading-zero);
-
-/* Neutralise le carré de 22x2 de la version "trait seul". */
-width:auto;
-height:auto;
-border-radius:0;
+width:16px;
+height:16px;
 
 flex-shrink:0;
-
-font-variant-numeric:tabular-nums;
-
-/* Le trait, désormais en fond : 22px de large, 2px de haut, calé à
-droite de la boîte ; les 34px de padding = 22 de trait + 12 d'écart. */
-padding-right:34px;
-
-background:linear-gradient(var(--amber-500),var(--amber-500)) no-repeat right center/22px 2px;
-
-}
-
-/* Repli pour les moteurs sans :has() — le numéro ne s'incrémenterait
-pas et toutes les sections afficheraient « 01 ». Mieux vaut alors le
-repère d'origine (trait seul) qu'une numérotation fausse. */
-@supports not selector(:has(*)){
-
-.kicker::before{
-content:"";
-width:22px;
-height:2px;
-padding-right:0;
-border-radius:1px;
-background:var(--amber-500);
-}
 
 }
 

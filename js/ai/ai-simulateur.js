@@ -32,7 +32,8 @@ generateEmail,
 translateText,
 computeApplicationReport,
 computeApplicationReadiness,
-generateChatReply
+generateChatReply,
+generateDiagnosticReading
 } from "./simulated-responses.js";
 
 /** Latence avant le premier fragment, comme un vrai appel réseau. */
@@ -92,6 +93,12 @@ return computeApplicationReadiness(input);
 
 case "chat":
 return generateChatReply(input);
+
+// Ajouté le 2026-09-05 : sans ce cas, le bloc « L'analyse de Fitz »
+// de results.html tombait sur « tâche inconnue » et affichait une
+// carte d'erreur au visiteur, juste après son test.
+case "diagnostic":
+return generateDiagnosticReading(input);
 
 default:
 throw new FitzError(CODES.INCONNU, { detail: `tâche inconnue : "${task}"` });

@@ -507,8 +507,8 @@ border:1px solid rgba(255,255,255,.6);
 border-radius:var(--radius-lg);
 
 box-shadow:
-0 4px 12px rgba(18,22,46,.10),
-0 20px 40px -14px rgba(18,22,46,.30),
+0 4px 12px rgba(20,16,13,.10),
+0 20px 40px -14px rgba(20,16,13,.30),
 inset 0 1px 0 rgba(255,255,255,.85);
 
 animation:float 5s ease-in-out infinite;
@@ -541,7 +541,7 @@ padding-top:2px;
 
 color:var(--card-accent-icon, var(--primary-color));
 
-filter:drop-shadow(0 2px 3px rgba(18,22,46,.18));
+filter:drop-shadow(0 2px 3px rgba(20,16,13,.18));
 
 flex-shrink:0;
 
@@ -677,7 +677,7 @@ border:1px solid rgba(255,255,255,.6);
 
 border-radius:var(--radius-lg);
 
-box-shadow:0 4px 12px rgba(18,22,46,.10), 0 24px 48px -12px rgba(18,22,46,.28), inset 0 1px 0 rgba(255,255,255,.8);
+box-shadow:0 4px 12px rgba(20,16,13,.10), 0 24px 48px -12px rgba(20,16,13,.28), inset 0 1px 0 rgba(255,255,255,.8);
 
 z-index:6;
 
@@ -696,7 +696,7 @@ de Fitz sur la page se signale comme cliquable. */
 
 transform:translateY(-6px);
 
-box-shadow:0 4px 12px rgba(18,22,46,.10), 0 30px 56px -12px rgba(18,22,46,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 1px rgba(255,255,255,.4);
+box-shadow:0 4px 12px rgba(20,16,13,.10), 0 30px 56px -12px rgba(20,16,13,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 1px rgba(255,255,255,.4);
 
 }
 
@@ -708,7 +708,7 @@ défaut du navigateur, pour être sûr qu'il reste visible au clavier
 
 outline:none;
 
-box-shadow:0 4px 12px rgba(18,22,46,.10), 0 30px 56px -12px rgba(18,22,46,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 4px rgba(51,65,140,.45);
+box-shadow:0 4px 12px rgba(20,16,13,.10), 0 30px 56px -12px rgba(20,16,13,.32), inset 0 1px 0 rgba(255,255,255,.8), 0 0 0 4px rgba(233,163,25,.45);
 
 }
 
@@ -955,7 +955,7 @@ background:var(--gradient-primary);
 
 border-radius:999px;
 
-box-shadow:0 0 10px rgba(51,65,140,.5);
+box-shadow:0 0 10px rgba(233,163,25,.5);
 
 transition:width .6s var(--ease-premium);
 
@@ -1040,7 +1040,7 @@ padding:4px;
 
 box-sizing:content-box;
 
-background:rgba(51,65,140,.10);
+background:rgba(26,23,20,.08);
 
 border-radius:8px;
 
@@ -1199,9 +1199,14 @@ display:none;
 
 @media(max-width:576px){
 
+/* Était 2.5rem en dur — un rabais local du plancher de 2.75rem
+qu'imposait alors --fs-hero. Depuis l'échelle mobile globale du
+2026-09-01 (css/base.css, :root sous 576px), le token vaut LUI-MÊME
+2.15rem à cette largeur : on le suit au lieu de le contredire, sinon
+le hero resterait le seul titre à l'ancienne échelle. */
 .hero h1{
 
-font-size:2.5rem;
+font-size:var(--fs-hero);
 
 }
 
@@ -1254,6 +1259,16 @@ justify-content:center;
 padding-left:16px;
 
 padding-right:16px;
+
+/* Un cran plus fin (2026-09-01, demande utilisateur : « diminue un
+peu la taille ») : la pastille pleine largeur à hauteur de bureau
+pesait lourd sous le hero. La cible tactile reste >44px de haut
+(.btn{min-height:44px}, css/base.css). */
+padding-top:11px;
+
+padding-bottom:11px;
+
+font-size:.92rem;
 
 }
 
@@ -1516,5 +1531,139 @@ disent « catalogue », trois blocs empilés disent « formulaire ». */
 .stat-card strong{ font-size:1.32rem; }
 
 .stat-card span{ font-size:.71rem; }
+
+}
+
+/* ==========================================================
+CARTES FLOTTANTES EN PASTILLES SUR TÉLÉPHONE (2026-09-01)
+==========================================================
+Sur un visuel 4/3 de ~340px de large, les deux cartes flottantes —
+même réduites à min(62%, 196px) par le palier 1023px — couvraient
+l'essentiel de la photo : titre + paragraphe chacune, l'image ne
+respirait plus (capture téléphone de l'utilisateur, 2026-09-01).
+
+Sous 640px, elles deviennent des PASTILLES : icône + titre seulement,
+le paragraphe disparaît. La photo redevient le sujet, et les deux
+libellés (« Régions compatibles », « Compatibilité élevée ») gardent
+leur rôle de preuve — le détail complet reste visible dès la largeur
+tablette. width:max-content : la pastille épouse son libellé au lieu
+d'occuper 62% du visuel. */
+@media(max-width:640px){
+
+.destination-card,
+.compatibility-card{
+
+width:max-content;
+
+max-width:78%;
+
+padding:8px 12px;
+
+align-items:center;
+
+gap:8px;
+
+}
+
+.floating-card p{
+
+display:none;
+
+}
+
+.floating-card strong{
+
+font-size:.78rem;
+
+}
+
+.floating-icon i,
+.floating-icon svg{
+
+width:16px;
+height:16px;
+
+}
+
+}
+
+/* ==========================================================
+HERO IMMERSIF SUR TÉLÉPHONE (2026-09-01, passe mobile lot 4)
+==========================================================
+Demande utilisateur, capture bureau à l'appui : le hero mobile doit
+retrouver l'esprit du bureau — le titre SUR la photo — au lieu du
+fond encre + photo encadrée à part.
+
+Pourquoi la photo ne couvrait que le haut : .hero-media est calée par
+aspect-ratio:1672/941 sur la largeur du viewport — 375px de large
+donnent ~211px de photo, tout le reste retombait sur le dégradé encre.
+Ici elle passe en absolu, étirée sur TOUTE la section (inset:0), et
+c'est le voile (.hero-overlay, surchargé pour mobile en fin de
+css/homepage-redesign.css — elle est chargée après ce fichier, un
+override ici perdrait la cascade) qui garantit le contraste du texte.
+Le fondu au défilement de js/hero.js continue de fonctionner tel quel.
+
+.hero-visual perd son cadre photo (la photo est déjà derrière) et
+devient la rangée des deux pastilles de preuve, en flux après le
+paragraphe — l'esprit des cartes flottantes du bureau, posé à la
+manière mobile. Les styles « pastilles » du palier 640 plus haut
+(icône+titre, p masqué) continuent de s'appliquer. */
+@media(max-width:640px){
+
+.hero-media{
+
+position:absolute;
+
+inset:0;
+
+aspect-ratio:auto;
+
+}
+
+.hero-media picture{
+
+display:block;
+
+width:100%;
+
+height:100%;
+
+}
+
+.hero-visual{
+
+min-height:0;
+
+aspect-ratio:auto;
+
+margin:4px 0 2px;
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+.hero-visual::before{
+
+display:none;
+
+}
+
+.hero-visual-bg,
+.hero-visual-overlay{
+
+display:none;
+
+}
+
+.destination-card,
+.compatibility-card{
+
+position:static;
+
+}
 
 }

@@ -3,10 +3,10 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Questionnaire | FitzUniverse</title>
 
-<meta name="description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
+<meta name="description" content="Répondez à quelques questions adaptées à votre niveau d'études pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 
 <meta name="theme-color" content="#211D18">
 <!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
@@ -22,13 +22,13 @@ assombrissement automatique qui casse les contrastes calibrés. -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/eligibility-questions.html">
 
 <meta property="og:title" content="Questionnaire | FitzUniverse">
-<meta property="og:description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
+<meta property="og:description" content="Répondez à quelques questions adaptées à votre niveau d'études pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 <meta property="og:type" content="website">
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Questionnaire | FitzUniverse">
-<meta name="twitter:description" content="Répondez à 14 questions pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
+<meta name="twitter:description" content="Répondez à quelques questions adaptées à votre niveau d'études pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 
 <!-- Google Fonts — système typographique Fitz (voir
 css/eligibility-typography.css), même identité que
@@ -70,7 +70,7 @@ defaut de style. Lien vers index.html : ces pages ne chargent aucun
 shell, la session n'y est pas connue — c'est aussi la cible de leurs
 liens de retour existants. -->
 <header class="page-brandbar page-brandbar--overlay on-dark">
-<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -106,8 +106,10 @@ pilule sur cette page seule. -->
 <!-- Valeurs de départ, écrasées par updateProgress() (eligibility-questions.js)
 dès le premier rendu. Tenues à jour malgré tout : elles s'affichent le temps
 que le module se charge, et restent seules à l'écran si le script échoue.
-1/14 arrondi = 7% (getProgress(), eligibility.engine.js). -->
-<span id="questionNumber">Question 1 / 14</span>
+le parcours dépend du niveau d'études, donc sa longueur n'est connue
+qu'après la première réponse : on n'affiche pas de total avant, plutôt
+que d'en inventer un (updateProgress, eligibility-questions.js). -->
+<span id="questionNumber">Question 1</span>
 <span id="progressPercent">7%</span>
 </div>
 
@@ -175,8 +177,12 @@ les échelles numériques — /20, /100, GPA /4, Autre) -->
 </main>
 
 <script src="js/back-link.js"></script>
-<script src="questions.js"></script>
-<script src="eligibility.engine.js"></script>
+<!-- questions.js et eligibility.engine.js ont été remplacés le
+2026-09-05 par deux MODULES purs, importés par eligibility-questions.js :
+js/eligibility-pistes.js (les questions, par niveau d'études) et
+js/eligibility-parcours.js (la progression). Des scripts classiques ne
+pouvaient pas être vérifiés par `npm test` ; ces modules le sont. Les
+deux anciens fichiers sont désormais inertes et à supprimer. -->
 <!-- module (audit du 2026-08-14) : lit une liste de pays réelle depuis
 Firestore avant le 1er rendu (voir loadDestinationCountries) — voir le
 commentaire en tête de eligibility-questions.js pour pourquoi QUESTIONS/

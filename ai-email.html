@@ -4,9 +4,18 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>E-mails Fitz | FitzUniverse</title>
+
+<!-- Ajouts de l'audit 2026-09-01 : page privée de l'espace connecté —
+noindex (rien à indexer derrière une session), theme-color et favicons
+alignés sur le standard du site (mêmes valeurs que index.html). -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 
 <meta name="description" content="Générez des e-mails professionnels pour vos candidatures universitaires avec Fitz.">
 
@@ -32,11 +41,18 @@ l'étudiant changeait de police en passant du catalogue à son espace. -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body data-plan="essentiel">
+
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <div id="pageLoader" class="auth-page-loader">
 <div class="loader-spinner"></div>
@@ -53,7 +69,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -105,7 +121,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </header>
 
-<main class="content" style="display:none;">
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
 
 <div class="ai-page-header reveal">
 
@@ -115,7 +131,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div>
 <h1>Générateur d'e-mails professionnels</h1>
-<p>Choisissez un type d'e-mail, complétez le contexte : Fitz rédige un message prêt à envoyer.</p>
+<p>Choisissez un type d'e-mail : Fitz connaît déjà votre profil et vos candidatures, et rédige un message prêt à envoyer.</p>
 </div>
 
 </div>
@@ -154,11 +170,36 @@ change quelque chose pour qui arrive ici directement. -->
 
 <form id="emailForm">
 
+<!-- LE CONTEXTE APPARTIENT À FITZ (refonte 2026-09-02) : l'étudiant
+ne re-saisit plus son identité — le profil et la candidature suivie
+remplissent tout. Les anciens champs restent DANS le formulaire,
+repliés sous « Ajuster » : même contrat de génération
+(collectData, ai-email.js), et l'étudiant garde toujours la main. -->
+<div class="ai-context-card" id="fitzContextCard">
+
+<div class="ai-context-head">
+<h3><i data-lucide="user-check"></i>2. Ce que Fitz sait déjà</h3>
+<button type="button" class="ai-context-adjust" id="contextAdjustBtn" aria-expanded="false">Ajuster</button>
+</div>
+
+<div class="ai-field ai-context-application">
+<label for="fieldApplication">Candidature concernée</label>
+<select id="fieldApplication">
+<option value="">Sans candidature liée</option>
+</select>
+</div>
+
+<dl class="ai-context-chips" id="contextChips"></dl>
+
+</div>
+
+<div id="contextDetails" hidden>
+
 <div class="ai-field-row">
 
 <div class="ai-field">
 <label for="fieldFullName">Nom complet</label>
-<input type="text" id="fieldFullName" required>
+<input type="text" id="fieldFullName">
 </div>
 
 <div class="ai-field">
@@ -176,8 +217,8 @@ change quelque chose pour qui arrive ici directement. -->
 </div>
 
 <div class="ai-field">
-<label for="fieldUniversity">Université</label>
-<input type="text" id="fieldUniversity" required>
+<label for="fieldUniversity">Université destinataire</label>
+<input type="text" id="fieldUniversity">
 </div>
 
 </div>
@@ -185,13 +226,15 @@ change quelque chose pour qui arrive ici directement. -->
 <div class="ai-field-row">
 
 <div class="ai-field">
-<label for="fieldProgram">Programme visé</label>
+<label for="fieldProgram">Programme ou bourse visé(e)</label>
 <input type="text" id="fieldProgram">
 </div>
 
 <div class="ai-field">
 <label for="fieldCountry">Pays</label>
 <input type="text" id="fieldCountry">
+</div>
+
 </div>
 
 </div>
@@ -216,8 +259,9 @@ change quelque chose pour qui arrive ici directement. -->
 <textarea id="fieldContext" rows="3"></textarea>
 </div>
 
-<button type="submit" class="btn btn-primary" id="generateEmailBtn" style="width:100%;" disabled>
-<span>Choisissez un type d'e-mail</span>
+<button type="submit" class="btn btn-primary ai-generate-btn app-cta" id="generateEmailBtn" disabled>
+<i data-lucide="send"></i>
+<span>Choisissez d'abord un type d'e-mail (étape 1)</span>
 </button>
 
 </form>

@@ -215,7 +215,7 @@ position:fixed;
 
 inset:0;
 
-background:rgba(15,23,42,.5);
+background:rgba(23,19,16,.5);
 
 z-index:40;
 
@@ -619,7 +619,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-box-shadow:0 8px 18px rgba(22,27,51,.24);
+box-shadow:0 8px 18px rgba(26,23,20,.24);
 
 }
 
@@ -1044,9 +1044,13 @@ padding:8px 16px;
 
 border-radius:var(--radius-full);
 
-background:var(--background-light);
+/* AMBRE + ENCRE en permanence (2026-09-02) : l'ancien couple
+--background-light/--accent-color rendait le libellé quasi invisible
+hors survol (constaté sur photo utilisateur, mobile ai-chat) —
+règle AA de base.css : surface --amber-500, libellé --ink-surface. */
+background:var(--amber-500);
 
-color:var(--accent-color);
+color:var(--ink-surface);
 
 font-weight:700;
 
@@ -1681,9 +1685,14 @@ padding:0 18px;
 
 }
 
-.topbar-plan-chip span{
+/* Le libellé de formule RESTE lisible en mobile (2026-09-02) —
+le masquer laissait une pastille colorée muette (photo utilisateur) ;
+« Signature » ou « Essentiel » tiennent très bien en compact. */
+.topbar-plan-chip{
 
-display:none;
+padding:6px 12px;
+
+font-size:.78rem;
 
 }
 
@@ -1695,4 +1704,481 @@ padding:24px;
 
 }
 
+}
+
+/* ==========================================================
+MESSAGERIE FITZUNIVERSE (2026-09-02) — le panneau de la cloche
+devient un fil de conversation signé FitzUniverse, avec réponse de
+l'étudiant (formules payantes). Uniquement des tokens : le panneau
+suit le contexte clair/sombre de chaque page.
+========================================================== */
+
+.messages-panel{ display:flex; flex-direction:column; }
+
+.messages-panel-list{
+
+flex:1;
+
+overflow-y:auto;
+
+max-height:260px;
+
+padding:12px 14px;
+
+gap:10px;
+
+}
+
+.messages-thread-item{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+max-width:92%;
+
+}
+
+.messages-thread-item.is-student{
+
+align-self:flex-end;
+
+align-items:flex-end;
+
+}
+
+.messages-thread-author{
+
+font-size:.68rem;
+
+font-weight:700;
+
+text-transform:uppercase;
+
+letter-spacing:.04em;
+
+color:var(--amber-700);
+
+margin-bottom:3px;
+
+}
+
+.messages-thread-item.is-student .messages-thread-author{
+
+color:var(--text-muted);
+
+}
+
+.messages-thread-bubble{
+
+padding:9px 13px;
+
+border-radius:14px;
+
+border-top-left-radius:4px;
+
+background:var(--background-light);
+
+border:1px solid var(--border-color);
+
+}
+
+.messages-thread-item.is-student .messages-thread-bubble{
+
+border-radius:14px;
+
+border-top-right-radius:4px;
+
+background:var(--ink-surface);
+
+border-color:var(--ink-surface);
+
+}
+
+.messages-thread-bubble p{
+
+color:var(--text-color);
+
+font-size:.85rem;
+
+line-height:1.5;
+
+margin:0;
+
+white-space:pre-wrap;
+
+overflow-wrap:anywhere;
+
+}
+
+.messages-thread-item.is-student .messages-thread-bubble p{
+
+color:#F5F0E7;
+
+}
+
+.messages-thread-item.is-unread .messages-thread-bubble{
+
+background:rgba(233,163,25,.14);
+
+border-color:rgba(233,163,25,.4);
+
+}
+
+.messages-thread-date{
+
+margin-top:3px;
+
+font-size:.68rem;
+
+color:var(--text-muted);
+
+}
+
+.messages-composer{
+
+display:flex;
+
+align-items:flex-end;
+
+gap:8px;
+
+padding:10px 12px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.messages-composer textarea{
+
+flex:1;
+
+resize:none;
+
+max-height:90px;
+
+padding:9px 12px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-color);
+
+font-family:"Inter",sans-serif;
+
+font-size:.85rem;
+
+line-height:1.4;
+
+}
+
+.messages-composer textarea:focus{
+
+outline:none;
+
+border-color:var(--amber-500);
+
+box-shadow:0 0 0 3px rgba(233,163,25,.18);
+
+}
+
+.messages-composer button{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+min-height:38px;
+
+border:none;
+
+border-radius:50%;
+
+background:var(--amber-500);
+
+color:var(--ink-surface);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.messages-composer button:hover{ background:var(--amber-600); }
+
+.messages-composer button:disabled{ opacity:.6; cursor:default; }
+
+.messages-composer button svg{ width:16px; height:16px; }
+
+.messages-composer-locked{
+
+display:flex;
+
+flex-wrap:wrap;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:6px;
+
+padding:10px 14px;
+
+border-top:1px solid var(--border-color);
+
+font-size:.76rem;
+
+color:var(--text-muted);
+
+}
+
+.messages-composer-locked a{
+
+font-weight:700;
+
+color:var(--amber-700);
+
+}
+
+/* ---- Cloche : en-tête avec lien vers la conversation complète ---- */
+
+.messages-panel-header{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:10px;
+
+}
+
+.messages-panel-openlink{
+
+flex-shrink:0;
+
+font-size:.74rem;
+
+font-weight:700;
+
+color:var(--amber-700);
+
+}
+
+.messages-panel-openlink:hover{ text-decoration:underline; }
+
+/* ---- Page « Mes messages » (messages.html) ---- */
+
+.messages-page-card{
+
+max-width:780px;
+
+margin:0 auto;
+
+}
+
+.messages-page-body{
+
+display:flex;
+
+flex-direction:column;
+
+gap:0;
+
+padding:0;
+
+}
+
+.messages-page-notice{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:10px;
+
+margin:16px 18px 0;
+
+padding:12px 14px;
+
+border-radius:var(--radius-md);
+
+background:rgba(233,163,25,.08);
+
+border:1px solid rgba(233,163,25,.25);
+
+color:var(--text-light);
+
+font-size:.84rem;
+
+line-height:1.55;
+
+}
+
+.messages-page-notice i,
+.messages-page-notice svg{
+
+width:16px;
+
+height:16px;
+
+flex-shrink:0;
+
+margin-top:2px;
+
+color:var(--amber-700);
+
+}
+
+.messages-page-thread{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+height:min(52vh, 520px);
+
+overflow-y:auto;
+
+padding:18px;
+
+margin:14px 0 0;
+
+border-top:1px solid var(--border-color);
+
+}
+
+/* Le composer partagé (.messages-composer) est déjà stylé plus haut ;
+sur la page il garde simplement plus d'air. */
+
+.messages-page-body .messages-composer{ padding:14px 18px; }
+
+.messages-page-body .messages-composer-locked{ padding:14px 18px; }
+
+@media(max-width:576px){
+
+.messages-page-notice{ margin:12px 12px 0; font-size:.8rem; }
+
+.messages-page-thread{ padding:14px 12px; height:min(56vh, 460px); }
+
+.messages-page-body .messages-composer,
+.messages-page-body .messages-composer-locked{ padding:12px; }
+
+}
+
+/* ==========================================================
+MESSAGERIE PLEIN CADRE (2026-09-02) — retour utilisateur : « pas de
+scroll qui vont dans tous les sens ». Avant : le fil avait sa propre
+hauteur fixe (52vh) AVEC son ascenseur, posé dans une page qui
+défilait aussi — deux ascenseurs côte à côte, et le FAB Fitz
+recouvrait le bouton d'envoi. Désormais la page messages est un cadre
+de conversation à la ai-chat : hauteur de l'écran, UN SEUL défilement
+(le fil), composer épinglé en bas, FAB masqué (le raccourci vers le
+chat Fitz n'a rien à faire posé sur un composer).
+========================================================== */
+
+body:has(.messages-page-card){
+height:100dvh;
+overflow:hidden;
+}
+
+body:has(.messages-page-card) .dashboard-shell{
+height:100%;
+min-height:0;
+}
+
+body:has(.messages-page-card) .dashboard-main{
+height:100%;
+min-height:0;
+display:flex;
+flex-direction:column;
+}
+
+/* La colonne éditoriale (journey-shell) garde sa largeur, mais devient
+une colonne flexible qui donne au fil TOUTE la hauteur restante. */
+body:has(.messages-page-card) .dashboard-main > .content{
+flex:1;
+min-height:0;
+display:flex;
+flex-direction:column;
+width:100%;
+padding:16px clamp(16px, 4vw, 40px) 20px;
+}
+
+body:has(.messages-page-card) .messages-page-card{
+flex:1;
+min-height:0;
+display:flex;
+flex-direction:column;
+width:100%;
+}
+
+body:has(.messages-page-card) .messages-page-body{
+flex:1;
+min-height:0;
+}
+
+/* Le SEUL élément qui défile. La hauteur fixe de la première version
+est neutralisée (cette règle vient après dans la feuille). */
+body:has(.messages-page-card) .messages-page-thread{
+flex:1;
+min-height:0;
+height:auto;
+}
+
+/* Le FAB « Discuter avec Fitz » recouvrait le bouton d'envoi — même
+règle que sur le chat (body:has(#chatApp), css/chat-redesign.css). */
+body:has(.messages-page-card) .fitz-fab-wrap{
+display:none;
+}
+
+/* Conversation aérée : bulles bornées comme dans une messagerie
+moderne, la ligne entière n'est jamais un bloc mur-à-mur. */
+.messages-page-thread .messages-thread-item{
+max-width:min(78%, 560px);
+}
+
+@media(max-width:576px){
+
+body:has(.messages-page-card) .dashboard-main > .content{
+padding:10px 10px 12px;
+}
+
+.messages-page-thread .messages-thread-item{
+max-width:88%;
+}
+
+}
+
+/* Correctifs mesurés au DOM réel (2026-09-02, cadre plein écran) :
+- le piège section{padding:110px/64px} de base.css s'appliquait à la
+  carte (<section class="ai-panel">) et mangeait ~130px de hauteur ;
+- en colonne flexible, l'avis, l'en-tête et le composer se laissaient
+  COMPRIMER par le fil (composer mesuré à 0px de haut) — seuls le fil
+  a le droit de grandir et de rétrécir. */
+body:has(.messages-page-card) .messages-page-card{
+padding:0;
+overflow:hidden;
+}
+
+body:has(.messages-page-card) .messages-page-card .ai-panel-header,
+body:has(.messages-page-card) .messages-page-notice,
+body:has(.messages-page-card) #messagesPageComposerHost{
+flex-shrink:0;
 }

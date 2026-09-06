@@ -17,15 +17,19 @@
 * Une clé OpenAI ou Anthropic écrite ici serait publique en quelques
 * minutes et facturée à FitzUniverse jusqu'à sa révocation.
 *
-* C'est pourquoi ENDPOINT ne pointe pas vers un fournisseur mais vers
-* NOTRE passerelle — une Cloud Function Firebase, dans le même projet
-* que le reste du site. Elle seule détient la clé, vérifie le jeton
-* Firebase de l'étudiant, contrôle son offre et son quota, puis appelle
-* le fournisseur. Le navigateur ne parle jamais au modèle directement.
+* C'est pourquoi le navigateur ne parle jamais au modèle : il appelle
+* NOTRE passerelle, la Cloud Function `fitzGenerate` (europe-west1),
+* qui vérifie l'identité de l'étudiant, sa formule et son plafond
+* d'usage avant d'appeler le modèle.
 *
-*     navigateur → passerelle FitzUniverse → fournisseur
-*                  (détient la clé,
-*                   vérifie l'identité et le quota)
+*     navigateur → passerelle FitzUniverse → modèle
+*                  (vérifie l'identité,
+*                   la formule et le plafond)
+*
+* Depuis le 2026-09-04 il n'y a même plus de clé à protéger : le modèle
+* est appelé via Vertex AI, et la fonction s'authentifie avec sa propre
+* identité de service Google. Une clé qui n'existe pas ne peut pas
+* fuiter.
 *
 * Ce détour n'est pas seulement une précaution : c'est aussi le seul
 * endroit où le quota par offre peut être appliqué de façon fiable.
@@ -37,7 +41,26 @@
 /**
 * "simule"     — js/ai/simulated-responses.js répond localement.
 *                Aucun réseau, aucun coût, réponses déterministes.
-* "passerelle" — appel HTTP à notre Cloud Function (voir ENDPOINT).
+* "passerelle" — appel du callable fitzGenerate (js/ai/ai-gateway.js).
+*
+* ⛔ REPASSÉ EN "simule" LE 2026-09-05 — ce n'est pas un retour en
+* arrière, c'est une réparation.
+*
+* Vérifié ce jour-là dans la console Google : le crédit d'essai de
+* 300 $ NE COUVRE PAS les modèles d'IA générative de partenaires
+* proposés en API gérée, et l'essai sans frais les BLOQUE purement et
+* simplement. Preuves : crédit intact à 300,00 $ sur 300,00 $, aucun
+* SKU Vertex AI en 30 jours, et surtout
+* `PredictionService.StreamRawPredict` à 100 % d'erreurs avec des 429.
+* La fonction `fitzGenerate` répondait donc, mais aucun modèle
+* derrière : chat, lettre, e-mail, traduction, analyse de dossier et
+* diagnostic étaient tous hors service en production.
+*
+* POUR REVENIR À "passerelle", IL FAUT D'ABORD une voie de facturation
+* réelle — compte Google Cloud converti en payant (ce qui débloque les
+* modèles de partenaires), ou API Anthropic directe (~50 % moins chère
+* que Vertex). Tant que ce n'est pas fait, remettre "passerelle" ne
+* fait que rendre le site cassé à nouveau.
 *
 * @type {"simule"|"passerelle"}
 */
@@ -47,8 +70,14 @@ export const MODE = "simule";
 export const IS_SIMULATED = MODE === "simule";
 
 /**
-* URL de la passerelle FitzUniverse — PAS celle d'un fournisseur.
-* Renseigner au moment du déploiement de la Cloud Function.
+* PLUS UTILISÉ depuis le 2026-09-04 — conservé vide à dessein.
+*
+* La passerelle n'est pas un endpoint HTTP mais un CALLABLE Firebase
+* (`fitzGenerate`, europe-west1). Le SDK connaît son adresse à partir
+* du projet et de la région : il n'y a pas d'URL à écrire, donc pas
+* d'URL à laisser périmer. Voir js/ai/ai-gateway.js.
+*
+* Ne pas supprimer cette constante sans vérifier qui l'importe encore.
 */
 export const ENDPOINT = "";
 
@@ -67,7 +96,12 @@ letter: 90000,
 email: 60000,
 translate: 90000,
 check: 120000,
-readiness: 45000
+readiness: 45000,
+
+// Le diagnostic est court (quelques centaines de mots) et arrive à
+// l'écran juste après cinq minutes de questions : au-delà de 45 s
+// d'attente supplémentaire, l'étudiant a déjà décroché.
+diagnostic: 45000
 };
 
 export const DELAI_PAR_DEFAUT_MS = 60000;
@@ -120,7 +154,7 @@ maxTokensSortie: 2000
 export const TACHES_STRUCTUREES = ["check", "readiness"];
 
 /** Toutes les tâches que Fitz sait faire. */
-export const TACHES = ["letter", "email", "translate", "check", "readiness", "chat"];
+export const TACHES = ["letter", "email", "translate", "check", "readiness", "chat", "diagnostic"];
 
 /**
 * Correspondance tâche → clé de fonctionnalité de js/plan-features.js.
@@ -133,5 +167,15 @@ email: "ai_email",
 translate: "ai_translate",
 check: "ai_check",
 readiness: "ai_check",
-chat: "ai_chat"
+chat: "ai_chat",
+
+// `diagnostic` est la SEULE tâche ouverte aux comptes gratuits : elle
+// écrit la lecture personnalisée du test d'éligibilité, à partir d'un
+// score et d'opportunités déjà calculés sans IA. Elle porte quand
+// même une clé ici parce que verifierAcces() (js/ai/ai-client.js)
+// refuse toute tâche absente de cette table — mais aucune page
+// n'appelle requireFeature() dessus, et c'est délibéré : la bloquer
+// derrière une formule payante viderait de son sens le moment où
+// l'étudiant décide de faire confiance à FitzUniverse.
+diagnostic: "ai_diagnostic"
 };

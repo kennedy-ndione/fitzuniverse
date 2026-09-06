@@ -305,7 +305,7 @@ ${doc.scan.map((item) => `<li><i data-lucide="check"></i><span>${item}</span></l
 <section class="docs-modal-section">
 <h4><i data-lucide="lightbulb"></i>Conseils</h4>
 <ul class="docs-modal-list is-tips">
-${doc.tips.map((item) => `<li><i data-lucide="sparkle"></i><span>${item}</span></li>`).join("")}
+${doc.tips.map((item) => `<li><i data-lucide="lightbulb"></i><span>${item}</span></li>`).join("")}
 </ul>
 </section>
 

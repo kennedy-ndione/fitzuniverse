@@ -189,11 +189,16 @@ duration: "6 mois",
 maxAccompaniedApplications: 5,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
+// Restructurés le 2026-09-02 : chaque ligne correspond à une
+// capacité RÉELLE de l'espace étudiant (parcours, outils, chat +
+// entraînement aux tests, entretiens, suivi, messagerie FitzUniverse).
 highlights: [
 "Jusqu'à 5 candidatures accompagnées de bout en bout",
-"Tous les outils Fitz : lettre, CV, e-mails, traduction",
+"100 % des outils Fitz : lettre, e-mails, vérification, traduction, compression",
+"Discuter avec Fitz : questions illimitées et entraînement aux tests calé sur vos échéances",
+"Préparation aux entretiens et suivi complet des candidatures",
+"Messagerie FitzUniverse : l'équipe vous répond dans votre espace",
 "2 révisions par dossier",
-"6 mois d'accompagnement personnalisé avec Fitz",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]
 },
@@ -226,16 +231,16 @@ fitzAccess: "100% des outils Fitz, sans restriction",
 // trois offres sont assurées par Fitz seul. La ligne promettait donc un
 // service qui n'était pas rendu.
 //
-// Elle n'est pas remplacée par un équivalent Fitz : Standard inclut déjà
-// "Tous les outils Fitz" et "2 révisions par dossier", une ligne de plus
-// sur la lettre n'aurait fait que répéter le palier du dessous. Ce qui
-// distingue réellement Avancé de Standard reste le volume, la durée, la
-// préparation à l'entretien et les alertes.
+// Elle n'est pas remplacée par un équivalent Fitz : Essentiel inclut
+// déjà tous les outils. Ce qui distingue RÉELLEMENT Ambition, c'est le
+// volume et la durée — les anciennes lignes « Préparation à
+// l'entretien » et « Alertes » (disponibles dès Essentiel) laissaient
+// croire le contraire et ont été retirées le 2026-09-02.
 highlights: [
 "Jusqu'à 9 candidatures accompagnées de bout en bout",
 "Tout le contenu du Forfait Essentiel",
-"Préparation à l'entretien",
-"Alertes sur les dates limites",
+"4 candidatures et 3 mois d'accompagnement de plus qu'Essentiel",
+"Le meilleur prix par candidature des formules autonomes (≈ 8 300 F)",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]
 },
@@ -303,8 +308,8 @@ fitzAccess: "100% des outils Fitz, sans restriction",
 // du même coup la seule justification du prix de Renforcé.
 highlights: [
 "Vérification humaine de chaque dossier avant l'envoi",
-"Conseils et suggestions d'un conseiller sur vos candidatures",
-"Échanges directs avec votre conseiller sur WhatsApp",
+"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
+"Échanges directs avec votre conseiller via la messagerie FitzUniverse",
 "L'assistance continue de Fitz en renfort",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]

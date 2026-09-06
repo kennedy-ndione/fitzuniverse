@@ -112,7 +112,19 @@ export const FEATURE_CATALOG = [
 { key: "ai_translate", label: "Traduction de documents", description: "Traduction des documents pour les candidatures internationales." },
 { key: "compress", label: "Compression de fichiers", description: "Réduction de la taille d'un PDF ou d'une image à la taille demandée par un portail universitaire." },
 { key: "interview_prep", label: "Préparation aux entretiens", description: "Banque de questions par type de bourse et checklist de préparation avant un entretien." },
-{ key: "advisor", label: "Mon conseiller", description: "Messagerie avec un conseiller humain dédié à l'accompagnement." }
+{ key: "advisor", label: "Mon conseiller", description: "Messagerie avec un conseiller humain dédié à l'accompagnement." },
+// Messagerie FitzUniverse (2026-09-02) : le canal officiel
+// admin ↔ étudiant, signé FitzUniverse. Tous les étudiants VOIENT les
+// messages reçus (cloche) ; ce drapeau contrôle le droit de RÉPONDRE.
+// Décision utilisateur : fermé au plan Gratuit (Découverte), ouvert à
+// toutes les formules payantes.
+{ key: "student_messaging", label: "Messagerie FitzUniverse", description: "Répondre à l'équipe FitzUniverse depuis la cloche de messages de l'espace étudiant." },
+// WhatsApp direct (2026-09-02) : décision utilisateur — la discussion
+// WhatsApp est STRICTEMENT réservée à la formule Signature. Contrôle
+// tous les liens wa.me d'accompagnement (accueil, offres, conseiller).
+// Seule exception assumée : le bouton d'ACHAT de la formule Signature
+// sur offers.html (canal commercial, visible de tous).
+{ key: "whatsapp_direct", label: "WhatsApp direct", description: "Échanges directs sur WhatsApp avec l'équipe — réservé à Signature." }
 ];
 
 // Toute offre payante donne 100% des outils Fitz — y compris Premier
@@ -138,7 +150,9 @@ interview_prep: { gratuit: false, "premier-dossier": true, essentiel: true, acco
 // Seule fonctionnalité de ce fichier qui N'EST PAS un outil Fitz — accès
 // à un conseiller humain, vrai uniquement pour les deux offres
 // "human" de pricing-plans.js. Voir la note en tête de fichier.
-advisor: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": true, signature: true }
+advisor: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": true, signature: true },
+student_messaging: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
+whatsapp_direct: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: true }
 };
 
 // ==========================================================

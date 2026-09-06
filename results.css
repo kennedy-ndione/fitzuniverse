@@ -307,7 +307,7 @@ et n'importe quelle classe de ton le bat. */
 
 --tone-text:var(--text-light);
 
---tone-glow:rgba(15,23,42,.12);
+--tone-glow:rgba(26,23,20,.12);
 
 }
 
@@ -687,7 +687,7 @@ background:var(--background-alt);
 
 /* Creuse légèrement le rail pour que la barre pleine se lise comme
 posée dedans plutôt que dessinée dessus. */
-box-shadow:inset 0 1px 2px rgba(15,23,42,.07);
+box-shadow:inset 0 1px 2px rgba(23,19,16,.07);
 
 overflow:hidden;
 
@@ -1228,7 +1228,7 @@ transform:translateY(-8px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(51,65,140,.18);
+border-color:rgba(26,23,20,.16);
 
 }
 
@@ -1692,4 +1692,306 @@ max-width:100%;
 
 }
 
+}
+
+
+/* ============================================================
+   Analyse de Fitz sur la page de résultats
+   ------------------------------------------------------------
+   À coller à la fin de results.css.
+
+   Quatre états, un seul bloc : verrouillé (visiteur sans compte),
+   en cours, prêt, échec. Le bloc garde la même largeur et la même
+   place dans tous les cas — un cadre qui saute quand la réponse
+   arrive donnerait l'impression que la page se casse.
+   ============================================================ */
+
+.fitz-analysis {
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: var(--surface, #fff);
+}
+
+.fitz-analysis:empty {
+  display: none;
+}
+
+.fitz-analysis-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fitz-analysis-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.fitz-analysis-head i,
+.fitz-analysis-head svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #e9a319;
+}
+
+.fitz-analysis-body h3 {
+  font-size: 0.95rem;
+  margin: 18px 0 6px;
+}
+
+.fitz-analysis-body h3:first-child {
+  margin-top: 0;
+}
+
+.fitz-analysis-body p {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.fitz-analysis-body ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.fitz-analysis-note {
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+/* --- Verrouillé : le visiteur n'a pas encore de compte --- */
+.fitz-analysis.is-locked {
+  border-style: dashed;
+}
+
+.fitz-analysis.is-locked .btn {
+  margin-top: 8px;
+}
+
+/* --- En cours : l'icône tourne, le texte s'écrit au fil de l'eau ---
+   L'animation est coupée pour qui a demandé moins de mouvement ;
+   l'icône reste, seule la rotation disparaît. */
+.fitz-analysis.is-loading .fitz-analysis-head i,
+.fitz-analysis.is-loading .fitz-analysis-head svg {
+  animation: fitz-analysis-spin 1.1s linear infinite;
+}
+
+@keyframes fitz-analysis-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fitz-analysis.is-loading .fitz-analysis-head i,
+  .fitz-analysis.is-loading .fitz-analysis-head svg {
+    animation: none;
+  }
+}
+
+/* --- Échec : visible sans être alarmant. L'analyse est un
+       supplément, son échec ne remet pas en cause le diagnostic. --- */
+.fitz-analysis.is-error {
+  border-color: rgba(200, 90, 40, 0.35);
+}
+
+.fitz-analysis.is-error .fitz-analysis-head i,
+.fitz-analysis.is-error .fitz-analysis-head svg {
+  color: #c85a28;
+}
+
+@media (max-width: 640px) {
+  .fitz-analysis {
+    padding: 18px;
+    border-radius: 14px;
+  }
+}
+
+
+/* --- Création de compte en place (js/creer-compte.js) ---
+   Affichée dans le bloc d'analyse quand le visiteur n'a pas de
+   compte. Volontairement sobre : c'est un formulaire de trois champs
+   au milieu d'une page de résultats, pas une page d'inscription. */
+
+.compte-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+}
+
+.compte-inline-titre {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.compte-inline-intro {
+  margin: 0;
+  font-size: 0.92rem;
+  opacity: 0.8;
+}
+
+.compte-inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compte-inline-field > span {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.compte-inline-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.14));
+  border-radius: 10px;
+}
+
+.compte-inline-field input:focus-visible {
+  outline: 2px solid #e9a319;
+  outline-offset: 1px;
+  border-color: #e9a319;
+}
+
+/* Autofill de Chrome : sans cette règle, le champ rempli
+   automatiquement repasse en bleu clair. Même recette que auth.css. */
+.compte-inline-field input:-webkit-autofill,
+.compte-inline-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  box-shadow: 0 0 0 1000px #fff inset;
+}
+
+.compte-inline-field small {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.compte-inline-error {
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  color: #8a2f10;
+  background: rgba(200, 90, 40, 0.09);
+  border-radius: 9px;
+}
+
+.compte-inline button[type="submit"] {
+  align-self: flex-start;
+}
+
+.compte-inline button[type="submit"][disabled] {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.compte-inline-note {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+  .compte-inline button[type="submit"] {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   LA RÉFLEXION DE FITZ — 2026-09-05
+
+   Six étapes affichées pendant que le diagnostic se calcule. Ce n'est
+   pas un sablier déguisé : chaque ligne porte une grandeur réelle
+   (nombre de bourses parcourues, d'opportunités retenues, d'échéances
+   encore ouvertes) et n'apparaît que lorsque son étape commence.
+
+   L'étape en cours tourne, les précédentes se cochent. Rien ne
+   disparaît : l'étudiant doit pouvoir relire ce qui a été fait pour
+   lui, c'est tout l'objet de ces quinze secondes.
+   ============================================================ */
+
+.reflexion {
+  list-style: none;
+  margin: 20px auto 0;
+  padding: 0;
+  max-width: 460px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reflexion-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: reflexion-entree 0.35s ease forwards;
+}
+
+@keyframes reflexion-entree {
+  to { opacity: 1; transform: none; }
+}
+
+.reflexion-step i,
+.reflexion-step svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #e9a319;
+}
+
+/* L'étape en cours : l'icône tourne. Coupée pour qui a demandé moins
+   de mouvement — l'icône reste, seule la rotation disparaît. */
+.reflexion-step.is-current i,
+.reflexion-step.is-current svg {
+  animation: reflexion-rotation 1.1s linear infinite;
+}
+
+@keyframes reflexion-rotation {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reflexion-step { animation: none; opacity: 1; transform: none; }
+  .reflexion-step.is-current i,
+  .reflexion-step.is-current svg { animation: none; }
+}
+
+/* Étape terminée : la coche remplace le sablier, le texte s'efface
+   légèrement pour que l'attention reste sur la ligne en cours. */
+.reflexion-step.is-done {
+  opacity: 0.62;
+}
+
+.reflexion-step.is-done i,
+.reflexion-step.is-done svg {
+  animation: none;
+}
+
+.reflexion-step.is-done::marker { content: none; }
+
+@media (max-width: 640px) {
+  .reflexion {
+    max-width: none;
+    gap: 12px;
+  }
+  .reflexion-step { font-size: 0.92rem; }
 }

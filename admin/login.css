@@ -1,38 +1,42 @@
 /* ==========================================================
-SCHOLARBRIDGE — CONNEXION ADMINISTRATEUR (admin/login.html)
-Repose sur css/base.css (tokens, reset) avec la même surcharge
-sombre "navy + gold" que le reste du Control Center
-(control-center.css) — reproduite ici pour ce fichier plutôt que
-partagée, comme le fait déjà chaque famille de pages du site.
+FITZUNIVERSE — CONNEXION ADMINISTRATEUR (admin/login.html)
+Repose sur css/base.css (tokens, reset). REFONTE 2026-09-02 : plus
+aucun navy — la porte d'entrée de l'admin est une scène ENCRE CHAUDE
+(même famille que --ink-surface et le hero du Control Center clair),
+éclairée à l'ambre. Le Control Center derrière elle est clair
+(control-center.css).
 ========================================================== */
 
 :root{
 
 /* ==========================================================
-THÈME SOMBRE — mêmes tokens --shell-* partagés que dashboard.css et
-admin/control-center.css (voir css/base.css) au lieu d'un troisième
-jeu de valeurs indépendant : c'était le fichier le plus dérivé des
-trois (--glass-border notamment n'avait plus la même opacité).
+THÈME ENCRE CHAUDE — valeurs propres à cette scène sombre (les
+tokens --shell-* navy de base.css ne sont plus consommés ici).
 ========================================================== */
 
---background:var(--shell-bg);
---background-soft:var(--shell-surface);
+--background:#241F19;
+--background-soft:#1E1A15;
 --background-light:rgba(233,163,25,.12);
 
---border-color:var(--shell-border);
+--border-color:rgba(255,255,255,.09);
 --glass-border:rgba(255,255,255,.08);
 
---text-color:var(--shell-text);
---text-light:#C2CBDE;
-/* Aligné sur admin/control-center.css — voir la note AA du 2026-08-02. */
---text-muted:#96A1B7;
+--text-color:#F5F0E7;
+
+/* Accent local : l'ambre de la marque (le violet --accent-500 de
+base.css est réservé à Fitz-acteur, pas à la scène de connexion). */
+--accent-color:var(--amber-500);
+--accent-hover:var(--amber-600);
+--text-light:#D8D2C7;
+/* Contrastes vérifiés sur fond #1E1A15/#241F19 (≥ 7:1). */
+--text-muted:#A89F92;
 /* Non-textuel uniquement (seuil 3:1) — voir la note dans css/base.css.
 Sans cette déclaration, .input-icon retombait sur la valeur de contexte
 CLAIR héritée de base.css, posée sur un fond sombre. */
 --text-decorative:#79849A;
 
---shadow-md:var(--shell-shadow-md);
---shadow-lg:var(--shell-shadow-lg);
+--shadow-md:0 14px 32px rgba(0,0,0,.38);
+--shadow-lg:0 22px 52px rgba(0,0,0,.46);
 
 }
 
@@ -52,11 +56,74 @@ overflow-x:hidden;
 
 background:
 
-radial-gradient(circle at 15% -10%,rgba(51,65,140,.28),transparent 45%),
+radial-gradient(circle at 15% -10%,rgba(233,163,25,.14),transparent 45%),
 
-radial-gradient(circle at 100% 10%,rgba(233,163,25,.16),transparent 40%),
+radial-gradient(circle at 100% 10%,rgba(201,134,11,.12),transparent 40%),
 
-linear-gradient(155deg,#12192B 0%,#0F172A 55%,#0B1120 100%);
+linear-gradient(155deg,#2A241C 0%,#211D18 55%,#171310 100%);
+
+}
+
+/* Chemin de sortie visible (règle « navigation toujours visible » du
+projet — la page n'en avait aucun) : pastille fixe vers le site. */
+.admin-back-link{
+
+position:fixed;
+
+top:18px;
+
+left:18px;
+
+z-index:10;
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:8px 15px;
+
+min-height:40px;
+
+border-radius:var(--radius-full);
+
+background:rgba(255,255,255,.06);
+
+border:1px solid var(--glass-border);
+
+backdrop-filter:blur(8px);
+
+-webkit-backdrop-filter:blur(8px);
+
+color:#D8D2C7;
+
+font-weight:600;
+
+font-size:.82rem;
+
+transition:var(--transition);
+
+}
+
+.admin-back-link i,
+.admin-back-link svg{
+
+width:15px;
+
+height:15px;
+
+flex-shrink:0;
+
+}
+
+.admin-back-link:hover{
+
+background:rgba(233,163,25,.14);
+
+border-color:rgba(233,163,25,.35);
+
+color:var(--amber-500);
 
 }
 
@@ -251,7 +318,7 @@ CARTE
 
 .admin-auth-card{
 
-background:rgba(30,41,59,.7);
+background:rgba(33,29,24,.72);
 
 backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
@@ -351,6 +418,31 @@ padding-right:46px;
 color:var(--text-muted);
 
 }
+
+/* AUTOFILL Chrome/Edge (constaté sur photo utilisateur 2026-09-02) :
+le remplissage automatique repeignait le champ en BLANC/bleu système
+sur la scène encre — champ e-mail illisible et hors charte. L'ombre
+interne opaque est la seule recette fiable pour recouvrir le fond
+imposé par le navigateur ; la transition « infinie » neutralise son
+retour. */
+.input-wrap input:-webkit-autofill,
+.input-wrap input:-webkit-autofill:hover,
+.input-wrap input:-webkit-autofill:focus{
+
+-webkit-box-shadow:0 0 0 1000px #1E1A15 inset;
+
+box-shadow:0 0 0 1000px #1E1A15 inset;
+
+-webkit-text-fill-color:#F5F0E7;
+
+caret-color:#F5F0E7;
+
+transition:background-color 999999s ease-out;
+
+}
+
+/* Curseur de saisie ambre : petit repère de marque pendant la frappe. */
+.input-wrap input{ caret-color:var(--amber-500); }
 
 .input-wrap:focus-within .input-icon{
 
@@ -474,10 +566,9 @@ BOUTON PRINCIPAL
 /* .btn-admin-submit s'appuie sur .btn (css/base.css, structure/
 padding/rayon/transitions/états actif-désactivé partagés — voir
 class="btn btn-lg btn-admin-submit" dans login.html) et ne garde ici
-que ses deltas réels : dégradé --gradient-primary (identité bleue du
-Control Center), pleine largeur, icône flèche décorative, et lueur au
-survol/focus assortie à ce même bleu plutôt que la teinte par défaut
-de .btn. */
+que ses deltas réels : surface AMBRE avec libellé encre (règle AA
+--amber-500 + --ink-surface de base.css), pleine largeur, icône
+flèche décorative, et lueur ambre au survol/focus. */
 
 .btn-admin-submit{
 
@@ -487,9 +578,9 @@ overflow:hidden;
 
 width:100%;
 
-background:var(--gradient-primary);
+background:linear-gradient(135deg,var(--amber-500),var(--amber-600));
 
-color:#fff;
+color:var(--ink-surface);
 
 font-weight:700;
 
@@ -513,7 +604,7 @@ background-repeat:no-repeat;
 
 background-position:center;
 
-background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4'/%3E%3Cpolyline points='10 17 15 12 10 7'/%3E%3Cline x1='15' y1='12' x2='3' y2='12'/%3E%3C/svg%3E");
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23211D18' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4'/%3E%3Cpolyline points='10 17 15 12 10 7'/%3E%3Cline x1='15' y1='12' x2='3' y2='12'/%3E%3C/svg%3E");
 
 }
 
@@ -521,13 +612,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 
 transform:translateY(-2px);
 
-box-shadow:0 16px 34px rgba(51,65,140,.4);
+box-shadow:0 16px 34px rgba(233,163,25,.28);
 
 }
 
 .btn-admin-submit:focus-visible{
 
-box-shadow:0 0 0 4px rgba(51,65,140,.3);
+box-shadow:0 0 0 4px rgba(233,163,25,.28);
 
 }
 

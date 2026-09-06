@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Votre diagnostic | FitzUniverse</title>
 
@@ -42,7 +42,9 @@ les scripts différés. -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="results.css">
 <link rel="stylesheet" href="css/results-redesign.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body>
@@ -55,7 +57,7 @@ defaut de style. Lien vers index.html : ces pages ne chargent aucun
 shell, la session n'y est pas connue — c'est aussi la cible de leurs
 liens de retour existants. -->
 <header class="page-brandbar">
-<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -89,7 +91,15 @@ infini). -->
 </div>
 </div>
 <div class="results-loading-spinner" aria-hidden="true"></div>
-<p>Fitz croise votre profil avec le catalogue…</p>
+
+<!-- LA RÉFLEXION DE FITZ — chaque étape est posée quand elle
+COMMENCE vraiment et cochée quand elle se termine, avec les vrais
+nombres du calcul (bourses parcourues, opportunités retenues,
+échéances encore ouvertes). Voir jouerReflexion() dans results.js :
+si le calcul dure plus longtemps qu'un palier, c'est le calcul qui
+commande, jamais l'inverse. aria-live pour que la progression soit
+annoncée aux lecteurs d'écran plutôt que subie en silence. -->
+<ol class="reflexion" id="reflexionSteps" aria-live="polite"></ol>
 </div>
 
 <div id="resultsContent" hidden>
@@ -225,6 +235,14 @@ Ce score est un point de départ pour comprendre votre profil — pas un verdict
 </div>
 <p class="section-subtext">Le niveau et le potentiel ci-dessus s'expliquent par ces éléments de votre parcours.</p>
 
+<!-- Lecture personnalisée écrite par Fitz (js/ai/diagnostic-fitz.js).
+     Placée ICI et pas ailleurs : après le score et sa décomposition,
+     pour que « ce qui vous freine » ait un contexte chiffré — et avant
+     les destinations et les opportunités, pour que « par où commencer »
+     débouche sur ce que l'étudiant va lire juste après. La section
+     promettait déjà « ce que Fitz a compris » ; elle le tient enfin. -->
+<div class="fitz-analysis" id="fitzAnalysis"></div>
+
 <div class="analysis-card strengths-card">
 <div class="analysis-heading">
 <i data-lucide="check-circle"></i>
@@ -250,7 +268,7 @@ Ce score est un point de départ pour comprendre votre profil — pas un verdict
 <i data-lucide="compass"></i>
 <h2>Opportunités correspondant actuellement à votre profil</h2>
 </div>
-<p class="section-subtext">Chaque opportunité ci-dessous est reliée à des éléments précis de vos réponses.</p>
+<p class="section-subtext" id="opportunitiesSubtext">Chaque opportunité ci-dessous est reliée à des éléments précis de vos réponses.</p>
 <div id="scholarships" class="opportunity-list"></div>
 </section>
 

@@ -30,6 +30,15 @@ signOut
 
 import { initMessagesPanel } from "./student-messages.js";
 
+// Menus déroulants habillés (bouton + liste aux couleurs du site, le
+// select natif reste fonctionnel) — voir l'en-tête de fitz-select.js.
+import { initFitzSelects } from "./fitz-select.js";
+
+// Entrées/sorties du site pour le Control Center (2026-09-02) :
+// une visite par session de navigateur + l'événement de déconnexion.
+// trackEvent/trackVisitOnce avalent leurs erreurs, jamais d'await ici.
+import { trackEvent, trackVisitOnce } from "./analytics.js";
+
 import {
 PLAN_ORDER,
 PLAN_LABELS,
@@ -219,6 +228,10 @@ logoutBtn.addEventListener("click", async () => {
 if (logoutBtn.dataset.busy === "true") return;
 logoutBtn.dataset.busy = "true";
 
+// Sortie volontaire — signalée AVANT signOut (après, l'écriture du
+// journal partirait sans uid). Pas d'await : jamais bloquant.
+trackEvent("logout", {});
+
 try {
 
 await signOut(auth);
@@ -277,6 +290,26 @@ initSidebar();
 initReveal();
 initLogout();
 initFitzFab();
+
+// Navigation mobile de l'espace (2026-09-03) — barre d'onglets basse
+// + feuille « Menu », injectées par js/mobile-nav.js (script plat,
+// chargé par chaque page). Appelé ici pour que les pages à double
+// présentation (dual-shell) l'obtiennent au moment où la barre haute
+// sort de son conteneur [hidden] — idempotent, voir initShell().
+if (window.FitzMobileNav) window.FitzMobileNav.initShell();
+
+// Menus déroulants aux couleurs du site (2026-09-02) — le <select>
+// natif ouvrait la liste blanche/surlignage bleu de l'OS, signalée
+// par l'utilisateur sur ai-email et ai-translate. Tous les selects
+// des pages connectées sont habillés ici, une fois pour toutes —
+// même patron que js/catalog-select.js côté catalogue public.
+initFitzSelects();
+
+// Entrée du site : une seule fois par session de navigateur (garde
+// sessionStorage dans analytics.js). Posé ici et non au niveau du
+// module : l'admin importe hidePageLoader() de ce fichier et ne doit
+// pas compter ses propres passages comme des entrées étudiantes.
+trackVisitOnce();
 
 if (window.lucide) lucide.createIcons();
 
@@ -376,9 +409,18 @@ if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
 applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress);
 applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess);
 
+// Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
+if (window.FitzMobileNav) {
+window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
+}
+
 if (window.lucide) lucide.createIcons();
 
-initMessagesPanel(session.user.uid);
+// Droit de réponse de la messagerie FitzUniverse : fonctionnalité
+// "student_messaging" (fermée au plan Gratuit — js/plan-features.js).
+initMessagesPanel(session.user.uid, {
+canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress)
+});
 
 hideLoader();
 

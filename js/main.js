@@ -1,7 +1,7 @@
 /**
 * ==========================================================
 * Fitz - Homepage init
-* Révélation au scroll, compteurs animés, icônes Lucide.
+* Révélation au scroll, icônes Lucide.
 * ==========================================================
 */
 
@@ -14,12 +14,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
 if (window.lucide) lucide.createIcons();
 
+// MENU MOBILE : le bouton rond + petit panneau du 2026-09-01 ont été
+// remplacés le 2026-09-03 par la navigation mobile commune à tout le
+// site (js/mobile-nav.js + css/mobile-nav.css) — feuille plein écran
+// injectée, plus aucun balisage ni code ici.
+
 // Le comportement du header (fond au scroll + disparition/réapparition
 // immersive) vit désormais dans js/header-scroll.js, partagé par
 // index.html/universities.html/scholarship-details.html — voir ce
 // fichier pour le détail. Chargé comme script séparé dans le <head>/
 // avant </body> de chaque page, pas ici, pour que les 2 autres pages
 // (qui ne chargent pas main.js) en bénéficient aussi.
+
+// ==========================================================
+// PARALLAXE DU PIED DE PAGE (2026-09-03)
+// La <picture> du footer (surdimensionnée de 14 % en CSS) glisse d'une
+// fraction du défilement pendant que le footer traverse l'écran — la
+// photo semble avoir de la profondeur derrière les colonnes. Un seul
+// écouteur passif + requestAnimationFrame, transform seul. Coupé par
+// prefers-reduced-motion (le CSS force alors transform:none).
+// ==========================================================
+
+(function initFooterParallax() {
+
+const photo = document.querySelector(".footer-photo-feature .footer-photo picture");
+const footer = document.querySelector(".footer-photo-feature");
+if (!photo || !footer) return;
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+const RATIO = 0.12;
+let ticking = false;
+
+function update() {
+ticking = false;
+const rect = footer.getBoundingClientRect();
+const vh = window.innerHeight || 1;
+if (rect.bottom < 0 || rect.top > vh) return;
+// -1 quand le footer entre par le bas, 0 quand il est calé en bas.
+const progress = Math.max(-1, Math.min(1, (rect.top + rect.height - vh) / vh));
+photo.style.transform = `translate3d(0, ${(-progress * RATIO * rect.height).toFixed(1)}px, 0)`;
+}
+
+function onScroll() {
+if (ticking) return;
+ticking = true;
+requestAnimationFrame(update);
+}
+
+window.addEventListener("scroll", onScroll, { passive: true });
+window.addEventListener("resize", onScroll, { passive: true });
+update();
+
+})();
 
 // ==========================================================
 // RÉVÉLATION AU SCROLL
@@ -48,56 +94,12 @@ revealItems.forEach((item) => item.classList.add("is-visible"));
 
 }
 
-// ==========================================================
-// COMPTEURS ANIMÉS (statistiques du hero)
-// ==========================================================
-
-const countItems = document.querySelectorAll("[data-count-to]");
-
-function animateCount(el) {
-
-const target = parseInt(el.dataset.countTo, 10);
-const duration = 1400;
-const start = performance.now();
-
-function step(now) {
-
-const progress = Math.min((now - start) / duration, 1);
-const eased = 1 - Math.pow(1 - progress, 3);
-
-el.textContent = Math.round(eased * target);
-
-if (progress < 1) {
-requestAnimationFrame(step);
-}
-
-}
-
-requestAnimationFrame(step);
-
-}
-
-if (countItems.length && "IntersectionObserver" in window) {
-
-const countObserver = new IntersectionObserver((entries) => {
-
-entries.forEach((entry) => {
-if (entry.isIntersecting) {
-animateCount(entry.target);
-countObserver.unobserve(entry.target);
-}
-});
-
-}, { threshold: 0.4 });
-
-countItems.forEach((item) => countObserver.observe(item));
-
-} else {
-
-countItems.forEach((item) => {
-item.textContent = item.dataset.countTo;
-});
-
-}
+// COMPTEURS ANIMÉS : partis d'ici le 2026-09-01. L'ancien système
+// [data-count-to] animait des valeurs écrites en dur dans le HTML et
+// n'avait plus aucun élément à servir depuis que les statistiques
+// viennent de Firestore. Le compteur au scroll vit désormais dans
+// js/homepage-teaser.js (setCount/animateCountTo), au seul endroit qui
+// connaît les vraies valeurs — voir son commentaire pour la course
+// fetch/viewport que l'ancien emplacement rendait inévitable.
 
 });

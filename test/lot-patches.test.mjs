@@ -265,3 +265,74 @@ test("entrées absentes ou vides : jamais d'exception", () => {
 assert.deepEqual(boursesSansProgramme(undefined, undefined), []);
 assert.deepEqual(boursesSansProgramme([], []), []);
 });
+
+// ============================================================
+// LINKS.niveaux — une université ne participe pas toujours à tous
+// les cycles d'une bourse (2026-09-05)
+// ============================================================
+//
+// Le Global Korea Scholarship publie DEUX listes d'universités
+// désignées : celle de la licence (GKS-U) et celle du master et du
+// doctorat (GKS-G). SNU, KAIST et POSTECH ne figurent que sur la
+// seconde. Sans restriction, un lien créait un programme par niveau
+// de la bourse et inventait une licence qui n'existe pas.
+
+test("LINKS sans niveaux : un programme par niveau de la bourse, comme avant", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Corée du Sud", levels: ["Licence", "Master", "Doctorat"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Corée du Sud", universityIds: ["u1"] }]
+  });
+  assert.deepEqual(r.erreurs, []);
+  assert.equal(r.programmes.length, 3);
+});
+
+test("LINKS avec niveaux : seuls les cycles déclarés produisent un programme", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Corée du Sud", levels: ["Licence", "Master", "Doctorat"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Corée du Sud", universityIds: ["u1"], niveaux: ["Master", "Doctorat"] }]
+  });
+  assert.deepEqual(r.erreurs, []);
+  assert.equal(r.programmes.length, 2);
+  assert.deepEqual(r.programmes.map((p) => p.level).sort(), ["Doctorat", "Master"]);
+  assert.ok(!r.programmes.some((p) => p.id.endsWith("__licence")));
+});
+
+test("LINKS.niveaux hors vocabulaire : refusé, jamais approximé", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Corée du Sud", levels: ["Master"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Corée du Sud", universityIds: ["u1"], niveaux: ["Postdoctorat"] }]
+  });
+  assert.ok(r.erreurs.some((e) => /niveau restreint inattendu/.test(e)));
+  assert.equal(r.programmes.length, 0);
+});
+
+test("LINKS.niveaux qui ne recoupe aucun niveau de la bourse : refusé", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Corée du Sud", levels: ["Licence"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Corée du Sud", universityIds: ["u1"], niveaux: ["Doctorat"] }]
+  });
+  assert.ok(r.erreurs.some((e) => /ne recoupe aucun niveau/.test(e)));
+});
+
+test("LINKS.niveaux vide : refusé — omettre le champ veut dire « tous »", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Corée du Sud", levels: ["Master"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Corée du Sud", universityIds: ["u1"], niveaux: [] }]
+  });
+  assert.ok(r.erreurs.some((e) => /tableau non vide/.test(e)));
+});
+
+test("LINKS.niveaux sur une bourse DÉJÀ EN BASE : la restriction voyage jusqu'à analyser", () => {
+  const r = validerLot({
+    UNIVERSITIES: [{ id: "u1", data: { name: "U", country: "Corée du Sud" } }],
+    LINKS: [{ scholarshipId: "deja-en-base", pays: "Corée du Sud", universityIds: ["u1"], niveaux: ["Master", "Doctorat"] }]
+  });
+  assert.deepEqual(r.erreurs, []);
+  assert.equal(r.liensExternes.length, 1);
+  assert.deepEqual(r.liensExternes[0].niveaux, ["Master", "Doctorat"]);
+});

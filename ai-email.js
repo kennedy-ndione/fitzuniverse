@@ -10,7 +10,7 @@
 */
 
 import { db } from "./firebase-config.js";
-import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
@@ -93,14 +93,46 @@ const { profile } = ctx;
 
 renderPrerequisNotice(profile);
 
-let application = null;
+// ==========================================================
+// REFONTE 2026-09-02 — le contexte appartient à Fitz. L'étudiant ne
+// re-saisit plus son identité ni sa cible : le profil remplit qui il
+// est, ses candidatures SUIVIES remplissent à qui il écrit (sélecteur
+// « Candidature concernée »). Les anciens champs restent dans le
+// formulaire, repliés sous « Ajuster » — même contrat de génération
+// (collectData), l'étudiant garde toujours le dernier mot.
+// ==========================================================
 
-if (applicationId) {
+// Toutes les candidatures suivies — une seule lecture, la collection
+// est petite (bornée par le quota de la formule).
+let trackedApplications = [];
+
+try {
+
+const appsSnap = await getDocs(collection(db, "users", ctx.user.uid, "applications"));
+trackedApplications = appsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+} catch (error) {
+
+console.error("Impossible de charger les candidatures suivies :", error);
+
+}
+
+let application = applicationId
+? trackedApplications.find((a) => a.id === applicationId) || null
+: null;
+
+// Repli : l'applicationId de l'URL n'était pas dans la liste (lien
+// ancien, document supprimé entre-temps) — on tente la lecture directe
+// comme avant la refonte, sans bloquer l'outil si elle échoue.
+if (applicationId && !application) {
 
 try {
 
 const snap = await getDoc(doc(db, "users", ctx.user.uid, "applications", applicationId));
-if (snap.exists()) application = { id: snap.id, ...snap.data() };
+if (snap.exists()) {
+application = { id: snap.id, ...snap.data() };
+trackedApplications.push(application);
+}
 
 } catch (error) {
 
@@ -112,13 +144,21 @@ console.error("Impossible de charger la candidature liée :", error);
 
 const contextBanner = document.getElementById("applicationContext");
 
-if (application && contextBanner) {
+function syncContextBanner() {
 
+if (!contextBanner) return;
+
+if (application) {
 contextBanner.hidden = false;
 contextBanner.querySelector("span").textContent =
 `Cet e-mail sera enregistré dans le suivi de "${application.university}".`;
+} else {
+contextBanner.hidden = true;
+}
 
 }
+
+syncContextBanner();
 
 const typeGrid = document.getElementById("emailTypeGrid");
 const form = document.getElementById("emailForm");
@@ -144,15 +184,135 @@ const editBtn = document.getElementById("editBtn");
 const regenerateBtn = document.getElementById("regenerateBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 
+const fieldApplication = document.getElementById("fieldApplication");
+const contextChips = document.getElementById("contextChips");
+const contextDetails = document.getElementById("contextDetails");
+const contextAdjustBtn = document.getElementById("contextAdjustBtn");
+
 fieldFullName.value = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.name || "";
-fieldNationality.value = profile.country || profile.originCountry || "";
+fieldNationality.value = profile.nationality || profile.country || profile.originCountry || "";
 fieldDegree.value = profile.lastDegree || profile.currentDegree || "";
 fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.preferredCountries[0]) || "";
+
+// La cible (université, programme/bourse, pays) vient de la
+// candidature sélectionnée — c'est elle qui sait à qui l'on écrit.
+function applyApplicationContext(app) {
+
+application = app || null;
+
+if (app) {
+fieldUniversity.value = app.university || "";
+fieldProgram.value = app.scholarship || fieldProgram.value || "";
+}
+
+syncContextBanner();
+renderContextChips();
+
+}
+
+// Sélecteur des candidatures suivies. Tri : les dossiers encore en
+// jeu d'abord (ordre de STATUS pertinent inutile ici — alphabétique
+// suffit et reste stable).
+trackedApplications
+.slice()
+.sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
+.forEach((app) => {
+
+const option = document.createElement("option");
+option.value = app.id;
+option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+fieldApplication.appendChild(option);
+
+});
+
+if (application) fieldApplication.value = application.id;
+
+fieldApplication.addEventListener("change", () => {
+const app = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
+applyApplicationContext(app);
+});
+
+// Pastilles « Ce que Fitz sait déjà » — le miroir exact de ce que
+// collectData() enverra. Une valeur manquante s'affiche « À
+// compléter » et ouvre les champs d'ajustement au clic.
+const CHIP_DEFS = [
+{ label: "Nom complet", input: fieldFullName },
+{ label: "Nationalité", input: fieldNationality },
+{ label: "Diplôme actuel", input: fieldDegree },
+{ label: "Université destinataire", input: fieldUniversity },
+{ label: "Programme / bourse", input: fieldProgram },
+{ label: "Pays", input: fieldCountry }
+];
+
+function renderContextChips() {
+
+contextChips.innerHTML = "";
+
+CHIP_DEFS.forEach(({ label, input }) => {
+
+const value = input.value.trim();
+
+const chip = document.createElement("div");
+chip.className = "ai-context-chip" + (value ? "" : " is-missing");
+
+const dt = document.createElement("dt");
+dt.textContent = label;
+
+const dd = document.createElement("dd");
+dd.textContent = value || "À compléter";
+
+chip.appendChild(dt);
+chip.appendChild(dd);
+
+if (!value) {
+chip.setAttribute("role", "button");
+chip.tabIndex = 0;
+chip.title = "Ouvrir les champs pour compléter";
+chip.addEventListener("click", () => openContextDetails(input));
+chip.addEventListener("keydown", (e) => {
+if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openContextDetails(input); }
+});
+}
+
+contextChips.appendChild(chip);
+
+});
+
+}
+
+function openContextDetails(focusInput) {
+
+contextDetails.hidden = false;
+contextAdjustBtn.setAttribute("aria-expanded", "true");
+contextAdjustBtn.textContent = "Réduire";
+
+if (focusInput) focusInput.focus();
+
+}
+
+contextAdjustBtn.addEventListener("click", () => {
+
+const willOpen = contextDetails.hidden;
+
+if (willOpen) {
+openContextDetails(null);
+} else {
+contextDetails.hidden = true;
+contextAdjustBtn.setAttribute("aria-expanded", "false");
+contextAdjustBtn.textContent = "Ajuster";
+}
+
+});
+
+// Toute retouche manuelle se reflète immédiatement dans les pastilles.
+CHIP_DEFS.forEach(({ input }) => input.addEventListener("input", renderContextChips));
 
 if (application) {
 fieldUniversity.value = application.university || "";
 if (application.scholarship) fieldProgram.value = fieldProgram.value || application.scholarship;
 }
+
+renderContextChips();
 
 let selectedType = null;
 let currentText = "";
@@ -250,6 +410,18 @@ async function generateEmail() {
 if (!selectedType) return;
 
 const data = collectData();
+
+// Les deux seules informations réellement indispensables — l'HTML ne
+// porte plus de `required` (les champs sont repliés par défaut, un
+// required invisible bloquerait la soumission sans rien montrer) :
+// la garde vit ici, et OUVRE les champs au lieu d'échouer en silence.
+if (!data.fullName || !data.university) {
+openContextDetails(!data.fullName ? fieldFullName : fieldUniversity);
+showToast(!data.fullName
+? "Indiquez votre nom complet — Fitz signe l'e-mail avec."
+: "Indiquez l'université destinataire, ou choisissez une candidature concernée ci-dessus.", { type: "error" });
+return;
+}
 
 generateBtn.disabled = true;
 generateBtn.querySelector("span").textContent = "Génération en cours…";

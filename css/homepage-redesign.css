@@ -439,3 +439,295 @@ linear-gradient(160deg, #2A211A 0%, #1E1712 55%, #15100B 100%);
 .footer-photo::after{
 background:linear-gradient(180deg, rgba(42,33,26,0) 0%, rgba(42,33,26,.45) 55%, #2A211A 100%);
 }
+
+/* ==========================================================
+VOILE DU HERO SUR TÉLÉPHONE (2026-09-01, passe mobile lot 4)
+==========================================================
+Compagnon du bloc « hero immersif » de css/hero.css (même jour) : la
+photo couvre désormais tout le héros sur mobile. Le voile de bureau
+ci-dessus est un dégradé LATÉRAL (100deg) pensé pour du texte posé à
+gauche d'un écran large ; en colonne unique il laissait le milieu de
+l'écran trop clair sous le texte. Voile VERTICAL à la place : sombre
+en tête (titre), plus léger au centre (la photo respire), et fondu
+final dans --ink-surface pour se souder à la suite de la page. Vit
+ici et non dans hero.css : cette feuille est chargée en dernier et
+son .hero-overlay de bureau gagnerait sinon la cascade. */
+@media(max-width:640px){
+
+.hero-overlay{
+background:
+linear-gradient(180deg,
+rgba(33,29,24,.84) 0%,
+rgba(33,29,24,.55) 34%,
+rgba(40,34,27,.48) 58%,
+rgba(33,29,24,.72) 82%,
+var(--ink-surface) 100%);
+}
+
+}
+
+/* ==========================================================
+PIED DE PAGE — LA PHOTO PASSE SOUS TOUT LE FOOTER (2026-09-03)
+==========================================================
+Retour utilisateur (capture de son écran) : « les étudiants qui sont
+sur la photo de mon footer n'apparaissent pas réellement » — la bande
+photo de 220px ne montrait que le haut du bâtiment, les diplômés
+(bas de hero-bg4) restaient coupés, et l'aplat encre des colonnes
+tombait juste dessus. Demande : « couleur footer + photo », en
+transparence, sans casser le site.
+
+Mécanique : .footer-photo n'est plus une bande dans le flux mais une
+COUCHE ABSOLUE qui couvre tout le pied de page ; le contenu (marque,
+colonnes, mention légale) est simplement posé par-dessus, avec un
+rembourrage haut qui laisse la photo respirer avant les colonnes. Le
+voile (::after) reprend EXACTEMENT les couleurs du fond encre chaude
+ci-dessus — la photo est visible en haut (voile léger), les liens
+reposent sur une zone au moins à 88 % d'encre (blanc ≥ 5:1 même sur
+le blanc du bâtiment), et la lueur terracotta en haut à droite est
+conservée. Le fond uni reste en dessous : si la photo ne charge pas,
+rien ne change par rapport à avant. Structure HTML intacte. */
+.footer-photo-feature{
+overflow:hidden;
+}
+
+.footer-photo-feature .footer-photo{
+position:absolute;
+inset:0;
+height:auto;
+z-index:0;
+}
+
+.footer-photo-feature .footer-photo-img{
+/* Le cadrage descend vers les diplômés (bas de l'image) plutôt que
+vers la façade : ce sont eux qu'on veut voir. */
+object-position:center 82%;
+}
+
+.footer-photo-feature .footer-photo::after{
+background:
+radial-gradient(ellipse 70% 60% at 85% 0%, rgba(217,128,90,.22) 0%, rgba(217,128,90,.07) 45%, transparent 70%),
+linear-gradient(180deg,
+rgba(21,16,11,.08) 0%,
+rgba(21,16,11,.26) 28%,
+rgba(21,16,11,.84) 50%,
+rgba(30,23,18,.93) 68%,
+rgba(21,16,11,.96) 100%);
+}
+
+/* Le contenu laisse ~260px de photo lisible avant les colonnes. */
+.footer-photo-feature .container{
+padding-top:270px;
+}
+
+/* Un filet de lumière entre la photo et le contenu, à la place de la
+découpe nette d'avant : la mention légale garde son propre trait. */
+.footer-photo-feature .footer-top{
+position:relative;
+}
+
+@media (max-width:768px){
+.footer-photo-feature .container{ padding-top:210px; }
+.footer-photo-feature .footer-photo-img{ object-position:center 55%; }
+}
+
+@media (max-width:576px){
+.footer-photo-feature .container{ padding-top:180px; }
+}
+
+/* ==========================================================
+PIED DE PAGE VIVANT (2026-09-03, suite — « rends le footer plus
+vivant avec la photo »)
+==========================================================
+Trois mouvements discrets, comme sur les sites de marque haut de gamme,
+jamais spectaculaires :
+1. Respiration (Ken Burns) : la photo s'agrandit de 6 % en 28 s, en
+   aller-retour, sur le compositeur (transform seul, pas de reflow).
+2. Parallaxe au défilement : js/main.js fait glisser la <picture>
+   d'une fraction du défilement (voir initFooterParallax) — la photo
+   est surdimensionnée de 14 % pour ne jamais laisser de bord nu.
+3. Lumière : un halo doré très diffus au-dessus des diplômés, qui
+   pulse lentement — le « moment » de la remise de diplôme.
+Le voile du haut s'est aussi allégé (8 % → 26 % au premier tiers) ;
+la zone des liens reste ≥ 84 % d'encre. prefers-reduced-motion coupe
+les trois mouvements et garde l'image nette et fixe. */
+.footer-photo-feature .footer-photo picture{
+position:absolute;
+inset:-7% 0;
+display:block;
+will-change:transform;
+}
+
+.footer-photo-feature .footer-photo-img{
+transform-origin:50% 70%;
+animation:footer-breathe 28s ease-in-out infinite alternate;
+will-change:transform;
+}
+
+@keyframes footer-breathe{
+from{ transform:scale(1); }
+to{ transform:scale(1.06); }
+}
+
+/* Halo doré au-dessus de la foule (entre le voile et le contenu). */
+.footer-photo-feature .footer-photo::before{
+content:"";
+position:absolute;
+left:50%;
+top:22%;
+width:70%;
+height:52%;
+transform:translateX(-50%);
+background:radial-gradient(ellipse at center, rgba(233,163,25,.28) 0%, rgba(233,163,25,.10) 40%, transparent 70%);
+mix-blend-mode:screen;
+pointer-events:none;
+z-index:1;
+animation:footer-glow 9s ease-in-out infinite alternate;
+}
+
+@keyframes footer-glow{
+from{ opacity:.55; transform:translateX(-50%) scale(1); }
+to{ opacity:1; transform:translateX(-50%) scale(1.08); }
+}
+
+/* Le voile (::after) reste au-dessus du halo. */
+.footer-photo-feature .footer-photo::after{ z-index:2; }
+
+/* Les liens répondent : un glissement de 3px et l'or de la marque. */
+.footer-photo-feature .footer-links a{
+display:inline-block;
+transition:transform .22s var(--ease-standard), color .22s var(--ease-standard);
+}
+
+.footer-photo-feature .footer-links a:hover{
+color:#E9A319;
+transform:translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce){
+.footer-photo-feature .footer-photo-img,
+.footer-photo-feature .footer-photo::before{ animation:none; }
+.footer-photo-feature .footer-photo picture{ transform:none !important; inset:0; }
+}
+
+/* ==========================================================
+PHOTOS ENTIÈRES SUR TÉLÉPHONE — ACCUEIL (2026-09-03)
+==========================================================
+Retour utilisateur : « côté mobile, les photos n'affichent pas en
+entier ». Trois cadres de l'accueil deviennent portrait sur téléphone
+et n'en montraient qu'une tranche (mesuré à 375px) :
+- le bloc « Prêt à commencer » (.cta-box, 335×563 : 60 % de la photo
+  de remise de diplômes perdus),
+- le pied de page (376×847 depuis que la photo le couvre : ~70 %),
+- la photo « vision » (4/3 sur une photo 3:2 : 11 %) et la photo
+  « comment ça marche » (hauteur fixe 220px).
+Règle appliquée : sur téléphone, un cadre photo prend le RATIO DE SA
+PHOTO (3:2 pour toutes celles-ci) — l'image se voit en entier, comme
+au bureau — et le texte qui était posé dessus vient en dessous, sur
+l'encre, avec un fondu entre les deux. Le hero d'accueil, lui, reste
+immersif (photo en fond plein écran, décision du 2026-09-01). */
+@media (max-width:640px){
+
+/* Photo « comment ça marche » et photo « vision » : ratio natif. */
+.how-it-works-photo img{ height:auto; aspect-ratio:3/2; }
+.vision-photo{ aspect-ratio:3/2; }
+/* La carte-citation, calée en bas de l'illustration, ne recouvre plus
+que le bord bas de la photo (~36px) : la photo redevient le sujet. */
+.vision-illustration{ padding-bottom:158px; }
+
+/* Bloc « Prêt à commencer » : photo en bande 3:2, panneau dessous. */
+.cta-box{
+display:block;
+padding:0;
+background:linear-gradient(180deg,#221A12 0%,#15100B 100%);
+}
+
+.cta-box-bg{
+position:relative;
+inset:auto;
+display:block;
+width:100%;
+height:auto;
+aspect-ratio:3/2;
+object-position:center;
+/* Fondu long : le tiers bas de la photo se dissout dans l'encre, et
+c'est là que se pose le texte — photo et informations forment un seul
+bloc, comme au bureau. */
+-webkit-mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+}
+
+.cta-box-panel{
+max-width:none;
+margin-top:-96px;
+padding:0 20px 30px;
+background:transparent;
+border:0;
+box-shadow:none;
+-webkit-backdrop-filter:none;
+backdrop-filter:none;
+border-radius:0;
+}
+
+/* Pied de page : la photo redevient une bande, à son ratio, au-dessus
+des colonnes — entière, diplômés compris. Les mouvements de bureau
+(respiration, parallaxe) sont coupés ici : un cadre au ratio exact ne
+tolère aucun déplacement sans laisser de bord nu. */
+.footer-photo-feature .footer-photo{
+position:relative;
+inset:auto;
+height:auto;
+aspect-ratio:3/2;
+}
+
+.footer-photo-feature .footer-photo picture{
+inset:0;
+transform:none !important;
+}
+
+.footer-photo-feature .footer-photo-img{
+object-position:center;
+animation:none;
+transform:none;
+}
+
+.footer-photo-feature .footer-photo::before{ animation:none; opacity:.7; }
+
+/* Le voile reprend le fondu long du bureau : photo claire en haut,
+encre en bas — et la marque + sa phrase viennent se poser sur le tiers
+bas de la photo, comme au bureau. */
+.footer-photo-feature .footer-photo::after{
+background:linear-gradient(180deg,
+rgba(21,16,11,.04) 0%,
+rgba(21,16,11,.10) 40%,
+rgba(21,16,11,.62) 66%,
+rgba(30,23,18,.90) 86%,
+#1E1712 100%);
+}
+
+.footer-photo-feature .container{
+position:relative;
+z-index:1;
+margin-top:-92px;
+padding-top:0;
+}
+
+.footer-photo-feature .footer-brand p{ text-shadow:0 1px 2px rgba(13,10,6,.5); }
+
+}
+
+/* ==========================================================
+FRISE DES ÉTABLISSEMENTS SUR iOS (2026-09-03, capture iPhone)
+==========================================================
+La frise « Des établissements réels » s'affichait VIDE sur iPhone
+(bande de ~300px sans un nom) alors qu'elle tourne partout ailleurs.
+Combinaison connue pour casser le rendu dans WebKit : un conteneur
+masqué (-webkit-mask-image) dont des enfants portent backdrop-filter
+— les deux pseudo-éléments de flou aux bords. Sur téléphone ces
+flous sont invisibles de toute façon (16 % de 375px = 60px de bord) :
+retirés sous 720px, le masque de fondu suffit. La piste est en outre
+promue sur son propre calque pour un défilement fluide. */
+@media (max-width:720px){
+.trust-marquee::before,
+.trust-marquee::after{ display:none; }
+.trust-marquee-track{ will-change:transform; transform:translateZ(0); }
+}

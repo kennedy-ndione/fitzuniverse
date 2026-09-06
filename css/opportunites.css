@@ -341,6 +341,14 @@ gap:12px 18px;
 }
 
 .opportunites-foot .btn-opportunites{
+/* inline-flex + gap (2026-09-01) : le bouton porte désormais une
+flèche à côté du libellé (voir index.html), comme les autres gestes
+principaux de la page. Ciblage de l'icône par la structure (> i,
+> svg), jamais par une classe posée sur le <i> — règle « Icônes » de
+DESIGN_SYSTEM.md. */
+display:inline-flex;
+align-items:center;
+gap:8px;
 font-family:var(--font-display);
 font-size:.84rem;
 font-weight:var(--fw-bold);
@@ -350,6 +358,13 @@ text-decoration:none;
 padding:10px 18px;
 border-radius:var(--radius-sm);
 transition:var(--transition);
+}
+
+.opportunites-foot .btn-opportunites > i,
+.opportunites-foot .btn-opportunites > svg{
+width:15px;
+height:15px;
+flex-shrink:0;
 }
 
 .opportunites-foot .btn-opportunites:hover{
@@ -407,43 +422,25 @@ padding-bottom:var(--space-xs);
 }
 
 /* ----------------------------------------------------------
-   Écrans tactiles : on ne défile pas tout seul
+   Écrans tactiles : le défilement automatique est DE RETOUR
    ----------------------------------------------------------
-   La pause au survol n'existe pas sur un téléphone : il n'y a pas de
-   curseur à poser sur une carte. Or ces cartes sont des liens, et une
-   cible qui glisse sous le pouce au moment où on la touche est une
-   cible qu'on rate.
+   Un @media (pointer:coarse) remplaçait ici le défilement par un
+   carrousel manuel (raison d'alors : une carte-lien qui glisse sous
+   le pouce est une cible qu'on rate). Retour utilisateur du
+   2026-09-01, captures mobiles à l'appui : « le défilement des
+   bourses ouvertes ne s'effectue pas » — le bandeau immobile se
+   lisait comme une panne, pas comme un choix.
 
-   Sur pointeur grossier, le bandeau devient donc ce qu'il aurait
-   toujours dû être sur mobile : un carrousel qu'on fait défiler au
-   doigt, avec accrochage carte par carte. Le geste est celui que
-   l'utilisateur connaît déjà, et plus rien ne bouge sans lui. */
-
-@media (pointer: coarse){
-
-.opportunites-track{
-animation:none;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
--webkit-overflow-scrolling:touch;
-scrollbar-width:none;
-}
-
-.opportunites-track::-webkit-scrollbar{ display:none; }
-
-.opportunite{ scroll-snap-align:start; }
-
-/* Le masque en dégradé suggérait un mouvement automatique ; ici, la
-   carte coupée au bord dit déjà « ça continue à droite ». */
-.opportunites-marquee{
-overflow:visible;
--webkit-mask-image:none;
-mask-image:none;
-}
-
-/* Plus rien à arrêter. */
-.opportunites-pause{ display:none; }
-
+   Le défilement tourne donc partout, et l'objection d'origine est
+   traitée autrement : au TOUCHER, la piste se met en pause (classe
+   est-touchee posée par js/opportunites-bandeau.js sur touchstart,
+   retirée au relâchement) — l'équivalent tactile de la pause au
+   survol juste au-dessus. Le doigt se pose, la piste s'arrête, le tap
+   atteint sa carte. Le bouton « Arrêter le défilement » redevient
+   visible sur mobile par la même occasion, et les préférences
+   prefers-reduced-motion (bloc plus haut) gardent le dernier mot. */
+.opportunites.est-touchee .opportunites-track{
+animation-play-state:paused;
 }
 
 /* Arrêt demandé explicitement par le visiteur (bouton du pied). */

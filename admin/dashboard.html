@@ -8,7 +8,9 @@
 
 <title>Control Center | FitzUniverse Admin</title>
 
-<meta name="description" content="Centre de contrôle Fitz : statistiques en temps réel, étudiants, formules, universités, bourses et assistant.">
+<meta name="description" content="Centre de contrôle Fitz : courbes d'activité, étudiants, admissions, formules, universités et bourses.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F6F3ED">
 
 <!-- Google Fonts (identiques au reste du parcours) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,12 +43,8 @@
 <aside class="sidebar" id="sidebar">
 
 <div class="sidebar-top">
-<!-- .sidebar-brand est le crochet .on-dark de css/base.css : c'est lui
-qui bascule --logo-structure en papier et --logo-descriptor en ambre
-sur cette sidebar sombre. Conteneur de mise en page, il n'habille
-jamais le lockup lui-meme. -->
 <div class="sidebar-brand">
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — administration">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — administration">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -63,24 +61,29 @@ jamais le lockup lui-meme. -->
 
 <nav class="sidebar-nav" aria-label="Navigation principale">
 
-<span class="sidebar-section-label">Vue d'ensemble</span>
+<span class="sidebar-section-label">Pilotage</span>
 
 <ul>
 <li><a href="dashboard.html" class="nav-link is-active" aria-current="page"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="messages.html" class="nav-link"><i data-lucide="messages-square"></i><span>Messages</span></a></li>
 <li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
 <li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Catalogue</span>
+
+<ul>
 <li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
 <li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
 </ul>
 
-<span class="sidebar-section-label">À venir</span>
+<span class="sidebar-section-label">Système</span>
 
 <ul>
+<li><a href="tools.html" class="nav-link"><i data-lucide="wrench"></i><span>Outils techniques</span></a></li>
 <li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
-<li><span class="nav-link is-soon"><i data-lucide="folder"></i><span>Documents</span><span class="nav-soon-badge">Bientôt</span></span></li>
 <li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
 <li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
-<li><span class="nav-link is-soon"><i data-lucide="settings"></i><span>Paramètres</span><span class="nav-soon-badge">Bientôt</span></span></li>
 </ul>
 
 </nav>
@@ -99,7 +102,7 @@ jamais le lockup lui-meme. -->
 <main class="content" style="display:none;">
 
 <!-- ==========================================================
-HERO EXÉCUTIF
+HERO EXÉCUTIF — identité, briefing, badges, actions rapides
 ========================================================== -->
 
 <section class="exec-hero reveal-stagger">
@@ -124,24 +127,97 @@ HERO EXÉCUTIF
 <!-- badges générés par dashboard.js (date, heure, sync, infra) -->
 </div>
 
+<div class="exec-actions">
+<a href="scholarships.html" class="exec-action-btn is-primary"><i data-lucide="plus"></i><span>Nouvelle bourse</span></a>
+<a href="universities.html" class="exec-action-btn"><i data-lucide="landmark"></i><span>Universités</span></a>
+<a href="students.html" class="exec-action-btn"><i data-lucide="users"></i><span>Étudiants</span></a>
+<a href="tools.html" class="exec-action-btn"><i data-lucide="wrench"></i><span>Outils</span></a>
+</div>
+
 </section>
 
 <!-- ==========================================================
-VUE D'ENSEMBLE DU JOUR
+PULSATION DU SITE — la grande courbe évolutive
 ========================================================== -->
 
-<section class="overview-card reveal-stagger">
+<section class="pulse-card reveal-stagger">
 
-<div class="overview-card-header">
-<h2>Aujourd'hui sur FitzUniverse</h2>
-<p>Le résumé quotidien de votre plateforme, en un coup d'œil.</p>
+<div class="pulse-head">
+
+<div>
+<h2>La pulsation de FitzUniverse</h2>
+<p class="pulse-head-sub">Entrées, sorties, interactions étudiantes, admissions et refus — jour par jour, à partir des compteurs réels écrits par le site.</p>
 </div>
 
-<div class="overview-checklist" id="overviewChecklist">
-<!-- items générés par dashboard.js -->
+<div class="pulse-controls">
+
+<div class="seg-control" id="pulseRange" role="group" aria-label="Période affichée">
+<button type="button" class="seg-btn" data-days="7">7 j</button>
+<button type="button" class="seg-btn is-active" data-days="30">30 j</button>
+<button type="button" class="seg-btn" data-days="90">90 j</button>
 </div>
+
+<button type="button" class="demo-toggle" id="demoToggle" aria-pressed="false">
+<span>Aperçu démo</span>
+<span class="demo-track"><span class="demo-thumb"></span></span>
+</button>
+
+</div>
+
+</div>
+
+<div class="serie-chips" id="serieChips">
+<!-- puces de séries générées par dashboard.js -->
+</div>
+
+<div class="demo-banner" id="demoBanner" hidden>
+<i data-lucide="flask-conical"></i>
+<span>Aperçu démo activé — cette courbe affiche des données SIMULÉES pour visualiser le rendu. Vos chiffres réels reviennent en désactivant la bascule.</span>
+</div>
+
+<div class="chart-wrap">
+<canvas id="pulseChart"></canvas>
+<div class="chart-empty-state" id="pulseChartEmpty" hidden>
+<i data-lucide="line-chart"></i>
+<p>Les courbes se dessineront automatiquement au fil de l'activité réelle. Activez « Aperçu démo » pour visualiser le rendu en attendant.</p>
+</div>
+</div>
+
+<p class="dash-footnote"><i data-lucide="info"></i><span id="pulseFootnote">Compteurs quotidiens écrits en continu par le site (js/analytics.js).</span></p>
 
 </section>
+
+<!-- ==========================================================
+ISSUES DE CANDIDATURES — admissions / refus / liste d'attente
+========================================================== -->
+
+<div class="outcome-strip reveal-stagger">
+
+<div class="outcome-card" style="--outcome-color:var(--success-600);">
+<i data-lucide="badge-check"></i>
+<div>
+<div class="outcome-card-value" id="outcomeAdmitted">—</div>
+<div class="outcome-card-label">Admissions signalées</div>
+</div>
+</div>
+
+<div class="outcome-card" style="--outcome-color:var(--danger-600);">
+<i data-lucide="badge-x"></i>
+<div>
+<div class="outcome-card-value" id="outcomeRejected">—</div>
+<div class="outcome-card-label">Refus signalés</div>
+</div>
+</div>
+
+<div class="outcome-card" style="--outcome-color:var(--warning-600);">
+<i data-lucide="hourglass"></i>
+<div>
+<div class="outcome-card-value" id="outcomeWaitlisted">—</div>
+<div class="outcome-card-label">Listes d'attente</div>
+</div>
+</div>
+
+</div>
 
 <!-- ==========================================================
 STATISTIQUES
@@ -156,36 +232,24 @@ OBSERVATIONS IA
 ========================================================== -->
 
 <section class="ai-observations reveal-stagger">
-<div class="ai-observations-icon"><i data-lucide="sparkles"></i></div>
+<div class="ai-observations-icon"><i data-lucide="activity"></i></div>
 <div>
-<h2>Observations IA</h2>
+<h2>Observations</h2>
 <p id="aiObservationText">Analyse en cours...</p>
 </div>
 </section>
 
 <!-- ==========================================================
-GRAPHIQUES
+FORMULES + ENTONNOIR
 ========================================================== -->
 
-<div class="panels-grid">
-
-<div class="panel-card">
-<h2>Inscriptions — 30 derniers jours</h2>
-<p class="panel-card-subtext">Nouveaux comptes créés chaque jour (données réelles, écrites par js/analytics.js).</p>
-<div class="chart-wrap">
-<canvas id="signupsChart" height="110"></canvas>
-<div class="chart-empty-state" id="signupsChartEmpty" hidden>
-<i data-lucide="line-chart"></i>
-<p>Les données apparaîtront automatiquement lorsque Fitz recevra davantage d'activité.</p>
-</div>
-</div>
-</div>
+<div class="panels-grid panels-grid--even">
 
 <div class="panel-card">
 <h2>Répartition par formule</h2>
 <p class="panel-card-subtext">Tentatives d'activation enregistrées, par formule.</p>
-<div class="chart-wrap">
-<canvas id="planChart" height="180"></canvas>
+<div class="chart-wrap chart-wrap--donut">
+<canvas id="planChart"></canvas>
 <div class="chart-empty-state" id="planChartEmpty" hidden>
 <i data-lucide="pie-chart"></i>
 <p>Les données apparaîtront automatiquement dès la première tentative d'activation.</p>
@@ -193,9 +257,19 @@ GRAPHIQUES
 </div>
 </div>
 
+<div class="panel-card">
+<h2>Entonnoir du parcours</h2>
+<p class="panel-card-subtext">Du premier contact jusqu'à l'admission — totaux depuis le lancement du suivi.</p>
+<div class="funnel-list" id="funnelList"></div>
 </div>
 
-<div class="panels-grid">
+</div>
+
+<!-- ==========================================================
+TOPS
+========================================================== -->
+
+<div class="panels-grid panels-grid--even">
 
 <div class="panel-card">
 <h2>Top pays consultés</h2>
@@ -219,7 +293,7 @@ ACTIVITÉ RÉCENTE + INFRASTRUCTURE
 
 <div class="panel-card">
 <h2>Activité récente</h2>
-<p class="panel-card-subtext">Ce qui s'est passé sur FitzUniverse, en temps réel.</p>
+<p class="panel-card-subtext">Les derniers événements réellement enregistrés sur FitzUniverse.</p>
 <div class="exec-timeline" id="activityTimeline"></div>
 </div>
 

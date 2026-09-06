@@ -4,9 +4,18 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Lettre de motivation | FitzUniverse</title>
+
+<!-- Ajouts de l'audit 2026-09-01 : page privée de l'espace connecté —
+noindex (rien à indexer derrière une session), theme-color et favicons
+alignés sur le standard du site (mêmes valeurs que index.html). -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 
 <meta name="description" content="Générez une lettre de motivation exceptionnelle avec Fitz, adaptée à votre profil et à votre université cible.">
 
@@ -32,11 +41,18 @@ l'étudiant changeait de police en passant du catalogue à son espace. -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body data-plan="essentiel">
+
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <div id="pageLoader" class="auth-page-loader">
 <div class="loader-spinner"></div>
@@ -53,7 +69,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -105,7 +121,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </header>
 
-<main class="content" style="display:none;">
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
 
 <div class="ai-page-header reveal">
 
@@ -157,6 +173,33 @@ un lien, ne passe par aucune des deux autres pages. -->
 
 <form id="letterForm">
 
+<!-- LE CONTEXTE APPARTIENT À FITZ (2026-09-02, patron d'ai-email) :
+la cible de la lettre (pays, université, programme, niveau) vient de
+la candidature suivie + du profil, affichée en pastilles. Les champs
+restent DANS le formulaire, repliés sous « Ajuster » — même contrat
+de génération (collectData, ai-letter.js). Les textareas en dessous
+(expériences, motivations…) restent visibles : c'est la MATIÈRE de
+la lettre, elle appartient à l'étudiant. -->
+<div class="ai-context-card" id="fitzContextCard">
+
+<div class="ai-context-head">
+<h3><i data-lucide="user-check"></i>2. Ce que Fitz sait déjà</h3>
+<button type="button" class="ai-context-adjust" id="contextAdjustBtn" aria-expanded="false">Ajuster</button>
+</div>
+
+<div class="ai-field ai-context-application">
+<label for="fieldApplication">Candidature concernée</label>
+<select id="fieldApplication">
+<option value="">Sans candidature liée</option>
+</select>
+</div>
+
+<dl class="ai-context-chips" id="contextChips"></dl>
+
+</div>
+
+<div id="contextDetails" hidden>
+
 <div class="ai-field-row">
 
 <div class="ai-field">
@@ -165,8 +208,8 @@ un lien, ne passe par aucune des deux autres pages. -->
 </div>
 
 <div class="ai-field">
-<label for="fieldUniversity">Université</label>
-<input type="text" id="fieldUniversity" required>
+<label for="fieldUniversity">Université destinataire</label>
+<input type="text" id="fieldUniversity">
 </div>
 
 </div>
@@ -175,7 +218,7 @@ un lien, ne passe par aucune des deux autres pages. -->
 
 <div class="ai-field">
 <label for="fieldProgram">Programme</label>
-<input type="text" id="fieldProgram" required>
+<input type="text" id="fieldProgram">
 </div>
 
 <div class="ai-field">
@@ -185,6 +228,8 @@ un lien, ne passe par aucune des deux autres pages. -->
 <option>Master</option>
 <option>Doctorat</option>
 </select>
+</div>
+
 </div>
 
 </div>
@@ -209,7 +254,7 @@ un lien, ne passe par aucune des deux autres pages. -->
 <textarea id="fieldGoals" rows="2"></textarea>
 </div>
 
-<button type="submit" class="btn btn-primary" id="generateLetterBtn" style="width:100%;">
+<button type="submit" class="btn btn-primary app-cta" id="generateLetterBtn">
 <span>Générer ma lettre</span>
 </button>
 

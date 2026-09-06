@@ -1,12 +1,27 @@
 /**
 * ============================================================
-* FitzUniverse — panneau de messages étudiant (Module 3)
+* FitzUniverse — messagerie étudiante (cloche + page Messages)
 * ============================================================
 *
-* Contrepartie côté étudiant de admin/student-detail.js : lit les
-* messages qu'un administrateur a envoyés à l'utilisateur connecté
-* (users/{uid}/messages) et permet de les marquer comme lus. Appelée
-* depuis dashboard.js une fois l'utilisateur authentifié.
+* REFONTE 2026-09-02 (2ᵉ passe) : la messagerie passe en TEMPS RÉEL.
+* Le fil users/{uid}/messages est écouté via onSnapshot : un message
+* envoyé par l'équipe depuis le Control Center apparaît instantanément
+* chez l'étudiant (cloche ET page Messages), sans recharger — et
+* inversement côté admin. Coût : l'attache initiale lit le fil une
+* fois, ensuite seuls les documents NOUVEAUX/modifiés sont facturés.
+*
+* Deux surfaces, un seul moteur :
+*  - initMessagesPanel(uid, {canReply}) — la cloche du topbar :
+*    aperçu compact + composer, avec lien vers la page complète ;
+*  - initMessagesPage(uid, {canReply}) — la page messages.html :
+*    conversation plein écran (ids messagesPageThread /
+*    messagesPageComposerHost).
+*
+* Signature : les messages de l'équipe sont toujours affichés
+* « FitzUniverse ». Droit de réponse : fonctionnalité
+* "student_messaging" (js/plan-features.js — fermée au plan Gratuit).
+* Forme des réponses imposée par firestore.rules
+* ({ text, fromStudent:true, createdAt, read:false }).
 * ============================================================
 */
 
@@ -16,20 +31,184 @@ import {
 collection,
 query,
 orderBy,
-getDocs,
+onSnapshot,
+addDoc,
 doc,
-updateDoc
+updateDoc,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 function formatDate(timestamp) {
 
 if (!timestamp || typeof timestamp.toDate !== "function") return "";
 
-return timestamp.toDate().toLocaleDateString("fr-FR");
+return timestamp.toDate().toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
 }
 
-export async function initMessagesPanel(uid) {
+// ==========================================================
+// Moteur partagé
+// ==========================================================
+
+// Écoute le fil en continu ; appelle callback(messages) à l'attache
+// puis à CHAQUE changement. Renvoie la fonction de désabonnement.
+function subscribeThread(uid, callback) {
+
+const threadQuery = query(
+collection(db, "users", uid, "messages"),
+orderBy("createdAt", "asc")
+);
+
+return onSnapshot(threadQuery, (snapshot) => {
+
+const messages = snapshot.docs.map((docSnap) => ({
+id: docSnap.id,
+...docSnap.data()
+}));
+
+callback(messages);
+
+}, (error) => {
+console.error("Écoute des messages impossible :", error);
+});
+
+}
+
+function renderThread(listEl, messages, { canReply, emptyHint }) {
+
+listEl.innerHTML = "";
+
+if (!messages.length) {
+listEl.innerHTML = `<p class="messages-panel-empty">${emptyHint || `Aucun message pour le moment. L'équipe FitzUniverse vous écrit ici${canReply ? " — et vous pouvez lui répondre" : ""}.`}</p>`;
+return;
+}
+
+messages.forEach((message) => {
+
+const fromStudent = message.fromStudent === true;
+
+const item = document.createElement("div");
+item.className = [
+"messages-thread-item",
+fromStudent ? "is-student" : "is-team",
+(!fromStudent && !message.read) ? "is-unread" : ""
+].filter(Boolean).join(" ");
+
+item.innerHTML = `
+<span class="messages-thread-author"></span>
+<div class="messages-thread-bubble"><p></p></div>
+<span class="messages-thread-date"></span>
+`;
+
+item.querySelector(".messages-thread-author").textContent = fromStudent ? "Vous" : "FitzUniverse";
+item.querySelector("p").textContent = message.text;
+item.querySelector(".messages-thread-date").textContent = formatDate(message.createdAt);
+
+listEl.appendChild(item);
+
+});
+
+listEl.scrollTop = listEl.scrollHeight;
+
+}
+
+// Marque lues toutes les réponses de l'ÉQUIPE non lues (jamais celles
+// de l'étudiant — leur "read" appartient à l'admin). Silencieux.
+async function markTeamMessagesRead(uid, messages) {
+
+const unread = messages.filter((m) => !m.read && m.fromStudent !== true);
+
+if (!unread.length) return;
+
+try {
+await Promise.all(unread.map((m) =>
+updateDoc(doc(db, "users", uid, "messages", m.id), { read: true })
+));
+} catch (error) {
+console.error("Impossible de marquer les messages comme lus :", error);
+}
+
+}
+
+function buildComposer(uid, { canReply, compact }) {
+
+if (!canReply) {
+
+const locked = document.createElement("div");
+locked.className = "messages-composer-locked";
+locked.innerHTML = `<span>Répondre à l'équipe est réservé aux formules payantes.</span><a href="offers.html">Voir les formules</a>`;
+return locked;
+
+}
+
+const composer = document.createElement("form");
+composer.className = "messages-composer";
+composer.innerHTML = `
+<textarea rows="${compact ? 1 : 2}" maxlength="2000" placeholder="Écrire à l'équipe FitzUniverse…" aria-label="Votre message à l'équipe FitzUniverse"></textarea>
+<button type="submit" aria-label="Envoyer">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+</button>
+`;
+
+const textarea = composer.querySelector("textarea");
+const submitBtn = composer.querySelector("button");
+
+composer.addEventListener("submit", async (event) => {
+
+event.preventDefault();
+
+const text = textarea.value.trim();
+if (!text || submitBtn.disabled) return;
+
+submitBtn.disabled = true;
+
+try {
+
+// Forme imposée par firestore.rules — ne rien ajouter ici sans
+// mettre à jour la règle users/{uid}/messages. Le rendu suit
+// automatiquement via onSnapshot : rien à rafraîchir à la main.
+await addDoc(collection(db, "users", uid, "messages"), {
+text,
+fromStudent: true,
+createdAt: serverTimestamp(),
+read: false
+});
+
+textarea.value = "";
+
+} catch (error) {
+
+console.error("Impossible d'envoyer le message :", error);
+alert("Votre message n'est pas parti. Vérifiez votre connexion, puis réessayez.");
+
+} finally {
+
+submitBtn.disabled = false;
+textarea.focus();
+
+}
+
+});
+
+// Entrée envoie, Maj+Entrée passe à la ligne — convention messagerie.
+textarea.addEventListener("keydown", (event) => {
+if (event.key === "Enter" && !event.shiftKey) {
+event.preventDefault();
+composer.requestSubmit();
+}
+});
+
+return composer;
+
+}
+
+// ==========================================================
+// Surface 1 — la cloche du topbar (toutes les pages de l'espace)
+// ==========================================================
+
+export async function initMessagesPanel(uid, options = {}) {
+
+const canReply = options.canReply === true;
 
 const bellBtn = document.getElementById("messagesBellBtn");
 const bellDot = document.getElementById("messagesBellDot");
@@ -38,82 +217,34 @@ const list = document.getElementById("messagesPanelList");
 
 if (!bellBtn || !panel || !list) return;
 
-async function loadMessages() {
-
-const messagesQuery = query(
-collection(db, "users", uid, "messages"),
-orderBy("createdAt", "desc")
-);
-
-const snapshot = await getDocs(messagesQuery);
-
-return snapshot.docs.map((docSnap) => ({
-id: docSnap.id,
-...docSnap.data()
-}));
-
+// En-tête : signature du canal + lien vers la conversation complète.
+const header = panel.querySelector(".messages-panel-header");
+if (header) {
+header.innerHTML = `<span>Messages · FitzUniverse</span><a href="messages.html" class="messages-panel-openlink">Tout ouvrir</a>`;
 }
 
-function renderList(messages) {
-
-list.innerHTML = "";
-
-if (!messages.length) {
-list.innerHTML = `<p class="messages-panel-empty">Vous êtes à jour : aucun message pour le moment.</p>`;
-return;
-}
-
-messages.forEach((message) => {
-
-const item = document.createElement("div");
-item.className = message.read ? "messages-panel-item" : "messages-panel-item is-unread";
-
-item.innerHTML = `<p></p><span></span>`;
-item.querySelector("p").textContent = message.text;
-item.querySelector("span").textContent = formatDate(message.createdAt);
-
-if (!message.read) {
-
-item.addEventListener("click", async () => {
-
-try {
-
-await updateDoc(doc(db, "users", uid, "messages", message.id), { read: true });
-item.classList.remove("is-unread");
-updateDot(messages);
-
-} catch (error) {
-
-console.error("Impossible de marquer le message comme lu :", error);
-
-}
-
-});
-
-}
-
-list.appendChild(item);
-
-});
-
-}
-
-function updateDot(messages) {
-const unreadCount = messages.filter((m) => !m.read).length;
-bellDot.hidden = unreadCount === 0;
+if (!panel.querySelector(".messages-composer, .messages-composer-locked")) {
+panel.appendChild(buildComposer(uid, { canReply, compact: true }));
 }
 
 let messages = [];
 
-try {
-messages = await loadMessages();
-} catch (error) {
-console.error("Impossible de charger les messages :", error);
-return;
+function updateDot() {
+const unreadCount = messages.filter((m) => !m.read && m.fromStudent !== true).length;
+bellDot.hidden = unreadCount === 0;
 }
 
-renderList(messages);
-updateDot(messages);
+subscribeThread(uid, (nextMessages) => {
+
+messages = nextMessages;
+
+renderThread(list, messages, { canReply });
+updateDot();
+
+// Panneau déjà ouvert quand un message arrive : lu immédiatement.
+if (!panel.hidden) markTeamMessagesRead(uid, messages);
+
+});
 
 bellBtn.addEventListener("click", () => {
 
@@ -121,6 +252,11 @@ const isOpen = !panel.hidden;
 
 panel.hidden = isOpen;
 bellBtn.setAttribute("aria-expanded", String(!isOpen));
+
+if (!isOpen) {
+list.scrollTop = list.scrollHeight;
+markTeamMessagesRead(uid, messages);
+}
 
 });
 
@@ -130,6 +266,36 @@ if (!panel.hidden && !event.target.closest(".messages-bell-wrap")) {
 panel.hidden = true;
 bellBtn.setAttribute("aria-expanded", "false");
 }
+
+});
+
+}
+
+// ==========================================================
+// Surface 2 — la page Messages (messages.html)
+// ==========================================================
+
+export function initMessagesPage(uid, options = {}) {
+
+const canReply = options.canReply === true;
+
+const thread = document.getElementById("messagesPageThread");
+const composerHost = document.getElementById("messagesPageComposerHost");
+
+if (!thread || !composerHost) return;
+
+composerHost.appendChild(buildComposer(uid, { canReply, compact: false }));
+
+subscribeThread(uid, (messages) => {
+
+renderThread(thread, messages, {
+canReply,
+emptyHint: "Aucun message pour le moment. Écrivez à l'équipe FitzUniverse ci-dessous — votre conversation restera ici, à un seul endroit."
+});
+
+// La page ouverte EST la conversation : tout ce qui arrive de
+// l'équipe est immédiatement considéré comme lu.
+markTeamMessagesRead(uid, messages);
 
 });
 

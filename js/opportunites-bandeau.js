@@ -35,7 +35,8 @@ analyserEcheance,
 libelleEcheance,
 formaterDate,
 classerOpportunites,
-opportunitesOuvertes
+opportunitesOuvertes,
+etatCandidature
 } from "./echeance.js";
 
 import { resolveScholarshipImage } from "./scholarship-image.js";
@@ -88,6 +89,53 @@ function regrouper(programmes, bourses, universites) {
 
 const parCle = new Map();
 
+// L'ÉTAT RÉEL DE CHAQUE BOURSE, calculé une fois (2026-09-05).
+//
+// Ce bandeau lisait la seule date du programme. Une date future
+// suffisait donc à faire une carte « 31 jours restants » sous un
+// titre qui promet « candidatures encore ouvertes » — y compris pour
+// une bourse dont le portail n'ouvre PAS encore. Après le lot 40,
+// 13 des 34 cartes étaient dans ce cas (Commonwealth, AUC, ETH,
+// Rotary, bourse saoudienne…), et l'accueil contredisait le
+// catalogue, qui les affiche « pas encore ouvertes ».
+//
+// La règle est la même que partout ailleurs depuis le lot 38 :
+// etatCandidature() est la seule autorité. Une date à venir
+// n'ouvre rien si le statut dit que le cycle est clos.
+const echeancesParBourse = new Map();
+
+for (const p of programmes) {
+if (!p.scholarshipId) continue;
+if (!echeancesParBourse.has(p.scholarshipId)) echeancesParBourse.set(p.scholarshipId, []);
+echeancesParBourse.get(p.scholarshipId).push(p.deadline);
+}
+
+const etatParBourse = new Map();
+
+const estOuverte = (bourse) => {
+
+if (!etatParBourse.has(bourse.id)) {
+etatParBourse.set(bourse.id, etatCandidature({
+statut: bourse.status,
+actif: bourse.isActive,
+echeances: echeancesParBourse.get(bourse.id) || [],
+periodeOuverture: bourse.periodeOuverture,
+verifieLe: bourse.verifieLe,
+echeanceVariable: bourse.echeanceVariable
+}));
+}
+
+const etat = etatParBourse.get(bourse.id);
+
+// Le bandeau est un COMPTE À REBOURS : il lui faut une date qui
+// vaille pour tout le monde. Quand la date dépend du pays ou de
+// l'établissement, la fiche le dit en toutes lettres et aucun
+// chiffre ne serait vrai pour l'étudiant qui lit — la bourse reste
+// au catalogue, pas ici.
+return etat.ton === "ouverte" && !bourse.echeanceVariable;
+
+};
+
 for (const p of programmes) {
 
 const bourse = bourses.get(p.scholarshipId);
@@ -95,6 +143,10 @@ const universite = universites.get(p.universityId);
 
 // Sans titre de bourse, la carte n'aurait rien à annoncer.
 if (!bourse || !bourse.title) continue;
+
+// Une bourse pas encore ouverte n'a pas sa place sous un titre qui
+// annonce des candidatures ouvertes.
+if (!estOuverte(bourse)) continue;
 
 const pays = p.country || universite?.country || "";
 const cle = `${p.scholarshipId}|${pays}`;
@@ -280,15 +332,12 @@ const retenues = classerOpportunites(ouvertes, aujourdhui).slice(0, MAX_CARTES);
 // aria-hidden pour ne pas dicter deux fois la même liste, et sortie
 // du parcours clavier pour la même raison.
 //
-// Sauf sur écran tactile : css/opportunites.css y remplace le
-// défilement automatique par un carrousel qu'on pousse au doigt (pas
-// de survol possible, donc pas de pause, donc une cible qui fuit sous
-// le pouce). Dans ce mode, la seconde passe ne sert plus à masquer une
-// boucle — elle ferait simplement défiler deux fois la même liste.
-const tactile = typeof window.matchMedia === "function"
-&& window.matchMedia("(pointer: coarse)").matches;
-
-const passes = (!tactile && retenues.length >= MIN_POUR_DEFILER) ? 2 : 1;
+// Le mode « carrousel manuel sur tactile » (2 passes seulement hors
+// tactile) a été retiré le 2026-09-01 sur retour utilisateur : le
+// bandeau immobile se lisait comme une panne. Le défilement tourne
+// désormais partout ; l'objection d'origine (une carte-lien qui fuit
+// sous le pouce) est traitée par la pause AU TOUCHER ci-dessous.
+const passes = retenues.length >= MIN_POUR_DEFILER ? 2 : 1;
 
 for (let passe = 0; passe < passes; passe++) {
 for (const opp of retenues) {
@@ -301,15 +350,38 @@ piste.appendChild(carte);
 }
 }
 
-// Sur tactile, c'est la feuille de style qui gère le mode carrousel :
-// poser « est-figee » ici rétablirait le masque et l'overflow du mode
-// bureau par-dessus.
-if (passes === 1 && !tactile) section.classList.add("est-figee");
+if (passes === 1) section.classList.add("est-figee");
+
+// Pause au toucher — l'équivalent tactile de la pause au survol
+// (css/opportunites.css, .est-touchee) : le doigt se pose, la piste
+// s'arrête net, le tap atteint sa carte ; elle repart au relâchement.
+// passive:true — on ne bloque jamais le défilement de la page.
+if (passes === 2) {
+const marquee = section.querySelector(".opportunites-marquee");
+if (marquee) {
+marquee.addEventListener("touchstart", () => section.classList.add("est-touchee"), { passive: true });
+for (const fin of ["touchend", "touchcancel"]) {
+marquee.addEventListener(fin, () => section.classList.remove("est-touchee"), { passive: true });
+}
+}
+}
 
 // Compte réel plutôt que nombre rond : « 12 » se vérifie, « des
 // dizaines » ne se vérifie pas.
-const lien = section.querySelector("#opportunitesLien");
-if (lien) lien.textContent = `Voir les ${ouvertes.length} opportunités ouvertes`;
+// Cible le <span> du libellé et non le lien entier (2026-09-01) : le
+// bouton porte désormais une flèche <i data-lucide> à côté du texte,
+// et écrire lien.textContent l'aurait effacée. Repli sur le lien
+// entier si le span manquait (ancienne version du HTML en cache).
+//
+// Le mot compte : ce nombre-ci n'est PAS celui du catalogue. Ici on
+// compte des ÉCHÉANCES fermes encore à venir (couple bourse × pays) ;
+// le catalogue, lui, compte des bourses ouvertes, y compris celles
+// dont la date dépend du pays ou n'est pas publiée — il y en a
+// toujours davantage. Écrire « N opportunités ouvertes » sur un
+// bouton qui mène à une page qui en montre trois fois plus a été
+// jugé trompeur le 2026-09-05 : on annonce donc ce qu'on a compté.
+const lien = section.querySelector("#opportunitesLienLabel") || section.querySelector("#opportunitesLien");
+if (lien) lien.textContent = `Voir les ${ouvertes.length} échéances à venir`;
 
 // Fraîcheur : affichée seulement si elle est vraie. Voir
 // verificationLaPlusAncienne().

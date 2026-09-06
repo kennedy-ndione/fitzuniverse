@@ -3165,7 +3165,7 @@ inset:0;
 
 z-index:19;
 
-background:rgba(15,23,42,.5);
+background:rgba(23,19,16,.5);
 
 }
 
@@ -3342,3 +3342,112 @@ justify-content:center;
 }
 
 }
+
+/* ==========================================================
+« CE QUE FITZ SAIT DÉJÀ » (2026-09-02) — carte de contexte PARTAGÉE
+par les outils Fitz (ai-email, ai-letter, ai-check) : l'étudiant ne
+re-saisit pas ce que Fitz connaît déjà — profil + candidature
+sélectionnée s'affichent en pastilles, les champs d'ajustement
+restent disponibles, repliés sous « Ajuster ». Née dans ai-email.css,
+déménagée ici quand le patron a été répliqué.
+========================================================== */
+
+.ai-context-card{
+border:1px solid var(--border-color);
+background:var(--background-soft);
+border-radius:var(--radius-sm);
+padding:16px;
+margin-bottom:18px;
+}
+
+.ai-context-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-bottom:12px;
+}
+
+.ai-context-head h3{
+display:flex;
+align-items:center;
+gap:8px;
+font-family:var(--font-display);
+font-size:var(--fs-small);
+font-weight:700;
+color:var(--text-color);
+margin:0;
+}
+
+.ai-context-head h3 i,
+.ai-context-head h3 svg{width:16px;height:16px;color:var(--amber-700);}
+
+.ai-context-adjust{
+background:none;
+border:none;
+padding:0;
+font-size:var(--fs-caption);
+font-weight:700;
+color:var(--text-light);
+text-decoration:underline;
+text-decoration-color:rgba(233,163,25,.45);
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.ai-context-adjust:hover{color:var(--text-color);text-decoration-color:var(--amber-500);}
+
+.ai-context-application{margin-bottom:12px;}
+
+.ai-context-chips{
+display:grid;
+grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+gap:8px;
+margin:0;
+}
+
+.ai-context-chip{
+background:#FFFFFF;
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+padding:8px 10px;
+min-width:0;
+}
+
+.ai-context-chip dt{
+font-size:11px;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:.05em;
+color:var(--text-muted);
+margin:0 0 2px;
+}
+
+.ai-context-chip dd{
+font-size:var(--fs-caption);
+font-weight:600;
+color:var(--text-color);
+margin:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+/* Valeur manquante : pastille cliquable qui ouvre les champs — ambre
+discret, jamais un rouge d'erreur (rien n'est encore « faux »). */
+.ai-context-chip.is-missing{
+border-style:dashed;
+border-color:rgba(233,163,25,.5);
+background:rgba(233,163,25,.06);
+cursor:pointer;
+}
+
+.ai-context-chip.is-missing dd{color:var(--amber-700);}
+
+.ai-context-chip.is-missing:hover,
+.ai-context-chip.is-missing:focus-visible{border-color:var(--amber-500);}
+
+/* Les champs d'ajustement repliés reprennent la respiration du
+formulaire quand ils s'ouvrent. */
+#contextDetails{margin-bottom:6px;}
+

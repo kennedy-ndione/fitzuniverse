@@ -10,6 +10,8 @@
 * ============================================================
 */
 
+import { db } from "./firebase-config.js";
+import { doc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
@@ -17,6 +19,11 @@ import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 import { extractTextFromFile } from "./js/ai/extract-text.js";
+
+// Contexte candidature (2026-09-02) — le patron d'ai-letter/ai-email
+// enfin répliqué ici (c'était la dernière page « reste à faire » de la
+// note de Phase 3) : ?applicationId= présélectionne la candidature.
+const applicationId = new URLSearchParams(window.location.search).get("applicationId");
 
 initShellChrome();
 
@@ -65,9 +72,119 @@ return icons[type] || "file";
 
 }
 
-function initCheckTool(ctx) {
+async function initCheckTool(ctx) {
 
 const { profile } = ctx;
+
+// ==========================================================
+// LE CONTEXTE APPARTIENT À FITZ (2026-09-02) — la vérification
+// s'ancre sur une candidature suivie : sélecteur + pastilles (rien à
+// ajuster à la main ici), bannière d'enregistrement, et le score de
+// l'analyse est écrit sur le document de la candidature (champ
+// dossierCheck) pour que le suivi s'en souvienne.
+// ==========================================================
+
+let trackedApplications = [];
+
+try {
+
+const appsSnap = await getDocs(collection(db, "users", ctx.user.uid, "applications"));
+trackedApplications = appsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+} catch (error) {
+
+console.error("Impossible de charger les candidatures suivies :", error);
+
+}
+
+let application = applicationId
+? trackedApplications.find((a) => a.id === applicationId) || null
+: null;
+
+const contextBanner = document.getElementById("applicationContext");
+const contextBackLink = document.getElementById("applicationContextBackLink");
+const fieldApplication = document.getElementById("fieldApplication");
+const contextChips = document.getElementById("contextChips");
+
+function syncContextBanner() {
+
+if (!contextBanner) return;
+
+if (application) {
+
+contextBanner.hidden = false;
+contextBanner.querySelector("span").textContent =
+`Cette vérification sera enregistrée dans le suivi de "${application.university}".`;
+
+if (contextBackLink) {
+contextBackLink.href = `applications.html#${application.id}`;
+contextBackLink.hidden = false;
+}
+
+} else {
+
+contextBanner.hidden = true;
+if (contextBackLink) contextBackLink.hidden = true;
+
+}
+
+}
+
+// Pastilles informatives : ce que le suivi sait du dossier visé. Sans
+// candidature liée, la pastille dit sur quoi porte l'analyse.
+function renderContextChips() {
+
+contextChips.innerHTML = "";
+
+const chips = application
+? [
+{ label: "Université", value: application.university || "" },
+{ label: "Bourse", value: application.scholarship || "" },
+{ label: "Date limite", value: application.deadline || "" }
+].filter((c) => c.value)
+: [{ label: "Portée", value: "Dossier général — reliez une candidature pour une analyse ciblée" }];
+
+chips.forEach(({ label, value }) => {
+
+const chip = document.createElement("div");
+chip.className = "ai-context-chip";
+
+const dt = document.createElement("dt");
+dt.textContent = label;
+
+const dd = document.createElement("dd");
+dd.textContent = value;
+
+chip.appendChild(dt);
+chip.appendChild(dd);
+contextChips.appendChild(chip);
+
+});
+
+}
+
+trackedApplications
+.slice()
+.sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
+.forEach((app) => {
+
+const option = document.createElement("option");
+option.value = app.id;
+option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+fieldApplication.appendChild(option);
+
+});
+
+if (application) fieldApplication.value = application.id;
+
+fieldApplication.addEventListener("change", () => {
+application = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
+syncContextBanner();
+renderContextChips();
+});
+
+syncContextBanner();
+renderContextChips();
 
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
@@ -270,7 +387,10 @@ content
 
 try {
 
-const { data } = await generate({ task: "check", input: { files, profile } });
+// `application` est ignorée sans risque par l'analyse simulée
+// actuelle ; le jour où l'analyse réelle sera branchée, elle saura
+// déjà POUR QUELLE candidature le dossier est vérifié.
+const { data } = await generate({ task: "check", input: { files, profile, application } });
 
 scoreRing.style.setProperty("--ai-score", data.overallScore);
 scoreValue.textContent = data.overallScore;
@@ -284,9 +404,31 @@ renderChecklist(data.checklist);
 resultsPanel.hidden = false;
 resultsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 
+// Le suivi de candidature se souvient de la vérification — même
+// principe que generatedLetter/generatedEmail (ai-letter/ai-email).
+if (application) {
+
+try {
+
+await updateDoc(doc(db, "users", ctx.user.uid, "applications", application.id), {
+dossierCheck: {
+score: data.overallScore,
+fileCount: files.length,
+checkedAt: serverTimestamp()
+}
+});
+
+} catch (error) {
+
+console.error("Impossible d'enregistrer la vérification sur la candidature :", error);
+
+}
+
+}
+
 trackEvent("verification_run", { fileCount: files.length });
 
-showToast("Analyse terminée.");
+showToast(application ? `Analyse terminée — enregistrée dans "${application.university}".` : "Analyse terminée.");
 
 } catch (error) {
 

@@ -18,7 +18,7 @@
 
 import { db } from "./firebase-config.js";
 import { collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, PLAN_LABELS, isFeatureLocked } from "./js/app-shell.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
@@ -188,6 +188,17 @@ renderLockedState(document.getElementById("lockedState"), ctx);
 return;
 
 }
+
+// WhatsApp direct : réservé à Signature ("whatsapp_direct",
+// js/plan-features.js). Les autres formules avec conseiller voient
+// l'alternative messagerie FitzUniverse à la place.
+const whatsappLocked = isFeatureLocked(ctx.planId, ctx.featureFlags, "whatsapp_direct", ctx.testerAccess, ctx.hasFitzExpress);
+
+const whatsappBtn = document.getElementById("advisorWhatsappBtn");
+const whatsappAlt = document.getElementById("advisorWhatsappAlt");
+
+if (whatsappBtn) whatsappBtn.hidden = whatsappLocked;
+if (whatsappAlt) whatsappAlt.hidden = !whatsappLocked;
 
 initAdvisorPage(ctx);
 

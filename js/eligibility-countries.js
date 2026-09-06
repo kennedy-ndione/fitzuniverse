@@ -169,7 +169,31 @@ const ALIAS = {
 "eswatini": "SZ", "swaziland": "SZ",
 "cote d ivoire": "CI", "ivory coast": "CI",
 "royaume uni": "GB", "grande bretagne": "GB",
-"etats unis": "US"
+"etats unis": "US",
+
+// GRAPHIES DU QUESTIONNAIRE (ajoutées le 2026-09-05).
+// La liste PAYS_DU_MONDE de js/eligibility-pistes.js — celle que
+// l'étudiant voit et clique — écrit deux pays autrement que le
+// référentiel : « Vietnam » (référentiel : « Viêt Nam ») et
+// « Congo (République du) » (référentiel : « Congo (Brazzaville) »).
+// Un pays non résolu rend estEligible() muet : l'étudiant n'est ni
+// retenu ni exclu, et TOUTES les bourses réservées lui restent
+// affichées. Le défaut ne se voit nulle part — il rend juste les
+// recommandations identiques pour tout le monde.
+"vietnam": "VN", "viet nam": "VN",
+"congo republique du": "CG", "republique du congo brazzaville": "CG",
+
+// Les six pays que le questionnaire propose et que le référentiel
+// n'avait pas. Trois sont membres du Commonwealth (AG, KN, VC) et
+// trois figurent sur la liste CAD (VC, MH, XK) : sans eux, un candidat
+// d'Antigua-et-Barbuda n'était PAS reconnu éligible aux bourses du
+// Commonwealth qui lui sont pourtant ouvertes.
+"antigua et barbuda": "AG",
+"saint kitts et nevis": "KN",
+"saint vincent et les grenadines": "VC",
+"iles marshall": "MH",
+"kosovo": "XK",
+"taiwan": "TW"
 };
 
 /**

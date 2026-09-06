@@ -102,10 +102,30 @@ padding-bottom:var(--space-lg);
 background:var(--background-soft);
 }
 
+/* Le compteur d'universités, remonté ici le 2026-09-01 pour occuper la
+moitié droite vide de .section-header, en a été retiré le jour même :
+le hero de la même page porte déjà bourses / pays / universités, et un
+second affichage du même nombre à trois écrans d'intervalle n'apportait
+rien. L'en-tête redevient donc une simple colonne — celle que
+.section-header (l.18) définit déjà : flex, column, align-items:flex-start,
+gap:20px. Ne PAS y reposer `display:flex` sans écrire aussi
+`flex-direction` : la direction colonne est héritée, et une passe
+précédente s'y est fait prendre — align-items:flex-end a aligné tout
+l'en-tête sur le bord droit au lieu de poser le nombre en bas. */
 .teaser-head{
 margin-bottom:44px;
 }
 
+/* RÈGLE RESTAURÉE le 2026-09-01. En retirant le compteur d'universités,
+la suppression a tranché trop large : elle allait du commentaire du
+compteur jusqu'à .teaser-card, et .teaser-grid — qui vivait entre les
+deux — est parti avec. Sans display:grid, les 4 cartes redevenaient des
+blocs pleine largeur empilés : Stanford seul occupait un écran entier.
+Les déclinaisons responsive (2 colonnes, puis rangée défilante sur
+mobile) avaient survécu plus bas — c'est SEULEMENT cette règle de base
+qui manquait. Leçon : supprimer un bloc entre deux ancres impose de
+relire ce que les ancres enferment, pas seulement d'y trouver ce qu'on
+cherche. */
 .teaser-grid{
 display:grid;
 grid-template-columns:repeat(4,1fr);
@@ -310,42 +330,32 @@ skeleton) : un skeleton aussi large que la grille en aspect-ratio 3/4
 devient démesurément haut, cassant toute la section le temps du
 chargement. Les skeletons restent maintenant 4 cases identiques ; seules
 les vraies cartes (jamais .teaser-card-skeleton) passent en bento. */
-@media(min-width:1024px){
+/* MISE EN PAGE « BENTO » RETIRÉE le 2026-09-01, après lecture à l'écran.
+La grille donnait 2 colonnes à la carte 1, 1 colonne aux cartes 2 et 3,
+et la largeur entière à la carte 4 en panoramique 21/6. Trois défauts
+que seul l'écran montrait :
+  - la carte 1, en 4/3 sur une largeur double, devenait deux fois plus
+    haute que ses voisines et écrasait toute la section ;
+  - les cartes 2 et 3, au contenu court, laissaient sous elles un grand
+    vide imposé par la hauteur de la carte 1 ;
+  - la carte 4, seule sur sa ligne en bande panoramique, se lisait comme
+    un élément détaché plutôt que comme le 4e d'un ensemble.
 
-.teaser-grid > :nth-child(1):not(.teaser-card-skeleton){
-grid-column:span 2;
-}
+Quatre cartes égales à la place. L'argument de fond : cette section
+s'intitule « un échantillon de ce qui vous attend » — elle doit
+ressembler au catalogue qu'elle annonce, et le catalogue est une grille
+régulière. Un aperçu qui ne ressemble pas à la page qu'il annonce ment
+sur ce qui attend le visiteur.
 
-.teaser-grid > :nth-child(4):not(.teaser-card-skeleton){
-grid-column:1 / -1;
-}
-
-.teaser-grid > :nth-child(4) .teaser-card-media{
-aspect-ratio:21 / 6;
-}
-
-/* Recadrage vers le HAUT pour la seule vignette panoramique (2026-08-22).
-Le problème n'était pas la photo mais la fenêtre : en 21/6 sur une
-source en 3/2, `object-fit:cover` ne conserve que 43 % de la hauteur,
-pris au CENTRE. Or sur une photo de ville, ce qui identifie le lieu —
-la ligne d'horizon, le monument — est presque toujours dans le tiers
-HAUT. Toronto en était l'exemple parfait : la tour CN disparaissait, et
-il ne restait qu'une vue aérienne d'immeubles et d'un port de plaisance
-qui aurait pu être n'importe quelle ville d'Amérique du Nord.
-
-30 % et non 0 % : à 0 % la bande n'attrape souvent que du ciel sur les
-photos cadrées large. 30 % remonte assez pour garder le monument tout
-en conservant de la matière urbaine au premier plan.
-
-La règle vaut pour TOUTE ville qui passera dans cet emplacement, pas
-seulement Toronto — c'est la fenêtre 21/6 qui coupe, pas le fichier.
-Les autres vignettes restent en 4/3, centrées : elles gardent 100 % de
-la hauteur utile et n'ont pas ce problème. */
-.teaser-grid > :nth-child(4) .teaser-card-media img{
-object-position:center 30%;
-}
-
-}
+À CONSERVER SI LE BENTO REVIENT UN JOUR — la leçon de l'audit du
+2026-08-22 : ces règles ciblent par POSITION (nth-child), donc elles
+s'appliquaient aussi aux 4 squelettes de chargement, pas seulement aux
+vraies cartes. Le squelette n°4 en pleine largeur héritait de
+`aspect-ratio:3/4` et devenait démesurément haut, cassant la section le
+temps du chargement. D'où le `:not(.teaser-card-skeleton)` sur chaque
+sélecteur. Toute règle positionnelle réintroduite ici doit le reprendre.
+Le recadrage `object-position:center 30%` de l'ancienne vignette 21/6
+tombe avec elle : en 4/3 la photo garde 100 % de sa hauteur utile. */
 
 @media(max-width:1023px){
 .teaser-grid{grid-template-columns:repeat(2,1fr);}
@@ -908,7 +918,7 @@ transform:translateY(-10px);
 
 box-shadow:var(--shadow-lg);
 
-border-color:rgba(51,65,140,.22);
+border-color:rgba(26,23,20,.18);
 
 }
 
@@ -939,14 +949,23 @@ color:var(--text-light);
 }
 
 /* ==========================================================
-LE PROBLÈME — liste numérotée éditoriale (refonte 2026-08-22)
+LE PROBLÈME — liste au trait (refonte 2026-08-22, icône 2026-09-01)
 Remplace la grille de 3 cartes à pastille+icône (.cards-grid/.info-card/
 .card-icon, toujours définies plus haut pour les témoignages) : une
-liste au trait, numéros fantômes en guise de repère plutôt que 3
-pictogrammes de plus. Change la structure de la section, pas seulement
-son habillage — c'est aussi une réponse à la consigne d'aller plus loin
-que l'habillage visuel seul.
-========================================================== */
+liste au trait plutôt que 3 pictogrammes de plus. Change la structure
+de la section, pas seulement son habillage — c'est aussi une réponse à
+la consigne d'aller plus loin que l'habillage visuel seul.
+
+Le repère de chaque ligne était un numéro fantôme (01/02/03, --text-
+decorative) plutôt qu'un pictogramme — décision du 2026-08-22 listée
+juste au-dessus. Sur demande explicite du 2026-09-01 (retirer les
+chiffres de toute la page d'accueil), ce numéro cède à son tour la
+place à une icône Lucide propre à chaque ligne, dans le même ton
+décoré/non-textuel : --text-decorative reste le bon token (voir sa
+note dans css/base.css — réservé au non-textuel dont le sens est déjà
+donné à côté, exactement le cas ici). Ciblage par la structure
+(.problem-item > i, .problem-item > svg), pas par une classe posée sur
+le <i> — voir DESIGN_SYSTEM.md, section « Icônes ». */
 
 .problem-list{
 
@@ -958,11 +977,11 @@ border-top:1px solid var(--border-color);
 
 display:grid;
 
-grid-template-columns:88px 1fr;
+grid-template-columns:32px 1fr;
 
 gap:24px;
 
-align-items:baseline;
+align-items:start;
 
 padding:36px 0;
 
@@ -970,19 +989,17 @@ border-bottom:1px solid var(--border-color);
 
 }
 
-.problem-number{
+.problem-item > i,
+.problem-item > svg{
 
-font-family:var(--font-display);
+width:28px;
+height:28px;
 
-font-size:1.7rem;
-
-font-weight:var(--fw-extrabold);
-
-letter-spacing:-.01em;
+margin-top:2px;
 
 color:var(--text-decorative);
 
-font-variant-numeric:tabular-nums;
+flex-shrink:0;
 
 }
 
@@ -1017,7 +1034,7 @@ max-width:58ch;
 
 .problem-item{
 
-grid-template-columns:44px 1fr;
+grid-template-columns:24px 1fr;
 
 gap:16px;
 
@@ -1025,9 +1042,11 @@ padding:26px 0;
 
 }
 
-.problem-number{
+.problem-item > i,
+.problem-item > svg{
 
-font-size:1.25rem;
+width:22px;
+height:22px;
 
 }
 
@@ -1211,41 +1230,26 @@ padding-right:0;
 
 }
 
-/* --amber-700 et pas --amber-500 : c'est du TEXTE sur fond clair, et
-seul le 700 y tient le contraste (voir la note --amber-* dans
-css/base.css). */
-.step-label{
+/* « Étape 0N » + le trait ambre remplacés par une icône, une par étape
+(Trouver/Préparer/Suivre) — demande explicite du 2026-09-01 de retirer
+les chiffres de la page d'accueil. --amber-700 et non --amber-500 :
+l'icône reprend la couleur que portait le libellé « Étape 0N », pas
+celle du trait (voir la note --amber-* dans css/base.css — le 500 est
+réservé aux surfaces, le 700 est le seul à tenir le contraste en usage
+texte/icône sur fond clair). Ciblage par la structure (.step-col > i,
+.step-col > svg), pas par une classe posée sur le <i> — voir
+DESIGN_SYSTEM.md, section « Icônes ». */
+.step-col > i,
+.step-col > svg{
 
 display:block;
 
-font-family:var(--font-affirmation);
+width:26px;
+height:26px;
 
-font-size:.74rem;
-
-font-weight:700;
-
-letter-spacing:.16em;
-
-text-transform:uppercase;
+margin-bottom:16px;
 
 color:var(--amber-700);
-
-}
-
-/* Le trait, lui, est une SURFACE : --amber-500 y est à sa place. */
-.step-rule{
-
-display:block;
-
-width:34px;
-
-height:2px;
-
-margin:14px 0 18px;
-
-border-radius:2px;
-
-background:var(--amber-500);
 
 }
 
@@ -1292,9 +1296,11 @@ border-top:1px solid rgba(226,232,240,.8);
 /* Le doublet .steps-cta-text-full / .steps-cta-text-short a disparu le
 2026-09-01 : le bouton portait "Commencer mon diagnostic gratuit" (33
 caractères) qui débordait sous 640px, d'où un second libellé court
-réservé à ce palier. Le libellé est désormais "Découvrir mes
-opportunités" — le MÊME que le CTA du hero, un seul geste ne méritant
-qu'un seul libellé.
+réservé à ce palier. Le libellé est désormais "Commencer
+gratuitement" (choix utilisateur du 2026-09-01) — un seul geste ne
+méritant qu'un seul libellé. Il fait 22 caractères, contre 23 pour la
+formulation précédente sur laquelle la mesure ci-dessous a été faite :
+elle reste donc valable telle quelle.
 
 Un libellé unique ne suffisait PAS à lui seul : mesuré à 360px, le
 texte réclamait 303px (233 de texte + 60 de rembourrage + 10 de gap)
@@ -1535,6 +1541,17 @@ gap:16px;
 flex-wrap:wrap;
 justify-content:center;
 margin-top:8px;
+}
+
+/* Flèche du CTA « Choisir ma formule » (passe mobile 2026-09-01) :
+sans taille explicite, un data-lucide sort à 24px — la classe exacte
+de dérive relevée à l'audit « icônes trop grandes » du 2026-08-22.
+Ciblage par la structure, règle « Icônes » de DESIGN_SYSTEM.md. */
+.cta-buttons .btn > i,
+.cta-buttons .btn > svg{
+width:18px;
+height:18px;
+flex-shrink:0;
 }
 
 /* Refonte 2026-08-22 : 3 chips verre + icône (shield-check/landmark/bot)
@@ -1809,6 +1826,19 @@ text-align:left;
 
 }
 
+/* Rythme vertical mobile (passe mobile 2026-09-01, lot 3) — cette
+feuille redéfinit .section APRÈS base.css, son palier ≤576px doit donc
+vivre ici aussi (voir la note du même jour dans base.css) : 128→92px
+au palier 992 ci-dessus, puis 64px sous 576px, le pas des sites
+mobiles actuels. */
+@media(max-width:576px){
+
+.section{
+padding:64px 0;
+}
+
+}
+
 /* .steps-card est une seule carte en flux normal (plus une grille à
 1/2/3 colonnes) : elle n'a plus besoin de paliers de mise en page par
 largeur d'écran comme l'ancienne grille .steps ci-dessus dans
@@ -1892,6 +1922,79 @@ padding:44px 14px;
 
 .cta-box-panel{
 padding:40px 18px;
+}
+
+}
+
+/* ==========================================================
+RECADRAGE DES GRANDES CARTES SUR TÉLÉPHONE (2026-09-01, lot 5)
+==========================================================
+Retour utilisateur, captures à l'appui : « le recadrage des cartes
+pour une compatibilité avec l'écran du téléphone tout en
+redimensionnant les contenus ». Deux blocs de l'accueil débordaient
+du cadre d'un écran de téléphone :
+
+— VISION : .vision-photo est un portrait 4/5 (420px max au bureau,
+posé à côté du texte). En colonne pleine largeur, 347px de large
+donnaient ~434px de photo + la carte-citation par-dessus : un écran
+entier pour une illustration. Recadrée en 4/3 (~260px) — object-fit:
+cover recadre dans l'image, rien n'est déformé — et la carte resserre
+son icône et ses rembourrages d'un cran.
+
+— CTA FINAL : le panneau verre gardait ses rembourrages de bureau à
+l'intérieur d'une section déjà rembourrée — deux cadres additionnés
+poussaient le bloc au-delà d'un écran. Les deux se resserrent ; le
+contenu (kicker, titre, bouton, mentions) tient désormais avec la
+photo visible autour, comme au bureau. */
+@media(max-width:576px){
+
+.vision-photo{
+
+aspect-ratio:4/3;
+
+max-width:none;
+
+}
+
+/* La carte-citation est calée en bottom:0 de l'illustration, dont le
+padding-bottom règle donc la part de carte qui DÉBORDE sous la photo.
+Avec 70px (valeur bureau, pensée pour une photo de ~520px), la carte
+recouvrait presque toute la photo recadrée en 4/3 : 120px la font
+chevaucher le bord bas sur ~60px seulement — la photo reste le sujet,
+la carte reste « posée dessus ». */
+.vision-illustration{
+
+padding-bottom:120px;
+
+}
+
+.vision-card{
+
+padding:18px 16px;
+
+}
+
+.vision-card > i,
+.vision-card > svg{
+
+width:24px;
+
+height:24px;
+
+margin-bottom:10px;
+
+}
+
+.cta-box{
+
+padding:22px 12px;
+
+}
+
+.cta-box-panel{
+
+padding:34px 18px;
+
 }
 
 }

@@ -1,16 +1,18 @@
 /* ==========================================================
-SCHOLARBRIDGE — CONTROL CENTER (admin/dashboard.html)
-Repose sur css/base.css (tokens, reset) mais applique la même
-surcharge sombre "navy + gold" déjà validée sur le dashboard
-étudiant (dashboard.css) — reproduite ici pour ce fichier plutôt que
-partagée, comme le fait déjà chaque famille de pages du site
-(dashboard.css, profile.css ont chacun leur propre copie du
-pattern de coquille). Depuis la migration du 2026-07-30, ce fichier
-sert TOUTES les pages du Control Center (dashboard, étudiants,
-formules, bourses, universités, fiche université, édition
-d'université) — admin/admin.css a été supprimé, son thème vert
-("--primary:#16a34a") ne correspondait plus à l'identité
-Fitz (encre/ambre définie dans css/base.css).
+FITZUNIVERSE — CONTROL CENTER (toutes les pages admin/)
+Repose sur css/base.css (tokens, reset). REFONTE 2026-09-02 : le
+thème sombre "navy + gold" est abandonné sur demande explicite
+(« je ne veux plus de bleu foncé ») au profit d'un thème CLAIR
+premium aux couleurs du site public — papier ivoire, encre chaude,
+ambre — avec l'ENCRE CHAUDE (--ink-surface) comme couleur
+d'autorité (hero, actions primaires, navigation active) là où le
+navy/indigo servait avant. Aucune valeur bleue (--shell-*,
+--primary-*, --gradient-primary de base.css) ne doit réapparaître
+ici : --gradient-primary est ré-ancré localement sur l'encre chaude
+ci-dessous, précisément pour neutraliser d'un coup tous les usages
+historiques. Ce fichier sert TOUTES les pages du Control Center
+(dashboard, étudiants, formules, bourses, universités, fiche
+université, outils).
 ========================================================== */
 
 :root{
@@ -20,43 +22,52 @@ Fitz (encre/ambre définie dans css/base.css).
 --topbar-height:72px;
 
 /* ==========================================================
-THÈME SOMBRE DU CONTROL CENTER — surcharge locale des tokens de
-css/base.css avec les tokens --shell-* partagés (voir base.css) au
-lieu de redéfinir ses propres valeurs : dashboard.css et
-admin/login.css consomment désormais exactement le même jeu, plus
-de dérive entre les trois (control-center.css avait sa propre copie
-légèrement décalée — --shadow-sm/md/lg notamment n'avaient plus les
-mêmes flous/opacités que le dashboard étudiant).
+THÈME CLAIR DU CONTROL CENTER — mêmes valeurs chaudes que le site
+public (css/base.css, contexte clair), re-déclarées ici parce que
+les composants de ce fichier consomment ces alias.
 ========================================================== */
 
---background:var(--shell-bg);
---background-soft:var(--shell-surface);
---background-alt:var(--shell-elevated);
---background-light:rgba(233,163,25,.12);
+--background:#FFFFFF;
+--background-soft:#F6F3ED;
+--background-alt:#EFEBE3;
+--background-light:rgba(233,163,25,.10);
 
---border-color:var(--shell-border);
+--border-color:#E5E1D9;
 
---text-color:var(--shell-text);
---text-light:#C2CBDE;
-/* #8792A8 échouait AA sur --shell-elevated (4,02:1), le fond des
-panneaux surélevés de cette page. Corrigé 2026-08-02 : 5,6 / 6,9 / 4,8
-sur shell-bg / shell-surface / shell-elevated. */
---text-muted:#96A1B7;
+--text-color:#1A1714;
+--text-light:#57514A;
+--text-muted:#6E6760;
 /* Non-textuel uniquement (seuil 3:1) — voir la note dans css/base.css. */
---text-decorative:#79849A;
+--text-decorative:#8A837A;
 
---shadow-xs:var(--shell-shadow-xs);
---shadow-sm:var(--shell-shadow-sm);
---shadow-md:var(--shell-shadow-md);
---shadow-lg:var(--shell-shadow-lg);
+/* Ombres chaudes et douces (l'encre du site à faible opacité —
+jamais de noir bleuté). */
+--shadow-xs:0 1px 2px rgba(26,23,20,.05), 0 2px 10px rgba(26,23,20,.045);
+--shadow-sm:0 6px 18px rgba(26,23,20,.07);
+--shadow-md:0 14px 32px rgba(26,23,20,.10);
+--shadow-lg:0 22px 52px rgba(26,23,20,.14);
+
+/* L'ACCENT DE L'ADMIN EST L'AMBRE (surfaces/anneaux/décor). Pour du
+TEXTE ou une icône sur fond clair, utiliser --amber-700 (règle AA de
+base.css) — jamais --accent-color directement. */
+--accent-color:var(--amber-500);
+
+/* Ré-ancrage local : tout ce qui consommait le dégradé indigo de
+base.css (nav active, badge sidebar, carte vedette, boutons) bascule
+sur l'encre chaude signature, sans toucher chaque usage. */
+--gradient-primary:linear-gradient(140deg,#342D24 0%,#211D18 58%,#191512 100%);
+
+/* Halo signature du Control Center clair : lueur ambre douce. */
+--admin-glow:0 14px 30px rgba(233,163,25,.16);
 
 }
 
 body{
 
 background:
-radial-gradient(circle at 15% -10%,rgba(51,65,140,.2),transparent 45%),
-radial-gradient(circle at 100% 0%,rgba(233,163,25,.12),transparent 40%),
+radial-gradient(circle at 12% -8%,rgba(233,163,25,.10),transparent 42%),
+radial-gradient(circle at 100% 0%,rgba(201,134,11,.07),transparent 45%),
+radial-gradient(circle at 85% 100%,rgba(233,163,25,.05),transparent 40%),
 var(--background-soft);
 
 background-attachment:fixed;
@@ -91,7 +102,7 @@ width:44px;
 
 height:44px;
 
-border:4px solid rgba(255,255,255,.12);
+border:4px solid rgba(26,23,20,.10);
 
 border-top:4px solid var(--accent-color);
 
@@ -195,10 +206,14 @@ border-radius:var(--radius-sm);
 
 }
 
-/* Le lockup vit dans css/base.css (.fitz-lockup) ; .sidebar-brand est
-dans la liste .on-dark, donc le descripteur y prend l'accent tout seul.
-Les regles supprimees coloraient « Fitz » en --primary-color et
-« UNIVERSE » en --amber-500 : une quatrieme variante de la marque. */
+/* Le lockup vit dans css/base.css (.fitz-lockup), et ses tokens n'ont
+qu'UNE source : css/base.css — règle gardée par test/logo-lockup.test.mjs.
+Il y avait ici une redéclaration de --logo-structure/--logo-descriptor
+pour .sidebar-brand, parce que base.css rangeait encore cette sidebar
+parmi les surfaces sombres (héritage de l'admin navy) alors qu'elle est
+claire depuis la refonte du 2026-09-02. Corrigé à la source le
+2026-09-04 : .sidebar-brand a quitté le bloc sombre de base.css et hérite
+des valeurs claires de :root. Rien à redéclarer ici. */
 
 .sidebar-badge{
 
@@ -303,7 +318,7 @@ height:19px;
 
 background:var(--background-light);
 
-color:var(--accent-color);
+color:var(--amber-700);
 
 }
 
@@ -313,7 +328,7 @@ background:var(--gradient-primary);
 
 color:#fff;
 
-box-shadow:0 8px 18px rgba(51,65,140,.24);
+box-shadow:0 8px 18px rgba(26,23,20,.22);
 
 }
 
@@ -444,7 +459,7 @@ height:var(--topbar-height);
 
 padding:0 32px;
 
-background:rgba(15,23,42,.72);
+background:rgba(253,252,250,.82);
 
 backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
@@ -852,7 +867,7 @@ inset:0;
 
 z-index:40;
 
-background:rgba(15,23,42,.6);
+background:rgba(26,23,20,.45);
 
 }
 
@@ -1400,7 +1415,7 @@ transition:var(--transition);
 
 transform:translateY(-1px);
 
-box-shadow:0 12px 26px rgba(51,65,140,.28);
+box-shadow:0 12px 26px rgba(26,23,20,.24);
 
 }
 
@@ -1827,7 +1842,7 @@ white-space:nowrap;
 
 transform:translateY(-1px);
 
-box-shadow:0 12px 26px rgba(51,65,140,.3);
+box-shadow:0 12px 26px rgba(26,23,20,.26);
 
 }
 
@@ -1904,15 +1919,15 @@ border-radius:var(--radius-lg);
 
 background:
 
-radial-gradient(circle at 100% 0%,rgba(233,163,25,.16),transparent 55%),
+radial-gradient(circle at 100% 0%,rgba(233,163,25,.22),transparent 55%),
 
-radial-gradient(circle at 0% 100%,rgba(51,65,140,.24),transparent 50%),
+radial-gradient(circle at 0% 100%,rgba(201,134,11,.14),transparent 50%),
 
-linear-gradient(155deg,#1A2338 0%,#161F33 55%,#12192B 100%);
+linear-gradient(155deg,#342D24 0%,#241F19 55%,#191512 100%);
 
-border:1px solid var(--border-color);
+border:1px solid rgba(233,163,25,.18);
 
-box-shadow:var(--shadow-lg);
+box-shadow:var(--shadow-lg), var(--admin-glow);
 
 overflow:hidden;
 
@@ -1972,7 +1987,7 @@ border-radius:var(--radius-lg);
 
 background:var(--gradient-primary);
 
-box-shadow:0 12px 28px rgba(51,65,140,.35), inset 0 1px 0 rgba(255,255,255,.16);
+box-shadow:0 12px 28px rgba(26,23,20,.30), inset 0 1px 0 rgba(255,255,255,.16);
 
 color:#fff;
 
@@ -2054,7 +2069,7 @@ box-shadow:0 0 0 3px rgba(233,163,25,.2);
 
 max-width:460px;
 
-color:rgba(226,232,240,.82);
+color:rgba(245,240,231,.85);
 
 font-size:.92rem;
 
@@ -2100,7 +2115,7 @@ border:1px solid rgba(255,255,255,.1);
 
 backdrop-filter:blur(6px);
 
-color:rgba(226,232,240,.9);
+color:rgba(245,240,231,.9);
 
 font-size:.78rem;
 
@@ -2330,7 +2345,7 @@ var(--gradient-primary);
 
 border:none;
 
-box-shadow:0 20px 44px rgba(51,65,140,.3);
+box-shadow:0 20px 44px rgba(26,23,20,.26);
 
 }
 
@@ -2445,7 +2460,7 @@ padding:24px 28px;
 
 border-radius:var(--radius-lg);
 
-background:linear-gradient(135deg,rgba(233,163,25,.08),rgba(51,65,140,.06));
+background:linear-gradient(135deg,rgba(233,163,25,.10),rgba(126,113,216,.06));
 
 border:1px solid rgba(233,163,25,.22);
 
@@ -2779,7 +2794,7 @@ white-space:nowrap;
 
 transform:translateY(-1px);
 
-box-shadow:0 12px 26px rgba(51,65,140,.28);
+box-shadow:0 12px 26px rgba(26,23,20,.24);
 
 }
 
@@ -2845,15 +2860,16 @@ color:#fff;
 
 .modal-base .modal-card{
 
-/* Panneau CLAIR dans l'admin sombre : reprend les valeurs de contexte
-clair de css/base.css, corrigées AA le 2026-08-02. */
---text-color:#0F172A;
---text-light:#475569;
---text-muted:#626E83;
---text-decorative:#7E8CA3;
---border-color:#E2E8F0;
---background-soft:#F8FAFC;
---background-alt:#F1F5F9;
+/* Panneau clair : depuis la refonte claire du 2026-09-02, mêmes
+valeurs chaudes que le reste du Control Center (l'ancien jeu slate
+#0F172A/#475569 datait de l'admin sombre). */
+--text-color:#1A1714;
+--text-light:#57514A;
+--text-muted:#6E6760;
+--text-decorative:#8A837A;
+--border-color:#E5E1D9;
+--background-soft:#F8F6F2;
+--background-alt:#F1EEE8;
 
 text-align:left;
 
@@ -3085,5 +3101,1629 @@ text-align:center;
 color:var(--text-muted);
 
 font-size:.85rem;
+
+}
+
+/* ==========================================================
+REFONTE 2026-09-02 — NOUVEAUX COMPOSANTS DU TABLEAU DE BORD
+(courbes évolutives, entonnoir, actions rapides, aperçu démo).
+Tout ce qui suit est propre au nouveau dashboard.html ; les pages
+listes/fiches continuent de consommer les composants historiques
+ci-dessus, re-thémés en clair.
+========================================================== */
+
+/* ---- Actions rapides du hero ---- */
+
+.exec-actions{
+
+position:relative;
+
+z-index:1;
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+width:100%;
+
+margin-top:18px;
+
+}
+
+.exec-action-btn{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+padding:9px 16px;
+
+min-height:40px;
+
+border-radius:var(--radius-full);
+
+border:1px solid rgba(233,163,25,.35);
+
+background:rgba(233,163,25,.12);
+
+color:#F5F0E7;
+
+font-weight:600;
+
+font-size:.84rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.exec-action-btn i,
+.exec-action-btn svg{
+
+width:15px;
+
+height:15px;
+
+color:var(--amber-500);
+
+}
+
+.exec-action-btn:hover{
+
+background:var(--amber-500);
+
+border-color:var(--amber-500);
+
+color:var(--ink-surface);
+
+}
+
+.exec-action-btn:hover i,
+.exec-action-btn:hover svg{ color:var(--ink-surface); }
+
+.exec-action-btn.is-primary{
+
+background:var(--amber-500);
+
+border-color:var(--amber-500);
+
+color:var(--ink-surface);
+
+}
+
+.exec-action-btn.is-primary i,
+.exec-action-btn.is-primary svg{ color:var(--ink-surface); }
+
+.exec-action-btn.is-primary:hover{
+
+background:var(--amber-600);
+
+border-color:var(--amber-600);
+
+}
+
+/* ---- Carte « Pulsation du site » (grande courbe évolutive) ---- */
+
+.pulse-card{
+
+margin:0 0 24px;
+
+padding:26px 28px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+.pulse-head{
+
+display:flex;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+gap:16px;
+
+flex-wrap:wrap;
+
+margin-bottom:6px;
+
+}
+
+.pulse-head h2{
+
+font-family:var(--font-display);
+
+font-size:var(--fs-card-title);
+
+font-weight:800;
+
+color:var(--text-color);
+
+margin-bottom:4px;
+
+}
+
+.pulse-head-sub{
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+max-width:520px;
+
+}
+
+.pulse-controls{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+flex-wrap:wrap;
+
+}
+
+/* Sélecteur segmenté (période 7/30/90 jours) */
+
+.seg-control{
+
+display:inline-flex;
+
+padding:4px;
+
+gap:2px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-alt);
+
+border:1px solid var(--border-color);
+
+}
+
+.seg-btn{
+
+padding:6px 14px;
+
+min-height:32px;
+
+border:none;
+
+border-radius:var(--radius-full);
+
+background:none;
+
+color:var(--text-muted);
+
+font-family:"Inter",sans-serif;
+
+font-weight:600;
+
+font-size:.8rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.seg-btn:hover{ color:var(--text-color); }
+
+.seg-btn.is-active{
+
+background:var(--ink-surface);
+
+color:#fff;
+
+box-shadow:0 4px 10px rgba(26,23,20,.18);
+
+}
+
+/* Puces de séries (activer/masquer une courbe) */
+
+.serie-chips{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+margin:14px 0 6px;
+
+}
+
+.serie-chip{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:6px 13px;
+
+min-height:32px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-light);
+
+font-family:"Inter",sans-serif;
+
+font-weight:600;
+
+font-size:.8rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.serie-chip .serie-dot{
+
+width:9px;
+
+height:9px;
+
+border-radius:50%;
+
+background:var(--serie-color,var(--amber-500));
+
+flex-shrink:0;
+
+}
+
+.serie-chip.is-active{
+
+border-color:var(--serie-color,var(--amber-500));
+
+background:color-mix(in srgb,var(--serie-color,var(--amber-500)) 10%,#fff);
+
+color:var(--text-color);
+
+}
+
+.serie-chip.is-off .serie-dot{ background:var(--text-decorative); }
+
+.serie-chip.is-off{ color:var(--text-muted); }
+
+/* Bascule « Aperçu démo » — clairement étiquetée, jamais ambiguë */
+
+.demo-toggle{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:9px;
+
+padding:6px 12px 6px 14px;
+
+min-height:36px;
+
+border-radius:var(--radius-full);
+
+border:1px dashed var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+font-family:"Inter",sans-serif;
+
+font-weight:600;
+
+font-size:.8rem;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.demo-toggle .demo-track{
+
+position:relative;
+
+width:34px;
+
+height:19px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-alt);
+
+border:1px solid var(--border-color);
+
+transition:var(--transition);
+
+flex-shrink:0;
+
+}
+
+.demo-toggle .demo-thumb{
+
+position:absolute;
+
+top:2px;
+
+left:2px;
+
+width:13px;
+
+height:13px;
+
+border-radius:50%;
+
+background:#fff;
+
+box-shadow:0 1px 3px rgba(26,23,20,.25);
+
+transition:var(--transition);
+
+}
+
+.demo-toggle.is-on{
+
+border-color:var(--accent-500);
+
+color:var(--accent-600);
+
+background:var(--accent-100);
+
+}
+
+.demo-toggle.is-on .demo-track{
+
+background:var(--accent-500);
+
+border-color:var(--accent-500);
+
+}
+
+.demo-toggle.is-on .demo-thumb{ transform:translateX(15px); }
+
+/* L'attribut hidden doit toujours gagner contre les display: des
+composants (règle générale absente de base.css). */
+
+[hidden]{ display:none !important; }
+
+.demo-banner{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+margin:12px 0 4px;
+
+padding:10px 14px;
+
+border-radius:var(--radius-md);
+
+background:var(--accent-100);
+
+border:1px dashed var(--accent-500);
+
+color:var(--accent-600);
+
+font-size:.82rem;
+
+font-weight:600;
+
+}
+
+.demo-banner i,
+.demo-banner svg{ width:15px; height:15px; flex-shrink:0; }
+
+/* ---- Deltas de tendance dans les cartes KPI ---- */
+
+.stat-card-delta{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:4px;
+
+margin-top:6px;
+
+font-size:.74rem;
+
+font-weight:700;
+
+color:var(--text-muted);
+
+}
+
+.stat-card-delta.is-up{ color:var(--success-600); }
+
+.stat-card-delta.is-down{ color:var(--danger-600); }
+
+.stat-card-delta i,
+.stat-card-delta svg{ width:12px; height:12px; }
+
+/* ---- Issues de candidatures (admissions / refus / attente) ---- */
+
+.outcome-strip{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:16px;
+
+margin:0 0 24px;
+
+}
+
+.outcome-card{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+padding:18px 20px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+border-left:4px solid var(--outcome-color,var(--amber-500));
+
+box-shadow:var(--shadow-xs);
+
+}
+
+.outcome-card i,
+.outcome-card svg{
+
+width:26px;
+
+height:26px;
+
+color:var(--outcome-color,var(--amber-500));
+
+flex-shrink:0;
+
+}
+
+.outcome-card-value{
+
+font-family:var(--font-display);
+
+font-size:1.5rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+line-height:1.1;
+
+}
+
+.outcome-card-label{
+
+color:var(--text-muted);
+
+font-size:.8rem;
+
+font-weight:600;
+
+}
+
+/* ---- Entonnoir du parcours ---- */
+
+.funnel-list{
+
+display:flex;
+
+flex-direction:column;
+
+gap:14px;
+
+margin-top:16px;
+
+}
+
+.funnel-row-label{
+
+display:flex;
+
+align-items:baseline;
+
+justify-content:space-between;
+
+gap:10px;
+
+margin-bottom:6px;
+
+font-size:.84rem;
+
+font-weight:600;
+
+color:var(--text-light);
+
+}
+
+.funnel-row-value{
+
+font-family:var(--font-display);
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.funnel-bar{
+
+height:10px;
+
+border-radius:var(--radius-full);
+
+background:var(--background-alt);
+
+overflow:hidden;
+
+}
+
+.funnel-bar-fill{
+
+height:100%;
+
+width:0;
+
+border-radius:var(--radius-full);
+
+background:linear-gradient(90deg,var(--amber-500),var(--amber-600));
+
+transition:width .9s var(--ease-premium);
+
+}
+
+/* ---- Note de bas de tableau de bord (fraîcheur des données) ---- */
+
+.dash-footnote{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+margin:4px 0 8px;
+
+color:var(--text-muted);
+
+font-size:.78rem;
+
+}
+
+.dash-footnote i,
+.dash-footnote svg{ width:13px; height:13px; flex-shrink:0; }
+
+/* ---- Page Outils techniques ---- */
+
+.tools-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+
+gap:16px;
+
+margin:0 0 24px;
+
+}
+
+.tool-card{
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+padding:20px 22px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-xs);
+
+transition:var(--transition);
+
+}
+
+.tool-card:hover{
+
+box-shadow:var(--shadow-sm);
+
+transform:translateY(-2px);
+
+}
+
+.tool-card-head{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+}
+
+.tool-card-head i,
+.tool-card-head svg{
+
+width:20px;
+
+height:20px;
+
+color:var(--tool-color,var(--amber-700));
+
+flex-shrink:0;
+
+}
+
+.tool-card-head h3{
+
+font-family:var(--font-display);
+
+font-size:1rem;
+
+font-weight:800;
+
+color:var(--text-color);
+
+}
+
+.tool-card p{
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+line-height:1.5;
+
+flex:1;
+
+}
+
+.tool-card-links{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+.tool-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+padding:6px 12px;
+
+min-height:32px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-light);
+
+font-size:.78rem;
+
+font-weight:600;
+
+transition:var(--transition);
+
+}
+
+.tool-link:hover{
+
+border-color:var(--amber-500);
+
+background:var(--background-light);
+
+color:var(--amber-700);
+
+}
+
+.tool-link i,
+.tool-link svg{ width:13px; height:13px; }
+
+.tools-batch-details{
+
+margin:0 0 24px;
+
+padding:18px 22px;
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+}
+
+.tools-batch-details summary{
+
+cursor:pointer;
+
+font-weight:700;
+
+color:var(--text-color);
+
+font-size:.92rem;
+
+}
+
+.tools-batch-details[open] summary{ margin-bottom:12px; }
+
+.tools-batch-list{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+}
+
+/* ==========================================================
+MOBILE ≤576px — règles de la doctrine mobile du projet : zéro
+débordement horizontal, sections resserrées, cartes ~1 écran.
+========================================================== */
+
+@media(max-width:576px){
+
+.content{ padding:16px 14px 40px; }
+
+.exec-hero{ padding:22px 18px; }
+
+.exec-identity-text h1{ font-size:1.25rem; }
+
+.exec-briefing{ font-size:.86rem; }
+
+.exec-hero-badges{ max-width:none; justify-content:flex-start; }
+
+.exec-actions{ margin-top:14px; }
+
+.exec-action-btn{ flex:1 1 calc(50% - 10px); justify-content:center; padding:9px 10px; }
+
+.pulse-card{ padding:18px 16px; }
+
+.pulse-controls{ width:100%; justify-content:space-between; }
+
+.outcome-strip{ grid-template-columns:1fr; gap:10px; }
+
+.outcome-card{ padding:14px 16px; }
+
+.panels-grid{ grid-template-columns:1fr; }
+
+.stats-grid{ gap:10px; }
+
+.tools-grid{ grid-template-columns:1fr; }
+
+}
+
+/* Les pistes de grille ne doivent jamais s'élargir au gabarit
+intrinsèque d'un canvas Chart.js (dimensionné pendant que .content
+est masqué au chargement) : min-width:0 + canvas borné. Sans cela,
+tout le tableau de bord débordait horizontalement. */
+
+.panels-grid > .panel-card,
+.stats-grid > .stat-card{ min-width:0; }
+
+.chart-wrap{ position:relative; width:100%; }
+
+.chart-wrap canvas{ max-width:100%; }
+
+/* Hauteurs maîtrisées : les deux graphiques passent en
+maintainAspectRatio:false (dashboard.js), le conteneur impose donc la
+hauteur — sans cela le donut occupait tout un écran en une colonne. */
+
+.pulse-card .chart-wrap{ height:320px; }
+
+.chart-wrap--donut{ height:280px; }
+
+@media(max-width:576px){
+
+.pulse-card .chart-wrap{ height:230px; }
+
+.chart-wrap--donut{ height:240px; }
+
+}
+
+/* Variante à deux colonnes égales des panels (donut + entonnoir). */
+
+.panels-grid--even{ grid-template-columns:1fr 1fr; }
+
+@media(max-width:1023px){
+
+.panels-grid--even{ grid-template-columns:1fr; }
+
+}
+
+/* ==========================================================
+SÉLECTEURS NATIFS (2026-09-02) — le menu déroulant système gardait un
+surlignage BLEU (signalé par l'utilisateur, capture de la page
+Bourses). Sur les navigateurs modernes (appearance:base-select,
+Chrome 135+), le menu devient entièrement stylable aux couleurs du
+site ; les autres gardent le select natif, sans casse.
+========================================================== */
+
+.content{ accent-color:var(--amber-600); }
+
+@supports (appearance: base-select) {
+
+.page-toolbar select,
+.field select{
+appearance:base-select;
+}
+
+.page-toolbar select::picker(select),
+.field select::picker(select){
+appearance:base-select;
+border:1px solid var(--border-color);
+border-radius:12px;
+background:#FFFFFF;
+box-shadow:var(--shadow-md);
+padding:6px;
+}
+
+.page-toolbar select option,
+.field select option{
+padding:8px 12px;
+border-radius:8px;
+color:var(--text-color);
+font-size:.88rem;
+}
+
+.page-toolbar select option:hover,
+.page-toolbar select option:focus,
+.field select option:hover,
+.field select option:focus{
+background:var(--background-light);
+color:var(--amber-700);
+}
+
+.page-toolbar select option:checked,
+.field select option:checked{
+background:var(--ink-surface);
+color:#fff;
+}
+
+}
+
+/* ==========================================================
+CENTRE DE MESSAGES (2026-09-02) — messagerie FitzUniverse
+bidirectionnelle : liste de conversations + fil + composer.
+========================================================== */
+
+.nav-count-badge{
+
+margin-left:auto;
+
+min-width:20px;
+
+height:20px;
+
+padding:0 6px;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+border-radius:var(--radius-full);
+
+background:var(--amber-500);
+
+color:var(--ink-surface);
+
+font-size:.68rem;
+
+font-weight:800;
+
+}
+
+.msg-center{
+
+display:grid;
+
+grid-template-columns:320px 1fr;
+
+gap:0;
+
+min-height:calc(100vh - var(--topbar-height) - 96px);
+
+border-radius:var(--radius-lg);
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+box-shadow:var(--shadow-sm);
+
+overflow:hidden;
+
+}
+
+.msg-list-pane{
+
+display:flex;
+
+flex-direction:column;
+
+border-right:1px solid var(--border-color);
+
+min-width:0;
+
+}
+
+.msg-list-search{
+
+position:relative;
+
+padding:14px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.msg-list-search i,
+.msg-list-search svg{
+
+position:absolute;
+
+left:26px;
+
+top:50%;
+
+transform:translateY(-50%);
+
+width:15px;
+
+height:15px;
+
+color:var(--text-decorative);
+
+pointer-events:none;
+
+}
+
+.msg-list-search input{
+
+width:100%;
+
+padding:9px 12px 9px 36px;
+
+border-radius:var(--radius-full);
+
+border:1px solid var(--border-color);
+
+background:var(--background-soft);
+
+color:var(--text-color);
+
+font-family:"Inter",sans-serif;
+
+font-size:.85rem;
+
+}
+
+.msg-list-search input:focus{
+
+outline:none;
+
+border-color:var(--amber-500);
+
+box-shadow:0 0 0 3px rgba(233,163,25,.16);
+
+}
+
+.msg-conv-list{
+
+flex:1;
+
+overflow-y:auto;
+
+}
+
+.msg-conv-empty{
+
+padding:24px 18px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.84rem;
+
+}
+
+.msg-conv-item{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+width:100%;
+
+padding:13px 14px;
+
+border:none;
+
+border-bottom:1px solid var(--border-color);
+
+background:none;
+
+text-align:left;
+
+cursor:pointer;
+
+transition:var(--transition);
+
+font-family:"Inter",sans-serif;
+
+}
+
+.msg-conv-item:hover{ background:var(--background-light); }
+
+.msg-conv-item.is-active{ background:var(--background-alt); }
+
+.msg-conv-avatar,
+.msg-thread-avatar{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:38px;
+
+height:38px;
+
+border-radius:50%;
+
+background:var(--gradient-primary);
+
+color:#fff;
+
+font-weight:800;
+
+font-size:.8rem;
+
+}
+
+.msg-conv-body{
+
+flex:1;
+
+min-width:0;
+
+display:flex;
+
+flex-direction:column;
+
+gap:2px;
+
+}
+
+.msg-conv-toprow{
+
+display:flex;
+
+align-items:baseline;
+
+justify-content:space-between;
+
+gap:8px;
+
+}
+
+.msg-conv-toprow strong{
+
+color:var(--text-color);
+
+font-size:.88rem;
+
+font-weight:700;
+
+white-space:nowrap;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+
+.msg-conv-toprow time{
+
+flex-shrink:0;
+
+color:var(--text-muted);
+
+font-size:.7rem;
+
+}
+
+.msg-conv-preview{
+
+color:var(--text-muted);
+
+font-size:.78rem;
+
+white-space:nowrap;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+
+.msg-conv-item.has-unread .msg-conv-preview{
+
+color:var(--text-color);
+
+font-weight:600;
+
+}
+
+.msg-conv-unread{
+
+flex-shrink:0;
+
+min-width:20px;
+
+height:20px;
+
+padding:0 6px;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+border-radius:var(--radius-full);
+
+background:var(--amber-500);
+
+color:var(--ink-surface);
+
+font-size:.68rem;
+
+font-weight:800;
+
+}
+
+.msg-thread-pane{
+
+display:flex;
+
+flex-direction:column;
+
+min-width:0;
+
+}
+
+.msg-thread-placeholder{
+
+flex:1;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+gap:12px;
+
+padding:40px 24px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.9rem;
+
+line-height:1.6;
+
+}
+
+.msg-thread-placeholder i,
+.msg-thread-placeholder svg{
+
+width:34px;
+
+height:34px;
+
+color:var(--text-decorative);
+
+}
+
+.msg-thread{
+
+flex:1;
+
+display:flex;
+
+flex-direction:column;
+
+min-height:0;
+
+}
+
+.msg-thread-head{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:14px 18px;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.msg-thread-headtext{
+
+flex:1;
+
+min-width:0;
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.msg-thread-headtext strong{
+
+color:var(--text-color);
+
+font-size:.95rem;
+
+font-weight:800;
+
+}
+
+.msg-thread-headtext span{
+
+color:var(--text-muted);
+
+font-size:.76rem;
+
+white-space:nowrap;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+}
+
+.msg-thread-scroll{
+
+flex:1;
+
+overflow-y:auto;
+
+display:flex;
+
+flex-direction:column;
+
+gap:14px;
+
+padding:20px;
+
+background:var(--background-soft);
+
+}
+
+.msg-thread-empty{
+
+margin:auto;
+
+max-width:380px;
+
+text-align:center;
+
+color:var(--text-muted);
+
+font-size:.86rem;
+
+line-height:1.6;
+
+}
+
+.msg-bubble-row{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-end;
+
+max-width:70%;
+
+align-self:flex-end;
+
+}
+
+.msg-bubble-row.is-student{
+
+align-self:flex-start;
+
+align-items:flex-start;
+
+}
+
+.msg-bubble-author{
+
+font-size:.68rem;
+
+font-weight:700;
+
+text-transform:uppercase;
+
+letter-spacing:.04em;
+
+color:var(--amber-700);
+
+margin-bottom:3px;
+
+}
+
+.msg-bubble-row.is-student .msg-bubble-author{
+
+color:var(--text-muted);
+
+}
+
+.msg-bubble{
+
+padding:10px 15px;
+
+border-radius:16px;
+
+border-bottom-right-radius:4px;
+
+background:var(--ink-surface);
+
+}
+
+.msg-bubble-row.is-student .msg-bubble{
+
+border-radius:16px;
+
+border-bottom-left-radius:4px;
+
+background:var(--background);
+
+border:1px solid var(--border-color);
+
+}
+
+.msg-bubble p{
+
+margin:0;
+
+color:#F5F0E7;
+
+font-size:.88rem;
+
+line-height:1.55;
+
+white-space:pre-wrap;
+
+overflow-wrap:anywhere;
+
+}
+
+.msg-bubble-row.is-student .msg-bubble p{
+
+color:var(--text-color);
+
+}
+
+.msg-bubble-date{
+
+margin-top:4px;
+
+font-size:.68rem;
+
+color:var(--text-muted);
+
+}
+
+.msg-thread-composer{
+
+display:flex;
+
+align-items:flex-end;
+
+gap:10px;
+
+padding:14px 18px 6px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.msg-thread-composer textarea{
+
+flex:1;
+
+resize:none;
+
+max-height:120px;
+
+padding:11px 14px;
+
+border-radius:var(--radius-md);
+
+border:1px solid var(--border-color);
+
+background:var(--background);
+
+color:var(--text-color);
+
+font-family:"Inter",sans-serif;
+
+font-size:.9rem;
+
+line-height:1.45;
+
+}
+
+.msg-thread-composer textarea:focus{
+
+outline:none;
+
+border-color:var(--amber-500);
+
+box-shadow:0 0 0 3px rgba(233,163,25,.16);
+
+}
+
+.msg-thread-composer button{
+
+flex-shrink:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+width:42px;
+
+height:42px;
+
+min-height:42px;
+
+border:none;
+
+border-radius:50%;
+
+background:var(--amber-500);
+
+color:var(--ink-surface);
+
+cursor:pointer;
+
+transition:var(--transition);
+
+}
+
+.msg-thread-composer button:hover{ background:var(--amber-600); }
+
+.msg-thread-composer button:disabled{ opacity:.6; cursor:default; }
+
+.msg-thread-composer button i,
+.msg-thread-composer button svg{ width:17px; height:17px; }
+
+.msg-thread-signnote{
+
+display:flex;
+
+align-items:center;
+
+gap:7px;
+
+padding:6px 18px 14px;
+
+color:var(--text-muted);
+
+font-size:.74rem;
+
+}
+
+.msg-thread-signnote i,
+.msg-thread-signnote svg{
+
+width:13px;
+
+height:13px;
+
+color:var(--amber-700);
+
+flex-shrink:0;
+
+}
+
+@media(max-width:900px){
+
+.msg-center{
+
+grid-template-columns:1fr;
+
+min-height:0;
+
+}
+
+.msg-list-pane{
+
+border-right:none;
+
+border-bottom:1px solid var(--border-color);
+
+max-height:44vh;
+
+}
+
+.msg-thread-scroll{ min-height:220px; }
+
+.msg-bubble-row{ max-width:88%; }
 
 }

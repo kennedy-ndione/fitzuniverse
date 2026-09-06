@@ -22,10 +22,17 @@ travail doit préférer les noms d'échelle (--primary-600,
 a désormais son propre système de couleur, découplé de --accent-*.
 ========================================================== */
 
---primary-50:#EEF0FB;
---primary-600:#33418C;
---primary-700:#262F6B;
---primary-900:#12162E;
+/* REFONTE 2026-09-02 — PLUS AUCUN BLEU (décision utilisateur, déjà
+appliquée à l'admin) : l'échelle primaire quitte l'indigo pour la
+famille ENCRE CHAUDE du site. L'historique de ce fichier allait déjà
+dans ce sens (--ink-surface avait remplacé --primary-900 sur les
+boutons, --background-light avait perdu son voile bleu) — ceci achève
+le mouvement : tout ce qui consomme --primary-*/--gradient-primary
+devient chaud d'un coup, sans toucher les pages une à une. */
+--primary-50:#F5F1E8;
+--primary-600:#211D18;
+--primary-700:#3A3228;
+--primary-900:#14100D;
 
 --primary-color:var(--primary-600);
 --primary-hover:var(--primary-700);
@@ -190,11 +197,11 @@ version avec des valeurs qui dérivent. Toute page à fond sombre
 doit surcharger les tokens ci-dessus avec CEUX-LÀ dans son propre
 scope (ex. `body.app-shell{ --background:var(--shell-bg); ...}`),
 jamais avec de nouvelles valeurs inventées localement. */
---shell-bg:#1E293B;
---shell-surface:#0F172A;
---shell-elevated:#263449;
+--shell-bg:#2C261E;
+--shell-surface:#211D18;
+--shell-elevated:#3A332A;
 --shell-border:rgba(255,255,255,.08);
---shell-text:#F1F5F9;
+--shell-text:#F5F1E8;
 --shell-shadow-xs:0 2px 10px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.04);
 --shell-shadow-sm:0 8px 20px rgba(0,0,0,.36);
 --shell-shadow-md:0 14px 32px rgba(0,0,0,.42);
@@ -209,12 +216,14 @@ des dizaines de quasi-copies de --gradient-primary avec des stops
 légèrement différents).
 ========================================================== */
 
+/* Recoloré encre chaude le 2026-09-02 (même refonte que l'échelle
+--primary-* ci-dessus) : le premier arrêt reste le bord « éclairé ». */
 --gradient-primary:
 linear-gradient(
 135deg,
-#4A5BC4 0%,
-#33418C 45%,
-#12162E 100%
+#4A4032 0%,
+#211D18 55%,
+#14100D 100%
 );
 
 /* ==========================================================
@@ -239,6 +248,22 @@ hero, .fitz-demo, .opportunites, parcours eligibility-*, results.css).
 Ce token abandonne donc toute teinte bleue plutôt que la resserrer
 davantage.
 
+Recoloré une seconde fois le 2026-09-01, du graphite vers l'ENCRE
+CHAUDE : même retour utilisateur une itération plus loin — le graphite
+« neutre » (#26262C/#18181C/#0A0A0C) se lisait toujours comme du bleu
+à côté des surfaces sombres chaudes du site (bandeau « ouvert en ce
+moment », pages catalogue en marron chaud), et l'utilisateur a demandé
+explicitement d'aligner le fond de la section Fitz sur ce marron-là.
+Les trois arrêts reprennent des valeurs chaudes DÉJÀ établies ailleurs
+plutôt que d'en inventer : #2C2419 (radial du bandeau opportunités,
+css/homepage-redesign.css), #1C1710 et #0D0A06 (voiles des heros
+catalogue, css/catalog.css), à luminosité équivalente aux arrêts
+graphite qu'elles remplacent — les contrastes du texte blanc posé
+dessus ne bougent donc pas (ils s'améliorent d'un cheveu, les arrêts
+chauds étant à peine plus sombres). Tous les consommateurs suivent
+d'un coup : .fitz-demo, le repli du hero, les fonds des parcours
+eligibility-* et results.
+
 À réserver aux surfaces pleine page ou pleine section. Un bouton ou
 une pastille garde --gradient-primary : l'identité bleue de la marque
 reste voulue à cette échelle, seules les GRANDES surfaces sombres en
@@ -248,9 +273,9 @@ sont détachées.
 --gradient-deep:
 linear-gradient(
 135deg,
-#26262C 0%,
-#18181C 45%,
-#0A0A0C 100%
+#2C2419 0%,
+#1C1710 45%,
+#0D0A06 100%
 );
 
 /* Fond de page. Recoloré le 2026-08-28 : les deux voiles étaient
@@ -442,6 +467,43 @@ Aucun bleu, aucune quatrième couleur.
 
 }
 
+/* ==========================================================
+ÉCHELLE TYPO SUR TÉLÉPHONE (2026-09-01, passe mobile — retour
+utilisateur : « réduire certaines tailles des écritures pour que la
+page contienne correctement les photos »)
+==========================================================
+Les clamp() ci-dessus ont des PLANCHERS pensés pour le bureau : sur un
+écran de 375px, --fs-hero tombait à 2.75rem (44px) et --fs-h2 à
+1.9rem (30px) — chaque titre de section mangeait 4 à 6 lignes, et les
+photos/cartes se retrouvaient repoussées hors du premier écran. Sous
+576px, les planchers descendent d'un cran vers les échelles des sites
+mobiles actuels (titre ~34px, section ~25px). Un @media sur :root et
+non des règles par page : tous les titres du site (accueil, catalogue,
+parcours, espace) suivent d'un coup, et les rapports entre niveaux
+sont conservés. Les tailles de corps (--fs-body/small/caption) ne
+bougent pas — elles sont déjà à l'échelle mobile. */
+@media(max-width:576px){
+
+:root{
+
+--fs-hero:2.15rem;
+
+--fs-h1:1.9rem;
+
+--fs-h2:1.55rem;
+
+--fs-h3:1.18rem;
+
+--fs-lead:1rem;
+
+--fs-page-title:1.3rem;
+
+--fs-stat:1.5rem;
+
+}
+
+}
+
 /* Seule variante autorisée du symbole : fond sombre. .on-dark est le
 crochet générique à poser sur un conteneur sombre ponctuel (ex. la
 carte encre de login.html) ; les autres sélecteurs sont les surfaces
@@ -452,11 +514,17 @@ de la connexion admin. */
 .header:not(.is-scrolled),
 .footer,
 .fitz-fab,
-.sidebar-brand,
 .admin-logo-wrap{
 --logo-structure:#FDFCFA;
 --logo-descriptor:#E9A319;
 }
+/* .sidebar-brand a QUITTÉ ce bloc le 2026-09-04 : la sidebar de
+l'admin est claire depuis la refonte du 2026-09-02, et
+admin/control-center.css redéclarait les tokens clairs pour
+compenser — ce qui donnait DEUX sources pour --logo-descriptor et
+faisait échouer test/logo-lockup.test.mjs. Elle hérite désormais
+des valeurs claires de :root, qui sont exactement celles que la
+surcharge rétablissait. */
 
 /* Balisage canonique (identique dans tous les fichiers) : un <svg
 class="fitz-mark"> sans AUCUN attribut stroke= ; le grand arc porte
@@ -506,7 +574,11 @@ design-previews/logo-lockup.html.
 ========================================================== */
 
 .fitz-lockup{
---lockup-size:44px;
+--lockup-size:36px;  /* défaut réduit de 44 à 36 le 2026-09-01 —
+   demande utilisateur : le lockup d'en-tête était trop grand pour un
+   rendu professionnel. Les tailles réelles sont posées PAR CONTEXTE
+   ci-dessous ; ce défaut ne sert qu'aux emplacements sans contexte
+   connu (aperçus de design-previews/). */
 display:inline-flex;
 align-items:center;
 gap:calc(var(--lockup-size) * .26);
@@ -545,6 +617,26 @@ margin-right:-.295em;
 text-transform:uppercase;
 line-height:1;
 color:var(--logo-descriptor);
+}
+
+/* TAILLES PAR CONTEXTE (2026-09-01) — les tailles quittent le HTML.
+Elles vivaient en style="--lockup-size:NNpx" sur chacun des 35 lockups :
+un changement global demandait 35 modifications, et surtout un style
+inline BAT toute règle de feuille — les paliers responsive de
+css/header.css (42px puis 36px) ne s'appliquaient donc JAMAIS, le logo
+mobile restait à 48px. Règles mortes depuis leur écriture, révélées en
+réduisant la taille de base. Désormais : une règle par contexte ici, et
+les paliers d'en-tête (css/header.css, réécrits en
+.header .fitz-lockup pour garder la priorité) redeviennent effectifs. */
+.header .fitz-lockup,
+.footer .fitz-lockup{
+--lockup-size:36px;
+}
+
+.journey-topbar .fitz-lockup,
+.sidebar-brand .fitz-lockup,
+.page-brandbar .fitz-lockup{
+--lockup-size:30px;
 }
 
 /* Barre de marque des pages sans en-tete (offers, payment, results,
@@ -596,9 +688,21 @@ padding:0;
 box-sizing:border-box;
 }
 
-html{
-scroll-behavior:smooth;
-}
+/* PAS de `scroll-behavior:smooth` ici — retiré le 2026-09-06 après mesure
+en production : un saut d'ancre durait 547 ms, et un « retour en haut »
+depuis 40 000 px, 1 479 ms. Pendant tout ce temps le site paraît mou alors
+qu'il tient 60 fps : le lissage global ne rendait pas le défilement fluide,
+il rendait chaque saut LENT.
+
+Le lissage reste là où il est un choix : les `scrollIntoView({behavior:
+"smooth"})` de applications.js (on suit une carte des yeux). S'il manque un
+jour sur les ancres de l'accueil, il se pose sur ces liens-là dans
+js/main.js — jamais sur `html`, qui l'imposerait à toute navigation, y
+compris aux sauts que le navigateur fait pour l'utilisateur.
+
+Le `scroll-behavior:auto !important` de css/animations.css
+(prefers-reduced-motion) reste en place : il ne coûte rien et couvre les
+lissages locaux. */
 
 ::selection{
 background:var(--primary-color);
@@ -606,7 +710,7 @@ color:#fff;
 }
 
 html{
-scrollbar-color:var(--primary-color) var(--background-soft);
+scrollbar-color:#B7AFA3 var(--background-soft);
 scrollbar-width:thin;
 }
 
@@ -618,14 +722,18 @@ width:11px;
 background:var(--background-soft);
 }
 
+/* Pouce NEUTRE CHAUD (2026-09-02) : l'indigo --primary-color était le
+dernier bleu visible sur toutes les pages (signalé par l'utilisateur,
+capture du Control Center) — la barre de défilement n'est pas un
+élément de marque, elle reste discrète. */
 ::-webkit-scrollbar-thumb{
-background:var(--primary-color);
+background:#B7AFA3;
 border-radius:999px;
 border:3px solid var(--background-soft);
 }
 
 ::-webkit-scrollbar-thumb:hover{
-background:var(--primary-hover);
+background:#8A837A;
 }
 
 body{
@@ -656,6 +764,17 @@ img{
 
 max-width:100%;
 
+/* height:auto AJOUTÉ à la passe mobile du 2026-09-01 — il manquait au
+trio canonique. Sans lui, une image portant width=/height= HTML (posés
+partout à l'audit du 2026-08-29 contre le CLS) garde sa hauteur
+d'ATTRIBUT quand max-width:100% réduit sa largeur : sur téléphone,
+.vision-photo (800x533) s'affichait en 335x533, étirée verticalement —
+et sa règle CSS aspect-ratio était ignorée (elle exige une dimension
+auto). height:auto ne touche que l'attribut : toute règle CSS de
+hauteur (object-fit:cover des cartes, drapeaux à taille fixe...) est
+plus spécifique qu'un sélecteur d'élément et continue de gagner. */
+height:auto;
+
 display:block;
 
 }
@@ -671,6 +790,22 @@ color:inherit;
 ul{
 
 list-style:none;
+
+}
+
+/* EXCEPTION — les listes rendues depuis du Markdown par Fitz gardent
+   leurs puces. La règle ci-dessus retire les puces de TOUTES les
+   listes du site, ce qui convient aux menus et aux grilles de cartes
+   mais transformait une énumération de Fitz en bloc de lignes
+   indistinctes : constaté le 2026-09-05 sur la page de résultats, dans
+   « Ce qui rend votre dossier crédible ». Une liste de faits doit se
+   lire comme une liste. */
+.ai-md-list,
+.fitz-analysis-body ul{
+
+list-style:disc;
+
+padding-left:20px;
 
 }
 
@@ -1574,10 +1709,12 @@ métadonnée, aide de champ ou légende posée sur une surface Fitz
 --text-muted est redéfini ici, sur la surface elle-même, plutôt que
 corrigé composant par composant : la variable cascade à toute la
 carte, donc aucun texte secondaire ne peut passer au travers, y
-compris ceux ajoutés plus tard. La valeur reprend --text-light
-(#475569), qui remonte à 5,83:1 sur le crème — pas une couleur
-inventée, le niveau de gris juste au-dessus dans l'échelle. */
---text-muted:#475569;
+compris ceux ajoutés plus tard. La valeur reprend --text-light —
+par la VARIABLE depuis le 2026-09-02 : l'ancienne copie en dur
+(#475569) datait de l'échelle slate et restait le dernier gris
+BLEUTÉ actif du système ; en suivant la variable, la surface Fitz
+reste alignée sur l'échelle chaude quoi qu'elle devienne. */
+--text-muted:var(--text-light);
 
 }
 
@@ -1638,7 +1775,7 @@ backdrop-filter:blur(16px);
 
 .glass-panel--dark{
 
-background:rgba(15,23,42,.45);
+background:rgba(23,19,16,.45);
 
 border:1px solid rgba(255,255,255,.16);
 
@@ -1772,7 +1909,7 @@ background:#FFFFFF;
 
 border:1.5px solid var(--amber-500);
 
-box-shadow:0 1px 2px rgba(18,22,46,.05), 0 6px 18px rgba(233,163,25,.22);
+box-shadow:0 1px 2px rgba(20,16,13,.05), 0 6px 18px rgba(233,163,25,.22);
 
 color:var(--amber-700);
 
@@ -1984,7 +2121,7 @@ outline:none;
 
 border-color:var(--primary-color);
 
-box-shadow:0 0 0 3px rgba(51,65,140,.12);
+box-shadow:0 0 0 3px rgba(26,23,20,.10);
 
 }
 
@@ -2082,7 +2219,7 @@ justify-content:center;
 
 padding:24px;
 
-background:rgba(15,23,42,.55);
+background:rgba(23,19,16,.55);
 
 backdrop-filter:blur(4px);
 
@@ -2191,6 +2328,25 @@ padding:110px 0;
 
 }
 
+/* Rythme vertical mobile (passe mobile 2026-09-01, lot 3) : 110px de
+respiration entre sections est un rythme d'écran de bureau ; sur un
+téléphone il fait défiler du vide et éloigne les contenus les uns des
+autres. ~64px est le pas des sites mobiles actuels. Les feuilles de
+page qui redéfinissent leur propre padding de section APRÈS base.css
+(ex. homepage-sections.css) doivent porter leur propre palier ≤576px :
+un @media n'ajoute aucune spécificité, c'est l'ordre de chargement qui
+tranche. */
+@media(max-width:576px){
+
+section,
+.section{
+
+padding:64px 0;
+
+}
+
+}
+
 .section-header{
 
 max-width:760px;
@@ -2239,7 +2395,7 @@ margin-bottom:22px;
 
 border-radius:999px;
 
-background:rgba(51,65,140,.08);
+background:rgba(26,23,20,.06);
 
 color:var(--primary-color);
 
@@ -2256,4 +2412,26 @@ width:18px;
 
 height:18px;
 
+}
+
+/* ==========================================================
+SAISIE SUR TÉLÉPHONE — PAS DE ZOOM AU FOCUS (2026-09-03)
+==========================================================
+Retour utilisateur (captures iPhone) : « le site n'est pas statique…
+surtout quand on essaie de saisir un texte ». Cause : iOS Safari ZOOME
+automatiquement la page dès qu'un champ dont la police fait moins de
+16px reçoit le focus — et la page se décale, puis ne revient pas à
+l'échelle après le clavier. Plusieurs champs du site sont en
+--fs-small (14,4px) ou moins (recherche du catalogue, filtres, champs
+des outils). Sous 720px, tout champ de saisie passe à 16px : c'est la
+seule parade fiable (maximum-scale=1 est à proscrire, il bloque le
+zoom d'accessibilité). !important assumé : des dizaines de règles de
+page posent leur propre taille avec une spécificité plus haute, et
+l'exception doit gagner partout, y compris sur les champs injectés. */
+@media (max-width:720px){
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+select,
+textarea{
+font-size:16px !important;
+}
 }

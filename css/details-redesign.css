@@ -227,3 +227,21 @@ la couleur héritée et l'emporte. Le correctif consigné là-bas est
 .details-hero .details-hero-sub{
 color:inherit;
 }
+
+/* ----------------------------------------------------------
+AUDIT MOBILE (2026-09-01) — un seul « Retour » sur petit écran.
+Sur mobile, deux liens retour identiques s'affichaient à 86px
+d'écart : « Retour au catalogue » dans l'en-tête (header-actions)
+et « Retour aux bourses » dans le hero (details-hero-inner), tous
+deux vers scholarships.html. Doctrine regles_mobile.md : le rendu
+mobile ne doit pas être encombré. On masque le DOUBLON du hero et
+on garde celui de l'en-tête, toujours visible même après défilement.
+Au-dessus de 640px, les deux restent (l'en-tête peut se replier et
+le hero a la place). CSS seul : js/back-link.js, partagé avec
+d'autres pages, n'est pas touché.
+---------------------------------------------------------- */
+@media (max-width: 640px){
+.details-hero-inner .back-link{
+display:none;
+}
+}

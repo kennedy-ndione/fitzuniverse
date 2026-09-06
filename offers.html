@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Choisissez votre accompagnement | FitzUniverse</title>
 
@@ -56,7 +56,9 @@ cette page n'avait jamais chargé la feuille d'animations partagée. -->
 <link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="offers.css">
 <link rel="stylesheet" href="css/offers-redesign.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body>
@@ -69,7 +71,7 @@ defaut de style. Lien vers index.html : ces pages ne chargent aucun
 shell, la session n'y est pas connue — c'est aussi la cible de leurs
 liens de retour existants. -->
 <header class="page-brandbar">
-<a href="index.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -250,11 +252,19 @@ pricing-plans.js. -->
 <span>candidatures accompagnées de bout en bout</span>
 </div>
 
+<!-- Restructuré le 2026-09-02 (demande utilisateur) : chaque puce
+correspond à quelque chose que l'ESPACE ÉTUDIANT rend réellement —
+parcours 6 étapes, outils Fitz, chat + entraînement aux tests,
+préparation aux entretiens, suivi, messagerie FitzUniverse. Essentiel
+est la carte-vitrine de l'espace ; Ambition n'ajoute QUE volume et
+durée (doctrine plan-features : aucun outil réservé au-dessus). -->
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>100 % des outils Fitz : lettre, CV, e-mails, traduction</span></li>
-<li><i data-lucide="check"></i><span>Diagnostic détaillé et plan d'action personnalisé</span></li>
-<li><i data-lucide="check"></i><span>Checklists, calendrier et alertes d'échéances</span></li>
-<li><i data-lucide="check"></i><span>Vérification complète de chaque dossier</span></li>
+<li><i data-lucide="check"></i><span>Parcours guidé en 6 étapes — de l'éligibilité jusqu'au visa</span></li>
+<li><i data-lucide="check"></i><span>100 % des outils Fitz : lettre de motivation, e-mails, vérification du dossier, traduction, compression</span></li>
+<li><i data-lucide="check"></i><span>Discuter avec Fitz : questions illimitées et entraînement aux tests (IELTS, TOPIK…) calé sur vos échéances</span></li>
+<li><i data-lucide="check"></i><span>Préparation aux entretiens : banque de questions par type de bourse</span></li>
+<li><i data-lucide="check"></i><span>Suivi des candidatures : statuts, rappels d'échéances, checklists de documents</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : écrivez à l'équipe directement depuis votre espace</span></li>
 <li><i data-lucide="check"></i><span>2 révisions par dossier</span></li>
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
 </ul>
@@ -303,10 +313,14 @@ elles sont assurées par Fitz seul. La ligne "Relecture humaine de la
 lettre de motivation" a été retirée le 2026-08-22 — elle promettait un
 service non rendu, et brouillait la seule justification du prix de
 Renforcé. Voir le commentaire dans pricing-plans.js. -->
+<!-- Ambition vend honnêtement ce qui la distingue : le VOLUME et la
+DURÉE (les anciens « Préparation à l'entretien » et « Alertes » sont
+inclus dès Essentiel — les afficher ici laissait croire le contraire). -->
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel</span></li>
-<li><i data-lucide="check"></i><span>Préparation à l'entretien</span></li>
-<li><i data-lucide="check"></i><span>Alertes sur les dates limites</span></li>
+<li><i data-lucide="check"></i><span>4 candidatures de plus (9 au lieu de 5) — multipliez les destinations sans devoir choisir</span></li>
+<li><i data-lucide="check"></i><span>3 mois d'accompagnement de plus (9 au lieu de 6)</span></li>
+<li><i data-lucide="check"></i><span>Le meilleur prix par candidature des formules autonomes (≈ 8 300 F)</span></li>
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
 </ul>
 
@@ -361,8 +375,8 @@ avec `highlights` de pricing-plans.js, que lit aussi le panneau
 d'incitation du tableau de bord. -->
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>Vérification humaine de chaque dossier avant l'envoi</span></li>
-<li><i data-lucide="check"></i><span>Conseils et suggestions d'un conseiller sur vos candidatures</span></li>
-<li><i data-lucide="check"></i><span>Échanges directs avec votre conseiller sur WhatsApp</span></li>
+<li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
+<li><i data-lucide="check"></i><span>Échanges directs avec votre conseiller via la messagerie FitzUniverse</span></li>
 <li><i data-lucide="check"></i><span>L'assistance continue de Fitz en renfort</span></li>
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
 </ul>
@@ -409,7 +423,7 @@ d'incitation du tableau de bord. -->
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
 </ul>
 
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20je%20souhaite%20rejoindre%20la%20formule%20Signature.%20Reste-t-il%20une%20place%20dans%20la%20promotion%20en%20cours%20%3F" target="_blank" rel="noopener" class="btn btn-secondary plan-cta">
+<a href="https://wa.me/221776981877?text=Bonjour%2C%20je%20souhaite%20rejoindre%20la%20formule%20Signature.%20Reste-t-il%20une%20place%20dans%20la%20promotion%20en%20cours%20%3F" target="_blank" rel="noopener" class="btn btn-secondary plan-cta" data-plan="signature">
 <span>Demander ma place</span>
 <i data-lucide="arrow-right"></i>
 </a>
@@ -515,11 +529,15 @@ précis où l'on choisit de payer ou non. -->
 <script src="pricing-plans.js"></script>
 <script src="offers.js"></script>
 <script type="module" src="offers-context.js"></script>
+<!-- Marque la formule ACTUELLE de l'étudiant connecté (badge + CTA
+neutralisé) et une demande de changement en cours — voir
+js/offers-current-plan.js (2026-09-02). Sans session : inactif. -->
+<script type="module" src="js/offers-current-plan.js"></script>
 
-<!-- Restreint le lien WhatsApp de réassurance aux abonnés
-Renforcé/Signature (même formule que "Mon conseiller" sur
-advisor.html) — même mécanisme (fetchFeatureFlags + isFeatureLocked,
-feature "advisor"), pas une 3e liste de plans en dur. Page volontairement
+<!-- Restreint le lien WhatsApp de réassurance aux abonnés SIGNATURE
+uniquement (décision 2026-09-02) — mécanisme fetchFeatureFlags +
+isFeatureLocked, feature "whatsapp_direct" (js/plan-features.js),
+pas une liste de plans en dur. Page volontairement
 publique : jamais de redirection ni de blocage ici, une erreur ou
 l'absence de session laisse simplement le lien caché. -->
 <script type="module">
@@ -527,7 +545,8 @@ import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-
 resolveSession().then(async (session) => {
 if (!session || session.disabled) return;
 const featureFlags = await fetchFeatureFlags();
-if (!isFeatureLocked(session.planId, featureFlags, "advisor", session.testerAccess, session.hasFitzExpress)) {
+// "whatsapp_direct" (2026-09-02) : WhatsApp réservé à Signature.
+if (!isFeatureLocked(session.planId, featureFlags, "whatsapp_direct", session.testerAccess, session.hasFitzExpress)) {
 document.querySelector(".reassurance-item-whatsapp")?.removeAttribute("hidden");
 }
 }).catch((error) => {

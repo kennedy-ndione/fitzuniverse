@@ -35,7 +35,7 @@
 // que ce soit dit en toutes lettres.
 // ============================================================
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
@@ -48,6 +48,15 @@ const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROJECT_ID = "scholarbridge-e0d84";
 const PLAN_PATH = join(racine, "scripts", ".lot-plan.json");
 const EXPORT_PATH = join(racine, "scripts", "export-catalog.json");
+
+// L'INSTANTANÉ PUBLIC (2026-09-03) — assets/data/catalogue.json, lu par
+// js/catalog-data.js à la place de Firestore : zéro lecture par visite.
+// Écrit par `export`, déployé avec le site (firebase deploy). Voir
+// l'en-tête de js/catalog-snapshot.js. Contrairement à export-catalog
+// (résumé d'audit, clés françaises, gitignoré), celui-ci porte les
+// documents TELS QUELS, sous les noms des collections — c'est ce que
+// le site attend — et il est versionné.
+const INSTANTANE_PATH = join(racine, "assets", "data", "catalogue.json");
 
 // Constantes OAuth PUBLIQUES de firebase-tools (voir l'en-tête) ; les
 // mêmes variables d'environnement que la CLI permettent de les
@@ -311,7 +320,19 @@ bloquant = true;
 continue;
 }
 
-const niveaux = Array.isArray(snap.data().levels) ? snap.data().levels : [];
+const niveauxBase = Array.isArray(snap.data().levels) ? snap.data().levels : [];
+
+// Restriction déclarée par le lot (voir lot-validate.mjs) : une
+// université peut ne participer qu'à certains cycles.
+const niveaux = Array.isArray(lien.niveaux) && lien.niveaux.length
+? niveauxBase.filter((n) => lien.niveaux.includes(n))
+: niveauxBase;
+
+if (Array.isArray(lien.niveaux) && lien.niveaux.length && !niveaux.length) {
+err(`ERREUR : "${lien.scholarshipId}" — la restriction de niveaux (${lien.niveaux.join(", ")}) ne recoupe aucun niveau de la bourse en base (${niveauxBase.join(", ")}).`);
+bloquant = true;
+continue;
+}
 
 if (!niveaux.length) {
 err(`ERREUR : la bourse "${lien.scholarshipId}" n'a pas de champ levels — aucun programme ne sera créé sans niveau.`);
@@ -658,6 +679,21 @@ status: d.status || ""
 };
 }
 
+// Convertit récursivement ce que JSON ne sait pas écrire : les
+// Timestamps Firestore (admin SDK) deviennent des chaînes ISO. Tout le
+// reste passe tel quel.
+function serialiser(valeur) {
+if (valeur === null || valeur === undefined) return valeur;
+if (typeof valeur.toDate === "function") return valeur.toDate().toISOString();
+if (Array.isArray(valeur)) return valeur.map(serialiser);
+if (typeof valeur === "object") {
+const sortie = {};
+for (const [k, v] of Object.entries(valeur)) sortie[k] = serialiser(v);
+return sortie;
+}
+return valeur;
+}
+
 async function exporter() {
 
 const db = await ouvrirFirestore();
@@ -754,6 +790,29 @@ programmes
 await writeFile(EXPORT_PATH, JSON.stringify(exportJson, null, 2), "utf8");
 
 ok(`scripts/export-catalog.json écrit : ${bourses.length} bourses · ${universites.length} universités · ${programmes.length} programmes · ${Object.keys(parPays).length} pays.`);
+
+// --- L'instantané PUBLIC, sur les MÊMES snapshots (aucune lecture de
+// plus). Documents tels quels, id inclus, Timestamps Firestore
+// convertis en ISO (JSON n'a pas de type date ; le site n'en lit
+// aucun sur ces trois collections, mais un objet {_seconds} servi tel
+// quel serait un piège pour la suite). Trié par id : un export sans
+// changement de données donne un fichier identique — diff git propre.
+const brut = (snap) => snap.docs
+.map((d) => ({ id: d.id, ...serialiser(d.data()) }))
+.sort((a, b) => a.id.localeCompare(b.id));
+
+const instantane = {
+genereLe: exportJson.genereLe,
+programs: brut(programmesSnap),
+universities: brut(universitesSnap),
+scholarships: brut(boursesSnap)
+};
+
+await mkdir(dirname(INSTANTANE_PATH), { recursive: true });
+const texte = JSON.stringify(instantane);
+await writeFile(INSTANTANE_PATH, texte, "utf8");
+
+ok(`assets/data/catalogue.json écrit (${Math.round(texte.length / 1024)} Ko) — c'est CE fichier que le site public sert. Le déployer : firebase deploy --only hosting.`);
 
 }
 

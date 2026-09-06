@@ -71,11 +71,52 @@ la main, jamais chargés par une page publique.
    pas est un coût que personne ne surveille — c'est ce qui a permis à
    l'accueil de coûter le double pendant des semaines.
 
-## Ce qui reste à faire
+## L'instantané statique (fait le 2026-09-03)
 
-La mémoïsation vaut pour **un chargement de page**. Deux visites
-successives relisent tout. Le correctif de fond est un **instantané JSON
-statique** du catalogue, régénéré à chaque lot : une visite passerait
-alors de ~591 lectures à zéro. C'est un chantier distinct, qui suppose
-une décision sur le forfait Firebase (Blaze) et une stratégie
-d'invalidation — il n'est pas engagé.
+Le correctif de fond est en place. `scripts/lot.mjs export` écrit
+désormais **deux** fichiers :
+
+| Fichier | Forme | Pour qui | Versionné |
+|---|---|---|---|
+| `scripts/export-catalog.json` | résumé d'audit, clés françaises | l'audit des lots | non (gitignoré) |
+| `assets/data/catalogue.json` | les documents TELS QUELS, sous `programs` / `universities` / `scholarships` | **le site public** | oui |
+
+`js/catalog-data.js` lit d'abord `assets/data/catalogue.json` (servi par
+Firebase Hosting comme un fichier — **zéro lecture Firestore**), et ne
+retombe sur Firestore que si le fichier manque ou n'est pas exploitable
+(`js/catalog-snapshot.js`, testé par `test/catalog-snapshot.test.mjs`).
+La fiche (`details.js`) y lit aussi son programme, son université et sa
+bourse. Le quota ne sert plus qu'aux commandes d'administration et à
+l'espace étudiant connecté.
+
+Vérifié en harnais (Playwright, SDK Firebase stubbé) : instantané présent
+→ 0 `getDocs`, catalogue affiché ; instantané absent → 3 `getDocs`, comme
+avant ; **quota épuisé + instantané présent → catalogue affiché** ; quota
+épuisé sans instantané → grille vide (la situation du 3 septembre au soir).
+
+### Coût par page, depuis l'instantané
+
+| Page | Lectures Firestore |
+|---|---|
+| `index.html`, `scholarships.html`, `universities.html`, `results.html`, `test-prep.html`, `profile.html`, `eligibility-questions.html` | **0** |
+| `scholarship-details.html` | **0** (était 2-3) |
+| `dashboard.html`, `applications.html` | 0 pour le catalogue ; les documents de l'utilisateur restent lus |
+
+### La règle de publication
+
+**Le catalogue public affiche l'état du dernier `export` déployé.**
+Un lot = `analyser` → `ecrire` → `verifier` → `export` →
+`firebase deploy --only hosting`. Sans le déploiement, les visiteurs
+voient l'export précédent ; en développement (Live Server), le fichier
+local est servi tel quel dès l'export.
+
+`firebase.json` sert le fichier avec `Cache-Control: max-age=300` : un
+nouvel export est vu au plus tard cinq minutes après le déploiement, et
+le navigateur revalide à chaque page (`fetch` en `no-cache`).
+
+### Ce qui reste hors instantané
+
+L'espace étudiant connecté (candidatures, profil, messages) lit ses
+propres documents : quelques lectures par page, sans rapport avec la
+taille du catalogue. `admin/` continue de lire Firestore en direct, à
+dessein.

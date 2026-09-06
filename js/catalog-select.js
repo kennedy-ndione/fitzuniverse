@@ -1,13 +1,19 @@
 /* ==========================================================
-FITZUNIVERSE — MENU « PAYS » / « NIVEAU » PERSONNALISÉ (2026-08-29)
-scholarships.html + universities.html.
+FITZUNIVERSE — MENU « PAYS » / « NIVEAU » / « TYPE » PERSONNALISÉ
+(2026-08-29) — scholarships.html + universities.html.
 
 Pourquoi ce fichier : un <select> HTML ouvre une liste dessinée par
 l'OS (fond blanc, surlignage bleu sur Windows/Chrome) — aucune règle
 CSS ne peut l'habiller. Ce script construit, à côté de chaque
-<select id="countryFilter">/<select id="levelFilter">, un petit menu
-(bouton + liste <ul>) qui porte les couleurs et la police du site
-(voir css/catalog-redesign.css, section « MENU PAYS / NIVEAU »).
+<select> listé dans SELECT_IDS, un petit menu (bouton + liste <ul>)
+qui porte les couleurs et la police du site (voir
+css/catalog-redesign.css, section « MENU PAYS / NIVEAU / TYPE »).
+
+#funderFilter (« Tous les types », bourses uniquement) ajouté le
+2026-09-01 : créé le 2026-08-30, un jour APRÈS ce script, il était
+resté un <select> natif — le seul de la barre à ouvrir la liste
+blanche/bleue de l'OS que ce fichier existe précisément pour
+remplacer (repéré par l'utilisateur sur capture, comme l'original).
 
 Ce script NE TOUCHE PAS à scholarships.js / universities-page.js : le
 <select> d'origine reste dans le DOM (juste masqué), garde sa valeur
@@ -30,7 +36,7 @@ Deux subtilités de synchronisation, sans rien modifier ailleurs :
 (function () {
 "use strict";
 
-const SELECT_IDS = ["countryFilter", "levelFilter"];
+const SELECT_IDS = ["countryFilter", "levelFilter", "funderFilter"];
 
 function buildCustomSelect(select) {
 

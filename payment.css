@@ -93,7 +93,7 @@ width:360px;
 
 height:360px;
 
-background:radial-gradient(circle,rgba(51,65,140,.22) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(233,163,25,.20) 0%,transparent 70%);
 
 animation:heroHaloA 24s ease-in-out infinite;
 
@@ -275,10 +275,10 @@ margin-bottom:36px;
 border-radius:var(--radius-lg);
 
 background:
-radial-gradient(circle at top right,rgba(51,65,140,.1),transparent 55%),
+radial-gradient(circle at top right,rgba(233,163,25,.10),transparent 55%),
 var(--background);
 
-border:1px solid rgba(51,65,140,.4);
+border:1px solid rgba(233,163,25,.5);
 
 box-shadow:var(--shadow-lg);
 
@@ -468,7 +468,7 @@ RÉCAPITULATIF
 .summary-card{
 
 background:
-radial-gradient(circle at 100% 0%,rgba(51,65,140,.04),transparent 45%),
+radial-gradient(circle at 100% 0%,rgba(233,163,25,.05),transparent 45%),
 var(--background);
 
 border:1px solid var(--border-color);
@@ -682,7 +682,7 @@ border:0;
 .payment-method{
 
 --method-color:var(--primary-color);
---method-glow:rgba(51,65,140,.28);
+--method-glow:rgba(233,163,25,.30);
 --method-tint:var(--background-light);
 
 display:block;
@@ -871,7 +871,7 @@ height:48px;
 
 border-radius:14px;
 
-box-shadow:0 8px 18px rgba(15,23,42,.16);
+box-shadow:0 8px 18px rgba(23,19,16,.16);
 
 transition:transform .25s var(--ease-premium);
 
@@ -932,7 +932,7 @@ border:1px solid var(--border-color);
 
 border-radius:12px;
 
-box-shadow:0 8px 18px rgba(15,23,42,.1);
+box-shadow:0 8px 18px rgba(23,19,16,.1);
 
 }
 

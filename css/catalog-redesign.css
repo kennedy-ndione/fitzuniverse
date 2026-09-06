@@ -185,7 +185,7 @@ font-size:.8rem;
 }
 
 /* ==========================================================
-MENU « PAYS » / « NIVEAU » — remplacement du <select> natif
+MENU « PAYS » / « NIVEAU » / « TYPE » — remplacement du <select> natif
 (2026-08-29). Un <select> HTML ne peut pas s'habiller : sa liste
 déroulante est dessinée par l'OS (fond blanc, surlignage bleu Windows
 sur la capture qui a motivé ce correctif), aucune règle CSS ne
@@ -195,6 +195,8 @@ le reste du site ; le <select> d'origine reste dans le DOM, cachée
 (display:none plus bas), pour que scholarships.js/universities-page.js
 continuent de lire et déclencher son évènement `change` sans aucune
 modification — seul l'habillage change, jamais la logique de filtre.
+« Tous les types » (#funderFilter) rejoint les deux premiers le
+2026-09-01 — voir l'en-tête de js/catalog-select.js.
 ========================================================== */
 .catalog-select-native-hidden{
 display:none;
@@ -291,7 +293,12 @@ font-size:.82rem;
 line-height:1.4;
 color:var(--text-color);
 cursor:pointer;
-white-space:nowrap;
+/* normal et non nowrap (2026-09-01, arrivée de #funderFilter) : son
+option « Organisation (fondation, ONG, UE, banque de développement) »
+dépasse la max-width de 260px de la liste — en nowrap elle serait
+tronquée avec un ascenseur horizontal. Les libellés courts (pays,
+niveaux) tiennent sur une ligne et ne changent pas d'aspect. */
+white-space:normal;
 }
 
 .catalog-custom-select-option.is-focused,
@@ -312,4 +319,76 @@ background:rgba(217,128,90,.12);
 @media(max-width:720px){
 .catalog-custom-select{ flex:1 1 0; }
 .catalog-custom-select-trigger{ max-width:none; }
+}
+
+/* ==========================================================
+PHOTOS ENTIÈRES SUR TÉLÉPHONE (2026-09-03)
+==========================================================
+Retour utilisateur : « côté mobile, les photos n'affichent pas en
+entier ». Au bureau la bannière est un cadre LARGE : la photo 2:1 s'y
+voit en entier. Sur téléphone le même cadre devient PORTRAIT (390×367
+mesuré) et object-fit:cover n'en montre plus qu'une tranche verticale
+(~35 % de l'image perdus). Le texte ne peut pas être posé SUR une
+photo 2:1 de 187px de haut ; donc, sur téléphone, la bannière se
+réorganise : la photo devient une bande pleine largeur à SON propre
+ratio (aucun recadrage), fondue par le bas dans l'encre, et le badge,
+le titre et les statistiques viennent en dessous. Les voiles obliques
+de bureau (::before/::after) n'ont plus de raison d'être : ils sont
+coupés, la lisibilité vient du fond encre lui-même. La réserve haute
+protège toujours l'en-tête public fixe. */
+@media (max-width:720px){
+
+.bourses-hero,
+.uni-hero{
+display:block;
+padding:84px 0 0;
+background:linear-gradient(180deg,#1C1710 0%,#15100B 100%);
+}
+
+.bourses-hero-bg,
+.uni-hero-bg{
+position:relative;
+inset:auto;
+z-index:0;
+display:block;
+width:100%;
+height:auto;
+aspect-ratio:2/1;
+object-fit:cover;
+transform:none;
+/* Fondu long : le tiers bas de la photo se dissout dans l'encre, et
+c'est là que se pose le texte — photo et informations forment un seul
+bloc, comme au bureau. */
+-webkit-mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+}
+
+.bourses-hero::before,
+.bourses-hero::after,
+.uni-hero::before,
+.uni-hero::after{ display:none; }
+
+.bourses-hero > .container,
+.uni-hero > .container,
+.bourses-hero > *:not(img):not(.container),
+.uni-hero > *:not(img):not(.container){
+position:relative;
+z-index:1;
+}
+
+.bourses-hero > .container,
+.uni-hero > .container{
+margin-top:-74px;
+padding:0 22px 28px;
+}
+
+/* Le titre repose sur la partie fondue de la photo : une ombre courte
+sécurise sa lecture là où un reflet clair subsisterait. */
+.bourses-hero h1,
+.uni-hero h1,
+.bourses-hero-badge,
+.uni-hero-badge{
+text-shadow:0 1px 2px rgba(13,10,6,.55);
+}
+
 }

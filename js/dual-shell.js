@@ -92,6 +92,11 @@ if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
 
+// Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
+if (window.FitzMobileNav) {
+window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
+}
+
 if (featureFlags) {
 document.querySelectorAll("[data-feature]").forEach((el) => {
 const key = el.dataset.feature;
@@ -121,7 +126,11 @@ advisorNav.hidden = !hasAdvisor;
 }
 }
 
-initMessagesPanel(session.user.uid);
+// Droit de réponse de la messagerie FitzUniverse — même règle que
+// js/app-shell.js (fonctionnalité "student_messaging").
+initMessagesPanel(session.user.uid, {
+canReply: !!featureFlags && !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress)
+});
 
 if (window.lucide) lucide.createIcons();
 

@@ -7,11 +7,19 @@ collection,
 getDocs
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+// Instantané statique du catalogue (2026-09-03) : la fiche lit son
+// programme, son université et sa bourse dans assets/data/catalogue.json
+// quand il est là — 0 lecture Firestore — et retombe sur getDoc sinon.
+// Voir l'en-tête de js/catalog-snapshot.js.
+import { documentDuCatalogue } from "./js/catalog-data.js";
+
 import { trackEvent } from "./js/analytics.js";
 import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
 import { languageLevelScore } from "./eligibility-ai.js";
 
 import { resolveCityImage } from "./js/scholarship-image.js";
+
+import { etatCandidature } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
 
@@ -50,7 +58,25 @@ const checks = [];
 // égalité stricte écartait à tort ces programmes pour tout étudiant,
 // même parfaitement éligible — remplacée par une inclusion (audit
 // 2026-08-22).
-const targetLevel = responses.studyLevel === "Nouveau bachelier" ? "Licence" : responses.studyLevel;
+// ⚠️ CORRECTIF DU 2026-09-05 — cette ligne lisait `studyLevel`, un
+// champ SUPPRIMÉ du questionnaire lors de la refonte du 2026-08-29 :
+// elle valait donc `undefined` pour tout le monde depuis huit jours,
+// et le contrôle « Niveau académique » passait toujours au vert sans
+// rien vérifier. Le cycle visé s'appelle `targetLevel` (et il est
+// désormais toujours écrit, même quand la question a été sautée —
+// voir finish() dans eligibility-questions.js).
+//
+// « Licence (Bachelor) » et « Doctorat (PhD) » portent une précision
+// entre parenthèses que le catalogue n'utilise pas : on la retire
+// avant de comparer, comme le fait LEVEL_ALIASES dans
+// js/recommend-programs.js. university.level peut lister plusieurs
+// paliers (« Licence / Master / Doctorat ») — d'où l'inclusion
+// plutôt qu'une égalité stricte.
+const cycleVise = responses.targetLevel || responses.studyLevel || "";
+
+const targetLevel = cycleVise === "Nouveau bachelier"
+? "Licence"
+: cycleVise.replace(/\s*\((Bachelor|PhD)\)\s*$/i, "").trim();
 
 checks.push({
 label: "Niveau académique",
@@ -640,6 +666,11 @@ try {
 const nouvelId = await createApplicationFromRecommendation(session.user.uid, {
 universityName: university.university,
 scholarshipTitle: university.scholarship
+}, {
+// Créneaux anti-triche (2026-09-02) : la création vise l'id
+// "slot-N" borné par firestore.rules — voir application-actions.js.
+existingApplications: candidatures,
+quota
 });
 trackEvent("application_created_from_details", { university: university.university, country: university.country });
 apres(nouvelId);
@@ -679,22 +710,29 @@ throw new Error("ID du programme manquant.");
 // d'université brut — "programs" porte les données propres à cette
 // offre (deadline, portail, langue...), jointes ici à son université
 // et à sa bourse pour l'affichage.
-const programSnap = await getDoc(doc(db, "programs", id));
+// Un document du catalogue : l'instantané d'abord (undefined = pas
+// d'instantané → getDoc, exactement comme avant), null = absent.
+async function lireDocument(nom, docId) {
+const depuisInstantane = await documentDuCatalogue(nom, docId);
+if (depuisInstantane !== undefined) return depuisInstantane;
+const snap = await getDoc(doc(db, nom, docId));
+return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
 
-if (!programSnap.exists()) {
+const program = await lireDocument("programs", id);
+
+if (!program) {
 afficherErreur("Cette opportunité n'est plus disponible", "Ce programme a peut-être été retiré ou mis à jour récemment — le reste du catalogue vous attend.");
 return;
 }
 
-const program = { id: programSnap.id, ...programSnap.data() };
-
-const [universitySnap, scholarshipSnap] = await Promise.all([
-program.universityId ? getDoc(doc(db, "universities", program.universityId)) : null,
-program.scholarshipId ? getDoc(doc(db, "scholarships", program.scholarshipId)) : null
+const [universityDoc, scholarshipDoc] = await Promise.all([
+program.universityId ? lireDocument("universities", program.universityId) : null,
+program.scholarshipId ? lireDocument("scholarships", program.scholarshipId) : null
 ]);
 
-const universityProfile = universitySnap && universitySnap.exists() ? universitySnap.data() : {};
-const scholarshipData = scholarshipSnap && scholarshipSnap.exists() ? scholarshipSnap.data() : {};
+const universityProfile = universityDoc || {};
+const scholarshipData = scholarshipDoc || {};
 
 const university = {
 id: program.id,
@@ -711,6 +749,17 @@ coverage: program.coverage || "",
 language: program.language || "",
 duration: program.duration || "",
 status: program.status || "",
+// Traçabilité de l'échéance (lot C2, 2026-09-05). Le programme gagne
+// sur la bourse — même doctrine que applicationUrl juste en dessous :
+// une date de dépôt propre à une université est vérifiée sur la page
+// de CETTE université, pas sur celle du bailleur. Champs absents =
+// inconnus, l'affichage reste juste, simplement moins précis.
+periodeOuverture: program.periodeOuverture || scholarshipData.periodeOuverture || "",
+verifieLe: program.verifieLe || scholarshipData.verifieLe || "",
+sourceEcheance: program.sourceEcheance || scholarshipData.sourceEcheance || "",
+echeanceVariable: program.echeanceVariable || scholarshipData.echeanceVariable || "",
+statutBourse: scholarshipData.status || "",
+actifBourse: scholarshipData.isActive,
 // Modèle "Option B" (migration du 2026-08-10, voir admin/migrate-portal.js) :
 // applicationUrl vit par défaut au niveau université
 // (applicationPortalUrl), le champ programme ne reste rempli que pour
@@ -855,12 +904,89 @@ cityImage.alt = university.city || "Ville";
 
 }
 
-if (deadline) deadline.textContent = university.deadline || "—";
+// ÉCHÉANCE ET STATUT — lus, jamais recopiés (2026-09-05).
+//
+// Avant ce correctif, cette page imprimait `program.deadline` tel
+// quel sous l'étiquette « Date limite ». Sur la Shanghai Government
+// Scholarship, elle affichait donc « 1er décembre 2025 – 30 avril
+// 2026 (cycle 2026) » comme date limite, et « Ouverte » juste à
+// côté — en septembre 2026. Un étudiant pouvait y croire et
+// travailler des semaines pour rien.
+//
+// etatCandidature() (js/echeance.js) tranche : une date lue et
+// dépassée ferme, quoi que dise le statut, et la date dépassée
+// change alors d'étiquette — « Dernière échéance connue », plus
+// jamais « Date limite ».
+const candidature = etatCandidature({
+// LES DEUX statuts, pas l'un OU l'autre. Les 33 programmes de
+// Stipendium Hungaricum disent « Ouverte » quand la bourse dit
+// « Fermée » : prendre le premier non vide faisait dire à cette
+// fiche « Candidatures ouvertes » pendant que la carte du
+// catalogue disait « pas encore ouvertes ». Il suffit qu'un des
+// deux annonce un cycle clos pour qu'on cesse de promettre un
+// portail ouvert.
+statut: [university.status, university.statutBourse],
+actif: university.actifBourse,
+echeances: [university.deadline],
+periodeOuverture: university.periodeOuverture,
+verifieLe: university.verifieLe,
+echeanceVariable: university.echeanceVariable
+});
+
+if (deadline) deadline.textContent = candidature.valeur;
+
+const deadlineLabel = document.getElementById("deadlineLabel");
+if (deadlineLabel) deadlineLabel.textContent = candidature.etiquette;
+
+const deadlineNote = document.getElementById("deadlineNote");
+
+if (deadlineNote) {
+
+// La source est un lien quand on l'a : « à confirmer sur le portail
+// officiel » sans dire OÙ ne demande à l'étudiant qu'un travail de
+// plus.
+const source = university.sourceEcheance
+? ` <a href="${university.sourceEcheance}" target="_blank" rel="noopener noreferrer">Voir la source</a>`
+: "";
+
+deadlineNote.innerHTML = "";
+deadlineNote.append(candidature.detail);
+if (candidature.verifie) deadlineNote.append(` · ${candidature.verifie}`);
+if (source) deadlineNote.insertAdjacentHTML("beforeend", source);
+
+// LE TEXTE DU CATALOGUE, EN ENTIER (2026-09-05).
+//
+// Depuis que cette case affiche l'échéance LUE (« 6 octobre 2026 »)
+// au lieu du champ brut, tout ce que la prose disait autour
+// disparaissait de l'écran : l'heure et le fuseau, le millésime de la
+// campagne, la porte d'entrée du compte GIRAF à valider deux semaines
+// avant, la double candidature de Knight-Hennessy… C'est précisément
+// là que vit l'information qu'un étudiant ne trouvera nulle part
+// ailleurs. On affiche donc les deux : l'état calculé, qui ne ment
+// pas, PUIS la phrase d'origine, qui explique.
+const prose = (university.deadline || "").trim();
+
+if (prose && prose !== candidature.valeur) {
+const bloc = document.createElement("span");
+bloc.className = "details-info-prose";
+bloc.textContent = prose;
+deadlineNote.append(bloc);
+}
+
+deadlineNote.hidden = !candidature.detail && !prose;
+
+}
 if (coverage) coverage.textContent = university.coverage || "—";
 if (language) language.textContent = university.language || "—";
 if (duration) duration.textContent = university.duration || "—";
 if (ranking) ranking.textContent = university.ranking || "—";
-if (status) status.textContent = university.status || "—";
+// Le statut affiché est celui que la LECTURE de l'échéance a établi,
+// pas la chaîne saisie en base : les deux se contredisaient sur 4
+// bourses au 2026-09-04 (dont l'Eiffel, dépassée de neuf mois).
+if (status) {
+status.textContent = candidature.badge;
+status.dataset.ton = candidature.ton;
+}
 
 // ===============================
 // Éligibilité par nationalité (2026-08-30). Deux affichages, deux

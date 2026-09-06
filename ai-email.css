@@ -21,3 +21,20 @@ display:none;
 
 /* Verre dépoli — réservé au panneau d'aperçu (l'e-mail généré par
 Fitz), pas au panneau de formulaire à gauche. */
+
+/* Les styles de la carte « Ce que Fitz sait déjà » (.ai-context-*)
+ont déménagé dans css/ai-suite.css le 2026-09-02 : le patron est
+désormais partagé par ai-email, ai-letter et ai-check. */
+
+/* CTA de génération : l'état désactivé n'est plus le pavé sombre à
+moitié transparent (opacity .5 de .btn:disabled sur le dégradé
+encre) — surface neutre chaude, libellé lisible, consigne claire. */
+.ai-generate-btn:disabled{
+background:var(--background-soft);
+color:var(--text-light);
+border:1px dashed var(--border-color);
+opacity:1;
+}
+
+.ai-generate-btn i,
+.ai-generate-btn svg{width:16px;height:16px;}

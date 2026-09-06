@@ -142,6 +142,14 @@ display:flex;
 gap:10px;
 }
 
+/* Le sélecteur d'unité (Mo/Ko) est habillé par js/fitz-select.js, dont
+l'enveloppe fait width:100% par défaut (champ de formulaire pleine
+largeur) : dans CETTE rangée flex, il gonflait la largeur minimale et
+créait 6px de débordement horizontal à 375px (audit 2026-09-02).
+Ici, l'unité garde sa largeur naturelle. */
+.cpr-target-row .fitz-select{width:auto;flex-shrink:0;}
+.cpr-target-row .fitz-select-trigger{min-width:86px;}
+
 .cpr-target-row input{
 flex:1;
 font-family:var(--font-body);
@@ -169,7 +177,13 @@ outline:none;
 border-color:var(--accent-color);
 }
 
-.cpr-run-btn{width:100%;justify-content:center;}
+/* Borné comme les autres CTA d'outil (.app-cta, css/app-shell.css) —
+un bouton n'est pas un bandeau (2026-09-02). */
+.cpr-run-btn{width:100%;max-width:380px;margin-left:auto;margin-right:auto;justify-content:center;}
+
+@media(max-width:576px){
+.cpr-run-btn{max-width:none;}
+}
 
 .cpr-note{
 display:flex;

@@ -318,6 +318,21 @@ margin-left:auto;
 margin-right:auto;
 }
 
+/* ≤1023px, les deux grilles passent en UNE colonne (offers.css) et
+doivent retrouver leur plafond « carte à taille humaine » : sans cette
+garde, le max-width:920px ci-dessus (posé sans media, et cette feuille
+gagne la cascade) étirait chaque carte sur ~920px avec sa typo de
+grille — constaté par l'utilisateur dans une fenêtre ~980px, carte
+Signature démesurée (2026-09-02). */
+@media(max-width:1023px){
+
+.pricing-grid,
+.pricing-grid--duo{
+max-width:460px;
+}
+
+}
+
 .pricing-grid{gap:20px;}
 
 .plan-card{
@@ -405,3 +420,21 @@ inset 0 1px 0 rgba(255,255,255,.85),
 }
 .consult-body h3{font-size:17px;}
 .consult-body p{font-size:13.5px;}
+
+/* ==========================================================
+DÉBORDEMENT HORIZONTAL SUR TÉLÉPHONE (2026-09-03)
+==========================================================
+Mesuré à 375px : scrollWidth 409 alors qu'aucun élément visible ne
+dépasse — ce sont les deux halos .container::before/::after (420 et
+380px, posés à left:-8% / right:-10%) qui agrandissent la zone de
+défilement. Le body{overflow-x:hidden} d'offers.css suffit sur bureau,
+mais Chrome mobile élargit quand même son viewport de mise en page
+(innerWidth 409 : la page s'affichait légèrement dézoomée, prise pour
+un « artefact d'émulateur » lors des audits précédents). overflow-x:
+clip ne crée pas de conteneur de défilement (position:sticky intact)
+et empêche cet élargissement — sur html, body ET le conteneur des
+halos, qui n'a plus le droit de déborder latéralement. */
+html,
+body{ overflow-x:clip; }
+
+main.container{ overflow-x:clip; }

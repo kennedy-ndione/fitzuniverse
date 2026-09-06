@@ -4,9 +4,18 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Paramètres du compte | FitzUniverse</title>
+
+<!-- Ajouts de l'audit 2026-09-01 : page privée de l'espace connecté —
+noindex (rien à indexer derrière une session), theme-color et favicons
+alignés sur le standard du site (mêmes valeurs que index.html). -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 
 <meta name="description" content="Gérez vos informations de connexion, votre mot de passe et votre compte FitzUniverse.">
 
@@ -32,11 +41,18 @@ l'étudiant changeait de police en passant du catalogue à son espace. -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
 </head>
 
 <body data-plan="essentiel">
+
+<!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
+publiques (.skip-link, css/base.css) ; tabindex="-1" sur <main> pour
+que l'Entrée DÉPLACE réellement le focus (voir la note d'index.html). -->
+<a href="#main-content" class="skip-link">Aller au contenu</a>
 
 <div id="pageLoader" class="auth-page-loader">
 <div class="loader-spinner"></div>
@@ -53,7 +69,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -106,7 +122,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </header>
 
-<main class="content" style="display:none;">
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
 
 <section class="ai-panel reveal">
 
@@ -126,14 +142,63 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <strong id="accountEmail">—</strong>
 </div>
 
-<div>
-<span class="account-info-label">Formule actuelle</span>
-<strong id="accountPlan">—</strong>
-</div>
-
 <p class="ai-field-hint">
 Pour modifier votre parcours académique, vos préférences ou vos objectifs d'études, rendez-vous sur <a href="profile.html" style="color:var(--accent-color);font-weight:700;">votre profil</a>.
 </p>
+
+</div>
+
+</section>
+
+<!-- ==========================================================
+MON ABONNEMENT (2026-09-02) — l'étudiant voit sa formule, son
+échéance, son quota utilisé, et peut EN CHANGER en un geste :
+« Changer de formule » mène au comparatif (offers.html), le choix y
+écrit `pendingPlan` (payment.js) — jamais `plan`, que seule l'équipe
+active après paiement (firestore.rules). La demande en cours
+s'affiche ici, annulable d'un clic. La ligne « Formule actuelle » de
+la carte Informations a déménagé ici pour ne pas exister deux fois.
+========================================================== -->
+<section class="ai-panel reveal" id="subscriptionSection" style="margin-top:20px;">
+
+<div class="ai-panel-header">
+<h2><i data-lucide="credit-card"></i>Mon abonnement</h2>
+</div>
+
+<div class="ai-panel-body">
+
+<div class="account-sub-grid">
+
+<div>
+<span class="account-info-label">Formule actuelle</span>
+<strong id="accountPlan">—</strong>
+<span class="account-sub-meta" id="subPlanMeta" hidden></span>
+</div>
+
+<div id="subQuotaWrap" hidden>
+<span class="account-info-label">Candidatures accompagnées</span>
+<strong id="subQuotaValue">—</strong>
+<span class="account-sub-meta">Terminer ou retirer une candidature libère sa place.</span>
+</div>
+
+</div>
+
+<div class="account-sub-pending" id="subPendingBanner" hidden>
+<i data-lucide="clock"></i>
+<div class="account-sub-pending-body">
+<strong id="subPendingLabel"></strong>
+<p>L'équipe FitzUniverse active la nouvelle formule dès confirmation du paiement — en général sous 24 h ouvrées. Votre accès actuel reste inchangé d'ici là.</p>
+<button type="button" class="account-sub-cancel" id="subPendingCancelBtn">Annuler cette demande</button>
+</div>
+</div>
+
+<div class="account-sub-actions">
+<a href="offers.html" class="btn btn-primary" id="subChangeBtn">
+<i data-lucide="refresh-ccw"></i>
+<span>Changer de formule</span>
+</a>
+<p class="ai-field-hint" id="subChangeHint">Comparez les formules et choisissez celle qui correspond à votre projet — le changement est activé par l'équipe après paiement, sans rien perdre de votre parcours.</p>
+</div>
 
 </div>
 
@@ -263,6 +328,9 @@ La suppression de votre compte est <strong>définitive et irréversible</strong>
 
 </div>
 
+<!-- SCHOLARBRIDGE_PLANS : quotas et libellés de la section
+« Mon abonnement » (script classique, avant le module). -->
+<script src="pricing-plans.js"></script>
 <script src="js/back-link.js"></script>
 <script type="module" src="account.js"></script>
 

@@ -11,7 +11,7 @@
 */
 
 import { db } from "./firebase-config.js";
-import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
@@ -102,14 +102,43 @@ const { profile } = ctx;
 
 renderPrerequisNotice(profile);
 
-let application = null;
+// ==========================================================
+// LE CONTEXTE APPARTIENT À FITZ (2026-09-02) — même patron
+// qu'ai-email.js : les candidatures suivies remplissent la cible de
+// la lettre (sélecteur « Candidature concernée »), le profil remplit
+// le reste, les champs restent repliés sous « Ajuster ». La matière
+// de la lettre (expériences, motivations…) reste visible : c'est à
+// l'étudiant, Fitz ne fait que la pré-remplir depuis le profil.
+// ==========================================================
 
-if (applicationId) {
+let trackedApplications = [];
+
+try {
+
+const appsSnap = await getDocs(collection(db, "users", ctx.user.uid, "applications"));
+trackedApplications = appsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+} catch (error) {
+
+console.error("Impossible de charger les candidatures suivies :", error);
+
+}
+
+let application = applicationId
+? trackedApplications.find((a) => a.id === applicationId) || null
+: null;
+
+// Repli : applicationId hors liste (lien ancien, document supprimé) —
+// lecture directe comme avant la refonte, sans bloquer l'outil.
+if (applicationId && !application) {
 
 try {
 
 const snap = await getDoc(doc(db, "users", ctx.user.uid, "applications", applicationId));
-if (snap.exists()) application = { id: snap.id, ...snap.data() };
+if (snap.exists()) {
+application = { id: snap.id, ...snap.data() };
+trackedApplications.push(application);
+}
 
 } catch (error) {
 
@@ -122,7 +151,11 @@ console.error("Impossible de charger la candidature liée :", error);
 const contextBanner = document.getElementById("applicationContext");
 const contextBackLink = document.getElementById("applicationContextBackLink");
 
-if (application && contextBanner) {
+function syncContextBanner() {
+
+if (!contextBanner) return;
+
+if (application) {
 
 contextBanner.hidden = false;
 contextBanner.querySelector("span").textContent =
@@ -133,7 +166,16 @@ contextBackLink.href = `applications.html#${application.id}`;
 contextBackLink.hidden = false;
 }
 
+} else {
+
+contextBanner.hidden = true;
+if (contextBackLink) contextBackLink.hidden = true;
+
 }
+
+}
+
+syncContextBanner();
 
 const styleGrid = document.getElementById("styleGrid");
 const form = document.getElementById("letterForm");
@@ -159,6 +201,11 @@ const regenerateBtn = document.getElementById("regenerateBtn");
 const downloadTxtBtn = document.getElementById("downloadTxtBtn");
 const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
+const fieldApplication = document.getElementById("fieldApplication");
+const contextChips = document.getElementById("contextChips");
+const contextDetails = document.getElementById("contextDetails");
+const contextAdjustBtn = document.getElementById("contextAdjustBtn");
+
 fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.preferredCountries[0]) || "";
 fieldProgram.value = profile.desiredField || "";
 if (profile.desiredDegree) fieldLevel.value = profile.desiredDegree;
@@ -166,10 +213,121 @@ fieldExperiences.value = describedExperiences(profile);
 fieldMotivations.value = profile.whyLeave || "";
 fieldGoals.value = profile.careerGoals || profile.dreams || "";
 
+// La cible vient de la candidature sélectionnée — elle sait à qui la
+// lettre s'adresse, et la bourse visée nourrit les motivations.
+function applyApplicationContext(app) {
+
+application = app || null;
+
+if (app) {
+fieldUniversity.value = app.university || "";
+if (app.scholarship) {
+fieldProgram.value = fieldProgram.value || app.scholarship;
+if (!fieldMotivations.value) fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
+}
+}
+
+syncContextBanner();
+renderContextChips();
+
+}
+
+trackedApplications
+.slice()
+.sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
+.forEach((app) => {
+
+const option = document.createElement("option");
+option.value = app.id;
+option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+fieldApplication.appendChild(option);
+
+});
+
+if (application) fieldApplication.value = application.id;
+
+fieldApplication.addEventListener("change", () => {
+const app = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
+applyApplicationContext(app);
+});
+
+// Pastilles — le miroir exact de la cible que collectData() enverra.
+const CHIP_DEFS = [
+{ label: "Pays visé", input: fieldCountry },
+{ label: "Université destinataire", input: fieldUniversity },
+{ label: "Programme", input: fieldProgram },
+{ label: "Niveau", input: fieldLevel }
+];
+
+function renderContextChips() {
+
+contextChips.innerHTML = "";
+
+CHIP_DEFS.forEach(({ label, input }) => {
+
+const value = input.value.trim();
+
+const chip = document.createElement("div");
+chip.className = "ai-context-chip" + (value ? "" : " is-missing");
+
+const dt = document.createElement("dt");
+dt.textContent = label;
+
+const dd = document.createElement("dd");
+dd.textContent = value || "À compléter";
+
+chip.appendChild(dt);
+chip.appendChild(dd);
+
+if (!value) {
+chip.setAttribute("role", "button");
+chip.tabIndex = 0;
+chip.title = "Ouvrir les champs pour compléter";
+chip.addEventListener("click", () => openContextDetails(input));
+chip.addEventListener("keydown", (e) => {
+if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openContextDetails(input); }
+});
+}
+
+contextChips.appendChild(chip);
+
+});
+
+}
+
+function openContextDetails(focusInput) {
+
+contextDetails.hidden = false;
+contextAdjustBtn.setAttribute("aria-expanded", "true");
+contextAdjustBtn.textContent = "Réduire";
+
+if (focusInput) focusInput.focus();
+
+}
+
+contextAdjustBtn.addEventListener("click", () => {
+
+if (contextDetails.hidden) {
+openContextDetails(null);
+} else {
+contextDetails.hidden = true;
+contextAdjustBtn.setAttribute("aria-expanded", "false");
+contextAdjustBtn.textContent = "Ajuster";
+}
+
+});
+
+CHIP_DEFS.forEach(({ input }) => {
+input.addEventListener("input", renderContextChips);
+input.addEventListener("change", renderContextChips);
+});
+
 if (application) {
 fieldUniversity.value = application.university || "";
 if (application.scholarship) fieldMotivations.value = fieldMotivations.value || `Candidature à la bourse ${application.scholarship}.`;
 }
+
+renderContextChips();
 
 let selectedStyle = "personnalise";
 let currentText = "";
@@ -246,6 +404,17 @@ profile
 async function generateLetter() {
 
 const data = collectData();
+
+// Les `required` HTML ont été retirés (champs repliés par défaut —
+// un required invisible bloque la soumission sans rien montrer) :
+// la garde vit ici, et OUVRE les champs au lieu d'échouer en silence.
+if (!data.university || !data.program) {
+openContextDetails(!data.university ? fieldUniversity : fieldProgram);
+showToast(!data.university
+? "Indiquez l'université destinataire, ou choisissez une candidature concernée ci-dessus."
+: "Indiquez le programme ou la bourse visé(e).", { type: "error" });
+return;
+}
 
 generateBtn.disabled = true;
 generateBtn.querySelector("span").textContent = "Génération en cours…";

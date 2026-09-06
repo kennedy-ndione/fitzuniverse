@@ -141,11 +141,16 @@ assert.equal(OFFRES.gratuit, undefined, "gratuit ne doit pas être une offre ach
 
 test("toute offre payante donne 100% des outils Fitz", () => {
 
-// "advisor" (ajouté 2026-08-07) est dans FEATURE_CATALOG pour réutiliser
-// le même mécanisme de verrouillage, mais ce n'est PAS un outil Fitz —
-// voir la note dans js/plan-features.js. Il a sa propre assertion
-// ci-dessous et ne doit pas casser celle-ci.
-const OUTILS_FITZ = FEATURE_CATALOG.filter(({ key }) => key !== "advisor");
+// DEUX entrées de FEATURE_CATALOG réutilisent le mécanisme de
+// verrouillage sans être des outils Fitz — voir les notes dans
+// js/plan-features.js. Chacune a sa propre assertion ci-dessous et ne
+// doit pas casser celle-ci :
+//   - "advisor" (2026-08-07) : accès à un conseiller humain.
+//   - "whatsapp_direct" (2026-09-02) : décision utilisateur, WhatsApp
+//     est STRICTEMENT réservé à Signature. Ce test l'exigeait encore
+//     dans toutes les offres payantes et échouait depuis lors.
+const HORS_OUTILS = ["advisor", "whatsapp_direct"];
+const OUTILS_FITZ = FEATURE_CATALOG.filter(({ key }) => !HORS_OUTILS.includes(key));
 
 const flags = resolveFeatureFlags(null);
 
@@ -153,6 +158,24 @@ for (const id of OFFRES_PAYANTES) {
 for (const { key } of OUTILS_FITZ) {
 assert.equal(flags[key][id], true, `"${key}" doit être inclus dans ${id}`);
 }
+}
+
+});
+
+test("\"whatsapp_direct\" n'est vrai que pour Signature", () => {
+
+// Décision utilisateur du 2026-09-02 : la discussion WhatsApp est
+// réservée à la formule Signature — les autres offres ont la
+// messagerie FitzUniverse (student_messaging). Seule exception, hors
+// de ce fichier : le bouton d'ACHAT de Signature sur offers.html.
+const flags = resolveFeatureFlags(null);
+
+for (const id of OFFRES_PAYANTES) {
+assert.equal(
+flags.whatsapp_direct[id],
+id === "signature",
+`"whatsapp_direct" pour ${id} devrait être ${id === "signature"}`
+);
 }
 
 });

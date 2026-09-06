@@ -43,6 +43,15 @@ if (!header) return;
 const SCROLLED_THRESHOLD = 40;
 const TOP_THRESHOLD = 8;
 
+// MOBILE (2026-09-03) : sur téléphone, l'en-tête REVIENT dès qu'on
+// remonte un peu (≥ 12px cumulés), comme sur tous les grands sites
+// mobiles — l'utilisateur ne doit jamais avoir à remonter tout en haut
+// d'un long catalogue pour retrouver le menu. Le comportement bureau
+// (« immersion » : retour au sommet seulement) est conservé tel quel.
+const mobileQuery = window.matchMedia("(max-width: 640px)");
+const UP_DELTA = 12;
+let upAccumulated = 0;
+
 let lastScrollY = window.scrollY;
 let ticking = false;
 
@@ -58,7 +67,14 @@ header.classList.remove("is-hidden");
 
 } else if (y > lastScrollY) {
 
-header.classList.add("is-hidden");
+upAccumulated = 0;
+// Menu mobile ouvert : l'en-tête ne bouge pas (voir css/mobile-nav.css).
+if (!document.body.classList.contains("mnav-open")) header.classList.add("is-hidden");
+
+} else if (mobileQuery.matches && y < lastScrollY) {
+
+upAccumulated += lastScrollY - y;
+if (upAccumulated >= UP_DELTA) header.classList.remove("is-hidden");
 
 }
 // Remonte sans atteindre le tout début de la page : le header reste

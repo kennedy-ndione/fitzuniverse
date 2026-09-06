@@ -62,8 +62,8 @@ position:absolute;
 inset:0;
 background:
 radial-gradient(ellipse 58% 76% at 88% 8%, rgba(233,163,25,.30) 0%, rgba(233,163,25,.09) 46%, transparent 70%),
-linear-gradient(102deg, rgba(7,10,22,.94) 0%, rgba(18,22,46,.80) 42%, rgba(18,22,46,.34) 100%),
-linear-gradient(180deg, rgba(7,10,22,.30) 0%, transparent 34%, rgba(7,10,22,.62) 100%);
+linear-gradient(102deg, rgba(13,10,6,.94) 0%, rgba(20,16,13,.80) 42%, rgba(20,16,13,.34) 100%),
+linear-gradient(180deg, rgba(13,10,6,.30) 0%, transparent 34%, rgba(13,10,6,.62) 100%);
 }
 
 /* 118px en haut : le header public est fixed et flotte sur la photo.
@@ -478,7 +478,7 @@ même page que le reste. */
 .cta-card-primary{
 background:
 radial-gradient(ellipse 70% 80% at 84% 10%, rgba(233,163,25,.34) 0%, rgba(233,163,25,.10) 48%, transparent 72%),
-linear-gradient(150deg, #1C2246 0%, #12162E 46%, #070A16 100%);
+linear-gradient(150deg, #342D24 0%, #211D18 46%, #14100D 100%);
 border:1px solid rgba(233,163,25,.22);
 color:#fff;
 box-shadow:var(--shadow-lg);
@@ -666,4 +666,80 @@ la même réserve y mangeait un tiers de la hauteur utile. */
 
 .details-hero-inner{ padding:96px 0 30px; }
 
+}
+
+/* ==========================================================
+PHOTO DE VILLE ENTIÈRE SUR TÉLÉPHONE (2026-09-03)
+==========================================================
+Même raisonnement que pour les bannières du catalogue
+(css/catalog-redesign.css, même date) : sur téléphone la photo de la
+ville devient une bande pleine largeur à un ratio proche des photos
+(16/10), fondue dans l'encre par le bas, et le titre vient dessous. */
+@media (max-width:720px){
+
+.details-hero{
+display:block;
+padding:84px 0 0;
+background:linear-gradient(180deg,#1C1710 0%,#15100B 100%);
+}
+
+.details-hero-bg{
+position:relative;
+inset:auto;
+display:block;
+width:100%;
+height:auto;
+aspect-ratio:16/10;
+transform:none;
+/* Fondu long : le tiers bas de la photo se dissout dans l'encre, et
+c'est là que se pose le texte — photo et informations forment un seul
+bloc, comme au bureau. */
+-webkit-mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+mask-image:linear-gradient(180deg,#000 38%,rgba(0,0,0,.62) 62%,rgba(0,0,0,.16) 84%,transparent 100%);
+}
+
+.details-hero-overlay{ display:none; }
+
+.details-hero-inner{ position:relative; margin-top:-84px; padding:0 0 28px; }
+.details-hero h1, .details-hero-badge{ text-shadow:0 1px 2px rgba(13,10,6,.55); }
+
+}
+
+/* ==========================================================
+   NOTE SOUS L'ÉCHÉANCE (2026-09-05)
+   ==========================================================
+   Ajoutée avec l'affichage honnête des cycles clos : la case
+   « Informations clés » ne dit plus seulement une date, elle dit ce
+   qu'on sait de sa fiabilité (« Les candidatures de ce cycle sont
+   closes. Réouverture attendue : … », « Vérifié le 5 septembre
+   2026 »). Volontairement discrète — c'est une précision, pas une
+   alerte : la donner en rouge ferait fuir d'une bourse qui rouvre
+   dans six semaines. */
+.details-info-note {
+display: block;
+margin-top: 4px;
+font-size: 0.78rem;
+line-height: 1.45;
+color: var(--text-muted, #6b6257);
+}
+
+.details-info-note a {
+color: inherit;
+text-decoration: underline;
+text-underline-offset: 2px;
+}
+
+/* Le statut reprend le ton calculé par etatCandidature() : un cycle
+   clos ne doit pas s'afficher de la même encre qu'un cycle ouvert. */
+#status[data-ton="close"] { color: var(--text-muted, #6b6257); }
+
+/* Le texte d'origine du catalogue, sous l'état calculé. Détaché sur
+   sa propre ligne et légèrement en retrait : c'est une citation de la
+   base, pas une phrase de la page. */
+.details-info-prose {
+display: block;
+margin-top: 6px;
+padding-left: 10px;
+border-left: 2px solid var(--border-color, #e5e1d9);
+color: var(--text-muted, #6b6257);
 }

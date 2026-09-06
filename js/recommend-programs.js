@@ -42,6 +42,8 @@
 // countries.js vit dans le même dossier.
 import { estEligible } from "./eligibility-countries.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
+import { familleDeDomaine } from "./eligibility-pistes.js";
+import { analyserEcheance, joursAvant } from "./echeance.js";
 
 // "bachelier" ajouté (audit 2026-08-22) : un lycéen qui vient d'obtenir
 // son bac vise un programme de 1er cycle, le même "Licence" que
@@ -148,6 +150,84 @@ return null;
 
 }
 
+/**
+* Le domaine visé correspond-il aux domaines de l'université ?
+*
+* CORRECTIF DU 2026-09-05 — mesuré sur le catalogue réel : 79 des 155
+* universités portent un champ `fields`, et il n'existe que DIX valeurs
+* dans tout le catalogue (Commerce, Sciences sociales, Ingénierie,
+* Informatique, Architecture, Sciences, Lettres, Droit, Médecine,
+* Agriculture). Le commentaire précédent, qui affirmait que ce champ
+* « reste vide sur tout le catalogue », était périmé.
+*
+* L'ancienne comparaison de texte brut ne pouvait pas fonctionner : la
+* question du diagnostic propose 35 spécialités fines et
+* « Intelligence artificielle » ne contient pas « Informatique ». La
+* réponse est donc TRADUITE vers le vocabulaire du catalogue par
+* familleDeDomaine() avant d'être comparée — la question reste riche,
+* c'est son résultat qui devient exploitable.
+*
+* Renvoie true | false | null : null quand l'université ne déclare
+* aucun domaine (la moitié du catalogue). Comme partout ailleurs, null
+* ne vaut JAMAIS false.
+*/
+export function domaineCorrespond(university, profile) {
+
+const champs = Array.isArray(university.fields) ? university.fields.filter(Boolean) : [];
+
+if (!champs.length) return null;
+
+const famille = familleDeDomaine(profile.desiredField);
+
+if (!famille) return null;
+
+return champs.some((f) => String(f).trim().toLowerCase() === famille.toLowerCase());
+
+}
+
+/**
+* État de l'échéance d'un programme, du point de vue « puis-je encore
+* candidater ? ».
+*
+* MESURE DU 2026-09-05 : 167 programmes portent `status:"Ouverte"`
+* alors que 39 seulement ont une date encore future. Se fier au statut
+* seul revient donc à proposer des trains déjà partis — la faute qui
+* décrédibilise un diagnostic en une ligne.
+*
+* @returns {{ouverte: boolean|null, jours: number|null}} ouverte vaut
+* null quand aucune date exploitable n'existe : inconnu, jamais fermé.
+*/
+export function etatEcheance(program, aujourdhui = new Date()) {
+
+if (String(program.status || "").toLowerCase().includes("fermé")) {
+return { ouverte: false, jours: null };
+}
+
+if (!program.deadline) return { ouverte: null, jours: null };
+
+// Les échéances du catalogue sont écrites EN FRANÇAIS (« 15 janvier
+// 2027 », « 31 octobre 2026 (rentrée de printemps) »), pas en ISO :
+// c'est analyserEcheance() qui sait les lire, et elle reconnaît aussi
+// deux états qu'une simple date ne dit pas.
+const echeance = analyserEcheance(String(program.deadline));
+
+// « Candidatures closes » : fermé, sans qu'aucune date ne soit
+// nécessaire.
+if (echeance.etat === "close") return { ouverte: false, jours: null };
+
+// Admission au fil de l'eau : ouvert en permanence — le refuser
+// faute de date serait exactement l'erreur inverse de celle qu'on
+// corrige ici.
+if (echeance.etat === "continue") return { ouverte: true, jours: null };
+
+const jours = joursAvant(echeance, aujourdhui);
+
+if (jours === null) return { ouverte: null, jours: null };
+
+return { ouverte: jours >= 0, jours };
+
+}
+
 // Score de compatibilité programme↔profil — mêmes critères que
 // details.js:computeCompatibility (niveau, langue, pays), adaptés pour
 // lire indifféremment le profil Firestore persistant (profile.js) ou le
@@ -191,21 +271,44 @@ if (languageMatch(program, profile)) score += 1;
 
 if (String(program.status || "").toLowerCase().includes("ouvert")) score += 1;
 
-// university.fields existe côté formulaire admin (admin/university.js)
-// mais reste vide (fields:[]) sur tout le catalogue actuellement seedé
-// (migrate.js, expand-catalog-batch*.js) : ce bonus ne s'applique donc à
-// aucune université réelle aujourd'hui. Câblé quand même dès maintenant —
-// s'active automatiquement le jour où ce champ sera renseigné, sans
-// qu'il faille retoucher ce pont. Correspondance texte dans les deux
-// sens (le libellé suggéré au diagnostic et la saisie libre admin ne
-// partagent pas forcément la même formulation exacte).
-if (profile.desiredField && Array.isArray(university.fields) && university.fields.length) {
-const desired = String(profile.desiredField).toLowerCase();
-if (university.fields.some((f) => {
-const field = String(f).toLowerCase();
-return field.includes(desired) || desired.includes(field);
-})) score += 1;
-}
+// LE DOMAINE PÈSE AUTANT QUE LE CYCLE (3 points, 2026-09-05).
+//
+// Ce bonus valait 1 point depuis son câblage, à une époque où AUCUNE
+// université du catalogue ne renseignait `fields` : il ne s'appliquait
+// à personne. Le lot 42 a renseigné 48 des 76 universités qui n'en
+// avaient pas, et la mesure a montré que remplir la donnée ne suffisait
+// pas — à 1 point, deux étudiants de disciplines différentes recevaient
+// toujours NEUF recommandations identiques sur douze, parce qu'un point
+// ne déplace rien face au seuil de sélection (meilleur − 3).
+//
+// Mesuré sur les 360 profils de grilleDeProfils(), données du lot 42 :
+//   poids 1 → 9 pistes identiques sur 12 entre six domaines ; 41 bourses
+//             distinctes proposées par l'ensemble des profils.
+//   poids 2 → 8 sur 12 ; 41 bourses distinctes.
+//   poids 3 → 3 sur 12 ; 48 bourses distinctes.
+//   poids 5 → 0 sur 12 — écarté : un étudiant ne verrait plus les
+//             grandes bourses ouvertes à toutes les disciplines.
+//
+// À 3, le domaine compte exactement autant que le cycle visé : on ne
+// propose pas une école d'ingénieurs à un futur juriste, de la même
+// façon qu'on ne propose pas un doctorat à un bachelier. Les bourses
+// généralistes (Chevening, Mastercard, CSC, Stipendium) apparaissent
+// PLUS souvent qu'avant, pas moins — elles sont rattachées à des
+// universités pluridisciplinaires, qui correspondent à tous.
+//
+// CONTREPARTIE ASSUMÉE, à relire quand les 28 universités restantes
+// seront renseignées : les disciplines rares du catalogue reçoivent
+// moins de pistes (agriculture 11,6 → 8,4 ; architecture 10,9 → 8,8 ;
+// plancher individuel 9 → 6). Une partie de cette baisse n'est pas la
+// réalité du monde mais un trou de notre catalogue — seules 7 des 48
+// universités renseignées déclarent l'agriculture. La remesurer après
+// avoir complété les 28 (scripts/data/domaines-a-completer-2026-09-05.md).
+//
+// domaineCorrespond() rend null quand l'université ne déclare aucun
+// domaine : un trou de données ne vaut donc pas non-correspondance, il
+// ne rapporte simplement rien — jamais de pénalité pour une fiche que
+// nous n'avons pas encore lue.
+if (domaineCorrespond(university, profile)) score += 3;
 
 const funding = fundingMatches(scholarship, profile);
 if (funding.full) score += 1;
@@ -248,10 +351,22 @@ if (lang) {
 reasons.push(`Enseigné en ${String(program.language).toLowerCase().includes("angl") ? "anglais" : String(program.language).toLowerCase().includes("fran") ? "français" : program.language} — une langue que vous maîtrisez`);
 }
 
-if (String(program.status || "").toLowerCase().includes("ouvert")) {
-reasons.push(program.deadline
-? `Candidatures actuellement ouvertes (échéance : ${program.deadline})`
-: "Candidatures actuellement ouvertes");
+if (domaineCorrespond(university, profile) === true) {
+reasons.push(`Établissement actif dans votre domaine (${familleDeDomaine(profile.desiredField)})`);
+}
+
+// L'échéance RÉELLE prime sur le statut affiché : un programme marqué
+// « Ouverte » dont la date est passée ne doit pas être présenté comme
+// ouvert (mesure du 2026-09-05 : 167 « Ouverte » pour 39 dates encore
+// futures).
+const echeance = etatEcheance(program);
+
+if (echeance.ouverte === true) {
+reasons.push(echeance.jours !== null && echeance.jours <= 400
+? `Candidatures ouvertes — il vous reste ${echeance.jours} jours`
+: `Candidatures ouvertes (échéance : ${program.deadline})`);
+} else if (echeance.ouverte === null && String(program.status || "").toLowerCase().includes("ouvert")) {
+reasons.push("Candidatures annoncées ouvertes — la date exacte est à confirmer sur le portail");
 }
 
 const funding = fundingMatches(scholarship, profile);
@@ -341,5 +456,185 @@ reasons: explainMatch(entry.program, entry.university, scholarship, profile || {
 }
 
 return picked;
+
+}
+
+// ============================================================
+// LA SÉLECTION DU DIAGNOSTIC GRATUIT — « ce que Fitz a retenu »
+// ============================================================
+//
+// POURQUOI CETTE FONCTION EXISTE, À CÔTÉ DE recommendPrograms()
+//
+// recommendPrograms() sert les CRÉNEAUX de candidature de l'espace
+// connecté : elle garde tout ce qui n'est pas exclu et classe par
+// score. C'est exactement ce qu'il faut là-bas — on remplit des
+// créneaux, on ne trie pas le monde.
+//
+// Sur la page de résultats, ce comportement produisait une phrase
+// fausse : « votre profil correspond à 154 opportunités ». 154, parce
+// que le score par défaut est 0, que le filtre gardait tout score
+// `>= 0`, et que « compatible » voulait donc dire « pas explicitement
+// exclue par la nationalité ou l'âge ». Sur 155 universités, le
+// chiffre était mécanique — trois profils différents donnaient trois
+// fois le même nombre.
+//
+// Ici, CORRESPONDRE a un sens, et chaque condition est un critère que
+// les organismes appliquent vraiment :
+//
+//   1. la bourse n'exclut pas la nationalité      (filtre existant)
+//   2. la limite d'âge n'est pas dépassée         (filtre existant)
+//   3. le programme est du CYCLE VISÉ             — obligatoire
+//   4. la langue d'enseignement est praticable    — trois valeurs
+//   5. l'échéance n'est PAS passée                — trois valeurs
+//
+// Puis une règle de PERTINENCE plutôt qu'un plafond arbitraire : on ne
+// garde que ce qui se tient à moins de `marge` points du meilleur.
+// Mesuré sur le catalogue réel le 2026-09-05, cela donne 4 à 12
+// opportunités selon le profil, réparties sur 3 à 10 pays — un chiffre
+// qui VARIE parce qu'il est calculé, pas parce qu'il est tronqué.
+//
+// Enfin : une opportunité = UNE BOURSE. Sans cela, « Stipendium
+// Hungaricum » apparaissait trois fois dans la même liste (trois
+// universités hongroises) et douze opportunités en devenaient sept.
+// ============================================================
+
+/**
+* La langue d'enseignement est-elle praticable par cet étudiant ?
+* true | false | null — null quand on ne sait pas, et null n'exclut
+* jamais.
+*
+* Cas particulier assumé : un étudiant débutant dans les deux langues
+* renvoie null et non false. Plusieurs grands programmes (CSC,
+* Türkiye Bursları…) incluent une année de langue préparatoire — lui
+* rendre une page vide serait faux autant qu'inutile. C'est l'analyse
+* qui lui dira que la langue est son premier chantier.
+*/
+export function langueCompatible(program, profile) {
+
+const langues = Array.isArray(profile.languages) ? profile.languages.filter(Boolean) : [];
+
+if (!program.language || !langues.length) return null;
+
+const langueProgramme = String(program.language).toLowerCase();
+
+return langues.some((l) => langueProgramme.includes(String(l).toLowerCase()));
+
+}
+
+/**
+* @returns {{retenues: Array, nombre: number, ouvertes: number, pays: number}}
+*/
+export function retenirOpportunites({
+profile,
+programs,
+universitiesById,
+scholarshipsById,
+aujourdhui = new Date(),
+max = 12,
+min = 5,
+marge = 3,
+maxParPays = 3
+}) {
+
+const p = profile || {};
+const cible = studentTargetLevel(p);
+
+const candidats = [];
+
+for (const program of programs) {
+
+const university = universitiesById.get(program.universityId);
+
+if (!university) continue;
+
+const scholarship = program.scholarshipId ? scholarshipsById.get(program.scholarshipId) : null;
+
+// 1 & 2 — les filtres durs déjà en place, réutilisés tels quels.
+if (scoreProgram(program, university, scholarship, p) < 0) continue;
+
+// 3 — le cycle visé. Sans cible connue on ne filtre pas : mieux vaut
+// une liste large qu'une page vide.
+if (cible && program.level && normalizeLevel(program.level) !== cible) continue;
+
+// 4 — la langue.
+if (langueCompatible(program, p) === false) continue;
+
+// 5 — l'échéance.
+const echeance = etatEcheance(program, aujourdhui);
+
+if (echeance.ouverte === false) continue;
+
+candidats.push({
+program,
+university,
+scholarship,
+echeance,
+// Le bonus d'échéance ouverte est le plus fort après le cycle :
+// entre deux bourses également pertinentes, celle dont les
+// candidatures sont encore ouvertes est la seule sur laquelle
+// l'étudiant peut agir cette semaine.
+score: scoreProgram(program, university, scholarship, p) + (echeance.ouverte === true ? 2 : 0)
+});
+
+}
+
+// Tri : pertinence, puis échéance la plus proche (les dates inconnues
+// en dernier — on ne les fait pas passer devant une date réelle).
+candidats.sort((a, b) =>
+(b.score - a.score) ||
+((a.echeance.jours ?? Number.MAX_SAFE_INTEGER) - (b.echeance.jours ?? Number.MAX_SAFE_INTEGER))
+);
+
+const seuil = candidats.length ? candidats[0].score - marge : 0;
+
+const retenues = [];
+const boursesVues = new Set();
+const universitesVues = new Set();
+const parPays = new Map();
+
+for (const c of candidats) {
+
+if (retenues.length >= max) break;
+
+// Le seuil de pertinence ne s'applique qu'une fois le minimum
+// atteint : mieux vaut cinq pistes dont deux moyennes qu'une page
+// qui n'en propose qu'une.
+if (c.score < seuil && retenues.length >= min) break;
+
+const cleBourse = c.scholarship ? c.scholarship.id : `programme:${c.program.id || c.program.universityId}`;
+
+if (boursesVues.has(cleBourse)) continue;
+if (universitesVues.has(c.program.universityId)) continue;
+
+const pays = c.university.country || "";
+if (pays && (parPays.get(pays) || 0) >= maxParPays) continue;
+
+boursesVues.add(cleBourse);
+universitesVues.add(c.program.universityId);
+if (pays) parPays.set(pays, (parPays.get(pays) || 0) + 1);
+
+retenues.push({
+universityId: c.program.universityId,
+universityName: c.university.name || "Établissement",
+country: pays,
+scholarshipId: c.scholarship ? c.scholarship.id : "",
+scholarshipTitle: c.scholarship ? c.scholarship.title : "",
+deadline: c.program.deadline || null,
+jours: c.echeance.jours,
+echeanceOuverte: c.echeance.ouverte,
+score: c.score,
+applicationUrl: c.program.applicationUrl || c.university.applicationPortalUrl || "",
+universityWebsite: c.university.officialWebsite || "",
+reasons: explainMatch(c.program, c.university, c.scholarship, p)
+});
+
+}
+
+return {
+retenues,
+nombre: retenues.length,
+ouvertes: retenues.filter((r) => r.echeanceOuverte === true).length,
+pays: new Set(retenues.map((r) => r.country).filter(Boolean)).size
+};
 
 }

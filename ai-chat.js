@@ -27,6 +27,15 @@ import { readAttachment, validateFiles } from "./js/ai/attachments.js";
 import { showToast, copyToClipboard } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
+// Contexte réel (2026-09-02) : Fitz reçoit les candidatures de
+// l'étudiant (échéances, statuts) pour répondre avec SES données —
+// et la page Préparation aux tests peut l'ouvrir en mode entraînement
+// (?prep=<id de test>), auquel cas Fitz sait déjà pourquoi l'étudiant
+// est là et ouvre directement la stratégie.
+import { db } from "./firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { TESTS } from "./js/test-prep-data.js";
+
 initShellChrome();
 
 function renderLockedState(container, ctx) {
@@ -97,6 +106,23 @@ return prefixe + (texte.length > 64 ? `${texte.slice(0, 64)}…` : texte);
 function initChat(ctx) {
 
 const { user, profile } = ctx;
+
+// Candidatures de l'étudiant — chargées une fois, jamais bloquantes :
+// le chat démarre sans elles et les réponses les utilisent dès
+// qu'elles sont là (1 lecture par candidature, petites collections).
+let studentApplications = [];
+
+const applicationsReady = getDocs(collection(db, "users", user.uid, "applications"))
+.then((snapshot) => {
+studentApplications = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+})
+.catch((error) => {
+console.warn("Chat sans contexte candidatures :", error);
+});
+
+// Mode « M'entraîner avec Fitz » (test-prep.html → ?prep=<id>) —
+// consommé une seule fois, sur le premier message.
+let pendingTestPrep = new URLSearchParams(window.location.search).get("prep");
 
 const scrollEl = document.getElementById("chatScroll");
 const emptyState = document.getElementById("chatEmptyState");
@@ -555,11 +581,16 @@ emptyState.hidden = true;
 
 try {
 
+const testPrep = pendingTestPrep;
+pendingTestPrep = null;
+
 const { text } = await generate({
 task: "chat",
 input: {
 message: userMessage.content,
 profile,
+applications: studentApplications,
+testPrep,
 history: active.messages.filter((m) => m.id !== assistantMessage.id).slice(-8),
 // Point d'extension : les pièces jointes sont déjà transmises à
 // generate() (js/ai/ai-client.js) — aucune analyse réelle n'a
@@ -736,6 +767,33 @@ greetingEl.textContent = prenom
 renderHelpCards();
 renderAll();
 renderHistoryList();
+
+// Arrivée en mode entraînement : on attend le contexte candidatures
+// (la stratégie se cale sur les échéances réelles), puis Fitz reçoit
+// un message d'ouverture naturel — visible, comme si l'étudiant
+// l'avait écrit — et répond par le briefing complet.
+if (pendingTestPrep) {
+
+const fiche = TESTS.find((t) => t.id === pendingTestPrep);
+
+if (fiche) {
+
+applicationsReady.then(() => {
+
+if (isGenerating) return;
+
+input.value = `Je viens m'entraîner pour le ${fiche.nom}.`;
+form.requestSubmit();
+
+});
+
+} else {
+
+pendingTestPrep = null;
+
+}
+
+}
 
 }
 

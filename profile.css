@@ -1,5 +1,5 @@
 /* ==========================================================
-SCHOLARBRIDGE — MON PROFIL (profile.html)
+FITZUNIVERSE — MON PROFIL (profile.html)
 Repose sur css/base.css + dashboard.css : cette page partage
 désormais la même coquille (sidebar/topbar) que le reste du
 parcours authentifié — elle vivait avant sur son propre thème clair
@@ -959,7 +959,7 @@ margin-top:4px;
 
 border-radius:var(--radius-lg);
 
-background:rgba(15,23,42,.85);
+background:rgba(23,19,16,.85);
 
 backdrop-filter:blur(16px);
 -webkit-backdrop-filter:blur(16px);
@@ -980,7 +980,7 @@ flex-wrap:wrap;
 
 }
 
-/* La barre de sauvegarde est sombre (rgba(15,23,42,.85)) : cette note
+/* La barre de sauvegarde est sombre (rgba(23,19,16,.85)) : cette note
 retombait sur la couleur de `p{}` de css/base.css — 1,53:1, mesuré
 au pixel. Même piège que le bandeau d'abonnement, voir la section 12
 de css/app-shell.css. */
@@ -1090,7 +1090,7 @@ padding:14px 20px;
 
 border-radius:var(--radius-md);
 
-background:#0F172A;
+background:#211D18;
 
 color:#fff;
 

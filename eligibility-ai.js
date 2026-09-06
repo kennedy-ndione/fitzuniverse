@@ -38,6 +38,13 @@
 // ouvertes à la nationalité quand l'appelant fournit le catalogue.
 import { estEligible, isoDeNationalite } from "./js/eligibility-countries.js";
 
+// Refonte du 2026-09-05 : le niveau d'études n'est plus une chaîne
+// figée parmi cinq, c'est une PISTE. Reconnaître le niveau par
+// mots-clés (pisteDepuisNiveau) plutôt que par égalité stricte permet
+// aux anciennes réponses — celles encore en sessionStorage, et celles
+// des profils déjà enregistrés — de continuer à être comprises.
+import { pisteDepuisNiveau, cycleViseEffectif, PISTES } from "./js/eligibility-pistes.js";
+
 // Table de conversion vers un pourcentage 0-100 commun, pour comparer
 // équitablement des moyennes saisies dans des systèmes différents avant
 // d'appliquer les mêmes seuils de score. Approximations documentées,
@@ -99,12 +106,15 @@ return 0;
 // ÉCHELLE DES CYCLES — sert à la cohérence parcours → objectif.
 // currentLevel (questions.js) → rang du PROCHAIN cycle naturel.
 // ==========================================================
-const CURRENT_TO_NATURAL_TARGET = {
-"Bac en cours ou obtenu": "Licence (Bachelor)",
-"Licence en cours": "Licence (Bachelor)",
-"Licence obtenue": "Master",
-"Master en cours ou obtenu": "Master",
-"Doctorat en cours ou obtenu": "Doctorat (PhD)"
+const CYCLE_NATUREL_PAR_PISTE = {
+[PISTES.LYCEE]: "Licence (Bachelor)",
+[PISTES.BAC_OBTENU]: "Licence (Bachelor)",
+[PISTES.LICENCE_EN_COURS]: "Licence (Bachelor)",
+[PISTES.LICENCE_OBTENUE]: "Master",
+[PISTES.MASTER_EN_COURS]: "Master",
+[PISTES.MASTER_OBTENU]: "Doctorat (PhD)",
+[PISTES.DOCTORAT_EN_COURS]: "Doctorat (PhD)",
+[PISTES.DOCTORAT_OBTENU]: "Doctorat (PhD)"
 };
 
 const LEVEL_RANK = {
@@ -115,13 +125,42 @@ const LEVEL_RANK = {
 
 // Rang du cycle le plus AVANCÉ qu'un parcours actuel permet de viser
 // directement (un bachelier ne peut pas candidater à un doctorat).
-const CURRENT_MAX_RANK = {
-"Bac en cours ou obtenu": 1,
-"Licence en cours": 2,
-"Licence obtenue": 2,
-"Master en cours ou obtenu": 3,
-"Doctorat en cours ou obtenu": 3
+const RANG_MAX_PAR_PISTE = {
+[PISTES.LYCEE]: 1,
+[PISTES.BAC_OBTENU]: 1,
+[PISTES.LICENCE_EN_COURS]: 2,
+[PISTES.LICENCE_OBTENUE]: 2,
+[PISTES.MASTER_EN_COURS]: 3,
+[PISTES.MASTER_OBTENU]: 3,
+[PISTES.DOCTORAT_EN_COURS]: 3,
+[PISTES.DOCTORAT_OBTENU]: 3
 };
+
+// Le niveau actuel dit en trois mots, pour les phrases du diagnostic :
+// « au lycée ou tout juste bachelier → licence (bachelor) » se lisait
+// mal, « le lycée → une licence » se lit.
+const LIBELLE_COURT_PISTE = {
+[PISTES.LYCEE]: "le lycée",
+[PISTES.BAC_OBTENU]: "un baccalauréat obtenu",
+[PISTES.LICENCE_EN_COURS]: "une licence en cours",
+[PISTES.LICENCE_OBTENUE]: "une licence obtenue",
+[PISTES.MASTER_EN_COURS]: "un master en cours",
+[PISTES.MASTER_OBTENU]: "un master obtenu",
+[PISTES.DOCTORAT_EN_COURS]: "un doctorat en cours",
+[PISTES.DOCTORAT_OBTENU]: "un doctorat soutenu"
+};
+
+function cycleNaturel(niveauActuel) {
+return CYCLE_NATUREL_PAR_PISTE[pisteDepuisNiveau(niveauActuel)] || "";
+}
+
+function rangMaximal(niveauActuel) {
+return RANG_MAX_PAR_PISTE[pisteDepuisNiveau(niveauActuel)] || 0;
+}
+
+function libelleCourt(niveauActuel) {
+return LIBELLE_COURT_PISTE[pisteDepuisNiveau(niveauActuel)] || String(niveauActuel || "").toLowerCase();
+}
 
 // Cycle visé effectif : la réponse explicite, ou — si l'étudiant a
 // répondu « Je ne sais pas encore » — le prochain cycle naturel déduit
@@ -129,12 +168,71 @@ const CURRENT_MAX_RANK = {
 // profil transmis au moteur de recommandation.
 export function resolveTargetLevel(responses) {
 
-const target = responses.targetLevel;
+// cycleViseEffectif couvre le cas où la question a été SAUTÉE parce
+// qu'un seul cycle était possible (un bachelier ne peut viser qu'une
+// licence) — depuis la refonte du 2026-09-05, elle n'est plus posée
+// dans ce cas.
+const effectif = cycleViseEffectif(responses);
 
-if (target && target !== "Je ne sais pas encore") return target;
+if (effectif && effectif !== "Je ne sais pas encore") return effectif;
 
-return CURRENT_TO_NATURAL_TARGET[responses.currentLevel] || "";
+return cycleNaturel(responses.currentLevel);
 
+}
+
+// ============================================================
+// LES BARÈMES, UN PAR CYCLE — refonte du 2026-09-05
+//
+// Un barème unique traitait un bachelier et un docteur avec la même
+// grille. Or les comités ne pèsent pas les mêmes choses :
+//
+//  - EN LICENCE, l'âge est le critère le plus discriminant du
+//    catalogue (Türkiye Bursları < 21 ans, MEXT ≤ 24, CSC < 25) et la
+//    filière du secondaire est le premier point de cohérence regardé.
+//    Ni expérience professionnelle ni projet de recherche : les
+//    demander reviendrait à reprocher à un lycéen de ne pas être un
+//    cadre.
+//  - EN MASTER, l'expérience professionnelle devient éliminatoire
+//    pour une partie des programmes (Chevening : 2 800 heures,
+//    vérifié le 2026-09-05) et l'ordre admission → bourse commande le
+//    calendrier.
+//  - EN DOCTORAT, tout se joue sur le projet de recherche et sur
+//    l'existence d'un laboratoire d'accueil ; la moyenne compte
+//    beaucoup moins.
+//
+// Chaque colonne totalise 100. Un critère absent d'un cycle n'est ni
+// compté ni affiché — c'est ce qui rend la décomposition lisible :
+// l'étudiant ne voit à l'écran que des axes qui le concernent.
+// ============================================================
+
+const POIDS = {
+
+"Licence (Bachelor)": {
+moyenne: 30, filiere: 10, age: 12, langue: 20,
+certification: 8, calendrier: 8, passeport: 6, destination: 6
+},
+
+Master: {
+moyenne: 24, experience: 16, admission: 10, progression: 8,
+langue: 18, certification: 8, calendrier: 8, passeport: 4, destination: 4
+},
+
+"Doctorat (PhD)": {
+recherche: 22, encadrement: 16, moyenne: 16, publications: 8,
+langue: 16, certification: 6, calendrier: 8, passeport: 4, destination: 4
+}
+
+};
+
+// Barème de repli, utilisé tant que le cycle visé n'est pas connu :
+// l'ancien barème du 2026-08-29, inchangé.
+const POIDS_PAR_DEFAUT = {
+moyenne: 28, progression: 12, langue: 20, certification: 8,
+age: 8, calendrier: 8, passeport: 8, destination: 8
+};
+
+function poidsDuCycle(cycle) {
+return POIDS[cycle] || POIDS_PAR_DEFAUT;
 }
 
 export class EligibilityAI {
@@ -156,19 +254,228 @@ weaknesses: [],
 recommendations: []
 };
 
-result.score += this.calculateAverage(result);         // 28
-result.score += this.calculateProgression(result);     // 12
-result.score += this.calculateLanguage(result);        // 20
-result.score += this.calculateCertification(result);   //  8
-result.score += this.calculateAge(result);             //  8
-result.score += this.calculateTimeline(result);        //  8
-result.score += this.calculatePassport(result);        //  8
-result.score += this.calculateDestination(result);     //  8
+const poids = poidsDuCycle(resolveTargetLevel(this.responses));
+
+// Chaque critère renvoie ses points sur SON ancien maximum ; on le
+// ramène à une proportion, puis on applique le poids du cycle. Un
+// même questionnaire, trois barèmes — parce que les comités ne
+// regardent pas la même chose selon le diplôme.
+const criteres = [
+{ cle: "moyenne", label: "Niveau académique", icon: "graduation-cap", ratio: this.calculateAverage(result) / 28, conseil: "Mettez en avant vos meilleurs résultats et complétez votre dossier avec des projets ou certificats qui pèsent autant qu'une moyenne." },
+{ cle: "progression", label: "Cohérence du projet", icon: "route", ratio: this.calculateProgression(result) / 12, conseil: "Un projet cohérent se raconte : dites explicitement pourquoi ce cycle, dans ce domaine, maintenant. C'est la première question d'un jury." },
+{ cle: "langue", label: "Langue", icon: "languages", ratio: this.calculateLanguage(result) / 20, conseil: "Un test certifié (IELTS, TOEFL, DELF, TCF) fait progresser cette ligne plus vite qu'un niveau auto-déclaré." },
+{ cle: "certification", label: "Certification de langue", icon: "file-check", ratio: this.calculateCertification(result) / 8, conseil: "Inscrivez-vous à une session officielle dès maintenant : entre l'inscription, l'examen et le résultat, comptez plusieurs semaines." },
+{ cle: "age", label: "Âge et limites d'âge", icon: "calendar", ratio: this.calculateAge(result) / 8, conseil: "Les limites d'âge ne se négocient pas : concentrez-vous sur les programmes qui n'en fixent aucune — chaque fiche du catalogue l'indique." },
+{ cle: "calendrier", label: "Calendrier", icon: "hourglass", ratio: this.calculateTimeline(result) / 8, conseil: "Fixer une période de départ, même approximative, permet de viser les bonnes sessions de candidature." },
+{ cle: "passeport", label: "Documents", icon: "id-card", ratio: this.calculatePassport(result) / 8, conseil: "Le passeport est le premier document demandé par tous les portails, et le plus long à obtenir. Lancez la démarche avant tout le reste." },
+{ cle: "destination", label: "Destination", icon: "globe-2", ratio: this.calculateDestination(result) / 8, conseil: "Ouvrir la destination multiplie les options, la fixer concentre les efforts. Choisissez — et assumez le choix dans votre lettre." },
+{ cle: "filiere", label: "Filière et domaine visé", icon: "compass", ratio: this.calculateFiliere(result), conseil: "Reliez explicitement votre filière au domaine visé dans votre lettre de motivation : c'est la première cohérence qu'un comité vérifie." },
+{ cle: "experience", label: "Expérience professionnelle", icon: "briefcase", ratio: this.calculateExperience(result), conseil: "Comptez vos heures précisément, stages rémunérés compris. En dessous de deux ans, visez d'abord les bourses qui n'exigent aucune expérience — elles sont nombreuses." },
+{ cle: "admission", label: "Candidatures universitaires", icon: "send", ratio: this.calculateAdmission(result), conseil: "Déposez vos candidatures universitaires en premier : plusieurs bourses ne financent qu'un étudiant déjà admis, et l'inverse ne marche pas." },
+{ cle: "recherche", label: "Projet de recherche", icon: "file-text", ratio: this.calculateRecherche(result), conseil: "Écrivez votre projet, même en trois pages : sans document, aucun directeur de recherche ne peut vous répondre." },
+{ cle: "encadrement", label: "Encadrement de thèse", icon: "users", ratio: this.calculateEncadrement(result), conseil: "Écrivez à trois chercheurs dont vous avez lu les travaux, projet en pièce jointe. Une réponse écrite, même brève, suffit aux dossiers." },
+{ cle: "publications", label: "Publications", icon: "book-marked", ratio: this.calculatePublications(result), conseil: "Une communication en séminaire ou un article court ouvrent déjà cette ligne. Ce n'est presque jamais exigé — c'est ce qui départage." }
+];
+
+result.breakdown = [];
+
+for (const critere of criteres) {
+
+const p = poids[critere.cle] || 0;
+
+// Un critère sans poids pour ce cycle n'est ni compté ni affiché :
+// montrer « Projet de recherche 0 % » à un bachelier serait un
+// reproche absurde.
+if (!p) continue;
+
+const ratio = Math.max(0, Math.min(1, Number(critere.ratio) || 0));
+
+result.score += ratio * p;
+
+result.breakdown.push({
+label: critere.label,
+icon: critere.icon,
+value: Math.round(ratio * 100),
+poids: p,
+// Le conseil voyage AVEC sa ligne : results.js n'a plus à
+// retrouver un texte par le libellé, et un critère qui n'existe
+// que pour un cycle emporte forcément le sien.
+conseil: critere.conseil || ""
+});
+
+}
+
+result.score = Math.round(result.score);
+
+// La décomposition est classée du plus lourd au plus léger : ce que
+// l'étudiant lit en premier est ce qui pèse le plus sur son dossier.
+result.breakdown.sort((a, b) => b.poids - a.poids);
 
 this.noteField(result);
 this.noteNationality(result, scholarships);
 
 return result;
+
+}
+
+// ==========================================================
+// LES CRITÈRES PROPRES AUX CYCLES (refonte du 2026-09-05)
+//
+// Ils renvoient une PROPORTION (0 à 1), pas des points : c'est le
+// poids du cycle qui décide de ce qu'ils valent. Chacun ne s'applique
+// qu'aux cycles où l'exigence existe réellement — voir POIDS.
+// ==========================================================
+
+// Cohérence entre la filière du secondaire et le domaine visé. Sans
+// filière déclarée, on ne juge pas : 0,7 est une valeur neutre, ni
+// récompense ni sanction.
+calculateFiliere(result) {
+
+const filiere = String(this.responses.secondaryTrackOther || this.responses.secondaryTrack || "");
+
+if (!filiere) return 0.7;
+
+if (filiere.toLowerCase().includes("autre")) return 0.7;
+
+result.strengths.push(`Filière ${filiere.toLowerCase()} au secondaire : un point de repère concret pour les comités, qui vérifient la continuité entre le parcours et le domaine demandé.`);
+
+return 1;
+
+}
+
+// Fait VÉRIFIÉ le 2026-09-05 sur chevening.org : « at least two
+// years' work experience, acquired after completing your
+// undergraduate degree, equivalent to 2,800 hours ». C'est un seuil
+// éliminatoire, pas un bonus — d'où la marche nette à deux ans.
+calculateExperience(result) {
+
+const exp = String(this.responses.workExperience || "").toLowerCase();
+
+if (!exp) return 0.6;
+
+if (exp.includes("plus de 5")) {
+result.strengths.push("Plus de cinq ans d'expérience professionnelle : vous dépassez le seuil de toutes les bourses qui en exigent une.");
+return 1;
+}
+
+if (exp.includes("2 à 5")) {
+result.strengths.push("Deux à cinq ans d'expérience professionnelle : vous franchissez le seuil des 2 800 heures exigées par Chevening, et celui de la plupart des programmes comparables.");
+return 1;
+}
+
+if (exp.includes("1 à 2")) {
+result.recommendations.push("Entre un et deux ans d'expérience : vous êtes à la limite du seuil de Chevening (2 800 heures, environ deux ans). Comptez précisément vos heures avant de candidater — stages rémunérés inclus.");
+return 0.65;
+}
+
+if (exp.includes("moins d'un an")) {
+result.weaknesses.push("Moins d'un an d'expérience professionnelle : les bourses qui en exigent deux vous sont fermées cette année. Elles ne le seront plus dans un an.");
+return 0.35;
+}
+
+result.weaknesses.push("Aucune expérience professionnelle déclarée : une partie des bourses de master en font un critère éliminatoire, indépendamment de vos notes.");
+
+return 0.15;
+
+}
+
+// Plusieurs bourses ne financent qu'un étudiant DÉJÀ admis : l'ordre
+// des démarches en dépend entièrement.
+calculateAdmission(result) {
+
+const adm = String(this.responses.admissionStatus || "").toLowerCase();
+
+if (!adm) return 0.6;
+
+if (adm.includes("déjà une admission")) {
+result.strengths.push("Vous avez déjà une admission : vous êtes éligible aux bourses qui exigent une offre avant de financer, ce qui écarte beaucoup de candidats.");
+return 1;
+}
+
+if (adm.includes("déposée")) {
+result.strengths.push("Vos candidatures universitaires sont déposées : vous avez pris l'ordre des démarches dans le bon sens.");
+return 0.8;
+}
+
+if (adm.includes("prépare")) {
+result.recommendations.push("Vos dossiers universitaires sont en préparation : terminez-les d'abord. Plusieurs bourses demandent une admission — sans elle, la candidature à la bourse est irrecevable.");
+return 0.5;
+}
+
+result.weaknesses.push("Aucune candidature universitaire engagée : commencez par l'admission. La bourse vient après, et certaines l'exigent noir sur blanc.");
+
+return 0.2;
+
+}
+
+// La pièce maîtresse d'un dossier de doctorat.
+calculateRecherche(result) {
+
+const projet = String(this.responses.researchProject || "").toLowerCase();
+
+// Pas de question posée (doctorant déjà inscrit) : le sujet existe.
+if (!projet) return 0.9;
+
+if (projet.includes("rédigé")) {
+result.strengths.push("Projet de recherche rédigé et abouti : c'est la pièce qu'un comité de doctorat lit en premier, et la vôtre est prête.");
+return 1;
+}
+
+if (projet.includes("idée précise")) {
+result.recommendations.push("Votre sujet est clair mais pas encore rédigé : mettez-le par écrit avant tout le reste — c'est ce document qui décide de l'accueil d'un laboratoire.");
+return 0.65;
+}
+
+if (projet.includes("domaine")) {
+result.weaknesses.push("Un domaine sans sujet précis ne suffit pas pour un doctorat : aucun directeur ne s'engage sur une intention.");
+return 0.35;
+}
+
+result.weaknesses.push("Sans projet de recherche, un dossier de doctorat n'a pas d'objet : c'est par là qu'il faut commencer, avant même de choisir un pays.");
+
+return 0.15;
+
+}
+
+calculateEncadrement(result) {
+
+const dir = String(this.responses.supervisorContact || "").toLowerCase();
+
+if (!dir) return 0.6;
+
+if (dir.includes("accord écrit")) {
+result.strengths.push("Un accord écrit d'un directeur ou d'un laboratoire : c'est ce qui transforme un projet en candidature recevable.");
+return 1;
+}
+
+if (dir.includes("contact en cours")) {
+result.recommendations.push("Un contact est engagé avec un encadrant : obtenez une réponse ÉCRITE, même brève. C'est elle que les dossiers demandent, pas la conversation.");
+return 0.7;
+}
+
+result.weaknesses.push("Sans directeur de thèse ni laboratoire d'accueil, votre dossier n'a pas de destinataire : c'est le premier verrou à lever, avant les échéances.");
+
+return 0.25;
+
+}
+
+calculatePublications(result) {
+
+const pub = String(this.responses.publications || "").toLowerCase();
+
+if (!pub) return 0.5;
+
+if (pub.includes("plusieurs")) {
+result.strengths.push("Plusieurs publications ou communications : à dossier égal, c'est ce qui départage.");
+return 1;
+}
+
+if (pub.includes("une fois")) return 0.7;
+
+// Ne JAMAIS présenter l'absence de publication comme un frein : ce
+// n'est presque jamais exigé avant le doctorat, et le dire
+// découragerait à tort.
+return 0.4;
 
 }
 
@@ -228,10 +535,10 @@ if (!current) return 6;
 // Pas encore de cycle visé : Fitz propose le prochain cycle naturel.
 if (!target || target === "Je ne sais pas encore") {
 
-const natural = CURRENT_TO_NATURAL_TARGET[current];
+const natural = cycleNaturel(current);
 
 if (natural) {
-result.recommendations.push(`D'après votre parcours (${current.toLowerCase()}), le cycle naturel à viser est : ${natural}.`);
+result.recommendations.push(`D'après votre parcours (${libelleCourt(current)}), le cycle naturel à viser est : ${natural}.`);
 }
 
 return 8;
@@ -239,7 +546,7 @@ return 8;
 }
 
 const targetRank = LEVEL_RANK[target];
-const maxRank = CURRENT_MAX_RANK[current];
+const maxRank = rangMaximal(current);
 
 if (!targetRank || !maxRank) return 6;
 
@@ -260,7 +567,7 @@ return 4;
 // diplôme sont rares — signalé, pas sanctionné lourdement.
 if (targetRank < maxRank - 0) {
 
-const naturalNext = CURRENT_TO_NATURAL_TARGET[current];
+const naturalNext = cycleNaturel(current);
 
 if (naturalNext && LEVEL_RANK[naturalNext] > targetRank) {
 result.recommendations.push(`Vous visez ${target.toLowerCase()} alors que votre parcours ouvre déjà ${naturalNext.toLowerCase()} : c'est possible (réorientation), mais les bourses financent rarement un second diplôme du même cycle.`);
@@ -269,7 +576,7 @@ return 8;
 
 }
 
-result.strengths.push(`Projet cohérent : ${current.toLowerCase()} → ${target.toLowerCase()}, la progression attendue par les comités de sélection.`);
+result.strengths.push(`Projet cohérent : ${libelleCourt(current)} → ${target.toLowerCase()}, la progression attendue par les comités de sélection.`);
 
 return 12;
 

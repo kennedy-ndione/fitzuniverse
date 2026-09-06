@@ -1,7 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Disallow: /import-scholarships.html
-Disallow: /import-universities.html
 
 Sitemap: https://scholarbridge-e0d84.web.app/sitemap.xml

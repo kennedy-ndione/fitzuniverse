@@ -16,6 +16,8 @@ getUniversitiesCount,
 getScholarshipsCount,
 getAnalyticsTotals,
 getTodayCounters,
+getDailyCounterHistory,
+getRecentEvents,
 getPlanBreakdown,
 getTopCountries,
 getTopUniversities
@@ -28,6 +30,67 @@ import { hidePageLoader } from "../js/app-shell.js";
 initSidebarToggle();
 
 // ==========================================================
+// Palette des graphiques — REFONTE CLAIRE 2026-09-02 : plus aucun
+// bleu/slate. Encre chaude pour les axes, ambre pour la série
+// principale, violet réservé aux séries où Fitz/l'étudiant est
+// l'acteur (même doctrine que DESIGN_SYSTEM.md, section Icônes).
+// ==========================================================
+
+const CHART_TEXT = "#6E6760";
+const CHART_GRID = "rgba(26,23,20,.07)";
+
+// Les cinq séries de la pulsation. `fields` liste les compteurs
+// quotidiens (analyticsDailyCounters) additionnés pour chaque jour.
+const PULSE_SERIES = [
+{
+key: "entrees",
+label: "Entrées",
+color: "#E9A319",
+fields: ["visit", "signup", "login"],
+fill: true
+},
+{
+key: "sorties",
+label: "Sorties",
+color: "#8A837A",
+fields: ["logout"]
+},
+{
+key: "interactions",
+label: "Interactions étudiantes",
+color: "#7E71D8",
+fields: [
+"ai_chat_message_sent", "advisor_request_sent", "admin_message_sent",
+"letter_generated", "email_generated", "verification_run", "translation_run"
+]
+},
+{
+key: "admissions",
+label: "Admissions",
+color: "#16A34A",
+fields: ["application_admitted"]
+},
+{
+key: "refus",
+label: "Refus",
+color: "#DC2626",
+fields: ["application_rejected"]
+}
+];
+
+// État du panneau « pulsation » : période affichée, séries visibles,
+// mode aperçu démo (données simulées, clairement étiquetées).
+const pulseState = {
+days: 30,
+demo: false,
+hidden: new Set(),
+history: {}
+};
+
+let pulseChart = null;
+let planChart = null;
+
+// ==========================================================
 // Formatage
 // ==========================================================
 
@@ -38,8 +101,7 @@ return new Intl.NumberFormat("fr-FR").format(value || 0);
 // ==========================================================
 // Identité de l'administrateur — dérivée du document admins/{uid}
 // déjà lu par la vérification d'accès (aucune requête Firebase
-// supplémentaire). Une simple chaîne de repli si aucun champ nom
-// n'a été renseigné dans la console Firebase.
+// supplémentaire).
 // ==========================================================
 
 function resolveAdminName(adminData, firebaseUser) {
@@ -175,69 +237,229 @@ new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
 // ==========================================================
-// Vue d'ensemble du jour
+// PULSATION DU SITE — la grande courbe évolutive multi-séries
 // ==========================================================
 
-function renderOverviewChecklist({ userStats, universitiesCount, scholarshipsCount, totals }) {
+function buildLastDays(n) {
 
-const items = [
+const days = [];
 
-{
-done: userStats.newToday > 0,
-title: "Nouvel étudiant",
-text: userStats.newToday > 0
-? `${userStats.newToday} inscription${userStats.newToday > 1 ? "s" : ""} aujourd'hui`
-: "Aucune inscription aujourd'hui pour le moment"
-},
-{
-done: universitiesCount > 0,
-title: "Universités actives",
-text: `${formatNumber(universitiesCount)} au catalogue`
-},
-{
-done: scholarshipsCount > 0,
-title: "Bourses disponibles",
-text: `${formatNumber(scholarshipsCount)} publiées`
-},
-{
-done: (totals.payment_attempted || 0) > 0,
-title: "Paiements",
-text: (totals.payment_attempted || 0) > 0
-? `${formatNumber(totals.payment_attempted)} tentative(s) enregistrée(s)`
-: "En attente du backend PayDunya (Phase 1)"
-},
-{
-done: (totals.letter_generated || 0) + (totals.email_generated || 0) + (totals.verification_run || 0) + (totals.translation_run || 0) > 0,
-title: "IA",
-text: "Fitz aujourd'hui : lettres, e-mails, vérifications et traductions confondus"
-},
-{
-done: false,
-title: "Documents",
-text: "S'activera dès la synchronisation des documents générés (hors périmètre actuel)"
+for (let i = n - 1; i >= 0; i--) {
+
+const d = new Date();
+d.setDate(d.getDate() - i);
+days.push(d.toISOString().slice(0, 10));
+
 }
 
-];
+return days;
 
-const container = document.getElementById("overviewChecklist");
+}
+
+// Générateur démo DÉTERMINISTE (même graine → même courbe, pour que
+// l'aperçu ne « saute » pas à chaque re-rendu). Jamais mélangé aux
+// données réelles : soit tout réel, soit tout simulé + bandeau.
+function demoValue(serieKey, dayIndex, totalDays) {
+
+let seed = 0;
+for (const c of serieKey) seed += c.charCodeAt(0);
+
+const wave = Math.sin((dayIndex + seed) / 3.1) + Math.sin((dayIndex + seed * 2) / 7.3);
+const trend = dayIndex / totalDays;
+
+const base = {
+entrees: 26 + trend * 30,
+sorties: 9 + trend * 9,
+interactions: 15 + trend * 22,
+admissions: 2 + trend * 5,
+refus: 1 + trend * 3
+}[serieKey] || 5;
+
+return Math.max(0, Math.round(base + wave * base * 0.32));
+
+}
+
+function realValue(serie, dayKey) {
+
+const counters = pulseState.history[dayKey];
+
+if (!counters) return 0;
+
+return serie.fields.reduce((sum, field) => sum + (counters[field] || 0), 0);
+
+}
+
+function pulseDatasets(days) {
+
+return PULSE_SERIES
+.filter((serie) => !pulseState.hidden.has(serie.key))
+.map((serie) => ({
+label: serie.label,
+data: days.map((dayKey, i) => pulseState.demo
+? demoValue(serie.key, i, days.length)
+: realValue(serie, dayKey)),
+borderColor: serie.color,
+backgroundColor: serie.fill ? `${serie.color}26` : "transparent",
+fill: !!serie.fill,
+tension: .38,
+borderWidth: 2.5,
+pointRadius: 0,
+pointHoverRadius: 4,
+pointHoverBackgroundColor: serie.color
+}));
+
+}
+
+function renderPulseChart() {
+
+const days = buildLastDays(pulseState.days);
+const datasets = pulseDatasets(days);
+
+const emptyState = document.getElementById("pulseChartEmpty");
+const hasData = pulseState.demo || datasets.some((ds) => ds.data.some((v) => v > 0));
+
+if (emptyState) emptyState.hidden = hasData;
+
+const canvas = document.getElementById("pulseChart");
+
+if (!canvas || !window.Chart) return;
+
+const labels = days.map((d) => {
+const [, m, j] = d.split("-");
+return `${j}/${m}`;
+});
+
+if (pulseChart) {
+
+pulseChart.data.labels = labels;
+pulseChart.data.datasets = datasets;
+pulseChart.update();
+
+} else {
+
+pulseChart = new Chart(canvas, {
+type: "line",
+data: { labels, datasets },
+options: {
+responsive: true,
+maintainAspectRatio: false,
+interaction: { mode: "index", intersect: false },
+plugins: {
+legend: { display: false },
+tooltip: {
+backgroundColor: "#211D18",
+titleColor: "#F5F0E7",
+bodyColor: "#F5F0E7",
+borderColor: "rgba(233,163,25,.4)",
+borderWidth: 1,
+padding: 12,
+cornerRadius: 10
+}
+},
+scales: {
+x: { ticks: { color: CHART_TEXT, maxTicksLimit: 10 }, grid: { display: false } },
+y: { beginAtZero: true, ticks: { color: CHART_TEXT, precision: 0 }, grid: { color: CHART_GRID } }
+}
+}
+});
+
+}
+
+}
+
+function renderSerieChips() {
+
+const container = document.getElementById("serieChips");
 container.innerHTML = "";
 
-items.forEach((item) => {
+PULSE_SERIES.forEach((serie) => {
 
-const el = document.createElement("div");
-el.className = "overview-item";
+const off = pulseState.hidden.has(serie.key);
 
-el.innerHTML = `
-<span class="overview-item-mark ${item.done ? "is-done" : "is-idle"}"><i data-lucide="${item.done ? "check" : "minus"}"></i></span>
-<div class="overview-item-text"><strong></strong><span></span></div>
-`;
+const chip = document.createElement("button");
+chip.type = "button";
+chip.className = `serie-chip ${off ? "is-off" : "is-active"}`;
+chip.style.setProperty("--serie-color", serie.color);
+chip.setAttribute("aria-pressed", String(!off));
 
-el.querySelector("strong").textContent = item.title;
-el.querySelector(".overview-item-text span").textContent = item.text;
+chip.innerHTML = `<span class="serie-dot"></span><span></span>`;
+chip.querySelector("span:last-child").textContent = serie.label;
 
-container.appendChild(el);
+chip.addEventListener("click", () => {
+
+if (pulseState.hidden.has(serie.key)) {
+pulseState.hidden.delete(serie.key);
+} else {
+pulseState.hidden.add(serie.key);
+}
+
+renderSerieChips();
+renderPulseChart();
 
 });
+
+container.appendChild(chip);
+
+});
+
+}
+
+function initPulseControls() {
+
+// Période 7 / 30 / 90 jours.
+document.querySelectorAll("#pulseRange .seg-btn").forEach((btn) => {
+
+btn.addEventListener("click", () => {
+
+document.querySelectorAll("#pulseRange .seg-btn").forEach((b) => b.classList.remove("is-active"));
+btn.classList.add("is-active");
+
+pulseState.days = parseInt(btn.dataset.days, 10);
+renderPulseChart();
+
+});
+
+});
+
+// Bascule « Aperçu démo » — le bandeau reste visible tant que le
+// mode est actif : impossible de confondre simulé et réel.
+const toggle = document.getElementById("demoToggle");
+const banner = document.getElementById("demoBanner");
+
+toggle.addEventListener("click", () => {
+
+pulseState.demo = !pulseState.demo;
+
+toggle.classList.toggle("is-on", pulseState.demo);
+toggle.setAttribute("aria-pressed", String(pulseState.demo));
+banner.hidden = !pulseState.demo;
+
+renderPulseChart();
+
+});
+
+}
+
+function renderPulseFootnote() {
+
+const el = document.getElementById("pulseFootnote");
+const trackedDays = Object.keys(pulseState.history).length;
+
+el.textContent = trackedDays > 0
+? `Compteurs quotidiens écrits en continu par le site (js/analytics.js) — ${trackedDays} jour${trackedDays > 1 ? "s" : ""} d'historique déjà accumulé${trackedDays > 1 ? "s" : ""}.`
+: "Compteurs quotidiens écrits en continu par le site (js/analytics.js) — l'historique commence à s'accumuler dès aujourd'hui.";
+
+}
+
+// ==========================================================
+// Issues de candidatures
+// ==========================================================
+
+function renderOutcomeStrip(totals) {
+
+document.getElementById("outcomeAdmitted").textContent = formatNumber(totals.application_admitted);
+document.getElementById("outcomeRejected").textContent = formatNumber(totals.application_rejected);
+document.getElementById("outcomeWaitlisted").textContent = formatNumber(totals.application_waitlisted);
 
 }
 
@@ -245,11 +467,24 @@ container.appendChild(el);
 // Cartes de statistiques
 // ==========================================================
 
-// Une carte "réelle" affiche un chiffre calculé à partir de données
-// Firestore existantes. Une carte "en attente" reste honnête tant
-// que l'infrastructure nécessaire (paiement réel, Fitz...) n'est
-// pas branchée — jamais de chiffre inventé (voir js/analytics.js).
-function renderStatCard({ icon, label, value, pending, pendingNote, size }) {
+// Somme d'un champ de compteur sur les N derniers jours de
+// l'historique déjà chargé (0 lecture supplémentaire).
+function sumLastDays(fields, nDays) {
+
+const days = buildLastDays(nDays);
+
+return days.reduce((total, dayKey) => {
+
+const counters = pulseState.history[dayKey];
+if (!counters) return total;
+
+return total + fields.reduce((s, f) => s + (counters[f] || 0), 0);
+
+}, 0);
+
+}
+
+function renderStatCard({ icon, label, value, pending, pendingNote, size, delta }) {
 
 const card = document.createElement("div");
 
@@ -264,12 +499,17 @@ card.innerHTML = `
 <div>
 <div class="stat-card-value"></div>
 <div class="stat-card-label"></div>
+${delta ? `<div class="stat-card-delta ${delta.dir === "up" ? "is-up" : ""}"><i data-lucide="${delta.dir === "up" ? "trending-up" : "minus"}"></i><span></span></div>` : ""}
 ${pending ? `<div class="stat-card-pending-note"></div>` : ""}
 </div>
 `;
 
 card.querySelector(".stat-card-value").textContent = pending ? "—" : formatNumber(value);
 card.querySelector(".stat-card-label").textContent = label;
+
+if (delta) {
+card.querySelector(".stat-card-delta span").textContent = delta.text;
+}
 
 if (pending) {
 card.querySelector(".stat-card-pending-note").textContent = pendingNote;
@@ -279,33 +519,43 @@ return card;
 
 }
 
+function weekDelta(fields) {
+
+const week = sumLastDays(fields, 7);
+
+return week > 0
+? { dir: "up", text: `+${formatNumber(week)} sur 7 jours` }
+: { dir: "flat", text: "stable sur 7 jours" };
+
+}
+
 function renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals }) {
 
 const grid = document.getElementById("statsGrid");
 grid.innerHTML = "";
 
+const fitzActions = (totals.letter_generated || 0) + (totals.email_generated || 0) +
+(totals.verification_run || 0) + (totals.translation_run || 0);
+
 const cards = [
 
-{ icon: "users", label: "Étudiants inscrits", value: userStats.total, size: "featured" },
+{ icon: "users", label: "Étudiants inscrits", value: userStats.total, size: "featured", delta: weekDelta(["signup"]) },
 { icon: "user-plus", label: "Nouveaux aujourd'hui", value: userStats.newToday, size: "accent" },
 { icon: "landmark", label: "Universités au catalogue", value: universitiesCount },
 { icon: "graduation-cap", label: "Bourses au catalogue", value: scholarshipsCount },
 
-{ icon: "eye", label: "Bourses consultées", value: totals.scholarship_viewed, size: "tall" },
+{ icon: "eye", label: "Bourses consultées", value: totals.scholarship_viewed, size: "tall", delta: weekDelta(["scholarship_viewed"]) },
 { icon: "building-2", label: "Universités consultées", value: totals.university_viewed },
-{ icon: "pen-line", label: "Lettres générées", value: totals.letter_generated },
-{ icon: "mail", label: "E-mails générés", value: totals.email_generated },
-{ icon: "shield-check", label: "Vérifications de dossier", value: totals.verification_run },
-{ icon: "languages", label: "Traductions effectuées", value: totals.translation_run },
+{ icon: "external-link", label: "Portails de candidature ouverts", value: totals.application_portal_opened },
+{ icon: "bot", label: "Actions Fitz (lettres, e-mails, contrôles…)", value: fitzActions },
+{ icon: "message-circle", label: "Messages au chat Fitz", value: totals.ai_chat_message_sent },
+{ icon: "user-check", label: "Demandes de conseiller", value: totals.advisor_request_sent },
+{ icon: "send", label: "Messages admin → étudiants", value: totals.admin_message_sent },
 { icon: "credit-card", label: "Tentatives de paiement", value: totals.payment_attempted, size: "wide" },
 
 {
 icon: "wallet", label: "Revenus réels", pending: true,
 pendingNote: "S'activera automatiquement dès que le paiement PayDunya réel sera branché (voir feuille de route Phase 1)."
-},
-{
-icon: "bot", label: "Conversations Fitz", pending: true,
-pendingNote: "S'activera automatiquement dès que le vrai backend Fitz (Phase 1) sera branché."
 }
 
 ];
@@ -317,7 +567,7 @@ if (window.lucide) lucide.createIcons();
 }
 
 // ==========================================================
-// Observations IA — synthèse en langage naturel des chiffres déjà
+// Observations — synthèse en langage naturel des chiffres déjà
 // calculés (aucune nouvelle source de données).
 // ==========================================================
 
@@ -325,90 +575,47 @@ function renderAiObservations({ userStats, totals }) {
 
 const el = document.getElementById("aiObservationText");
 
-const activitySum = (totals.letter_generated || 0) + (totals.email_generated || 0) +
-(totals.verification_run || 0) + (totals.translation_run || 0);
+const weekIn = sumLastDays(["visit", "signup", "login"], 7);
+const weekAdmitted = sumLastDays(["application_admitted"], 7);
+const weekRejected = sumLastDays(["application_rejected"], 7);
 
-let text;
+const fragments = [];
 
 if (userStats.total === 0) {
-text = "Fitz n'a pas encore d'étudiant inscrit. Les statistiques commenceront à évoluer dès l'arrivée des premiers comptes.";
-} else if (userStats.newToday === 0 && activitySum === 0) {
-text = "Aucune anomalie détectée aujourd'hui. Le nombre d'inscriptions est stable — aucune activité inhabituelle à signaler.";
-} else if (userStats.newToday > 0) {
-text = `Activité positive aujourd'hui : ${userStats.newToday} nouvel${userStats.newToday > 1 ? "les" : ""} inscription${userStats.newToday > 1 ? "s" : ""} et ${activitySum} action${activitySum > 1 ? "s" : ""} Fitz enregistrée${activitySum > 1 ? "s" : ""}. Rien d'anormal à signaler.`;
-} else {
-text = `Aucune nouvelle inscription aujourd'hui, mais ${activitySum} action${activitySum > 1 ? "s" : ""} Fitz enregistrée${activitySum > 1 ? "s" : ""} au total. Aucune anomalie détectée.`;
+el.textContent = "Fitz n'a pas encore d'étudiant inscrit. Les statistiques commenceront à évoluer dès l'arrivée des premiers comptes.";
+return;
 }
 
-el.textContent = text;
+if (userStats.newToday > 0) {
+fragments.push(`${userStats.newToday} nouvel${userStats.newToday > 1 ? "les" : ""} inscription${userStats.newToday > 1 ? "s" : ""} aujourd'hui`);
+}
+
+if (weekIn > 0) {
+fragments.push(`${formatNumber(weekIn)} entrée${weekIn > 1 ? "s" : ""} sur les 7 derniers jours`);
+}
+
+if (weekAdmitted > 0) {
+fragments.push(`${weekAdmitted} admission${weekAdmitted > 1 ? "s" : ""} signalée${weekAdmitted > 1 ? "s" : ""} cette semaine`);
+}
+
+if (weekRejected > 0) {
+fragments.push(`${weekRejected} refus cette semaine`);
+}
+
+if (!fragments.length) {
+
+const totalActivity = (totals.letter_generated || 0) + (totals.email_generated || 0) +
+(totals.verification_run || 0) + (totals.translation_run || 0);
+
+el.textContent = totalActivity > 0
+? `Semaine calme : aucune entrée ni issue de candidature enregistrée sur 7 jours, mais ${formatNumber(totalActivity)} action${totalActivity > 1 ? "s" : ""} Fitz au total depuis le lancement. Aucune anomalie détectée.`
+: "Aucune anomalie détectée. L'activité est stable — les courbes ci-dessus se rempliront au fil des visites et des candidatures.";
+
+return;
 
 }
 
-// ==========================================================
-// Graphique des inscriptions (30 derniers jours)
-// ==========================================================
-
-function buildLast30Days() {
-
-const days = [];
-
-for (let i = 29; i >= 0; i--) {
-
-const d = new Date();
-d.setDate(d.getDate() - i);
-days.push(d.toISOString().slice(0, 10));
-
-}
-
-return days;
-
-}
-
-function renderSignupsChart(todayCounters) {
-
-const days = buildLast30Days();
-
-// Le futur module "Statistiques IA avancées" lira l'historique complet
-// des compteurs quotidiens ; pour ce premier tableau de bord, on ne
-// lit que le jour courant (déjà disponible) et on affiche les jours
-// précédents à 0 tant qu'aucun historique n'a été accumulé — honnête
-// plutôt que d'inventer une courbe.
-const todayKey = new Date().toISOString().slice(0, 10);
-
-const values = days.map((day) => (day === todayKey ? (todayCounters.signup || 0) : 0));
-
-const ctx = document.getElementById("signupsChart");
-const emptyState = document.getElementById("signupsChartEmpty");
-
-const hasData = values.some((v) => v > 0);
-
-if (emptyState) emptyState.hidden = hasData;
-
-if (!ctx || !window.Chart) return;
-
-new Chart(ctx, {
-type: "line",
-data: {
-labels: days.map((d) => d.slice(5)),
-datasets: [{
-label: "Inscriptions",
-data: values,
-borderColor: "#E9A319",
-backgroundColor: "rgba(233,163,25,.15)",
-tension: .35,
-fill: true,
-pointRadius: 0
-}]
-},
-options: {
-responsive: true,
-plugins: { legend: { display: false } },
-scales: {
-x: { ticks: { color: "#8792A8", maxTicksLimit: 8 }, grid: { display: false } },
-y: { ticks: { color: "#8792A8", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" } }
-}
-}
-});
+el.textContent = `${fragments.join(", ")}. Aucune anomalie détectée.`;
 
 }
 
@@ -430,30 +637,70 @@ if (emptyState) emptyState.hidden = total > 0;
 
 if (!ctx || !window.Chart) return;
 
-new Chart(ctx, {
+planChart = new Chart(ctx, {
 type: "doughnut",
 data: {
 labels: planIds.map((id) => PLAN_LABELS[id]),
 datasets: [{
 data: planIds.map((id) => breakdown[id] || 0),
-// Une couleur par entrée de PLAN_LABELS, dans l'ordre de PLAN_ORDER.
-// Ce tableau n'en comptait que 4 pour 4 formules : les 3 offres
-// ajoutées le 2026-08-02 auraient eu des segments sans couleur. Les
-// valeurs sont aussi passées à la palette bleu/violet en vigueur —
-// les précédentes (#8B1E3F, #B23358, #D4A24C) venaient du thème
-// marron/or abandonné et étaient les dernières encore en place ici.
-// Progression : gris (gratuit) → bleus (formules) → violets (humain).
-backgroundColor: ["#94A3B8", "#64748B", "#4A5BC4", "#33418C", "#262F6B", "#7E71D8", "#6459B8"],
-borderColor: "#1E293B",
+// Refonte claire 2026-09-02 : la palette bleu/violet de l'admin
+// sombre est remplacée par la progression chaude du site —
+// gris chauds (gratuit) → gamme ambre (formules) → encre puis
+// violet Fitz (accompagnement humain/premium).
+backgroundColor: ["#B7AFA3", "#8A837A", "#E9A319", "#C9860B", "#8A5D00", "#211D18", "#7E71D8"],
+borderColor: "#FFFFFF",
 borderWidth: 2
 }]
 },
 options: {
 responsive: true,
+maintainAspectRatio: false,
 plugins: {
-legend: { position: "bottom", labels: { color: "#C2CBDE", boxWidth: 12 } }
+legend: { position: "bottom", labels: { color: "#57514A", boxWidth: 12 } }
 }
 }
+});
+
+}
+
+// ==========================================================
+// Entonnoir du parcours — totaux depuis le lancement du suivi
+// ==========================================================
+
+function renderFunnel({ userStats, totals }) {
+
+const steps = [
+{ label: "Entrées enregistrées (visites, connexions)", value: (totals.visit || 0) + (totals.login || 0) + (totals.signup || 0), icon: "footprints" },
+{ label: "Étudiants inscrits", value: userStats.total },
+{ label: "Candidatures suivies", value: totals.application_added || 0 },
+{ label: "Admissions signalées", value: totals.application_admitted || 0 }
+];
+
+const max = Math.max(1, ...steps.map((s) => s.value));
+
+const container = document.getElementById("funnelList");
+container.innerHTML = "";
+
+steps.forEach((step) => {
+
+const row = document.createElement("div");
+
+row.innerHTML = `
+<div class="funnel-row-label"><span></span><span class="funnel-row-value"></span></div>
+<div class="funnel-bar"><div class="funnel-bar-fill"></div></div>
+`;
+
+row.querySelector(".funnel-row-label span:first-child").textContent = step.label;
+row.querySelector(".funnel-row-value").textContent = formatNumber(step.value);
+
+container.appendChild(row);
+
+// Largeur appliquée après insertion pour laisser la transition CSS
+// animer la barre au chargement.
+requestAnimationFrame(() => {
+row.querySelector(".funnel-bar-fill").style.width = `${Math.round((step.value / max) * 100)}%`;
+});
+
 });
 
 }
@@ -494,51 +741,94 @@ container.appendChild(row);
 }
 
 // ==========================================================
-// Chronologie d'activité — construite uniquement à partir de
-// données déjà récupérées ailleurs sur cette page (aucune requête
-// Firebase supplémentaire) : honnête plutôt qu'inventée.
+// Chronologie d'activité — les VRAIS derniers événements du journal
+// analyticsEvents (une seule requête, limitée). Les visites sont
+// filtrées pour ne pas noyer les événements signifiants.
 // ==========================================================
 
-function renderActivityTimeline({ userStats, todayCounters }) {
+const EVENT_LABELS = {
+signup: "Nouvel étudiant inscrit",
+login: "Connexion d'un étudiant",
+logout: "Déconnexion d'un étudiant",
+scholarship_viewed: "Bourse consultée",
+university_viewed: "Université consultée",
+application_portal_opened: "Portail de candidature ouvert",
+university_portal_opened: "Site d'université ouvert",
+funder_portal_opened: "Portail du bailleur ouvert",
+application_created_from_details: "Candidature créée depuis une fiche",
+letter_generated: "Lettre de motivation générée",
+email_generated: "E-mail généré",
+verification_run: "Vérification de dossier",
+translation_run: "Traduction effectuée",
+ai_chat_message_sent: "Message envoyé à Fitz",
+application_added: "Candidature ajoutée au suivi",
+application_checked_in: "Point d'étape sur une candidature",
+application_checklist_updated: "Checklist de candidature mise à jour",
+application_readiness_checked: "Contrôle de préparation lancé",
+application_recommendation_replaced: "Suggestion Fitz remplacée",
+application_admitted: "ADMISSION signalée par un étudiant",
+application_rejected: "Refus signalé par un étudiant",
+application_waitlisted: "Mise en liste d'attente signalée",
+advisor_request_sent: "Demande de revue par un conseiller",
+admin_message_sent: "Message envoyé à un étudiant",
+file_compressed: "Fichier compressé",
+payment_attempted: "Tentative de paiement"
+};
+
+function relativeTime(date) {
+
+if (!date) return "";
+
+const diffMs = Date.now() - date.getTime();
+const minutes = Math.round(diffMs / 60000);
+
+if (minutes < 1) return "à l'instant";
+if (minutes < 60) return `il y a ${minutes} min`;
+
+const hours = Math.round(minutes / 60);
+if (hours < 24) return `il y a ${hours} h`;
+
+return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
+}
+
+function eventDetail(event) {
+
+const p = event.payload || {};
+
+if (p.university) return p.university;
+if (p.country) return p.country;
+if (p.plan) return `Formule : ${PLAN_LABELS[p.plan] || p.plan}`;
+if (p.status) return `Statut : ${p.status}`;
+
+return "";
+
+}
+
+function renderActivityTimeline(events) {
 
 const container = document.getElementById("activityTimeline");
 container.innerHTML = "";
 
-const entries = [];
+const meaningful = events.filter((e) => e.type !== "visit").slice(0, 9);
 
-entries.push({
-label: "Connexion administrateur",
-meta: "Aujourd'hui — à l'instant"
-});
+if (!meaningful.length) {
 
-if (userStats.newToday > 0) {
-entries.push({
-label: `${userStats.newToday} nouvel${userStats.newToday > 1 ? "les" : ""} étudiant${userStats.newToday > 1 ? "s" : ""} inscrit${userStats.newToday > 1 ? "s" : ""}`,
-meta: "Aujourd'hui"
-});
+container.innerHTML = `<p class="timeline-empty">En attente des premières activités étudiantes — cette chronologie affiche les événements réels du journal analytics.</p>`;
+return;
+
 }
 
-const activitySum = (todayCounters.letter_generated || 0) + (todayCounters.email_generated || 0) +
-(todayCounters.verification_run || 0) + (todayCounters.translation_run || 0);
-
-if (activitySum > 0) {
-entries.push({
-label: `${activitySum} action${activitySum > 1 ? "s" : ""} Fitz enregistrée${activitySum > 1 ? "s" : ""}`,
-meta: "Aujourd'hui"
-});
-}
-
-if (entries.length === 1) {
-entries.push({
-label: "En attente des premières activités étudiantes",
-meta: "Cette chronologie se remplira automatiquement"
-});
-}
-
-entries.forEach((entry) => {
+meaningful.forEach((event) => {
 
 const row = document.createElement("div");
 row.className = "timeline-item";
+
+const when = event.createdAt && typeof event.createdAt.toDate === "function"
+? relativeTime(event.createdAt.toDate())
+: "";
+
+const detail = eventDetail(event);
 
 row.innerHTML = `
 <span class="timeline-dot"></span>
@@ -548,8 +838,8 @@ row.innerHTML = `
 </div>
 `;
 
-row.querySelector(".timeline-label").textContent = entry.label;
-row.querySelector(".timeline-meta").textContent = entry.meta;
+row.querySelector(".timeline-label").textContent = EVENT_LABELS[event.type] || event.type;
+row.querySelector(".timeline-meta").textContent = [detail, when].filter(Boolean).join(" — ");
 
 container.appendChild(row);
 
@@ -558,12 +848,9 @@ container.appendChild(row);
 }
 
 // ==========================================================
-// Infrastructure — état des services. Dérivé de faits déjà connus
+// Infrastructure — état des services, dérivé de faits déjà connus
 // à ce stade du code (si on atteint ce rendu, Firestore/Auth ont
-// déjà répondu avec succès) plutôt que de nouveaux appels réseau ;
-// Fitz et PayDunya restent honnêtement "en attente" tant que
-// leurs backends réels ne sont pas branchés (voir js/ai/ai-client.js
-// et payment.js).
+// déjà répondu avec succès).
 // ==========================================================
 
 function renderInfraGrid() {
@@ -626,23 +913,39 @@ return;
 
 const adminData = adminSnap.data();
 
-const [userStats, universitiesCount, scholarshipsCount, totals, todayCounters] = await Promise.all([
+const [userStats, universitiesCount, scholarshipsCount, totals, todayCounters, history, recentEvents] = await Promise.all([
 getUserStats(),
 getUniversitiesCount(),
 getScholarshipsCount(),
 getAnalyticsTotals(),
-getTodayCounters()
+getTodayCounters(),
+getDailyCounterHistory(90),
+getRecentEvents(20)
 ]);
+
+// L'historique quotidien alimente la pulsation, les deltas des
+// cartes ET les observations — chargé UNE fois pour tout le
+// tableau de bord (au plus ~90 lectures, souvent bien moins).
+pulseState.history = history;
+
+// Le document du jour peut être plus frais que l'historique (les
+// deux lectures partent en parallèle) : on garde le plus récent.
+const todayKey = new Date().toISOString().slice(0, 10);
+pulseState.history[todayKey] = { ...(history[todayKey] || {}), ...todayCounters };
 
 renderExecHero({ adminData, firebaseUser: user, universitiesCount, scholarshipsCount, userStats });
 renderStatusBadges();
-renderOverviewChecklist({ userStats, universitiesCount, scholarshipsCount, totals });
+renderOutcomeStrip(totals);
 renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals });
 renderAiObservations({ userStats, totals });
-renderActivityTimeline({ userStats, todayCounters });
+renderFunnel({ userStats, totals });
+renderActivityTimeline(recentEvents);
 renderInfraGrid();
 
-renderSignupsChart(todayCounters);
+renderSerieChips();
+initPulseControls();
+renderPulseChart();
+renderPulseFootnote();
 
 await Promise.all([
 renderPlanChart(),
@@ -653,6 +956,15 @@ getTopUniversities(6).then((items) => renderTopList("topUniversitiesList", items
 if (window.lucide) lucide.createIcons();
 
 hidePageLoader();
+
+// Les graphiques ont été construits pendant que .content était
+// masqué (display:none) : leur canvas garde alors un gabarit
+// arbitraire qui fait déborder la page. On les recale sur la
+// largeur réelle une fois le contenu affiché.
+requestAnimationFrame(() => {
+if (pulseChart) pulseChart.resize();
+if (planChart) planChart.resize();
+});
 
 } catch (error) {
 

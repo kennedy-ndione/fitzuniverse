@@ -33,7 +33,7 @@ export const DOCUMENT_CATEGORIES = [
 { key: "financier", label: "Financier", icon: "wallet" },
 { key: "administratif", label: "Administratif", icon: "stamp" },
 { key: "sante", label: "Santé", icon: "stethoscope" },
-{ key: "specifique", label: "Spécifique", icon: "sparkles" }
+{ key: "specifique", label: "Spécifique", icon: "layers" }
 ];
 
 // Trois niveaux de priorité, affichés comme 3 sections distinctes sur

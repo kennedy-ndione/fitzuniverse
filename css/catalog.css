@@ -126,8 +126,8 @@ z-index:-1;
 
 background:
 radial-gradient(ellipse 58% 76% at 88% 8%, rgba(233,163,25,.30) 0%, rgba(233,163,25,.09) 46%, transparent 70%),
-linear-gradient(102deg, rgba(7,10,22,.94) 0%, rgba(18,22,46,.80) 42%, rgba(18,22,46,.34) 100%),
-linear-gradient(180deg, rgba(7,10,22,.30) 0%, transparent 34%, rgba(7,10,22,.62) 100%);
+linear-gradient(102deg, rgba(13,10,6,.94) 0%, rgba(20,16,13,.80) 42%, rgba(20,16,13,.34) 100%),
+linear-gradient(180deg, rgba(13,10,6,.30) 0%, transparent 34%, rgba(13,10,6,.62) 100%);
 
 }
 
@@ -382,7 +382,7 @@ backdrop-filter:blur(16px) saturate(1.4);
 
 border:1px solid var(--border-color);
 
-box-shadow:0 1px 2px rgba(18,22,46,.05), 0 10px 30px -12px rgba(18,22,46,.24);
+box-shadow:0 1px 2px rgba(20,16,13,.05), 0 10px 30px -12px rgba(20,16,13,.24);
 
 transition:box-shadow var(--transition), border-color var(--transition);
 
@@ -393,7 +393,7 @@ transition:box-shadow var(--transition), border-color var(--transition);
 
 border-color:var(--amber-500);
 
-box-shadow:0 1px 2px rgba(18,22,46,.05), 0 14px 36px -12px rgba(233,163,25,.34);
+box-shadow:0 1px 2px rgba(20,16,13,.05), 0 14px 36px -12px rgba(233,163,25,.34);
 
 }
 
@@ -900,7 +900,7 @@ object-fit:cover;
 
 border-radius:3px;
 
-box-shadow:0 1px 3px rgba(18,22,46,.18);
+box-shadow:0 1px 3px rgba(20,16,13,.18);
 
 flex-shrink:0;
 
@@ -1101,6 +1101,46 @@ color:var(--amber-700);
 .catalog-chip.is-funding svg,
 .scholarship-card-chip.is-funding i,
 .scholarship-card-chip.is-funding svg{ color:var(--amber-700); }
+
+/* La puce financement porte du texte LIBRE (montants à plusieurs
+paliers, mentions entre parenthèses) qui peut dépasser de loin la
+largeur de la carte — mesuré 1 495px dans une carte de 308px sur
+téléphone (passe mobile du 2026-09-01) : en nowrap hérité de la règle
+commune, le texte était simplement coupé au bord. Elle passe donc en
+multi-lignes, BORNÉES à 3 (line-clamp) : certains montants italiens
+font un paragraphe entier (paliers fuori sede/pendolare/in sede +
+revalorisation ISTAT + majorations), et 6 lignes d'ambre avalaient la
+carte — l'intégralité reste lisible sur la fiche de la bourse. Les
+autres puces (niveau, pays) restent courtes et en nowrap.
+-webkit-box remplace inline-flex (nécessaire au clamp) : le gap ne
+s'applique plus, l'écart icône-texte passe par un margin-right. */
+.catalog-chip.is-funding,
+.scholarship-card-chip.is-funding{
+
+display:-webkit-box;
+
+-webkit-line-clamp:3;
+
+-webkit-box-orient:vertical;
+
+overflow:hidden;
+
+white-space:normal;
+
+line-height:1.45;
+
+}
+
+.catalog-chip.is-funding i,
+.catalog-chip.is-funding svg,
+.scholarship-card-chip.is-funding i,
+.scholarship-card-chip.is-funding svg{
+
+margin-right:6px;
+
+vertical-align:-2px;
+
+}
 
 
 /* ==========================================================
@@ -1353,5 +1393,265 @@ sinon elle glisse derrière. 82px de header + 12px de respiration. */
 .catalog-hero-bg,
 .bourses-hero-bg,
 .uni-hero-bg{ transform:none; }
+
+}
+
+
+/* ==========================================================
+CATALOGUES SUR FOND SOMBRE — 2026-09-01
+==========================================================
+Les deux pages de catalogue passent du papier chaud à l'encre chaude,
+la même que le bandeau « Ouvert en ce moment » de l'accueil
+(css/homepage-redesign.css:194). PAS le graphite --gradient-deep des
+pages de diagnostic : celui-ci est neutre-froid, l'encre du bandeau est
+chaude et s'accorde au papier du reste du site.
+
+MÉTHODE — deux calques de tokens, aucun correctif élément par élément.
+Ces feuilles sont écrites au token (185 var() contre 15 couleurs en
+dur) : il suffit donc de redéfinir les neutres dans le scope de la
+page, puis de RÉTABLIR les neutres clairs dans les îlots qui restent
+clairs — les cartes. C'est la règle déjà posée dans css/base.css :
+« toute page à fond sombre doit surcharger les tokens ci-dessus […]
+jamais avec de nouvelles valeurs inventées localement ».
+
+POURQUOI #pageMain ET NON body — .header.is-scrolled a un fond blanc
+écrit en dur (css/header.css:55) et son texte suit --text-light. Des
+tokens sombres posés sur body donneraient une barre blanche à texte
+taupe clair, illisible. #pageMain exclut les deux en-têtes, publique
+et connectée, et il est déplacé d'un shell à l'autre par
+js/dual-shell.js sans jamais cesser d'être ce même élément.
+
+CONTRASTES MESURÉS sur les trois arrêts du dégradé (#241E15, #2C2419,
+#211D18), au pire cas :
+  #FDFCFA titres .................. 14,9:1
+  #D8CBB4 texte courant ........... 9,6:1
+  #A2957F texte sourd, placeholder  5,2:1
+  #D9805A ambre de page ........... 5,2:1
+--amber-700 (#8F3E22 sur ces pages) tombe à 2,1:1 : il est remappé sur
+--amber-500. C'est la seule valeur qui devenait illisible.
+========================================================== */
+
+body.catalog-dark{
+
+/* Aplat d'encre + dégradé sur le premier écran seulement. Ni
+`background-attachment:fixed` (saccades connues sur Safari mobile) ni
+pseudo-élément (aucun n'est posé sur body par ces feuilles, autant ne
+pas en introduire un) : le dégradé accueille en haut de page, la page
+se pose ensuite sur l'encre pleine. */
+background-color:var(--ink-surface);
+background-image:
+radial-gradient(120% 90% at 12% 0%, #2C2419 0%, rgba(44,36,25,0) 58%),
+linear-gradient(180deg, #241E15 0%, var(--ink-surface) 100%);
+background-repeat:no-repeat;
+background-size:100% 100vh;
+
+}
+
+/* --- Calque 1 : le chrome de page passe en sombre --- */
+body.catalog-dark #pageMain{
+
+--text-color:#FDFCFA;
+--text-light:#D8CBB4;
+--text-muted:#A2957F;
+
+--border-color:rgba(255,255,255,.14);
+
+--background:rgba(255,255,255,.055);
+--background-soft:rgba(255,255,255,.045);
+--background-alt:rgba(255,255,255,.10);
+--background-light:rgba(255,255,255,.07);
+
+/* Voir l'en-tête : #8F3E22 tombe à 2,1:1 sur cette encre. */
+--amber-700:var(--amber-500);
+
+/* INDIRECTIONS FIGÉES — à ne pas oublier. Ces trois tokens valent
+`var(--amber-700)` ou `var(--amber-600)` et sont déclarés à :root
+(css/base.css:287, css/catalog-redesign.css:50, css/journey-shell.css
+:37 et :44). Un var() écrit DANS la valeur d'une propriété
+personnalisée est résolu sur l'élément qui la déclare : la valeur
+héritée ici est donc déjà #8F3E22, et le remappage ci-dessus ne
+l'atteint pas. Il faut les réécrire explicitement. */
+--primary-color:var(--amber-500);
+--fitz-color:var(--amber-500);
+--accent-color:var(--amber-500);
+
+}
+
+/* --- Calque 2 : les cartes, surfaces ÉLEVÉES et non îlots clairs ---
+Première version : les cartes restaient blanches, comme celles du
+bandeau de l'accueil. À l'écran, sur une grille entière, l'effet était
+tout autre — le bandeau montre 4 cartes qui défilent, le catalogue en
+aligne 16 : des pavés blancs sur l'encre, sans cohérence avec le reste
+de la page. Corrigé le 2026-09-01 après lecture à l'écran.
+
+Une carte sur fond sombre ne s'éclaircit pas jusqu'au papier : elle
+s'ÉLÈVE d'un cran au-dessus du fond, et c'est la bordure qui la
+découpe. Elles héritent donc des tokens sombres du calque 1, et ne
+gardent en propre que leur surface.
+
+CONTRASTES MESURÉS sur la surface de carte résultante (#312D28) :
+  #FDFCFA titre .............. 13,3:1
+  #D8CBB4 texte courant ...... 8,5:1
+  #A2957F texte sourd ........ 4,6:1
+  #D9805A nom de bourse ...... 4,7:1
+et sur la puce de niveau (#46423E), dont le texte est --text-light :
+  #D8CBB4 ..................... 6,2:1 */
+body.catalog-dark .scholarship-card,
+body.catalog-dark .uni-card{
+
+background:rgba(255,255,255,.07);
+
+}
+
+/* Le panneau d'accompagnement est un .glass-panel : --glass vaut
+rgba(255,255,255,.72), pensé pour du papier. Laissé tel quel, il
+poserait une vitre presque blanche au milieu de l'encre. */
+body.catalog-dark .uni-accompaniment-banner{
+
+--glass:rgba(255,255,255,.06);
+--glass-border:rgba(255,255,255,.14);
+
+}
+
+/* --- La seule couleur écrite en dur du chrome ---
+.catalog-filters / .catalog-search-bar portent rgba(255,255,255,.86)
+(l.378) : un token ne peut pas l'atteindre. L'ombre portée d'origine
+est inutile sur fond sombre — c'est la bordure et le voile translucide
+qui donnent le relief. */
+body.catalog-dark .catalog-filters,
+body.catalog-dark .catalog-search-bar{
+
+background:rgba(255,255,255,.06);
+box-shadow:none;
+
+}
+
+body.catalog-dark .catalog-filters:focus-within,
+body.catalog-dark .catalog-search-bar:focus-within{
+
+background:rgba(255,255,255,.10);
+box-shadow:0 14px 36px -12px rgba(0,0,0,.5);
+
+}
+
+/* Les listes déroulantes suivent --background, mais leur menu natif
+est rendu par le système : on force la couleur du texte des options,
+sinon Windows peut servir du texte clair sur fond clair. */
+body.catalog-dark #pageMain select option{
+
+color:#1A1714;
+background:#FDFCFA;
+
+}
+
+/* --- Calque 3 : le voile de la bannière quitte le marine ---
+LE DÉFAUT (signalé à l'écran le 2026-09-01, à la jonction bannière /
+page) : le voile de la bannière est construit sur rgba(7,10,22) et
+rgba(18,22,46) — ce dernier est exactement --primary-900, l'ancien
+marine de la marque. Tant que la page était en papier chaud, le
+contraste masquait la différence de teinte. Sur l'encre chaude, la
+bannière tire au bleu-gris et la page au brun : deux noirs côte à côte
+qui ne sont pas de la même famille, et la jonction se voit.
+
+Les deux arrêts sont remplacés par leurs équivalents CHAUDS À
+LUMINANCE ÉGALE — le voile garde exactement son pouvoir d'assombrissement,
+seule la teinte change :
+  #070A16 (L 0,0032) -> #0D0A06 (L 0,0032)
+  #12162E (L 0,0090) -> #1C1710 (L 0,0090)
+Titre blanc : 19,3:1 et 17,4:1 sur ces deux fonds.
+
+Le dernier arrêt du dégradé vertical descend désormais jusqu'à
+--ink-surface, l'encre de la page elle-même : le bas de la bannière se
+dissout dans la page au lieu de s'y arrêter net.
+
+L'éclat ambré reste écrit en littéral (#E9A319) : c'est la seule
+touche de marque de la bannière, et --amber-500 vaut terracotta sur
+ces deux pages. */
+body.catalog-dark .catalog-hero::after,
+body.catalog-dark .bourses-hero::after,
+body.catalog-dark .uni-hero::after{
+
+background:
+radial-gradient(ellipse 58% 76% at 88% 8%, rgba(233,163,25,.30) 0%, rgba(233,163,25,.09) 46%, transparent 70%),
+linear-gradient(102deg, rgba(13,10,6,.94) 0%, rgba(28,23,16,.80) 42%, rgba(28,23,16,.34) 100%),
+linear-gradient(180deg, rgba(13,10,6,.30) 0%, transparent 34%, rgba(13,10,6,.62) 86%, var(--ink-surface) 100%);
+
+}
+
+/* La bannière n'a plus de bord à défendre : elle se fond dans la page
+par le bas. Les coins arrondis ne servaient qu'à la détacher du papier
+et, à pleine largeur, ne se voient plus que tout en haut de l'écran.
+On les garde en haut, on les supprime en bas — là où la dissolution
+doit être franche. */
+body.catalog-dark .catalog-hero,
+body.catalog-dark .bourses-hero,
+body.catalog-dark .uni-hero{
+
+border-bottom-left-radius:0;
+border-bottom-right-radius:0;
+
+/* margin-bottom:26px est CONSERVÉ. L'avoir supprimé collait la barre
+de filtres au bas de la bannière : .catalog-body n'a aucun rembourrage
+haut (l.323), et universities.html n'a même pas ce conteneur. Le fond
+de la bannière et celui de la page étant désormais la même encre, ces
+26px ne se voient pas — ils ne font que respirer. */
+
+}
+
+/* ==========================================================
+LIEN « ACCUEIL » DU HEADER (2026-09-01)
+==========================================================
+Le header des deux pages catalogue ne portait plus aucune navigation
+sur mobile (liens croisés masqués sous 640px par css/header.css,
+Connexion et CTA retirés à la demande de l'utilisateur) : un visiteur
+arrivé sur le catalogue n'avait aucun retour visible vers l'accueil.
+Même composant .back-link que le header de scholarship-details, aux
+couleurs des deux états du header : clair sur la photo (header
+transparent), encre une fois défilé (.is-scrolled, fond papier). Le
+margin-bottom:32px du .back-link générique (css/base.css, pensé pour
+un lien posé au-dessus d'un titre) est neutralisé — ici il vit DANS la
+ligne du header. */
+.header .back-link{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
+margin:0;
+
+font-weight:var(--fw-semibold);
+
+font-size:var(--fs-small);
+
+}
+
+.header .back-link i,
+.header .back-link svg{
+
+width:16px;
+
+height:16px;
+
+flex-shrink:0;
+
+}
+
+.header:not(.is-scrolled) .back-link{
+
+color:rgba(255,255,255,.94);
+
+}
+
+.header.is-scrolled .back-link{
+
+color:var(--text-light);
+
+}
+
+.header.is-scrolled .back-link:hover{
+
+color:var(--text-color);
 
 }

@@ -4,9 +4,15 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
 <title>Détails de la bourse | FitzUniverse</title>
+
+<!-- Audit 2026-09-01 : favicons alignés sur le standard du site
+(seule page publique qui ne les portait pas). -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
 <meta name="description" content="Détails, conditions et procédure de candidature pour cette bourse sur FitzUniverse.">
 <meta name="theme-color" content="#211D18">
 <meta name="color-scheme" content="light">
@@ -59,8 +65,15 @@ troisième page du même parcours (voir ce fichier). -->
 <!-- Coquille « parcours » (2026-08-30) : chargée en dernier, retire
 la grille à sidebar et bascule la page dans l'identité papier chaud. -->
 <link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
+<script src="js/mobile-nav.js" defer></script>
+<!-- Couche « vivant » (2026-09-03) : mouvement, retour au geste,
+progression de lecture. EN DERNIER — elle se pose par-dessus tout le
+reste et n'utilise donc aucun !important hors mouvement réduit.
+Voir css/vivant.css. -->
+<link rel="stylesheet" href="css/vivant.css">
 </head>
 
 <body>
@@ -78,7 +91,7 @@ uniquement si une session est trouvée. -->
 
 <div class="container header-container">
 
-<a href="index.html" class="fitz-lockup" style="--lockup-size:48px" aria-label="FitzUniverse — accueil">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -117,7 +130,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <header class="journey-topbar">
 
-<a href="dashboard.html" class="fitz-lockup" style="--lockup-size:30px" aria-label="FitzUniverse — mon parcours">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
 <svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
 <circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
@@ -330,7 +343,15 @@ jamais un échec silencieux. -->
 
 <div class="details-info-item">
 <i data-lucide="calendar-clock"></i>
-<div><span>Date limite</span><strong id="deadline"></strong></div>
+<div>
+<!-- L'étiquette est ÉCRITE PAR LE SCRIPT (details.js) : « Date
+limite » quand les candidatures sont ouvertes, « Dernière échéance
+connue » quand le cycle est clos. Une étiquette figée était le
+coeur du problème — elle présentait une date dépassée comme une
+échéance à tenir. Ne pas la re-figer ici. -->
+<span id="deadlineLabel">Date limite</span><strong id="deadline"></strong>
+<small class="details-info-note" id="deadlineNote" hidden></small>
+</div>
 </div>
 
 <div class="details-info-item">
@@ -390,7 +411,7 @@ explique le cas général. Rempli en textContent par details.js. -->
 
 <div class="cta-card cta-card-primary">
 
-<span class="cta-card-badge"><i data-lucide="star"></i>Recommandé</span>
+<span class="cta-card-badge"><i data-lucide="award"></i>Recommandé</span>
 
 <h3>Être accompagné par Fitz</h3>
 
@@ -508,6 +529,10 @@ import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
 applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "detailsMain" });
 </script>
 
+<!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,
+volontairement : comme js/catalog-watchdog.js, il doit survivre à
+l'échec d'un téléchargement gstatic. Ne jamais lui ajouter type="module". -->
+<script src="js/vivant.js" defer></script>
 </body>
 
 </html>

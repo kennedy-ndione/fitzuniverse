@@ -1,5 +1,11 @@
 import { TESTIMONIALS } from "./testimonials-data.js";
 
+// Entrée du site pour le Control Center (2026-09-02) : une visite par
+// session de navigateur, signalée depuis la page d'accueil — le point
+// d'entrée public principal (l'espace connecté a la sienne via
+// js/app-shell.js, même garde sessionStorage, jamais de doublon).
+import { trackVisitOnce } from "./analytics.js";
+
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
 
@@ -24,17 +30,30 @@ return scholarship ? scholarship.title : "";
 
 const TEASER_COUNT = 4;
 
-// Sélection éditoriale (2026-08-11) plutôt qu'un tirage arbitraire :
-// l'ordre de retour Firestore plaçait souvent 2 villes chinoises côte à
-// côte (peu de diversité perçue) pour la toute première impression du
-// site. 4 pays visuellement distincts, photos les plus abouties du
-// catalogue. Retombe sur pickDiverse() si l'un de ces identifiants
-// disparaît un jour (désinscription d'université, etc.).
+// Sélection éditoriale plutôt qu'un tirage arbitraire : l'ordre de
+// retour Firestore plaçait souvent 2 villes chinoises côte à côte (peu
+// de diversité perçue) pour la toute première impression du site.
+// Retombe sur pickDiverse() si l'un de ces identifiants disparaît un
+// jour (désinscription d'université, etc.).
+//
+// REVUE DU 2026-09-01 — la sélection datait du 2026-08-11, quand le
+// catalogue comptait bien moins d'établissements. Avec 122 universités
+// dans 28 pays, le critère devient la NOTORIÉTÉ MONDIALE : cette
+// section s'intitule « un échantillon de ce qui vous attend », et
+// quatre noms que l'étudiant reconnaît immédiatement disent mieux la
+// solidité du catalogue que quatre noms choisis pour leurs couleurs.
+//
+// Sortent : Sciences Po (excellente en science politique, mais au-delà
+// de #350 au classement général) et Toronto (#29, remplaçable par plus
+// haut). Entrent : Stanford et Tsinghua.
+//
+// Les quatre couvrent quatre pays et trois continents, et chacun a une
+// photo distincte au catalogue — contrainte du tirage : `withPhoto`.
 const FEATURED_UNIVERSITY_IDS = [
-"university-of-oxford-oxford",
-"eth-zurich-zurich",
-"sciences-po-paris",
-"university-of-toronto-toronto"
+"university-of-oxford-oxford",   // Royaume-Uni — top 5 mondial
+"stanford-university-stanford",  // États-Unis  — top 5 mondial
+"eth-zurich-zurich",             // Suisse      — top 10 mondial
+"tsinghua-university-pekin"      // Chine       — top 20 mondial
 ];
 
 // Un même établissement existe en 3 documents Firestore (un par niveau
@@ -142,7 +161,10 @@ const srcset = [400, 800, 1200, 1600].map((w) => `assets/images/cities/${base}-$
 
 // university.name (pas .university, champ inexistant sur le document —
 // voir universities-page.js qui lit le même champ) : sans ce correctif
-// chaque carte retombait sur "Université partenaire" au lieu du vrai nom.
+// chaque carte retombait sur le libellé de repli au lieu du vrai nom.
+// Ce repli ne dit plus « partenaire » (doctrine de rédaction, gardée par
+// test/copy-partenaire.test.mjs) : les universités du catalogue ne sont
+// pas des partenaires de FitzUniverse.
 card.innerHTML = `
 <div class="teaser-card-media">
 <img src="assets/images/cities/${base}-800w.jpg" srcset="${srcset}" sizes="${sizesForSlot(index)}" alt="${university.city || university.name || ""}" ${index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>
@@ -150,7 +172,7 @@ ${university.ranking ? `<span class="teaser-card-rank"><i data-lucide="trophy"><
 </div>
 <div class="teaser-card-body">
 ${university.flag ? `<img class="teaser-card-flag" src="assets/flags/${university.flag}" alt="" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : ""}
-<h3>${university.name || "Établissement"}</h3>
+<h3>${university.name || "Université"}</h3>
 <p>${[university.city, university.country].filter(Boolean).join(", ")}</p>
 ${scholarshipTitle ? `<span class="teaser-card-tag"><i data-lucide="award"></i>${scholarshipTitle}</span>` : ""}
 </div>
@@ -203,6 +225,68 @@ track.innerHTML = `
 
 }
 
+// ==========================================================
+// COMPTEUR ANIMÉ AU SCROLL (2026-09-01, demande utilisateur)
+// L'ancien compteur data-count-to de main.js comptait vers des valeurs
+// écrites EN DUR dans le HTML et avait été débranché : déclenché à
+// l'entrée dans le viewport, il partait souvent avant la fin du fetch
+// Firestore et animait un chiffre faux ou vide. Ici l'ordre est
+// inversé et la course disparaît : on n'observe l'élément QU'UNE FOIS
+// la vraie valeur connue — l'animation part donc toujours du bon
+// chiffre, immédiatement si l'élément est déjà à l'écran, sinon à son
+// entrée dans le viewport. Durée et easing repris de l'ancien système
+// (1400 ms, easeOutCubic) : même langage d'animation que le reste de
+// la page. prefers-reduced-motion : pas d'animation, valeur posée
+// directement — même politique que animations.css.
+// ==========================================================
+
+const REDUCED_MOTION = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+function animateCountTo(el, target) {
+
+const duration = 1400;
+const start = performance.now();
+
+function step(now) {
+const progress = Math.min((now - start) / duration, 1);
+const eased = 1 - Math.pow(1 - progress, 3);
+el.textContent = `${Math.round(eased * target)}`;
+if (progress < 1) requestAnimationFrame(step);
+}
+
+requestAnimationFrame(step);
+
+}
+
+function setCount(el, value) {
+
+if (!el) return;
+
+if (REDUCED_MOTION || !("IntersectionObserver" in window)) {
+el.textContent = `${value}`;
+return;
+}
+
+// « 0 » et non « — » dès maintenant : le filet de secours de
+// index.html retire tout bloc encore sur « — » après 8 s, et un
+// compteur qui attend son entrée dans le viewport n'est pas un bloc
+// en échec. Ce 0 n'est vu par personne : l'élément est hors écran
+// tant que l'observer n'a pas déclenché, et l'animation part dès
+// qu'il devient visible.
+el.textContent = "0";
+
+const observer = new IntersectionObserver((entries) => {
+entries.forEach((entry) => {
+if (!entry.isIntersecting) return;
+observer.unobserve(entry.target);
+animateCountTo(entry.target, value);
+});
+}, { threshold: 0.4 });
+
+observer.observe(el);
+
+}
+
 // Alimente aussi les 2 chiffres du hero (Bourses référencées / Pays de
 // destination) — anciennement "500+"/"30+" codés en dur dans
 // index.html, en contradiction avec les vrais chiffres affichés plus
@@ -210,6 +294,11 @@ track.innerHTML = `
 // pas de 2e fetch : simplement 2 cibles DOM de plus.
 function renderTrustStats(universities, scholarshipCount) {
 
+// trustCountryCount / trustScholarshipCount ont disparu de l'accueil le
+// 2026-09-01 : la section « catalogue » n'affiche plus qu'un compteur,
+// celui des universités, le hero portant déjà les trois. Les deux
+// recherches sont CONSERVÉES — elles renvoient null sans rien casser, et
+// elles évitent de casser toute page qui reprendrait ce bloc à trois.
 const universityCountEl = document.getElementById("trustUniversityCount");
 const countryCountEl = document.getElementById("trustCountryCount");
 const scholarshipCountEl = document.getElementById("trustScholarshipCount");
@@ -227,12 +316,18 @@ document.getElementById("trustStats")?.remove();
 return;
 }
 
-if (universityCountEl) universityCountEl.textContent = `${deduped.length}+`;
-if (countryCountEl) countryCountEl.textContent = `${countryCount}+`;
-if (scholarshipCountEl) scholarshipCountEl.textContent = `${scholarshipCount}+`;
-if (heroScholarshipCountEl) heroScholarshipCountEl.textContent = `${scholarshipCount}+`;
-if (heroCountryCountEl) heroCountryCountEl.textContent = `${countryCount}+`;
-if (heroUniversityCountEl) heroUniversityCountEl.textContent = `${deduped.length}+`;
+// SUFFIXE « + » RETIRÉ le 2026-09-01. Le catalogue compte EXACTEMENT
+// ces nombres — ils sont comptés sur les documents réellement chargés,
+// pas estimés. « 122+ » laissait entendre davantage, et c'est le seul
+// endroit du site où un chiffre en promettait plus qu'il n'en tenait.
+// Un catalogue qui se vend sur la vérification à la main ne gagne rien
+// à arrondir vers le haut.
+setCount(universityCountEl, deduped.length);
+setCount(countryCountEl, countryCount);
+setCount(scholarshipCountEl, scholarshipCount);
+setCount(heroScholarshipCountEl, scholarshipCount);
+setCount(heroCountryCountEl, countryCount);
+setCount(heroUniversityCountEl, deduped.length);
 
 }
 
@@ -351,3 +446,4 @@ document.querySelector(".hero-stats")?.remove();
 
 renderTestimonials();
 loadTeaser();
+trackVisitOnce();

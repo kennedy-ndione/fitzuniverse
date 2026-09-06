@@ -95,6 +95,32 @@ continue;
 
 }
 
+// Titre (#, ##, ###...)
+//
+// Ajouté le 2026-09-05 : le prompt `diagnostic` impose quatre titres
+// « ### ... » et le rendu les affichait tels quels, dièses compris —
+// le bloc « L'analyse de Fitz » de results.html montrait donc des
+// dièses au visiteur.
+//
+// Le niveau est PLAFONNÉ à h3, jamais h1 ni h2 : une réponse de Fitz
+// est toujours imbriquée dans une page qui a déjà son titre, et un
+// modèle qui écrirait « # » ne doit pas pouvoir poser un h1 dans une
+// bulle de chat. h3 est aussi ce qu'attend results.css
+// (`.fitz-analysis-body h3`).
+if (/^\s*#{1,6}\s+/.test(line)) {
+
+const diese = line.trim().match(/^#+/)[0].length;
+const niveau = diese <= 3 ? 3 : 4;
+
+html.push(
+`<h${niveau} class="ai-md-title">${renderInline(line.replace(/^\s*#{1,6}\s+/, ""))}</h${niveau}>`
+);
+
+i += 1;
+continue;
+
+}
+
 // Liste à puces
 if (/^\s*[-*]\s+/.test(line)) {
 

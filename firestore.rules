@@ -41,6 +41,61 @@ get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive =
 }
 
 // ------------------------------------------------------------
+// AUDIT SÉCURITÉ 2026-09-02 — le serveur connaît les formules.
+// Jusqu'ici, le quota de candidatures et les fonctionnalités payantes
+// n'étaient vérifiés QUE côté client (js/plan-features.js) : un
+// étudiant outillé pouvait, depuis la console développeur, créer des
+// candidatures sans limite, répondre à la messagerie en formule
+// Gratuit ou déposer des demandes conseiller sans Signature. Les
+// helpers ci-dessous lisent la formule du COMPTE (users/{uid}.plan,
+// qu'aucun étudiant ne peut s'attribuer — voir la règle users) et
+// portent ici le plancher de chaque droit. Le client reste plus
+// restrictif (expiration planExpiresAt, bascules config/planFeatures) ;
+// ces règles sont le PLANCHER infranchissable, pas le miroir exact.
+//
+// Les quotas dupliquent volontairement pricing-plans.js
+// (maxAccompaniedApplications) : les règles ne peuvent pas lire un
+// fichier JS. Toute modification de la grille DOIT être répercutée ici.
+// ------------------------------------------------------------
+
+function planOf(uid) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('plan', '');
+}
+
+function isTester(uid) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('testerAccess', false) == true;
+}
+
+function isPaidPlan(uid) {
+return planOf(uid) in ['premier-dossier', 'essentiel', 'accompagnement', 'premium', 'signature-focus', 'signature'];
+}
+
+function isSignaturePlan(uid) {
+return planOf(uid) in ['signature-focus', 'signature'];
+}
+
+// Quota de candidatures SIMULTANÉES par formule, exprimé en MOTIF
+// D'IDENTIFIANT autorisé — miroir de maxAccompaniedApplications
+// (pricing-plans.js) : premier-dossier 1, essentiel 5,
+// accompagnement 9, premium/signature-focus 12, signature illimitée
+// (999 créneaux — fini pour rester exprimable, inatteignable en
+// pratique), gratuit 0. Un motif plutôt qu'un nombre : matches() est
+// la construction la plus sûre du langage des règles, sans conversion
+// de chaîne. La chaîne vide pour "gratuit" ne matche aucun id réel
+// (un id de document n'est jamais vide) : création impossible.
+// get() est mis en cache par requête : les appels répétés à planOf()
+// ne coûtent qu'UNE lecture.
+function slotPattern(uid) {
+return isTester(uid) ? 'slot-([1-9][0-9]{0,2})' :
+(planOf(uid) == 'signature' ? 'slot-([1-9][0-9]{0,2})' :
+(planOf(uid) == 'signature-focus' ? 'slot-([1-9]|1[0-2])' :
+(planOf(uid) == 'premium' ? 'slot-([1-9]|1[0-2])' :
+(planOf(uid) == 'accompagnement' ? 'slot-[1-9]' :
+(planOf(uid) == 'essentiel' ? 'slot-[1-5]' :
+(planOf(uid) == 'premier-dossier' ? 'slot-1' : ''))))));
+}
+
+// ------------------------------------------------------------
 // Profils utilisateurs (créés à l'inscription, lus/modifiés
 // depuis dashboard.js et profile.js). Depuis le Module 3 du Control
 // Center (CRM étudiants, admin/student-detail.js), un administrateur
@@ -113,9 +168,25 @@ allow update, delete: if false;
 // ne peut toujours pas supprimer les messages qu'il a envoyés.
 // ------------------------------------------------------------
 match /users/{uid}/messages/{messageId} {
-allow create: if isAdmin();
+// Messagerie FitzUniverse bidirectionnelle (2026-09-02) : l'étudiant
+// peut RÉPONDRE dans son propre fil, avec une forme imposée
+// (fromStudent:true, read:false, texte non vide) — il ne peut ni
+// usurper un message "FitzUniverse" ni pré-marquer lu.
+// AUDIT SÉCURITÉ (même jour) : le droit de répondre est fermé au
+// plan Gratuit — désormais aussi ICI (isPaidPlan/isTester), plus
+// seulement côté client : un compte gratuit ne peut plus écrire
+// dans le fil depuis la console développeur.
+allow create: if isAdmin() ||
+(isOwner(uid) &&
+(isPaidPlan(uid) || isTester(uid)) &&
+request.resource.data.keys().hasOnly(["text", "fromStudent", "createdAt", "read"]) &&
+request.resource.data.text is string && request.resource.data.text != "" &&
+request.resource.data.fromStudent == true &&
+request.resource.data.read == false);
 allow read: if isOwner(uid) || isAdmin();
-allow update: if isOwner(uid) &&
+// L'admin doit pouvoir marquer LUES les réponses étudiantes depuis
+// le centre de messages — même clé unique "read" que côté étudiant.
+allow update: if (isOwner(uid) || isAdmin()) &&
 request.resource.data.diff(resource.data).affectedKeys().hasOnly(["read"]);
 allow delete: if isOwner(uid);
 }
@@ -133,7 +204,11 @@ allow delete: if isOwner(uid);
 // la suppression de compte, account.html).
 // ------------------------------------------------------------
 match /users/{uid}/advisorRequests/{requestId} {
+// AUDIT SÉCURITÉ 2026-09-02 : le conseiller est une exclusivité
+// Signature/Signature Focus (flag "advisor", js/plan-features.js) —
+// désormais aussi côté serveur (isSignaturePlan/isTester).
 allow create: if isOwner(uid) &&
+(isSignaturePlan(uid) || isTester(uid)) &&
 request.resource.data.keys().hasOnly(["text", "applicationId", "university", "status", "createdAt"]) &&
 request.resource.data.text is string && request.resource.data.text != "" &&
 request.resource.data.status == "nouveau";
@@ -154,9 +229,22 @@ allow delete: if isOwner(uid);
 // admin/student-detail.js). Tout le reste du document (status,
 // deadline, notes...) reste strictement réservé à l'étudiant.
 // ------------------------------------------------------------
+// CRÉNEAUX ANTI-TRICHE (audit sécurité 2026-09-02). Les règles ne
+// savent pas COMPTER une sous-collection — elles contraignent donc
+// l'IDENTIFIANT : toute nouvelle candidature doit s'appeler "slot-N"
+// avec N dans le motif autorisé par la formule (slotPattern
+// ci-dessus). Il ne peut mécaniquement pas exister plus de
+// candidatures SIMULTANÉES créées que de créneaux ; supprimer une
+// candidature libère son créneau — c'est la promesse commerciale
+// (« N à la fois »). Côté client, js/application-actions.js
+// (slotIdLibre) choisit le premier créneau libre ; addDoc (id auto)
+// est désormais REFUSÉ ici. Les documents à id auto créés AVANT
+// cette règle restent lisibles, modifiables et supprimables — seule
+// la CRÉATION est contrainte.
 match /users/{uid}/applications/{applicationId} {
 allow read: if isOwner(uid) || isAdmin();
-allow create, delete: if isOwner(uid);
+allow create: if isOwner(uid) && applicationId.matches(slotPattern(uid));
+allow delete: if isOwner(uid);
 allow update: if isOwner(uid) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
 }

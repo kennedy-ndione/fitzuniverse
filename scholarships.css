@@ -430,3 +430,12 @@ outline-offset:3px;
 .scholarship-card-body{ padding:18px 18px 20px; }
 
 }
+
+/* Photo de carte entière sur téléphone (2026-09-03) : à 140px de haut
+sur une carte de 343px, la vignette était une fente de 2,45:1 qui
+coupait ~40 % d'une photo 3:2. Ratio 16/10 à la place — toute la
+largeur de l'écran est disponible, la photo se voit presque en entier
+(≤ 7 % de recadrage sur du 3:2, 0 % sur du 16:10). */
+@media(max-width:720px){
+.scholarship-card-media{ height:auto; aspect-ratio:16/10; }
+}

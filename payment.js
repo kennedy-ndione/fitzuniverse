@@ -4,7 +4,8 @@
 // jamais depuis un prix stocké côté client — pour qu'un navigateur ne
 // puisse jamais faire afficher un montant différent de celui défini
 // dans SCHOLARBRIDGE_PLANS. Aucune clé secrète ni appel PayDunya ici :
-// voir requestActivation() plus bas pour l'architecture prévue.
+// le paiement passe par la Cloud Function creerPaiement (europe-west1),
+// seule détentrice des clés — voir functions/paiement.js.
 //
 // Compte : cette page est désormais le SEUL endroit du site où un
 // compte peut être créé (signup.html a été retiré — voir le commit
@@ -15,14 +16,15 @@
 // l'absence de session est un état normal sur cette page (visiteur
 // pas encore client), pas une erreur d'accès.
 //
-// Le compte est créé (Auth + Firestore) au moment où l'activation est
-// confirmée, PAS avant — voir ensureAccount()/initActivation() plus
-// bas : tant que le vrai backend de paiement n'existe pas, aucun
-// champ `plan` n'est écrit à la création (seulement `pendingPlan`, à
-// titre informatif pour le suivi admin) pour ne jamais donner d'accès
-// payant réel sans paiement réellement vérifié.
+// Le compte est créé (Auth + Firestore) juste avant le départ vers
+// PayDunya — voir ensureAccount()/initActivation() plus bas. Cette
+// page n'écrit JAMAIS le champ `plan`, seulement `pendingPlan` (une
+// intention, à titre informatif pour le suivi admin). L'accès payant
+// est ouvert par le webhook, côté serveur, après vérification du
+// paiement — et firestore.rules interdit de toute façon à un compte
+// d'écrire son propre `plan`.
 
-import { auth, db } from "./firebase-config.js";
+import { app, auth, db } from "./firebase-config.js";
 import { resolveSession } from "./js/access-guard.js";
 import {
 createUserWithEmailAndPassword,
@@ -32,8 +34,18 @@ import {
 doc,
 setDoc,
 updateDoc,
+onSnapshot,
 serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import {
+getFunctions,
+httpsCallable
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
+
+// europe-west1, pas la région par défaut : creerPaiement y est déployée
+// (voir functions/paiement.js). Cibler la mauvaise région donne un
+// "not-found" qui ressemble à s'y méprendre à un bug de code.
+const functions = getFunctions(app, "europe-west1");
 import {
 showFormError,
 clearFormError,
@@ -375,8 +387,13 @@ return credential.user.uid;
 }
 
 // ==========================================================
-// ACTIVATION — point d'entrée du futur backend (non codé ici)
+// ACTIVATION — branchée sur le backend depuis le 2026-09-04
 // ==========================================================
+//
+// HISTORIQUE : cette page a longtemps affiché « le paiement sécurisé
+// PayDunya sera activé très prochainement ». Le backend existe
+// désormais (functions/paiement.js, déployé en europe-west1). Le flux
+// décrit ci-dessous n'est plus un plan, c'est ce qui se passe.
 //
 // Flux prévu, à implémenter côté serveur (Cloud Functions Firebase ou
 // équivalent) :
@@ -395,16 +412,45 @@ return credential.user.uid;
 //    message d'accueil "votre accompagnement est activé" (voir
 //    accompagnementAlert dans dashboard.html/dashboard.js).
 //
-// Tant que ce backend n'existe pas, cette fonction ne contacte aucun
-// serveur et ne déclenche aucun paiement : elle confirme uniquement le
-// choix de l'utilisateur, sans jamais activer de compte Premium.
-function requestActivation(plan, method) {
+// Demande une facture au backend et renvoie l'URL de paiement PayDunya.
+//
+// Le navigateur envoie un IDENTIFIANT d'offre, jamais un montant : le
+// serveur relit le prix dans sa propre grille (GRILLE, functions/
+// paiement.js). C'est la raison d'être de tout ce détour — sans lui,
+// une console de développeur suffirait à acheter Signature à 100 F.
+const creerPaiement = httpsCallable(functions, "creerPaiement");
 
-return new Promise((resolve) => {
+// Messages français pour les refus que le backend sait produire. Un
+// étudiant ne doit jamais lire un code d'erreur : chaque cas ci-dessous
+// correspond à un HttpsError levé dans functions/paiement.js.
+function messageErreurPaiement(error) {
 
-setTimeout(() => resolve({ plan: plan.id, method }), 900);
+const code = String(error?.code || "").replace("functions/", "");
 
-});
+if (code === "failed-precondition") {
+// Le backend explique lui-même pourquoi (ex. Premier Dossier déjà
+// détenu, qui n'expire pas). Son message est déjà en français et
+// destiné à l'étudiant.
+return error.message;
+}
+
+if (code === "unauthenticated") {
+return "Votre session a expiré. Reconnectez-vous, puis relancez le paiement.";
+}
+
+if (code === "permission-denied") {
+return "Ce compte est suspendu. Contactez-nous pour le réactiver.";
+}
+
+if (code === "invalid-argument") {
+return "Cette formule n'est plus disponible. Choisissez-en une autre depuis la page des offres.";
+}
+
+if (code === "unavailable") {
+return "Le service de paiement ne répond pas pour l'instant. Réessayez dans un instant.";
+}
+
+return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cela persiste.";
 
 }
 
@@ -475,28 +521,147 @@ return;
 
 }
 
-await requestActivation(plan, method.value);
-
 trackEvent(isNewAccount ? "signup" : "payment_attempted", { plan: plan.id, method: method.value, uid });
+
+// `just_created` est posé maintenant : le compte EXISTE réellement à
+// cet instant. `just_upgraded`, en revanche, ne sera posé qu'après la
+// confirmation du paiement (voir attendreActivation) — l'écrire ici
+// ferait dire au tableau de bord « votre accompagnement est activé »
+// à quelqu'un qui aurait abandonné devant l'écran de paiement.
+if (isNewAccount) sessionStorage.setItem("just_created", "true");
+
+// sessionStorage survit à l'aller-retour vers PayDunya (même onglet,
+// même origine) : c'est ce qui permet de retrouver la formule au
+// retour, même si l'URL était tronquée en route.
+sessionStorage.setItem("scholarbridgeCheckout", JSON.stringify({ plan: plan.id }));
+
+let facture;
+
+try {
+
+facture = await creerPaiement({ planId: plan.id, method: method.value });
+
+} catch (error) {
+
+console.error(error);
 
 button.classList.remove("is-loading");
 button.disabled = false;
 label.textContent = activationLabel(plan);
 
-resultText.textContent = `${plan.label} via ${methodLabels[method.value]} — le paiement sécurisé PayDunya sera activé très prochainement. Nous vous recontacterons dès l'ouverture des paiements. Redirection vers votre tableau de bord...`;
+resultText.textContent = messageErreurPaiement(error);
 result.hidden = false;
 result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-// Mêmes drapeaux que l'ancien signup.js / que le flux d'upgrade déjà
-// prévu dans dashboard.js — voir le commentaire ACTIVATION plus haut.
-if (isNewAccount) sessionStorage.setItem("just_created", "true");
+return;
+
+}
+
+const url = facture?.data?.url;
+
+if (!url) {
+
+button.classList.remove("is-loading");
+button.disabled = false;
+label.textContent = activationLabel(plan);
+
+resultText.textContent = "Le paiement n'a pas pu être lancé. Réessayez dans un instant.";
+result.hidden = false;
+return;
+
+}
+
+label.textContent = "Redirection vers le paiement sécurisé...";
+
+// On QUITTE le site pour la page PayDunya. Tout ce qui suit — le
+// débit, la confirmation, l'activation — se passe ailleurs. Le
+// retour est géré par attendreActivation() en haut de bootstrap.
+window.location.href = url;
+
+});
+
+}
+
+// ==========================================================
+// RETOUR DE PAYDUNYA
+// ==========================================================
+//
+// L'étudiant revient sur `payment.html?paiement=ok`. Ce paramètre ne
+// prouve RIEN : il est dans l'URL, donc réécrivable par n'importe qui.
+// La seule preuve qu'un paiement a eu lieu vit dans le document
+// `users/{uid}`, que seul le webhook (SDK Admin) peut écrire.
+//
+// On observe donc ce document, et on attend que le serveur y écrive
+// `dernierPaiementLe`. C'est le webhook qui décide, pas cette page.
+//
+// Le décalage est réel : PayDunya appelle notre serveur pendant que le
+// navigateur revient. Le plus souvent c'est déjà fait avant l'affichage
+// de la page ; parfois il faut quelques secondes. D'où l'attente
+// explicite plutôt qu'une lecture unique qui arriverait trop tôt.
+const FENETRE_PAIEMENT_MS = 15 * 60 * 1000;
+
+function attendreActivation(plan, session) {
+
+const result = document.getElementById("activationResult");
+const resultText = document.getElementById("activationResultText");
+const button = document.getElementById("activateButton");
+const label = document.getElementById("activateButtonLabel");
+
+if (button) button.disabled = true;
+if (label) label.textContent = "Confirmation du paiement...";
+
+resultText.textContent = `Nous confirmons votre paiement auprès de PayDunya. Ne fermez pas cette page.`;
+result.hidden = false;
+result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+const debut = Date.now();
+let termine = false;
+
+const arret = onSnapshot(doc(db, "users", session.user.uid), (snap) => {
+
+if (termine) return;
+
+const data = snap.data() || {};
+const paiement = data.dernierPaiementLe ? new Date(data.dernierPaiementLe).getTime() : 0;
+
+// Une confirmation "récente" seulement : un ancien paiement ne doit
+// pas faire passer pour réussi un retour qui ne l'est pas.
+if (!paiement || paiement < debut - FENETRE_PAIEMENT_MS) return;
+
+termine = true;
+arret();
+
+trackEvent("payment_completed", { plan: plan.id, uid: session.user.uid });
+
 sessionStorage.setItem("just_upgraded", plan.label);
+sessionStorage.removeItem("scholarbridgeCheckout");
+
+resultText.textContent = `Paiement confirmé — ${plan.label} est activé. Redirection vers votre espace...`;
 
 setTimeout(() => {
 window.location.href = resolvePostActivationTarget(plan.id);
-}, 2200);
+}, 1600);
+
+}, (error) => {
+
+console.error("Suivi de l'activation interrompu :", error);
 
 });
+
+// Au-delà d'une minute et demie, on cesse de faire attendre devant un
+// écran figé — sans jamais prétendre que le paiement a échoué : il est
+// probablement passé, et le webhook finira par arriver. On dit
+// exactement ce qu'on sait.
+setTimeout(() => {
+
+if (termine) return;
+
+resultText.textContent =
+"Votre paiement est enregistré chez PayDunya, mais sa confirmation nous parvient avec du retard. "
++ "Votre accès s'ouvrira automatiquement d'ici quelques minutes — vous pouvez fermer cette page. "
++ "Si rien ne change d'ici une heure, écrivez-nous, nous avons la trace de votre paiement.";
+
+}, 90000);
 
 }
 
@@ -512,6 +677,7 @@ return;
 }
 
 const plan = SCHOLARBRIDGE_PLANS[planId];
+const etatPaiement = new URLSearchParams(window.location.search).get("paiement");
 
 initAccountSection(session);
 renderPlan(plan);
@@ -519,6 +685,30 @@ initFitzRotator();
 initPaymentMethods(plan);
 initActivation(plan, session);
 initReveal();
+
+// Retour de PayDunya. `?paiement=ok` déclenche l'ATTENTE de la
+// confirmation serveur, jamais l'activation elle-même : ce paramètre
+// se réécrit à la main dans la barre d'adresse, il ne vaut donc rien
+// comme preuve.
+if (etatPaiement === "ok" && session) {
+
+attendreActivation(plan, session);
+
+} else if (etatPaiement === "annule") {
+
+const result = document.getElementById("activationResult");
+const resultText = document.getElementById("activationResultText");
+
+// Dire explicitement « vous n'avez pas été débité » : c'est la
+// première question que se pose quelqu'un qui vient d'abandonner un
+// paiement, et le silence sur ce point crée des messages au support.
+resultText.textContent =
+"Paiement annulé — vous n'avez pas été débité. "
++ "Votre choix est conservé : relancez quand vous voulez.";
+
+result.hidden = false;
+
+}
 
 if (window.lucide) lucide.createIcons();
 
