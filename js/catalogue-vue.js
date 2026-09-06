@@ -46,17 +46,33 @@ import { paysAvecArticle } from "./eligibility-countries.js";
 /**
 * Combien de cartes la vue d'aperçu vise. « Environ » : on ne coupe
 * jamais un pays en deux pour tomber juste, donc le total réel est le
-* plus grand total de pays entiers qui tient sous ce plafond.
+* premier total de pays entiers qui atteint ce plafond.
+*
+* POURQUOI 12 ET 8, ET PAS 18 ET 12
+* ---------------------------------
+* La consigne du 2026-09-06 disait « ≈ 18 cartes », « 12 par pays », et
+* fixait l'objectif réel : ramener la page **sous 12 000 px**. Les deux
+* ne tenaient pas ensemble. Mesuré à 390 px, largeur où le défaut a été
+* constaté :
+*
+*     18 / 12  →  22 cartes, 15 672 px   (objectif manqué de 30 %)
+*     12 /  8  →  16 cartes, 12 164 px   (objectif atteint)
+*
+* Une carte de bourse fait ~644 px de haut sur un téléphone : c'est
+* elle qui décide, pas le nombre choisi au jugé. On a donc gardé
+* l'objectif chiffré, qui se vérifie, et ajusté les moyens — les deux
+* pays de tête restent visibles dans les deux réglages, on n'a rien
+* perdu du sens de la vue.
 */
-export const CARTES_VISEES = 18;
+export const CARTES_VISEES = 12;
 
 /**
-* Au-delà, un pays à lui seul redevient un mur. Il montre ses douze
+* Au-delà, un pays à lui seul redevient un mur. Il montre ses huit
 * premières cartes et un lien qui dit le reste en toutes lettres
-* (« Voir les 29 bourses en Italie ») — le seul endroit où une section
-* est écourtée, et elle le dit.
+* (« Voir les 29 bourses de l'Italie ») — le seul endroit où une
+* section est écourtée, et elle le dit.
 */
-export const MAX_PAR_PAYS = 12;
+export const MAX_PAR_PAYS = 8;
 
 /**
 * Découpe la liste groupée par pays en une vue qui a une fin.

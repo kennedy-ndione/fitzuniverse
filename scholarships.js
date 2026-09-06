@@ -24,6 +24,10 @@ import { resolveScholarshipImage } from "./js/scholarship-image.js";
 
 import { etatCandidature } from "./js/echeance.js";
 
+// La vue par pays — voir l'en-tête de js/catalogue-vue.js : 103 077 px
+// de page mesurés le 2026-09-06, soit 113 écrans.
+import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.js";
+
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
 
@@ -93,6 +97,12 @@ const typeBourseFiltre = params.get("funder") || "";
 // l'autre pour que changer de pays ou de niveau ne la perde pas.
 const ageParam = parseInt(params.get("age"), 10);
 const ageFiltreInitial = Number.isFinite(ageParam) && ageParam > 0 ? ageParam : null;
+
+// « Tout afficher » (2026-09-06) : restaure le rendu d'avant la vue par
+// pays — les 156 cartes dépliées d'un coup. C'est une porte de sortie
+// assumée, pas le défaut : voir l'en-tête de js/catalogue-vue.js pour
+// les 103 077 px que la vue par défaut corrige.
+const toutAfficher = params.get("all") === "1";
 
 const container = document.getElementById("scholarship-list");
 const searchInput = document.getElementById("searchInput");
@@ -425,9 +435,11 @@ return haystack.includes(recherche.toLowerCase());
 });
 }
 
-if (paysFiltre) {
-scholarships = scholarships.filter((scholarship) => scholarship.country === paysFiltre);
-}
+// Le filtre PAYS est volontairement appliqué en DERNIER (voir la fin de
+// cette fonction) : l'index des pays du bas de page doit lister tous les
+// pays qui restent après les AUTRES filtres. Le calculer sur la liste
+// déjà réduite à un pays ne proposerait plus que ce pays-là — un index
+// qui ne mène nulle part.
 
 if (niveau) {
 scholarships = scholarships.filter((scholarship) => (scholarship.levels || []).includes(niveau));
@@ -467,7 +479,14 @@ if (ageCheck && ageCheck.checked && ageCourant !== null) {
 scholarships = scholarships.filter((scholarship) => bourseCompatibleAge(scholarship, ageCourant, niveau));
 }
 
-afficherBourses(scholarships);
+// Tous les filtres SAUF le pays : c'est la portée de l'index des pays.
+const sansPays = scholarships;
+
+const visibles = paysFiltre
+? sansPays.filter((scholarship) => scholarship.country === paysFiltre)
+: sansPays;
+
+afficherBourses(visibles, sansPays);
 
 }
 
@@ -681,6 +700,27 @@ a.country.localeCompare(b.country, "fr")
 
 }
 
+// UNE PASTILLE EST UN FILTRE, PLUS UNE ANCRE (2026-09-06)
+//
+// Elle pointait vers `#country-italie`, c'est-à-dire vers un endroit de
+// la même page interminable : cliquer « Italie » faisait défiler 40 000
+// px et laissait l'étudiant au milieu de 156 cartes, sans repère. Elle
+// charge maintenant `?country=Italie` — la même page, réduite à ce
+// pays. Le bouton Retour du navigateur redevient utile, et l'URL se
+// partage.
+function pastillePays({ country, items }, actif) {
+
+const flag = items.find((item) => item.flag) || {};
+const flagImg = flag.flag ? `<img src="assets/flags/${flag.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
+
+// `tout: false` : cliquer un pays sort du mode « Tout afficher » —
+// on a justement demandé à voir moins.
+const href = urlAvecFiltres({ country, tout: false });
+
+return `<a href="${href}" class="catalog-country-pill${actif ? " is-active" : ""}">${flagImg}<span>${country}</span><span class="catalog-country-pill-count">${items.length}</span></a>`;
+
+}
+
 function renderCountryPills(groups) {
 
 if (groups.length <= 1) {
@@ -691,26 +731,55 @@ return;
 
 countryPills.hidden = false;
 
-countryPills.innerHTML = groups.map(({ country, items }) => {
-
-const flag = items.find((item) => item.flag) || {};
-const slug = slugify(country);
-const flagImg = flag.flag ? `<img src="assets/flags/${flag.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
-
-return `<a href="#country-${slug}" class="catalog-country-pill${country === paysFiltre ? " is-active" : ""}">${flagImg}<span>${country}</span><span class="catalog-country-pill-count">${items.length}</span></a>`;
-
-}).join("");
+countryPills.innerHTML = groups.map((g) => pastillePays(g, g.country === paysFiltre)).join("");
 
 }
 
-function afficherBourses(scholarships) {
+const NOMS_BOURSES = { un: "bourse", plusieurs: "bourses", accord: "e" };
+
+// LA TABLE DES MATIÈRES (2026-09-06)
+//
+// C'est elle qui rend la vue courte acceptable : on ne montre plus les
+// 30 pays d'un coup, mais on les NOMME tous, avec leur compte, à portée
+// d'un clic. Sans elle, réduire la page reviendrait à cacher le
+// catalogue.
+//
+// Elle est rendue DANS le conteneur de liste, qui est vidé à chaque
+// affichage : aucun risque d'en accumuler deux quand la page se
+// re-rend (recherche vivante, changement de filtre).
+function renderIndexPays(groupesIndex, vue) {
+
+if (groupesIndex.length <= 1) return;
+
+const nav = document.createElement("nav");
+nav.className = "catalog-country-index";
+nav.setAttribute("aria-label", "Tous les pays du catalogue");
+
+const restants = vue.partielle
+? `<p class="catalog-country-index-lead">Le catalogue compte ${vue.total} bourse${vue.total > 1 ? "s" : ""} dans ${groupesIndex.length} pays. Choisissez une destination :</p>`
+: `<p class="catalog-country-index-lead">Toutes les destinations du catalogue :</p>`;
+
+nav.innerHTML = restants
++ `<div class="catalog-country-index-pills">${groupesIndex.map((g) => pastillePays(g, g.country === paysFiltre)).join("")}</div>`
+// « Tout afficher » reste possible, et reste discret : c'est la porte
+// de sortie de quelqu'un qui sait ce qu'il fait, pas le chemin normal.
++ (toutAfficher
+? `<a class="catalog-tout-afficher" href="${urlAvecFiltres({ country: "", tout: false })}">Revenir à la vue par pays</a>`
+: `<a class="catalog-tout-afficher" href="${urlAvecFiltres({ country: "", tout: true })}">Tout afficher (${vue.total} bourse${vue.total > 1 ? "s" : ""} d'un coup)</a>`);
+
+container.appendChild(nav);
+
+}
+
+function afficherBourses(scholarships, sansPays = scholarships) {
 
 container.innerHTML = "";
 
-resultsCount.textContent = `${scholarships.length} bourse${scholarships.length > 1 ? "s" : ""} trouvée${scholarships.length > 1 ? "s" : ""}`;
-clearFiltersLink.hidden = !(recherche || niveau || paysFiltre || typeBourseFiltre || financementIntegralFiltre || rangMaxFiltre !== null || (nationalityCheck && nationalityCheck.checked) || (ageCheck && ageCheck.checked));
+clearFiltersLink.hidden = !(recherche || niveau || paysFiltre || typeBourseFiltre || financementIntegralFiltre || rangMaxFiltre !== null || toutAfficher || (nationalityCheck && nationalityCheck.checked) || (ageCheck && ageCheck.checked));
 
 if (scholarships.length === 0) {
+
+resultsCount.textContent = "Aucune bourse ne correspond à ces filtres";
 
 countryPills.hidden = true;
 countryPills.innerHTML = "";
@@ -731,9 +800,27 @@ return;
 
 const groups = groupByCountry(scholarships);
 
-renderCountryPills(groups);
+// L'index (barre du haut ET table des matières du bas) porte tous les
+// pays qui survivent aux autres filtres — pas seulement ceux de la vue.
+const groupesIndex = groupByCountry(sansPays);
 
-groups.forEach(({ country, items, ouvertes }) => {
+renderCountryPills(groupesIndex);
+
+// La vue a une fin : voir js/catalogue-vue.js. Le tri des pays et le
+// rang des cartes arrivent ici déjà faits, et ressortent intacts.
+const vue = decouperVue(groups, { paysFiltre, tout: toutAfficher });
+
+resultsCount.textContent = ligneEtendue(vue, NOMS_BOURSES, {
+pays: groupesIndex.length,
+paysFiltre,
+ouvertes: vue.mode === "pays" && groups[0] ? groups[0].ouvertes : undefined
+});
+
+vue.groupes.forEach((groupe) => {
+
+const { country, items, ecourte } = groupe;
+const ouvertes = groupe.source.ouvertes;
+const total = groupe.total;
 
 const section = document.createElement("section");
 section.className = "catalog-country-group";
@@ -746,9 +833,10 @@ section.innerHTML = `
 <div class="catalog-country-header">
 ${flagImg}
 <h2>${country}</h2>
-<span>(${items.length} bourse${items.length > 1 ? "s" : ""} · ${ouvertes ? `${ouvertes} ouverte${ouvertes > 1 ? "s" : ""}` : "aucune ouverte"})</span>
+<span>(${total} bourse${total > 1 ? "s" : ""} · ${ouvertes ? `${ouvertes} ouverte${ouvertes > 1 ? "s" : ""}` : "aucune ouverte"})</span>
 </div>
 <div class="bourses-grid"></div>
+${ecourte ? `<a class="catalog-country-more" href="${urlAvecFiltres({ country, tout: false })}"><span>${libelleVoirTout(groupe, NOMS_BOURSES)}</span><i data-lucide="arrow-right"></i></a>` : ""}
 `;
 
 const grid = section.querySelector(".bourses-grid");
@@ -757,6 +845,8 @@ items.forEach((scholarship) => grid.appendChild(renderCard(scholarship)));
 container.appendChild(section);
 
 });
+
+renderIndexPays(groupesIndex, vue);
 
 
 // Les toutes premières cartes sont au-dessus de la ligne de
@@ -788,7 +878,15 @@ if (window.lucide) lucide.createIcons();
 // filtre qu'il avait choisi en arrivant.
 // ============================
 
-function navigateWithFilters({ search, country, level, funderType = typeBourseFiltre, funding = financementIntegralFiltre, maxRank = rangMaxFiltre }) {
+function urlAvecFiltres({
+search = recherche,
+country = paysFiltre,
+level = niveau,
+funderType = typeBourseFiltre,
+funding = financementIntegralFiltre,
+maxRank = rangMaxFiltre,
+tout = toutAfficher
+} = {}) {
 
 const url = new URL("scholarships.html", window.location.origin);
 
@@ -802,9 +900,19 @@ if (maxRank !== null && maxRank !== undefined) url.searchParams.set("maxRank", S
 // PORTÉ d'une navigation à l'autre dès que la case est cochée — sinon
 // changer de pays ou de niveau le décocherait en silence.
 if (ageCheck && ageCheck.checked && ageCourant !== null) url.searchParams.set("age", String(ageCourant));
+if (tout) url.searchParams.set("all", "1");
 
-window.location.href = url.toString();
+return url.pathname.split("/").pop() + url.search;
 
+}
+
+// Les pastilles de pays et les liens « Voir les N bourses » passent par
+// urlAvecFiltres() plutôt que de bâtir leur URL à la main : c'est ce qui
+// garantit qu'aller voir l'Italie ne perd pas la recherche, le niveau ou
+// le type de bourse déjà choisis (audit du 2026-08-16, même raison
+// qu'ici).
+function navigateWithFilters(options) {
+window.location.href = urlAvecFiltres(options);
 }
 
 if (searchInput) {

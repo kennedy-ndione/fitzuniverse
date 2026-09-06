@@ -169,7 +169,13 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
     try {
 
-      await page.goto(`${base}/scholarships.html`, { waitUntil: "domcontentloaded" });
+      // `?all=1` depuis le 2026-09-06 : la vue PAR DÉFAUT n'affiche plus
+      // que ~16 cartes (voir js/catalogue-vue.js — la page faisait
+      // 103 077 px de haut). Ce contrôle-ci confronte les pastilles de
+      // TOUT le catalogue à ce que Node recalcule : il lui faut donc
+      // toutes les cartes. La vue par défaut a son propre contrôle, plus
+      // bas.
+      await page.goto(`${base}/scholarships.html?all=1`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector(".scholarship-card .scholarship-card-status", { timeout: 20000 });
 
       const vu = await page.evaluate(() => {
@@ -269,6 +275,63 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
     anomalies.push(...erreurs);
     await contexte.close();
+  }
+
+  // ---------- 1 bis. La vue par défaut A UNE FIN ----------
+  //
+  // Ajouté le 2026-09-06. Le contrôle ci-dessus regarde `?all=1`, donc
+  // il ne verrait RIEN si la vue par défaut redevenait un mur de 156
+  // cartes. Or c'est précisément ce qu'on vient de corriger : mesurée à
+  // 390 px, la page passait de 103 077 px à ~12 000. On vérifie donc
+  // l'étendue elle-même, sur les deux catalogues.
+  for (const [page_, selCarte, total] of [
+    ["scholarships.html", ".scholarship-card", cible.total],
+    ["universities.html", ".uni-card", null]
+  ]) {
+
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base);
+
+    try {
+
+      await page.goto(`${base}/${page_}`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(selCarte, { timeout: 20000 });
+
+      const vu = await page.evaluate((sel) => ({
+        hauteur: document.documentElement.scrollHeight,
+        deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        cartes: document.querySelectorAll(sel).length,
+        index: document.querySelectorAll(".catalog-country-index-pills .catalog-country-pill").length,
+        portee: (document.getElementById("resultsCount") || {}).textContent || "",
+        // Une pastille qui pointe encore vers « #country-… » est une
+        // ancre : elle ferait défiler 40 000 px au lieu de filtrer.
+        ancres: [...document.querySelectorAll("#countryPills .catalog-country-pill")]
+          .filter((a) => (a.getAttribute("href") || "").startsWith("#")).length
+      }), selCarte);
+
+      // 30 écrans de téléphone : très au-dessus de la vue visée (~13),
+      // très en dessous des 113 d'avant. Un seuil qui n'alerte que si la
+      // découpe a réellement cessé de s'appliquer.
+      if (vu.hauteur > 25000) {
+        anomalies.push(`${page_} : la vue par défaut fait ${vu.hauteur} px de haut — la découpe par pays ne s'applique plus.`);
+      }
+
+      if (vu.deborde) anomalies.push(`${page_} : débordement horizontal à 390 px.`);
+      if (vu.ancres) anomalies.push(`${page_} : ${vu.ancres} pastille(s) de pays pointent encore vers une ancre au lieu de filtrer.`);
+      if (!vu.index) anomalies.push(`${page_} : la table des matières des pays a disparu — la vue courte cacherait alors le catalogue.`);
+      if (!/\d/.test(vu.portee)) anomalies.push(`${page_} : aucune ligne d'étendue au-dessus de la liste.`);
+      if (total !== null && vu.cartes >= total) {
+        anomalies.push(`${page_} : ${vu.cartes} cartes affichées d'emblée sur ${total} — la vue par défaut n'est plus finie.`);
+      }
+
+      notes.push(`${page_} par défaut : ${vu.hauteur} px · ${vu.cartes} cartes · index ${vu.index} pays · « ${vu.portee.trim()} »`);
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC vue par défaut ${page_} : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+
   }
 
   // ---------- 2. Une fiche à cycle CLOS ----------

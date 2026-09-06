@@ -5,6 +5,11 @@ import { resolveCityImage } from "./js/scholarship-image.js";
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
 
+// La vue par pays, partagée avec scholarships.js — voir l'en-tête de
+// js/catalogue-vue.js. Cette page souffrait du même mal : 155 cartes
+// empilées, une page dont on ne voit pas la fin.
+import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.js";
+
 // Page publique, en accès libre — voir la note dans universities.css.
 // Aucun garde d'authentification ici, volontairement : le catalogue est
 // une information publique, jamais verrouillée derrière un compte ou
@@ -155,6 +160,43 @@ const heroSubtitle = document.getElementById("subtitle");
 
 levelFilter.value = params.get("level") || "";
 
+// La recherche traverse l'URL depuis le 2026-09-06 (voir
+// urlAvecFiltres) : elle doit donc aussi en revenir, sinon un lien
+// partagé ou un retour arrière afficherait un champ vide au-dessus
+// d'une liste filtrée.
+searchInput.value = params.get("search") || "";
+searchClearBtn.hidden = !searchInput.value;
+
+// « Tout afficher » (2026-09-06) : la porte de sortie vers le rendu
+// d'avant la vue par pays — les 155 cartes d'un coup. Voir l'en-tête de
+// js/catalogue-vue.js.
+const toutAfficher = params.get("all") === "1";
+
+const NOMS_UNIS = { un: "établissement", plusieurs: "établissements", accord: "" };
+
+// Les pastilles de pays sont des FILTRES, plus des ancres (2026-09-06) —
+// même correctif que scholarships.js. `?country=` était déjà lu par
+// populateCountryFilter() ; ce qui manquait, c'était un lien pour
+// l'écrire. Les autres filtres présents dans l'URL sont conservés :
+// aller voir la France ne doit pas perdre la bourse ou le niveau déjà
+// choisis.
+function urlAvecFiltres({ country = countryFilter.value, level = levelFilter.value, search = searchInput.value.trim(), tout = toutAfficher } = {}) {
+
+const url = new URL("universities.html", window.location.origin);
+
+if (scholarshipIdFilter) url.searchParams.set("scholarshipId", scholarshipIdFilter);
+if (country) url.searchParams.set("country", country);
+if (level) url.searchParams.set("level", level);
+// La recherche de cette page est vivante (aucun rechargement à la
+// frappe) mais elle traverse désormais l'URL : sans ça, cliquer un pays
+// après avoir tapé trois lettres effaçait la recherche en silence.
+if (search) url.searchParams.set("search", search);
+if (tout) url.searchParams.set("all", "1");
+
+return url.pathname.split("/").pop() + url.search;
+
+}
+
 let allUniversities = [];
 let allPrograms = [];
 let allScholarshipsById = new Map();
@@ -216,6 +258,11 @@ const search = searchInput.value.trim().toLowerCase();
 const country = countryFilter.value;
 const level = levelFilter.value;
 
+// Le PAYS est retiré du filtre principal et appliqué en dernier (plus
+// bas) : l'index du bas de page doit lister tous les pays qui restent
+// après les AUTRES filtres, sinon il ne proposerait que le pays déjà
+// choisi — un index qui ne mène nulle part.
+
 const scope = scholarshipIdFilter
 ? allUniversities.filter((u) => allPrograms.some((p) => p.universityId === u.firestoreId && p.scholarshipId === scholarshipIdFilter))
 : allUniversities;
@@ -226,7 +273,6 @@ const programsForUniversity = allPrograms.filter((p) => p.universityId === unive
 const universityLevels = programsForUniversity.map((p) => p.level);
 
 return (
-(!country || university.country === country) &&
 (!level || universityLevels.includes(level)) &&
 (!search ||
 (university.name || "").toLowerCase().includes(search) ||
@@ -257,9 +303,12 @@ return buildCardModel(university, programsForUniversity, variant % 4);
 
 });
 
-resultsCount.textContent = `${cards.length} établissement${cards.length > 1 ? "s" : ""} trouvé${cards.length > 1 ? "s" : ""}`;
+// Toutes les cartes SAUF le filtre pays : la portée de l'index.
+const visibles = country ? cards.filter((c) => c.country === country) : cards;
 
-if (cards.length === 0) {
+if (visibles.length === 0) {
+
+resultsCount.textContent = "Aucun établissement ne correspond à ces filtres";
 
 countryPills.hidden = true;
 countryPills.innerHTML = "";
@@ -268,11 +317,23 @@ renderEmptyState();
 
 } else {
 
-const groups = groupByCountry(cards);
+const groups = groupByCountry(visibles);
+const groupesIndex = groupByCountry(cards);
 
-renderCountryPills(groups, country);
+renderCountryPills(groupesIndex, country);
 
-groups.forEach(({ country: groupCountry, items }) => {
+// La vue a une fin — voir js/catalogue-vue.js. Le tri des pays
+// (le mieux fourni d'abord) arrive ici déjà fait et ressort intact.
+const vue = decouperVue(groups, { paysFiltre: country, tout: toutAfficher });
+
+resultsCount.textContent = ligneEtendue(vue, NOMS_UNIS, {
+pays: groupesIndex.length,
+paysFiltre: country
+});
+
+vue.groupes.forEach((groupe) => {
+
+const { country: groupCountry, items, ecourte, total } = groupe;
 
 const section = document.createElement("section");
 section.className = "catalog-country-group";
@@ -285,9 +346,10 @@ section.innerHTML = `
 <div class="catalog-country-header">
 ${flagImg}
 <h2>${groupCountry}</h2>
-<span>(${items.length} université${items.length > 1 ? "s" : ""})</span>
+<span>(${total} université${total > 1 ? "s" : ""})</span>
 </div>
 <div class="uni-grid"></div>
+${ecourte ? `<a class="catalog-country-more" href="${urlAvecFiltres({ country: groupCountry, tout: false })}"><span>${libelleVoirTout(groupe, NOMS_UNIS)}</span><i data-lucide="arrow-right"></i></a>` : ""}
 `;
 
 const grid = section.querySelector(".uni-grid");
@@ -296,6 +358,8 @@ items.forEach((card) => grid.appendChild(renderCard(card)));
 container.appendChild(section);
 
 });
+
+renderIndexPays(groupesIndex, vue, country);
 
 }
 
@@ -315,6 +379,19 @@ if (window.lucide) lucide.createIcons();
 
 }
 
+function pastillePays({ country: groupCountry, items }, actif) {
+
+const flagItem = items.find((item) => item.flag);
+const flagImg = flagItem ? `<img src="assets/flags/${flagItem.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
+
+// `tout: false` : choisir un pays sort du mode « Tout afficher » — on
+// vient précisément de demander à voir moins.
+const href = urlAvecFiltres({ country: groupCountry, tout: false });
+
+return `<a href="${href}" class="catalog-country-pill${actif ? " is-active" : ""}">${flagImg}<span>${groupCountry}</span><span class="catalog-country-pill-count">${items.length}</span></a>`;
+
+}
+
 function renderCountryPills(groups, activeCountry) {
 
 if (groups.length <= 1) {
@@ -325,15 +402,30 @@ return;
 
 countryPills.hidden = false;
 
-countryPills.innerHTML = groups.map(({ country: groupCountry, items }) => {
+countryPills.innerHTML = groups.map((g) => pastillePays(g, g.country === activeCountry)).join("");
 
-const flagItem = items.find((item) => item.flag);
-const flagImg = flagItem ? `<img src="assets/flags/${flagItem.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : "";
-const slug = slugify(groupCountry);
+}
 
-return `<a href="#country-${slug}" class="catalog-country-pill${groupCountry === activeCountry ? " is-active" : ""}">${flagImg}<span>${groupCountry}</span><span class="catalog-country-pill-count">${items.length}</span></a>`;
+// La table des matières — voir la note jumelle dans scholarships.js.
+// Rendue DANS le conteneur, vidé à chaque affichage : impossible d'en
+// accumuler deux quand la recherche vivante re-rend la page.
+function renderIndexPays(groupesIndex, vue, activeCountry) {
 
-}).join("");
+if (groupesIndex.length <= 1) return;
+
+const nav = document.createElement("nav");
+nav.className = "catalog-country-index";
+nav.setAttribute("aria-label", "Tous les pays du catalogue");
+
+nav.innerHTML = (vue.partielle
+? `<p class="catalog-country-index-lead">Le catalogue compte ${vue.total} établissement${vue.total > 1 ? "s" : ""} dans ${groupesIndex.length} pays. Choisissez une destination :</p>`
+: `<p class="catalog-country-index-lead">Toutes les destinations du catalogue :</p>`)
++ `<div class="catalog-country-index-pills">${groupesIndex.map((g) => pastillePays(g, g.country === activeCountry)).join("")}</div>`
++ (toutAfficher
+? `<a class="catalog-tout-afficher" href="${urlAvecFiltres({ country: "", tout: false })}">Revenir à la vue par pays</a>`
+: `<a class="catalog-tout-afficher" href="${urlAvecFiltres({ country: "", tout: true })}">Tout afficher (${vue.total} établissement${vue.total > 1 ? "s" : ""} d'un coup)</a>`);
+
+container.appendChild(nav);
 
 }
 
@@ -431,7 +523,12 @@ levelFilter.addEventListener("change", applyFilters);
 
 resetBtn.addEventListener("click", () => {
 
-if (scholarshipIdFilter) {
+// Tout filtre porté par l'URL (bourse, pays, niveau, recherche,
+// « tout afficher ») ne peut se réinitialiser qu'en RECHARGEANT :
+// remettre les contrôles à zéro sur place laissait `?country=Italie`
+// dans la barre d'adresse, et le moindre rechargement — ou un partage
+// du lien — ramenait le filtre qu'on venait de retirer.
+if (window.location.search) {
 window.location.href = "universities.html";
 return;
 }

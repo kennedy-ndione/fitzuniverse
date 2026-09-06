@@ -37,7 +37,9 @@ function pays(...paires) {
 
 test("l'aperçu remplit jusqu'au plafond puis s'arrête net, sans couper un pays", () => {
 
-  const vue = decouperVue(pays(["Italie", 8], ["France", 6], ["Japon", 7], ["Maroc", 5]));
+  // Réglage explicite : ce test décrit la RÈGLE, pas l'accordage mesuré
+  // (CARTES_VISEES/MAX_PAR_PAYS, vérifiés séparément plus bas).
+  const vue = decouperVue(pays(["Italie", 8], ["France", 6], ["Japon", 7], ["Maroc", 5]), { cible: 18, maxParPays: 12 });
 
   assert.equal(vue.mode, "apercu");
   assert.deepEqual(vue.groupes.map((g) => g.country), ["Italie", "France", "Japon"]);
@@ -51,9 +53,9 @@ test("l'aperçu remplit jusqu'au plafond puis s'arrête net, sans couper un pays
 
 test("un pays plus gros que le plafond par pays est écourté, et le dit", () => {
 
-  const vue = decouperVue(pays(["Italie", 29], ["France", 4]));
+  const vue = decouperVue(pays(["Italie", 29], ["France", 4]), { cible: 18, maxParPays: 12 });
 
-  assert.equal(vue.groupes[0].items.length, MAX_PAR_PAYS);
+  assert.equal(vue.groupes[0].items.length, 12);
   assert.equal(vue.groupes[0].total, 29, "le total réel reste porté par le groupe");
   assert.equal(vue.groupes[0].ecourte, true);
   assert.equal(vue.groupes[1].country, "France", "12 + 4 tiennent encore sous 18");
@@ -76,10 +78,10 @@ test("le dépassement du plafond est borné par le plafond PAR PAYS", () => {
   // Le pire cas : on est à 17 cartes (sous le plafond, donc on continue)
   // et le pays suivant en apporte 12. 29 est le maximum atteignable —
   // jamais un « et si le pays suivant en avait 60 ».
-  const vue = decouperVue(pays(["A", 9], ["B", 8], ["C", 60], ["D", 5]));
+  const vue = decouperVue(pays(["A", 9], ["B", 8], ["C", 60], ["D", 5]), { cible: 18, maxParPays: 12 });
 
   assert.equal(vue.affichees, 29);
-  assert.ok(vue.affichees <= CARTES_VISEES + MAX_PAR_PAYS, "borne haute garantie");
+  assert.ok(vue.affichees <= 18 + 12, "borne haute garantie");
   assert.equal(vue.groupes[2].ecourte, true);
   assert.deepEqual(vue.groupes.map((g) => g.country), ["A", "B", "C"]);
 
@@ -145,7 +147,7 @@ test("« Tout afficher » restaure exactement le rendu d'avant", () => {
 
 test("une vue partielle DIT qu'elle est partielle", () => {
 
-  const vue = decouperVue(pays(["Italie", 29], ["France", 26], ["Japon", 7]));
+  const vue = decouperVue(pays(["Italie", 29], ["France", 26], ["Japon", 7]), { cible: 18, maxParPays: 12 });
 
   assert.equal(ligneEtendue(vue, BOURSES, { pays: 30 }), "24 bourses affichées sur 62 · 30 pays");
 
@@ -153,7 +155,7 @@ test("une vue partielle DIT qu'elle est partielle", () => {
 
 test("l'accord suit le mot : « affichées » pour des bourses, « affichés » pour des établissements", () => {
 
-  const vue = decouperVue(pays(["Italie", 29], ["France", 26]));
+  const vue = decouperVue(pays(["Italie", 29], ["France", 26]), { cible: 18, maxParPays: 12 });
 
   assert.match(ligneEtendue(vue, BOURSES, { pays: 30 }), /bourses affichées sur/);
   assert.match(ligneEtendue(vue, UNIS, { pays: 30 }), /établissements affichés sur/);
@@ -184,7 +186,7 @@ test("zéro ouverte se dit, et ne se confond pas avec « pas d'information »", 
 
 test("le lien d'un groupe écourté porte le nombre réel et le bon article", () => {
 
-  const vue = decouperVue(pays(["Italie", 29], ["Japon", 20], ["France", 26]), { cible: 100 });
+  const vue = decouperVue(pays(["Italie", 29], ["Japon", 20], ["France", 26]), { cible: 100, maxParPays: 12 });
 
   assert.equal(libelleVoirTout(vue.groupes[0], BOURSES), "Voir les 29 bourses de l'Italie");
   assert.equal(libelleVoirTout(vue.groupes[1], BOURSES), "Voir les 20 bourses du Japon");
@@ -216,6 +218,9 @@ test("une liste vide ne casse rien", () => {
 });
 
 test("les constantes restent celles qu'on a mesurées", () => {
-  assert.equal(CARTES_VISEES, 18);
-  assert.equal(MAX_PAR_PAYS, 12);
+  // Accordés le 2026-09-06 CONTRE UNE MESURE, pas au jugé : 18/12
+  // laissait scholarships.html à 15 672 px, au-dessus des 12 000 px
+  // visés ; 12/8 la ramène à 12 164 px. Voir js/catalogue-vue.js.
+  assert.equal(CARTES_VISEES, 12);
+  assert.equal(MAX_PAR_PAYS, 8);
 });
