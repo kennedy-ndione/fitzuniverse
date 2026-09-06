@@ -56,6 +56,30 @@ const LEVEL_ALIASES = {
 "doctorat": "Doctorat", "phd": "Doctorat", "doctorate": "Doctorat"
 };
 
+/**
+* L'IDENTIFIANT D'UN DOCUMENT, QUELLE QUE SOIT LA FORME REÇUE
+* -----------------------------------------------------------
+* Les appelants ne passent pas tous les mêmes objets. results.js
+* transmet les documents du catalogue TELS QUELS (ils portent `id`) ;
+* dashboard.js et applications.js les renomment d'abord
+* (`{ firestoreId: id, ...reste }`) et n'ont donc plus d'`id` du tout.
+*
+* CE QUE CETTE DIVERGENCE A COÛTÉ (trouvé le 2026-09-06) : la clé de
+* dédoublonnage par bourse valait `c.scholarship.id`, donc `undefined`
+* pour tout appelant de l'espace connecté. `boursesVues` contenait
+* alors une seule entrée — `undefined` — et TOUT candidat suivant était
+* écarté comme un doublon. Le hub ne retenait qu'UNE opportunité sur
+* les 101 qui passaient les filtres. Rien ne plantait : le chiffre
+* était simplement faux, et personne ne pouvait le deviner.
+*
+* On lit donc les deux formes ici, une fois pour toutes, plutôt que
+* d'exiger des appelants une convention qu'un seul d'entre eux
+* respectait.
+*/
+function idDe(doc) {
+return (doc && (doc.id || doc.firestoreId)) || "";
+}
+
 function normalizeLevel(value) {
 const text = String(value || "").toLowerCase();
 for (const key in LEVEL_ALIASES) {
@@ -64,13 +88,43 @@ if (text.includes(key)) return LEVEL_ALIASES[key];
 return "";
 }
 
-// Niveau que l'étudiant VISE — champ targetLevel d'abord (diagnostic
-// gratuit refondu, via resolveTargetLevel() dans eligibility-ai.js),
-// sinon l'ancien comportement (dernier diplôme) pour l'espace connecté.
-// Une seule définition, partagée par scoreProgram() et explainMatch(),
-// pour que le score et son explication ne puissent jamais diverger.
+/**
+* Niveau que l'étudiant VISE.
+*
+* L'ORDRE EST LA FONCTION — chaque cran est une source de moins en
+* moins sûre du PROJET de l'étudiant :
+*
+*   1. `targetLevel`    — le diagnostic gratuit le DEMANDE
+*                         (resolveTargetLevel, eligibility-ai.js).
+*                         Réponse explicite : rien ne la dépasse.
+*   2. `desiredDegree`  — « Diplôme recherché » de profile.html, le
+*                         même projet dit par un étudiant CONNECTÉ.
+*   3. `lastDegree` /
+*      `currentDegree`  — le diplôme DÉJÀ OBTENU. Un repli, jamais un
+*                         projet : on suppose alors qu'il vise le
+*                         cycle qu'il a, faute de mieux.
+*
+* POURQUOI `desiredDegree` A ÉTÉ AJOUTÉ (2026-09-06)
+* --------------------------------------------------
+* Le bug conceptuel corrigé côté public le 2026-08-29 — récompenser le
+* diplôme obtenu au lieu du diplôme visé — était resté vivant côté
+* CONNECTÉ, c'est-à-dire côté PAYANT. `targetLevel` n'existe que sur le
+* profil du diagnostic ; le profil de l'espace porte `desiredDegree`
+* (profile.js l'écrit, profile.html le propose : Licence / Master /
+* Doctorat) et RIEN ne le lisait. Un titulaire de licence qui déclarait
+* viser un master se voyait donc bonifier les licences.
+*
+* `desiredDegree` passe APRÈS `targetLevel` (une réponse de diagnostic
+* reste prioritaire, elle est plus récente et plus contextualisée) et
+* AVANT les diplômes obtenus (un projet déclaré bat toujours une
+* déduction).
+*
+* Une seule définition, partagée par scoreProgram(), explainMatch() et
+* retenirOpportunites(), pour que le score, son explication et le
+* filtre ne puissent jamais diverger.
+*/
 function studentTargetLevel(profile) {
-return normalizeLevel(profile.targetLevel || profile.lastDegree || profile.currentDegree);
+return normalizeLevel(profile.targetLevel || profile.desiredDegree || profile.lastDegree || profile.currentDegree);
 }
 
 // Dérive un signal financement simple à partir des deux formes de profil
@@ -423,6 +477,20 @@ const scholarship = entry.program.scholarshipId ? scholarshipsById.get(entry.pro
 
 picked.push({
 universityId: entry.program.universityId,
+// LES DEUX CLÉS VERS LE CATALOGUE (ajoutées le 2026-09-06)
+//
+// Elles manquaient, et leur absence rendait SILENCIEUSEMENT inerte
+// tout un pan de la passe 1 : applications.js écrivait
+// `scholarshipId: pickedEntry.scholarshipId || null` — donc toujours
+// null — et son sélecteur ne pouvait afficher l'état publié par la
+// fiche, faute de savoir de quelle bourse il parlait. Rien ne
+// plantait, tout se taisait.
+//
+// `programId` désigne LE programme réellement noté ici, ce qu'aucune
+// heuristique côté appelant ne pouvait déduire sans risque quand une
+// université porte plusieurs fiches d'une même bourse.
+scholarshipId: idDe(scholarship),
+programId: idDe(entry.program),
 // Exposé pour countCompatibleOpportunities() (dashboard.js), qui a
 // besoin de savoir combien d'entrées correspondent réellement au
 // profil (score > 0) plutôt que de compter tout le catalogue — champ
@@ -556,6 +624,15 @@ if (scoreProgram(program, university, scholarship, p) < 0) continue;
 // une liste large qu'une page vide.
 if (cible && program.level && normalizeLevel(program.level) !== cible) continue;
 
+// 3 bis — le retrait volontaire. `isActive:false` est le seul geste
+// editorial qui ferme une bourse sans condition : etatCandidature()
+// le traite en PREMIER, avant meme les dates. Le filtre ne change
+// rien aujourd'hui (les 27 bourses concernees portent aussi un statut
+// « Fermee », mesure le 2026-09-06 : 0 fuite) — il ferme l'ecart pour
+// le jour ou l'une d'elles n'en portera pas, et ou le hub proposerait
+// alors une bourse que le catalogue affiche close.
+if (scholarship && scholarship.isActive === false) continue;
+
 // 4 — la langue.
 if (langueCompatible(program, p) === false) continue;
 
@@ -601,7 +678,12 @@ if (retenues.length >= max) break;
 // qui n'en propose qu'une.
 if (c.score < seuil && retenues.length >= min) break;
 
-const cleBourse = c.scholarship ? c.scholarship.id : `programme:${c.program.id || c.program.universityId}`;
+// idDe() et non `.id` : voir son en-tete — la forme des documents
+// depend de l'appelant, et la clef qui s'effondrait ne retenait qu'une
+// opportunite sur cent.
+const cleBourse = c.scholarship && idDe(c.scholarship)
+? `bourse:${idDe(c.scholarship)}`
+: `programme:${idDe(c.program) || c.program.universityId}`;
 
 if (boursesVues.has(cleBourse)) continue;
 if (universitesVues.has(c.program.universityId)) continue;
@@ -617,7 +699,12 @@ retenues.push({
 universityId: c.program.universityId,
 universityName: c.university.name || "Établissement",
 country: pays,
-scholarshipId: c.scholarship ? c.scholarship.id : "",
+scholarshipId: idDe(c.scholarship),
+// Le programme reellement retenu — meme raison que dans
+// recommendPrograms : applications.js ecrit cette cle sur la
+// candidature, et une heuristique cote appelant se tromperait des
+// qu'une universite porte plusieurs fiches d'une meme bourse.
+programId: idDe(c.program),
 scholarshipTitle: c.scholarship ? c.scholarship.title : "",
 deadline: c.program.deadline || null,
 jours: c.echeance.jours,

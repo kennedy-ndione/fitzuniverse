@@ -167,7 +167,17 @@ return { app, jours: Math.round((cible - jour) / 86400000) };
 
 }
 
-/** Ton d'une échéance — mêmes fenêtres que js/next-action.js. */
+/**
+* Ton d'une échéance — mêmes fenêtres que js/next-action.js (3 / 14), et
+* DÉLIBÉRÉMENT différentes de celles de js/echeance.js (14 / 60). Voir
+* le commentaire au-dessus de JOURS_CRITIQUE dans js/next-action.js :
+* deux publics, deux horizons, le même mot. Ne pas les uniformiser.
+*
+* Depuis la passe 1 (2026-09-06), une candidature LIÉE au catalogue
+* prend son ton de etatCandidature() : cette fonction ne sert plus
+* qu'aux candidatures hors catalogue, dont l'étudiant a saisi la date
+* lui-même.
+*/
 export function tonEcheance(jours) {
 if (jours < 0 || jours <= 3) return "critique";
 if (jours <= 14) return "haute";

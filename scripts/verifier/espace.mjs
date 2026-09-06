@@ -36,6 +36,7 @@ import { fileURLToPath } from "node:url";
 
 import { couperLeReseau } from "./hors-ligne.mjs";
 import { indexerCatalogue, etatDeLaCandidature, normaliserTitre } from "../../js/candidature-catalogue.js";
+import { etatCandidature } from "../../js/echeance.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -156,7 +157,21 @@ function preparer() {
     }
   };
 
-  return { index, applications, userData, clos, ouvert, dateDecalee };
+  // De quoi confronter la phase 02 : le badge que le CATALOGUE affiche
+  // pour chaque bourse, recalcule en Node. Une opportunite proposee par
+  // le hub ne doit jamais porter « Candidatures closes ».
+  const badgeParTitre = new Map();
+
+  for (const bourse of brut.scholarships) {
+    const liees = (index.programmesParBourse.get(bourse.id) || []).map((p) => p.deadline);
+    badgeParTitre.set(bourse.title, etatCandidature({
+      statut: bourse.status, actif: bourse.isActive, echeances: liees,
+      periodeOuverture: bourse.periodeOuverture, verifieLe: bourse.verifieLe,
+      echeanceVariable: bourse.echeanceVariable
+    }).badge);
+  }
+
+  return { index, applications, userData, clos, ouvert, dateDecalee, badgeParTitre, totalBourses: brut.scholarships.length };
 
 }
 
@@ -355,6 +370,14 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
           carteClose,
           radar: [...document.querySelectorAll("#jyRadarChips .jy-radar-chip")].map((c) => c.textContent.trim()),
           radarVisible: !document.getElementById("jyRadar")?.hidden,
+          // PHASE 02 — passe 2/3 : le hub sert desormais la MEME selection
+          // que le diagnostic gratuit (retenirOpportunites). La phrase et
+          // les cartes doivent en decouler.
+          phrase02: document.getElementById("jyOppsSub")?.textContent.trim() || "",
+          opportunites: [...document.querySelectorAll("#jyOpps .jy-opp")].map((c) => ({
+            bourse: c.querySelector("h3")?.textContent.trim() || "",
+            universite: c.querySelector(".jy-opp-uni")?.textContent.trim() || ""
+          })),
           action: {
             titre: document.getElementById("jyActionTitle")?.textContent.trim() || "",
             texte: document.getElementById("jyActionText")?.textContent.trim() || ""
@@ -374,6 +397,41 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         if (!/clos/i.test(vu.action.titre + vu.action.texte)) anomalies.push(`Prochaine action : « ${vu.action.titre} » — le cycle clos n'est pas signalé.`);
         if (/Il reste/.test(vu.action.texte) && new RegExp(nomClos).test(vu.action.texte)) anomalies.push(`Prochaine action : compte à rebours vers un cycle clos — « ${vu.action.texte} ».`);
       }
+
+      // ---- PHASE 02 : la phrase, et surtout ce qu'elle promet ----
+      //
+      // « Fitz a retenu N … dont M ouvertes » : le N doit etre celui de
+      // la SELECTION, pas la taille du catalogue, et aucune des cartes
+      // proposees ne doit viser un cycle que la fiche declare clos. On ne
+      // se fie pas au libelle : on RECALCULE l'etat de chaque bourse
+      // proposee, comme pages.mjs le fait pour le bandeau d'accueil.
+      const chiffres = vu.phrase02.match(/retenu (\d+) opportunit\S+ pour votre profil, dont (\d+)/);
+
+      if (!chiffres) {
+        anomalies.push(`Phase 02 : la phrase n'annonce pas « Fitz a retenu N … dont M » — « ${vu.phrase02.slice(0, 110)} »`);
+      } else {
+
+        const [, nTexte, mTexte] = chiffres;
+        const n = Number(nTexte);
+        const m = Number(mTexte);
+
+        if (m > n) anomalies.push(`Phase 02 : ${m} ouvertes annoncees pour ${n} retenues — impossible.`);
+        if (n >= cible.totalBourses) anomalies.push(`Phase 02 : ${n} retenues pour ${cible.totalBourses} bourses au catalogue — le hub ne selectionne plus rien.`);
+
+        notes.push(`phase 02 : ${n} retenues dont ${m} ouvertes (catalogue : ${cible.totalBourses} bourses)`);
+
+      }
+
+      for (const opp of vu.opportunites) {
+        const badge = cible.badgeParTitre.get(opp.bourse);
+        if (!badge) {
+          anomalies.push(`Phase 02 : « ${opp.bourse} » ne correspond a aucune bourse du catalogue.`);
+        } else if (badge === "Candidatures closes") {
+          anomalies.push(`Phase 02 : « ${opp.bourse} » est proposee alors que le catalogue affiche « ${badge} ».`);
+        }
+      }
+
+      notes.push(`opportunites proposees : ${vu.opportunites.map((o) => o.bourse.slice(0, 34)).join(" · ") || "aucune"}`);
 
       notes.push(`tableau de bord : ${vu.cartes.length} dossiers — ${vu.cartes.map((c) => `${c.titre.slice(0, 24)} [${c.pastille.slice(0, 40)}]`).join(" · ")}`);
       notes.push(`radar : ${vu.radarVisible ? vu.radar.join(" | ") : "masqué"} — action : « ${vu.action.titre.slice(0, 70)} »`);

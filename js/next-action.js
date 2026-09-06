@@ -178,6 +178,27 @@ return qualifierEtapes(etapes).find((e) => e.etat === "a-faire") || null;
 
 export const URGENCES = ["critique", "haute", "normale", "exploration"];
 
+/**
+* CES SEUILS DIVERGENT DE js/echeance.js, ET C'EST VOULU — NE PAS LES
+* « ALIGNER » (constat consigné le 2026-09-06)
+*
+* Ici : 3 et 14 jours. Là-bas (JOURS_CRITIQUE / JOURS_PROCHE de
+* js/echeance.js) : 14 et 60. Le même mot, deux horizons — l'en-tête de
+* la section 5 de js/echeance.js explique pourquoi : on parle ici à un
+* étudiant qui a DÉJÀ un dossier en cours, dont la prochaine étape est
+* une tâche de quelques heures ; là-bas à un visiteur qui n'a rien
+* commencé, pour qui une bourse à dix jours est hors d'atteinte.
+*
+* CE QUE LA PASSE 1 A CHANGÉ : depuis qu'une candidature LIÉE au
+* catalogue prend son ton de etatCandidature() (`app.echeance`), cette
+* divergence ne touche plus que les candidatures HORS catalogue — celles
+* dont l'étudiant a saisi la date lui-même. Autrement dit, le champ
+* d'application s'est réduit, la règle n'a pas changé.
+*
+* Uniformiser les deux jeux afficherait « tranquille » à quelqu'un qui
+* n'a en réalité plus le temps.
+*/
+
 /** Fenêtre en deçà de laquelle une échéance devient critique. */
 export const JOURS_CRITIQUE = 3;
 

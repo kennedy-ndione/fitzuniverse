@@ -14,7 +14,10 @@ import { db } from "./firebase-config.js";
 import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
 import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLocked, applyFeatureLocks } from "./js/app-shell.js";
-import { recommendPrograms } from "./js/recommend-programs.js";
+// retenirOpportunites : la MEME selection que results.js (le diagnostic
+// gratuit) — cinq filtres, dedoublonnage par bourse et par universite,
+// plafond par pays. Voir chargerOpportunites() plus bas.
+import { retenirOpportunites } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 import { prochaineAction, qualifierEtapes, joursRestants } from "./js/next-action.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
@@ -48,15 +51,31 @@ const programs = catalogue.programmes.map(renommer);
 const universitiesById = new Map(catalogue.universites.map((u) => [u.id, renommer(u)]));
 const scholarshipsById = new Map(catalogue.bourses.map((s) => [s.id, renommer(s)]));
 
-const matches = recommendPrograms({
+// L'ESPACE PAYANT RECOMMANDAIT MOINS BIEN QUE LE DIAGNOSTIC GRATUIT
+// (corrigé le 2026-09-06, passe espace étudiant 2/3)
+//
+// Ici tournait `recommendPrograms(...).filter(m => m.score > 0)`. Ce
+// tri-là garde tout ce qui n'est pas négatif, donne +1 au statut
+// « Ouverte » — que 167 programmes affichent pour 39 dates réellement
+// futures — et ne filtre NI le cycle visé, NI l'échéance, NI les
+// doublons de bourse. Le diagnostic gratuit, lui, passe par
+// retenirOpportunites() : cinq filtres, dédoublonnage par bourse et
+// par université, plafond par pays.
+//
+// Autrement dit, l'étudiant qui PAYAIT recevait la liste la moins
+// travaillée des deux. On sert désormais la même que results.js — une
+// seule définition de « ce qui correspond à ce profil ».
+const selection = retenirOpportunites({
 profile: profile || {},
 programs,
 universitiesById,
-scholarshipsById,
-count: programs.length
-}).filter((m) => m.score > 0);
+scholarshipsById
+});
 
-return { count: matches.length, top: matches.slice(0, 3), index };
+// On rend `selection` tel quel : `nombre`, `ouvertes` et `pays` sont
+// déjà calculés là-bas. Les recompter ici serait la deuxième source de
+// vérité que cette passe supprime.
+return { selection, count: selection.nombre, top: selection.retenues.slice(0, 3), index };
 
 } catch (error) {
 
@@ -232,8 +251,18 @@ grid.innerHTML = "";
 return;
 }
 
-sub.textContent = opps.count > 0
-? `${opps.count} opportunité${opps.count > 1 ? "s" : ""} du catalogue correspond${opps.count > 1 ? "ent" : ""} actuellement à votre profil — voici les plus proches de vous.`
+// « Fitz A RETENU N », jamais « il n'existe que N » : le chiffre dit le
+// travail de selection, pas une penurie. Meme phrase que results.js —
+// un etudiant qui passe du diagnostic a son espace doit reconnaitre la
+// meme voix et le meme compte.
+const n = opps.count;
+const m = opps.selection ? opps.selection.ouvertes : 0;
+
+sub.textContent = n > 0
+// « ouvertes » s'accorde avec « candidatures », toujours au pluriel —
+// jamais avec M : « dont 0 aux candidatures encore ouverte » était une
+// faute d'accord.
+? `Fitz a retenu ${n} opportunité${n > 1 ? "s" : ""} pour votre profil, dont ${m} aux candidatures encore ouvertes.`
 : "Le catalogue n'a pas encore de correspondance nette avec votre profil — explorez-le librement, il s'enrichit chaque semaine.";
 
 grid.innerHTML = opps.top.map((pick) => `

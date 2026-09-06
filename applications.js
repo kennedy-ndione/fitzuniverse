@@ -31,7 +31,19 @@ serverTimestamp
 import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
 import { isQuotaReached } from "./js/plan-features.js";
-import { recommendPrograms } from "./js/recommend-programs.js";
+// DEUX MOTEURS, DEUX USAGES — et c'est voulu (passe 2/3, 2026-09-06) :
+//
+//   retenirOpportunites  ce que Fitz PROPOSE de lui-même (créneaux
+//                        pré-remplis, remplacement d'une suggestion).
+//                        Cinq filtres : jamais un cycle clos, jamais un
+//                        mauvais niveau. La même sélection que le
+//                        diagnostic gratuit.
+//   recommendPrograms    ce que l'étudiant CHERCHE dans le sélecteur.
+//                        Le catalogue entier, classé. Il a le droit de
+//                        chercher n'importe quoi — la passe 1 y a mis
+//                        l'état honnête et écarté les closes des seules
+//                        suggestions.
+import { recommendPrograms, retenirOpportunites } from "./js/recommend-programs.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase, FITZ_READINESS_PHRASES } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
@@ -77,29 +89,6 @@ return null;
 });
 }
 return promesseIndex;
-}
-
-// L'identifiant du programme derrière une recommandation. recommendPrograms
-// (hors périmètre de cette passe) rend universityId + scholarshipId mais
-// pas l'id du programme : on le retrouve sur le catalogue — UN seul
-// programme pour ce couple, ou celui dont la prose d'échéance est
-// exactement celle de la recommandation. Ambigu → null (l'état se
-// calcule alors à l'échelle de la bourse, jamais sur un programme
-// choisi au hasard).
-function programIdPour(programmes, universityId, scholarshipId, deadline) {
-
-if (!universityId || !scholarshipId) return null;
-
-const candidats = programmes.filter((p) => p.universityId === universityId && p.scholarshipId === scholarshipId);
-
-if (candidats.length === 1) return candidats[0].id || candidats[0].firestoreId || null;
-
-const memeProse = candidats.filter((p) => (p.deadline || "") === (deadline || ""));
-
-if (memeProse.length === 1) return memeProse[0].id || memeProse[0].firestoreId || null;
-
-return null;
-
 }
 
 // La ligne d'échéance d'une carte. Candidature liée : l'état publié par
@@ -657,13 +646,25 @@ const uni = universitiesById.get(p.universityId);
 return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
 });
 
-const recommendations = recommendPrograms({
+// retenirOpportunites, et non plus recommendPrograms : un créneau que
+// Fitz remplit LUI-MÊME ne doit jamais viser un cycle clos ni un
+// mauvais niveau. L'ancien appel gardait tout `score >= 0`, sans
+// filtrer ni le cycle ni l'échéance — l'étudiant trouvait donc en
+// arrivant des candidatures vers des portes fermées, pré-remplies par
+// le service qu'il paie.
+//
+// `eligiblePrograms` (et non tout le catalogue) reste passé tel quel :
+// c'est lui qui écarte les universités déjà occupées par un autre
+// créneau, ce que retenirOpportunites ne peut pas savoir.
+const { retenues } = retenirOpportunites({
 profile: profile || {},
 programs: eligiblePrograms,
 universitiesById,
-scholarshipsById,
-count: missing
+scholarshipsById
 });
+
+// Dans l'ordre, autant que de créneaux libres.
+const recommendations = retenues.slice(0, missing);
 
 if (!recommendations.length) return false;
 
@@ -688,7 +689,7 @@ scholarship: rec.scholarshipTitle,
 // permet à la carte d'afficher l'état publié par la fiche, et à une
 // correction de catalogue d'atteindre la candidature.
 scholarshipId: rec.scholarshipId || null,
-programId: programIdPour(programs, rec.universityId, rec.scholarshipId, rec.deadline),
+programId: rec.programId || null,
 // Audit du 2026-08-28 : ces deux champs étaient "" en dur alors que
 // rec porte déjà applicationUrl/universityWebsite (recommend-programs.js)
 // — un créneau suggéré par Fitz n'affichait donc jamais aucun lien tant
@@ -826,7 +827,7 @@ return etatsMemo.get(cle);
 pickerEntries = picks.map((pick) => {
 
 const uni = universitiesById.get(pick.universityId) || {};
-const programId = programIdPour(programs, pick.universityId, pick.scholarshipId, pick.deadline);
+const programId = pick.programId || null;
 const lecture = pick.scholarshipId ? lectureDe(pick.scholarshipId, programId) : null;
 const etat = lecture && lecture.lie ? lecture.etat : null;
 
@@ -1386,13 +1387,17 @@ const uni = universitiesById.get(p.universityId);
 return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
 });
 
-const [alternative] = recommendPrograms({
+// Même moteur que seedRecommendedSlots : « Suggérer une autre
+// université » repose le drapeau `isRecommendation`, c'est donc un
+// créneau rempli par Fitz au même titre. Le laisser sur
+// recommendPrograms aurait gardé ici, et ici seulement, la porte que
+// la passe 2/3 vient de fermer ailleurs.
+const [alternative] = retenirOpportunites({
 profile: profile || {},
 programs: eligiblePrograms,
 universitiesById,
-scholarshipsById,
-count: 1
-});
+scholarshipsById
+}).retenues;
 
 if (!alternative) {
 alert("Aucune autre université compatible avec votre profil n'est disponible pour le moment.");
