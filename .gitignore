@@ -40,3 +40,8 @@ ui-debug.log
 Thumbs.db
 .DS_Store
 *.log
+
+# Sauvegardes Firestore (scripts/sauvegarde.mjs) — donnees personnelles
+# d etudiants, JAMAIS dans le depot. Le filet immediat avant chaque lot
+# qui ecrit ; le dispositif definitif est `gcloud firestore export`.
+sauvegardes/
