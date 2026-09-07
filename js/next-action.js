@@ -114,6 +114,25 @@ advisor: "la revue de votre conseiller"
 };
 
 /**
+* Libellés très courts des prérequis, pour l'infobulle « à faire après
+* le profil et la lettre » du stepper. Exporté (lot D1, 2026-09-07) :
+* applications.js et dashboard.js en portaient chacun une copie, et
+* c'est cette copie qui a laissé passer l'identifiant brut
+* « traductions » dans une infobulle au lot précédent. Un seul endroit,
+* et test/next-action.test.mjs vérifie que chaque clé de PREREQUIS y a
+* une entrée.
+*/
+export const LIBELLE_PREREQUIS = {
+profile: "le profil",
+checklist: "le dossier",
+letter: "la lettre",
+readiness: "la vérification",
+traductions: "les traductions",
+ressources: "la preuve de ressources",
+advisor: "la revue conseiller"
+};
+
+/**
 * Jours restants avant une date limite.
 * @returns {number|null} null si aucune date exploitable
 */

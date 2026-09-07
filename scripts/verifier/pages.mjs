@@ -637,6 +637,127 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
   }
 
+  // ---------- 6. Le coût réel par université (lot D1, 2026-09-07) ----------
+  //
+  // Aujourd'hui aucune université du catalogue ne porte `fraisScolarite`
+  // (la donnée arrive au lot D2) : le contrôle se fait sur deux FIXTURES
+  // injectées dans l'instantané servi à la page — une AVEC frais
+  // vérifiés (sourcés, datés), une SANS. Attendu : la première montre
+  // un montant daté, la seconde « Frais non vérifiés », aucune des deux
+  // ne dit « gratuit ». Puis le filtre de coût : « Tous » par défaut
+  // laisse voir la bande « inconnu », une bande explicite la retire.
+  {
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base, { large: true });
+
+    try {
+
+      const snapshot = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+
+      const ilYa = (jours) => {
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() - jours);
+        return d.toISOString().slice(0, 10);
+      };
+
+      const fixtures = [
+        {
+          id: "harnais-frais-verifies", name: "Harnais Université Frais Vérifiés", country: "Harnais", city: "Fixture", image: "", flag: "",
+          fraisScolarite: { licence: { montant: 3950, devise: "EUR", periode: "an" }, source: "https://exemple.invalid/frais", verifieLe: ilYa(10) },
+          exoneration: { politique: "possible_plafonnee", detail: "Exonération sur dossier, contingentée", source: "https://exemple.invalid/exoneration", verifieLe: ilYa(10) }
+        },
+        { id: "harnais-frais-inconnus", name: "Harnais Université Frais Inconnus", country: "Harnais", city: "Fixture", image: "", flag: "" }
+      ];
+
+      const programmes = fixtures.map((u) => ({ id: `${u.id}__prog`, universityId: u.id, scholarshipId: null, level: "Licence", language: "Français", status: "Ouvert", deadline: null }));
+
+      const catalogue = { ...snapshot, universities: [...snapshot.universities, ...fixtures], programs: [...snapshot.programs, ...programmes] };
+
+      // Enregistrée APRÈS couperLeReseau : la route la plus récente gagne.
+      await page.route("**/assets/data/catalogue.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(catalogue) }));
+
+      await page.goto(`${base}/universities.html?search=harnais`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".uni-card", { timeout: 20000 });
+
+      const lire = () => page.evaluate(() => {
+        const cartes = [...document.querySelectorAll(".uni-card")].map((c) => ({
+          nom: c.querySelector("h3")?.textContent.trim() || "",
+          cout: c.querySelector(".uni-card-chip.is-cost")?.textContent.replace(/\s+/g, " ").trim() || "",
+          coutTitle: c.querySelector(".uni-card-chip.is-cost")?.getAttribute("title") || "",
+          inconnu: c.querySelector(".uni-card-chip.is-cost-unknown")?.textContent.replace(/\s+/g, " ").trim() || "",
+          exoneration: c.querySelector(".uni-card-chip.is-exoneration")?.textContent.replace(/\s+/g, " ").trim() || "",
+          texte: c.textContent.replace(/\s+/g, " ")
+        }));
+        const select = document.getElementById("costFilter");
+        return { cartes, filtre: select ? select.value : null, options: select ? [...select.options].map((o) => o.value) : [] };
+      });
+
+      const defaut = await lire();
+
+      const verifiee = defaut.cartes.find((c) => /Frais Vérifiés/.test(c.nom));
+      const inconnue = defaut.cartes.find((c) => /Frais Inconnus/.test(c.nom));
+
+      if (!verifiee || !inconnue) throw new Error(`fixtures non affichées (${defaut.cartes.map((c) => c.nom).join(", ")})`);
+
+      if (defaut.filtre !== "") anomalies.push(`universities.html : le filtre de coût vaut « ${defaut.filtre} » par défaut au lieu de « Tous ».`);
+      if (defaut.options.join(",") !== ",gratuit,abordable,eleve,inconnu") anomalies.push(`universities.html : options du filtre de coût « ${defaut.options.join(",")} ».`);
+
+      if (!/3 950/.test(verifiee.cout.replace(/[  ]/g, " "))) anomalies.push(`fixture vérifiée : la puce de coût dit « ${verifiee.cout} » au lieu du montant 3 950 €/an.`);
+      if (!/vérifié le/i.test(verifiee.coutTitle)) anomalies.push(`fixture vérifiée : la date de vérification manque dans le title (« ${verifiee.coutTitle} »).`);
+      if (verifiee.inconnu) anomalies.push("fixture vérifiée : porte aussi « Frais non vérifiés ».");
+      if (!/places limitées/i.test(verifiee.exoneration)) anomalies.push(`fixture vérifiée : puce d'exonération « ${verifiee.exoneration} ».`);
+
+      if (inconnue.inconnu !== "Frais non vérifiés") anomalies.push(`fixture sans frais : « ${inconnue.inconnu} » au lieu de « Frais non vérifiés ».`);
+      if (inconnue.cout) anomalies.push(`fixture sans frais : un montant s'affiche (« ${inconnue.cout} »).`);
+      if (inconnue.exoneration) anomalies.push("fixture sans frais : une puce d'exonération s'affiche sans donnée.");
+
+      for (const c of [verifiee, inconnue]) {
+        if (/gratuit/i.test(c.texte)) anomalies.push(`${c.nom} : la carte contient « gratuit ».`);
+      }
+
+      // Le filtre : « eleve » ne garde que la fixture vérifiée ; retour à
+      // « Tous » ramène la bande « inconnu ».
+      const filtrer = async (valeur) => {
+        await page.evaluate((v) => {
+          const s = document.getElementById("costFilter");
+          s.value = v;
+          s.dispatchEvent(new Event("change", { bubbles: true }));
+        }, valeur);
+        return lire();
+      };
+
+      const eleve = await filtrer("eleve");
+      if (eleve.cartes.length !== 1 || !/Frais Vérifiés/.test(eleve.cartes[0].nom)) anomalies.push(`filtre « eleve » : ${eleve.cartes.map((c) => c.nom).join(", ") || "aucune carte"} au lieu de la seule fixture vérifiée.`);
+
+      const inconnuSeul = await filtrer("inconnu");
+      if (inconnuSeul.cartes.length !== 1 || !/Frais Inconnus/.test(inconnuSeul.cartes[0].nom)) anomalies.push(`filtre « inconnu » : ${inconnuSeul.cartes.map((c) => c.nom).join(", ") || "aucune carte"} au lieu de la seule fixture sans frais.`);
+
+      const tous = await filtrer("");
+      if (tous.cartes.length !== 2) anomalies.push(`retour à « Tous » : ${tous.cartes.length} carte(s) au lieu de 2 — la bande « inconnu » n'est pas revenue.`);
+
+      // Le lien porte le filtre (urlAvecFiltres) : une pastille de pays
+      // rendue pendant qu'un coût est choisi doit le conserver. Les
+      // pastilles n'existent qu'à partir de deux pays : on lève la
+      // recherche (tout le catalogue, sans prix vérifié aujourd'hui)
+      // et on choisit la bande « inconnu ».
+      await page.evaluate(() => {
+        const s = document.getElementById("searchInput");
+        s.value = "";
+        s.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      await filtrer("inconnu");
+      const lien = await page.evaluate(() => document.querySelector("#countryPills .catalog-country-pill")?.getAttribute("href") || "");
+      if (!/cost=inconnu/.test(lien)) anomalies.push(`urlAvecFiltres : la pastille de pays perd le filtre de coût (« ${lien} »).`);
+
+      notes.push(`coût (fixtures) : « ${verifiee.cout} » / « ${inconnue.inconnu} » · filtre eleve → 1, inconnu → 1, Tous → 2 · lien « ${lien.slice(0, 60)} »`);
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC coût par université : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
   return { anomalies, notes };
 
 }

@@ -23,6 +23,7 @@ import assert from "node:assert/strict";
 
 import {
 PREREQUIS,
+LIBELLE_PREREQUIS,
 JOURS_CRITIQUE,
 JOURS_PROCHE,
 joursRestants,
@@ -88,6 +89,31 @@ assert.deepEqual(PREREQUIS.checklist, []);
 assert.deepEqual(PREREQUIS.letter, ["profile"]);
 assert.deepEqual(PREREQUIS.readiness, ["checklist", "letter"]);
 assert.deepEqual(PREREQUIS.advisor, ["readiness", "traductions", "ressources"]);
+
+});
+
+test("toute clé citée dans PREREQUIS a une entrée dans LIBELLE_PREREQUIS et dans NOM_ETAPE", () => {
+
+// Les deux tables servent les messages : l'infobulle du stepper
+// (LIBELLE_PREREQUIS, un seul endroit depuis le lot D1) et la phrase
+// « il manque … » (NOM_ETAPE, lue via avertissementsPrematures).
+const cles = new Set(Object.keys(PREREQUIS));
+for (const liste of Object.values(PREREQUIS)) for (const id of liste) cles.add(id);
+
+for (const id of cles) {
+assert.ok(typeof LIBELLE_PREREQUIS[id] === "string" && LIBELLE_PREREQUIS[id].trim(), `LIBELLE_PREREQUIS manque « ${id} »`);
+}
+
+// NOM_ETAPE n'est pas exporté : on le lit à travers le seul chemin
+// public qui le rend, avertissementsPrematures().prerequisLisible.
+for (const [etape, prerequis] of Object.entries(PREREQUIS)) {
+for (const manquant of prerequis) {
+const jeu = [{ id: manquant, label: manquant, done: false }, { id: etape, label: etape, done: false }];
+const a = avertissementsPrematures(jeu).find((x) => x.id === etape);
+assert.ok(a, `${etape} devrait être prématurée sans ${manquant}`);
+assert.ok(a.prerequisLisible && a.prerequisLisible !== manquant, `NOM_ETAPE manque « ${manquant} »`);
+}
+}
 
 });
 

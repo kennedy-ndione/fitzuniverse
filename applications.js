@@ -51,7 +51,7 @@ import { showToast } from "./js/ai/toast.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 // Créneaux anti-triche "slot-N" — voir l'en-tête de ce module.
 import { slotIdLibre } from "./js/application-actions.js";
-import { qualifierEtapes, avertissementsPrematures } from "./js/next-action.js";
+import { qualifierEtapes, avertissementsPrematures, LIBELLE_PREREQUIS } from "./js/next-action.js";
 // escapeHtml : ces trois chaînes sont des constantes du code, pas de la
 // saisie étudiante — mais elles traversent innerHTML, et une constante
 // d'aujourd'hui devient un libellé configurable demain.
@@ -471,15 +471,6 @@ ${!result.ready && advisorUnlocked ? `<a href="advisor.html?applicationId=${app.
 // PARCOURS GUIDÉ — stepper 5 étapes (js/application-journey.js),
 // repère visuel de ce qu'il reste à faire avant le dépôt.
 // ==========================================================
-
-const LIBELLE_PREREQUIS = {
-profile: "le profil",
-checklist: "le dossier",
-letter: "la lettre",
-readiness: "la vérification",
-traductions: "les traductions",
-ressources: "la preuve de ressources"
-};
 
 // Trois états, pas deux — voir js/next-action.js. Une étape peut être
 // non cochée ET hors de portée : générer la lettre avant d'avoir

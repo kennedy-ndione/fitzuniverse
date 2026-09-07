@@ -19,7 +19,7 @@ import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLock
 // plafond par pays. Voir chargerOpportunites() plus bas.
 import { retenirOpportunites } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
-import { prochaineAction, qualifierEtapes, joursRestants } from "./js/next-action.js";
+import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
@@ -279,15 +279,6 @@ ${pick.reasons && pick.reasons.length ? `<p class="jy-opp-reason"><i data-lucide
 // ==========================================================
 // PHASE 3 — DOSSIERS (une carte + mini-stepper par candidature)
 // ==========================================================
-const LIBELLE_PREREQUIS = {
-profile: "le profil",
-checklist: "le dossier",
-letter: "la lettre",
-readiness: "la vérification",
-traductions: "les traductions",
-ressources: "la preuve de ressources"
-};
-
 function renderEtapesChips(etapes) {
 
 return qualifierEtapes(etapes).map((etape) => {

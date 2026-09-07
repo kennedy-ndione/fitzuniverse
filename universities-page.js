@@ -10,6 +10,12 @@ import { chargerCatalogue } from "./js/catalog-data.js";
 // empilées, une page dont on ne voit pas la fin.
 import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.js";
 
+// Le coût réel par université (lot D1, 2026-09-07) — voir l'en-tête de
+// js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
+// daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
+import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, formaterMontant } from "./js/frais.js";
+import { formaterDate } from "./js/echeance.js";
+
 // Page publique, en accès libre — voir la note dans universities.css.
 // Aucun garde d'authentification ici, volontairement : le catalogue est
 // une information publique, jamais verrouillée derrière un compte ou
@@ -73,6 +79,19 @@ const scholarshipLabel = university.scholarshipTitles.length
 ? university.scholarshipTitles.join(" · ")
 : "";
 
+// Lot D1 : le coût, honnête. Vérifié → le montant, la date en title ;
+// inconnu → « Frais non vérifiés » en gris atténué, jamais en rouge :
+// ce n'est pas une alerte, c'est une information manquante.
+const { frais, exoneration, niveau } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "" };
+
+const costChip = frais.etat === "verifie"
+? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${formaterMontant(frais.montant, frais.devise, frais.periode)}${frais.fraiche ? "" : " · à recouper"}</span>`
+: `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLES_BANDES.inconnu}</span>`;
+
+const exonerationChip = exoneration.politique !== "inconnue"
+? `<span class="uni-card-chip is-exoneration" title="${exoneration.detail || LIBELLES_EXONERATION[exoneration.politique]}"><i data-lucide="badge-percent"></i>${LIBELLES_EXONERATION[exoneration.politique]}</span>`
+: "";
+
 // Photo de ville en variantes responsives (2026-08-29). Avant ce
 // correctif, cette ligne posait le FICHIER D'ORIGINE de
 // assets/images/cities/ — oxford.jpg fait 2,6 Mo, waseda.jpg 2,6 Mo :
@@ -97,6 +116,8 @@ ${scholarshipLabel ? `<p class="uni-card-scholarship">${scholarshipLabel}</p>` :
 <div class="uni-card-meta">
 ${levelChips}
 ${university.language ? `<span class="uni-card-chip"><i data-lucide="languages"></i>${university.language}</span>` : ""}
+${costChip}
+${exonerationChip}
 </div>
 <div class="uni-card-footer">
 ${university.deadline ? `<span class="uni-card-deadline"><i data-lucide="clock"></i>${university.deadline}</span>` : `<span></span>`}
@@ -148,7 +169,13 @@ const searchInput = document.getElementById("searchInput");
 const searchClearBtn = document.getElementById("searchClearBtn");
 const countryFilter = document.getElementById("countryFilter");
 const levelFilter = document.getElementById("levelFilter");
+const costFilter = document.getElementById("costFilter");
 const resetBtn = document.getElementById("resetFiltersBtn");
+
+// Les bandes viennent de js/frais.js, jamais recopiées ici. « Tous »
+// est déjà dans le HTML ; js/catalog-select.js voit les options
+// arriver (MutationObserver) et rebâtit son menu.
+BANDES.forEach((bande) => costFilter.add(new Option(LIBELLES_BANDES[bande], bande)));
 const resultsCount = document.getElementById("resultsCount");
 const countryPills = document.getElementById("countryPills");
 const statTotal = document.getElementById("statTotal");
@@ -159,6 +186,7 @@ const heroTitle = document.getElementById("title");
 const heroSubtitle = document.getElementById("subtitle");
 
 levelFilter.value = params.get("level") || "";
+costFilter.value = BANDES.includes(params.get("cost")) ? params.get("cost") : "";
 
 // La recherche traverse l'URL depuis le 2026-09-06 (voir
 // urlAvecFiltres) : elle doit donc aussi en revenir, sinon un lien
@@ -180,13 +208,14 @@ const NOMS_UNIS = { un: "établissement", plusieurs: "établissements", accord: 
 // l'écrire. Les autres filtres présents dans l'URL sont conservés :
 // aller voir la France ne doit pas perdre la bourse ou le niveau déjà
 // choisis.
-function urlAvecFiltres({ country = countryFilter.value, level = levelFilter.value, search = searchInput.value.trim(), tout = toutAfficher } = {}) {
+function urlAvecFiltres({ country = countryFilter.value, level = levelFilter.value, cost = costFilter.value, search = searchInput.value.trim(), tout = toutAfficher } = {}) {
 
 const url = new URL("universities.html", window.location.origin);
 
 if (scholarshipIdFilter) url.searchParams.set("scholarshipId", scholarshipIdFilter);
 if (country) url.searchParams.set("country", country);
 if (level) url.searchParams.set("level", level);
+if (cost) url.searchParams.set("cost", cost);
 // La recherche de cette page est vivante (aucun rechargement à la
 // frappe) mais elle traverse désormais l'URL : sans ça, cliquer un pays
 // après avoir tapé trois lettres effaçait la recherche en silence.
@@ -223,6 +252,38 @@ container.appendChild(card);
 
 }
 
+// Le niveau dont on affiche le coût : celui du filtre niveau ; sinon le
+// niveau le plus bas disponible sur l'université ; sinon, pour une
+// université sans programme, le plus bas niveau renseigné dans ses
+// frais, et « Licence » en dernier recours.
+function niveauCourant(university, levels) {
+
+if (levelFilter.value) return levelFilter.value;
+
+const tries = [...levels].sort((a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b));
+if (tries[0]) return tries[0];
+
+const frais = university.fraisScolarite || {};
+return LEVEL_ORDER.find((niveau) => frais[niveau.toLowerCase()]) || LEVEL_ORDER[0];
+
+}
+
+// Le coût pour le niveau courant, sa bande et la politique
+// d'exonération — calculés au même endroit pour le filtre et la carte.
+function coutPour(university, levels) {
+
+const niveau = niveauCourant(university, levels);
+const frais = lireFrais(university, niveau);
+
+return {
+niveau,
+frais,
+bande: bandeCout(frais.montant, frais.devise),
+exoneration: lireExoneration(university)
+};
+
+}
+
 // Combine un profil d'université avec ses programmes (niveaux, bourses,
 // deadline la plus proche...) — une seule carte par établissement,
 // enrichie plutôt que dupliquée.
@@ -230,6 +291,8 @@ function buildCardModel(university, programsForUniversity, photoVariant) {
 
 const levels = [...new Set(programsForUniversity.map((p) => p.level).filter(Boolean))]
 .sort((a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b));
+
+const cout = coutPour(university, levels);
 
 const scholarshipTitles = [...new Set(
 programsForUniversity.map((p) => (allScholarshipsById.get(p.scholarshipId) || {}).title).filter(Boolean)
@@ -247,7 +310,8 @@ deadline: deadlines[0] || "",
 language: languages[0] || "",
 status: statuses.find((s) => String(s).toLowerCase().includes("ouvert")) || statuses[0] || "",
 primaryProgramId: programsForUniversity[0] ? programsForUniversity[0].firestoreId : university.firestoreId,
-photoVariant
+photoVariant,
+cout
 };
 
 }
@@ -257,6 +321,10 @@ function applyFilters() {
 const search = searchInput.value.trim().toLowerCase();
 const country = countryFilter.value;
 const level = levelFilter.value;
+// Coût : « Tous » (vide) laisse passer TOUT, y compris la bande
+// « inconnu » — une université sans prix vérifié reste visible tant
+// que l'étudiant ne demande pas explicitement une bande.
+const cost = costFilter.value;
 
 // Le PAYS est retiré du filtre principal et appliqué en dernier (plus
 // bas) : l'index du bas de page doit lister tous les pays qui restent
@@ -274,6 +342,7 @@ const universityLevels = programsForUniversity.map((p) => p.level);
 
 return (
 (!level || universityLevels.includes(level)) &&
+(!cost || coutPour(university, universityLevels.filter(Boolean)).bande === cost) &&
 (!search ||
 (university.name || "").toLowerCase().includes(search) ||
 (university.city || "").toLowerCase().includes(search) ||
@@ -520,6 +589,7 @@ searchInput.focus();
 
 countryFilter.addEventListener("change", applyFilters);
 levelFilter.addEventListener("change", applyFilters);
+costFilter.addEventListener("change", applyFilters);
 
 resetBtn.addEventListener("click", () => {
 
@@ -537,6 +607,7 @@ searchInput.value = "";
 searchClearBtn.hidden = true;
 countryFilter.value = "";
 levelFilter.value = "";
+costFilter.value = "";
 applyFilters();
 
 });

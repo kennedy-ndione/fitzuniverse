@@ -36,7 +36,7 @@ Deux subtilités de synchronisation, sans rien modifier ailleurs :
 (function () {
 "use strict";
 
-const SELECT_IDS = ["countryFilter", "levelFilter", "funderFilter"];
+const SELECT_IDS = ["countryFilter", "levelFilter", "funderFilter", "costFilter"];
 
 function buildCustomSelect(select) {
 

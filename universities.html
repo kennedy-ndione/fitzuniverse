@@ -288,6 +288,14 @@ suppression de « partenaires » (voir REDACTION.md §1 et §4). -->
 <option value="Doctorat">Doctorat</option>
 </select>
 
+<!-- Lot D1 (2026-09-07) : filtre de coût, alimenté par BANDES
+(js/frais.js) depuis universities-page.js. Par défaut « Tous » : une
+université sans prix vérifié reste visible tant que l'étudiant ne
+demande pas explicitement une bande. -->
+<select id="costFilter" aria-label="Filtrer par coût">
+<option value="">Tous les coûts</option>
+</select>
+
 <button type="button" class="catalog-search-reset" id="resetFiltersBtn">
 <i data-lucide="rotate-ccw"></i>
 <span>Réinitialiser</span>

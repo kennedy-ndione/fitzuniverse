@@ -1086,6 +1086,21 @@ color:var(--text-muted);
 
 }
 
+/* Coût réel par université (lot D1, 2026-09-07). Un prix vérifié se
+lit comme les autres puces. « Frais non vérifiés » est ATTÉNUÉ, jamais
+rouge : ce n'est pas une alerte, c'est une information manquante — et
+aujourd'hui c'est le cas de tout le catalogue, la donnée arrive au lot
+D2. */
+.uni-card-chip.is-cost-unknown{
+color:var(--text-muted);
+background:transparent;
+border:1px dashed var(--border-color);
+font-weight:var(--fw-medium, 500);
+}
+
+.uni-card-chip.is-cost-unknown i,
+.uni-card-chip.is-cost-unknown svg{ opacity:.7; }
+
 /* Puce « financement » : la seule information de la carte qui décide
 vraiment si l'étudiant clique. Elle est donc la seule colorée. */
 .catalog-chip.is-funding,
