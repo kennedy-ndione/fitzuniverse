@@ -204,6 +204,30 @@ background:var(--gradient-fitz);
 
 .app-recommendation-badge i{width:12px;height:12px;}
 
+/* Lot A (2026-09-07) : la pastille de parcours (« Bourse » /
+« Préinscription ») vit à côté du statut. Gris neutre des pastilles
+existantes, jamais une couleur d'alerte : un parcours n'est pas une
+alerte. Le groupe passe à la ligne à 375px au lieu de déborder. */
+.app-card-pills{
+display:flex;
+flex-wrap:wrap;
+justify-content:flex-end;
+gap:6px;
+flex:0 1 auto;
+}
+
+.app-track-pill{
+flex:0 0 auto;
+padding:5px 12px;
+border-radius:var(--radius-full);
+font-size:var(--fs-caption);
+font-weight:600;
+white-space:nowrap;
+background:var(--background-soft);
+color:var(--text-light);
+border:1px solid var(--border-color);
+}
+
 .app-status-pill{
 flex:0 0 auto;
 padding:5px 12px;
@@ -634,6 +658,14 @@ color:var(--text-color);
 }
 
 .apps-field textarea{resize:vertical;}
+
+/* Note sous le select de parcours quand une bourse du catalogue le
+verrouille (lot A). */
+.apps-field-note{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+.apps-field-note[hidden]{display:none;}
 
 .apps-field input:focus,
 .apps-field select:focus,

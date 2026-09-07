@@ -72,6 +72,9 @@ import { formaterDate } from "./js/echeance.js";
 // Vocabulaire et libellés dans js/exigences.js — jamais deux façons de
 // dire la même exigence.
 import { lireExigences, groupees, elementsAAjouter } from "./js/exigences.js";
+// Lot A (2026-09-07) : le parcours porté par la candidature — bourse ou
+// préinscription. Lu avec défaut « bourse », jamais rattrapé en base.
+import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "./js/parcours.js";
 
 initShellChrome();
 
@@ -811,6 +814,9 @@ programId: rec.programId || null,
 portalUrl: rec.applicationUrl || "",
 universityWebsite: rec.universityWebsite || "",
 status: "a_preparer",
+// Lot A : ces créneaux viennent de retenirOpportunites() — toujours
+// des bourses.
+track: "bourse",
 deadline: null,
 reminderFrequency: 14,
 notes: "",
@@ -857,6 +863,7 @@ const modalTitle = document.getElementById("applicationModalTitle");
 const form = document.getElementById("applicationForm");
 
 const fields = {
+track: document.getElementById("applicationTrack"),
 university: document.getElementById("fieldUniversity"),
 scholarship: document.getElementById("fieldScholarship"),
 portalUrl: document.getElementById("fieldPortalUrl"),
@@ -894,7 +901,18 @@ const pickerList = document.getElementById("pickerList");
 const pickerSearch = document.getElementById("pickerSearch");
 const pickerSummary = document.getElementById("pickerSummary");
 const manualFields = document.getElementById("manualFields");
+const trackSection = document.getElementById("trackSection");
+const trackNote = document.getElementById("applicationTrackNote");
 const detailsSection = document.getElementById("detailsSection");
+
+// Lot A : une candidature liée à une bourse du catalogue ne peut pas
+// être une préinscription — le select se verrouille sur « Bourse » et
+// le dit. Hors catalogue (repli manuel ou édition), l'étudiant choisit.
+function verrouillerParcours(verrouille) {
+if (verrouille) fields.track.value = "bourse";
+fields.track.disabled = verrouille;
+trackNote.hidden = !verrouille;
+}
 const manualModeBtn = document.getElementById("manualModeBtn");
 const saveBtn = document.getElementById("applicationSaveBtn");
 
@@ -1075,6 +1093,8 @@ fields.deadline.value = entry.deadlineISO || "";
 pickerSection.hidden = true;
 manualFields.hidden = true;
 fields.university.required = false;
+verrouillerParcours(true);
+trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1110,6 +1130,8 @@ manualMode = false;
 pickerSummary.hidden = true;
 pickerSummary.innerHTML = "";
 manualFields.hidden = true;
+trackSection.hidden = true;
+verrouillerParcours(false);
 detailsSection.hidden = true;
 saveBtn.disabled = true;
 pickerSection.hidden = false;
@@ -1128,6 +1150,8 @@ pickerSummary.hidden = true;
 pickerSummary.innerHTML = "";
 manualFields.hidden = false;
 fields.university.required = true;
+verrouillerParcours(false);
+trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1143,6 +1167,7 @@ function openModal(app) {
 editingId = app ? app.id : null;
 modalTitle.textContent = app ? "Modifier la candidature" : "Nouvelle candidature";
 
+fields.track.value = lireParcours(app);
 fields.university.value = app?.university || "";
 fields.scholarship.value = app?.scholarship || "";
 fields.portalUrl.value = app?.portalUrl || "";
@@ -1162,6 +1187,8 @@ manualMode = true;
 pickerSection.hidden = true;
 manualFields.hidden = false;
 fields.university.required = true;
+verrouillerParcours(false);
+trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1170,6 +1197,8 @@ saveBtn.disabled = false;
 manualMode = false;
 manualFields.hidden = true;
 fields.university.required = false;
+trackSection.hidden = true;
+verrouillerParcours(false);
 detailsSection.hidden = true;
 saveBtn.disabled = true;
 pickerSection.hidden = false;
@@ -1225,7 +1254,10 @@ ${app.isRecommendation ? `<span class="app-recommendation-badge">Suggéré par F
 <h3>${app.university}</h3>
 ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : ""}
 </div>
+<div class="app-card-pills">
+<span class="app-track-pill" data-track="${lireParcours(app)}">${LIBELLES_PARCOURS[lireParcours(app)].court}</span>
 <span class="app-status-pill app-status-${app.status}">${STATUS_LABELS[app.status] || app.status}</span>
+</div>
 </div>
 
 ${renderJourneyStepper(app, journeySteps)}
@@ -1790,6 +1822,9 @@ university: fields.university.value.trim(),
 scholarship: fields.scholarship.value.trim(),
 portalUrl: fields.portalUrl.value.trim(),
 status: fields.status.value,
+// Lot A : le parcours. Tout ce qui n'est pas exactement
+// « preinscription » est une bourse (js/parcours.js).
+track: fields.track.value === "preinscription" ? "preinscription" : "bourse",
 deadline: fields.deadline.value || null,
 reminderFrequency: parseInt(fields.frequency.value, 10),
 notes: fields.notes.value.trim(),
@@ -1814,6 +1849,9 @@ payload.universityId = pickedEntry.universityId || null;
 // suggérés par Fitz (seedRecommendedSlots).
 payload.scholarshipId = pickedEntry.scholarshipId || null;
 payload.programId = pickedEntry.programId || null;
+// Lot A : une candidature liée à une bourse du catalogue ne peut pas
+// être une préinscription. La donnée gagne sur le formulaire.
+if (pickedEntry.scholarshipId) payload.track = "bourse";
 }
 
 if (!payload.university) return;

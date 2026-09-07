@@ -173,14 +173,31 @@ function preparer() {
     deadline: dansNJours(40)
   });
 
+  // LOT A (chantier préinscription, 2026-09-07) — le parcours.
+  //   slot-6  hors catalogue, écrite avec track:"preinscription". Attendu :
+  //           la carte affiche « Préinscription » après rechargement.
+  //   slot-3  ANCIENNE : aucun champ `track`. Attendu : « Bourse », et
+  //           AUCUNE écriture de rattrapage — le défaut est à la lecture.
+  applications.push({
+    ...commun,
+    id: "slot-6",
+    university: "Université Témoin Préinscription",
+    scholarship: "",
+    track: "preinscription",
+    deadline: null
+  });
+
   const userData = {
     uid: UID,
     name: "Harnais",
     email: "harnais@fitz.local",
-    // Formule « essentiel » : suivi des candidatures ouvert, quota 5 —
-    // Fitz voudra donc pré-remplir des créneaux (setDoc consignés, pas
-    // exécutés) ; c'est le comportement normal, on ne le bride pas.
-    plan: "essentiel",
+    // Formule « accompagnement » : suivi des candidatures ouvert, quota 9
+    // (« essentiel » plafonnait à 5, et le lot A ajoute un sixième témoin
+    // puis ENREGISTRE une candidature via le formulaire — le quota doit
+    // laisser la place). Fitz voudra donc pré-remplir des créneaux
+    // (setDoc consignés, pas exécutés) ; c'est le comportement normal,
+    // on ne le bride pas.
+    plan: "accompagnement",
     planExpiresAt: dansNJours(90),
     profile: {
       name: "Harnais", email: "harnais@fitz.local",
@@ -303,6 +320,11 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
             blocs: carte("slot-5") ? carte("slot-5").querySelectorAll(".app-exigences, .app-exigence-suggestion").length : -1
           },
           suggestions: [...document.querySelectorAll("[data-ajouter-dossier]")].map((b) => b.dataset.ajouterDossier),
+          // LOT A — la pastille de parcours
+          parcours: {
+            slot3: texte(carte("slot-3")?.querySelector(".app-track-pill")),
+            slot6: texte(carte("slot-6")?.querySelector(".app-track-pill"))
+          },
           ecritures: (window.__harnaisEcritures || []).map((e) => ({ op: e.op, chemin: e.chemin, cles: Object.keys(e.data || {}) }))
         };
 
@@ -379,6 +401,22 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       // Le rattrapage ne touche jamais slot-1 (déjà liée) ni slot-3 (hors catalogue).
       const indus = vu.ecritures.filter((e) => e.op === "update" && /\/applications\/slot-(1|3)$/.test(e.chemin));
       if (indus.length) anomalies.push(`Écriture(s) de rattrapage indue(s) : ${indus.map((e) => e.chemin).join(", ")}`);
+
+      // ---- LOT A : le parcours porté par la candidature ----
+      //
+      // Le test qui compte le plus : une candidature ANCIENNE (sans
+      // `track`) se lit « Bourse » et ne provoque AUCUNE écriture. Le
+      // défaut est à la lecture, jamais rattrapé en base.
+      if (vu.parcours.slot6 !== "Préinscription") anomalies.push(`slot-6 (track:"preinscription") : pastille « ${vu.parcours.slot6} » au lieu de « Préinscription ».`);
+      if (vu.parcours.slot3 !== "Bourse") anomalies.push(`slot-3 (sans track) : pastille « ${vu.parcours.slot3} » au lieu de « Bourse ».`);
+
+      const rattrapagesParcours = vu.ecritures.filter((e) => e.op !== "set" && e.cles.includes("track"));
+      if (rattrapagesParcours.length) anomalies.push(`${rattrapagesParcours.length} écriture(s) de « track » sur des candidatures existantes : ${rattrapagesParcours.map((e) => e.chemin).join(", ")} — le défaut doit rester à la lecture.`);
+
+      const seedsSansParcours = vu.ecritures.filter((e) => e.op === "set" && /\/applications\/slot-\d+$/.test(e.chemin) && !e.cles.includes("track"));
+      if (seedsSansParcours.length) anomalies.push(`${seedsSansParcours.length} créneau(x) créé(s) par Fitz SANS champ track : ${seedsSansParcours.map((e) => e.chemin).join(", ")}`);
+
+      notes.push(`parcours : slot-6 « ${vu.parcours.slot6} », slot-3 ancienne « ${vu.parcours.slot3} », aucune écriture de rattrapage`);
 
       if (vu.slot3.liee) anomalies.push("slot-3 (hors catalogue) : rendue comme liée.");
       if (!/Date limite :/.test(vu.slot3.texte)) anomalies.push(`slot-3 (hors catalogue) : le rendu d'origine « Date limite : … » a disparu — « ${vu.slot3.texte.slice(0, 80)} »`);
@@ -474,6 +512,65 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       if (picker.datesSurCloses) anomalies.push(`Sélecteur : « Échéance : … » sur ${picker.datesSurCloses} bourse(s) close(s).`);
 
       notes.push(`sélecteur : ${picker.propositions} suggestions, aucune close`);
+
+      // ---- LOT A : le select de parcours dans le formulaire ----
+      //
+      // 1. Une bourse du catalogue verrouille le select sur « Bourse ».
+      // 2. Hors catalogue, l'étudiant choisit « Préinscription » ; la
+      //    seule écriture produite porte track:"preinscription".
+      if (picker.propositions) {
+
+        await page.click("#pickerList .apps-pick");
+        await page.waitForSelector("#trackSection:not([hidden])", { timeout: 10000 });
+
+        const verrou = await page.evaluate(() => {
+          const s = document.getElementById("applicationTrack");
+          return { valeur: s.value, verrouille: s.disabled, note: !document.getElementById("applicationTrackNote").hidden };
+        });
+
+        if (verrou.valeur !== "bourse" || !verrou.verrouille) anomalies.push(`Sélecteur : une bourse du catalogue choisie, le parcours vaut « ${verrou.valeur} » ${verrou.verrouille ? "verrouillé" : "MODIFIABLE"} au lieu de « bourse » verrouillé.`);
+        if (!verrou.note) anomalies.push("Sélecteur : la note « Cette candidature suit une bourse du catalogue. » n'apparaît pas.");
+
+        await page.click("#pickerChangeBtn");
+        await page.waitForSelector("#manualModeBtn", { state: "visible", timeout: 10000 });
+        await page.click("#manualModeBtn");
+        await page.waitForSelector("#fieldUniversity", { state: "visible", timeout: 10000 });
+
+        const libre = await page.evaluate(() => {
+          const s = document.getElementById("applicationTrack");
+          return { verrouille: s.disabled, note: !document.getElementById("applicationTrackNote").hidden };
+        });
+
+        if (libre.verrouille || libre.note) anomalies.push("Hors catalogue : le parcours reste verrouillé (ou la note du catalogue reste affichée).");
+
+        // Le select natif est habillé par js/fitz-select.js : on pose la
+        // valeur sur le natif et on prévient le formulaire.
+        await page.evaluate(() => {
+          const s = document.getElementById("applicationTrack");
+          s.value = "preinscription";
+          s.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        await page.fill("#fieldUniversity", "Université Enregistrée en Préinscription");
+        await page.evaluate(() => document.getElementById("applicationForm").requestSubmit());
+
+        await page.waitForFunction(
+          () => (window.__harnaisEcritures || []).some((e) => e.op === "set" && e.data && e.data.university === "Université Enregistrée en Préinscription"),
+          null,
+          { timeout: 10000 }
+        ).catch(() => anomalies.push("Enregistrement hors catalogue en « Préinscription » : rien n'a été écrit."));
+
+        const enregistree = await page.evaluate(() => {
+          const e = (window.__harnaisEcritures || []).find((x) => x.op === "set" && x.data && x.data.university === "Université Enregistrée en Préinscription");
+          return e ? { chemin: e.chemin, track: e.data.track, scholarshipId: e.data.scholarshipId ?? null } : null;
+        });
+
+        if (enregistree) {
+          if (enregistree.track !== "preinscription") anomalies.push(`Enregistrement hors catalogue : track « ${enregistree.track} » écrit au lieu de « preinscription ».`);
+          if (enregistree.scholarshipId) anomalies.push("Enregistrement hors catalogue : une clé de bourse a été écrite.");
+          notes.push(`formulaire : « Préinscription » écrite sur ${enregistree.chemin.split("/").pop()} (track=${enregistree.track})`);
+        }
+
+      }
 
     } catch (e) {
       anomalies.push(`ÉCHEC applications.html : ${e.message}`);
