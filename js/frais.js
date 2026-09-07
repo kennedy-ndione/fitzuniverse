@@ -206,6 +206,67 @@ if (!frais || frais.etat !== "verifie") return LIBELLES_BANDES.inconnu;
 return frais.montant === 0 ? "Gratuit" : formaterMontant(frais.montant, frais.devise, frais.periode);
 }
 
+/** Ordre des niveaux, du plus bas au plus haut. */
+export const ORDRE_NIVEAUX = ["Licence", "Master", "Doctorat"];
+
+/**
+* Le niveau qu'une carte affiche quand l'étudiant n'en a demandé aucun
+* (correction D2-bis, 2026-09-07). Avant : le plus bas niveau de
+* l'établissement — et Polytechnique, Sorbonne Université, Paris Cité
+* cachaient un prix vérifié en master ou en doctorat derrière un « Frais
+* non vérifiés » de licence. Maintenant : le PREMIER niveau, dans l'ordre
+* Licence / Master / Doctorat, qui porte un montant vérifié ; à défaut, le
+* plus bas niveau de l'établissement, comme avant (état « inconnu »).
+*
+* `niveaux` = les niveaux réellement proposés par l'établissement (ses
+* programmes au catalogue). On les parcourt D'ABORD, dans l'ordre — HEC
+* n'a que des programmes de master chez nous : c'est son master qui
+* s'affiche, pas son bachelor. PUIS les niveaux restants, parce que
+* Sorbonne Université n'a pas de programme « Doctorat » dans nos
+* croisements université × bourse, mais son droit de doctorat est
+* vérifié et sourcé — le cacher serait cacher un fait ; la puce dit
+* alors « à partir de … · doctorat ». Ne s'applique PAS quand un filtre
+* de niveau est actif : c'est alors le niveau demandé qui parle, même
+* sans prix — la page ne passe pas par ici dans ce cas.
+*
+* @returns {{ niveau: string, frais: Object, plusBas: string, replie: boolean }}
+*   `replie` : vrai quand le niveau affiché n'est pas le plus bas de
+*   l'établissement — la puce doit alors nommer le niveau.
+*/
+export function premierNiveauVerifie(uni, niveaux = [], options) {
+
+const proposes = ORDRE_NIVEAUX.filter((n) => niveaux.includes(n));
+const plusBas = proposes[0] || ORDRE_NIVEAUX[0];
+const candidats = [...proposes, ...ORDRE_NIVEAUX.filter((n) => !proposes.includes(n))];
+
+for (const niveau of candidats) {
+const frais = lireFrais(uni, niveau, options);
+if (frais.etat === "verifie") return { niveau, frais, plusBas, replie: niveau !== plusBas };
+}
+
+return { niveau: plusBas, frais: lireFrais(uni, plusBas, options), plusBas, replie: false };
+
+}
+
+/**
+* Le texte de la puce de coût d'une carte, à un seul endroit :
+*   "3 950 €/an"                          niveau le plus bas, fraîche
+*   "3 950 €/an · à recouper"             pas fraîche
+*   "à partir de 3 950 €/an · master"     niveau replié (pas le plus bas)
+*   "Gratuit"                             zéro vérifié
+*   "Frais non vérifiés"                  rien de vérifié
+*/
+export function libellePuce(frais, { niveau = "", replie = false } = {}) {
+
+if (!frais || frais.etat !== "verifie") return LIBELLES_BANDES.inconnu;
+
+const montant = libelleMontant(frais);
+const tete = replie ? `à partir de ${montant} · ${String(niveau).toLowerCase()}` : montant;
+
+return frais.fraiche ? tete : `${tete} · à recouper`;
+
+}
+
 /**
 * La phrase honnête, à un seul endroit :
 *   verifie + fraiche      -> "3 950 €/an · vérifié le 7 septembre 2026"

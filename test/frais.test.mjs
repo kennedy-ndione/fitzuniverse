@@ -12,11 +12,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
 POLITIQUES_EXONERATION, LIBELLES_EXONERATION, BANDES, LIBELLES_BANDES,
-SEUILS_PAR_DEVISE, SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR,
-bandeCout, lireFrais, lireExoneration, formaterMontant, libelleMontant, libelleFrais
+SEUILS_PAR_DEVISE, SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR, ORDRE_NIVEAUX,
+bandeCout, lireFrais, lireExoneration, formaterMontant, libelleMontant, libelleFrais,
+premierNiveauVerifie, libellePuce
 } from "../js/frais.js";
+
+const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const AUJOURDHUI = new Date("2026-09-07T10:00:00Z");
 
@@ -219,6 +226,82 @@ assert.equal(lireExoneration({}).politique, "inconnue");
 assert.equal(lireExoneration({ exoneration: { politique: "Systematique" } }).politique, "inconnue");
 assert.equal(lireExoneration({ exoneration: { politique: "possible_plafonnee", detail: "Places limitées" } }).politique, "possible_plafonnee");
 assert.equal(lireExoneration(null).politique, "inconnue");
+});
+
+// ------------------------------------------------------------------
+// Le niveau que la carte affiche (D2-bis)
+// ------------------------------------------------------------------
+
+const OPT = { aujourdhui: AUJOURDHUI };
+
+/** Université avec un montant vérifié en MASTER seulement. */
+function masterSeul(surcharge = {}) {
+return { id: "u2", name: "Master seul", fraisScolarite: { master: { montant: 3950, devise: "EUR", periode: "an" }, source: "https://exemple.invalid/m", verifieLe: iso(10), ...surcharge } };
+}
+
+test("montant en master seulement, sans filtre → le master s'affiche, « à partir de » et le nom du niveau", () => {
+const r = premierNiveauVerifie(masterSeul(), ["Licence", "Master", "Doctorat"], OPT);
+assert.equal(r.niveau, "Master");
+assert.equal(r.frais.etat, "verifie");
+assert.equal(r.replie, true);
+assert.equal(plat(libellePuce(r.frais, r)), "à partir de 3 950 €/an · master");
+});
+
+test("montant en licence → libellé inchangé, PAS de « à partir de » (non-régression)", () => {
+const r = premierNiveauVerifie(verifiee(), ["Licence", "Master"], OPT);
+assert.equal(r.niveau, "Licence");
+assert.equal(r.replie, false);
+assert.equal(plat(libellePuce(r.frais, r)), "3 950 €/an");
+assert.ok(!/à partir de/.test(libellePuce(r.frais, r)));
+});
+
+test("aucun montant vérifié → « Frais non vérifiés », niveau le plus bas comme avant", () => {
+const r = premierNiveauVerifie({ id: "u3" }, ["Master", "Doctorat"], OPT);
+assert.equal(r.niveau, "Master", "le plus bas niveau de l'établissement");
+assert.equal(r.frais.etat, "inconnu");
+assert.equal(r.replie, false);
+assert.equal(libellePuce(r.frais, r), "Frais non vérifiés");
+});
+
+test("ordre Licence / Master / Doctorat : un doctorat vérifié ne passe pas devant un master vérifié", () => {
+const deux = masterSeul({ doctorat: { montant: 398, devise: "EUR", periode: "an" } });
+assert.equal(premierNiveauVerifie(deux, [], OPT).niveau, "Master");
+const docSeul = { id: "u4", fraisScolarite: { doctorat: { montant: 398, devise: "EUR", periode: "an" }, source: "https://exemple.invalid/d", verifieLe: iso(10) } };
+const r = premierNiveauVerifie(docSeul, ["Licence", "Doctorat"], OPT);
+assert.equal(r.niveau, "Doctorat");
+assert.equal(plat(libellePuce(r.frais, r)), "à partir de 398 €/an · doctorat");
+});
+
+test("les niveaux PROPOSÉS passent d'abord : HEC (master seulement au catalogue) affiche son master, pas son bachelor", () => {
+const hec = verifiee({ licence: { montant: 26500, devise: "EUR", periode: "an" }, master: { montant: 29450, devise: "EUR", periode: "an" } });
+const r = premierNiveauVerifie(hec, ["Master"], OPT);
+assert.equal(r.niveau, "Master");
+assert.equal(r.replie, false);
+assert.equal(plat(libellePuce(r.frais, r)), "29 450 €/an");
+});
+
+test("filtre master actif sur une université sans prix master → « Frais non vérifiés », le repli ne s'applique pas", () => {
+// La page lit alors directement le niveau demandé, sans repli.
+const f = lireFrais(verifiee({ master: undefined }), "Master", OPT);
+assert.equal(f.etat, "inconnu");
+assert.equal(libellePuce(f, { niveau: "Master", replie: false }), "Frais non vérifiés");
+});
+
+test("libellePuce : replié ET pas fraîche → les deux mentions ; zéro vérifié replié → « à partir de Gratuit » jamais", () => {
+const vieux = premierNiveauVerifie(masterSeul({ verifieLe: iso(200) }), [], OPT);
+assert.equal(plat(libellePuce(vieux.frais, vieux)), "à partir de 3 950 €/an · master · à recouper");
+assert.deepEqual(ORDRE_NIVEAUX, ["Licence", "Master", "Doctorat"]);
+});
+
+test("rejeu sur les 26 universités françaises de l'instantané : 15 affichent un montant, pas 12", () => {
+const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+const francaises = catalogue.universities.filter((u) => u.country === "France");
+assert.equal(francaises.length, 26);
+const niveauxDe = (u) => [...new Set(catalogue.programs.filter((p) => p.universityId === u.id).map((p) => p.level).filter(Boolean))];
+const affichees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).frais.etat === "verifie");
+assert.equal(affichees.length, 15, affichees.map((u) => u.name).join(", "));
+const repliees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).replie).map((u) => u.name).sort();
+assert.deepEqual(repliees, ["Sorbonne Université", "Université Paris Cité", "École polytechnique"].sort());
 });
 
 // ------------------------------------------------------------------

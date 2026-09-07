@@ -13,7 +13,7 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // Le coût réel par université (lot D1, 2026-09-07) — voir l'en-tête de
 // js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
-import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libelleMontant } from "./js/frais.js";
+import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
 import { formaterDate } from "./js/echeance.js";
 
 // Page publique, en accès libre — voir la note dans universities.css.
@@ -82,10 +82,10 @@ const scholarshipLabel = university.scholarshipTitles.length
 // Lot D1 : le coût, honnête. Vérifié → le montant, la date en title ;
 // inconnu → « Frais non vérifiés » en gris atténué, jamais en rouge :
 // ce n'est pas une alerte, c'est une information manquante.
-const { frais, exoneration, niveau } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "" };
+const { frais, exoneration, niveau, replie } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "", replie: false };
 
 const costChip = frais.etat === "verifie"
-? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libelleMontant(frais)}${frais.fraiche ? "" : " · à recouper"}</span>`
+? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}</span>`
 : `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLES_BANDES.inconnu}</span>`;
 
 const exonerationChip = exoneration.politique !== "inconnue"
@@ -256,28 +256,30 @@ container.appendChild(card);
 // niveau le plus bas disponible sur l'université ; sinon, pour une
 // université sans programme, le plus bas niveau renseigné dans ses
 // frais, et « Licence » en dernier recours.
-function niveauCourant(university, levels) {
-
-if (levelFilter.value) return levelFilter.value;
-
-const tries = [...levels].sort((a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b));
-if (tries[0]) return tries[0];
-
-const frais = university.fraisScolarite || {};
-return LEVEL_ORDER.find((niveau) => frais[niveau.toLowerCase()]) || LEVEL_ORDER[0];
-
-}
-
 // Le coût pour le niveau courant, sa bande et la politique
 // d'exonération — calculés au même endroit pour le filtre et la carte.
+//
+// Filtre de niveau actif : c'est le niveau demandé qui parle, même sans
+// prix. Sinon (D2-bis, 2026-09-07) : le premier niveau qui porte un
+// montant vérifié, dans l'ordre Licence / Master / Doctorat — voir
+// premierNiveauVerifie() dans js/frais.js. Avant, la carte prenait le
+// plus bas niveau de l'établissement et cachait trois prix vérifiés sur
+// quinze derrière « Frais non vérifiés ».
 function coutPour(university, levels) {
 
-const niveau = niveauCourant(university, levels);
-const frais = lireFrais(university, niveau);
+let niveau, frais, replie = false;
+
+if (levelFilter.value) {
+niveau = levelFilter.value;
+frais = lireFrais(university, niveau);
+} else {
+({ niveau, frais, replie } = premierNiveauVerifie(university, levels));
+}
 
 return {
 niveau,
 frais,
+replie,
 bande: bandeCout(frais.montant, frais.devise),
 exoneration: lireExoneration(university)
 };
