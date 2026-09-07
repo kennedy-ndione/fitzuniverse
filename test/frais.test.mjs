@@ -14,8 +14,8 @@ import assert from "node:assert/strict";
 
 import {
 POLITIQUES_EXONERATION, LIBELLES_EXONERATION, BANDES, LIBELLES_BANDES,
-SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR,
-bandeCout, lireFrais, lireExoneration, formaterMontant, libelleFrais
+SEUILS_PAR_DEVISE, SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR,
+bandeCout, lireFrais, lireExoneration, formaterMontant, libelleMontant, libelleFrais
 } from "../js/frais.js";
 
 const AUJOURDHUI = new Date("2026-09-07T10:00:00Z");
@@ -58,6 +58,21 @@ for (const b of BANDES) assert.ok(LIBELLES_BANDES[b] && LIBELLES_BANDES[b].trim(
 assert.equal(SEUIL_GRATUIT, 500);
 assert.equal(SEUIL_ABORDABLE, 2500);
 assert.equal(JOURS_FRAICHEUR, 180);
+});
+
+test("les libellés de bandes sont neutres : ni symbole monétaire ni chiffre", () => {
+for (const b of BANDES) {
+assert.ok(!/[0-9€$£]/.test(LIBELLES_BANDES[b]), `${b} : « ${LIBELLES_BANDES[b]} »`);
+assert.ok(!/CHF|EUR|USD|MAD/.test(LIBELLES_BANDES[b]), `${b} : code de devise dans le libellé`);
+}
+assert.equal(LIBELLES_BANDES.gratuit, "Gratuit ou presque");
+assert.equal(LIBELLES_BANDES.eleve, "Plus cher");
+});
+
+test("SEUIL_GRATUIT / SEUIL_ABORDABLE dérivent de SEUILS_PAR_DEVISE.EUR (source unique)", () => {
+assert.equal(SEUIL_GRATUIT, SEUILS_PAR_DEVISE.EUR.gratuit);
+assert.equal(SEUIL_ABORDABLE, SEUILS_PAR_DEVISE.EUR.abordable);
+assert.deepEqual(Object.keys(SEUILS_PAR_DEVISE), ["EUR"], "aucune autre devise avant le lot D2");
 });
 
 // ------------------------------------------------------------------
@@ -105,6 +120,25 @@ test("montant 0 vérifié et sourcé → verifie, montant 0 (jamais un « inconn
 const f = lireFrais(verifiee({ licence: { montant: 0, devise: "EUR", periode: "an" } }), "Licence", { aujourdhui: AUJOURDHUI });
 assert.equal(f.etat, "verifie");
 assert.equal(f.montant, 0);
+});
+
+test("zéro vérifié → « Gratuit · vérifié le … », jamais « 0 € »", () => {
+const zero = verifiee({ licence: { montant: 0, devise: "EUR", periode: "an" } });
+const l = plat(libelleFrais(zero, "Licence", { aujourdhui: AUJOURDHUI }));
+assert.equal(l, "Gratuit · vérifié le 28 août 2026");
+assert.ok(!/0 €/.test(l) && !/\b0 /.test(l), `« ${l} »`);
+assert.equal(libelleMontant(lireFrais(zero, "Licence", { aujourdhui: AUJOURDHUI })), "Gratuit");
+});
+
+test("zéro vérifié mais pas fraîche → « Gratuit · à recouper »", () => {
+const zero = verifiee({ licence: { montant: 0, devise: "EUR", periode: "an" }, verifieLe: iso(200) });
+assert.equal(libelleFrais(zero, "Licence", { aujourdhui: AUJOURDHUI }), "Gratuit · à recouper");
+});
+
+test("libelleMontant : un montant non nul passe par formaterMontant, un état inconnu reste « Frais non vérifiés »", () => {
+assert.equal(plat(libelleMontant(lireFrais(verifiee(), "Licence", { aujourdhui: AUJOURDHUI }))), "3 950 €/an");
+assert.equal(libelleMontant(lireFrais({}, "Licence")), "Frais non vérifiés");
+assert.equal(libelleMontant(null), "Frais non vérifiés");
 });
 
 // ------------------------------------------------------------------
@@ -155,9 +189,25 @@ assert.equal(bandeCout("3950"), "inconnu");
 assert.equal(bandeCout(-1), "inconnu");
 });
 
-test("bandeCout : sans conversion, une devise autre que l'euro reste « inconnu »", () => {
+test("bandeCout : une devise sans seuils posés reste « inconnu » — jamais convertie", () => {
+assert.equal(bandeCout(0, "EUR"), "gratuit");
 assert.equal(bandeCout(450, "USD"), "inconnu");
+assert.equal(bandeCout(12000, "MAD"), "inconnu", "MAD absent du tableau tant que le lot D2 n'a pas posé ses seuils");
 assert.equal(bandeCout(450, "EUR"), "gratuit");
+});
+
+test("bandeCout lit SEUILS_PAR_DEVISE : des seuils MAD posés (dans ce test seulement) rangent un montant en dirhams", () => {
+// Valeurs de TEST, pas une décision : elles prouvent le mécanisme, sans
+// figer un seuil marocain que seul le lot D2 posera, avec sa source.
+SEUILS_PAR_DEVISE.MAD = { gratuit: 5000, abordable: 25000 };
+try {
+assert.equal(bandeCout(12000, "MAD"), "abordable");
+assert.equal(bandeCout(4000, "MAD"), "gratuit");
+assert.equal(bandeCout(40000, "MAD"), "eleve");
+} finally {
+delete SEUILS_PAR_DEVISE.MAD;
+}
+assert.equal(bandeCout(12000, "MAD"), "inconnu", "le tableau est revenu à son état d'origine");
 });
 
 // ------------------------------------------------------------------

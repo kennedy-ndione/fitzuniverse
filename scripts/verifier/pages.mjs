@@ -665,7 +665,12 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
           fraisScolarite: { licence: { montant: 3950, devise: "EUR", periode: "an" }, source: "https://exemple.invalid/frais", verifieLe: ilYa(10) },
           exoneration: { politique: "possible_plafonnee", detail: "Exonération sur dossier, contingentée", source: "https://exemple.invalid/exoneration", verifieLe: ilYa(10) }
         },
-        { id: "harnais-frais-inconnus", name: "Harnais Université Frais Inconnus", country: "Harnais", city: "Fixture", image: "", flag: "" }
+        { id: "harnais-frais-inconnus", name: "Harnais Université Frais Inconnus", country: "Harnais", city: "Fixture", image: "", flag: "" },
+        // D1-bis : un zéro VÉRIFIÉ se dit « Gratuit », jamais « 0 € ».
+        {
+          id: "harnais-frais-gratuits", name: "Harnais Université Frais Gratuits", country: "Harnais", city: "Fixture", image: "", flag: "",
+          fraisScolarite: { licence: { montant: 0, devise: "EUR", periode: "an" }, source: "https://exemple.invalid/frais-zero", verifieLe: ilYa(10) }
+        }
       ];
 
       const programmes = fixtures.map((u) => ({ id: `${u.id}__prog`, universityId: u.id, scholarshipId: null, level: "Licence", language: "Français", status: "Ouvert", deadline: null }));
@@ -695,8 +700,13 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
       const verifiee = defaut.cartes.find((c) => /Frais Vérifiés/.test(c.nom));
       const inconnue = defaut.cartes.find((c) => /Frais Inconnus/.test(c.nom));
+      const gratuite = defaut.cartes.find((c) => /Frais Gratuits/.test(c.nom));
 
-      if (!verifiee || !inconnue) throw new Error(`fixtures non affichées (${defaut.cartes.map((c) => c.nom).join(", ")})`);
+      if (!verifiee || !inconnue || !gratuite) throw new Error(`fixtures non affichées (${defaut.cartes.map((c) => c.nom).join(", ")})`);
+
+      if (!/^Gratuit\b/.test(gratuite.cout)) anomalies.push(`fixture à 0 € vérifié : la puce dit « ${gratuite.cout} » au lieu de « Gratuit ».`);
+      if (/0\s*€/.test(gratuite.cout.replace(/[  ]/g, " "))) anomalies.push(`fixture à 0 € vérifié : « ${gratuite.cout} » affiche un zéro.`);
+      if (!/vérifié le/i.test(gratuite.coutTitle)) anomalies.push("fixture à 0 € vérifié : la date de vérification manque dans le title.");
 
       if (defaut.filtre !== "") anomalies.push(`universities.html : le filtre de coût vaut « ${defaut.filtre} » par défaut au lieu de « Tous ».`);
       if (defaut.options.join(",") !== ",gratuit,abordable,eleve,inconnu") anomalies.push(`universities.html : options du filtre de coût « ${defaut.options.join(",")} ».`);
@@ -731,8 +741,11 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       const inconnuSeul = await filtrer("inconnu");
       if (inconnuSeul.cartes.length !== 1 || !/Frais Inconnus/.test(inconnuSeul.cartes[0].nom)) anomalies.push(`filtre « inconnu » : ${inconnuSeul.cartes.map((c) => c.nom).join(", ") || "aucune carte"} au lieu de la seule fixture sans frais.`);
 
+      const gratuitSeul = await filtrer("gratuit");
+      if (gratuitSeul.cartes.length !== 1 || !/Frais Gratuits/.test(gratuitSeul.cartes[0].nom)) anomalies.push(`filtre « gratuit » : ${gratuitSeul.cartes.map((c) => c.nom).join(", ") || "aucune carte"} au lieu de la seule fixture à 0 € vérifié.`);
+
       const tous = await filtrer("");
-      if (tous.cartes.length !== 2) anomalies.push(`retour à « Tous » : ${tous.cartes.length} carte(s) au lieu de 2 — la bande « inconnu » n'est pas revenue.`);
+      if (tous.cartes.length !== 3) anomalies.push(`retour à « Tous » : ${tous.cartes.length} carte(s) au lieu de 3 — la bande « inconnu » n'est pas revenue.`);
 
       // Le lien porte le filtre (urlAvecFiltres) : une pastille de pays
       // rendue pendant qu'un coût est choisi doit le conserver. Les
@@ -748,7 +761,7 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       const lien = await page.evaluate(() => document.querySelector("#countryPills .catalog-country-pill")?.getAttribute("href") || "");
       if (!/cost=inconnu/.test(lien)) anomalies.push(`urlAvecFiltres : la pastille de pays perd le filtre de coût (« ${lien} »).`);
 
-      notes.push(`coût (fixtures) : « ${verifiee.cout} » / « ${inconnue.inconnu} » · filtre eleve → 1, inconnu → 1, Tous → 2 · lien « ${lien.slice(0, 60)} »`);
+      notes.push(`coût (fixtures) : « ${verifiee.cout} » / « ${inconnue.inconnu} » / « ${gratuite.cout} » · filtre eleve → 1, inconnu → 1, gratuit → 1, Tous → 3 · lien « ${lien.slice(0, 60)} »`);
 
     } catch (e) {
       anomalies.push(`ÉCHEC coût par université : ${e.message}`);

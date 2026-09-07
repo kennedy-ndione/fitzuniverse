@@ -13,7 +13,7 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // Le coût réel par université (lot D1, 2026-09-07) — voir l'en-tête de
 // js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
-import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, formaterMontant } from "./js/frais.js";
+import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libelleMontant } from "./js/frais.js";
 import { formaterDate } from "./js/echeance.js";
 
 // Page publique, en accès libre — voir la note dans universities.css.
@@ -85,7 +85,7 @@ const scholarshipLabel = university.scholarshipTitles.length
 const { frais, exoneration, niveau } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "" };
 
 const costChip = frais.etat === "verifie"
-? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${formaterMontant(frais.montant, frais.devise, frais.periode)}${frais.fraiche ? "" : " · à recouper"}</span>`
+? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libelleMontant(frais)}${frais.fraiche ? "" : " · à recouper"}</span>`
 : `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLES_BANDES.inconnu}</span>`;
 
 const exonerationChip = exoneration.politique !== "inconnue"

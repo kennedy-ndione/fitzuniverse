@@ -15,11 +15,18 @@
 * LA RÈGLE DES TROIS VALEURS, ENCORE
 * -----------------------------------
 * Champ absent ≠ zéro ≠ inconnu. Une université sans `fraisScolarite`
-* n'affiche RIEN sur le prix : jamais « gratuit », jamais « 0 », jamais
-* une estimation. Un montant n'est affiché QUE s'il est SOURCÉ (une URL
-* officielle) et DATÉ (`verifieLe`) : sans l'un des deux, l'état est
-* « inconnu », même si le chiffre est là. Même doctrine que
-* estEligible(), etatCandidature() et lireExigences().
+* n'affiche RIEN sur le prix : jamais une estimation, jamais un « 0 »
+* qui viendrait d'un champ vide. Un montant n'est affiché QUE s'il est
+* SOURCÉ (une URL officielle) et DATÉ (`verifieLe`) : sans l'un des
+* deux, l'état est « inconnu », même si le chiffre est là. Même doctrine
+* que estEligible(), etatCandidature() et lireExigences().
+*
+* Et dans l'autre sens (D1-bis) : la règle n'est pas « ne jamais parler
+* de gratuité », c'est « ne jamais AFFIRMER une gratuité non vérifiée,
+* et toujours la dire quand elle l'est ». Un zéro vérifié et sourcé —
+* l'université publique allemande, exactement — est l'information la
+* plus favorable du catalogue : il se lit « Gratuit », pas « 0 €/an »,
+* qu'un étudiant prendrait pour une donnée manquante.
 *
 * Devise stockée telle qu'elle est facturée (EUR pour la France).
 * Aucune conversion FCFA — décision fermée, hors périmètre.
@@ -46,18 +53,34 @@ inconnue: "Exonération non vérifiée"
 };
 
 /**
-* Seuils arrêtés lors de l'audit « Hubs » : gratuit de 0 à 500 €/an, peu
-* cher jusqu'à ~2 500 €/an. On n'en invente pas d'autres.
+* Seuils de bande, PAR DEVISE. Pour l'euro : arrêtés lors de l'audit
+* « Hubs », gratuit de 0 à 500 €/an, peu cher jusqu'à ~2 500 €/an.
+*
+* Une devise ABSENTE de ce tableau -> bande « inconnu », et c'est
+* voulu : un seuil n'est pas une conversion de taux, c'est un jugement
+* sur ce qu'« abordable » veut dire dans ce pays. Il se pose à la main,
+* une fois, avec une source — jamais calculé depuis un taux de change.
+* Les devises des pays cibles (MAD, TRY, CAD, XOF…) se remplissent au
+* lot D2, chacune avec sa source.
 */
-export const SEUIL_GRATUIT = 500;
-export const SEUIL_ABORDABLE = 2500;
+export const SEUILS_PAR_DEVISE = {
+EUR: { gratuit: 500, abordable: 2500 }
+};
+
+// Compatibilité : les deux anciens noms restent exportés, mais dérivés
+// du tableau — une seule source.
+export const SEUIL_GRATUIT = SEUILS_PAR_DEVISE.EUR.gratuit;
+export const SEUIL_ABORDABLE = SEUILS_PAR_DEVISE.EUR.abordable;
 
 export const BANDES = ["gratuit", "abordable", "eleve", "inconnu"];
 
+// Neutres : ni montant ni symbole. « jusqu'à 500 €/an » serait faux dès
+// qu'une seconde devise existe. Le montant exact reste sur la carte,
+// où il est juste.
 export const LIBELLES_BANDES = {
-gratuit: "Gratuit ou presque (jusqu'à 500 €/an)",
-abordable: "Peu cher (jusqu'à 2 500 €/an)",
-eleve: "Plus de 2 500 €/an",
+gratuit: "Gratuit ou presque",
+abordable: "Peu cher",
+eleve: "Plus cher",
 inconnu: "Frais non vérifiés"
 };
 
@@ -94,15 +117,16 @@ return typeof source === "string" && /^https?:\/\/\S+$/.test(source.trim());
 const INCONNU = Object.freeze({ etat: "inconnu", montant: null, devise: null, periode: null, source: null, verifieLe: null, fraiche: false });
 
 /**
-* Bande de coût d'un montant ANNUEL. Les seuils sont en euros et il n'y
-* a pas de conversion : une devise autre que l'euro ne peut pas être
-* rangée honnêtement, elle reste « inconnu ».
+* Bande de coût d'un montant ANNUEL, selon les seuils de SA devise. Une
+* devise sans seuils posés ne peut pas être rangée honnêtement : elle
+* reste « inconnu » (voir SEUILS_PAR_DEVISE).
 */
 export function bandeCout(montant, devise = "EUR") {
 if (typeof montant !== "number" || !Number.isFinite(montant) || montant < 0) return "inconnu";
-if (devise && devise !== "EUR") return "inconnu";
-if (montant <= SEUIL_GRATUIT) return "gratuit";
-if (montant <= SEUIL_ABORDABLE) return "abordable";
+const seuils = SEUILS_PAR_DEVISE[devise || "EUR"];
+if (!seuils) return "inconnu";
+if (montant <= seuils.gratuit) return "gratuit";
+if (montant <= seuils.abordable) return "abordable";
 return "eleve";
 }
 
@@ -172,11 +196,24 @@ return `${groupes} ${symbole}/${periode}`;
 }
 
 /**
+* Le montant tel qu'il se lit sur une carte, à partir d'un résultat de
+* lireFrais() VÉRIFIÉ : « Gratuit » pour un zéro vérifié, le montant
+* formaté sinon. C'est cette fonction, pas formaterMontant(), que
+* l'affichage doit appeler.
+*/
+export function libelleMontant(frais) {
+if (!frais || frais.etat !== "verifie") return LIBELLES_BANDES.inconnu;
+return frais.montant === 0 ? "Gratuit" : formaterMontant(frais.montant, frais.devise, frais.periode);
+}
+
+/**
 * La phrase honnête, à un seul endroit :
 *   verifie + fraiche      -> "3 950 €/an · vérifié le 7 septembre 2026"
 *   verifie + pas fraiche  -> "3 950 €/an · à recouper"
+*   zéro vérifié           -> "Gratuit · vérifié le 7 septembre 2026"
 *   inconnu                -> "Frais non vérifiés"
-* Jamais une phrase qui laisse croire à la gratuité.
+* Jamais une gratuité affirmée sans vérification ; toujours dite quand
+* elle est vérifiée.
 */
 export function libelleFrais(uni, niveau, options) {
 
@@ -184,7 +221,7 @@ const f = lireFrais(uni, niveau, options);
 
 if (f.etat !== "verifie") return LIBELLES_BANDES.inconnu;
 
-const montant = formaterMontant(f.montant, f.devise, f.periode);
+const montant = libelleMontant(f);
 
 return f.fraiche
 ? `${montant} · vérifié le ${formaterDate(f.verifieLe)}`
