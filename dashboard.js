@@ -655,7 +655,7 @@ const opps = await chargerOpportunites(profile);
 // et tout se calcule comme avant sur la date saisie.
 applications = applications.map((app) => ({
 ...app,
-etapes: computeJourneySteps(app, { profileScore }),
+etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {} }),
 echeance: opps.index ? etatDeLaCandidature(app, opps.index) : null
 }));
 

@@ -1,22 +1,16 @@
 import { db } from "./firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { DOCUMENTS, DOCUMENT_CATEGORIES, PRIORITY_LEVELS } from "./js/documents-data.js";
+import { DOCUMENTS, DOCUMENT_CATEGORIES, PRIORITY_LEVELS, slugDocument } from "./js/documents-data.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 
 initShellChrome();
 
-// Identifiant stable pour un document de la bibliothèque statique
-// (DOCUMENTS n'a pas de champ `id` — seul `title` est unique et stable
-// dans cette liste). Utilisé comme clé du champ Firestore
-// users/{uid}.documentsObtained, une map { slug: true }.
-function slugify(title) {
-return title
-.toLowerCase()
-.normalize("NFD").replace(/[̀-ͯ]/g, "")
-.replace(/[^a-z0-9]+/g, "-")
-.replace(/^-+|-+$/g, "");
-}
+// Identifiant stable pour un document de la bibliothèque : clé du champ
+// Firestore users/{uid}.documentsObtained. Depuis le lot B (2026-09-07)
+// la fonction vit dans js/documents-data.js (slugDocument), lue aussi
+// par le parcours préinscription — une seule définition, mêmes clés.
+const slugify = slugDocument;
 
 // Lecture défensive de "generatedDocuments" : une entrée corrompue dans
 // le localStorage d'un navigateur (ex. écriture partielle, ancienne
@@ -450,6 +444,16 @@ renderGeneratedDocuments();
 searchInput.addEventListener("input", applyFilters);
 
 renderCategoryFilters();
+
+// Lot B (2026-09-07) : les étapes du parcours préinscription envoient
+// ici avec ?categorie=administratif ou ?categorie=financier. Une clé
+// inconnue est ignorée — on retombe sur « Tous ».
+const categorieDemandee = new URLSearchParams(window.location.search).get("categorie") || "";
+if (DOCUMENT_CATEGORIES.some((c) => c.key === categorieDemandee)) {
+activeCategory = categorieDemandee;
+updateActiveChip();
+}
+
 renderGeneratedDocuments();
 renderObtainedCount();
 applyFilters();

@@ -56,7 +56,7 @@ export const PHASES = [
 { id: "opportunites", label: "Opportunités", icon: "compass" },
 { id: "dossiers", label: "Dossiers", icon: "clipboard-list" },
 { id: "depot", label: "Dépôt", icon: "send" },
-{ id: "reponse", label: "Réponse & bourse", icon: "award" },
+{ id: "reponse", label: "Réponse", icon: "award" },
 { id: "depart", label: "Visa & départ", icon: "plane" }
 ];
 

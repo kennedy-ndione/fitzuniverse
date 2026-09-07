@@ -46,6 +46,34 @@ export const PRIORITY_LEVELS = [
 { key: "specifique", label: "Spécifiques", description: "Selon le pays, le programme, le niveau d'études ou le domaine." }
 ];
 
+// Identifiant stable pour un document de la bibliothèque (DOCUMENTS n'a
+// pas de champ `id` — seul `title` est unique et stable dans cette
+// liste). C'est la clé du champ Firestore users/{uid}.documentsObtained,
+// une map { slug: true }. Source UNIQUE depuis le lot B du chantier
+// préinscription (2026-09-07) : documents.js l'importait en local, et
+// js/application-journey.js a besoin des mêmes clés pour lire la map.
+// Ne jamais modifier ce corps : les clés déjà écrites en base en
+// dépendent.
+export function slugDocument(title) {
+return title
+.toLowerCase()
+.normalize("NFD").replace(/[̀-ͯ]/g, "")
+.replace(/[^a-z0-9]+/g, "-")
+.replace(/^-+|-+$/g, "");
+}
+
+// Les slugs que le code lit ailleurs que sur documents.html (étapes du
+// parcours préinscription). Dérivés des TITRES, jamais recopiés à la
+// main — et test/documents-data.test.mjs vérifie que chaque titre
+// existe toujours : renommer une fiche casse le test, pas l'étudiant.
+export const SLUGS = {
+traductions: slugDocument("Traductions certifiées"),
+copies: slugDocument("Copies certifiées conformes"),
+legalisation: slugDocument("Légalisation / apostille"),
+ressources: slugDocument("Justificatifs de ressources"),
+bancaire: slugDocument("Attestation bancaire")
+};
+
 export const DOCUMENTS = [
 
 // ==========================================================
@@ -1342,6 +1370,45 @@ mistakes: [
 "Oublier de certifier la traduction en plus de l'original."
 ],
 scholarBridgeTip: "Avant toute démarche en mairie, relisez précisément les instructions du programme : cette étape autrefois systématique disparaît progressivement de nombreux dossiers."
+},
+
+// 46e fiche (lot B du chantier préinscription, 2026-09-07). Une
+// préinscription est une conformité : l'université qui reçoit un
+// diplôme étranger veut savoir qu'il est authentique. Deux régimes
+// DIFFÉRENTS selon le pays de destination — les confondre coûte un
+// dossier.
+{
+icon: "stamp",
+category: "administratif",
+priority: "frequent",
+title: "Légalisation / apostille",
+description: "Authentification officielle d'un document public (diplôme, acte de naissance) pour qu'il soit reconnu dans un autre pays.",
+importance: "Une université ou un consulat étranger ne peut pas vérifier lui-même qu'un diplôme est authentique. La légalisation ou l'apostille est la preuve, apposée par une autorité, que la signature et le cachet du document sont bien ceux d'une autorité compétente. Sans elle, certains pays refusent purement et simplement le document.",
+context: "Demandée surtout pour une préinscription ou une équivalence de diplôme, et dans plusieurs procédures de visa d'études — plus rarement pour une candidature à une bourse.",
+requestedBy: "Dépend du pays qui REÇOIT le document. Si ce pays est partie à la convention de La Haye de 1961, il demande une apostille — un cachet unique, sans passage par l'ambassade. Sinon, il demande une légalisation consulaire, en plusieurs étapes : ministère des Affaires étrangères du pays d'origine, puis ambassade ou consulat du pays de destination. Les deux régimes ne se remplacent pas l'un l'autre.",
+level: "Licence, Master, Doctorat",
+issuedBy: "Apostille : l'autorité désignée par le pays d'origine. Légalisation : le ministère des Affaires étrangères, puis le consulat du pays de destination.",
+howToObtain: "Vérifiez d'abord, auprès de l'université ou du consulat, quel régime s'applique et sur quels documents exactement. Présentez ensuite l'original (parfois une copie certifiée conforme) à l'autorité compétente : pour une apostille, souvent une cour d'appel ou un ministère (Justice ou Affaires étrangères) ; pour une légalisation, le ministère des Affaires étrangères du pays d'origine puis la représentation diplomatique du pays de destination. Si une traduction certifiée est exigée, demandez si c'est l'original, la traduction, ou les deux qui doivent être légalisés — la réponse varie selon le pays.",
+averageTime: "De quelques jours à plusieurs semaines ; la légalisation consulaire, en plusieurs étapes, est la plus longue.",
+validity: "Le cachet n'expire pas, mais certains destinataires exigent un document légalisé récemment.",
+scan: [
+"Scanner le document et son apostille ou ses cachets de légalisation ensemble, dans l'ordre où ils ont été apposés.",
+"Vérifier que chaque cachet, chaque signature et le numéro de l'apostille sont lisibles.",
+"Regrouper original, traduction et légalisation dans un seul PDF si le portail le demande."
+],
+tips: [
+"Identifiez le régime (apostille ou légalisation consulaire) AVANT toute démarche : il dépend du pays de destination, pas du vôtre.",
+"Commencez tôt : la légalisation consulaire passe par plusieurs administrations qui ont chacune leurs propres délais.",
+"Faites légaliser en une fois tous les documents demandés pour la même destination.",
+"Conservez les originaux légalisés : un scan suffit souvent pour la préinscription, mais l'original pourra être demandé à l'arrivée."
+],
+mistakes: [
+"Demander une apostille pour un pays qui n'est pas partie à la convention de La Haye — ou l'inverse.",
+"Faire légaliser une photocopie simple alors que l'autorité exige l'original ou une copie certifiée.",
+"Oublier la traduction certifiée quand c'est elle, et non l'original, que le destinataire veut voir légalisée.",
+"Confondre légalisation, copie certifiée conforme et traduction certifiée : ce sont trois démarches distinctes."
+],
+scholarBridgeTip: "Posez la question en une phrase à l'université ou au consulat : « apostille ou légalisation consulaire, et sur quels documents ? ». Cette réponse écrite vous évite de refaire toute la chaîne."
 },
 
 {

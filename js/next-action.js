@@ -134,13 +134,18 @@ export function qualifierEtapes(etapes) {
 
 const faites = new Set(etapes.filter((e) => e.done).map((e) => e.id));
 
+// Lot B (2026-09-07) : un prérequis ABSENT du parcours ne bloque rien.
+// En préinscription il n'y a pas d'étape « readiness » ; sans ce
+// filtre, « Revue conseiller » y resterait prématurée pour toujours.
+const presentes = new Set(etapes.map((e) => e.id));
+
 return etapes.map((etape) => {
 
 if (etape.done) {
 return { ...etape, etat: "faite", bloquePar: [] };
 }
 
-const manquants = (PREREQUIS[etape.id] || []).filter((id) => !faites.has(id));
+const manquants = (PREREQUIS[etape.id] || []).filter((id) => presentes.has(id) && !faites.has(id));
 
 if (manquants.length) {
 return {

@@ -38,6 +38,7 @@ import { couperLeReseau } from "./hors-ligne.mjs";
 import { indexerCatalogue, etatDeLaCandidature, normaliserTitre } from "../../js/candidature-catalogue.js";
 import { etatCandidature } from "../../js/echeance.js";
 import { lireExigences, deposeParUnTiers, elementsAAjouter } from "../../js/exigences.js";
+import { DOCUMENTS, SLUGS } from "../../js/documents-data.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -199,6 +200,10 @@ function preparer() {
     // on ne le bride pas.
     plan: "accompagnement",
     planExpiresAt: dansNJours(90),
+    // LOT B : deux documents déjà cochés sur documents.html — de quoi
+    // rendre FAITE l'étape « Traductions et légalisations » de slot-6,
+    // et elle seule (aucun justificatif de ressources).
+    documentsObtained: { [SLUGS.traductions]: true, [SLUGS.legalisation]: true },
     profile: {
       name: "Harnais", email: "harnais@fitz.local",
       originCountry: "Sénégal", nationality: "Sénégalaise", age: "22",
@@ -325,6 +330,11 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
             slot3: texte(carte("slot-3")?.querySelector(".app-track-pill")),
             slot6: texte(carte("slot-6")?.querySelector(".app-track-pill"))
           },
+          // LOT B — les étapes du stepper, par parcours
+          etapes: {
+            slot3: [...(carte("slot-3")?.querySelectorAll(".journey-step") || [])].map((b) => ({ id: b.dataset.journeyStep, label: texte(b.querySelector(".journey-step-label")), faite: b.classList.contains("is-done") })),
+            slot6: [...(carte("slot-6")?.querySelectorAll(".journey-step") || [])].map((b) => ({ id: b.dataset.journeyStep, label: texte(b.querySelector(".journey-step-label")), faite: b.classList.contains("is-done") }))
+          },
           ecritures: (window.__harnaisEcritures || []).map((e) => ({ op: e.op, chemin: e.chemin, cles: Object.keys(e.data || {}) }))
         };
 
@@ -417,6 +427,28 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       if (seedsSansParcours.length) anomalies.push(`${seedsSansParcours.length} créneau(x) créé(s) par Fitz SANS champ track : ${seedsSansParcours.map((e) => e.chemin).join(", ")}`);
 
       notes.push(`parcours : slot-6 « ${vu.parcours.slot6} », slot-3 ancienne « ${vu.parcours.slot3} », aucune écriture de rattrapage`);
+
+      // ---- LOT B : chaque parcours a ses propres étapes ----
+      //
+      // Bourse (slot-3, sans track) : EXACTEMENT les étapes d'avant le
+      // lot B. Préinscription (slot-6) : jamais « Lettre de motivation »
+      // ni « Vérifiée par Fitz ». Le stub userData porte traductions +
+      // légalisation obtenues : l'étape 3 de slot-6 doit être FAITE, la
+      // 4 non — c'est la moitié « après rechargement » du contrôle du
+      // clic « J'ai ce document » (section 3 ci-dessous).
+      const idsBourse = vu.etapes.slot3.map((e) => e.id).join(",");
+      if (idsBourse !== "profile,checklist,letter,readiness") anomalies.push(`slot-3 (bourse) : étapes « ${idsBourse} » au lieu de profile,checklist,letter,readiness.`);
+
+      const idsPre = vu.etapes.slot6.map((e) => e.id).join(",");
+      if (idsPre !== "profile,checklist,traductions,ressources") anomalies.push(`slot-6 (préinscription) : étapes « ${idsPre} » au lieu de profile,checklist,traductions,ressources.`);
+      if (vu.etapes.slot6.some((e) => /Lettre de motivation|Vérifiée par Fitz/.test(e.label))) anomalies.push("slot-6 (préinscription) : une étape de concours (lettre / vérification Fitz) s'affiche.");
+
+      const traductions = vu.etapes.slot6.find((e) => e.id === "traductions");
+      const ressources = vu.etapes.slot6.find((e) => e.id === "ressources");
+      if (traductions && !traductions.faite) anomalies.push("slot-6 : traductions + légalisation obtenues dans documentsObtained, mais l'étape « Traductions et légalisations » n'est pas faite.");
+      if (ressources && ressources.faite) anomalies.push("slot-6 : « Preuve de ressources » faite alors qu'aucun justificatif n'est obtenu.");
+
+      notes.push(`étapes : bourse [${vu.etapes.slot3.map((e) => e.label).join(" · ")}] — préinscription [${vu.etapes.slot6.map((e) => `${e.label}${e.faite ? " ✓" : ""}`).join(" · ")}]`);
 
       if (vu.slot3.liee) anomalies.push("slot-3 (hors catalogue) : rendue comme liée.");
       if (!/Date limite :/.test(vu.slot3.texte)) anomalies.push(`slot-3 (hors catalogue) : le rendu d'origine « Date limite : … » a disparu — « ${vu.slot3.texte.slice(0, 80)} »`);
@@ -675,6 +707,78 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
     } catch (e) {
       anomalies.push(`ÉCHEC dashboard.html : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 3. documents.html (lot B) ----------
+  //
+  // L'autre moitié du contrôle des étapes « documents » : le clic
+  // « J'ai ce document » ÉCRIT bien users/{uid}.documentsObtained sous le
+  // slug que le parcours lit (js/documents-data.js, SLUGS). On part d'un
+  // étudiant SANS document obtenu, on coche Traductions puis
+  // Légalisation, et on vérifie les deux écritures. Puis la 46e fiche
+  // s'ouvre et son modal est complet.
+  {
+    const vierge = { ...etudiant, userData: { ...etudiant.userData, documentsObtained: {} } };
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base, vierge);
+
+    try {
+
+      await page.goto(`${base}/documents.html?categorie=administratif`, { waitUntil: "domcontentloaded" });
+
+      if (page.url().includes("login.html")) throw new Error("redirigée vers la connexion — la doublure étudiant n'a pas pris.");
+
+      await page.waitForSelector("#documentsContainer .doc-card", { timeout: 30000 });
+
+      const cocher = async (titre) => {
+        const carte = page.locator("#documentsContainer .doc-card", { has: page.locator("h3", { hasText: titre }) }).first();
+        await carte.locator(".doc-card-obtained input").click();
+      };
+
+      await cocher("Traductions certifiées");
+      await cocher("Légalisation / apostille");
+
+      const vu = await page.evaluate(() => ({
+        actif: document.querySelector("#categoryFilters .docs-category-chip.is-active")?.dataset.category ?? null,
+        cartes: document.querySelectorAll("#documentsContainer .doc-card").length,
+        ecritures: (window.__harnaisEcritures || []).filter((e) => e.op === "update").map((e) => ({ chemin: e.chemin, cles: Object.keys(e.data || {}), valeurs: Object.values(e.data || {}) }))
+      }));
+
+      if (vu.actif !== "administratif") anomalies.push(`documents.html?categorie=administratif : filtre actif « ${vu.actif} » — le lien des étapes du parcours n'atterrit pas sur la bonne catégorie.`);
+
+      const attendues = [`documentsObtained.${SLUGS.traductions}`, `documentsObtained.${SLUGS.legalisation}`];
+      for (const cle of attendues) {
+        const e = vu.ecritures.find((x) => x.cles.includes(cle));
+        if (!e) anomalies.push(`documents.html : le clic « J'ai ce document » n'a pas écrit « ${cle} ».`);
+        else if (!e.chemin.endsWith(`/users/${UID}`) && e.chemin !== `users/${UID}`) anomalies.push(`documents.html : « ${cle} » écrite sur ${e.chemin} au lieu de users/${UID}.`);
+        else if (e.valeurs[0] !== true) anomalies.push(`documents.html : « ${cle} » écrite à ${e.valeurs[0]} au lieu de true.`);
+      }
+
+      notes.push(`documents.html : ${vu.cartes} cartes en « administratif », clics « J'ai ce document » → ${vu.ecritures.map((e) => e.cles.join(",")).join(" ; ")}`);
+
+      // La 46e fiche
+      const fiche = page.locator("#documentsContainer .doc-card", { has: page.locator("h3", { hasText: "Légalisation / apostille" }) }).first();
+      if (!(await fiche.count())) {
+        anomalies.push("documents.html : la fiche « Légalisation / apostille » est absente.");
+      } else {
+        await fiche.click();
+        await page.waitForSelector("#documentModal:not([hidden])", { timeout: 10000 });
+        const modal = await page.evaluate(() => ({
+          titre: document.getElementById("modalTitle")?.textContent.trim() || "",
+          sections: document.querySelectorAll("#modalBody .docs-modal-section").length,
+          texte: document.getElementById("modalBody")?.textContent.replace(/\s+/g, " ") || ""
+        }));
+        if (modal.titre !== "Légalisation / apostille") anomalies.push(`documents.html : modal ouvert sur « ${modal.titre} ».`);
+        if (!/La Haye/.test(modal.texte) || !/consulaire/.test(modal.texte)) anomalies.push("documents.html : le modal de la 46e fiche ne distingue pas apostille (La Haye) et légalisation consulaire.");
+        if (modal.sections < 4) anomalies.push(`documents.html : modal de la 46e fiche incomplet (${modal.sections} section(s)).`);
+        notes.push(`46e fiche : modal « ${modal.titre} », ${modal.sections} sections (${DOCUMENTS.length} documents au total)`);
+      }
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC documents.html : ${e.message}`);
     }
 
     anomalies.push(...erreurs);

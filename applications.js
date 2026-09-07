@@ -834,7 +834,10 @@ return true;
 
 }
 
-function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress) {
+// `documentsObtained` : users/{uid}.documentsObtained (lot B, 2026-09-07),
+// LU par les étapes du parcours préinscription — écrit par documents.html
+// seulement.
+function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress, documentsObtained = {}) {
 
 const profileScore = calculateAiScore(profile);
 const advisorUnlocked = !isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress);
@@ -912,6 +915,18 @@ function verrouillerParcours(verrouille) {
 if (verrouille) fields.track.value = "bourse";
 fields.track.disabled = verrouille;
 trackNote.hidden = !verrouille;
+}
+
+// Résidu du lot A (corrigé lot B) : « Changer » puis « hors catalogue »
+// laissait le titre de bourse, le portail et la date de l'entrée
+// précédemment choisie — on pouvait enregistrer une préinscription qui
+// traînait un titre de bourse. Ce que le catalogue a rempli, on le vide
+// dès qu'on quitte l'entrée.
+function viderChampsCatalogue() {
+fields.university.value = "";
+fields.scholarship.value = "";
+fields.portalUrl.value = "";
+fields.deadline.value = "";
 }
 const manualModeBtn = document.getElementById("manualModeBtn");
 const saveBtn = document.getElementById("applicationSaveBtn");
@@ -1132,6 +1147,7 @@ pickerSummary.innerHTML = "";
 manualFields.hidden = true;
 trackSection.hidden = true;
 verrouillerParcours(false);
+viderChampsCatalogue();
 detailsSection.hidden = true;
 saveBtn.disabled = true;
 pickerSection.hidden = false;
@@ -1151,6 +1167,7 @@ pickerSummary.innerHTML = "";
 manualFields.hidden = false;
 fields.university.required = true;
 verrouillerParcours(false);
+viderChampsCatalogue();
 trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
@@ -1235,7 +1252,7 @@ statPending.textContent = applications.filter((a) => a.status === "en_attente").
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
-const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests });
+const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained });
 
 const card = document.createElement("article");
 card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
@@ -2009,6 +2026,6 @@ return;
 
 }
 
-initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress);
+initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress, ctx.userData?.documentsObtained || {});
 
 });
