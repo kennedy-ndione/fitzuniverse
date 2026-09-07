@@ -262,18 +262,20 @@ function setCount(el, value) {
 
 if (!el) return;
 
-if (REDUCED_MOTION || !("IntersectionObserver" in window)) {
+// LA VRAIE VALEUR D'ABORD, TOUJOURS (clôture du chantier préinscription,
+// 2026-09-07). Avant : « 0 » posé ici, et la vraie valeur seulement
+// quand l'IntersectionObserver déclenchait — constaté en ligne, dans un
+// navigateur réel : les trois compteurs du hero restaient à « 0 » alors
+// que universities.html, qui écrit sa valeur directement dans
+// textContent, affichait 155 et 30 dans le même navigateur. Le premier
+// chiffre que lit un visiteur ne peut pas être « 0 Bourses référencées ».
+// Même motif que universities-page.js désormais : la valeur est écrite,
+// point ; l'animation de comptage est une amélioration par-dessus, et
+// son pire cas est « le nombre ne s'anime pas », jamais « le nombre dit
+// zéro ». Aucun « + » ajouté ici ni dans le HTML (piège « 40++ »).
 el.textContent = `${value}`;
-return;
-}
 
-// « 0 » et non « — » dès maintenant : le filet de secours de
-// index.html retire tout bloc encore sur « — » après 8 s, et un
-// compteur qui attend son entrée dans le viewport n'est pas un bloc
-// en échec. Ce 0 n'est vu par personne : l'élément est hors écran
-// tant que l'observer n'a pas déclenché, et l'animation part dès
-// qu'il devient visible.
-el.textContent = "0";
+if (REDUCED_MOTION || !("IntersectionObserver" in window)) return;
 
 const observer = new IntersectionObserver((entries) => {
 entries.forEach((entry) => {

@@ -15,6 +15,10 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
 import { BANDES, LIBELLES_BANDES, LIBELLE_SANS_PRIX, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
 import { formaterDate } from "./js/echeance.js";
+// Recherche insensible aux accents et à la casse (clôture, 2026-09-07) :
+// « ecole » doit trouver « École polytechnique », « koc » « Koç ». Même
+// normalisation que le rapprochement de candidature — un seul module.
+import { normaliserTitre } from "./js/candidature-catalogue.js";
 
 // Page publique, en accès libre — voir la note dans universities.css.
 // Aucun garde d'authentification ici, volontairement : le catalogue est
@@ -320,7 +324,7 @@ cout
 
 function applyFilters() {
 
-const search = searchInput.value.trim().toLowerCase();
+const search = normaliserTitre(searchInput.value.trim());
 const country = countryFilter.value;
 const level = levelFilter.value;
 // Coût : « Tous » (vide) laisse passer TOUT, y compris la bande
@@ -346,9 +350,9 @@ return (
 (!level || universityLevels.includes(level)) &&
 (!cost || coutPour(university, universityLevels.filter(Boolean)).bande === cost) &&
 (!search ||
-(university.name || "").toLowerCase().includes(search) ||
-(university.city || "").toLowerCase().includes(search) ||
-(university.country || "").toLowerCase().includes(search))
+normaliserTitre(university.name || "").includes(search) ||
+normaliserTitre(university.city || "").includes(search) ||
+normaliserTitre(university.country || "").includes(search))
 );
 
 });

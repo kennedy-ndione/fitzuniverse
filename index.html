@@ -241,11 +241,13 @@ Compteur animé au scroll RÉTABLI le 2026-09-01 (demande utilisateur),
 mais côté homepage-teaser.js (setCount) et non plus via l'ancien
 data-count-to de main.js : celui-ci se déclenchait à l'entrée dans le
 viewport, souvent avant la fin du fetch Firestore, et animait un
-chiffre faux ou vide — c'est pour ça qu'il avait été débranché. Le
-nouveau n'observe l'élément qu'une fois la vraie valeur connue, la
-course a disparu. « — » reste le contenu initial (donnée pas encore
-chargée, surveillé par le filet de secours en fin de page) ; il passe
-à « 0 » quand la donnée arrive, puis compte à l'apparition. -->
+chiffre faux ou vide — c'est pour ça qu'il avait été débranché.
+Depuis la clôture du chantier préinscription (2026-09-07), setCount
+écrit la VRAIE valeur dès qu'elle est connue, puis anime par-dessus à
+l'apparition : en ligne, les trois compteurs restaient à « 0 » quand
+l'observer ne déclenchait pas. « — » reste le contenu initial (donnée
+pas encore chargée, surveillé par le filet de secours en fin de page).
+Aucun « + » ici : la valeur brute vient telle quelle du catalogue. -->
 <div class="hero-stats reveal hero-stagger">
 
 <div class="stat-card">
@@ -402,7 +404,7 @@ award (le financement) et landmark (l'établissement). Pas d'étincelle.
 <i data-lucide="award" aria-hidden="true"></i>
 <div>
 <h3>Bourses</h3>
-<p>Trouver un financement et candidater. 156 bourses, échéances vérifiées.</p>
+<p>Trouver un financement et candidater. Des échéances vérifiées sur chaque bourse.</p>
 </div>
 </a>
 

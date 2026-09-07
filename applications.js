@@ -66,7 +66,7 @@ import { chargerCatalogue } from "./js/catalog-data.js";
 // publie — etatCandidature(), la seule autorité. La date saisie par
 // l'étudiant n'est JAMAIS écrasée : une divergence s'affiche, avec un
 // bouton qu'il clique lui-même.
-import { indexerCatalogue, lierCandidature, etatDeLaCandidature } from "./js/candidature-catalogue.js";
+import { indexerCatalogue, lierCandidature, etatDeLaCandidature, normaliserTitre } from "./js/candidature-catalogue.js";
 import { formaterDate } from "./js/echeance.js";
 // Passe 3/3 : `exigences` (99 bourses) trouve enfin un destinataire.
 // Vocabulaire et libellés dans js/exigences.js — jamais deux façons de
@@ -1000,7 +1000,10 @@ function renderPickerList() {
 
 if (!pickerEntries) return;
 
-const q = (pickerSearch.value || "").trim().toLowerCase();
+// Insensible aux accents et à la casse (clôture, 2026-09-07) : « ecole »
+// trouve « École », « koc » trouve « Koç ». Même normalisation que le
+// rapprochement de candidature.
+const q = normaliserTitre((pickerSearch.value || "").trim());
 
 // Le sélecteur ne propose plus de porte fermée (passe 1/3) :
 //  - « Suggérées pour votre profil » écarte les cycles clos — Fitz ne
@@ -1014,9 +1017,9 @@ const rang = (e) => (!e.etat ? 2 : e.etat.ton === "ouverte" ? 0 : e.etat.ton ===
 const matches = q
 ? pickerEntries
 .filter((e) =>
-e.universityName.toLowerCase().includes(q) ||
-(e.country || "").toLowerCase().includes(q) ||
-(e.scholarshipTitle || "").toLowerCase().includes(q))
+normaliserTitre(e.universityName).includes(q) ||
+normaliserTitre(e.country || "").includes(q) ||
+normaliserTitre(e.scholarshipTitle || "").includes(q))
 .sort((a, b) => rang(a) - rang(b))
 : pickerEntries.filter((e) => !estClose(e));
 
