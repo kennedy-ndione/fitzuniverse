@@ -13,7 +13,7 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // Le coût réel par université (lot D1, 2026-09-07) — voir l'en-tête de
 // js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
-import { BANDES, LIBELLES_BANDES, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
+import { BANDES, LIBELLES_BANDES, LIBELLE_SANS_PRIX, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
 import { formaterDate } from "./js/echeance.js";
 
 // Page publique, en accès libre — voir la note dans universities.css.
@@ -86,7 +86,7 @@ const { frais, exoneration, niveau, replie } = university.cout || { frais: { eta
 
 const costChip = frais.etat === "verifie"
 ? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}</span>`
-: `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLES_BANDES.inconnu}</span>`;
+: `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLE_SANS_PRIX}</span>`;
 
 const exonerationChip = exoneration.politique !== "inconnue"
 ? `<span class="uni-card-chip is-exoneration" title="${exoneration.detail || LIBELLES_EXONERATION[exoneration.politique]}"><i data-lucide="badge-percent"></i>${LIBELLES_EXONERATION[exoneration.politique]}</span>`
@@ -280,7 +280,7 @@ return {
 niveau,
 frais,
 replie,
-bande: bandeCout(frais.montant, frais.devise),
+bande: bandeCout(frais.montant, frais.devise, { replie }),
 exoneration: lireExoneration(university)
 };
 

@@ -81,8 +81,19 @@ export const LIBELLES_BANDES = {
 gratuit: "Gratuit ou presque",
 abordable: "Peu cher",
 eleve: "Plus cher",
-inconnu: "Frais non vérifiés"
+// « Coût non classé », pas « Frais non vérifiés » (D2-ter) : la bande
+// « inconnu » couvre AUSSI un établissement dont le prix affiché est celui
+// d'un niveau replié — un prix vérifié qui ne permet pas de classer.
+inconnu: "Coût non classé"
 };
+
+/**
+* La phrase de la CARTE quand aucun montant n'est vérifié. Distincte du
+* libellé de bande « Coût non classé » : deux phrases pour deux endroits,
+* et c'est voulu — une carte sans prix dit que rien n'a été vérifié, le
+* filtre dit seulement qu'il ne sait pas ranger.
+*/
+export const LIBELLE_SANS_PRIX = "Frais non vérifiés";
 
 /**
 * Fraîcheur d'une vérification de frais : 180 jours. Les droits
@@ -120,8 +131,18 @@ const INCONNU = Object.freeze({ etat: "inconnu", montant: null, devise: null, pe
 * Bande de coût d'un montant ANNUEL, selon les seuils de SA devise. Une
 * devise sans seuils posés ne peut pas être rangée honnêtement : elle
 * reste « inconnu » (voir SEUILS_PAR_DEVISE).
+*
+* `replie` (D2-ter, 2026-09-07) : quand le montant est celui d'un niveau
+* REPLIÉ — pas le plus bas de l'établissement, voir premierNiveauVerifie —
+* la bande vaut « inconnu ». Sorbonne Université et Paris Cité sortaient
+* en « Gratuit ou presque » parce que leur DOCTORAT est à 398 € alors
+* que leur master est à 3 950 €. On connaît un prix, on ne sait pas
+* classer l'établissement : c'est un aveu, pas une perte. Le montant
+* reste affiché sur la carte. Le repli est la condition, pas le montant :
+* un 0 € vérifié sur le niveau le plus bas reste « gratuit ».
 */
-export function bandeCout(montant, devise = "EUR") {
+export function bandeCout(montant, devise = "EUR", { replie = false } = {}) {
+if (replie) return "inconnu";
 if (typeof montant !== "number" || !Number.isFinite(montant) || montant < 0) return "inconnu";
 const seuils = SEUILS_PAR_DEVISE[devise || "EUR"];
 if (!seuils) return "inconnu";
@@ -202,7 +223,7 @@ return `${groupes} ${symbole}/${periode}`;
 * l'affichage doit appeler.
 */
 export function libelleMontant(frais) {
-if (!frais || frais.etat !== "verifie") return LIBELLES_BANDES.inconnu;
+if (!frais || frais.etat !== "verifie") return LIBELLE_SANS_PRIX;
 return frais.montant === 0 ? "Gratuit" : formaterMontant(frais.montant, frais.devise, frais.periode);
 }
 
@@ -258,7 +279,7 @@ return { niveau: plusBas, frais: lireFrais(uni, plusBas, options), plusBas, repl
 */
 export function libellePuce(frais, { niveau = "", replie = false } = {}) {
 
-if (!frais || frais.etat !== "verifie") return LIBELLES_BANDES.inconnu;
+if (!frais || frais.etat !== "verifie") return LIBELLE_SANS_PRIX;
 
 const montant = libelleMontant(frais);
 const tete = replie ? `à partir de ${montant} · ${String(niveau).toLowerCase()}` : montant;
@@ -280,7 +301,7 @@ export function libelleFrais(uni, niveau, options) {
 
 const f = lireFrais(uni, niveau, options);
 
-if (f.etat !== "verifie") return LIBELLES_BANDES.inconnu;
+if (f.etat !== "verifie") return LIBELLE_SANS_PRIX;
 
 const montant = libelleMontant(f);
 

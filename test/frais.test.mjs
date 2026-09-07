@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 import {
 POLITIQUES_EXONERATION, LIBELLES_EXONERATION, BANDES, LIBELLES_BANDES,
-SEUILS_PAR_DEVISE, SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR, ORDRE_NIVEAUX,
+SEUILS_PAR_DEVISE, SEUIL_GRATUIT, SEUIL_ABORDABLE, JOURS_FRAICHEUR, ORDRE_NIVEAUX, LIBELLE_SANS_PRIX,
 bandeCout, lireFrais, lireExoneration, formaterMontant, libelleMontant, libelleFrais,
 premierNiveauVerifie, libellePuce
 } from "../js/frais.js";
@@ -74,6 +74,53 @@ assert.ok(!/CHF|EUR|USD|MAD/.test(LIBELLES_BANDES[b]), `${b} : code de devise da
 }
 assert.equal(LIBELLES_BANDES.gratuit, "Gratuit ou presque");
 assert.equal(LIBELLES_BANDES.eleve, "Plus cher");
+});
+
+test("aucun libellé de bande ne contient « non vérifié » — seule la puce de la carte le dit", () => {
+for (const b of BANDES) assert.ok(!/non vérifié/i.test(LIBELLES_BANDES[b]), `${b} : « ${LIBELLES_BANDES[b]} »`);
+assert.equal(LIBELLES_BANDES.inconnu, "Coût non classé");
+assert.equal(LIBELLE_SANS_PRIX, "Frais non vérifiés");
+assert.equal(libellePuce({ etat: "inconnu" }, {}), "Frais non vérifiés");
+assert.equal(libelleFrais({}, "Licence"), "Frais non vérifiés");
+});
+
+// ------------------------------------------------------------------
+// Un niveau replié ne classe pas (D2-ter)
+// ------------------------------------------------------------------
+
+test("replie → bande « inconnu », même pour un montant qui serait « gratuit » ; sans repli, le 0 € du niveau le plus bas reste « gratuit »", () => {
+assert.equal(bandeCout(398, "EUR", { replie: true }), "inconnu");
+assert.equal(bandeCout(0, "EUR", { replie: true }), "inconnu");
+assert.equal(bandeCout(0, "EUR", { replie: false }), "gratuit");
+assert.equal(bandeCout(0, "EUR"), "gratuit");
+const zero = verifiee({ licence: { montant: 0, devise: "EUR", periode: "an" } });
+const r = premierNiveauVerifie(zero, ["Licence", "Master"], OPT);
+assert.equal(r.replie, false);
+assert.equal(bandeCout(r.frais.montant, r.frais.devise, { replie: r.replie }), "gratuit");
+});
+
+// Onze « eleve », pas douze : Polytechnique n'affiche qu'un master
+// replié (pas de prix de licence vérifié), donc elle est non classée
+// elle aussi — le repli est la condition, quel que soit le montant.
+test("rejeu : aucune université française en « gratuit » ; Dauphine « abordable », onze « eleve » ; Sorbonne, Paris Cité et Polytechnique non classées mais affichées", () => {
+const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+const francaises = catalogue.universities.filter((u) => u.country === "France");
+const niveauxDe = (u) => [...new Set(catalogue.programs.filter((p) => p.universityId === u.id).map((p) => p.level).filter(Boolean))];
+const bandes = new Map();
+for (const u of francaises) {
+const r = premierNiveauVerifie(u, niveauxDe(u));
+bandes.set(u.name, { bande: bandeCout(r.frais.montant, r.frais.devise, { replie: r.replie }), puce: plat(libellePuce(r.frais, r)) });
+}
+const par = (b) => [...bandes.entries()].filter(([, v]) => v.bande === b).map(([n]) => n).sort();
+assert.deepEqual(par("gratuit"), [], "depuis le 1er septembre 2026, aucune université française n'est gratuite pour un étudiant hors UE");
+assert.deepEqual(par("abordable"), ["Université Paris Dauphine-PSL"]);
+assert.equal(par("eleve").length, 11, par("eleve").join(", "));
+assert.deepEqual(par("inconnu").filter((n) => /Polytechnique|Sorbonne Université|Paris Cité/.test(n)).length, 3);
+assert.equal(bandes.get("Sorbonne Université").bande, "inconnu");
+assert.equal(bandes.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
+assert.equal(bandes.get("Université Paris Cité").bande, "inconnu");
+assert.equal(bandes.get("Université Paris Cité").puce, "à partir de 398 €/an · doctorat");
+assert.equal(bandes.get("École polytechnique").bande, "inconnu");
 });
 
 test("SEUIL_GRATUIT / SEUIL_ABORDABLE dérivent de SEUILS_PAR_DEVISE.EUR (source unique)", () => {
