@@ -69,11 +69,13 @@ else if (tries > 40) clearInterval(t);
 // ==========================================================
 
 const PUBLIC_PRIMARY = [
-{ href: "index.html", title: "Accueil", sub: "La bourse qui vous correspond", icon: "house" },
-{ href: "scholarships.html", title: "Bourses d'études", sub: "Catalogue vérifié, bourse par bourse", icon: "award" },
-{ href: "universities.html", title: "Universités", sub: "Établissements et portails officiels", icon: "landmark" },
+{ href: "index.html", title: "Accueil", sub: "Bourse ou préinscription, accompagné jusqu'au dépôt", icon: "house" },
+{ href: "scholarships.html", title: "Bourses", sub: "Catalogue vérifié, bourse par bourse", icon: "award" },
+// Lot Préinscriptions (2026-09-07) : la même entrée que le menu public.
+{ href: "preinscriptions.html", title: "Préinscriptions", sub: "Partir en finançant vos études", icon: "file-check" },
+{ href: "universities.html", title: "Universités", sub: "Établissements, coûts vérifiés et portails officiels", icon: "landmark" },
 { href: "eligibility-test.html", title: "Mon diagnostic Fitz", sub: "5 minutes, confidentiel, sans engagement", icon: "compass" },
-{ href: "offers.html", title: "Formules", sub: "Accompagnement jusqu'à l'admission", icon: "layers" }
+{ href: "offers.html", title: "Formules", sub: "Accompagnement jusqu'au dépôt", icon: "layers" }
 ];
 
 function buildPublicSheet() {

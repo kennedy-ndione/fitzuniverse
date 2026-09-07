@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 
 import { couperLeReseau } from "./hors-ligne.mjs";
 import { etatCandidature, analyserEcheance, etatAffichable } from "../../js/echeance.js";
+import { lirePays, etatDunPays, LIBELLES_PROCEDURE } from "../../js/pays-preinscription.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -765,6 +766,72 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
     } catch (e) {
       anomalies.push(`ÉCHEC coût par université : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 7. preinscriptions.html (lot Préinscriptions, 2026-09-07) ----------
+  //
+  // Hors ligne, depuis l'instantané, 390×844. La carte France doit dire
+  // les effectifs que Node recalcule (26 / 15 au lot D2), une carte
+  // « prochaine » doit porter son libellé de procédure depuis le
+  // vocabulaire fermé, aucune carte ne peut dire « pas à pas », et la
+  // page ne doit manquer aucun fichier ni lever d'erreur console.
+  {
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base);
+
+    try {
+
+      const snapshot = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+      const pays = lirePays();
+      const france = pays[0];
+      const attenduFrance = etatDunPays(france, snapshot);
+      const prochaine = pays[1];
+
+      await page.goto(`${base}/preinscriptions.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("#paysListe .pre-pays", { timeout: 20000 });
+      await page.waitForFunction(() => document.querySelectorAll("#paysListe .pre-pays").length >= 7, null, { timeout: 15000 });
+
+      const vu = await page.evaluate(() => {
+        const texte = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
+        const cartes = [...document.querySelectorAll("#paysListe .pre-pays")].map((c) => ({
+          id: c.id, nom: texte(c.querySelector("h3")), effectifs: texte(c.querySelector(".pre-pays-effectifs")),
+          procedure: texte(c.querySelector(".pre-pays-procedure")), principal: c.classList.contains("pre-pays--principal"),
+          lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: texte(c), dates: c.querySelectorAll(".pre-fait-source").length
+        }));
+        return { cartes, deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth, faitsFrance: document.querySelectorAll("#faitsFrance .pre-fait").length };
+      });
+
+      if (vu.cartes.length !== 7) anomalies.push(`preinscriptions.html : ${vu.cartes.length} carte(s) de pays au lieu de 7.`);
+      if (vu.deborde) anomalies.push("preinscriptions.html : débordement horizontal à 390 px.");
+
+      const cFrance = vu.cartes[0];
+      if (!cFrance || cFrance.nom !== "France" || !cFrance.principal) anomalies.push(`preinscriptions.html : la première carte n'est pas la France en plein (${cFrance && cFrance.nom}).`);
+      const attenduTexte = `${attenduFrance.etablissements} établissements au catalogue · ${attenduFrance.coutsVerifies} avec coût vérifié`;
+      if (cFrance && cFrance.effectifs !== attenduTexte) anomalies.push(`carte France : « ${cFrance.effectifs} » au lieu de « ${attenduTexte} » (recalculé depuis l'instantané).`);
+      if (cFrance && !cFrance.lien.includes("country=France")) anomalies.push(`carte France : lien « ${cFrance.lien} » sans filtre pays.`);
+
+      const cProchaine = vu.cartes[1];
+      if (cProchaine && !cProchaine.procedure.startsWith(LIBELLES_PROCEDURE[prochaine.procedure])) anomalies.push(`carte ${cProchaine.nom} : procédure « ${cProchaine.procedure} » au lieu du libellé « ${LIBELLES_PROCEDURE[prochaine.procedure]} ».`);
+
+      for (const c of vu.cartes) {
+        const p = pays.find((x) => `pays-${x.id}` === c.id);
+        if (p && p.procedure !== "documentee" && /pas à pas/i.test(c.texte)) anomalies.push(`carte ${c.nom} : dit « pas à pas » sans procédure documentée.`);
+        if (p) {
+          const e = etatDunPays(p, snapshot);
+          if (!c.effectifs.startsWith(String(e.etablissements))) anomalies.push(`carte ${c.nom} : « ${c.effectifs} » ne commence pas par ${e.etablissements}.`);
+          if (c.dates !== p.faits.length) anomalies.push(`carte ${c.nom} : ${c.dates} date(s) de vérification pour ${p.faits.length} fait(s).`);
+        }
+      }
+
+      if (vu.faitsFrance !== france.faits.length) anomalies.push(`« Ce que ça coûte vraiment » : ${vu.faitsFrance} fait(s) affiché(s) pour ${france.faits.length} dans la source.`);
+
+      notes.push(`preinscriptions.html : ${vu.cartes.length} pays — France « ${cFrance ? cFrance.effectifs : "?"} » — ${cProchaine ? cProchaine.nom + " : " + cProchaine.procedure.slice(0, 44) : "?"}`);
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC preinscriptions.html : ${e.message}`);
     }
 
     anomalies.push(...erreurs);
