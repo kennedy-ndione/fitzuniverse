@@ -16,6 +16,8 @@ import {
 FEATURE_CATALOG,
 PLAN_ORDER,
 PLAN_LABELS,
+PLAN_PREINSCRIPTION_ORDER,
+PLAN_PREINSCRIPTION_LABELS,
 resolveFeatureFlags
 } from "../js/plan-features.js";
 
@@ -41,11 +43,12 @@ if (!head) return;
 
 head.querySelectorAll("th:not(:first-child)").forEach((th) => th.remove());
 
-PLAN_ORDER.forEach((planId) => {
+// Grille B : les offres préinscription ont leurs colonnes, après les bourses.
+[...PLAN_ORDER, ...PLAN_PREINSCRIPTION_ORDER].forEach((planId) => {
 
 const th = document.createElement("th");
 th.setAttribute("scope", "col");
-th.textContent = PLAN_LABELS[planId];
+th.textContent = PLAN_LABELS[planId] || PLAN_PREINSCRIPTION_LABELS[planId];
 head.appendChild(th);
 
 });
@@ -68,7 +71,7 @@ row.innerHTML = `
 <div>${label}</div>
 <div class="plans-feature-description">${description}</div>
 </td>
-${PLAN_ORDER.map((planId) => `
+${[...PLAN_ORDER, ...PLAN_PREINSCRIPTION_ORDER].map((planId) => `
 <td>
 <label class="plan-toggle">
 <input type="checkbox" data-key="${key}" data-plan="${planId}" ${featureFlags[key][planId] ? "checked" : ""}>

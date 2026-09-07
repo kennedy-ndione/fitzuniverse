@@ -102,7 +102,7 @@ document.querySelectorAll("[data-feature]").forEach((el) => {
 const key = el.dataset.feature;
 const flags = featureFlags[key];
 if (!flags) return;
-const locked = isFeatureLocked(session.planId, featureFlags, key, session.testerAccess, session.hasFitzExpress);
+const locked = isFeatureLocked(session.planId, featureFlags, key, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
 const link = el.matches("a") ? el : el.querySelector("a[data-real-href]");
 el.classList.toggle("is-locked", locked);
 if (!link) return;
@@ -129,7 +129,7 @@ advisorNav.hidden = !hasAdvisor;
 // Droit de réponse de la messagerie FitzUniverse — même règle que
 // js/app-shell.js (fonctionnalité "student_messaging").
 initMessagesPanel(session.user.uid, {
-canReply: !!featureFlags && !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress)
+canReply: !!featureFlags && !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
 
 if (window.lucide) lucide.createIcons();

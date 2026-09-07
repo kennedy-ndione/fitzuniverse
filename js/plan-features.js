@@ -102,6 +102,20 @@ premium: "Premium",
 signature: "Signature"
 };
 
+// ==========================================================
+// GRILLE B — le second forfait, PRÉINSCRIPTION (2026-09-07). Un ordre
+// et des libellés SÉPARÉS de PLAN_ORDER : un compte porte au plus une
+// formule bourse ET au plus une offre préinscription, et ses droits
+// sont l'UNION des deux (voir decideVerrou et resolveFeatureFlags).
+// ==========================================================
+export const PLAN_PREINSCRIPTION_ORDER = ["diagnostic-france", "dossier-france", "dossier-france-conseiller"];
+
+export const PLAN_PREINSCRIPTION_LABELS = {
+"diagnostic-france": "Diagnostic France",
+"dossier-france": "Dossier France",
+"dossier-france-conseiller": "Dossier France + Conseiller"
+};
+
 export const FEATURE_CATALOG = [
 { key: "applications", label: "Suivi des candidatures", description: "Suivi par étapes des candidatures déposées, avec rappels de vérification sur les portails universitaires." },
 { key: "documents", label: "Checklists & documents", description: "Suivi des documents attendus pour chaque candidature." },
@@ -124,7 +138,11 @@ export const FEATURE_CATALOG = [
 // tous les liens wa.me d'accompagnement (accueil, offres, conseiller).
 // Seule exception assumée : le bouton d'ACHAT de la formule Signature
 // sur offers.html (canal commercial, visible de tous).
-{ key: "whatsapp_direct", label: "WhatsApp direct", description: "Échanges directs sur WhatsApp avec l'équipe — réservé à Signature." }
+{ key: "whatsapp_direct", label: "WhatsApp direct", description: "Échanges directs sur WhatsApp avec l'équipe — réservé à Signature." },
+// Grille B (2026-09-07) : le Diagnostic France — de l'arithmétique sur
+// des seuils publiés, aucune IA. Ouvert par les trois offres
+// préinscription, par aucune formule bourse.
+{ key: "diagnostic_france", label: "Diagnostic France", description: "Ressources, droits, plafond d'exonération et frais de dossier contre les seuils publiés — avant de payer Campus France." }
 ];
 
 // Toute offre payante donne 100% des outils Fitz — y compris Premier
@@ -152,8 +170,49 @@ interview_prep: { gratuit: false, "premier-dossier": true, essentiel: true, acco
 // "human" de pricing-plans.js. Voir la note en tête de fichier.
 advisor: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": true, signature: true },
 student_messaging: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-whatsapp_direct: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: true }
+whatsapp_direct: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: true },
+diagnostic_france: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: false }
 };
+
+// Les DROITS DES OFFRES PRÉINSCRIPTION (grille B). Fusionnés dans les
+// drapeaux par resolveFeatureFlags() : un drapeau vaut true pour un
+// compte si SA formule bourse OU SON offre préinscription l'ouvre.
+//   diagnostic-france : la page du diagnostic uniquement.
+//   dossier-france    : candidatures préinscription (quota 7), documents,
+//                       préparation aux entretiens, messagerie. PAS advisor,
+//                       aucun outil Fitz (le parcours n'a pas d'étape Fitz).
+//   + conseiller      : idem + advisor.
+export const PREINSCRIPTION_FEATURE_CONFIG = {
+applications: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+documents: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+ai_chat: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+ai_letter: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+ai_check: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+ai_email: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+ai_translate: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+compress: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+interview_prep: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+advisor: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": true },
+student_messaging: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+whatsapp_direct: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+diagnostic_france: { "diagnostic-france": true, "dossier-france": true, "dossier-france-conseiller": true }
+};
+
+/**
+* La décision de verrou, PURE (testable sans Firebase) — l'UNION des deux
+* forfaits. Verrouillé seulement si la formule bourse ne l'ouvre pas ET
+* que l'offre préinscription ne l'ouvre pas non plus. js/access-guard.js
+* (isFeatureLocked) délègue ici.
+*/
+export function decideVerrou({ planId, planPreinscriptionId = "", featureFlags, featureKey, testerAccess = false, hasFitzExpress = false }) {
+if (testerAccess) return false;
+if (hasFitzExpress && featureKey === "ai_chat") return false;
+const flags = featureFlags && featureFlags[featureKey];
+if (!flags) return false;
+if (flags[planId] !== false) return false;
+if (planPreinscriptionId && flags[planPreinscriptionId] === true) return false;
+return true;
+}
 
 // ==========================================================
 // QUOTA DE CANDIDATURES ACCOMPAGNÉES — décision pure, testable
@@ -189,7 +248,7 @@ const merged = {};
 
 FEATURE_CATALOG.forEach(({ key }) => {
 
-const defaults = DEFAULT_FEATURE_CONFIG[key];
+const defaults = { ...DEFAULT_FEATURE_CONFIG[key], ...(PREINSCRIPTION_FEATURE_CONFIG[key] || {}) };
 const overrides = (rawConfig && rawConfig.features && rawConfig.features[key]) || {};
 
 merged[key] = { ...defaults, ...overrides };

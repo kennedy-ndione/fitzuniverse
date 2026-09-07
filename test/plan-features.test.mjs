@@ -149,7 +149,7 @@ test("toute offre payante donne 100% des outils Fitz", () => {
 //   - "whatsapp_direct" (2026-09-02) : décision utilisateur, WhatsApp
 //     est STRICTEMENT réservé à Signature. Ce test l'exigeait encore
 //     dans toutes les offres payantes et échouait depuis lors.
-const HORS_OUTILS = ["advisor", "whatsapp_direct"];
+const HORS_OUTILS = ["advisor", "whatsapp_direct", "diagnostic_france"];
 const OUTILS_FITZ = FEATURE_CATALOG.filter(({ key }) => !HORS_OUTILS.includes(key));
 
 const flags = resolveFeatureFlags(null);

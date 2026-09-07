@@ -138,6 +138,19 @@ un état (« déjà acquis »), pas un décor. -->
 <!-- SECTION A — POUR DÉMARRER
 Le Pass Découverte n'est pas une formule (type "pass") et ne doit jamais
 apparaître comme une colonne des formules complètes. -->
+<!-- GRILLE B (2026-09-07) : DEUX COLONNES, jamais les deux grilles dans
+le même tableau. « Bourses » : l'unité est la candidature accompagnée, à
+la fois. « Préinscriptions » : l'unité est le dossier Études en France,
+pour une campagne. Ambition (9 candidatures, 75 000 F) et Dossier France
+(1 dossier, 75 000 F) côte à côte se liraient comme une mauvaise affaire :
+chaque colonne explique son unité. -->
+<div class="pricing-columns">
+<section class="pricing-column" id="bourses" aria-labelledby="colBoursesTitre">
+<div class="pricing-column-head reveal">
+<span class="plans-kicker">Bourses</span>
+<h2 id="colBoursesTitre">Candidater à des bourses</h2>
+<p>L'unité : la candidature accompagnée. Chaque formule en couvre un nombre <strong>à la fois</strong> — terminer une candidature libère sa place.</p>
+</div>
 <div id="family-autonome" class="section-heading-plans reveal">
 <span class="plans-kicker">Pour démarrer</span>
 <h2>Deux façons simples de commencer avec Fitz.</h2>
@@ -158,7 +171,7 @@ apparaître comme une colonne des formules complètes. -->
 <div class="consult-cta-wrap">
 
 <div class="plan-price">
-<span class="plan-price-local">10 000 FCFA</span>
+<span class="plan-price-local" data-price-of="fitzExpress">10 000 FCFA</span>
 <span class="plan-price-main"><span class="plan-amount">15</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">14 jours</span>
 </div>
@@ -192,7 +205,7 @@ concurrente. -->
 <div class="consult-cta-wrap">
 
 <div class="plan-price">
-<span class="plan-price-local">15 000 FCFA</span>
+<span class="plan-price-local" data-price-of="premier-dossier">15 000 FCFA</span>
 <span class="plan-price-main"><span class="plan-amount">23</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">1 candidature, sans abonnement</span>
 </div>
@@ -234,7 +247,7 @@ en pied de page. Le détail "≈ N F/mois" a été retiré à la même
 demande ; seule la durée d'accompagnement reste, ce n'est pas un prix
 mais une caractéristique de l'offre. -->
 <div class="plan-price">
-<span class="plan-price-local">45 000 FCFA</span>
+<span class="plan-price-local" data-price-of="essentiel">45 000 FCFA</span>
 <span class="plan-price-main"><span class="plan-amount">69</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">6 mois d'accompagnement</span>
 <!-- Le prix raconté (chantier grille du 2026-08-29) : le montant absolu
@@ -244,7 +257,7 @@ que l'étudiant dépense déjà. La mensualité a été retirée le même jour
 mensuels, l'afficher prêtait à confusion). Chiffre dérivé du prix
 (45 000 F / 5 candidatures) : recalculer si priceFCFA change dans
 pricing-plans.js. -->
-<span class="plan-price-note">soit 9 000 F par candidature</span>
+<span class="plan-price-note" data-per-application-of="essentiel">soit 9 000 F par candidature</span>
 </div>
 
 <div class="plan-quota">
@@ -286,10 +299,10 @@ durée (doctrine plan-features : aucun outil réservé au-dessus). -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-local">75 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">114</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="accompagnement">75 000 FCFA</span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="accompagnement">114</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">9 mois d'accompagnement</span>
-<span class="plan-price-note">soit environ 8 300 F par candidature</span>
+<span class="plan-price-note" data-per-application-of="accompagnement">soit environ 8 300 F par candidature</span>
 </div>
 
 <div class="plan-quota">
@@ -355,7 +368,7 @@ inclus dès Essentiel — les afficher ici laissait croire le contraire). -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-local">150 000 FCFA</span>
+<span class="plan-price-local" data-price-of="signature-focus">150 000 FCFA</span>
 <span class="plan-price-main"><span class="plan-amount">229</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">9 mois d'accompagnement</span>
 </div>
@@ -399,7 +412,7 @@ d'incitation du tableau de bord. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-local">250 000 FCFA</span>
+<span class="plan-price-local" data-price-of="signature">250 000 FCFA</span>
 <span class="plan-price-main"><span class="plan-amount">381</span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">12 mois d'accompagnement</span>
 </div>
@@ -446,6 +459,97 @@ différentes. Un seul bloc, quatre lignes, icônes nues.
 Le lien WhatsApp garde sa classe .reassurance-item-whatsapp : le script
 en pied de page la cible pour ne le révéler qu'aux abonnés Renforcé/
 Signature. -->
+</section>
+
+<section class="pricing-column pricing-column--preinscriptions" id="preinscriptions" aria-labelledby="colPreTitre">
+<div class="pricing-column-head reveal">
+<span class="plans-kicker">Préinscriptions</span>
+<h2 id="colPreTitre">Partir en finançant vos études</h2>
+<p>L'unité : <strong>le dossier Études en France</strong>, jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant — <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné jusqu'au dépôt, jamais jusqu'à l'admission.</p>
+</div>
+
+<div class="starter-stack">
+<div class="consult-banner reveal">
+<i class="consult-icon" data-lucide="calculator"></i>
+<div class="consult-body">
+<h3>Diagnostic France</h3>
+<p>Vos ressources contre le seuil publié, les droits d'inscription, le plafond d'exonération et les 85 000 F de dossier. Une réponse honnête, chiffrée et sourcée, avant de payer Campus France. Aucune IA : de l'arithmétique sur des seuils publiés.</p>
+</div>
+<div class="consult-cta-wrap">
+<div class="plan-price">
+<span class="plan-price-local" data-price-of="diagnostic-france">10 000 FCFA</span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="diagnostic-france">15</span><span class="plan-currency">€</span></span>
+<span class="plan-price-term">14 jours</span>
+</div>
+<button type="button" class="btn btn-secondary plan-cta" data-plan="diagnostic-france">
+<span>Faire mon Diagnostic France</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</div>
+</div>
+</div>
+
+<div class="pricing-grid-wrap">
+<div class="pricing-grid">
+
+<article class="plan-card plan-card-featured reveal">
+<div class="plan-head">
+<h2>Dossier France</h2>
+<p class="plan-tagline">Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.</p>
+</div>
+<div class="plan-price">
+<span class="plan-price-local" data-price-of="dossier-france">75 000 FCFA</span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france">114</span><span class="plan-currency">€</span></span>
+<span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
+<span class="plan-price-note">moins que les 85 000 F de dossier Campus France, pour un dossier complet avant de les payer</span>
+</div>
+<div class="plan-quota">
+<strong>Jusqu'à 7</strong>
+<span>vœux Études en France, dans un seul dossier</span>
+</div>
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Profil, pièces, traductions et légalisations, preuve de ressources — vérifiés avant l'envoi</span></li>
+<li><i data-lucide="check"></i><span>Le Diagnostic France inclus</span></li>
+<li><i data-lucide="check"></i><span>Préparation à l'entretien Campus France</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions</span></li>
+<li><i data-lucide="check"></i><span>Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission</span></li>
+</ul>
+<button type="button" class="btn btn-accent plan-cta" data-plan="dossier-france">
+<span>Choisir Dossier France</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</article>
+
+<article class="plan-card plan-card--human reveal">
+<div class="plan-head">
+<h2>Dossier France + Conseiller</h2>
+<p class="plan-tagline">Le même dossier, plus une relecture humaine avant les 85 000 F non remboursables.</p>
+</div>
+<div class="plan-price">
+<span class="plan-price-local" data-price-of="dossier-france-conseiller">150 000 FCFA</span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france-conseiller">229</span><span class="plan-currency">€</span></span>
+<span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
+</div>
+<div class="plan-quota">
+<strong>Jusqu'à 7</strong>
+<span>vœux Études en France, relus par un conseiller</span>
+</div>
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Tout le contenu de Dossier France</span></li>
+<li><i data-lucide="check"></i><span>Une relecture humaine de votre dossier AVANT le paiement des 85 000 F non remboursables</span></li>
+<li><i data-lucide="check"></i><span>Un conseiller joignable pendant toute la campagne</span></li>
+</ul>
+<button type="button" class="btn btn-secondary plan-cta" data-plan="dossier-france-conseiller">
+<span>Choisir Dossier France + Conseiller</span>
+<i data-lucide="arrow-right"></i>
+</button>
+</article>
+
+</div>
+</div>
+</section>
+</div>
+
 <div class="offer-footnotes reveal">
 
 <p class="footnote-line">

@@ -38,9 +38,9 @@ setDoc,
 serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-import { PLAN_ORDER, PLAN_LABELS, resolveFeatureFlags } from "./plan-features.js";
+import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS, resolveFeatureFlags, decideVerrou } from "./plan-features.js";
 
-export { PLAN_ORDER, PLAN_LABELS };
+export { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS };
 
 // Formule résolue pour le compte propriétaire (voir la note dans
 // resolveSession() ci-dessous) — la plus complète de PLAN_ORDER,
@@ -104,6 +104,22 @@ return !isNaN(expiry) && expiry.getTime() >= Date.now();
 
 }
 
+// Grille B (2026-09-07) : le second forfait, PRÉINSCRIPTION. Même règle
+// que resolvePlan : hors vocabulaire ou expiré = aucune offre ("").
+export function resolvePlanPreinscription(userData) {
+
+const raw = String((userData && userData.planPreinscription) || "").toLowerCase();
+
+if (!PLAN_PREINSCRIPTION_ORDER.includes(raw)) return "";
+
+const expiry = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt) : null;
+
+if (expiry && !isNaN(expiry) && expiry.getTime() < Date.now()) return "";
+
+return raw;
+
+}
+
 // Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER
 // pour que les comptes qui la détiennent déjà continuent de fonctionner,
 // mais ne doit plus jamais être SUGGÉRÉE à l'achat — ni comme prochain
@@ -139,12 +155,10 @@ return PLAN_ORDER.filter((p) => p !== planId && flags[p] && isSellablePlan(p));
 // hasFitzExpress : un Pass Fitz Express actif débloque uniquement
 // "ai_chat" (questions ponctuelles), jamais les autres outils — il ne
 // remplace pas un abonnement, voir pricing-plans.js.
-export function isFeatureLocked(planId, featureFlags, featureKey, testerAccess, hasFitzExpress) {
-if (testerAccess) return false;
-if (hasFitzExpress && featureKey === "ai_chat") return false;
-const flags = featureFlags[featureKey];
-if (!flags) return false;
-return flags[planId] === false;
+// `planPreinscriptionId` (grille B) : les droits sont l'UNION des deux
+// forfaits — la décision vit dans decideVerrou (js/plan-features.js).
+export function isFeatureLocked(planId, featureFlags, featureKey, testerAccess, hasFitzExpress, planPreinscriptionId = "") {
+return decideVerrou({ planId, planPreinscriptionId, featureFlags, featureKey, testerAccess, hasFitzExpress });
 }
 
 // ==========================================================
@@ -275,7 +289,8 @@ profile,
 planId,
 disabled: userData.disabled === true,
 testerAccess: userData.testerAccess === true,
-hasFitzExpress: hasFitzExpressAccess(userData)
+hasFitzExpress: hasFitzExpressAccess(userData),
+planPreinscriptionId: resolvePlanPreinscription(userData)
 });
 
 } catch (error) {
@@ -363,7 +378,7 @@ showGuardLoader();
 
 const featureFlags = await fetchFeatureFlags();
 
-if (isFeatureLocked(session.planId, featureFlags, featureKey, session.testerAccess, session.hasFitzExpress)) {
+if (isFeatureLocked(session.planId, featureFlags, featureKey, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
 
 const target = unlockingPlans(session.planId, featureFlags[featureKey])[0];
 

@@ -41,7 +41,7 @@ ${principal ? "" : `<span class="pre-pays-prochain">Prochaine destination</span>
 <p class="pre-pays-effectifs"><strong>${etat.etablissements}</strong> établissement${etat.etablissements > 1 ? "s" : ""} au catalogue · <strong>${etat.coutsVerifies}</strong> avec coût vérifié</p>
 <p class="pre-pays-procedure ${escapeHtml(pays.procedure)}"><i data-lucide="${pays.procedure === "documentee" ? "route" : "clock"}" aria-hidden="true"></i><span>${escapeHtml(libelleProcedure(pays))}${pays.portail ? ` — portail : <a href="${escapeHtml(pays.portail.url)}" target="_blank" rel="noopener">${escapeHtml(pays.portail.nom)}</a>` : ""}</span></p>
 <p class="pre-pays-langues"><i data-lucide="languages" aria-hidden="true"></i><span>${escapeHtml(pays.langue.join(", "))}</span></p>
-${pays.faits.length ? `<ul class="pre-faits">${pays.faits.map(renderFait).join("")}</ul>` : ""}
+${pays.faits.length && !principal ? `<ul class="pre-faits">${pays.faits.map(renderFait).join("")}</ul>` : ""}
 ${pays.avertissement ? `<p class="pre-pays-avertissement"><i data-lucide="triangle-alert" aria-hidden="true"></i><span>${escapeHtml(pays.avertissement)}</span></p>` : ""}
 <a class="pre-pays-lien" href="${lien}">Voir les établissements<i data-lucide="arrow-right" aria-hidden="true"></i></a>
 </article>`;

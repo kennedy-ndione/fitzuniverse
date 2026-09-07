@@ -57,20 +57,39 @@ portail: { nom: "Études en France", url: "https://pastel.diplomatie.gouv.fr/etu
 procedure: "en_cours",
 faits: [
 {
+cle: "ressources",
 texte: "Ressources exigées pour le visa étudiant : 877,50 € par mois, soit environ 10 530 € par an, depuis le 1er août 2026 (décret n° 2026-526 du 22 juin 2026).",
 montant: 877.5, devise: "EUR",
+montants: { mensuel: 877.5, annuel: 10530 },
 source: "https://www.infomigrants.net/fr/post/72455/france--le-niveau-minimum-de-ressources-pour-les-etudiants-etrangers-passe-a-877-euros-a-compter-du-1er-aout-2026",
 verifieLe: "2026-09-07"
 },
 {
+cle: "droits",
 texte: "Droits d'inscription différenciés 2026-2027 : 2 902 € en licence, 3 950 € en master. Les exonérations sont plafonnées à 30 % des étudiants non européens (25 % en 2027-2028).",
 montant: 3950, devise: "EUR",
+montants: { licence: 2902, master: 3950 },
+plafondExoneration: 0.30,
 source: "https://www.service-public.gouv.fr/particuliers/actualites/A18927?lang=en",
 verifieLe: "2026-09-07"
 },
 {
+cle: "procedure",
 texte: "Études en France : 73 pays concernés, entretien obligatoire, 7 vœux au maximum par niveau, frais de dossier variables selon le pays de résidence.",
 source: "https://demarchesetrangers.fr/blog/etudes-en-france-campus-france",
+verifieLe: "2026-09-07"
+},
+{
+cle: "fraisDossier",
+texte: "Frais de dossier Campus France Sénégal : 85 000 F CFA, non remboursables. « Ne procéder à aucun paiement avant de recevoir cette demande » de paiement ; règlement en agence SUNU BANK.",
+montant: 85000, devise: "XOF",
+source: "https://www.senegal.campusfrance.org/les-questions-frequemment-posees",
+verifieLe: "2026-09-07"
+},
+{
+cle: "calendrier",
+texte: "Calendrier Sénégal, rentrée 2026 : ouverture le 1er octobre, dépôt jusqu'au 15 décembre pour les formations connectées (du 1er avril au 12 juillet pour les non connectées), vérification des documents jusqu'au 27 juillet — la campagne se termine fin juillet.",
+source: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
 verifieLe: "2026-09-07"
 }
 ],
@@ -212,4 +231,42 @@ return { etablissements: dUnPays.length, coutsVerifies, procedure: pays.procedur
 /** Libellé de procédure, toujours depuis le vocabulaire fermé. */
 export function libelleProcedure(pays) {
 return LIBELLES_PROCEDURE[pays && pays.procedure] || LIBELLES_PROCEDURE.a_venir;
+}
+
+/**
+* La campagne Études en France (grille B, 2026-09-07). `ouverture` est un
+* fait (le 1er octobre, calendrier Campus France Sénégal — voir le fait
+* « calendrier »). `cloture` est une BORNE COMMERCIALE : Campus France
+* ne publie pas de date de fin de campagne pour 2027-2028 (vérifié le
+* 2026-09-07) ; la dernière échéance publiée pour 2026 est le 27 juillet
+* (vérification des documents). Le 31 juillet est donc la fin de la
+* durée « une campagne » des offres Dossier France — pas un fait, une
+* décision, dite comme telle. Le serveur (functions/lib/achat.js) en
+* porte le MIROIR, et test/functions-achat.test.mjs compare les deux.
+*/
+export const CAMPAGNE_FRANCE = {
+ouverture: { mois: 10, jour: 1 },
+cloture: { mois: 7, jour: 31 },
+faitCalendrier: "calendrier"
+};
+
+/**
+* Le 31 juillet de la campagne en cours à `date` (UTC, fin de journée) :
+* août → décembre = l'année suivante ; janvier → juillet = la même année.
+* Référence côté site ; le calcul qui FAIT FOI est celui du webhook.
+*/
+export function finDeCampagne(date) {
+const d = date instanceof Date ? date : new Date(date);
+const mois = d.getUTCMonth() + 1;
+let annee = d.getUTCFullYear();
+if (mois > CAMPAGNE_FRANCE.cloture.mois) annee += 1;
+return new Date(Date.UTC(annee, CAMPAGNE_FRANCE.cloture.mois - 1, CAMPAGNE_FRANCE.cloture.jour, 23, 59, 59));
+}
+
+/** Un fait France par sa clé (`ressources`, `droits`, `fraisDossier`, …). */
+export function faitFrance(cle) {
+const france = PAYS.find((p) => p.id === "france");
+const fait = france && france.faits.find((f) => f.cle === cle);
+if (!fait) throw new Error(`Fait France introuvable : ${cle}`);
+return fait;
 }

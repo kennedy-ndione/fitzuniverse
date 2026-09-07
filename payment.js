@@ -463,7 +463,13 @@ return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cel
 // applications.js pour ouvrir directement le formulaire de candidature.
 const POST_ACTIVATION_TARGETS = {
 fitzExpress: "ai-chat.html",
-"premier-dossier": "applications.html?action=new"
+"premier-dossier": "applications.html?action=new",
+// Grille B (2026-09-07) : le diagnostic ouvre sa page ; un Dossier France
+// ouvre le formulaire de candidature, parcours préinscription pré-rempli
+// (le select du lot A lit ?track=preinscription).
+"diagnostic-france": "diagnostic-france.html",
+"dossier-france": "applications.html?action=new&track=preinscription",
+"dossier-france-conseiller": "applications.html?action=new&track=preinscription"
 };
 
 function resolvePostActivationTarget(planId) {

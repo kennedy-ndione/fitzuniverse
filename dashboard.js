@@ -624,7 +624,7 @@ renderUpgradeNudge(planId, testerAccess);
 // avec humain, même règle que partout (isFeatureLocked).
 const advisorBtn = document.getElementById("jyAdvisorBtn");
 if (advisorBtn) {
-advisorBtn.hidden = isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress);
+advisorBtn.hidden = isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress, session.planPreinscriptionId);
 }
 
 // ---- Données du parcours ----

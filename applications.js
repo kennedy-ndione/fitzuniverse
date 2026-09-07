@@ -30,7 +30,7 @@ serverTimestamp
 
 import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
-import { isQuotaReached } from "./js/plan-features.js";
+import { isQuotaReached, PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 // DEUX MOTEURS, DEUX USAGES — et c'est voulu (passe 2/3, 2026-09-06) :
 //
 //   retenirOpportunites  ce que Fitz PROPOSE de lui-même (créneaux
@@ -709,6 +709,11 @@ return d.toISOString().slice(0, 10);
 // confirmée" distinct, pour ne pas dupliquer isQuotaReached()).
 async function seedRecommendedSlots(uid, planId, existingApplications, profile) {
 
+// Grille B : les créneaux suggérés sont des BOURSES — on ne compte que
+// les candidatures de ce parcours, les préinscriptions (pre-N) ne
+// consomment pas ce quota.
+existingApplications = (existingApplications || []).filter((a) => lireParcours(a) !== "preinscription");
+
 const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
 const quota = plan ? plan.maxAccompaniedApplications : null;
 
@@ -830,10 +835,31 @@ return true;
 // `documentsObtained` : users/{uid}.documentsObtained (lot B, 2026-09-07),
 // LU par les étapes du parcours préinscription — écrit par documents.html
 // seulement.
-function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress, documentsObtained = {}) {
+// `planPreinscriptionId` (grille B, 2026-09-07) : le second forfait. Les
+// candidatures se comptent PAR PARCOURS : slot-N pour les bourses (quota
+// maxAccompaniedApplications), pre-N pour les préinscriptions (quota
+// maxPreinscriptions) — le serveur fait foi (firestore.rules).
+function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress, documentsObtained = {}, planPreinscriptionId = "") {
 
 const profileScore = calculateAiScore(profile);
-const advisorUnlocked = !isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress);
+const advisorUnlocked = !isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress, planPreinscriptionId);
+
+const planBourse = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
+const planPre = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planPreinscriptionId];
+const peutBourse = testerAccess || !!(planBourse && planBourse.maxAccompaniedApplications > 0);
+const peutPreinscription = testerAccess || !!(planPre && planPre.maxPreinscriptions > 0);
+
+function estPreinscription(track) { return track === "preinscription"; }
+function quotaPour(track) {
+if (estPreinscription(track)) return planPre ? planPre.maxPreinscriptions : null;
+return planBourse ? planBourse.maxAccompaniedApplications : null;
+}
+function candidaturesDuParcours(track, liste) {
+return (liste || []).filter((a) => (lireParcours(a) === "preinscription") === estPreinscription(track));
+}
+function nomFormulePour(track) {
+return estPreinscription(track) ? (PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId] || "Dossier France") : PLAN_LABELS[planId];
+}
 
 let advisorRequests = [];
 
@@ -1181,6 +1207,10 @@ editingId = app ? app.id : null;
 modalTitle.textContent = app ? "Modifier la candidature" : "Nouvelle candidature";
 
 fields.track.value = lireParcours(app);
+// Grille B : on ne propose que les parcours que le compte peut accompagner.
+fields.track.querySelector('option[value="bourse"]').disabled = !peutBourse;
+fields.track.querySelector('option[value="preinscription"]').disabled = !peutPreinscription;
+if (!app && !peutBourse && peutPreinscription) fields.track.value = "preinscription";
 fields.university.value = app?.university || "";
 fields.scholarship.value = app?.scholarship || "";
 fields.portalUrl.value = app?.portalUrl || "";
@@ -1892,33 +1922,38 @@ trackEvent(outcomeEvent, { university: payload.university || "" });
 
 } else {
 
-// Quota de candidatures accompagnées (pricing-plans.js —
-// maxAccompaniedApplications, la seule vraie différence entre les
-// formules depuis le pivot tarifaire du 2026-07-30).
-const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
-const quota = plan ? plan.maxAccompaniedApplications : null;
+// Grille B (2026-09-07) : le quota se lit PAR PARCOURS. Une préinscription
+// demande une offre Dossier France (pre-N, 7 vœux) ; une bourse une
+// formule bourse (slot-N). Ici on prévient poliment ; c'est
+// firestore.rules qui fait foi.
+const track = payload.track;
 
-// La décision vit dans js/plan-features.js (fonction pure, couverte
-// par test/plan-features.test.mjs) plutôt qu'en ligne ici : elle est
-// ainsi vérifiable sans navigateur et sans écrire dans Firestore.
-if (isQuotaReached(quota, applications.length)) {
-
-// Libellé d'interface, pas le nom de marque long — voir la règle
-// dans js/plan-features.js.
-showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
+if (estPreinscription(track) && !peutPreinscription) {
+showToast("Cette candidature suit une préinscription : elle demande l'offre Dossier France. Vos formules bourse ne l'accompagnent pas.", { type: "error" });
 return;
+}
 
+if (!estPreinscription(track) && !peutBourse) {
+showToast("Cette candidature suit une bourse : elle demande une formule bourse. Votre offre Dossier France accompagne les préinscriptions.", { type: "error" });
+return;
+}
+
+const quota = quotaPour(track);
+const duParcours = candidaturesDuParcours(track, applications);
+
+if (isQuotaReached(quota, duParcours.length)) {
+showToast(estPreinscription(track)
+? `${nomFormulePour(track)} accompagne ${quota} vœux Études en France à la fois. Terminez-en un, ou retirez-en un.`
+: `Votre formule ${nomFormulePour(track)} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
+return;
 }
 
 payload.nextCheckDate = nextCheckFromToday(payload.reminderFrequency);
 payload.createdAt = serverTimestamp();
 
-// Créneau anti-triche (audit sécurité 2026-09-02) : l'id "slot-N" est
-// borné au quota de la formule par firestore.rules — la seule voie de
-// création acceptée par le serveur. isQuotaReached ci-dessus garantit
-// qu'un créneau est libre ; la garde ci-dessous couvre le cas limite
-// (données locales périmées) avec le même message que le quota.
-const slotId = slotIdLibre(applications, quota);
+// Créneau anti-triche : l'id "slot-N" (bourse) ou "pre-N" (préinscription)
+// est borné par firestore.rules — la seule voie de création acceptée.
+const slotId = slotIdLibre(duParcours, quota, estPreinscription(track) ? "pre" : "slot");
 
 if (!slotId) {
 showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
@@ -1966,18 +2001,26 @@ if (event.target === modal) closeModal();
 // fois.
 function maybeAutoOpenNewApplication() {
 
-const shouldOpen = new URLSearchParams(window.location.search).get("action") === "new";
+const params = new URLSearchParams(window.location.search);
+const shouldOpen = params.get("action") === "new";
+// Grille B : payment.js renvoie ici avec ?track=preinscription après un
+// achat Dossier France — le formulaire s'ouvre hors catalogue, parcours
+// pré-rempli (le select du lot A).
+const track = params.get("track") === "preinscription" ? "preinscription" : "bourse";
 
 if (!shouldOpen) return;
 
 window.history.replaceState({}, "", window.location.pathname);
 
-const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
-const quota = plan ? plan.maxAccompaniedApplications : null;
-
-if (isQuotaReached(quota, applications.length)) return;
+if (isQuotaReached(quotaPour(track), candidaturesDuParcours(track, applications).length)) return;
 
 openModal(null);
+
+if (estPreinscription(track) && peutPreinscription) {
+enterManualMode();
+fields.track.value = "preinscription";
+fields.track.dispatchEvent(new Event("change", { bubbles: true }));
+}
 
 }
 
@@ -2022,6 +2065,6 @@ return;
 
 }
 
-initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress, ctx.userData?.documentsObtained || {});
+initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress, ctx.userData?.documentsObtained || {}, ctx.planPreinscriptionId || "");
 
 });

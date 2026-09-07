@@ -42,6 +42,7 @@ import { trackEvent, trackVisitOnce } from "./analytics.js";
 import {
 PLAN_ORDER,
 PLAN_LABELS,
+PLAN_PREINSCRIPTION_LABELS,
 nextPlanId,
 unlockingPlans,
 isFeatureLocked,
@@ -77,7 +78,7 @@ nav.hidden = !hasAdvisor;
 
 // Identique à dashboard.js : verrouille/déverrouille chaque [data-feature]
 // (essentiellement les liens de la sidebar ici) selon la formule active.
-function applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress) {
+function applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, planPreinscriptionId = "") {
 
 document.querySelectorAll("[data-feature]").forEach((el) => {
 
@@ -86,7 +87,7 @@ const flags = featureFlags[key];
 
 if (!flags) return;
 
-const locked = isFeatureLocked(planId, featureFlags, key, testerAccess, hasFitzExpress);
+const locked = isFeatureLocked(planId, featureFlags, key, testerAccess, hasFitzExpress, planPreinscriptionId);
 const link = el.matches("a") ? el : el.querySelector("a[data-real-href]");
 
 if (!link) return;
@@ -404,9 +405,12 @@ const planBadge = document.getElementById("planBadge");
 if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
 
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
-if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
+// Grille B : un compte peut porter deux forfaits ; l'étiquette les dit
+// tous les deux (« Gratuit · Diagnostic France »), le second n'étant
+// jamais tu derrière le premier.
+if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId] + (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] ? " · " + PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] : "");
 
-applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress);
+applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
 applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess);
 
 // Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
@@ -419,7 +423,7 @@ if (window.lucide) lucide.createIcons();
 // Droit de réponse de la messagerie FitzUniverse : fonctionnalité
 // "student_messaging" (fermée au plan Gratuit — js/plan-features.js).
 initMessagesPanel(session.user.uid, {
-canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress)
+canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
 
 hideLoader();
@@ -432,7 +436,8 @@ planId: session.planId,
 featureFlags,
 testerAccess: session.testerAccess,
 hasFitzExpress: session.hasFitzExpress,
-locked: feature ? isFeatureLocked(session.planId, featureFlags, feature, session.testerAccess, session.hasFitzExpress) : false
+planPreinscriptionId: session.planPreinscriptionId || "",
+locked: feature ? isFeatureLocked(session.planId, featureFlags, feature, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId) : false
 };
 
 }).catch((error) => {

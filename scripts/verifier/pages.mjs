@@ -822,7 +822,10 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
         if (p) {
           const e = etatDunPays(p, snapshot);
           if (!c.effectifs.startsWith(String(e.etablissements))) anomalies.push(`carte ${c.nom} : « ${c.effectifs} » ne commence pas par ${e.etablissements}.`);
-          if (c.dates !== p.faits.length) anomalies.push(`carte ${c.nom} : ${c.dates} date(s) de vérification pour ${p.faits.length} fait(s).`);
+          // La carte France ne répète pas ses faits (ils vivent dans « Ce que ça
+          // coûte vraiment ») : zéro date attendue sur elle.
+          const datesAttendues = c.id === "pays-france" ? 0 : p.faits.length;
+          if (c.dates !== datesAttendues) anomalies.push(`carte ${c.nom} : ${c.dates} date(s) de vérification pour ${datesAttendues} attendue(s).`);
         }
       }
 

@@ -30,7 +30,7 @@ markAdvisorRequestProcessed
 
 import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
-import { PLAN_LABELS } from "../js/plan-features.js";
+import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
@@ -172,9 +172,13 @@ document.getElementById("detailAvatar").textContent = initials;
 const planKey = resolvePlan(userData);
 const planLabel = PLAN_LABELS[planKey];
 const disabled = userData.disabled === true;
+// Grille B : le second forfait (préinscription), en lecture seule ici —
+// aucune écriture admin sur ces champs, le webhook seul les pose.
+const planPreKey = resolvePlanPreinscription(userData);
 
 document.getElementById("detailPills").innerHTML = `
 <span class="status-pill plan-${planKey}">${planLabel}</span>
+${planPreKey ? `<span class="status-pill plan-signature-focus">${PLAN_PREINSCRIPTION_LABELS[planPreKey]}</span>` : ""}
 <span class="status-pill ${disabled ? "is-disabled" : "is-active"}">${disabled ? "Suspendu" : "Actif"}</span>
 ${userData.testerAccess === true ? `<span class="status-pill plan-premium">Accès test complet</span>` : ""}
 `;
@@ -315,6 +319,22 @@ const fitzExpressInput = document.getElementById("fitzExpressInput");
 const fitzExpressStatus = document.getElementById("fitzExpressStatus");
 
 fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
+
+// Grille B : le forfait préinscription et son échéance (lecture seule).
+const planPreStatus = document.getElementById("planPreinscriptionStatus");
+if (planPreStatus) {
+if (!userData.planPreinscription) {
+planPreStatus.textContent = "Aucune offre préinscription.";
+} else {
+const expPre = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt).getTime() : NaN;
+const nomPre = PLAN_PREINSCRIPTION_LABELS[userData.planPreinscription] || userData.planPreinscription;
+planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
+? `${nomPre} — aucune échéance enregistrée.`
+: (expPre < Date.now()
+? `${nomPre} — expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)}.`
+: `${nomPre} — active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)} (écrit par le paiement, non modifiable ici).`);
+}
+}
 
 if (!userData.fitzExpressExpiresAt) {
 fitzExpressStatus.textContent = "Aucun Pass Fitz Express actif.";

@@ -658,7 +658,7 @@ flags = await fetchFeatureFlags();
 } catch { /* valeurs par défaut : on ne bloque pas la fiche */ }
 
 const parcoursVerrouille = flags
-? isFeatureLocked(session.planId, flags, "applications", session.testerAccess, session.hasFitzExpress)
+? isFeatureLocked(session.planId, flags, "applications", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 : false;
 
 if (parcoursVerrouille) {

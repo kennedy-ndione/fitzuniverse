@@ -18,7 +18,7 @@
 * ============================================================
 */
 
-import { PLAN_LABELS, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
+import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
 
 // pricing-plans.js est chargé comme script classique (pas un module) sur
 // toute page qui en a besoin — voir applications.js/dashboard.js pour le
@@ -37,6 +37,9 @@ return (typeof window !== "undefined" && window.SCHOLARBRIDGE_PLANS)
 // DEFAULT_FEATURE_CONFIG.advisor, qui reste la source de vérité réelle ;
 // cette liste ne sert qu'à documenter l'intention pour qui lit ce fichier).
 const ADVISOR_PLANS = ["signature-focus", "signature"];
+// Grille B (2026-09-07) : la revue conseiller est aussi ouverte par
+// Dossier France + Conseiller — l'union des deux forfaits.
+const ADVISOR_PREINSCRIPTION = ["dossier-france-conseiller"];
 
 /**
 * @param {Object} session - résultat de resolveSession()/bootstrapShell()
@@ -56,21 +59,28 @@ export async function getUserEntitlements(session) {
 
 const featureFlags = await fetchFeatureFlags();
 const planData = readPlanData(session.planId);
+const planPreData = readPlanData(session.planPreinscriptionId || "");
 
 return {
 plan: session.planId,
 planLabel: PLAN_LABELS[session.planId],
+// Grille B : le second forfait et son quota — les droits sont l'UNION.
+planPreinscription: session.planPreinscriptionId || "",
+planPreinscriptionLabel: PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "",
+planPreinscriptionExpiresAt: (session.userData && session.userData.planPreinscriptionExpiresAt) || null,
+maxPreinscriptions: planPreData ? planPreData.maxPreinscriptions : 0,
 isFitzExpressActive: !!session.hasFitzExpress,
 fitzExpressExpiresAt: (session.userData && session.userData.fitzExpressExpiresAt) || null,
 maxApplications: planData ? planData.maxAccompaniedApplications : 0,
-hasAdvisor: ADVISOR_PLANS.includes(session.planId),
+hasAdvisor: ADVISOR_PLANS.includes(session.planId) || ADVISOR_PREINSCRIPTION.includes(session.planPreinscriptionId || ""),
 featureFlags,
 isFeatureLocked: (featureKey) => isFeatureLocked(
 session.planId,
 featureFlags,
 featureKey,
 session.testerAccess,
-session.hasFitzExpress
+session.hasFitzExpress,
+session.planPreinscriptionId
 )
 };
 

@@ -88,6 +88,7 @@ const SCHOLARBRIDGE_PLANS = {
 // il ne doit jamais apparaître comme une colonne du tableau comparatif.
 fitzExpress: {
 id: "fitzExpress",
+parcours: "bourse",
 type: "pass",
 label: "Pass Découverte",
 icon: "zap",
@@ -128,6 +129,7 @@ highlights: [
 // continuent de fonctionner à l'identique.
 "premier-dossier": {
 id: "premier-dossier",
+parcours: "bourse",
 type: "unit",
 // EN VENTE — ne pas remettre `deprecated: true` ici.
 // Ce commentaire affirmait l'inverse jusqu'au 2026-09-01 : une passe
@@ -174,6 +176,7 @@ highlights: [
 
 essentiel: {
 id: "essentiel",
+parcours: "bourse",
 type: "plan",
 label: "Forfait Essentiel",
 icon: "compass",
@@ -205,6 +208,7 @@ highlights: [
 
 accompagnement: {
 id: "accompagnement",
+parcours: "bourse",
 type: "plan",
 label: "Forfait Ambition",
 // "rocket" depuis le 2026-08-29 : sparkles est le cliché visuel de
@@ -250,6 +254,7 @@ highlights: [
 // Conseiller — Ambition est repassée à 9 candidatures le 2026-08-29.
 premium: {
 id: "premium",
+parcours: "bourse",
 type: "plan",
 label: "Premium",
 icon: "crown",
@@ -277,6 +282,7 @@ highlights: [
 
 "signature-focus": {
 id: "signature-focus",
+parcours: "bourse",
 type: "human",
 label: "Forfait Conseiller",
 icon: "user-check",
@@ -317,6 +323,7 @@ highlights: [
 
 signature: {
 id: "signature",
+parcours: "bourse",
 type: "human",
 label: "Signature",
 icon: "star",
@@ -351,6 +358,78 @@ highlights: [
 "Des échanges personnalisés (WhatsApp)",
 "L'assistance continue de Fitz tout au long du processus",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
+]
+},
+
+// ==========================================================
+// GRILLE B — PRÉINSCRIPTIONS (2026-09-07). Un SECOND forfait, qui
+// coexiste avec le forfait bourse : `users.planPreinscription`, écrit
+// par le webhook seul, jamais `plan`. Trois offres décidées, ne pas
+// rouvrir. France uniquement. Paiement en une fois, jamais de
+// remboursement, jamais de mensualité. `maxPreinscriptions` = les 7
+// vœux d'un dossier Études en France — dupliqué dans firestore.rules
+// (pre-[1-7]) et functions/lib/achat.js, test/grille-b.test.mjs
+// échoue si l'un des trois diverge.
+// ==========================================================
+
+"diagnostic-france": {
+id: "diagnostic-france",
+parcours: "preinscription",
+type: "pass",
+label: "Diagnostic France",
+icon: "calculator",
+tagline: "Une réponse honnête avant de payer Campus France.",
+badge: "Avant de payer",
+priceFCFA: 10000,
+duration: "14 jours",
+fitzAccess: "Aucun outil Fitz : de l'arithmétique sur des seuils publiés, avec leurs sources",
+maxPreinscriptions: 0,
+highlights: [
+"Vos ressources contre le seuil publié pour le visa (877,50 € par mois)",
+"Les droits d'inscription selon le niveau, et ce que change le plafond d'exonération à 30 %",
+"Les 85 000 F de dossier Campus France, non remboursables, et la règle « aucun paiement à l'avance »",
+"Un total annuel honnête, chaque chiffre daté et sourcé"
+]
+},
+
+"dossier-france": {
+id: "dossier-france",
+parcours: "preinscription",
+type: "campagne",
+label: "Dossier France",
+icon: "file-check",
+tagline: "Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.",
+badge: "Une campagne",
+priceFCFA: 75000,
+duration: "une campagne, jusqu'au 31 juillet",
+fitzAccess: "Documents, traductions et légalisations, preuve de ressources, préparation à l'entretien, messagerie FitzUniverse",
+maxPreinscriptions: 7,
+highlights: [
+"Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources",
+"Le Diagnostic France inclus",
+"Préparation à l'entretien Campus France",
+"Messagerie FitzUniverse pour vos questions",
+"Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission"
+]
+},
+
+"dossier-france-conseiller": {
+id: "dossier-france-conseiller",
+parcours: "preinscription",
+type: "campagne",
+label: "Dossier France + Conseiller",
+icon: "user-check",
+tagline: "Le même dossier, plus une relecture humaine avant les 85 000 F non remboursables.",
+badge: "Relecture humaine",
+priceFCFA: 150000,
+duration: "une campagne, jusqu'au 31 juillet",
+fitzAccess: "Tout Dossier France, plus la relecture de votre conseiller",
+maxPreinscriptions: 7,
+highlights: [
+"Tout le contenu de Dossier France",
+"Une relecture humaine de votre dossier AVANT le paiement des 85 000 F non remboursables",
+"Un conseiller joignable pendant toute la campagne",
+"Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission"
 ]
 }
 

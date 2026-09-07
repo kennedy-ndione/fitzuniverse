@@ -61,38 +61,10 @@ const SITE = "https://scholarbridge-e0d84.web.app";
 const API_BASE = "https://app.paydunya.com/sandbox-api/v1";
 // Production : "https://app.paydunya.com/api/v1"
 
-/**
- * Grille tarifaire — miroir serveur de pricing-plans.js.
- *
- * `premium` n'y figure pas : elle est `deprecated: true` côté client,
- * donc plus vendue. L'omettre ici la rend inachetable par une requête
- * fabriquée à la main, ce qu'un simple drapeau dans le navigateur ne
- * garantissait pas.
- *
- * `dureeMois: null` = achat unique sans échéance (Premier Dossier).
- * `pass: true`      = pass Fitz Express, qui n'écrit PAS `plan` mais
- *                     `fitzExpressExpiresAt` (voir appliquerAchat).
- */
-const GRILLE = {
-  fitzExpress: { label: "Pass Découverte", prix: 10000, dureeJours: 14, pass: true },
-  "premier-dossier": { label: "Forfait Premier Dossier", prix: 15000, dureeMois: null },
-  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6 },
-  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9 },
-  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9 },
-  signature: { label: "Signature", prix: 250000, dureeMois: 12 },
-};
-
-// Miroir de PLAN_ORDER (js/plan-features.js). Sert uniquement à ne
-// jamais RÉTROGRADER un client : voir appliquerAchat.
-const RANG = {
-  gratuit: 0,
-  "premier-dossier": 1,
-  essentiel: 2,
-  accompagnement: 3,
-  premium: 4,
-  "signature-focus": 5,
-  signature: 6,
-};
+// Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
+// testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
+// offres préinscription y écrivent `planPreinscription`, jamais `plan`.
+const { GRILLE, calculerMiseAJour } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -337,84 +309,35 @@ async function appliquerAchat(token, donneesPaydunya) {
     const userSnap = await tx.get(refUser);
     const user = userSnap.data() || {};
 
-    const maintenant = new Date();
-    const misAJour = {
-      pendingPlan: admin.firestore.FieldValue.delete(),
-      pendingPlanRequestedAt: admin.firestore.FieldValue.delete(),
-      dernierPaiementLe: maintenant.toISOString(),
-    };
+    const decision = calculerMiseAJour({
+      planId: p.planId,
+      user,
+      maintenant: new Date(),
+      supprimer: admin.firestore.FieldValue.delete(),
+    });
 
-    // --- Le pass Découverte n'est pas une formule ---
-    // Il n'écrit pas `plan` : il ouvre l'accès à Fitz par
-    // fitzExpressExpiresAt (voir estAutorise dans functions/fitz.js et
-    // resolvePlan dans js/access-guard.js). Un étudiant qui a une
-    // formule payante ET un pass garde les deux, sans interférence.
-    if (offre.pass) {
-      const restant = dateValide(user.fitzExpressExpiresAt);
-      const depart = restant && restant > maintenant ? restant : maintenant;
+    if (decision.statut === "rang-inferieur") {
+      // Rétrogradation : on encaisse (le paiement a eu lieu) mais on
+      // ne dégrade pas le compte. Un humain tranchera — remboursement
+      // exclu par la politique commerciale.
+      logger.warn("Achat de rang inférieur, compte inchangé", {
+        uid: p.uid,
+        planActuel: decision.planActuel,
+        planAchete: p.planId,
+      });
 
-      misAJour.fitzExpressExpiresAt = ajouterJours(depart, offre.dureeJours).toISOString();
-    } else {
-      const planActuel = String(user.plan || "gratuit");
-      const expiration = dateValide(user.planExpiresAt);
-      const encoreActif = !user.planExpiresAt || (expiration && expiration > maintenant);
+      tx.update(refPaiement, {
+        statut: "paye",
+        applique: false,
+        motif: "rang-inferieur-au-plan-actuel",
+        traiteLe: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
-      const rangActuel = encoreActif ? RANG[planActuel] ?? 0 : 0;
-      const rangAchete = RANG[p.planId] ?? 0;
-
-      if (rangAchete < rangActuel) {
-        // Rétrogradation : on encaisse (le paiement a eu lieu) mais on
-        // ne dégrade pas le compte. Un humain tranchera — remboursement
-        // exclu par la politique commerciale, donc c'est un geste
-        // commercial à décider, pas une règle automatique.
-        logger.warn("Achat de rang inférieur, compte inchangé", {
-          uid: p.uid,
-          planActuel,
-          planAchete: p.planId,
-        });
-
-        tx.update(refPaiement, {
-          statut: "paye",
-          applique: false,
-          motif: "rang-inferieur-au-plan-actuel",
-          traiteLe: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        tx.set(refUser, misAJour, { merge: true });
-        return "rang-inferieur";
-      }
-
-      misAJour.plan = p.planId;
-
-      if (offre.dureeMois === null) {
-        // Achat unique sans échéance (Premier Dossier). On efface une
-        // éventuelle échéance héritée d'une formule précédente : la
-        // laisser ferait expirer un accès qui n'expire pas.
-        misAJour.planExpiresAt = admin.firestore.FieldValue.delete();
-      } else {
-        // PROLONGATION plutôt que remise à zéro : racheter la même
-        // formule avant son échéance AJOUTE la durée à ce qui reste.
-        // Confisquer les mois déjà payés reviendrait à encaisser deux
-        // fois la même période, et punirait l'étudiant qui s'y prend
-        // tôt — exactement le contraire de ce qu'on veut encourager.
-        const memeFormule = planActuel === p.planId && encoreActif && expiration;
-        const depart = memeFormule && expiration > maintenant ? expiration : maintenant;
-
-        let echeance = ajouterMois(depart, offre.dureeMois);
-
-        // GARANTIE : un achat ne raccourcit JAMAIS un accès en cours.
-        // Le cas est improbable avec la grille actuelle (toute montée
-        // en gamme dure plus longtemps que ce qui pouvait rester), mais
-        // il suffirait d'une durée revue à la baisse pour qu'un
-        // étudiant paie et perde du temps. Trois lignes valent mieux
-        // qu'un incident.
-        if (expiration && expiration > echeance) echeance = expiration;
-
-        misAJour.planExpiresAt = echeance.toISOString();
-      }
+      tx.set(refUser, decision.misAJour, { merge: true });
+      return "rang-inferieur";
     }
 
-    tx.set(refUser, misAJour, { merge: true });
+    tx.set(refUser, decision.misAJour, { merge: true });
 
     tx.update(refPaiement, {
       statut: "paye",
@@ -429,28 +352,8 @@ async function appliquerAchat(token, donneesPaydunya) {
   });
 }
 
-// Les dates sont écrites en CHAÎNE ISO, jamais en Timestamp Firestore.
-// Ce n'est pas un détail : tout le code existant lit ces champs avec
-// `new Date(valeur)` (js/access-guard.js, functions/fitz.js). Un
-// Timestamp y deviendrait `Invalid Date`, et un accès payant serait
-// traité comme expiré.
-function dateValide(valeur) {
-  if (!valeur) return null;
-  const d = new Date(valeur);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function ajouterJours(depart, jours) {
-  const d = new Date(depart.getTime());
-  d.setDate(d.getDate() + jours);
-  return d;
-}
-
-function ajouterMois(depart, mois) {
-  const d = new Date(depart.getTime());
-  d.setMonth(d.getMonth() + mois);
-  return d;
-}
+// Les dates (chaînes ISO, jamais des Timestamp) et l'arithmétique des
+// échéances vivent dans functions/lib/achat.js.
 
 exports.paydunyaWebhook = onRequest(
   {

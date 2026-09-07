@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<!-- Diagnostic France (grille B, 2026-09-07). Page de l'espace connecté,
+verrouillée par la fonctionnalité "diagnostic_france" (offre Diagnostic
+France, ou tout Dossier France). De l'ARITHMÉTIQUE, aucune IA : chaque
+chiffre vient d'un fait sourcé et daté de js/pays-preinscription.js,
+via js/diagnostic-france.js. Le verdict parle de seuils publiés, jamais
+de visa ; aucune promesse de résultat. -->
+<title>Diagnostic France | FitzUniverse</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<meta name="description" content="Vos ressources contre le seuil publié, les droits d'inscription, le plafond d'exonération et les frais de dossier : une réponse chiffrée avant de payer Campus France.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="css/app-typography.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<link rel="stylesheet" href="css/diagnostic-france.css">
+<style>[hidden]{display:none !important;}</style>
+<script src="pricing-plans.js"></script>
+<script src="js/mobile-nav.js" defer></script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+<div id="pageLoader" class="auth-page-loader"><div class="loader-spinner"></div></div>
+<div class="dashboard-shell">
+<div class="dashboard-main">
+<header class="journey-topbar">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</a>
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+<h1>Diagnostic France</h1>
+</div>
+<div class="journey-topbar-actions">
+<div class="messages-bell-wrap">
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false"><i data-lucide="bell"></i><span class="messages-bell-dot" id="messagesBellDot" hidden></span></button>
+<div class="messages-panel" id="messagesPanel" hidden><div class="messages-panel-header">Messages de l'équipe</div><div class="messages-panel-list" id="messagesPanelList"></div></div>
+</div>
+<a href="offers.html" class="topbar-plan-chip"><span id="topbarPlanLabel">—</span></a>
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil"><i data-lucide="user-round"></i></a>
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres"><i data-lucide="settings"></i></a>
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion"><i data-lucide="log-out"></i></button>
+</div>
+</header>
+
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
+<div id="lockedState" hidden></div>
+<div id="diagnosticApp" class="reveal">
+
+<section class="diag-intro">
+<h2>Une réponse chiffrée avant de payer Campus France</h2>
+<p>Vos ressources contre le seuil publié, les droits d'inscription du niveau visé, ce que change le plafond d'exonération, et les frais de dossier. De l'arithmétique sur des chiffres publiés, chacun avec sa source et sa date — aucune estimation, aucune promesse de résultat.</p>
+</section>
+
+<form class="diag-form card" id="diagForm" novalidate>
+<div class="field">
+<label for="diagRessources">Ressources disponibles par mois</label>
+<div class="diag-montant">
+<input type="number" id="diagRessources" name="ressources" min="0" step="1" inputmode="decimal" required placeholder="Ex. 600 000">
+<select id="diagDevise" name="devise" aria-label="Devise"><option value="XOF">F CFA</option><option value="EUR">€</option></select>
+</div>
+<p class="field-hint">Ce que vous, votre famille ou votre garant pouvez justifier chaque mois, pendant l'année.</p>
+</div>
+<div class="field">
+<span class="field-label">Niveau visé</span>
+<div class="diag-choix" role="radiogroup" aria-label="Niveau visé">
+<label><input type="radio" name="niveau" value="licence" checked> Licence</label>
+<label><input type="radio" name="niveau" value="master"> Master</label>
+</div>
+</div>
+<div class="field">
+<label class="diag-check"><input type="checkbox" id="diagExoneration" name="exoneration"> J'espère une exonération des droits différenciés</label>
+</div>
+<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Calculer</span></button>
+</form>
+
+<section class="diag-resultat" id="diagResultat" hidden aria-live="polite">
+<p class="diag-verdict" id="diagVerdict"></p>
+<ul class="diag-blocs" id="diagBlocs"></ul>
+<p class="diag-total" id="diagTotal"></p>
+<p class="diag-note">Ce diagnostic compare vos chiffres à des seuils publiés. La décision de visa et d'admission appartient aux autorités consulaires et à l'établissement.</p>
+<p class="diag-sauvegarde" id="diagSauvegarde" hidden></p>
+</section>
+
+</div>
+</main>
+</div>
+</div>
+
+<script type="module" src="js/diagnostic-france-page.js"></script>
+<script type="module" src="js/admin-access.js"></script>
+</body>
+</html>

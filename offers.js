@@ -92,6 +92,36 @@ observer.observe(item);
 
 }
 
+// Grille B (2026-09-07) : les chiffres dérivés de la page (prix en FCFA,
+// équivalent en euros, coût par candidature) viennent de
+// pricing-plans.js — le texte écrit dans offers.html n'est qu'un repli
+// sans JavaScript. Plus aucun doublon à recalculer à la main.
+const EUR_PER_XOF = 655.957;
+const formatF = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+function initDerivedPrices() {
+
+document.querySelectorAll("[data-price-of]").forEach((el) => {
+const plan = SCHOLARBRIDGE_PLANS[el.dataset.priceOf];
+if (plan) el.textContent = `${formatF(plan.priceFCFA)} FCFA`;
+});
+
+document.querySelectorAll("[data-eur-of]").forEach((el) => {
+const plan = SCHOLARBRIDGE_PLANS[el.dataset.eurOf];
+if (plan) el.textContent = String(Math.round(plan.priceFCFA / EUR_PER_XOF));
+});
+
+document.querySelectorAll("[data-per-application-of]").forEach((el) => {
+const plan = SCHOLARBRIDGE_PLANS[el.dataset.perApplicationOf];
+if (!plan || !Number.isFinite(plan.maxAccompaniedApplications) || plan.maxAccompaniedApplications <= 0) return;
+const par = plan.priceFCFA / plan.maxAccompaniedApplications;
+el.textContent = Number.isInteger(par)
+? `soit ${formatF(par)} F par candidature`
+: `soit environ ${formatF(Math.round(par / 100) * 100)} F par candidature`;
+});
+
+}
+
 function initPlanSelection() {
 
 document.querySelectorAll(".plan-cta").forEach((button) => {
@@ -115,6 +145,7 @@ window.location.href = `payment.html?plan=${encodeURIComponent(planId)}`;
 
 initFitzRotator();
 initReveal();
+initDerivedPrices();
 initPlanSelection();
 
 // lucide est chargé avec `defer` (2026-08-29) : ce script classique

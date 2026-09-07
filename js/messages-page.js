@@ -21,7 +21,7 @@ initShellChrome();
 bootstrapShell({}).then((ctx) => {
 
 initMessagesPage(ctx.user.uid, {
-canReply: !isFeatureLocked(ctx.planId, ctx.featureFlags, "student_messaging", ctx.testerAccess, ctx.hasFitzExpress)
+canReply: !isFeatureLocked(ctx.planId, ctx.featureFlags, "student_messaging", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId)
 });
 
 if (window.lucide) lucide.createIcons();

@@ -200,6 +200,12 @@ function preparer() {
     // on ne le bride pas.
     plan: "accompagnement",
     planExpiresAt: dansNJours(90),
+    // Grille B (2026-09-07) : le second forfait. Sans lui, l'enregistrement
+    // d'une préinscription hors catalogue est refusé (garde-fou client,
+    // firestore.rules fait foi) — c'est précisément ce qu'on veut voir
+    // PASSER ici, sur l'identifiant pre-N.
+    planPreinscription: "dossier-france",
+    planPreinscriptionExpiresAt: dansNJours(200),
     // LOT B : deux documents déjà cochés sur documents.html — de quoi
     // rendre FAITE l'étape « Traductions et légalisations » de slot-6,
     // et elle seule (aucun justificatif de ressources).
@@ -599,6 +605,8 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         if (enregistree) {
           if (enregistree.track !== "preinscription") anomalies.push(`Enregistrement hors catalogue : track « ${enregistree.track} » écrit au lieu de « preinscription ».`);
           if (enregistree.scholarshipId) anomalies.push("Enregistrement hors catalogue : une clé de bourse a été écrite.");
+          // Grille B : une préinscription vit sur pre-N, jamais sur slot-N.
+          if (!/\/applications\/pre-\d+$/.test(enregistree.chemin)) anomalies.push(`Enregistrement hors catalogue : écrit sur ${enregistree.chemin} au lieu d'un identifiant pre-N.`);
           notes.push(`formulaire : « Préinscription » écrite sur ${enregistree.chemin.split("/").pop()} (track=${enregistree.track})`);
         }
 

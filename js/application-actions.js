@@ -43,13 +43,21 @@ import { collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.co
 * Premier créneau libre pour une nouvelle candidature.
 * @param {Array<{id:string}>} existingApplications - candidatures déjà chargées
 * @param {number} quota - maxAccompaniedApplications de la formule (Infinity accepté)
-* @returns {string|null} "slot-N", ou null si tous les créneaux sont pris
+* @param {string} [prefixe="slot"] - "slot" pour une bourse, "pre" pour une préinscription
+* @returns {string|null} "slot-N" / "pre-N", ou null si tous les créneaux sont pris
+*
+* `prefixe` (grille B, 2026-09-07) : deux espaces d'identifiants distincts,
+* donc deux quotas qui ne se consomment jamais l'un l'autre
+* (firestore.rules, preSlotPattern). Passer ici les candidatures DU MÊME
+* parcours.
 */
-export function slotIdLibre(existingApplications, quota) {
+export function slotIdLibre(existingApplications, quota, prefixe = "slot") {
+
+const motif = new RegExp("^" + prefixe + "-(\\d+)$");
 
 const pris = new Set(
 (existingApplications || [])
-.map((a) => /^slot-(\d+)$/.exec(a.id || ""))
+.map((a) => motif.exec(a.id || ""))
 .filter(Boolean)
 .map((m) => parseInt(m[1], 10))
 );
@@ -59,7 +67,7 @@ const pris = new Set(
 const max = Number.isFinite(quota) ? quota : 999;
 
 for (let n = 1; n <= max; n++) {
-if (!pris.has(n)) return `slot-${n}`;
+if (!pris.has(n)) return `${prefixe}-${n}`;
 }
 
 return null;

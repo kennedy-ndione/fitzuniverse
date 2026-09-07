@@ -192,7 +192,7 @@ return;
 // WhatsApp direct : réservé à Signature ("whatsapp_direct",
 // js/plan-features.js). Les autres formules avec conseiller voient
 // l'alternative messagerie FitzUniverse à la place.
-const whatsappLocked = isFeatureLocked(ctx.planId, ctx.featureFlags, "whatsapp_direct", ctx.testerAccess, ctx.hasFitzExpress);
+const whatsappLocked = isFeatureLocked(ctx.planId, ctx.featureFlags, "whatsapp_direct", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId);
 
 const whatsappBtn = document.getElementById("advisorWhatsappBtn");
 const whatsappAlt = document.getElementById("advisorWhatsappAlt");

@@ -96,6 +96,36 @@ return isTester(uid) ? 'slot-([1-9][0-9]{0,2})' :
 }
 
 // ------------------------------------------------------------
+// GRILLE B (2026-09-07) — le second forfait, PRÉINSCRIPTION.
+// users/{uid}.planPreinscription est écrit par le webhook seul (mêmes
+// protections que "plan"). Les droits sont l'UNION des deux forfaits :
+// un compte Dossier France peut répondre à la messagerie même sans
+// formule bourse ; seul Dossier France + Conseiller ouvre la revue
+// conseiller. L'expiration (planPreinscriptionExpiresAt) reste vérifiée
+// côté client — même limite acceptée que planExpiresAt.
+// ------------------------------------------------------------
+function planPreOf(uid) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('planPreinscription', '');
+}
+
+function isDossierFrance(uid) {
+return planPreOf(uid) in ['dossier-france', 'dossier-france-conseiller'];
+}
+
+function isDossierConseiller(uid) {
+return planPreOf(uid) == 'dossier-france-conseiller';
+}
+
+// Quota PRÉINSCRIPTION : les 7 vœux d'un dossier Études en France —
+// miroir de maxPreinscriptions (pricing-plans.js). Les candidatures de
+// ce parcours s'appellent "pre-N" : un espace d'identifiants DISTINCT
+// de "slot-N", donc un quota qui ne consomme jamais l'autre. Le client
+// (slotIdLibre, js/application-actions.js) suit le même préfixe.
+function preSlotPattern(uid) {
+return (isTester(uid) || isDossierFrance(uid)) ? 'pre-[1-7]' : '';
+}
+
+// ------------------------------------------------------------
 // Profils utilisateurs (créés à l'inscription, lus/modifiés
 // depuis dashboard.js et profile.js). Depuis le Module 3 du Control
 // Center (CRM étudiants, admin/student-detail.js), un administrateur
@@ -143,9 +173,12 @@ return isTester(uid) ? 'slot-([1-9][0-9]{0,2})' :
 // (hors de cette liste, informatif, sans effet sur l'accès).
 match /users/{uid} {
 allow read: if isOwner(uid) || isAdmin();
-allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"]);
+// Grille B : "planPreinscription" et "planPreinscriptionExpiresAt" sont
+// hors de portée de l'étudiant ET de l'administrateur — seul le webhook
+// (SDK Admin) les écrit.
+allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt"]);
 allow update: if (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"])) ||
-(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"]));
+(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt"]));
 allow delete: if isOwner(uid);
 }
 
@@ -178,7 +211,7 @@ match /users/{uid}/messages/{messageId} {
 // dans le fil depuis la console développeur.
 allow create: if isAdmin() ||
 (isOwner(uid) &&
-(isPaidPlan(uid) || isTester(uid)) &&
+(isPaidPlan(uid) || isDossierFrance(uid) || isTester(uid)) &&
 request.resource.data.keys().hasOnly(["text", "fromStudent", "createdAt", "read"]) &&
 request.resource.data.text is string && request.resource.data.text != "" &&
 request.resource.data.fromStudent == true &&
@@ -208,7 +241,7 @@ match /users/{uid}/advisorRequests/{requestId} {
 // Signature/Signature Focus (flag "advisor", js/plan-features.js) —
 // désormais aussi côté serveur (isSignaturePlan/isTester).
 allow create: if isOwner(uid) &&
-(isSignaturePlan(uid) || isTester(uid)) &&
+(isSignaturePlan(uid) || isDossierConseiller(uid) || isTester(uid)) &&
 request.resource.data.keys().hasOnly(["text", "applicationId", "university", "status", "createdAt"]) &&
 request.resource.data.text is string && request.resource.data.text != "" &&
 request.resource.data.status == "nouveau";
@@ -243,7 +276,13 @@ allow delete: if isOwner(uid);
 // la CRÉATION est contrainte.
 match /users/{uid}/applications/{applicationId} {
 allow read: if isOwner(uid) || isAdmin();
-allow create: if isOwner(uid) && applicationId.matches(slotPattern(uid));
+// Grille B : le quota se lit PAR PARCOURS (request.resource.data.track,
+// « bourse » par défaut — règle des trois valeurs de js/parcours.js) :
+// une préinscription vit sur "pre-N", une bourse sur "slot-N".
+allow create: if isOwner(uid) && (
+(request.resource.data.get('track', 'bourse') == 'preinscription' && applicationId.matches(preSlotPattern(uid))) ||
+(request.resource.data.get('track', 'bourse') != 'preinscription' && applicationId.matches(slotPattern(uid)))
+);
 allow delete: if isOwner(uid);
 allow update: if isOwner(uid) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
