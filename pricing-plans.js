@@ -61,6 +61,27 @@
 // candidatures). `premier-dossier` l'a été aussi ce jour-là, puis a
 // été RESSUSCITÉE le 2026-08-29 — voir le commentaire sur son entrée.
 //
+// GRILLE A (2026-09-07) — LA PROFONDEUR REMPLACE LE COMPTAGE.
+// Mesuré sur l'export réel : 156 bourses, 72 ouvertes, 27 déposées par
+// un tiers, 60 déposables soi-même et non exclues pour le Sénégal
+// (Licence 30, Master 42, Doctorat 28) ; le harnais retient 8 à 12
+// opportunités par profil réel. Au-dessus de 9, un quota ne
+// différencie plus rien, et « illimité » est faux par construction.
+// D'où : `essentiel` (5) → `essentiel-4` (4, 6 mois, 45 000 F) ;
+// `signature-focus` (12) → `conseiller-6` (6, 9 mois, 150 000 F) ;
+// `accompagnement` (Ambition, 9) et `signature` (illimité) sortent de
+// la vente. RÈGLE D'OR : aucun objet existant n'a été modifié (prix,
+// quota, durée, fonctionnalités) — un client Essentiel garde ses 5
+// candidatures et sa messagerie ; les anciens identifiants restent
+// dans firestore.rules avec leurs droits d'origine. Les NOUVEAUX
+// identifiants portent le quota dans leur nom : un nouveau quota sera
+// un nouvel identifiant, jamais une modification.
+//
+// Le diagnostic d'éligibilité bourses RESTE GRATUIT (décision explicite,
+// grille A) : seule porte d'entrée gratuite du site, démonstration
+// personnalisée que le catalogue fonctionne. Ne jamais le rattacher à
+// une offre, Pass Découverte compris.
+//
 // ==========================================================
 // IDENTIFIANTS — ne pas renommer à la légère
 // ==========================================================
@@ -174,10 +195,16 @@ highlights: [
 // restent suivies jusqu'à la décision (extendsPendingApplications).
 // ==========================================================
 
+// DÉPRÉCIÉE (grille A, 2026-09-07) : remplacée par `essentiel-4`
+// (même prix, même durée, quota 4 — la profondeur plutôt que le
+// comptage). Honorée telle quelle pour qui la détient : 5 candidatures
+// ET la messagerie FitzUniverse restent acquises (firestore.rules,
+// js/plan-features.js). Ne rien modifier ici.
 essentiel: {
 id: "essentiel",
 parcours: "bourse",
 type: "plan",
+deprecated: true,
 label: "Forfait Essentiel",
 icon: "compass",
 tagline: "Jusqu'à 5 candidatures accompagnées de bout en bout, avec Fitz.",
@@ -206,10 +233,16 @@ highlights: [
 ]
 },
 
+// DÉPRÉCIÉE (grille A, 2026-09-07) : retirée de la vente parce que son
+// quota de 9 dépasse ce qu'un étudiant peut réellement viser — le
+// catalogue retient 8 à 12 opportunités par profil, toutes bourses
+// confondues, et une candidature ne se mène pas à fond à ce rythme.
+// Honorée telle quelle pour qui la détient (9 candidatures, messagerie).
 accompagnement: {
 id: "accompagnement",
 parcours: "bourse",
 type: "plan",
+deprecated: true,
 label: "Forfait Ambition",
 // "rocket" depuis le 2026-08-29 : sparkles est le cliché visuel de
 // l'IA — banni du design system (voir DESIGN_SYSTEM.md, règle
@@ -271,7 +304,9 @@ highlights: [
 "Tout le contenu du Forfait Ambition",
 "Révisions illimitées",
 "Aide à la préparation du visa",
-"Réponse prioritaire sous 24 h"
+// Le délai annoncé est passé à 48 h ouvrées (grille A, 2026-09-07) : il
+// vit dans js/delai-reponse.js, il est le même partout.
+"Réponse prioritaire sous 48 h ouvrées"
 ]
 },
 
@@ -280,10 +315,14 @@ highlights: [
 // Un conseiller réel, Fitz venant en renfort — et non l'inverse.
 // ==========================================================
 
+// DÉPRÉCIÉE (grille A, 2026-09-07) : remplacée par `conseiller-6`
+// (même prix, même durée, quota 6). Honorée telle quelle pour qui la
+// détient : 12 candidatures, conseiller, messagerie.
 "signature-focus": {
 id: "signature-focus",
 parcours: "bourse",
 type: "human",
+deprecated: true,
 label: "Forfait Conseiller",
 icon: "user-check",
 tagline: "Un conseiller humain vérifie chaque dossier avant l'envoi, sur 12 candidatures.",
@@ -321,10 +360,17 @@ highlights: [
 ]
 },
 
+// DÉPRÉCIÉE (grille A, 2026-09-07) : retirée de la vente parce que
+// « illimité » est faux — le plafond réel est de 8 à 12 opportunités
+// par profil, et une promesse qu'aucun catalogue ne peut tenir n'a pas
+// sa place sur une grille. Honorée telle quelle pour qui la détient :
+// quota Infinity, conseiller dédié, messagerie ET WhatsApp direct
+// (whatsapp_direct n'est plus attachée à aucune offre en vente).
 signature: {
 id: "signature",
 parcours: "bourse",
 type: "human",
+deprecated: true,
 label: "Signature",
 icon: "star",
 tagline: "Conseiller dédié, candidatures illimitées.",
@@ -357,6 +403,65 @@ highlights: [
 "Accompagnement jusqu'à la préparation du visa",
 "Des échanges personnalisés (WhatsApp)",
 "L'assistance continue de Fitz tout au long du processus",
+"Candidatures en attente suivies jusqu'à la décision de l'université"
+]
+},
+
+// ==========================================================
+// GRILLE A (2026-09-07) — LES DEUX OFFRES BOURSES RÉVISÉES.
+// Quatre offres en vente côté bourses : fitzExpress, premier-dossier,
+// et ces deux-ci. La promesse est la PROFONDEUR (« 4 candidatures
+// accompagnées à fond »), jamais le volume ni un prix par candidature.
+// La messagerie FitzUniverse est réservée, côté bourses, au Forfait
+// Conseiller : une bourse se décide par un jury, l'échange n'y a pas
+// la valeur directe qu'il a en préinscription. Toute formule payante
+// garde une voie de service après-vente séparée (« Signaler un
+// problème », support_ticket). Aucune offre en vente ne porte WhatsApp.
+// ==========================================================
+
+"essentiel-4": {
+id: "essentiel-4",
+parcours: "bourse",
+type: "plan",
+label: "Forfait Essentiel",
+icon: "compass",
+tagline: "4 candidatures accompagnées à fond, avec Fitz.",
+badge: "4 candidatures à fond",
+priceFCFA: 45000,
+duration: "6 mois",
+maxAccompaniedApplications: 4,
+extendsPendingApplications: true,
+fitzAccess: "100% des outils Fitz, sans restriction",
+highlights: [
+"4 candidatures accompagnées à fond, à la fois",
+"100 % des outils Fitz : lettre, e-mails, vérification, traduction, compression",
+"Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests calé sur vos échéances",
+"Préparation aux entretiens et suivi complet des candidatures",
+"2 révisions par dossier",
+"Candidatures en attente suivies jusqu'à la décision de l'université",
+"Service après-vente : signaler un problème, réponse sous 48 h ouvrées"
+]
+},
+
+"conseiller-6": {
+id: "conseiller-6",
+parcours: "bourse",
+type: "human",
+label: "Forfait Conseiller",
+icon: "user-check",
+tagline: "6 candidatures, chacune relue par un conseiller avant l'envoi.",
+badge: "Accompagnement humain",
+priceFCFA: 150000,
+duration: "9 mois",
+maxAccompaniedApplications: 6,
+extendsPendingApplications: true,
+fitzAccess: "100% des outils Fitz, sans restriction",
+highlights: [
+"6 candidatures accompagnées à fond, chacune relue par un conseiller",
+"Vérification humaine de chaque dossier avant l'envoi",
+"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
+"Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées",
+"Tout le contenu du Forfait Essentiel, Fitz en renfort",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]
 },

@@ -61,12 +61,23 @@
 // `fitzExpress` n'y figure volontairement pas : c'est un pass ponctuel,
 // pas une formule — il ne touche jamais le champ `plan` et son accès est
 // résolu séparément par hasFitzExpressAccess() (js/access-guard.js).
+//
+// GRILLE A (2026-09-07) : `essentiel-4` et `conseiller-6` remplacent
+// `essentiel` et `signature-focus` à la vente ; `accompagnement` et
+// `signature` sont retirées. Chaque nouvelle offre se place JUSTE AVANT
+// l'ancienne qu'elle remplace (même prix, quota plus bas) : l'upsell
+// d'un ancien client ne lui propose ainsi jamais une marche plus basse,
+// et le serveur (RANG, functions/lib/achat.js — miroir de cet ordre) ne
+// rétrograde jamais un compte. Les anciens identifiants RESTENT : ils
+// sont la valeur de `plan` des comptes existants.
 export const PLAN_ORDER = [
 "gratuit",
 "premier-dossier",
+"essentiel-4",
 "essentiel",
 "accompagnement",
 "premium",
+"conseiller-6",
 "signature-focus",
 "signature"
 ];
@@ -95,9 +106,13 @@ export const PLAN_ORDER = [
 export const PLAN_LABELS = {
 gratuit: "Gratuit",
 "premier-dossier": "Premier Dossier",
+// Grille A : le nom commercial est conservé — c'est l'identifiant qui
+// change (voir pricing-plans.js, « ne jamais renommer un identifiant »).
+"essentiel-4": "Essentiel",
 essentiel: "Essentiel",
 accompagnement: "Ambition",
 premium: "Premium",
+"conseiller-6": "Conseiller",
 "signature-focus": "Conseiller",
 signature: "Signature"
 };
@@ -130,8 +145,9 @@ export const FEATURE_CATALOG = [
 // Messagerie FitzUniverse (2026-09-02) : le canal officiel
 // admin ↔ étudiant, signé FitzUniverse. Tous les étudiants VOIENT les
 // messages reçus (cloche) ; ce drapeau contrôle le droit de RÉPONDRE.
-// Décision utilisateur : fermé au plan Gratuit (Découverte), ouvert à
-// toutes les formules payantes.
+// Décision utilisateur du 2026-09-02 : fermé au plan Gratuit, ouvert à
+// toutes les formules payantes — RESSERRÉ par la grille A (2026-09-07),
+// voir DEFAULT_FEATURE_CONFIG.student_messaging.
 { key: "student_messaging", label: "Messagerie FitzUniverse", description: "Répondre à l'équipe FitzUniverse depuis la cloche de messages de l'espace étudiant." },
 // WhatsApp direct (2026-09-02) : décision utilisateur — la discussion
 // WhatsApp est STRICTEMENT réservée à la formule Signature. Contrôle
@@ -142,7 +158,14 @@ export const FEATURE_CATALOG = [
 // Grille B (2026-09-07) : le Diagnostic France — de l'arithmétique sur
 // des seuils publiés, aucune IA. Ouvert par les trois offres
 // préinscription, par aucune formule bourse.
-{ key: "diagnostic_france", label: "Diagnostic France", description: "Ressources, droits, plafond d'exonération et frais de dossier contre les seuils publiés — avant de payer Campus France." }
+{ key: "diagnostic_france", label: "Diagnostic France", description: "Ressources, droits, plafond d'exonération et frais de dossier contre les seuils publiés — avant de payer Campus France." },
+// Grille A (2026-09-07) : « Signaler un problème » — service
+// après-vente (problème technique, paiement, erreur du site), ouvert à
+// TOUTE formule payante, Pass Découverte compris. Ce n'est PAS un
+// accompagnement : aucune question de dossier, aucune relecture n'y
+// est traitée — sinon la porte de service recréerait ce que la
+// messagerie réserve. Jamais confondu avec student_messaging.
+{ key: "support_ticket", label: "Signaler un problème", description: "Service après-vente : un problème technique, un paiement, une erreur du site — pour toute formule payante." }
 ];
 
 // Toute offre payante donne 100% des outils Fitz — y compris Premier
@@ -151,27 +174,42 @@ export const FEATURE_CATALOG = [
 // Ce qui distingue les offres entre elles est le nombre de candidatures
 // accompagnées et le niveau de service humain (voir pricing-plans.js),
 // jamais l'accès aux outils listés ci-dessous.
+// Grille A (2026-09-07) : `essentiel-4` et `conseiller-6` ajoutées sur
+// chaque ligne ; les anciens identifiants gardent EXACTEMENT leurs
+// valeurs (règle d'or : un client existant ne perd rien).
 export const DEFAULT_FEATURE_CONFIG = {
-applications: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-documents: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-ai_chat: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-ai_letter: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-ai_check: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-ai_email: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-ai_translate: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-compress: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
+applications: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+documents: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+ai_chat: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+ai_letter: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+ai_check: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+ai_email: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+ai_translate: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+compress: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
 // Décision validée le 2026-08-10 : même palier que le reste du lot
 // "dossier de candidature enrichi" (Essentiel+, pas de palier dédié
 // malgré le "Premium en préparation" affiché jusqu'ici sur le
 // placeholder dashboard — copie mise à jour en conséquence).
-interview_prep: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
+interview_prep: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
 // Seule fonctionnalité de ce fichier qui N'EST PAS un outil Fitz — accès
-// à un conseiller humain, vrai uniquement pour les deux offres
-// "human" de pricing-plans.js. Voir la note en tête de fichier.
-advisor: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": true, signature: true },
-student_messaging: { gratuit: false, "premier-dossier": true, essentiel: true, accompagnement: true, premium: true, "signature-focus": true, signature: true },
-whatsapp_direct: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: true },
-diagnostic_france: { gratuit: false, "premier-dossier": false, essentiel: false, accompagnement: false, premium: false, "signature-focus": false, signature: false }
+// à un conseiller humain, vrai uniquement pour les offres "human" de
+// pricing-plans.js. Voir la note en tête de fichier.
+advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": true, "signature-focus": true, signature: true },
+// MESSAGERIE (grille A, 2026-09-07) — deux règles selon le parcours.
+// Côté bourses, réservée au Forfait Conseiller (conseiller-6) : une
+// bourse se décide par un jury, l'échange n'a pas la valeur directe
+// qu'il a en préinscription (une pièce mal formatée se répare). Retirée
+// des offres mises en vente par ce lot (essentiel-4) et de
+// premier-dossier ; les DÉTENTEURS d'essentiel/accompagnement/premium/
+// signature-focus/signature la CONSERVENT. Côté préinscription : les
+// trois offres (PREINSCRIPTION_FEATURE_CONFIG). Toute formule payante
+// garde « Signaler un problème » (support_ticket) — voie séparée.
+student_messaging: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+// Grille A : whatsapp_direct n'est attachée à AUCUNE offre en vente —
+// seuls les détenteurs de Signature (dépréciée) la conservent.
+whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: true },
+diagnostic_france: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
+support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true }
 };
 
 // Les DROITS DES OFFRES PRÉINSCRIPTION (grille B). Fusionnés dans les
@@ -193,9 +231,13 @@ ai_translate: { "diagnostic-france": false, "dossier-france": false, "dossier-fr
 compress: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 interview_prep: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 advisor: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": true },
-student_messaging: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+// Grille A : la messagerie est incluse dans les TROIS offres
+// préinscription, Diagnostic France compris — un dossier bloqué se
+// débloque, l'échange a une valeur directe.
+student_messaging: { "diagnostic-france": true, "dossier-france": true, "dossier-france-conseiller": true },
 whatsapp_direct: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
-diagnostic_france: { "diagnostic-france": true, "dossier-france": true, "dossier-france-conseiller": true }
+diagnostic_france: { "diagnostic-france": true, "dossier-france": true, "dossier-france-conseiller": true },
+support_ticket: { "diagnostic-france": true, "dossier-france": true, "dossier-france-conseiller": true }
 };
 
 /**
@@ -207,6 +249,9 @@ diagnostic_france: { "diagnostic-france": true, "dossier-france": true, "dossier
 export function decideVerrou({ planId, planPreinscriptionId = "", featureFlags, featureKey, testerAccess = false, hasFitzExpress = false }) {
 if (testerAccess) return false;
 if (hasFitzExpress && featureKey === "ai_chat") return false;
+// Grille A : le Pass Découverte est une formule payante — il a droit au
+// service après-vente, et à rien d'autre de plus.
+if (hasFitzExpress && featureKey === "support_ticket") return false;
 const flags = featureFlags && featureFlags[featureKey];
 if (!flags) return false;
 if (flags[planId] !== false) return false;

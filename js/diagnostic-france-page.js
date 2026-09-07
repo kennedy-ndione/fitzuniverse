@@ -42,7 +42,7 @@ container.innerHTML = `
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Diagnostic France</h2>
 <p>Cette page est ouverte par les offres préinscription : Diagnostic France, Dossier France ou Dossier France + Conseiller. Elle n'est comprise dans aucune formule bourse.</p>
-<a href="offers.html#preinscriptions" class="btn btn-primary"><span>Voir les offres préinscription</span></a>
+<a href="offers.html?parcours=preinscription" class="btn btn-primary"><span>Voir les offres préinscription</span></a>
 </div>
 `;
 container.hidden = false;

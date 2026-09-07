@@ -64,7 +64,7 @@ const API_BASE = "https://app.paydunya.com/sandbox-api/v1";
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour } = require("./lib/achat");
+const { GRILLE, calculerMiseAJour, estEnVente } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -98,6 +98,16 @@ exports.creerPaiement = onCall(
       throw new HttpsError("invalid-argument", "Cette formule n'est pas disponible.");
     }
 
+    // 2 bis. Grille A (2026-09-07) : une offre retirée de la vente ne
+    //    se paie pas, même en forgeant la requête. Le webhook, lui,
+    //    continue d'honorer un paiement créé avant le retrait.
+    if (!estEnVente(planId)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cette formule n'est plus en vente. Les formules actuelles sont sur la page des offres."
+      );
+    }
+
     // 3. Le compte. On lit le nom et l'e-mail depuis Firestore plutôt
     //    que depuis la requête : la facture PayDunya doit porter
     //    l'identité du compte, pas celle que le navigateur prétend.
@@ -125,6 +135,20 @@ exports.creerPaiement = onCall(
         "failed-precondition",
         "Vous détenez déjà le Forfait Premier Dossier, et il n'expire pas. " +
           "Pour accompagner plusieurs candidatures, passez au Forfait Essentiel."
+      );
+    }
+
+    // 3 ter. NE JAMAIS ENCAISSER CE QUI NE SERA PAS APPLIQUÉ (grille A).
+    //    Le webhook refuse de rétrograder un client (statut
+    //    "rang-inferieur") — jusqu'ici il le découvrait APRÈS le
+    //    paiement, sans remboursement possible. La même décision est
+    //    rejouée ici, à blanc, avant que le moindre franc ne bouge.
+    const aBlanc = calculerMiseAJour({ planId, user: profil, supprimer: null });
+    if (aBlanc.statut === "rang-inferieur") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Votre formule actuelle est plus complète que celle-ci, et elle est encore active : " +
+          "cet achat ne changerait rien à votre compte."
       );
     }
 

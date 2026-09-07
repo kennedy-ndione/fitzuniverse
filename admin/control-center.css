@@ -4170,6 +4170,56 @@ overflow-y:auto;
 
 }
 
+/* ---- Signalements (grille A, 2026-09-07) ---- */
+
+.msg-support{
+border-bottom:1px solid var(--border-color);
+max-height:42vh;
+overflow-y:auto;
+}
+
+.msg-support-head{
+display:flex;
+align-items:center;
+gap:8px;
+padding:12px 14px 8px;
+font-size:.82rem;
+}
+
+.msg-support-head i,
+.msg-support-head svg{ width:16px; height:16px; color:var(--amber-700); }
+
+.msg-support-item{
+padding:10px 14px;
+border-top:1px solid var(--border-color);
+font-size:.82rem;
+}
+
+.msg-support-item.is-new{ background:rgba(233,163,25,.06); }
+
+.msg-support-meta{
+display:flex;
+flex-direction:column;
+gap:2px;
+}
+
+.msg-support-meta span{ color:var(--text-muted); font-size:.74rem; }
+
+.msg-support-item p{
+margin:6px 0 8px;
+white-space:pre-wrap;
+line-height:1.45;
+}
+
+.msg-support-actions{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px;
+}
+
+.msg-support-done{ font-size:.74rem; color:var(--text-muted); }
+
 .msg-conv-empty{
 
 padding:24px 18px;

@@ -34,7 +34,10 @@ getDoc,
 collection,
 query,
 orderBy,
-onSnapshot
+onSnapshot,
+limit,
+updateDoc,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import {
@@ -317,6 +320,72 @@ if (window.lucide) lucide.createIcons();
 }
 
 // ==========================================================
+// Signalements — « Signaler un problème » (grille A, 2026-09-07).
+// Service après-vente écrit par l'étudiant dans supportTickets
+// (js/support-ticket.js) ; l'admin le lit ici et le marque traité.
+// Temps réel, 50 derniers.
+// ==========================================================
+
+const SUJETS_SUPPORT = { paiement: "Paiement", technique: "Problème technique", site: "Erreur sur le site" };
+
+function escapeHtml(s) {
+return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function initSupportTickets() {
+
+const bloc = document.getElementById("supportList");
+const items = document.getElementById("supportItems");
+const count = document.getElementById("supportCount");
+if (!bloc || !items) return;
+
+const q = query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(50));
+
+onSnapshot(q, (snapshot) => {
+
+const tickets = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+const nouveaux = tickets.filter((t) => t.status === "nouveau");
+
+bloc.hidden = tickets.length === 0;
+count.hidden = nouveaux.length === 0;
+count.textContent = String(nouveaux.length);
+
+items.innerHTML = tickets.map((t) => `
+<article class="msg-support-item${t.status === "nouveau" ? " is-new" : ""}">
+<div class="msg-support-meta">
+<strong>${escapeHtml(t.name || t.email || t.uid)}</strong>
+<span>${escapeHtml(SUJETS_SUPPORT[t.sujet] || t.sujet || "")} · ${t.createdAt ? escapeHtml(formatWhen(t.createdAt)) : "à l'instant"}</span>
+</div>
+<p>${escapeHtml(t.texte || "")}</p>
+<div class="msg-support-actions">
+<a href="student-detail.html?uid=${encodeURIComponent(t.uid)}" class="table-link-btn"><i data-lucide="user-round"></i><span>Fiche</span></a>
+${t.status === "nouveau"
+? `<button type="button" class="table-link-btn" data-support-traite="${t.id}"><i data-lucide="check"></i><span>Marquer traité</span></button>`
+: `<span class="msg-support-done">Traité</span>`}
+</div>
+</article>`).join("");
+
+if (window.lucide) lucide.createIcons();
+
+}, (error) => {
+console.error("Écoute des signalements impossible :", error);
+});
+
+items.addEventListener("click", async (event) => {
+const bouton = event.target.closest("[data-support-traite]");
+if (!bouton) return;
+bouton.disabled = true;
+try {
+await updateDoc(doc(db, "supportTickets", bouton.dataset.supportTraite), { status: "traite", traiteLe: serverTimestamp() });
+} catch (error) {
+console.error("Impossible de marquer le signalement traité :", error);
+bouton.disabled = false;
+}
+});
+
+}
+
+// ==========================================================
 // Envoi
 // ==========================================================
 
@@ -397,6 +466,7 @@ await loadConversations();
 renderConversationList();
 updateNavBadge();
 initComposer();
+initSupportTickets();
 
 const searchInput = document.getElementById("convSearchInput");
 searchInput.addEventListener("input", () => renderConversationList(searchInput.value));

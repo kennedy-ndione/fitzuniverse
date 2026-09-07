@@ -89,12 +89,27 @@ const UID_BOURSE = `rejeu-ambition-${T}`;
 const UID_DOSSIER = `rejeu-dossier-${T}`;
 const UID_LES_DEUX = `rejeu-les-deux-${T}`;
 const UID_DIAG = `rejeu-diagnostic-${T}`;
+// Grille A (2026-09-07).
+const UID_ESS4 = `rejeu-essentiel4-${T}`;
+const UID_CONS6 = `rejeu-conseiller6-${T}`;
+const UID_ESS_ANCIEN = `rejeu-essentiel-ancien-${T}`;
+const UID_PREMIER = `rejeu-premier-dossier-${T}`;
+const UID_GRATUIT = `rejeu-gratuit-${T}`;
+const UID_PASS = `rejeu-pass-${T}`;
+const UID_SIGNATURE = `rejeu-signature-${T}`;
 const dans = (jours) => new Date(Date.now() + jours * 86400000).toISOString();
 
 await admin.doc(`users/${UID_BOURSE}`).set({ uid: UID_BOURSE, name: "Ambition seul", plan: "accompagnement", planExpiresAt: dans(200) });
 await admin.doc(`users/${UID_DOSSIER}`).set({ uid: UID_DOSSIER, name: "Dossier France seul", planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dans(200) });
 await admin.doc(`users/${UID_LES_DEUX}`).set({ uid: UID_LES_DEUX, name: "Les deux", plan: "accompagnement", planExpiresAt: dans(200), planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dans(200) });
 await admin.doc(`users/${UID_DIAG}`).set({ uid: UID_DIAG, name: "Diagnostic seul", planPreinscription: "diagnostic-france", planPreinscriptionExpiresAt: dans(10) });
+await admin.doc(`users/${UID_ESS4}`).set({ uid: UID_ESS4, name: "Essentiel 4", plan: "essentiel-4", planExpiresAt: dans(180) });
+await admin.doc(`users/${UID_CONS6}`).set({ uid: UID_CONS6, name: "Conseiller 6", plan: "conseiller-6", planExpiresAt: dans(270) });
+await admin.doc(`users/${UID_ESS_ANCIEN}`).set({ uid: UID_ESS_ANCIEN, name: "Essentiel ancien (5)", plan: "essentiel", planExpiresAt: dans(180) });
+await admin.doc(`users/${UID_PREMIER}`).set({ uid: UID_PREMIER, name: "Premier Dossier", plan: "premier-dossier" });
+await admin.doc(`users/${UID_GRATUIT}`).set({ uid: UID_GRATUIT, name: "Gratuit" });
+await admin.doc(`users/${UID_PASS}`).set({ uid: UID_PASS, name: "Pass Découverte", fitzExpressExpiresAt: dans(14) });
+await admin.doc(`users/${UID_SIGNATURE}`).set({ uid: UID_SIGNATURE, name: "Signature (ancienne)", plan: "signature", planExpiresAt: dans(365) });
 
 const candidature = (track) => ({ university: "Université de test", status: "a_preparer", track, checklist: [], reminderFrequency: 14 });
 
@@ -122,8 +137,52 @@ attendre("réponse messagerie acceptée pour Dossier France", await creerCommeEt
 console.log("Diagnostic seul :");
 attendre("aucune candidature (pre-1 refusée)", await creerCommeEtudiant(UID_DIAG, `users/${UID_DIAG}/applications/pre-1`, candidature("preinscription")), 403);
 attendre("aucune candidature (slot-1 refusée)", await creerCommeEtudiant(UID_DIAG, `users/${UID_DIAG}/applications/slot-1`, candidature("bourse")), 403);
-attendre("réponse messagerie refusée", await creerCommeEtudiant(UID_DIAG, `users/${UID_DIAG}/messages/m1`, { text: "Bonjour", fromStudent: true, createdAt: new Date().toISOString(), read: false }), 403);
+// Grille A : la messagerie est comprise dans les TROIS offres préinscription.
+attendre("réponse messagerie acceptée pour Diagnostic France (grille A)", await creerCommeEtudiant(UID_DIAG, `users/${UID_DIAG}/messages/m1`, { text: "Bonjour", fromStudent: true, createdAt: new Date().toISOString(), read: false }), 200);
 attendre("le diagnostic peut s'enregistrer (users.diagnosticFrance)", await patchCommeEtudiant(UID_DIAG, `users/${UID_DIAG}`, { diagnosticFrance: { atteint: true } }), 200);
+
+const message = { text: "Bonjour", fromStudent: true, createdAt: new Date().toISOString(), read: false };
+const revue = { text: "Relecture", applicationId: "slot-1", university: "Test", status: "nouveau", createdAt: new Date().toISOString() };
+const signalement = (uid) => ({ uid, email: "t@fitz.local", name: "Test", sujet: "paiement", texte: "Mon paiement n'apparaît pas", page: "/messages.html", status: "nouveau", createdAt: new Date().toISOString() });
+
+console.log("\n=== Grille A — les paliers bourses révisés ===");
+console.log("Essentiel (essentiel-4) :");
+for (let n = 1; n <= 4; n++) attendre(`bourse slot-${n} acceptée`, await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/applications/slot-${n}`, candidature("bourse")), 200);
+attendre("la 5e (slot-5) est refusée", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/applications/slot-5`, candidature("bourse")), 403);
+attendre("messagerie REFUSÉE (réservée au Conseiller côté bourses)", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/messages/m1`, message), 403);
+attendre("demande conseiller refusée", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/advisorRequests/r1`, revue), 403);
+attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_ESS4, `supportTickets/t-${UID_ESS4}`, signalement(UID_ESS4)), 200);
+attendre("un signalement déguisé (status traite) est refusé", await creerCommeEtudiant(UID_ESS4, `supportTickets/t2-${UID_ESS4}`, { ...signalement(UID_ESS4), status: "traite" }), 403);
+attendre("un signalement au nom d'un autre compte est refusé", await creerCommeEtudiant(UID_ESS4, `supportTickets/t3-${UID_ESS4}`, signalement(UID_CONS6)), 403);
+
+console.log("Conseiller (conseiller-6) :");
+for (let n = 1; n <= 6; n++) attendre(`bourse slot-${n} acceptée`, await creerCommeEtudiant(UID_CONS6, `users/${UID_CONS6}/applications/slot-${n}`, candidature("bourse")), 200);
+attendre("la 7e (slot-7) est refusée", await creerCommeEtudiant(UID_CONS6, `users/${UID_CONS6}/applications/slot-7`, candidature("bourse")), 403);
+attendre("messagerie acceptée", await creerCommeEtudiant(UID_CONS6, `users/${UID_CONS6}/messages/m1`, message), 200);
+attendre("demande conseiller acceptée", await creerCommeEtudiant(UID_CONS6, `users/${UID_CONS6}/advisorRequests/r1`, revue), 200);
+attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_CONS6, `supportTickets/t-${UID_CONS6}`, signalement(UID_CONS6)), 200);
+
+console.log("NON-RÉGRESSION — un ancien Essentiel (5) ne perd rien :");
+for (let n = 1; n <= 5; n++) attendre(`bourse slot-${n} acceptée`, await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-${n}`, candidature("bourse")), 200);
+attendre("la 6e (slot-6) est refusée, comme avant", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-6`, candidature("bourse")), 403);
+attendre("messagerie CONSERVÉE", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/messages/m1`, message), 200);
+attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_ESS_ANCIEN, `supportTickets/t-${UID_ESS_ANCIEN}`, signalement(UID_ESS_ANCIEN)), 200);
+
+console.log("NON-RÉGRESSION — Signature (ancienne) :");
+attendre("bourse slot-13 acceptée (aucun plafond)", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/applications/slot-13`, candidature("bourse")), 200);
+attendre("messagerie conservée", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/messages/m1`, message), 200);
+attendre("demande conseiller conservée", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/advisorRequests/r1`, revue), 200);
+
+console.log("Premier Dossier, Pass Découverte, Gratuit :");
+attendre("Premier Dossier : slot-1 accepté", await creerCommeEtudiant(UID_PREMIER, `users/${UID_PREMIER}/applications/slot-1`, candidature("bourse")), 200);
+attendre("Premier Dossier : messagerie refusée", await creerCommeEtudiant(UID_PREMIER, `users/${UID_PREMIER}/messages/m1`, message), 403);
+attendre("Premier Dossier : « Signaler un problème » accepté", await creerCommeEtudiant(UID_PREMIER, `supportTickets/t-${UID_PREMIER}`, signalement(UID_PREMIER)), 200);
+attendre("Pass Découverte : « Signaler un problème » accepté", await creerCommeEtudiant(UID_PASS, `supportTickets/t-${UID_PASS}`, signalement(UID_PASS)), 200);
+attendre("Pass Découverte : messagerie refusée", await creerCommeEtudiant(UID_PASS, `users/${UID_PASS}/messages/m1`, message), 403);
+attendre("Gratuit : « Signaler un problème » REFUSÉ", await creerCommeEtudiant(UID_GRATUIT, `supportTickets/t-${UID_GRATUIT}`, signalement(UID_GRATUIT)), 403);
+attendre("Gratuit : messagerie refusée", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/messages/m1`, message), 403);
+attendre("Gratuit : aucune candidature", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/applications/slot-1`, candidature("bourse")), 403);
+attendre("Diagnostic seul : « Signaler un problème » accepté", await creerCommeEtudiant(UID_DIAG, `supportTickets/t-${UID_DIAG}`, signalement(UID_DIAG)), 200);
 
 console.log("Les deux champs sont hors de portée de l'étudiant :");
 attendre("planPreinscription refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscription: "dossier-france" }), 403);
@@ -131,13 +190,14 @@ attendre("planPreinscriptionExpiresAt refusé à l'étudiant", await patchCommeE
 attendre("plan refusé à l'étudiant (inchangé)", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { plan: "signature" }), 403);
 
 // Nettoyage.
-for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG]) {
+for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE]) {
   for (const sc of ["applications", "advisorRequests", "messages"]) {
     const snap = await admin.collection(`users/${uid}/${sc}`).get();
     for (const d of snap.docs) await d.ref.delete();
   }
   await admin.doc(`users/${uid}`).delete();
 }
+for (const d of (await admin.collection("supportTickets").where("uid", ">=", "rejeu-").where("uid", "<", "rejeu-\uf8ff").get()).docs) await d.ref.delete();
 
 const ko = resultats.filter((r) => !r.ok);
 console.log(`\n${resultats.length - ko.length}/${resultats.length} attentes tenues.`);

@@ -129,7 +129,8 @@ return { checks, percent };
 // (audit du 2026-08-10).
 function buildOffersUrl(programId, score) {
 
-const searchParams = new URLSearchParams({ program: programId });
+// Grille A : une fiche bourse mène à la grille bourses.
+const searchParams = new URLSearchParams({ parcours: "bourse", program: programId });
 
 if (typeof score === "number") searchParams.set("score", score);
 

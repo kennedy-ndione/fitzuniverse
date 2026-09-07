@@ -136,7 +136,9 @@ if (!canReply) {
 
 const locked = document.createElement("div");
 locked.className = "messages-composer-locked";
-locked.innerHTML = `<span>Répondre à l'équipe est réservé aux formules payantes.</span><a href="offers.html">Voir les formules</a>`;
+// Grille A : la messagerie est comprise dans le Forfait Conseiller et
+// dans les offres préinscription — pas dans toute formule payante.
+locked.innerHTML = `<span>Répondre ici est compris dans le Forfait Conseiller et dans les offres préinscription.</span><a href="offers.html">Voir les formules</a>`;
 return locked;
 
 }

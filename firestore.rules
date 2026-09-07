@@ -66,18 +66,39 @@ function isTester(uid) {
 return get(/databases/$(database)/documents/users/$(uid)).data.get('testerAccess', false) == true;
 }
 
+// GRILLE A (2026-09-07) : `essentiel-4` et `conseiller-6` AJOUTÉS ;
+// aucun ancien identifiant retiré — ce sont les valeurs de `plan` des
+// comptes existants, et leurs droits d'origine sont conservés.
 function isPaidPlan(uid) {
-return planOf(uid) in ['premier-dossier', 'essentiel', 'accompagnement', 'premium', 'signature-focus', 'signature'];
+return planOf(uid) in ['premier-dossier', 'essentiel', 'essentiel-4', 'accompagnement', 'premium', 'signature-focus', 'conseiller-6', 'signature'];
 }
 
 function isSignaturePlan(uid) {
-return planOf(uid) in ['signature-focus', 'signature'];
+return planOf(uid) in ['signature-focus', 'conseiller-6', 'signature'];
+}
+
+// MESSAGERIE (grille A) — le droit de RÉPONDRE côté bourses. Réservée
+// au Forfait Conseiller (conseiller-6) pour les offres en vente ;
+// essentiel, accompagnement, premium, signature-focus et signature la
+// CONSERVENT (règle d'or : aucun détenteur ne perd un droit acquis).
+// premier-dossier et essentiel-4 en sont exclus ; ils ont le service
+// après-vente (supportTickets, plus bas).
+function isMessagingPlan(uid) {
+return planOf(uid) in ['essentiel', 'accompagnement', 'premium', 'signature-focus', 'conseiller-6', 'signature'];
+}
+
+// Un Pass Découverte a existé sur ce compte. Les règles ne savent pas
+// comparer une chaîne ISO à request.time : l'expiration reste vérifiée
+// côté client (même limite acceptée que planExpiresAt). Sert
+// uniquement au service après-vente.
+function hasFitzExpressPass(uid) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('fitzExpressExpiresAt', '') != '';
 }
 
 // Quota de candidatures SIMULTANÉES par formule, exprimé en MOTIF
 // D'IDENTIFIANT autorisé — miroir de maxAccompaniedApplications
-// (pricing-plans.js) : premier-dossier 1, essentiel 5,
-// accompagnement 9, premium/signature-focus 12, signature illimitée
+// (pricing-plans.js) : premier-dossier 1, essentiel-4 4, essentiel 5,
+// conseiller-6 6, accompagnement 9, premium/signature-focus 12, signature illimitée
 // (999 créneaux — fini pour rester exprimable, inatteignable en
 // pratique), gratuit 0. Un motif plutôt qu'un nombre : matches() est
 // la construction la plus sûre du langage des règles, sans conversion
@@ -85,14 +106,18 @@ return planOf(uid) in ['signature-focus', 'signature'];
 // (un id de document n'est jamais vide) : création impossible.
 // get() est mis en cache par requête : les appels répétés à planOf()
 // ne coûtent qu'UNE lecture.
+// Grille A (2026-09-07) : essentiel-4 → 4 créneaux, conseiller-6 → 6.
+// Les anciens motifs sont conservés tels quels.
 function slotPattern(uid) {
 return isTester(uid) ? 'slot-([1-9][0-9]{0,2})' :
 (planOf(uid) == 'signature' ? 'slot-([1-9][0-9]{0,2})' :
 (planOf(uid) == 'signature-focus' ? 'slot-([1-9]|1[0-2])' :
 (planOf(uid) == 'premium' ? 'slot-([1-9]|1[0-2])' :
 (planOf(uid) == 'accompagnement' ? 'slot-[1-9]' :
+(planOf(uid) == 'conseiller-6' ? 'slot-[1-6]' :
 (planOf(uid) == 'essentiel' ? 'slot-[1-5]' :
-(planOf(uid) == 'premier-dossier' ? 'slot-1' : ''))))));
+(planOf(uid) == 'essentiel-4' ? 'slot-[1-4]' :
+(planOf(uid) == 'premier-dossier' ? 'slot-1' : ''))))))));
 }
 
 // ------------------------------------------------------------
@@ -114,6 +139,12 @@ return planPreOf(uid) in ['dossier-france', 'dossier-france-conseiller'];
 
 function isDossierConseiller(uid) {
 return planPreOf(uid) == 'dossier-france-conseiller';
+}
+
+// Grille A : les TROIS offres préinscription ouvrent la messagerie
+// (Diagnostic France compris) et le service après-vente.
+function hasPreinscription(uid) {
+return planPreOf(uid) in ['diagnostic-france', 'dossier-france', 'dossier-france-conseiller'];
 }
 
 // Quota PRÉINSCRIPTION : les 7 vœux d'un dossier Études en France —
@@ -209,9 +240,12 @@ match /users/{uid}/messages/{messageId} {
 // plan Gratuit — désormais aussi ICI (isPaidPlan/isTester), plus
 // seulement côté client : un compte gratuit ne peut plus écrire
 // dans le fil depuis la console développeur.
+// GRILLE A (2026-09-07) : resserré — isMessagingPlan (côté bourses,
+// Conseiller + détenteurs des anciennes formules) ou une offre
+// préinscription (les trois). Voir js/plan-features.js.
 allow create: if isAdmin() ||
 (isOwner(uid) &&
-(isPaidPlan(uid) || isDossierFrance(uid) || isTester(uid)) &&
+(isMessagingPlan(uid) || hasPreinscription(uid) || isTester(uid)) &&
 request.resource.data.keys().hasOnly(["text", "fromStudent", "createdAt", "read"]) &&
 request.resource.data.text is string && request.resource.data.text != "" &&
 request.resource.data.fromStudent == true &&
@@ -286,6 +320,29 @@ allow create: if isOwner(uid) && (
 allow delete: if isOwner(uid);
 allow update: if isOwner(uid) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
+}
+
+// ------------------------------------------------------------
+// SIGNALER UN PROBLÈME (grille A, 2026-09-07) — service après-vente,
+// ouvert à TOUTE formule payante (Pass Découverte et offres
+// préinscription compris), jamais au gratuit. Voie SÉPARÉE de la
+// messagerie : un problème technique, un paiement, une erreur du
+// site — pas une question de dossier. L'étudiant crée son signalement
+// avec une forme imposée (status "nouveau", texte non vide) ; seul un
+// administrateur le lit et le fait évoluer (admin/messages.html).
+// Lecture par l'étudiant : uniquement ses propres signalements.
+// ------------------------------------------------------------
+match /supportTickets/{ticketId} {
+allow create: if isSignedIn() &&
+request.resource.data.uid == request.auth.uid &&
+(isPaidPlan(request.auth.uid) || hasPreinscription(request.auth.uid) || hasFitzExpressPass(request.auth.uid) || isTester(request.auth.uid)) &&
+request.resource.data.keys().hasOnly(["uid", "email", "name", "sujet", "texte", "page", "status", "createdAt"]) &&
+request.resource.data.sujet in ["paiement", "technique", "site"] &&
+request.resource.data.texte is string && request.resource.data.texte != "" &&
+request.resource.data.status == "nouveau";
+allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "traiteLe"]);
+allow delete: if isAdmin();
 }
 
 // ------------------------------------------------------------

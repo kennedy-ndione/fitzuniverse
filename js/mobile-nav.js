@@ -80,6 +80,10 @@ const PUBLIC_PRIMARY = [
 
 function buildPublicSheet() {
 
+// Les deux pages catalogue n'ont pas « Connexion » (décision du
+// 2026-09-01, rétablie par la grille A) — ni dans l'en-tête, ni ici.
+const sansConnexion = isCurrent("scholarships.html") || isCurrent("universities.html");
+
 const sheet = document.createElement("div");
 sheet.className = "mnav-sheet";
 sheet.id = "mnavSheet";
@@ -108,11 +112,11 @@ sheet.innerHTML = `
 <p class="mnav-eyebrow">Explorer</p>
 <ul class="mnav-list">${items}</ul>
 
-<div class="mnav-section">
+${sansConnexion ? "" : `<div class="mnav-section">
 <p class="mnav-eyebrow">Votre espace</p>
 <ul class="mnav-list">
 <li>
-<a href="login.html" class="mnav-link"${isCurrent("login.html") ? ' aria-current="page"' : ""}>
+<a href="login.html" class="mnav-link">
 <span class="mnav-link-icon">${icon("log-in")}</span>
 <span class="mnav-link-text">
 <span class="mnav-link-title">Se connecter</span>
@@ -122,7 +126,7 @@ sheet.innerHTML = `
 </a>
 </li>
 </ul>
-</div>
+</div>`}
 
 <div class="mnav-footer">
 <a href="eligibility-test.html" class="mnav-cta">Découvrir mes opportunités ${icon("arrow-right")}</a>

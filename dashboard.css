@@ -2003,6 +2003,59 @@ padding:0;
 
 }
 
+/* ---- Signaler un problème (grille A, 2026-09-07) ---- */
+
+.messages-support-card{ margin-top:18px; }
+
+.messages-support-body{ padding:16px 18px 18px; }
+
+.messages-support-lead{
+margin:0 0 14px;
+font-size:.86rem;
+line-height:1.55;
+color:var(--text-light);
+}
+
+.messages-support-form{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.messages-support-field{
+display:flex;
+flex-direction:column;
+gap:6px;
+font-size:.8rem;
+font-weight:600;
+color:var(--text-color);
+}
+
+.messages-support-field select,
+.messages-support-field textarea{
+font:inherit;
+font-weight:400;
+padding:10px 12px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+background:var(--surface-color, #fff);
+color:var(--text-color);
+resize:vertical;
+}
+
+.messages-support-actions{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px;
+}
+
+.messages-support-done{
+margin:0;
+font-size:.8rem;
+color:var(--text-light);
+}
+
 .messages-page-notice{
 
 display:flex;

@@ -44,10 +44,18 @@
 const GRILLE = {
   fitzExpress: { label: "Pass Découverte", prix: 10000, dureeJours: 14, pass: true, parcours: "bourse" },
   "premier-dossier": { label: "Forfait Premier Dossier", prix: 15000, dureeMois: null, parcours: "bourse" },
-  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse" },
-  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9, parcours: "bourse" },
-  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse" },
-  signature: { label: "Signature", prix: 250000, dureeMois: 12, parcours: "bourse" },
+  // Grille A (2026-09-07) : les deux offres bourses révisées.
+  "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse" },
+  "conseiller-6": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse" },
+  // DÉPRÉCIÉES (grille A) : `deprecated: true` = creerPaiement REFUSE
+  // l'achat (une offre retirée de la vente ne se paie pas, même en
+  // forgeant la requête), mais le webhook HONORE encore un paiement
+  // créé avant le retrait — retirer l'entrée aurait laissé un étudiant
+  // payé sans activation. Mêmes prix qu'à l'époque.
+  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse", deprecated: true },
+  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9, parcours: "bourse", deprecated: true },
+  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse", deprecated: true },
+  signature: { label: "Signature", prix: 250000, dureeMois: 12, parcours: "bourse", deprecated: true },
   // Grille B — préinscription (France uniquement). Prix décidés, ne pas rouvrir.
   "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription" },
   "dossier-france": { label: "Dossier France", prix: 75000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
@@ -56,15 +64,29 @@ const GRILLE = {
 
 // Miroir de PLAN_ORDER (js/plan-features.js). Sert uniquement à ne
 // jamais RÉTROGRADER un client.
+// Grille A : `essentiel-4` se range SOUS `essentiel` (5) et
+// `conseiller-6` SOUS `signature-focus` (12) — un client d'une ancienne
+// formule encore active ne peut pas être rétrogradé par un achat.
 const RANG = {
   gratuit: 0,
   "premier-dossier": 1,
-  essentiel: 2,
-  accompagnement: 3,
-  premium: 4,
-  "signature-focus": 5,
-  signature: 6,
+  "essentiel-4": 2,
+  essentiel: 3,
+  accompagnement: 4,
+  premium: 5,
+  "conseiller-6": 6,
+  "signature-focus": 7,
+  signature: 8,
 };
+
+/**
+ * Une offre se vend si elle est dans la GRILLE et n'est pas dépréciée.
+ * Vérifié par creerPaiement AVANT de créer la facture.
+ */
+function estEnVente(planId) {
+  const offre = GRILLE[planId];
+  return !!offre && offre.deprecated !== true;
+}
 
 // Miroir de PLAN_PREINSCRIPTION_ORDER (js/plan-features.js).
 const RANG_PREINSCRIPTION = {
@@ -197,4 +219,4 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
   return { statut: "applique", misAJour };
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, finDeCampagne, calculerMiseAJour, dateValide };
+module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente };

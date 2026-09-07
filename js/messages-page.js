@@ -9,20 +9,34 @@
 *
 * Accessible à TOUTES les formules (chacun lit ses messages) ; le
 * droit de RÉPONDRE suit la fonctionnalité "student_messaging"
-* (fermée au plan Gratuit — js/plan-features.js).
+* (grille A : côté bourses, le Forfait Conseiller et les détenteurs des
+* anciennes formules ; côté préinscription, les trois offres — voir
+* js/plan-features.js). Toute formule payante a en plus « Signaler un
+* problème » (support_ticket, js/support-ticket.js).
 * ============================================================
 */
 
 import { initShellChrome, bootstrapShell, isFeatureLocked } from "./app-shell.js";
 import { initMessagesPage } from "./student-messages.js";
+import { DELAI_REPONSE } from "./delai-reponse.js";
+import { initSupportForm } from "./support-ticket.js";
 
 initShellChrome();
+
+// Le délai annoncé, à un seul endroit (grille A).
+document.querySelectorAll("[data-delai-reponse]").forEach((el) => { el.textContent = DELAI_REPONSE; });
 
 bootstrapShell({}).then((ctx) => {
 
 initMessagesPage(ctx.user.uid, {
 canReply: !isFeatureLocked(ctx.planId, ctx.featureFlags, "student_messaging", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId)
 });
+
+// « Signaler un problème » : toute formule payante, jamais le gratuit
+// (grille A, fonctionnalité "support_ticket").
+if (!isFeatureLocked(ctx.planId, ctx.featureFlags, "support_ticket", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId)) {
+initSupportForm(ctx);
+}
 
 if (window.lucide) lucide.createIcons();
 

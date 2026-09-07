@@ -149,7 +149,11 @@ test("toute offre payante donne 100% des outils Fitz", () => {
 //   - "whatsapp_direct" (2026-09-02) : décision utilisateur, WhatsApp
 //     est STRICTEMENT réservé à Signature. Ce test l'exigeait encore
 //     dans toutes les offres payantes et échouait depuis lors.
-const HORS_OUTILS = ["advisor", "whatsapp_direct", "diagnostic_france"];
+//   - "student_messaging" et "support_ticket" (grille A, 2026-09-07) :
+//     la messagerie est réservée au Conseiller côté bourses (les
+//     anciennes formules la gardent) ; le service après-vente est
+//     ouvert à toute formule payante. Voir test/grille-a.test.mjs.
+const HORS_OUTILS = ["advisor", "whatsapp_direct", "diagnostic_france", "student_messaging", "support_ticket"];
 const OUTILS_FITZ = FEATURE_CATALOG.filter(({ key }) => !HORS_OUTILS.includes(key));
 
 const flags = resolveFeatureFlags(null);
@@ -183,7 +187,7 @@ id === "signature",
 test("\"advisor\" (conseiller humain) n'est vrai que pour les offres d'accompagnement humain", () => {
 
 const flags = resolveFeatureFlags(null);
-const OFFRES_AVEC_CONSEILLER = ["signature-focus", "signature"];
+const OFFRES_AVEC_CONSEILLER = ["signature-focus", "conseiller-6", "signature"];
 
 for (const id of OFFRES_PAYANTES) {
 assert.equal(
@@ -241,10 +245,14 @@ assert.equal(nextPlanIdReproduit("gratuit"), "premier-dossier", "l'upsell d'un c
 
 });
 
-test("premium est déprécié : la formule suivante après Avancé est désormais Renforcé", () => {
+test("premium est déprécié : la formule suivante après Ambition est le Conseiller en vente (conseiller-6)", () => {
 
 assert.equal(OFFRES.premium.deprecated, true, "cette assertion doit être mise à jour si premium redevient vendable");
-assert.equal(nextPlanIdReproduit("accompagnement"), "signature-focus", "premium (déprécié) doit être sauté par l'upsell");
+// Grille A : signature-focus est dépréciée à son tour — l'upsell saute
+// premium ET signature-focus pour tomber sur conseiller-6.
+assert.equal(nextPlanIdReproduit("accompagnement"), "conseiller-6", "premium et signature-focus (dépréciés) doivent être sautés par l'upsell");
+assert.equal(nextPlanIdReproduit("essentiel"), "conseiller-6", "un client Essentiel (5) ne doit jamais se voir proposer essentiel-4 (une marche plus basse)");
+assert.equal(nextPlanIdReproduit("premier-dossier"), "essentiel-4");
 
 });
 

@@ -112,6 +112,18 @@
 <input type="text" id="convSearchInput" placeholder="Rechercher un étudiant...">
 </div>
 
+<!-- SIGNALEMENTS (grille A, 2026-09-07) : le service après-vente
+« Signaler un problème » (collection supportTickets) atterrit ici,
+au-dessus des conversations. Masqué tant qu'il n'y en a aucun. -->
+<div class="msg-support" id="supportList" hidden>
+<div class="msg-support-head">
+<i data-lucide="life-buoy"></i>
+<strong>Signalements</strong>
+<span class="nav-count-badge" id="supportCount" hidden></span>
+</div>
+<div id="supportItems"></div>
+</div>
+
 <div class="msg-conv-list" id="convList">
 <!-- conversations générées par messages.js -->
 </div>

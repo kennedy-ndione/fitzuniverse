@@ -6,7 +6,12 @@
 * Quatre endroits portent le prix ou le quota : pricing-plans.js, la
 * GRILLE serveur (functions/lib/achat.js), firestore.rules (motifs
 * d'identifiants) et offers.html. Ce fichier échoue si l'un d'eux
-* diverge. Puis : l'union des droits, le diagnostic, les deux colonnes.
+* diverge. Puis : l'union des droits, le diagnostic, la page.
+*
+* Mis à jour par la grille A (2026-09-07) : la messagerie est comprise
+* dans les TROIS offres préinscription ; les offres dépréciées restent
+* dans la GRILLE serveur (deprecated: true, pour honorer un paiement
+* en vol) ; offers.html n'affiche plus qu'une grille à la fois.
 * ============================================================
 */
 
@@ -90,10 +95,16 @@ assert.equal(OFFRES.accompagnement.maxAccompaniedApplications, 9);
 // Cohérence pricing-plans.js ↔ GRILLE serveur ↔ firestore.rules
 // ------------------------------------------------------------------
 
-test("GRILLE serveur : mêmes prix que pricing-plans.js pour toute offre vendue", () => {
+test("GRILLE serveur : mêmes prix que pricing-plans.js ; une offre dépréciée y est refusée à la vente", () => {
 for (const [id, o] of Object.entries(OFFRES)) {
-if (o.deprecated) { assert.ok(!GRILLE[id], `${id} déprécié ne doit pas être achetable côté serveur`); continue; }
+if (o.deprecated) {
+// Grille A : l'entrée peut rester (le webhook honore un paiement créé
+// avant le retrait) mais elle DOIT porter deprecated: true.
+if (GRILLE[id]) { assert.equal(GRILLE[id].deprecated, true, `${id} déprécié doit l'être aussi côté serveur`); assert.equal(GRILLE[id].prix, o.priceFCFA); }
+continue;
+}
 assert.ok(GRILLE[id], `${id} absent de la GRILLE serveur`);
+assert.notEqual(GRILLE[id].deprecated, true, `${id} est vendu côté client mais refusé côté serveur`);
 assert.equal(GRILLE[id].prix, o.priceFCFA, `${id} : prix serveur ≠ prix client`);
 assert.equal(GRILLE[id].parcours, o.parcours, `${id} : parcours serveur ≠ client`);
 }
@@ -138,7 +149,8 @@ assert.ok(owner && /"planPreinscription"/.test(owner[1]) && /"planPreinscription
 const adminOnly = bloc.match(/isAdmin\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(\[([^\]]*)\]\)/);
 assert.ok(adminOnly && !/planPreinscription/.test(adminOnly[1]), "l'admin ne doit pas pouvoir écrire le forfait préinscription");
 assert.ok(/request\.resource\.data\.get\('track', 'bourse'\) == 'preinscription' && applicationId\.matches\(preSlotPattern\(uid\)\)/.test(regles));
-assert.ok(/isPaidPlan\(uid\) \|\| isDossierFrance\(uid\) \|\| isTester\(uid\)/.test(regles), "messagerie ouverte à Dossier France");
+assert.ok(/isMessagingPlan\(uid\) \|\| hasPreinscription\(uid\) \|\| isTester\(uid\)/.test(regles), "messagerie ouverte aux trois offres préinscription (grille A)");
+assert.ok(motifRegle("hasPreinscription").includes("['diagnostic-france', 'dossier-france', 'dossier-france-conseiller']"));
 assert.ok(/isSignaturePlan\(uid\) \|\| isDossierConseiller\(uid\) \|\| isTester\(uid\)/.test(regles), "conseiller ouvert à Dossier France + Conseiller");
 });
 
@@ -178,9 +190,10 @@ assert.equal(verrou("accompagnement", "dossier-france-conseiller", "advisor"), f
 assert.equal(verrou("signature", "diagnostic-france", "whatsapp_direct"), false);
 });
 
-test("Diagnostic seul : la page du diagnostic uniquement, aucun droit de candidature", () => {
+test("Diagnostic seul : la page du diagnostic et la messagerie (grille A), aucun droit de candidature", () => {
 assert.equal(verrou("gratuit", "diagnostic-france", "diagnostic_france"), false);
-for (const k of ["applications", "documents", "student_messaging", "advisor", "ai_chat", "interview_prep"]) assert.equal(verrou("gratuit", "diagnostic-france", k), true, k);
+assert.equal(verrou("gratuit", "diagnostic-france", "student_messaging"), false, "grille A : la messagerie est comprise dans les trois offres préinscription");
+for (const k of ["applications", "documents", "advisor", "ai_chat", "interview_prep"]) assert.equal(verrou("gratuit", "diagnostic-france", k), true, k);
 assert.equal(OFFRES["diagnostic-france"].maxPreinscriptions, 0);
 assert.equal(isQuotaReached(OFFRES["diagnostic-france"].maxPreinscriptions, 0), false, "quota 0 = aucune offre active, c'est le verrou de page qui interdit");
 });
@@ -243,26 +256,25 @@ for (const f of PAYS.find((p) => p.id === "france").faits) assert.match(f.source
 });
 
 // ------------------------------------------------------------------
-// offers.html : deux colonnes
+// offers.html : une vue par parcours (grille A remplace les deux colonnes)
 // ------------------------------------------------------------------
 
-test("offers.html : deux colonnes, aucune offre bourse dans la colonne préinscription et inversement", () => {
+test("offers.html : les deux vues existent, aucune offre bourse dans la vue préinscription et inversement", () => {
 const debutB = offersHtml.indexOf('id="bourses"');
 const debutP = offersHtml.indexOf('id="preinscriptions"');
-assert.ok(debutB > 0 && debutP > debutB, "les deux colonnes existent, Bourses avant Préinscriptions");
-const colonneB = offersHtml.slice(debutB, debutP);
-const colonneP = offersHtml.slice(debutP, offersHtml.indexOf("offer-footnotes"));
+assert.ok(debutB > 0 && debutP > debutB, "les deux vues existent, Bourses avant Préinscriptions");
+const vueB = offersHtml.slice(debutB, debutP);
+const vueP = offersHtml.slice(debutP, offersHtml.indexOf("offer-footnotes"));
 const ids = (html) => [...html.matchAll(/data-plan="([^"]+)"/g)].map((m) => m[1]);
-const idsB = ids(colonneB), idsP = ids(colonneP);
+const idsB = ids(vueB), idsP = ids(vueP);
 assert.deepEqual(idsP.sort(), [...PRE].sort());
-for (const id of idsB) assert.equal(OFFRES[id].parcours, "bourse", `${id} dans la colonne Bourses`);
-for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id} dans la colonne Préinscriptions`);
-assert.ok(/L'unité : la candidature accompagnée/.test(colonneB));
-assert.ok(/L'unité : <strong>le dossier Études en France<\/strong>/.test(colonneP));
-assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(colonneP.replace(/jamais jusqu'à l'admission/g, "")), "aucune promesse d'admission");
-// Les chiffres dérivés portent leur source (offers.js les recalcule depuis pricing-plans.js).
-for (const id of ["essentiel", "accompagnement", "dossier-france", "dossier-france-conseiller", "diagnostic-france"]) assert.ok(offersHtml.includes(`data-price-of="${id}"`), `data-price-of ${id}`);
-assert.ok(offersHtml.includes('data-per-application-of="essentiel"') && offersHtml.includes('data-per-application-of="accompagnement"'));
+for (const id of idsB) assert.equal(OFFRES[id].parcours, "bourse", `${id} dans la vue Bourses`);
+for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id} dans la vue Préinscriptions`);
+assert.ok(/L'unité : la candidature accompagnée/.test(vueB));
+assert.ok(/L'unité : <strong>le dossier Études en France<\/strong>/.test(vueP));
+assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(vueP.replace(/jamais jusqu'à l'admission/g, "")), "aucune promesse d'admission");
+// Les prix portent leur source (offers.js les remplit depuis pricing-plans.js).
+for (const id of [...idsB, ...idsP]) assert.ok(offersHtml.includes(`data-price-of="${id}"`) && offersHtml.includes(`data-eur-of="${id}"`), `prix dérivés pour ${id}`);
 });
 
 test("diagnostic-france.html : verrouillée par diagnostic_france, sans IA, sans promesse", () => {

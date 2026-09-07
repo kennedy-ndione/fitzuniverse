@@ -92,10 +92,11 @@ observer.observe(item);
 
 }
 
-// Grille B (2026-09-07) : les chiffres dérivés de la page (prix en FCFA,
-// équivalent en euros, coût par candidature) viennent de
-// pricing-plans.js — le texte écrit dans offers.html n'est qu'un repli
-// sans JavaScript. Plus aucun doublon à recalculer à la main.
+// Grille B (2026-09-07), puis grille A : les prix de la page (FCFA et
+// équivalent en euros) viennent de pricing-plans.js — offers.html ne
+// contient AUCUN montant d'offre écrit en dur. Le « coût par
+// candidature » a disparu avec la grille A : le volume n'est plus
+// l'argument.
 const EUR_PER_XOF = 655.957;
 const formatF = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
@@ -109,15 +110,6 @@ if (plan) el.textContent = `${formatF(plan.priceFCFA)} FCFA`;
 document.querySelectorAll("[data-eur-of]").forEach((el) => {
 const plan = SCHOLARBRIDGE_PLANS[el.dataset.eurOf];
 if (plan) el.textContent = String(Math.round(plan.priceFCFA / EUR_PER_XOF));
-});
-
-document.querySelectorAll("[data-per-application-of]").forEach((el) => {
-const plan = SCHOLARBRIDGE_PLANS[el.dataset.perApplicationOf];
-if (!plan || !Number.isFinite(plan.maxAccompaniedApplications) || plan.maxAccompaniedApplications <= 0) return;
-const par = plan.priceFCFA / plan.maxAccompaniedApplications;
-el.textContent = Number.isInteger(par)
-? `soit ${formatF(par)} F par candidature`
-: `soit environ ${formatF(Math.round(par / 100) * 100)} F par candidature`;
 });
 
 }

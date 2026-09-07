@@ -8,7 +8,7 @@
 
 <title>Choisissez votre accompagnement | FitzUniverse</title>
 
-<meta name="description" content="Choisissez la formule adaptée à votre profil : Pass Découverte, Forfait Premier Dossier, Essentiel ou Ambition en autonomie avec Fitz — ou Forfait Conseiller et Signature avec un conseiller humain.">
+<meta name="description" content="Deux parcours, deux grilles. Bourses : des candidatures accompagnées à fond, avec Fitz ou avec un conseiller. Préinscription en France : un dossier Études en France mené jusqu'au dépôt.">
 
 <meta name="theme-color" content="#211D18">
 <!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
@@ -24,7 +24,7 @@ assombrissement automatique qui casse les contrastes calibrés. -->
 <link rel="canonical" href="https://scholarbridge-e0d84.web.app/offers.html">
 
 <meta property="og:title" content="Choisissez votre accompagnement | FitzUniverse">
-<meta property="og:description" content="Choisissez la formule adaptée à votre profil : Pass Découverte, Forfait Premier Dossier, Essentiel ou Ambition en autonomie avec Fitz — ou Forfait Conseiller et Signature avec un conseiller humain.">
+<meta property="og:description" content="Deux parcours, deux grilles. Bourses : des candidatures accompagnées à fond, avec Fitz ou avec un conseiller. Préinscription en France : un dossier Études en France mené jusqu'au dépôt.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -110,10 +110,12 @@ dégradé a disparu le 2026-08-22. -->
 </div>
 </div>
 
-<h1>Choisissez la formule adaptée au nombre de candidatures que vous souhaitez préparer.</h1>
+<!-- Grille A (2026-09-07) : le volume n'est plus l'argument. Le titre
+vaut pour les deux parcours ; chaque grille explique ensuite son unité. -->
+<h1>Choisissez la profondeur de votre accompagnement.</h1>
 
 <p class="lead">
-Tous les forfaits d'accompagnement donnent accès à 100 % des outils Fitz. Ils se distinguent par le nombre de candidatures accompagnées et par la présence, ou non, d'un conseiller humain. Le Pass Découverte, lui, donne accès à Fitz pour vos questions — pas aux outils de dossier.
+Deux parcours, deux grilles. Pour une bourse : des candidatures accompagnées à fond, avec Fitz seul ou avec un conseiller. Pour une préinscription en France : un dossier Études en France mené jusqu'au dépôt. Paiement en une fois, aucune formule ne promet un résultat.
 </p>
 
 </header>
@@ -135,44 +137,80 @@ un état (« déjà acquis »), pas un décor. -->
 
 </div>
 
-<!-- SECTION A — POUR DÉMARRER
-Le Pass Découverte n'est pas une formule (type "pass") et ne doit jamais
-apparaître comme une colonne des formules complètes. -->
-<!-- GRILLE B (2026-09-07) : DEUX COLONNES, jamais les deux grilles dans
-le même tableau. « Bourses » : l'unité est la candidature accompagnée, à
-la fois. « Préinscriptions » : l'unité est le dossier Études en France,
-pour une campagne. Ambition (9 candidatures, 75 000 F) et Dossier France
-(1 dossier, 75 000 F) côte à côte se liraient comme une mauvaise affaire :
-chaque colonne explique son unité. -->
-<div class="pricing-columns">
-<section class="pricing-column" id="bourses" aria-labelledby="colBoursesTitre">
+<!-- ==========================================================
+GRILLE A (2026-09-07) — UNE GRILLE À LA FOIS. Remplace les deux
+colonnes de la grille B : la page n'affiche plus qu'un parcours.
+  offers.html?parcours=bourse          → la grille bourses
+  offers.html?parcours=preinscription  → la grille préinscriptions
+  offers.html#<idDeFormule>            → la grille du parcours de cette
+                                         formule (champ `parcours` de
+                                         pricing-plans.js), puis
+                                         défilement jusqu'à elle
+  offers.html sans rien                → le choix, deux boutons de poids
+                                         égal, aucun parcours d'office
+Routage : js/offres-parcours.js (module, testable sans navigateur).
+Les liens existants offers.html#<id> restent valables tels quels.
+Les prix ne sont JAMAIS écrits ici : data-price-of / data-eur-of sont
+remplis par offers.js depuis pricing-plans.js. Aucun coût par
+candidature, aucun « illimité », aucune comparaison fondée sur le
+nombre : la promesse est la profondeur.
+========================================================== -->
+
+<div id="parcoursChoix" class="parcours-choice reveal" hidden>
+<span class="plans-kicker">Deux parcours</span>
+<h2>Pour quel parcours cherchez-vous un accompagnement ?</h2>
+<div class="parcours-choice-actions">
+<a href="offers.html?parcours=bourse" class="parcours-choice-btn" data-parcours-switch="bourse">
+<i data-lucide="award"></i>
+<span class="parcours-choice-title">Bourses</span>
+<span class="parcours-choice-sub">Des candidatures accompagnées à fond, avec Fitz ou avec un conseiller.</span>
+</a>
+<a href="offers.html?parcours=preinscription" class="parcours-choice-btn" data-parcours-switch="preinscription">
+<i data-lucide="landmark"></i>
+<span class="parcours-choice-title">Préinscriptions</span>
+<span class="parcours-choice-sub">Un dossier Études en France, jusqu'à 7 vœux, mené jusqu'au dépôt.</span>
+</a>
+</div>
+</div>
+
+<!-- ============================ BOURSES ============================ -->
+<section class="pricing-view" id="bourses" data-parcours="bourse" aria-labelledby="colBoursesTitre" hidden>
+
+<nav class="parcours-switch" aria-label="Changer de parcours">
+<span class="parcours-switch-current"><i data-lucide="award"></i><span>Bourses</span></span>
+<a href="offers.html?parcours=preinscription" class="parcours-switch-link" data-parcours-switch="preinscription"><span>Voir les offres préinscription</span><i data-lucide="arrow-right"></i></a>
+</nav>
+
 <div class="pricing-column-head reveal">
 <span class="plans-kicker">Bourses</span>
 <h2 id="colBoursesTitre">Candidater à des bourses</h2>
-<p>L'unité : la candidature accompagnée. Chaque formule en couvre un nombre <strong>à la fois</strong> — terminer une candidature libère sa place.</p>
+<p>L'unité : la candidature accompagnée, menée à fond. Chaque formule en couvre un nombre <strong>à la fois</strong> — terminer une candidature libère sa place. Ce qui change entre les deux formules complètes : la présence d'un conseiller humain, et la messagerie avec l'équipe.</p>
 </div>
+
 <div id="family-autonome" class="section-heading-plans reveal">
 <span class="plans-kicker">Pour démarrer</span>
 <h2>Deux façons simples de commencer avec Fitz.</h2>
-<p>Des réponses à vos questions, ou directement votre première candidature.</p>
+<p>Des réponses à vos questions, ou directement votre première candidature. Le diagnostic d'éligibilité, lui, reste gratuit.</p>
 </div>
 
 <div class="starter-stack">
 
+<!-- Le Pass Découverte n'est pas une formule (type "pass") et ne doit
+jamais apparaître comme une colonne des formules complètes. -->
 <div class="consult-banner reveal">
 
 <i class="consult-icon" data-lucide="zap"></i>
 
 <div class="consult-body">
 <h3>Pass Découverte</h3>
-<p>Questions illimitées à Fitz pendant 14 jours — critères, procédures, orientation. Idéal pour avancer vite avant de choisir un accompagnement complet.</p>
+<p>Posez toutes vos questions à Fitz pendant 14 jours — critères, procédures, orientation. Pour avancer vite avant de choisir un accompagnement complet.</p>
 </div>
 
 <div class="consult-cta-wrap">
 
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="fitzExpress">10 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">15</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="fitzExpress"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="fitzExpress"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">14 jours</span>
 </div>
 
@@ -185,14 +223,9 @@ chaque colonne explique son unité. -->
 
 </div>
 
-<!-- Premier Dossier — ressuscitée le 2026-08-29 (voir pricing-plans.js) :
-la marche manquante entre « parler à Fitz » (Découverte) et
-« 5 candidatures » (Standard). Type "unit" : un paiement unique qui
-achète UNE candidature accompagnée, jamais une colonne des formules
-complètes. Le prix par candidature (15 000 F) est volontairement bien
-au-dessus de celui de Standard (9 000 F) : l'offre sert de porte
-d'entrée et d'argument pour les formules du dessous, pas de
-concurrente. -->
+<!-- Premier Dossier — un paiement unique qui achète UNE candidature
+accompagnée, jamais une colonne des formules complètes. Porte d'entrée
+vers le produit cœur, la candidature de l'étudiant. -->
 <div class="consult-banner reveal">
 
 <i class="consult-icon" data-lucide="file-text"></i>
@@ -205,8 +238,8 @@ concurrente. -->
 <div class="consult-cta-wrap">
 
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="premier-dossier">15 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">23</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="premier-dossier"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="premier-dossier"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">1 candidature, sans abonnement</span>
 </div>
 
@@ -221,251 +254,120 @@ concurrente. -->
 
 </div>
 
-<!-- Paliers autonomes (Standard/Avancé) -->
-<div class="pricing-grid-wrap">
+<!-- Les deux formules complètes : Fitz seul, ou avec un conseiller. -->
+<div id="family-accompagne" class="pricing-grid-wrap">
 
 <div class="pricing-glow" aria-hidden="true"></div>
 
 <div class="section-heading-plans reveal">
-<span class="plans-kicker">Formules autonomes</span>
-<h2>Avancer avec Fitz, à votre rythme.</h2>
-<p>Ambition reprend tout le contenu d'Essentiel.</p>
+<span class="plans-kicker">Formules complètes</span>
+<h2>Chaque candidature, menée à fond.</h2>
+<p>Le catalogue retient huit à douze opportunités par profil : ce qui compte n'est pas d'en viser plus, c'est de déposer chacune sans faille.</p>
 </div>
 
-<div class="pricing-grid">
+<div class="pricing-grid pricing-grid--duo">
 
 <article class="plan-card reveal">
 
+<span class="plan-badge plan-badge--recommended">Avec Fitz</span>
+
 <div class="plan-head">
 <h2>Forfait Essentiel</h2>
-<p class="plan-tagline">Jusqu'à 5 candidatures accompagnées de bout en bout.</p>
+<p class="plan-tagline">4 candidatures accompagnées à fond, avec Fitz.</p>
 </div>
 
-<!-- Prix : l'euro porte le montant, le FCFA le surmonte en petit
-(demande du 2026-08-22). Parité fixe 1 € = 655,957 FCFA — voir la note
-en pied de page. Le détail "≈ N F/mois" a été retiré à la même
-demande ; seule la durée d'accompagnement reste, ce n'est pas un prix
-mais une caractéristique de l'offre. -->
+<!-- L'euro porte le montant, le FCFA le surmonte en petit (2026-08-22).
+Parité fixe 1 € = 655,957 FCFA — voir la note en pied de page. -->
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="essentiel">45 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">69</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="essentiel-4"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="essentiel-4"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">6 mois d'accompagnement</span>
-<!-- Le prix raconté (chantier grille du 2026-08-29) : le montant absolu
-demande un saut de confiance ; le coût par candidature se compare à ce
-que l'étudiant dépense déjà. La mensualité a été retirée le même jour
-(décision utilisateur — ces formules ne sont pas des abonnements
-mensuels, l'afficher prêtait à confusion). Chiffre dérivé du prix
-(45 000 F / 5 candidatures) : recalculer si priceFCFA change dans
-pricing-plans.js. -->
-<span class="plan-price-note" data-per-application-of="essentiel">soit 9 000 F par candidature</span>
 </div>
 
 <div class="plan-quota">
-<strong>Jusqu'à 5</strong>
-<span>candidatures accompagnées de bout en bout</span>
+<strong>4</strong>
+<span>candidatures accompagnées à fond, à la fois</span>
 </div>
 
-<!-- Restructuré le 2026-09-02 (demande utilisateur) : chaque puce
-correspond à quelque chose que l'ESPACE ÉTUDIANT rend réellement —
-parcours 6 étapes, outils Fitz, chat + entraînement aux tests,
-préparation aux entretiens, suivi, messagerie FitzUniverse. Essentiel
-est la carte-vitrine de l'espace ; Ambition n'ajoute QUE volume et
-durée (doctrine plan-features : aucun outil réservé au-dessus). -->
+<!-- Chaque puce correspond à quelque chose que l'ESPACE ÉTUDIANT rend
+réellement. Aucun humain n'intervient ici : Essentiel est assuré par
+Fitz seul — c'est la seule justification du prix du Conseiller. -->
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>Parcours guidé en 6 étapes — de l'éligibilité jusqu'au visa</span></li>
 <li><i data-lucide="check"></i><span>100 % des outils Fitz : lettre de motivation, e-mails, vérification du dossier, traduction, compression</span></li>
-<li><i data-lucide="check"></i><span>Discuter avec Fitz : questions illimitées et entraînement aux tests (IELTS, TOPIK…) calé sur vos échéances</span></li>
+<li><i data-lucide="check"></i><span>Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests (IELTS, TOPIK…) calé sur vos échéances</span></li>
 <li><i data-lucide="check"></i><span>Préparation aux entretiens : banque de questions par type de bourse</span></li>
 <li><i data-lucide="check"></i><span>Suivi des candidatures : statuts, rappels d'échéances, checklists de documents</span></li>
-<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : écrivez à l'équipe directement depuis votre espace</span></li>
 <li><i data-lucide="check"></i><span>2 révisions par dossier</span></li>
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
+<li><i data-lucide="check"></i><span>Service après-vente « Signaler un problème », réponse sous 48 h ouvrées</span></li>
 </ul>
 
-<button type="button" class="btn btn-secondary plan-cta" data-plan="essentiel">
+<button type="button" class="btn btn-secondary plan-cta" data-plan="essentiel-4">
 <span>Choisir Essentiel</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
 </article>
 
-<article class="plan-card plan-card-featured reveal">
-
-<span class="plan-badge plan-badge--recommended">Le plus populaire</span>
-
-<div class="plan-head">
-<h2>Forfait Ambition</h2>
-<p class="plan-tagline">Jusqu'à 9 candidatures accompagnées de bout en bout.</p>
-</div>
-
-<div class="plan-price">
-<span class="plan-price-local" data-price-of="accompagnement">75 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount" data-eur-of="accompagnement">114</span><span class="plan-currency">€</span></span>
-<span class="plan-price-term">9 mois d'accompagnement</span>
-<span class="plan-price-note" data-per-application-of="accompagnement">soit environ 8 300 F par candidature</span>
-</div>
-
-<div class="plan-quota">
-<strong>Jusqu'à 9</strong>
-<span>candidatures accompagnées de bout en bout</span>
-</div>
-
-<!-- L'ancre de marché (chantier grille du 2026-08-29) : au Sénégal,
-les frais de dossier Campus France sont de 85 000 F, obligatoires et
-non remboursables, pour UNE seule destination — vérifié le jour même
-sur senegal.campusfrance.org. C'est LE référentiel de dépense que
-connaît chaque étudiant visé ; comparé à lui, Avancé devient une
-évidence. Mettre à jour le montant si Campus France change ses frais. -->
-<p class="plan-anchor">
-<i data-lucide="scale"></i>
-<span>Moins que les seuls frais de dossier Campus France (85 000 F pour une destination) — pour 9 candidatures accompagnées.</span>
-</p>
-
-<!-- Aucun humain n'intervient sur Découverte, Standard et Avancé :
-elles sont assurées par Fitz seul. La ligne "Relecture humaine de la
-lettre de motivation" a été retirée le 2026-08-22 — elle promettait un
-service non rendu, et brouillait la seule justification du prix de
-Renforcé. Voir le commentaire dans pricing-plans.js. -->
-<!-- Ambition vend honnêtement ce qui la distingue : le VOLUME et la
-DURÉE (les anciens « Préparation à l'entretien » et « Alertes » sont
-inclus dès Essentiel — les afficher ici laissait croire le contraire). -->
-<ul class="plan-features">
-<li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel</span></li>
-<li><i data-lucide="check"></i><span>4 candidatures de plus (9 au lieu de 5) — multipliez les destinations sans devoir choisir</span></li>
-<li><i data-lucide="check"></i><span>3 mois d'accompagnement de plus (9 au lieu de 6)</span></li>
-<li><i data-lucide="check"></i><span>Le meilleur prix par candidature des formules autonomes (≈ 8 300 F)</span></li>
-<li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
-</ul>
-
-<button type="button" class="btn btn-accent plan-cta" data-plan="accompagnement">
-<span>Choisir Ambition</span>
-<i data-lucide="arrow-right"></i>
-</button>
-
-</article>
-
-</div>
-
-</div>
-
-<!-- SECTION C — ACCOMPAGNEMENT HUMAIN -->
-<div id="family-accompagne" class="pricing-grid-wrap">
-
-<div class="section-heading-plans reveal">
-<span class="plans-kicker">Accompagnement humain</span>
-<h2>Un conseiller à vos côtés, Fitz en renfort.</h2>
-</div>
-
-<div class="pricing-grid pricing-grid--duo">
-
-<article class="plan-card plan-card--human reveal">
+<article class="plan-card plan-card--human plan-card-featured reveal">
 
 <span class="plan-badge plan-badge--human">Accompagnement humain</span>
 
 <div class="plan-head">
 <h2>Forfait Conseiller</h2>
-<p class="plan-tagline">Un conseiller humain vérifie chaque dossier avant l'envoi, sur 12 candidatures.</p>
+<p class="plan-tagline">6 candidatures, chacune relue par un conseiller avant l'envoi.</p>
 </div>
 
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="signature-focus">150 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">229</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="conseiller-6"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="conseiller-6"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">9 mois d'accompagnement</span>
 </div>
 
 <div class="plan-quota">
-<strong>12</strong>
-<span>candidatures accompagnées de bout en bout</span>
+<strong>6</strong>
+<span>candidatures, chacune relue par un conseiller</span>
 </div>
 
-<!-- Ce que fait l'humain, concrètement — réécrit le 2026-08-22. La
-marche depuis Avancé est nette : Découverte, Standard et Avancé sont
-assurées par Fitz SEUL, Renforcé est le premier palier où un conseiller
-humain intervient. Tout l'écart de prix achète donc exactement cette
-présence humaine — ce qui le rend lisible malgré un quota et une durée
-identiques à Avancé. Liste tenue en phase
-avec `highlights` de pricing-plans.js, que lit aussi le panneau
-d'incitation du tableau de bord. -->
+<!-- Ce que fait l'humain, concrètement. Le Conseiller est le seul
+palier bourses où quelqu'un lit votre dossier avant vous ne l'envoyiez
+— et le seul avec la messagerie FitzUniverse : une bourse se décide par
+un jury, l'échange n'a de valeur qu'avec la personne qui relit. Liste
+tenue en phase avec `highlights` de pricing-plans.js. -->
 <ul class="plan-features">
+<li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel, Fitz en renfort</span></li>
 <li><i data-lucide="check"></i><span>Vérification humaine de chaque dossier avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
-<li><i data-lucide="check"></i><span>Échanges directs avec votre conseiller via la messagerie FitzUniverse</span></li>
-<li><i data-lucide="check"></i><span>L'assistance continue de Fitz en renfort</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées</span></li>
 <li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
 </ul>
 
-<button type="button" class="btn btn-secondary plan-cta" data-plan="signature-focus">
+<button type="button" class="btn btn-accent plan-cta" data-plan="conseiller-6">
 <span>Choisir Conseiller</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
 </article>
 
-<!-- Seule offre sans plafond : pas de .plan-quota chiffré. -->
-<article class="plan-card plan-card--human reveal">
-
-<span class="plan-badge plan-badge--human">Notre formule la plus complète</span>
-
-<div class="plan-head">
-<h2>Signature</h2>
-<p class="plan-tagline">Conseiller dédié, candidatures illimitées.</p>
-</div>
-
-<div class="plan-price">
-<span class="plan-price-local" data-price-of="signature">250 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount">381</span><span class="plan-currency">€</span></span>
-<span class="plan-price-term">12 mois d'accompagnement</span>
-</div>
-
-<div class="plan-quota">
-<strong>Illimité</strong>
-<span>candidatures accompagnées de bout en bout</span>
-</div>
-
-<p class="plan-anchor plan-anchor--scarcity">
-<i data-lucide="users"></i>
-<span><strong>20 places par promotion</strong> — un conseiller dédié ne peut pas accompagner tout le monde en même temps.</span>
-</p>
-
-<ul class="plan-features">
-<li><i data-lucide="check"></i><span>Un conseiller dédié</span></li>
-<li><i data-lucide="check"></i><span>Points d'étape en visioconférence</span></li>
-<li><i data-lucide="check"></i><span>Accompagnement jusqu'à la préparation du visa</span></li>
-<li><i data-lucide="check"></i><span>Échanges personnalisés sur WhatsApp</span></li>
-<li><i data-lucide="check"></i><span>L'assistance continue de Fitz tout au long du processus</span></li>
-<li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
-</ul>
-
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20je%20souhaite%20rejoindre%20la%20formule%20Signature.%20Reste-t-il%20une%20place%20dans%20la%20promotion%20en%20cours%20%3F" target="_blank" rel="noopener" class="btn btn-secondary plan-cta" data-plan="signature">
-<span>Demander ma place</span>
-<i data-lucide="arrow-right"></i>
-</a>
-
-<p class="plan-request-note">
-<i data-lucide="message-circle"></i>
-<span>Réponse rapide sur WhatsApp — vous ne payez qu'une fois votre place confirmée.</span>
-</p>
-
-</article>
-
 </div>
 
 </div>
 
-<!-- Mentions + réassurance, fusionnées le 2026-08-22 : c'étaient deux
-blocs successifs (.offer-mentions puis .reassurance) qui disaient la
-même chose — « vous pouvez avoir confiance » — sur deux mises en page
-différentes. Un seul bloc, quatre lignes, icônes nues.
-Le lien WhatsApp garde sa classe .reassurance-item-whatsapp : le script
-en pied de page la cible pour ne le révéler qu'aux abonnés Renforcé/
-Signature. -->
 </section>
 
-<section class="pricing-column pricing-column--preinscriptions" id="preinscriptions" aria-labelledby="colPreTitre">
+<!-- ======================== PRÉINSCRIPTIONS ======================== -->
+<section class="pricing-view pricing-column--preinscriptions" id="preinscriptions" data-parcours="preinscription" aria-labelledby="colPreTitre" hidden>
+
+<nav class="parcours-switch" aria-label="Changer de parcours">
+<span class="parcours-switch-current"><i data-lucide="landmark"></i><span>Préinscriptions</span></span>
+<a href="offers.html?parcours=bourse" class="parcours-switch-link" data-parcours-switch="bourse"><span>Voir les offres bourses</span><i data-lucide="arrow-right"></i></a>
+</nav>
+
 <div class="pricing-column-head reveal">
 <span class="plans-kicker">Préinscriptions</span>
 <h2 id="colPreTitre">Partir en finançant vos études</h2>
-<p>L'unité : <strong>le dossier Études en France</strong>, jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant — <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné jusqu'au dépôt, jamais jusqu'à l'admission.</p>
+<p>L'unité : <strong>le dossier Études en France</strong>, jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant — <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné jusqu'au dépôt, jamais jusqu'à l'admission. La messagerie FitzUniverse est comprise dans les trois offres : un dossier bloqué se débloque.</p>
 </div>
 
 <div class="starter-stack">
@@ -473,12 +375,12 @@ Signature. -->
 <i class="consult-icon" data-lucide="calculator"></i>
 <div class="consult-body">
 <h3>Diagnostic France</h3>
-<p>Vos ressources contre le seuil publié, les droits d'inscription, le plafond d'exonération et les 85 000 F de dossier. Une réponse honnête, chiffrée et sourcée, avant de payer Campus France. Aucune IA : de l'arithmétique sur des seuils publiés.</p>
+<p>Vos ressources contre le seuil publié, les droits d'inscription, le plafond d'exonération et les frais de dossier Campus France. Une réponse honnête, chiffrée et sourcée, avant de les payer. Aucune IA : de l'arithmétique sur des seuils publiés.</p>
 </div>
 <div class="consult-cta-wrap">
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="diagnostic-france">10 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount" data-eur-of="diagnostic-france">15</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="diagnostic-france"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="diagnostic-france"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">14 jours</span>
 </div>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="diagnostic-france">
@@ -490,7 +392,7 @@ Signature. -->
 </div>
 
 <div class="pricing-grid-wrap">
-<div class="pricing-grid">
+<div class="pricing-grid pricing-grid--duo">
 
 <article class="plan-card plan-card-featured reveal">
 <div class="plan-head">
@@ -498,10 +400,10 @@ Signature. -->
 <p class="plan-tagline">Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="dossier-france">75 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france">114</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="dossier-france"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
-<span class="plan-price-note">moins que les 85 000 F de dossier Campus France, pour un dossier complet avant de les payer</span>
+<span class="plan-price-note">un dossier complet avant de payer les frais de dossier Campus France, non remboursables</span>
 </div>
 <div class="plan-quota">
 <strong>Jusqu'à 7</strong>
@@ -511,7 +413,7 @@ Signature. -->
 <li><i data-lucide="check"></i><span>Profil, pièces, traductions et légalisations, preuve de ressources — vérifiés avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Le Diagnostic France inclus</span></li>
 <li><i data-lucide="check"></i><span>Préparation à l'entretien Campus France</span></li>
-<li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions, réponse sous 48 h ouvrées</span></li>
 <li><i data-lucide="check"></i><span>Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission</span></li>
 </ul>
 <button type="button" class="btn btn-accent plan-cta" data-plan="dossier-france">
@@ -521,23 +423,25 @@ Signature. -->
 </article>
 
 <article class="plan-card plan-card--human reveal">
+<span class="plan-badge plan-badge--human">Relecture humaine</span>
 <div class="plan-head">
 <h2>Dossier France + Conseiller</h2>
-<p class="plan-tagline">Le même dossier, plus une relecture humaine avant les 85 000 F non remboursables.</p>
+<p class="plan-tagline">Le même dossier, plus une relecture humaine avant les frais de dossier non remboursables.</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-local" data-price-of="dossier-france-conseiller">150 000 FCFA</span>
-<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france-conseiller">229</span><span class="plan-currency">€</span></span>
+<span class="plan-price-local" data-price-of="dossier-france-conseiller"></span>
+<span class="plan-price-main"><span class="plan-amount" data-eur-of="dossier-france-conseiller"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
 </div>
 <div class="plan-quota">
 <strong>Jusqu'à 7</strong>
-<span>vœux Études en France, relus par un conseiller</span>
+<span>vœux, relus par un conseiller</span>
 </div>
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>Tout le contenu de Dossier France</span></li>
-<li><i data-lucide="check"></i><span>Une relecture humaine de votre dossier AVANT le paiement des 85 000 F non remboursables</span></li>
+<li><i data-lucide="check"></i><span>Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables</span></li>
 <li><i data-lucide="check"></i><span>Un conseiller joignable pendant toute la campagne</span></li>
+<li><i data-lucide="check"></i><span>Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission</span></li>
 </ul>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="dossier-france-conseiller">
 <span>Choisir Dossier France + Conseiller</span>
@@ -547,8 +451,8 @@ Signature. -->
 
 </div>
 </div>
+
 </section>
-</div>
 
 <div class="offer-footnotes reveal">
 
@@ -621,6 +525,11 @@ précis où l'on choisit de payer ou non. -->
 </details>
 
 <details class="faq-item">
+<summary><span>Comment joindre l'équipe ?</span><i data-lucide="chevron-down"></i></summary>
+<p>La messagerie FitzUniverse — une conversation dans votre espace, réponse sous 48 h ouvrées — est comprise dans le Forfait Conseiller et dans les trois offres préinscription : c'est là que l'échange a une valeur directe, avec la personne qui relit votre dossier ou quand une pièce bloque. Toutes les formules payantes disposent en plus de « Signaler un problème », un service après-vente pour un souci technique, un paiement ou une erreur du site — pas pour une question de dossier.</p>
+</details>
+
+<details class="faq-item">
 <summary><span>Que se passe-t-il si mon abonnement se termine avant d'avoir une réponse ?</span><i data-lucide="chevron-down"></i></summary>
 <p>Quelle que soit votre formule, si une candidature accompagnée est encore en attente de réponse à la fin de votre période d'abonnement, son suivi reste actif jusqu'à la décision de l'université — vous ne perdez jamais l'accompagnement au moment le plus important.</p>
 </details>
@@ -632,6 +541,11 @@ précis où l'on choisit de payer ou non. -->
 <script src="js/back-link.js"></script>
 <script src="pricing-plans.js"></script>
 <script src="offers.js"></script>
+<!-- Grille A : une grille à la fois — ?parcours=, #<id>, ou le choix. -->
+<script type="module">
+import { initOffresParcours } from "./js/offres-parcours.js";
+initOffresParcours(window.SCHOLARBRIDGE_PLANS);
+</script>
 <script type="module" src="offers-context.js"></script>
 <!-- Marque la formule ACTUELLE de l'étudiant connecté (badge + CTA
 neutralisé) et une demande de changement en cours — voir

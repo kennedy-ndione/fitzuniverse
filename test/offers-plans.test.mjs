@@ -101,9 +101,11 @@ assert.ok(
 // passeraient au vert sans rien vérifier.
 test("le balayage voit bien les boutons d'achat de la page", () => {
 assert.ok(boutons.length >= 4, `seulement ${boutons.length} data-plan trouvés dans offers.html`);
+// Grille A (2026-09-07) : Ambition est retirée de la vente ; le pivot
+// de la page est désormais le Forfait Conseiller (conseiller-6).
 assert.ok(
-boutons.includes("accompagnement"),
-"l'offre pivot « accompagnement » doit être proposée sur la page"
+boutons.includes("conseiller-6"),
+"l'offre pivot « conseiller-6 » doit être proposée sur la page"
 );
 assert.ok(
 Object.keys(OFFRES).length >= 5,

@@ -120,7 +120,9 @@ page dans l'identité papier chaud. -->
 
 <div class="messages-page-notice">
 <i data-lucide="badge-check"></i>
-<span>Vos messages arrivent directement à l'équipe FitzUniverse, en temps réel. Nous vous répondons en général <strong>sous 24 h ouvrées</strong> — la réponse apparaîtra ici et dans la cloche, où que vous soyez sur le site.</span>
+<!-- Le délai vit dans js/delai-reponse.js (grille A) ; le texte écrit
+ici n'est qu'un repli sans JavaScript. -->
+<span>Vos messages arrivent directement à l'équipe FitzUniverse, en temps réel. Nous vous répondons en général sous <strong data-delai-reponse>48 h ouvrées</strong> — la réponse apparaîtra ici et dans la cloche, où que vous soyez sur le site.</span>
 </div>
 
 <div class="messages-page-thread" id="messagesPageThread">
@@ -128,6 +130,44 @@ page dans l'identité papier chaud. -->
 </div>
 
 <div id="messagesPageComposerHost"></div>
+
+</div>
+
+</section>
+
+<!-- SIGNALER UN PROBLÈME (grille A, 2026-09-07) — service après-vente,
+ouvert à toute formule payante (fonctionnalité "support_ticket",
+js/support-ticket.js). Voie SÉPARÉE de la messagerie : rien ici ne
+traite une question de dossier. Masquée tant que le droit n'est pas
+vérifié ; jamais montrée au plan Gratuit. -->
+<section class="ai-panel reveal messages-page-card messages-support-card" id="supportCard" hidden>
+
+<div class="ai-panel-header">
+<h2><i data-lucide="life-buoy"></i>Signaler un problème</h2>
+</div>
+
+<div class="ai-panel-body messages-support-body">
+
+<p class="messages-support-lead">Service après-vente, compris dans toute formule payante : un problème technique, un paiement, une erreur du site. Ce n'est pas un accompagnement — aucune question sur votre dossier ni relecture n'est traitée ici. Réponse sous <strong data-delai-reponse>48 h ouvrées</strong>.</p>
+
+<form id="supportForm" class="messages-support-form" novalidate>
+<label class="messages-support-field">
+<span>Sujet</span>
+<select id="supportSujet">
+<option value="paiement">Paiement</option>
+<option value="technique">Problème technique</option>
+<option value="site">Erreur sur le site</option>
+</select>
+</label>
+<label class="messages-support-field">
+<span>Ce qui s'est passé</span>
+<textarea id="supportTexte" rows="3" maxlength="1500" placeholder="Décrivez le problème, et sur quelle page il se produit." required></textarea>
+</label>
+<div class="messages-support-actions">
+<button type="submit" class="btn btn-primary" id="supportSend"><span>Envoyer le signalement</span></button>
+<p class="messages-support-done" id="supportDone" hidden>Signalement envoyé. L'équipe vous répond sous <strong data-delai-reponse>48 h ouvrées</strong>.</p>
+</div>
+</form>
 
 </div>
 

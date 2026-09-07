@@ -115,12 +115,14 @@ flèche retour »). Style : .header .back-link dans css/catalog.css. -->
 <span>Accueil</span>
 </a>
 
-<!-- Menu public à quatre entrées (lot Préinscriptions, 2026-09-07) —
-remplace le seul lien croisé Bourses ↔ Universités. -->
+<!-- Menu public à TROIS entrées : Bourses · Préinscriptions · Universités.
+Le lot Préinscriptions (2026-09-07) en avait posé quatre, avec
+« Connexion » — une erreur de spec : la décision du 2026-09-01 l'avait
+retirée des deux pages catalogue (grille A, même jour). La feuille
+mobile (js/mobile-nav.js) suit la même règle sur ces deux pages. -->
 <a href="scholarships.html" class="header-link" aria-current="page"><span>Bourses</span></a>
 <a href="preinscriptions.html" class="header-link"><span>Préinscriptions</span></a>
 <a href="universities.html" class="header-link"><span>Universités</span></a>
-<a href="login.html" class="header-link header-link-login" aria-label="Connexion"><i data-lucide="log-in"></i><span>Connexion</span></a>
 
 <!-- « Connexion » et « Découvrir mes opportunités » retirés de l'en-tête
 des deux pages catalogue (décision utilisateur, 2026-09-01) : le
