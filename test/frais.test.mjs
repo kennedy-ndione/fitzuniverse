@@ -115,7 +115,7 @@ const par = (b) => [...bandes.entries()].filter(([, v]) => v.bande === b).map(([
 assert.deepEqual(par("gratuit"), [], "depuis le 1er septembre 2026, aucune université française n'est gratuite pour un étudiant hors UE");
 assert.deepEqual(par("abordable"), ["Université Paris Dauphine-PSL"]);
 assert.equal(par("eleve").length, 11, par("eleve").join(", "));
-assert.deepEqual(par("inconnu").filter((n) => /Polytechnique|Sorbonne Université|Paris Cité/.test(n)).length, 3);
+assert.deepEqual(par("inconnu").filter((n) => /polytechnique|Sorbonne Université|Paris Cité/i.test(n)).length, 3);
 assert.equal(bandes.get("Sorbonne Université").bande, "inconnu");
 assert.equal(bandes.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
 assert.equal(bandes.get("Université Paris Cité").bande, "inconnu");
