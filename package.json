@@ -5,7 +5,7 @@
   "description": "FitzUniverse - plateforme d'orientation vers les bourses et universites internationales.",
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
-    "emulators": "firebase emulators:start --project scholarbridge-e0d84 --only auth,firestore",
+    "emulators": "firebase emulators:start --project scholarbridge-e0d84 --only auth,firestore,storage",
     "seed:emulator": "cross-env FIRESTORE_EMULATOR_HOST=localhost:8080 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node scripts/seed-emulator.mjs",
     "verifier": "node scripts/verifier/verifier.mjs",
     "radar": "node scripts/radar-echeances.mjs",

@@ -94,7 +94,12 @@ export function getDocs(ref){ const c = ref && ref.__chemin || ''; if (c.endsWit
     setDoc: `export function setDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'set', chemin: ref && ref.__chemin || '', data }); return Promise.resolve(); }`,
     updateDoc: `export function updateDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'update', chemin: ref && ref.__chemin || '', data }); return Promise.resolve(); }`,
     deleteDoc: `export function deleteDoc(ref){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'delete', chemin: ref && ref.__chemin || '' }); return Promise.resolve(); }`,
-    addDoc: `export function addDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'add', chemin: ref && ref.__chemin || '', data }); return Promise.resolve({ id: 'auto' }); }`
+    addDoc: `export function addDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'add', chemin: ref && ref.__chemin || '', data }); return Promise.resolve({ id: 'auto' }); }`,
+    // Lot E1 : Storage. L'envoi d'une capture est CONSIGNÉ (op 'upload',
+    // chemin, taille, type), jamais fait ; l'URL de lecture est factice.
+    ref: `export function ref(_s, chemin){ return { __chemin: String(chemin || '') }; }`,
+    uploadBytes: `export function uploadBytes(ref, blob, meta){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'upload', chemin: ref && ref.__chemin || '', data: { taille: blob && blob.size || 0, type: (meta && meta.contentType) || (blob && blob.type) || '' } }); return Promise.resolve({ ref }); }`,
+    getDownloadURL: `export function getDownloadURL(ref){ return Promise.resolve('blob:harnais/' + (ref && ref.__chemin || '')); }`
   };
 
 }

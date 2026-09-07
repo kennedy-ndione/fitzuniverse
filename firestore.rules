@@ -308,6 +308,47 @@ allow delete: if isOwner(uid);
 // est désormais REFUSÉ ici. Les documents à id auto créés AVANT
 // cette règle restent lisibles, modifiables et supprimables — seule
 // la CRÉATION est contrainte.
+// ------------------------------------------------------------
+// LA PREUVE DE DÉPÔT (lot E1, 2026-09-07) — miroir de js/preuve-depot.js.
+// Un statut DÉPOSÉ (deposee, en_attente, reponse_recue, admise,
+// refusee, liste_attente) ne s'écrit qu'avec une preuveDepot valide :
+// mode dans le vocabulaire, champ requis selon le mode, deposeLe au
+// format date, fichier (s'il y en a un) dans le dossier Storage de
+// CETTE candidature. Une déclaration structurée, pas une vérification.
+// JAMAIS DE DÉGRADATION : la règle ne joue qu'à la TRANSITION vers un
+// statut déposé (le champ « status » figure dans affectedKeys) — une
+// candidature déjà déposée sans preuve reste modifiable sur ses
+// autres champs. Même style que les créneaux slot-N.
+// ------------------------------------------------------------
+function estStatutDepose(statut) {
+return statut in ['deposee', 'en_attente', 'reponse_recue', 'admise', 'refusee', 'liste_attente'];
+}
+
+function preuveValide(d, uid, applicationId) {
+return d.keys().hasAll(['preuveDepot']) &&
+d.preuveDepot is map &&
+d.preuveDepot.keys().hasOnly(['mode', 'numeroDossier', 'fichier', 'deposeLe', 'declareLe']) &&
+d.preuveDepot.get('mode', '') in ['numero', 'capture', 'transmis'] &&
+d.preuveDepot.get('deposeLe', '') is string &&
+d.preuveDepot.get('deposeLe', '').matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+(!('numeroDossier' in d.preuveDepot) || (d.preuveDepot.numeroDossier is string && d.preuveDepot.numeroDossier.size() <= 64)) &&
+(!('fichier' in d.preuveDepot) || (d.preuveDepot.fichier is string && d.preuveDepot.fichier.matches('users/' + uid + '/applications/' + applicationId + '/.*'))) &&
+(
+(d.preuveDepot.mode == 'numero' && d.preuveDepot.get('numeroDossier', '') != '') ||
+(d.preuveDepot.mode == 'capture' && d.preuveDepot.get('fichier', '') != '') ||
+(d.preuveDepot.mode == 'transmis' && (d.preuveDepot.get('numeroDossier', '') != '' || d.preuveDepot.get('fichier', '') != ''))
+);
+}
+
+// Vrai si cette écriture ne pose PAS un statut déposé sans preuve :
+// soit le statut n'est pas déposé, soit il n'a pas bougé (pas de
+// dégradation d'une candidature ancienne), soit la preuve est valide.
+function depotJustifie(uid, applicationId, transition) {
+return !estStatutDepose(request.resource.data.get('status', '')) ||
+!transition ||
+preuveValide(request.resource.data, uid, applicationId);
+}
+
 match /users/{uid}/applications/{applicationId} {
 allow read: if isOwner(uid) || isAdmin();
 // Grille B : le quota se lit PAR PARCOURS (request.resource.data.track,
@@ -316,9 +357,13 @@ allow read: if isOwner(uid) || isAdmin();
 allow create: if isOwner(uid) && (
 (request.resource.data.get('track', 'bourse') == 'preinscription' && applicationId.matches(preSlotPattern(uid))) ||
 (request.resource.data.get('track', 'bourse') != 'preinscription' && applicationId.matches(slotPattern(uid)))
-);
+) && depotJustifie(uid, applicationId, true);
 allow delete: if isOwner(uid);
-allow update: if isOwner(uid) ||
+// E1 : la transition vers un statut déposé exige la preuve ; une
+// preuve écrite (même sans changer le statut) doit être bien formée.
+allow update: if (isOwner(uid) &&
+depotJustifie(uid, applicationId, 'status' in request.resource.data.diff(resource.data).affectedKeys()) &&
+(!('preuveDepot' in request.resource.data.diff(resource.data).affectedKeys()) || !('preuveDepot' in request.resource.data) || preuveValide(request.resource.data, uid, applicationId))) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
 }
 

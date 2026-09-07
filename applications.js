@@ -75,6 +75,14 @@ import { lireExigences, groupees, elementsAAjouter } from "./js/exigences.js";
 // Lot A (2026-09-07) : le parcours porté par la candidature — bourse ou
 // préinscription. Lu avec défaut « bourse », jamais rattrapé en base.
 import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "./js/parcours.js";
+// Lot E1 (2026-09-07) : la preuve de dépôt — une déclaration structurée,
+// jamais une vérification. firestore.rules fait foi.
+import { lirePreuve, preuveValide, libelleDemande, resumePreuve, cheminCapture, TAILLE_MAX_FICHIER, TYPES_FICHIER } from "./js/preuve-depot.js";
+import { deposeParUnTiers } from "./js/exigences.js";
+import { STATUTS_DEPOSES } from "./js/journey-map.js";
+import { compressImageToTarget } from "./js/compression-image.js";
+import { storage } from "./firebase-config.js";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 
 initShellChrome();
 
@@ -892,8 +900,163 @@ portalUrl: document.getElementById("fieldPortalUrl"),
 status: document.getElementById("fieldStatus"),
 deadline: document.getElementById("fieldDeadline"),
 frequency: document.getElementById("fieldFrequency"),
-notes: document.getElementById("fieldNotes")
+notes: document.getElementById("fieldNotes"),
+// Lot E1
+preuveNumero: document.getElementById("preuveNumero"),
+preuveDate: document.getElementById("preuveDate"),
+preuveFichier: document.getElementById("preuveFichier")
 };
+
+// ==========================================================
+// LA PREUVE DE DÉPÔT dans le formulaire (lot E1, 2026-09-07).
+// Une déclaration, jamais une vérification (js/preuve-depot.js).
+// Le select de statut ne propose les statuts déposés que si une
+// preuve valide est saisie ; sinon la phrase de libelleDemande()
+// explique ce qu'on attend. firestore.rules fait foi.
+// ==========================================================
+const preuveBlock = document.getElementById("preuveBlock");
+const preuveDemande = document.getElementById("preuveDemande");
+const preuveActuelle = document.getElementById("preuveActuelle");
+const preuveEtat = document.getElementById("preuveEtat");
+
+// La candidature en cours d'édition, et sa preuve déjà enregistrée.
+let preuveEnregistree = null;
+let preuveParTiers = false;
+
+function dateISOAujourdhui() {
+const d = new Date();
+return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Ce que le formulaire déclare maintenant (sans le fichier, qui n'a pas
+// encore de chemin : on le représente par un marqueur si un fichier est
+// choisi — le vrai chemin est écrit après l'envoi).
+function preuveSaisie() {
+const numero = fields.preuveNumero.value.trim();
+const fichierChoisi = fields.preuveFichier.files && fields.preuveFichier.files.length > 0;
+const fichierExistant = preuveEnregistree && preuveEnregistree.fichier;
+const preuve = { deposeLe: fields.preuveDate.value };
+if (numero) preuve.numeroDossier = numero;
+if (fichierChoisi || fichierExistant) preuve.fichier = fichierChoisi ? "(à envoyer)" : fichierExistant;
+preuve.mode = preuveParTiers ? "transmis" : (numero ? "numero" : "capture");
+return preuve;
+}
+
+function fichierAcceptable(file) {
+if (!file) return true;
+if (file.size > TAILLE_MAX_FICHIER) return false;
+return TYPES_FICHIER.some((t) => (file.type || "").startsWith(t));
+}
+
+// Active/désactive les statuts déposés selon la validité de la preuve,
+// et dit pourquoi.
+function rafraichirPreuve() {
+if (preuveBlock.hidden) return;
+const preuve = preuveSaisie();
+const file = fields.preuveFichier.files && fields.preuveFichier.files[0];
+const valide = preuveValide(preuve, { parTiers: preuveParTiers }) && fichierAcceptable(file);
+
+fields.status.querySelectorAll("option").forEach((opt) => {
+if (STATUTS_DEPOSES.includes(opt.value)) opt.disabled = !valide;
+});
+
+if (file && !fichierAcceptable(file)) {
+preuveEtat.textContent = "Ce fichier n'est pas accepté : image ou PDF, 5 Mo au plus.";
+preuveEtat.classList.remove("is-ok");
+} else if (valide) {
+preuveEtat.textContent = "Déclaration complète : vous pouvez passer la candidature en « Déposée ».";
+preuveEtat.classList.add("is-ok");
+} else if (preuve.deposeLe > dateISOAujourdhui()) {
+preuveEtat.textContent = "La date de dépôt ne peut pas être dans le futur.";
+preuveEtat.classList.remove("is-ok");
+} else {
+preuveEtat.textContent = "Les statuts « Déposée » et suivants s'ouvriront une fois la déclaration remplie.";
+preuveEtat.classList.remove("is-ok");
+}
+
+// Si le statut choisi vient d'être invalidé, on redescend proprement.
+const opt = fields.status.selectedOptions[0];
+if (opt && opt.disabled) {
+fields.status.value = "en_cours";
+fields.status.dispatchEvent(new Event("change", { bubbles: true }));
+}
+}
+
+// Prépare le bloc pour la candidature ouverte dans le modal.
+function preparerPreuve(app, lecture) {
+preuveEnregistree = lirePreuve(app);
+preuveParTiers = !!(lecture && lecture.bourse && deposeParUnTiers(lireExigences(lecture.bourse)));
+const dejaDeposee = !!app && STATUTS_DEPOSES.includes(app.status);
+const dejaValide = preuveEnregistree && preuveValide(preuveEnregistree, { parTiers: preuveParTiers });
+
+// Une candidature nouvelle ou en préparation : le bloc s'affiche pour
+// permettre de déposer. Une candidature DÉJÀ déposée sans preuve
+// (antérieure au lot) : rien n'est exigé sur ses autres champs —
+// jamais de dégradation ; le bloc reste proposé, sans contrainte.
+preuveBlock.hidden = false;
+preuveDemande.textContent = libelleDemande(app, { parTiers: preuveParTiers });
+preuveActuelle.hidden = !preuveEnregistree;
+preuveActuelle.textContent = preuveEnregistree ? resumePreuve(preuveEnregistree) : "";
+
+fields.preuveNumero.value = (preuveEnregistree && preuveEnregistree.numeroDossier) || "";
+fields.preuveDate.value = (preuveEnregistree && preuveEnregistree.deposeLe) || dateISOAujourdhui();
+fields.preuveDate.max = dateISOAujourdhui();
+fields.preuveFichier.value = "";
+
+if (dejaDeposee && !dejaValide) {
+// Non-dégradation : les statuts déposés restent proposés tels quels
+// tant que le statut ne bouge pas (firestore.rules ne joue qu'à la
+// transition). On n'impose rien ici.
+fields.status.querySelectorAll("option").forEach((opt) => { opt.disabled = false; });
+preuveEtat.textContent = "Cette candidature a été déposée avant la déclaration de dépôt ; vous pouvez la compléter ici.";
+preuveEtat.classList.remove("is-ok");
+return;
+}
+
+rafraichirPreuve();
+}
+
+["input", "change"].forEach((evt) => {
+fields.preuveNumero.addEventListener(evt, rafraichirPreuve);
+fields.preuveDate.addEventListener(evt, rafraichirPreuve);
+fields.preuveFichier.addEventListener(evt, rafraichirPreuve);
+});
+
+// L'envoi de la capture : compressée si c'est une image (même
+// implémentation que compress.html), puis déposée dans le dossier
+// Storage de CETTE candidature — le seul chemin que storage.rules
+// et firestore.rules acceptent.
+async function envoyerCapture(applicationId, file) {
+let blob = file;
+let ext = (file.name.split(".").pop() || "").toLowerCase();
+if ((file.type || "").startsWith("image/")) {
+blob = await compressImageToTarget(file, 1.5 * 1024 * 1024);
+ext = "jpg";
+}
+if (file.type === "application/pdf") ext = "pdf";
+const chemin = cheminCapture(uid, applicationId, ext);
+await uploadBytes(storageRef(storage, chemin), blob, { contentType: blob.type || file.type });
+return chemin;
+}
+
+// Construit le champ preuveDepot à écrire, ou null si rien n'est
+// déclaré de neuf (on ne réécrit jamais declareLe pour rien).
+async function preuveAEcrire(applicationId) {
+if (preuveBlock.hidden) return null;
+const file = fields.preuveFichier.files && fields.preuveFichier.files[0];
+const saisie = preuveSaisie();
+const inchangee = preuveEnregistree && !file &&
+(saisie.numeroDossier || "") === (preuveEnregistree.numeroDossier || "") &&
+saisie.deposeLe === preuveEnregistree.deposeLe;
+if (inchangee) return null;
+if (!preuveValide(saisie, { parTiers: preuveParTiers }) || !fichierAcceptable(file)) return null;
+
+const preuve = { mode: saisie.mode, deposeLe: saisie.deposeLe, declareLe: serverTimestamp() };
+if (saisie.numeroDossier) preuve.numeroDossier = saisie.numeroDossier;
+if (file) preuve.fichier = await envoyerCapture(applicationId, file);
+else if (preuveEnregistree && preuveEnregistree.fichier) preuve.fichier = preuveEnregistree.fichier;
+return preuve;
+}
 
 const appsCol = collection(db, "users", uid, "applications");
 
@@ -1219,6 +1382,10 @@ fields.deadline.value = app?.deadline || "";
 fields.frequency.value = app?.reminderFrequency || "14";
 fields.notes.value = app?.notes || "";
 
+// Lot E1 : la déclaration de dépôt, selon la candidature (et sa bourse :
+// déposée par un tiers ou non).
+preparerPreuve(app, app && catalogueIndex ? etatDeLaCandidature(app, catalogueIndex) : null);
+
 pickedEntry = null;
 pickerSummary.hidden = true;
 pickerSummary.innerHTML = "";
@@ -1275,6 +1442,15 @@ statPending.textContent = applications.filter((a) => a.status === "en_attente").
 
 }
 
+// Lot E1 : « Déposée le <date> · dossier n° … » ou « · capture jointe » —
+// la preuve reste consultable (le lien demande l'URL à Storage au clic).
+function renderPreuve(app) {
+const preuve = lirePreuve(app);
+const resume = resumePreuve(preuve);
+if (!resume) return "";
+return `<span class="app-preuve"><i data-lucide="send"></i>${escapeHtml(resume)}${preuve.fichier ? ` <a href="#" data-voir-capture="${escapeHtml(preuve.fichier)}">voir</a>` : ""}</span>`;
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
@@ -1309,6 +1485,7 @@ ${renderJourneyStepper(app, journeySteps)}
 ${renderEcheanceCandidature(app, lecture)}
 <span class="${urgency.urgent ? "is-urgent" : ""}"><i data-lucide="bell"></i>${urgency.text}</span>
 ${app.premiumProtected ? `<span class="is-protected"><i data-lucide="shield-check"></i>Suivi maintenu même après votre abonnement</span>` : ""}
+${renderPreuve(app)}
 </div>
 
 ${renderDivergence(app, lecture)}
@@ -1357,6 +1534,16 @@ ${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" cla
 card.querySelector(".app-checkin-btn").addEventListener("click", () => checkIn(app));
 card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(app));
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
+card.querySelector("[data-voir-capture]")?.addEventListener("click", async (event) => {
+event.preventDefault();
+try {
+const url = await getDownloadURL(storageRef(storage, event.currentTarget.dataset.voirCapture));
+window.open(url, "_blank", "noopener");
+} catch (error) {
+console.error("Capture illisible :", error);
+showToast("La capture n'a pas pu être ouverte.", { type: "error" });
+}
+});
 card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
 card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
 card.querySelector(".app-readiness-btn").addEventListener("click", () => runReadinessCheck(app));
@@ -1899,6 +2086,19 @@ if (pickedEntry.scholarshipId) payload.track = "bourse";
 
 if (!payload.university) return;
 
+// Lot E1 : un statut déposé exige une déclaration valide — le select
+// ne l'offre qu'à cette condition, mais on le redit ici, en clair.
+const veutDeposer = STATUTS_DEPOSES.includes(payload.status);
+const previousApp = editingId ? applications.find((a) => a.id === editingId) : null;
+const transition = !previousApp || previousApp.status !== payload.status;
+if (veutDeposer && transition) {
+const file = fields.preuveFichier.files && fields.preuveFichier.files[0];
+if (!preuveValide(preuveSaisie(), { parTiers: preuveParTiers }) || !fichierAcceptable(file)) {
+showToast(libelleDemande(previousApp, { parTiers: preuveParTiers }), { type: "warning" });
+return;
+}
+}
+
 if (editingId) {
 
 // Issue de candidature (Control Center 2026-09-02) : quand l'étudiant
@@ -1914,7 +2114,19 @@ liste_attente: "application_waitlisted"
 const previous = applications.find((a) => a.id === editingId);
 const outcomeEvent = OUTCOME_EVENTS[payload.status];
 
+// Lot E1 : la preuve, si elle est nouvelle ou modifiée (la capture est
+// envoyée AVANT l'écriture Firestore, pour que le chemin existe).
+try {
+const preuve = await preuveAEcrire(editingId);
+if (preuve) payload.preuveDepot = preuve;
+} catch (error) {
+console.error("Capture non envoyée :", error);
+showToast("La capture n'a pas pu être envoyée. Réessayez, ou déclarez un numéro de dossier.", { type: "error" });
+return;
+}
+
 await updateDoc(doc(db, "users", uid, "applications", editingId), payload);
+if (payload.preuveDepot && previous && previous.status !== payload.status) trackEvent("application_deposee_declaree", { mode: payload.preuveDepot.mode, track: payload.track });
 
 if (outcomeEvent && previous && previous.status !== payload.status) {
 trackEvent(outcomeEvent, { university: payload.university || "" });
@@ -1957,6 +2169,16 @@ const slotId = slotIdLibre(duParcours, quota, estPreinscription(track) ? "pre" :
 
 if (!slotId) {
 showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
+return;
+}
+
+// Lot E1 : la preuve, si l'étudiant en déclare une dès la création.
+try {
+const preuve = await preuveAEcrire(slotId);
+if (preuve) payload.preuveDepot = preuve;
+} catch (error) {
+console.error("Capture non envoyée :", error);
+showToast("La capture n'a pas pu être envoyée. Réessayez, ou déclarez un numéro de dossier.", { type: "error" });
 return;
 }
 

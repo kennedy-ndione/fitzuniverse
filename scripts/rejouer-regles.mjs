@@ -184,13 +184,37 @@ attendre("Gratuit : messagerie refusée", await creerCommeEtudiant(UID_GRATUIT, 
 attendre("Gratuit : aucune candidature", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/applications/slot-1`, candidature("bourse")), 403);
 attendre("Diagnostic seul : « Signaler un problème » accepté", await creerCommeEtudiant(UID_DIAG, `supportTickets/t-${UID_DIAG}`, signalement(UID_DIAG)), 200);
 
+console.log("\n=== E1 — la preuve de dépôt (firestore.rules) ===");
+const UID_E1 = `rejeu-depot-${T}`;
+await admin.doc(`users/${UID_E1}`).set({ uid: UID_E1, name: "Preuve de dépôt", plan: "conseiller-6", planExpiresAt: dans(200) });
+// Une candidature ANCIENNE, déjà déposée sans preuve (écrite par l'admin SDK, comme avant le lot).
+await admin.doc(`users/${UID_E1}/applications/slot-6`).set({ university: "Ancienne", status: "deposee", notes: "" });
+attendre("création en préparation, sans preuve : acceptée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, candidature("bourse")), 200);
+attendre("passage en deposee SANS preuve : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee" }), 403);
+attendre("passage en deposee avec une preuve mal formée (mode inconnu) : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "ocr", numeroDossier: "1", deposeLe: "2026-09-07" } }), 403);
+attendre("passage en deposee, numero sans numéro : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", deposeLe: "2026-09-07" } }), 403);
+attendre("passage en deposee, date mal formée : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", numeroDossier: "1", deposeLe: "07/09/2026" } }), 403);
+attendre("passage en deposee, capture hors du dossier de la candidature : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "capture", fichier: `users/${UID_E1}/applications/slot-2/preuve-depot.jpg`, deposeLe: "2026-09-07" } }), 403);
+attendre("passage en deposee AVEC preuve numero : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", numeroDossier: "EF-1", deposeLe: "2026-09-07" } }), 200);
+attendre("création en préparation (slot-2)", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-2`, candidature("bourse")), 200);
+attendre("passage en en_attente AVEC preuve capture : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-2`, { status: "en_attente", preuveDepot: { mode: "capture", fichier: `users/${UID_E1}/applications/slot-2/preuve-depot.jpg`, deposeLe: "2026-09-06" } }), 200);
+attendre("création en préparation (slot-3)", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-3`, candidature("bourse")), 200);
+attendre("passage en deposee AVEC preuve transmis (numéro) : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-3`, { status: "deposee", preuveDepot: { mode: "transmis", numeroDossier: "REF-AMB", deposeLe: "2026-09-06" } }), 200);
+attendre("création DIRECTE en deposee sans preuve : refusée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-4`, { ...candidature("bourse"), status: "deposee" }), 403);
+attendre("création directe en admise avec preuve : acceptée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-4`, { ...candidature("bourse"), status: "admise", preuveDepot: { mode: "numero", numeroDossier: "X", deposeLe: "2026-08-01" } }), 200);
+attendre("NON-RÉGRESSION : candidature déjà deposee sans preuve, modification des notes acceptée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { notes: "mise à jour", nextCheckDate: "2026-10-01" }), 200);
+attendre("NON-RÉGRESSION : même candidature, réécriture du même statut sans preuve (status inchangé) acceptée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "deposee", notes: "encore" }), 200);
+attendre("mais passer cette ancienne candidature en en_attente sans preuve : refusé (transition)", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "en_attente" }), 403);
+attendre("une preuve mal formée écrite seule (sans changer le statut) : refusée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { preuveDepot: { mode: "numero", deposeLe: "2026-09-07" } }), 403);
+attendre("redescendre en en_cours (statut non déposé) : accepté sans preuve", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "en_cours" }), 200);
+
 console.log("Les deux champs sont hors de portée de l'étudiant :");
 attendre("planPreinscription refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscription: "dossier-france" }), 403);
 attendre("planPreinscriptionExpiresAt refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscriptionExpiresAt: dans(400) }), 403);
 attendre("plan refusé à l'étudiant (inchangé)", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { plan: "signature" }), 403);
 
 // Nettoyage.
-for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE]) {
+for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1]) {
   for (const sc of ["applications", "advisorRequests", "messages"]) {
     const snap = await admin.collection(`users/${uid}/${sc}`).get();
     for (const d of snap.docs) await d.ref.delete();

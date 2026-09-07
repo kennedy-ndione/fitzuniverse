@@ -31,6 +31,9 @@ markAdvisorRequestProcessed
 import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS } from "../js/plan-features.js";
+// Lot E1 : la preuve de dépôt, en lecture seule (jamais la capture
+// elle-même — storage.rules la réserve au propriétaire).
+import { lirePreuve, resumePreuve, LIBELLES_MODES } from "../js/preuve-depot.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
@@ -518,8 +521,22 @@ a_preparer: "À préparer",
 en_cours: "En préparation",
 deposee: "Déposée",
 en_attente: "En attente de réponse",
-reponse_recue: "Réponse reçue"
+reponse_recue: "Réponse reçue",
+admise: "Admise",
+refusee: "Refusée",
+liste_attente: "Liste d'attente"
 };
+
+// Lot E1 : ce que l'étudiant a DÉCLARÉ (mode, numéro, date) — pas la
+// capture. Une candidature déposée sans preuve est dite telle quelle.
+function renderPreuveReadOnly(app) {
+const preuve = lirePreuve(app);
+if (!preuve) return ["deposee", "en_attente", "reponse_recue", "admise", "refusee", "liste_attente"].includes(app.status)
+? `<div class="timeline-meta" style="color:var(--text-muted);">Déposée sans déclaration de dépôt (antérieure au lot E1).</div>`
+: "";
+const resume = resumePreuve(preuve) || `Déclaration incomplète (${LIBELLES_MODES[preuve.mode] || preuve.mode || "mode inconnu"})`;
+return `<div class="timeline-meta" style="color:var(--success);">Preuve de dépôt : ${resume}${preuve.fichier ? " (capture réservée à l'étudiant)" : ""}</div>`;
+}
 
 // Même structure que le "checklist" par candidature côté étudiant
 // (voir applications.js) — libellés dupliqués ici volontairement
@@ -651,6 +668,7 @@ list.innerHTML = applications.map((app) => `
 <div class="timeline-body">
 <div class="timeline-label">${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}</div>
 <div class="timeline-meta">${APP_STATUS_LABELS[app.status] || app.status}${app.premiumProtected ? " · suivi protégé au-delà de l'abonnement" : ""}</div>
+${renderPreuveReadOnly(app)}
 ${renderChecklistItemsReadOnly(app)}
 </div>
 </div>

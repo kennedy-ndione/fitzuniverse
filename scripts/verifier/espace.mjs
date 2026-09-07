@@ -188,6 +188,18 @@ function preparer() {
     deadline: null
   });
 
+  // LOT E1 (2026-09-07) : une préinscription DÉJÀ enregistrée sur pre-1,
+  // en préparation — le harnais y déclare un dépôt par numéro ; puis un
+  // dépôt par capture sur slot-1.
+  applications.push({
+    ...commun,
+    id: "pre-1",
+    university: "Université Témoin Dépôt",
+    scholarship: "",
+    track: "preinscription",
+    deadline: null
+  });
+
   const userData = {
     uid: UID,
     name: "Harnais",
@@ -293,6 +305,62 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       // Le rattrapage écrit après le premier rendu ; on attend que la
       // liste porte bien nos trois cartes.
       await page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 3, null, { timeout: 15000 });
+
+      // ---- LOT E1 : la preuve de dépôt ----
+      //
+      // 1. pre-1 : « Déposée » est proposée seulement une fois un numéro
+      //    saisi ; l'enregistrement écrit status + preuveDepot.mode numero.
+      // 2. slot-1 : la capture passe par l'envoi Storage (consigné), puis
+      //    la preuve écrite porte le chemin users/{uid}/applications/slot-1/.
+      {
+        const declarer = async (id, { numero, fichier }) => {
+          await page.click(`#${id} .app-edit-btn`);
+          await page.waitForSelector("#preuveBlock:not([hidden])", { timeout: 10000 });
+          const avant = await page.evaluate(() => ({
+            deposeeBloquee: document.querySelector('#fieldStatus option[value="deposee"]').disabled,
+            demande: document.getElementById("preuveDemande").textContent.trim()
+          }));
+          if (!avant.deposeeBloquee) anomalies.push(`${id} : « Déposée » est proposée AVANT toute déclaration de dépôt.`);
+          if (!/numéro de dossier|transmis/i.test(avant.demande)) anomalies.push(`${id} : la phrase de demande est muette — « ${avant.demande} »`);
+          if (numero) await page.fill("#preuveNumero", numero);
+          if (fichier) await page.setInputFiles("#preuveFichier", fichier);
+          await page.waitForFunction(() => !document.querySelector('#fieldStatus option[value="deposee"]').disabled, null, { timeout: 5000 })
+            .catch(() => anomalies.push(`${id} : « Déposée » reste bloquée après la déclaration.`));
+          await page.evaluate(() => { const s = document.getElementById("fieldStatus"); s.value = "deposee"; s.dispatchEvent(new Event("change", { bubbles: true })); });
+          await page.evaluate(() => document.getElementById("applicationForm").requestSubmit());
+          await page.waitForFunction((id) => (window.__harnaisEcritures || []).some((e) => e.op === "update" && e.chemin.endsWith("/applications/" + id) && e.data && e.data.preuveDepot), id, { timeout: 15000 })
+            .catch(() => anomalies.push(`${id} : aucune écriture de preuveDepot après la déclaration.`));
+          return page.evaluate((id) => {
+            const e = (window.__harnaisEcritures || []).find((x) => x.op === "update" && x.chemin.endsWith("/applications/" + id) && x.data && x.data.preuveDepot);
+            const up = (window.__harnaisEcritures || []).find((x) => x.op === "upload" && x.chemin.includes("/applications/" + id + "/"));
+            return e ? { status: e.data.status, preuve: e.data.preuveDepot, upload: up ? { chemin: up.chemin, ...up.data } : null } : null;
+          }, id);
+        };
+
+        const parNumero = await declarer("pre-1", { numero: "EF-2026-000123" });
+        if (parNumero) {
+          if (parNumero.status !== "deposee") anomalies.push(`pre-1 : statut écrit « ${parNumero.status} » au lieu de « deposee ».`);
+          if (parNumero.preuve.mode !== "numero" || parNumero.preuve.numeroDossier !== "EF-2026-000123") anomalies.push(`pre-1 : preuve écrite ${JSON.stringify(parNumero.preuve)}.`);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(parNumero.preuve.deposeLe)) anomalies.push("pre-1 : deposeLe n'est pas une date.");
+          notes.push(`E1 pre-1 : déposée par numéro ${parNumero.preuve.numeroDossier}, le ${parNumero.preuve.deposeLe}`);
+        }
+
+        // Une vraie image (PNG 1×1) : la compression canvas la transforme en JPEG.
+        const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+        const parCapture = await declarer("slot-1", { fichier: { name: "confirmation.png", mimeType: "image/png", buffer: png } });
+        if (parCapture) {
+          if (parCapture.preuve.mode !== "capture") anomalies.push(`slot-1 : mode « ${parCapture.preuve.mode} » au lieu de « capture ».`);
+          if (parCapture.preuve.fichier !== `users/${UID}/applications/slot-1/preuve-depot.jpg`) anomalies.push(`slot-1 : chemin de capture « ${parCapture.preuve.fichier} ».`);
+          if (!parCapture.upload) anomalies.push("slot-1 : aucun envoi Storage consigné avant l'écriture de la preuve.");
+          else if (!/^image\/jpeg$/.test(parCapture.upload.type)) anomalies.push(`slot-1 : la capture envoyée est « ${parCapture.upload.type} » — la compression image n'a pas été appliquée.`);
+          notes.push(`E1 slot-1 : déposée par capture (${parCapture.upload ? parCapture.upload.type + ", " + parCapture.upload.taille + " o" : "sans envoi"})`);
+        }
+
+        // La page est rechargée plus bas par les contrôles suivants : on
+        // rend la main avec la liste telle qu'au départ.
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 3, null, { timeout: 15000 });
+      }
 
       const vu = await page.evaluate(() => {
 

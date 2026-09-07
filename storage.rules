@@ -3,19 +3,46 @@ rules_version = '2';
 // ============================================================
 // Fitz - Règles de sécurité Storage
 //
-// Storage est initialisé (firebase-config.js) mais aucune
-// fonctionnalité du site n'y écrit encore aujourd'hui. Ces règles
-// posent un cadre sûr par défaut (accès refusé sauf à son propre
-// dossier) pour un futur usage (ex. upload de documents de
-// candidature), plutôt que de laisser le bucket sans règles
-// explicites.
+// Jusqu'au lot E1 (2026-09-07), aucune fonctionnalité du site
+// n'écrivait ici. Désormais UN usage, borné :
+//
+//   users/{uid}/applications/{applicationId}/preuve-depot.<ext>
+//     la capture de confirmation d'un dépôt (js/preuve-depot.js,
+//     mode "capture" ou "transmis"). Lecture et écriture réservées au
+//     PROPRIÉTAIRE ; image ou PDF ; 5 Mo au plus (une capture d'écran
+//     pèse quelques centaines de Ko, un PDF de confirmation rarement
+//     plus d'un Mo — la compression client vise 1,5 Mo, 5 Mo est le
+//     plafond serveur). Un administrateur ne lit PAS la capture : il
+//     voit la déclaration (mode, numéro, date) dans le CRM, ce qui
+//     suffit à la statistique. Aucune capture n'est jamais lisible
+//     par un autre étudiant, ni exposée dans l'export du catalogue
+//     (scripts/lot.mjs ne lit que le catalogue).
+//
+// Le reste du dossier users/{uid}/ n'est plus ouvert en écriture
+// « pour un futur usage » : tout nouvel usage écrira sa propre règle.
 // ============================================================
 
 service firebase.storage {
 match /b/{bucket}/o {
 
+function estProprietaire(uid) {
+return request.auth != null && request.auth.uid == uid;
+}
+
+function estCaptureAcceptable() {
+return request.resource != null &&
+request.resource.size <= 5 * 1024 * 1024 &&
+(request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+}
+
+match /users/{uid}/applications/{applicationId}/{fichier} {
+allow read: if estProprietaire(uid);
+allow write: if estProprietaire(uid) && (request.method == 'delete' || estCaptureAcceptable());
+}
+
 match /users/{uid}/{allPaths=**} {
-allow read, write: if request.auth != null && request.auth.uid == uid;
+allow read: if estProprietaire(uid);
+allow write: if false;
 }
 
 match /{allPaths=**} {

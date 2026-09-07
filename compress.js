@@ -1,6 +1,7 @@
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { trackEvent } from "./js/analytics.js";
+import { compressImageToTarget } from "./js/compression-image.js";
 
 initShellChrome();
 
@@ -51,67 +52,9 @@ return unit === "MB" ? n * 1024 * 1024 : n * 1024;
 // puis des dimensions si la qualité seule ne suffit pas.
 // ==========================================================
 
-function loadImageElement(file) {
-
-return new Promise((resolve, reject) => {
-
-const img = new Image();
-img.onload = () => resolve(img);
-img.onerror = reject;
-img.src = URL.createObjectURL(file);
-
-});
-
-}
-
-function canvasToBlob(img, scale, quality) {
-
-return new Promise((resolve) => {
-
-const canvas = document.createElement("canvas");
-canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
-
-const ctx = canvas.getContext("2d");
-ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
-
-});
-
-}
-
-async function compressImageToTarget(file, targetBytes, onProgress) {
-
-const img = await loadImageElement(file);
-
-let quality = 0.9;
-let scale = 1;
-let blob = await canvasToBlob(img, scale, quality);
-
-let attempts = 0;
-const maxAttempts = 18;
-
-while (blob.size > targetBytes && attempts < maxAttempts) {
-
-if (quality > 0.2) {
-quality -= 0.08;
-} else {
-scale *= 0.85;
-}
-
-blob = await canvasToBlob(img, scale, quality);
-attempts++;
-
-onProgress(`Ajustement de la qualité... (${attempts}/${maxAttempts})`);
-
-}
-
-URL.revokeObjectURL(img.src);
-
-return blob;
-
-}
+// Compression d'image : extraite dans js/compression-image.js (lot E1,
+// 2026-09-07) — la capture d'une preuve de dépôt (applications.js)
+// passe par la même implémentation. Rien ne change ici.
 
 // ==========================================================
 // Compression de PDF — chaque page est rendue en image (pdf.js) puis

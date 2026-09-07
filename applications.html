@@ -297,6 +297,34 @@ et cap sur le visa en cas d'admission, rebond en cas de refus. -->
 
 </div>
 
+<!-- LA PREUVE DE DÉPÔT (lot E1, 2026-09-07) — js/preuve-depot.js.
+Un statut « déposé » ne s'enregistre qu'avec une déclaration : un
+numéro de dossier ou la capture de confirmation (ou, pour une bourse
+déposée par un tiers, ce que l'étudiant a reçu en retour). Les options
+déposées du select restent désactivées tant que la preuve n'est pas
+valide ; la phrase explique ce qu'on attend, jamais un blocage muet.
+firestore.rules fait foi. -->
+<div class="apps-preuve" id="preuveBlock" hidden>
+<p class="apps-preuve-titre"><i data-lucide="send"></i><span>Déclarer mon dépôt</span></p>
+<p class="apps-field-note apps-preuve-demande" id="preuveDemande"></p>
+<p class="apps-preuve-actuelle" id="preuveActuelle" hidden></p>
+<div class="apps-field-row">
+<label class="apps-field">
+<span>Numéro de dossier</span>
+<input type="text" id="preuveNumero" maxlength="64" autocomplete="off" placeholder="Ex. EF-2026-123456">
+</label>
+<label class="apps-field">
+<span>Date de dépôt</span>
+<input type="date" id="preuveDate">
+</label>
+</div>
+<label class="apps-field">
+<span>Capture de confirmation (image ou PDF, 5 Mo max)</span>
+<input type="file" id="preuveFichier" accept="image/*,application/pdf">
+</label>
+<p class="apps-field-note" id="preuveEtat"></p>
+</div>
+
 <label class="apps-field">
 <span>Fitz vous relance tous les</span>
 <select id="fieldFrequency">

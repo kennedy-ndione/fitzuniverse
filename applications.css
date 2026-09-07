@@ -681,6 +681,51 @@ gap:12px;
 margin-top:8px;
 }
 
+/* ---------- La preuve de dépôt (lot E1) ---------- */
+
+.apps-preuve{
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+background:var(--background-soft);
+padding:12px 14px 2px;
+margin-bottom:16px;
+}
+
+.apps-preuve[hidden]{display:none;}
+
+.apps-preuve-titre{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 6px;
+font-weight:700;
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+
+.apps-preuve-titre i,
+.apps-preuve-titre svg{width:16px;height:16px;color:var(--text-muted);}
+
+.apps-preuve-demande{margin:0 0 12px;}
+
+.apps-preuve-actuelle{
+margin:0 0 12px;
+font-size:var(--fs-caption);
+color:var(--success);
+font-weight:600;
+}
+
+.apps-preuve .apps-field{margin-bottom:12px;}
+
+.apps-preuve input[type="file"]{padding:8px;font-size:var(--fs-caption);}
+
+#preuveEtat{margin:0 0 10px;}
+#preuveEtat.is-ok{color:var(--success);}
+
+/* La ligne sur la carte : « Déposée le … · dossier n° … ». */
+.app-card-meta .app-preuve{color:var(--success);font-weight:600;}
+.app-card-meta .app-preuve a{color:inherit;text-decoration:underline;}
+
 @media(max-width:600px){
 .apps-field-row{grid-template-columns:1fr;}
 }
