@@ -159,12 +159,16 @@ text-shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
 
 }
 
-/* Réutilise --amber-500 : déjà validé à >8:1 sur cette même photo
-assombrie pour .benefit i juste plus bas — même contexte de fond,
-même garantie de contraste, pas de nouveau calcul nécessaire. */
+/* Lot C (2026-09-07) : le LITTÉRAL #E9A319, jamais var(--amber-500) —
+onze feuilles redéfinissent l'échelle amber en terracotta (piège
+documenté), et ce titre doit rester l'ambre de la marque, celui de
+l'arc du logo. Italique : « Bourse ou préinscription » est le choix,
+le reste de la phrase est la promesse. Même contraste que l'ancien
+--amber-500 sur cette photo assombrie (>8:1, mesuré pour .benefit i). */
 .hero-h1-accent{
 
-color:var(--amber-500);
+color:#E9A319;
+font-style:italic;
 
 }
 

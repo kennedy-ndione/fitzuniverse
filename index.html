@@ -5,19 +5,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
-<title>FitzUniverse | Découvrez les bourses faites pour vous</title>
+<title>FitzUniverse | Bourse ou préinscription, accompagné jusqu'au dépôt</title>
 
-<meta name="description"
-content="FitzUniverse aide les étudiants africains à découvrir leur potentiel académique et les opportunités de bourses internationales qui leur correspondent, grâce à une analyse personnalisée.">
+<meta name="description" content="Que vous visiez une bourse ou une admission que vous financez vous-même, FitzUniverse vous accompagne du choix de l'établissement jusqu'au dépôt de votre dossier. Conçu d'abord pour les étudiants africains, ouvert à tous.">
 
-<meta property="og:title" content="FitzUniverse | Découvrez les bourses faites pour vous">
-<meta property="og:description" content="Répondez à quelques questions, laissez Fitz analyser votre profil, et découvrez votre potentiel et vos opportunités d'études à l'international.">
+<meta property="og:title" content="FitzUniverse | Bourse ou préinscription, accompagné jusqu'au dépôt">
+<meta property="og:description" content="Que vous visiez une bourse ou une admission que vous financez vous-même, FitzUniverse vous accompagne du choix de l'établissement jusqu'au dépôt de votre dossier. Conçu d'abord pour les étudiants africains, ouvert à tous.">
 <meta property="og:type" content="website">
 <!-- URL à mettre à jour si un nom de domaine personnalisé est acheté (scholarbridge-e0d84.web.app = domaine Firebase Hosting par défaut) -->
 <meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="FitzUniverse | Découvrez les bourses faites pour vous">
-<meta name="twitter:description" content="Répondez à quelques questions, laissez Fitz analyser votre profil, et découvrez votre potentiel et vos opportunités d'études à l'international.">
+<meta name="twitter:title" content="FitzUniverse | Bourse ou préinscription, accompagné jusqu'au dépôt">
+<meta name="twitter:description" content="Que vous visiez une bourse ou une admission que vous financez vous-même, FitzUniverse vous accompagne du choix de l'établissement jusqu'au dépôt de votre dossier. Conçu d'abord pour les étudiants africains, ouvert à tous.">
 
 <meta name="theme-color" content="#211D18">
 <meta name="color-scheme" content="light">
@@ -208,15 +207,15 @@ class="hero-bg-image">
 <!-- Titre -->
 
 <h1 class="reveal hero-stagger">
-Trouvez les <span class="hero-h1-accent">bourses d'études</span> qui correspondent à votre profil.
+<span class="hero-h1-accent">Bourse ou préinscription</span>, faites-vous accompagner de bout en bout.
 </h1>
 
 <!-- Description -->
 
 <p class="hero-description reveal hero-stagger">
-Votre bourse existe peut-être déjà. Le plus dur, c'est de la trouver —
-c'est exactement ce que Fitz fait avec vous. Conçu d'abord pour les
-étudiants africains et ouvert également à tous.
+Que vous visiez une bourse ou une admission que vous financez vous-même,
+Fitz vous guide du choix de l'établissement jusqu'au dépôt de votre
+dossier. Conçu d'abord pour les étudiants africains, ouvert à tous.
 </p>
 
 <!-- Points forts — refonte 2026-08-22 : rangée de texte séparée par des
@@ -383,6 +382,43 @@ d'où un rendu correct par accident. -->
 </section>
 
 <!-- ==========================================
+LES DEUX PORTES — lot C du chantier préinscription (2026-09-07)
+Le titre du hero dit « Bourse ou préinscription » : cette section est
+l'endroit où ce choix se fait. Deux cartes de même poids, aucune mise
+en avant. Même composant que la liste du problème (.problem-item :
+icône nue + h3 + p), posé en deux colonnes — aucun composant neuf.
+Ce que la page peut promettre, et rien de plus : « faites-vous
+accompagner » et « voyez ce que coûte une année » — jamais « trouvez
+votre programme » : le catalogue porte des établissements, et 100 de
+ses 155 universités n'ont aucun prix vérifié.
+Icônes vérifiées dans le bundle lucide@1.31.0 chargé par la page :
+award (le financement) et landmark (l'établissement). Pas d'étincelle.
+=========================================== -->
+<section id="portes" class="portes section" aria-label="Deux parcours : bourses ou préinscriptions">
+<div class="container">
+<div class="problem-list portes-list">
+
+<a class="problem-item reveal" href="scholarships.html">
+<i data-lucide="award" aria-hidden="true"></i>
+<div>
+<h3>Bourses</h3>
+<p>Trouver un financement et candidater. 156 bourses, échéances vérifiées.</p>
+</div>
+</a>
+
+<a class="problem-item reveal" href="universities.html">
+<i data-lucide="landmark" aria-hidden="true"></i>
+<div>
+<h3>Préinscriptions</h3>
+<p>Partir en finançant vos études. Voyez ce que coûte réellement une année et faites-vous accompagner jusqu'au dépôt.</p>
+</div>
+</a>
+
+</div>
+</div>
+</section>
+
+<!-- ==========================================
 OPPORTUNITÉS OUVERTES — ajouté le 2026-08-27
 
 La première phrase du site, et la seule qui réponde à « qu'est-ce que
@@ -460,7 +496,7 @@ seulement d'habillage.
 <span class="kicker"><i data-lucide="circle-alert" aria-hidden="true"></i>Pourquoi tant d'étudiants abandonnent ?</span>
 
 <h2>
-Le problème n'est pas le manque de bourses.
+Le problème n'est pas le manque d'opportunités.
 Le problème est de trouver celles qui sont <em>réellement</em> faites pour vous.
 </h2>
 
@@ -479,8 +515,8 @@ opportunités correspondent réellement à leur profil.
 <div>
 <h3>Vous cherchez partout</h3>
 <p>
-Des centaines de sites proposent des milliers de bourses, mais personne ne vous
-dit lesquelles correspondent réellement à votre parcours.
+Des centaines de sites proposent des milliers de bourses et d'établissements, mais personne ne vous
+dit lesquels correspondent réellement à votre parcours.
 </p>
 </div>
 </article>

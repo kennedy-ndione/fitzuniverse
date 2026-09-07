@@ -1998,3 +1998,47 @@ padding:34px 18px;
 }
 
 }
+
+
+/* ==========================================================
+LES DEUX PORTES — lot C (2026-09-07)
+Même composant que la liste du problème (.problem-item : icône nue,
+h3, p), posé en deux colonnes de même poids. Ce sont des liens : un
+focus visible, un survol qui ne change que le titre. Aucun composant
+neuf, aucune couleur neuve (--amber-700 est celui du sur-titre).
+========================================================== */
+.portes{
+padding-top:var(--space-lg);
+padding-bottom:0;
+}
+
+.portes-list{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:0 48px;
+border-top:0;
+}
+
+.portes .problem-item{
+text-decoration:none;
+color:inherit;
+border-top:1px solid var(--border-color);
+}
+
+.portes .problem-item:hover h3,
+.portes .problem-item:focus-visible h3{
+color:var(--amber-700);
+}
+
+.portes .problem-item:focus-visible{
+outline:2px solid var(--amber-700);
+outline-offset:6px;
+border-radius:4px;
+}
+
+@media(max-width:640px){
+.portes-list{
+grid-template-columns:1fr;
+gap:0;
+}
+}
