@@ -247,12 +247,23 @@ function animateCountTo(el, target) {
 const duration = 1400;
 const start = performance.now();
 
+// Filet (clôture, 2026-09-07) : requestAnimationFrame ne tourne pas dans
+// un onglet en arrière-plan ni dans un cadre qui ne compose jamais — la
+// première image, « 0 », resterait alors affichée. Quoi qu'il arrive,
+// la valeur finale est posée à la fin de la durée prévue : le pire cas
+// redevient « le nombre ne s'anime pas », jamais « le nombre dit zéro ».
+const filet = setTimeout(() => { el.textContent = `${target}`; }, duration + 200);
+
 function step(now) {
 const progress = Math.min((now - start) / duration, 1);
 const eased = 1 - Math.pow(1 - progress, 3);
 el.textContent = `${Math.round(eased * target)}`;
 if (progress < 1) requestAnimationFrame(step);
+else clearTimeout(filet);
 }
+
+// Pas d'animation du tout hors écran : on garde la valeur déjà écrite.
+if (document.visibilityState !== "visible") return;
 
 requestAnimationFrame(step);
 
