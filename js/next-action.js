@@ -62,20 +62,29 @@ import { PROFILE_READY_THRESHOLD } from "./profile-score.js";
 *   readiness ← checklist  : computeApplicationReadiness() lit la
 *               + letter     checklist et hasGeneratedLetter.
 *   advisor   ← readiness  : la revue humaine est la ressource la plus
-*                            rare du service ; la dépenser sur un
-*                            dossier que Fitz n'a pas encore relu,
-*                            c'est la dépenser à relever des fautes
-*                            qu'une machine trouve en trois secondes.
+*               | traductions rare du service ; la dépenser sur un
+*               + ressources  dossier que personne n'a encore préparé,
+*                            c'est la dépenser à relever des pièces
+*                            manquantes au lieu du fond.
 *
 * `profile` et `checklist` n'ont pas de prérequis : on peut remplir
 * son profil et rassembler ses pièces dans n'importe quel ordre.
+*
+* LA RÈGLE DES PARCOURS (lot B, 2026-09-07) : on déclare ici TOUS les
+* prérequis possibles d'une étape, tous parcours confondus, et
+* qualifierEtapes() ne retient que ceux qui EXISTENT dans le parcours
+* courant. En bourse, `advisor` n'attend donc que `readiness` ; en
+* préinscription (js/application-journey.js), où `readiness` n'existe
+* pas, il attend `traductions` ET `ressources`. Un prérequis absent du
+* parcours ne bloque jamais — sans quoi la revue conseiller resterait
+* prématurée pour toujours en préinscription.
 */
 export const PREREQUIS = {
 profile: [],
 checklist: [],
 letter: ["profile"],
 readiness: ["checklist", "letter"],
-advisor: ["readiness"]
+advisor: ["readiness", "traductions", "ressources"]
 };
 
 /**
@@ -87,7 +96,10 @@ advisor: ["readiness"]
 const CONSEQUENCE_PREMATUREE = {
 letter: "Fitz écrit votre lettre à partir de votre profil. Avec un profil encore incomplet, elle restera générique — et une lettre générique est ce qui écarte une candidature.",
 readiness: "La vérification lit votre dossier et votre lettre. Lancée maintenant, elle n'aurait presque rien à examiner : son feu vert ne voudrait rien dire.",
-advisor: "Votre conseiller relit un dossier déjà vérifié par Fitz. Le lui envoyer avant, c'est lui faire relever des fautes que Fitz trouve en trois secondes, au lieu du fond."
+// Vrai dans les deux parcours : en bourse le dossier est préparé par la
+// vérification Fitz, en préinscription par les traductions et la preuve
+// de ressources. Un seul message, honnête pour les deux.
+advisor: "Votre conseiller relit un dossier déjà préparé. Le lui envoyer avant, c'est lui faire relever des pièces manquantes au lieu de travailler le fond — et sa relecture est la ressource la plus rare du service."
 };
 
 /** Libellés courts des étapes, pour les messages. */
@@ -96,6 +108,8 @@ profile: "votre profil",
 checklist: "votre dossier de candidature",
 letter: "votre lettre de motivation",
 readiness: "la vérification avant dépôt",
+traductions: "vos traductions et légalisations",
+ressources: "votre preuve de ressources",
 advisor: "la revue de votre conseiller"
 };
 

@@ -476,7 +476,9 @@ const LIBELLE_PREREQUIS = {
 profile: "le profil",
 checklist: "le dossier",
 letter: "la lettre",
-readiness: "la vérification"
+readiness: "la vérification",
+traductions: "les traductions",
+ressources: "la preuve de ressources"
 };
 
 // Trois états, pas deux — voir js/next-action.js. Une étape peut être

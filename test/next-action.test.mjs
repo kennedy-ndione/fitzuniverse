@@ -79,12 +79,104 @@ test("les prérequis correspondent aux données réellement consommées", () => 
 
 // La lettre est écrite à partir du profil (js/ai/prompts.js) ; la
 // vérification lit la checklist et la lettre ; le conseiller relit
-// un dossier déjà vérifié.
+// un dossier déjà préparé — par la vérification Fitz en bourse, par
+// les traductions et la preuve de ressources en préinscription. On
+// déclare TOUS les prérequis possibles ; qualifierEtapes() ne retient
+// que ceux du parcours courant.
 assert.deepEqual(PREREQUIS.profile, []);
 assert.deepEqual(PREREQUIS.checklist, []);
 assert.deepEqual(PREREQUIS.letter, ["profile"]);
 assert.deepEqual(PREREQUIS.readiness, ["checklist", "letter"]);
-assert.deepEqual(PREREQUIS.advisor, ["readiness"]);
+assert.deepEqual(PREREQUIS.advisor, ["readiness", "traductions", "ressources"]);
+
+});
+
+// ==========================================================
+// REVUE CONSEILLER — prérequis par parcours (suite du lot B, 2026-09-07)
+// ==========================================================
+
+const ADVISOR = { id: "advisor", label: "Revue conseiller", href: "advisor.html" };
+
+/** Le parcours bourse + revue conseiller. */
+function etapesBourse(faites = []) {
+return [...etapes(faites), { ...ADVISOR, done: faites.includes("advisor") }];
+}
+
+/** Le parcours préinscription (js/application-journey.js) + revue conseiller. */
+function etapesPreinscription(faites = []) {
+return [
+{ id: "profile", label: "Profil complété", href: "profile.html" },
+{ id: "checklist", label: "Dossier de candidature", action: "focus-checklist" },
+{ id: "traductions", label: "Traductions et légalisations", href: "documents.html?categorie=administratif" },
+{ id: "ressources", label: "Preuve de ressources", href: "documents.html?categorie=financier" },
+ADVISOR
+].map((e) => ({ ...e, done: faites.includes(e.id) }));
+}
+
+test("bourse : la revue conseiller attend la vérification Fitz, et elle seule", () => {
+
+const sans = qualifierEtapes(etapesBourse(["profile", "checklist", "letter"])).find((e) => e.id === "advisor");
+assert.equal(sans.etat, "prematuree");
+assert.deepEqual(sans.bloquePar, ["readiness"]);
+
+});
+
+test("bourse : vérification faite → revue conseiller à faire (non-régression)", () => {
+
+const avec = qualifierEtapes(etapesBourse(["profile", "checklist", "letter", "readiness"])).find((e) => e.id === "advisor");
+assert.equal(avec.etat, "a-faire");
+assert.deepEqual(avec.bloquePar, []);
+
+});
+
+test("preinscription : la revue conseiller attend traductions ET ressources, jamais readiness", () => {
+
+const vide = qualifierEtapes(etapesPreinscription(["profile", "checklist"])).find((e) => e.id === "advisor");
+assert.equal(vide.etat, "prematuree");
+assert.deepEqual([...vide.bloquePar].sort(), ["ressources", "traductions"]);
+assert.ok(!vide.bloquePar.includes("readiness"), "readiness n'existe pas dans ce parcours");
+
+const moitie = qualifierEtapes(etapesPreinscription(["profile", "checklist", "traductions"])).find((e) => e.id === "advisor");
+assert.equal(moitie.etat, "prematuree");
+assert.deepEqual(moitie.bloquePar, ["ressources"]);
+
+});
+
+test("preinscription : traductions et ressources faites → revue conseiller à faire", () => {
+
+const prete = qualifierEtapes(etapesPreinscription(["profile", "checklist", "traductions", "ressources"])).find((e) => e.id === "advisor");
+assert.equal(prete.etat, "a-faire");
+assert.deepEqual(prete.bloquePar, []);
+
+});
+
+test("aucun message rendu ne contient « undefined », dans les deux parcours", () => {
+
+const jeux = [
+etapesBourse([]), etapesBourse(["profile", "checklist", "letter"]),
+etapesPreinscription([]), etapesPreinscription(["profile", "checklist", "traductions"])
+];
+
+for (const jeu of jeux) {
+
+for (const e of qualifierEtapes(jeu)) {
+assert.ok(!/undefined/.test(e.consequence || ""), `${e.id} : conséquence « ${e.consequence} »`);
+}
+
+// Le message qui nomme le prérequis manquant (avertissementsPrematures)
+for (const a of avertissementsPrematures(jeu)) {
+const rendu = `${a.label} — à faire après ${a.prerequisLisible}. ${a.consequence}`;
+assert.ok(!/undefined/.test(rendu), `${a.id} : « ${rendu} »`);
+assert.ok(a.prerequisLisible && a.prerequisLisible !== a.bloquePar[0], `${a.id} : prérequis ${a.bloquePar[0]} sans libellé lisible`);
+}
+
+}
+
+// Le conseiller a une conséquence vraie dans les deux parcours : pas de
+// « vérifié par Fitz » en préinscription, où cette étape n'existe pas.
+const advisorPre = qualifierEtapes(etapesPreinscription(["profile", "checklist"])).find((e) => e.id === "advisor");
+assert.ok(advisorPre.consequence.length > 30);
+assert.ok(!/vérifié par Fitz/i.test(advisorPre.consequence));
 
 });
 

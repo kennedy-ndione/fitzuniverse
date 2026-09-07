@@ -135,11 +135,17 @@ assert.equal(isJourneyComplete(computeJourneySteps(app, { profileScore: 0, docum
 // Le qualificateur d'étapes ne bloque pas sur un prérequis absent
 // ------------------------------------------------------------------
 
-test("preinscription : « Revue conseiller » n'est pas prématurée derrière une readiness qui n'existe pas", () => {
+test("preinscription : « Revue conseiller » attend traductions et ressources, jamais une readiness qui n'existe pas", () => {
 const steps = computeJourneySteps(pre, { profileScore: 0, advisorUnlocked: true });
 const advisor = qualifierEtapes(steps).find((s) => s.id === "advisor");
-assert.equal(advisor.etat, "a-faire");
-assert.deepEqual(advisor.bloquePar, []);
+assert.equal(advisor.etat, "prematuree");
+assert.deepEqual([...advisor.bloquePar].sort(), ["ressources", "traductions"]);
+assert.ok(!advisor.bloquePar.includes("readiness"));
+
+const tout = { [SLUGS.traductions]: true, [SLUGS.legalisation]: true, [SLUGS.bancaire]: true };
+const prete = qualifierEtapes(computeJourneySteps(pre, { profileScore: 0, advisorUnlocked: true, documentsObtained: tout })).find((s) => s.id === "advisor");
+assert.equal(prete.etat, "a-faire");
+assert.deepEqual(prete.bloquePar, []);
 });
 
 test("bourse : « Revue conseiller » reste prématurée tant que la vérification n'est pas faite", () => {
