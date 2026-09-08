@@ -681,177 +681,27 @@ réponse de l'université — avec toutes vos échéances au même endroit.
 
 </div>
 
+<!-- Le second bouton arrive ici le 2026-09-08, avec la suppression de
+la section « Comment ce catalogue est fait » qui le portait jusque-là.
+Il fallait le reloger : c'était le SEUL lien vers universities.html
+dans le corps de la page (les deux autres sont l'en-tête et le pied,
+hors corps). Cette place-ci parce que la section vient d'expliquer
+« Trouver / Préparer / Suivre » : consulter le catalogue est
+exactement l'autre façon d'y entrer, à côté du diagnostic. Pas un
+doublon du CTA existant — destination et poids différents : le
+diagnostic reste primaire (btn-primary btn-lg), le catalogue est
+secondaire, comme il l'était déjà dans .teaser-actions. Le CTA ambre
+de fin de page, lui, reste le seul geste ambre. -->
 <div class="steps-footer">
 <a href="eligibility-test.html" class="btn btn-primary btn-lg steps-cta">
 <span>Commencer gratuitement</span>
 <span class="steps-cta-arrow" aria-hidden="true">→</span>
 </a>
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- ==========================================
-LES DEUX PORTES
-Le titre du hero dit « Bourse ou préinscription » : cette section est
-l'endroit où ce choix se fait pour de bon.
-
-SA PLACE, APRÈS « COMMENT ÇA FONCTIONNE » ET NON AVANT
-Ses deux phrases portent de vrais arguments, mais elle demandait de
-choisir une deuxième fois dans les deux premiers écrans — juste après
-les deux portes du hero, qui posent déjà la même question. Le visiteur
-voit maintenant ce que le site fait avant qu'on lui demande par quelle
-voie il entre.
-
-Deux cartes de même poids, aucune mise en avant. Même composant que la
-liste du problème (.problem-item : icône nue + h3 + p), posé en deux
-colonnes — aucun composant neuf, aucun bouton, aucun ambre.
-
-L'aria-label est parti avec l'arrivée de l'en-tête : il annonçait
-« Deux parcours : bourses ou préinscriptions » quand le titre visible
-dit « Deux parcours, un seul compte », et c'est lui qui l'aurait
-emporté au lecteur d'écran. Les autres sections titrées de la page
-n'en portent pas non plus.
-Ce que la page peut promettre, et rien de plus : « faites-vous
-accompagner » et « voyez ce que coûte une année » — jamais « trouvez
-votre programme » : le catalogue porte des établissements, et 100 de
-ses 155 universités n'ont aucun prix vérifié.
-Icônes vérifiées dans le bundle lucide@1.31.0 chargé par la page :
-award (le financement), landmark (l'établissement) et signpost (le
-sur-titre). Pas d'étincelle.
-=========================================== -->
-<section id="portes" class="portes section">
-<div class="container">
-
-<div class="section-header reveal">
-
-<span class="kicker"><i data-lucide="signpost" aria-hidden="true"></i>Quelle voie est la mienne ?</span>
-
-<h2>
-Deux parcours, un seul compte.
-</h2>
-
-<p>
-Vous pouvez viser une bourse, financer vous-même votre année, ou les deux — le compte et le dossier restent les mêmes.
-</p>
-
-</div>
-
-<div class="problem-list portes-list">
-
-<a class="problem-item reveal" href="scholarships.html">
-<i data-lucide="award" aria-hidden="true"></i>
-<div>
-<h3>Bourses</h3>
-<p>Trouver un financement et candidater. Des échéances vérifiées sur chaque bourse.</p>
-</div>
-</a>
-
-<a class="problem-item reveal" href="preinscriptions.html">
-<i data-lucide="landmark" aria-hidden="true"></i>
-<div>
-<h3>Préinscriptions</h3>
-<p>Partir en finançant vos études. Voyez ce que coûte réellement une année et faites-vous accompagner jusqu'au dépôt.</p>
-</div>
-</a>
-
-</div>
-</div>
-</section>
-
-<!-- ==========================================
-APERÇU CONCRET — ouvre le bloc "preuve" (2026-08-28)
-Compteurs + transparence + témoignages rejoignent ici la liste
-détaillée (photos, drapeaux, noms de bourses) qu'ils accompagnaient
-déjà, une fois le visiteur arrivé au bon endroit du parcours.
-
-Depuis la réorganisation du 2026-08-28, #trust (établissements
-vérifiés + bandeau de logos) suit IMMÉDIATEMENT cette section au lieu
-d'ouvrir la page : les deux disent "notre catalogue est réel", et les
-séparer par quatre sections faisait tenir deux fois le même argument à
-deux endroits sans que l'un renforce l'autre. Lus à la suite, ils
-forment un seul temps de preuve : voici l'échantillon, voici les
-chiffres, voici les témoignages — et chaque établissement derrière a
-été vérifié un par un.
-=========================================== -->
-
-<!-- ==========================================
-COMMENT CE CATALOGUE EST FAIT (2026-09-08)
-Cette section ne montre plus le catalogue, elle explique comment il est
-fabriqué. Sont partis le même jour : l'en-tête « Le catalogue / Quatre
-exemples de ce qui vous attend », les quatre cartes d’aperçu et le
-conteneur de témoignages, vide depuis sa création.
-
-L'identifiant passe de « teaser » à « garanties » : aucune ancre
-« #teaser » n'existait dans le dépôt (vérifié sur les 471 fichiers
-suivis non binaires), et le mot ne décrivait plus rien. La CLASSE
-« teaser » est gardée telle quelle — c'est elle qui porte la mise en
-forme dans css/homepage-sections.css, et la renommer aurait été une
-refonte de feuille pour un changement de nom.
-
-Les trois garanties et le bouton sont repris mot pour mot : leur texte
-a été pesé contre l'export du catalogue le 2026-09-01 (354 programmes,
-143 sans échéance, 0 sans lien officiel).
-=========================================== -->
-<section id="garanties" class="teaser section">
-
-<div class="container">
-
-<div class="section-header reveal">
-
-<span class="kicker"><i data-lucide="notebook-pen" aria-hidden="true"></i>Comment ce catalogue est fait</span>
-
-<h2>
-D'où viennent les données que vous voyez.
-</h2>
-
-</div>
-
-<div class="assurance-list reveal">
-
-<!-- RÉÉCRIT le 2026-09-01 — les deux premières affirmations ne
-tenaient plus devant les données. Mesuré sur scripts/export-catalog.json :
-354 programmes, dont 143 sans échéance et 143 sans couverture (40 %), et
-4 universités sans portail de candidature (les 3 marocaines publiques et
-l'IHEID — aucune n'en a, c'est un blanc voulu, pas un oubli). Promettre
-« critères et échéances confirmés POUR CHAQUE FICHE » était donc faux
-quatre fois sur dix.
-Ce qui EST vrai à 100 %, vérifié dans le même export : 0 bourse et 0
-université sans lien officiel. La deuxième carte s'appuie désormais sur
-ce chiffre-là, et la première dit la vérité plus forte — un champ vide
-est un champ qu'on n'a pas inventé. -->
-<div class="assurance-item">
-<h3>Saisi à la main, jamais aspiré</h3>
-<p>Chaque bourse et chaque université sont entrées une par une, depuis leur source officielle. Aucune collecte automatique — et ce qui n'a pas pu être confirmé reste vide plutôt qu'inventé.</p>
-</div>
-
-<div class="assurance-item">
-<h3>Le lien officiel reste accessible</h3>
-<p>Depuis chaque fiche, le site de l'université ou de l'organisme qui finance s'ouvre gratuitement, que vous soyez abonné ou non.</p>
-</div>
-
-<div class="assurance-item">
-<h3>Fitz s'appuie sur ces données</h3>
-<p>Ses recommandations viennent des bourses et des critères réellement enregistrés dans ce catalogue — jamais d'une réponse inventée.</p>
-</div>
-
-</div>
-
-<div class="teaser-actions reveal">
-
 <a href="universities.html" class="btn btn-secondary">
 <span>Explorer toutes les universités</span>
-<i data-lucide="arrow-right"></i>
+<i data-lucide="arrow-right" aria-hidden="true"></i>
 </a>
-
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20FitzUniverse" target="_blank" rel="noopener" class="teaser-whatsapp" hidden>
-<i data-lucide="message-circle"></i>
-<span>Une question avant de commencer ? Discutez avec nous sur WhatsApp</span>
-</a>
+</div>
 
 </div>
 
@@ -1129,10 +979,8 @@ restent sur « — », sans qu'aucun code ne s'en aperçoive.
 
 Ce filet ne surveille plus QUE cette rangée-là (2026-09-08). Les deux
 autres blocs qu'il couvrait — les quatre cartes d'aperçu et la bande
-défilante d'établissements — ont quitté la page. La branche des cartes
-était la plus dangereuse des trois : elle retirait la SECTION ENTIÈRE
-qui contenait la grille, ce qui aurait emporté les garanties avec
-elle.
+défilante d'établissements — ont quitté la page, et la section qui les
+hébergeait a suivi le même jour.
 
 Ce public est justement celui qui a le plus de risques d'être sur une
 connexion contrainte. On préfère donc une page plus courte à une page
@@ -1156,20 +1004,18 @@ commercial : renvoyé vers son vrai tableau de bord, comme dashboard.html
 est la destination naturelle après login.js. Pas de garde bloquante ici
 (page publique en premier lieu) : le contenu s'affiche normalement, la
 redirection n'intervient qu'une fois la session Firebase résolue. -->
+<!-- Le lien WhatsApp de l'accueil est parti le 2026-09-08 avec la
+section « Comment ce catalogue est fait » qui le contenait (.teaser-whatsapp).
+Le bloc qui le démasquait part avec lui : fetchFeatureFlags() +
+isFeatureLocked("whatsapp_direct") ne servaient QUE ce lien-là. C'était
+une lecture Firestore (config/planFeatures) faite au chargement de
+l'accueil par tout visiteur déjà connecté — juste avant de le rediriger
+vers dashboard.html, où le même lien lui est de toute façon proposé.
+Ne reste donc ici que la redirection. -->
 <script type="module">
-import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
-resolveSession().then(async (session) => {
+import { resolveSession } from "./js/access-guard.js";
+resolveSession().then((session) => {
 if (session && !session.disabled) {
-try {
-const featureFlags = await fetchFeatureFlags();
-// "whatsapp_direct" (2026-09-02) : WhatsApp réservé à Signature,
-// plus large que l'ancien verrou "advisor".
-if (!isFeatureLocked(session.planId, featureFlags, "whatsapp_direct", session.testerAccess, session.hasFitzExpress)) {
-document.querySelector(".teaser-whatsapp")?.removeAttribute("hidden");
-}
-} catch (error) {
-console.warn("Vérification de l'accès WhatsApp ignorée :", error);
-}
 window.location.replace("dashboard.html");
 }
 }).catch((error) => {

@@ -1283,6 +1283,13 @@ color:var(--text-light);
 carte (retour utilisateur 2026-08-22) — séparé de la liste par un
 filet, comme le pied d'un formulaire plutôt que la suite d'une étape
 en particulier. */
+/* Deux boutons depuis le 2026-09-08 (voir le commentaire au-dessus de
+.steps-footer dans index.html) : le pied était un bloc simple portant
+un seul .btn en inline-flex, donc collé à gauche. Le flex reprend
+exactement cet alignement (justify-content par défaut = flex-start) —
+la position du bouton primaire ne bouge pas d'un pixel — et le
+flex-wrap fait passer le secondaire sur une seconde ligne dès que les
+deux ne tiennent plus, sans média-requête à maintenir. */
 .steps-footer{
 
 margin-top:4px;
@@ -1290,6 +1297,14 @@ margin-top:4px;
 padding-top:28px;
 
 border-top:1px solid rgba(226,232,240,.8);
+
+display:flex;
+
+flex-wrap:wrap;
+
+align-items:center;
+
+gap:14px 20px;
 
 }
 
