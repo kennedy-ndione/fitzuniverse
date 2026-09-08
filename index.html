@@ -697,7 +697,15 @@ de fin de page, lui, reste le seul geste ambre. -->
 <span>Commencer gratuitement</span>
 <span class="steps-cta-arrow" aria-hidden="true">→</span>
 </a>
-<a href="universities.html" class="btn btn-secondary">
+<!-- btn-lg ajouté le 2026-09-08 (lot 5) : sans lui ce bouton faisait
+50px contre 56 pour le primaire, deux hauteurs à 6px d'écart posées
+côte à côte. La cause n'était pas un alignement mais un mélange de
+tailles de composant — .btn (13px 22px) contre .btn-lg (16px 30px).
+Corrigé en haut, dans le composant, plutôt qu'en bas avec un
+min-height : les deux boutons sont du même geste, ils doivent être du
+même gabarit. La hiérarchie reste portée par la COULEUR (primaire
+plein, secondaire sobre), pas par la taille. -->
+<a href="universities.html" class="btn btn-secondary btn-lg">
 <span>Explorer toutes les universités</span>
 <i data-lucide="arrow-right" aria-hidden="true"></i>
 </a>

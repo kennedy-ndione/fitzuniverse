@@ -905,10 +905,19 @@ en particulier. */
 /* Deux boutons depuis le 2026-09-08 (voir le commentaire au-dessus de
 .steps-footer dans index.html) : le pied était un bloc simple portant
 un seul .btn en inline-flex, donc collé à gauche. Le flex reprend
-exactement cet alignement (justify-content par défaut = flex-start) —
-la position du bouton primaire ne bouge pas d'un pixel — et le
-flex-wrap fait passer le secondaire sur une seconde ligne dès que les
-deux ne tiennent plus, sans média-requête à maintenir. */
+exactement cet alignement — la position du bouton primaire ne bouge
+pas — et le flex-wrap fait passer le secondaire sur une seconde ligne
+dès que les deux ne tiennent plus.
+
+justify-content:flex-start est ÉCRIT, pas laissé au défaut (2026-09-08,
+lot 5). La valeur calculée d'un conteneur flex qui n'a rien déclaré est
+« normal », pas « flex-start » : les deux se placent pareil, mais on ne
+peut pas vérifier « normal » — un contrôle qui lit justify-content ne
+sait pas distinguer « voulu » de « jamais écrit ». La déclarer rend la
+règle lisible à la mesure autant qu'au rendu.
+
+gap : 16px de rang au lieu de 14. C'est le pas minimal en dessous
+duquel deux boutons empilés se lisent comme un seul bloc coupé. */
 .steps-footer{
 
 margin-top:4px;
@@ -921,9 +930,11 @@ display:flex;
 
 flex-wrap:wrap;
 
+justify-content:flex-start;
+
 align-items:center;
 
-gap:14px 20px;
+gap:16px 20px;
 
 }
 
@@ -1511,9 +1522,26 @@ padding:28px 20px 24px;
 /* Voir le commentaire de .steps-cta-arrow plus haut : c'est ce couple
 qui remplace l'ancien second libellé court. */
 .steps-cta{
+white-space:nowrap;
+}
+
+/* PLEINE LARGEUR UNE FOIS EMPILÉS (2026-09-08, lot 5).
+Sous 640px les deux boutons passent l'un sous l'autre. Laissés à leur
+largeur propre, ils donnaient deux pastilles de 276 et 313px calées à
+gauche : deux bords droits différents à 37px l'un de l'autre, ce qui se
+lit comme un défaut de gabarit et non comme un choix. En pleine largeur
+ils partagent leurs DEUX bords, le gauche comme le droit — l'alignement
+devient vérifiable au lieu d'être approximatif — et c'est la forme que
+prennent déjà les gestes principaux du site sur téléphone.
+
+Le rembourrage horizontal retombe à 16px (il valait 30 via .btn-lg) :
+le libellé le plus long réclame ~253px, et 318 - 2×30 n'en laissait que
+258 — cinq pixels de marge, donc un retour à la ligne à la première
+police un peu plus large. À 16px la réserve passe à ~33px. */
+.steps-footer .btn{
+flex:1 1 100%;
 padding-left:16px;
 padding-right:16px;
-white-space:nowrap;
 }
 
 }
