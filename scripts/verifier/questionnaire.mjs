@@ -32,18 +32,25 @@ async function elementVisible(page, selecteur) {
 export async function jouerQuestionnaire(page, profil) {
 
   const posees = [];
+  let precedente = null;
 
   for (let etape = 0; etape < MAX_ETAPES; etape += 1) {
 
     // Arrivé sur les résultats : le questionnaire est fini.
     if (!page.url().includes("eligibility-questions.html")) return posees;
 
-    await page.waitForSelector("#question[data-question]", { timeout: 10000 });
+    await attendreQuestionOuResultats(page, precedente);
+
+    // La dernière réponse peut avoir déclenché la navigation vers
+    // results.html ENTRE le test d'URL ci-dessus et l'attente : on
+    // re-teste avant de lire une question qui n'existe plus.
+    if (!page.url().includes("eligibility-questions.html")) return posees;
 
     const id = await page.getAttribute("#question", "data-question");
     const libelle = (await page.textContent("#question"))?.trim();
 
     posees.push({ id, libelle });
+    precedente = id;
 
     if (!(id in profil.reponses)) {
       throw new Error(
@@ -145,6 +152,44 @@ export async function jouerQuestionnaire(page, profil) {
 
   throw new Error(`Le questionnaire n'a pas abouti en ${MAX_ETAPES} étapes — boucle probable.`);
 
+}
+
+// Après une réponse, la page fait l'une de deux choses (setTimeout
+// 250 ms dans eligibility-questions.js) : afficher la question suivante,
+// ou naviguer vers results.html. Deux courses guettent le harnais, toutes
+// deux vues le 2026-09-08 (« lycee » à une passe, « licence-en-cours » à
+// la suivante, chacun passant seul) :
+//
+// 1. `waitForSelector("#question[data-question]")` survit à la
+//    navigation, cherche la question dans results.html, où elle n'existe
+//    pas, et expire après 10 s. On attend donc la PREMIÈRE des deux
+//    issues : la question suivante OU l'URL des résultats.
+//
+// 2. `data-question` reste posé avec l'ANCIEN identifiant jusqu'au
+//    render() suivant. Si le setTimeout de la page prend du retard sous
+//    charge, un simple « la question existe » est vrai immédiatement :
+//    le harnais relirait la même question et recliquerait la même
+//    carte, sautant une question. On attend donc que l'identifiant
+//    CHANGE par rapport à la question précédente.
+//
+// Sans allonger les délais : les 10 s sont celles d'avant.
+async function attendreQuestionOuResultats(page, precedente) {
+  const question = page.waitForFunction(
+    (prev) => {
+      const el = document.querySelector("#question[data-question]");
+      return !!el && el.dataset.question !== prev;
+    },
+    precedente,
+    { timeout: 10000 }
+  );
+  const resultats = page.waitForURL(/results\.html/, { timeout: 10000 });
+
+  // Le perdant de la course rejette plus tard, à son propre timeout :
+  // on le neutralise pour ne pas lever un « unhandled rejection ».
+  question.catch(() => {});
+  resultats.catch(() => {});
+
+  await Promise.race([question, resultats]);
 }
 
 // Un <input type=range> ne réagit pas à `fill()` : la valeur doit être
