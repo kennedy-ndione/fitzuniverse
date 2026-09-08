@@ -23,7 +23,11 @@ import { MODES, LIBELLES_MODES, LONGUEUR_MAX_NUMERO, TAILLE_MAX_FICHIER, lirePre
 import { STATUTS_DEPOSES, PHASES, etatDesPhases } from "../js/journey-map.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
-const lire = (f) => readFileSync(join(racine, f), "utf8");
+// Fins de ligne normalisées à la lecture : cette machine a core.autocrlf à
+// true, les règles arrivent donc en CRLF sur le disque alors que le dépôt
+// les stocke en LF. Les motifs ci-dessous décrivent le CONTENU des règles,
+// pas son encodage — ils restent écrits pour des fins de ligne LF.
+const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
 const AUJOURDHUI = new Date(2026, 8, 7);
 const hier = "2026-09-06";
 
