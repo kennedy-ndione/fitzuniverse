@@ -197,6 +197,29 @@ WebP, pas en JPEG : une bonne part du public visé navigue sur un
 forfait compté, et un JPEG de cette taille aurait pesé le triple pour
 les navigateurs qui en ont le moins les moyens. -->
 <picture>
+
+<!-- LE TÉLÉPHONE D'ABORD — un recadrage vertical, pas la même photo
+rognée. En `cover` sur un cadre portrait, un téléphone de 390 x 844
+peignait la photo 3:2 sur 1266 px CSS de large pour 390 visibles :
+69 % de la largeur décodée puis jetée, et le tiers restant agrandi
+3,2 fois, en DPR 2 comme en DPR 3. Le recadrage central 1680 x 3360
+(scripts/generer-hero-portrait.mjs) est ce que l'écran montrait déjà.
+
+Le 640px de la requête média est celui de css/hero.css — le
+téléphone est exactement l'écran qui bascule en hero immersif.
+Pas de 1200w ni de 2560w ici : élargir le `sizes` aurait tiré
+281 Ko sur tous les téléphones, et une bonne part du public visé
+navigue sur un forfait compté. -->
+<source media="(max-width:640px)" type="image/avif" sizes="100vw"
+srcset="assets/images/hero-bg3-portrait-600w.avif 600w,
+assets/images/hero-bg3-portrait-900w.avif 900w">
+<source media="(max-width:640px)" type="image/webp" sizes="100vw"
+srcset="assets/images/hero-bg3-portrait-600w.webp 600w,
+assets/images/hero-bg3-portrait-900w.webp 900w">
+<source media="(max-width:640px)" type="image/jpeg" sizes="100vw"
+srcset="assets/images/hero-bg3-portrait-600w.jpg 600w,
+assets/images/hero-bg3-portrait-900w.jpg 900w">
+
 <source type="image/avif" srcset="assets/images/hero-bg3-400w.avif 400w, assets/images/hero-bg3-800w.avif 800w, assets/images/hero-bg3-1200w.avif 1200w, assets/images/hero-bg3-1600w.avif 1600w, assets/images/hero-bg3-1920w.avif 1920w, assets/images/hero-bg3-2560w.avif 2560w" sizes="100vw">
 <source type="image/webp" srcset="assets/images/hero-bg3-400w.webp 400w, assets/images/hero-bg3-800w.webp 800w, assets/images/hero-bg3-1200w.webp 1200w, assets/images/hero-bg3-1600w.webp 1600w, assets/images/hero-bg3-1920w.webp 1920w, assets/images/hero-bg3-2560w.webp 2560w" sizes="100vw">
 <img
