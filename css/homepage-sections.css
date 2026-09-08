@@ -1204,24 +1204,36 @@ flex-shrink:0;
 CTA est sombre et déjà chargé (photo + panneau verre) ; ces 3 pastilles
 supplémentaires en rajoutaient sans que l'icône n'apporte rien que le
 libellé ne dise déjà. */
+/* LES FILETS SONT PARTIS (2026-09-08, lot 5).
+Ils étaient posés en border-left sur chaque enfant sauf le premier —
+« premier » au sens du DOM, pas au sens de la ligne affichée. Dès que
+les trois mentions ne tenaient plus sur une ligne, l'élément qui
+passait à la ligne suivante emportait son filet et l'affichait seul
+devant lui, en tête de ligne. Constaté à 1366 comme à 390.
+
+Aucune correction n'était possible en gardant le principe : CSS ne sait
+pas dire « premier de sa ligne ». :first-child, :nth-child, les
+sélecteurs de fratrie raisonnent tous sur le DOM ; seul le moteur de
+rendu sait où la ligne s'est coupée, et il ne l'expose pas. Toute
+variante à base de filets aurait donc reproduit le même défaut à une
+largeur non testée — ce qui est exactement ce qui vient de se passer.
+
+Le séparateur devient donc de l'espace : gap 22px en colonne. L'espace
+se recalcule tout seul à chaque retour à la ligne, sans jamais laisser
+de trace en tête de ligne. Le rang vaut 8px, le minimum en dessous
+duquel deux mentions empilées se recollent. */
 .cta-trust{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:0;
+gap:8px 22px;
 margin-top:8px;
 font-size:.92rem;
 color:rgba(255,255,255,.82);
 }
 
 .cta-trust > div{
-padding:4px 18px;
-border-left:1px solid rgba(255,255,255,.22);
-}
-
-.cta-trust > div:first-child{
-padding-left:0;
-border-left:none;
+padding:4px 0;
 }
 
 /* ==========================================================
@@ -1453,10 +1465,21 @@ text-align:center;
 align-items:center;
 }
 
+/* LE BLOC DE MARQUE RESTE À GAUCHE (2026-09-08, lot 5).
+Cette requête centrait .footer-top — donc le logo et la phrase
+d'accroche — alors que .footer-links juste en dessous gardait
+text-align:left. Le pied de page changeait donc d'axe en son milieu :
+marque centrée, colonnes de liens à gauche. C'était le seul endroit du
+site où deux blocs voisins d'un même conteneur ne partageaient pas leur
+bord gauche, et c'était visible sans mesurer.
+
+Aligné à gauche plutôt que tout centré : c'est le rendu de
+l'ordinateur, et il n'y a aucune raison que le pied de page raconte
+autre chose selon la largeur. .footer-bottom n'est pas touchée. */
 .footer-top{
 flex-direction:column;
-align-items:center;
-text-align:center;
+align-items:flex-start;
+text-align:left;
 gap:36px;
 }
 
@@ -1465,7 +1488,7 @@ max-width:none;
 }
 
 .footer-links{
-justify-content:center;
+justify-content:flex-start;
 text-align:left;
 }
 
@@ -1542,6 +1565,29 @@ police un peu plus large. À 16px la réserve passe à ~33px. */
 flex:1 1 100%;
 padding-left:16px;
 padding-right:16px;
+}
+
+/* LES TROIS MENTIONS S'EMPILENT SUR UN SEUL BORD (2026-09-08, lot 5).
+Elles ne tiennent de toute façon pas côte à côte à cette largeur : en
+flex-wrap + justify-content:center, chacune finissait seule sur sa
+ligne et se centrait sur SA propre largeur — trois bords gauches à
+105, 46 et 86px, un escalier que rien ne justifiait puisque les trois
+disent la même sorte de chose.
+
+Le passage en colonne + align-items:flex-start leur donne le bord
+gauche du panneau, donc un seul. text-align:left est nécessaire en
+plus : sans lui les boîtes seraient alignées mais leur TEXTE resterait
+centré (hérité de .cta-box-panel), et l'escalier reviendrait à
+l'identique, un cran plus bas.
+
+Assumé : à cette largeur ces trois lignes ne suivent plus le centrage
+du reste du panneau. Trois phrases empilées de longueurs différentes ne
+se lisent pas comme de la prose centrée mais comme une liste, et une
+liste s'aligne. */
+.cta-trust{
+flex-direction:column;
+align-items:flex-start;
+text-align:left;
 }
 
 }
