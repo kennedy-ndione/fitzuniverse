@@ -225,10 +225,23 @@ PHASE 2 — OPPORTUNITÉS
 
 <div class="jy-opps" id="jyOpps"></div>
 
+<!-- DIAGNOSTIC FRANCE — la seule porte hors paiement (2026-09-08).
+Avant ce jour, payment.js:470 était l'UNIQUE lien vers
+diagnostic-france.html de tout le site : un acheteur qui fermait
+l'onglet après son paiement ne retrouvait jamais le produit qu'il
+venait d'acheter. Ni carte, ni menu, ni fil d'Ariane — le seul chemin
+connu repassait par la page de paiement.
+
+Cette carte est RETIRÉE DU DOM quand le droit est fermé (voir
+js/dashboard.js), et non grisée comme les [data-feature] voisins : ce
+n'est pas un outil Fitz qu'on montre pour donner envie, c'est un
+produit d'une autre grille. Le griser ici reviendrait à vendre la
+colonne préinscription au milieu du parcours bourse. -->
 <div class="jy-phase-actions">
 <a href="universities.html" class="jy-btn"><i data-lucide="landmark"></i><span>Explorer les universités</span></a>
 <a href="scholarships.html" class="jy-btn"><i data-lucide="graduation-cap"></i><span>Explorer les bourses</span></a>
 <span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une candidature</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<a href="diagnostic-france.html" class="jy-btn" id="jyDiagnosticFranceBtn"><i data-lucide="calculator"></i><span>Diagnostic France</span></a>
 </div>
 </section>
 

@@ -61,7 +61,7 @@ ${CE_QUE_FAIT_LE_CONSEILLER.map((ligne) => `<li>${ligne}</li>`).join("")}
 </ul>
 
 <div class="advisor-locked-actions">
-<a href="offers.html#signature-focus" class="btn btn-primary">
+<a href="offers.html?parcours=bourse" class="btn btn-primary">
 <span>Découvrir l'accompagnement humain</span>
 </a>
 <a href="ai-check.html" class="btn btn-secondary">

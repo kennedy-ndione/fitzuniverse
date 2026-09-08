@@ -628,6 +628,16 @@ if (advisorBtn) {
 advisorBtn.hidden = isFeatureLocked(planId, featureFlags, "advisor", testerAccess, hasFitzExpress, session.planPreinscriptionId);
 }
 
+// Diagnostic France en phase 02 — RETIRÉ du DOM si le droit est fermé,
+// pas masqué : `hidden` laisserait le lien dans l'arbre, donc dans la
+// tabulation d'un lecteur d'écran et dans un Ctrl+F. Pour un produit
+// d'une autre grille, être annoncé puis inaccessible est pire que ne
+// pas être annoncé. Voir le commentaire de la carte dans dashboard.html.
+const diagBtn = document.getElementById("jyDiagnosticFranceBtn");
+if (diagBtn && isFeatureLocked(planId, featureFlags, "diagnostic_france", testerAccess, hasFitzExpress, session.planPreinscriptionId)) {
+diagBtn.remove();
+}
+
 // ---- Données du parcours ----
 const profileScore = calculateAiScore(profile);
 
@@ -707,7 +717,12 @@ renderReponse(applications, opps.count);
 
 // Les cartes de réponse viennent d'insérer des [data-feature] : on
 // re-applique les verrous de formule sur ce DOM neuf.
-applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress);
+// 5e argument (planPreinscriptionId) ajoute le 2026-09-08 : sans lui,
+// ce second passage REVERROUILLAIT ce que le premier avait ouvert pour
+// un forfait preinscription. Les cartes de reponse sont injectees apres
+// coup ; leurs [data-feature] repassaient ici avec un argument de moins,
+// donc evalues sur la seule formule bourse.
+applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, session.planPreinscriptionId);
 
 initVisaChecklist(user.uid, visaChecklist, rafraichirCarte);
 

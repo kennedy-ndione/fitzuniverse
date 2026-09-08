@@ -22,6 +22,7 @@
 */
 
 import { resolveSession, fetchFeatureFlags, isFeatureLocked, PLAN_LABELS } from "./access-guard.js";
+import { advisorOuvert } from "./plan-features.js";
 import { initShellChrome, unlockingPlans } from "./app-shell.js";
 import { initMessagesPanel } from "./student-messages.js";
 
@@ -95,6 +96,12 @@ if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
 // Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
 if (window.FitzMobileNav) {
 window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
+// Même règle que js/app-shell.js : l'entrée Diagnostic France n'entre
+// dans le menu que si le droit est ouvert. Les pages à double
+// présentation ont le même menu, elles ont donc le même besoin.
+if (featureFlags && !isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
+window.FitzMobileNav.ouvrirEntree("diagnostic_france");
+}
 }
 
 if (featureFlags) {
@@ -119,8 +126,15 @@ link.setAttribute("href", link.dataset.realHref);
 const advisorLabel = document.getElementById("advisorSectionLabel");
 const advisorNav = document.getElementById("advisorSectionNav");
 if (advisorLabel && advisorNav) {
-const advisorFlags = featureFlags.advisor;
-const hasAdvisor = !!advisorFlags && (session.testerAccess || advisorFlags[session.planId] === true);
+// Troisième copie de la même règle, remplacée le 2026-09-08 par
+// l'appel unique : elle ignorait planPreinscriptionId, comme les
+// deux autres. Voir advisorOuvert() dans js/plan-features.js.
+const hasAdvisor = advisorOuvert({
+planId: session.planId,
+planPreinscriptionId: session.planPreinscriptionId,
+featureFlags,
+testerAccess: session.testerAccess
+});
 advisorLabel.hidden = !hasAdvisor;
 advisorNav.hidden = !hasAdvisor;
 }

@@ -19,6 +19,7 @@
 */
 
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
+import { DEFAULT_FEATURE_CONFIG, PREINSCRIPTION_FEATURE_CONFIG, advisorOuvert } from "./plan-features.js";
 
 // pricing-plans.js est chargé comme script classique (pas un module) sur
 // toute page qui en a besoin — voir applications.js/dashboard.js pour le
@@ -31,15 +32,20 @@ return (typeof window !== "undefined" && window.SCHOLARBRIDGE_PLANS)
 : undefined;
 }
 
-// Formules "human" (pricing-plans.js) donnant accès à un conseiller —
-// dupliqué ici plutôt qu'importé depuis plan-features.js car ce n'est pas
-// un featureFlag à proprement parler dans toutes les surfaces (voir
-// DEFAULT_FEATURE_CONFIG.advisor, qui reste la source de vérité réelle ;
-// cette liste ne sert qu'à documenter l'intention pour qui lit ce fichier).
-const ADVISOR_PLANS = ["signature-focus", "signature"];
+// DÉRIVÉE, PLUS RECOPIÉE (2026-09-08). Cette liste était écrite en dur —
+// ["signature-focus", "signature"] — avec un commentaire reconnaissant
+// que DEFAULT_FEATURE_CONFIG.advisor était « la source de vérité réelle »
+// et que la copie ne servait qu'à documenter l'intention. La grille A a
+// ajouté « conseiller-6 » à la vraie config sans que la copie suive :
+// pendant ce temps, un client à 150 000 F voyait hasAdvisor=false et la
+// section « Mon conseiller » masquée. Une duplication qui se sait
+// duplication n'est pas une duplication acceptable, c'est une dette qui
+// attend son incident. On la calcule maintenant.
+export const ADVISOR_PLANS = Object.keys(DEFAULT_FEATURE_CONFIG.advisor).filter((planId) => DEFAULT_FEATURE_CONFIG.advisor[planId] === true);
 // Grille B (2026-09-07) : la revue conseiller est aussi ouverte par
-// Dossier France + Conseiller — l'union des deux forfaits.
-const ADVISOR_PREINSCRIPTION = ["dossier-france-conseiller"];
+// Dossier France + Conseiller — l'union des deux forfaits. Dérivée elle
+// aussi, pour la même raison que ci-dessus.
+export const ADVISOR_PREINSCRIPTION = Object.keys(PREINSCRIPTION_FEATURE_CONFIG.advisor).filter((planId) => PREINSCRIPTION_FEATURE_CONFIG.advisor[planId] === true);
 
 /**
 * @param {Object} session - résultat de resolveSession()/bootstrapShell()
@@ -72,7 +78,16 @@ maxPreinscriptions: planPreData ? planPreData.maxPreinscriptions : 0,
 isFitzExpressActive: !!session.hasFitzExpress,
 fitzExpressExpiresAt: (session.userData && session.userData.fitzExpressExpiresAt) || null,
 maxApplications: planData ? planData.maxAccompaniedApplications : 0,
-hasAdvisor: ADVISOR_PLANS.includes(session.planId) || ADVISOR_PREINSCRIPTION.includes(session.planPreinscriptionId || ""),
+// Même décision que les shells depuis le 2026-09-08 — advisorOuvert()
+// lit les drapeaux RÉSOLUS (défauts + surcharges Firestore), là où les
+// deux listes ci-dessus ignorent une surcharge admin. Elles restent
+// exportées pour qui veut la liste des formules concernées.
+hasAdvisor: advisorOuvert({
+planId: session.planId,
+planPreinscriptionId: session.planPreinscriptionId,
+featureFlags,
+testerAccess: session.testerAccess
+}),
 featureFlags,
 isFeatureLocked: (featureKey) => isFeatureLocked(
 session.planId,

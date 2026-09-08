@@ -18,6 +18,45 @@
 */
 
 import { faitFrance } from "./pays-preinscription.js";
+import { findCountry } from "./countries.js";
+
+/**
+* PAYS DE RÉSIDENCE — la question qui manquait (2026-09-08).
+*
+* Le diagnostic servait les frais de dossier de l'espace Campus France
+* du SÉNÉGAL (85 000 F CFA) à tout acheteur, où qu'il vive. Un étudiant
+* ivoirien payait pour lire un montant qui n'était pas le sien, dans un
+* produit vendu comme « une réponse chiffrée avant de payer Campus
+* France » — c'est-à-dire exactement là où se tromper coûte le plus.
+*
+* Le partage est net, et il tient à la géographie de la dépense :
+*   - ce qui est FRANÇAIS vaut pour tout le monde. Le seuil de
+*     ressources du visa, les droits différenciés, le plafond
+*     d'exonération sont fixés par la France et ne dépendent pas d'où
+*     part l'étudiant : ces blocs se calculent sans condition ;
+*   - ce qui est LOCAL — les frais de l'espace Campus France du pays de
+*     résidence — ne s'affiche que si ce pays est documenté.
+*
+* Un pays non documenté ne reçoit AUCUN montant inventé, ni une moyenne,
+* ni « environ ». Il reçoit une phrase qui dit ce qu'on ne sait pas, et
+* un total annuel qui annonce lui-même ce qu'il exclut : un total muet
+* sur son propre trou serait pire qu'un mauvais chiffre, parce qu'il se
+* lirait comme complet.
+*
+* Le Sénégal est le seul pays documenté à ce stade — les autres viendront
+* du lot S2, avec leurs sources.
+*/
+export function residenceDocumentee(paysResidence) {
+const fait = faitFrance("fraisDossier");
+if (!fait.residence) return false;
+const saisi = findCountry(paysResidence);
+const attendu = findCountry(fait.residence);
+// findCountry normalise casse et accents ; on compare des ISO, jamais
+// deux chaînes libres (« senegal », « Sénégal », « SN » sont un seul
+// pays). Une saisie que le référentiel ne reconnaît pas n'est jamais
+// tenue pour documentée.
+return !!saisi && !!attendu && saisi.iso === attendu.iso;
+}
 
 /** Parité fixe FCFA ↔ euro (la même que payment.js). */
 export const PARITE_EUR_XOF = 655.957;
@@ -47,6 +86,8 @@ export function calculerDiagnostic(entrees = {}) {
 const devise = entrees.devise === "XOF" ? "XOF" : "EUR";
 const niveau = NIVEAUX_DIAGNOSTIC.includes(entrees.niveau) ? entrees.niveau : "licence";
 const exonerationEsperee = entrees.exonerationEsperee === true;
+const paysResidence = String(entrees.paysResidence || "").trim();
+const documente = residenceDocumentee(paysResidence);
 const brut = Number(entrees.ressourcesMensuelles);
 const disponibleEUR = Number.isFinite(brut) && brut >= 0 ? arrondi(enEuros(brut, devise), 2) : 0;
 
@@ -62,7 +103,9 @@ const atteint = ecartMensuel >= 0;
 const droitsMontant = fDroits.montants[niveau];
 const plafond = fDroits.plafondExoneration;
 
-const fraisDossierEUR = arrondi(enEuros(fDossier.montant, fDossier.devise), 0);
+// Zéro quand le pays n'est pas documenté : le total ne peut pas porter
+// un montant qu'on ne connaît pas, et n'a pas le droit d'en deviner un.
+const fraisDossierEUR = documente ? arrondi(enEuros(fDossier.montant, fDossier.devise), 0) : 0;
 
 // Total annuel honnête : les ressources que le consulat exige de
 // justifier + les droits du niveau visé + les frais de dossier. Pas
@@ -75,7 +118,8 @@ const verdict = atteint
 : `Vos ressources n'atteignent pas le seuil publié : il manque ${formatEUR(Math.abs(ecartMensuel))} par mois (${formatEUR(disponibleEUR)} pour ${formatEUR(seuilMensuel)} exigés).`;
 
 return {
-entrees: { ressourcesMensuelles: brut, devise, niveau, exonerationEsperee },
+entrees: { ressourcesMensuelles: brut, devise, niveau, exonerationEsperee, paysResidence },
+residence: { pays: paysResidence, documentee: documente },
 ressources: {
 disponibleEUR, seuilMensuel, seuilAnnuel, ecartMensuel, atteint,
 texte: verdict,
@@ -88,14 +132,28 @@ texte: exonerationEsperee
 : `Droits différenciés en ${niveau} : ${formatEUR(droitsMontant)} par an, à budgéter en totalité. Les exonérations sont plafonnées à ${Math.round(plafond * 100)} % des étudiants non européens.`,
 source: fDroits.source, verifieLe: fDroits.verifieLe
 },
-fraisDossier: {
+// Pays non documenté : ni montant, ni devise, ni source — les champs
+// sont ABSENTS plutôt que nuls ou à zéro. Un `montant: 0` se serait
+// additionné, formaté, affiché « 0 F CFA » et lu comme « c'est
+// gratuit ». Ce qu'on ignore ne prend pas la forme de ce qu'on sait.
+fraisDossier: documente
+? {
+documente: true,
 montant: fDossier.montant, devise: fDossier.devise, montantEUR: fraisDossierEUR,
 texte: `Frais de dossier Campus France : ${formatXOF(fDossier.montant)}, non remboursables. Aucun paiement à l'avance : attendez la demande de paiement officielle.`,
 source: fDossier.source, verifieLe: fDossier.verifieLe
+}
+: {
+documente: false,
+texte: "Frais de dossier Campus France : non encore vérifiés pour votre pays. Ils existent et varient d'un espace Campus France à l'autre : renseignez-vous auprès de celui de votre pays de résidence avant de budgéter.",
+montantEUR: 0
 },
 total: {
 annuelEUR: totalAnnuelEUR,
-texte: `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits + ${formatEUR(fraisDossierEUR)} de dossier).`
+inclutFraisDossier: documente,
+texte: documente
+? `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits + ${formatEUR(fraisDossierEUR)} de dossier).`
+: `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits) — HORS frais de dossier Campus France, non encore vérifiés pour votre pays. Le montant réel sera donc plus élevé.`
 },
 verdict
 };

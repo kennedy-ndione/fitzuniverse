@@ -8,16 +8,24 @@ import { db } from "../firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell } from "./app-shell.js";
 import { calculerDiagnostic, formatEUR } from "./diagnostic-france.js";
+import { COUNTRY_NAMES } from "./countries.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
 
 initShellChrome();
 
+// Le lien de source n'est rendu que s'il y en a une. Un bloc « non
+// verifie pour votre pays » n'a pas de source : lui en fabriquer une
+// (celle du Senegal, la plus proche) serait exactement le mensonge que
+// ce lot corrige.
 function renderBloc(titre, bloc) {
-return `<li class="diag-bloc ${bloc.atteint === false ? "is-ecart" : ""}">
+const source = bloc.source
+? `<a class="diag-source" href="${escapeHtml(bloc.source)}" target="_blank" rel="noopener">Source — vérifié le ${escapeHtml(formaterDate(bloc.verifieLe))}</a>`
+: `<span class="diag-source diag-source--absente">Aucune source vérifiée pour votre pays à ce jour.</span>`;
+return `<li class="diag-bloc ${bloc.atteint === false || bloc.documente === false ? "is-ecart" : ""}">
 <strong>${escapeHtml(titre)}</strong>
 <p>${escapeHtml(bloc.texte)}</p>
-<a class="diag-source" href="${escapeHtml(bloc.source)}" target="_blank" rel="noopener">Source — vérifié le ${escapeHtml(formaterDate(bloc.verifieLe))}</a>
+${source}
 </li>`;
 }
 
@@ -60,11 +68,20 @@ return;
 }
 
 const form = document.getElementById("diagForm");
+document.getElementById("diagPaysListe").innerHTML = COUNTRY_NAMES.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
+
+// Le pays de residence du profil pre-remplit le champ : la plupart des
+// etudiants candidatent depuis chez eux, et redemander ce quon sait
+// deja est une friction gratuite. Reste modifiable — on pre-remplit,
+// on nimpose pas.
+const paysProfil = (ctx.profile && (ctx.profile.country || ctx.profile.originCountry)) || "";
+if (paysProfil) document.getElementById("diagPays").value = paysProfil;
 const sauvegarde = document.getElementById("diagSauvegarde");
 
 // Un diagnostic déjà enregistré se réaffiche tel quel.
 const precedent = ctx.userData && ctx.userData.diagnosticFrance;
 if (precedent && precedent.entrees) {
+document.getElementById("diagPays").value = precedent.entrees.paysResidence || paysProfil || "";
 document.getElementById("diagRessources").value = precedent.entrees.ressourcesMensuelles ?? "";
 document.getElementById("diagDevise").value = precedent.entrees.devise || "XOF";
 const niveau = form.querySelector(`input[name="niveau"][value="${precedent.entrees.niveau}"]`);
@@ -82,11 +99,17 @@ form.addEventListener("submit", async (event) => {
 event.preventDefault();
 
 const entrees = {
+paysResidence: document.getElementById("diagPays").value.trim(),
 ressourcesMensuelles: Number(document.getElementById("diagRessources").value),
 devise: document.getElementById("diagDevise").value,
 niveau: form.querySelector('input[name="niveau"]:checked').value,
 exonerationEsperee: document.getElementById("diagExoneration").checked
 };
+
+if (!entrees.paysResidence) {
+document.getElementById("diagPays").focus();
+return;
+}
 
 if (!Number.isFinite(entrees.ressourcesMensuelles) || entrees.ressourcesMensuelles < 0) {
 document.getElementById("diagRessources").focus();
@@ -104,6 +127,8 @@ verdict: resultat.verdict,
 atteint: resultat.ressources.atteint,
 ecartMensuel: resultat.ressources.ecartMensuel,
 totalAnnuelEUR: resultat.total.annuelEUR,
+paysResidence: entrees.paysResidence,
+totalInclutFraisDossier: resultat.total.inclutFraisDossier,
 calculeLe: new Date().toISOString()
 }
 });

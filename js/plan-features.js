@@ -259,6 +259,34 @@ if (planPreinscriptionId && flags[planPreinscriptionId] === true) return false;
 return true;
 }
 
+/**
+* LE DROIT « MON CONSEILLER », EN UN SEUL ENDROIT (2026-09-08).
+*
+* Il en existait TROIS copies — js/app-shell.js, js/dual-shell.js et
+* dashboard.js — chacune portant le commentaire « à garder synchronisées
+* si la règle change ». Elles ne l'ont pas été : la règle a changé deux
+* fois (conseiller-6 en grille A, dossier-france-conseiller en grille B)
+* et les trois copies lisaient encore la seule formule bourse. Un client
+* ayant payé un conseiller ne voyait pas la section, alors que
+* firestore.rules:278 l'autorisait déjà à lui écrire.
+*
+* La règle, une fois pour toutes : ouvert si l'accès test est actif, ou
+* si l'une des DEUX offres — bourse ou préinscription — le déclare
+* explicitement vrai. Le `=== true` est délibéré et diffère de
+* decideVerrou(), qui ouvre sur `!== false` : une section entière qui
+* apparaît parce qu'une formule n'a pas été listée serait une fuite,
+* pas une tolérance. Ici, ce qui n'est pas explicitement ouvert est
+* fermé.
+*
+* @param {{planId?:string, planPreinscriptionId?:string, featureFlags?:Object, testerAccess?:boolean}} args
+*/
+export function advisorOuvert({ planId = "", planPreinscriptionId = "", featureFlags, testerAccess = false } = {}) {
+const flags = featureFlags && featureFlags.advisor;
+if (!flags) return false;
+if (testerAccess) return true;
+return flags[planId] === true || (!!planPreinscriptionId && flags[planPreinscriptionId] === true);
+}
+
 // ==========================================================
 // QUOTA DE CANDIDATURES ACCOMPAGNÉES — décision pure, testable
 // ==========================================================

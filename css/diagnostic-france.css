@@ -27,6 +27,9 @@ dashboard.css seulement ; aucune couleur ni police nouvelle. */
 .diag-bloc p{ margin:0 0 6px; line-height:1.55; }
 .diag-source{ font-size:var(--fs-caption); color:var(--text-muted); text-decoration:underline; text-underline-offset:3px; }
 .diag-source:hover, .diag-source:focus-visible{ color:var(--amber-700); }
+/* Absence de source : surtout PAS souligne — un soulignement se lit
+comme un lien, donc comme une source qui existerait. */
+.diag-source--absente{ text-decoration:none; font-style:italic; }
 .diag-total{ margin:0; font-weight:600; }
 .diag-note, .diag-sauvegarde{ margin:0; font-size:var(--fs-small); color:var(--text-muted); }
 

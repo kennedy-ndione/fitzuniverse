@@ -183,10 +183,18 @@ Diagnostic France, Dossier France, Dossier France + Conseiller. -->
 
 <script src="js/header-scroll.js"></script>
 <script type="module" src="js/preinscriptions-page.js"></script>
-<script type="module">
-import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
-applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" });
-</script>
+<!-- Appel à applyAuthenticatedShellIfLoggedIn() retiré le 2026-09-08 :
+il ne faisait rien. La garde de js/dual-shell.js exige #authShellRoot ET
+#dashboardMainContent ; cette page n'a jamais eu ni l'un ni l'autre, la
+fonction rendait donc null avant toute action — mais au prix du
+chargement d'un module et d'une résolution de session complète, pour
+zéro effet visible. Le code mort qui COÛTE est le pire : il se lit comme
+une intention tenue.
+
+La page reste donc volontairement 100 % publique pour l'instant. Le
+double espace (public / connecté) est le sujet du lot S4, qui reprendra
+cette page proprement — avec les ancres qu'il faut, cette fois. -->
+
 <script type="module" src="js/admin-access.js"></script>
 <script src="js/vivant.js" defer></script>
 </body>

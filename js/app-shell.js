@@ -49,6 +49,9 @@ isFeatureLocked,
 resolveSession,
 fetchFeatureFlags
 } from "./access-guard.js";
+// Le droit « Mon conseiller » se décide dans plan-features.js, en un
+// seul endroit — voir advisorOuvert() et la note qui l'accompagne.
+import { advisorOuvert } from "./plan-features.js";
 
 // applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
 // DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
@@ -61,15 +64,21 @@ export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked, a
 // (applyAdvisorVisibility). Les deux copies existent parce que
 // dashboard.js n'utilise délibérément pas ce module (voir la note en
 // tête de fichier) ; à garder synchronisées si la règle change.
-function applyAdvisorVisibility(planId, featureFlags, testerAccess) {
+function applyAdvisorVisibility(planId, featureFlags, testerAccess, planPreinscriptionId = "") {
 
 const label = document.getElementById("advisorSectionLabel");
 const nav = document.getElementById("advisorSectionNav");
 
 if (!label || !nav) return;
 
-const flags = featureFlags.advisor;
-const hasAdvisor = !!flags && (testerAccess || flags[planId] === true);
+// planPreinscriptionId ajouté le 2026-09-08. Cette fonction ne
+// regardait que la formule BOURSE : un client « Dossier France +
+// Conseiller » avait payé un conseiller, firestore.rules l'autorisait
+// à lui écrire, et la section restait masquée dans son espace. Le
+// droit se lit sur l'UNION des deux forfaits partout ailleurs
+// (decideVerrou) ; il n'y avait aucune raison que la visibilité de la
+// section soit le seul endroit à n'en lire qu'un.
+const hasAdvisor = advisorOuvert({ planId, planPreinscriptionId, featureFlags, testerAccess });
 
 label.hidden = !hasAdvisor;
 nav.hidden = !hasAdvisor;
@@ -411,11 +420,17 @@ const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId] + (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] ? " · " + PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] : "");
 
 applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
-applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess);
+applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess, session.planPreinscriptionId);
 
 // Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
 if (window.FitzMobileNav) {
 window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
+// Diagnostic France : l'entrée n'entre dans le menu QUE si le droit
+// est ouvert — c'est ici, une fois la session résolue, qu'on le sait.
+// Voir MENU_FEATURE_ITEMS dans js/mobile-nav.js.
+if (!isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
+window.FitzMobileNav.ouvrirEntree("diagnostic_france");
+}
 }
 
 if (window.lucide) lucide.createIcons();

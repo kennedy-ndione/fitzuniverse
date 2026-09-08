@@ -34,7 +34,14 @@ import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS } from "../js/plan-features.js"
 // Lot E1 : la preuve de dépôt, en lecture seule (jamais la capture
 // elle-même — storage.rules la réserve au propriétaire).
 import { lirePreuve, resumePreuve, LIBELLES_MODES } from "../js/preuve-depot.js";
-import { resolvePlan } from "../js/access-guard.js";
+import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "../js/parcours.js";
+// resolvePlanPreinscription manquait à cet import (corrigé 2026-09-08).
+// Elle est appelée dans renderHeader() : la fiche étudiant levait une
+// ReferenceError avant d'avoir rien affiché, donc l'admin ne pouvait
+// ouvrir AUCUNE fiche. Une page entière hors service pour un nom absent
+// d'une liste d'import — c'est ce que le test de forme ajouté dans
+// test/admin-imports.test.mjs cherche désormais sur tout admin/*.js.
+import { resolvePlan, resolvePlanPreinscription } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
 // Interaction directe admin → étudiant, comptée pour les courbes du
@@ -667,7 +674,14 @@ list.innerHTML = applications.map((app) => `
 <span class="timeline-dot" style="background:${app.status === "reponse_recue" ? "var(--success)" : "var(--border-color)"}"></span>
 <div class="timeline-body">
 <div class="timeline-label">${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}</div>
-<div class="timeline-meta">${APP_STATUS_LABELS[app.status] || app.status}${app.premiumProtected ? " · suivi protégé au-delà de l'abonnement" : ""}</div>
+<!-- Parcours affiché depuis le 2026-09-08 : bourse et préinscription
+n'ont ni les mêmes étapes, ni les mêmes documents, ni le même
+interlocuteur. Sans cette mention, l'admin lisait deux candidatures
+identiques là où l'étudiant en vit deux différentes. lireParcours()
+plutôt que app.track brut — c'est elle qui décide qu'un champ absent
+vaut « bourse », et deux lectures divergentes du même champ
+finiraient par se contredire. -->
+<div class="timeline-meta">${LIBELLES_PARCOURS[lireParcours(app)].court} · ${APP_STATUS_LABELS[app.status] || app.status}${app.premiumProtected ? " · suivi protégé au-delà de l'abonnement" : ""}</div>
 ${renderPreuveReadOnly(app)}
 ${renderChecklistItemsReadOnly(app)}
 </div>

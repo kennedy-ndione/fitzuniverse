@@ -174,12 +174,22 @@ anciennes — jamais retirées d'un compte qui les détient. -->
 <div class="detail-section">
 <h3>Pass Fitz Express</h3>
 <p class="detail-field-value" id="fitzExpressStatus" style="margin-bottom:14px;">—</p>
-<span class="detail-field-label">Offre préinscription (grille B, écrite par le paiement seul)</span>
-<p class="detail-field-value" id="planPreinscriptionStatus" style="margin-bottom:14px;">—</p>
 <div class="detail-actions-row">
 <input type="date" id="fitzExpressInput">
 <button type="button" class="btn-detail-action" id="saveFitzExpressBtn">Enregistrer la date</button>
 </div>
+</div>
+<!-- Sortie de la section « Pass Fitz Express » le 2026-09-08. L'offre
+préinscription y était nichée sous le titre d'un AUTRE produit, entre
+un statut et un champ de date qui ne la concernaient pas : l'admin
+lisait « Pass Fitz Express » et trouvait dessous une ligne parlant
+d'autre chose. Deux forfaits distincts (grille A bourse, grille B
+préinscription) méritent deux sections. Toujours en lecture seule :
+aucun bouton ici, le webhook de paiement écrit seul ce champ. -->
+<div class="detail-section">
+<h3>Offre préinscription</h3>
+<p class="detail-field-value" id="planPreinscriptionStatus" style="margin-bottom:14px;">—</p>
+<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);margin-bottom:0;">Grille B, écrite par le paiement seul — aucune modification manuelle depuis cette fiche.</p>
 </div>
 <div class="detail-section">
 <h3>Candidatures accompagnées</h3>

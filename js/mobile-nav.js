@@ -255,6 +255,36 @@ const MENU_ITEMS = [
 { href: "universities.html", label: "Universités", icon: "landmark" }
 ];
 
+// ENTRÉES SOUMISES À UN DROIT (2026-09-08). Elles ne sont PAS rendues au
+// montage : la feuille « Menu » se construit au DOMContentLoaded, bien
+// avant que la session soit résolue, et une entrée posée puis retirée
+// clignoterait — ou pire, resterait si la résolution échouait. Elles
+// n'entrent dans le DOM que sur appel explicite du shell, une fois le
+// droit connu : FitzMobileNav.ouvrirEntree("diagnostic_france").
+//
+// diagnostic-france.html n'avait, avant ce jour, aucune entrée de menu
+// nulle part — le seul lien du site vivait dans payment.js, après le
+// paiement. Un produit acheté doit se retrouver depuis son espace.
+const MENU_FEATURE_ITEMS = [
+{ href: "diagnostic-france.html", label: "Diagnostic France", icon: "calculator", id: "mnavMenuDiagnosticFrance", feature: "diagnostic_france" }
+];
+
+function renderMenuItem(m) {
+return `
+<a href="${m.href}" class="mnav-menu-item"${m.id ? ` id="${m.id}"` : ""}${isCurrent(m.href) ? ' aria-current="page"' : ""}>
+${icon(m.icon)}<span>${m.label}</span>
+</a>`;
+}
+
+/** Insère une entrée de menu soumise à un droit, une fois ce droit connu. */
+function ouvrirEntree(feature) {
+const item = MENU_FEATURE_ITEMS.find((m) => m.feature === feature);
+const grille = document.getElementById("mnavMenuGrid");
+if (!item || !grille || document.getElementById(item.id)) return;
+grille.insertAdjacentHTML("beforeend", renderMenuItem(item));
+refreshIcons(grille);
+}
+
 function initialsFrom(name) {
 const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
 if (!parts.length) return "";
@@ -310,10 +340,7 @@ sheet.setAttribute("aria-label", "Menu de mon espace");
 
 const planLabel = (document.getElementById("topbarPlanLabel") || {}).textContent || "";
 
-const items = MENU_ITEMS.map((m) => `
-<a href="${m.href}" class="mnav-menu-item"${m.id ? ` id="${m.id}"` : ""}${isCurrent(m.href) ? ' aria-current="page"' : ""}>
-${icon(m.icon)}<span>${m.label}</span>
-</a>`).join("");
+const items = MENU_ITEMS.map(renderMenuItem).join("");
 
 sheet.innerHTML = `
 <span class="mnav-menu-grip" aria-hidden="true"></span>
@@ -325,7 +352,7 @@ sheet.innerHTML = `
 </div>
 <button type="button" class="mnav-menu-close" id="mnavMenuClose" aria-label="Fermer le menu">${icon("x")}</button>
 </div>
-<div class="mnav-menu-grid">${items}</div>
+<div class="mnav-menu-grid" id="mnavMenuGrid">${items}</div>
 <button type="button" class="mnav-menu-logout" id="mnavMenuLogout">${icon("log-out")}<span>Se déconnecter</span></button>
 <div class="mnav-menu-site">
 <a href="index.html">Accueil du site</a>
@@ -572,6 +599,6 @@ document.addEventListener("DOMContentLoaded", init);
 init();
 }
 
-window.FitzMobileNav = { initShell, initPublic, setUser };
+window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree };
 
 })();

@@ -228,8 +228,9 @@ assert.equal(ko.ressources.ecartMensuel, -77.5);
 assert.match(ko.verdict, /il manque 77,50 € par mois/);
 });
 
-test("diagnostic en F CFA : la parité fixe, et le total annuel", () => {
-const r = calculerDiagnostic({ ressourcesMensuelles: 600000, devise: "XOF", niveau: "licence" });
+// paysResidence explicite depuis le lot S0 (2026-09-08) : les frais de dossier Campus France sont ceux de l espace du pays de residence, et ces deux tests verifient le cas senegalais. Sans pays declare, le diagnostic les exclut desormais — c etait tout l objet du correctif.
+test("diagnostic en F CFA, residence Senegal : la parite fixe, et le total annuel", () => {
+const r = calculerDiagnostic({ ressourcesMensuelles: 600000, devise: "XOF", niveau: "licence", paysResidence: "Sénégal" });
 assert.equal(r.ressources.disponibleEUR, 914.69);
 assert.equal(r.ressources.atteint, true);
 assert.equal(r.droits.montant, 2902);
@@ -247,7 +248,7 @@ assert.ok(!/visa accord/i.test(t) && !/\badmis/i.test(t) && !/vous aurez/i.test(
 });
 
 test("chaque chiffre affiché correspond à un fait sourcé de pays-preinscription.js", () => {
-const r = calculerDiagnostic({ ressourcesMensuelles: 900, niveau: "master", exonerationEsperee: true });
+const r = calculerDiagnostic({ ressourcesMensuelles: 900, niveau: "master", exonerationEsperee: true, paysResidence: "Sénégal" });
 const ressources = faitFrance("ressources"), droits = faitFrance("droits"), dossier = faitFrance("fraisDossier");
 assert.equal(r.ressources.seuilMensuel, ressources.montants.mensuel);
 assert.equal(r.ressources.seuilAnnuel, ressources.montants.annuel);

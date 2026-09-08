@@ -71,6 +71,18 @@ de visa ; aucune promesse de résultat. -->
 </section>
 
 <form class="diag-form card" id="diagForm" novalidate>
+<!-- PREMIÈRE question depuis le 2026-09-08, et non la dernière : elle
+décide de ce que les autres réponses veulent dire. Les frais de dossier
+Campus France dépendent de l'espace du pays de résidence ; sans cette
+question, le diagnostic servait les 85 000 F CFA du Sénégal à tout le
+monde. Champ libre + <datalist> (js/countries.js), comme partout
+ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
+<div class="field">
+<label for="diagPays">Votre pays de résidence</label>
+<input type="text" id="diagPays" name="paysResidence" list="diagPaysListe" autocomplete="country-name" required placeholder="Ex. Sénégal">
+<datalist id="diagPaysListe"></datalist>
+<p class="field-hint">Le pays d'où vous candidatez. Il détermine l'espace Campus France dont dépendent vos frais de dossier — les seuils français, eux, sont les mêmes pour tous.</p>
+</div>
 <div class="field">
 <label for="diagRessources">Ressources disponibles par mois</label>
 <div class="diag-montant">
