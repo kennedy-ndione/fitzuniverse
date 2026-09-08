@@ -28,7 +28,17 @@ import { calculerDiagnostic, textesRendus, formatEUR } from "../js/diagnostic-fr
 import { faitFrance, PAYS } from "../js/pays-preinscription.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
-const lire = (f) => readFileSync(join(racine, f), "utf8");
+// Fins de ligne normalisées à la lecture, comme dans
+// test/preuve-depot.test.mjs. Cette machine a core.autocrlf à true : le
+// dépôt stocke firestore.rules en LF, le disque le rend en CRLF. Les
+// motifs ci-dessous décrivent le CONTENU des règles, pas son encodage.
+//
+// Ici les deux motifs « function X(uid) { …\n} » passaient encore, mais
+// par chance de forme : leur « [\s\S]*? » absorbait le \r avant le \n
+// final. Un motif un peu moins tolérant aurait échoué sans prévenir, et
+// le groupe capturé traînait un \r. On ne laisse pas un test dépendre
+// d'un réglage de machine.
+const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
 const require = createRequire(import.meta.url);
 const { GRILLE } = require(join(racine, "functions/lib/achat.js"));
 
