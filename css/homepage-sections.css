@@ -938,6 +938,23 @@ gap:16px 20px;
 
 }
 
+/* MÊME BOÎTE, PAS SEULEMENT MÊME GABARIT (2026-09-08, lot 5).
+btn-lg a mis les deux boutons au même rembourrage et à la même taille
+de texte, et il restait tout de même 2px d'écart de hauteur : .btn-secondary
+porte `border:1px solid var(--border-color)` (base.css), .btn-primary
+n'a aucune bordure. Deux fois un pixel, en haut et en bas.
+
+Une bordure transparente de même épaisseur sur le primaire remet les
+deux dans la même boîte. Elle ne se voit pas — le fond du bouton passe
+dessous, background-clip valant border-box par défaut — et elle est
+préférable à un min-height, qui aurait figé une hauteur calculée pour
+une police donnée et se serait décalé au premier changement de
+libellé ou de taille de texte. Portée limitée à ce pied : le reste du
+site continue d'utiliser .btn-primary tel quel. */
+.steps-footer .btn-primary{
+border:1px solid transparent;
+}
+
 /* Le doublet .steps-cta-text-full / .steps-cta-text-short a disparu le
 2026-09-01 : le bouton portait "Commencer mon diagnostic gratuit" (33
 caractères) qui débordait sous 640px, d'où un second libellé court
