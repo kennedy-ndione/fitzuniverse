@@ -45,3 +45,10 @@ Thumbs.db
 # d etudiants, JAMAIS dans le depot. Le filet immediat avant chaque lot
 # qui ecrit ; le dispositif definitif est `gcloud firestore export`.
 sauvegardes/
+
+# Planches, maquettes et notes de travail échangées pendant une séance
+# (« Claude outputs/ »). Ce sont des pièces de conversation, pas des
+# sources du site : rien dans le dépôt ne les charge, et elles pèsent
+# plus lourd que le code qu'elles ont servi à écrire. Elles restent sur
+# le disque de la machine où elles ont été produites.
+Claude outputs/
