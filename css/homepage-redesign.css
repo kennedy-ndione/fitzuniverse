@@ -249,6 +249,30 @@ background:rgba(253,249,239,.85);
 }
 
 /* ==========================================================
+L'ACCUEIL N'A PAS DE FOND D'EN-TÊTE
+==========================================================
+Le dégradé ci-dessus s'arrête net à 76 px (82 sur ordinateur) : posé
+sur la photo du hero, il se lit comme une barre sombre à bord franc en
+travers de l'image. Mesuré : c'était le plus grand saut de luminance
+des 140 premiers pixels de la page, 0,057 pile à y=76.
+
+Le travail de lisibilité passe au voile vertical de la photo
+(css/hero.css) : il n'a pas de bord, donc il ne fait pas de barre. Les
+contrastes du logo et des liens sont mesurés sur les pixels composités
+sous eux, aux deux extrêmes de la dérive de la photo.
+
+La règle du dessus reste EN PLACE pour scholarship-details.html, qui
+charge cette même feuille et garde sa bannière : son propre voile n'a
+pas été retouché ni mesuré ici. La classe sur le corps est ce qui
+sépare les deux — le sélecteur pèse (0,3,0) contre (0,2,0), et arrive
+après. */
+body.accueil .header:not(.is-scrolled){
+
+background:none;
+
+}
+
+/* ==========================================================
 CTA FINAL — panneau verre dépoli déjà neutre (rgba(14,14,16,…), pas de
 bleu) : réchauffé pour rejoindre exactement la même encre que le reste
 de la page plutôt que rester un noir neutre isolé.

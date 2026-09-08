@@ -362,6 +362,22 @@ prévu pour un fond blanc une fois le header défilé (.is-scrolled), pas
 pour flotter directement sur la photo du hero — trop peu de contraste
 pour rester repérable, contrairement au bouton "Découvrir" à côté. */
 .header-link-login{display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border-radius:var(--radius-full); background:#fff; color:var(--primary-color); box-shadow:var(--shadow-xs);}
+
+/* « Connexion » ne fait PAS exception (2026-09-08). La pastille ronde
+décrite plus bas a été retirée : elle posait un disque blanc opaque de
+36 px sur la photo, le seul aplat clair de tout le hero, et le seul
+élément d'interface à ne pas se fondre dans l'image.
+
+L'accès n'est pas perdu : js/mobile-nav.js pose login.html dans la
+feuille plein écran (mnav-link, vérifié dans le fichier). Le
+raisonnement d'origine — « c'est le seul chemin vers login.html sur la
+home » — datait d'avant cette feuille.
+
+Les règles de la pastille sont laissées en place, inertes, plutôt que
+supprimées : elles portent le compte rendu d'un vrai bug de cascade
+(icône blanche sur fond blanc, 2026-08-28) qu'il ne faudrait pas
+réapprendre si la pastille revenait un jour. */
+.header-link-login{display:none;}
 /* Bug réel trouvé le 2026-08-28 en testant sur un vrai viewport mobile
 (390px) : l'icône de ce cercle était invisible — blanche sur fond blanc.
 Cause : .header:not(.is-scrolled) .header-link et .header.is-scrolled

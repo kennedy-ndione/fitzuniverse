@@ -181,9 +181,9 @@ ne s'éclaircit pas. Toute retouche de ces deux arrêts se remesure. */
 .hero-photo-glow{
 
 background:linear-gradient(180deg,
-rgba(20,16,13,.55) 0%,
-rgba(20,16,13,0) 20%,
-rgba(20,16,13,0) 44%,
+rgba(20,16,13,.80) 0%,
+rgba(20,16,13,0) 36%,
+rgba(20,16,13,0) 48%,
 rgba(20,16,13,.66) 76%,
 rgba(20,16,13,.96) 100%);
 
@@ -266,7 +266,19 @@ letter-spacing:.2em;
 
 text-transform:uppercase;
 
-color:#E9A319;
+/* CRÈME, ET NON L'AMBRE DE LA MARQUE — décision mesurée.
+Cette ligne traverse le cadre jusqu'à la moitié de sa largeur, là où le
+voile horizontal est déjà clair et où passe le bâtiment blanc. En ambre
+elle tombait à 1,30:1 sur téléphone et 2,22:1 sur ordinateur, pour un
+seuil de 4,5:1.
+
+Le garder en ambre aurait demandé un voile à .80 sous cette ligne, soit
+la photo écrasée sur toute sa moitié haute ; en crème il suffit de .63.
+C'est la photo qu'on préserve, pas la couleur.
+
+L'ambre ne quitte pas le surtitre pour autant : le trait de 28 px juste
+en dessous le garde. L'accent reste, il change de porteur. */
+color:#F5F1E8;
 
 }
 
@@ -672,7 +684,12 @@ transform-origin:50% 40%;
 il lui faut un fond franc — et la nav garde le sien en haut. */
 .hero-photo-veil{
 
-background:linear-gradient(180deg,rgba(20,16,13,.6) 0%,rgba(20,16,13,.15) 18%,rgba(20,16,13,.55) 42%,rgba(20,16,13,.9) 62%,rgba(20,16,13,.97) 100%);
+background:linear-gradient(180deg,
+rgba(20,16,13,.92) 0%,
+rgba(20,16,13,.44) 22%,
+rgba(20,16,13,.80) 44%,
+rgba(20,16,13,.93) 66%,
+rgba(20,16,13,.97) 100%);
 
 }
 
