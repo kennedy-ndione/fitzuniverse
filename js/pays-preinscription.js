@@ -286,10 +286,19 @@ jalonsVerifiesLe: "2026-09-07"
 * La date ISO d'un jalon pour la campagne en cours à `date` : un jalon
 * d'octobre à décembre tombe dans l'année d'ouverture, un jalon de
 * janvier à juillet dans l'année de clôture (finDeCampagne).
+*
+* `jalons` est le troisième argument depuis le lot S1b : le calendrier
+* est une donnée du pays de RÉSIDENCE, pas de la destination, et il vit
+* désormais dans la couche (js/procedures/residences/*). Par défaut ce
+* sont ceux du Sénégal, les seuls publiés à ce jour — c'est ce qui
+* permet au lot S2 d'ajouter un pays sans rouvrir ce module. La borne
+* de campagne (octobre → 31 juillet) reste commune : elle est aussi la
+* frontière commerciale des offres, et le webhook en porte le miroir.
+*
 * @returns {{cle:string, iso:string, libelle:string, debut:boolean}|null}
 */
-export function jalonDeCampagne(cle, date = new Date()) {
-const jalon = CAMPAGNE_FRANCE.jalons[cle];
+export function jalonDeCampagne(cle, date = new Date(), jalons = CAMPAGNE_FRANCE.jalons) {
+const jalon = (jalons || CAMPAGNE_FRANCE.jalons)[cle];
 if (!jalon) return null;
 const anneeCloture = finDeCampagne(date).getUTCFullYear();
 const annee = jalon.mois > CAMPAGNE_FRANCE.cloture.mois ? anneeCloture - 1 : anneeCloture;

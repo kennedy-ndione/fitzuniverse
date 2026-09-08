@@ -1480,6 +1480,16 @@ if (!etapes.length) return "";
 
 const faites = etapes.filter((s) => s.etat === "faite").length;
 const aConfirmer = etapes.filter((s) => s.procedure.fiabilite === "a_confirmer").length;
+// Lot S1b : ce titre disait « depuis le Sénégal » à tout le monde, y
+// compris à un étudiant qui avait déclaré vivre ailleurs. Il nomme
+// maintenant la résidence RÉELLE du profil, et ne nomme rien quand elle
+// est inconnue. Entre parenthèses : « depuis le Sénégal », « depuis la
+// Côte d'Ivoire », « depuis Maurice » — l'article change avec le pays,
+// et une phrase qui se trompe d'article à chaque profil n'est pas une
+// phrase, c'est un gabarit.
+const procedure = procedurePour(app);
+const residence = String((profile && (profile.originCountry || profile.country)) || "").trim();
+const documentee = !!(procedure && procedure.residenceDocumentee);
 const aujourdhui = new Date();
 
 const lignes = etapes.map((s) => {
@@ -1513,8 +1523,10 @@ ${demandePreuve ? `<input type="text" name="preuve" maxlength="64" placeholder="
 }).join("");
 
 return `<details class="app-procedure">
-<summary><i data-lucide="route"></i><span>Procédure Études en France, depuis le Sénégal · ${faites}/${etapes.length} étape${etapes.length > 1 ? "s" : ""}${aConfirmer ? ` · ${aConfirmer} à confirmer` : ""}</span></summary>
-<p class="app-procedure-lead">Documentée depuis les sources publiques de Campus France Sénégal. Une consigne « à confirmer » sera précisée à la première passe réelle sur la plateforme.</p>
+<summary><i data-lucide="route"></i><span>Procédure ${escapeHtml((procedure && procedure.portail.nom) || "de portail")}${residence ? ` (résidence : ${escapeHtml(residence)})` : ""} · ${faites}/${etapes.length} étape${etapes.length > 1 ? "s" : ""}${aConfirmer ? ` · ${aConfirmer} à confirmer` : ""}</span></summary>
+<p class="app-procedure-lead">${documentee
+? "Documentée depuis les sources publiques de Campus France. Les montants, les dates et les lieux sont ceux de votre pays de résidence. Une consigne « à confirmer » sera précisée à la première passe réelle sur la plateforme."
+: "Ces étapes sont celles de la plateforme : elles valent pour tout candidat. Ce qui dépend de votre pays de résidence — frais de dossier, dates de la campagne, lieu de l'entretien — n'est pas encore vérifié pour lui, et chaque étape concernée le dit."}</p>
 <ol class="app-procedure-liste">${lignes}</ol>
 </details>`;
 

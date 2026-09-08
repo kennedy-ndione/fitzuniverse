@@ -14,11 +14,16 @@ import { lirePays, etatDunPays, libelleProcedure, jalonDeCampagne } from "./pays
 // Lot E2 : quand une procédure existe pour un pays, la carte dit
 // honnêtement son état (« documentée depuis les sources publiques ;
 // N étapes à confirmer ») et la France, en plein, montre ses étapes.
-// Page publique : la résidence est le Sénégal, le premier public du site.
-import { trouverProcedure, libelleProcedureDocumentee, codeProcedurePour } from "./procedures/index.js";
+//
+// Lot S1b (2026-09-08) : cette page est PUBLIQUE, et un visiteur non
+// connecté n'a pas de pays de résidence. Elle en supposait un — le
+// Sénégal — et servait donc à un Ivoirien de passage les 85 000 F, la
+// SUNU BANK et les dates de la campagne sénégalaise comme si c'étaient
+// les siennes. Elle affiche maintenant le TRONC, commun à tous, et dit
+// quels pays de résidence sont vérifiés.
+import { trouverProcedure, libelleProcedureDocumentee, codeProcedurePour, residencesDocumentees } from "./procedures/index.js";
 import { texteConsigne, LIBELLES_FIABILITE, ICONES_TYPE } from "./procedures/vocabulaire.js";
 
-const RESIDENCE_PAR_DEFAUT = "Sénégal";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
 
@@ -36,8 +41,11 @@ return `<li class="pre-fait">
 }
 
 function renderProcedure(procedure) {
+// Sans pays de résidence, composerProcedure a déjà retiré les
+// échéances : `jalons` reste indéfini et aucune date ne s'affiche.
+const jalons = (procedure.faits && procedure.faits.calendrier && procedure.faits.calendrier.jalons) || undefined;
 const etapes = procedure.etapes.map((e) => {
-const jalon = e.echeance ? jalonDeCampagne(e.echeance.cle) : null;
+const jalon = e.echeance ? jalonDeCampagne(e.echeance.cle, new Date(), jalons) : null;
 return `<li class="pre-procedure-etape fiab-${escapeHtml(e.fiabilite)}">
 <i data-lucide="${escapeHtml(ICONES_TYPE[e.type] || "circle-help")}" aria-hidden="true"></i>
 <div>
@@ -48,9 +56,10 @@ ${jalon ? `<p class="pre-procedure-date">${jalon.debut ? "À partir du" : "Jusqu
 </div>
 </li>`;
 }).join("");
+const documentes = residencesDocumentees(procedure.paysDestination).map((r) => r.pays);
 return `<details class="pre-procedure" id="procedure-${escapeHtml(procedure.paysDestination.toLowerCase())}">
-<summary><i data-lucide="route" aria-hidden="true"></i><span>La procédure ${escapeHtml(procedure.portail.nom)}, depuis le ${escapeHtml(procedure.paysResidence)} : ${procedure.etapes.length} étapes</span></summary>
-<p class="pre-lead">Lue sur les pages publiques de Campus France Sénégal. Les étapes marquées « À confirmer » se passent derrière l'authentification, ou viennent d'un agrégateur : elles seront précisées à la première passe réelle.</p>
+<summary><i data-lucide="route" aria-hidden="true"></i><span>La procédure ${escapeHtml(procedure.portail.nom)} : ${procedure.etapes.length} étapes</span></summary>
+<p class="pre-lead">Ces ${procedure.etapes.length} étapes sont celles de la plateforme : elles sont les mêmes pour tout candidat, d'où qu'il parte. Lues sur les pages publiques de Campus France. Ce qui dépend de votre pays de résidence — frais de dossier, dates de la campagne, lieu de l'entretien — est vérifié pour ${documentes.length ? `ces pays de résidence : ${escapeHtml(documentes.join(", "))}` : "aucun pays de résidence à ce jour"} ; ailleurs, les étapes restent identiques et ces détails sont à confirmer auprès de l'espace Campus France local.</p>
 <ol class="pre-procedure-liste">${etapes}</ol>
 </details>`;
 }
@@ -58,7 +67,7 @@ return `<details class="pre-procedure" id="procedure-${escapeHtml(procedure.pays
 function renderPays(pays, etat, principal) {
 
 const lien = `universities.html?country=${encodeURIComponent(pays.nom)}`;
-const procedure = trouverProcedure({ paysDestination: pays.nom, paysResidence: RESIDENCE_PAR_DEFAUT });
+const procedure = trouverProcedure({ paysDestination: pays.nom });
 const code = codeProcedurePour(pays, procedure);
 const libelle = procedure ? libelleProcedureDocumentee(procedure) : libelleProcedure(pays);
 

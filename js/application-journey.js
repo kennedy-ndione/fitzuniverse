@@ -63,12 +63,16 @@ function etapesDeProcedure(app, procedure, aujourdhui) {
 if (!procedure || !Array.isArray(procedure.etapes) || lireParcours(app) !== "preinscription") return [];
 
 const etat = app && app.procedure && typeof app.procedure === "object" ? app.procedure : {};
+// Lot S1b : les jalons sont ceux de la COUCHE de résidence. Sans couche,
+// composerProcedure a déjà retiré les échéances — aucune date d'un autre
+// pays ne peut donc arriver jusqu'ici.
+const jalons = (procedure.faits && procedure.faits.calendrier && procedure.faits.calendrier.jalons) || undefined;
 
 return procedure.etapes.map((e) => {
 
 const saisie = etat[e.id] && typeof etat[e.id] === "object" ? etat[e.id] : null;
 const preuvePresente = e.preuve === "aucune" || !!(saisie && typeof saisie.preuve === "string" && saisie.preuve.trim());
-const jalon = e.echeance && e.echeance.depuis === "calendrier" ? jalonDeCampagne(e.echeance.cle, aujourdhui) : null;
+const jalon = e.echeance && e.echeance.depuis === "calendrier" ? jalonDeCampagne(e.echeance.cle, aujourdhui, jalons) : null;
 
 return {
 id: e.id,

@@ -18,7 +18,7 @@
 */
 
 import { faitFrance } from "./pays-preinscription.js";
-import { findCountry } from "./countries.js";
+import { coucheDeResidence } from "./procedures/index.js";
 
 /**
 * PAYS DE RÉSIDENCE — la question qui manquait (2026-09-08).
@@ -45,17 +45,21 @@ import { findCountry } from "./countries.js";
 *
 * Le Sénégal est le seul pays documenté à ce stade — les autres viendront
 * du lot S2, avec leurs sources.
+*
+* LOT S1b (2026-09-08) : ce test lisait le champ `residence` du seul
+* fait fraisDossier. Il lit maintenant le REGISTRE DES COUCHES
+* (js/procedures/residences/index.js), c'est-à-dire le même endroit que
+* la procédure de portail. Sans cela, le lot S2 aurait eu deux listes à
+* tenir — celle du diagnostic et celle des procédures — et le jour où
+* l'une aurait avancé sans l'autre, un étudiant aurait vu les étapes de
+* son pays sans en voir le coût, ou l'inverse. Le comportement
+* observable ne change pas : le Sénégal reste le seul pays servi.
 */
 export function residenceDocumentee(paysResidence) {
-const fait = faitFrance("fraisDossier");
-if (!fait.residence) return false;
-const saisi = findCountry(paysResidence);
-const attendu = findCountry(fait.residence);
-// findCountry normalise casse et accents ; on compare des ISO, jamais
-// deux chaînes libres (« senegal », « Sénégal », « SN » sont un seul
-// pays). Une saisie que le référentiel ne reconnaît pas n'est jamais
-// tenue pour documentée.
-return !!saisi && !!attendu && saisi.iso === attendu.iso;
+// coucheDeResidence apparie par code ISO (findCountry) : « senegal »,
+// « Sénégal » et « SN » sont un seul pays, et une saisie que le
+// référentiel ne reconnaît pas n'est jamais tenue pour documentée.
+return !!coucheDeResidence("France", paysResidence);
 }
 
 /** Parité fixe FCFA ↔ euro (la même que payment.js). */
@@ -87,13 +91,16 @@ const devise = entrees.devise === "XOF" ? "XOF" : "EUR";
 const niveau = NIVEAUX_DIAGNOSTIC.includes(entrees.niveau) ? entrees.niveau : "licence";
 const exonerationEsperee = entrees.exonerationEsperee === true;
 const paysResidence = String(entrees.paysResidence || "").trim();
-const documente = residenceDocumentee(paysResidence);
+// La couche du pays de résidence porte SES faits : les frais de dossier
+// sortent d'elle, pas d'une table France où ils auraient l'air généraux.
+const couche = coucheDeResidence("France", paysResidence);
+const documente = !!couche;
 const brut = Number(entrees.ressourcesMensuelles);
 const disponibleEUR = Number.isFinite(brut) && brut >= 0 ? arrondi(enEuros(brut, devise), 2) : 0;
 
 const fRessources = faitFrance("ressources");
 const fDroits = faitFrance("droits");
-const fDossier = faitFrance("fraisDossier");
+const fDossier = couche ? couche.faits.fraisDossier : null;
 
 const seuilMensuel = fRessources.montants.mensuel;
 const seuilAnnuel = fRessources.montants.annuel;

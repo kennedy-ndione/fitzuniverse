@@ -829,7 +829,13 @@ lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: text
         // voulu : mettre « documentee » dans la fiche ferait dire
         // « documentée » à codeProcedurePour même s'il restait des étapes
         // douteuses, ce qui casserait justement le garde-fou.
-        const codeReel = p ? codeProcedurePour(p, trouverProcedure({ paysDestination: p.nom, paysResidence: "Sénégal" })) : null;
+        //
+        // Lot S1b (2026-09-08) : on interroge la procédure comme la PAGE
+        // l'interroge — sans pays de résidence, parce qu'un visiteur
+        // public n'en a pas. Passer « Sénégal » ici rendait le contrôle
+        // muet : il autorisait un « pas à pas » que la page, elle, ne
+        // pouvait plus produire.
+        const codeReel = p ? codeProcedurePour(p, trouverProcedure({ paysDestination: p.nom })) : null;
         if (p && codeReel !== "documentee" && /pas à pas/i.test(c.texte)) anomalies.push(`carte ${c.nom} : dit « pas à pas » sans procédure documentée.`);
         if (p) {
           const e = etatDunPays(p, snapshot);
