@@ -70,7 +70,7 @@ Code de sortie 0 = tout va bien, 1 = au moins un profil en échec.
 | fichier | rôle |
 |---|---|
 | `verifier.mjs` | l'entrée : lance le serveur, le navigateur, les assertions |
-| `questionnaire.mjs` | joue le questionnaire ; pilote par `#question[data-question]` |
+| `questionnaire.mjs` | joue le questionnaire ; pilote par `#question[data-question]`, et attend après chaque clic *soit* la question suivante *soit* l'arrivée sur `results.html` (la dernière réponse peut finir pendant l'attente) |
 | `profils.mjs` | les six étudiants joués — un par piste d'études |
 | `pages.mjs` | la liste des bourses et deux fiches, recomptées contre le catalogue |
 | `hors-ligne.mjs` | les doublures Firebase / Lucide / polices |
