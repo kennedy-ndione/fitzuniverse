@@ -1244,13 +1244,18 @@ largeur non testée — ce qui est exactement ce qui vient de se passer.
 
 Le séparateur devient donc de l'espace : gap 22px en colonne. L'espace
 se recalcule tout seul à chaque retour à la ligne, sans jamais laisser
-de trace en tête de ligne. Le rang vaut 8px, le minimum en dessous
-duquel deux mentions empilées se recollent. */
+de trace en tête de ligne.
+
+Le rang vaut 10px et non 8. 8px était le plancher visé, mais posé tel
+quel il se mesurait à 7,99 : la mise en page fractionnaire rend
+toujours un cheveu de moins que la valeur déclarée (même effet que sur
+.steps-footer, voir sa note). Une valeur de plancher ne doit pas être
+posée à l'exact : elle doit être dépassée. */
 .cta-trust{
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:8px 22px;
+gap:10px 22px;
 margin-top:8px;
 font-size:.92rem;
 color:rgba(255,255,255,.82);
