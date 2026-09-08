@@ -48,7 +48,7 @@ const catalogue = JSON.parse(lire("assets/data/catalogue.json"));
 // couche Sénégal. Tout ce qui suit la traite comme avant la scission.
 const FR = trouverProcedure({ paysDestination: "France", paysResidence: "Sénégal" });
 // La même destination, depuis un pays sans couche.
-const CI = trouverProcedure({ paysDestination: "France", paysResidence: "Côte d'Ivoire" });
+const CI = trouverProcedure({ paysDestination: "France", paysResidence: "Rwanda" });
 
 const PASTEL = "https://pastel.diplomatie.gouv.fr/etudesenfrance/dyn/public/authentification/login.html";
 const AUJOURDHUI = new Date("2026-09-07T12:00:00Z");
@@ -223,7 +223,7 @@ assert.equal(trouverProcedure({ paysDestination: "France", paysResidence: "seneg
 assert.equal(trouverProcedure({ portailUrl: PASTEL, paysResidence: "Sénégal" }), FR);
 // Ce qui a changé le 2026-09-08 : ces trois appels rendaient null, et un
 // candidat ivoirien, marocain ou sans pays déclaré voyait un dossier vide.
-assert.equal(trouverProcedure({ paysDestination: "France", paysResidence: "Maroc" }).residenceDocumentee, false);
+assert.equal(trouverProcedure({ paysDestination: "France", paysResidence: "Rwanda" }).residenceDocumentee, false);
 assert.equal(trouverProcedure({ paysDestination: "France" }).etapes.length, FR.etapes.length, "sans résidence, les étapes du tronc, toutes");
 assert.equal(trouverProcedure({ portailUrl: PASTEL }).residenceDocumentee, false);
 // La destination inconnue reste le seul null.
@@ -345,7 +345,7 @@ assert.equal(trouverProcedure({ paysDestination: "France", paysResidence: null }
 });
 
 test("un fragment qui remplace sans source ou sans verifieLe est REFUSÉ", () => {
-const factice = (etapes) => composerProcedure(PROCEDURE_FRANCE, { id: "france-x", destination: "France", pays: "Côte d'Ivoire", verifieLe: "2026-09-08", faits: {}, etapes });
+const factice = (etapes) => composerProcedure(PROCEDURE_FRANCE, { id: "france-x", destination: "France", pays: "Rwanda", verifieLe: "2026-09-08", faits: {}, etapes });
 // Un remplacement sans source : refusé.
 assert.ok(defautsDeProcedure(factice({ ef_paiement: { consigne: "Payez 40 000 F à la banque.", verifieLe: "2026-09-08" } })).some((d) => /fragment « ef_paiement » : sans source/.test(d)));
 // Un remplacement sans date : refusé.
@@ -382,8 +382,12 @@ assert.ok(pieces.pieces.some((p) => /L-AR/.test(p.nom)));
 });
 
 test("le registre des couches est le seul endroit qui déclare un pays documenté", () => {
-assert.equal(COUCHES.length, 1, "le lot S2 en ajoutera six ; il n'ajoutera qu'ici");
-assert.deepEqual(residencesDocumentees("France").map((r) => r.pays), ["Sénégal"]);
+// Le lot S2-PAYS en a ajouté sept — et il n'a ajouté QUE des fichiers de
+// données et sept lignes ici. C'était la promesse de S1b, et c'est ce
+// chiffre qui la vérifie : le jour où enregistrer un pays demandera de
+// toucher un module, ce test aura besoin d'être relu, pas mis à jour.
+assert.equal(COUCHES.length, 8, "huit pays de résidence documentés");
+assert.deepEqual(residencesDocumentees("France").map((r) => r.pays), ["Bénin", "Burkina Faso", "Cameroun", "Côte d'Ivoire", "Guinée", "Maroc", "Sénégal", "Togo"]);
 assert.deepEqual(residencesDocumentees("Roumanie"), []);
 // Le diagnostic lit ce registre, il ne tient plus sa propre liste.
 const diag = lire("js/diagnostic-france.js");

@@ -71,6 +71,18 @@ const procedure = trouverProcedure({ paysDestination: pays.nom });
 const code = codeProcedurePour(pays, procedure);
 const libelle = procedure ? libelleProcedureDocumentee(procedure) : libelleProcedure(pays);
 
+// LOT S2-PAYS : les pays de RÉSIDENCE documentés pour cette destination,
+// lus dans le registre — jamais écrits en dur, sans quoi le chiffre
+// mentirait au premier pays ajouté. Cette ligne est HORS du bloc
+// repliable : huit pays de résidence vérifiés un par un est ce que le
+// site a de plus difficile à copier, et c'est la seule page où un
+// visiteur peut le voir. La laisser sous un « détails » à déplier
+// revenait à la garder pour nous.
+const residences = residencesDocumentees(pays.nom);
+const ligneResidences = residences.length
+? `<p class="pre-pays-residences"><i data-lucide="map-pin" aria-hidden="true"></i><span>Frais, calendrier et pièces vérifiés depuis <strong>${residences.length} pays de résidence</strong> : ${escapeHtml(residences.map((r) => r.pays).join(", "))}</span></p>`
+: "";
+
 return `<article class="pre-pays${principal ? " pre-pays--principal" : ""}" id="pays-${escapeHtml(pays.id)}">
 <div class="pre-pays-head">
 <img src="assets/flags/${escapeHtml(pays.code)}.svg" alt="" width="28" height="21" loading="lazy" decoding="async">
@@ -80,6 +92,7 @@ ${principal ? "" : `<span class="pre-pays-prochain">Prochaine destination</span>
 <p class="pre-pays-position">${escapeHtml(pays.positionnement)}</p>
 <p class="pre-pays-effectifs"><strong>${etat.etablissements}</strong> établissement${etat.etablissements > 1 ? "s" : ""} au catalogue · <strong>${etat.coutsVerifies}</strong> avec coût vérifié</p>
 <p class="pre-pays-procedure ${escapeHtml(code)}"><i data-lucide="${code === "documentee" || procedure ? "route" : "clock"}" aria-hidden="true"></i><span>${escapeHtml(libelle)}${pays.portail ? ` — portail : <a href="${escapeHtml(pays.portail.url)}" target="_blank" rel="noopener">${escapeHtml(pays.portail.nom)}</a>` : ""}</span></p>
+${ligneResidences}
 ${procedure && principal ? renderProcedure(procedure) : ""}
 <p class="pre-pays-langues"><i data-lucide="languages" aria-hidden="true"></i><span>${escapeHtml(pays.langue.join(", "))}</span></p>
 ${pays.faits.length && !principal ? `<ul class="pre-faits">${pays.faits.map(renderFait).join("")}</ul>` : ""}

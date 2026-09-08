@@ -38,7 +38,24 @@ const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 // site », plus bas, garde le filet contre une exclusion trop large.
 const EXCLUS = new Set(["node_modules", ".git", ".claude", "admin", "Claude outputs", "sauvegardes"]);
 
+// Les couches de résidence (js/procedures/residences/) CITENT des
+// sources officielles mot pour mot — c'est la règle du dossier : chaque
+// fragment porte sa source et sa date, et on ne réécrit pas ce qu'un
+// organisme publie. Campus France Guinée avertit lui-même qu'il « ne
+// travaille avec aucun partenaire extérieur » : la phrase vise des
+// rabatteurs qui encaissent 1 500 000 GNF en son nom. La retoucher pour
+// satisfaire une règle de copie falsifierait un avertissement de
+// sécurité.
+//
+// C'est exactement la carve-out déjà écrite en tête de ce fichier pour
+// les .mjs (« pays partenaires » d'un bailleur n'est pas notre
+// promesse) : le mot dans la bouche d'un tiers n'est pas notre claim.
+// Ce qui reste banni, et qui est tout l'objet de cette garde, c'est
+// « universités partenaires » dans NOTRE copie.
+const DOSSIERS_CITANT_DES_SOURCES = join(racine, "js", "procedures", "residences");
+
 function fichiers(extension, dir = racine, acc = []) {
+if (dir === DOSSIERS_CITANT_DES_SOURCES) return acc;
 for (const e of readdirSync(dir)) {
 if (EXCLUS.has(e)) continue;
 const p = join(dir, e);

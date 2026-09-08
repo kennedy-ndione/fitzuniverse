@@ -45,7 +45,7 @@ function couche(extra = {}) {
 return {
 id: "france-factice",
 destination: "France",
-pays: "Côte d'Ivoire",
+pays: "Rwanda",
 verifieLe: LE,
 faits: {
 fraisDossier: { montant: 75000, devise: "XOF", texte: "x", source: SOURCE, verifieLe: LE }
@@ -229,7 +229,7 @@ test("un fait en MAD : ni la composition ni le diagnostic ne se cassent, et aucu
 // La couche marocaine n'existe pas encore : on prouve que la FORME la
 // supporte, ce qui est tout l'objet de ce lot.
 const maroc = composerProcedure(PROCEDURE_FRANCE, couche({
-pays: "Maroc",
+pays: "Rwanda",
 faits: { fraisDossier: { montant: 1900, devise: "MAD", texte: "x", source: SOURCE, verifieLe: LE } }
 }));
 assert.deepEqual(defautsDeProcedure(maroc), []);
@@ -239,7 +239,7 @@ assert.equal(maroc.faits.fraisDossier.devise, "MAD");
 // preuve côté diagnostic se fait donc sur ses fonctions pures, plus
 // l'assurance qu'un montant non convertible ne rentre pas dans le total.
 const eur = 10530 + 2902;
-const sansPays = calculerDiagnostic({ ressourcesMensuelles: 900, paysResidence: "Maroc" });
+const sansPays = calculerDiagnostic({ ressourcesMensuelles: 900, paysResidence: "Rwanda" });
 assert.equal(sansPays.total.annuelEUR, eur, "un pays non documenté : le total ne contient que les chiffres français");
 assert.deepEqual(sansPays.total.enPlus, []);
 // Et la règle de devise elle-même : 1 900 Dhs ne valent pas 1 900 €.

@@ -187,7 +187,7 @@ const BASE = { ressourcesMensuelles: 900, devise: "EUR", niveau: "licence" };
 
 test("résidence non documentée : ni « 85 000 », ni « Sénégal », et le total dit ce qu'il exclut", () => {
 
-const r = calculerDiagnostic({ ...BASE, paysResidence: "Côte d'Ivoire" });
+const r = calculerDiagnostic({ ...BASE, paysResidence: "Rwanda" });
 
 const rendu = JSON.stringify(r);
 assert.ok(!/85\s*000/.test(rendu), "le montant sénégalais ne doit apparaître nulle part");
@@ -207,20 +207,20 @@ assert.match(r.total.texte, /plus élevé/);
 
 test("les chiffres FRANÇAIS sont les mêmes pour tous : seuls les frais locaux changent", () => {
 
-const ci = calculerDiagnostic({ ...BASE, paysResidence: "Côte d'Ivoire" });
+const sansCouche = calculerDiagnostic({ ...BASE, paysResidence: "Rwanda" });
 const sn = calculerDiagnostic({ ...BASE, paysResidence: "Sénégal" });
 
 // Seuil de ressources, droits, plafond d'exonération : identiques.
-assert.deepEqual(ci.ressources, sn.ressources);
-assert.deepEqual(ci.droits, sn.droits);
-assert.equal(ci.verdict, sn.verdict);
+assert.deepEqual(sansCouche.ressources, sn.ressources);
+assert.deepEqual(sansCouche.droits, sn.droits);
+assert.equal(sansCouche.verdict, sn.verdict);
 
 // Les frais de dossier, eux, ne valent que pour le pays documenté.
 assert.equal(sn.fraisDossier.documente, true);
 assert.equal(sn.fraisDossier.montant, 85000);
 assert.equal(sn.total.inclutFraisDossier, true);
 // Et le total sénégalais est plus élevé d'exactement ces frais.
-assert.equal(sn.total.annuelEUR - ci.total.annuelEUR, sn.fraisDossier.montantEUR);
+assert.equal(sn.total.annuelEUR - sansCouche.total.annuelEUR, sn.fraisDossier.montantEUR);
 
 });
 
@@ -228,8 +228,8 @@ test("residenceDocumentee : insensible à la casse et aux accents, fermée par d
 assert.equal(residenceDocumentee("Sénégal"), true);
 assert.equal(residenceDocumentee("senegal"), true);
 assert.equal(residenceDocumentee("SN"), true);
-assert.equal(residenceDocumentee("Côte d'Ivoire"), false);
-assert.equal(residenceDocumentee("Cameroun"), false);
+assert.equal(residenceDocumentee("Rwanda"), false);
+assert.equal(residenceDocumentee("Madagascar"), false);
 assert.equal(residenceDocumentee(""), false);
 assert.equal(residenceDocumentee(undefined), false);
 assert.equal(residenceDocumentee("Pays qui n'existe pas"), false, "une saisie non reconnue n'est jamais documentée");

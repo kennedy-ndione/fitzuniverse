@@ -236,6 +236,7 @@ color:var(--text-color);
 
 .pre-pays-procedure,
 .pre-pays-langues,
+.pre-pays-residences,
 .pre-pays-avertissement{
 margin:0;
 display:grid;
@@ -251,6 +252,8 @@ line-height:1.5;
 .pre-pays-procedure > svg,
 .pre-pays-langues > i,
 .pre-pays-langues > svg,
+.pre-pays-residences > i,
+.pre-pays-residences > svg,
 .pre-pays-avertissement > i,
 .pre-pays-avertissement > svg{
 width:16px;
@@ -359,4 +362,11 @@ align-items:center;
 .pre-pays{ padding:18px; }
 .pre-pays-liste{ grid-template-columns:1fr; }
 .pre-entree .btn{ width:100%; justify-content:center; }
+}
+
+/* Lot S2-PAYS : les pays de residence documentes, sur la carte et
+   hors du bloc repliable. Le chiffre est ce que le site a de plus
+   difficile a copier — il se lit sans un clic. */
+.pre-pays-residences strong{
+color:var(--text-color);
 }
