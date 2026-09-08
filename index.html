@@ -170,27 +170,41 @@ HERO
 
 <section class="hero">
 
-<!-- Photo de fond — permutée avec celle de la section "Notre vision"
-le 2026-08-23. hero-bg2.jpg était ici alors que son original ne fait
-que 1672 x 941 : sur un écran de 1920px, et plus encore en DPR 2,
-elle était agrandie au-delà de sa définition et apparaissait molle —
-la seule photo du site dans ce cas, les autres originaux allant de
-5040 à 6720 px de large.
+<!-- LOT HERO (2026-09-08, maquette « Accueil FitzUniverse » confirmée) —
+DEUX ZONES EMPILÉES SUR ORDINATEUR : la photo (500 px), une bande
+d'encre en dessous, séparées par une ligne ambre d'un pixel que la
+première ligne du titre chevauche. Sur téléphone la structure
+immersive d'avant est gardée : la photo derrière tout, le contenu
+empilé dans le tiers bas (voir css/hero.css, ≤640px).
 
-hero-bg3.jpg (5040 x 3360) prend sa place et permet enfin une
-variante 1920w. Les deux photos n'ont pas été choisies au hasard :
-celle-ci a du ciel et de la pelouse à gauche, là où le titre se
-pose, tandis que les visages de hero-bg2 valent mieux dans le petit
-cadre 4:5 de la vision, où ils illustrent littéralement le propos
-(voir #vision plus bas).
+CE QUI A DISPARU CE JOUR-LÀ
+  - .hero-visual : la photo university-hall et les deux cartes
+    « Régions compatibles » / « Compatibilité élevée ». Elles
+    affichaient un résultat PERSONNALISÉ (« 3 destinations identifiées
+    pour votre profil », « Votre profil correspond fortement ») à un
+    visiteur qui n'a ni compte ni profil : le seul élément inventé de
+    la page. Les fichiers assets/images/university-hall-*.{jpg,webp,avif}
+    ne sont plus chargés par aucune page (universities.html ne les cite
+    que dans un commentaire) — conservés sur disque, à retirer dans un
+    lot d'actifs, pas ici.
+  - .hero-benefits : les trois lignes à trait vertical. Le sous-titre
+    porte désormais le message, en une phrase.
+  - .hero-cta et .hero-note : remplacés par les deux portes et par la
+    ligne de preuve. Le diagnostic gratuit garde son lien, dans cette
+    ligne de preuve.
+  - .hero-media : la photo n'est plus fixée en fond de page. js/hero.js
+    ne trouve donc plus rien à estomper au défilement (sa garde
+    « if (heroMedia) » s'en charge) : c'est voulu, la photo a maintenant
+    sa place et son mouvement propres. AUCUN fichier JS n'est touché. -->
 
-Le 2560w n'existe qu'en AVIF et WebP, pas en JPEG. C'est l'image LCP
-de la page, et une bonne part du public visé navigue sur un forfait
-mobile compté : les 281 Ko de l'AVIF ne partent que vers un écran
-large en DPR 2, qui sait forcément décoder l'AVIF. Un JPEG 2560w
-aurait pesé le triple pour les navigateurs qui en ont le moins les
-moyens — le repli JPEG s'arrête donc à 1920w. -->
-<div class="hero-media" aria-hidden="true">
+<div class="hero-photo" aria-hidden="true">
+
+<!-- Photo LCP inchangée (hero-bg3, 5040 x 3360) : mêmes srcset AVIF /
+WebP / JPEG de 400 à 2560, même fetchpriority. Seuls le conteneur et
+le traitement changent. Le 2560w n'existe qu'en AVIF et WebP, pas en
+JPEG : une bonne part du public visé navigue sur un forfait compté,
+et un JPEG de cette taille aurait pesé le triple pour les navigateurs
+qui en ont le moins les moyens. -->
 <picture>
 <source type="image/avif" srcset="assets/images/hero-bg3-400w.avif 400w, assets/images/hero-bg3-800w.avif 800w, assets/images/hero-bg3-1200w.avif 1200w, assets/images/hero-bg3-1600w.avif 1600w, assets/images/hero-bg3-1920w.avif 1920w, assets/images/hero-bg3-2560w.avif 2560w" sizes="100vw">
 <source type="image/webp" srcset="assets/images/hero-bg3-400w.webp 400w, assets/images/hero-bg3-800w.webp 800w, assets/images/hero-bg3-1200w.webp 1200w, assets/images/hero-bg3-1600w.webp 1600w, assets/images/hero-bg3-1920w.webp 1920w, assets/images/hero-bg3-2560w.webp 2560w" sizes="100vw">
@@ -200,192 +214,114 @@ srcset="assets/images/hero-bg3-400w.jpg 400w, assets/images/hero-bg3-800w.jpg 80
 sizes="100vw"
 fetchpriority="high"
 alt=""
-class="hero-bg-image">
+class="hero-photo-img">
 </picture>
-<div class="hero-overlay"></div>
+
+<!-- Trois calques, dans cet ordre : le dégradé de lisibilité, la lueur
+ambre en soft-light, le grain. Le grain est un feTurbulence SVG en
+data-URI — aucun fichier image de plus. -->
+<div class="hero-photo-veil"></div>
+<div class="hero-photo-glow"></div>
+<div class="hero-photo-grain"></div>
+
 </div>
 
-<div class="container hero-container">
+<div class="hero-band">
 
-<!-- LEFT -->
+<div class="container hero-band-inner">
 
+<!-- .hero-content reste le parent direct des éléments échelonnés :
+css/animations.css cale ses délais sur
+« .hero-content > .hero-stagger:nth-child(N) ». Aucun fichier
+d'animation touché. -->
 <div class="hero-content">
 
-<!-- Titre -->
+<p class="hero-eyebrow reveal hero-stagger">
+<span class="hero-eyebrow-rule" aria-hidden="true"></span>
+<span>Conçu d'abord pour les étudiants africains, ouvert à tous</span>
+</p>
 
-<h1 class="reveal hero-stagger">
-<span class="hero-h1-accent">Bourse</span>&nbsp;ou&nbsp;<span class="hero-h1-accent">préinscription</span>, faites-vous accompagner de bout en bout.
+<!-- UN SEUL h1, jamais deux : sur ordinateur c'est une marge négative
+(css/hero.css) qui fait remonter le bloc surtitre + titre pour que
+« Bourse ou préinscription, » se pose à cheval sur la ligne ambre.
+Découper le titre en deux balises aurait donné deux titres au
+lecteur d'écran et à Google pour une seule phrase.
+
+Le LITTÉRAL #E9A319 sur les deux mots, jamais var(--amber-500) :
+onze feuilles redéfinissent l'échelle amber en terracotta
+(css/homepage-redesign.css la première), et ces deux mots doivent
+rester l'ambre de la marque, celui de l'arc du logo. Les
+insécables soudent « Bourse ou préinscription » ; les <br> tiennent
+la coupe en trois lignes, identique sur ordinateur et téléphone. -->
+<h1 class="hero-title reveal hero-stagger">
+<span class="hero-h1-accent">Bourse</span>&nbsp;ou&nbsp;<span class="hero-h1-accent">préinscription</span>,<br>faites-vous accompagner<br>de bout en bout.
 </h1>
 
-<!-- Description -->
-
-<p class="hero-description reveal hero-stagger">
-Que vous visiez une bourse ou une admission que vous financez vous-même,
-Fitz vous guide du choix de l'établissement jusqu'au dépôt de votre
-dossier. Conçu d'abord pour les étudiants africains, ouvert à tous.
+<p class="hero-subtitle reveal hero-stagger">
+Fitz vous guide du choix de l'établissement jusqu'au dépôt de votre dossier — et il vous dit ce qu'il ne sait pas.
 </p>
 
-<!-- Points forts — refonte 2026-08-22 : rangée de texte séparée par des
-traits verticaux (voir css/hero.css .hero-benefits/.benefit) plutôt que
-3 puces à icône ambre. Même contenu, 3 icônes de moins. -->
-<ul class="hero-benefits reveal hero-stagger">
+<!-- LES DEUX PORTES, de poids strictement égal : même fond crème,
+même corps, même flèche. L'ambre n'est PAS un bouton — il reste
+aux deux mots du titre, au surtitre et à la ligne. La flèche est
+un SVG en clair, dupliqué : pas d'icône Lucide dans le hero. -->
+<div class="hero-doors reveal hero-stagger">
 
-<li class="benefit">Découverte personnalisée en quelques minutes</li>
+<a href="scholarships.html" class="hero-door">
+<span>Trouver une bourse</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+</a>
 
-<li class="benefit">Analyse de votre potentiel par Fitz</li>
-
-<li class="benefit">Des opportunités identifiées pour vous, pas une liste générique</li>
-
-</ul>
-
-<!-- Statistiques — remplies par js/homepage-teaser.js (renderTrustStats),
-mêmes données Firestore que #teaser plus bas. Anciennement "500+"/"30+"
-codés en dur ici : ne correspondaient plus aux "40+"/"10+" réels
-affichés par #teaser, contradiction visible en scrollant (audit du
-2026-08-13).
-
-Compteur animé au scroll RÉTABLI le 2026-09-01 (demande utilisateur),
-mais côté homepage-teaser.js (setCount) et non plus via l'ancien
-data-count-to de main.js : celui-ci se déclenchait à l'entrée dans le
-viewport, souvent avant la fin du fetch Firestore, et animait un
-chiffre faux ou vide — c'est pour ça qu'il avait été débranché.
-Depuis la clôture du chantier préinscription (2026-09-07), setCount
-écrit la VRAIE valeur dès qu'elle est connue, puis anime par-dessus à
-l'apparition : en ligne, les trois compteurs restaient à « 0 » quand
-l'observer ne déclenchait pas. « — » reste le contenu initial (donnée
-pas encore chargée, surveillé par le filet de secours en fin de page).
-Aucun « + » ici : la valeur brute vient telle quelle du catalogue. -->
-<div class="hero-stats reveal hero-stagger">
-
-<div class="stat-card">
-<strong><span id="heroScholarshipCount">—</span></strong>
-<span>Bourses référencées</span>
-</div>
-
-<div class="stat-card">
-<strong><span id="heroCountryCount">—</span></strong>
-<span>Pays de destination</span>
-</div>
-
-<!-- Était "Fitz / Assistant intelligent" (2026-08-22). Ce n'était
-pas une statistique : deux chiffres suivis d'un nom de produit
-dans une rangée qui annonce la taille du catalogue. Le lecteur
-lit "10+ / 10+ / Fitz" et bute sur le troisième.
-Le nombre d'établissements vérifiés est la troisième mesure
-naturelle, il vient des mêmes données déjà chargées par
-renderTrustStats() (js/homepage-teaser.js) — aucun fetch de plus —
-et c'est le même trio que la bannière de scholarships.html.
-Fitz n'y perd rien : il est nommé dans le paragraphe juste
-au-dessus, dans les puces, et il a sa section entière plus bas. -->
-<div class="stat-card">
-<strong><span id="heroUniversityCount">—</span></strong>
-<span>Établissements vérifiés</span>
-</div>
-
-</div>
-
-<!-- Message de confiance — icône shield-check retirée (refonte
-2026-08-22) : c'était la seule icône de la page sans taille explicite,
-affichée à 24px par défaut à côté d'un texte de .95rem — l'exemple le
-plus net de l'audit "icônes trop grandes". Le texte suffit. -->
-<p class="hero-note reveal hero-stagger">
-Commencez gratuitement • Sans carte bancaire • Découverte personnalisée
-</p>
-
-<!-- Le hero n'avait plus aucun élément cliquable depuis que la carte
-Fitz a été extraite vers sa propre section (#fitz-demo) — régression
-relevée à l'audit du 2026-08-13. btn-secondary (pas btn-accent) :
-l'ambre reste réservé au seul CTA final, voir le commentaire dans la
-section CTA plus bas. -->
-<a href="eligibility-test.html" class="btn btn-secondary btn-lg hero-cta reveal hero-stagger">
-<i data-lucide="compass"></i>
-<span>Découvrir mes opportunités</span>
+<a href="preinscriptions.html" class="hero-door">
+<span>Partir en me finançant</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
 </a>
 
 </div>
 
-<!-- RIGHT -->
-
-<div class="hero-visual">
-
-<!-- Photo derrière les cartes flottantes : .hero-media (fixed, plein
-écran) ne descend pas toujours jusqu'ici selon la hauteur de la
-fenêtre (aspect-ratio calculé sur la largeur), laissant le bleu uni de
-.hero nu à cet endroit. Photo dédiée, indépendante du parallax du haut
-de page.
-university-hall.jpg remplace hero-bg5.jpg (choix explicite utilisateur
-2026-08-22, préféré à amphitheatre.jpg) : bâtiment collégial de style
-gothique anglais, sans blason ni texte identifiant visibles sur ce
-cadrage — même prudence que pour university-building.jpg (Harvard Law
-School, bannières "HLS" lisibles, écarté ailleurs sur le site) et
-hero-bg5.jpg (retiré plus tôt car ses teintes vives ne matchaient pas
-les badges), mais l'architecture reste distinctive au point qu'un
-visiteur connaissant ce campus pourrait le reconnaître — à surveiller
-si ça devient un point de friction. -->
-<!-- Pas de loading="lazy" decoding="async" : fait partie de la 1re section visible
-(colonne droite du hero, à côté du h1), pas d'intérêt à en retarder
-le chargement. -->
-<picture>
-<source type="image/avif" srcset="assets/images/university-hall-400w.avif 400w, assets/images/university-hall-800w.avif 800w, assets/images/university-hall-1200w.avif 1200w, assets/images/university-hall-1600w.avif 1600w, assets/images/university-hall-1920w.avif 1920w" sizes="(max-width:1023px) 100vw, 50vw">
-<source type="image/webp" srcset="assets/images/university-hall-400w.webp 400w, assets/images/university-hall-800w.webp 800w, assets/images/university-hall-1200w.webp 1200w, assets/images/university-hall-1600w.webp 1600w, assets/images/university-hall-1920w.webp 1920w" sizes="(max-width:1023px) 100vw, 50vw">
-<img
-src="assets/images/university-hall-1920w.jpg" width="1920" height="1280"
-srcset="assets/images/university-hall-400w.jpg 400w, assets/images/university-hall-800w.jpg 800w, assets/images/university-hall-1200w.jpg 1200w, assets/images/university-hall-1600w.jpg 1600w, assets/images/university-hall-1920w.jpg 1920w"
-sizes="(max-width:1023px) 100vw, 50vw"
-alt=""
-class="hero-visual-bg"
-aria-hidden="true">
-</picture>
-<div class="hero-visual-overlay" aria-hidden="true"></div>
-
-<!-- Ordre + emphase inversés (choix explicite utilisateur 2026-08-22) :
-Régions compatibles passe en premier (carte "avant", position haute,
-entre dans l'animation la première) et Compatibilité élevée devient la
-seconde carte, en retrait. L'ordre DOM suit l'ordre visuel voulu — les
-positions/délais restent portés par .destination-card/.compatibility-card
-dans hero.css, pas par cet ordre en lui-même, mais le faire correspondre
-évite toute confusion pour la prochaine personne qui lit ce fichier. -->
-
-<div class="floating-card destination-card reveal hero-stagger">
-
-<div class="floating-icon">
-<i data-lucide="earth"></i>
 </div>
 
-<div>
+<div class="hero-side">
 
-<strong>Régions compatibles</strong>
+<!-- Les trois compteurs gardent leurs identifiants, leur « — » de
+départ et leur alimentation par setCount() (js/homepage-teaser.js) :
+ils changent de place et d'habillage, pas de plomberie. La classe
+.hero-stats est conservée SANS style comme point d'accroche du
+filet de secours de ce même fichier, qui retire la rangée quand le
+catalogue est injoignable — trois tirets au-dessus de la ligne de
+flottaison font lire « site cassé ». Aucun « + » : la valeur vient
+telle quelle du catalogue. -->
+<div class="hero-figures hero-stats reveal hero-stagger">
 
-<p>3 destinations identifiées pour votre profil</p>
+<div class="hero-figure">
+<strong><span id="heroScholarshipCount">—</span></strong>
+<span>bourses</span>
+</div>
+
+<div class="hero-figure">
+<strong><span id="heroCountryCount">—</span></strong>
+<span>pays</span>
+</div>
+
+<div class="hero-figure">
+<strong><span id="heroUniversityCount">—</span></strong>
+<span>établissements</span>
+</div>
+
+</div>
+
+<!-- La ligne de preuve. « Diagnostic gratuit, sans compte » est la
+SEULE porte du diagnostic dans le hero depuis que le bouton unique
+a laissé la place aux deux portes. -->
+<p class="hero-proof reveal hero-stagger">
+<span>Coûts et échéances vérifiés à la source, datés.</span>
+<span>Aucune promesse d'admission · <a href="eligibility-test.html">Diagnostic gratuit, sans compte</a></span>
+</p>
 
 </div>
 
 </div>
 
-<!-- Compatibilité — icône resserrée 48px→42px (refonte 2026-08-22). -->
-
-<div class="floating-card compatibility-card reveal hero-stagger">
-
-<div class="floating-icon">
-<i data-lucide="badge-check"></i>
-</div>
-
-<div>
-
-<strong>Compatibilité élevée</strong>
-
-<p>Votre profil correspond fortement aux critères recherchés.</p>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- Ferme .container.hero-container (ouvert avant .hero-content) —
-</div> manquant depuis l'origine, repéré à l'audit du 2026-09-01 : le
-parseur HTML rattrapait l'erreur en refermant la div au </section>,
-d'où un rendu correct par accident. -->
 </div>
 
 </section>
