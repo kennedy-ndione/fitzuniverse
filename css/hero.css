@@ -1,22 +1,29 @@
 /* ==========================================================
-HERO — refonte du 2026-09-08 (maquette « Accueil FitzUniverse »,
-planches « Ordinateur 1440 » et « Téléphone 390 », confirmées)
+HERO — une photo, plein cadre, derrière tout
 ==========================================================
 
-DEUX ZONES SUR ORDINATEUR, UNE SEULE SUR TÉLÉPHONE
---------------------------------------------------
-≥1024 px : la photo (500 px de haut) au-dessus, une bande d'encre en
-dessous, séparées par une ligne ambre d'un pixel — et la première
-ligne du titre chevauche cette ligne. Un seul h1, remonté par une
-marge négative (voir .hero-eyebrow plus bas) : découper le titre en
-deux balises aurait donné deux titres au lecteur d'écran et à Google
-pour une seule phrase.
+LA STRUCTURE
+------------
+Une seule photo occupe tout le cadre. Le contenu vit dans le tiers
+gauche ; les trois chiffres et la ligne de preuve se posent en pied de
+cadre, la preuve à gauche, les chiffres à droite. Ni bande d'encre, ni
+ligne ambre, ni chevauchement du titre : le hero est une image dans
+laquelle on écrit, pas deux zones empilées.
 
-≤640 px : la structure immersive d'AVANT est gardée — la photo
-derrière tout, plein cadre, le contenu empilé dans le tiers bas. Ni
-bande, ni ligne ambre, ni chevauchement. Seuls le traitement de la
-photo, son mouvement et le contenu sont mis en cohérence avec le
-bureau (regles_mobile.md, « hero immersif »).
+Le téléphone (≤640 px) a toujours eu cette structure ; il la garde
+telle quelle, y compris sa lueur ambre en soft-light, que l'ordinateur
+échange contre un second voile (voir .hero-photo-glow).
+
+DEUX VOILES, PAS UN
+-------------------
+.hero-photo-veil court à l'HORIZONTALE : sombre à gauche, où vit le
+texte, clair à droite, où sont les toques et le bâtiment. Ce que la
+photo raconte reste visible.
+.hero-photo-glow court à la VERTICALE : il rend la navigation lisible
+en haut et fait le lit des chiffres en bas. Les deux se multiplient
+là où ils se croisent — le pied de cadre, à gauche, est donc le point
+le plus sombre de l'image, et c'est exactement là que passent les
+deux textes les plus petits.
 
 LES COULEURS ET LES POLICES SONT ÉCRITES EN LITTÉRAL
 -----------------------------------------------------
@@ -35,18 +42,36 @@ dix-sept feuilles le redéfinissent, ici en Sora).
 
 position:relative;
 
-/* LE CORPS DU TITRE, UNE SEULE FOIS
-La maquette pose 80 px sur une planche de 1440 px. Mesuré : la ligne
-la plus large réclame alors 814 px, et la colonne gauche n'en offre
-que 598 à 1024 px — le titre y partait sur quatre lignes. Il suit donc
-la largeur, plafonné aux 80 px de la maquette (atteints dès ~1430 px).
-La variable sert AUSSI au calcul du chevauchement plus bas : avec
-line-height 1, une ligne vaut exactement ce corps. */
---hero-title-size:clamp(3.4rem, 5.6vw, 5rem);
+/* La photo dérive (fitz-derive, +7,5 %) : sans cela elle déborderait
+sur la section suivante. */
+overflow:hidden;
 
-/* Plus de rembourrage haut : la photo commence sous l'en-tête fixe et
-transparent, qui se pose dessus — comme dans la maquette. */
-padding:0;
+/* Le hero occupe l'écran, mais jamais moins de 620 px (un portable
+1366 × 768 n'offre qu'environ 640 px utiles) ni plus de 820 px (sur
+un grand écran, un hero qui remplit 1200 px de haut fait passer le
+reste de la page pour une deuxième page). svh et non vh : sur
+téléphone, vh compte la barre d'adresse rétractée et laisse le pied
+de cadre sous le pouce. */
+height:clamp(620px, 100svh, 820px);
+
+display:flex;
+
+flex-direction:column;
+
+/* Le contenu est centré dans ce qui reste une fois retirés le
+dégagement sous l'en-tête fixe (76 px) et la place du pied de
+cadre (124 px). */
+justify-content:center;
+
+padding:76px 0 124px;
+
+/* LE CORPS DU TITRE, UNE SEULE FOIS
+La maquette pose 70 px sur une planche de 1366 px, soit 5,1vw. Le
+plancher (2,8rem) tient « faites-vous accompagner » dans les 590 px
+d'une tablette de 641 px ; le plafond (4,5rem) l'empêche de dominer
+sur un écran très large. La variable existe pour que le téléphone
+n'ait qu'un seul endroit à contredire. */
+--hero-title-size:clamp(2.8rem, 5.1vw, 4.5rem);
 
 color:#F5F1E8;
 
@@ -60,11 +85,9 @@ LA PHOTO
 
 .hero-photo{
 
-position:relative;
+position:absolute;
 
-height:500px;
-
-overflow:hidden;
+inset:0;
 
 background:#14100D;
 
@@ -132,23 +155,37 @@ pointer-events:none;
 
 }
 
-/* 1. La lisibilité : sombre en haut pour la navigation, sombre en bas
-pour le titre, presque transparent au milieu où vivent les visages. */
+/* 1. LE VOILE HORIZONTAL — le texte à gauche, la photo à droite. */
 .hero-photo-veil{
 
-background:
-linear-gradient(180deg,rgba(20,16,13,.55) 0%,rgba(20,16,13,.05) 28%,rgba(20,16,13,.05) 55%,rgba(20,16,13,.82) 100%),
-linear-gradient(90deg,rgba(20,16,13,.55) 0%,rgba(20,16,13,.1) 45%,rgba(20,16,13,0) 100%);
+background:linear-gradient(100deg,
+rgba(20,16,13,.90) 0%,
+rgba(20,16,13,.80) 30%,
+rgba(20,16,13,.42) 58%,
+rgba(20,16,13,.20) 100%);
 
 }
 
-/* 2. La lueur ambre, en soft-light : elle réchauffe la photo sans la
-teinter — l'ambre de la marque posé sur la lumière, pas dessus. */
+/* 2. LE VOILE VERTICAL — la navigation en haut, le pied de cadre en
+bas. Transparent au milieu (20 % → 44 %) : c'est la bande où vivent
+les visages, elle ne doit rien perdre.
+
+Les deux derniers arrêts (.66 et .96, et non .52 et .88 comme sur la
+maquette) sont MESURÉS, pas choisis. Sous « ÉTABLISSEMENTS » — 9,5 px,
+le texte le plus petit du cadre, posé le plus à droite, là où le voile
+horizontal est le plus clair — les valeurs de la maquette tombaient à
+3,98:1 sur un pixel de ciel brûlé, pour un seuil de 4,5:1 ; deux crans
+plus loin (.62 / .94) elles remontaient à 4,49, soit un centième sous
+le seuil. Le voile s'épaissit donc jusqu'à .66 / .96 ; le texte, lui,
+ne s'éclaircit pas. Toute retouche de ces deux arrêts se remesure. */
 .hero-photo-glow{
 
-mix-blend-mode:soft-light;
-
-background:linear-gradient(160deg,rgba(233,163,25,.4) 0%,rgba(233,163,25,0) 55%);
+background:linear-gradient(180deg,
+rgba(20,16,13,.55) 0%,
+rgba(20,16,13,0) 20%,
+rgba(20,16,13,0) 44%,
+rgba(20,16,13,.66) 76%,
+rgba(20,16,13,.96) 100%);
 
 }
 
@@ -163,41 +200,33 @@ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000
 }
 
 /* ==========================================================
-LA BANDE D'ENCRE
+LE CONTENU — surtitre, titre, promesse, portes
+==========================================================
+Les quatre calques ci-dessus sont positionnés : sans position ni
+z-index, le contenu en flux normal passerait DESSOUS eux (les éléments
+positionnés se peignent après les blocs en flux). D'où le z-index sur
+.hero-inner et sur .hero-foot.
 ========================================================== */
 
-.hero-band{
+.hero-inner{
 
 position:relative;
 
-/* Au-dessus de la photo : c'est ce qui permet à la première ligne du
-titre, qui déborde par le haut, de se poser dessus. Jamais
-d'overflow:hidden ici — ce débordement est le sujet. */
 z-index:2;
 
-background:#14100D;
+/* margin-top / margin-bottom à ZÉRO, et c'est le point délicat de tout
+le cadre : .container pose « margin:auto », et dans un conteneur flex
+une marge automatique sur l'axe principal absorbe l'espace libre AVANT
+que justify-content ne s'applique. Les deux enfants en flux portaient
+donc quatre marges automatiques qui se partageaient les 198 px libres
+d'un écran de téléphone — le contenu remontait de 149 px et le pied
+flottait à 50 px du bas au lieu de 26. Mesuré, puis corrigé ici. Les
+marges HORIZONTALES restent automatiques : c'est elles qui centrent. */
+margin-top:0;
 
-border-top:1px solid #E9A319;
-
-}
-
-.hero-band-inner{
-
-display:flex;
-
-align-items:flex-start;
-
-justify-content:space-between;
-
-gap:64px;
-
-padding:54px 0 60px;
+margin-bottom:0;
 
 }
-
-/* ==========================================================
-LA COLONNE DE GAUCHE — surtitre, titre, promesse, portes
-========================================================== */
 
 /* .hero-content reste le parent direct des éléments échelonnés :
 css/animations.css cale ses délais sur
@@ -212,20 +241,6 @@ flex-direction:column;
 align-items:flex-start;
 
 gap:24px;
-
-/* RIGIDE, et c'est le point d'appui de toute la bande : la colonne
-prend exactement ce que le titre demande — sa ligne la plus large,
-« faites-vous accompagner », mesurée à 1018 px pour 100 px de corps —
-et ne se laisse jamais rétrécir. Sans cela, la colonne de droite (382 px
-pour tenir « Aucune promesse d'admission · Diagnostic gratuit, sans
-compte » sur une ligne) affamait le titre, qui repassait sur quatre
-lignes. La maquette donnait 760 px à cette colonne parce que sa
-première ligne vivait dans la photo, hors d'elle ; ici le titre est UN
-SEUL élément, c'est cette ligne-là qui doit tenir. Le sous-titre garde
-sa propre laisse à 580 px. */
-flex:0 0 auto;
-
-min-width:0;
 
 }
 
@@ -245,8 +260,6 @@ font-size:12px;
 
 font-weight:600;
 
-/* Hauteur de ligne EXPLICITE : elle entre dans le calcul du
-chevauchement plus bas, une valeur héritée le rendrait approximatif. */
 line-height:16px;
 
 letter-spacing:.2em;
@@ -278,9 +291,9 @@ qui l'emporterait, et le titre repasserait en 700. Deux classes (0,2,0)
 tranchent, sans !important.
 
 Newsreader 500 (et non le 800 d'août) : c'est la graisse de la maquette
-confirmée — plus éditoriale, moins empâtée à 80 px. La graisse est déjà
-chargée par le <link> Google Fonts d'index.html (0,500 et 1,500 pour
-l'italique des deux mots ambrés), rien à ajouter. */
+confirmée — plus éditoriale, moins empâtée aux grands corps. La graisse
+est déjà chargée par le <link> Google Fonts d'index.html (0,500 et
+1,500 pour l'italique des deux mots ambrés), rien à ajouter. */
 .hero .hero-title{
 
 margin:0;
@@ -297,7 +310,7 @@ letter-spacing:-.02em;
 
 color:#F5F1E8;
 
-max-width:none;
+max-width:830px;
 
 /* Les <br> du HTML tiennent la coupe en trois lignes : un équilibrage
 automatique la contredirait. */
@@ -318,21 +331,26 @@ font-style:italic;
 
 }
 
+/* max-width et non width : dans une colonne flex alignée au début, un
+paragraphe dont la ligne naturelle dépasse largement 560 px prend
+exactement ces 560 px — le rendu est celui de la maquette — mais il
+n'a plus besoin d'être remis à zéro sur chaque écran étroit, où un
+width figé déborderait. */
 .hero-subtitle{
 
 margin:0;
 
-max-width:580px;
+max-width:560px;
 
 font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
 
-font-size:18.5px;
+font-size:16.5px;
 
 font-weight:400;
 
-line-height:1.5;
+line-height:1.62;
 
-color:rgba(245,241,232,.76);
+color:rgba(245,241,232,.80);
 
 }
 
@@ -413,49 +431,95 @@ color:#14100D;
 }
 
 /* ==========================================================
-LA COLONNE DE DROITE — les trois chiffres, la ligne de preuve
+LE PIED DE CADRE — la ligne de preuve, les trois chiffres
+==========================================================
+Ancré au bas du cadre plutôt qu'au bas du contenu : c'est ce qui fait
+que la photo se termine sur une ligne d'information et non dans le
+vide. Le décalage left:50% + translateX(-50%) reprend le centrage de
+.container sans réintroduire une marge automatique, qu'un élément
+absolu n'obtiendrait pas.
 ========================================================== */
 
-.hero-side{
+.hero-foot{
+
+position:absolute;
+
+z-index:2;
+
+/* Même raison que .hero-inner : .container pose margin:auto, et le pied
+revient dans le flux sur téléphone. */
+margin-top:0;
+
+margin-bottom:0;
+
+left:50%;
+
+transform:translateX(-50%);
+
+bottom:46px;
+
+display:flex;
+
+align-items:flex-end;
+
+justify-content:space-between;
+
+/* Le pied se replie sur deux rangées plutôt que de comprimer les
+chiffres quand la largeur ne suffit plus (voir la tablette). */
+flex-wrap:wrap;
+
+gap:40px;
+
+}
+
+/* Les deux enfants du pied ont changé de parent : css/animations.css
+n'écrit ses délais que pour « .hero-content > » et « .hero-visual > ».
+Ils portent donc les leurs ici, à la suite des quatre du contenu
+(.05 / .16 / .27 / .38) — de gauche à droite, la preuve puis les
+chiffres, jamais deux éléments sans délai au milieu de la séquence. */
+.hero-foot > .hero-stagger:nth-child(1){ transition-delay:.49s; }
+.hero-foot > .hero-stagger:nth-child(2){ transition-delay:.60s; }
+
+.hero-proof{
 
 display:flex;
 
 flex-direction:column;
 
-align-items:flex-end;
+gap:6px;
 
-gap:22px;
+margin:0;
 
-/* C'est ELLE qui absorbe ce qui reste, jamais le titre. Sur les écrans
-les plus larges le titre est à son plafond (80 px) et ne laisse que
-322 px ici : la seconde ligne de preuve passe alors sur deux lignes.
-C'est le seul endroit où la maquette cède, et elle cède du bon côté —
-une ligne de mention qui se replie vaut mieux qu'un titre cassé. */
-flex:1 1 auto;
+max-width:360px;
 
-min-width:0;
+font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
 
-text-align:right;
+font-size:12.5px;
 
-/* La colonne gauche part du haut (elle porte le chevauchement) ;
-celle-ci se cale en bas, sur la même ligne que les portes. */
-align-self:flex-end;
+line-height:1.6;
+
+color:rgba(245,241,232,.66);
 
 }
 
-/* css/animations.css n'écrit ses délais que pour « .hero-content > » et
-« .hero-visual > » ; cette colonne est neuve, elle porte les siens ici
-plutôt que d'aller modifier la feuille d'animation. */
-.hero-side > .hero-stagger:nth-child(1){ transition-delay:.38s; }
-.hero-side > .hero-stagger:nth-child(2){ transition-delay:.49s; }
+.hero-proof a{
+
+color:#E9A319;
+
+text-decoration:underline;
+
+text-underline-offset:3px;
+
+}
+
+.hero-proof a:hover,
+.hero-proof a:focus-visible{ color:#F2B640; }
 
 .hero-figures{
 
 display:flex;
 
-/* 36 px est l'écart de la maquette (1440 px) ; en dessous, les trois
-chiffres et « établissements » doivent tenir dans ce qui reste. */
-gap:clamp(18px, 2.4vw, 36px);
+gap:38px;
 
 }
 
@@ -465,7 +529,9 @@ display:flex;
 
 flex-direction:column;
 
-gap:5px;
+/* Aligné à droite : la rangée se termine sur le bord du cadre, pas
+dans le vide. .hero-side portait cet alignement, elle n'existe plus. */
+text-align:right;
 
 }
 
@@ -473,7 +539,7 @@ gap:5px;
 
 font-family:'Newsreader',Georgia,serif;
 
-font-size:36px;
+font-size:34px;
 
 font-weight:500;
 
@@ -491,184 +557,107 @@ color:#F5F1E8;
 
 font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
 
-font-size:11.5px;
+font-size:9.5px;
 
-letter-spacing:.08em;
+letter-spacing:.18em;
 
 text-transform:uppercase;
 
 color:rgba(245,241,232,.55);
 
-}
-
-.hero-proof{
-
-display:flex;
-
-flex-direction:column;
-
-gap:6px;
-
-margin:0;
-
-font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
-
-font-size:13px;
-
-line-height:1.5;
-
-color:rgba(245,241,232,.58);
-
-}
-
-.hero-proof a{
-
-color:#E9A319;
-
-text-decoration:underline;
-
-text-underline-offset:3px;
-
-}
-
-.hero-proof a:hover,
-.hero-proof a:focus-visible{ color:#F2B640; }
-
-/* ==========================================================
-LE CHEVAUCHEMENT — ordinateur seulement (≥1024 px)
-==========================================================
-Le bloc surtitre + titre vit dans la BANDE et remonte par une marge
-négative posée sur son premier élément : en colonne flex, une marge
-haute négative sur le premier enfant décale toute la pile vers le haut
-et raccourcit d'autant la colonne. Résultat : « Bourse ou
-préinscription, » se pose à cheval sur la ligne ambre — 60 px au-dessus,
-20 px en dessous, exactement la maquette — et les deux lignes suivantes
-restent dans la bande.
-
-Le calcul est écrit en clair plutôt qu'en valeur magique : on remonte de
-la hauteur du surtitre, de son écart, d'une ligne de titre et du
-rembourrage haut de la bande, moins les 20 px que la première ligne
-garde SOUS le trait.
-========================================================== */
-
-@media(min-width:1024px){
-
-.hero-eyebrow{
-
---hero-eyebrow-h:16px;   /* line-height du surtitre, ci-dessus */
---hero-lead-gap:24px;    /* gap de .hero-content */
---hero-band-pad:54px;    /* padding haut de .hero-band-inner */
---hero-cross:20px;       /* ce que la première ligne garde sous le trait */
-
-/* --hero-title-size vaut UNE ligne (line-height:1) : le chevauchement
-suit donc le titre quand il se réduit, et la ligne garde toujours ses
-20 px sous le trait. */
-margin-top:calc(var(--hero-cross) - var(--hero-band-pad) - var(--hero-eyebrow-h) - var(--hero-lead-gap) - var(--hero-title-size));
-
-}
+margin-top:7px;
 
 }
 
 /* ==========================================================
 TABLETTE (641 → 1023 px)
 ==========================================================
-Même structure empilée, sans chevauchement : la photo garde sa place
-au-dessus, la bande passe en une seule colonne. Le titre suit la
-largeur — « faites-vous accompagner » à 80 px demande 880 px, la
-tablette n'en offre pas 710.
+Même structure immersive. Deux ajustements seulement : le pied passe
+sur deux rangées — 360 px de preuve plus 386 px de chiffres ne tiennent
+pas dans les 706 px d'une tablette de 768 — et le cadre lui rend la
+hauteur que cette seconde rangée réclame.
 ========================================================== */
 
 @media(max-width:1023px){
 
-.hero-photo{
+.hero{
 
-height:46vh;
-
-min-height:300px;
+padding:88px 0 172px;
 
 }
 
-.hero-band-inner{
+.hero-foot{
 
 flex-direction:column;
 
 align-items:flex-start;
 
-gap:30px;
+gap:22px;
 
-padding:40px 0 48px;
-
-}
-
-.hero{
-
---hero-title-size:clamp(2.5rem, 6.2vw, 3.5rem);
+bottom:40px;
 
 }
 
-.hero-subtitle{
+/* Les chiffres reprennent la tête, comme sur téléphone : une rangée de
+chiffres sous une ligne de mention se lit comme une note de bas de
+page. Le pied garde sa séquence — .49 puis .60 suit l'ordre du DOM,
+donc la preuve reste la première à paraître. */
+.hero-figures{
 
-font-size:17px;
+order:1;
+
+gap:clamp(18px, 3.6vw, 38px);
+
+}
+
+.hero-proof{
+
+order:2;
+
+max-width:none;
 
 }
 
-.hero-side{
-
-align-self:flex-start;
-
-align-items:flex-start;
-
-text-align:left;
-
-min-width:0;
-
-width:100%;
-
-}
+.hero-figure{ text-align:left; }
 
 }
 
 /* ==========================================================
-TÉLÉPHONE (≤640 px) — LA STRUCTURE D'AUJOURD'HUI EST GARDÉE
+TÉLÉPHONE (≤640 px) — RIEN NE CHANGE
 ==========================================================
-Pas de bande d'encre, pas de ligne ambre, pas de chevauchement : la
-photo passe DERRIÈRE tout le hero, plein cadre, et le contenu s'empile
-dans le tiers bas, ancré en bas. C'est la règle « hero immersif » de
-regles_mobile.md, et la planche « Téléphone 390 » de la maquette.
+Le téléphone était déjà immersif et le reste, au pixel près : photo
+plein cadre, contenu empilé dans le tiers bas, ancré en bas, chiffres
+au-dessus de la ligne de preuve. Comme .hero-band / .hero-band-inner /
+.hero-side n'existent plus, leurs déclarations sont reportées sur
+.hero, .hero-inner et .hero-foot — même rendu, autres sélecteurs.
 ========================================================== */
 
 @media(max-width:640px){
 
 .hero{
 
-display:flex;
-
-flex-direction:column;
-
-/* Le contenu se pose en bas de l'écran, comme sur la planche. svh et
-non vh : sur téléphone, vh compte la barre d'adresse rétractée et
-laisse le bas du hero sous le pouce. */
-justify-content:flex-end;
+/* Le cadre reprend la hauteur d'écran et le contenu redescend en bas :
+ni la hauteur bornée ni le centrage du bureau. Les 18 px d'écart que
+.hero-band-inner posait entre le contenu et le pied deviennent le gap
+du cadre — les quatre calques sont absolus, donc hors flux, et ne
+comptent pas comme éléments flexibles. */
+height:auto;
 
 min-height:660px;
 
 min-height:100svh;
 
-}
+justify-content:flex-end;
 
-.hero-photo{
+gap:18px;
 
-position:absolute;
+padding:0;
 
-inset:0;
-
-height:auto;
-
-min-height:0;
-
-z-index:0;
+--hero-title-size:min(40px, 8.4vw);
 
 }
+
+.hero-photo{ z-index:0; }
 
 .hero-photo-img{
 
@@ -687,33 +676,26 @@ background:linear-gradient(180deg,rgba(20,16,13,.6) 0%,rgba(20,16,13,.15) 18%,rg
 
 }
 
-.hero-band{
+/* Le téléphone garde SA lueur ambre en soft-light : le voile ci-dessus
+fait déjà tout le travail vertical, et l'ordinateur est le seul à
+avoir besoin du second voile d'encre. */
+.hero-photo-glow{
 
-position:relative;
+mix-blend-mode:soft-light;
 
-z-index:2;
-
-background:transparent;
-
-border-top:0;
+background:linear-gradient(160deg,rgba(233,163,25,.4) 0%,rgba(233,163,25,0) 55%);
 
 }
 
-.hero-band-inner{
-
 /* Marges de 20 px (regles_mobile.md) plutôt que les 4 % de .container :
-à 375 px, 4 % ne feraient que 15 px de chaque côté. */
+à 375 px, 4 % ne feraient que 15 px de chaque côté. Le rembourrage
+haut ne sert que de garde contre la nav quand le contenu devient
+assez haut pour la toucher. */
+.hero-inner{
+
 width:calc(100% - 40px);
 
-flex-direction:column;
-
-align-items:stretch;
-
-gap:18px;
-
-/* Le rembourrage haut ne sert que de garde contre la nav quand le
-contenu devient assez haut pour la toucher. */
-padding:104px 0 26px;
+padding:104px 0 0;
 
 }
 
@@ -766,15 +748,11 @@ partait sur quatre lignes en sortant du cadre (mesuré à 375 et à
 largeur — 8,4vw plafonné aux 40 px de la maquette : 31,5 px à 375,
 32,8 à 390, 40 à partir de 476 px. La coupe en TROIS lignes tient
 partout, et le « ou » n'est jamais seul. */
-.hero{
-
---hero-title-size:min(40px, 8.4vw);
-
-}
-
 .hero .hero-title{
 
 line-height:1.02;
+
+max-width:none;
 
 }
 
@@ -783,6 +761,8 @@ line-height:1.02;
 max-width:none;
 
 font-size:15.5px;
+
+line-height:1.5;
 
 color:rgba(245,241,232,.8);
 
@@ -814,21 +794,35 @@ font-size:15px;
 
 }
 
-.hero-side{
+/* Le pied revient dans le flux, au bas de la pile : sur un écran de
+téléphone, un pied ancré au cadre passerait sous le pouce. */
+.hero-foot{
 
-width:100%;
+position:static;
+
+left:auto;
+
+bottom:auto;
+
+transform:none;
+
+width:calc(100% - 40px);
+
+flex-direction:column;
 
 align-items:stretch;
 
-text-align:left;
-
 gap:18px;
+
+padding:0 0 26px;
 
 }
 
 /* Une rangée nue sous un filet — plus de cartes de verre : trois
 chiffres n'ont pas besoin de trois boîtes. */
 .hero-figures{
+
+order:1;
 
 justify-content:space-between;
 
@@ -842,11 +836,17 @@ border-top:1px solid rgba(245,241,232,.14);
 
 }
 
+.hero-figure{ text-align:left; }
+
 .hero-figure strong{ font-size:28px; }
 
 .hero-figure > span{
 
 font-size:10.5px;
+
+letter-spacing:.08em;
+
+margin-top:5px;
 
 color:rgba(245,241,232,.6);
 
@@ -859,9 +859,15 @@ texte, pas dans le vide. */
 /* Une seule ligne coupée naturellement, plutôt que deux blocs. */
 .hero-proof{
 
+order:2;
+
 display:block;
 
+max-width:none;
+
 font-size:12.5px;
+
+line-height:1.5;
 
 color:rgba(245,241,232,.6);
 

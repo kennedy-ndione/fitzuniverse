@@ -170,41 +170,32 @@ HERO
 
 <section class="hero">
 
-<!-- LOT HERO (2026-09-08, maquette « Accueil FitzUniverse » confirmée) —
-DEUX ZONES EMPILÉES SUR ORDINATEUR : la photo (500 px), une bande
-d'encre en dessous, séparées par une ligne ambre d'un pixel que la
-première ligne du titre chevauche. Sur téléphone la structure
-immersive d'avant est gardée : la photo derrière tout, le contenu
-empilé dans le tiers bas (voir css/hero.css, ≤640px).
+<!-- LE HERO — UNE PHOTO PLEIN CADRE, DERRIÈRE TOUT
+Le contenu vit dans le tiers gauche ; les chiffres et la ligne de
+preuve se posent en pied de cadre. Ni bande d'encre, ni ligne ambre,
+ni chevauchement du titre : le hero est une image dans laquelle on
+écrit. La mise en forme, les deux voiles et les trois tailles d'écran
+sont dans css/hero.css.
 
-CE QUI A DISPARU CE JOUR-LÀ
-  - .hero-visual : la photo university-hall et les deux cartes
-    « Régions compatibles » / « Compatibilité élevée ». Elles
-    affichaient un résultat PERSONNALISÉ (« 3 destinations identifiées
-    pour votre profil », « Votre profil correspond fortement ») à un
-    visiteur qui n'a ni compte ni profil : le seul élément inventé de
-    la page. Les fichiers assets/images/university-hall-*.{jpg,webp,avif}
-    ne sont plus chargés par aucune page (universities.html ne les cite
-    que dans un commentaire) — conservés sur disque, à retirer dans un
-    lot d'actifs, pas ici.
-  - .hero-benefits : les trois lignes à trait vertical. Le sous-titre
-    porte désormais le message, en une phrase.
-  - .hero-cta et .hero-note : remplacés par les deux portes et par la
-    ligne de preuve. Le diagnostic gratuit garde son lien, dans cette
-    ligne de preuve.
-  - .hero-media : la photo n'est plus fixée en fond de page. js/hero.js
-    ne trouve donc plus rien à estomper au défilement (sa garde
-    « if (heroMedia) » s'en charge) : c'est voulu, la photo a maintenant
-    sa place et son mouvement propres. AUCUN fichier JS n'est touché. -->
+CE QUE LE HERO NE PORTERA PAS
+  - la photo university-hall et les deux cartes « Régions compatibles »
+    / « Compatibilité élevée » : elles annonçaient un résultat
+    PERSONNALISÉ (« 3 destinations identifiées pour votre profil ») à
+    un visiteur qui n'a ni compte ni profil. Retirées définitivement.
+  - un bouton ambre : l'ambre reste aux deux mots du titre, au surtitre
+    et au lien de la ligne de preuve. Un bouton ambre ferait de l'une
+    des deux portes la bonne réponse.
+
+js/hero.js ne cherche que .hero-media, absent depuis la refonte : sa
+garde le laisse inerte, et c'est voulu — la photo a son mouvement
+propre (fitz-derive). AUCUN fichier JS n'est touché. -->
 
 <div class="hero-photo" aria-hidden="true">
 
-<!-- Photo LCP inchangée (hero-bg3, 5040 x 3360) : mêmes srcset AVIF /
-WebP / JPEG de 400 à 2560, même fetchpriority. Seuls le conteneur et
-le traitement changent. Le 2560w n'existe qu'en AVIF et WebP, pas en
-JPEG : une bonne part du public visé navigue sur un forfait compté,
-et un JPEG de cette taille aurait pesé le triple pour les navigateurs
-qui en ont le moins les moyens. -->
+<!-- Photo LCP : hero-bg3, 5040 x 3360. Le 2560w n'existe qu'en AVIF et
+WebP, pas en JPEG : une bonne part du public visé navigue sur un
+forfait compté, et un JPEG de cette taille aurait pesé le triple pour
+les navigateurs qui en ont le moins les moyens. -->
 <picture>
 <source type="image/avif" srcset="assets/images/hero-bg3-400w.avif 400w, assets/images/hero-bg3-800w.avif 800w, assets/images/hero-bg3-1200w.avif 1200w, assets/images/hero-bg3-1600w.avif 1600w, assets/images/hero-bg3-1920w.avif 1920w, assets/images/hero-bg3-2560w.avif 2560w" sizes="100vw">
 <source type="image/webp" srcset="assets/images/hero-bg3-400w.webp 400w, assets/images/hero-bg3-800w.webp 800w, assets/images/hero-bg3-1200w.webp 1200w, assets/images/hero-bg3-1600w.webp 1600w, assets/images/hero-bg3-1920w.webp 1920w, assets/images/hero-bg3-2560w.webp 2560w" sizes="100vw">
@@ -217,18 +208,17 @@ alt=""
 class="hero-photo-img">
 </picture>
 
-<!-- Trois calques, dans cet ordre : le dégradé de lisibilité, la lueur
-ambre en soft-light, le grain. Le grain est un feTurbulence SVG en
-data-URI — aucun fichier image de plus. -->
-<div class="hero-photo-veil"></div>
-<div class="hero-photo-glow"></div>
-<div class="hero-photo-grain"></div>
-
 </div>
 
-<div class="hero-band">
+<!-- Trois calques, dans cet ordre : le voile horizontal (le texte à
+gauche, la photo à droite), le voile vertical (la nav en haut, le pied
+en bas), le grain. Le grain est un feTurbulence SVG en data-URI —
+aucun fichier image de plus. -->
+<div class="hero-photo-veil" aria-hidden="true"></div>
+<div class="hero-photo-glow" aria-hidden="true"></div>
+<div class="hero-photo-grain" aria-hidden="true"></div>
 
-<div class="container hero-band-inner">
+<div class="container hero-inner">
 
 <!-- .hero-content reste le parent direct des éléments échelonnés :
 css/animations.css cale ses délais sur
@@ -241,18 +231,17 @@ d'animation touché. -->
 <span>Conçu d'abord pour les étudiants africains, ouvert à tous</span>
 </p>
 
-<!-- UN SEUL h1, jamais deux : sur ordinateur c'est une marge négative
-(css/hero.css) qui fait remonter le bloc surtitre + titre pour que
-« Bourse ou préinscription, » se pose à cheval sur la ligne ambre.
-Découper le titre en deux balises aurait donné deux titres au
-lecteur d'écran et à Google pour une seule phrase.
+<!-- UN SEUL h1, jamais deux : découper le titre en deux balises
+donnerait deux titres au lecteur d'écran et à Google pour une seule
+phrase.
 
 Le LITTÉRAL #E9A319 sur les deux mots, jamais var(--amber-500) :
 onze feuilles redéfinissent l'échelle amber en terracotta
 (css/homepage-redesign.css la première), et ces deux mots doivent
-rester l'ambre de la marque, celui de l'arc du logo. Les
-insécables soudent « Bourse ou préinscription » ; les <br> tiennent
-la coupe en trois lignes, identique sur ordinateur et téléphone. -->
+rester l'ambre de la marque, celui de l'arc du logo. Les insécables
+soudent « Bourse ou préinscription » ; les <br> tiennent la coupe en
+trois lignes — elles donnent un meilleur drapeau que la coupure
+naturelle, et elles sont identiques sur ordinateur et téléphone. -->
 <h1 class="hero-title reveal hero-stagger">
 <span class="hero-h1-accent">Bourse</span>&nbsp;ou&nbsp;<span class="hero-h1-accent">préinscription</span>,<br>faites-vous accompagner<br>de bout en bout.
 </h1>
@@ -262,9 +251,8 @@ Fitz vous guide du choix de l'établissement jusqu'au dépôt de votre dossier �
 </p>
 
 <!-- LES DEUX PORTES, de poids strictement égal : même fond crème,
-même corps, même flèche. L'ambre n'est PAS un bouton — il reste
-aux deux mots du titre, au surtitre et à la ligne. La flèche est
-un SVG en clair, dupliqué : pas d'icône Lucide dans le hero. -->
+même corps, même flèche. La flèche est un SVG en clair, dupliqué :
+pas d'icône Lucide dans le hero. -->
 <div class="hero-doors reveal hero-stagger">
 
 <a href="scholarships.html" class="hero-door">
@@ -281,16 +269,26 @@ un SVG en clair, dupliqué : pas d'icône Lucide dans le hero. -->
 
 </div>
 
-<div class="hero-side">
+</div>
+
+<!-- LE PIED DE CADRE : la preuve à gauche, les chiffres à droite. -->
+<div class="container hero-foot">
+
+<!-- La ligne de preuve. « Diagnostic gratuit, sans compte » est la
+SEULE porte du diagnostic dans le hero depuis que le bouton unique a
+laissé la place aux deux portes. -->
+<p class="hero-proof reveal hero-stagger">
+<span>Coûts et échéances vérifiés à la source, datés.</span>
+<span>Aucune promesse d'admission · <a href="eligibility-test.html">Diagnostic gratuit, sans compte</a></span>
+</p>
 
 <!-- Les trois compteurs gardent leurs identifiants, leur « — » de
 départ et leur alimentation par setCount() (js/homepage-teaser.js) :
-ils changent de place et d'habillage, pas de plomberie. La classe
-.hero-stats est conservée SANS style comme point d'accroche du
-filet de secours de ce même fichier, qui retire la rangée quand le
-catalogue est injoignable — trois tirets au-dessus de la ligne de
-flottaison font lire « site cassé ». Aucun « + » : la valeur vient
-telle quelle du catalogue. -->
+ils changent de place, pas de plomberie. La classe .hero-stats est
+conservée SANS style comme point d'accroche du filet de secours de ce
+même fichier, qui retire la rangée quand le catalogue est injoignable —
+trois tirets en pied de cadre font lire « site cassé ». Aucun « + » :
+la valeur vient telle quelle du catalogue. -->
 <div class="hero-figures hero-stats reveal hero-stagger">
 
 <div class="hero-figure">
@@ -306,18 +304,6 @@ telle quelle du catalogue. -->
 <div class="hero-figure">
 <strong><span id="heroUniversityCount">—</span></strong>
 <span>établissements</span>
-</div>
-
-</div>
-
-<!-- La ligne de preuve. « Diagnostic gratuit, sans compte » est la
-SEULE porte du diagnostic dans le hero depuis que le bouton unique
-a laissé la place aux deux portes. -->
-<p class="hero-proof reveal hero-stagger">
-<span>Coûts et échéances vérifiés à la source, datés.</span>
-<span>Aucune promesse d'admission · <a href="eligibility-test.html">Diagnostic gratuit, sans compte</a></span>
-</p>
-
 </div>
 
 </div>
