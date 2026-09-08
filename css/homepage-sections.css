@@ -916,8 +916,15 @@ peut pas vérifier « normal » — un contrôle qui lit justify-content ne
 sait pas distinguer « voulu » de « jamais écrit ». La déclarer rend la
 règle lisible à la mesure autant qu'au rendu.
 
-gap : 16px de rang au lieu de 14. C'est le pas minimal en dessous
-duquel deux boutons empilés se lisent comme un seul bloc coupé. */
+gap : 18px de rang au lieu de 14. La cible était « 16px au minimum,
+mesurés » ; posé à 16 tout juste, l'écart réellement mesuré entre les
+deux boîtes tombait à 15,52px. Ce n'est pas le gap qui se perd — un
+témoin flex à row-gap:16px posé dans la même page mesure 15,996 — mais
+la boîte des boutons : leur bordure d'un pixel se résout à 0,641px dans
+ce rendu, la hauteur de ligne du flex s'aligne sur des pixels
+d'appareil, et la demi-différence est prise sur l'écart visible, en
+haut comme en bas. 18 laisse la marge nécessaire pour que la valeur
+mesurée reste au-dessus de 16 quel que soit l'arrondi du rendu. */
 .steps-footer{
 
 margin-top:4px;
@@ -934,7 +941,7 @@ justify-content:flex-start;
 
 align-items:center;
 
-gap:16px 20px;
+gap:18px 20px;
 
 }
 
