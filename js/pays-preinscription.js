@@ -73,11 +73,20 @@ plafondExoneration: 0.30,
 source: "https://www.service-public.gouv.fr/particuliers/actualites/A18927?lang=en",
 verifieLe: "2026-09-07"
 },
+// Réécrit le 2026-09-08 (lot EEF-DOC). Ce fait venait d'un agrégateur
+// et portait la MÊME erreur que l'étape « vœux » de la procédure :
+// « 7 vœux au maximum PAR NIVEAU ». Le plafond est de 7 AU TOTAL. Ce
+// fait-ci est le plus exposé des deux — il s'affiche sur la page
+// publique Préinscriptions (#faitsFrance) —, donc corriger la procédure
+// sans le corriger revenait à laisser l'erreur là où elle se lit le
+// plus. « 73 pays » et « frais variables selon le pays » partent avec :
+// aucune page officielle consultée ne les porte, et les frais du
+// Sénégal sont déjà dits, sourcés, dans le fait suivant.
 {
 cle: "procedure",
-texte: "Études en France : 73 pays concernés, entretien obligatoire, 7 vœux au maximum par niveau, frais de dossier variables selon le pays de résidence.",
-source: "https://demarchesetrangers.fr/blog/etudes-en-france-campus-france",
-verifieLe: "2026-09-07"
+texte: "Études en France : au maximum sept (7) choix de formations connectées AU TOTAL — un plafond global, et non par niveau. Chaque type de formation a son sous-plafond à l'intérieur de ces 7 : 3 pour la Licence 1 (DAP), 2 pour les écoles d'architecture (DAP Jaune), 7 pour les BUT, les licences 2 et 3 et les masters.",
+source: "https://www.senegal.campusfrance.org/je-constitue-mon-dossier-sur-etudes-en-france",
+verifieLe: "2026-09-08"
 },
 {
 cle: "fraisDossier",

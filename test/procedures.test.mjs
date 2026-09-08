@@ -76,21 +76,83 @@ assert.match(paiement[0].consigne, /SUNU BANK/);
 assert.match(paiement[0].consigne, /ne payez JAMAIS avant/i);
 });
 
-test("toute étape après connexion est « a_confirmer », avec la réserve dans son texte rendu", () => {
+test("une étape après connexion n'est ferme que si sa source est la page qui décrit ces écrans", () => {
+// La règle d'avant le 2026-09-08 disait « après connexion ⇒ toujours
+// a_confirmer ». Elle était trop forte : Campus France Sénégal décrit
+// publiquement ses propres écrans après connexion. Le garde-fou qui
+// reste — et qui est le vrai sujet de ce test — c'est qu'on ne promeut
+// pas un écran d'après-connexion en citant le calendrier ou la FAQ.
 const apres = FR.etapes.filter((e) => e.apresConnexion);
 assert.ok(apres.length >= 2, "la saisie et les pièces se passent derrière l'authentification");
 for (const e of apres) {
+if (e.fiabilite === "verifie_source_officielle") {
+assert.equal(e.source, FR.sources.DOSSIER, `${e.id} : ferme, mais sa source ne décrit pas les écrans après connexion`);
+assert.equal(estConsigneFerme(e), true, e.id);
+assert.ok(!texteConsigne(e).toLowerCase().includes(RESERVE_A_CONFIRMER), e.id);
+} else {
 assert.equal(e.fiabilite, "a_confirmer", e.id);
 assert.ok(texteConsigne(e).toLowerCase().includes(RESERVE_A_CONFIRMER), e.id);
-assert.equal(estConsigneFerme(e), false);
+assert.equal(estConsigneFerme(e), false, e.id);
 }
-// Ce qui vient d'un agrégateur sans confirmation officielle l'est aussi.
-assert.equal(FR.etapes.find((e) => e.type === "voeux").fiabilite, "a_confirmer");
+}
 // Et une consigne vérifiée est rendue telle quelle, sans réserve.
 const compte = FR.etapes.find((e) => e.type === "compte");
 assert.equal(texteConsigne(compte), compte.consigne);
 assert.ok(!texteConsigne(compte).toLowerCase().includes(RESERVE_A_CONFIRMER));
 assert.ok(FR.etapes.some((e) => e.fiabilite === "verifie_source_officielle"), "au moins une consigne ferme");
+});
+
+test("aucun agrégateur : toutes les sources sont des pages de l'organisme lui-même", () => {
+const urls = [...Object.values(FR.sources), ...FR.etapes.map((e) => e.source)];
+for (const url of urls) {
+assert.ok(!/demarchesetrangers/i.test(url), `agrégateur encore cité : ${url}`);
+assert.match(url, /^https:\/\/www\.senegal\.campusfrance\.org\//, url);
+}
+assert.equal(FR.sources.AGREG, undefined, "la table ne porte plus d'agrégateur");
+// Le garde-fou vaut pour le dépôt, pas seulement pour ce fichier : le
+// même agrégateur sourçait un « fait » France affiché sur la page
+// publique Préinscriptions, avec la même erreur de plafond.
+for (const f of PAYS.find((p) => p.id === "france").faits) {
+assert.ok(!/demarchesetrangers/i.test(f.source), `fait France encore sourcé sur un agrégateur : « ${f.texte.slice(0, 60)} »`);
+// On interdit l'AFFIRMATION « N vœux par niveau », pas les mots : le
+// texte corrigé dit « et non par niveau », ce qui est le contraire.
+assert.ok(!/(vœux|choix)[^.]{0,24}(au maximum\s+)?par niveau/i.test(f.texte), `fait France : « 7 vœux par niveau » est faux — « ${f.texte.slice(0, 60)} »`);
+}
+const procedureFrance = PAYS.find((p) => p.id === "france").faits.find((f) => f.cle === "procedure");
+assert.match(procedureFrance.texte, /AU TOTAL/, "le fait public doit dire que le plafond est global");
+assert.equal(procedureFrance.source, FR.sources.DOSSIER);
+});
+
+test("les vœux : le plafond de 7 est GLOBAL, et le sous-plafond de la Licence 1 est dit", () => {
+const voeux = FR.etapes.find((e) => e.type === "voeux");
+assert.equal(voeux.fiabilite, "verifie_source_officielle");
+assert.equal(voeux.source, FR.sources.DOSSIER);
+// Le total ET le sous-plafond qui coûte le plus cher à ignorer.
+assert.match(voeux.consigne, /sept \(7\) choix de formations connectées/);
+assert.match(voeux.consigne, /GLOBAL/);
+assert.match(voeux.consigne, /Licence 1 \(DAP\)\s*:\s*3 formations/);
+// L'exemple qui montre que les sous-plafonds s'additionnent DANS le total.
+assert.match(voeux.consigne, /3 \+ 4 = 7/);
+// Et surtout : plus aucune trace du « par niveau » de l'agrégateur.
+assert.ok(!/par niveau/i.test(voeux.consigne), "« 7 vœux par niveau » était l'erreur de l'agrégateur");
+assert.ok(!/agrégateur/i.test(voeux.consigne));
+});
+
+test("la saisie dit l'exemption CEDEAO, et ne présente plus le choix de l'antenne comme une règle de la source", () => {
+const saisie = FR.etapes.find((e) => e.id === "ef_saisie");
+assert.match(saisie.consigne, /CEDEAO/);
+assert.match(saisie.consigne, /exemptés de titre de séjour au Sénégal à la date de rédaction de cette page/, "la réserve est de la source, elle se garde");
+assert.match(saisie.consigne, /conseil/i, "l'antenne est un conseil assumé, pas un fait sourcé");
+assert.ok(!/L'adresse indiquée détermine l'antenne/.test(saisie.consigne));
+});
+
+test("les pièces : la règle de traduction mot pour mot, le plafond général, et le test de français avant dépôt pour L-AR", () => {
+const pieces = FR.etapes.find((e) => e.id === "ef_pieces");
+assert.equal(pieces.source, FR.sources.DOSSIER, "les tailles sont sur DOSSIER, pas sur la FAQ");
+assert.match(pieces.consigne, /Tous les documents doivent être en français ou traduits en Français auprès d'un traducteur assermenté\. Dans le cas où le document est traduit, il faut joindre aussi obligatoirement le document original\./);
+assert.match(pieces.consigne, /plafond est général/);
+assert.match(pieces.consigne, /L-AR/);
+assert.match(pieces.consigne, /AVANT de déposer/);
 });
 
 test("aucune étape n'a une taille de fichier sans source ; les tailles citées sont celles de la page « je constitue mon dossier » ou de la FAQ", () => {
@@ -249,17 +311,23 @@ for (const a of alertes) assert.ok(!/undefined/.test(a.prerequisLisible + a.cons
 // pays-preinscription : l'état honnête de la France
 // ------------------------------------------------------------------
 
-test("France reste « en_cours » tant qu'il existe un « a_confirmer » ; passe « documentee » quand on les retire tous", () => {
+test("France : plus aucune étape à confirmer, la procédure est « documentee » et le dit", () => {
 const france = PAYS.find((p) => p.id === "france");
+// Les trois dernières « a_confirmer » (saisie, pièces, vœux) sont
+// tombées le 2026-09-08 : la page DOSSIER décrit ces écrans.
+assert.deepEqual(etapesAConfirmer(FR).map((e) => e.id), [], "aucune étape ne reste à confirmer");
+assert.equal(codeProcedurePour(france, FR), "documentee");
+assert.equal(libelleProcedureDocumentee(FR), "Procédure de portail documentée, accompagnée pas à pas");
+// Le code DÉCLARÉ du pays reste « en_cours » : c'est la procédure qui
+// tranche, pas la fiche pays — sinon les deux pourraient diverger.
 assert.equal(france.procedure, "en_cours");
-assert.ok(etapesAConfirmer(FR).length > 0);
-assert.equal(codeProcedurePour(france, FR), "en_cours");
-assert.match(libelleProcedureDocumentee(FR), /^Procédure documentée depuis les sources publiques ; \d+ étapes? à confirmer$/);
-const confirmee = { ...FR, etapes: FR.etapes.map((e) => ({ ...e, fiabilite: "verifie_source_officielle" })) };
-assert.equal(codeProcedurePour(france, confirmee), "documentee");
-assert.match(libelleProcedureDocumentee(confirmee), /pas à pas/);
+// Et aucune consigne de la France ne porte plus la réserve.
+for (const e of FR.etapes) assert.ok(!texteConsigne(e).toLowerCase().includes(RESERVE_A_CONFIRMER), e.id);
+// Le mécanisme inverse tient toujours : une seule étape douteuse suffit à retirer le « pas à pas ».
+const douteuse = { ...FR, etapes: FR.etapes.map((e, i) => (i === 0 ? { ...e, fiabilite: "a_confirmer" } : e)) };
+assert.equal(codeProcedurePour(france, douteuse), "en_cours");
+assert.match(libelleProcedureDocumentee(douteuse), /^Procédure documentée depuis les sources publiques ; 1 étape à confirmer$/);
 assert.equal(codeProcedurePour(PAYS.find((p) => p.id === "roumanie"), null), "a_venir");
-assert.ok(!/pas à pas/.test(libelleProcedureDocumentee(FR)), "aucun « pas à pas » tant qu'il reste des étapes à confirmer");
 });
 
 test("la page préinscriptions et la fiche université branchent la procédure", () => {

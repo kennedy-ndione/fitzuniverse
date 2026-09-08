@@ -348,7 +348,13 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         } else {
           if (!proc.details) anomalies.push("pre-2 (Bordeaux, préinscription) : aucune procédure de portail affichée.");
           if (proc.fermes < 1) anomalies.push("pre-2 : aucune consigne ferme (vérifiée sur la source officielle).");
-          if (proc.aConfirmer < 1) anomalies.push("pre-2 : aucune consigne « à confirmer ».");
+          // « Au moins une consigne à confirmer » a sauté le 2026-09-08 :
+          // la France n'en a plus aucune. C'était un contrôle de l'état
+          // des DONNÉES à un instant, pas un invariant — il devenait faux
+          // le jour où le travail de sourçage aboutissait, ce qui était
+          // pourtant le but. L'invariant, lui, est juste en dessous et
+          // tient dans les deux sens : autant de réserves visibles que
+          // d'étapes à confirmer, y compris zéro et zéro.
           if (proc.reserveVisible !== proc.aConfirmer) anomalies.push(`pre-2 : ${proc.aConfirmer} étape(s) à confirmer mais ${proc.reserveVisible} réserve(s) visible(s) dans le texte.`);
           if (!proc.paiement) anomalies.push("pre-2 : l'étape de paiement (85 000 F, SUNU BANK) est absente.");
           if (proc.stepperEf < 5) anomalies.push(`pre-2 : le stepper ne porte que ${proc.stepperEf} étape(s) de procédure.`);

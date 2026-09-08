@@ -27,19 +27,28 @@
 *              assermenté, original joint)
 *   CANDID     senegal.campusfrance.org/candidater-a-une-formation
 *   PRECONS    senegal.campusfrance.org/la-phase-pre-consulaire
-*   AGREG      demarchesetrangers.fr/blog/etudes-en-france-campus-france
-*              — un AGRÉGATEUR : « 73 pays », « 7 vœux par niveau »,
-*              « entretien 20-30 min ». Marqué "a_confirmer" quand aucune
-*              page Campus France ne le confirme.
+*
+* PLUS AUCUN AGRÉGATEUR ICI (lot EEF-DOC, 2026-09-08). La table portait
+* demarchesetrangers.fr, d'où venaient « 73 pays », « 7 vœux par niveau »
+* et « entretien 20-30 min ». Un agrégateur n'est pas une source : il
+* recopie, il vieillit, et il se trompe. Celui-ci se trompait — voir la
+* note de ef_voeux : le plafond n'est pas de 7 PAR NIVEAU, il est de 7
+* AU TOTAL, et un candidat qui suivait cet agrégateur perdait des vœux.
 *
 * RÈGLES DURES (test/procedures.test.mjs)
 *   - une étape sans `source` ET `verifieLe` n'existe pas ;
-*   - tout ce qui se passe APRÈS la connexion à la plateforme (écrans,
-*     pièges, formats exacts, tailles) est "a_confirmer", avec la
-*     consigne « à confirmer lors de la première passe réelle » — même
-*     quand une page publique le décrit : c'est la passe réelle (le
-*     porteur du projet, ou le premier étudiant) qui tranchera, et les
-*     codes changeront alors un par un. `apresConnexion: true` le marque ;
+*   - une étape qui se passe APRÈS la connexion (`apresConnexion: true`)
+*     n'est FERME que si sa source est la page qui décrit ces écrans-là,
+*     c'est-à-dire DOSSIER. Sinon elle est "a_confirmer". La règle a
+*     changé le 2026-09-08 : elle disait « après connexion ⇒ toujours
+*     a_confirmer », par prudence, en supposant que seule une passe
+*     authentifiée pourrait trancher. C'était trop fort — Campus France
+*     Sénégal DÉCRIT publiquement ses propres écrans après connexion
+*     (tailles des fichiers, règle de traduction, plafond de vœux,
+*     exemption CEDEAO). Une source officielle qui documente l'écran
+*     vaut mieux qu'une passe réelle non faite. Le garde-fou qui reste :
+*     on ne promeut pas un écran d'après-connexion en citant le
+*     calendrier ou la FAQ, seulement DOSSIER ;
 *   - aucune étape n'invente une pièce, un format ou une taille : si la
 *     page ne le dit pas, le champ est absent ;
 *   - le calendrier vient de js/pays-preinscription.js (CAMPAGNE_FRANCE.
@@ -50,7 +59,13 @@
 * ============================================================
 */
 
-const VERIFIE = "2026-09-07";
+// 2026-09-08 : les QUATRE pages citées ci-dessous ont été relues ce
+// jour-là, pas seulement DOSSIER (elle-même datée « Mise à jour le 02
+// octobre 2025 »). C'est ce qui autorise une date unique : `verifieLe`
+// dit « cette étape a été confrontée à sa source à cette date », et
+// dater d'aujourd'hui une étape dont on n'a pas rouvert la page serait
+// exactement le genre d'à-peu-près que ce fichier existe pour empêcher.
+const VERIFIE = "2026-09-08";
 
 const SOURCES = {
 FAQ: "https://www.senegal.campusfrance.org/les-questions-frequemment-posees",
@@ -58,8 +73,7 @@ CAL: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
 PROC: "https://www.senegal.campusfrance.org/la-procedure-etudes-en-france",
 DOSSIER: "https://www.senegal.campusfrance.org/je-constitue-mon-dossier-sur-etudes-en-france",
 CANDID: "https://www.senegal.campusfrance.org/candidater-a-une-formation",
-PRECONS: "https://www.senegal.campusfrance.org/la-phase-pre-consulaire",
-AGREG: "https://demarchesetrangers.fr/blog/etudes-en-france-campus-france"
+PRECONS: "https://www.senegal.campusfrance.org/la-phase-pre-consulaire"
 };
 
 export const PROCEDURE_FRANCE_SENEGAL = {
@@ -96,17 +110,25 @@ verifieLe: VERIFIE
 id: "ef_saisie",
 type: "saisie",
 titre: "Compléter mes informations personnelles",
-consigne: "Renseignez identité, coordonnées (adresse et deux numéros de téléphone), CV et statut particulier. L'adresse indiquée détermine l'antenne où se tiendra votre entretien : donnez une adresse proche de l'antenne souhaitée, pas votre lieu de naissance.",
+// La phrase sur l'antenne est un CONSEIL, pas un fait de la source, et
+// elle le dit (2026-09-08). Elle affirmait auparavant que « l'adresse
+// indiquée détermine l'antenne où se tiendra votre entretien » : la
+// page DOSSIER ne dit rien de tel — elle demande une adresse, point.
+// C'est la FAQ qui relie l'entretien à l'antenne choisie selon le lieu
+// de résidence déclaré. Le conseil est bon, mais un conseil présenté
+// comme une règle de Campus France est un mensonge utile, et c'est
+// encore un mensonge.
+consigne: "Renseignez identité, coordonnées (adresse et deux numéros de téléphone), CV et statut particulier ; toutes ces informations doivent être exactes et conformes à vos documents officiels. Si vous n'êtes pas sénégalais, joignez en plus une carte de séjour en cours de validité ou un récépissé obtenu auprès des autorités sénégalaises — sauf pour les ressortissants de la zone CEDEAO, exemptés de titre de séjour au Sénégal à la date de rédaction de cette page — ainsi que les justificatifs d'une activité au Sénégal, travail ou études, depuis au moins un an. Nous vous conseillons de déclarer une adresse proche de l'antenne Campus France où vous souhaitez passer votre entretien, le lieu de résidence déclaré déterminant l'antenne : c'est notre conseil, cette page ne le formule pas.",
 prerequis: ["ef_compte", "profile"],
 preuve: "aucune",
 pieces: [
 { nom: "Photo d'identité", format: "scan", tailleMax: "50 Ko", traduction: false, legalisation: false },
-{ nom: "Pièce d'identité (CNI ou passeport ; pour un étranger, titre de séjour et justificatifs d'activité au Sénégal depuis un an)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
+{ nom: "Pièce d'identité (CNI ou passeport ; pour un étranger, carte de séjour en cours de validité ou récépissé — sauf ressortissants de la zone CEDEAO, exemptés — et justificatifs d'une activité au Sénégal depuis au moins un an)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
 { nom: "Curriculum vitae", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 echeance: null,
 apresConnexion: true,
-fiabilite: "a_confirmer",
+fiabilite: "verifie_source_officielle",
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
 },
@@ -115,19 +137,28 @@ verifieLe: VERIFIE
 id: "ef_pieces",
 type: "pieces",
 titre: "Renseigner mon parcours et joindre mes diplômes",
-consigne: "Détaillez chaque année d'études avec ses justificatifs : relevés de notes des trois dernières années, tous les diplômes obtenus (bac et son relevé, licence, master, BTS, DUT…), l'attestation d'accréditation ANAQ-Sup pour une formation privée, la certification B2 pour un bac Arabe L-AR. Tout document doit être en français ou traduit par un traducteur assermenté, l'original joint.",
+// Source passée de FAQ à DOSSIER (2026-09-08) : c'est DOSSIER qui porte
+// les tailles de fichier et la règle de traduction, citée ici mot pour
+// mot. Conséquence assumée : le sigle « ANAQ-Sup » disparaît du texte.
+// Il est réel et il est bien de Campus France Sénégal — mais il est sur
+// la FAQ, pas sur DOSSIER, qui écrit « l'attestation d'accréditation de
+// la formation (pour les établissements privés) ». Une étape ne porte
+// qu'UNE source ; lui en faire dire plus qu'elle ne dit, c'est
+// précisément ce qu'on reproche aux agrégateurs. Le sigle reviendra le
+// jour où une étape pourra citer deux pages.
+consigne: "Détaillez chaque année d'études avec ses justificatifs : relevés de notes des trois dernières années, tous les diplômes obtenus (bac et son relevé, licence, master, BTS, DUT…), et l'attestation d'accréditation de la formation si votre établissement est privé. Aucun fichier téléversé ne peut dépasser 500 Ko : le plafond est général, il vaut pour chaque pièce. Tous les documents doivent être en français ou traduits en Français auprès d'un traducteur assermenté. Dans le cas où le document est traduit, il faut joindre aussi obligatoirement le document original. Si votre baccalauréat porte la mention Arabe L-AR, vous devez obligatoirement passer un test de français AVANT de déposer votre dossier sur la plateforme : ne le laissez pas pour la fin, il conditionne le dépôt.",
 prerequis: ["ef_saisie", "checklist", "traductions"],
 preuve: "aucune",
 pieces: [
 { nom: "Relevés de notes des 3 dernières années", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
 { nom: "Diplômes obtenus (bac + relevé, licence, master, BTS, DUT…)", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
-{ nom: "Attestation d'accréditation ANAQ-Sup (formations privées)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
+{ nom: "Attestation d'accréditation de la formation (établissements privés)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
 { nom: "Certification B2 de français (bac Arabe L-AR uniquement)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 echeance: null,
 apresConnexion: true,
-fiabilite: "a_confirmer",
-source: SOURCES.FAQ,
+fiabilite: "verifie_source_officielle",
+source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
 },
 
@@ -135,14 +166,29 @@ verifieLe: VERIFIE
 id: "ef_voeux",
 type: "voeux",
 titre: "Formuler mes vœux de formation et mes motivations",
-consigne: "Choisissez vos formations parmi les établissements connectés et rédigez une motivation claire et personnalisée pour chacune. Le plafond de 7 vœux par niveau vient d'un agrégateur, aucune page Campus France Sénégal ne le confirme.",
+// LE PLAFOND EST GLOBAL, PAS PAR NIVEAU (correction du 2026-09-08).
+// L'ancien texte reprenait un agrégateur : « 7 vœux par niveau ». La
+// page DOSSIER dit « au maximum sept (7) choix de formations
+// connectées », puis donne des sous-plafonds PAR TYPE de formation qui
+// vivent SOUS ce total — elle le prouve par ses propres exemples, qui
+// tombent tous les deux sur 7 : « une Licence 1 en Droit (3 universités)
+// et un BUT en carrières juridiques (4 IUT) », « 3 DAP Licence
+// Informatique et 4 Licence 2 Informatique ».
+//
+// L'erreur n'était pas cosmétique : un candidat en Licence 1 qui lisait
+// « 7 par niveau » croyait disposer de 7 places de DAP alors qu'il en a
+// 3. Il en demandait 7, la plateforme en refusait 4, et il l'apprenait
+// au moment de valider — après avoir écrit sept lettres de motivation.
+// D'où l'ordre du texte : le total d'abord, les sous-plafonds ensuite,
+// et un exemple chiffré qui montre l'addition.
+consigne: "Vous pouvez faire au maximum sept (7) choix de formations connectées : ce plafond de 7 est GLOBAL, toutes formations confondues. À l'intérieur de ces 7, chaque type de formation a son propre plafond — Licence 1 (DAP) : 3 formations ; écoles d'architecture (DAP Jaune) : 2 écoles ; BUT : 7 formations ; Licences 2, 3 et Masters : 7 formations. Ces sous-plafonds ne s'ajoutent pas au total, ils s'y logent : une Licence 1 en Droit (3 universités) et un BUT en carrières juridiques (4 IUT), cela fait 3 + 4 = 7, et vos vœux sont épuisés. Rédigez pour chacun une motivation claire et personnalisée, et veillez à la cohérence de l'ensemble.",
 prerequis: ["ef_pieces"],
 preuve: "aucune",
 pieces: [],
 echeance: null,
 apresConnexion: true,
-fiabilite: "a_confirmer",
-source: SOURCES.AGREG,
+fiabilite: "verifie_source_officielle",
+source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
 },
 

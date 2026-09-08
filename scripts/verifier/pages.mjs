@@ -28,6 +28,7 @@ import { fileURLToPath } from "node:url";
 import { couperLeReseau } from "./hors-ligne.mjs";
 import { etatCandidature, analyserEcheance, etatAffichable } from "../../js/echeance.js";
 import { lirePays, etatDunPays, LIBELLES_PROCEDURE } from "../../js/pays-preinscription.js";
+import { trouverProcedure, codeProcedurePour } from "../../js/procedures/index.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -819,7 +820,17 @@ lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: text
 
       for (const c of vu.cartes) {
         const p = pays.find((x) => `pays-${x.id}` === c.id);
-        if (p && p.procedure !== "documentee" && /pas à pas/i.test(c.texte)) anomalies.push(`carte ${c.nom} : dit « pas à pas » sans procédure documentée.`);
+        // Le droit de dire « pas à pas » se lit sur le code CALCULÉ, pas
+        // sur le code déclaré du pays (2026-09-08). `pays.procedure` est
+        // un plancher : il sert quand aucune procédure n'existe, ou qu'il
+        // lui reste des étapes à confirmer. Quand une procédure est
+        // entièrement vérifiée, c'est elle qui décide — la France est
+        // passée « documentee » sans que sa fiche pays change, et c'est
+        // voulu : mettre « documentee » dans la fiche ferait dire
+        // « documentée » à codeProcedurePour même s'il restait des étapes
+        // douteuses, ce qui casserait justement le garde-fou.
+        const codeReel = p ? codeProcedurePour(p, trouverProcedure({ paysDestination: p.nom, paysResidence: "Sénégal" })) : null;
+        if (p && codeReel !== "documentee" && /pas à pas/i.test(c.texte)) anomalies.push(`carte ${c.nom} : dit « pas à pas » sans procédure documentée.`);
         if (p) {
           const e = etatDunPays(p, snapshot);
           if (!c.effectifs.startsWith(String(e.etablissements))) anomalies.push(`carte ${c.nom} : « ${c.effectifs} » ne commence pas par ${e.etablissements}.`);
