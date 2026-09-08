@@ -61,10 +61,6 @@ return result;
 
 }
 
-// Tirage à photos distinctes : plusieurs établissements peuvent partager
-// la même ville (donc la même photo) — on prend au maximum un
-// établissement par photo pour que les 4 cartes se ressemblent le moins
-
 // ==========================================================
 // COMPTEUR ANIMÉ AU SCROLL (2026-09-01, demande utilisateur)
 // L'ancien compteur data-count-to de main.js comptait vers des valeurs
@@ -147,27 +143,28 @@ observer.observe(el);
 // pas de 2e fetch : simplement 2 cibles DOM de plus.
 function renderTrustStats(universities, scholarshipCount) {
 
-// trustCountryCount / trustScholarshipCount ont disparu de l'accueil le
-// 2026-09-01 : la section « catalogue » n'affiche plus qu'un compteur,
-// celui des universités, le hero portant déjà les trois. Les deux
-// recherches sont CONSERVÉES — elles renvoient null sans rien casser, et
-// elles évitent de casser toute page qui reprendrait ce bloc à trois.
-const universityCountEl = document.getElementById("trustUniversityCount");
-const countryCountEl = document.getElementById("trustCountryCount");
-const scholarshipCountEl = document.getElementById("trustScholarshipCount");
+// Les trois cibles trustUniversityCount / trustCountryCount /
+// trustScholarshipCount ont été retirées le 2026-09-08 : la dernière
+// page qui aurait pu les porter était l'accueil, et le bloc #trust qui
+// les contenait a quitté le site. Vérifié avant suppression — zéro
+// occurrence dans les fichiers suivis. Elles étaient gardées « au cas
+// où une page reprendrait ce bloc à trois » ; plus aucune ne le fait,
+// et trois recherches DOM qui renvoient null à chaque chargement ne
+// documentent rien qu'un commentaire ne dise mieux.
 const heroScholarshipCountEl = document.getElementById("heroScholarshipCount");
 const heroCountryCountEl = document.getElementById("heroCountryCount");
 const heroUniversityCountEl = document.getElementById("heroUniversityCount");
 
-if (!universityCountEl && !countryCountEl && !scholarshipCountEl && !heroScholarshipCountEl && !heroCountryCountEl && !heroUniversityCountEl) return;
+if (!heroScholarshipCountEl && !heroCountryCountEl && !heroUniversityCountEl) return;
 
 const deduped = dedupeByUniversity(universities);
 const countryCount = new Set(deduped.map((u) => u.country).filter(Boolean)).size;
 
-if (!deduped.length) {
-document.getElementById("trustStats")?.remove();
-return;
-}
+// Catalogue joignable mais vide : on ne pose aucun chiffre. Le filet de
+// fin de body (index.html, 8 s) retire alors la rangée du hero, qui
+// reste sur ses tirets d'ici là. Auparavant cette branche retirait
+// #trustStats, un élément qui n'existe plus nulle part.
+if (!deduped.length) return;
 
 // SUFFIXE « + » RETIRÉ le 2026-09-01. Le catalogue compte EXACTEMENT
 // ces nombres — ils sont comptés sur les documents réellement chargés,
@@ -175,9 +172,6 @@ return;
 // endroit du site où un chiffre en promettait plus qu'il n'en tenait.
 // Un catalogue qui se vend sur la vérification à la main ne gagne rien
 // à arrondir vers le haut.
-setCount(universityCountEl, deduped.length);
-setCount(countryCountEl, countryCount);
-setCount(scholarshipCountEl, scholarshipCount);
 setCount(heroScholarshipCountEl, scholarshipCount);
 setCount(heroCountryCountEl, countryCount);
 setCount(heroUniversityCountEl, deduped.length);

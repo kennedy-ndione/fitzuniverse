@@ -83,17 +83,6 @@ radial-gradient(circle at bottom right,#EFE6D1 0%,transparent 35%),
 
 }
 
-/* ==========================================================
-POLICE DES NOMS DE BOURSES/UNIVERSITÉS — reste en Public Sans
-(--font-product) plutôt que Newsreader : ce sont des noms propres dans
-une grille façon catalogue (Oxford, ETH Zurich…), pas un titre
-éditorial — la règle générale h1-h6 (base.css) leur donnerait sinon
---font-display (Newsreader) comme tout le reste de la page.
-========================================================== */
-.teaser-card-body h3{
-font-family:var(--font-product);
-}
-
 /* Accent en italique dans le titre du hero — même traitement que les
 <em> de "Le problème"/"Notre vision" (homepage-typography.css), pour
 que la phrase d'accroche porte elle aussi la signature "mot-clé en
@@ -279,14 +268,6 @@ de la page plutôt que rester un noir neutre isolé.
 ========================================================== */
 .cta-box-panel{
 background:rgba(28,22,16,.64);
-}
-
-/* ==========================================================
-CARTES DE L'ÉCHANTILLON — pastille de classement, même correctif que
-.cta-box-panel : noir neutre → encre chaude.
-========================================================== */
-.teaser-card-rank{
-background:rgba(28,22,16,.72);
 }
 
 /* ==========================================================

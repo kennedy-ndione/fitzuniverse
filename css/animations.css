@@ -24,15 +24,13 @@ transform:translateY(0) scale(1);
 
 .cards-grid .reveal:nth-child(2),
 .steps .reveal:nth-child(2),
-.problem-list .reveal:nth-child(2),
-.assurance-list .reveal:nth-child(2){
+.problem-list .reveal:nth-child(2){
 transition-delay:.08s;
 }
 
 .cards-grid .reveal:nth-child(3),
 .steps .reveal:nth-child(3),
-.problem-list .reveal:nth-child(3),
-.assurance-list .reveal:nth-child(3){
+.problem-list .reveal:nth-child(3){
 transition-delay:.16s;
 }
 

@@ -84,336 +84,6 @@ max-width:62ch;
 text-wrap:pretty;
 }
 
-/* ==========================================================
-APERÇU DES OPPORTUNITÉS
-========================================================== */
-
-.teaser{
-padding-top:80px;
-/* Padding bas réduit (80 -> 40px) plutôt que supprimé : #trust enchaîne
-sur le même fond et apporte déjà ses 80px, deux paddings pleins bout à
-bout auraient creusé 160px au milieu d'un bloc censé se lire d'une
-traite. Mais le mettre à 0 laissait .teaser-actions déborder de 21px
-sur la section suivante (marge basse s'échappant d'un parent sans
-padding) — invisible tant que les deux fonds sont identiques, faux dès
-qu'ils divergeraient. 40px = --space-lg, la valeur de rythme la plus
-proche. */
-padding-bottom:var(--space-lg);
-background:var(--background-soft);
-}
-
-/* Le compteur d'universités, remonté ici le 2026-09-01 pour occuper la
-moitié droite vide de .section-header, en a été retiré le jour même :
-le hero de la même page porte déjà bourses / pays / universités, et un
-second affichage du même nombre à trois écrans d'intervalle n'apportait
-rien. L'en-tête redevient donc une simple colonne — celle que
-.section-header (l.18) définit déjà : flex, column, align-items:flex-start,
-gap:20px. Ne PAS y reposer `display:flex` sans écrire aussi
-`flex-direction` : la direction colonne est héritée, et une passe
-précédente s'y est fait prendre — align-items:flex-end a aligné tout
-l'en-tête sur le bord droit au lieu de poser le nombre en bas. */
-.teaser-head{
-margin-bottom:44px;
-}
-
-/* RÈGLE RESTAURÉE le 2026-09-01. En retirant le compteur d'universités,
-la suppression a tranché trop large : elle allait du commentaire du
-compteur jusqu'à .teaser-card, et .teaser-grid — qui vivait entre les
-deux — est parti avec. Sans display:grid, les 4 cartes redevenaient des
-blocs pleine largeur empilés : Stanford seul occupait un écran entier.
-Les déclinaisons responsive (2 colonnes, puis rangée défilante sur
-mobile) avaient survécu plus bas — c'est SEULEMENT cette règle de base
-qui manquait. Leçon : supprimer un bloc entre deux ancres impose de
-relire ce que les ancres enferment, pas seulement d'y trouver ce qu'on
-cherche. */
-.teaser-grid{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:22px;
-}
-
-.teaser-card{
-display:block;
-text-decoration:none;
-color:inherit;
-border-radius:var(--radius-lg);
-overflow:hidden;
-background:var(--background);
-border:1px solid var(--border-color);
-box-shadow:var(--shadow-sm);
-transition:var(--transition);
-}
-
-.teaser-card:hover{
-transform:translateY(-8px);
-box-shadow:var(--shadow-lg);
-}
-
-/* .teaser-card a overflow:hidden (juste au-dessus) : l'outline focus
-par défaut du navigateur peut s'y retrouver rogné selon les moteurs —
-anneau dédié pour être sûr qu'il reste visible au clavier (audit du
-2026-08-13). */
-.teaser-card:focus-visible{
-outline:none;
-box-shadow:var(--shadow-lg), 0 0 0 3px #fff, 0 0 0 6px var(--primary-color);
-}
-
-.teaser-card-media{
-position:relative;
-aspect-ratio:4/3;
-overflow:hidden;
-background:var(--background-light);
-}
-
-.teaser-card-media img{
-width:100%;
-height:100%;
-object-fit:cover;
-transition:transform .5s var(--ease-premium,ease);
-}
-
-.teaser-card:hover .teaser-card-media img{
-transform:scale(1.08);
-}
-
-.teaser-card-rank{
-position:absolute;
-top:10px;
-right:10px;
-display:inline-flex;
-align-items:center;
-gap:5px;
-padding:5px 10px;
-border-radius:999px;
-background:rgba(9,12,28,.72);
-backdrop-filter:blur(4px);
--webkit-backdrop-filter:blur(4px);
-color:#fff;
-font-size:.72rem;
-font-weight:700;
-text-shadow:0 1px 3px rgba(0,0,0,.35);
-}
-
-.teaser-card-rank i,
-.teaser-card-rank svg{width:12px;height:12px;}
-
-.teaser-card-body{
-padding:18px 18px 20px;
-position:relative;
-}
-
-.teaser-card-flag{
-width:22px;
-height:16px;
-object-fit:cover;
-border-radius:3px;
-position:absolute;
-top:-32px;
-right:16px;
-box-shadow:0 0 0 2px #fff;
-}
-
-.teaser-card-body{
-display:flex;
-flex-direction:column;
-}
-
-.teaser-card-body h3{
-font-family:var(--font-display);
-font-weight:600;
-font-size:var(--fs-h4);
-line-height:var(--lh-snug);
-margin:0 0 4px;
-color:var(--primary-dark);
-display:-webkit-box;
--webkit-line-clamp:2;
--webkit-box-orient:vertical;
-overflow:hidden;
-min-height:2.5em;
-}
-
-.teaser-card-body p{
-margin:0 0 10px;
-font-size:var(--fs-small);
-line-height:1.5;
-color:var(--text-light);
-}
-
-.teaser-card-tag{
-margin-top:auto;
-}
-
-.teaser-card-tag{
-display:inline-flex;
-align-items:center;
-gap:6px;
-font-size:.78rem;
-font-weight:600;
-color:var(--primary-color);
-}
-
-.teaser-card-tag i,
-.teaser-card-tag svg{width:14px;height:14px;}
-
-.teaser-card-skeleton{
-aspect-ratio:3/4;
-border-radius:var(--radius-lg);
-background:linear-gradient(100deg,var(--background-light) 30%,#fff 50%,var(--background-light) 70%);
-background-size:200% 100%;
-animation:teaser-shimmer 1.4s infinite;
-}
-
-@keyframes teaser-shimmer{
-0%{background-position:200% 0;}
-100%{background-position:-200% 0;}
-}
-
-.teaser-actions{
-margin-top:40px;
-display:flex;
-align-items:center;
-justify-content:center;
-gap:28px;
-flex-wrap:wrap;
-}
-
-.teaser-whatsapp{
-display:inline-flex;
-align-items:center;
-gap:8px;
-color:var(--text-light);
-text-decoration:none;
-font-size:.92rem;
-font-weight:500;
-transition:color .2s;
-}
-
-/* #25D366 (vert WhatsApp officiel) ne fait que 1,98:1 sur fond blanc,
-sous le seuil de 3:1 des icônes porteuses de sens. #178F43 reste
-clairement identifiable comme le vert WhatsApp (même teinte, plus
-sombre) et passe à 4,16:1. Même correction à reporter sur
-.reassurance-item-whatsapp i (offers.css), qui porte la même couleur
-et le même défaut. */
-.teaser-whatsapp i,
-.teaser-whatsapp svg{
-width:18px;
-height:18px;
-color:#178F43;
-}
-
-.teaser-whatsapp:hover{color:var(--primary-color);}
-
-/* [hidden] seul ne suffit pas ici : display:inline-flex ci-dessus est
-une règle d'auteur, qui l'emporte toujours sur le display:none de
-l'agent utilisateur pour [hidden], quelle que soit la spécificité —
-restriction Signature Focus/Signature ajoutée en JS en fin de body
-(voir le script de resolveSession). Même correctif à reporter sur
-.reassurance-item-whatsapp (offers.css), qui a le même défaut. */
-.teaser-whatsapp[hidden]{display:none;}
-
-/* Bento (desktop uniquement) : la 1re carte (meilleur classement/photo
-la plus forte du tirage, voir js/homepage-teaser.js) prend 2 colonnes
-au lieu d'être identique aux 3 autres ; la 4e devient une bannière
-pleine largeur en 2e rangée — remplace la grille à 4 colonnes égales,
-plate et répétitive. L'aspect-ratio de sa photo est réduit (bannière
-large et basse plutôt que 4/3 étiré sur toute la largeur, qui aurait
-donné une image démesurément haute).
-
-:not(.teaser-card-skeleton) ajouté (audit 2026-08-22, repéré en testant
-la page hors-ligne/Firestore lent) : ces règles ciblent par position
-(nth-child), donc s'appliquaient aussi aux 4 skeletons pendant le
-chargement — pas seulement aux vraies cartes une fois rendues. Le
-skeleton n°1 (span 2 colonnes) et surtout le n°4 (pleine largeur)
-héritaient alors de .teaser-card-skeleton{aspect-ratio:3/4} sans le
-correctif 21/6 (qui ne vise que .teaser-card-media, absent d'un
-skeleton) : un skeleton aussi large que la grille en aspect-ratio 3/4
-devient démesurément haut, cassant toute la section le temps du
-chargement. Les skeletons restent maintenant 4 cases identiques ; seules
-les vraies cartes (jamais .teaser-card-skeleton) passent en bento. */
-/* MISE EN PAGE « BENTO » RETIRÉE le 2026-09-01, après lecture à l'écran.
-La grille donnait 2 colonnes à la carte 1, 1 colonne aux cartes 2 et 3,
-et la largeur entière à la carte 4 en panoramique 21/6. Trois défauts
-que seul l'écran montrait :
-  - la carte 1, en 4/3 sur une largeur double, devenait deux fois plus
-    haute que ses voisines et écrasait toute la section ;
-  - les cartes 2 et 3, au contenu court, laissaient sous elles un grand
-    vide imposé par la hauteur de la carte 1 ;
-  - la carte 4, seule sur sa ligne en bande panoramique, se lisait comme
-    un élément détaché plutôt que comme le 4e d'un ensemble.
-
-Quatre cartes égales à la place. L'argument de fond : cette section
-s'intitule « un échantillon de ce qui vous attend » — elle doit
-ressembler au catalogue qu'elle annonce, et le catalogue est une grille
-régulière. Un aperçu qui ne ressemble pas à la page qu'il annonce ment
-sur ce qui attend le visiteur.
-
-À CONSERVER SI LE BENTO REVIENT UN JOUR — la leçon de l'audit du
-2026-08-22 : ces règles ciblent par POSITION (nth-child), donc elles
-s'appliquaient aussi aux 4 squelettes de chargement, pas seulement aux
-vraies cartes. Le squelette n°4 en pleine largeur héritait de
-`aspect-ratio:3/4` et devenait démesurément haut, cassant la section le
-temps du chargement. D'où le `:not(.teaser-card-skeleton)` sur chaque
-sélecteur. Toute règle positionnelle réintroduite ici doit le reprendre.
-Le recadrage `object-position:center 30%` de l'ancienne vignette 21/6
-tombe avec elle : en 4/3 la photo garde 100 % de sa hauteur utile. */
-
-@media(max-width:1023px){
-.teaser-grid{grid-template-columns:repeat(2,1fr);}
-}
-
-/* En dessous de 600px, la grille à 1 colonne empilait 4 cartes pleine
-largeur, chacune dominée par une photo en 4/3 : ~450px par carte, soit
-près de 1 800px rien que pour ces 4 cartes (2 917px pour toute la
-section, l'équivalent de 3 écrans et demi sur un téléphone). Le
-problème n'était pas le nombre de cartes mais leur mise en page : une
-colonne verticale n'a aucune raison de s'imposer alors que .teaser-grid
-n'a que 4 éléments fixes (TEASER_COUNT, voir js/homepage-teaser.js) —
-pas de flux continu à faire tenir.
-
-Le carrousel horizontal résout ça sans rien retirer : mêmes 4 cartes,
-identiques à elles-mêmes, simplement rangées côte à côte et parcourues
-au doigt plutôt qu'en défilement vertical. C'est le même geste que sur
-.opportunites-track (css/opportunites.css) — déjà le vocabulaire tactile
-du reste du site — mais ici sans les mécanismes de boucle/pause de ce
-composant : la liste est courte et fixe, un simple carrousel accroché
-suffit. */
-@media(max-width:600px){
-
-.teaser-grid{
-grid-template-columns:none;
-display:flex;
-gap:16px;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-scroll-padding-left:1px;
--webkit-overflow-scrolling:touch;
-scrollbar-width:none;
-/* Marge basse plutôt que padding : laisse la carte du bout s'accrocher
-pile au bord tout en gardant de la place pour l'ombre au survol/focus,
-que overflow-x:auto aurait sinon rognée. */
-padding-bottom:6px;
-margin-bottom:-6px;
-}
-
-.teaser-grid::-webkit-scrollbar{display:none;}
-
-.teaser-card{
-scroll-snap-align:start;
-flex:0 0 80%;
-max-width:300px;
-}
-
-/* 4/3 -> 16/10 : sur une carte pleine largeur, 4/3 donnait une photo
-aussi haute que large sur un petit téléphone. La carte fait maintenant
-80 % de l'écran plutôt que 100 %, donc l'image aurait de toute façon
-rétréci ; 16/10 réduit en plus sa hauteur propre, la carte devenant
-plus large que haute comme le reste des vignettes du site. */
-.teaser-card-media{aspect-ratio:16/10;}
-
-.teaser-actions{flex-direction:column;gap:18px;}
-
-}
-
 /* Redéfinition de .btn-lg, composant de css/base.css (16px 28px,
 1.05rem). Elle est conservée — la page l'utilise telle quelle depuis
 longtemps et la modifier déplacerait tous les grands boutons de
@@ -431,6 +101,18 @@ font-size:1.02rem;
 }
 
 /* ==========================================================
+BLOC MORT, VÉRIFIÉ LE 2026-09-08 — CONSERVÉ HORS PÉRIMÈTRE
+Tout ce qui suit jusqu'à .info-card (.trust, .trust-marquee*,
+.trust-logo, .trust-stat*, .trust-testimonials, .trust-transparency,
+.testimonial-*) ne correspond à aucun élément d'aucun fichier html/js
+suivi : la section #trust a quitté l'accueil au lot ACCUEIL-3, et
+renderTrustLogos/renderTestimonialCard n'existent plus. Les mentions de
+« .teaser » et « #teaser » dans les commentaires ci-dessous visent une
+section supprimée au lot ACCUEIL-4 — les lire comme de l'historique.
+Non supprimé ici : ce lot avait un périmètre nommé (teaser/assurance/
+portes), et ce bloc-ci lui est antérieur. À retirer dans une passe
+dédiée, avec les 24 classes listées dans le rapport ACCUEIL-4.
+
 CONFIANCE / PREUVE SOCIALE (bandeau après le hero) — version condensée
 Anciennement une section complète (liste intégrale des universités +
 compteurs + transparence) : trop lourde si tôt dans le parcours. Réduite
@@ -666,72 +348,6 @@ font-size:.88rem;
 color:var(--text-light);
 }
 
-/* ==========================================================
-GARANTIES — liste au trait (refonte 2026-08-22)
-Remplace .cards-grid.trust-transparency (3 .info-card à pastille+icône :
-search-check/link-2/bot) sous l'aperçu des opportunités : mêmes 3
-messages, sans les 3 icônes qui les portaient. Séparateurs verticaux
-(desktop) / horizontaux (mobile) plutôt que 3 cartes à ombre — plus
-sobre, cohérent avec .problem-list plus haut sur la page.
-========================================================== */
-
-.assurance-list{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:36px;
-padding-top:40px;
-margin-top:48px;
-border-top:1px solid var(--border-color);
-}
-
-.assurance-item{
-padding-left:28px;
-border-left:1px solid var(--border-color);
-}
-
-.assurance-item:first-child{
-padding-left:0;
-border-left:none;
-}
-
-.assurance-item h3{
-font-family:var(--font-display);
-font-size:var(--fs-h4);
-font-weight:var(--fw-bold);
-letter-spacing:-.01em;
-margin-bottom:8px;
-color:var(--text-color);
-}
-
-.assurance-item p{
-font-size:var(--fs-small);
-line-height:var(--lh-relaxed);
-color:var(--text-light);
-}
-
-@media(max-width:900px){
-
-.assurance-list{
-grid-template-columns:1fr;
-gap:28px;
-padding-top:32px;
-margin-top:40px;
-}
-
-.assurance-item{
-padding-left:0;
-padding-top:24px;
-border-left:none;
-border-top:1px solid var(--border-color);
-}
-
-.assurance-item:first-child{
-padding-top:0;
-border-top:none;
-}
-
-}
-
 @media(max-width:640px){
 
 .trust-marquee-set{
@@ -881,13 +497,16 @@ le même jour avec la grille de 3 cartes elle-même — voir .steps-card
 plus haut, une timeline à carte unique qui n'a plus besoin de mise en
 page par palier selon la largeur d'écran. */
 
-/* .info-card / .cards-grid restent utilisées telles quelles par les
-témoignages (js/homepage-teaser.js renderTestimonialCard : card.className
-= "info-card testimonial-card", posée dans .cards-grid.testimonial-grid)
-— ne pas supprimer même si cette page ne les utilise plus ailleurs
-depuis la refonte 2026-08-22 (voir .problem-list/.assurance-list
-ci-dessous, qui remplacent les grilles à icônes "Pourquoi nous
-choisir"/"Vérifié à la main"). */
+/* CE COMMENTAIRE N'EST PLUS VRAI (relevé le 2026-09-08, non corrigé
+au-delà de cette note). Il disait que .info-card / .cards-grid étaient
+gardées pour les témoignages rendus par renderTestimonialCard : cette
+fonction n'existe plus dans js/homepage-teaser.js, et .info-card comme
+.cards-grid n'apparaissent dans AUCUN fichier html/js suivi. Elles font
+partie des 24 classes mortes de cette feuille listées dans le rapport
+du lot ACCUEIL-4 — laissées en place parce qu'elles sont antérieures à
+ce lot, pas parce qu'elles servent encore.
+La .assurance-list que ce commentaire citait est, elle, partie avec la
+section « Comment ce catalogue est fait » le 2026-09-08. */
 .info-card{
 
 /* Tokens plutôt que valeurs en dur (2026-08-28) : le filet était
@@ -2014,46 +1633,3 @@ padding:34px 18px;
 
 }
 
-
-/* ==========================================================
-LES DEUX PORTES — lot C (2026-09-07)
-Même composant que la liste du problème (.problem-item : icône nue,
-h3, p), posé en deux colonnes de même poids. Ce sont des liens : un
-focus visible, un survol qui ne change que le titre. Aucun composant
-neuf, aucune couleur neuve (--amber-700 est celui du sur-titre).
-========================================================== */
-.portes{
-padding-top:var(--space-lg);
-padding-bottom:0;
-}
-
-.portes-list{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:0 48px;
-border-top:0;
-}
-
-.portes .problem-item{
-text-decoration:none;
-color:inherit;
-border-top:1px solid var(--border-color);
-}
-
-.portes .problem-item:hover h3,
-.portes .problem-item:focus-visible h3{
-color:var(--amber-700);
-}
-
-.portes .problem-item:focus-visible{
-outline:2px solid var(--amber-700);
-outline-offset:6px;
-border-radius:4px;
-}
-
-@media(max-width:640px){
-.portes-list{
-grid-template-columns:1fr;
-gap:0;
-}
-}
