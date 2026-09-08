@@ -19,6 +19,7 @@ import { languageLevelScore } from "./eligibility-ai.js";
 
 import { resolveCityImage } from "./js/scholarship-image.js";
 
+import { portailDocumente } from "./js/procedures/index.js";
 import { etatCandidature } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
@@ -1224,6 +1225,15 @@ if (applyBtn) {
 const aUnPortail = !!university.applicationUrl;
 
 applyBtn.hidden = !isPaidUser || !aUnPortail;
+
+// Lot E2 : la procédure du portail, si elle est documentée — visible de
+// tous, elle ne dit rien que Campus France ne publie.
+const procedureLink = document.getElementById("procedureLink");
+if (procedureLink) {
+const documente = portailDocumente(university.applicationUrl);
+procedureLink.hidden = !documente;
+if (documente) procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
+}
 
 if (isPaidUser && aUnPortail) {
 

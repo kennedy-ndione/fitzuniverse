@@ -799,7 +799,8 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
         const cartes = [...document.querySelectorAll("#paysListe .pre-pays")].map((c) => ({
           id: c.id, nom: texte(c.querySelector("h3")), effectifs: texte(c.querySelector(".pre-pays-effectifs")),
           procedure: texte(c.querySelector(".pre-pays-procedure")), principal: c.classList.contains("pre-pays--principal"),
-          lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: texte(c), dates: c.querySelectorAll(".pre-fait-source").length
+          // Lot E2 : les sources de la procédure (détails « pre-procedure ») ne sont pas des faits de la carte.
+lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: texte(c), dates: [...c.querySelectorAll(".pre-fait-source")].filter((a) => !a.closest(".pre-procedure")).length
         }));
         return { cartes, deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth, faitsFrance: document.querySelectorAll("#faitsFrance .pre-fait").length };
       });

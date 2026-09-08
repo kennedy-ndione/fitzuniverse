@@ -39,6 +39,64 @@
 import { PROFILE_READY_THRESHOLD } from "./profile-score.js";
 import { lireParcours } from "./parcours.js";
 import { SLUGS } from "./documents-data.js";
+import { ICONES_TYPE } from "./procedures/vocabulaire.js";
+import { jalonDeCampagne } from "./pays-preinscription.js";
+
+/**
+* LA PROCÉDURE DE PORTAIL (lot E2, 2026-09-07). Quand la candidature est
+* une PRÉINSCRIPTION et que l'appelant a trouvé une procédure connue
+* (js/procedures/index.js, trouverProcedure — il connaît le catalogue et
+* le profil, pas ce module), chaque étape de la procédure devient une
+* étape du parcours, insérée ENTRE « preuve de ressources » et le dépôt
+* (donc avant la revue conseiller). Aucun nouveau mécanisme de guidage :
+* les prérequis de l'étape nourrissent qualifierEtapes() (js/next-
+* action.js), l'échéance vient du calendrier de js/pays-preinscription.js.
+*
+*   done = l'étudiant l'a cochée ET, si une preuve est attendue, la
+*          preuve est présente — champ app.procedure[idEtape] =
+*          { faite, preuve, faitLe }.
+*
+* Parcours BOURSE : aucune injection, quoi que dise l'université.
+*/
+function etapesDeProcedure(app, procedure, aujourdhui) {
+
+if (!procedure || !Array.isArray(procedure.etapes) || lireParcours(app) !== "preinscription") return [];
+
+const etat = app && app.procedure && typeof app.procedure === "object" ? app.procedure : {};
+
+return procedure.etapes.map((e) => {
+
+const saisie = etat[e.id] && typeof etat[e.id] === "object" ? etat[e.id] : null;
+const preuvePresente = e.preuve === "aucune" || !!(saisie && typeof saisie.preuve === "string" && saisie.preuve.trim());
+const jalon = e.echeance && e.echeance.depuis === "calendrier" ? jalonDeCampagne(e.echeance.cle, aujourdhui) : null;
+
+return {
+id: e.id,
+label: e.titre,
+icon: ICONES_TYPE[e.type] || "circle-help",
+done: !!(saisie && saisie.faite === true && preuvePresente),
+action: "procedure",
+prerequis: [...(e.prerequis || [])],
+procedure: {
+type: e.type,
+consigne: e.consigne,
+fiabilite: e.fiabilite,
+preuve: e.preuve,
+pieces: e.pieces || [],
+montant: e.montant,
+devise: e.devise,
+source: e.source,
+verifieLe: e.verifieLe,
+echeanceISO: jalon ? jalon.iso : null,
+echeanceLibelle: jalon ? jalon.libelle : "",
+echeanceDebut: jalon ? jalon.debut : false,
+saisie
+}
+};
+
+});
+
+}
 
 /**
 * @param {Object} app - document users/{uid}/applications/{id}
@@ -47,9 +105,11 @@ import { SLUGS } from "./documents-data.js";
 * @param {boolean} [options.advisorUnlocked=false] - accès à "advisor" pour ce compte
 * @param {Array} [options.advisorRequests=[]] - users/{uid}/advisorRequests déjà chargées
 * @param {Object} [options.documentsObtained={}] - users/{uid}.documentsObtained, map { slug: true }
-* @returns {Array<{id:string,label:string,icon:string,done:boolean,href?:string,action?:string,isFitz?:boolean}>}
+* @param {Object|null} [options.procedure=null] - la procédure de portail (js/procedures/index.js, trouverProcedure) — préinscription seulement
+* @param {Date} [options.aujourdhui] - pour dater les jalons de campagne
+* @returns {Array<{id:string,label:string,icon:string,done:boolean,href?:string,action?:string,isFitz?:boolean,prerequis?:string[],procedure?:Object}>}
 */
-export function computeJourneySteps(app, { profileScore = 0, advisorUnlocked = false, advisorRequests = [], documentsObtained = {} } = {}) {
+export function computeJourneySteps(app, { profileScore = 0, advisorUnlocked = false, advisorRequests = [], documentsObtained = {}, procedure = null, aujourdhui = new Date() } = {}) {
 
 const checklist = Array.isArray(app.checklist) ? app.checklist : [];
 const checklistTotal = checklist.length;
@@ -97,7 +157,10 @@ label: "Preuve de ressources",
 icon: "wallet",
 done: obtenu(SLUGS.ressources) || obtenu(SLUGS.bancaire),
 href: "documents.html?categorie=financier"
-}
+},
+// Lot E2 : la procédure de portail, entre la preuve de ressources et
+// le dépôt. Vide sans procédure connue.
+...etapesDeProcedure(app, procedure, aujourdhui)
 );
 
 } else {

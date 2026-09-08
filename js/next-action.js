@@ -113,6 +113,14 @@ ressources: "votre preuve de ressources",
 advisor: "la revue de votre conseiller"
 };
 
+/** Le nom d'une étape dans une phrase — une étape de procédure (E2) porte le sien. */
+function nomDeLEtape(etape) {
+if (!etape) return "une étape";
+if (NOM_ETAPE[etape.id]) return NOM_ETAPE[etape.id];
+if (etape.procedure && etape.label) return etape.label.charAt(0).toLowerCase() + etape.label.slice(1);
+return "une étape";
+}
+
 /**
 * Libellés très courts des prérequis, pour l'infobulle « à faire après
 * le profil et la lettre » du stepper. Exporté (lot D1, 2026-09-07) :
@@ -172,20 +180,29 @@ const faites = new Set(etapes.filter((e) => e.done).map((e) => e.id));
 // filtre, « Revue conseiller » y resterait prématurée pour toujours.
 const presentes = new Set(etapes.map((e) => e.id));
 
+// Lot E2 : les étapes de procédure (js/procedures/*) portent leurs
+// prérequis SUR ELLES (etape.prerequis) ; les étapes natives les lisent
+// dans PREREQUIS. Même filtre presentes pour les deux. Les libellés des
+// prérequis de procédure viennent de leur propre label.
+const labels = new Map(etapes.map((e) => [e.id, e.label]));
+const lisible = (id) => LIBELLE_PREREQUIS[id] || (labels.get(id) ? labels.get(id).charAt(0).toLowerCase() + labels.get(id).slice(1) : id);
+
 return etapes.map((etape) => {
 
 if (etape.done) {
 return { ...etape, etat: "faite", bloquePar: [] };
 }
 
-const manquants = (PREREQUIS[etape.id] || []).filter((id) => presentes.has(id) && !faites.has(id));
+const declares = Array.isArray(etape.prerequis) ? etape.prerequis : (PREREQUIS[etape.id] || []);
+const manquants = declares.filter((id) => presentes.has(id) && !faites.has(id));
 
 if (manquants.length) {
 return {
 ...etape,
 etat: "prematuree",
 bloquePar: manquants,
-consequence: CONSEQUENCE_PREMATUREE[etape.id] || ""
+bloqueParLibelles: manquants.map(lisible),
+consequence: CONSEQUENCE_PREMATUREE[etape.id] || (etape.procedure ? "Cette étape de la procédure s'appuie sur ce qui précède : la franchir maintenant, c'est la refaire." : "")
 };
 }
 
@@ -385,7 +402,7 @@ return actionEtape(
 pressee.faisable,
 pressee.app,
 critique ? "critique" : "haute",
-`${quand}${ou}, et il manque ${NOM_ETAPE[pressee.faisable.id] || "une étape"}.`
+`${quand}${ou}, et il manque ${nomDeLEtape(pressee.faisable)}.`
 );
 
 }
@@ -445,7 +462,7 @@ return actionEtape(
 suivante.faisable,
 suivante.app,
 "normale",
-`${quand} : ${NOM_ETAPE[suivante.faisable.id] || "une étape"} vous attend.`
+`${quand} : ${nomDeLEtape(suivante.faisable)} vous attend.`
 );
 
 }
@@ -498,6 +515,8 @@ urgence: "exploration"
 */
 export function avertissementsPrematures(etapes) {
 
+const labels = new Map(etapes.map((e) => [e.id, e.label]));
+
 return qualifierEtapes(etapes)
 .filter((e) => e.etat === "prematuree" && e.bloquePar.length === 1)
 .map((e) => ({
@@ -505,7 +524,8 @@ id: e.id,
 label: e.label,
 consequence: e.consequence,
 bloquePar: e.bloquePar,
-prerequisLisible: NOM_ETAPE[e.bloquePar[0]] || e.bloquePar[0]
+// Lot E2 : une étape de procédure n'est pas dans NOM_ETAPE — son label suffit.
+prerequisLisible: NOM_ETAPE[e.bloquePar[0]] || (labels.get(e.bloquePar[0]) ? labels.get(e.bloquePar[0]).charAt(0).toLowerCase() + labels.get(e.bloquePar[0]).slice(1) : e.bloquePar[0])
 }));
 
 }

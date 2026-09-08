@@ -19,6 +19,7 @@ import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLock
 // plafond par pays. Voir chargerOpportunites() plus bas.
 import { retenirOpportunites } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
+import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
 
@@ -646,9 +647,21 @@ const opps = await chargerOpportunites(profile);
 // posé AVANT tout rendu, lu par next-action.js, journey-map.js
 // (radar) et renderDossiers. Sans catalogue, `echeance` reste absent
 // et tout se calcule comme avant sur la date saisie.
+// Lot E2 : la procédure de portail d'une préinscription (même règle
+// que applications.js : université du catalogue ou URL du portail,
+// résidence du profil).
+const procedureDe = (app) => {
+const uni = opps.index && app.universityId ? opps.index.uniParId.get(app.universityId) : null;
+return trouverProcedure({
+paysDestination: (uni && uni.country) || "",
+portailUrl: app.portalUrl || (uni && uni.applicationPortalUrl) || "",
+paysResidence: (profile && (profile.originCountry || profile.country)) || ""
+});
+};
+
 applications = applications.map((app) => ({
 ...app,
-etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {} }),
+etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {}, procedure: procedureDe(app) }),
 echeance: opps.index ? etatDeLaCandidature(app, opps.index) : null
 }));
 

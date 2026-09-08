@@ -200,6 +200,23 @@ function preparer() {
     deadline: null
   });
 
+  // LOT E2 (2026-09-07) : une préinscription vers l'Université de Bordeaux
+  // (sur Études en France) — la carte doit afficher la procédure, avec au
+  // moins une consigne ferme et au moins une « à confirmer ».
+  const bordeaux = uniParId.get("universite-de-bordeaux-bordeaux");
+  if (bordeaux) {
+    applications.push({
+      ...commun,
+      id: "pre-2",
+      university: bordeaux.name,
+      scholarship: "",
+      track: "preinscription",
+      universityId: bordeaux.id,
+      portalUrl: bordeaux.applicationPortalUrl || "",
+      deadline: null
+    });
+  }
+
   const userData = {
     uid: UID,
     name: "Harnais",
@@ -305,6 +322,43 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       // Le rattrapage écrit après le premier rendu ; on attend que la
       // liste porte bien nos trois cartes.
       await page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 3, null, { timeout: 15000 });
+
+      // ---- LOT E2 : la procédure de portail sur pre-2 (Université de Bordeaux) ----
+      {
+        const proc = await page.evaluate(() => {
+          const carte = document.getElementById("pre-2");
+          if (!carte) return null;
+          const details = carte.querySelector(".app-procedure");
+          const etapes = [...carte.querySelectorAll(".app-procedure-etape")];
+          const stepper = [...carte.querySelectorAll("[data-journey-step]")].map((b) => b.dataset.journeyStep);
+          return {
+            details: !!details,
+            resume: details ? details.querySelector("summary").textContent.replace(/\s+/g, " ").trim() : "",
+            etapes: etapes.length,
+            fermes: etapes.filter((e) => e.classList.contains("fiab-verifie_source_officielle")).length,
+            aConfirmer: etapes.filter((e) => e.classList.contains("fiab-a_confirmer")).length,
+            reserveVisible: etapes.filter((e) => /à confirmer lors de la première passe réelle/i.test(e.querySelector(".app-procedure-consigne")?.textContent || "")).length,
+            paiement: etapes.some((e) => /85 000 F/.test(e.textContent) && /SUNU BANK/.test(e.textContent)),
+            stepperEf: stepper.filter((id) => id.startsWith("ef_")).length,
+            ordre: stepper.join(",")
+          };
+        });
+        if (!proc) {
+          notes.push("E2 : pas de carte pre-2 (Université de Bordeaux absente du catalogue ?) — contrôle sauté.");
+        } else {
+          if (!proc.details) anomalies.push("pre-2 (Bordeaux, préinscription) : aucune procédure de portail affichée.");
+          if (proc.fermes < 1) anomalies.push("pre-2 : aucune consigne ferme (vérifiée sur la source officielle).");
+          if (proc.aConfirmer < 1) anomalies.push("pre-2 : aucune consigne « à confirmer ».");
+          if (proc.reserveVisible !== proc.aConfirmer) anomalies.push(`pre-2 : ${proc.aConfirmer} étape(s) à confirmer mais ${proc.reserveVisible} réserve(s) visible(s) dans le texte.`);
+          if (!proc.paiement) anomalies.push("pre-2 : l'étape de paiement (85 000 F, SUNU BANK) est absente.");
+          if (proc.stepperEf < 5) anomalies.push(`pre-2 : le stepper ne porte que ${proc.stepperEf} étape(s) de procédure.`);
+          if (!/ressources,ef_compte/.test(proc.ordre)) anomalies.push(`pre-2 : les étapes de procédure ne suivent pas « ressources » (${proc.ordre}).`);
+          notes.push(`E2 pre-2 : ${proc.resume} — ${proc.fermes} fermes, ${proc.aConfirmer} à confirmer`);
+        }
+        // Le parcours BOURSE d'une université française ne reçoit aucune étape.
+        const bourseEf = await page.evaluate(() => [...document.querySelectorAll('#applicationsList .app-card')].filter((c) => c.querySelector('.app-track-pill[data-track="bourse"]')).some((c) => c.querySelector(".app-procedure")));
+        if (bourseEf) anomalies.push("E2 : une candidature BOURSE affiche une procédure de portail.");
+      }
 
       // ---- LOT E1 : la preuve de dépôt ----
       //

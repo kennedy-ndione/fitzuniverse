@@ -247,8 +247,37 @@ return LIBELLES_PROCEDURE[pays && pays.procedure] || LIBELLES_PROCEDURE.a_venir;
 export const CAMPAGNE_FRANCE = {
 ouverture: { mois: 10, jour: 1 },
 cloture: { mois: 7, jour: 31 },
-faitCalendrier: "calendrier"
+faitCalendrier: "calendrier",
+// Les JALONS publiés (lot E2, 2026-09-07) — formations connectées,
+// calendrier Campus France Sénégal 2026 (page + PDF Calendrier2026VF_0).
+// Une seule source pour js/procedures/* : jamais recopiés là-bas. Les
+// mois d'octobre à décembre sont ceux de l'année d'ouverture, janvier à
+// juillet ceux de l'année de clôture — jalonDeCampagne() fait le calcul.
+jalons: {
+soumission: { mois: 12, jour: 15, libelle: "Soumission du dossier (formations connectées)" },
+paiement: { mois: 12, jour: 27, libelle: "Paiement des frais de dossier" },
+visa: { mois: 5, jour: 1, libelle: "Demande de visa possible à partir du", debut: true },
+confirmation: { mois: 5, jour: 31, libelle: "Confirmation du choix définitif" },
+complements: { mois: 7, jour: 27, libelle: "Compléments de dossier et vérification des originaux" }
+},
+sourceJalons: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
+jalonsVerifiesLe: "2026-09-07"
 };
+
+/**
+* La date ISO d'un jalon pour la campagne en cours à `date` : un jalon
+* d'octobre à décembre tombe dans l'année d'ouverture, un jalon de
+* janvier à juillet dans l'année de clôture (finDeCampagne).
+* @returns {{cle:string, iso:string, libelle:string, debut:boolean}|null}
+*/
+export function jalonDeCampagne(cle, date = new Date()) {
+const jalon = CAMPAGNE_FRANCE.jalons[cle];
+if (!jalon) return null;
+const anneeCloture = finDeCampagne(date).getUTCFullYear();
+const annee = jalon.mois > CAMPAGNE_FRANCE.cloture.mois ? anneeCloture - 1 : anneeCloture;
+const iso = `${annee}-${String(jalon.mois).padStart(2, "0")}-${String(jalon.jour).padStart(2, "0")}`;
+return { cle, iso, libelle: jalon.libelle, debut: jalon.debut === true };
+}
 
 /**
 * Le 31 juillet de la campagne en cours à `date` (UTC, fin de journée) :

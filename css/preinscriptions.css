@@ -98,6 +98,70 @@ text-underline-offset:3px;
 color:var(--amber-700);
 }
 
+/* ---------- La procédure de portail (lot E2) ---------- */
+.pre-procedure{
+margin:14px 0 0;
+border:1px solid var(--border-color);
+border-radius:12px;
+background:rgba(255,255,255,.04);
+}
+
+.pre-procedure > summary{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px 14px;
+cursor:pointer;
+font-weight:600;
+list-style:none;
+}
+
+.pre-procedure > summary::-webkit-details-marker{display:none;}
+
+.pre-procedure > summary i,
+.pre-procedure > summary svg{width:18px;height:18px;flex-shrink:0;color:var(--text-muted);}
+
+.pre-procedure .pre-lead{margin:0 14px 10px;font-size:var(--fs-small);}
+
+.pre-procedure-liste{
+list-style:none;
+margin:0;
+padding:0 14px 14px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.pre-procedure-etape{
+display:grid;
+grid-template-columns:20px 1fr;
+gap:12px;
+align-items:start;
+font-size:var(--fs-small);
+line-height:1.55;
+}
+
+.pre-procedure-etape > i,
+.pre-procedure-etape > svg{width:18px;height:18px;margin-top:3px;color:var(--text-muted);}
+
+.pre-procedure-etape p{margin:0 0 4px;}
+
+.pre-procedure-fiabilite{
+display:inline-block;
+margin-left:6px;
+padding:1px 8px;
+border-radius:999px;
+border:1px solid var(--border-color);
+font-size:var(--fs-caption);
+font-weight:500;
+color:var(--text-muted);
+vertical-align:middle;
+}
+
+.pre-procedure-fiabilite.is-a_confirmer{border-color:rgba(233,163,25,.5);color:var(--amber-500, #E9A319);}
+
+.pre-procedure-date{font-size:var(--fs-caption);color:var(--text-muted);}
+
 /* ---------- Les pays ---------- */
 .pre-pays-liste{
 display:grid;

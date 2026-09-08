@@ -81,6 +81,12 @@ import { lirePreuve, preuveValide, libelleDemande, resumePreuve, cheminCapture, 
 import { deposeParUnTiers } from "./js/exigences.js";
 import { STATUTS_DEPOSES } from "./js/journey-map.js";
 import { compressImageToTarget } from "./js/compression-image.js";
+// Lot E2 (2026-09-07) : la procédure de portail — des étapes DE PLUS dans
+// le moteur de guidage existant, pour une préinscription vers un portail
+// documenté (js/procedures/index.js). Aucun nouveau mécanisme.
+import { trouverProcedure } from "./js/procedures/index.js";
+import { texteConsigne, LIBELLES_FIABILITE, LIBELLES_PREUVE } from "./js/procedures/vocabulaire.js";
+import { joursRestants } from "./js/next-action.js";
 import { storage } from "./firebase-config.js";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 
@@ -1451,10 +1457,98 @@ if (!resume) return "";
 return `<span class="app-preuve"><i data-lucide="send"></i>${escapeHtml(resume)}${preuve.fichier ? ` <a href="#" data-voir-capture="${escapeHtml(preuve.fichier)}">voir</a>` : ""}</span>`;
 }
 
+// Lot E2 : la procédure de portail de cette candidature, ou null. Une
+// PRÉINSCRIPTION seulement ; la destination se lit sur l'université du
+// catalogue (ou sur l'URL du portail), la résidence sur le profil.
+function procedurePour(app) {
+if (lireParcours(app) !== "preinscription") return null;
+const uni = catalogueIndex && app.universityId ? catalogueIndex.uniParId.get(app.universityId) : null;
+return trouverProcedure({
+paysDestination: (uni && uni.country) || "",
+portailUrl: app.portalUrl || (uni && uni.applicationPortalUrl) || "",
+paysResidence: (profile && (profile.originCountry || profile.country)) || ""
+});
+}
+
+// La procédure sur la carte : chaque étape avec sa consigne (ferme, ou
+// avec sa réserve visible), son échéance de campagne, ses pièces, sa
+// source — et la case « Fait », avec la preuve attendue.
+function renderProcedure(app, steps) {
+
+const etapes = qualifierEtapes(steps).filter((s) => s.action === "procedure");
+if (!etapes.length) return "";
+
+const faites = etapes.filter((s) => s.etat === "faite").length;
+const aConfirmer = etapes.filter((s) => s.procedure.fiabilite === "a_confirmer").length;
+const aujourdhui = new Date();
+
+const lignes = etapes.map((s) => {
+const p = s.procedure;
+const jours = p.echeanceISO ? joursRestants(p.echeanceISO, aujourdhui) : null;
+const echeance = p.echeanceISO
+? `<p class="app-procedure-echeance${jours !== null && jours <= 14 && !p.echeanceDebut ? " is-proche" : ""}"><i data-lucide="calendar"></i><span>${p.echeanceDebut ? "À partir du" : "Jusqu'au"} ${escapeHtml(formaterDate(p.echeanceISO))}${jours !== null && !p.echeanceDebut ? (jours < 0 ? " — dépassé" : jours === 0 ? " — aujourd'hui" : ` — dans ${jours} j`) : ""}</span></p>`
+: "";
+const pieces = p.pieces.length
+? `<ul class="app-procedure-pieces">${p.pieces.map((piece) => `<li>${escapeHtml(piece.nom)}${piece.tailleMax ? ` <span>· ${escapeHtml(piece.tailleMax)}</span>` : ""}${piece.traduction ? " <span>· traduction assermentée</span>" : ""}${piece.legalisation ? " <span>· légalisation</span>" : ""}</li>`).join("")}</ul>`
+: "";
+const saisie = p.saisie || {};
+const demandePreuve = p.preuve !== "aucune";
+return `<li class="app-procedure-etape is-${s.etat} fiab-${p.fiabilite}" data-procedure-etape="${s.id}">
+<div class="app-procedure-tete">
+<i data-lucide="${s.etat === "faite" ? "check" : s.icon}"></i>
+<strong>${escapeHtml(s.label)}</strong>
+<span class="app-procedure-fiabilite is-${p.fiabilite}">${escapeHtml(LIBELLES_FIABILITE[p.fiabilite] || p.fiabilite)}</span>
+</div>
+<p class="app-procedure-consigne">${escapeHtml(texteConsigne(p))}</p>
+${echeance}
+${pieces}
+${s.etat === "prematuree" ? `<p class="app-procedure-attente"><i data-lucide="info"></i><span>À faire après ${escapeHtml((s.bloqueParLibelles || s.bloquePar).join(" et "))}.</span></p>` : ""}
+<form class="app-procedure-faire" data-procedure-form="${s.id}">
+<label><input type="checkbox" name="faite" ${saisie.faite === true ? "checked" : ""}> <span>Fait${saisie.faitLe ? ` le ${escapeHtml(formaterDate(String(saisie.faitLe).slice(0, 10)))}` : ""}</span></label>
+${demandePreuve ? `<input type="text" name="preuve" maxlength="64" placeholder="${escapeHtml(LIBELLES_PREUVE[p.preuve] || "référence")}" value="${escapeHtml(saisie.preuve || "")}" aria-label="${escapeHtml(LIBELLES_PREUVE[p.preuve] || "référence")}">` : ""}
+<button type="submit" class="btn btn-ghost btn-sm"><span>Enregistrer</span></button>
+</form>
+<a class="app-procedure-source" href="${escapeHtml(p.source)}" target="_blank" rel="noopener">Source — vérifié le ${escapeHtml(formaterDate(p.verifieLe))}</a>
+</li>`;
+}).join("");
+
+return `<details class="app-procedure">
+<summary><i data-lucide="route"></i><span>Procédure Études en France, depuis le Sénégal · ${faites}/${etapes.length} étape${etapes.length > 1 ? "s" : ""}${aConfirmer ? ` · ${aConfirmer} à confirmer` : ""}</span></summary>
+<p class="app-procedure-lead">Documentée depuis les sources publiques de Campus France Sénégal. Une consigne « à confirmer » sera précisée à la première passe réelle sur la plateforme.</p>
+<ol class="app-procedure-liste">${lignes}</ol>
+</details>`;
+
+}
+
+// Enregistre une étape de procédure. Une seule saisie, deux effets : la
+// SOUMISSION cochée avec son numéro remplit aussi la preuve de dépôt
+// (lot E1) — jamais deux champs à remplir.
+async function enregistrerEtapeProcedure(app, etape, { faite, preuve }) {
+
+const faitLe = dateISOAujourdhui();
+const saisie = { faite: faite === true, preuve: (preuve || "").trim().slice(0, 64), faitLe };
+const patchDoc = { [`procedure.${etape.id}`]: saisie, updatedAt: serverTimestamp() };
+
+if (etape.procedure.type === "soumission" && saisie.faite && saisie.preuve) {
+const nouvelle = { mode: "numero", numeroDossier: saisie.preuve, deposeLe: faitLe };
+const actuelle = lirePreuve(app);
+const memeNumero = actuelle && actuelle.numeroDossier === saisie.preuve;
+if (!memeNumero && preuveValide(nouvelle, { parTiers: false })) {
+patchDoc.preuveDepot = { ...nouvelle, declareLe: serverTimestamp() };
+if (actuelle && actuelle.fichier) patchDoc.preuveDepot.fichier = actuelle.fichier;
+}
+}
+
+await updateDoc(doc(db, "users", uid, "applications", app.id), patchDoc);
+trackEvent("procedure_etape", { etape: etape.id, faite: saisie.faite });
+showToast(saisie.faite ? `« ${etape.label} » enregistrée.` : `« ${etape.label} » décochée.`, { type: "success" });
+
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
-const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained });
+const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained, procedure: procedurePour(app) });
 
 const card = document.createElement("article");
 card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
@@ -1480,6 +1574,8 @@ ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : "
 </div>
 
 ${renderJourneyStepper(app, journeySteps)}
+
+${renderProcedure(app, journeySteps)}
 
 <div class="app-card-meta">
 ${renderEcheanceCandidature(app, lecture)}
@@ -1633,8 +1729,34 @@ btn.addEventListener("click", () => { window.location.href = step.href; });
 btn.addEventListener("click", focusChecklist);
 } else if (step.action === "run-readiness") {
 btn.addEventListener("click", () => runReadinessCheck(app));
+} else if (step.action === "procedure") {
+// Lot E2 : ouvrir la procédure et aller à l'étape.
+btn.addEventListener("click", () => {
+const details = card.querySelector(".app-procedure");
+if (details) details.open = true;
+card.querySelector(`[data-procedure-etape="${step.id}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+});
 }
 
+});
+
+// Lot E2 : la case « Fait » de chaque étape de procédure.
+card.querySelectorAll("[data-procedure-form]").forEach((form) => {
+form.addEventListener("submit", async (event) => {
+event.preventDefault();
+const etape = journeySteps.find((s) => s.id === form.dataset.procedureForm);
+if (!etape) return;
+const bouton = form.querySelector("button");
+bouton.disabled = true;
+try {
+await enregistrerEtapeProcedure(app, etape, { faite: form.elements.faite.checked, preuve: form.elements.preuve ? form.elements.preuve.value : "" });
+await loadApplications();
+} catch (error) {
+console.error("Étape de procédure non enregistrée :", error);
+showToast("L'étape n'a pas pu être enregistrée. Réessayez.", { type: "error" });
+bouton.disabled = false;
+}
+});
 });
 const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
 
