@@ -85,6 +85,11 @@ import { compressImageToTarget } from "./js/compression-image.js";
 // le moteur de guidage existant, pour une préinscription vers un portail
 // documenté (js/procedures/index.js). Aucun nouveau mécanisme.
 import { trouverProcedure } from "./js/procedures/index.js";
+// Lot S3 : le portail de candidature a quitté le catalogue public. Une
+// candidature créée depuis une recommandation doit quand même arriver
+// avec son lien — sinon l'étudiant qui paie retrouve la case vide que
+// l'audit du 2026-08-28 avait justement fait remplir.
+import { chargerPortails, portailUniversite } from "./js/portails.js";
 import { texteConsigne, LIBELLES_FIABILITE, LIBELLES_PREUVE } from "./js/procedures/vocabulaire.js";
 import { joursRestants } from "./js/next-action.js";
 import { storage } from "./firebase-config.js";
@@ -823,7 +828,7 @@ programId: rec.programId || null,
 // rec porte déjà applicationUrl/universityWebsite (recommend-programs.js)
 // — un créneau suggéré par Fitz n'affichait donc jamais aucun lien tant
 // que l'étudiant n'éditait pas la carte à la main pour en coller un.
-portalUrl: rec.applicationUrl || "",
+portalUrl: portailDeLEntree(rec),
 universityWebsite: rec.universityWebsite || "",
 status: "a_preparer",
 // Lot A : ces créneaux viennent de retenirOpportunites() — toujours
@@ -1290,7 +1295,7 @@ manualMode = false;
 
 fields.university.value = entry.universityName;
 fields.scholarship.value = entry.scholarshipTitle || "";
-fields.portalUrl.value = entry.applicationUrl || "";
+fields.portalUrl.value = portailDeLEntree(entry);
 // Pré-rempli UNIQUEMENT sur une date ferme d'un cycle ouvert (voir
 // ensurePickerEntries) ; sinon le champ reste vide et l'état s'explique
 // dans le résumé ci-dessous.
@@ -1314,7 +1319,7 @@ pickerSummary.innerHTML = `
 <button type="button" class="apps-selection-change" id="pickerChangeBtn">Changer</button>
 </div>
 <ul class="apps-selection-facts">
-${entry.applicationUrl ? `<li><i data-lucide="link"></i><span>Portail officiel de candidature renseigné automatiquement</span></li>` : ""}
+${portailDeLEntree(entry) ? `<li><i data-lucide="link"></i><span>Portail officiel de candidature renseigné automatiquement</span></li>` : ""}
 ${entry.etat ? `<li class="apps-selection-etat is-${escapeHtml(entry.etat.ton)}"><i data-lucide="calendar-check"></i><span><strong>${escapeHtml(entry.etat.etiquette)} : ${escapeHtml(entry.etat.valeur)}</strong>${entry.etat.detail ? ` — ${escapeHtml(entry.etat.detail)}` : ""}${entry.etat.verifie ? ` (${escapeHtml(entry.etat.verifie)})` : ""}</span></li>` : ""}
 ${lignePreDepot(entry)}
 ${entry.deadlineText ? `<li><i data-lucide="calendar-clock"></i><span>Échéance du catalogue : ${escapeHtml(entry.deadlineText)}${entry.deadlineISO ? " — date limite pré-remplie" : ""}</span></li>` : ""}
@@ -1983,7 +1988,7 @@ scholarship: alternative.scholarshipTitle,
 // seedRecommendedSlots) — la nouvelle université suggérée gardait les
 // liens de l'ancienne, ou aucun lien si le créneau remplacé n'en avait
 // jamais eu.
-portalUrl: alternative.applicationUrl || "",
+portalUrl: portailDeLEntree(alternative),
 universityWebsite: alternative.universityWebsite || "",
 isRecommendation: true,
 updatedAt: serverTimestamp()
@@ -2399,7 +2404,24 @@ maybeScrollToHash();
 
 }
 
+// Le portail d'une entrée du catalogue (recommandation, sélecteur,
+// alternative). L'ordre dit la règle : ce que porte l'entrée d'abord —
+// un instantané non scindé, ou une valeur déjà écrite —, la carte
+// servie par la fonction `portails` ensuite. Rend "" quand l'étudiant
+// n'y a pas droit ou que la carte n'a pas pu être chargée : une case
+// vide, jamais un lien mort.
+function portailDeLEntree(entree) {
+if (!entree) return "";
+return entree.applicationUrl
+|| portailUniversite({ universityId: entree.universityId, programId: entree.programId })
+|| "";
+}
+
 bootstrapShell({ feature: "applications" }).then(async (ctx) => {
+
+// Une fois pour la session : cette page est déjà derrière
+// bootstrapShell, l'appel ne coûte donc rien à un visiteur.
+await chargerPortails();
 
 if (ctx.locked) {
 

@@ -42,7 +42,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 
-import { validerLot, SLUG_NIVEAU, boursesSansProgramme } from "./lot-validate.mjs";
+import { validerLot, SLUG_NIVEAU, boursesSansProgramme, boursesSansPortail } from "./lot-validate.mjs";
+import { separerPortails } from "./instantane-portails.mjs";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROJECT_ID = "scholarbridge-e0d84";
@@ -57,6 +58,12 @@ const EXPORT_PATH = join(racine, "scripts", "export-catalog.json");
 // documents TELS QUELS, sous les noms des collections — c'est ce que
 // le site attend — et il est versionné.
 const INSTANTANE_PATH = join(racine, "assets", "data", "catalogue.json");
+
+// LA CARTE DES PORTAILS (lot S3, 2026-09-08) — le pendant PRIVÉ de
+// l'instantané ci-dessus. Embarquée avec les Cloud Functions, jamais
+// servie par Hosting (firebase.json ignore functions/**), lue par la
+// fonction « portails » après vérification de l'abonnement.
+const PORTAILS_PATH = join(racine, "functions", "data", "catalogue-portails.json");
 
 // Constantes OAuth PUBLIQUES de firebase-tools (voir l'en-tête) ; les
 // mêmes variables d'environnement que la CLI permettent de les
@@ -624,6 +631,11 @@ niveaux: Array.isArray(d.levels) ? d.levels : [],
 statut: d.status || "",
 actif: d.isActive !== false,
 site: d.officialWebsite || "",
+// Lot S3 : le portail de DÉPÔT de la bourse, distinct de `site` (la
+// page du bailleur). Exporté pour la même raison qu'applicationUrl au
+// niveau programme l'a été le 2026-08-31 : un champ absent de l'export
+// est un champ que personne ne peut auditer.
+portail: d.applicationPortalUrl || "",
 image: d.image || "",
 funder: d.funder ?? null,
 funderName: d.funderName ?? null,
@@ -745,6 +757,13 @@ bourses.forEach((b) => { if (b.funder) parFunder[b.funder] = (parFunder[b.funder
 // snapshots DÉJÀ chargés — aucune lecture Firestore supplémentaire.
 const sansProgramme = boursesSansProgramme(bourses, programmes);
 
+// Lot S3 : bourses qui se déposent chez le bailleur et n'ont pas de
+// portail de dépôt. La fiche dit à l'étudiant que ce n'est pas
+// l'université qui reçoit son dossier, puis ne lui dit pas qui le
+// reçoit. Voir scripts/data/triage-portails-bourses.mjs pour le
+// triage des 156 `officialWebsite` existants.
+const sansPortail = boursesSansPortail(bourses.map((b) => ({ id: b.id, entryPoint: b.entryPoint, applicationPortalUrl: b.portail })));
+
 // Programmes sans `coverage` : ce que la page publique ne peut PAS
 // dire de la prise en charge. C'est la mesure qui a fait retirer
 // « entièrement financées » des deux catalogues le 2026-08-31 — au
@@ -770,6 +789,7 @@ boursesSansImage: sansImage.length,
 boursesSansFunder: sansFunder.length,
 boursesSansEntryPoint: sansEntryPoint.length,
 boursesSansProgramme: sansProgramme.length,
+boursesSansPortailDeDepot: sansPortail.length,
 programmesAvecPortailPropre: portailAuNiveauProgramme.length,
 programmesSansCoverage: sansCoverage.length
 },
@@ -780,6 +800,7 @@ boursesSansEligibilite: sansEligibilite,
 boursesSansFunder: sansFunder,
 boursesSansEntryPoint: sansEntryPoint,
 boursesSansProgrammeIds: sansProgramme,
+boursesSansPortailDeDepot: sansPortail,
 programmesAvecPortailPropre: portailAuNiveauProgramme,
 programmesSansCoverage: sansCoverage,
 bourses,
@@ -808,11 +829,36 @@ universities: brut(universitesSnap),
 scholarships: brut(boursesSnap)
 };
 
+// LOT S3 (2026-09-08) — DEUX FICHIERS, PLUS UN SEUL.
+//
+// L'instantané public est servi par Hosting : il est public par
+// construction, quoi qu'affiche le navigateur. Il portait pourtant
+// `applicationPortalUrl` en clair pour 147 universités sur 155 —
+// c'est-à-dire que le portail « réservé aux abonnés » s'ouvrait en
+// ouvrant une URL. Le verrou de details.js masquait un bouton, pas
+// une donnée.
+//
+// La carte des portails part donc dans functions/data/, embarquée avec
+// les Cloud Functions et servie par `portails` (functions/portails.js)
+// après vérification de l'abonnement. Elle N'EST PAS déployée par
+// Hosting : firebase.json ignore functions/** — sans cette ligne, tout
+// ce lot serait décoratif, le répertoire functions/ étant servi comme
+// le reste du dépôt.
+const { public: instantanePublic, portails, comptes } = separerPortails(instantane);
+
 await mkdir(dirname(INSTANTANE_PATH), { recursive: true });
-const texte = JSON.stringify(instantane);
+const texte = JSON.stringify(instantanePublic);
 await writeFile(INSTANTANE_PATH, texte, "utf8");
 
+await mkdir(dirname(PORTAILS_PATH), { recursive: true });
+await writeFile(PORTAILS_PATH, JSON.stringify(portails, null, 2), "utf8");
+
 ok(`assets/data/catalogue.json écrit (${Math.round(texte.length / 1024)} Ko) — c'est CE fichier que le site public sert. Le déployer : firebase deploy --only hosting.`);
+ok(`functions/data/catalogue-portails.json écrit : ${comptes.universites} université(s), ${comptes.programmes} programme(s), ${comptes.bourses} bourse(s). Le déployer : firebase deploy --only functions.`);
+
+if (sansPortail.length) {
+warn(`${sansPortail.length} bourse(s) « dépôt chez le bailleur » sans portail de dépôt — voir boursesSansPortailDeDepot dans scripts/export-catalog.json.`);
+}
 
 }
 

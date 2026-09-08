@@ -430,7 +430,40 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
         );
       }
 
+      // LOT S3 (2026-09-08) — CE QU'UN VISITEUR NE DOIT PAS VOIR.
+      // Le portail de candidature a quitté le catalogue public : il est
+      // servi par la Cloud Function `portails`, qui refuse un anonyme
+      // (la doublure hors-ligne rend ce refus). La fiche doit alors se
+      // lire comme avant pour lui — c'est-à-dire sans bouton de
+      // portail, mais AUSSI sans cadenas, sans mention d'un lien
+      // refusé, et sans bloc vide à la place (règle du 2026-08-31, en
+      // tête du bloc portail de scholarship-details.html).
+      const portail = await page.evaluate(() => {
+        const visible = (el) => !!el && !el.hidden && el.offsetParent !== null;
+        const bloc = document.getElementById("portalBlock");
+        return {
+          apply: visible(document.getElementById("applyBtn")),
+          universite: visible(document.getElementById("universityPortalBtn")),
+          bailleur: visible(document.getElementById("funderPortalBtn")),
+          procedure: visible(document.getElementById("procedureLink")),
+          blocVisible: visible(bloc),
+          blocVide: visible(bloc) && bloc.querySelectorAll("a:not([hidden])").length === 0,
+          cadenas: !!document.querySelector('#portalBlock [data-lucide="lock"]'),
+          texte: (bloc && bloc.textContent) || ""
+        };
+      });
+
+      if (portail.apply) anomalies.push("Fiche ouverte, visiteur anonyme : le bouton « portail de candidature » est visible.");
+      if (portail.bailleur) anomalies.push("Fiche ouverte, visiteur anonyme : le bouton « portail du bailleur » est visible.");
+      if (portail.cadenas) anomalies.push("Fiche ouverte, visiteur anonyme : un cadenas est affiché dans le bloc portail.");
+      if (portail.blocVide) anomalies.push("Fiche ouverte, visiteur anonyme : le bloc portail est visible mais ne contient aucun lien.");
+      if (/réservé|abonné|verrouill/i.test(portail.texte)) {
+        anomalies.push(`Fiche ouverte, visiteur anonyme : le bloc portail annonce un contenu refusé (« ${portail.texte.replace(/\s+/g, " ").slice(0, 80)} »).`);
+      }
+      if (!portail.universite) anomalies.push("Fiche ouverte, visiteur anonyme : le site de l'université a disparu — c'est le SEUL lien qu'il doit garder.");
+
       notes.push(`fiche ouverte (${cible.ouvert.id}) : « ${vu.etiquette} : ${vu.valeur} » — ${vu.note.slice(0, 60)}`);
+      notes.push(`fiche ouverte, anonyme : portail masqué, site université ${portail.universite ? "visible" : "ABSENT"}, procédure ${portail.procedure ? "visible" : "masquée"}, aucun cadenas`);
 
     } catch (e) {
       anomalies.push(`ÉCHEC fiche ouverte : ${e.message}`);

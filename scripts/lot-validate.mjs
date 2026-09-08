@@ -440,3 +440,33 @@ const liees = new Set(
 return (bourses || []).filter((b) => b && !liees.has(b.id)).map((b) => b.id);
 
 }
+
+/**
+* Les bourses dont le dossier se dépose CHEZ LE BAILLEUR (entryPoint
+* "bourse") et qui ne portent aucun portail de dépôt.
+*
+* C'est un TROU DE CATALOGUE au sens strict : la fiche dit à l'étudiant
+* « ce n'est pas l'université qui reçoit votre dossier », puis ne lui
+* dit pas qui le reçoit. Jusqu'au lot S3, la question ne se posait même
+* pas — il n'y avait qu'un champ, `officialWebsite`, qui servait
+* tantôt de page d'information et tantôt de portail, et un compteur
+* n'aurait rien pu mesurer. Avec deux champs distincts, l'absence
+* devient une information.
+*
+* `entryPoint` absent n'entre PAS dans la liste : c'est un INCONNU
+* (règle des trois valeurs), et on ne réclame pas un portail à une
+* bourse dont on ignore encore où elle se dépose. Seul « bourse »
+* déclenche l'exigence.
+*
+* Fonction pure — testée sur des données factices, sans Firestore.
+*
+* @param {Array<{id:string, entryPoint?:string, applicationPortalUrl?:string}>} bourses
+* @returns {Array<string>} identifiants des bourses sans portail de dépôt
+*/
+export function boursesSansPortail(bourses) {
+
+return (bourses || [])
+.filter((b) => b && b.entryPoint === "bourse" && !String(b.applicationPortalUrl || "").trim())
+.map((b) => b.id);
+
+}

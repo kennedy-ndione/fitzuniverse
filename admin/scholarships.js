@@ -56,6 +56,12 @@ const levelCheckboxes = Array.from(document.querySelectorAll('input[name="schola
 const funderInput = document.getElementById("funder");
 const funderNameInput = document.getElementById("funderName");
 const entryPointInput = document.getElementById("entryPoint");
+// Lot S3 : les DEUX liens de la bourse. `officialWebsite` (la page du
+// bailleur, publique) n'était jusqu'ici modifiable nulle part dans
+// l'admin, alors qu'il est affiché sur chaque fiche ;
+// `applicationPortalUrl` est le champ neuf (le lieu de dépôt, privé).
+const officialWebsiteInput = document.getElementById("officialWebsite");
+const applicationPortalUrlInput = document.getElementById("applicationPortalUrl");
 
 const ageMaxTousInput = document.getElementById("ageMaxTous");
 const ageMaxLicenceInput = document.getElementById("ageMaxLicence");
@@ -188,9 +194,15 @@ const fields = {};
 const funder = funderInput ? funderInput.value : "";
 const funderName = funderNameInput ? funderNameInput.value.trim() : "";
 const entryPoint = entryPointInput ? entryPointInput.value : "";
+// Lot S3 : les deux liens suivent exactement la même règle que les
+// trois champs ci-dessus — vide = absent en base, jamais "".
+const officialWebsite = officialWebsiteInput ? officialWebsiteInput.value.trim() : "";
+const applicationPortalUrl = applicationPortalUrlInput ? applicationPortalUrlInput.value.trim() : "";
 if (funder) fields.funder = funder;
 if (funderName) fields.funderName = funderName;
 if (entryPoint) fields.entryPoint = entryPoint;
+if (officialWebsite) fields.officialWebsite = officialWebsite;
+if (applicationPortalUrl) fields.applicationPortalUrl = applicationPortalUrl;
 return fields;
 }
 
@@ -203,6 +215,8 @@ const s = scholarship || {};
 if (funderInput) funderInput.value = s.funder || "";
 if (funderNameInput) funderNameInput.value = s.funderName || "";
 if (entryPointInput) entryPointInput.value = s.entryPoint || "";
+if (officialWebsiteInput) officialWebsiteInput.value = s.officialWebsite || "";
+if (applicationPortalUrlInput) applicationPortalUrlInput.value = s.applicationPortalUrl || "";
 }
 
 // ===============================
@@ -618,7 +632,7 @@ eligibility: buildEligibilityFromForm()
 // fausse valeur, et ne rien écrire rendrait l'erreur incorrigible.
 const funderFields = buildFunderFieldsFromForm();
 if (editingId) {
-for (const champ of ["funder", "funderName", "entryPoint"]) {
+for (const champ of ["funder", "funderName", "entryPoint", "officialWebsite", "applicationPortalUrl"]) {
 if (!(champ in funderFields)) funderFields[champ] = deleteField();
 }
 }

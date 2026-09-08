@@ -65,6 +65,11 @@ function preparer() {
 
   const brut = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
 
+  // LOT S3 : la carte des portails ne vit plus dans l instantane public.
+  // Le harnais la lit la ou la Cloud Function la lit, et la sert a la
+  // doublure httpsCallable — un etudiant abonne doit voir ses portails.
+  const portails = JSON.parse(fs.readFileSync(path.join(RACINE, "functions/data/catalogue-portails.json"), "utf8"));
+
   const catalogue = { programmes: brut.programs, universites: brut.universities, bourses: brut.scholarships };
   const index = indexerCatalogue(catalogue);
 
@@ -212,7 +217,7 @@ function preparer() {
       scholarship: "",
       track: "preinscription",
       universityId: bordeaux.id,
-      portalUrl: bordeaux.applicationPortalUrl || "",
+      portalUrl: portails.universites[bordeaux.id] || "",
       deadline: null
     });
   }
@@ -261,7 +266,15 @@ function preparer() {
     }).badge);
   }
 
-  return { index, applications, userData, clos, ouvert, dateDecalee, badgeParTitre, avecVoie, nue,
+  // LOT S3 : un programme dont l'université a un portail connu — c'est
+  // la fiche sur laquelle on vérifie qu'un CLIENT voit bien son bouton,
+  // avec la bonne URL, servie par la fonction et non par le catalogue.
+  const programmeAvecPortail = brut.programs.find((p) => p.universityId && portails.universites[p.universityId]) || null;
+  const ficheAvecPortail = programmeAvecPortail
+    ? { id: programmeAvecPortail.id, portail: portails.universites[programmeAvecPortail.universityId] }
+    : null;
+
+  return { index, applications, userData, portails, ficheAvecPortail, clos, ouvert, dateDecalee, badgeParTitre, avecVoie, nue,
     totalBourses: brut.scholarships.length,
     totalVoie: brut.scholarships.filter((b) => deposeParUnTiers(lireExigences(b))).length,
     totalSansExigence: brut.scholarships.filter((b) => lireExigences(b).length === 0).length };
@@ -299,7 +312,7 @@ async function ouvrir(navigateur, base, etudiant) {
 export async function verifierEspaceEtudiant({ navigateur, base }) {
 
   const cible = preparer();
-  const etudiant = { uid: UID, userData: cible.userData, applications: cible.applications };
+  const etudiant = { uid: UID, userData: cible.userData, applications: cible.applications, portails: cible.portails };
 
   const anomalies = [];
   const notes = [];
@@ -915,6 +928,57 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
     } catch (e) {
       anomalies.push(`ÉCHEC documents.html : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 4. scholarship-details.html, vue par un CLIENT (lot S3) ----------
+  //
+  // La contre-épreuve de ce que pages.mjs vérifie côté visiteur. Le
+  // portail a quitté le catalogue public : il faut donc prouver qu'il
+  // arrive quand même chez celui qui paie, et avec la BONNE URL — celle
+  // de functions/data/catalogue-portails.json, servie par la fonction
+  // `portails` (ici doublée). Sans ce contrôle, « les portails ont
+  // disparu pour les clients » passerait pour un succès du lot.
+  if (cible.ficheAvecPortail) {
+
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
+
+    try {
+
+      await page.goto(`${base}/scholarship-details.html?id=${encodeURIComponent(cible.ficheAvecPortail.id)}`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => {
+        const el = document.getElementById("title");
+        return el && el.textContent.trim().length > 0;
+      }, null, { timeout: 20000 });
+
+      // Le bouton est peint après resolveSession() et chargerPortails() :
+      // on attend qu'il apparaisse plutôt que de lire trop tôt.
+      await page.waitForFunction(() => {
+        const el = document.getElementById("applyBtn");
+        return el && !el.hidden;
+      }, null, { timeout: 20000 }).catch(() => {});
+
+      const vu = await page.evaluate(() => {
+        const apply = document.getElementById("applyBtn");
+        return {
+          visible: !!apply && !apply.hidden,
+          href: apply ? apply.getAttribute("href") : ""
+        };
+      });
+
+      if (!vu.visible) {
+        anomalies.push(`fiche client : le bouton de portail est masqué pour un compte abonné (${cible.ficheAvecPortail.id}).`);
+      } else if (vu.href !== cible.ficheAvecPortail.portail) {
+        anomalies.push(`fiche client : le bouton pointe sur « ${vu.href} » au lieu du portail servi par la fonction (« ${cible.ficheAvecPortail.portail} »).`);
+      }
+
+      notes.push(`fiche client (${cible.ficheAvecPortail.id}) : bouton ${vu.visible ? "visible" : "MASQUÉ"} — ${String(vu.href).slice(0, 60)}`);
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC fiche client : ${e.message}`);
     }
 
     anomalies.push(...erreurs);

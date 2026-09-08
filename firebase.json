@@ -28,7 +28,20 @@
       "import-scholarships.html",
       "import-scholarships.js",
       "import-universities.html",
-      "import-universities.js"
+      "import-universities.js",
+      "functions/**",
+      "scripts/**",
+      "test/**",
+      "sauvegardes/**",
+      "Claude outputs/**",
+      "firestore-debug.log",
+      "etat.txt",
+      "PROMPT_JOURNEE.md",
+      "package.json",
+      "package-lock.json",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "storage.rules"
     ],
     "rewrites": [],
     "headers": [

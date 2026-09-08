@@ -45,3 +45,12 @@ exports.paydunyaWebhook = require("./paiement").paydunyaWebhook;
 // MODE="passerelle" dans js/ai/ai-config.js.
 // ------------------------------------------------------------
 exports.fitzGenerate = require("./fitz").fitzGenerate;
+
+// ------------------------------------------------------------
+// Portails de candidature — voir functions/portails.js.
+// portails : rend la carte des portails à un client abonné (onCall).
+// C'est le SEUL endroit d'où cette donnée sort désormais : elle a été
+// retirée de l'instantané public assets/data/catalogue.json (lot S3),
+// où n'importe qui la lisait sans compte et sans payer.
+// ------------------------------------------------------------
+exports.portails = require("./portails").portails;

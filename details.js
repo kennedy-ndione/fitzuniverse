@@ -19,7 +19,11 @@ import { languageLevelScore } from "./eligibility-ai.js";
 
 import { resolveCityImage } from "./js/scholarship-image.js";
 
-import { portailDocumente } from "./js/procedures/index.js";
+import { trouverProcedure } from "./js/procedures/index.js";
+// Lot S3 : le portail de candidature ne vient plus du catalogue public
+// (il en a été retiré), mais de la Cloud Function `portails`, qui
+// vérifie l'abonnement avant de rendre quoi que ce soit.
+import { chargerPortails, portailUniversite, portailBourse } from "./js/portails.js";
 import { etatCandidature } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
@@ -167,11 +171,23 @@ return `offers.html?${searchParams.toString()}`;
 // officiel ET le visiteur est abonné. Ce bouton était public depuis le
 // 2026-08-30 — une déduction, jamais une demande : un non-abonné ne
 // doit voir qu'un seul lien, le site de l'université.
+// LOT S3 : `portailBourse()` d'abord, `scholarshipWebsite` ensuite.
+// Le champ neuf scholarships.applicationPortalUrl est le lieu où l'on
+// DÉPOSE ; officialWebsite est la page du bailleur, qui fait
+// aujourd'hui le travail des deux et se trompe donc une fois sur deux
+// (jica.go.jp/…/internship.html est une page d'information,
+// aims.edu.gh/application/… un vrai portail). Le champ neuf est vide
+// sur les 156 bourses tant que le lot de données n'a pas eu lieu — ce
+// bouton se comporte donc EXACTEMENT comme avant, et se corrigera tout
+// seul, bourse par bourse, au fil du remplissage. Voir
+// scripts/data/triage-portails-bourses.mjs.
 function configurerPortailBailleur(university, funderBtn, funderLabelEl, isPaidUser) {
 
-if (!funderBtn || !isPaidUser || !university.scholarshipWebsite) return;
+const lien = portailBourse(university.scholarshipId) || university.scholarshipWebsite;
 
-funderBtn.href = university.scholarshipWebsite;
+if (!funderBtn || !isPaidUser || !lien) return;
+
+funderBtn.href = lien;
 
 if (funderLabelEl) {
 funderLabelEl.textContent = "Accéder au portail officiel de la bourse" + (university.funderName ? ` — ${university.funderName}` : "");
@@ -789,6 +805,12 @@ const scholarshipData = scholarshipDoc || {};
 
 const university = {
 id: program.id,
+// Les deux clés qui servent à retrouver le portail auprès de la
+// fonction `portails` (lot S3) : `id` ci-dessus est celui du
+// PROGRAMME, et l'université a le sien.
+programId: program.id,
+universityId: program.universityId || "",
+scholarshipId: program.scholarshipId || "",
 university: universityProfile.name || "",
 country: universityProfile.country || "",
 city: universityProfile.city || "",
@@ -819,6 +841,14 @@ actifBourse: scholarshipData.isActive,
 // une vraie exception (ex. Politecnico di Milano : portail PhD
 // distinct du portail Licence/Master). Le programme gagne toujours
 // s'il porte une valeur — sinon on retombe sur le défaut université.
+//
+// LOT S3 : ces deux champs ne sont plus dans le catalogue public, ils
+// valent donc "" ici pour tout le monde. La résolution vit maintenant
+// dans js/portails.js (portailUniversite), avec la MÊME priorité
+// programme > université. La ligne reste : le jour où un instantané
+// non scindé revient (restauration, machine d'un autre), elle continue
+// de fonctionner, et `separerPortails` reste le seul endroit qui décide
+// que ce champ est privé.
 applicationUrl: program.applicationUrl || universityProfile.applicationPortalUrl || "",
 officialWebsite: universityProfile.officialWebsite || "",
 // Champs propres à la BOURSE (2026-08-30), jusqu'ici perdus à la
@@ -856,7 +886,18 @@ eligibility: scholarshipData.eligibility || null
 // redirige jamais (contrairement à requireAuth/requireFeature) : cette
 // page reste 100% publique même pour vérifier ce simple statut.
 const session = await resolveSession().catch(() => null);
-const isPaidUser = !!session && (session.testerAccess || session.planId !== "gratuit" || session.hasFitzExpress);
+// Lot S3 : `planPreinscriptionId` ajouté à la condition. Un client
+// Dossier France (grille B) paie, et ne passait pourtant aucun de ces
+// trois tests — il ne voyait pas le portail du bailleur. Même famille
+// d'oubli que le conseiller du lot S0 : une deuxième grille tarifaire
+// ajoutée sans repasser sur les conditions écrites pour la première.
+const isPaidUser = !!session && (session.testerAccess || session.planId !== "gratuit" || !!session.planPreinscriptionId || session.hasFitzExpress);
+
+// La carte des portails, demandée UNE fois pour la session. Rend null
+// pour un visiteur, un compte sans abonnement actif, ou hors ligne —
+// et la page se rend alors exactement comme pour un visiteur : sans
+// bouton, sans cadenas, sans bloc vide.
+await chargerPortails();
 
 // ===============================
 // Éléments HTML
@@ -1179,7 +1220,11 @@ university: university.university
 configurerPortailBailleur(university, funderPortalBtn, funderPortalLabel, isPaidUser);
 ordonnerPortails(university.entryPoint, funderPortalBtn, universityPortalBtn, null);
 
-const portailBailleurVisible = isPaidUser && !!university.scholarshipWebsite;
+// Lot S3 : la MÊME condition que configurerPortailBailleur ci-dessus,
+// portail de dépôt compris — sans quoi la phrase d'orientation et le
+// bouton pourraient se contredire le jour où une bourse portera son
+// applicationPortalUrl sans officialWebsite.
+const portailBailleurVisible = isPaidUser && !!(portailBourse(university.scholarshipId) || university.scholarshipWebsite);
 const phraseOrientation = phraseOrientationPortails(university.entryPoint, portailBailleurVisible);
 if (portalIntro && phraseOrientation) portalIntro.textContent = phraseOrientation;
 
@@ -1222,22 +1267,40 @@ if (applyBtn) {
 // La mention « réservé aux abonnés » qui accompagnait ce bouton a été
 // retirée de la page le 2026-08-31 : annoncer une porte fermée, c'est
 // encore montrer la porte.
-const aUnPortail = !!university.applicationUrl;
+// LOT S3 : l'URL vient de la fonction `portails`, jamais du catalogue.
+// `portailUniversite` rend "" tant que la carte n'a pas été obtenue —
+// c'est-à-dire pour un visiteur, un compte sans abonnement actif, ou
+// hors ligne. Les deux conditions d'avant tiennent toujours et restent
+// écrites séparément : être abonné ne suffit pas, encore faut-il qu'un
+// portail existe, et un portail connu ne s'affiche pas à qui n'y a pas
+// droit. Simplement, la seconde est désormais tranchée par le serveur.
+const portail = portailUniversite({ universityId: university.universityId, programId: university.programId })
+|| university.applicationUrl;
+const aUnPortail = !!portail;
 
 applyBtn.hidden = !isPaidUser || !aUnPortail;
 
 // Lot E2 : la procédure du portail, si elle est documentée — visible de
 // tous, elle ne dit rien que Campus France ne publie.
+//
+// LOT S3 : décidée par le PAYS DE DESTINATION, plus par l'URL du
+// portail. Deux raisons, et la seconde est la vraie. D'abord l'URL
+// n'est plus publique : la garder comme critère aurait retiré à tous
+// les visiteurs un lien qui doit rester public. Ensuite, depuis le lot
+// S1b, une procédure EST documentée par destination et non par
+// université — la faire dépendre d'un champ propre à chaque
+// établissement était déjà une incohérence, qui masquait le lien sur
+// les universités françaises dont le portail n'est pas Études en France.
 const procedureLink = document.getElementById("procedureLink");
 if (procedureLink) {
-const documente = portailDocumente(university.applicationUrl);
-procedureLink.hidden = !documente;
-if (documente) procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
+const procedure = trouverProcedure({ paysDestination: university.country });
+procedureLink.hidden = !procedure;
+if (procedure) procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
 }
 
 if (isPaidUser && aUnPortail) {
 
-applyBtn.href = university.applicationUrl;
+applyBtn.href = portail;
 
 applyBtn.addEventListener("click", () => {
 trackEvent("application_portal_opened", {

@@ -56,7 +56,16 @@ const IMPLEMENTATIONS = {
   onAuthStateChanged: "export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel(null), 0); return () => {}; }",
   onSnapshot: "export function onSnapshot(){ return () => {}; }",
   serverTimestamp: "export function serverTimestamp(){ return new Date(); }",
-  writeBatch: "export function writeBatch(){ return { set(){}, update(){}, delete(){}, commit: () => Promise.resolve() }; }"
+  writeBatch: "export function writeBatch(){ return { set(){}, update(){}, delete(){}, commit: () => Promise.resolve() }; }",
+  // LOT S3 : la Cloud Function `portails` sert la carte des portails de
+  // candidature, retirée du catalogue public. Hors ligne et sans compte,
+  // la doublure rend ce que rendrait le vrai serveur à un visiteur : un
+  // refus "unauthenticated". C'est le cas qui compte pour ce harnais —
+  // il prouve que le catalogue et les fiches se rendent ENTIÈREMENT sans
+  // portail, sans cadenas et sans bloc vide. La coquille par défaut
+  // aurait « marché » aussi, en levant un TypeError attrapé plus loin :
+  // on préfère doubler le refus réel plutôt que compter sur une panne.
+  httpsCallable: "export function httpsCallable(){ return function(){ const e = new Error('[harnais] hors ligne'); e.code = 'unauthenticated'; return Promise.reject(e); }; }"
 };
 
 // En mode admin, la doublure rend un utilisateur connecté et un
@@ -79,11 +88,18 @@ const IMPLEMENTATIONS_ADMIN = {
 // updateDoc) est CONSIGNÉE dans window.__harnaisEcritures au lieu
 // d'être faite : c'est ce qui permet au harnais de prouver qu'aucune
 // `deadline` n'est écrite sans un clic de l'étudiant.
-function implementationsEtudiant({ uid, userData, applications }) {
+function implementationsEtudiant({ uid, userData, applications, portails }) {
 
   const donnees = JSON.stringify({ uid, userData, applications });
+  // LOT S3 : l'étudiant du harnais a une formule active — le vrai
+  // serveur lui rendrait donc la carte des portails. On la lui rend,
+  // pour que la fiche et les candidatures soient vérifiées dans l'état
+  // d'un CLIENT, et pas seulement dans celui d'un visiteur.
+  const carte = JSON.stringify(portails || { universites: {}, programmes: {}, bourses: {} });
 
   return {
+    httpsCallable: `const __PORTAILS = ${carte};
+export function httpsCallable(_f, nom){ return function(){ if (nom === 'portails') return Promise.resolve({ data: __PORTAILS }); const e = new Error('[harnais] fonction non doublée : ' + nom); e.code = 'unavailable'; return Promise.reject(e); }; }`,
     onAuthStateChanged: `export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel({ uid: ${JSON.stringify(uid)}, email: 'harnais@fitz.local', displayName: 'Harnais' }), 0); return () => {}; }`,
     doc: `export function doc(){ const a = Array.from(arguments); const base = a[0] && a[0].__chemin ? [a[0].__chemin] : []; return { __chemin: base.concat(a.slice(1)).join('/') }; }`,
     collection: `export function collection(){ const a = Array.from(arguments); const base = a[0] && a[0].__chemin ? [a[0].__chemin] : []; return { __chemin: base.concat(a.slice(1)).join('/') }; }`,

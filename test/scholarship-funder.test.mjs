@@ -117,13 +117,19 @@ parent.children.push(funderBtn, universityBtn, applyBtn, lockedNote);
 return { parent, funderBtn, universityBtn, applyBtn, lockedNote };
 }
 
-function contexteDetails() {
+// `portailBourse` vient de js/portails.js (lot S3) : la fonction
+// extraite l'appelle pour préférer le portail de DÉPÔT de la bourse à
+// sa page d'information. Dans ce contexte, on la double par un stub qui
+// rend "" — c'est-à-dire l'état réel des 156 bourses tant que le lot de
+// données n'a pas eu lieu. Les tests ci-dessous portent donc bien sur le
+// comportement d'aujourd'hui, qui ne doit pas avoir bougé d'un pouce.
+function contexteDetails(portails = {}) {
 return chargerFonctions(sourceDetails, "details.js", [
 "configurerPortailBailleur",
 "ordonnerPortails",
 "phraseOrientationPortails",
 "afficherCriteresGeneraux"
-], {});
+], { portailBourse: (id) => portails[id] || "" });
 }
 
 function position(parent, node) {
@@ -247,7 +253,9 @@ assert.equal(f.phraseOrientationPortails("universite", false), attendue);
 
 test("la phrase est calculée avec isPaidUser && scholarshipWebsite, pas avec entryPoint seul", () => {
 const source = readFileSync(join(racine, "details.js"), "utf8");
-assert.match(source, /const portailBailleurVisible = isPaidUser && !!university\.scholarshipWebsite;/);
+// Lot S3 : la condition inclut le portail de DÉPÔT de la bourse, pour
+// que la phrase et le bouton ne puissent pas se contredire.
+assert.match(source, /const portailBailleurVisible = isPaidUser && !!\(portailBourse\(university\.scholarshipId\) \|\| university\.scholarshipWebsite\);/);
 assert.match(source, /phraseOrientationPortails\(university\.entryPoint, portailBailleurVisible\)/);
 });
 
@@ -262,7 +270,13 @@ return chargerFonctions(sourceAdmin, "admin/scholarships.js", [
 ], {
 funderInput: { value: "" },
 funderNameInput: { value: "" },
-entryPointInput: { value: "" }
+entryPointInput: { value: "" },
+// Lot S3 : les deux liens de la bourse rejoignent le même bloc de
+// champs — même règle des trois valeurs, même mécanique de
+// pré-remplissage à l'édition. Sans eux dans le contexte, la fonction
+// extraite lève une ReferenceError.
+officialWebsiteInput: { value: "" },
+applicationPortalUrlInput: { value: "" }
 });
 }
 

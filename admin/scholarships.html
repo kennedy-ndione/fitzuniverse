@@ -226,6 +226,40 @@ scholarships.js. -->
 </select>
 </div>
 
+<!-- LES DEUX LIENS (lot S3, 2026-09-08). Ils n'ont pas le même sens et
+n'ont pas le même régime — c'est toute la raison d'avoir deux champs
+au lieu d'un.
+
+`officialWebsite` = LA PAGE DU BAILLEUR. Une source : on y lit ce
+qu'est la bourse, ses critères, son calendrier. Publique, comme
+toutes les sources du site.
+
+`applicationPortalUrl` = LÀ OÙ L'ON DÉPOSE. Le même vocabulaire que
+sur une université. Réservé aux étudiants accompagnés : ce champ ne
+part PAS dans le catalogue public, il est servi par la fonction
+`portails` après vérification de l'abonnement.
+
+Jusqu'ici un seul champ faisait les deux, et se trompait donc une
+fois sur deux : jica.go.jp/…/internship.html est une page
+d'information, aims.edu.gh/application/masters-… un vrai portail de
+dépôt. Personne ne pouvait dire lequel sans ouvrir le lien.
+
+Même règle des trois valeurs que partout : un champ vide produit
+l'ABSENCE en base, jamais "". Une bourse dont le dossier se dépose
+chez le bailleur et qui n'a pas de portail est signalée comme un trou
+de catalogue (scripts/lot-validate.mjs, boursesSansPortail). -->
+<div class="field">
+<label for="officialWebsite">Page officielle du bailleur (publique)</label>
+<input type="url" id="officialWebsite" placeholder="https://… — la page qui DÉCRIT la bourse">
+<p class="form-hint">Une source, pas un privilège : ce lien est visible de tous.</p>
+</div>
+
+<div class="field">
+<label for="applicationPortalUrl">Portail de dépôt du dossier (réservé aux abonnés)</label>
+<input type="url" id="applicationPortalUrl" placeholder="https://… — la page où l'on DÉPOSE">
+<p class="form-hint">À remplir seulement quand le dossier se dépose chez le bailleur. Ne part jamais dans le catalogue public.</p>
+</div>
+
 <!-- Limite d'âge (2026-08-30) : champ `ageMax` de la bourse. Tous les
 champs sont facultatifs et vides par défaut — un champ absent est un
 INCONNU, jamais « pas de limite ». « Tous cycles » et les clés par

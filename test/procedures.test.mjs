@@ -231,9 +231,16 @@ assert.equal(trouverProcedure({ paysDestination: "Roumanie", paysResidence: "Sé
 assert.equal(trouverProcedure(), null);
 assert.equal(portailDocumente(PASTEL), true);
 assert.equal(portailDocumente("https://formulaires.ens.psl.eu/"), false);
-const bordeaux = catalogue.universities.find((u) => u.id === "universite-de-bordeaux-bordeaux");
-assert.ok(bordeaux && portailDocumente(bordeaux.applicationPortalUrl), "l'Université de Bordeaux est sur Études en France");
-assert.equal(catalogue.universities.filter((u) => u.country === "France" && portailDocumente(u.applicationPortalUrl)).length, 17);
+// LOT S3 : les portails ont quitté l'instantané public (ils étaient
+// lisibles de tous, sans compte) et vivent dans la carte privée servie
+// par la Cloud Function. Le contrôle est le même, il lit juste au bon
+// endroit — et il vaut mieux ainsi : il échouerait le jour où un
+// portail repartirait en clair dans le fichier public.
+const portails = JSON.parse(lire("functions/data/catalogue-portails.json")).universites;
+assert.ok(portailDocumente(portails["universite-de-bordeaux-bordeaux"]), "l'Université de Bordeaux est sur Études en France");
+const francaises = catalogue.universities.filter((u) => u.country === "France").map((u) => u.id);
+assert.equal(francaises.filter((id) => portailDocumente(portails[id])).length, 17);
+assert.equal(catalogue.universities.some((u) => "applicationPortalUrl" in u), false, "le catalogue public ne porte plus aucun portail");
 });
 
 test("appariement des pays : par code ISO, jamais par chaîne libre", () => {
@@ -538,7 +545,11 @@ assert.ok(!/pas à pas/.test(libelleProcedureDocumentee(CI)));
 test("la page préinscriptions et la fiche université branchent la procédure", () => {
 const page = lire("js/preinscriptions-page.js");
 assert.ok(page.includes("trouverProcedure") && page.includes("libelleProcedureDocumentee") && page.includes("texteConsigne"));
-assert.ok(lire("details.js").includes("portailDocumente") && lire("scholarship-details.html").includes('id="procedureLink"'));
+// Lot S3 : details.js ne décide plus le lien de procédure sur l'URL du
+// portail (que le visiteur n'a plus) mais sur le PAYS de destination —
+// ce qui est aussi la bonne clé depuis S1b, une procédure étant
+// documentée par destination.
+assert.ok(lire("details.js").includes("trouverProcedure({ paysDestination: university.country })") && lire("scholarship-details.html").includes('id="procedureLink"'));
 assert.ok(lire("applications.js").includes("trouverProcedure") && lire("dashboard.js").includes("trouverProcedure"));
 // Page publique : aucune résidence supposée, et la liste des pays
 // documentés est affichée telle qu'elle vit dans le registre.

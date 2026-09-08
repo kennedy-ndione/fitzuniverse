@@ -785,7 +785,12 @@ freeContainer.innerHTML = `
 
 if (rest.length) {
 
-lockedCount.textContent = `+${rest.length} autre${rest.length > 1 ? "s" : ""} piste${rest.length > 1 ? "s" : ""} d'amélioration verrouillée${rest.length > 1 ? "s" : ""}`;
+// Lot S3 : « verrouillée » retiré — cette page est publique, et on
+// n'annonce pas à un visiteur ce qu'on lui refuse (voir le commentaire
+// de #recoLocked dans results.html). La phrase dit maintenant ce que
+// l'accompagnement COUVRE, pas ce qu'il retient. Le chiffre, lui, est
+// le même : les axes du score autres que le point faible déjà donné.
+lockedCount.textContent = `Les ${rest.length} autre${rest.length > 1 ? "s" : ""} catégorie${rest.length > 1 ? "s" : ""} de votre score, une par une`;
 locked.hidden = false;
 
 } else {
