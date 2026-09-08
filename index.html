@@ -779,45 +779,38 @@ chiffres, voici les témoignages — et chaque établissement derrière a
 été vérifié un par un.
 =========================================== -->
 
-<section id="teaser" class="teaser section">
+<!-- ==========================================
+COMMENT CE CATALOGUE EST FAIT (2026-09-08)
+Cette section ne montre plus le catalogue, elle explique comment il est
+fabriqué. Sont partis le même jour : l'en-tête « Le catalogue / Quatre
+exemples de ce qui vous attend », les quatre cartes d’aperçu et le
+conteneur de témoignages, vide depuis sa création.
+
+L'identifiant passe de « teaser » à « garanties » : aucune ancre
+« #teaser » n'existait dans le dépôt (vérifié sur les 471 fichiers
+suivis non binaires), et le mot ne décrivait plus rien. La CLASSE
+« teaser » est gardée telle quelle — c'est elle qui porte la mise en
+forme dans css/homepage-sections.css, et la renommer aurait été une
+refonte de feuille pour un changement de nom.
+
+Les trois garanties et le bouton sont repris mot pour mot : leur texte
+a été pesé contre l'export du catalogue le 2026-09-01 (354 programmes,
+143 sans échéance, 0 sans lien officiel).
+=========================================== -->
+<section id="garanties" class="teaser section">
 
 <div class="container">
 
-<!-- REVU le 2026-09-01. Trois corrections d'un coup :
+<div class="section-header reveal">
 
-1. Le kicker (« Un aperçu, pas le catalogue entier ») et le titre
-   (« Un échantillon de ce qui vous attend ») disaient la MÊME chose,
-   l'un au-dessus de l'autre. Le titre nomme maintenant ce qui est
-   réellement montré — quatre cartes, pas un « échantillon » flou.
+<span class="kicker"><i data-lucide="notebook-pen" aria-hidden="true"></i>Comment ce catalogue est fait</span>
 
-2. Le sous-titre disait « Universités partenaires ». Aucune université
-   du catalogue n'a de relation avec FitzUniverse : le mot avait été
-   retiré des deux pages catalogue mais cette occurrence-ci avait été
-   oubliée. Voir REDACTION.md §1.
+<h2>
+D'où viennent les données que vous voyez.
+</h2>
 
-3. Les TROIS compteurs sont réduits à UN. Le hero de la même page
-   affiche déjà bourses / pays / universités : les répéter ici
-   n'apprenait rien. Cette section parle d'universités — les cartes en
-   montrent quatre, le bouton mène à leur catalogue — donc un seul
-   nombre, celui-là. Il est remonté DANS l'en-tête, à droite du texte :
-   .section-header est une colonne de 640px dans un conteneur de 1240,
-   et cette moitié droite était vide. -->
-<div class="section-header teaser-head reveal">
-<span class="kicker"><i data-lucide="layout-grid" aria-hidden="true"></i>Le catalogue</span>
-<h2>Quatre exemples de ce qui vous attend</h2>
-<p>Des établissements réels, des bourses ouvertes, des programmes compatibles avec votre parcours — c'est là-dedans que Fitz cherche pour vous.</p>
 </div>
 
-<div class="teaser-grid reveal" id="teaserGrid">
-<div class="teaser-card teaser-card-skeleton"></div>
-<div class="teaser-card teaser-card-skeleton"></div>
-<div class="teaser-card teaser-card-skeleton"></div>
-<div class="teaser-card teaser-card-skeleton"></div>
-</div>
-
-<!-- Garanties — .cards-grid.trust-transparency (3 cartes à pastille+
-icône search-check/link-2/bot) → .assurance-list (refonte 2026-08-22,
-voir css/homepage-sections.css) : liste au trait, mêmes 3 messages. -->
 <div class="assurance-list reveal">
 
 <!-- RÉÉCRIT le 2026-09-01 — les deux premières affirmations ne
@@ -848,20 +841,6 @@ est un champ qu'on n'a pas inventé. -->
 
 </div>
 
-<!-- Témoignages réels — vide tant qu'aucun n'a été recueilli, voir
-js/testimonials-data.js. Reste "hidden" jusqu'à ce que
-renderTestimonials() y trouve au moins une entrée. .info-card/
-.cards-grid : classes générées par homepage-teaser.js, toujours
-définies dans css/homepage-sections.css (voir le commentaire à côté de
-.info-card) même si le reste de la page ne les utilise plus. -->
-<div id="trustTestimonials" class="trust-testimonials" hidden>
-
-<h3>Ce que disent les premiers étudiants accompagnés</h3>
-
-<div id="testimonialGrid" class="cards-grid testimonial-grid"></div>
-
-</div>
-
 <div class="teaser-actions reveal">
 
 <a href="universities.html" class="btn btn-secondary">
@@ -880,60 +859,6 @@ définies dans css/homepage-sections.css (voir le commentaire à côté de
 
 </section>
 
-<!-- ==========================================
-CONFIANCE / PREUVE SOCIALE — VERSION CONDENSÉE
-Un bandeau minimaliste (kicker + titre + logos en défilement continu,
-une seule ligne, aucun scroll nécessaire pour le voir en entier).
-
-Déplacé le 2026-08-28 : ouvrait la page juste après le hero, ferme
-maintenant le bloc de preuve entamé par #teaser (voir son commentaire
-pour le raisonnement). Ce que le visiteur voit désormais juste après
-le hero, c'est #opportunites — de vraies bourses datées, nommées,
-avec le pays et la photo : une preuve plus spécifique qu'une frise de
-logos d'établissements avec lesquels FitzUniverse n'a aucune
-relation, et qui n'a donc rien perdu à descendre.
-=========================================== -->
-
-<section id="trust" class="trust section">
-
-<div class="container">
-
-<!-- section-badge (pastille + icône badge-check) → .kicker (refonte
-2026-08-22, voir css/homepage-typography.css) : un trait ambre et un
-libellé plutôt qu'un pictogramme de plus.
-
-Le libellé était « Ils nous font confiance » jusqu'au 2026-08-23. Le
-bandeau est rempli par renderTrustLogos() avec les universités du
-CATALOGUE : aucune d'elles n'a de relation avec FitzUniverse, et
-aucune ne nous a accordé sa confiance. La phrase affirmait donc à des
-étudiants qui vont payer une chose qui n'est pas vraie — et le titre
-juste en dessous disait déjà correctement ce que le bandeau montre.
-Le nouveau libellé promet exactement ce qui est livré — et la phrase
-est répartie entre le kicker et le titre plutôt que répétée dans les
-deux, l'ancien titre disant déjà « vérifié établissement par
-établissement ». -->
-<div class="section-header reveal">
-
-<span class="kicker"><i data-lucide="shield-check" aria-hidden="true"></i>Des établissements réels</span>
-
-<h2>
-Vérifiés un par un, avant d'apparaître dans votre catalogue.
-</h2>
-
-</div>
-
-<!-- Rempli par js/homepage-teaser.js (renderTrustLogos) à partir des
-vraies universités Firestore — retiré du DOM si le fetch échoue ou si
-le catalogue est vide, jamais laissé avec un contenu par défaut inventé.
-Piste dupliquée pour un défilement sans coupure ; la 2e copie est
-aria-hidden pour ne pas doubler la liste au lecteur d'écran. -->
-<div id="trustLogosRow" class="trust-marquee reveal">
-<div id="trustMarqueeTrack" class="trust-marquee-track"></div>
-</div>
-
-</div>
-
-</section>
 
 <!-- ==========================================
 NOTRE VISION
@@ -1200,8 +1125,14 @@ ses imports pointent vers www.gstatic.com, et si ce domaine est
 injoignable — réseau d'entreprise filtrant, connexion coupée, CDN
 bloqué — le module n'est pas exécuté du tout, donc son catch non plus.
 Reproduit en conditions réelles : les trois statistiques du hero
-restent sur « — », les cartes d'aperçu restent des rectangles vides et
-le bandeau reste muet, sans qu'aucun code ne s'en aperçoive.
+restent sur « — », sans qu'aucun code ne s'en aperçoive.
+
+Ce filet ne surveille plus QUE cette rangée-là (2026-09-08). Les deux
+autres blocs qu'il couvrait — les quatre cartes d'aperçu et la bande
+défilante d'établissements — ont quitté la page. La branche des cartes
+était la plus dangereuse des trois : elle retirait la SECTION ENTIÈRE
+qui contenait la grille, ce qui aurait emporté les garanties avec
+elle.
 
 Ce public est justement celui qui a le plus de risques d'être sur une
 connexion contrainte. On préfère donc une page plus courte à une page
@@ -1217,17 +1148,6 @@ setTimeout(function () {
     if (stats) stats.remove();
   }
 
-  var grille = document.getElementById("teaserGrid");
-  if (grille && !grille.querySelector(".teaser-card:not(.teaser-card-skeleton)")) {
-    var section = grille.closest("section");
-    if (section) section.remove();
-    else grille.remove();
-  }
-
-  ["trustLogosRow", "trustStats"].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el && !el.textContent.trim()) el.remove();
-  });
 }, 8000);
 </script>
 

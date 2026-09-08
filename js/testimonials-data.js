@@ -3,14 +3,17 @@
  *
  * Vide au 2026-08-13 : aucun étudiant payant à ce jour, donc aucune
  * citation réelle disponible. NE JAMAIS ajouter d'entrée inventée ici,
- * même à titre d'exemple visuel — la section confiance de la home
- * (index.html #trustTestimonials, rendue par
- * js/homepage-teaser.js/renderTestimonials) est conçue pour rester
- * masquée tant que ce tableau est vide, et pour afficher uniquement de
- * vraies entrées dès qu'il ne l'est plus.
+ * même à titre d'exemple visuel.
  *
- * Forme attendue d'une entrée réelle, à ajouter ici le jour venu (une
- * seule opération, aucun autre fichier à toucher) :
+ * PLUS AUCUN FICHIER NE L'IMPORTE depuis le 2026-09-08. Le conteneur
+ * #trustTestimonials a quitté index.html avec le reste de l'aperçu du
+ * catalogue, et js/homepage-teaser.js ne rend plus de témoignages. Ce
+ * fichier est gardé pour la règle qu'il porte et pour la forme
+ * ci-dessous, pas parce qu'il sert. Conséquence à connaître : ajouter
+ * une entrée ici n'affiche plus rien — il faudra aussi remettre la
+ * section et son rendu. Ce n'est plus « une seule opération ».
+ *
+ * Forme attendue d'une entrée réelle :
  *
  * {
  *   id: "awa-2026",          // identifiant stable, pas d'espace
