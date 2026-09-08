@@ -335,42 +335,6 @@ la valeur vient telle quelle du catalogue. -->
 
 </section>
 
-<!-- ==========================================
-LES DEUX PORTES — lot C du chantier préinscription (2026-09-07)
-Le titre du hero dit « Bourse ou préinscription » : cette section est
-l'endroit où ce choix se fait. Deux cartes de même poids, aucune mise
-en avant. Même composant que la liste du problème (.problem-item :
-icône nue + h3 + p), posé en deux colonnes — aucun composant neuf.
-Ce que la page peut promettre, et rien de plus : « faites-vous
-accompagner » et « voyez ce que coûte une année » — jamais « trouvez
-votre programme » : le catalogue porte des établissements, et 100 de
-ses 155 universités n'ont aucun prix vérifié.
-Icônes vérifiées dans le bundle lucide@1.31.0 chargé par la page :
-award (le financement) et landmark (l'établissement). Pas d'étincelle.
-=========================================== -->
-<section id="portes" class="portes section" aria-label="Deux parcours : bourses ou préinscriptions">
-<div class="container">
-<div class="problem-list portes-list">
-
-<a class="problem-item reveal" href="scholarships.html">
-<i data-lucide="award" aria-hidden="true"></i>
-<div>
-<h3>Bourses</h3>
-<p>Trouver un financement et candidater. Des échéances vérifiées sur chaque bourse.</p>
-</div>
-</a>
-
-<a class="problem-item reveal" href="preinscriptions.html">
-<i data-lucide="landmark" aria-hidden="true"></i>
-<div>
-<h3>Préinscriptions</h3>
-<p>Partir en finançant vos études. Voyez ce que coûte réellement une année et faites-vous accompagner jusqu'au dépôt.</p>
-</div>
-</a>
-
-</div>
-</div>
-</section>
 
 <!-- ==========================================
 OPPORTUNITÉS OUVERTES — ajouté le 2026-08-27
@@ -730,6 +694,74 @@ réponse de l'université — avec toutes vos échéances au même endroit.
 
 </section>
 
+
+<!-- ==========================================
+LES DEUX PORTES
+Le titre du hero dit « Bourse ou préinscription » : cette section est
+l'endroit où ce choix se fait pour de bon.
+
+SA PLACE, APRÈS « COMMENT ÇA FONCTIONNE » ET NON AVANT
+Ses deux phrases portent de vrais arguments, mais elle demandait de
+choisir une deuxième fois dans les deux premiers écrans — juste après
+les deux portes du hero, qui posent déjà la même question. Le visiteur
+voit maintenant ce que le site fait avant qu'on lui demande par quelle
+voie il entre.
+
+Deux cartes de même poids, aucune mise en avant. Même composant que la
+liste du problème (.problem-item : icône nue + h3 + p), posé en deux
+colonnes — aucun composant neuf, aucun bouton, aucun ambre.
+
+L'aria-label est parti avec l'arrivée de l'en-tête : il annonçait
+« Deux parcours : bourses ou préinscriptions » quand le titre visible
+dit « Deux parcours, un seul compte », et c'est lui qui l'aurait
+emporté au lecteur d'écran. Les autres sections titrées de la page
+n'en portent pas non plus.
+Ce que la page peut promettre, et rien de plus : « faites-vous
+accompagner » et « voyez ce que coûte une année » — jamais « trouvez
+votre programme » : le catalogue porte des établissements, et 100 de
+ses 155 universités n'ont aucun prix vérifié.
+Icônes vérifiées dans le bundle lucide@1.31.0 chargé par la page :
+award (le financement), landmark (l'établissement) et signpost (le
+sur-titre). Pas d'étincelle.
+=========================================== -->
+<section id="portes" class="portes section">
+<div class="container">
+
+<div class="section-header reveal">
+
+<span class="kicker"><i data-lucide="signpost" aria-hidden="true"></i>Quelle voie est la mienne ?</span>
+
+<h2>
+Deux parcours, un seul compte.
+</h2>
+
+<p>
+Vous pouvez viser une bourse, financer vous-même votre année, ou les deux — le compte et le dossier restent les mêmes.
+</p>
+
+</div>
+
+<div class="problem-list portes-list">
+
+<a class="problem-item reveal" href="scholarships.html">
+<i data-lucide="award" aria-hidden="true"></i>
+<div>
+<h3>Bourses</h3>
+<p>Trouver un financement et candidater. Des échéances vérifiées sur chaque bourse.</p>
+</div>
+</a>
+
+<a class="problem-item reveal" href="preinscriptions.html">
+<i data-lucide="landmark" aria-hidden="true"></i>
+<div>
+<h3>Préinscriptions</h3>
+<p>Partir en finançant vos études. Voyez ce que coûte réellement une année et faites-vous accompagner jusqu'au dépôt.</p>
+</div>
+</a>
+
+</div>
+</div>
+</section>
 
 <!-- ==========================================
 APERÇU CONCRET — ouvre le bloc "preuve" (2026-08-28)
