@@ -64,7 +64,28 @@ const MENTION_PAR_DEFAUT = `${MENTION_RESIDENCE_ABSENTE} : les montants, les dat
 // defautsDeProcedure() fait respecter.
 const CLES_AJOUT = ["consigneSup", "piecesSup"];
 const CLES_REMPLACEMENT = ["titre", "consigne", "pieces"];
-const CLES_VALEUR = ["montant", "devise"];
+const CLES_VALEUR = ["montant", "devise", "decomposition"];
+
+/**
+* LES DEUX SEULES DEVISES QU'ON ADDITIONNE (lot S2-MODÈLE, 2026-09-08).
+*
+* Le franc CFA a une parité LÉGALE et FIXE avec l'euro (655,957) : les
+* additionner est une opération exacte, et tout le Diagnostic France
+* repose dessus. Le dirham marocain n'en a pas. Convertir un dirham
+* demanderait un taux, c'est-à-dire un chiffre qui vieillit tout seul
+* dans un dépôt qui refuse déjà ce genre de valeur pour les échéances —
+* et un total « exact » calculé sur un taux d'il y a six mois est pire
+* qu'une addition qu'on refuse de faire.
+*
+* La règle est donc : on additionne XOF et EUR, et rien d'autre. Un
+* montant dans une autre devise s'affiche EN L'ÉTAT, à côté du total,
+* avec la mention qu'il s'y ajoute. Le total ne l'absorbe jamais.
+*/
+export const DEVISES_ADDITIONNABLES = ["EUR", "XOF"];
+
+export function deviseAdditionnable(devise) {
+return DEVISES_ADDITIONNABLES.includes(String(devise || "").toUpperCase());
+}
 
 /**
 * Deux graphies du même pays ? Une seule règle : le code ISO du
@@ -115,6 +136,14 @@ const calendrier = (couche && couche.faits && couche.faits.calendrier) || null;
 
 const composee = { ...etape };
 
+// LES ABSENCES DÉCLARÉES (lot S2-MODÈLE). Une couche peut être
+// documentée pour ses frais et muette sur son calendrier : c'est l'état
+// le plus fréquent, pas une exception. L'étape reçoit alors la phrase de
+// la COUCHE — plus précise que la mention générale du tronc, et servie à
+// sa place — et son échéance disparaît d'elle-même, faute de jalon.
+const absences = (couche && couche.absences) || null;
+const manquants = absences ? (etape.dependDe || []).filter((cle) => absences[cle]) : [];
+
 // L'échéance ne survit que si le calendrier de la résidence porte ce
 // jalon : sans couche, aucune date n'est affichée. C'est ainsi qu'un
 // Ivoirien ne lit pas les dates de la campagne sénégalaise.
@@ -131,7 +160,20 @@ composee.consigne = `${etape.consigne} ${composee.mention}`;
 return composee;
 }
 
-if (!fragment) return composee;
+// Avec une couche, la mention servie n'est plus celle du tronc mais
+// celle de la couche, clé par clé : « le calendrier de la campagne n'est
+// pas encore publié » vaut mieux que « votre pays n'est pas documenté »,
+// qui serait faux ici. Plusieurs absences sur une même étape se suivent
+// dans l'ordre où l'étape les déclare.
+if (manquants.length) {
+composee.mention = manquants.map((cle) => absences[cle]).join(" ");
+composee.absences = [...manquants];
+}
+
+if (!fragment) {
+if (composee.mention) composee.consigne = `${etape.consigne} ${composee.mention}`;
+return composee;
+}
 
 if (fragment.titre) composee.titre = fragment.titre;
 
@@ -156,6 +198,12 @@ composee.sourceResidence = fragment.source;
 composee.verifieLeResidence = fragment.verifieLe;
 }
 
+// La mention d'absence se pose APRÈS le fragment : elle parle de ce que
+// la couche n'a pas, y compris quand la couche a écrit la consigne. Un
+// pays peut décrire son guichet de paiement sans connaître encore la
+// date limite de la campagne.
+if (composee.mention) composee.consigne = `${composee.consigne} ${composee.mention}`;
+
 return composee;
 
 }
@@ -178,6 +226,12 @@ id: couche ? couche.id : tronc.id,
 residence: couche ? couche.pays : "",
 residenceDocumentee: !!couche,
 faits: (couche && couche.faits) || null,
+// Ce que la couche déclare NE PAS savoir, et ce que l'organisme
+// officiel du pays dit de nous. Les deux sont des champs facultatifs de
+// la couche ; absents, ils valent "" et null, et rien ne s'affiche —
+// jamais un bloc vide (lot S2-MODÈLE).
+absences: (couche && couche.absences) || null,
+avertissement: (couche && couche.avertissement) || "",
 couche: couche || null,
 etapes: tronc.etapes.map((e) => composerEtape(e, fragments[e.id] || null, couche, tronc))
 };
@@ -270,6 +324,49 @@ return `Procédure documentée depuis les sources publiques ; ${n} étape${n > 1
 * remplacement, et qu'un pays du lot S2 pourrait sinon glisser une
 * phrase non vérifiée à la fin d'une consigne qui, elle, l'est.
 */
+/**
+* UN MONTANT PEUT ÊTRE UNE SOMME (lot S2-MODÈLE, 2026-09-08).
+*
+* Au Cameroun, la procédure coûte 85 000 F de frais Campus France PLUS
+* 16 000 F de frais TLS, tous deux obligatoires. Porter 85 000
+* sous-estime la dépense réelle de 16 000 F ; porter 101 000 sans rien
+* dire donne un chiffre tombé du ciel — et un étudiant qui compare avec
+* la page officielle croit à une erreur.
+*
+* La forme : `montant` reste ce que l'étudiant paie RÉELLEMENT en tout,
+* `decomposition` dit d'où vient chaque franc. La somme doit être
+* ÉGALE, au franc près : un écart n'est pas un arrondi à tolérer, c'est
+* un chiffre faux quelque part. Et toutes les lignes portent la devise
+* du fait — une décomposition qui mélange les devises ne s'additionne
+* pas (voir DEVISES_ADDITIONNABLES).
+*/
+function defautsDeDecomposition(cle, fait) {
+
+const defauts = [];
+if (!fait || fait.decomposition === undefined) return defauts;
+
+if (!Array.isArray(fait.decomposition) || !fait.decomposition.length) {
+defauts.push(`fait ${cle} : decomposition vide`);
+return defauts;
+}
+
+let somme = 0;
+for (const ligne of fait.decomposition) {
+if (!ligne || !String(ligne.libelle || "").trim()) defauts.push(`fait ${cle} : ligne de décomposition sans libellé`);
+if (typeof (ligne && ligne.montant) !== "number" || !Number.isFinite(ligne.montant)) {
+defauts.push(`fait ${cle} : ligne « ${(ligne && ligne.libelle) || "?"} » sans montant`);
+continue;
+}
+if (ligne.devise !== fait.devise) defauts.push(`fait ${cle} : ligne « ${ligne.libelle} » en ${ligne.devise} au lieu de ${fait.devise}`);
+somme += ligne.montant;
+}
+
+if (somme !== fait.montant) defauts.push(`fait ${cle} : la décomposition fait ${somme}, le montant dit ${fait.montant}`);
+
+return defauts;
+
+}
+
 export function defautsDeCouche(couche, tronc) {
 
 const defauts = [];
@@ -282,6 +379,26 @@ if (!memePays(couche.destination, tronc && tronc.paysDestination)) defauts.push(
 for (const [cle, fait] of Object.entries(couche.faits || {})) {
 if (!/^https?:\/\//.test((fait && fait.source) || "")) defauts.push(`fait ${cle} : sans source`);
 if (!/^\d{4}-\d{2}-\d{2}$/.test((fait && fait.verifieLe) || "")) defauts.push(`fait ${cle} : sans verifieLe`);
+defauts.push(...defautsDeDecomposition(cle, fait));
+}
+
+// UNE ABSENCE EST UNE PHRASE, ET ELLE NE PORTE QUE SUR CE QUI MANQUE.
+// Un fait ne peut pas être à la fois présent et déclaré absent : la
+// contradiction serait invisible à l'affichage (l'étudiant lirait un
+// montant ET « ce montant n'est pas connu »), et c'est exactement le
+// genre d'incohérence qu'une couche de données doit rendre impossible.
+for (const [cle, phrase] of Object.entries(couche.absences || {})) {
+if (typeof phrase !== "string" || !phrase.trim()) defauts.push(`absence ${cle} : sans phrase`);
+if (couche.faits && couche.faits[cle]) defauts.push(`absence ${cle} : ce fait est pourtant présent`);
+// Une absence que personne ne consomme ne s'affiche nulle part : c'est
+// une phrase écrite pour rien, et le lot suivant croira l'avoir servie.
+if (tronc && Array.isArray(tronc.etapes) && !tronc.etapes.some((e) => (e.dependDe || []).includes(cle))) {
+defauts.push(`absence ${cle} : aucune étape ne la consomme (voir dependDe)`);
+}
+}
+
+if (couche.avertissement !== undefined && (typeof couche.avertissement !== "string" || !couche.avertissement.trim())) {
+defauts.push("avertissement : présent mais vide");
 }
 
 const ids = new Set(((tronc && tronc.etapes) || []).map((e) => e.id));

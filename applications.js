@@ -1527,7 +1527,20 @@ ${demandePreuve ? `<input type="text" name="preuve" maxlength="64" placeholder="
 </li>`;
 }).join("");
 
-return `<details class="app-procedure">
+// LOT S2-MODÈLE : l'avertissement que l'organisme officiel du pays
+// publie lui-même. Campus France Maroc met en garde, frontalement,
+// contre les intermédiaires privés : aucun n'est accrédité, leurs
+// dossiers « sont aisément reconnaissables ». Le cacher à un
+// utilisateur marocain serait exactement le comportement dénoncé ; le
+// lui montrer prouve le contraire. Il est donc HORS du <details> —
+// visible sans un clic, non repliable — et absent sans bloc vide quand
+// la couche n'en porte pas.
+const avertissement = (procedure && procedure.avertissement) || "";
+const blocAvertissement = avertissement
+? `<p class="app-procedure-avertissement"><i data-lucide="triangle-alert"></i><span>${escapeHtml(avertissement)}</span></p>`
+: "";
+
+return `${blocAvertissement}<details class="app-procedure">
 <summary><i data-lucide="route"></i><span>Procédure ${escapeHtml((procedure && procedure.portail.nom) || "de portail")}${residence ? ` (résidence : ${escapeHtml(residence)})` : ""} · ${faites}/${etapes.length} étape${etapes.length > 1 ? "s" : ""}${aConfirmer ? ` · ${aConfirmer} à confirmer` : ""}</span></summary>
 <p class="app-procedure-lead">${documentee
 ? "Documentée depuis les sources publiques de Campus France. Les montants, les dates et les lieux sont ceux de votre pays de résidence. Une consigne « à confirmer » sera précisée à la première passe réelle sur la plateforme."

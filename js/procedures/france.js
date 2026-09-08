@@ -39,6 +39,25 @@
 * lui ajoute une MENTION qui le dit, et lui retire son échéance — jamais
 * un montant, jamais une date, jamais un zéro empruntés à un autre pays.
 *
+* `dependDe` (lot S2-MODÈLE, 2026-09-08) : CE QUE L'ÉTAPE CONSOMME dans
+* la couche, clé par clé. Il existe un troisième état entre « pays
+* documenté » et « pays inconnu », et c'est le plus fréquent : le pays
+* est documenté pour ses frais, pas pour son calendrier — Campus France
+* ne publie le calendrier d'une campagne qu'au moment de l'ouvrir. Une
+* couche déclare alors `absences: { calendrier: "<phrase>" }`, et
+* composerProcedure sert cette phrase aux étapes qui citent « calendrier »
+* dans leur `dependDe`. Sans ce champ, l'étudiant voyait ses frais, aucune
+* échéance, et AUCUNE explication : son pays comptant pour documenté, la
+* mention générale ne s'affichait pas.
+*
+* Les clés utilisées ici :
+*   "fraisDossier" le montant dû à l'espace Campus France du pays ;
+*   "calendrier"   les jalons de la campagne locale ;
+*   "jalonsAval"   les dates d'APRÈS le dépôt (entretien, réponses). Un
+*                  espace peut publier sa fenêtre de candidature sans
+*                  publier celles-là — c'est le cas du Maroc — et deux
+*                  étapes en dépendent sans porter d'échéance elles-mêmes.
+*
 * RÈGLES DURES (test/procedures.test.mjs)
 *   - une étape sans `source` ET `verifieLe` n'existe pas ;
 *   - une étape qui se passe APRÈS la connexion (`apresConnexion: true`)
@@ -131,6 +150,7 @@ pieces: [
 echeance: null,
 apresConnexion: true,
 dependResidence: true,
+dependDe: [],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
@@ -157,6 +177,7 @@ pieces: [
 echeance: null,
 apresConnexion: true,
 dependResidence: true,
+dependDe: [],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
@@ -208,6 +229,7 @@ preuve: "numero_dossier",
 pieces: [],
 echeance: { depuis: "calendrier", cle: "soumission" },
 dependResidence: true,
+dependDe: ["calendrier"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.FAQ,
 verifieLe: VERIFIE
@@ -229,6 +251,7 @@ preuve: "recu",
 pieces: [],
 echeance: { depuis: "calendrier", cle: "paiement" },
 dependResidence: true,
+dependDe: ["fraisDossier", "calendrier"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.FAQ,
 verifieLe: VERIFIE
@@ -246,6 +269,7 @@ preuve: "convocation",
 pieces: [],
 echeance: null,
 dependResidence: true,
+dependDe: ["jalonsAval"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.CAL,
 verifieLe: VERIFIE
@@ -263,6 +287,7 @@ preuve: "aucune",
 pieces: [],
 echeance: null,
 dependResidence: true,
+dependDe: ["jalonsAval"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.CAL,
 verifieLe: VERIFIE
@@ -278,6 +303,7 @@ preuve: "capture",
 pieces: [],
 echeance: { depuis: "calendrier", cle: "confirmation" },
 dependResidence: true,
+dependDe: ["calendrier"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.PRECONS,
 verifieLe: VERIFIE
@@ -293,6 +319,7 @@ preuve: "aucune",
 pieces: [],
 echeance: { depuis: "calendrier", cle: "complements" },
 dependResidence: true,
+dependDe: ["calendrier"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.CAL,
 verifieLe: VERIFIE
@@ -310,6 +337,7 @@ preuve: "aucune",
 pieces: [],
 echeance: { depuis: "calendrier", cle: "visa" },
 dependResidence: true,
+dependDe: ["calendrier"],
 fiabilite: "verifie_source_officielle",
 source: SOURCES.CAL,
 verifieLe: VERIFIE

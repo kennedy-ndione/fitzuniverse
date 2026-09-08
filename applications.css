@@ -763,6 +763,34 @@ color:var(--text-muted);
 line-height:1.5;
 }
 
+/* Lot S2-MODÈLE : l'avertissement que l'organisme officiel du pays
+   publie lui-même (les intermédiaires privés non accrédités, au Maroc).
+   Il vit HORS du <details> : visible sans un clic, non repliable — un
+   avertissement qu'il faut déplier n'avertit personne. Ton ambre, pas
+   rouge : c'est une mise en garde de la source, pas une erreur de
+   l'étudiant. */
+.app-procedure-avertissement{
+display:flex;
+gap:10px;
+align-items:flex-start;
+margin:0 0 10px;
+padding:12px 14px;
+border:1px solid color-mix(in srgb, var(--amber-500) 40%, transparent);
+border-radius:var(--radius-md);
+background:color-mix(in srgb, var(--amber-500) 8%, transparent);
+font-size:var(--fs-caption);
+line-height:1.55;
+color:var(--text-primary);
+}
+
+.app-procedure-avertissement i{
+flex:none;
+width:16px;
+height:16px;
+margin-top:2px;
+color:var(--amber-700);
+}
+
 .app-procedure-liste{
 list-style:none;
 margin:0;

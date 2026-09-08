@@ -29,7 +29,14 @@ import { dirname, join, relative } from "node:path";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const EXCLUS = new Set(["node_modules", ".git", ".claude", "admin"]);
+// « Claude outputs » ajouté le 2026-09-08 : ce répertoire porte des
+// notes de travail et des BROUILLONS de fichiers de données (les couches
+// de pays en préparation), pas du code servi. Il n'est d'ailleurs plus
+// déployé du tout depuis le lot S3 (firebase.json, hosting.ignore). Le
+// balayer revenait à faire échouer la copie du site sur un brouillon que
+// personne ne lit — et le test « le balayage couvre bien les pages du
+// site », plus bas, garde le filet contre une exclusion trop large.
+const EXCLUS = new Set(["node_modules", ".git", ".claude", "admin", "Claude outputs", "sauvegardes"]);
 
 function fichiers(extension, dir = racine, acc = []) {
 for (const e of readdirSync(dir)) {
