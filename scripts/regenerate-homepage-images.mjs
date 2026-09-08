@@ -22,9 +22,16 @@ const HOMEPAGE_IMAGES = [
   "amphitheatre.jpg",
   "graduation.jpg",
   "international-students.jpg",
-  "university-building.jpg",
-  "university-hall.jpg"
+  "university-building.jpg"
 ];
+
+// university-hall.jpg est sortie de cette liste le 2026-09-08, en même
+// temps que ses quinze variantes. Plus aucune page ne la charge : le
+// hero de l'accueil a sa propre photo, universities.html est passée à
+// campus-courtyard.jpg le 2026-09-01, et sa provenance n'a jamais pu
+// être établie (CREDITS.md). L'ORIGINAL reste sur le disque et dans le
+// dépôt — sa suppression est une décision, pas un ménage — mais le
+// laisser ici aurait recréé les variantes au premier lancement.
 
 const WIDTHS = [400, 800, 1200, 1600, 1920];
 const QUALITY = 92; // Qualité augmentée de 78 à 92 (quasi sans perte)
