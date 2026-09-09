@@ -36,6 +36,7 @@ import { couperLeReseau } from "./hors-ligne.mjs";
 import { jouerQuestionnaire } from "./questionnaire.mjs";
 import { verifierPagesCatalogue } from "./pages.mjs";
 import { verifierEspaceEtudiant } from "./espace.mjs";
+import { verifierControlCenter } from "./control-center.mjs";
 import { PROFILS, profilParCle } from "./profils.mjs";
 
 import path from "node:path";
@@ -231,7 +232,10 @@ async function principal() {
   // « espace » n'est pas un profil de questionnaire : c'est le contrôle de
   // l'espace étudiant seul (espace.mjs), pour itérer vite dessus.
   const seulEspace = args.includes("espace");
-  const cles = args.filter((a) => !a.startsWith("--") && a !== "espace");
+  // « admin » : le Control Center seul — quatre sessions d'administrateur
+  // stubbées (voir control-center.mjs).
+  const seulAdmin = args.includes("admin");
+  const cles = args.filter((a) => !a.startsWith("--") && a !== "espace" && a !== "admin");
 
   const choisis = cles.length
     ? cles.map((c) => {
@@ -239,7 +243,7 @@ async function principal() {
         if (!p) throw new Error(`Profil inconnu : « ${c} ». Disponibles : ${PROFILS.map((x) => x.cle).join(", ")}`);
         return p;
       })
-    : (seulEspace ? [] : PROFILS);
+    : (seulEspace || seulAdmin ? [] : PROFILS);
 
   let chromium;
 
@@ -280,7 +284,7 @@ async function principal() {
   // catalogue.
   let pages = { anomalies: [], notes: [] };
 
-  if (!cles.length && !seulEspace) {
+  if (!cles.length && !seulEspace && !seulAdmin) {
 
     process.stdout.write(`  ${"pages catalogue".padEnd(20)} `);
 
@@ -301,7 +305,7 @@ async function principal() {
   // regardaient.
   let espace = { anomalies: [], notes: [] };
 
-  if (!cles.length) {
+  if (!cles.length && !seulAdmin) {
 
     process.stdout.write(`  ${"espace étudiant".padEnd(20)} `);
 
@@ -316,16 +320,36 @@ async function principal() {
 
   }
 
+  // Le Control Center, une session d'administrateur par niveau. La
+  // panne du 2026-09-09 vivait ici, derrière une porte que le harnais
+  // ne savait franchir que dans le seul rôle où la page marchait.
+  let centre = { anomalies: [], notes: [] };
+
+  if (!cles.length && !seulEspace) {
+
+    process.stdout.write(`  ${"control center".padEnd(20)} `);
+
+    centre = await verifierControlCenter({ navigateur, base: serveur.url });
+
+    console.log(centre.anomalies.length ? "ÉCHEC" : "ok");
+
+    for (const note of centre.notes) console.log(`      · ${note}`);
+    for (const anomalie of centre.anomalies) console.log(`      ✗ ${anomalie}`);
+
+    console.log("");
+
+  }
+
   await navigateur.close();
   await serveur.arreter();
 
   const echecs = resultats.filter((r) => r.anomalies.length);
 
-  const totalEchecs = echecs.length + (pages.anomalies.length ? 1 : 0) + (espace.anomalies.length ? 1 : 0);
+  const totalEchecs = echecs.length + (pages.anomalies.length ? 1 : 0) + (espace.anomalies.length ? 1 : 0) + (centre.anomalies.length ? 1 : 0);
 
   console.log(totalEchecs
-    ? `${totalEchecs} contrôle(s) en échec : ${[...echecs.map((r) => r.profil.cle), ...(pages.anomalies.length ? ["pages catalogue"] : []), ...(espace.anomalies.length ? ["espace étudiant"] : [])].join(", ")}\n`
-    : `${resultats.length} profil(s) + les pages du catalogue + l'espace étudiant vérifiés de bout en bout, aucune anomalie.\n`);
+    ? `${totalEchecs} contrôle(s) en échec : ${[...echecs.map((r) => r.profil.cle), ...(pages.anomalies.length ? ["pages catalogue"] : []), ...(espace.anomalies.length ? ["espace étudiant"] : []), ...(centre.anomalies.length ? ["control center"] : [])].join(", ")}\n`
+    : `${resultats.length} profil(s) + les pages du catalogue + l'espace étudiant + le Control Center vérifiés de bout en bout, aucune anomalie.\n`);
 
   process.exit(totalEchecs ? 1 : 0);
 

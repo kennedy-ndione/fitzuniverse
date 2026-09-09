@@ -36,13 +36,16 @@ const SYMBOLES = {
     "signInAnonymously", "signInWithEmailAndPassword", "createUserWithEmailAndPassword",
     "sendPasswordResetEmail", "updateProfile", "updatePassword", "deleteUser",
     "EmailAuthProvider", "reauthenticateWithCredential", "GoogleAuthProvider",
-    "signInWithPopup"
+    "signInWithPopup", "setPersistence", "browserLocalPersistence", "browserSessionPersistence"
   ],
   "firebase-firestore.js": [
     "getFirestore", "connectFirestoreEmulator", "collection", "doc", "getDoc",
     "getDocs", "setDoc", "addDoc", "updateDoc", "deleteDoc", "query", "where",
     "orderBy", "limit", "onSnapshot", "serverTimestamp", "increment",
-    "writeBatch", "arrayUnion", "arrayRemove", "Timestamp"
+    "writeBatch", "arrayUnion", "arrayRemove", "Timestamp",
+    // Relevé complété le 2026-09-09, quand le Control Center est entré
+    // dans le harnais : admin/firebase-admin.js importe ces trois-là.
+    "deleteField", "documentId", "getCountFromServer"
   ],
   "firebase-storage.js": ["getStorage", "ref", "uploadBytes", "getDownloadURL", "deleteObject"],
   "firebase-functions.js": ["getFunctions", "httpsCallable", "connectFunctionsEmulator"]
@@ -56,6 +59,8 @@ const IMPLEMENTATIONS = {
   onAuthStateChanged: "export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel(null), 0); return () => {}; }",
   onSnapshot: "export function onSnapshot(){ return () => {}; }",
   serverTimestamp: "export function serverTimestamp(){ return new Date(); }",
+  getCountFromServer: "export function getCountFromServer(){ return Promise.resolve({ data: () => ({ count: 0 }) }); }",
+  setPersistence: "export function setPersistence(){ return Promise.resolve(); }",
   writeBatch: "export function writeBatch(){ return { set(){}, update(){}, delete(){}, commit: () => Promise.resolve() }; }",
   // LOT S3 : la Cloud Function `portails` sert la carte des portails de
   // candidature, retirée du catalogue public. Hors ligne et sans compte,
@@ -77,6 +82,42 @@ const IMPLEMENTATIONS_ADMIN = {
   onAuthStateChanged: "export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel({ uid: 'harnais', email: 'harnais@fitz.local' }), 0); return () => {}; }",
   getDoc: "export function getDoc(){ return Promise.resolve({ exists: () => true, data: () => ({ email: 'harnais@fitz.local', isActive: true }) }); }"
 };
+
+/**
+ * Mode ADMIN NOMMÉ (correctif du 2026-09-09).
+ *
+ * Le mode ci-dessus rend un document `admins` SANS champ `role` — donc
+ * un propriétaire, par la règle d'amorçage. C'est le seul cas que le
+ * harnais savait jouer, et c'est exactement celui qui n'a pas cassé.
+ *
+ * La panne, elle, vivait chez les AUTRES : un administrateur ordinaire,
+ * dont `appliquerRole()` retire les blocs réservés, et un propriétaire
+ * dont le document portait la graphie héritée « super-admin ». Ce mode
+ * prend donc le document `admins` en paramètre, et sert en plus le
+ * document `users/{uid}` de l'étudiant dont on ouvre la fiche.
+ *
+ * Aucune écriture n'est faite : elles sont CONSIGNÉES dans
+ * window.__harnaisEcritures, comme en mode étudiant.
+ */
+function implementationsAdmin({ uid, email, adminDoc, etudiantUid, etudiantDoc, echecAdmins = false }) {
+
+  const donnees = JSON.stringify({ uid, adminDoc, etudiantUid, etudiantDoc, echecAdmins });
+
+  return {
+    onAuthStateChanged: `export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel({ uid: ${JSON.stringify(uid)}, email: ${JSON.stringify(email)} }), 0); return () => {}; }`,
+    doc: `export function doc(){ const a = Array.from(arguments); const base = a[0] && a[0].__chemin ? [a[0].__chemin] : []; return { __chemin: base.concat(a.slice(1)).join('/') }; }`,
+    collection: `export function collection(){ const a = Array.from(arguments); const base = a[0] && a[0].__chemin ? [a[0].__chemin] : []; return { __chemin: base.concat(a.slice(1)).join('/') }; }`,
+    getDoc: `const __A = ${donnees};
+export function getDoc(ref){ const c = (ref && ref.__chemin) || '';
+if (c === 'admins/' + __A.uid) { if (__A.echecAdmins) { const e = new Error('[harnais] lecture de admins refusée'); e.code = 'permission-denied'; return Promise.reject(e); } return Promise.resolve({ exists: () => true, id: __A.uid, data: () => __A.adminDoc }); }
+if (c === 'users/' + __A.etudiantUid) return Promise.resolve({ exists: () => true, id: __A.etudiantUid, data: () => __A.etudiantDoc });
+return Promise.resolve({ exists: () => false, data: () => null }); }`,
+    setDoc: `export function setDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'set', chemin: (ref && ref.__chemin) || '', data }); return Promise.resolve(); }`,
+    updateDoc: `export function updateDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'update', chemin: (ref && ref.__chemin) || '', data }); return Promise.resolve(); }`,
+    addDoc: `export function addDoc(ref, data){ (window.__harnaisEcritures = window.__harnaisEcritures || []).push({ op: 'add', chemin: (ref && ref.__chemin) || '', data }); return Promise.resolve({ id: 'auto' }); }`
+  };
+
+}
 
 // Mode ÉTUDIANT (passe espace étudiant 1/3, 2026-09-06) : les pages
 // dashboard.html et applications.html vivent derrière bootstrapShell(),
@@ -137,6 +178,7 @@ function doublureFirebase(fichier, admin = false, etudiant = null) {
   // `new` — ce qui marche sur une fonction, pas sur un littéral.
   const implementations = etudiant
     ? { ...IMPLEMENTATIONS, ...implementationsEtudiant(etudiant) }
+    : admin && typeof admin === "object" ? { ...IMPLEMENTATIONS, ...implementationsAdmin(admin) }
     : admin ? { ...IMPLEMENTATIONS, ...IMPLEMENTATIONS_ADMIN } : IMPLEMENTATIONS;
 
   return noms
@@ -165,7 +207,11 @@ export async function couperLeReseau(context, options = {}) {
   // connecté. Sans ce mode, aucune page du Control Center ne serait
   // vérifiable — et ce sont justement celles que personne ne regarde
   // avant qu'elles ne cassent.
-  const admin = options.admin === true;
+  // `true` garde l'ancien comportement (un propriétaire par amorçage) ;
+  // un OBJET { uid, email, adminDoc, etudiantUid, etudiantDoc } permet
+  // de jouer un administrateur ORDINAIRE, ou un propriétaire dont le
+  // document porte la graphie héritée — les deux cas qui ont cassé.
+  const admin = options.admin === true || (options.admin && typeof options.admin === "object") ? options.admin : false;
 
   // Mode ÉTUDIANT : { uid, userData, applications } — voir
   // implementationsEtudiant() ci-dessus.

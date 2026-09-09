@@ -166,10 +166,18 @@ assert.match(page, /const proprietaire = porteRoleProprietaire\(a\);/);
 
 test("aucune chaîne de rôle n'est écrite en dur hors de js/roles-admin.js", () => {
 
-// Le seul fichier autorisé à contenir ces chaînes est celui qui les
-// DÉCLARE. firestore.rules aussi, forcément — c'est l'autre langage, et
-// le test ci-dessus compare les deux jeux de valeurs.
-const exemptes = new Set(["js/roles-admin.js"]);
+// Le seul fichier de PRODUCTION autorisé à contenir ces chaînes est
+// celui qui les DÉCLARE. firestore.rules aussi, forcément — c'est
+// l'autre langage, et le test ci-dessus compare les deux jeux de
+// valeurs.
+//
+// Le harnais navigateur est exempté pour la raison INVERSE : ses
+// sessions doivent porter les valeurs telles qu'elles existent EN BASE,
+// graphie héritée et rôle inconnu compris. S'il importait les
+// constantes, il suivrait le code au lieu de le confronter — et le jour
+// où une constante change, il changerait avec elle sans rien dire. Ses
+// valeurs sont vérifiées juste en dessous, une par une.
+const exemptes = new Set(["js/roles-admin.js", "scripts/verifier/control-center.mjs"]);
 
 const dossiers = ["js", "admin", "functions", "scripts"];
 const fichiers = [];
@@ -219,6 +227,38 @@ assert.match(declaration, /export const ROLE_SUPER_ADMIN_HERITE = "super-admin";
 // Son en-tête RACONTE la panne, donc parle de Firestore et du
 // navigateur — on regarde le code, pas le récit.
 assert.ok(!/firebase|gstatic|document\.|window\./i.test(sansCommentaires(declaration)), "js/roles-admin.js doit rester sans Firebase ni DOM");
+
+});
+
+test("le harnais navigateur joue les trois rôles qui existent en base, pas seulement celui qui marchait", () => {
+
+// Le harnais ne savait ouvrir le Control Center que dans UN rôle :
+// un document sans champ `role`, donc le propriétaire par amorçage —
+// exactement le seul pour qui la fiche ne cassait pas. Ses sessions
+// couvrent désormais les trois autres états réels.
+const harnais = lire("scripts/verifier/control-center.mjs");
+
+const sessions = [...harnais.matchAll(/role: "([^"]+)"/g)].map((m) => m[1]);
+
+assert.ok(sessions.includes(ROLE_ADMIN), "il manque la session « administrateur ordinaire » — celle qui a cassé");
+assert.ok(sessions.includes(ROLE_SUPER_ADMIN_HERITE), "il manque la session « graphie héritée » — celle du propriétaire réel");
+assert.ok(sessions.some((r) => !ROLES_CONNUS.includes(r)), "il manque une session au rôle inconnu");
+
+// Et le quatrième état, qui n'est pas un rôle : la lecture qui échoue.
+assert.match(harnais, /echecAdmins: true/);
+assert.match(harnais, /renvoyé à la connexion/);
+
+// Ce que chaque session vérifie : que la fiche s'ouvre ENTIÈREMENT, et
+// que le réservé est absent plutôt que grisé.
+assert.match(harnais, /reserveVisible/);
+assert.match(harnais, /querySelectorAll\("\[data-super-admin\]"\)\.length/);
+assert.match(harnais, /const ECRANS_D_ECHEC = \[/);
+
+// Le harnais tourne dans `npm run verifier` sans qu'on ait à y penser.
+const verifieur = lire("scripts/verifier/verifier.mjs");
+assert.match(verifieur, /import \{ verifierControlCenter \} from "\.\/control-center\.mjs";/);
+assert.match(verifieur, /centre = await verifierControlCenter\(/);
+assert.match(verifieur, /\(centre\.anomalies\.length \? 1 : 0\)/, "un échec du Control Center doit faire échouer le harnais entier");
 
 });
 
