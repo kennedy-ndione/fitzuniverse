@@ -316,3 +316,51 @@ largeur du pouce. Remontée au-dessus de la zone de gestes. */
 }
 
 @media print{ .fitz-fab-wrap{ display:none; } }
+
+/* ==========================================================
+   BASCULE D'ESPACE (lot S4)
+   ==========================================================
+   Visible UNIQUEMENT pour un client qui a les deux
+   accompagnements — pour tous les autres, elle n'est pas dans
+   le DOM (js/app-shell.js, initBasculeEspace). Un client qui
+   n'a acheté qu'un accompagnement ne doit pas apprendre
+   l'existence de l'autre par un bouton grisé dans sa barre
+   haute : ce serait vendre au milieu de ce qu'il a déjà payé.
+   ========================================================== */
+.espace-bascule{
+display:inline-flex;
+align-items:center;
+gap:2px;
+padding:3px;
+margin-right:6px;
+border:1px solid var(--border-soft, rgba(0,0,0,.10));
+border-radius:999px;
+background:var(--surface-2, rgba(0,0,0,.03));
+}
+
+.espace-bascule-btn{
+padding:5px 12px;
+border-radius:999px;
+font-size:var(--fs-caption);
+font-weight:600;
+line-height:1;
+color:var(--text-muted);
+text-decoration:none;
+white-space:nowrap;
+transition:background .15s ease, color .15s ease;
+}
+
+.espace-bascule-btn:hover{ color:var(--text-color); }
+
+.espace-bascule-btn.is-active{
+background:var(--surface-1, #fff);
+color:var(--text-color);
+box-shadow:0 1px 2px rgba(0,0,0,.06);
+}
+
+/* Sous 720px la barre haute est déjà dense : on garde la bascule,
+   mais compacte — c'est la seule façon de changer d'espace. */
+@media (max-width: 720px){
+.espace-bascule{ margin-right:2px; }
+.espace-bascule-btn{ padding:5px 9px; }
+}

@@ -692,43 +692,69 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
       notes.push(`sélecteur : ${picker.propositions} suggestions, aucune close`);
 
-      // ---- LOT A : le select de parcours dans le formulaire ----
+      // ---- LOT S4 : l'ESPACE impose le parcours, il n'y a plus de select ----
       //
-      // 1. Une bourse du catalogue verrouille le select sur « Bourse ».
-      // 2. Hors catalogue, l'étudiant choisit « Préinscription » ; la
-      //    seule écriture produite porte track:"preinscription".
+      // Le sélecteur « Ce que vise cette candidature » a disparu du
+      // formulaire : on ne demande plus à quelqu'un de choisir dans un
+      // menu ce qu'il vient d'acheter. Ce qu'on vérifie maintenant :
+      //   1. le select n'est nulle part dans le DOM ;
+      //   2. dans l'espace BOURSE, une candidature part en track="bourse"
+      //      sur un identifiant slot-N ;
+      //   3. dans l'espace PRÉINSCRIPTION, la même saisie part en
+      //      track="preinscription" sur un pre-N — sans qu'on ait rien
+      //      choisi.
       if (picker.propositions) {
 
-        await page.click("#pickerList .apps-pick");
-        await page.waitForSelector("#trackSection:not([hidden])", { timeout: 10000 });
+        const selectPresent = await page.evaluate(() => ({
+          select: !!document.getElementById("applicationTrack"),
+          section: !!document.getElementById("trackSection")
+        }));
+        if (selectPresent.select || selectPresent.section) {
+          anomalies.push("Formulaire : le sélecteur de parcours est encore dans le DOM — l'espace doit imposer le parcours.");
+        }
 
-        const verrou = await page.evaluate(() => {
-          const s = document.getElementById("applicationTrack");
-          return { valeur: s.value, verrouille: s.disabled, note: !document.getElementById("applicationTrackNote").hidden };
+        // 2. Espace BOURSE (celui de la page à ce stade) : une entrée du
+        //    catalogue s'enregistre en bourse, sur un slot-N.
+        await page.click("#pickerList .apps-pick");
+        await page.waitForSelector("#detailsSection", { state: "visible", timeout: 10000 });
+        await page.evaluate(() => document.getElementById("applicationForm").requestSubmit());
+
+        await page.waitForFunction(
+          () => (window.__harnaisEcritures || []).some((e) => e.op === "set" && e.data && e.data.track === "bourse"),
+          null,
+          { timeout: 10000 }
+        ).catch(() => anomalies.push("Espace bourse : aucune candidature écrite depuis le catalogue."));
+
+        const enBourse = await page.evaluate(() => {
+          const e = (window.__harnaisEcritures || []).find((x) => x.op === "set" && x.data && x.data.track === "bourse");
+          return e ? { chemin: e.chemin, track: e.data.track } : null;
         });
 
-        if (verrou.valeur !== "bourse" || !verrou.verrouille) anomalies.push(`Sélecteur : une bourse du catalogue choisie, le parcours vaut « ${verrou.valeur} » ${verrou.verrouille ? "verrouillé" : "MODIFIABLE"} au lieu de « bourse » verrouillé.`);
-        if (!verrou.note) anomalies.push("Sélecteur : la note « Cette candidature suit une bourse du catalogue. » n'apparaît pas.");
+        if (enBourse && !/\/applications\/slot-\d+$/.test(enBourse.chemin)) {
+          anomalies.push(`Espace bourse : écrit sur ${enBourse.chemin} au lieu d'un identifiant slot-N.`);
+        }
 
-        await page.click("#pickerChangeBtn");
-        await page.waitForSelector("#manualModeBtn", { state: "visible", timeout: 10000 });
-        await page.click("#manualModeBtn");
+        // 3. Espace PRÉINSCRIPTION : on bascule comme le ferait le
+        //    sélecteur de barre haute (sessionStorage, js/app-shell.js),
+        //    puis on saisit hors catalogue. Rien d'autre ne change.
+        await page.evaluate(() => sessionStorage.setItem("fitz.espace", "preinscription"));
+        await page.goto(`${base}/applications.html?action=new`, { waitUntil: "domcontentloaded" });
+        await page.waitForSelector("#applicationModal", { state: "visible", timeout: 20000 });
+
+        const espaceRendu = await page.evaluate(() => ({
+          body: document.body.dataset.espace || "",
+          selectEncoreLa: !!document.getElementById("applicationTrack"),
+          slotsVisibles: [...document.querySelectorAll("#applicationsList .app-card")].map((c) => c.id).filter((id) => /^slot-/.test(id))
+        }));
+
+        if (espaceRendu.body !== "preinscription") anomalies.push(`Bascule : la page reste dans l'espace « ${espaceRendu.body} » après le passage en préinscription.`);
+        if (espaceRendu.selectEncoreLa) anomalies.push("Bascule : le sélecteur de parcours est réapparu.");
+
+        await page.waitForSelector("#manualModeBtn", { state: "visible", timeout: 10000 }).catch(() => {});
+        const manuel = await page.$("#manualModeBtn");
+        if (manuel) await manuel.click();
         await page.waitForSelector("#fieldUniversity", { state: "visible", timeout: 10000 });
 
-        const libre = await page.evaluate(() => {
-          const s = document.getElementById("applicationTrack");
-          return { verrouille: s.disabled, note: !document.getElementById("applicationTrackNote").hidden };
-        });
-
-        if (libre.verrouille || libre.note) anomalies.push("Hors catalogue : le parcours reste verrouillé (ou la note du catalogue reste affichée).");
-
-        // Le select natif est habillé par js/fitz-select.js : on pose la
-        // valeur sur le natif et on prévient le formulaire.
-        await page.evaluate(() => {
-          const s = document.getElementById("applicationTrack");
-          s.value = "preinscription";
-          s.dispatchEvent(new Event("change", { bubbles: true }));
-        });
         await page.fill("#fieldUniversity", "Université Enregistrée en Préinscription");
         await page.evaluate(() => document.getElementById("applicationForm").requestSubmit());
 
@@ -736,7 +762,7 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
           () => (window.__harnaisEcritures || []).some((e) => e.op === "set" && e.data && e.data.university === "Université Enregistrée en Préinscription"),
           null,
           { timeout: 10000 }
-        ).catch(() => anomalies.push("Enregistrement hors catalogue en « Préinscription » : rien n'a été écrit."));
+        ).catch(() => anomalies.push("Espace préinscription : rien n'a été écrit depuis le formulaire."));
 
         const enregistree = await page.evaluate(() => {
           const e = (window.__harnaisEcritures || []).find((x) => x.op === "set" && x.data && x.data.university === "Université Enregistrée en Préinscription");
@@ -744,11 +770,13 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         });
 
         if (enregistree) {
-          if (enregistree.track !== "preinscription") anomalies.push(`Enregistrement hors catalogue : track « ${enregistree.track} » écrit au lieu de « preinscription ».`);
-          if (enregistree.scholarshipId) anomalies.push("Enregistrement hors catalogue : une clé de bourse a été écrite.");
+          // LA vérification du lot : le parcours vient de l'ESPACE, sans
+          // qu'aucun menu n'ait été touché.
+          if (enregistree.track !== "preinscription") anomalies.push(`Espace préinscription : track « ${enregistree.track} » écrit au lieu de « preinscription ».`);
+          if (enregistree.scholarshipId) anomalies.push("Espace préinscription : une clé de bourse a été écrite.");
           // Grille B : une préinscription vit sur pre-N, jamais sur slot-N.
-          if (!/\/applications\/pre-\d+$/.test(enregistree.chemin)) anomalies.push(`Enregistrement hors catalogue : écrit sur ${enregistree.chemin} au lieu d'un identifiant pre-N.`);
-          notes.push(`formulaire : « Préinscription » écrite sur ${enregistree.chemin.split("/").pop()} (track=${enregistree.track})`);
+          if (!/\/applications\/pre-\d+$/.test(enregistree.chemin)) anomalies.push(`Espace préinscription : écrit sur ${enregistree.chemin} au lieu d'un identifiant pre-N.`);
+          notes.push(`formulaire : « ${enregistree.track} » écrite sur ${enregistree.chemin.split("/").pop()}, sans sélecteur — l'espace a décidé`);
         }
 
       }
@@ -761,13 +789,15 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
     await contexte.close();
   }
 
-  // ---------- 2. dashboard.html ----------
+  // ---------- 2. le hub bourse (ex-dashboard.html) ----------
   {
     const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
 
     try {
 
-      await page.goto(`${base}/dashboard.html`, { waitUntil: "domcontentloaded" });
+      // LOT S4 : dashboard.html n'est plus qu'un aiguillage — le hub
+      // porte désormais son propre nom.
+      await page.goto(`${base}/espace-bourse.html`, { waitUntil: "domcontentloaded" });
 
       if (page.url().includes("login.html")) throw new Error("redirigée vers la connexion — la doublure étudiant n'a pas pris.");
 
@@ -855,7 +885,7 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       notes.push(`radar : ${vu.radarVisible ? vu.radar.join(" | ") : "masqué"} — action : « ${vu.action.titre.slice(0, 70)} »`);
 
     } catch (e) {
-      anomalies.push(`ÉCHEC dashboard.html : ${e.message}`);
+      anomalies.push(`ÉCHEC espace-bourse.html : ${e.message}`);
     }
 
     anomalies.push(...erreurs);
@@ -983,6 +1013,161 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
     anomalies.push(...erreurs);
     await contexte.close();
+  }
+
+  // ---------- 5. LES DEUX ESPACES, SOUS SESSION (lot S4) ----------
+  //
+  // Le lot demandait cette vérification « sous session réelle, avec deux
+  // comptes de test ». Aucun mot de passe n'est saisi ici : le harnais
+  // STUBBE la session, ce qui donne la même preuve, reproductible, et
+  // sans identifiants à faire circuler. Trois profils, dérivés du même
+  // étudiant témoin — seules les formules changent :
+  //
+  //   client BOURSE          plan actif, aucun forfait préinscription
+  //   client PRÉINSCRIPTION  aucune formule bourse, dossier-france actif
+  //   compte GRATUIT         ni l'un ni l'autre
+  //
+  // Ce qu'on lit : où l'on ATTERRIT, ce qui est ABSENT du DOM, et où
+  // mène une URL forcée de l'autre espace.
+  {
+
+    const profil = (userData) => ({ ...etudiant, userData: { ...etudiant.userData, ...userData } });
+
+    const CLIENT_BOURSE = profil({ plan: "conseiller-6", planExpiresAt: dansNJours(90), planPreinscription: "", planPreinscriptionExpiresAt: null });
+    const CLIENT_PRE = profil({ plan: "gratuit", planExpiresAt: null, planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dansNJours(200) });
+    const GRATUIT = profil({ plan: "gratuit", planExpiresAt: null, planPreinscription: "", planPreinscriptionExpiresAt: null });
+
+    /** Ouvre une URL avec un profil donné et rend ce que le DOM porte. */
+    const lireEspace = async (compte, url, attente) => {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, compte);
+      try {
+        await page.goto(`${base}/${url}`, { waitUntil: "domcontentloaded" });
+        // Les redirections d'espace sont des window.location.replace :
+        // on attend que l'URL se stabilise sur une page attendue…
+        await page.waitForFunction((fins) => fins.some((f) => location.pathname.endsWith(f)), attente, { timeout: 20000 })
+          .catch(() => {});
+        // …PUIS que la coquille ait fini. bootstrapShell pose
+        // body[data-espace] tout à la fin : sans cette attente, on lit un
+        // DOM d'avant la résolution de session — pastille « … », onglet
+        // Fitz encore présent, bouton flottant pas encore injecté. Les
+        // trois « anomalies » du premier passage n'en étaient pas.
+        // On attend la coquille APRÈS la redirection : body[data-espace] ET
+        // la pastille remplie. Attendre le seul data-espace ne suffit pas —
+        // un window.location.replace peut résoudre la condition sur le
+        // document d'AVANT la navigation, et l'evaluate qui suit lit alors
+        // le nouveau, encore à « … ».
+        await page.waitForFunction(() => {
+          if (!document.body.dataset.espace) return false;
+          const el = document.getElementById("topbarPlanLabel");
+          return !el || el.textContent.trim() !== "…";
+        }, null, { timeout: 20000, polling: 100 }).catch(() => {});
+        const vu = await page.evaluate(() => ({
+          page: location.pathname.split("/").pop(),
+          espace: document.body.dataset.espace || "",
+          fab: !!document.getElementById("fitzFabWrap"),
+          bascule: !!document.getElementById("espaceBascule"),
+          basculeEntrees: [...document.querySelectorAll("#espaceBascule [data-espace]")].map((a) => a.dataset.espace),
+          pastille: (document.getElementById("topbarPlanLabel") || {}).textContent || "",
+          accueilMinimal: !!document.getElementById("accueilMinimal") && !document.getElementById("accueilMinimal").hidden,
+          outilsFitz: [...document.querySelectorAll('a[href^="ai-"], a[href^="test-prep"], a[href^="interview-prep"]')].length
+        }));
+        return { vu, erreurs, contexte };
+      } catch (e) {
+        return { vu: null, erreurs: [...erreurs, `ÉCHEC ${url} : ${e.message}`], contexte };
+      }
+    };
+
+    // --- a) Le client BOURSE ---------------------------------------
+    {
+      const { vu, erreurs, contexte } = await lireEspace(CLIENT_BOURSE, "dashboard.html", ["espace-bourse.html", "dashboard.html"]);
+      if (vu) {
+        if (vu.page !== "espace-bourse.html") anomalies.push(`client bourse : atterrit sur ${vu.page} au lieu de espace-bourse.html.`);
+        if (vu.espace !== "bourse") anomalies.push(`client bourse : body data-espace = « ${vu.espace} ».`);
+        if (!vu.fab) anomalies.push("client bourse : le bouton flottant Fitz est absent alors qu'il a les outils.");
+        if (vu.bascule) anomalies.push("client bourse : la bascule d'espace est dans le DOM — il n'a qu'un accompagnement.");
+        if (/Dossier France|Diagnostic France/.test(vu.pastille)) anomalies.push(`client bourse : la pastille annonce un forfait préinscription (« ${vu.pastille} »).`);
+        notes.push(`S4 client bourse : ${vu.page} — pastille « ${vu.pastille.trim()} », Fitz présent, aucune bascule`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // Une page de l'AUTRE espace ne le renvoie pas aux offres.
+    {
+      const { vu, erreurs, contexte } = await lireEspace(CLIENT_BOURSE, "diagnostic-france.html", ["espace-bourse.html", "offers.html", "diagnostic-france.html"]);
+      if (vu) {
+        if (vu.page === "offers.html") anomalies.push("client bourse sur diagnostic-france.html : renvoyé sur la page d'offres — on ne vend pas à quelqu'un qui a déjà payé.");
+        else if (vu.page !== "espace-bourse.html") anomalies.push(`client bourse sur diagnostic-france.html : atterrit sur ${vu.page} au lieu de son hub.`);
+        else notes.push("S4 URL forcée : diagnostic-france.html ramène le client bourse à espace-bourse.html");
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // --- b) Le client PRÉINSCRIPTION --------------------------------
+    {
+      const { vu, erreurs, contexte } = await lireEspace(CLIENT_PRE, "dashboard.html", ["espace-preinscription.html", "dashboard.html"]);
+      if (vu) {
+        if (vu.page !== "espace-preinscription.html") anomalies.push(`client préinscription : atterrit sur ${vu.page} au lieu de espace-preinscription.html.`);
+        if (vu.espace !== "preinscription") anomalies.push(`client préinscription : body data-espace = « ${vu.espace} ».`);
+        // ABSENT du DOM, pas masqué : c'est toute la règle du lot.
+        if (vu.fab) anomalies.push("client préinscription : le bouton flottant Fitz est dans le DOM — il n'a aucun outil Fitz.");
+        if (vu.outilsFitz > 0) anomalies.push(`client préinscription : ${vu.outilsFitz} lien(s) vers un outil Fitz dans le DOM.`);
+        if (vu.bascule) anomalies.push("client préinscription : la bascule d'espace est dans le DOM — il n'a qu'un accompagnement.");
+        if (!/Dossier France/.test(vu.pastille)) anomalies.push(`client préinscription : la pastille dit « ${vu.pastille} » au lieu de son forfait.`);
+        notes.push(`S4 client préinscription : ${vu.page} — pastille « ${vu.pastille.trim()} », aucun Fitz dans le DOM`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    {
+      const { vu, erreurs, contexte } = await lireEspace(CLIENT_PRE, "ai-letter.html", ["espace-preinscription.html", "offers.html", "ai-letter.html"]);
+      if (vu) {
+        if (vu.page === "offers.html") anomalies.push("client préinscription sur ai-letter.html : renvoyé sur la page d'offres au lieu de son hub.");
+        else if (vu.page !== "espace-preinscription.html") anomalies.push(`client préinscription sur ai-letter.html : atterrit sur ${vu.page}.`);
+        else notes.push("S4 URL forcée : ai-letter.html ramène le client préinscription à espace-preinscription.html");
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // --- c) Le client des DEUX : la bascule, et elle seule -----------
+    {
+      const { vu, erreurs, contexte } = await lireEspace(etudiant, "espace-bourse.html", ["espace-bourse.html"]);
+      if (vu) {
+        if (!vu.bascule) anomalies.push("client des deux : aucune bascule d'espace dans le DOM.");
+        else if (vu.basculeEntrees.join(",") !== "bourse,preinscription") anomalies.push(`client des deux : bascule à « ${vu.basculeEntrees.join(",")} ».`);
+        // La pastille ne dit QU'UN forfait, celui de l'espace courant.
+        if (/·/.test(vu.pastille)) anomalies.push(`client des deux : la pastille concatène les deux forfaits (« ${vu.pastille} »).`);
+        notes.push(`S4 client des deux : bascule ${vu.basculeEntrees.join(" / ")} — pastille « ${vu.pastille.trim()} »`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // --- d) Le compte GRATUIT : il reste, et il garde ses pages ------
+    {
+      const { vu, erreurs, contexte } = await lireEspace(GRATUIT, "dashboard.html", ["dashboard.html", "offers.html", "login.html"]);
+      if (vu) {
+        if (vu.page !== "dashboard.html") anomalies.push(`compte gratuit : expédié sur ${vu.page} — un compte sans accompagnement garde son accueil.`);
+        if (!vu.accueilMinimal) anomalies.push("compte gratuit : l'accueil minimal ne s'affiche pas.");
+        notes.push("S4 compte gratuit : reste sur dashboard.html, accueil minimal affiché");
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    {
+      const { vu, erreurs, contexte } = await lireEspace(GRATUIT, "profile.html", ["profile.html", "offers.html", "login.html"]);
+      if (vu) {
+        if (vu.page !== "profile.html") anomalies.push(`compte gratuit : profile.html le renvoie sur ${vu.page} — son profil doit rester accessible.`);
+        else notes.push("S4 compte gratuit : profile.html accessible, aucune boucle de redirection");
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
   }
 
   return { anomalies, notes };

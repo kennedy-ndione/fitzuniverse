@@ -369,7 +369,7 @@ renderHistory();
 
 }
 
-bootstrapShell({ feature: "ai_translate" }).then((ctx) => {
+bootstrapShell({ feature: "ai_translate", espace: "bourse" }).then((ctx) => {
 
 if (ctx.locked) {
 

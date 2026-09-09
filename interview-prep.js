@@ -111,7 +111,7 @@ renderProgress();
 
 }
 
-bootstrapShell({ feature: "interview_prep" }).then((ctx) => {
+bootstrapShell({ feature: "interview_prep", espace: "bourse" }).then((ctx) => {
 
 if (ctx.locked) {
 

@@ -227,23 +227,12 @@ catalogue) — mais ce n'est plus le chemin par défaut. -->
 modification d'une candidature existante. En création via le
 catalogue, ils restent cachés mais PORTENT les valeurs choisies :
 le chemin d'enregistrement est le même dans tous les cas. -->
-<!-- LOT A (chantier préinscription, 2026-09-07) : le parcours que suit
-la candidature — bourse, ou admission que l'étudiant finance lui-même.
-Au-dessus du champ université, visible dès qu'une candidature prend
-forme (catalogue choisi ou saisie hors catalogue). Une entrée du
-catalogue verrouille le select sur « Bourse » : la donnée gagne sur
-le formulaire (voir handleSubmit dans applications.js). Le parcours
-à l'écran (étapes, conseils) est le lot B. -->
-<div id="trackSection" hidden>
-<label class="apps-field">
-<span>Ce que vise cette candidature</span>
-<select id="applicationTrack" name="track">
-<option value="bourse" selected>Bourse</option>
-<option value="preinscription">Préinscription — je finance moi-même</option>
-</select>
-<small class="apps-field-note" id="applicationTrackNote" hidden>Cette candidature suit une bourse du catalogue.</small>
-</label>
-</div>
+<!-- LOT S4 (2026-09-08) : le sélecteur « Ce que vise cette candidature »
+a DISPARU. L'espace impose le parcours — on ne demande plus à
+quelqu'un de choisir dans un menu ce qu'il vient d'acheter, et un
+client qui n'a qu'un accompagnement n'a jamais eu à choisir. Le
+champ « track » continue d'être écrit sur la candidature, depuis
+l'espace courant (applications.js). -->
 
 <div id="manualFields" hidden>
 

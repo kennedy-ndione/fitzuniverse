@@ -61,6 +61,38 @@ export const PHASES = [
 ];
 
 /**
+* LES MÊMES PHASES, DEUX VOCABULAIRES (lot S4).
+*
+* Les six phases décrivaient un parcours BOURSE et étaient servies aux
+* deux : « Opportunités » et « Réponse » (icône coupe) ne veulent rien
+* dire pour quelqu'un qui prépare une préinscription qu'il finance
+* lui-même. Il ne cherche pas une opportunité, il choisit un
+* établissement ; il n'attend pas un prix, il attend une admission.
+*
+* LES `id` NE CHANGENT PAS, et c'est le point : ce sont eux que
+* etatDesPhases() mesure, que les ancres visent et que le CSS habille.
+* On dédouble les LIBELLÉS et l'ordre, jamais le moteur — deux moteurs,
+* c'est deux définitions de « dossier prêt » qui divergent au premier
+* correctif.
+*/
+export const PHASES_PAR_ESPACE = {
+bourse: PHASES,
+preinscription: [
+{ id: "profil", label: "Profil", icon: "user-round" },
+{ id: "opportunites", label: "Établissements", icon: "landmark" },
+{ id: "dossiers", label: "Dossiers", icon: "clipboard-list" },
+{ id: "depot", label: "Dépôt", icon: "send" },
+{ id: "reponse", label: "Admission", icon: "mail" },
+{ id: "depart", label: "Visa & départ", icon: "plane" }
+]
+};
+
+/** Les phases d'un espace ; celles du parcours bourse par défaut. */
+export function phasesDe(espace) {
+return PHASES_PAR_ESPACE[espace] || PHASES;
+}
+
+/**
 * État des 6 phases.
 *
 * Définitions — chacune adossée à une donnée réelle :
@@ -84,7 +116,11 @@ export const PHASES = [
 * @param {Array}  ctx.applications - chacune avec `etapes` (computeJourneySteps) déjà calculées
 * @returns {{phases: Array, couranteId: string, progressionPct: number}}
 */
-export function etatDesPhases({ profileScore = 0, applications = [], visaChecklist = {} } = {}) {
+export function etatDesPhases({ profileScore = 0, applications = [], visaChecklist = {}, espace = "bourse" } = {}) {
+
+// Les libellés et l ordre changent d un espace à l autre ; la MESURE,
+// elle, est la même pour les deux.
+const listePhases = phasesDe(espace);
 
 const aUneCandidature = applications.length > 0;
 
@@ -105,13 +141,13 @@ reponse: aReponse,
 depart: visaComplete(visaChecklist)
 };
 
-let couranteId = PHASES[PHASES.length - 1].id;
+let couranteId = listePhases[listePhases.length - 1].id;
 
-for (const phase of PHASES) {
+for (const phase of listePhases) {
 if (!faits[phase.id]) { couranteId = phase.id; break; }
 }
 
-const phases = PHASES.map((phase) => ({
+const phases = listePhases.map((phase) => ({
 ...phase,
 faite: faits[phase.id],
 courante: phase.id === couranteId

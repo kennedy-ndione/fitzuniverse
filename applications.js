@@ -538,9 +538,29 @@ ${avertissement}`;
 
 }
 
+// LOT S4 — LA PAGE EST SCOPÉE PAR L'ESPACE D'OÙ L'ON VIENT.
+// Une seule page, deux contenus : un client préinscription n'y voit que
+// ses pre-N, un client bourse que ses slot-N. Sans cela, un client qui
+// a les deux accompagnements lisait une liste mélangée où un dossier
+// France s'intercalait entre deux bourses, avec des étapes et un
+// vocabulaire qui ne se répondaient pas.
+// ESPACE vaut "" pour un compte sans accompagnement (la page est alors
+// verrouillée de toute façon, mais ses candidatures protégées doivent
+// rester lisibles) : dans ce cas, on ne filtre rien.
+let ESPACE = "";
+
+// L'espace où l'on SE TROUVE, qui décide du parcours d'une NOUVELLE
+// candidature. À ne pas confondre avec ESPACE ci-dessus, qui filtre la
+// LISTE : un client des deux accompagnements voit ses deux parcours
+// (ESPACE vide), mais il en écrit UN — celui de l'espace courant. Les
+// avoir confondus faisait écrire « bourse » à un client passé en
+// préinscription, sur un identifiant slot-N ; le harnais l'a attrapé.
+let ESPACE_ECRITURE = "";
+
 async function fetchApplications(uid) {
 const snapshot = await getDocs(collection(db, "users", uid, "applications"));
-return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+const toutes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+return ESPACE ? toutes.filter((app) => lireParcours(app) === ESPACE) : toutes;
 }
 
 function renderProtectedReadOnlyState(container, protectedApps, index = null) {
@@ -904,7 +924,6 @@ const modalTitle = document.getElementById("applicationModalTitle");
 const form = document.getElementById("applicationForm");
 
 const fields = {
-track: document.getElementById("applicationTrack"),
 university: document.getElementById("fieldUniversity"),
 scholarship: document.getElementById("fieldScholarship"),
 portalUrl: document.getElementById("fieldPortalUrl"),
@@ -1097,18 +1116,16 @@ const pickerList = document.getElementById("pickerList");
 const pickerSearch = document.getElementById("pickerSearch");
 const pickerSummary = document.getElementById("pickerSummary");
 const manualFields = document.getElementById("manualFields");
-const trackSection = document.getElementById("trackSection");
-const trackNote = document.getElementById("applicationTrackNote");
 const detailsSection = document.getElementById("detailsSection");
 
 // Lot A : une candidature liée à une bourse du catalogue ne peut pas
 // être une préinscription — le select se verrouille sur « Bourse » et
 // le dit. Hors catalogue (repli manuel ou édition), l'étudiant choisit.
-function verrouillerParcours(verrouille) {
-if (verrouille) fields.track.value = "bourse";
-fields.track.disabled = verrouille;
-trackNote.hidden = !verrouille;
-}
+// LOT S4 : plus de select à verrouiller — l'espace impose le parcours.
+// La fonction reste pour ses appelants, et ne fait plus rien : une
+// candidature créée depuis le catalogue des bourses dans l'espace
+// préinscription n'existe pas, l'espace ayant déjà tranché.
+function verrouillerParcours() {}
 
 // Résidu du lot A (corrigé lot B) : « Changer » puis « hors catalogue »
 // laissait le titre de bourse, le portail et la date de l'entrée
@@ -1305,7 +1322,6 @@ pickerSection.hidden = true;
 manualFields.hidden = true;
 fields.university.required = false;
 verrouillerParcours(true);
-trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1341,7 +1357,6 @@ manualMode = false;
 pickerSummary.hidden = true;
 pickerSummary.innerHTML = "";
 manualFields.hidden = true;
-trackSection.hidden = true;
 verrouillerParcours(false);
 viderChampsCatalogue();
 detailsSection.hidden = true;
@@ -1364,7 +1379,6 @@ manualFields.hidden = false;
 fields.university.required = true;
 verrouillerParcours(false);
 viderChampsCatalogue();
-trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1380,11 +1394,6 @@ function openModal(app) {
 editingId = app ? app.id : null;
 modalTitle.textContent = app ? "Modifier la candidature" : "Nouvelle candidature";
 
-fields.track.value = lireParcours(app);
-// Grille B : on ne propose que les parcours que le compte peut accompagner.
-fields.track.querySelector('option[value="bourse"]').disabled = !peutBourse;
-fields.track.querySelector('option[value="preinscription"]').disabled = !peutPreinscription;
-if (!app && !peutBourse && peutPreinscription) fields.track.value = "preinscription";
 fields.university.value = app?.university || "";
 fields.scholarship.value = app?.scholarship || "";
 fields.portalUrl.value = app?.portalUrl || "";
@@ -1409,7 +1418,6 @@ pickerSection.hidden = true;
 manualFields.hidden = false;
 fields.university.required = true;
 verrouillerParcours(false);
-trackSection.hidden = false;
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1418,7 +1426,6 @@ saveBtn.disabled = false;
 manualMode = false;
 manualFields.hidden = true;
 fields.university.required = false;
-trackSection.hidden = true;
 verrouillerParcours(false);
 detailsSection.hidden = true;
 saveBtn.disabled = true;
@@ -2206,7 +2213,9 @@ portalUrl: fields.portalUrl.value.trim(),
 status: fields.status.value,
 // Lot A : le parcours. Tout ce qui n'est pas exactement
 // « preinscription » est une bourse (js/parcours.js).
-track: fields.track.value === "preinscription" ? "preinscription" : "bourse",
+// LOT S4 : l'espace impose le parcours. On ne demande plus à
+// quelqu'un de choisir dans un menu ce qu'il vient d'acheter.
+track: ESPACE_ECRITURE === "preinscription" ? "preinscription" : "bourse",
 deadline: fields.deadline.value || null,
 reminderFrequency: parseInt(fields.frequency.value, 10),
 notes: fields.notes.value.trim(),
@@ -2390,11 +2399,9 @@ if (isQuotaReached(quotaPour(track), candidaturesDuParcours(track, applications)
 
 openModal(null);
 
-if (estPreinscription(track) && peutPreinscription) {
-enterManualMode();
-fields.track.value = "preinscription";
-fields.track.dispatchEvent(new Event("change", { bubbles: true }));
-}
+// Un dossier de préinscription se saisit hors catalogue : le catalogue
+// des bourses n'a rien à proposer à quelqu'un qui finance ses études.
+if (estPreinscription(track) && peutPreinscription) enterManualMode();
 
 }
 
@@ -2431,6 +2438,18 @@ return entree.applicationUrl
 }
 
 bootstrapShell({ feature: "applications" }).then(async (ctx) => {
+
+// LOT S4 : l'espace d'où l'on vient, AVANT toute lecture de
+// candidatures — c'est lui qui décide de ce que cette page montre.
+// Un client qui a les DEUX accompagnements voit ses deux parcours ici,
+// chaque carte portant son étiquette (« Bourse » / « Préinscription »,
+// posée au lot A). La règle du lot S4 vise le client d'UN SEUL
+// accompagnement — « un client préinscription n'y voit que ses pre-N » —
+// et elle est tenue : son espace vaut alors « preinscription », et le
+// filtre s'applique. Masquer la moitié de ses dossiers à quelqu'un qui a
+// payé les deux serait lui cacher ce qu'il a acheté.
+ESPACE = ctx.espaceUtilisateur === "les-deux" ? "" : (ctx.espace || "");
+ESPACE_ECRITURE = ctx.espace || "";
 
 // Une fois pour la session : cette page est déjà derrière
 // bootstrapShell, l'appel ne coûte donc rien à un visiteur.

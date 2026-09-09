@@ -461,19 +461,32 @@ return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cel
 // que de faire remonter le pas depuis le tableau de bord (audit du
 // 2026-08-10, chantier "accès par formule"). "?action=new" est lu par
 // applications.js pour ouvrir directement le formulaire de candidature.
+// LOT S4 : chaque achat mène à SON espace, jamais à dashboard.html.
+// dashboard.html n'est plus qu'un aiguillage : y envoyer un client qui
+// vient de payer lui ferait traverser une redirection de plus, et lui
+// montrerait une page vide le temps que la session se résolve. Le
+// paramètre ?track= a disparu avec le sélecteur du formulaire : l'espace
+// impose désormais le parcours, on ne demande plus à quelqu'un de
+// choisir ce qu'il vient d'acheter.
 const POST_ACTIVATION_TARGETS = {
 fitzExpress: "ai-chat.html",
-"premier-dossier": "applications.html?action=new",
-// Grille B (2026-09-07) : le diagnostic ouvre sa page ; un Dossier France
-// ouvre le formulaire de candidature, parcours préinscription pré-rempli
-// (le select du lot A lit ?track=preinscription).
+"premier-dossier": "espace-bourse.html?action=new",
+"essentiel-4": "espace-bourse.html",
+"conseiller-6": "espace-bourse.html",
+// Grille B : le diagnostic ouvre sa page ; un Dossier France ouvre son
+// hub, prêt à enregistrer la première préinscription.
 "diagnostic-france": "diagnostic-france.html",
-"dossier-france": "applications.html?action=new&track=preinscription",
-"dossier-france-conseiller": "applications.html?action=new&track=preinscription"
+"dossier-france": "espace-preinscription.html?action=new",
+"dossier-france-conseiller": "espace-preinscription.html?action=new"
 };
 
+// Le repli vise l'espace bourse, et non dashboard.html : les seules
+// formules qui passent par ici sans être listées sont les DÉPRÉCIÉES
+// (essentiel, accompagnement, signature, signature-focus), toutes des
+// offres bourse dont un client peut encore payer une facture émise
+// avant leur retrait.
 function resolvePostActivationTarget(planId) {
-return POST_ACTIVATION_TARGETS[planId] || "dashboard.html";
+return POST_ACTIVATION_TARGETS[planId] || "espace-bourse.html";
 }
 
 function initActivation(plan, session) {

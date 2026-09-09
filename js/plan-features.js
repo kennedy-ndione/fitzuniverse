@@ -331,3 +331,182 @@ merged[key] = { ...defaults, ...overrides };
 return merged;
 
 }
+
+// ==========================================================
+// FORMULES RÉSOLUES, ET ESPACE (déplacé de js/access-guard.js, S4)
+// ==========================================================
+
+// Un abonnement expiré doit se comporter exactement comme l'absence
+// d'abonnement — les deux cas retombent aujourd'hui sur "essentiel"
+// (voir la note historique ci-dessous). Ce n'est PAS un nouveau choix :
+// c'est le même comportement déjà en place, appliqué en plus au cas de
+// l'expiration pour rester cohérent. planExpiresAt est une chaîne ISO
+// (ex. "2026-09-15"), écrite par le futur backend de paiement — aucun
+// compte n'en a aujourd'hui, ce contrôle est donc actuellement inerte.
+function isPlanExpired(userData) {
+
+if (!userData || !userData.planExpiresAt) return false;
+
+const expiry = new Date(userData.planExpiresAt);
+
+return !isNaN(expiry) && expiry.getTime() < Date.now();
+
+}
+
+// RÉSOLU (2026-07-30, audit d'harmonisation) : tout compte sans formule
+// payante valide — y compris un compte dont la formule a expiré —
+// retombe désormais sur "gratuit" (voir js/plan-features.js), qui ne
+// débloque aucun outil Fitz ni candidature accompagnée. C'était
+// auparavant "essentiel" par défaut, ce qui donnait 100% des outils
+// payants à tout le monde tant qu'aucun vrai paiement n'existait.
+export function resolvePlan(userData) {
+const raw = String((userData && userData.plan) || "").toLowerCase();
+if (!PLAN_ORDER.includes(raw)) return "gratuit";
+return isPlanExpired(userData) ? "gratuit" : raw;
+}
+
+// Fitz Express (pricing-plans.js) n'est PAS une formule : c'est un pass
+// indépendant qui ne touche jamais `plan`. Un compte peut l'avoir actif
+// quelle que soit sa formule (y compris aucune). fitzExpressExpiresAt
+// suit la même convention que planExpiresAt (chaîne ISO).
+export function hasFitzExpressAccess(userData) {
+
+if (!userData || !userData.fitzExpressExpiresAt) return false;
+
+const expiry = new Date(userData.fitzExpressExpiresAt);
+
+return !isNaN(expiry) && expiry.getTime() >= Date.now();
+
+}
+
+// Grille B (2026-09-07) : le second forfait, PRÉINSCRIPTION. Même règle
+// que resolvePlan : hors vocabulaire ou expiré = aucune offre ("").
+export function resolvePlanPreinscription(userData) {
+
+const raw = String((userData && userData.planPreinscription) || "").toLowerCase();
+
+if (!PLAN_PREINSCRIPTION_ORDER.includes(raw)) return "";
+
+const expiry = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt) : null;
+
+if (expiry && !isNaN(expiry) && expiry.getTime() < Date.now()) return "";
+
+return raw;
+
+}
+
+// Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER
+// pour que les comptes qui la détiennent déjà continuent de fonctionner,
+// mais ne doit plus jamais être SUGGÉRÉE à l'achat — ni comme prochain
+// palier (nextPlanId, panneau coach du tableau de bord), ni comme cible
+// de déverrouillage d'une fonctionnalité (unlockingPlans, CTA "Choisir
+// ma formule" un peu partout). `window.SCHOLARBRIDGE_PLANS` peut être
+// absent sur une page qui ne charge pas pricing-plans.js (ex. panneau
+// admin) : dans ce cas rien n'est filtré, comportement inchangé.
+function isSellablePlan(planId) {
+const plan = typeof SCHOLARBRIDGE_PLANS !== "undefined" && SCHOLARBRIDGE_PLANS[planId];
+return !plan || plan.deprecated !== true;
+}
+
+export function nextPlanId(planId) {
+const index = PLAN_ORDER.indexOf(planId);
+if (index === -1) return null;
+for (let i = index + 1; i < PLAN_ORDER.length; i++) {
+if (isSellablePlan(PLAN_ORDER[i])) return PLAN_ORDER[i];
+}
+return null;
+}
+
+// `espace` ajouté au lot S4 : une fonctionnalité purement PRÉINSCRIPTION
+// (diagnostic_france) n'est ouverte par aucune formule de PLAN_ORDER. La
+// fonction ne trouvait donc rien et l'appelant renvoyait sur une page
+// d'offres nue — on montrait la porte des bourses à quelqu'un venu
+// acheter un dossier France. On cherche maintenant dans la grille de
+// l'espace concerné.
+export function unlockingPlans(planId, flags, espace = "") {
+if (!flags) return [];
+if (espace === "preinscription") return PLAN_PREINSCRIPTION_ORDER.filter((p) => flags[p]);
+const bourses = PLAN_ORDER.filter((p) => p !== planId && flags[p] && isSellablePlan(p));
+// Sans espace déclaré, on garde le comportement d'avant — et, s'il n'y
+// a rien côté bourse, on regarde quand même côté préinscription plutôt
+// que de ne rien proposer.
+return bourses.length ? bourses : PLAN_PREINSCRIPTION_ORDER.filter((p) => flags[p]);
+}
+
+// ==========================================================
+// L'ESPACE — l'identité d'un client, pas un filtre (lot S4)
+// ==========================================================
+//
+// Le parcours était jusqu'ici un CHAMP sur une candidature (`track`),
+// lu à cinq endroits, qui changeait quelques étapes. Il devient ce qui
+// décide OÙ un client atterrit, ce qu'il voit, et comment on lui parle.
+//
+// Quatre valeurs, et une seule fonction pour les produire :
+//   "bourse"          il a payé un accompagnement bourse ;
+//   "preinscription"  il a payé un dossier France ;
+//   "les-deux"        les deux — ou l'accès test ;
+//   "aucun"           aucun accompagnement actif. Ce n'est PAS une
+//                     erreur : c'est un compte gratuit connecté, qui a
+//                     le droit d'atteindre son profil et son compte.
+//
+// L'EXPIRATION EST COMPRISE, parce que les deux formules sont résolues
+// par resolvePlan() et resolvePlanPreinscription(), qui la gèrent déjà.
+// Un accompagnement bourse expiré + un dossier France actif rend
+// "preinscription", et surtout pas "les-deux".
+//
+// `testerAccess` rend "les-deux", ET C'EST DIT ICI EN TOUTES LETTRES.
+// C'est la seule exception, et elle mérite d'être explicite : c'est
+// exactement ce contournement qui a rendu invisible, pendant des
+// semaines, tout ce qu'un vrai client voyait (le compte d'administration
+// ne validait aucune restriction).
+export const ESPACES = ["bourse", "preinscription", "les-deux", "aucun"];
+
+/** Le hub de chaque espace. "aucun" reste sur dashboard.html, qui lui rend un accueil minimal. */
+export const HUB_ESPACE = {
+bourse: "espace-bourse.html",
+preinscription: "espace-preinscription.html",
+"les-deux": "espace-bourse.html",
+aucun: "dashboard.html"
+};
+
+/**
+* L'espace d'un compte. Pure : aucun DOM, aucun Firestore.
+*
+* Accepte une SESSION (resolveSession, formules déjà résolues) ou un
+* document users/{uid} BRUT — dans ce cas les deux formules sont
+* résolues ici, avec les mêmes fonctions. Les deux formes existent
+* vraiment dans le dépôt : le shell a une session, un test ou un panneau
+* d'administration a le document.
+*
+* @param {{planId?:string, planPreinscriptionId?:string, testerAccess?:boolean, plan?:string, planPreinscription?:string}} source
+* @returns {"bourse"|"preinscription"|"les-deux"|"aucun"}
+*/
+export function resoudreEspace(source) {
+
+if (!source || typeof source !== "object") return "aucun";
+
+if (source.testerAccess === true) return "les-deux";
+
+const bourse = source.planId !== undefined ? source.planId : resolvePlan(source);
+const preinscription = source.planPreinscriptionId !== undefined ? source.planPreinscriptionId : resolvePlanPreinscription(source);
+
+const aBourse = !!bourse && bourse !== "gratuit";
+const aPreinscription = !!preinscription;
+
+if (aBourse && aPreinscription) return "les-deux";
+if (aBourse) return "bourse";
+if (aPreinscription) return "preinscription";
+return "aucun";
+
+}
+
+/**
+* Vrai si un compte de cet espace a le droit d'ouvrir une page marquée
+* `espacePage`. Une page sans espace (profil, compte, messages,
+* documents) est ouverte à tous : elle n'appartient à aucun parcours.
+*/
+export function espaceAutorise(espaceUtilisateur, espacePage) {
+if (!espacePage) return true;
+if (espaceUtilisateur === "les-deux") return true;
+return espaceUtilisateur === espacePage;
+}

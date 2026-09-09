@@ -38,24 +38,34 @@ const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 // site », plus bas, garde le filet contre une exclusion trop large.
 const EXCLUS = new Set(["node_modules", ".git", ".claude", "admin", "Claude outputs", "sauvegardes"]);
 
-// Les couches de résidence (js/procedures/residences/) CITENT des
-// sources officielles mot pour mot — c'est la règle du dossier : chaque
-// fragment porte sa source et sa date, et on ne réécrit pas ce qu'un
-// organisme publie. Campus France Guinée avertit lui-même qu'il « ne
-// travaille avec aucun partenaire extérieur » : la phrase vise des
-// rabatteurs qui encaissent 1 500 000 GNF en son nom. La retoucher pour
-// satisfaire une règle de copie falsifierait un avertissement de
-// sécurité.
+// LES CITATIONS ÉCHAPPENT AU CONTRÔLE DE COPIE — PAS LE RÉPERTOIRE (S4).
 //
-// C'est exactement la carve-out déjà écrite en tête de ce fichier pour
-// les .mjs (« pays partenaires » d'un bailleur n'est pas notre
-// promesse) : le mot dans la bouche d'un tiers n'est pas notre claim.
-// Ce qui reste banni, et qui est tout l'objet de cette garde, c'est
-// « universités partenaires » dans NOTRE copie.
-const DOSSIERS_CITANT_DES_SOURCES = join(racine, "js", "procedures", "residences");
+// La première version de cette exclusion portait sur tout
+// js/procedures/residences/, ce qui faisait échapper au contrôle
+// éditorial l'intégralité des couches : titres, consignes, noms de
+// pièces, des centaines de lignes que l'étudiant lit. Trop large pour
+// la raison invoquée — le mot dans la bouche d'un TIERS n'est pas notre
+// promesse, mais tout le reste d'une couche est bien notre copie.
+//
+// Deux champs, et deux seulement, portent une citation :
+//   `avertissement`  le texte que l'organisme publie contre les
+//                    rabatteurs, partout dans le dépôt ;
+//   `texte`          l'énoncé d'un FAIT d'une couche de résidence, qui
+//                    reprend la page officielle — Campus France Guinée
+//                    répète son avertissement dans la phrase même qui
+//                    donne le montant. Restreint aux couches : ailleurs,
+//                    `texte` est de la copie maison et reste contrôlée.
+// Tout le reste d'une couche — titres, consignes, noms de pièces, ce
+// que l'étudiant lit ligne après ligne — passe au contrôle éditorial.
+function sansCitations(source, chemin = "") {
+let sortie = source.replace(/avertissement:\s*"(?:\\.|[^"\\])*"/g, 'avertissement: ""');
+if (chemin.includes("/procedures/residences/")) {
+sortie = sortie.replace(/texte:\s*"(?:\\.|[^"\\])*"/g, 'texte: ""');
+}
+return sortie;
+}
 
 function fichiers(extension, dir = racine, acc = []) {
-if (dir === DOSSIERS_CITANT_DES_SOURCES) return acc;
 for (const e of readdirSync(dir)) {
 if (EXCLUS.has(e)) continue;
 const p = join(dir, e);
@@ -93,7 +103,7 @@ assert.equal(i, -1, `${nom(p)} contient encore « partenaire » dans du texte vi
 
 test("aucun .js du site (hors admin/) ne contient « partenaire » hors commentaire", () => {
 for (const p of fichiers(".js")) {
-const visible = sansCommentairesJs(readFileSync(p, "utf8"));
+const visible = sansCommentairesJs(sansCitations(readFileSync(p, "utf8"), nom(p)));
 const i = visible.toLowerCase().indexOf("partenaire");
 assert.equal(i, -1, `${nom(p)} contient encore « partenaire » (chaîne ou identifiant) : « …${visible.slice(Math.max(0, i - 60), i + 30).trim()}… »`);
 }

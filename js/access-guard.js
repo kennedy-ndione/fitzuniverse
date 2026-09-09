@@ -38,9 +38,20 @@ setDoc,
 serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS, resolveFeatureFlags, decideVerrou } from "./plan-features.js";
+import {
+PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS,
+resolveFeatureFlags, decideVerrou,
+resolvePlan, resolvePlanPreinscription, hasFitzExpressAccess,
+nextPlanId, unlockingPlans,
+ESPACES, HUB_ESPACE, resoudreEspace, espaceAutorise
+} from "./plan-features.js";
 
-export { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS };
+export {
+PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS,
+resolvePlan, resolvePlanPreinscription, hasFitzExpressAccess,
+nextPlanId, unlockingPlans,
+ESPACES, HUB_ESPACE, resoudreEspace, espaceAutorise
+};
 
 // Formule résolue pour le compte propriétaire (voir la note dans
 // resolveSession() ci-dessous) — la plus complète de PLAN_ORDER,
@@ -61,90 +72,17 @@ desiredCountry: ""
 };
 }
 
-// Un abonnement expiré doit se comporter exactement comme l'absence
-// d'abonnement — les deux cas retombent aujourd'hui sur "essentiel"
-// (voir la note historique ci-dessous). Ce n'est PAS un nouveau choix :
-// c'est le même comportement déjà en place, appliqué en plus au cas de
-// l'expiration pour rester cohérent. planExpiresAt est une chaîne ISO
-// (ex. "2026-09-15"), écrite par le futur backend de paiement — aucun
-// compte n'en a aujourd'hui, ce contrôle est donc actuellement inerte.
-function isPlanExpired(userData) {
-
-if (!userData || !userData.planExpiresAt) return false;
-
-const expiry = new Date(userData.planExpiresAt);
-
-return !isNaN(expiry) && expiry.getTime() < Date.now();
-
-}
-
-// RÉSOLU (2026-07-30, audit d'harmonisation) : tout compte sans formule
-// payante valide — y compris un compte dont la formule a expiré —
-// retombe désormais sur "gratuit" (voir js/plan-features.js), qui ne
-// débloque aucun outil Fitz ni candidature accompagnée. C'était
-// auparavant "essentiel" par défaut, ce qui donnait 100% des outils
-// payants à tout le monde tant qu'aucun vrai paiement n'existait.
-export function resolvePlan(userData) {
-const raw = String((userData && userData.plan) || "").toLowerCase();
-if (!PLAN_ORDER.includes(raw)) return "gratuit";
-return isPlanExpired(userData) ? "gratuit" : raw;
-}
-
-// Fitz Express (pricing-plans.js) n'est PAS une formule : c'est un pass
-// indépendant qui ne touche jamais `plan`. Un compte peut l'avoir actif
-// quelle que soit sa formule (y compris aucune). fitzExpressExpiresAt
-// suit la même convention que planExpiresAt (chaîne ISO).
-export function hasFitzExpressAccess(userData) {
-
-if (!userData || !userData.fitzExpressExpiresAt) return false;
-
-const expiry = new Date(userData.fitzExpressExpiresAt);
-
-return !isNaN(expiry) && expiry.getTime() >= Date.now();
-
-}
-
-// Grille B (2026-09-07) : le second forfait, PRÉINSCRIPTION. Même règle
-// que resolvePlan : hors vocabulaire ou expiré = aucune offre ("").
-export function resolvePlanPreinscription(userData) {
-
-const raw = String((userData && userData.planPreinscription) || "").toLowerCase();
-
-if (!PLAN_PREINSCRIPTION_ORDER.includes(raw)) return "";
-
-const expiry = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt) : null;
-
-if (expiry && !isNaN(expiry) && expiry.getTime() < Date.now()) return "";
-
-return raw;
-
-}
-
-// Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER
-// pour que les comptes qui la détiennent déjà continuent de fonctionner,
-// mais ne doit plus jamais être SUGGÉRÉE à l'achat — ni comme prochain
-// palier (nextPlanId, panneau coach du tableau de bord), ni comme cible
-// de déverrouillage d'une fonctionnalité (unlockingPlans, CTA "Choisir
-// ma formule" un peu partout). `window.SCHOLARBRIDGE_PLANS` peut être
-// absent sur une page qui ne charge pas pricing-plans.js (ex. panneau
-// admin) : dans ce cas rien n'est filtré, comportement inchangé.
-function isSellablePlan(planId) {
-const plan = typeof SCHOLARBRIDGE_PLANS !== "undefined" && SCHOLARBRIDGE_PLANS[planId];
-return !plan || plan.deprecated !== true;
-}
-
-export function nextPlanId(planId) {
-const index = PLAN_ORDER.indexOf(planId);
-if (index === -1) return null;
-for (let i = index + 1; i < PLAN_ORDER.length; i++) {
-if (isSellablePlan(PLAN_ORDER[i])) return PLAN_ORDER[i];
-}
-return null;
-}
-
-export function unlockingPlans(planId, flags) {
-return PLAN_ORDER.filter((p) => p !== planId && flags[p] && isSellablePlan(p));
-}
+// LOT S4 — TOUTE LA LOGIQUE PURE DE FORMULE A DÉMÉNAGÉ dans
+// js/plan-features.js : resolvePlan, resolvePlanPreinscription,
+// hasFitzExpressAccess, nextPlanId, unlockingPlans, et la décision
+// d'ESPACE (resoudreEspace). Elle n'avait rien à faire dans un module
+// qui importe le SDK Firebase depuis un CDN — un test Node ne peut pas
+// charger ce fichier, et c'est exactement ce qui a empêché, jusqu'ici,
+// d'écrire un test sur la résolution des formules.
+//
+// Elles restent RÉ-EXPORTÉES ici : une trentaine de fichiers les
+// importent depuis access-guard, et ce lot n'est pas un lot de
+// renommage.
 
 // testerAccess (users/{uid}.testerAccess, réservé à l'admin — voir
 // firestore.rules) court-circuite le verrouillage par formule pour un
@@ -370,17 +308,30 @@ return new Promise(() => {});
 * vers offers.html (sur la formule qui la débloquerait, si connue) et
 * ne résout jamais sa promesse — même contrat que requireAuth().
 */
-export function requireFeature(featureKey) {
+export function requireFeature(featureKey, { espace = "" } = {}) {
 
 return requireAuth().then(async (session) => {
 
 showGuardLoader();
 
+// LOT S4 — ON NE VEND PAS À QUELQU'UN QUI A DÉJÀ PAYÉ.
+// Un client préinscription qui force ai-letter.html dans sa barre
+// d'adresse n'est pas un prospect : c'est un client, qui s'est trompé
+// de porte. On le RAMÈNE CHEZ LUI, pas sur la page d'offres. La page
+// d'offres reste la destination de qui n'a rien acheté — pour lui,
+// elle répond à la question qu'il se pose.
+const espaceUtilisateur = resoudreEspace(session);
+
+if (espace && !espaceAutorise(espaceUtilisateur, espace) && espaceUtilisateur !== "aucun") {
+window.location.replace(HUB_ESPACE[espaceUtilisateur]);
+return new Promise(() => {});
+}
+
 const featureFlags = await fetchFeatureFlags();
 
 if (isFeatureLocked(session.planId, featureFlags, featureKey, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
 
-const target = unlockingPlans(session.planId, featureFlags[featureKey])[0];
+const target = unlockingPlans(session.planId, featureFlags[featureKey], espace)[0];
 
 window.location.replace(target ? `offers.html#${target}` : "offers.html");
 

@@ -239,19 +239,31 @@ whenLucideReady(() => refreshIcons(sheet));
 // 2. ESPACE ÉTUDIANT — barre d'onglets + feuille « Menu »
 // ==========================================================
 
+// LOT S4 : le champ « espace » dit à quel accompagnement une destination
+// appartient ; absent, elle appartient aux deux. Le premier onglet mène
+// au HUB, dont l'adresse dépend de l'espace — dashboard.html n'est plus
+// qu'un aiguillage.
 const TABS = [
-{ href: "dashboard.html", label: "Parcours", icon: "route" },
+{ href: "dashboard.html", label: "Parcours", icon: "route", hub: true },
 { href: "applications.html", label: "Candidatures", icon: "folder-open" },
 { href: "documents.html", label: "Documents", icon: "file-text" }
 ];
 
+const HUB_PAR_ESPACE = { bourse: "espace-bourse.html", preinscription: "espace-preinscription.html" };
+
+// Le champ « espace » restreint une entrée à un accompagnement. Les sept
+// liens n'en portaient aucun : la feuille proposait « Préparation aux
+// tests » et « Entretien » à un client préinscription, qui arrivait sur
+// une page verrouillée. Le profil, le compte, les messages et le
+// catalogue des universités restent communs — ils n'appartiennent à
+// aucun parcours.
 const MENU_ITEMS = [
 { href: "profile.html", label: "Mon profil", icon: "user-round" },
 { href: "account.html", label: "Paramètres", icon: "settings" },
 { href: "messages.html", label: "Messages de l'équipe", icon: "bell", id: "mnavMenuMessages" },
-{ href: "test-prep.html", label: "Préparation aux tests", icon: "book-open" },
-{ href: "interview-prep.html", label: "Entretien", icon: "mic" },
-{ href: "scholarships.html", label: "Catalogue des bourses", icon: "award" },
+{ href: "test-prep.html", label: "Préparation aux tests", icon: "book-open", espace: "bourse" },
+{ href: "interview-prep.html", label: "Entretien", icon: "mic", espace: "bourse" },
+{ href: "scholarships.html", label: "Catalogue des bourses", icon: "award", espace: "bourse" },
 { href: "universities.html", label: "Universités", icon: "landmark" }
 ];
 
@@ -274,6 +286,47 @@ return `
 <a href="${m.href}" class="mnav-menu-item"${m.id ? ` id="${m.id}"` : ""}${isCurrent(m.href) ? ' aria-current="page"' : ""}>
 ${icon(m.icon)}<span>${m.label}</span>
 </a>`;
+}
+
+/**
+* Applique l'espace courant à la navigation (lot S4), une fois la
+* session résolue : le hub prend son adresse, et tout ce qui appartient
+* à l'AUTRE accompagnement est RETIRÉ du DOM.
+*
+* Retiré, pas masqué : un lien caché reste dans la tabulation, dans un
+* Ctrl+F et dans la lecture d'un lecteur d'écran. Proposer « Fitz » à
+* un client préinscription, c'était l'envoyer sur une page verrouillée
+* et lui vendre ce qu'il n'a pas acheté, au milieu de ce qu'il a payé.
+*/
+function appliquerEspace(espace) {
+
+if (!espace) return;
+
+const hub = HUB_PAR_ESPACE[espace];
+const barre = document.getElementById("mnavTabbar");
+
+if (barre && hub) {
+const onglet = barre.querySelector('.mnav-tab[href="dashboard.html"]');
+if (onglet) {
+onglet.setAttribute("href", hub);
+if (isCurrent(hub)) onglet.setAttribute("aria-current", "page");
+}
+// L'onglet Fitz n'existe pas dans l'espace préinscription.
+if (espace === "preinscription") {
+const fitz = barre.querySelector(".mnav-tab--fitz");
+if (fitz) fitz.remove();
+}
+}
+
+const grille = document.getElementById("mnavMenuGrid");
+if (!grille) return;
+
+for (const item of MENU_ITEMS) {
+if (!item.espace || item.espace === espace) continue;
+const lien = grille.querySelector(`a[href="${item.href}"]`);
+if (lien) lien.remove();
+}
+
 }
 
 /** Insère une entrée de menu soumise à un droit, une fois ce droit connu. */
@@ -599,6 +652,6 @@ document.addEventListener("DOMContentLoaded", init);
 init();
 }
 
-window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree };
+window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree, appliquerEspace };
 
 })();

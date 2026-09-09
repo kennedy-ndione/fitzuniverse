@@ -28,6 +28,9 @@ import { dirname, join } from "node:path";
 import { advisorOuvert, DEFAULT_FEATURE_CONFIG, PREINSCRIPTION_FEATURE_CONFIG, resolveFeatureFlags } from "../js/plan-features.js";
 import { calculerDiagnostic, residenceDocumentee } from "../js/diagnostic-france.js";
 import { faitFrance } from "../js/pays-preinscription.js";
+// Le témoin « pays non documenté » se choisit tout seul — voir
+// test/_pays-temoin.mjs, et l'historique des quatre pays qu'il a usés.
+import { TEMOIN, TEMOIN_2 } from "./_pays-temoin.mjs";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
@@ -148,16 +151,23 @@ assert.match(avant.slice(derniereSection, derniereSection + 60), /<h3>Offre pré
 
 test("diagnostic-france.html a deux entrées hors paiement, et chacune disparaît quand le droit est fermé", () => {
 
-const dashHtml = lire("dashboard.html");
-const dashJs = lire("dashboard.js");
+// LOT S4 : la carte a suivi le Diagnostic dans SON espace. Elle vivait
+// sur dashboard.html, qui n'est plus qu'un aiguillage ; elle est
+// maintenant dans le hub préinscription, à la phase où l'on choisit ses
+// établissements — c'est-à-dire au moment où la question du coût se
+// pose. Le retrait quand le droit est fermé ne dépend plus d'un code
+// écrit exprès dans dashboard.js : son [data-feature] la fait retirer
+// du DOM par applyFeatureLocks(), comme tous les autres.
+const hubPre = lire("espace-preinscription.html");
+const shell = lire("js/app-shell.js");
 const nav = lire("js/mobile-nav.js");
 
-// a) La carte du tableau de bord.
-assert.ok(dashHtml.includes('href="diagnostic-france.html"'), "aucun lien vers le diagnostic dans dashboard.html");
-assert.ok(dashHtml.includes('id="jyDiagnosticFranceBtn"'), "la carte doit être identifiable pour être retirée");
-// Retirée du DOM (remove), pas seulement masquée.
-assert.match(dashJs, /jyDiagnosticFranceBtn[\s\S]{0,400}?diagBtn\.remove\(\)/, "la carte doit être retirée du DOM quand le droit est fermé");
-assert.match(dashJs, /isFeatureLocked\(planId, featureFlags, "diagnostic_france"/, "le droit se lit avec la fonctionnalité diagnostic_france");
+// a) La carte du hub préinscription.
+assert.ok(hubPre.includes('href="diagnostic-france.html"'), "aucun lien vers le diagnostic dans le hub préinscription");
+assert.ok(hubPre.includes('id="jyDiagnosticFranceBtn"'), "la carte doit être identifiable");
+assert.match(hubPre, /data-feature="diagnostic_france"/, "la carte doit porter le droit qui la conditionne");
+// Retirée du DOM (remove), pas seulement masquée ni grisée.
+assert.match(shell, /if \(locked\) \{\s*el\.remove\(\);/, "un droit fermé RETIRE l'élément, il ne le grise pas");
 
 // b) L'entrée du menu mobile.
 assert.ok(nav.includes('href: "diagnostic-france.html"'), "aucune entrée de menu vers le diagnostic");
@@ -165,7 +175,10 @@ assert.ok(nav.includes('feature: "diagnostic_france"'), "l'entrée doit déclare
 // Elle n'est PAS dans la liste rendue au montage : absente du DOM par défaut.
 const menuItems = nav.slice(nav.indexOf("const MENU_ITEMS = ["), nav.indexOf("];", nav.indexOf("const MENU_ITEMS = [")));
 assert.ok(!menuItems.includes("diagnostic-france.html"), "l'entrée ne doit pas être rendue au montage, avant que le droit soit connu");
-assert.ok(nav.includes("function ouvrirEntree(") && nav.includes("ouvrirEntree }"), "ouvrirEntree doit être exposée sur FitzMobileNav");
+assert.ok(nav.includes("function ouvrirEntree("), "ouvrirEntree doit exister");
+// On vérifie le NOM exposé, pas la forme exacte de la ligne : elle a
+// gagné appliquerEspace au lot S4, elle en gagnera d'autres.
+assert.match(nav, /window[.]FitzMobileNav = [{][^}]*ouvrirEntree[,} ]/, "ouvrirEntree doit être exposée sur FitzMobileNav");
 
 // c) Les deux coquilles ne l'ouvrent qu'après avoir vérifié le droit.
 for (const f of ["js/app-shell.js", "js/dual-shell.js"]) {
@@ -174,7 +187,7 @@ assert.match(src, /!isFeatureLocked\([^)]*"diagnostic_france"[^)]*\)[\s\S]{0,200
 }
 
 // d) payment.js n'est plus le seul chemin.
-const liens = ["dashboard.html", "js/mobile-nav.js"].filter((f) => lire(f).includes("diagnostic-france.html"));
+const liens = ["espace-preinscription.html", "js/mobile-nav.js"].filter((f) => lire(f).includes("diagnostic-france.html"));
 assert.equal(liens.length, 2, "les deux entrées doivent exister");
 
 });
@@ -187,7 +200,7 @@ const BASE = { ressourcesMensuelles: 900, devise: "EUR", niveau: "licence" };
 
 test("résidence non documentée : ni « 85 000 », ni « Sénégal », et le total dit ce qu'il exclut", () => {
 
-const r = calculerDiagnostic({ ...BASE, paysResidence: "Rwanda" });
+const r = calculerDiagnostic({ ...BASE, paysResidence: TEMOIN });
 
 const rendu = JSON.stringify(r);
 assert.ok(!/85\s*000/.test(rendu), "le montant sénégalais ne doit apparaître nulle part");
@@ -207,7 +220,7 @@ assert.match(r.total.texte, /plus élevé/);
 
 test("les chiffres FRANÇAIS sont les mêmes pour tous : seuls les frais locaux changent", () => {
 
-const sansCouche = calculerDiagnostic({ ...BASE, paysResidence: "Rwanda" });
+const sansCouche = calculerDiagnostic({ ...BASE, paysResidence: TEMOIN });
 const sn = calculerDiagnostic({ ...BASE, paysResidence: "Sénégal" });
 
 // Seuil de ressources, droits, plafond d'exonération : identiques.
@@ -228,8 +241,8 @@ test("residenceDocumentee : insensible à la casse et aux accents, fermée par d
 assert.equal(residenceDocumentee("Sénégal"), true);
 assert.equal(residenceDocumentee("senegal"), true);
 assert.equal(residenceDocumentee("SN"), true);
-assert.equal(residenceDocumentee("Rwanda"), false);
-assert.equal(residenceDocumentee("Madagascar"), false);
+assert.equal(residenceDocumentee(TEMOIN), false);
+assert.equal(residenceDocumentee(TEMOIN_2), false);
 assert.equal(residenceDocumentee(""), false);
 assert.equal(residenceDocumentee(undefined), false);
 assert.equal(residenceDocumentee("Pays qui n'existe pas"), false, "une saisie non reconnue n'est jamais documentée");
@@ -336,5 +349,8 @@ const sansCom = html.replace(/<!--[\s\S]*?-->/g, " ");
 assert.ok(!sansCom.includes("applyAuthenticatedShellIfLoggedIn"), "l'appel était mort : la garde de dual-shell.js rendait null faute de #authShellRoot");
 assert.ok(!sansCom.includes("dual-shell.js"), "plus aucun import de la coquille sur cette page");
 assert.ok(!sansCom.includes("authShellRoot") && !sansCom.includes("dashboardMainContent"), "la page n'a toujours pas ces ancres — c'est bien pour ça que l'appel ne servait à rien");
-assert.match(html, /lot S4/, "un commentaire doit renvoyer au lot qui reprendra cette page");
+// Le lot S4 a TRANCHÉ : cette page reste publique, et le commentaire le
+// dit — il ne renvoie plus à un lot futur, il porte la décision.
+assert.match(html, /LOT S4 — LA DÉCISION EST PRISE : CETTE PAGE RESTE PUBLIQUE/, "la décision doit être écrite, pas reportée");
+assert.ok(!/le sujet du lot S4/.test(html), "plus de renvoi à un lot à venir");
 });

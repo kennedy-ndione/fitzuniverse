@@ -203,7 +203,7 @@ ${t.plan.map((etape, i) => `<li><i data-lucide="chevron-right"></i><span><strong
 // ==========================================================
 initShellChrome();
 
-bootstrapShell().then(async (session) => {
+bootstrapShell({ espace: "bourse" }).then(async (session) => {
 
 if (!session) return;
 

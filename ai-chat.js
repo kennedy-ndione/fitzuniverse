@@ -797,7 +797,7 @@ pendingTestPrep = null;
 
 }
 
-bootstrapShell({ feature: "ai_chat" }).then((ctx) => {
+bootstrapShell({ feature: "ai_chat", espace: "bourse" }).then((ctx) => {
 
 if (ctx.locked) {
 

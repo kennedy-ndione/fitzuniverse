@@ -98,8 +98,13 @@ verifieLe: VERIFIE
 // REMPLACEMENT — l'ordre burkinabè : on paie dès la soumission, et le
 // reçu devient une pièce du dossier papier.
 ef_paiement: {
-titre: "Payer les frais de gestion de dossier — 70 000 F, dès la soumission",
-consigne: "Les 70 000 F CFA sont payables dès que vous soumettez votre dossier, et ne sont pas remboursables. Retirez d'abord la fiche d'adhésion à Campus France, puis payez et CONSERVEZ LE REÇU DE LA BANQUE : il vous sera réclamé au rendez-vous de dépôt de votre dossier papier, avec la fiche remplie. Les pages officielles ne nomment pas la banque : demandez-la à votre espace Campus France, à Ouagadougou ou à Bobo, avant de vous déplacer.",
+// LOT S4 : la source dit deux choses — « payables dès la soumission »
+// sur une page, « après validation du dossier numérique » sur la page
+// de PROCÉDURE. On tranche pour la seconde, qui est l'opérationnelle :
+// un étudiant envoyé à la banque avant la validation en revient sans
+// avoir pu payer, et le mot « dès » lui aura coûté un déplacement.
+titre: "Payer les frais de gestion de dossier — 70 000 F, après validation",
+consigne: "Les 70 000 F CFA sont payables après validation de votre dossier numérique, et ne sont pas remboursables. Retirez d'abord la fiche d'adhésion à Campus France, puis payez et CONSERVEZ LE REÇU DE LA BANQUE : il vous sera réclamé au rendez-vous de dépôt de votre dossier papier, avec la fiche remplie. Les pages officielles ne nomment pas la banque : demandez-la à votre espace Campus France, à Ouagadougou ou à Bobo, avant de vous déplacer.",
 montant: 70000,
 devise: "XOF",
 source: SOURCES_BF.ETAPES,

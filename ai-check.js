@@ -450,7 +450,7 @@ analyzeBtn.addEventListener("click", runAnalysis);
 
 }
 
-bootstrapShell({ feature: "ai_check" }).then((ctx) => {
+bootstrapShell({ feature: "ai_check", espace: "bourse" }).then((ctx) => {
 
 if (ctx.locked) {
 

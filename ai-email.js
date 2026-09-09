@@ -532,7 +532,7 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-bootstrapShell({ feature: "ai_email" }).then(async (ctx) => {
+bootstrapShell({ feature: "ai_email", espace: "bourse" }).then(async (ctx) => {
 
 if (ctx.locked) {
 

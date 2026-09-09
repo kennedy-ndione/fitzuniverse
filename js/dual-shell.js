@@ -21,9 +21,9 @@
 * l'identique quel que soit le chrome autour de lui.
 */
 
-import { resolveSession, fetchFeatureFlags, isFeatureLocked, PLAN_LABELS } from "./access-guard.js";
+import { resolveSession, fetchFeatureFlags, isFeatureLocked, PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, resoudreEspace } from "./access-guard.js";
 import { advisorOuvert } from "./plan-features.js";
-import { initShellChrome, unlockingPlans } from "./app-shell.js";
+import { initShellChrome, unlockingPlans, espaceCourant } from "./app-shell.js";
 import { initMessagesPanel } from "./student-messages.js";
 
 function loadStylesheet(href) {
@@ -90,8 +90,21 @@ const featureFlags = await fetchFeatureFlags().catch(() => null);
 const planBadge = document.getElementById("planBadge");
 if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
 
+// LOT S4 : la pastille dit le forfait de l'ESPACE courant. Elle
+// n'affichait que la formule bourse : un client venu d'un dossier
+// France y lisait « Gratuit » alors qu'il a payé, sur les pages
+// catalogue qu'il consulte justement pour choisir son établissement.
+const espaceUtilisateur = resoudreEspace(session);
+const espace = espaceCourant(espaceUtilisateur);
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
-if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId];
+if (topbarPlanLabel) {
+topbarPlanLabel.textContent = espace === "preinscription"
+? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || PLAN_LABELS[session.planId])
+: PLAN_LABELS[session.planId];
+}
+document.body.dataset.espace = espace || "aucun";
+// La navigation mobile suit le même espace que la barre haute.
+if (window.FitzMobileNav && window.FitzMobileNav.appliquerEspace) window.FitzMobileNav.appliquerEspace(espace);
 
 // Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
 if (window.FitzMobileNav) {

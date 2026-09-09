@@ -57,7 +57,7 @@ container.hidden = false;
 if (window.lucide) lucide.createIcons();
 }
 
-bootstrapShell({ feature: "diagnostic_france" }).then(async (ctx) => {
+bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" }).then(async (ctx) => {
 
 if (!ctx) return;
 

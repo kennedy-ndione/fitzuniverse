@@ -47,7 +47,10 @@ nextPlanId,
 unlockingPlans,
 isFeatureLocked,
 resolveSession,
-fetchFeatureFlags
+fetchFeatureFlags,
+resoudreEspace,
+espaceAutorise,
+HUB_ESPACE
 } from "./access-guard.js";
 // Le droit « Mon conseiller » se décide dans plan-features.js, en un
 // seul endroit — voir advisorOuvert() et la note qui l'accompagne.
@@ -85,8 +88,18 @@ nav.hidden = !hasAdvisor;
 
 }
 
-// Identique à dashboard.js : verrouille/déverrouille chaque [data-feature]
-// (essentiellement les liens de la sidebar ici) selon la formule active.
+// CE QUI N'EST PAS DANS L'ACCOMPAGNEMENT EST ABSENT DU DOM (lot S4).
+//
+// Jusqu'ici, un outil non inclus restait là : opacité 55 % (css/journey.css),
+// cadenas, et un lien toujours cliquable qui menait aux offres. C'était
+// un panneau, pas une porte — et un panneau qu'un lecteur d'écran lit,
+// qu'un Ctrl+F trouve, et sur lequel la tabulation s'arrête. On RETIRE
+// l'élément, comme le lot S0 l'avait fait pour la carte Diagnostic.
+//
+// La vente ne disparaît pas pour autant : elle se fait par les cartes
+// « Choisir ma formule » des hubs, jamais par un manque affiché. C'est
+// la doctrine déjà écrite pour le portail de candidature le 2026-08-31 —
+// on ne montre pas une porte fermée, on fait qu'il n'y ait pas de porte.
 function applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, planPreinscriptionId = "") {
 
 document.querySelectorAll("[data-feature]").forEach((el) => {
@@ -101,14 +114,14 @@ const link = el.matches("a") ? el : el.querySelector("a[data-real-href]");
 
 if (!link) return;
 
-el.classList.toggle("is-locked", locked);
-
 if (locked) {
+el.remove();
+return;
+}
 
-const targetPlan = unlockingPlans(planId, flags)[0] || null;
-link.setAttribute("href", targetPlan ? `offers.html#${targetPlan}` : "offers.html");
+el.classList.remove("is-locked");
 
-} else if (link.dataset.realHref) {
+if (link.dataset.realHref) {
 
 link.setAttribute("href", link.dataset.realHref);
 
@@ -299,7 +312,12 @@ export function initShellChrome() {
 initSidebar();
 initReveal();
 initLogout();
-initFitzFab();
+// initFitzFab() N'EST PLUS APPELÉ ICI (lot S4). Cette fonction tourne
+// avant que la session soit résolue : elle ne peut pas savoir dans quel
+// espace on est, et l'espace préinscription n'a aucun outil Fitz. Le
+// bouton est donc injecté par bootstrapShell(), une fois l'espace connu
+// — absent du DOM plutôt qu'injecté puis retiré, ce qui aurait laissé
+// un clignotement et, en cas d'échec de résolution, un bouton mort.
 
 // Navigation mobile de l'espace (2026-09-03) — barre d'onglets basse
 // + feuille « Menu », injectées par js/mobile-nav.js (script plat,
@@ -373,7 +391,71 @@ content.querySelectorAll(".reveal").forEach((el) => el.classList.add("is-visible
 }
 }
 
-export function bootstrapShell({ feature, pageLoaderId = "pageLoader", contentSelector = ".content" } = {}) {
+// ==========================================================
+// L'ESPACE COURANT — mémoire de session, pour « les-deux »
+// ==========================================================
+// Un client qui a les deux accompagnements bascule de l'un à l'autre
+// (voir le sélecteur de barre haute). Son choix vit en sessionStorage :
+// il survit à la navigation, pas à la fermeture de l'onglet. Pas de
+// localStorage — le prochain étudiant sur le même poste partagé ne doit
+// pas hériter de l'espace du précédent.
+const CLE_ESPACE = "fitz.espace";
+
+export function lireEspaceChoisi() {
+try {
+const v = sessionStorage.getItem(CLE_ESPACE);
+return v === "bourse" || v === "preinscription" ? v : "";
+} catch { return ""; }
+}
+
+export function ecrireEspaceChoisi(espace) {
+try { sessionStorage.setItem(CLE_ESPACE, espace); } catch { /* mode privé : le choix vaut pour la page */ }
+}
+
+/**
+* L'espace dans lequel on SE TROUVE — à distinguer de celui auquel on a
+* DROIT (resoudreEspace). Une page marquée impose le sien ; sinon c'est
+* le droit, et pour « les-deux » le dernier choix, à défaut les bourses.
+*/
+export function espaceCourant(espaceUtilisateur, espacePage = "") {
+if (espacePage) return espacePage;
+if (espaceUtilisateur === "les-deux") return lireEspaceChoisi() || "bourse";
+if (espaceUtilisateur === "aucun") return "";
+return espaceUtilisateur;
+}
+
+// Le sélecteur de bascule. Il n'entre dans le DOM QUE pour « les-deux » :
+// un client qui n'a acheté qu'un accompagnement ne doit pas apprendre
+// l'existence de l'autre par un bouton grisé dans sa barre haute.
+function initBasculeEspace(espaceUtilisateur, courant) {
+
+if (espaceUtilisateur !== "les-deux") return;
+if (document.getElementById("espaceBascule")) return;
+
+const topbar = document.querySelector(".journey-topbar");
+if (!topbar) return;
+
+const nav = document.createElement("div");
+nav.id = "espaceBascule";
+nav.className = "espace-bascule";
+nav.setAttribute("role", "group");
+nav.setAttribute("aria-label", "Changer d'accompagnement");
+nav.innerHTML = `
+<a href="espace-bourse.html" class="espace-bascule-btn${courant === "bourse" ? " is-active" : ""}"${courant === "bourse" ? ' aria-current="page"' : ""} data-espace="bourse">Bourses</a>
+<a href="espace-preinscription.html" class="espace-bascule-btn${courant === "preinscription" ? " is-active" : ""}"${courant === "preinscription" ? ' aria-current="page"' : ""} data-espace="preinscription">Préinscription</a>
+`;
+
+nav.addEventListener("click", (e) => {
+const lien = e.target.closest("[data-espace]");
+if (lien) ecrireEspaceChoisi(lien.dataset.espace);
+});
+
+const ancre = topbar.querySelector(".journey-topbar-actions") || topbar;
+ancre.insertBefore(nav, ancre.firstChild);
+
+}
+
+export function bootstrapShell({ feature, espace = "", pageLoaderId = "pageLoader", contentSelector = ".content" } = {}) {
 
 const content = document.querySelector(contentSelector);
 
@@ -406,18 +488,44 @@ window.location.replace("suspended.html");
 return new Promise(() => {});
 }
 
+// LOT S4 — L'ESPACE, AVANT TOUT LE RESTE.
+// Une page marquée qu'un client n'a pas le droit d'ouvrir ne le renvoie
+// pas aux offres : elle le ramène CHEZ LUI. On ne vend pas à quelqu'un
+// qui a déjà payé — il s'est trompé de porte, on lui montre la sienne.
+const espaceUtilisateur = resoudreEspace(session);
+
+if (espace && !espaceAutorise(espaceUtilisateur, espace) && espaceUtilisateur !== "aucun") {
+window.location.replace(HUB_ESPACE[espaceUtilisateur]);
+return new Promise(() => {});
+}
+
+const courant = espaceCourant(espaceUtilisateur, espace);
+
 const featureFlags = await fetchFeatureFlags();
 
 document.body.dataset.plan = session.planId;
+document.body.dataset.espace = courant || "aucun";
 
 const planBadge = document.getElementById("planBadge");
 if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
 
+// LA PASTILLE NE DIT QUE L'ESPACE OÙ L'ON SE TROUVE (lot S4).
+// Elle concaténait les deux forfaits (« Gratuit · Diagnostic France »),
+// ce qui affichait « Gratuit » à un client qui avait payé un dossier
+// France, et rappelait les bourses à quelqu'un venu préparer une
+// préinscription. Dans un espace, on porte le forfait de cet espace.
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
-// Grille B : un compte peut porter deux forfaits ; l'étiquette les dit
-// tous les deux (« Gratuit · Diagnostic France »), le second n'étant
-// jamais tu derrière le premier.
-if (topbarPlanLabel) topbarPlanLabel.textContent = PLAN_LABELS[session.planId] + (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] ? " · " + PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] : "");
+if (topbarPlanLabel) {
+topbarPlanLabel.textContent = courant === "preinscription"
+? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || PLAN_LABELS[session.planId])
+: PLAN_LABELS[session.planId];
+}
+
+// Le bouton flottant Fitz : aucun outil Fitz dans l'espace
+// préinscription, donc aucun bouton — absent, pas grisé.
+if (courant !== "preinscription") initFitzFab();
+
+initBasculeEspace(espaceUtilisateur, courant);
 
 applyFeatureLocks(session.planId, featureFlags, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
 applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess, session.planPreinscriptionId);
@@ -425,6 +533,10 @@ applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess, sessi
 // Nom affiché dans la feuille « Menu » mobile (js/mobile-nav.js).
 if (window.FitzMobileNav) {
 window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
+// Lot S4 : la barre d'onglets et la feuille « Menu » se filtrent par
+// espace. Elles proposaient « Fitz » et « Préparation aux tests » à un
+// client préinscription qui n'a aucun de ces outils.
+if (window.FitzMobileNav.appliquerEspace) window.FitzMobileNav.appliquerEspace(courant);
 // Diagnostic France : l'entrée n'entre dans le menu QUE si le droit
 // est ouvert — c'est ici, une fois la session résolue, qu'on le sait.
 // Voir MENU_FEATURE_ITEMS dans js/mobile-nav.js.
@@ -452,6 +564,11 @@ featureFlags,
 testerAccess: session.testerAccess,
 hasFitzExpress: session.hasFitzExpress,
 planPreinscriptionId: session.planPreinscriptionId || "",
+// L'espace auquel le compte a DROIT, et celui où il SE TROUVE : les
+// deux diffèrent pour un client « les-deux », et les pages en ont
+// besoin (portée des candidatures, vocabulaire, quotas).
+espaceUtilisateur,
+espace: courant,
 locked: feature ? isFeatureLocked(session.planId, featureFlags, feature, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId) : false
 };
 

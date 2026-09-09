@@ -515,17 +515,19 @@ transition:var(--transition);
 .jy-tool i,
 .jy-tool svg{ width:14px; height:14px; color:var(--amber-700); }
 
-/* Verrouillage par formule — même mécanique data-feature/is-locked que
-l'ancienne sidebar (js/app-shell.js:applyFeatureLocks), habillée pour
-les chips : cadenas visible, teinte en retrait, lien vers l'offre. */
-[data-feature].is-locked .jy-tool,
-[data-feature].is-locked.jy-tool,
-[data-feature].is-locked .jy-btn{
-opacity:.55;
-}
+/* LOT S4 — L'OPACITÉ DE VERROUILLAGE A ÉTÉ SUPPRIMÉE.
+   Elle grisait à 55 % un outil non inclus, en laissant le lien
+   cliquable, tabulable, lisible par un lecteur d'écran et trouvable au
+   Ctrl+F. C'était un panneau, pas une porte. applyFeatureLocks()
+   (js/app-shell.js) RETIRE désormais l'élément du DOM, comme le lot S0
+   l'avait fait pour la carte Diagnostic — même doctrine que le portail
+   de candidature du 2026-08-31 : on ne montre pas une porte fermée, on
+   fait qu'il n'y ait pas de porte. La vente se fait par les cartes
+   « Choisir ma formule » des hubs, jamais par un manque affiché.
 
-[data-feature] .jy-lock{ display:none; width:12px; height:12px; }
-[data-feature].is-locked .jy-lock{ display:inline-block; }
+   Le cadenas reste masqué par défaut : les [data-feature] encore
+   présents dans le HTML le portent, et il ne doit jamais s'afficher. */
+[data-feature] .jy-lock{ display:none; }
 
 /* ---------- Phases 4-6 : listes + guides ---------- */
 .jy-list{

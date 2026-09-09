@@ -21,6 +21,7 @@ import { retenirOpportunites } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
+import { lireParcours } from "./js/parcours.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
@@ -587,7 +588,16 @@ section.hidden = false;
 // ==========================================================
 initShellChrome();
 
-bootstrapShell().then(async (session) => {
+// LOT S4 — CE FICHIER EST LE MOTEUR DES DEUX HUBS.
+// Il servait la seule page dashboard.html ; il sert maintenant
+// espace-bourse.html et espace-preinscription.html, qui partagent la
+// coquille, le rail des phases et le radar, mais pas leur vocabulaire.
+// L'espace vient du <body data-espace>, et bootstrapShell le confirme.
+// Le nom du fichier est resté : une trentaine de tests, le harnais et
+// les pages le référencent, et le renommer aurait été un lot à soi.
+const ESPACE = document.body.dataset.espace === "preinscription" ? "preinscription" : "bourse";
+
+bootstrapShell({ espace: ESPACE }).then(async (session) => {
 
 if (!session) return;
 
@@ -644,7 +654,14 @@ const profileScore = calculateAiScore(profile);
 let applications = [];
 try {
 const applicationsSnap = await getDocs(collection(db, "users", user.uid, "applications"));
-applications = applicationsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+applications = applicationsSnap.docs
+.map((d) => ({ id: d.id, ...d.data() }))
+// LOT S4 : un hub ne montre que les candidatures de SON espace. Un
+// client qui a les deux accompagnements a deux parcours distincts, pas
+// une liste mélangée où un dossier de préinscription vient s'intercaler
+// entre deux bourses — et le rail des phases mesurerait alors un
+// parcours qui n'existe pas.
+.filter((app) => lireParcours(app) === ESPACE);
 } catch (error) {
 console.error("Impossible de charger les candidatures :", error);
 }
@@ -683,7 +700,7 @@ const nomAffiche = user.displayName || userData.name || "Étudiant";
 // checklist visa la rappelle à chaque étape cochée, pour que la
 // phase 06 vive comme les autres.
 function rafraichirCarte(visa) {
-const etat = etatDesPhases({ profileScore, applications, visaChecklist: visa });
+const etat = etatDesPhases({ profileScore, applications, visaChecklist: visa, espace: ESPACE });
 renderHello(nomAffiche, etat.phases);
 renderRail(etat.phases, etat.progressionPct);
 renderEtatsPhases(etat.phases);

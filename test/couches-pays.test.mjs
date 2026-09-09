@@ -31,6 +31,7 @@ import { COUCHES } from "../js/procedures/residences/index.js";
 import { trouverProcedure, coucheDeResidence, residencesDocumentees, defautsDeCouche, defautsDeProcedure, deviseAdditionnable, MENTION_RESIDENCE_ABSENTE } from "../js/procedures/index.js";
 import { computeJourneySteps } from "../js/application-journey.js";
 import { calculerDiagnostic } from "../js/diagnostic-france.js";
+import { TEMOIN, TEMOIN_2 } from "./_pays-temoin.mjs";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
@@ -210,7 +211,7 @@ assert.ok(lire("applications.js").includes("return `${blocAvertissement}<details
 // ------------------------------------------------------------------
 
 test("une résidence non documentée reçoit toujours les onze étapes du tronc", () => {
-for (const pays of ["Rwanda", "Madagascar", "Sénégalaise", ""]) {
+for (const pays of [TEMOIN, TEMOIN_2, "Sénégalaise", ""]) {
 const p = trouverProcedure({ paysDestination: "France", paysResidence: pays });
 assert.ok(p, `${pays || "(vide)"} : la procédure ne doit jamais être nulle`);
 assert.equal(p.residenceDocumentee, false, pays || "(vide)");

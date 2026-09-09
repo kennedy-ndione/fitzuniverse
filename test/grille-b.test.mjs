@@ -293,6 +293,6 @@ const html = lire("diagnostic-france.html");
 assert.ok(html.includes("noindex"));
 assert.ok(!/data-lucide="sparkle/.test(html));
 assert.ok(!/visa accord|vous aurez votre visa|admission garantie/i.test(html));
-assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ feature: "diagnostic_france" })'));
+assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" })'));
 assert.ok(!/fitzGenerate|ai-client|generate\(/.test(lire("js/diagnostic-france.js") + lire("js/diagnostic-france-page.js")), "aucune IA");
 });
