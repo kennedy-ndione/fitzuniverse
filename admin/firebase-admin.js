@@ -23,6 +23,11 @@ Timestamp,
 serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
+// Une seule orthographe de rôle, déclarée dans js/roles-admin.js. Un
+// test échoue si une chaîne de rôle est écrite en dur ailleurs — la
+// panne du 2026-09-09 est née de deux graphies pour la même idée.
+import { ROLE_ADMIN } from "../js/roles-admin.js";
+
 // ============================================
 // UNIVERSITÉS
 // ============================================
@@ -924,7 +929,7 @@ return patch.attributionManuelle;
 // compte existant, qui s'est inscrit normalement sur le site. Aucun mot
 // de passe ne transite par ici, et aucune page n'en demande.
 //
-// Le document porte toujours role:"admin" — les règles le forcent, et
+// Le document porte toujours ROLE_ADMIN — les règles le forcent, et
 // c'est ce qui empêche de se fabriquer un pair ou un successeur. Le
 // propriétaire, lui, n'a pas de champ `role` : son document ne peut
 // naître que dans la console Firebase.
@@ -940,7 +945,7 @@ return snapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
 export async function promouvoirAdmin(uid, { email = "", nom = "" } = {}, parUid = "") {
 
 await setDoc(doc(db, "admins", uid), {
-role: "admin",
+role: ROLE_ADMIN,
 isActive: true,
 nommeLe: new Date().toISOString().slice(0, 10),
 nommePar: parUid,

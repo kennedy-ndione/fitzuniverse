@@ -59,8 +59,22 @@ get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive =
 // et cette création force role:"admin". Un document sans rôle ne peut
 // donc naître que dans la console Firebase, c'est-à-dire de la main du
 // propriétaire du projet.
+// ⚠️ DEUX GRAPHIES, ET LA SECONDE EST CELLE DE LA PRODUCTION.
+// Le document du propriétaire, créé en console bien avant ce lot, porte
+// `role: "super-admin"` — avec un trait d'union. La première version de
+// cette fonction ne reconnaissait que "superAdmin" : elle a donc traité
+// le PROPRIÉTAIRE comme un administrateur ordinaire, ce qui lui a retiré
+// d'un coup le droit d'écrire `plan` et de nommer qui que ce soit, et a
+// cassé la fiche étudiant côté navigateur (correctif du 2026-09-09).
+//
+// La leçon vaut d'être écrite : la règle d'amorçage supposait « aucun
+// champ role ». Le document réel EN AVAIT UN, orthographié autrement.
+// On accepte donc les deux graphies. "superAdmin" reste la forme
+// canonique, celle que le code écrit ; "super-admin" est acceptée parce
+// qu'elle EXISTE, et qu'une règle qui ignore l'état réel de la base est
+// une règle fausse, si élégante soit-elle.
 function estSuperAdminDoc(d) {
-return d.isActive == true && (!d.keys().hasAny(["role"]) || d.role == "superAdmin");
+return d.isActive == true && (!d.keys().hasAny(["role"]) || d.role == "superAdmin" || d.role == "super-admin");
 }
 
 function isSuperAdmin() {

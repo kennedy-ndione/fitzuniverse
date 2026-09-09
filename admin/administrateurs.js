@@ -25,7 +25,7 @@
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
-import { chargerAdmin, estSuperAdminDoc } from "./admin-role.js";
+import { chargerAdmin, estSuperAdminDoc, porteRoleProprietaire, defautDeRole, libelleDefautDeRole } from "./admin-role.js";
 import { listerAdmins, changerActivationAdmin } from "./firebase-admin.js";
 import { succes, echec, notifier } from "./notifier.js";
 
@@ -47,7 +47,8 @@ return String(texte == null ? "" : texte).replace(/[&<>"']/g, (c) => ({ "&": "&a
 
 function ligne(a) {
 
-const proprietaire = estSuperAdminDoc(a) || a.role === "superAdmin";
+const proprietaire = porteRoleProprietaire(a);
+const defaut = defautDeRole(a);
 const actif = a.isActive === true;
 const cestMoi = moi && a.uid === moi.uid;
 
@@ -66,7 +67,7 @@ else action = `<button type="button" class="btn-detail-action" data-reactiver="$
 return `<tr>
 <td>${echapper(a.nom || "—")}</td>
 <td>${echapper(a.email || "—")}</td>
-<td><span class="admins-role ${proprietaire ? "is-proprietaire" : "is-admin"}">${proprietaire ? "Propriétaire" : "Administrateur"}</span></td>
+<td><span class="admins-role ${proprietaire ? "is-proprietaire" : "is-admin"}">${proprietaire ? "Propriétaire" : "Administrateur"}</span>${defaut ? `<span class="admins-defaut ${defaut.herite ? "" : "is-inconnu"}">${echapper(libelleDefautDeRole(defaut))}</span>` : ""}</td>
 <td class="admins-etat ${actif ? "" : "is-revoque"}">${actif ? "Actif" : "Révoqué"}</td>
 <td>${dateLisible(a.nommeLe)}</td>
 <td>${echapper(a.nommePar || "—")}</td>
@@ -145,7 +146,23 @@ echec(revoquer ? "La révocation a échoué" : "La réactivation a échoué", er
 
 (async () => {
 
+// chargerAdmin() REJETTE quand la lecture échoue (correctif du
+// 2026-09-09) : sans ce try, la page afficherait « Réservé au
+// propriétaire » à un propriétaire — une phrase fausse, et la pire
+// des pistes pour qui cherche la panne.
+try {
 moi = await chargerAdmin();
+} catch (error) {
+document.querySelector(".content").style.display = "";
+document.querySelector(".content").innerHTML = `
+<div style="padding:40px;text-align:center;">
+<h2>Vos droits n'ont pas pu être vérifiés</h2>
+<p>Ce n'est pas un refus : la lecture a échoué (${echapper((error && (error.code || error.message)) || "erreur inconnue")}). Rechargez la page.</p>
+</div>`;
+hidePageLoader();
+echec("La vérification de vos droits a échoué", error);
+return;
+}
 
 // La page entière est réservée au propriétaire. admin-auth.js retire
 // déjà son lien de la barre latérale ; ici on ferme la porte, parce

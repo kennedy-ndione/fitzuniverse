@@ -37,27 +37,29 @@ doc,
 getDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-/**
-* Vrai si ce document `admins` est celui d'un propriétaire.
-* MIROIR de estSuperAdminDoc() dans firestore.rules — le serveur fait
-* foi, celle-ci ne sert qu'à décider ce qu'on AFFICHE.
-*/
-export function estSuperAdminDoc(data) {
-if (!data || data.isActive !== true) return false;
-return !("role" in data) || data.role === "superAdmin";
-}
+import { estSuperAdminDoc as estSuper, defautDeRole, libelleDefautDeRole, ROLE_ADMIN, ROLE_SUPER_ADMIN } from "../js/roles-admin.js";
+
+// Les valeurs de rôle vivent dans js/roles-admin.js, et nulle part
+// ailleurs — un test échoue si une chaîne de rôle est écrite en dur.
+// Ce module ne fait que les BRANCHER sur Firestore : il ne peut pas être
+// testé sous Node (il importe le SDK depuis un CDN), et c'est justement
+// pour cela que la décision est ailleurs.
+export { estSuperAdminDoc, porteRoleProprietaire, defautDeRole, libelleDefautDeRole } from "../js/roles-admin.js";
 
 let promesse = null;
 
 /**
-* @returns {Promise<{uid:string, email:string, data:Object, role:string, superAdmin:boolean}|null>}
+* @returns {Promise<{uid:string, email:string, data:Object, role:string, superAdmin:boolean, defautDeRole:Object|null}|null>}
 * null = personne de connecté, ou aucun document admin actif.
+* REJETTE si la lecture échoue : « on n'a pas pu savoir » n'est pas
+* « ce compte n'a pas de droits », et les confondre déconnecte des
+* administrateurs légitimes sans leur dire pourquoi.
 */
 export function chargerAdmin() {
 
 if (promesse) return promesse;
 
-promesse = new Promise((resolve) => {
+promesse = new Promise((resolve, rejeter) => {
 
 onAuthStateChanged(auth, async (user) => {
 
@@ -70,6 +72,18 @@ const snap = await getDoc(doc(db, "admins", user.uid));
 if (!snap.exists() || snap.data().isActive !== true) { resolve(null); return; }
 
 const data = snap.data();
+const superAdmin = estSuper(data);
+
+// ON NE DÉGRADE JAMAIS EN SILENCE (correctif du 2026-09-09).
+// Une valeur de `role` inconnue rendait « administrateur ordinaire »
+// sans un mot : le propriétaire, dont le document portait
+// « super-admin », a perdu ses droits et personne n'a su pourquoi
+// pendant une heure. Le défaut est désormais dit, avec sa valeur.
+const defaut = defautDeRole(data);
+
+if (defaut) {
+console.warn(`[FitzUniverse] Document admins/${user.uid} : ${libelleDefautDeRole(defaut)}`, { role: data.role, superAdminResolu: superAdmin });
+}
 
 resolve({
 uid: user.uid,
@@ -77,14 +91,29 @@ email: user.email || data.email || "",
 data,
 // Le rôle AFFICHÉ : un document sans champ `role` est celui du
 // propriétaire, et on le nomme ainsi plutôt que de laisser un vide.
-role: estSuperAdminDoc(data) ? "superAdmin" : (data.role || "admin"),
-superAdmin: estSuperAdminDoc(data)
+role: superAdmin ? ROLE_SUPER_ADMIN : (data.role || ROLE_ADMIN),
+superAdmin,
+defautDeRole: defaut
 });
 
 } catch (erreur) {
 
-console.error("Lecture du rôle administrateur impossible :", erreur);
-resolve(null);
+// CE CATCH RÉSOLVAIT `null`, et c'était un mensonge.
+//
+// `null` veut dire « ce compte n'est pas administrateur », et
+// admin-auth.js le déconnecte sur cette base. Une lecture refusée ou
+// une coupure réseau ne disent rien de tel : elles disent « on n'a
+// pas pu savoir ». Le propriétaire s'est vu éjecter ainsi, sans un
+// mot — la même famille de faute que l'écran qui parlait de
+// connexion Internet sur une TypeError.
+//
+// On PROPAGE donc. Chaque appelant décide quoi montrer, mais aucun
+// ne peut plus confondre « pas de droits » avec « pas de réponse ».
+console.error(
+`[FitzUniverse] Lecture de admins/${user.uid} impossible (${(erreur && erreur.code) || "erreur inconnue"}).`,
+erreur
+);
+rejeter(erreur);
 
 }
 

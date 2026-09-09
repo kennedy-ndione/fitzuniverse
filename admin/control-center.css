@@ -4833,3 +4833,7 @@ line-height:1.55;
 .admins-role.is-proprietaire{ background:rgba(233,163,25,.16); }
 .admins-role.is-admin{ background:rgba(0,0,0,.07); }
 .admins-etat.is-revoque{ opacity:.62; }
+/* Un défaut de rôle se VOIT : c est le silence qui a coûté le diagnostic
+   du 2026-09-09, pas la faute de frappe. */
+.admins-defaut{ display:block; margin-top:5px; font-size:12px; font-weight:600; line-height:1.35; color:#8A4B00; }
+.admins-defaut.is-inconnu{ color:#9B1C1C; }

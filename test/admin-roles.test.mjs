@@ -37,6 +37,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 import { PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+import { estSuperAdminDoc, ROLE_SUPER_ADMIN, ROLE_ADMIN } from "../js/roles-admin.js";
 
 const require = createRequire(import.meta.url);
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -55,27 +56,24 @@ test("un document admins ACTIF et SANS champ role est reconnu superAdmin", () =>
 const fonction = regles.slice(regles.indexOf("function estSuperAdminDoc"), regles.indexOf("function isSuperAdmin"));
 assert.match(fonction, /d\.isActive == true/);
 assert.match(fonction, /!d\.keys\(\)\.hasAny\(\["role"\]\)/, "un document SANS rôle doit passer");
-assert.match(fonction, /d\.role == "superAdmin"/);
 
-// Le miroir, côté navigateur : la même phrase, deux fois écrite, donc
-// deux fois vérifiée. Le serveur fait foi ; le client décide seulement
-// de ce qu'il AFFICHE.
+// Le miroir, côté navigateur, n'est PLUS recopié ici : on appelle la
+// vraie fonction. Ce test rejouait une copie de la logique, écrite à la
+// main dans le test — et une copie ne peut pas contredire l'original,
+// elle ne peut que vieillir avec lui. Voir test/roles-admin.test.mjs
+// pour la comparaison des VALEURS acceptées de part et d'autre.
+assert.equal(estSuperAdminDoc({ isActive: true }), true, "L'AMORÇAGE : sans rôle, c'est le propriétaire");
+assert.equal(estSuperAdminDoc({ isActive: true, role: ROLE_SUPER_ADMIN }), true);
+assert.equal(estSuperAdminDoc({ isActive: true, role: ROLE_ADMIN }), false);
+assert.equal(estSuperAdminDoc({ isActive: false }), false, "un compte révoqué n'est plus rien");
+assert.equal(estSuperAdminDoc({ isActive: false, role: ROLE_SUPER_ADMIN }), false);
+assert.equal(estSuperAdminDoc(null), false);
+
+// Et le Control Center la RE-EXPORTE, il ne la réécrit pas.
 const role = lire("admin/admin-role.js");
-assert.match(role, /export function estSuperAdminDoc\(data\)/);
-assert.match(role, /return !\("role" in data\) \|\| data\.role === "superAdmin";/);
-assert.match(role, /data\.isActive !== true/);
+assert.match(role, /export \{[^}]*estSuperAdminDoc[^}]*\} from "\.\.\/js\/roles-admin\.js";/);
+assert.ok(!/function estSuperAdminDoc\(/.test(role), "admin-role.js ne doit plus contenir sa propre copie");
 
-// C'est le comportement qui compte : on le rejoue.
-const estSuper = (data) => {
-if (!data || data.isActive !== true) return false;
-return !("role" in data) || data.role === "superAdmin";
-};
-assert.equal(estSuper({ isActive: true }), true, "L'AMORÇAGE : sans rôle, c'est le propriétaire");
-assert.equal(estSuper({ isActive: true, role: "superAdmin" }), true);
-assert.equal(estSuper({ isActive: true, role: "admin" }), false);
-assert.equal(estSuper({ isActive: false }), false, "un compte révoqué n'est plus rien");
-assert.equal(estSuper({ isActive: false, role: "superAdmin" }), false);
-assert.equal(estSuper(null), false);
 });
 
 test("pourquoi l'amorçage n'est pas une faille : aucun client ne peut créer un document sans rôle", () => {
@@ -345,7 +343,10 @@ for (const [nom, src] of [["firebase-admin.js", admin], ["student-detail.js", js
 assert.ok(!/createUserWithEmailAndPassword|type="password"/.test(src), `${nom} : aucune création de compte ici`);
 }
 assert.match(admin, /export async function promouvoirAdmin\(uid, \{ email = "", nom = "" \} = \{\}, parUid = ""\)/);
-assert.match(admin, /role: "admin",\s*isActive: true,/);
+// La CONSTANTE, pas la chaîne : c'est tout l'objet du correctif du
+// 2026-09-09 (voir test/roles-admin.test.mjs).
+assert.match(admin, /role: ROLE_ADMIN,\s*isActive: true,/);
+assert.match(admin, /import \{ ROLE_ADMIN \} from "\.\.\/js\/roles-admin\.js";/);
 // On ne supprime jamais : la fonction n'existe pas.
 assert.ok(!/deleteDoc\(doc\(db, "admins"/.test(admin), "un administrateur se désactive, il ne se supprime pas");
 assert.match(admin, /export async function changerActivationAdmin\(uid, actif\)/);

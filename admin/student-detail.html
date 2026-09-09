@@ -185,7 +185,11 @@ caché annonce à un collègue une capacité qu'il n'a pas. -->
 <div class="detail-section">
 <h3>Pass Fitz Express</h3>
 <p class="detail-field-value" id="fitzExpressStatus" style="margin-bottom:14px;">—</p>
-<div class="detail-actions-row">
+<!-- Le Pass Découverte est un droit PAYANT : firestore.rules le réserve
+     au propriétaire depuis le lot ADMIN, et le bloc doit donc porter le
+     même marqueur que les deux grilles. Sans lui, un administrateur
+     ordinaire voyait un bouton dont le serveur refusait l écriture. -->
+<div class="detail-actions-row" data-super-admin>
 <input type="date" id="fitzExpressInput">
 <button type="button" class="btn-detail-action" id="saveFitzExpressBtn">Enregistrer la date</button>
 </div>

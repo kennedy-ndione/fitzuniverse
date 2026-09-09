@@ -143,6 +143,31 @@ translation_run: "Traduction effectuée",
 payment_attempted: "Tentative de paiement"
 };
 
+// TROIS FAMILLES D'ERREUR, et confondre deux d'entre elles envoie
+// chercher la panne du mauvais côté — c'est ce qui a coûté deux
+// diagnostics :
+//
+//   "reseau"   la requête n'est jamais arrivée, ou est revenue vide.
+//              Réessayer a un sens, et c'est la seule famille où on le
+//              propose.
+//   "serveur"  elle est arrivée, et le serveur a REFUSÉ. Un droit
+//              manquant, un document absent : réessayer ne changera
+//              rien, et parler de connexion Internet serait un mensonge.
+//   "code"     aucune requête en cause. TypeError, ReferenceError, une
+//              propriété lue sur null — un bug, qu'il faut nommer.
+const CODES_RESEAU = /^(unavailable|deadline-exceeded|aborted|resource-exhausted|cancelled|network-request-failed)$/;
+
+function categoriserErreur(error) {
+const code = error && typeof error.code === "string" ? error.code.replace(/^[a-z]+\//, "") : "";
+if (!code) return "code";
+if (CODES_RESEAU.test(code)) return "reseau";
+return "serveur";
+}
+
+function echapperTexte(texte) {
+return String(texte == null ? "" : texte).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 const params = new URLSearchParams(window.location.search);
 const uid = params.get("uid");
 
@@ -347,7 +372,14 @@ function renderSubscriptionTab(userData) {
 
 construireSelecteurs();
 
-document.getElementById("planSelect").value = userData.plan || "";
+// ⚠️ GARDE OBLIGATOIRE (correctif du 2026-09-09). Cette ligne était
+// écrite sans elle, et elle a tué la fiche ENTIÈRE pour tout
+// administrateur ordinaire : appliquerRole() retire du DOM les éléments
+// [data-super-admin], dont ce sélecteur. Un « .value » sur null, et la
+// page affichait « Impossible de charger cette fiche » — sur tous les
+// comptes. TOUT élément réservé se lit avec une garde, sans exception.
+const planSelect = document.getElementById("planSelect");
+if (planSelect) planSelect.value = userData.plan || "";
 
 // Demande de changement déposée par l'étudiant (2026-09-02) : le
 // point d'entrée du système « changer de formule » de l'espace
@@ -377,15 +409,19 @@ pendingStatus.textContent = "Aucune demande de changement en attente.";
 
 const disabled = userData.disabled === true;
 
-document.getElementById("statusLabel").textContent = disabled
+const statusLabel = document.getElementById("statusLabel");
+if (statusLabel) statusLabel.textContent = disabled
 ? "Ce compte est actuellement suspendu."
 : "Ce compte est actif.";
 
 const toggleBtn = document.getElementById("toggleDisabledBtn");
+if (toggleBtn) {
 toggleBtn.textContent = disabled ? "Réactiver le compte" : "Suspendre le compte";
 toggleBtn.classList.toggle("is-danger", !disabled);
+}
 
-document.getElementById("testerAccessToggle").checked = userData.testerAccess === true;
+const testerToggle = document.getElementById("testerAccessToggle");
+if (testerToggle) testerToggle.checked = userData.testerAccess === true;
 
 // Expiration de formule / Pass Fitz Express (pricing pivot 2026-07-30)
 // — planExpiresAt/fitzExpressExpiresAt sont des chaînes ISO simples
@@ -393,9 +429,12 @@ document.getElementById("testerAccessToggle").checked = userData.testerAccess ==
 const planExpiryInput = document.getElementById("planExpiryInput");
 const planExpiryStatus = document.getElementById("planExpiryStatus");
 
-planExpiryInput.value = userData.planExpiresAt || "";
+// Le champ est réservé au propriétaire ; le STATUT, lui, reste lu par
+// tout le monde — un administrateur ordinaire doit voir où en est la
+// formule, il ne doit simplement pas pouvoir la changer.
+if (planExpiryInput) planExpiryInput.value = userData.planExpiresAt || "";
 
-if (!userData.plan) {
+if (!planExpiryStatus) { /* rien à écrire */ } else if (!userData.plan) {
 planExpiryStatus.textContent = "Aucune formule active — l'expiration ne s'applique pas.";
 } else if (!userData.planExpiresAt) {
 planExpiryStatus.textContent = "Aucune date d'expiration enregistrée.";
@@ -409,7 +448,7 @@ planExpiryStatus.textContent = expired
 const fitzExpressInput = document.getElementById("fitzExpressInput");
 const fitzExpressStatus = document.getElementById("fitzExpressStatus");
 
-fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
+if (fitzExpressInput) fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
 
 // Grille B : le forfait préinscription et son échéance. MODIFIABLE
 // depuis le lot ADMIN (2026-09-09) — la mention « écrit par le
@@ -455,7 +494,7 @@ planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
 // le reste : ce compte n'a pas payé.
 renderAttributionManuelle(userData);
 
-if (!userData.fitzExpressExpiresAt) {
+if (!fitzExpressStatus) { /* rien à écrire */ } else if (!userData.fitzExpressExpiresAt) {
 fitzExpressStatus.textContent = "Aucun Pass Fitz Express actif.";
 } else {
 const expired = new Date(userData.fitzExpressExpiresAt).getTime() < Date.now();
@@ -857,24 +896,32 @@ return;
 
 try {
 
-const adminSnap = await getDoc(doc(db, "admins", user.uid));
+// UNE SEULE LECTURE, UN SEUL VERDICT (correctif du 2026-09-09).
+// Cette page lisait admins/{uid} pour son compte, PUIS appelait
+// chargerAdmin() : deux allers-retours, et surtout deux endroits qui
+// décidaient « est-ce un administrateur ». Deux décisions égales
+// écrites à deux endroits finissent par différer — c'est déjà arrivé
+// ici, sur l'orthographe d'un rôle.
+//
+// LOT ADMIN : le NIVEAU, pas seulement l'identité. Un administrateur
+// ordinaire garde la fiche entière — profil, notes, messages,
+// candidatures — mais les sélecteurs de formule et le bouton de
+// promotion sont RETIRÉS du DOM avant le premier rendu.
+//
+// Une lecture qui ÉCHOUE part dans le catch, où elle est nommée : elle
+// ne se confond plus avec « ce compte n'est pas administrateur ».
+const adminConnecte = await chargerAdmin();
 
-if (!adminSnap.exists() || adminSnap.data().isActive !== true) {
+if (!adminConnecte) {
 await signOut(auth);
 window.location.href = "login.html";
 return;
 }
 
-// LOT ADMIN : le NIVEAU, pas seulement l'identité. Un administrateur
-// ordinaire garde la fiche entière — profil, notes, messages,
-// candidatures — mais les sélecteurs de formule et le bouton de
-// promotion sont RETIRÉS du DOM avant le premier rendu.
-const adminConnecte = await chargerAdmin();
-
 currentAdmin = {
-uid: user.uid,
-email: user.email,
-superAdmin: !!(adminConnecte && adminConnecte.superAdmin)
+uid: adminConnecte.uid,
+email: adminConnecte.email,
+superAdmin: adminConnecte.superAdmin
 };
 
 appliquerRole(currentAdmin.superAdmin);
@@ -894,17 +941,57 @@ hidePageLoader();
 
 } catch (error) {
 
+// ⚠️ UN FILET QUI MENT COÛTE PLUS CHER QUE PAS DE FILET.
+//
+// Ce bloc transformait N'IMPORTE QUELLE erreur en « Vérifiez votre
+// connexion Internet ». Deux fois, la fiche est morte d'une erreur de
+// PROGRAMMATION — un import manquant au lot S0, puis un `.value` sur un
+// élément retiré du DOM — et deux fois l'écran a envoyé chercher la
+// panne du côté du réseau. Chaque diagnostic a commencé par une fausse
+// piste que l'écran lui-même avait indiquée.
+//
+// Désormais : on distingue, on NOMME l'erreur à l'écran, et on la laisse
+// entière dans la console. Une erreur de code n'est pas une panne
+// passagère : proposer « Réessayer » serait promettre que le hasard
+// pourrait la réparer.
 console.error("Erreur de chargement de la fiche étudiant :", error);
+
+const famille = categoriserErreur(error);
+const codeLisible = echapperTexte((error && error.code) || "");
+const detail = echapperTexte((error && (error.stack || error.message)) || String(error));
+const retour = `<p style="margin-top:14px;"><a href="students.html">Retour à la liste des étudiants</a></p>`;
+const pileVisible = `<p style="font-family:monospace;font-size:13px;margin-top:14px;padding:12px;border-radius:8px;background:rgba(0,0,0,.06);text-align:left;white-space:pre-wrap;">${detail}</p>`;
+
+const ecrans = {
+
+reseau: `
+<div style="padding:40px;text-align:center;">
+<h2>Cette fiche n'a pas pu être chargée</h2>
+<p>La connexion au serveur a échoué (${codeLisible || "réseau"}). Vérifiez votre connexion Internet, puis réessayez.</p>
+<button onclick="window.location.reload()">Réessayer</button>
+</div>`,
+
+serveur: `
+<div style="padding:40px;text-align:center;">
+<h2>Le serveur a refusé cette lecture</h2>
+<p>Ce n'est pas un problème de connexion : la requête est bien arrivée, et elle a été refusée (${codeLisible}). Réessayer ne changera rien — c'est un droit ou un document qui manque.</p>
+${pileVisible}
+${retour}
+</div>`,
+
+code: `
+<div style="padding:40px;text-align:center;">
+<h2>Cette fiche a rencontré une erreur interne</h2>
+<p>Ce n'est pas un problème de connexion : réessayer ne changera rien. Signalez ce message tel quel.</p>
+${pileVisible}
+${retour}
+</div>`
+
+};
 
 if (content) {
 content.style.display = "";
-content.innerHTML = `
-<div style="padding:40px;text-align:center;">
-<h2>Impossible de charger cette fiche</h2>
-<p>Vérifiez votre connexion Internet, puis réessayez.</p>
-<button onclick="window.location.reload()">Réessayer</button>
-</div>
-`;
+content.innerHTML = ecrans[famille];
 }
 
 if (pageLoader) pageLoader.style.display = "none";
@@ -966,25 +1053,36 @@ echec(`${libelle} n'a pas été enregistré`, error);
 
 }
 
+// Les quatre champs de formule vivent dans des blocs [data-super-admin],
+// que appliquerRole() RETIRE du DOM pour un administrateur ordinaire.
+// Leur bouton est retiré avec eux, donc ces gestionnaires ne partent
+// jamais chez lui — mais un bouton et son champ peuvent être séparés un
+// jour, et le prix de l'oubli est la fiche entière (2026-09-09). On lit
+// donc TOUJOURS à travers cette fonction : élément absent = champ vide.
+function valeurDe(id) {
+const el = document.getElementById(id);
+return el ? el.value : "";
+}
+
 document.getElementById("savePlanBtn")?.addEventListener("click", () => {
-const value = document.getElementById("planSelect").value;
+const value = valeurDe("planSelect");
 const libelle = value ? (PLAN_LABELS[value] || value) : "Sans formule";
 enregistrerFormule({ plan: value || null }, libelle);
 });
 
 document.getElementById("savePlanExpiryBtn")?.addEventListener("click", () => {
-const value = document.getElementById("planExpiryInput").value || null;
+const value = valeurDe("planExpiryInput") || null;
 enregistrerFormule({ planExpiresAt: value }, value ? `l'expiration au ${formatISODate(value)}` : "l'expiration effacée");
 });
 
 document.getElementById("savePlanPreinscriptionBtn")?.addEventListener("click", () => {
-const value = document.getElementById("planPreinscriptionSelect").value;
+const value = valeurDe("planPreinscriptionSelect");
 const libelle = value ? (PLAN_PREINSCRIPTION_LABELS[value] || value) : "Sans offre préinscription";
 enregistrerFormule({ planPreinscription: value || null }, libelle);
 });
 
 document.getElementById("savePlanPreinscriptionExpiryBtn")?.addEventListener("click", () => {
-const value = document.getElementById("planPreinscriptionExpiryInput").value || null;
+const value = valeurDe("planPreinscriptionExpiryInput") || null;
 enregistrerFormule({ planPreinscriptionExpiresAt: value }, value ? `l'expiration préinscription au ${formatISODate(value)}` : "l'expiration préinscription effacée");
 });
 
@@ -1060,11 +1158,11 @@ el.textContent = "État administrateur non lisible avec ce compte.";
 // un compte à qui on offrait un pass était indiscernable d un compte qui
 // l avait acheté.
 document.getElementById("saveFitzExpressBtn")?.addEventListener("click", () => {
-const value = document.getElementById("fitzExpressInput").value || null;
+const value = valeurDe("fitzExpressInput") || null;
 enregistrerFormule({ fitzExpressExpiresAt: value }, value ? `le Pass Découverte jusqu au ${formatISODate(value)}` : "le Pass Découverte retiré");
 });
 
-document.getElementById("testerAccessToggle").addEventListener("change", async (event) => {
+document.getElementById("testerAccessToggle")?.addEventListener("change", async (event) => {
 
 const enabled = event.target.checked;
 

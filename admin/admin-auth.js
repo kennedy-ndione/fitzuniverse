@@ -53,8 +53,22 @@ appliquerRole(administrateur.superAdmin);
 
 } catch (error) {
 
-console.error(error);
-window.location.href = "login.html";
+// ON NE DÉCONNECTE PAS SUR UNE ERREUR DE LECTURE (correctif du
+// 2026-09-09). Renvoyer à login.html affirme « vous n'êtes pas
+// administrateur », alors que la vérité est « on n'a pas pu le
+// savoir ». Le propriétaire s'est déjà vu éjecter ainsi, sans un mot,
+// et a cherché la panne du côté de son compte.
+console.error("[FitzUniverse] Vos droits d'administration n'ont pas pu être lus :", error);
+
+const loader = document.getElementById("pageLoader");
+if (loader) loader.style.display = "none";
+
+const alerte = document.createElement("div");
+alerte.setAttribute("role", "alert");
+alerte.style.cssText = "padding:40px;text-align:center;font:600 15px/1.5 system-ui,sans-serif;";
+// textContent : un message d'erreur peut contenir n'importe quoi.
+alerte.textContent = `Vos droits d'administration n'ont pas pu être vérifiés (${(error && (error.code || error.message)) || "erreur inconnue"}). Vous êtes toujours connecté — rechargez la page. Si le message revient, signalez ce code : ce n'est pas votre compte qui est en cause.`;
+document.body.prepend(alerte);
 
 }
 
