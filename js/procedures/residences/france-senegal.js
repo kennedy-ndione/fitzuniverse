@@ -65,6 +65,18 @@ verifieLe: CAMPAGNE_FRANCE.jalonsVerifiesLe
 }
 },
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Ne payez jamais avant d'avoir reçu la demande de paiement sur votre compte. La demande de paiement ne signifie pas non plus que le dossier est éligible.",
+source: "https://www.senegal.campusfrance.org/les-questions-frequemment-posees",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — le tronc demande une pièce d'identité ; le Sénégal demande en

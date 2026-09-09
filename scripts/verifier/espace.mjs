@@ -1170,6 +1170,148 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
   }
 
+  // ---------- 6. LOT DIAGNOSTIC-2 : le diagnostic rend un CHEMIN ----------
+  //
+  // Trois profils, choisis parce qu'ils font basculer les trois états du
+  // verdict ET les trois états de la documentation pays :
+  //
+  //   Sénégal au-dessus du seuil   pays entièrement documenté, calendrier
+  //                                publié, verdict « tient ».
+  //   Côte d'Ivoire loin en dessous  pays documenté SANS calendrier :
+  //                                aucune date ne doit s'afficher.
+  //   Rwanda                       pays NON documenté : ni frais de
+  //                                dossier, ni vigilance, ni calendrier —
+  //                                et les onze étapes quand même.
+  //
+  // On ne regarde pas « la page s'affiche » : on RELIT les valeurs, comme
+  // partout dans ce harnais.
+  {
+
+    const PROFILS_DIAG = [
+      {
+        cle: "sn-au-dessus",
+        pays: "Sénégal", ressources: 900, devise: "EUR", niveau: "licence",
+        verdict: /^Votre projet tient financièrement\.$/,
+        fin: /arriver à temps, avec un dossier complet/,
+        vigilance: 1,
+        calendrier: "dates",
+        total: /13 562 €/
+      },
+      {
+        cle: "ci-loin-dessous",
+        pays: "Côte d'Ivoire", ressources: 400, devise: "EUR", niveau: "licence",
+        verdict: /^Il manque 5 730 € sur l'année \(3 758 634 F CFA\)\.$/,
+        fin: /Ce n'est pas un refus, c'est un chiffre/,
+        vigilance: 2,
+        calendrier: "absence",
+        total: /13 554 €/
+      },
+      {
+        cle: "rw-non-documente",
+        pays: "Rwanda", ressources: 900, devise: "EUR", niveau: "licence",
+        verdict: /^Votre projet tient financièrement\.$/,
+        fin: /sans rien repayer/,
+        vigilance: 0,
+        calendrier: "absence",
+        total: /13 432 €/
+      }
+    ];
+
+    for (const p of PROFILS_DIAG) {
+
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
+
+      try {
+
+        await page.goto(`${base}/diagnostic-france.html`, { waitUntil: "domcontentloaded" });
+
+        if (page.url().includes("login.html")) throw new Error("redirigée vers la connexion — la doublure étudiant n'a pas pris.");
+
+        await page.waitForSelector("#diagForm", { timeout: 30000 });
+
+        await page.fill("#diagPays", p.pays);
+        await page.fill("#diagRessources", String(p.ressources));
+        // Le <select> natif est masqué derrière le composant maison
+        // (js/fitz-select.js) : selectOption ne le voit pas. On pose la
+        // valeur et on notifie, exactement comme le ferait le composant.
+        await page.evaluate((devise) => {
+          const el = document.getElementById("diagDevise");
+          el.value = devise;
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }, p.devise);
+        await page.check(`input[name="niveau"][value="${p.niveau}"]`, { force: true });
+        await page.click("#diagCalculer");
+
+        await page.waitForFunction(() => {
+          const v = document.getElementById("diagVerdict");
+          const f = document.getElementById("diagFin");
+          return v && v.textContent.trim() && f && f.textContent.trim();
+        }, null, { timeout: 20000 });
+
+        const vu = await page.evaluate(() => ({
+          verdict: (document.getElementById("diagVerdict").textContent || "").trim(),
+          total: (document.getElementById("diagTotal").textContent || "").trim(),
+          fin: (document.getElementById("diagFin").textContent || "").trim(),
+          lignes: document.querySelectorAll("#diagBlocs .diag-bloc").length,
+          sansSource: document.querySelectorAll("#diagBlocs .diag-source--absente").length,
+          vigilance: document.getElementById("diagSectionVigilance").hidden ? 0 : document.querySelectorAll("#diagVigilance li").length,
+          jalons: document.querySelectorAll("#diagCalendrier li").length,
+          absenceCalendrier: document.getElementById("diagCalendrierAbsence").hidden ? "" : (document.getElementById("diagCalendrierAbsence").textContent || "").trim(),
+          leviers: document.querySelectorAll("#diagLeviers .diag-levier").length,
+          bourses: document.querySelectorAll("#diagLeviers .diag-bourses li").length,
+          passerelle: !!document.querySelector("#diagLeviers .diag-passerelle"),
+          etapes: document.querySelectorAll("#diagEtapes li").length,
+          offres: document.querySelectorAll("#diagOffres li").length,
+          corps: document.getElementById("diagResultat").innerText
+        }));
+
+        if (!p.verdict.test(vu.verdict)) anomalies.push(`diagnostic ${p.cle} : verdict « ${vu.verdict} »`);
+        if (!p.fin.test(vu.fin)) anomalies.push(`diagnostic ${p.cle} : phrase de fin « ${vu.fin.slice(0, 90)}… »`);
+        if (!p.total.test(vu.total)) anomalies.push(`diagnostic ${p.cle} : total « ${vu.total.slice(0, 90)}… »`);
+        if (vu.vigilance !== p.vigilance) anomalies.push(`diagnostic ${p.cle} : ${vu.vigilance} point(s) de vigilance, ${p.vigilance} attendu(s).`);
+
+        // AUCUNE URGENCE INVENTÉE : un pays sans calendrier publié ne
+        // montre aucune date, et dit pourquoi.
+        if (p.calendrier === "dates") {
+          if (!vu.jalons) anomalies.push(`diagnostic ${p.cle} : aucun jalon affiché alors que le calendrier est publié.`);
+          if (vu.absenceCalendrier) anomalies.push(`diagnostic ${p.cle} : phrase d'absence affichée avec un calendrier publié.`);
+        } else {
+          if (vu.jalons) anomalies.push(`diagnostic ${p.cle} : ${vu.jalons} date(s) affichée(s) sans calendrier publié.`);
+          if (!vu.absenceCalendrier) anomalies.push(`diagnostic ${p.cle} : ni date, ni phrase d'absence — la section est muette.`);
+        }
+
+        // Les onze étapes sont rendues pour tout le monde : on ne cache
+        // rien pour faire payer la suite.
+        if (vu.etapes !== 11) anomalies.push(`diagnostic ${p.cle} : ${vu.etapes} étapes rendues, 11 attendues.`);
+        if (vu.lignes !== 3) anomalies.push(`diagnostic ${p.cle} : ${vu.lignes} lignes chiffrées, 3 attendues.`);
+        if (vu.offres !== 2) anomalies.push(`diagnostic ${p.cle} : ${vu.offres} offre(s) rendue(s), 2 attendues.`);
+        if (vu.leviers < 2) anomalies.push(`diagnostic ${p.cle} : ${vu.leviers} levier(s) rendus.`);
+
+        // Un pays non documenté a EXACTEMENT une ligne sans source (les
+        // frais de dossier) ; un pays documenté n'en a aucune.
+        const sansSourceAttendu = p.pays === "Rwanda" ? 1 : 0;
+        if (vu.sansSource !== sansSourceAttendu) anomalies.push(`diagnostic ${p.cle} : ${vu.sansSource} ligne(s) sans source, ${sansSourceAttendu} attendue(s).`);
+
+        for (const interdit of ["payez pour", "débloquer", "Impossible"]) {
+          if (vu.corps.toLowerCase().includes(interdit.toLowerCase())) anomalies.push(`diagnostic ${p.cle} : « ${interdit} » dans le résultat.`);
+        }
+        if (vu.corps.includes("!")) anomalies.push(`diagnostic ${p.cle} : un point d'exclamation dans le résultat.`);
+
+        notes.push(`diagnostic ${p.cle} : « ${vu.verdict} » — ${vu.vigilance} vigilance, ${vu.jalons} date(s)${vu.absenceCalendrier ? " (absence dite)" : ""}, ${vu.leviers} leviers${vu.bourses ? ` dont ${vu.bourses} bourse(s)` : " sans bloc bourses"}, ${vu.etapes} étapes — fin : « ${vu.fin.slice(0, 60)}… »`);
+
+      } catch (erreur) {
+
+        anomalies.push(`diagnostic ${p.cle} : ÉCHEC — ${erreur.message}`);
+
+      }
+
+      anomalies.push(...erreurs);
+      await contexte.close();
+
+    }
+
+  }
+
   return { anomalies, notes };
 
 }

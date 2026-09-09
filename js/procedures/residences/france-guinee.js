@@ -73,6 +73,18 @@ calendrier: "Campus France Guinée n'a pas publié le calendrier de la campagne 
 // relayer coûte trois lignes et peut épargner 1 500 000 GNF à quelqu'un.
 avertissement: "Campus France Guinée ne reçoit aucun argent en espèces et ne travaille avec aucun partenaire extérieur : tout paiement passe par la banque, après le message de demande de paiement. Son seul bureau est au CCFG ; ses déplacements en régions se font avec les autorités scolaires et universitaires locales. En cas de doute, appelez le 622 55 28 12 ou le 622 55 28 13 aux horaires de bureau avant de payer quoi que ce soit à qui que ce soit.",
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Si vous ne prenez pas votre rendez-vous d'entretien dans les 10 jours suivant l'ouverture des créneaux, Campus France vous convoque d'office, à une date que vous n'aurez pas choisie.",
+source: "https://www.guinee.campusfrance.org/les-6-etapes-de-la-procedure",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — la Guinée exige un PASSEPORT en cours de validité dès la

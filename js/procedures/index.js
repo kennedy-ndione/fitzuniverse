@@ -104,6 +104,16 @@ if (!paysResidence) return null;
 return COUCHES.find((c) => memePays(c.destination, paysDestination) && memePays(c.pays, paysResidence)) || null;
 }
 
+/**
+* Les points de vigilance d'un pays de résidence — le tableau vide quand
+* le pays n'est pas documenté, ou qu'il n'en déclare aucun. Jamais null :
+* l'appelant boucle, il ne teste pas.
+*/
+export function pointsDeVigilanceDe(paysDestination, paysResidence) {
+const couche = coucheDeResidence(paysDestination, paysResidence);
+return (couche && couche.pointsDeVigilance) || [];
+}
+
 /** Les pays de résidence documentés pour une destination, dans l'ordre du registre. */
 export function residencesDocumentees(paysDestination) {
 return COUCHES.filter((c) => memePays(c.destination, paysDestination)).map((c) => ({ pays: c.pays, verifieLe: c.verifieLe }));
@@ -232,6 +242,10 @@ faits: (couche && couche.faits) || null,
 // jamais un bloc vide (lot S2-MODÈLE).
 absences: (couche && couche.absences) || null,
 avertissement: (couche && couche.avertissement) || "",
+// Lot DIAGNOSTIC-2 : une à trois phrases qui coûtent cher quand on ne
+// les lit pas. Tableau VIDE et non null quand la couche n'en déclare
+// pas : l'appelant boucle sans se demander si le champ existe.
+pointsDeVigilance: (couche && couche.pointsDeVigilance) || [],
 couche: couche || null,
 etapes: tronc.etapes.map((e) => composerEtape(e, fragments[e.id] || null, couche, tronc))
 };
@@ -399,6 +413,36 @@ defauts.push(`absence ${cle} : aucune étape ne la consomme (voir dependDe)`);
 
 if (couche.avertissement !== undefined && (typeof couche.avertissement !== "string" || !couche.avertissement.trim())) {
 defauts.push("avertissement : présent mais vide");
+}
+
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+//
+// Une à trois phrases par pays : la règle éliminatoire, le piège de
+// calendrier, la porte qui se ferme. Elles ne sont pas un résumé des
+// consignes — elles sont la partie des consignes qui coûte cher quand on
+// ne la lit pas, remontée en tête du diagnostic.
+//
+// Même exigence que partout : SOURCE + DATE, sinon la couche est en
+// défaut. Une phrase de vigilance non sourcée serait le pire des
+// contenus de ce dépôt — un avertissement a l'autorité d'un fait, et
+// l'étudiant y obéira.
+//
+// PLAFOND À TROIS, à dessein : au-delà, plus rien ne ressort. Un lot qui
+// veut en ajouter une quatrième doit d'abord décider laquelle sort.
+if (couche.pointsDeVigilance !== undefined) {
+
+if (!Array.isArray(couche.pointsDeVigilance) || !couche.pointsDeVigilance.length) {
+defauts.push("pointsDeVigilance : présent mais vide");
+} else if (couche.pointsDeVigilance.length > 3) {
+defauts.push(`pointsDeVigilance : ${couche.pointsDeVigilance.length} entrées, trois au maximum`);
+}
+
+for (const [i, point] of (Array.isArray(couche.pointsDeVigilance) ? couche.pointsDeVigilance : []).entries()) {
+if (!point || typeof point.texte !== "string" || !point.texte.trim()) defauts.push(`point de vigilance ${i + 1} : sans texte`);
+if (!/^https?:\/\//.test((point && point.source) || "")) defauts.push(`point de vigilance ${i + 1} : sans source`);
+if (!/^\d{4}-\d{2}-\d{2}$/.test((point && point.verifieLe) || "")) defauts.push(`point de vigilance ${i + 1} : sans verifieLe`);
+}
+
 }
 
 const ids = new Set(((tronc && tronc.etapes) || []).map((e) => e.id));

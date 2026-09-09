@@ -63,6 +63,18 @@ absences: {
 calendrier: "Le calendrier de la campagne pour la rentrée 2027 n'est pas encore publié par Campus France Bénin. Les procédures s'ouvrent le 1er octobre ; lors de la campagne précédente, le paiement des frais devait être fait avant la mi-novembre et la première soumission du dossier avant le 20 novembre — des dates serrées, mais qui ne se reportent pas telles quelles d'une année sur l'autre. Consultez le calendrier officiel dès l'ouverture."
 },
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Trois procédures Campus France au maximum dans une vie, et un seul redoublement. Un test d'auto-évaluation obligatoire décide si vous pouvez candidater : passez-le AVANT de dépenser un franc.",
+source: "https://www.benin.campusfrance.org/la-procedure-de-candidatures-classiques-2025-2026",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — LA PORTE. Trois choses qu'un candidat béninois doit savoir

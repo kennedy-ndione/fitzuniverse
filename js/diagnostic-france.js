@@ -259,3 +259,218 @@ return ` Ce total réunit ${lignes}.`;
 export function textesRendus(resultat) {
 return [resultat.verdict, resultat.ressources.texte, resultat.droits.texte, resultat.fraisDossier.texte, resultat.total.texte];
 }
+
+// ==========================================================
+// LE VERDICT — une phrase, en haut, avant tout chiffre détaillé
+// (lot DIAGNOSTIC-2, 2026-09-09)
+// ==========================================================
+//
+// Le diagnostic rendait un TOTAL. Un total est une donnée ; l'étudiant a
+// payé pour une DÉCISION. Les trois états ci-dessous sont cette
+// décision, et ils tiennent en une phrase qu'on lit avant de descendre.
+//
+// La frontière à 20 % n'est pas cosmétique, elle change ce qu'on
+// CONSEILLE : sous 20 %, l'écart se comble par un choix d'université,
+// une exonération ou une bourse — trois leviers que la page affiche
+// juste en dessous. Au-delà, aucun de ces leviers ne suffit seul, et
+// dire « il vous manque 180 € par mois » ferait passer pour un détail
+// ce qui est un projet à refinancer. On bascule alors sur l'ANNÉE :
+// c'est le montant qu'une bourse doit couvrir.
+
+/** La frontière entre « ça se comble » et « c'est un autre plan de financement ». */
+export const SEUIL_ECART_IMPORTANT = 0.2;
+
+export const ETATS_VERDICT = ["tient", "ecart-faible", "ecart-important"];
+
+/**
+* La devise dans laquelle l'étudiant PENSE son budget : celle de l'espace
+* Campus France de son pays de résidence.
+*
+* Elle ne sert qu'à REDIRE un montant déjà juste en euros — jamais à
+* calculer. Et seulement quand la parité est fixe : le dirham et le
+* franc guinéen n'en ont pas, et un « environ » à un taux du jour serait
+* exactement le chiffre qui vieillit tout seul que ce dépôt refuse
+* partout ailleurs (voir DEVISES_ADDITIONNABLES).
+*/
+export function deviseDeResidence(paysResidence) {
+const couche = coucheDeResidence("France", paysResidence);
+const devise = couche && couche.faits && couche.faits.fraisDossier && couche.faits.fraisDossier.devise;
+return devise ? String(devise).toUpperCase() : null;
+}
+
+function enDeviseLocale(montantEUR, paysResidence) {
+const devise = deviseDeResidence(paysResidence);
+// L'euro ne se redit pas en euros, et une devise sans parité fixe ne se
+// redit pas du tout.
+if (!devise || devise === "EUR" || !deviseAdditionnable(devise)) return null;
+return { montant: Math.round(montantEUR * PARITE_EUR_XOF), devise };
+}
+
+/**
+* Le verdict, en une phrase, et de quoi la redire ailleurs.
+*
+* @returns {{etat:string, phrase:string, manqueMensuelEUR:number,
+*            manqueAnnuelEUR:number, local:{montant:number,devise:string}|null}}
+*/
+export function verdictChiffre(resultat) {
+
+const seuil = resultat.ressources.seuilMensuel;
+const ecart = resultat.ressources.ecartMensuel;
+const pays = resultat.residence.pays;
+
+if (ecart >= 0) {
+return {
+etat: "tient",
+phrase: "Votre projet tient financièrement.",
+manqueMensuelEUR: 0,
+manqueAnnuelEUR: 0,
+local: null
+};
+}
+
+const manqueMensuel = arrondi(Math.abs(ecart), 2);
+const manqueAnnuel = arrondi(manqueMensuel * 12, 0);
+const important = manqueMensuel >= seuil * SEUIL_ECART_IMPORTANT;
+
+// Le montant redit dans la monnaie du pays porte sur la MÊME période que
+// la phrase : mensuel quand on parle du mois, annuel quand on parle de
+// l'année. Mélanger les deux donnerait deux chiffres qui ne se
+// répondent pas.
+const local = enDeviseLocale(important ? manqueAnnuel : manqueMensuel, pays);
+const suffixe = local ? ` (${formatMontant(local.montant, local.devise)})` : "";
+
+return {
+etat: important ? "ecart-important" : "ecart-faible",
+phrase: important
+? `Il manque ${formatEUR(manqueAnnuel)} sur l'année${suffixe}.`
+: `Il vous manque ${formatEUR(manqueMensuel)} par mois${suffixe}.`,
+manqueMensuelEUR: manqueMensuel,
+manqueAnnuelEUR: manqueAnnuel,
+local
+};
+
+}
+
+// ==========================================================
+// CHAQUE LIGNE AVEC SA SOURCE ET SA DATE
+// ==========================================================
+//
+// La décomposition existait ; il lui manquait ses sources. C'est le seul
+// élément de cette page qu'aucun concurrent ne peut copier honnêtement —
+// un montant sans source est un montant qu'on a recopié quelque part.
+//
+// Une ligne sans source ne s'affiche pas en tant que montant : elle
+// affiche sa mention d'absence. `montant: null` et `absente: true` sont
+// donc deux façons de dire la même chose, et l'appelant n'a pas à
+// choisir laquelle regarder.
+
+/**
+* Les lignes du total, chacune avec son montant, sa source et sa date.
+* @returns {Array<{cle,libelle,montant,devise,texte,source,verifieLe,absente,dansLeTotal}>}
+*/
+export function lignesChiffrees(resultat) {
+
+const lignes = [];
+
+lignes.push({
+cle: "ressources",
+libelle: "Ressources à justifier pour le visa",
+montant: resultat.ressources.seuilAnnuel,
+devise: "EUR",
+texte: `${formatEUR(resultat.ressources.seuilMensuel)} par mois, soit ${formatEUR(resultat.ressources.seuilAnnuel)} sur l'année.`,
+source: resultat.ressources.source,
+verifieLe: resultat.ressources.verifieLe,
+absente: false,
+dansLeTotal: true
+});
+
+lignes.push({
+cle: "droits",
+libelle: `Droits d'inscription ${resultat.droits.niveau}`,
+montant: resultat.droits.montant,
+devise: "EUR",
+texte: `${formatEUR(resultat.droits.montant)} par an, à budgéter en totalité.`,
+source: resultat.droits.source,
+verifieLe: resultat.droits.verifieLe,
+absente: false,
+dansLeTotal: true
+});
+
+const frais = resultat.fraisDossier;
+
+lignes.push(frais.documente
+? {
+cle: "fraisDossier",
+libelle: "Frais de dossier Campus France",
+montant: frais.montant,
+devise: frais.devise,
+texte: `${formatMontant(frais.montant, frais.devise)}, non remboursables.${texteDecomposition(frais)}${frais.additionnable ? "" : " Cette devise n'a pas de parité fixe avec l'euro : ce montant s'ajoute au total, il n'y est pas fondu."}`,
+source: frais.source,
+verifieLe: frais.verifieLe,
+absente: false,
+dansLeTotal: frais.additionnable
+}
+: {
+cle: "fraisDossier",
+libelle: "Frais de dossier Campus France",
+montant: null,
+devise: null,
+texte: "Non encore vérifiés pour votre pays. Ils existent et varient d'un espace Campus France à l'autre : le total ci-dessous les EXCLUT, la dépense réelle sera donc plus élevée.",
+source: null,
+verifieLe: null,
+absente: true,
+dansLeTotal: false
+});
+
+return lignes;
+
+}
+
+// ==========================================================
+// LA PHRASE DE FIN — le dernier mot appartient au projet
+// ==========================================================
+//
+// Elle vient APRÈS l'offre, et elle ne vend pas. Quatre cas, quatre
+// phrases, et quatre règles de ton tenues par un test :
+//   aucun point d'exclamation ; jamais « vous allez réussir », « tout
+//   est possible », « rien n'est perdu » ; finir sur une ACTION ou un
+//   CHEMIN, jamais sur un prix ; la réassurance vient de la PRÉCISION.
+//
+// Le cas « pays non documenté » PRIME sur les trois autres : quand il
+// manque un chiffre, le dire est plus urgent que de commenter un total
+// qu'on sait incomplet. Et il dit ce qui se passera ensuite — la mise à
+// jour, sans repayer — parce qu'un manque sans suite est un abandon.
+
+export const PHRASES_INTERDITES = ["vous allez réussir", "tout est possible", "rien n'est perdu"];
+
+export function phraseDeFin(resultat) {
+
+const v = verdictChiffre(resultat);
+
+if (resultat.residence.documentee === false) {
+return {
+cas: "residence-non-documentee",
+texte: "Il manque encore un chiffre pour votre pays : les frais de votre espace Campus France. Tout le reste ci-dessus est vérifié et vous concerne. Dès que nous aurons lu la source officielle, votre diagnostic se mettra à jour — sans rien repayer."
+};
+}
+
+if (v.etat === "tient") {
+return {
+cas: "tient",
+texte: "Votre projet tient financièrement. Ce qui vous départagera maintenant, ce n'est plus l'argent : c'est d'arriver à temps, avec un dossier complet."
+};
+}
+
+if (v.etat === "ecart-faible") {
+return {
+cas: "ecart-faible",
+texte: `Il vous manque ${formatEUR(v.manqueMensuelEUR)} par mois, et c'est un écart qui se comble : une université moins chère, une exonération, ou une bourse suffisent souvent à le franchir. Vous n'êtes pas loin.`
+};
+}
+
+return {
+cas: "ecart-important",
+texte: `Aujourd'hui, l'écart est de ${formatEUR(v.manqueAnnuelEUR)} sur l'année. Ce n'est pas un refus, c'est un chiffre — et un chiffre se travaille. Beaucoup d'étudiants partent grâce à une bourse qui couvre exactement cette différence : c'est par là qu'il faut commencer, et nous vous dirons lesquelles sont ouvertes et vous concernent.`
+};
+
+}

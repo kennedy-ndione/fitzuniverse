@@ -71,6 +71,18 @@ calendrier: "Campus France Togo n'a pas encore publié les dates limites de la c
 // ce qu'il décrit.
 avertissement: "Campus France Togo rappelle qu'il est le seul interlocuteur officiel de la préinscription et qu'il ne reconnaît aucun intermédiaire — agence, cybercafé, officine, cabinet de coaching — se faisant rémunérer pour ÉLABORER votre dossier de candidature ou consulaire. FitzUniverse ne remplit ni ne soumet aucun dossier à votre place : votre compte Études en France reste le vôtre, et vous seul y écrivez. Nous vous aidons à comprendre la procédure, à réunir vos pièces à temps et à ne pas manquer une échéance. Les sessions d'information de Campus France Togo sont gratuites, à Lomé et à Kara : allez-y, elles sont utiles.",
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Il n'existe aucune attestation de création de compte : si le CROUS en réclame une, fournissez une capture d'écran de votre compte ou votre convocation à l'entretien.",
+source: "https://www.togo.campusfrance.org/les-procedures-et-inscriptions",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — trois détails togolais dont un que personne n'anticipe :

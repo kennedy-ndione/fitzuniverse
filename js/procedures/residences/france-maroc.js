@@ -90,6 +90,18 @@ jalonsAval: "La fenêtre de candidature est publiée (1er octobre → 15 novembr
 // d'aucun partenariat et ne promet ni admission ni visa.
 avertissement: "Campus France Maroc rappelle qu'il est le seul interlocuteur officiel de la procédure et qu'aucun organisme privé n'est accrédité pour la mener à votre place. Aucun intermédiaire ne peut garantir une admission ou un visa. FitzUniverse vous aide à comprendre, organiser et préparer votre dossier : vous le remplissez et le soumettez vous-même, sur votre compte Études en France.",
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "La fenêtre de candidature est courte : du 1er octobre au 15 novembre 2026. Elle ferme un mois avant celle de plusieurs pays voisins — ne vous fiez pas au calendrier d'un voisin.",
+source: "https://www.maroc.campusfrance.org/la-procedure-de-candidature-sur-etudes-en-france-de-campus-france",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // REMPLACEMENT — l'ordre lui-même change : au Maroc on SOUMET, puis on

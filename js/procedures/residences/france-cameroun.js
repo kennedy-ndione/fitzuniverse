@@ -79,6 +79,18 @@ absences: {
 calendrier: "Le calendrier de la campagne 2027-28 n'est pas encore publié par Campus France Cameroun. Le calendrier en ligne est celui de la rentrée 2026, ouvert le 6 octobre 2025 : ses dates sont passées et ne se reportent pas d'une année sur l'autre. Consultez le calendrier officiel à partir du début du mois d'octobre. Une seule date se répète chaque année et figure telle quelle dans votre parcours : la confirmation du choix définitif, au plus tard le 31 mai."
 },
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Aucun rendez-vous de paiement tant que votre panier ne contient pas au moins deux formations connectées, et que votre parcours et vos diplômes ne sont pas renseignés.",
+source: "https://www.cameroun.campusfrance.org/fr/vous-souhaitez-etudier-en-france-la-procedure-en-7-etapes",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — deux exigences linguistiques propres au Cameroun, et elles

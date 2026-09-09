@@ -74,6 +74,23 @@ calendrier: "Campus France Burkina n'a pas publié le calendrier de la campagne 
 // pays lus. Le relayer intégralement fait partie du service.
 avertissement: "Campus France Burkina met en garde sur deux points. D'abord la fraude documentaire : la présentation d'un faux document — faux relevé de notes, faux diplôme, fausse inscription, faux document Campus France — entraîne l'inéligibilité à TOUTE procédure Campus France et consulaire, et relève du code pénal. Ensuite les intermédiaires : aucune agence n'est agréée, et Campus France Burkina, service de l'ambassade de France, se déclare le seul organisme habilité à accompagner les mobilités étudiantes vers la France. FitzUniverse ne remplit, ne rédige et ne soumet aucun dossier, ne produit aucun document destiné à votre candidature, et ne se réclame d'aucun agrément : votre compte Études en France reste le vôtre. Vérifiez aussi la source de ce que vous lisez en ligne — Campus France Burkina rappelle qu'il n'a qu'une seule page Facebook officielle.",
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Bulletins TRIMESTRIELS depuis la seconde : le relevé annuel et le récapitulatif du lycée sont explicitement refusés.",
+source: "https://www.burkina.campusfrance.org/les-grandes-etapes-de-la-procedure",
+verifieLe: VERIFIE
+},
+{
+texte: "Un faux document — relevé, diplôme, inscription — entraîne l'inéligibilité à TOUTE procédure Campus France et consulaire, et relève du code pénal.",
+source: "https://www.burkina.campusfrance.org/les-grandes-etapes-de-la-procedure",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // AJOUT — le numéro burkinabè et le piège qui va avec : il ne sert pas

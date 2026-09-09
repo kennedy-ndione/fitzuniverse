@@ -67,6 +67,23 @@ absences: {
 calendrier: "Campus France Côte d'Ivoire n'a pas publié le calendrier de la campagne à venir : les dates encore en ligne sur les pages de procédure appartiennent à des campagnes passées et se contredisent entre elles (2023, 2024, 2025). Aucune date n'est donc affichée ici. Les campagnes précédentes se sont ouvertes le 1er octobre ; consultez la page officielle dès l'ouverture."
 },
 
+// LES POINTS DE VIGILANCE (lot DIAGNOSTIC-2, 2026-09-09).
+// Aucun fait neuf : ces phrases sont la partie des consignes ci-dessous
+// qui coûte cher quand on ne la lit pas, remontée en tête du Diagnostic
+// France. Même source, même date que la consigne dont elles sortent.
+pointsDeVigilance: [
+{
+texte: "Après deux corrections non suivies de modifications, votre dossier n'est plus recevable — et les frais versés restent dus.",
+source: "https://www.ivoire.campusfrance.org/je-veux-m-inscrire-en-licence-23-master-12-cycle-ingenieur",
+verifieLe: VERIFIE
+},
+{
+texte: "Avant de déposer votre visa, imprimez depuis votre compte la quittance de paiement : elle fait passer les frais de 65 000 à 35 000 F CFA.",
+source: "https://www.ivoire.campusfrance.org/je-veux-m-inscrire-en-licence-23-master-12-cycle-ingenieur",
+verifieLe: VERIFIE
+}
+],
+
 etapes: {
 
 // REMPLACEMENT — l'ordre réel, celui de l'étape 5 de la page de

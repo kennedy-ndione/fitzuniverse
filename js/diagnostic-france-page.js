@@ -1,43 +1,223 @@
 // ============================================================
 // diagnostic-france.html — branchement de js/diagnostic-france.js
-// (grille B, 2026-09-07). Verrouillé par "diagnostic_france". Le
-// résultat est enregistré sur users/{uid}.diagnosticFrance pour que
-// l'étudiant le retrouve ; c'est la seule écriture de la page.
+// (grille B, 2026-09-07). Verrouillé par "diagnostic_france".
+//
+// LOT DIAGNOSTIC-2 (2026-09-09) — cette page rendait un TOTAL. Un total
+// est une donnée ; l'étudiant a payé 10 000 F pour une DÉCISION et un
+// CHEMIN. Elle rend désormais, dans cet ordre : le verdict en une
+// phrase, le détail sourcé ligne par ligne, les points de vigilance de
+// son pays, son calendrier en jours, les leviers qui font baisser le
+// total, les onze étapes qui lui restent, l'offre une seule fois, et la
+// phrase de fin.
+//
+// RIEN N'EST MASQUÉ POUR FAIRE PAYER LA SUITE. Le catalogue est chargé
+// pour calculer les leviers ; s'il ne se charge pas, les deux leviers
+// qui en dépendent disparaissent — les autres restent. Une section
+// absente n'est jamais une section verrouillée.
+//
+// Le résultat est enregistré sur users/{uid}.diagnosticFrance pour que
+// l'étudiant le retrouve et le rejoue quand ses chiffres changent ;
+// c'est la seule écriture de la page.
 // ============================================================
 import { db } from "../firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell } from "./app-shell.js";
-import { calculerDiagnostic, formatEUR } from "./diagnostic-france.js";
+import { calculerDiagnostic, formatEUR, verdictChiffre, lignesChiffrees, phraseDeFin } from "./diagnostic-france.js";
+import {
+vigilanceDe,
+calendrierDe,
+leviersDe,
+etapesRestantes,
+PREAMBULE_OFFRE,
+OFFRES_ACCOMPAGNEMENT
+} from "./diagnostic-conseil.js";
+import { chargerCatalogue } from "./catalog-data.js";
 import { COUNTRY_NAMES } from "./countries.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
 
 initShellChrome();
 
+// Le catalogue sert UNIQUEMENT aux deux leviers qui en dépendent
+// (université la moins chère, bourses ouvertes). Il est chargé une fois,
+// en parallèle du reste, et son échec ne casse rien : `null` fait
+// simplement disparaître ces deux leviers-là.
+let CATALOGUE = null;
+
 // Le lien de source n'est rendu que s'il y en a une. Un bloc « non
 // verifie pour votre pays » n'a pas de source : lui en fabriquer une
 // (celle du Senegal, la plus proche) serait exactement le mensonge que
-// ce lot corrige.
-function renderBloc(titre, bloc) {
-const source = bloc.source
-? `<a class="diag-source" href="${escapeHtml(bloc.source)}" target="_blank" rel="noopener">Source — vérifié le ${escapeHtml(formaterDate(bloc.verifieLe))}</a>`
-: `<span class="diag-source diag-source--absente">Aucune source vérifiée pour votre pays à ce jour.</span>`;
-return `<li class="diag-bloc ${bloc.atteint === false || bloc.documente === false ? "is-ecart" : ""}">
-<strong>${escapeHtml(titre)}</strong>
-<p>${escapeHtml(bloc.texte)}</p>
-${source}
-</li>`;
+// le lot S2 corrige.
+function lienSource(source, verifieLe, absente = "Aucune source vérifiée pour votre pays à ce jour.") {
+return source
+? `<a class="diag-source" href="${escapeHtml(source)}" target="_blank" rel="noopener">${escapeHtml(hoteDe(source))} — vérifié le ${escapeHtml(formaterDate(verifieLe))}</a>`
+: `<span class="diag-source diag-source--absente">${escapeHtml(absente)}</span>`;
+}
+
+// Le NOM DU SITE plutôt que « Source ». « campusfrance.org » dit d'où
+// vient le chiffre sans qu'on clique — et c'est précisément ce qu'aucun
+// concurrent ne peut copier honnêtement.
+function hoteDe(url) {
+try {
+return new URL(url).hostname.replace(/^www\./, "");
+} catch {
+return "Source";
+}
+}
+
+function renderLignes(resultat) {
+
+document.getElementById("diagBlocs").innerHTML = lignesChiffrees(resultat).map((l) => `
+<li class="diag-bloc ${l.absente ? "is-ecart" : ""}">
+<strong>${escapeHtml(l.libelle)}</strong>
+<p>${escapeHtml(l.texte)}</p>
+${lienSource(l.source, l.verifieLe)}
+</li>`).join("");
+
+document.getElementById("diagTotal").textContent = resultat.total.texte;
+
+}
+
+function renderVigilance(pays) {
+
+const points = vigilanceDe(pays);
+const section = document.getElementById("diagSectionVigilance");
+
+// Aucun bloc vide : un pays sans point de vigilance documenté ne reçoit
+// pas un titre suivi de rien (règle du lot S2-MODÈLE).
+if (!points.length) { section.hidden = true; return; }
+
+section.hidden = false;
+document.getElementById("diagVigilanceTitre").textContent = `Les points de vigilance ${pays ? `— ${pays}` : "de votre pays"}`;
+document.getElementById("diagVigilance").innerHTML = points.map((p) => `
+<li>
+<p>${escapeHtml(p.texte)}</p>
+${lienSource(p.source, p.verifieLe)}
+</li>`).join("");
+
+}
+
+function renderCalendrier(pays) {
+
+const cal = calendrierDe(pays);
+const liste = document.getElementById("diagCalendrier");
+const absence = document.getElementById("diagCalendrierAbsence");
+const source = document.getElementById("diagCalendrierSource");
+
+// AUCUNE URGENCE INVENTÉE. Sans calendrier publié, on affiche la phrase
+// d'absence de la couche — jamais une date reprise d'une campagne
+// passée, même « à titre indicatif ».
+liste.innerHTML = cal.documente
+? cal.jalons.map((j) => `<li class="${j.jours < 0 ? "is-passe" : j.jours <= 30 ? "is-proche" : ""}">${escapeHtml(j.texte)}</li>`).join("")
+: "";
+
+absence.hidden = cal.documente;
+absence.textContent = cal.documente ? "" : cal.absence;
+
+source.hidden = !cal.source;
+source.innerHTML = cal.source ? lienSource(cal.source, cal.verifieLe) : "";
+
+}
+
+function renderLeviers(resultat) {
+
+const leviers = leviersDe(resultat, {
+catalogue: CATALOGUE,
+profile: resultat.profil || null
+});
+
+document.getElementById("diagLeviers").innerHTML = leviers
+// Un levier « non disponible » qui a quand même une phrase la dit :
+// « nous n'avons pas encore vérifié les frais » est une information.
+// Un levier vide (aucune bourse ouverte) disparaît, il ne s'affiche pas
+// en creux — le briefing l'exige, et « 0 bourse » se lirait comme un
+// verdict sur le profil.
+.filter((l) => l.texte)
+.map((l) => `
+<li class="diag-levier ${l.disponible ? "" : "is-partiel"}">
+<p>${escapeHtml(l.texte)}</p>
+${Array.isArray(l.bourses) && l.bourses.length ? `<ul class="diag-bourses">${l.bourses.map((b) => `
+<li>
+<strong>${escapeHtml(b.titre)}</strong> — ${escapeHtml(b.universite)}${typeof b.jours === "number" ? ` · clôture dans ${b.jours} jour${b.jours > 1 ? "s" : ""}` : ""}
+${b.financement ? `<p>${escapeHtml(b.financement)}</p>` : ""}
+${b.source ? lienSource(b.source, b.verifieLe) : ""}
+</li>`).join("")}</ul>` : ""}
+${l.lien ? `<a class="diag-passerelle" href="${escapeHtml(l.lien)}">Voir les formules bourse</a>` : ""}
+${l.source ? lienSource(l.source, l.verifieLe) : ""}
+</li>`).join("");
+
+}
+
+function renderEtapes(pays) {
+
+const { etapes, residenceDocumentee, avertissement } = etapesRestantes(pays);
+
+document.getElementById("diagEtapesIntro").textContent = residenceDocumentee
+? `La procédure Études en France, telle qu'elle s'applique depuis ${pays} : ${etapes.length} étapes, dans l'ordre. Elle est écrite ici en entier — vous pouvez la suivre seul.`
+: `La procédure Études en France, ${etapes.length} étapes, dans l'ordre. Les montants, les dates et les lieux qui dépendent de votre pays de résidence ne sont pas encore vérifiés : chaque étape concernée le dit.`;
+
+const bandeau = document.getElementById("diagAvertissement");
+bandeau.hidden = !avertissement;
+bandeau.textContent = avertissement || "";
+
+document.getElementById("diagEtapes").innerHTML = etapes.map((e) => `
+<li>
+<strong>${escapeHtml(e.titre)}</strong>
+${e.echeance ? `<span class="diag-etape-echeance">${escapeHtml(e.echeance.texte)}</span>` : ""}
+<p>${escapeHtml(e.consigne)}</p>
+${lienSource(e.source, e.verifieLe)}
+</li>`).join("");
+
+}
+
+const espacer = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+// PARTIE B — LES 10 000 F DU DIAGNOSTIC SE DÉDUISENT. Nulle part cette
+// mention n'a plus sa place qu'ici : la personne qui la lit vient
+// précisément de payer ce diagnostic. Le prix affiché est celui du
+// compte ; celui qui FAIT FOI est recalculé par la Cloud Function avant
+// la facture (functions/lib/achat.js).
+function renderOffre(userData) {
+
+document.getElementById("diagOffrePreambule").textContent = PREAMBULE_OFFRE;
+
+document.getElementById("diagOffres").innerHTML = OFFRES_ACCOMPAGNEMENT.map((o) => {
+
+const plan = (window.SCHOLARBRIDGE_PLANS || {})[o.id];
+if (!plan) return `<li><strong>${escapeHtml(o.label)}</strong> — ${escapeHtml(o.ligne)}</li>`;
+
+const tarif = typeof window.prixAvecDeduction === "function"
+? window.prixAvecDeduction(o.id, userData || {})
+: null;
+
+const prix = tarif && tarif.deduction
+? `${espacer(tarif.prix)} F au lieu de ${espacer(tarif.base)} F — ${tarif.mention}`
+: `${espacer(plan.priceFCFA)} F`;
+
+return `<li><strong>${escapeHtml(o.label)} (${escapeHtml(prix)})</strong> — ${escapeHtml(o.ligne)}</li>`;
+
+}).join("");
+
 }
 
 function render(resultat) {
-document.getElementById("diagVerdict").textContent = resultat.verdict;
-document.getElementById("diagBlocs").innerHTML =
-renderBloc("Ressources exigées pour le visa", resultat.ressources) +
-renderBloc("Droits d'inscription", resultat.droits) +
-renderBloc("Frais de dossier Campus France", resultat.fraisDossier);
-document.getElementById("diagTotal").textContent = resultat.total.texte;
+
+document.getElementById("diagVerdict").textContent = verdictChiffre(resultat).phrase;
+
+renderLignes(resultat);
+renderVigilance(resultat.residence.pays);
+renderCalendrier(resultat.residence.pays);
+renderLeviers(resultat);
+renderEtapes(resultat.residence.pays);
+renderOffre(resultat.userData || null);
+
+// Le dernier mot appartient au projet de l'étudiant : la phrase de fin
+// vient APRÈS l'offre, et elle ne vend pas.
+document.getElementById("diagFin").textContent = phraseDeFin(resultat).texte;
+
 document.getElementById("diagResultat").hidden = false;
 if (window.lucide) lucide.createIcons();
+
 }
 
 // Verrou (grille B) : aucune formule bourse n'ouvre cette page — seules
@@ -78,7 +258,36 @@ const paysProfil = (ctx.profile && (ctx.profile.country || ctx.profile.originCou
 if (paysProfil) document.getElementById("diagPays").value = paysProfil;
 const sauvegarde = document.getElementById("diagSauvegarde");
 
-// Un diagnostic déjà enregistré se réaffiche tel quel.
+// Le catalogue n'est chargé QUE pour les leviers, et son échec ne doit
+// rien casser : deux leviers de moins valent mieux qu'une page morte.
+try {
+const catalogue = await chargerCatalogue();
+// chargerCatalogue() rend { programmes, universites, bourses } ; le
+// moteur de recommandation, lui, parle anglais. La traduction est ici,
+// une fois — pas dans le module pur, qui ne doit connaître qu'une forme.
+CATALOGUE = { programs: catalogue.programmes, universities: catalogue.universites, scholarships: catalogue.bourses };
+} catch (error) {
+console.warn("[FitzUniverse] Catalogue indisponible : les leviers « université » et « bourses » ne seront pas calculés.", error);
+}
+
+// Le profil de l'étudiant sert au levier « bourses » : ce sont ses
+// filtres durs (nationalité, cycle, langue, âge) qui décident ce qui
+// « correspond à votre profil ».
+const profil = ctx.profile || null;
+
+function calculer(entrees) {
+const resultat = calculerDiagnostic(entrees);
+// Le profil sert au levier « bourses » (filtres durs), le document
+// utilisateur à la déduction des 10 000 F. Ni l'un ni l'autre n'entre
+// dans le CALCUL du total : ils décident de ce qu'on peut dire en plus.
+resultat.profil = profil;
+resultat.userData = ctx.userData || null;
+return resultat;
+}
+
+// Un diagnostic déjà enregistré se réaffiche tel quel — et se REJOUE :
+// les chiffres d'un étudiant changent, et un résultat qu'on retrouve
+// vaut deux fois un résultat qu'on lit une fois.
 const precedent = ctx.userData && ctx.userData.diagnosticFrance;
 if (precedent && precedent.entrees) {
 document.getElementById("diagPays").value = precedent.entrees.paysResidence || paysProfil || "";
@@ -87,9 +296,9 @@ document.getElementById("diagDevise").value = precedent.entrees.devise || "XOF";
 const niveau = form.querySelector(`input[name="niveau"][value="${precedent.entrees.niveau}"]`);
 if (niveau) niveau.checked = true;
 document.getElementById("diagExoneration").checked = precedent.entrees.exonerationEsperee === true;
-render(calculerDiagnostic(precedent.entrees));
+render(calculer(precedent.entrees));
 if (precedent.calculeLe) {
-sauvegarde.textContent = `Dernier diagnostic enregistré le ${formaterDate(String(precedent.calculeLe).slice(0, 10))}.`;
+sauvegarde.textContent = `Diagnostic enregistré le ${formaterDate(String(precedent.calculeLe).slice(0, 10))}. Vos chiffres ont changé ? Modifiez-les ci-dessus et relancez le calcul : c'est le même diagnostic, remis à jour, sans rien repayer.`;
 sauvegarde.hidden = false;
 }
 }
@@ -116,14 +325,22 @@ document.getElementById("diagRessources").focus();
 return;
 }
 
-const resultat = calculerDiagnostic(entrees);
+const resultat = calculer(entrees);
 render(resultat);
+
+const verdict = verdictChiffre(resultat);
 
 try {
 await updateDoc(doc(db, "users", ctx.user.uid), {
 diagnosticFrance: {
 entrees,
-verdict: resultat.verdict,
+verdict: verdict.phrase,
+// L'ÉTAT, et pas seulement la phrase (lot DIAGNOSTIC-2) : c'est lui
+// qui permettra plus tard de savoir à qui parler de bourses sans
+// relire le calcul, et il ne bouge pas quand la phrase est réécrite.
+etatVerdict: verdict.etat,
+manqueMensuelEUR: verdict.manqueMensuelEUR,
+manqueAnnuelEUR: verdict.manqueAnnuelEUR,
 atteint: resultat.ressources.atteint,
 ecartMensuel: resultat.ressources.ecartMensuel,
 totalAnnuelEUR: resultat.total.annuelEUR,
@@ -132,11 +349,11 @@ totalInclutFraisDossier: resultat.total.inclutFraisDossier,
 calculeLe: new Date().toISOString()
 }
 });
-sauvegarde.textContent = `Diagnostic enregistré — vous le retrouverez ici. Total annuel : ${formatEUR(resultat.total.annuelEUR)}.`;
+sauvegarde.textContent = `Diagnostic enregistré — vous le retrouverez ici, et vous pourrez le rejouer quand vos chiffres changeront. Total annuel : ${formatEUR(resultat.total.annuelEUR)}.`;
 sauvegarde.hidden = false;
 } catch (error) {
 console.error("Impossible d'enregistrer le diagnostic :", error);
-sauvegarde.textContent = "Le diagnostic est calculé mais n'a pas pu être enregistré. Réessayez plus tard.";
+sauvegarde.textContent = "Le diagnostic est calculé et affiché en entier ci-dessus, mais il n'a pas pu être enregistré. Vous pourrez le relancer plus tard.";
 sauvegarde.hidden = false;
 }
 

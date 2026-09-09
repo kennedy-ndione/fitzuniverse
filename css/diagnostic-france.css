@@ -37,3 +37,73 @@ comme un lien, donc comme une source qui existerait. */
 .diag-form{ padding:18px; }
 .diag-form .btn{ width:100%; justify-content:center; }
 }
+
+/* ------------------------------------------------------------------
+LOT DIAGNOSTIC-2 (2026-09-09) — du total au chemin.
+
+Le résultat n'est plus trois blocs et une somme : c'est un document, et
+il se lit comme un document. Sept sections, un titre chacune, et une
+seule règle de hiérarchie — le verdict est la seule ligne qui grossit,
+la phrase de fin est la seule qui se détache sans grossir.
+
+Aucune couleur ni police nouvelle : tokens de base.css et dashboard.css.
+------------------------------------------------------------------ */
+.diag-resultat{ gap:28px; }
+.diag-verdict{ font-size:var(--fs-h2); letter-spacing:-.01em; }
+
+.diag-section{ display:grid; gap:12px; }
+.diag-section h3{ margin:0; font-size:var(--fs-h4); }
+.diag-section-intro{ margin:0; color:var(--text-light); line-height:1.6; }
+.diag-source-ligne{ margin:0; }
+
+/* Les points de vigilance : le seul bloc de la page qui porte un filet
+de couleur. Il est là parce qu'une règle éliminatoire lue trop tard
+coûte une année — pas pour décorer. */
+.diag-section--vigilance{ border-left:3px solid var(--amber-700); padding-left:16px; }
+.diag-vigilance,
+.diag-leviers,
+.diag-calendrier,
+.diag-offres,
+.diag-bourses{ list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+.diag-vigilance li,
+.diag-levier{ border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--background-soft); padding:14px 16px; }
+.diag-vigilance p,
+.diag-levier > p{ margin:0 0 6px; line-height:1.55; }
+.diag-levier.is-partiel{ background:transparent; }
+
+.diag-calendrier li{ padding-left:14px; border-left:2px solid var(--border-color); line-height:1.5; }
+.diag-calendrier li.is-proche{ border-left-color:var(--amber-700); font-weight:600; }
+.diag-calendrier li.is-passe{ color:var(--text-muted); }
+.diag-absence{ margin:0; color:var(--text-light); line-height:1.6; }
+
+.diag-bourses{ margin-top:10px; gap:10px; }
+.diag-bourses li{ border-top:1px solid var(--border-color); padding-top:10px; }
+.diag-bourses p{ margin:4px 0 6px; font-size:var(--fs-small); line-height:1.5; color:var(--text-light); }
+.diag-passerelle{ display:inline-block; margin-top:6px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+
+.diag-avertissement{ margin:0; padding:14px 16px; border-radius:var(--radius-sm); background:var(--background-soft); border:1px solid var(--amber-700); line-height:1.55; }
+
+.diag-etapes{ margin:0; padding-left:20px; display:grid; gap:14px; }
+.diag-etapes li{ line-height:1.55; }
+.diag-etapes strong{ display:block; }
+.diag-etapes p{ margin:4px 0 6px; color:var(--text-light); }
+.diag-etape-echeance{ display:inline-block; margin-bottom:4px; font-size:var(--fs-caption); font-weight:600; color:var(--amber-700); }
+
+/* L'offre : une seule fois, sans insistance. Pas de carte, pas d'ombre,
+pas de fond coloré — elle se lit, elle ne se vend pas. */
+.diag-section--offre{ border-top:1px solid var(--border-color); padding-top:22px; }
+.diag-offre-preambule{ margin:0; line-height:1.6; }
+.diag-offres li{ line-height:1.55; }
+.diag-section--offre .btn{ justify-self:start; }
+
+/* La phrase de fin : le dernier mot appartient au projet de l'étudiant.
+Elle se détache par l'espace et par une taille de lecture, jamais par
+un effet : un dernier mot qui crie n'en est plus un. */
+.diag-fin{ margin:0; padding-top:4px; font-size:var(--fs-lead); line-height:1.65; }
+
+@media(max-width:640px){
+.diag-resultat{ gap:22px; }
+.diag-section--vigilance{ padding-left:12px; }
+.diag-etapes{ padding-left:18px; }
+.diag-section--offre .btn{ width:100%; justify-content:center; }
+}

@@ -67,7 +67,8 @@ de visa ; aucune promesse de résultat. -->
 
 <section class="diag-intro">
 <h2>Une réponse chiffrée avant de payer Campus France</h2>
-<p>Vos ressources contre le seuil publié, les droits d'inscription du niveau visé, ce que change le plafond d'exonération, et les frais de dossier. De l'arithmétique sur des chiffres publiés, chacun avec sa source et sa date — aucune estimation, aucune promesse de résultat.</p>
+<p>Vos ressources contre le seuil publié, chaque montant avec sa source et sa date, les points de vigilance de votre pays, votre calendrier en jours, ce qui peut faire baisser le total, et les étapes qui vous restent. De l'arithmétique sur des chiffres publiés — aucune estimation, aucune promesse de résultat.</p>
+<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
 </section>
 
 <form class="diag-form card" id="diagForm" novalidate>
@@ -104,12 +105,62 @@ ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Calculer</span></button>
 </form>
 
+<!-- LOT DIAGNOSTIC-2 (2026-09-09) — du total au CHEMIN.
+L'ordre des sections EST le produit : le verdict d'abord, parce qu'une
+décision se lit avant un chiffre ; les points de vigilance en troisième,
+parce que c'est là que les 10 000 F se justifient ; l'offre en
+avant-dernier, une seule fois ; et la phrase de fin en dernier, parce
+que le dernier mot appartient au projet de l'étudiant, jamais à un prix.
+
+RIEN N'EST MASQUÉ POUR FAIRE PAYER LA SUITE. Tout ce que le diagnostic
+promet est rendu en entier, immédiatement — y compris les onze étapes de
+la procédure. Quatre des sept pays documentés publient un avertissement
+contre les officines qui font l'inverse. -->
 <section class="diag-resultat" id="diagResultat" hidden aria-live="polite">
+
 <p class="diag-verdict" id="diagVerdict"></p>
+
+<section class="diag-section" id="diagSectionLignes">
+<h3>Le détail, chiffre par chiffre</h3>
 <ul class="diag-blocs" id="diagBlocs"></ul>
 <p class="diag-total" id="diagTotal"></p>
+</section>
+
+<section class="diag-section diag-section--vigilance" id="diagSectionVigilance" hidden>
+<h3 id="diagVigilanceTitre">Les points de vigilance de votre pays</h3>
+<ul class="diag-vigilance" id="diagVigilance"></ul>
+</section>
+
+<section class="diag-section" id="diagSectionCalendrier">
+<h3>Votre calendrier</h3>
+<ul class="diag-calendrier" id="diagCalendrier"></ul>
+<p class="diag-absence" id="diagCalendrierAbsence" hidden></p>
+<p class="diag-source-ligne" id="diagCalendrierSource" hidden></p>
+</section>
+
+<section class="diag-section" id="diagSectionLeviers">
+<h3>Ce qui peut faire baisser ce total</h3>
+<ul class="diag-leviers" id="diagLeviers"></ul>
+</section>
+
+<section class="diag-section" id="diagSectionEtapes">
+<h3>Ce qu'il vous reste à faire</h3>
+<p class="diag-section-intro" id="diagEtapesIntro"></p>
+<p class="diag-avertissement" id="diagAvertissement" hidden></p>
+<ol class="diag-etapes" id="diagEtapes"></ol>
+</section>
+
+<section class="diag-section diag-section--offre" id="diagSectionOffre">
+<p class="diag-offre-preambule" id="diagOffrePreambule"></p>
+<ul class="diag-offres" id="diagOffres"></ul>
+<a class="btn btn-primary" href="offers.html?parcours=preinscription"><span>Voir les deux formules</span></a>
+</section>
+
+<p class="diag-fin" id="diagFin"></p>
+
 <p class="diag-note">Ce diagnostic compare vos chiffres à des seuils publiés. La décision de visa et d'admission appartient aux autorités consulaires et à l'établissement.</p>
 <p class="diag-sauvegarde" id="diagSauvegarde" hidden></p>
+
 </section>
 
 </div>
