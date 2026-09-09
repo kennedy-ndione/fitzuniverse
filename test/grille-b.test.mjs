@@ -150,14 +150,35 @@ assert.ok(motifRegle("isDossierFrance").includes("['dossier-france', 'dossier-fr
 assert.ok(motifRegle("isDossierConseiller").includes("'dossier-france-conseiller'"));
 });
 
-test("firestore.rules : planPreinscription et planPreinscriptionExpiresAt hors de portée de l'étudiant, et de l'admin", () => {
+test("firestore.rules : les formules restent hors de portée de l'étudiant, et de l'admin ORDINAIRE", () => {
+// LOT ADMIN (2026-09-09) : la grille préinscription s'ouvre à
+// l'attribution manuelle — mais au seul superAdmin. Ce que ce test
+// gardait reste gardé, avec un cran de plus : l'administrateur
+// ORDINAIRE, qui n'existait pas quand il a été écrit, ne peut écrire
+// AUCUNE formule, ni bourse ni préinscription.
 const bloc = regles.slice(regles.indexOf("match /users/{uid} {"), regles.indexOf("match /users/{uid}/messages"));
-const create = bloc.match(/allow create: if isOwner\(uid\) && !request\.resource\.data\.keys\(\)\.hasAny\(\[([^\]]*)\]\)/);
-assert.ok(create && /"planPreinscription"/.test(create[1]) && /"planPreinscriptionExpiresAt"/.test(create[1]));
-const owner = bloc.match(/\(isOwner\(uid\) && !request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasAny\(\[([^\]]*)\]\)\)/);
-assert.ok(owner && /"planPreinscription"/.test(owner[1]) && /"planPreinscriptionExpiresAt"/.test(owner[1]));
-const adminOnly = bloc.match(/isAdmin\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(\[([^\]]*)\]\)/);
-assert.ok(adminOnly && !/planPreinscription/.test(adminOnly[1]), "l'admin ne doit pas pouvoir écrire le forfait préinscription");
+
+// L'étudiant : ni à la création, ni à la mise à jour.
+assert.match(bloc, /allow create: if isOwner\(uid\) && !request\.resource\.data\.keys\(\)\.hasAny\(champsFormule\(\)/);
+assert.match(bloc, /\(isOwner\(uid\) && !request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasAny\(champsFormule\(\)/);
+
+// La liste des champs de formule porte les DEUX grilles, et la trace
+// d'attribution manuelle — que l'étudiant ne doit pas pouvoir effacer
+// sur son propre compte.
+const champs = regles.match(/function champsFormule\(\) \{\s*return \[([^\]]*)\]/);
+assert.ok(champs, "champsFormule() introuvable dans les règles");
+for (const champ of ["plan", "planExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt", "attributionManuelle"]) {
+assert.ok(champs[1].includes(`"${champ}"`), `champsFormule() devrait contenir ${champ}`);
+}
+
+// L'administrateur ORDINAIRE : de la modération, jamais un droit payant.
+const ordinaire = regles.match(/function champsAdminOrdinaire\(\) \{\s*return \[([^\]]*)\]/);
+assert.ok(ordinaire, "champsAdminOrdinaire() introuvable dans les règles");
+assert.ok(!/plan/.test(ordinaire[1]), "un admin ordinaire ne doit écrire aucune formule");
+assert.match(bloc, /\(isAdmin\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(champsAdminOrdinaire\(\)\)\)/);
+
+// Le superAdmin : les deux grilles.
+assert.match(bloc, /isSuperAdmin\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(champsFormule\(\)/);
 assert.ok(/request\.resource\.data\.get\('track', 'bourse'\) == 'preinscription' && applicationId\.matches\(preSlotPattern\(uid\)\)/.test(regles));
 assert.ok(/isMessagingPlan\(uid\) \|\| hasPreinscription\(uid\) \|\| isTester\(uid\)/.test(regles), "messagerie ouverte aux trois offres préinscription (grille A)");
 assert.ok(motifRegle("hasPreinscription").includes("['diagnostic-france', 'dossier-france', 'dossier-france-conseiller']"));

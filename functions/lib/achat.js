@@ -151,6 +151,18 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
     pendingPlan: supprimer,
     pendingPlanRequestedAt: supprimer,
     dernierPaiementLe: maintenant.toISOString(),
+    // LOT ADMIN (2026-09-09) : un VRAI paiement efface la mention
+    // d'attribution manuelle. Le propriétaire peut poser une formule à
+    // la main — pour tester, pour dépanner, pour régulariser — et la
+    // fiche l'annonce alors en tête : « aucun paiement associé ». Le
+    // jour où l'argent arrive vraiment, cette phrase devient fausse, et
+    // une phrase fausse sur une fiche client est pire que pas de phrase.
+    //
+    // Posé ici, dans l'objet COMMUN aux trois branches : le pass, la
+    // grille préinscription et la grille bourse l'effacent toutes les
+    // trois. Y compris sur un achat de rang inférieur, qui n'applique
+    // pas la formule mais encaisse — l'argent a bien été versé.
+    attributionManuelle: supprimer,
   };
 
   // --- Le pass Découverte n'est pas une formule ---

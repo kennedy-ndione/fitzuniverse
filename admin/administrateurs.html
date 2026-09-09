@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Administrateurs | FitzUniverse Control Center</title>
+
+<meta name="description" content="Les administrateurs du Control Center : qui, à quel niveau, nommé par qui.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — administration">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Pilotage</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="messages.html" class="nav-link"><i data-lucide="messages-square"></i><span>Messages</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<!-- Lot ADMIN : réservé au propriétaire. data-super-admin le fait
+     RETIRER du DOM pour un administrateur ordinaire (admin-auth.js). -->
+<li data-super-admin><a href="administrateurs.html" class="nav-link is-active" aria-current="page"><i data-lucide="shield-check"></i><span>Administrateurs</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Catalogue</span>
+
+<ul>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Système</span>
+
+<ul>
+<li><a href="tools.html" class="nav-link"><i data-lucide="wrench"></i><span>Outils techniques</span></a></li>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
+<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Administrateurs</h1>
+<p>Qui a accès au Control Center, à quel niveau, et depuis quand.</p>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<p class="detail-field-value" style="font-weight:400;margin-bottom:20px;max-width:70ch;">
+On ne crée jamais de compte ici. Un collègue s'inscrit normalement sur le site, puis vous le promouvez depuis sa fiche étudiant — aucun mot de passe ne transite par cette page. Un administrateur ordinaire gère les étudiants, les messages et le catalogue&nbsp;; il ne peut ni nommer, ni révoquer, ni attribuer une formule.
+</p>
+
+<div class="admin-table-wrap">
+
+<table class="table admins-table">
+<thead>
+<tr>
+<th>Nom</th>
+<th>Courriel</th>
+<th>Rôle</th>
+<th>État</th>
+<th>Nommé le</th>
+<th>Par</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="adminsTable">
+<tr><td colspan="7"><div class="admin-table-empty">Chargement…</div></td></tr>
+</tbody>
+</table>
+
+</div>
+
+</main></main>
+
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="administrateurs.js"></script>
+
+</body>
+
+</html>

@@ -868,3 +868,93 @@ updatedAt: serverTimestamp()
 });
 
 }
+
+// ==========================================================
+// ATTRIBUTION MANUELLE D'UNE FORMULE (lot ADMIN, 2026-09-09)
+// ==========================================================
+//
+// Le propriétaire peut poser une formule à la main — les DEUX grilles,
+// bourse et préinscription. C'était impossible côté préinscription :
+// firestore.rules n'admettait pas ces champs dans sa liste blanche, et
+// la moitié du produit était donc intestable.
+//
+// LA CONTREPARTIE EST ÉCRITE DANS LA MÊME REQUÊTE : `attributionManuelle`
+// dit quoi, par qui et quand. Sans elle, un compte posé à la main serait
+// indiscernable d'un compte payé — pour nous, pour le support, et pour
+// les chiffres. Le webhook d'achat l'EFFACE quand un vrai paiement
+// arrive (functions/paiement.js) : un achat réel efface la mention.
+//
+// Une seule écriture, pas deux : si les règles refusent, RIEN n'est
+// posé — ni la formule, ni la trace.
+
+/**
+* @param {string} uid
+* @param {{plan?:string|null, planExpiresAt?:string|null, planPreinscription?:string|null, planPreinscriptionExpiresAt?:string|null}} formules
+* @param {string} parUid uid de l'administrateur qui attribue
+*/
+export async function attribuerFormuleManuellement(uid, formules, parUid) {
+
+const patch = {};
+
+// `undefined` = « ne touche pas à ce champ » ; `null` = « efface-le ».
+// La distinction compte : enregistrer la seule grille préinscription ne
+// doit pas effacer la formule bourse du compte.
+for (const champ of ["plan", "planExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt"]) {
+if (formules[champ] !== undefined) patch[champ] = formules[champ] || null;
+}
+
+patch.attributionManuelle = {
+plan: formules.plan !== undefined ? (formules.plan || null) : null,
+planPreinscription: formules.planPreinscription !== undefined ? (formules.planPreinscription || null) : null,
+par: parUid,
+le: new Date().toISOString().slice(0, 10)
+};
+
+await updateDoc(doc(db, "users", uid), patch);
+
+return patch.attributionManuelle;
+
+}
+
+// ==========================================================
+// LES ADMINISTRATEURS (lot ADMIN)
+// ==========================================================
+//
+// On ne CRÉE jamais de compte depuis le Control Center : on PROMEUT un
+// compte existant, qui s'est inscrit normalement sur le site. Aucun mot
+// de passe ne transite par ici, et aucune page n'en demande.
+//
+// Le document porte toujours role:"admin" — les règles le forcent, et
+// c'est ce qui empêche de se fabriquer un pair ou un successeur. Le
+// propriétaire, lui, n'a pas de champ `role` : son document ne peut
+// naître que dans la console Firebase.
+
+export async function listerAdmins() {
+
+const snapshot = await getDocs(collection(db, "admins"));
+
+return snapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+
+}
+
+export async function promouvoirAdmin(uid, { email = "", nom = "" } = {}, parUid = "") {
+
+await setDoc(doc(db, "admins", uid), {
+role: "admin",
+isActive: true,
+nommeLe: new Date().toISOString().slice(0, 10),
+nommePar: parUid,
+email,
+nom
+});
+
+}
+
+/**
+* Révoque ou réactive. On ne SUPPRIME jamais un administrateur : les
+* règles l'interdisent, et l'historique de qui a été nommé, par qui et
+* quand ne doit pas pouvoir disparaître d'un clic.
+*/
+export async function changerActivationAdmin(uid, actif) {
+await updateDoc(doc(db, "admins", uid), { isActive: actif === true });
+}

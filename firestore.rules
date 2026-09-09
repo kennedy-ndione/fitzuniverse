@@ -41,6 +41,48 @@ get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isActive =
 }
 
 // ------------------------------------------------------------
+// DEUX NIVEAUX D'ADMINISTRATEUR (lot ADMIN, 2026-09-09)
+//
+//   superAdmin  le propriétaire : nomme, révoque, et pose une formule
+//               à la main.
+//   admin       un collègue : gère les étudiants, les messages, le
+//               catalogue. Ne nomme personne, ne révoque personne, ne
+//               se promeut pas, n'attribue aucune formule.
+//
+// RÈGLE D'AMORÇAGE, DÉLIBÉRÉE : un document `admins` ACTIF et SANS
+// champ `role` vaut superAdmin. Les comptes qui existaient avant ce lot
+// sont donc propriétaires d'office, et l'interface fonctionne dès le
+// déploiement — aucune écriture manuelle en console n'est nécessaire.
+//
+// Ce n'est pas une faille, et la raison tient en une phrase : AUCUN
+// client ne peut créer un document `admins` sans être déjà superAdmin,
+// et cette création force role:"admin". Un document sans rôle ne peut
+// donc naître que dans la console Firebase, c'est-à-dire de la main du
+// propriétaire du projet.
+function estSuperAdminDoc(d) {
+return d.isActive == true && (!d.keys().hasAny(["role"]) || d.role == "superAdmin");
+}
+
+function isSuperAdmin() {
+return isSignedIn() &&
+exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+estSuperAdminDoc(get(/databases/$(database)/documents/admins/$(request.auth.uid)).data);
+}
+
+// Les champs d'ENTITLEMENT : ce qui donne accès à un produit payant.
+// Seul un superAdmin les pose à la main, et toute pose laisse une trace
+// (`attributionManuelle`, écrite dans la même requête).
+function champsFormule() {
+return ["plan", "planExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt", "fitzExpressExpiresAt", "attributionManuelle"];
+}
+
+// Ce qu'un administrateur ORDINAIRE peut changer sur un compte : de la
+// modération, jamais un droit payant.
+function champsAdminOrdinaire() {
+return ["disabled", "testerAccess"];
+}
+
+// ------------------------------------------------------------
 // AUDIT SÉCURITÉ 2026-09-02 — le serveur connaît les formules.
 // Jusqu'ici, le quota de candidatures et les fonctionnalités payantes
 // n'étaient vérifiés QUE côté client (js/plan-features.js) : un
@@ -204,12 +246,24 @@ return (isTester(uid) || isDossierFrance(uid)) ? 'pre-[1-7]' : '';
 // (hors de cette liste, informatif, sans effet sur l'accès).
 match /users/{uid} {
 allow read: if isOwner(uid) || isAdmin();
-// Grille B : "planPreinscription" et "planPreinscriptionExpiresAt" sont
-// hors de portée de l'étudiant ET de l'administrateur — seul le webhook
-// (SDK Admin) les écrit.
-allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt"]);
-allow update: if (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt"])) ||
-(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["plan", "disabled", "testerAccess", "planExpiresAt", "fitzExpressExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt"]));
+// LOT ADMIN (2026-09-09) : la grille PRÉINSCRIPTION s'ouvre à
+// l'attribution manuelle, ce qu'elle refusait jusqu'ici. L'intention
+// d'origine — éviter qu'une régularisation à la main diverge d'un vrai
+// paiement — était bonne, mais elle ne protégeait rien : le MÊME risque
+// existait déjà, à l'identique, sur `plan`, que l'admin écrivait
+// librement. L'asymétrie interdisait seulement de tester la moitié du
+// produit. On ouvre les deux grilles, on réserve les deux au
+// superAdmin, et on rend la trace explicite des deux côtés
+// (`attributionManuelle`).
+allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(champsFormule().concat(["disabled", "testerAccess"]));
+allow update: if
+// Le superAdmin : les droits payants, et rien d'autre.
+(isSuperAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(champsFormule().concat(champsAdminOrdinaire()))) ||
+// L'administrateur ordinaire : de la modération seulement.
+(isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(champsAdminOrdinaire())) ||
+// L'étudiant : tout SAUF ces champs — `attributionManuelle` comprise,
+// sans quoi il pourrait effacer la trace de sa propre régularisation.
+(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(champsFormule().concat(["disabled", "testerAccess"])));
 allow delete: if isOwner(uid);
 }
 
@@ -463,9 +517,46 @@ allow write: if isAdmin();
 // Un nouvel administrateur ne peut être créé que depuis la
 // console Firebase ou un futur outil serveur de confiance.
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// LES ADMINISTRATEURS (lot ADMIN, 2026-09-09)
+//
+// `allow write: if false` obligeait à passer par la console Firebase
+// pour nommer qui que ce soit. Le propriétaire peut désormais déléguer
+// depuis l'interface — sans jamais créer de compte : on PROMEUT un
+// compte existant, qui s'est inscrit normalement. Aucun mot de passe ne
+// transite nulle part.
+//
+// Quatre garde-fous, et ils tiennent ensemble :
+//   1. seul un superAdmin écrit ici ;
+//   2. le document écrit porte OBLIGATOIREMENT role:"admin" — on ne
+//      peut donc pas se fabriquer un pair, ni un successeur ;
+//   3. on ne modifie QUE le document d'un administrateur ordinaire
+//      (`resource.data.get("role", "superAdmin")`) : le document du
+//      propriétaire, qui n'a pas de rôle, est intouchable depuis le
+//      client — c'est ce qui rend l'amorçage sûr ;
+//   4. la SUPPRESSION est interdite à tout le monde. On ne supprime pas
+//      un administrateur, on le désactive : l'historique de qui a été
+//      nommé, par qui et quand, ne doit pas pouvoir disparaître.
+//
+// La lecture s'ouvre au superAdmin : la page administrateurs.html liste
+// la collection, et un `list` passe par la même règle qu'un `get`.
+// ------------------------------------------------------------
 match /admins/{uid} {
-allow read: if isOwner(uid);
-allow write: if false;
+
+allow read: if isOwner(uid) || isSuperAdmin();
+
+allow create: if isSuperAdmin()
+&& request.resource.data.role == "admin"
+&& request.resource.data.keys().hasOnly(["role", "isActive", "nommeLe", "nommePar", "email", "nom"]);
+
+allow update: if isSuperAdmin()
+&& request.auth.uid != uid
+&& resource.data.get("role", "superAdmin") == "admin"
+&& request.resource.data.role == "admin"
+&& request.resource.data.keys().hasOnly(["role", "isActive", "nommeLe", "nommePar", "email", "nom"]);
+
+allow delete: if false;
+
 }
 
 // ------------------------------------------------------------

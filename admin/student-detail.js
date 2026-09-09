@@ -25,12 +25,20 @@ updateUserFitzExpressExpiry,
 getUserApplications,
 updateApplicationChecklistItem,
 getAdvisorRequests,
-markAdvisorRequestProcessed
+markAdvisorRequestProcessed,
+// Lot ADMIN : l attribution manuelle (une seule écriture, tracée) et la
+// promotion d un compte existant.
+attribuerFormuleManuellement,
+promouvoirAdmin
 } from "./firebase-admin.js";
 
 import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
-import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS } from "../js/plan-features.js";
+import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+// Lot ADMIN : le rôle décide de ce qui est RENDU, le bandeau dit ce qui
+// s est passé, et firebase-admin porte les écritures tracées.
+import { chargerAdmin, appliquerRole } from "./admin-role.js";
+import { succes, echec, notifier } from "./notifier.js";
 // Lot E1 : la preuve de dépôt, en lecture seule (jamais la capture
 // elle-même — storage.rules la réserve au propriétaire).
 import { lirePreuve, resumePreuve, LIBELLES_MODES } from "../js/preuve-depot.js";
@@ -264,7 +272,80 @@ list.appendChild(row);
 
 }
 
+// ==========================================================
+// LES DEUX SÉLECTEURS, CONSTRUITS DEPUIS LES CONSTANTES (lot ADMIN)
+// ==========================================================
+// Les options étaient écrites à la main dans le HTML. La liste s'était
+// déjà désynchronisée deux fois de la grille réelle — un identifiant de
+// formule recopié dans du balisage est un identifiant que personne ne
+// met à jour. Elles viennent maintenant de PLAN_ORDER et de
+// PLAN_PREINSCRIPTION_ORDER, avec leurs libellés d'interface.
+//
+// Les dépréciées restent proposées, dans leur propre groupe : des
+// comptes bien réels les portent, et il faut pouvoir les leur rendre.
+function construireSelecteurs() {
+
+const selPlan = document.getElementById("planSelect");
+
+if (selPlan && !selPlan.options.length) {
+
+const enVente = PLAN_ORDER.filter((p) => p !== "gratuit" && estEnVente(p));
+const retirees = PLAN_ORDER.filter((p) => p !== "gratuit" && !estEnVente(p));
+
+const option = (id) => `<option value="${id}">${PLAN_LABELS[id] || id}</option>`;
+
+selPlan.innerHTML = `<option value="">Sans formule</option>`
++ `<optgroup label="En vente">${enVente.map(option).join("")}</optgroup>`
++ `<optgroup label="Retirées de la vente">${retirees.map(option).join("")}</optgroup>`;
+
+}
+
+const selPre = document.getElementById("planPreinscriptionSelect");
+
+if (selPre && !selPre.options.length) {
+selPre.innerHTML = `<option value="">Sans offre</option>`
++ PLAN_PREINSCRIPTION_ORDER.map((id) => `<option value="${id}">${PLAN_PREINSCRIPTION_LABELS[id] || id}</option>`).join("");
+}
+
+}
+
+// Une offre encore vendue ? `deprecated` vit dans pricing-plans.js, un
+// script classique chargé par la page. Absent (test, page sans lui), on
+// ne filtre rien : mieux vaut tout proposer que de masquer une formule
+// qu'un compte détient.
+function estEnVente(planId) {
+const plans = typeof window !== "undefined" && window.SCHOLARBRIDGE_PLANS;
+return !plans || !plans[planId] || plans[planId].deprecated !== true;
+}
+
+function renderAttributionManuelle(userData) {
+
+const el = document.getElementById("attributionManuelle");
+if (!el) return;
+
+const trace = userData.attributionManuelle;
+
+if (!trace || typeof trace !== "object") {
+el.hidden = true;
+el.textContent = "";
+return;
+}
+
+const quoi = [
+trace.plan ? (PLAN_LABELS[trace.plan] || trace.plan) : null,
+trace.planPreinscription ? (PLAN_PREINSCRIPTION_LABELS[trace.planPreinscription] || trace.planPreinscription) : null
+].filter(Boolean).join(" et ") || "aucune formule";
+
+el.innerHTML = `<i data-lucide="hand-coins" aria-hidden="true"></i><span><strong>Formule posée à la main le ${formatISODate(trace.le)} — aucun paiement associé.</strong> ${quoi}. Un vrai achat effacera cette mention.</span>`;
+el.hidden = false;
+
+if (window.lucide) lucide.createIcons();
+
+}
+
 function renderSubscriptionTab(userData) {
+
+construireSelecteurs();
 
 document.getElementById("planSelect").value = userData.plan || "";
 
@@ -330,7 +411,30 @@ const fitzExpressStatus = document.getElementById("fitzExpressStatus");
 
 fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
 
-// Grille B : le forfait préinscription et son échéance (lecture seule).
+// Grille B : le forfait préinscription et son échéance. MODIFIABLE
+// depuis le lot ADMIN (2026-09-09) — la mention « écrit par le
+// paiement, non modifiable ici » qui terminait cette phrase n'est plus
+// vraie, et la laisser aurait été pire qu'un champ manquant.
+const planPreSelect = document.getElementById("planPreinscriptionSelect");
+if (planPreSelect) planPreSelect.value = userData.planPreinscription || "";
+
+const planPreExpiryInput = document.getElementById("planPreinscriptionExpiryInput");
+if (planPreExpiryInput) planPreExpiryInput.value = userData.planPreinscriptionExpiresAt || "";
+
+const planPreExpiryStatus = document.getElementById("planPreinscriptionExpiryStatus");
+if (planPreExpiryStatus) {
+if (!userData.planPreinscription) {
+planPreExpiryStatus.textContent = "Aucune offre préinscription — l'expiration ne s'applique pas.";
+} else if (!userData.planPreinscriptionExpiresAt) {
+planPreExpiryStatus.textContent = "Aucune date d'expiration enregistrée.";
+} else {
+const finie = new Date(userData.planPreinscriptionExpiresAt).getTime() < Date.now();
+planPreExpiryStatus.textContent = finie
+? `Offre expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)} — l'étudiant perd l'espace préinscription.`
+: `Offre active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)}.`;
+}
+}
+
 const planPreStatus = document.getElementById("planPreinscriptionStatus");
 if (planPreStatus) {
 if (!userData.planPreinscription) {
@@ -342,9 +446,14 @@ planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
 ? `${nomPre} — aucune échéance enregistrée.`
 : (expPre < Date.now()
 ? `${nomPre} — expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)}.`
-: `${nomPre} — active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)} (écrit par le paiement, non modifiable ici).`);
+: `${nomPre} — active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)}.`);
 }
 }
+
+// La trace d'une attribution posée à la main. Elle se lit EN TÊTE de
+// fiche, avant tout le reste, parce qu'elle change la lecture de tout
+// le reste : ce compte n'a pas payé.
+renderAttributionManuelle(userData);
 
 if (!userData.fitzExpressExpiresAt) {
 fitzExpressStatus.textContent = "Aucun Pass Fitz Express actif.";
@@ -480,7 +589,7 @@ await renderAdvisorRequests();
 } catch (error) {
 
 console.error("Impossible de marquer la demande comme traitée :", error);
-alert("Un souci est survenu — réessayez dans un instant.");
+echec("L action n a pas abouti", error);
 button.disabled = false;
 
 }
@@ -612,7 +721,7 @@ await updateApplicationChecklistItem(uid, app.id, newChecklist);
 await renderCandidatures(currentUserData);
 } catch (error) {
 console.error("Impossible de marquer la lettre comme reçue :", error);
-alert("Un souci est survenu — réessayez dans un instant.");
+echec("L action n a pas abouti", error);
 }
 
 }
@@ -756,7 +865,19 @@ window.location.href = "login.html";
 return;
 }
 
-currentAdmin = { uid: user.uid, email: user.email };
+// LOT ADMIN : le NIVEAU, pas seulement l'identité. Un administrateur
+// ordinaire garde la fiche entière — profil, notes, messages,
+// candidatures — mais les sélecteurs de formule et le bouton de
+// promotion sont RETIRÉS du DOM avant le premier rendu.
+const adminConnecte = await chargerAdmin();
+
+currentAdmin = {
+uid: user.uid,
+email: user.email,
+superAdmin: !!(adminConnecte && adminConnecte.superAdmin)
+};
+
+appliquerRole(currentAdmin.superAdmin);
 
 if (!uid) {
 content.style.display = "";
@@ -767,6 +888,7 @@ return;
 
 initTabs();
 await loadStudent();
+if (currentAdmin.superAdmin) await rafraichirEtatPromotion();
 
 hidePageLoader();
 
@@ -795,67 +917,151 @@ if (pageLoader) pageLoader.style.display = "none";
 // Actions : formule, suspension, notes, messages
 // ==========================================================
 
-document.getElementById("savePlanBtn").addEventListener("click", async () => {
+// ==========================================================
+// TOUTE ATTRIBUTION MANUELLE PASSE PAR ICI (lot ADMIN, 2026-09-09)
+// ==========================================================
+//
+// Une seule fonction pour les quatre boutons de formule, et trois
+// exigences qu'elle tient ensemble :
+//
+//   1. UNE SEULE ÉCRITURE — la formule ET sa trace partent dans la même
+//      requête. Si les règles refusent, RIEN n'est posé : jamais une
+//      formule sans sa trace, ni l'inverse.
+//   2. UN RETOUR VISIBLE, dans les deux issues. Un refus du serveur
+//      n'est pas une panne : c'est une information, et elle est dite
+//      (« vous n'avez pas ce droit »).
+//   3. ON RELIT DEPUIS LA BASE. L'ancien code mettait à jour l'objet en
+//      mémoire et réaffichait : on voyait donc ce qu'on avait DEMANDÉ,
+//      pas ce qui avait été ENREGISTRÉ. Les deux diffèrent le jour où
+//      une règle refuse un champ au milieu d'un lot.
+async function enregistrerFormule(champs, libelle) {
 
-const value = document.getElementById("planSelect").value;
+if (!currentAdmin || !currentAdmin.superAdmin) {
+echec("Attribution refusée : seul le propriétaire peut poser une formule à la main.");
+return;
+}
+
+notifier(`Enregistrement de ${libelle}…`);
 
 try {
 
-await updateUserPlan(uid, value || null);
-currentUserData.plan = value || null;
+await attribuerFormuleManuellement(uid, champs, currentAdmin.uid);
+
+// On RELIT : c'est l'état réel qu'on affiche, jamais l'état espéré.
+const relu = await getUser(uid);
+if (relu) {
+currentUserData = relu;
 renderHeader(currentUserData);
+renderSubscriptionTab(currentUserData);
+}
 
-alert("Formule mise à jour.");
+succes(`${libelle} enregistré. La mention d'attribution manuelle est posée sur ce compte.`);
 
 } catch (error) {
 
 console.error(error);
-alert("Impossible de mettre à jour la formule.");
+echec(`${libelle} n'a pas été enregistré`, error);
 
 }
 
+}
+
+document.getElementById("savePlanBtn")?.addEventListener("click", () => {
+const value = document.getElementById("planSelect").value;
+const libelle = value ? (PLAN_LABELS[value] || value) : "Sans formule";
+enregistrerFormule({ plan: value || null }, libelle);
 });
 
-document.getElementById("savePlanExpiryBtn").addEventListener("click", async () => {
-
+document.getElementById("savePlanExpiryBtn")?.addEventListener("click", () => {
 const value = document.getElementById("planExpiryInput").value || null;
+enregistrerFormule({ planExpiresAt: value }, value ? `l'expiration au ${formatISODate(value)}` : "l'expiration effacée");
+});
+
+document.getElementById("savePlanPreinscriptionBtn")?.addEventListener("click", () => {
+const value = document.getElementById("planPreinscriptionSelect").value;
+const libelle = value ? (PLAN_PREINSCRIPTION_LABELS[value] || value) : "Sans offre préinscription";
+enregistrerFormule({ planPreinscription: value || null }, libelle);
+});
+
+document.getElementById("savePlanPreinscriptionExpiryBtn")?.addEventListener("click", () => {
+const value = document.getElementById("planPreinscriptionExpiryInput").value || null;
+enregistrerFormule({ planPreinscriptionExpiresAt: value }, value ? `l'expiration préinscription au ${formatISODate(value)}` : "l'expiration préinscription effacée");
+});
+
+// ==========================================================
+// PROMOUVOIR — on ne crée jamais de compte, on en promeut un
+// ==========================================================
+document.getElementById("promoteAdminBtn")?.addEventListener("click", async () => {
+
+if (!currentAdmin || !currentAdmin.superAdmin) {
+echec("Promotion refusée : seul le propriétaire peut nommer un administrateur.");
+return;
+}
+
+const nom = (currentUserData && currentUserData.name) || (currentUserData && currentUserData.email) || uid;
+
+if (!window.confirm(`Promouvoir ${nom} en administrateur ?\n\nCette personne aura accès au Control Center : étudiants, messages, catalogue. Elle ne pourra ni nommer, ni révoquer, ni attribuer une formule.`)) return;
+
+notifier("Promotion en cours…");
 
 try {
 
-await updateUserPlanExpiry(uid, value);
-currentUserData.planExpiresAt = value;
-renderSubscriptionTab(currentUserData);
-
-alert("Date d'expiration mise à jour.");
+await promouvoirAdmin(uid, { email: (currentUserData && currentUserData.email) || "", nom: (currentUserData && currentUserData.name) || "" }, currentAdmin.uid);
+await rafraichirEtatPromotion();
+succes(`${nom} est désormais administrateur. Vous pouvez le révoquer depuis la page Administrateurs.`);
 
 } catch (error) {
 
 console.error(error);
-alert("Impossible de mettre à jour la date d'expiration.");
+echec("La promotion a échoué", error);
 
 }
 
 });
 
-document.getElementById("saveFitzExpressBtn").addEventListener("click", async () => {
+/** Lit `admins/{uid}` de l'étudiant affiché et dit où il en est. */
+async function rafraichirEtatPromotion() {
 
-const value = document.getElementById("fitzExpressInput").value || null;
+const el = document.getElementById("promotionStatus");
+const bouton = document.getElementById("promoteAdminBtn");
+if (!el) return;
 
 try {
 
-await updateUserFitzExpressExpiry(uid, value);
-currentUserData.fitzExpressExpiresAt = value;
-renderSubscriptionTab(currentUserData);
+const snap = await getDoc(doc(db, "admins", uid));
 
-alert("Pass Fitz Express mis à jour.");
+if (!snap.exists()) {
+el.textContent = "Ce compte n'est pas administrateur.";
+if (bouton) bouton.disabled = false;
+return;
+}
+
+const data = snap.data();
+const actif = data.isActive === true;
+
+el.textContent = actif
+? `Administrateur depuis le ${data.nommeLe ? formatISODate(data.nommeLe) : "—"}. La révocation se fait depuis la page Administrateurs.`
+: "Administrateur révoqué. La réactivation se fait depuis la page Administrateurs.";
+
+if (bouton) bouton.disabled = actif;
 
 } catch (error) {
 
-console.error(error);
-alert("Impossible de mettre à jour le Pass Fitz Express.");
+// La lecture d'un document `admins` qui n'est pas le sien est
+// réservée au superAdmin : un refus ici n'est pas une panne.
+el.textContent = "État administrateur non lisible avec ce compte.";
 
 }
 
+}
+
+// Le Pass Découverte est un droit PAYANT : il passe par le même chemin
+// tracé que les deux grilles (lot ADMIN). Il était écrit sans trace, et
+// un compte à qui on offrait un pass était indiscernable d un compte qui
+// l avait acheté.
+document.getElementById("saveFitzExpressBtn")?.addEventListener("click", () => {
+const value = document.getElementById("fitzExpressInput").value || null;
+enregistrerFormule({ fitzExpressExpiresAt: value }, value ? `le Pass Découverte jusqu au ${formatISODate(value)}` : "le Pass Découverte retiré");
 });
 
 document.getElementById("testerAccessToggle").addEventListener("change", async (event) => {
@@ -871,7 +1077,7 @@ renderHeader(currentUserData);
 } catch (error) {
 
 console.error(error);
-alert("Impossible de mettre à jour l'accès test complet.");
+echec("L accès test complet n a pas été enregistré", error);
 event.target.checked = !enabled;
 
 }
@@ -899,7 +1105,7 @@ renderSubscriptionTab(currentUserData);
 } catch (error) {
 
 console.error(error);
-alert("Impossible de mettre à jour le statut du compte.");
+echec("Le statut du compte n a pas été enregistré", error);
 
 }
 
@@ -922,7 +1128,7 @@ await renderNotes();
 } catch (error) {
 
 console.error(error);
-alert("Impossible d'ajouter la note.");
+echec("La note n a pas été ajoutée", error);
 
 }
 
@@ -947,7 +1153,7 @@ await renderMessages();
 } catch (error) {
 
 console.error(error);
-alert("Impossible d'envoyer le message.");
+echec("Le message n a pas été envoyé", error);
 
 }
 
@@ -970,7 +1176,7 @@ window.location.href = "login.html";
 } catch (error) {
 
 console.error(error);
-alert("Erreur lors de la déconnexion.");
+echec("La déconnexion a échoué", error);
 logoutBtn.dataset.busy = "false";
 
 }

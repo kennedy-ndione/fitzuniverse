@@ -57,6 +57,9 @@
 <li><a href="messages.html" class="nav-link"><i data-lucide="messages-square"></i><span>Messages</span></a></li>
 <li><a href="students.html" class="nav-link is-active" aria-current="page"><i data-lucide="users"></i><span>Étudiants</span></a></li>
 <li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<!-- Lot ADMIN : réservé au propriétaire. data-super-admin le fait
+     RETIRER du DOM pour un administrateur ordinaire (admin-auth.js). -->
+<li data-super-admin><a href="administrateurs.html" class="nav-link"><i data-lucide="shield-check"></i><span>Administrateurs</span></a></li>
 </ul>
 
 <span class="sidebar-section-label">Catalogue</span>
@@ -108,6 +111,21 @@
 <div id="detailPills"></div>
 </div>
 
+<!-- LOT ADMIN : la mention d'attribution manuelle, EN TÊTE de la fiche.
+Elle se lit avant tout le reste parce qu'elle change la lecture de
+tout le reste : cette formule n'a pas été payée. Rendue par
+student-detail.js seulement quand le champ existe — aucun bloc vide
+sinon. Un vrai paiement l'efface (functions/paiement.js). -->
+<p class="detail-attribution-manuelle" id="attributionManuelle" hidden></p>
+
+<!-- Promouvoir : réservé au propriétaire, et retiré du DOM pour les
+autres. On ne crée jamais de compte ici — on promeut un compte
+existant, qui s'est inscrit normalement. Aucun mot de passe. -->
+<div class="detail-actions-row" id="promotionRow" data-super-admin style="margin-bottom:18px;">
+<button type="button" class="btn-detail-action" id="promoteAdminBtn">Promouvoir en administrateur</button>
+<span class="detail-field-value" id="promotionStatus" style="font-weight:400;">—</span>
+</div>
+
 <div class="detail-tabs" role="tablist">
 <button type="button" class="tab-btn is-active" data-tab="profil">Profil</button>
 <button type="button" class="tab-btn" data-tab="progression">Progression</button>
@@ -141,32 +159,25 @@ rendue par renderSubscriptionTab (student-detail.js). Activer la
 formule ci-dessous répond à la demande ; le champ s'efface de
 lui-même côté étudiant à sa prochaine visite. -->
 <p class="detail-field-value" id="pendingPlanStatus" style="margin-bottom:14px;">—</p>
-<div class="detail-actions-row">
-<!-- Liste COMPLÈTE des formules (2026-09-02) : le sélecteur ignorait
-premier-dossier, signature-focus et signature — impossible
-d'activer ces formules depuis le CRM. Premium reste listé pour
-les comptes qui le détiennent (offre dépréciée, jamais retirée
-d'un compte actif). -->
-<select id="planSelect">
-<option value="">Sans formule</option>
-<option value="premier-dossier">Premier Dossier</option>
-<!-- Grille A (2026-09-07) : les deux offres en vente, puis les
-anciennes — jamais retirées d'un compte qui les détient. -->
-<option value="essentiel-4">Essentiel (4 candidatures)</option>
-<option value="conseiller-6">Conseiller (6 candidatures)</option>
-<option value="essentiel">Essentiel — ancienne, 5 (dépréciée)</option>
-<option value="accompagnement">Ambition (dépréciée)</option>
-<option value="premium">Premium (dépréciée)</option>
-<option value="signature-focus">Conseiller — ancienne, 12 (dépréciée)</option>
-<option value="signature">Signature (dépréciée)</option>
-</select>
+<!-- LOT ADMIN (2026-09-09) : le sélecteur est CONSTRUIT depuis
+PLAN_ORDER (js/plan-features.js), groupé en « En vente » et
+« Retirées de la vente ». Plus aucun identifiant de formule écrit
+en dur ici : la liste s'était déjà désynchronisée deux fois de la
+grille réelle, et un identifiant recopié à la main dans du HTML
+est un identifiant que personne ne met à jour.
+
+`data-super-admin` : retiré du DOM pour un administrateur
+ordinaire (admin/admin-role.js). Retiré, pas grisé — un bouton
+caché annonce à un collègue une capacité qu'il n'a pas. -->
+<div class="detail-actions-row" data-super-admin>
+<select id="planSelect" aria-label="Formule bourse"></select>
 <button type="button" class="btn-detail-action" id="savePlanBtn">Enregistrer la formule</button>
 </div>
 </div>
 <div class="detail-section">
 <h3>Expiration de la formule</h3>
 <p class="detail-field-value" id="planExpiryStatus" style="margin-bottom:14px;">—</p>
-<div class="detail-actions-row">
+<div class="detail-actions-row" data-super-admin>
 <input type="date" id="planExpiryInput">
 <button type="button" class="btn-detail-action" id="savePlanExpiryBtn">Enregistrer la date</button>
 </div>
@@ -179,17 +190,33 @@ anciennes — jamais retirées d'un compte qui les détient. -->
 <button type="button" class="btn-detail-action" id="saveFitzExpressBtn">Enregistrer la date</button>
 </div>
 </div>
-<!-- Sortie de la section « Pass Fitz Express » le 2026-09-08. L'offre
-préinscription y était nichée sous le titre d'un AUTRE produit, entre
-un statut et un champ de date qui ne la concernaient pas : l'admin
-lisait « Pass Fitz Express » et trouvait dessous une ligne parlant
-d'autre chose. Deux forfaits distincts (grille A bourse, grille B
-préinscription) méritent deux sections. Toujours en lecture seule :
-aucun bouton ici, le webhook de paiement écrit seul ce champ. -->
+<!-- Sortie de la section « Pass Fitz Express » le 2026-09-08 : l'offre
+préinscription y était nichée sous le titre d'un AUTRE produit.
+
+LOT ADMIN (2026-09-09) : elle devient MODIFIABLE. Elle portait
+« écrite par le paiement seul — aucune modification manuelle depuis
+cette fiche », ce qui était vrai et coûteux : impossible de tester,
+de dépanner ou de régulariser la moitié du produit sans passer par
+un vrai paiement PayDunya. Le risque invoqué — une régularisation
+qui diverge d'un paiement — existait déjà mot pour mot sur la
+grille bourse, écrite librement depuis cette même fiche. Les deux
+grilles sont désormais logées à la même enseigne : réservées au
+propriétaire, et tracées. -->
 <div class="detail-section">
 <h3>Offre préinscription</h3>
 <p class="detail-field-value" id="planPreinscriptionStatus" style="margin-bottom:14px;">—</p>
-<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);margin-bottom:0;">Grille B, écrite par le paiement seul — aucune modification manuelle depuis cette fiche.</p>
+<div class="detail-actions-row" data-super-admin>
+<select id="planPreinscriptionSelect" aria-label="Offre préinscription"></select>
+<button type="button" class="btn-detail-action" id="savePlanPreinscriptionBtn">Enregistrer l'offre</button>
+</div>
+</div>
+<div class="detail-section">
+<h3>Expiration de l'offre préinscription</h3>
+<p class="detail-field-value" id="planPreinscriptionExpiryStatus" style="margin-bottom:14px;">—</p>
+<div class="detail-actions-row" data-super-admin>
+<input type="date" id="planPreinscriptionExpiryInput">
+<button type="button" class="btn-detail-action" id="savePlanPreinscriptionExpiryBtn">Enregistrer la date</button>
+</div>
 </div>
 <div class="detail-section">
 <h3>Candidatures accompagnées</h3>

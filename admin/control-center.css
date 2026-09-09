@@ -4777,3 +4777,59 @@ max-height:44vh;
 .msg-bubble-row{ max-width:88%; }
 
 }
+
+/* ==========================================================
+   BANDEAU DE RETOUR D'ACTION (lot ADMIN, 2026-09-09)
+   ==========================================================
+   Le Control Center répondait par alert() : une boîte système
+   qui ne dit pas POURQUOI et qu'on ne peut pas relire. Ici, un
+   bandeau qui reste neuf secondes, nomme la cause, et se lit.
+   Un bouton qui ne fait rien de visible est un bouton cassé.
+   ========================================================== */
+.admin-notifier{
+position:fixed;
+left:50%;
+bottom:24px;
+transform:translateX(-50%);
+z-index:9999;
+max-width:min(680px, calc(100vw - 32px));
+padding:13px 18px;
+border-radius:10px;
+border:1px solid rgba(0,0,0,.14);
+background:#211D18;
+color:#F5F1E8;
+font-size:14px;
+line-height:1.5;
+box-shadow:0 10px 30px rgba(0,0,0,.28);
+}
+
+.admin-notifier.is-succes{ border-color:#2F6F4E; background:#123522; color:#E6F5EC; }
+.admin-notifier.is-erreur{ border-color:#8E3B2F; background:#3A1712; color:#FBE8E4; }
+
+/* La mention d'attribution manuelle, en tête de la fiche étudiant.
+   Ambre : ce n'est pas une erreur, c'est une information qu'il faut
+   voir avant de lire le reste — cette formule n'a pas été payée. */
+.detail-attribution-manuelle{
+display:flex;
+gap:10px;
+align-items:flex-start;
+margin:0 0 18px;
+padding:12px 14px;
+border:1px solid rgba(233,163,25,.42);
+border-radius:10px;
+background:rgba(233,163,25,.10);
+font-size:14px;
+line-height:1.55;
+}
+
+.detail-attribution-manuelle i{ flex:none; width:16px; height:16px; margin-top:3px; }
+
+/* Tableau des administrateurs. */
+.admins-table{ width:100%; border-collapse:collapse; font-size:14px; }
+.admins-table th,
+.admins-table td{ padding:11px 12px; text-align:left; border-bottom:1px solid rgba(0,0,0,.08); vertical-align:middle; }
+.admins-table th{ font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+.admins-role{ display:inline-block; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:700; }
+.admins-role.is-proprietaire{ background:rgba(233,163,25,.16); }
+.admins-role.is-admin{ background:rgba(0,0,0,.07); }
+.admins-etat.is-revoque{ opacity:.62; }
