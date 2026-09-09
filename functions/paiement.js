@@ -64,7 +64,7 @@ const API_BASE = "https://app.paydunya.com/sandbox-api/v1";
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente } = require("./lib/achat");
+const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -152,18 +152,26 @@ exports.creerPaiement = onCall(
       );
     }
 
+    // 3 quater. LES 10 000 F DU DIAGNOSTIC SE DÉDUISENT (lot
+    //    DIAGNOSTIC-2, 2026-09-09). Calculé ICI, à partir du document
+    //    users/{uid} lu au serveur : le navigateur n envoie qu un
+    //    identifiant de formule, et un prix affiché faux resterait une
+    //    erreur d affichage, jamais une remise obtenue.
+    const tarif = prixAvecDeduction(planId, profil);
+    const montant = tarif.prix;
+
     const facture = {
       invoice: {
         items: {
           item_0: {
-            name: offre.label,
+            name: tarif.deduction ? offre.label + " (" + tarif.mention + ")" : offre.label,
             quantity: 1,
-            unit_price: String(offre.prix),
-            total_price: String(offre.prix),
+            unit_price: String(montant),
+            total_price: String(montant),
             description: "Accompagnement aux candidatures universitaires internationales",
           },
         },
-        total_amount: offre.prix,
+        total_amount: montant,
         description: `FitzUniverse — ${offre.label}`,
       },
       store: {
@@ -241,7 +249,9 @@ exports.creerPaiement = onCall(
       uid,
       planId,
       label: offre.label,
-      montantAttendu: offre.prix,
+      montantAttendu: montant,
+      montantCatalogue: tarif.base,
+      deduction: tarif.deduction,
       devise: "XOF",
       methodeChoisie: method || null,
       statut: "en-attente",

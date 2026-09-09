@@ -88,6 +88,91 @@ function estEnVente(planId) {
   return !!offre && offre.deprecated !== true;
 }
 
+// ============================================================
+// LES 10 000 F DU DIAGNOSTIC SE DÉDUISENT (lot DIAGNOSTIC-2, 2026-09-09)
+// ============================================================
+//
+// Le Diagnostic France est vendu comme « une réponse honnête AVANT de
+// payer Campus France ». Le facturer une seconde fois à qui décide
+// ensuite de se faire accompagner en ferait un péage : on le déduit.
+//
+// Trente jours, parce que c'est le temps d'une décision de famille —
+// pas quatorze, qui est la durée d'ACCÈS au diagnostic et n'a rien à
+// voir avec le délai qu'on met à se décider.
+//
+// Miroir de pricing-plans.js (DEDUCTION_DIAGNOSTIC), comparé par
+// test/grille-b.test.mjs. Le prix qui FAIT FOI est celui calculé ici :
+// le navigateur n'envoie qu'un identifiant de formule, jamais un
+// montant (voir functions/paiement.js).
+const DEDUCTION_DIAGNOSTIC = {
+  offre: "diagnostic-france",
+  montant: 10000,
+  jours: 30,
+  plans: ["dossier-france", "dossier-france-conseiller"],
+  mention: "vos 10 000 F de diagnostic sont déduits",
+  // Miroir explicite de GRILLE["diagnostic-france"].dureeJours, pour que
+  // le client puisse porter la même valeur sans lire toute la grille.
+  // Un test vérifie qu'elles ne divergent pas.
+  dureeDiagnosticJours: 14,
+};
+
+/**
+ * Quand ce compte a-t-il payé son diagnostic ? `null` s'il ne l'a pas
+ * payé, ou si on ne peut pas le dater.
+ *
+ * DEUX SOURCES, dans cet ordre :
+ *   1. `diagnosticPayeLe`, posé par le webhook depuis ce lot. C'est la
+ *      seule qui soit exacte, et c'est celle qui vaudra pour tous les
+ *      achats à venir.
+ *   2. À défaut, l'échéance du diagnostic en cours moins sa durée
+ *      (14 jours). Filet pour les comptes qui ont payé AVANT ce lot :
+ *      sans lui, ils perdraient une déduction qu'ils ont achetée. Il
+ *      s'éteint tout seul, puisque tout nouvel achat pose le champ.
+ */
+function diagnosticPayeLe(user = {}) {
+  const explicite = dateValide(user.diagnosticPayeLe);
+  if (explicite) return explicite;
+
+  if (String(user.planPreinscription || "") !== DEDUCTION_DIAGNOSTIC.offre) return null;
+
+  const expiration = dateValide(user.planPreinscriptionExpiresAt);
+  if (!expiration) return null;
+
+  const duree = DEDUCTION_DIAGNOSTIC.dureeDiagnosticJours;
+  return new Date(expiration.getTime() - duree * 86400000);
+}
+
+/**
+ * Le prix RÉELLEMENT dû pour une formule, déduction faite.
+ *
+ * @returns {{prix:number, base:number, deduction:number, mention:string}|null}
+ *          null pour une formule inconnue.
+ */
+function prixAvecDeduction(planId, user = {}, maintenant = new Date()) {
+  const offre = GRILLE[planId];
+  if (!offre) return null;
+
+  const base = offre.prix;
+  const rien = { prix: base, base, deduction: 0, mention: "" };
+
+  if (!DEDUCTION_DIAGNOSTIC.plans.includes(planId)) return rien;
+
+  const paye = diagnosticPayeLe(user);
+  if (!paye) return rien;
+
+  const jours = Math.floor((maintenant.getTime() - paye.getTime()) / 86400000);
+  // Un achat daté dans le FUTUR n'ouvre aucun droit : une horloge
+  // décalée ou une donnée saisie à la main ne doit pas faire un rabais.
+  if (jours < 0 || jours > DEDUCTION_DIAGNOSTIC.jours) return rien;
+
+  return {
+    prix: base - DEDUCTION_DIAGNOSTIC.montant,
+    base,
+    deduction: DEDUCTION_DIAGNOSTIC.montant,
+    mention: DEDUCTION_DIAGNOSTIC.mention,
+  };
+}
+
 // Miroir de PLAN_PREINSCRIPTION_ORDER (js/plan-features.js).
 const RANG_PREINSCRIPTION = {
   "diagnostic-france": 1,
@@ -201,6 +286,15 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
     if (encoreActif && expiration > echeance) echeance = expiration;
 
     misAJour.planPreinscriptionExpiresAt = echeance.toISOString();
+
+    // La DATE D'ACHAT du diagnostic, et non son échéance : c'est elle
+    // qui ouvre la déduction de 10 000 F sur un Dossier France acheté
+    // dans les trente jours (prixAvecDeduction). Déduire depuis
+    // l'échéance marchait, tant que la durée du diagnostic ne bougeait
+    // pas — une déduction ne doit pas dépendre d'un paramètre qui n'a
+    // rien à voir avec elle.
+    if (planId === DEDUCTION_DIAGNOSTIC.offre) misAJour.diagnosticPayeLe = maintenant.toISOString();
+
     return { statut: "applique", misAJour };
   }
 
@@ -231,4 +325,4 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
   return { statut: "applique", misAJour };
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente };
+module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction };

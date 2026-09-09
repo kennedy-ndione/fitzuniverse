@@ -489,11 +489,19 @@ priceFCFA: 10000,
 duration: "14 jours",
 fitzAccess: "Aucun outil Fitz : de l'arithmétique sur des seuils publiés, avec leurs sources",
 maxPreinscriptions: 0,
+// Lot DIAGNOSTIC-2 (2026-09-09) : la promesse suit ce que la page rend
+// vraiment. Elle ne rendait qu'un total ; elle rend maintenant un
+// verdict, les points de vigilance du pays, le calendrier en jours, les
+// leviers et les étapes — et la dernière ligne dit ce que devient le
+// prix si l'accompagnement suit.
 highlights: [
-"Vos ressources contre le seuil publié pour le visa (877,50 € par mois)",
-"Les droits d'inscription selon le niveau, et ce que change le plafond d'exonération à 30 %",
-"Les 85 000 F de dossier Campus France, non remboursables, et la règle « aucun paiement à l'avance »",
-"Un total annuel honnête, chaque chiffre daté et sourcé"
+"Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année",
+"Chaque montant avec sa source officielle et sa date de vérification",
+"Les points de vigilance de votre pays : les règles éliminatoires, avant qu'elles ne coûtent une année",
+"Votre calendrier en jours, ou la raison pour laquelle aucune date n'est encore publiée",
+"Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes",
+"Les étapes de votre procédure, en entier — rien n'est masqué pour faire payer la suite",
+"Les 10 000 F se déduisent d'un Dossier France acheté dans les 30 jours"
 ]
 },
 
@@ -567,3 +575,79 @@ selectedAt: new Date().toISOString()
 };
 
 }
+
+// ==========================================================
+// LES 10 000 F DU DIAGNOSTIC SE DÉDUISENT (lot DIAGNOSTIC-2, 2026-09-09)
+// ==========================================================
+//
+// MIROIR de functions/lib/achat.js (DEDUCTION_DIAGNOSTIC, diagnosticPayeLe,
+// prixAvecDeduction). Dupliqué volontairement, comme les prix et les
+// quotas : une Cloud Function ne peut pas importer un module du site.
+// test/grille-b.test.mjs échoue si les deux divergent.
+//
+// CE CALCUL NE FAIT PAS FOI. Il décide de ce qui est AFFICHÉ ; le
+// montant facturé est recalculé côté serveur, à partir du seul
+// identifiant de formule que le navigateur envoie. Un prix affiché faux
+// serait une erreur d'affichage, jamais une remise obtenue.
+
+const DEDUCTION_DIAGNOSTIC = {
+offre: "diagnostic-france",
+montant: 10000,
+jours: 30,
+plans: ["dossier-france", "dossier-france-conseiller"],
+mention: "vos 10 000 F de diagnostic sont déduits",
+// La durée du diagnostic (14 j) ne sert QUE au filet ci-dessous, pour
+// les comptes payés avant ce lot. Elle est ici en clair plutôt que lue
+// dans le champ duration, qui vaut la chaîne « 14 jours » : analyser
+// une phrase pour en tirer un nombre est le genre de fragilité qui
+// casse le jour où quelqu'un écrit « deux semaines ».
+dureeDiagnosticJours: 14
+};
+
+window.SCHOLARBRIDGE_DEDUCTION = DEDUCTION_DIAGNOSTIC;
+
+function dateDeDiagnostic(user) {
+
+const u = user || {};
+
+const explicite = u.diagnosticPayeLe ? new Date(u.diagnosticPayeLe) : null;
+if (explicite && !isNaN(explicite.getTime())) return explicite;
+
+// Filet pour les comptes qui ont payé AVANT ce lot : l'échéance du
+// diagnostic en cours, moins sa durée. Il s'éteint tout seul, puisque
+// tout nouvel achat pose `diagnosticPayeLe`.
+if (String(u.planPreinscription || "") !== DEDUCTION_DIAGNOSTIC.offre) return null;
+
+const expiration = u.planPreinscriptionExpiresAt ? new Date(u.planPreinscriptionExpiresAt) : null;
+if (!expiration || isNaN(expiration.getTime())) return null;
+
+const duree = DEDUCTION_DIAGNOSTIC.dureeDiagnosticJours;
+return new Date(expiration.getTime() - duree * 86400000);
+
+}
+
+/**
+* Le prix à AFFICHER pour une formule, déduction faite.
+* @returns {{prix:number, base:number, deduction:number, mention:string}|null}
+*/
+function prixAvecDeduction(planId, user, maintenant) {
+
+const plan = SCHOLARBRIDGE_PLANS[planId];
+if (!plan) return null;
+
+const base = plan.priceFCFA;
+const rien = { prix: base, base, deduction: 0, mention: "" };
+
+if (!DEDUCTION_DIAGNOSTIC.plans.includes(planId)) return rien;
+
+const paye = dateDeDiagnostic(user);
+if (!paye) return rien;
+
+const jours = Math.floor(((maintenant || new Date()).getTime() - paye.getTime()) / 86400000);
+if (jours < 0 || jours > DEDUCTION_DIAGNOSTIC.jours) return rien;
+
+return { prix: base - DEDUCTION_DIAGNOSTIC.montant, base, deduction: DEDUCTION_DIAGNOSTIC.montant, mention: DEDUCTION_DIAGNOSTIC.mention };
+
+}
+
+window.prixAvecDeduction = prixAvecDeduction;

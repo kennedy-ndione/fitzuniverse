@@ -135,21 +135,48 @@ return `<span class="price-local">${formatFCFA(amountFCFA)} FCFA</span>`
 
 // Libellé du bouton d'activation. L'euro annonce, le FCFA précise ce qui
 // part du compte — les deux sur la même ligne, jamais l'un sans l'autre.
+// LE PRIX RÉELLEMENT DÛ (lot DIAGNOSTIC-2, 2026-09-09) : les 10 000 F
+// d'un diagnostic payé depuis moins de trente jours se déduisent d'un
+// Dossier France. Calculé par pricing-plans.js, et RECALCULÉ côté
+// serveur avant la facture — ce qui est affiché ici ne fait pas foi, et
+// un prix affiché faux resterait une erreur d'affichage, jamais une
+// remise obtenue.
+//
+// `session` peut être null (page ouverte sans compte) : le prix de
+// catalogue s'affiche alors, ce qui est la bonne réponse — la déduction
+// appartient à un compte, pas à un visiteur.
+let TARIF = null;
+
+function tarifDe(plan, session) {
+const calcul = typeof window.prixAvecDeduction === "function"
+? window.prixAvecDeduction(plan.id, (session && session.userData) || {})
+: null;
+return calcul || { prix: plan.priceFCFA, base: plan.priceFCFA, deduction: 0, mention: "" };
+}
+
 function activationLabel(plan) {
 
-return `Activer mon accompagnement — ${formatEUR(plan.priceFCFA)} € (${formatFCFA(plan.priceFCFA)} FCFA)`;
+const montant = TARIF ? TARIF.prix : plan.priceFCFA;
+
+return `Activer mon accompagnement — ${formatEUR(montant)} € (${formatFCFA(montant)} FCFA)`;
 
 }
 
-function renderPlan(plan) {
+function renderPlan(plan, session) {
+
+TARIF = tarifDe(plan, session);
 
 document.getElementById("planSummaryIcon").setAttribute("data-lucide", plan.icon);
 document.getElementById("planSummaryBadge").textContent = plan.badge;
 document.getElementById("planSummaryLabel").textContent = plan.label;
-document.getElementById("planSummaryAmount").innerHTML = formatPriceHTML(plan.priceFCFA);
+document.getElementById("planSummaryAmount").innerHTML = formatPriceHTML(TARIF.prix);
 
 document.getElementById("summaryOffer").textContent = plan.label;
-document.getElementById("summaryPrice").textContent = `${formatEUR(plan.priceFCFA)} € — ${formatFCFA(plan.priceFCFA)} FCFA débités`;
+document.getElementById("summaryPrice").textContent = TARIF.deduction
+// Le prix barré ET la raison : un montant qui baisse sans explication
+// se lit comme une erreur, et on appelle le support pour la signaler.
+? `${formatEUR(TARIF.prix)} € — ${formatFCFA(TARIF.prix)} FCFA débités, au lieu de ${formatFCFA(TARIF.base)} FCFA : ${TARIF.mention}.`
+: `${formatEUR(TARIF.prix)} € — ${formatFCFA(TARIF.prix)} FCFA débités`;
 // Toutes les offres n'ont pas de durée : Premier Dossier, Signature
 // Focus et Signature achètent un nombre de candidatures, pas une
 // période. La ligne entière est masquée dans ce cas — la page
@@ -699,7 +726,7 @@ const plan = SCHOLARBRIDGE_PLANS[planId];
 const etatPaiement = new URLSearchParams(window.location.search).get("paiement");
 
 initAccountSection(session);
-renderPlan(plan);
+renderPlan(plan, session);
 initFitzRotator();
 initPaymentMethods(plan);
 initActivation(plan, session);
