@@ -101,6 +101,22 @@ pilule sur cette page seule. -->
 <span>Fitz</span>
 </div>
 
+<!-- LE BANDEAU D'ENTRÉE (lot LANGAGE, 2026-09-10). Avant ce lot, le
+visiteur tombait directement sur « Dans quel pays vivez-vous ? » sans
+savoir combien de temps ça prend, si c'est gratuit, s'il faut un compte
+ni ce qu'il obtient. Le nombre de questions dépend du niveau d'études
+(15 au lycée, jusqu'à 19 pour un doctorat) : on donne la durée, jamais
+un nombre en dur. Il porte aussi le seul <h1> de la page. Retiré de
+l'écran après la première réponse (updateProgress, eligibility-questions.js). -->
+<section class="entree" id="entree" aria-labelledby="entreeTitre">
+<h1 id="entreeTitre">Votre diagnostic Fitz, en quelques minutes</h1>
+<ul class="entree-liste">
+<li><i data-lucide="clock-3" aria-hidden="true"></i><span>Environ cinq minutes. Le nombre de questions dépend de votre niveau d'études.</span></li>
+<li><i data-lucide="badge-check" aria-hidden="true"></i><span>Gratuit, sans compte à créer.</span></li>
+<li><i data-lucide="compass" aria-hidden="true"></i><span>À la fin : votre score, vos points forts et les opportunités qui correspondent à votre profil.</span></li>
+</ul>
+</section>
+
 <!-- Barre de progression -->
 <div class="progress-info">
 <!-- Valeurs de départ, écrasées par updateProgress() (eligibility-questions.js)
@@ -195,5 +211,9 @@ if (window.lucide) lucide.createIcons();
 });
 </script>
 
+<!-- Pied de page partagé (lot LANGAGE, 2026-09-10) : injecté par
+js/pied-de-page.js — colonnes Plateforme / Comprendre / Légal, puis le
+glossaire (js/glossaire.js) explique les termes techniques de la page. -->
+<script src="js/pied-de-page.js" defer></script>
 </body>
 </html>

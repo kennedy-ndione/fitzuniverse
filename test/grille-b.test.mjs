@@ -307,8 +307,11 @@ const idsB = ids(vueB), idsP = ids(vueP);
 assert.deepEqual(idsP.sort(), [...PRE].sort());
 for (const id of idsB) assert.equal(OFFRES[id].parcours, "bourse", `${id} dans la vue Bourses`);
 for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id} dans la vue Préinscriptions`);
-assert.ok(/L'unité : la candidature accompagnée/.test(vueB));
-assert.ok(/L'unité : <strong>le dossier Études en France<\/strong>/.test(vueP));
+// Lot LANGAGE (2026-09-10) : « L'unité : … » est devenu « Vous payez
+// par candidature » / « Vous payez pour un dossier » — même contrat,
+// dit avec le mot concret d'abord.
+assert.ok(/Vous payez une formule, en une fois\. Elle couvre un nombre de candidatures accompagnées/.test(vueB));
+assert.ok(/Vous payez pour <strong>un dossier Études en France<\/strong>/.test(vueP));
 assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(vueP.replace(/jamais jusqu'à l'admission/g, "")), "aucune promesse d'admission");
 // Les prix portent leur source (offers.js les remplit depuis pricing-plans.js).
 for (const id of [...idsB, ...idsP]) assert.ok(offersHtml.includes(`data-price-of="${id}"`) && offersHtml.includes(`data-eur-of="${id}"`), `prix dérivés pour ${id}`);

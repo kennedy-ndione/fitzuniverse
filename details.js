@@ -929,16 +929,22 @@ const securityNoticeText = document.getElementById("securityNoticeText");
 // ===============================
 // Remplissage des informations
 // ===============================
-const pageTitle = university.university
-? `${university.university} - ${university.scholarship || "Bourse"} | FitzUniverse`
-: "Détails de la bourse | FitzUniverse";
+// Lot LANGAGE (2026-09-10) : « Détails de la bourse » était un nom de
+// fichier. Le titre et la description sont construits depuis la bourse
+// affichée — le programme, le pays, le niveau — et ne promettent rien
+// d'autre que ce que la fiche donne.
+const nomBourse = university.scholarship || "Bourse";
+const pageTitle = `${[nomBourse, university.country, university.level].filter(Boolean).join(" · ")} | FitzUniverse`;
 
 document.title = pageTitle;
 
 const metaDescription = document.querySelector('meta[name="description"]');
 
-if (metaDescription && university.description) {
-metaDescription.setAttribute("content", university.description.slice(0, 160));
+if (metaDescription) {
+const ou = [university.university, university.country].filter(Boolean).join(", ");
+const resume = `${nomBourse}${ou ? ` (${ou})` : ""}${university.level ? `, niveau ${university.level}` : ""} : critères, échéance datée et site officiel.`;
+const complement = university.description ? ` ${university.description}` : "";
+metaDescription.setAttribute("content", (resume + complement).slice(0, 160));
 }
 
 // Canonical + Open Graph propres à CE programme (2026-08-29) : la

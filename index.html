@@ -414,8 +414,8 @@ seulement d'habillage.
 <span class="kicker"><i data-lucide="circle-alert" aria-hidden="true"></i>Pourquoi tant d'étudiants abandonnent ?</span>
 
 <h2>
-Le problème n'est pas le manque d'opportunités.
-Le problème est de trouver celles qui sont <em>réellement</em> faites pour vous.
+Les opportunités existent.
+Le plus dur est de trouver celles qui sont <em>réellement</em> faites pour vous.
 </h2>
 
 <p>
@@ -560,6 +560,27 @@ Bonjour, je suis Fitz.
 COMMENT ÇA FONCTIONNE
 =========================================== -->
 
+<!-- ==========================================
+LE CATALOGUE EN CHIFFRES (lot LANGAGE, 2026-09-10)
+==========================================
+Les nombres se LISENT, ils ne s'écrivent pas : js/homepage-teaser.js
+les compte sur l'instantané assets/data/catalogue.json (bourses,
+établissements, pays) et sur le registre js/procedures/residences/
+index.js (pays de départ documentés). La bande reste `hidden` tant que
+le catalogue n'a pas répondu — pas de zéro, pas d'estimation. Un test
+échoue si l'un de ces nombres est écrit en clair ici. -->
+<section id="chiffres" class="chiffres" aria-label="Le catalogue en chiffres" hidden>
+<div class="container">
+<ul class="chiffres-liste">
+<li><strong data-chiffre="bourses">—</strong><span>bourses vérifiées une par une</span></li>
+<li><strong data-chiffre="etablissements">—</strong><span>établissements</span></li>
+<li><strong data-chiffre="pays">—</strong><span>pays au catalogue</span></li>
+<li><strong data-chiffre="residences">—</strong><span>pays de départ documentés à la source officielle</span></li>
+</ul>
+<p class="chiffres-note">Chaque fiche porte sa date de vérification et le lien vers sa source.</p>
+</div>
+</section>
+
 <section id="how-it-works" class="how-it-works section">
 
 <div class="container">
@@ -657,7 +678,7 @@ chiffres de toute la page d'accueil). Voir le commentaire au-dessus de
 <p>
 Répondez à quelques questions sur votre parcours. Fitz identifie les bourses
 et les universités réellement compatibles avec votre profil, critères
-d'admission inclus — pas une liste générique.
+d'admission inclus. Aucune liste générique.
 </p>
 </div>
 
@@ -665,8 +686,8 @@ d'admission inclus — pas une liste générique.
 <i data-lucide="clipboard-check" aria-hidden="true"></i>
 <h3>Préparer</h3>
 <p>
-CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi — et
-pour une préinscription, la liste des traductions, légalisations et preuves de
+CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi. Pour
+une préinscription, la liste des traductions, légalisations et preuves de
 ressources à réunir. Pour toute question précise sur une université ou un
 critère, Fitz vous répond directement.
 </p>
@@ -677,7 +698,7 @@ critère, Fitz vous répond directement.
 <h3>Suivre</h3>
 <p>
 Chaque candidature avance par étapes claires, de la préparation jusqu'à la
-réponse de l'université — avec toutes vos échéances au même endroit.
+réponse de l'université, avec toutes vos échéances au même endroit.
 </p>
 </div>
 
@@ -733,7 +754,7 @@ NOTRE VISION
 <span class="kicker"><i data-lucide="telescope" aria-hidden="true"></i>Notre vision</span>
 
 <h2>
-Nous voulons que le lieu de naissance d'un étudiant ne détermine plus la qualité de son <em>avenir</em>.
+Là où vous êtes né ne devrait pas décider de votre <em>avenir</em>.
 </h2>
 
 <!-- Les deux paragraphes d'origine disaient la même chose : le premier
@@ -890,81 +911,11 @@ principal sans repère visuel. -->
 </main>
 
 <!-- ==========================================
-FOOTER
-=========================================== -->
-
-<footer class="footer footer-photo-feature">
-
-<div class="footer-photo">
-<picture>
-<source type="image/avif" srcset="assets/images/hero-bg4-400w.avif 400w, assets/images/hero-bg4-800w.avif 800w, assets/images/hero-bg4-1200w.avif 1200w, assets/images/hero-bg4-1600w.avif 1600w, assets/images/hero-bg4-1920w.avif 1920w" sizes="100vw">
-<source type="image/webp" srcset="assets/images/hero-bg4-400w.webp 400w, assets/images/hero-bg4-800w.webp 800w, assets/images/hero-bg4-1200w.webp 1200w, assets/images/hero-bg4-1600w.webp 1600w, assets/images/hero-bg4-1920w.webp 1920w" sizes="100vw">
-<img
-class="footer-photo-img"
-src="assets/images/hero-bg4-800w.jpg" width="800" height="533"
-srcset="assets/images/hero-bg4-400w.jpg 400w, assets/images/hero-bg4-800w.jpg 800w, assets/images/hero-bg4-1200w.jpg 1200w, assets/images/hero-bg4-1600w.jpg 1600w, assets/images/hero-bg4-1920w.jpg 1920w"
-sizes="100vw"
-alt=""
-loading="lazy" decoding="async">
-</picture>
-</div>
-
-<div class="container">
-
-<div class="footer-top">
-
-<div class="footer-brand">
-<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
-<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
-<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
-</svg>
-<span class="fitz-lockup-text">
-<span class="fitz-lockup-name">Fitz</span>
-<span class="fitz-lockup-sub">Universe</span>
-</span>
-</a>
-<p>FitzUniverse accompagne en priorité les étudiants africains, qu'ils visent une bourse ou une admission qu'ils financent eux-mêmes — une plateforme ouverte à tout étudiant, où qu'il soit.</p>
-</div>
-
-<div class="footer-links">
-
-<div>
-<p class="footer-col-title">Plateforme</p>
-<ul>
-<li><a href="scholarships.html">Bourses</a></li>
-<li><a href="preinscriptions.html">Préinscriptions</a></li>
-<li><a href="universities.html">Universités</a></li>
-<li><a href="#why-us">Pourquoi nous choisir</a></li>
-<li><a href="#how-it-works">Comment ça fonctionne</a></li>
-<li><a href="#vision">Notre vision</a></li>
-</ul>
-</div>
-
-<!-- Icônes LinkedIn/Facebook/Instagram/Youtube retirées (audit du
-2026-08-13) : elles pointaient vers "#", Fitz n'a pas encore
-de comptes actifs sur ces réseaux. À réintroduire avec de vrais liens
-le jour où ils existent, pas avant. -->
-<div>
-<p class="footer-col-title">Compte</p>
-<ul>
-<li><a href="login.html">Connexion</a></li>
-</ul>
-</div>
-
-</div>
-
-</div>
-
-<div class="footer-bottom">
-
-<p>© 2026 FitzUniverse. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
-
-</div>
-
-</div>
-
-</footer>
+FOOTER — composant partagé (lot LANGAGE, 2026-09-10)
+==========================================
+Le balisage qui vivait ici est devenu js/pied-de-page.js, posé sur
+toutes les pages publiques ; l'accueil le charge comme les autres. -->
+<script src="js/pied-de-page.js" defer></script>
 
 <!-- ==========================================
 SCRIPTS

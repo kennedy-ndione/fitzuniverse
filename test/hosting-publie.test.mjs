@@ -210,7 +210,9 @@ for (const doc of ["AI_INTEGRATION.md", "ASSETS.md", "COUT_LECTURE.md", "DESIGN_
 assert.ok(ignore.includes(doc), `hosting.ignore devrait contenir « ${doc} »`);
 }
 assert.equal(ignore.includes("CREDITS.md"), false, "CREDITS.md est publié à dessein");
-assert.ok(lire("index.html").includes('href="CREDITS.md"'), "et le lien qui le justifie existe toujours");
+// Lot LANGAGE (2026-09-10) : le pied de page est un composant partagé,
+// le lien vit dans js/pied-de-page.js (posé sur toutes les pages publiques).
+assert.ok(lire("js/pied-de-page.js").includes('href="CREDITS.md"'), "et le lien qui le justifie existe toujours");
 });
 
 test("la liste blanche reste étroite : quatre dossiers, et des extensions comptées", () => {

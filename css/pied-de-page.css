@@ -1,0 +1,214 @@
+/* ==========================================================
+FitzUniverse — pied de page partagé (lot LANGAGE, 2026-09-10)
+==========================================================
+Injecté par js/pied-de-page.js sur TOUTES les pages publiques ; cette
+feuille est chargée par le composant lui-même (une page n'a rien à
+recopier). Les règles viennent de css/homepage-sections.css, où elles
+ne servaient qu'à index.html — le pied de page n'existait nulle part
+ailleurs. Fond ambre : la couleur de l'arc du logo reprise en pleine
+surface, blanc dessus (5.76:1 sur --amber-700, AA). */
+
+.footer{
+position:relative;
+background:linear-gradient(160deg,#7A5000 0%, var(--amber-700) 55%, #6B4600 100%);
+color:rgba(255,255,255,.92);
+padding:0 0 22px;
+font-family:var(--font-body, inherit);
+}
+
+.footer .container{
+position:relative;
+z-index:1;
+padding-top:36px;
+}
+
+/* Bande photo pleine largeur au-dessus des colonnes (hero-bg4.jpg,
+diplômés divers). Le dégradé en bas la fond dans l'ambre. */
+.footer-photo{
+height:220px;
+position:relative;
+overflow:hidden;
+}
+
+.footer-photo-img{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+object-fit:cover;
+object-position:center 30%;
+}
+
+.footer-photo::after{
+content:'';
+position:absolute;
+inset:0;
+background:linear-gradient(180deg, rgba(122,80,0,0) 0%, rgba(122,80,0,.35) 55%, var(--amber-700) 100%);
+}
+
+/* Contenu resserré (~900px) : marque à gauche, trois colonnes à droite. */
+.footer-top{
+display:flex;
+flex-wrap:wrap;
+justify-content:space-between;
+gap:48px;
+max-width:900px;
+margin:0 auto;
+padding-bottom:28px;
+}
+
+.footer-brand{
+max-width:250px;
+}
+
+.footer-brand .fitz-lockup{
+margin-bottom:12px;
+}
+
+/* css/journey-shell.css cache .fitz-lockup-text sous 720px pour la barre
+haute de l'espace étudiant — sélecteur global, qui atteignait ce pied
+de page sur les pages catalogue : la marque perdait son nom. */
+.footer .fitz-lockup-text{
+display:flex;
+}
+
+.footer-brand p{
+font-size:var(--fs-small);
+color:rgba(255,255,255,.85);
+line-height:var(--lh-relaxed);
+}
+
+.footer-links{
+display:flex;
+gap:48px;
+}
+
+.footer-links > div{
+min-width:120px;
+}
+
+.footer-links ul{
+list-style:none;
+margin:0;
+padding:0;
+}
+
+.footer-links .footer-col-title{
+color:#fff;
+margin-bottom:10px;
+font-size:var(--fs-caption);
+font-weight:700;
+letter-spacing:var(--ls-wide);
+text-transform:uppercase;
+}
+
+.footer-links a{
+display:block;
+font-size:var(--fs-small);
+color:rgba(255,255,255,.85);
+padding:4px 0;
+transition:color .2s ease;
+text-decoration:none;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible{
+color:#fff;
+}
+
+.footer-links a:focus-visible{
+outline:2px solid #fff;
+outline-offset:2px;
+border-radius:var(--radius-xs);
+}
+
+.footer-bottom{
+display:flex;
+justify-content:center;
+align-items:center;
+flex-wrap:wrap;
+gap:16px;
+padding-top:14px;
+border-top:1px solid rgba(255,255,255,.22);
+}
+
+.footer-bottom p{
+color:rgba(255,255,255,.6);
+font-size:.9rem;
+margin:0;
+}
+
+.footer-bottom a{
+color:inherit;
+}
+
+/* <body> en rangée flex (pages tunnel : questionnaire, connexion) — la
+classe est posée par js/pied-de-page.js : la rangée passe à la ligne et
+le pied de page prend toute la sienne, en bas, sans serrer la carte. */
+body.pied-de-page-en-rangee{
+flex-wrap:wrap;
+align-content:flex-start;
+}
+
+body.pied-de-page-en-rangee > .footer{
+flex:0 0 100%;
+width:100%;
+align-self:flex-end;
+margin-top:auto;
+}
+
+/* Le pied de page public n'a pas sa place DANS l'espace étudiant : quand
+js/dual-shell.js a monté la coquille (catalogue vu connecté), il reste
+au bout du document mais ne se montre pas. */
+body.dashboard-shell-active .footer{
+display:none;
+}
+
+/* Une explication du glossaire (js/glossaire.js) : le même gris que le
+texte courant, légèrement en retrait — c'est une parenthèse, pas une
+note. */
+.glossaire-def{
+color:var(--text-light, inherit);
+}
+
+/* ≤992px : la marque reste à gauche, comme les colonnes en dessous — le
+pied de page ne change pas d'axe en son milieu. */
+@media(max-width:992px){
+
+.footer-top{
+flex-direction:column;
+align-items:flex-start;
+text-align:left;
+gap:36px;
+}
+
+.footer-brand{
+max-width:none;
+}
+
+.footer-links{
+justify-content:flex-start;
+text-align:left;
+}
+
+}
+
+/* ≤640px (375px inclus) : trois colonnes sur toute la largeur, qui
+passent à la ligne quand elles ne tiennent plus côte à côte. */
+@media(max-width:640px){
+
+.footer-links{
+flex-wrap:wrap;
+gap:28px 36px;
+width:100%;
+}
+
+.footer-photo{
+height:160px;
+}
+
+.footer-bottom{
+justify-content:flex-start;
+}
+
+}

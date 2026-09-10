@@ -165,7 +165,8 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <div class="journey-context">
 <a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
 
-<h1>Bourses d'études</h1>
+<!-- h2, pas h1 (lot LANGAGE) : le titre de la page est celui de la bannière. -->
+<h2 class="journey-context-titre">Bourses d'études</h2>
 </div>
 
 <div class="journey-topbar-actions">
@@ -276,7 +277,10 @@ site officiel de chaque bourse — de quoi candidater seul, si on le
 souhaite. (Le libellé fautif n'est pas recopié ici : un test cherche
 sa chaîne dans le dépôt entier.) -->
 <h1>Bourses d'études <span class="hero-h1-accent">vérifiées une par une</span></h1>
-<p>Programmes officiels, critères vérifiés, échéances datées et sources citées — parcourez le catalogue complet, en accès libre.</p>
+<!-- Lot LANGAGE (2026-09-10) : la page dit ce qu'on y fait, et
+combien de bourses elle contient — nombre lu par scholarships.js sur
+le catalogue chargé, jamais écrit ici. -->
+<p>Filtrez les bourses par pays et par niveau d'études. Chaque fiche donne ses critères, son échéance datée et son site officiel. <span id="heroBoursesTotal" hidden>Le catalogue en compte <strong id="heroBoursesNombre"></strong> aujourd'hui.</span> En accès libre, sans compte.</p>
 
 </div>
 
@@ -466,5 +470,9 @@ inexistante pour tout autre visiteur. -->
 volontairement : comme js/catalog-watchdog.js, il doit survivre à
 l'échec d'un téléchargement gstatic. Ne jamais lui ajouter type="module". -->
 <script src="js/vivant.js" defer></script>
+<!-- Pied de page partagé (lot LANGAGE, 2026-09-10) : injecté par
+js/pied-de-page.js — colonnes Plateforme / Comprendre / Légal, puis le
+glossaire (js/glossaire.js) explique les termes techniques de la page. -->
+<script src="js/pied-de-page.js" defer></script>
 </body>
 </html>

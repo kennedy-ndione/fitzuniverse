@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bientôt disponible | FitzUniverse</title>
+<meta name="description" content="Cette page de FitzUniverse est en préparation : mentions légales, conditions de vente, confidentialité et contact.">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+/* Lot LANGAGE (2026-09-10) : la page « bientôt disponible » que visent
+les liens de la colonne Légal du pied de page partagé
+(js/pied-de-page.js). Les pages mentions légales, CGV, confidentialité
+et contact attendent le NINEA et le RCCM : ce lot ne pose que les
+liens. Une page, quatre libellés (?page=…). */
+.bientot{ min-height:60vh; display:flex; align-items:center; }
+.bientot .container{ max-width:640px; padding:56px 24px 72px; }
+.bientot h1{ font-family:var(--font-affirmation); font-size:var(--fs-h2, 2rem); margin:0 0 14px; }
+.bientot p{ color:var(--text-light); line-height:var(--lh-relaxed); margin:0 0 12px; }
+.bientot .btn{ margin-top:18px; }
+.bientot-kicker{ font-size:var(--fs-caption); letter-spacing:var(--ls-wide); text-transform:uppercase; font-weight:700; color:var(--amber-700); margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<header class="page-brandbar">
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</header>
+
+<main class="bientot" id="main-content" tabindex="-1">
+<div class="container">
+<p class="bientot-kicker">Bientôt disponible</p>
+<h1 id="bientotTitre">Cette page arrive</h1>
+<p id="bientotTexte">Nous la publions dès que FitzUniverse aura ses documents d'entreprise au complet. Le catalogue, le diagnostic et les préinscriptions restent ouverts en attendant.</p>
+<p>Pour nous joindre dès maintenant : <a href="https://wa.me/221776981877" target="_blank" rel="noopener">WhatsApp</a>.</p>
+<a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+</div>
+</main>
+
+<script>
+(function () {
+var LIBELLES = {
+"mentions-legales": "Mentions légales",
+"cgv": "Conditions générales de vente",
+"confidentialite": "Politique de confidentialité",
+"contact": "Contact"
+};
+var page = new URLSearchParams(location.search).get("page");
+var libelle = LIBELLES[page];
+if (!libelle) return;
+document.getElementById("bientotTitre").textContent = libelle + " : bientôt disponible";
+document.title = libelle + " | FitzUniverse";
+})();
+</script>
+<script src="js/pied-de-page.js" defer></script>
+</body>
+</html>

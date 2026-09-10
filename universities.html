@@ -164,7 +164,8 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <div class="journey-context">
 <a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
 
-<h1>Les universités du catalogue</h1>
+<!-- h2, pas h1 (lot LANGAGE) : le titre de la page est celui de la bannière. -->
+<h2 class="journey-context-titre">Les universités du catalogue</h2>
 </div>
 
 <div class="journey-topbar-actions">
@@ -396,6 +397,10 @@ inexistante pour tout autre visiteur. -->
 volontairement : comme js/catalog-watchdog.js, il doit survivre à
 l'échec d'un téléchargement gstatic. Ne jamais lui ajouter type="module". -->
 <script src="js/vivant.js" defer></script>
+<!-- Pied de page partagé (lot LANGAGE, 2026-09-10) : injecté par
+js/pied-de-page.js — colonnes Plateforme / Comprendre / Légal, puis le
+glossaire (js/glossaire.js) explique les termes techniques de la page. -->
+<script src="js/pied-de-page.js" defer></script>
 </body>
 
 </html>

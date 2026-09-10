@@ -1266,180 +1266,12 @@ padding:4px 0;
 }
 
 /* ==========================================================
-FOOTER
-========================================================== */
-
-/* Footer standard (scholarships.html, et toute page qui n'ajoute pas
-.footer-photo-feature) : bleu marine simple, sans photo. */
-.footer{
-position:relative;
-background:var(--primary-dark);
-color:rgba(255,255,255,.85);
-padding:44px 0 22px;
-}
-
-.footer .container{
-position:relative;
-z-index:1;
-}
-
-/* index.html uniquement (classe .footer-photo-feature) : fond ambre —
-la couleur du "Bridge" du logo (voir .logo .bridge, header.css) reprise
-ici en pleine surface plutôt qu'en touche, sur demande explicite — plus
-une bande photo de campus. Réservé à la page d'accueil pour ne pas
-répéter ce traitement lourd sur chaque page ; scholarships.html garde
-le footer standard ci-dessus. Contraste vérifié : blanc sur
---amber-700 tient 5.76:1 (AA), d'où ce fond plutôt que --amber-500
-(2.16:1 sur texte blanc, illisible). */
-.footer-photo-feature{
-background:linear-gradient(160deg,#7A5000 0%, var(--amber-700) 55%, #6B4600 100%);
-color:rgba(255,255,255,.92);
-padding:0 0 22px;
-}
-
-/* Bande photo pleine largeur, au-dessus des colonnes de liens —
-diplômés divers (hero-bg4.jpg), distincte des hero-bg2/3/5.jpg déjà
-utilisées ailleurs sur index.html et des photos Oxford/Zurich/Paris/
-Toronto de l'échantillon éditorial plus haut sur la même page. Le
-dégradé en bas la fond dans l'ambre du footer plutôt que de la
-découper au cordeau (référence : footer de Sichuan University).
-Remplace university-building.jpg (2026-08-13) : c'était en réalité le
-bâtiment de Harvard Law School (bannières "HLS" visibles à l'écran),
-étiqueté "Campus universitaire" générique — Harvard n'a jamais fait
-partie du catalogue FitzUniverse, la photo suggérait une affiliation
-inexistante. hero-bg4.jpg n'avait par ailleurs encore aucun usage sur
-le site. img (pas de background CSS) pour bénéficier du srcset, comme
-.hero-visual-bg plus haut (css/hero.css) et les photos du catalogue. */
-.footer-photo{
-height:220px;
-position:relative;
-overflow:hidden;
-}
-
-.footer-photo-img{
-position:absolute;
-inset:0;
-width:100%;
-height:100%;
-object-fit:cover;
-object-position:center 30%;
-}
-
-.footer-photo::after{
-content:'';
-position:absolute;
-inset:0;
-background:linear-gradient(180deg, rgba(122,80,0,0) 0%, rgba(122,80,0,.35) 55%, var(--amber-700) 100%);
-}
-
-.footer-photo-feature .container{
-padding-top:36px;
-}
-
-/* Contenu resserré sur une largeur propre (~820px) plutôt qu'étalé sur
-toute la largeur du .container (1200px) : c'était le principal défaut
-signalé — trop d'espace mort entre la marque et les colonnes de liens. */
-.footer-top{
-display:flex;
-flex-wrap:wrap;
-justify-content:space-between;
-gap:48px;
-max-width:820px;
-margin:0 auto;
-padding-bottom:28px;
-}
-
-.footer-brand{
-max-width:250px;
-}
-
-.footer-brand img,
-.footer-brand .logo-mark{
-height:38px;
-width:38px;
-margin-bottom:12px;
-}
-
-/* .65 -> .85 (audit du 2026-08-13) : sur --amber-700, .65 donnait
-3,43:1, sous le seuil AA (4,5:1) — recalculé, .85 tient 4,67:1. */
-.footer-brand p{
-font-size:var(--fs-small);
-color:rgba(255,255,255,.85);
-line-height:var(--lh-relaxed);
-}
-
-/* Colonnes "Plateforme" / "Compte" resserrées côte à côte plutôt
-qu'étalées sur 300px de grille — c'est ça qui créait le vide au milieu
-du footer. */
-.footer-links{
-display:flex;
-gap:56px;
-}
-
-.footer-links > div{
-min-width:120px;
-}
-
-/* Le fond du footer est maintenant ambre : les intitulés restent en
-blanc (5.76:1, AA) plutôt qu'en ambre sur ambre, qui serait illisible.
-h3 (pas h4) depuis l'audit du 2026-08-13 : le dernier titre de <main>
-est un h2 (CTA final), sauter à h4 crevait la hiérarchie de titres. */
-/* .footer-col-title (2026-08-29) : « Plateforme »/« Compte » ne sont
-pas des titres de contenu mais des étiquettes de colonnes de liens —
-passés de <h3> à <p> pour ne plus apparaître dans le plan de titres
-annoncé par un lecteur d'écran. Le sélecteur h3 est conservé à côté :
-d'autres pages partagent cette feuille. */
-.footer-links h3,
-.footer-links .footer-col-title{
-color:#fff;
-margin-bottom:10px;
-font-size:var(--fs-caption);
-font-weight:700;
-letter-spacing:var(--ls-wide);
-text-transform:uppercase;
-}
-
-/* .65 -> .85, même correctif de contraste que .footer-brand p ci-dessus. */
-.footer-links a{
-display:block;
-font-size:var(--fs-small);
-color:rgba(255,255,255,.85);
-padding:4px 0;
-transition:color .2s ease;
-}
-
-.footer-links a:hover,
-.footer-links a:focus-visible{
-color:#fff;
-}
-
-.footer-links a:focus-visible{
-outline:2px solid #fff;
-outline-offset:2px;
-border-radius:var(--radius-xs);
-}
-
-/* index.html uniquement : bento 3 blocs (marque / plateforme / compte)
-au lieu de 2 rangées empilées — les icônes sociales rejoignent le bloc
-"Compte" (voir index.html) plutôt que d'occuper toute une rangée
-.footer-bottom à elles seules, ce qui réduisait la hauteur perçue du
-footer d'une rangée entière. scholarships.html n'a jamais eu de
-réseaux sociaux dans son footer, il n'est pas concerné par ce
-déplacement. */
-.footer-bottom{
-display:flex;
-justify-content:center;
-align-items:center;
-flex-wrap:wrap;
-gap:16px;
-padding-top:14px;
-border-top:1px solid rgba(255,255,255,.22);
-}
-
-.footer-bottom p{
-color:rgba(255,255,255,.6);
-font-size:.9rem;
-}
+FOOTER — parti dans css/pied-de-page.css (lot LANGAGE, 2026-09-10)
+==========================================================
+Le pied de page est un composant partagé (js/pied-de-page.js) posé
+sur toutes les pages publiques ; il charge sa propre feuille. Ne rien
+remettre ici : cette feuille n'est chargée que par index.html et
+scholarships.html. */
 
 .social-links{
 display:flex;
@@ -1492,33 +1324,6 @@ text-align:center;
 
 .vision-content{
 align-items:center;
-}
-
-/* LE BLOC DE MARQUE RESTE À GAUCHE (2026-09-08, lot 5).
-Cette requête centrait .footer-top — donc le logo et la phrase
-d'accroche — alors que .footer-links juste en dessous gardait
-text-align:left. Le pied de page changeait donc d'axe en son milieu :
-marque centrée, colonnes de liens à gauche. C'était le seul endroit du
-site où deux blocs voisins d'un même conteneur ne partageaient pas leur
-bord gauche, et c'était visible sans mesurer.
-
-Aligné à gauche plutôt que tout centré : c'est le rendu de
-l'ordinateur, et il n'y a aucune raison que le pied de page raconte
-autre chose selon la largeur. .footer-bottom n'est pas touchée. */
-.footer-top{
-flex-direction:column;
-align-items:flex-start;
-text-align:left;
-gap:36px;
-}
-
-.footer-brand{
-max-width:none;
-}
-
-.footer-links{
-justify-content:flex-start;
-text-align:left;
 }
 
 }
@@ -1622,12 +1427,6 @@ text-align:left;
 }
 
 @media(max-width:640px){
-
-.footer-links{
-gap:36px;
-justify-content:space-between;
-width:100%;
-}
 
 /* ==========================================================
 LIBELLÉS DE BOUTON COUPÉS EN DEUX SUR TÉLÉPHONE (2026-08-23)
@@ -1736,3 +1535,61 @@ padding:34px 18px;
 
 }
 
+
+
+/* ==========================================================
+LE CATALOGUE EN CHIFFRES (lot LANGAGE, 2026-09-10)
+==========================================================
+Bande claire entre la démonstration de Fitz et « Comment ça
+fonctionne » : quatre nombres lus sur le catalogue (js/homepage-teaser.js)
+et une phrase. Chasse fixe sur les nombres, comme .hero-figure. */
+.chiffres{
+padding:36px 0;
+background:var(--surface-color, #fff);
+border-top:1px solid var(--border-color);
+border-bottom:1px solid var(--border-color);
+}
+
+.chiffres-liste{
+list-style:none;
+margin:0;
+padding:0;
+display:grid;
+grid-template-columns:repeat(4, minmax(0, 1fr));
+gap:24px 32px;
+}
+
+.chiffres-liste li{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.chiffres-liste strong{
+font-family:var(--font-affirmation);
+font-size:2.2rem;
+font-weight:500;
+line-height:1;
+font-variant-numeric:tabular-nums;
+color:var(--text-color);
+}
+
+.chiffres-liste span{
+font-size:var(--fs-small);
+color:var(--text-light);
+line-height:var(--lh-relaxed);
+}
+
+.chiffres-note{
+margin:22px 0 0;
+font-size:var(--fs-small);
+color:var(--text-light);
+}
+
+@media(max-width:900px){
+.chiffres-liste{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+
+@media(max-width:400px){
+.chiffres-liste{ grid-template-columns:1fr; }
+}

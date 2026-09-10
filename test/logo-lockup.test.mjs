@@ -133,7 +133,9 @@ assert.ok(css.includes('font-family:"Public Sans",system-ui,sans-serif;'), "le d
 // Deux pour les pages qui ont un en-tête public ET une barre connectée,
 // deux pour index.html (en-tête + pied de page), un partout ailleurs.
 const ATTENDU = {
-"index.html": 2,
+// Lot LANGAGE (2026-09-10) : le lockup du pied de page est injecté par
+// js/pied-de-page.js — il n'est plus dans le HTML d'aucune page.
+"index.html": 1,
 "scholarships.html": 2,
 "universities.html": 2,
 "scholarship-details.html": 2,

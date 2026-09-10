@@ -381,6 +381,14 @@ if (window.lucide) lucide.createIcons();
 // casser : le tiret cadratin du HTML reste affiché.
 function renderHeroStats(universitiesById) {
 
+// Lot LANGAGE : la phrase d'entrée dit combien de bourses le
+// catalogue compte — lu ici, jamais écrit dans le HTML.
+const nombreEntree = document.getElementById("heroBoursesNombre");
+if (nombreEntree && allScholarships.length) {
+nombreEntree.textContent = String(allScholarships.length);
+document.getElementById("heroBoursesTotal").hidden = false;
+}
+
 const elBourses = document.getElementById("statScholarships");
 const elPays = document.getElementById("statCountries");
 const elUniversites = document.getElementById("statPartners");

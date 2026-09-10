@@ -151,7 +151,8 @@ white-space:nowrap;
 .journey-context .back-link i,
 .journey-context .back-link svg{ width:15px; height:15px; }
 
-.journey-context h1{
+.journey-context h1,
+.journey-context h2{
 margin:0;
 font-family:var(--font-affirmation);
 font-size:1.05rem;
@@ -221,7 +222,8 @@ padding:28px clamp(16px, 4vw, 40px) 80px;
 
 .fitz-lockup-text{ display:none; }
 
-.journey-context h1{ font-size:.95rem; }
+.journey-context h1,
+.journey-context h2{ font-size:.95rem; }
 
 /* Profil/paramètres passent dans le parcours sur mobile — la barre
 garde cloche, formule et déconnexion. */

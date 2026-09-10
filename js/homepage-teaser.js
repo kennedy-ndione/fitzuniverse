@@ -38,6 +38,11 @@ import { trackVisitOnce } from "./analytics.js";
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
 
+// Lot LANGAGE (2026-09-10) : la bande « le catalogue en chiffres »
+// compte aussi les pays de départ documentés à la source officielle —
+// le registre des couches de résidence, jamais un nombre écrit.
+import { COUCHES } from "./procedures/residences/index.js";
+
 // Un même établissement existe en 3 documents Firestore (un par niveau
 // Licence/Master/Doctorat) — sans ce regroupement, le tirage pourrait
 // afficher le même établissement (et la même photo) plusieurs fois.
@@ -176,6 +181,23 @@ setCount(heroScholarshipCountEl, scholarshipCount);
 setCount(heroCountryCountEl, countryCount);
 setCount(heroUniversityCountEl, deduped.length);
 
+renderChiffres({ bourses: scholarshipCount, etablissements: deduped.length, pays: countryCount, residences: COUCHES.length });
+
+}
+
+// La bande #chiffres (index.html) : quatre nombres LUS, puis la section
+// se montre. Sans catalogue elle reste cachée — pas de zéro, pas
+// d'estimation. Valeurs écrites telles quelles (pas d'animation : la
+// bande est sous la ligne de flottaison, rAF n'y tourne pas toujours).
+function renderChiffres(valeurs) {
+const bande = document.getElementById("chiffres");
+if (!bande) return;
+if (!valeurs.bourses || !valeurs.etablissements || !valeurs.pays) return;
+for (const [cle, valeur] of Object.entries(valeurs)) {
+const el = bande.querySelector(`[data-chiffre="${cle}"]`);
+if (el) el.textContent = String(valeur);
+}
+bande.hidden = false;
 }
 
 // ==========================================================

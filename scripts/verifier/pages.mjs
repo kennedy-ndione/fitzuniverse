@@ -22,6 +22,9 @@
  */
 
 import fs from "node:fs";
+// Lot LANGAGE : le nombre de pays de départ documentés, lu au même
+// endroit que l'accueil (js/homepage-teaser.js).
+import { COUCHES } from "../../js/procedures/residences/index.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1019,6 +1022,102 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
     } catch (e) {
       anomalies.push(`ÉCHEC preinscription-france.html : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 6. LOT LANGAGE (2026-09-10) : le critère de fin, à 375 px ----------
+  //
+  // Un visiteur venu de Google ouvre scholarships.html sans passer par
+  // l'accueil : la page dit en une phrase ce qu'on y fait et combien de
+  // bourses elle contient (nombre LU, pas écrit) ; en bas, le pied de page
+  // partagé avec sa colonne Légal ; rien ne déborde à 375 px. Le
+  // questionnaire annonce durée, gratuité, absence de compte et résultat
+  // AVANT la première question. Sur preinscriptions.html, « apostille »
+  // porte son explication. Sur l'accueil, la bande de chiffres est
+  // remplie depuis le catalogue et le registre des couches.
+  {
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base);
+    await page.setViewportSize({ width: 375, height: 812 });
+
+    const lirePied = () => page.evaluate(() => {
+      const f = document.querySelector("footer.footer");
+      if (!f) return null;
+      const r = f.getBoundingClientRect();
+      return {
+        visible: r.width > 0 && r.height > 0,
+        colonnes: [...f.querySelectorAll(".footer-col-title")].map((e) => e.textContent.trim()),
+        legal: [...f.querySelectorAll("a[href^='bientot.html']")].map((a) => a.textContent.trim()),
+        h1: document.querySelectorAll("h1").length,
+        deborde: document.scrollingElement.scrollWidth > window.innerWidth + 1
+      };
+    });
+
+    try {
+      // a) scholarships.html, en direct.
+      await page.goto(`${base}/scholarships.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("#scholarshipsContainer .scholarship-card, #resultsCount", { timeout: 30000 });
+      await page.waitForFunction(() => !document.getElementById("heroBoursesTotal").hidden, null, { timeout: 20000 });
+      await page.waitForSelector("footer.footer", { timeout: 20000 });
+      const bourses = await page.evaluate(() => ({
+        phrase: document.querySelector(".bourses-hero p").innerText.replace(/\s+/g, " ").trim(),
+        nombre: document.getElementById("heroBoursesNombre").textContent.trim(),
+        stat: (document.getElementById("statScholarships") || {}).textContent
+      }));
+      if (!/^Filtrez les bourses par pays et par niveau/.test(bourses.phrase)) anomalies.push(`LANGAGE scholarships : la première phrase ne dit pas ce qu'on fait — « ${bourses.phrase.slice(0, 60)} »`);
+      if (!/^\d+$/.test(bourses.nombre) || Number(bourses.nombre) < 1) anomalies.push(`LANGAGE scholarships : nombre de bourses « ${bourses.nombre} ».`);
+      if (bourses.stat && bourses.stat.trim() !== bourses.nombre) anomalies.push(`LANGAGE scholarships : la phrase dit ${bourses.nombre} bourses, le bloc de chiffres ${bourses.stat}.`);
+      const pied = await lirePied();
+      if (!pied || !pied.visible) anomalies.push("LANGAGE scholarships : pas de pied de page visible.");
+      else {
+        if (!pied.colonnes.includes("Légal")) anomalies.push(`LANGAGE scholarships : colonnes « ${pied.colonnes.join(", ")} » sans Légal.`);
+        if (pied.legal.length !== 4) anomalies.push(`LANGAGE scholarships : ${pied.legal.length} liens légaux au lieu de 4.`);
+        if (pied.h1 !== 1) anomalies.push(`LANGAGE scholarships : ${pied.h1} <h1>.`);
+        if (pied.deborde) anomalies.push("LANGAGE scholarships : la page déborde horizontalement à 375 px.");
+      }
+      notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, pied de page [${pied ? pied.colonnes.join(" · ") : "absent"}], liens légaux : ${pied ? pied.legal.join(" · ") : "—"}`);
+
+      // b) Le questionnaire : le bandeau avant la question.
+      await page.goto(`${base}/eligibility-questions.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("#question", { timeout: 20000 });
+      const q = await page.evaluate(() => {
+        const e = document.getElementById("entree"), qh = document.getElementById("question");
+        return {
+          present: !!e && !e.hidden, y: e ? e.getBoundingClientRect().top : null, yq: qh.getBoundingClientRect().top,
+          texte: e ? e.innerText.replace(/\s+/g, " ") : "", h1: document.querySelectorAll("h1").length
+        };
+      });
+      if (!q.present) anomalies.push("LANGAGE questionnaire : pas de bandeau d'entrée.");
+      else {
+        if (q.y >= q.yq) anomalies.push("LANGAGE questionnaire : le bandeau n'est pas AVANT la question.");
+        for (const attendu of ["minutes", "Gratuit", "sans compte", "votre score"]) if (!q.texte.includes(attendu)) anomalies.push(`LANGAGE questionnaire : « ${attendu} » manque au bandeau.`);
+        if (q.h1 !== 1) anomalies.push(`LANGAGE questionnaire : ${q.h1} <h1>.`);
+      }
+      notes.push(`LANGAGE questionnaire : bandeau « ${q.texte.slice(0, 70)}… » avant la première question`);
+
+      // c) Le glossaire, sur la page qui parle d'apostille.
+      await page.goto(`${base}/preinscriptions.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("footer.footer .glossaire-def, main .glossaire-def", { timeout: 20000 }).catch(() => {});
+      const g = await page.evaluate(() => {
+        const defs = [...document.querySelectorAll(".glossaire-def")].map((d) => d.getAttribute("data-terme"));
+        const main = document.querySelector("main") || document.body;
+        return { defs, apostille: /apostille \(un tampon officiel/.test(main.innerText), h1: document.querySelectorAll("h1").length };
+      });
+      if (!g.apostille) anomalies.push(`LANGAGE glossaire : « apostille » sans explication sur preinscriptions.html (termes expliqués : ${g.defs.join(", ") || "aucun"}).`);
+      if (g.defs.filter((d) => d === "apostille").length > 1) anomalies.push("LANGAGE glossaire : apostille expliquée deux fois.");
+      notes.push(`LANGAGE glossaire (preinscriptions.html) : termes expliqués à leur première apparition — ${g.defs.join(", ")}`);
+
+      // d) L'accueil : la bande de chiffres, lue.
+      await page.goto(`${base}/index.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => { const c = document.getElementById("chiffres"); return c && !c.hidden; }, null, { timeout: 30000 });
+      const c = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll("#chiffres [data-chiffre]")].map((e) => [e.getAttribute("data-chiffre"), e.textContent.trim()])));
+      for (const k of ["bourses", "etablissements", "pays", "residences"]) if (!/^\d+$/.test(c[k] || "")) anomalies.push(`LANGAGE chiffres : « ${k} » = « ${c[k]} ».`);
+      if (Number(c.residences) !== COUCHES.length) anomalies.push(`LANGAGE chiffres : ${c.residences} pays de départ affichés, ${COUCHES.length} couches documentées.`);
+      notes.push(`LANGAGE accueil : ${c.bourses} bourses · ${c.etablissements} établissements · ${c.pays} pays · ${c.residences} pays de départ documentés — lus, pas écrits`);
+    } catch (e) {
+      anomalies.push(`ÉCHEC LOT LANGAGE : ${e.message}`);
     }
 
     anomalies.push(...erreurs);

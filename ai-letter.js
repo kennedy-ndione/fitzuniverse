@@ -273,7 +273,7 @@ const badge = document.querySelector(".ai-page-header-badge span:last-child");
 if (badge) badge.textContent = voeu ? "Une lettre par vœu · 4 à 5 lignes" : "5 styles disponibles";
 
 const titre = document.querySelector(".ai-page-header-main h1");
-if (titre) titre.textContent = voeu ? "Ma lettre pour chaque vœu" : "Lettre de motivation exceptionnelle";
+if (titre) titre.textContent = voeu ? "Ma lettre pour chaque vœu" : "Votre lettre de motivation";
 
 const sousTitre = document.querySelector(".ai-page-header-main p");
 if (sousTitre) sousTitre.textContent = voeu
