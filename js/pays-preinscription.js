@@ -41,8 +41,72 @@ en_cours: "Procédure de portail en cours de documentation",
 a_venir: "Procédure de portail à venir"
 };
 
+// ==========================================================
+// L'ACCOMPAGNEMENT — une décision de VENTE (lot PRÉINSCRIPTIONS-VITRINE)
+// ==========================================================
+//
+// `procedure` dit ce qu'on SAIT ; `accompagnement` dit ce qu'on VEND.
+// Les deux ne se déduisent pas l'un de l'autre, et les confondre a un
+// coût dans les deux sens : une destination peut être entièrement
+// documentée sans être encore vendue (le temps de former quelqu'un), ou
+// ouverte à la vente avant que le dernier fait soit posé (parce que ce
+// qui manque n'empêche pas de déposer un dossier).
+//
+// Le hub ne lit QUE ce champ pour décider d'afficher un bouton. Ouvrir
+// une destination doit rester purement documentaire : écrire les
+// données, basculer ce champ, copier la page. Aucun module à rouvrir.
+export const ACCOMPAGNEMENT = ["ouvert", "a_venir"];
+
 /**
-* Un fait = { texte, montant?, devise?, source, verifieLe }.
+* LE CONTRAT D'UNE DESTINATION OUVERTE.
+*
+* Ce qu'un pays doit porter pour avoir le droit de passer à « ouvert ».
+* La liste est ici, en clair, parce que c'est elle qui empêchera
+* d'ouvrir une destination à moitié prête — et parce que la personne qui
+* ouvrira la Roumanie dans six mois lira ceci, pas une conversation.
+*
+*   nom            le nom du pays, tel que le catalogue l'écrit
+*   code           le code du drapeau (assets/flags/<code>.svg)
+*   langue         au moins une langue d'enseignement
+*   positionnement la phrase qui dit à qui cette destination convient
+*   portail        { nom, url } — le portail officiel de dépôt
+*   procedure      une procédure de portail COMPOSÉE, avec ses étapes
+*                  (js/procedures/) — injectée, voir defautsDeDestination
+*   faits          au moins un fait sourcé et daté, et au moins un
+*                  DIFFUSABLE en public : sans lui, la page de la
+*                  destination n'a aucune preuve à montrer gratuitement,
+*                  et c'est justement la preuve qui fait vendre.
+*/
+export const CONTRAT_DESTINATION = ["nom", "code", "langue", "positionnement", "portail", "procedure", "faitPublic"];
+
+/**
+* LA DIFFUSION D'UN FAIT — gratuit ou payant, décidé fait par fait.
+*
+* La ligne du lot : PUBLIER LA RÈGLE, VENDRE LE CALCUL.
+*
+*   "public"  la règle. Les seuils français, les droits, le plafond
+*             d'exonération, le plafond des vœux : ce sont des textes
+*             publiés par l'État, et les afficher avec leur source est
+*             la preuve que nos chiffres sont vrais. Cette preuve est
+*             gratuite, sinon elle ne prouve rien.
+*   "client"  le calcul. Les frais de dossier du pays de RÉSIDENCE, le
+*             nom de la banque, le moment du paiement, les dates de la
+*             campagne : c'est exactement ce que le Diagnostic (10 000 F)
+*             et le Dossier France (75 000 F) vendent. Ces faits restent
+*             dans les données et alimentent le Diagnostic et l'espace
+*             client — seul leur AFFICHAGE PUBLIC est retiré.
+*
+* DÉFAUT : "client". Un fait dont personne n'a décidé la diffusion ne
+* part pas en ligne. C'est le sens sûr : oublier de publier une règle se
+* voit et se corrige, publier par inadvertance ce qu'on vend ne se
+* rattrape pas.
+*/
+export const DIFFUSION = ["public", "client"];
+
+export const DIFFUSION_PAR_DEFAUT = "client";
+
+/**
+* Un fait = { texte, montant?, devise?, diffusion?, source, verifieLe }.
 * `source` et `verifieLe` sont OBLIGATOIRES — voir la règle 1.
 */
 export const PAYS = [
@@ -55,9 +119,11 @@ code: "fr",
 langue: ["français"],
 portail: { nom: "Études en France", url: "https://pastel.diplomatie.gouv.fr/etudesenfrance/" },
 procedure: "en_cours",
+accompagnement: "ouvert",
 faits: [
 {
 cle: "ressources",
+diffusion: "public",
 texte: "Ressources exigées pour le visa étudiant : 877,50 € par mois, soit environ 10 530 € par an, depuis le 1er août 2026 (décret n° 2026-526 du 22 juin 2026).",
 montant: 877.5, devise: "EUR",
 montants: { mensuel: 877.5, annuel: 10530 },
@@ -66,6 +132,7 @@ verifieLe: "2026-09-07"
 },
 {
 cle: "droits",
+diffusion: "public",
 texte: "Droits d'inscription différenciés 2026-2027 : 2 902 € en licence, 3 950 € en master. Les exonérations sont plafonnées à 30 % des étudiants non européens (25 % en 2027-2028).",
 montant: 3950, devise: "EUR",
 montants: { licence: 2902, master: 3950 },
@@ -84,6 +151,7 @@ verifieLe: "2026-09-07"
 // Sénégal sont déjà dits, sourcés, dans le fait suivant.
 {
 cle: "procedure",
+diffusion: "public",
 texte: "Études en France : au maximum sept (7) choix de formations connectées AU TOTAL — un plafond global, et non par niveau. Chaque type de formation a son sous-plafond à l'intérieur de ces 7 : 3 pour la Licence 1 (DAP), 2 pour les écoles d'architecture (DAP Jaune), 7 pour les BUT, les licences 2 et 3 et les masters.",
 source: "https://www.senegal.campusfrance.org/je-constitue-mon-dossier-sur-etudes-en-france",
 verifieLe: "2026-09-08"
@@ -98,6 +166,7 @@ verifieLe: "2026-09-08"
 // de résidence déclaré et se tait quand ils diffèrent.
 {
 cle: "fraisDossier",
+diffusion: "client",
 residence: "Sénégal",
 texte: "Frais de dossier Campus France Sénégal : 85 000 F CFA, non remboursables. « Ne procéder à aucun paiement avant de recevoir cette demande » de paiement ; règlement en agence SUNU BANK.",
 montant: 85000, devise: "XOF",
@@ -106,6 +175,7 @@ verifieLe: "2026-09-07"
 },
 {
 cle: "calendrier",
+diffusion: "client",
 texte: "Calendrier Sénégal, rentrée 2026 : ouverture le 1er octobre, dépôt jusqu'au 15 décembre pour les formations connectées (du 1er avril au 12 juillet pour les non connectées), vérification des documents jusqu'au 27 juillet — la campagne se termine fin juillet.",
 source: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
 verifieLe: "2026-09-07"
@@ -122,6 +192,7 @@ code: "ro",
 langue: ["français", "anglais", "allemand", "roumain"],
 portail: null,
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [
 {
 texte: "Admission sur dossier : lettre d'acceptation délivrée après pré-acceptation par l'université puis approbation du ministère. Un dossier incomplet est rejeté sans explication. Frais de traitement de 100 à 250 € selon l'université. Programmes en français, anglais, allemand ou roumain.",
@@ -140,6 +211,7 @@ code: "tr",
 langue: ["turc", "anglais"],
 portail: null,
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [
 {
 texte: "Universités publiques : de 500 à 4 000 $ par an ; universités de fondation : de 5 000 à 20 000 $ par an. La licence en université publique passe par l'examen YÖS. Plus de 250 000 étudiants internationaux.",
@@ -159,6 +231,7 @@ code: "ma",
 langue: ["français", "arabe"],
 portail: null,
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [],
 positionnement: "Proche, francophone, visa simple : un hub d'admission autofinancée plutôt que de bourses. Dans le public, l'admission des étudiants étrangers passe surtout par les quotas de l'AMCI, par voie diplomatique. Le coût du privé n'a pas encore été vérifié."
 },
@@ -171,6 +244,7 @@ code: "it",
 langue: ["italien", "anglais"],
 portail: { nom: "Universitaly", url: "https://www.universitaly.it/" },
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [
 {
 texte: "Étudiant non européen sans ISEE : de 1 000 à 4 000 € par an en université publique. Les bourses régionales DSU (exonération, logement, repas) sont ouvertes aux étudiants internationaux sur critères de revenu. Admission via Universitaly.",
@@ -189,6 +263,7 @@ code: "de",
 langue: ["allemand", "anglais"],
 portail: { nom: "uni-assist", url: "https://www.uni-assist.de/" },
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [
 {
 texte: "Compte bloqué exigé pour le visa : 11 904 € par an, soit 992 € par mois, depuis septembre 2024.",
@@ -208,6 +283,7 @@ code: "ca",
 langue: ["anglais", "français"],
 portail: null,
 procedure: "a_venir",
+accompagnement: "a_venir",
 faits: [
 {
 texte: "Depuis le 1er janvier 2026, les candidats en master et doctorat dans un établissement public sont dispensés de la lettre d'attestation provinciale ou territoriale (PAL/TAL).",
@@ -224,6 +300,104 @@ avertissement: "Ce n'est pas une destination « pas cher et facile » : les frai
 /** Les pays, triés par `ordre`. Ne mute pas PAYS. */
 export function lirePays() {
 return [...PAYS].sort((a, b) => a.ordre - b.ordre);
+}
+
+/** Vrai quand cette destination est VENDUE aujourd'hui. */
+export function estOuverte(pays) {
+return !!pays && pays.accompagnement === "ouvert";
+}
+
+/** Les destinations vendues, dans l'ordre. */
+export function destinationsOuvertes() {
+return lirePays().filter(estOuverte);
+}
+
+/** Les destinations annoncées mais pas encore vendues, dans l'ordre. */
+export function destinationsAVenir() {
+return lirePays().filter((p) => !estOuverte(p));
+}
+
+/**
+* La page dédiée d'une destination : `preinscription-<id>.html`.
+*
+* Une vraie page, jamais un paramètre d'URL : elle doit être indexable
+* sur « étudier en France depuis le Sénégal ». Le nom se calcule ici,
+* une fois, pour que le hub n'ait aucun chemin écrit en dur.
+*/
+export function pageDeDestination(pays) {
+return `preinscription-${pays && pays.id}.html`;
+}
+
+/**
+* La diffusion d'un fait, avec son défaut sûr.
+* Un fait sans `diffusion` déclarée n'est PAS public.
+*/
+export function diffusionDuFait(fait) {
+const d = fait && fait.diffusion;
+return DIFFUSION.includes(d) ? d : DIFFUSION_PAR_DEFAUT;
+}
+
+/**
+* Les faits qu'on a le droit d'afficher sur une page PUBLIQUE : la
+* règle, jamais le calcul.
+*
+* C'est cette fonction, et elle seule, que les pages publiques appellent.
+* Un fait ajouté demain sans `diffusion` ne sortira pas tout seul.
+*/
+export function faitsPublics(pays) {
+return ((pays && pays.faits) || []).filter((f) => diffusionDuFait(f) === "public");
+}
+
+/** Les faits réservés aux clients — le Diagnostic et l'espace les lisent. */
+export function faitsClients(pays) {
+return ((pays && pays.faits) || []).filter((f) => diffusionDuFait(f) === "client");
+}
+
+/**
+* Ce qui manque à un pays pour avoir le droit d'être « ouvert ».
+* Liste vide = le contrat est tenu.
+*
+* LA PROCÉDURE ARRIVE EN ARGUMENT, et ce n'est pas un détail de style :
+* js/procedures/residences/france-senegal.js importe CAMPAGNE_FRANCE
+* d'ici. Importer js/procedures/ depuis ce module fermerait le cycle, et
+* un cycle d'imports ESM se paie en `undefined` au premier chargement,
+* dans le module qui a eu le malheur d'être évalué en second. L'appelant
+* — le hub, la page de destination, le test — a déjà trouverProcedure()
+* sous la main : il la passe.
+*
+* @param {Object} pays
+* @param {{procedure?: Object|null}} [contexte] la procédure COMPOSÉE
+*/
+export function defautsDeDestination(pays, { procedure = null } = {}) {
+
+const defauts = [];
+
+if (!pays) return ["destination absente"];
+
+if (!pays.nom || typeof pays.nom !== "string") defauts.push("nom manquant");
+if (!pays.code || typeof pays.code !== "string") defauts.push("code de drapeau manquant");
+if (!Array.isArray(pays.langue) || !pays.langue.length) defauts.push("aucune langue d'enseignement");
+if (typeof pays.positionnement !== "string" || !pays.positionnement.trim()) defauts.push("positionnement vide");
+if (!pays.portail || !/^https?:\/\//.test(pays.portail.url || "")) defauts.push("portail officiel manquant");
+if (!ACCOMPAGNEMENT.includes(pays.accompagnement)) defauts.push(`accompagnement « ${pays.accompagnement} » hors vocabulaire`);
+
+// La procédure : des étapes réelles, pas une intention. Une destination
+// vendue sans procédure composée vendrait un accompagnement dont
+// personne ne connaît les étapes.
+if (!procedure || !Array.isArray(procedure.etapes) || !procedure.etapes.length) {
+defauts.push("aucune procédure de portail composée");
+}
+
+// Au moins un fait sourcé et daté…
+const solides = ((pays.faits) || []).filter((f) => /^https?:\/\//.test(f.source || "") && /^\d{4}-\d{2}-\d{2}$/.test(f.verifieLe || ""));
+if (!solides.length) defauts.push("aucun fait sourcé et daté");
+
+// …et au moins un DIFFUSABLE : la page publique d'une destination sans
+// preuve gratuite n'a rien à montrer, et c'est la preuve qui vend.
+if (!faitsPublics(pays).filter((f) => solides.includes(f)).length) defauts.push("aucun fait public sourcé et daté");
+
+return defauts;
+
 }
 
 /**

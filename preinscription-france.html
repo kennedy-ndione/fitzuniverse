@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+<!-- LA PAGE D'UNE DESTINATION (lot PRÉINSCRIPTIONS-VITRINE, 2026-09-09).
+
+UNE VRAIE PAGE, PAS UN PARAMÈTRE D'URL. Elle doit pouvoir se positionner
+sur « étudier en France depuis le Sénégal » ; une page unique paramétrée
+par ?destination= n'est indexable qu'une fois.
+
+C'EST LA PAGE MODÈLE. Ouvrir la Roumanie = copier ce fichier en
+preinscription-roumanie.html, changer `data-destination` sur <body>, le
+titre, la description et la photo, puis basculer `accompagnement` dans
+js/pays-preinscription.js. AUCUN module à rouvrir. Tout le reste — le
+nom, les langues, les règles, les pays de résidence, le nombre d'étapes,
+les prix — est rendu depuis les données par js/preinscription-destination.js.
+
+LA LIGNE : publier la RÈGLE, vendre le CALCUL. Les seuils, les droits, le
+plafond d'exonération et la règle des vœux sont ici, avec leur source et
+leur date — c'est la preuve que nos chiffres sont vrais, et une preuve
+payante ne prouve rien. Le contenu des étapes, les frais de dossier par
+pays de résidence, la banque, le moment du paiement et les dates de la
+campagne n'y sont PAS : c'est ce que le Diagnostic et le Dossier France
+vendent. Le partage est déclaré fait par fait (`diffusion`) dans les
+données, et faitsPublics() est la seule porte. -->
+<title>Étudier en France : préinscription accompagnée | FitzUniverse</title>
+
+<meta name="description" content="Étudier en France depuis l'Afrique de l'Ouest : les ressources exigées pour le visa, les droits d'inscription, le plafond d'exonération et la règle des sept vœux — publiés avec leur source. Accompagnement jusqu'au dépôt de votre dossier Études en France.">
+
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<link rel="canonical" href="https://scholarbridge-e0d84.web.app/preinscription-france.html">
+
+<meta property="og:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
+<meta property="og:description" content="Les ressources exigées, les droits d'inscription et la règle des sept vœux, publiés avec leur source. Accompagnement jusqu'au dépôt de votre dossier Études en France.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://scholarbridge-e0d84.web.app/assets/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
+<meta name="twitter:description" content="Les ressources exigées, les droits d'inscription et la règle des sept vœux, publiés avec leur source.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="css/catalog.css">
+<link rel="stylesheet" href="css/catalog-typography.css">
+<link rel="stylesheet" href="css/catalog-redesign.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<link rel="stylesheet" href="css/preinscriptions.css">
+<style>[hidden]{display:none !important;}</style>
+
+<script src="pricing-plans.js"></script>
+<script src="js/mobile-nav.js" defer></script>
+<link rel="stylesheet" href="css/vivant.css">
+</head>
+
+<!-- L'UNIQUE endroit où cette page nomme sa destination. -->
+<body class="catalog-dark" data-destination="france">
+
+<a href="#pageMain" class="skip-link">Aller au contenu</a>
+
+<header class="header" id="publicHeader">
+
+<div class="container header-container">
+
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+
+<div class="header-actions">
+
+<a href="preinscriptions.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Destinations</span>
+</a>
+
+<a href="scholarships.html" class="header-link"><span>Bourses</span></a>
+<a href="preinscriptions.html" class="header-link" aria-current="page"><span>Préinscriptions</span></a>
+<a href="universities.html" class="header-link"><span>Universités</span></a>
+<a href="login.html" class="header-link header-link-login" aria-label="Connexion"><i data-lucide="log-in"></i><span>Connexion</span></a>
+
+</div>
+
+</div>
+
+</header>
+
+<main id="pageMain">
+<div id="destApp">
+
+<!-- a) LE HERO DE LA DESTINATION -->
+<section class="catalog-hero uni-hero">
+<picture class="uni-hero-picture" aria-hidden="true">
+<source type="image/avif" srcset="assets/images/campus-courtyard-400w.avif 400w, assets/images/campus-courtyard-800w.avif 800w, assets/images/campus-courtyard-1200w.avif 1200w" sizes="100vw">
+<source type="image/webp" srcset="assets/images/campus-courtyard-400w.webp 400w, assets/images/campus-courtyard-800w.webp 800w, assets/images/campus-courtyard-1200w.webp 1200w" sizes="100vw">
+<img class="uni-hero-bg" src="assets/images/campus-courtyard-800w.jpg" srcset="assets/images/campus-courtyard-400w.jpg 400w, assets/images/campus-courtyard-800w.jpg 800w, assets/images/campus-courtyard-1200w.jpg 1200w" sizes="100vw" width="1600" height="800" fetchpriority="high" decoding="async" alt="">
+</picture>
+<span class="uni-hero-badge"><img id="destDrapeau" src="assets/flags/fr.svg" alt="" width="22" height="16"><span id="destBadge">—</span></span>
+<h1 id="destTitre">—</h1>
+<p id="destPosition">—</p>
+<p class="dest-langues"><i data-lucide="languages" aria-hidden="true"></i><span id="destLangues">—</span></p>
+</section>
+
+<!-- b) CE QUE ÇA PROMET, ET CE QUE ÇA NE PROMET PAS.
+Mot pour mot le bloc du hub : c'est la signature anti-officine, et sa
+place est sur la page qui vend, pas sur celle qui oriente. -->
+<section class="pre-section" aria-labelledby="promessesTitre">
+<div class="container">
+<h2 id="promessesTitre">Ce que cet accompagnement promet, et ce qu'il ne promet pas</h2>
+<ul class="pre-promesses">
+<li><i data-lucide="file-check" aria-hidden="true"></i><span>Il va jusqu'au <strong>dépôt</strong> d'un dossier conforme : pièces, traductions, légalisations et preuve de ressources vérifiées avant l'envoi. Jamais jusqu'à l'admission, qui appartient à l'établissement.</span></li>
+<li><i data-lucide="user-round" aria-hidden="true"></i><span><strong>Vous déposez vous-même</strong>, sur le portail officiel du pays ou de l'établissement. Personne ne dépose à votre place, et aucun intermédiaire n'est nécessaire.</span></li>
+<li><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Aucun taux de réussite affiché</strong> : un dossier conforme est ce que nous pouvons garantir, une décision d'admission ne l'est pas.</span></li>
+</ul>
+</div>
+</section>
+
+<!-- c) LES RÈGLES PUBLIQUES, avec leur source et leur date. Rendues
+depuis les faits marqués `diffusion: "public"`. -->
+<section class="pre-section" id="regles" aria-labelledby="reglesTitre">
+<div class="container">
+<h2 id="reglesTitre">Les règles, publiées avec leur source</h2>
+<p class="pre-lead">Ce sont des textes officiels, pas nos estimations. Nous les affichons en entier, gratuitement, avec la date à laquelle nous les avons lus — c'est ce qui vous permet de vérifier tout le reste.</p>
+<ul class="pre-faits" id="destRegles"></ul>
+</div>
+</section>
+
+<!-- d) D'OÙ VOUS CANDIDATEZ. Les pays de résidence sont NOMMÉS, lus
+depuis le registre des couches ; aucun détail n'est donné. -->
+<section class="pre-section" id="destSectionResidences" aria-labelledby="residencesTitre" hidden>
+<div class="container">
+<h2 id="residencesTitre">D'où vous candidatez change tout</h2>
+<p class="pre-lead" id="destResidencesIntro">—</p>
+<p class="dest-residences-phrase" id="destResidencesPhrase">—</p>
+<ul class="dest-residences" id="destResidencesListe"></ul>
+<p class="pre-lead"><strong><span id="destResidencesNombre">—</span> pays vérifiés.</strong> Le détail de votre pays — combien, où, quand, et ce qui fait recaler un dossier chez vous — fait partie de l'accompagnement.</p>
+</div>
+</section>
+
+<!-- e) LA PROCÉDURE : le NOMBRE d'étapes, jamais leur contenu. -->
+<section class="pre-section" id="destSectionProcedure" aria-labelledby="procedureTitre" hidden>
+<div class="container">
+<h2 id="procedureTitre" class="dest-procedure-titre"><span id="destProcedureTitre">—</span></h2>
+<p class="pre-lead" id="destProcedurePhrase">—</p>
+<p class="dest-procedure-client" id="destProcedureClient">—</p>
+</div>
+</section>
+
+<!-- Le catalogue, public et le reste : ce que nous avons déjà vérifié. -->
+<section class="pre-section" id="destSectionCatalogue" aria-labelledby="catalogueTitre" hidden>
+<div class="container">
+<h2 id="catalogueTitre">Ce que nous avons déjà vérifié</h2>
+<p class="pre-lead" id="destCatalogue">—</p>
+<a class="btn btn-secondary" id="destCatalogueLien" href="universities.html"><span>Voir les établissements</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+</div>
+</section>
+
+<!-- f) LE PRIX ET LES DEUX OFFRES. Le lien porte `destination` : le pays
+voyage jusqu'à la caisse. -->
+<section class="pre-section" id="offres" aria-labelledby="offresTitre">
+<div class="container">
+<h2 id="offresTitre">Ce que coûte l'accompagnement</h2>
+<p class="pre-lead">Trois formules, un paiement unique, aucune mensualité. Vous déposez toujours vous-même.</p>
+<ul class="pre-offres" id="destOffres"></ul>
+<p class="pre-lead dest-deduction" id="destDeduction"></p>
+</div>
+</section>
+
+</div>
+</main>
+
+<script src="js/header-scroll.js"></script>
+<script type="module" src="js/preinscription-destination.js"></script>
+<script type="module" src="js/admin-access.js"></script>
+<script src="js/vivant.js" defer></script>
+</body>
+</html>

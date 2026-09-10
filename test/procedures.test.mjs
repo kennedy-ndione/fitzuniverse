@@ -548,8 +548,23 @@ assert.ok(!/pas à pas/.test(libelleProcedureDocumentee(CI)));
 });
 
 test("la page préinscriptions et la fiche université branchent la procédure", () => {
-const page = lire("js/preinscriptions-page.js");
-assert.ok(page.includes("trouverProcedure") && page.includes("libelleProcedureDocumentee") && page.includes("texteConsigne"));
+
+// LOT PRÉINSCRIPTIONS-VITRINE (2026-09-09) — LE PARTAGE A CHANGÉ DE
+// PLACE, ET C'EST LE SENS DU LOT.
+//
+// Le hub rendait les onze étapes avec leur consigne (texteConsigne),
+// c'est-à-dire le contenu même du Dossier France. La page publique dit
+// désormais le NOMBRE d'étapes, jamais leur contenu — la règle se
+// publie, le calcul se vend. Les modules de procédure restent branchés
+// partout où l'étudiant est CLIENT : applications.js, dashboard.js, la
+// fiche, et le Diagnostic.
+const hub = lire("js/preinscriptions-page.js");
+const destination = lire("js/preinscription-destination.js");
+
+assert.ok(!hub.includes("texteConsigne"), "le hub ne rend plus les consignes des étapes");
+assert.ok(!destination.includes("texteConsigne"), "la page de destination non plus");
+assert.ok(destination.includes("procedure.etapes.length"), "elle annonce le NOMBRE d'étapes");
+assert.ok(destination.includes("trouverProcedure({ paysDestination: pays.nom })"), "depuis la procédure composée, pas d'un chiffre écrit à la main");
 // Lot S3 : details.js ne décide plus le lien de procédure sur l'URL du
 // portail (que le visiteur n'a plus) mais sur le PAYS de destination —
 // ce qui est aussi la bonne clé depuis S1b, une procédure étant
@@ -558,9 +573,11 @@ assert.ok(lire("details.js").includes("trouverProcedure({ paysDestination: unive
 assert.ok(lire("applications.js").includes("trouverProcedure") && lire("dashboard.js").includes("trouverProcedure"));
 // Page publique : aucune résidence supposée, et la liste des pays
 // documentés est affichée telle qu'elle vit dans le registre.
-assert.ok(page.includes("trouverProcedure({ paysDestination: pays.nom })"), "la page publique n'invente pas de résidence");
-assert.ok(page.includes("residencesDocumentees"), "elle dit quels pays sont vérifiés");
-assert.ok(!page.includes("depuis le ${escapeHtml(procedure.paysResidence)}"), "la phrase figée « depuis le Sénégal » a disparu");
+assert.ok(destination.includes("residencesDocumentees"), "la page de destination dit quels pays sont vérifiés");
+assert.ok(hub.includes("residencesDocumentees"), "le hub en dit le nombre");
+for (const src of [hub, destination]) {
+assert.ok(!src.includes("depuis le ${escapeHtml(procedure.paysResidence)}"), "la phrase figée « depuis le Sénégal » a disparu");
+}
 // La carte du dossier nomme la résidence RÉELLE du profil, ou rien.
 const apps = lire("applications.js");
 assert.ok(!apps.includes("Procédure Études en France, depuis le Sénégal"), "le titre ne nomme plus le Sénégal pour tout le monde");

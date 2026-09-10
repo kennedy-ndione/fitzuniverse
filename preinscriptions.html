@@ -114,41 +114,22 @@ pages publiques et dans la feuille mobile (js/mobile-nav.js). -->
 </picture>
 <span class="uni-hero-badge"><i data-lucide="wallet"></i><span>Préinscriptions</span></span>
 <h1 id="title">Partir en <span class="hero-h1-accent">finançant vos études</span></h1>
-<p id="subtitle">Une admission que vous financez vous-même est un dossier à rendre conforme, pas un concours à gagner. Fitz vous accompagne jusqu'au dépôt de ce dossier — et vous le déposez vous-même.</p>
+<p id="subtitle">Une admission que vous financez vous-même est un dossier à rendre conforme, pas un concours à gagner. Choisissez votre destination : chacune a sa page, ses règles publiées et son accompagnement jusqu'au dépôt — que vous faites vous-même.</p>
 </section>
 
-<section class="pre-section" aria-labelledby="promessesTitre">
-<div class="container">
-<h2 id="promessesTitre">Ce que cet accompagnement promet, et ce qu'il ne promet pas</h2>
-<ul class="pre-promesses">
-<li><i data-lucide="file-check" aria-hidden="true"></i><span>Il va jusqu'au <strong>dépôt</strong> d'un dossier conforme : pièces, traductions, légalisations et preuve de ressources vérifiées avant l'envoi. Jamais jusqu'à l'admission, qui appartient à l'établissement.</span></li>
-<li><i data-lucide="user-round" aria-hidden="true"></i><span><strong>Vous déposez vous-même</strong>, sur le portail officiel du pays ou de l'établissement. Personne ne dépose à votre place, et aucun intermédiaire n'est nécessaire.</span></li>
-<li><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Aucun taux de réussite affiché</strong> : un dossier conforme est ce que nous pouvons garantir, une décision d'admission ne l'est pas.</span></li>
-</ul>
-</div>
-</section>
-
-<!-- 2. Ce que ça coûte vraiment — les faits France, depuis
-js/pays-preinscription.js, chacun avec sa date de vérification. -->
-<section class="pre-section" id="cout" aria-labelledby="coutTitre">
-<div class="container">
-<h2 id="coutTitre">Ce que ça coûte vraiment</h2>
-<p class="pre-lead">L'information que personne ne donne avant d'encaisser. Pour la France, où nous avons vérifié le coût d'une année établissement par établissement, voici ce qui est publié — et la date à laquelle nous l'avons lu.</p>
-<ul class="pre-faits" id="faitsFrance"></ul>
-</div>
-</section>
-
-<!-- 3. Les pays — rendus par js/preinscriptions-page.js, dans l'ordre
-validé : France en plein, six prochaines destinations. -->
+<!-- 2. LES DESTINATIONS — rendues par js/preinscriptions-page.js depuis
+js/pays-preinscription.js. Aucun nom de pays, aucun compteur, aucun
+chemin de page n'est écrit ici : basculer `accompagnement` dans les
+données suffit à ouvrir une destination. -->
 <section class="pre-section" id="pays" aria-labelledby="paysTitre">
 <div class="container">
-<h2 id="paysTitre">Les pays, dans l'ordre où nous les ouvrons</h2>
-<p class="pre-lead">La France d'abord, où le coût d'une année est déjà vérifié. Les six autres sont nommés, avec ce qui est déjà sourcé ; leur procédure de portail sera documentée avant d'être accompagnée. Chaque carte renvoie vers les établissements du catalogue.</p>
-<div class="pre-pays-liste" id="paysListe" aria-live="polite"></div>
+<h2 id="paysTitre">Les destinations, dans l'ordre où nous les ouvrons</h2>
+<p class="pre-lead">Nous n'ouvrons une destination que lorsque sa procédure officielle est documentée de bout en bout, et que les frais et le calendrier sont vérifiés depuis le pays d'où vous candidatez. Les suivantes sont nommées ici, sans promesse de date.</p>
+<div class="pre-dest-liste" id="paysListe" aria-live="polite"></div>
 </div>
 </section>
 
-<!-- 4. Les étapes — les quatre du parcours préinscription telles
+<!-- 3. Les étapes — les quatre du parcours préinscription telles
 qu'elles existent dans l'espace étudiant (js/application-journey.js).
 Pas de cinquième. -->
 <section class="pre-section" id="comment-ca-marche" aria-labelledby="etapesTitre">
@@ -164,16 +145,14 @@ Pas de cinquième. -->
 </div>
 </section>
 
-<!-- 5. L'entrée. Le bouton mène à la grille préinscription
-(offers.html?parcours=preinscription — grille A, une grille à la fois) :
-Diagnostic France, Dossier France, Dossier France + Conseiller. -->
+<!-- 4. L'entrée. Le catalogue est public et le reste : c'est la porte
+la plus utile pour qui ne sait pas encore où il veut aller. -->
 <section class="pre-section" aria-labelledby="entreeTitre">
 <div class="container">
 <h2 id="entreeTitre">Par où commencer</h2>
-<p class="pre-lead">Regardez d'abord ce que coûte une année là où c'est déjà vérifié.</p>
+<p class="pre-lead">Le catalogue est ouvert à tous : regardez ce que coûte une année là où le coût est déjà vérifié, établissement par établissement.</p>
 <div class="pre-entree">
-<a href="universities.html?country=France" class="btn btn-primary"><span>Voir les établissements en France</span><i data-lucide="arrow-right"></i></a>
-<a href="offers.html?parcours=preinscription" class="btn btn-secondary"><span>Voir les offres préinscription</span><i data-lucide="arrow-right"></i></a>
+<a href="universities.html" class="btn btn-primary"><span>Voir les établissements</span><i data-lucide="arrow-right"></i></a>
 <a href="#comment-ca-marche" class="btn btn-secondary"><span>Comment ça marche</span></a>
 </div>
 </div>

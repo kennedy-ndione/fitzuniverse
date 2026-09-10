@@ -532,7 +532,14 @@ parcours: "preinscription",
 type: "campagne",
 label: "Dossier France + Conseiller",
 icon: "user-check",
-tagline: "Le même dossier, plus une relecture humaine avant les 85 000 F non remboursables.",
+// Lot PRÉINSCRIPTIONS-VITRINE (2026-09-09) : le montant est PARTI de
+// cette phrase, et pour deux raisons qui se renforcent. Il était faux
+// hors du Sénégal — 80 000 F en Côte d'Ivoire, 101 000 au Cameroun,
+// 1 500 000 GNF en Guinée — et il publiait sur offers.html, page
+// publique, un chiffre que le Diagnostic vend. La phrase garde toute sa
+// force sans lui : ce qui fait peur, ce n'est pas le montant, c'est
+// « non remboursables ».
+tagline: "Le même dossier, plus une relecture humaine avant des frais de dossier non remboursables.",
 badge: "Relecture humaine",
 priceFCFA: 150000,
 duration: "une campagne, jusqu'au 31 juillet",
@@ -540,7 +547,7 @@ fitzAccess: "Tout Dossier France, plus la relecture de votre conseiller",
 maxPreinscriptions: 7,
 highlights: [
 "Tout le contenu de Dossier France",
-"Une relecture humaine de votre dossier AVANT le paiement des 85 000 F non remboursables",
+"Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables",
 "Un conseiller joignable pendant toute la campagne",
 "Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission"
 ]

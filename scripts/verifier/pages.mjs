@@ -27,8 +27,16 @@ import { fileURLToPath } from "node:url";
 
 import { couperLeReseau } from "./hors-ligne.mjs";
 import { etatCandidature, analyserEcheance, etatAffichable } from "../../js/echeance.js";
-import { lirePays, etatDunPays, LIBELLES_PROCEDURE } from "../../js/pays-preinscription.js";
-import { trouverProcedure, codeProcedurePour } from "../../js/procedures/index.js";
+import { lirePays, etatDunPays, estOuverte, faitsPublics } from "../../js/pays-preinscription.js";
+import { trouverProcedure, residencesDocumentees } from "../../js/procedures/index.js";
+
+// LES CHAÎNES QUI NE DOIVENT PLUS PARAÎTRE EN PUBLIC (lot
+// PRÉINSCRIPTIONS-VITRINE, 2026-09-09). Ce sont exactement les faits que
+// le Diagnostic (10 000 F) et le Dossier France (75 000 F) vendent : les
+// frais de dossier du pays de résidence, la banque, le montant, les
+// dates de la campagne. Ils restent dans les données et alimentent le
+// Diagnostic et l espace client — seul leur AFFICHAGE PUBLIC est retiré.
+const CHAINES_INTERDITES = ["SUNU BANK", "85 000", "80 000", "1 500 000", "1 900 Dhs", "1er octobre", "15 décembre", "27 juillet"];
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -806,13 +814,13 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
     await contexte.close();
   }
 
-  // ---------- 7. preinscriptions.html (lot Préinscriptions, 2026-09-07) ----------
+  // ---------- 7. preinscriptions.html — LE HUB DES DESTINATIONS ----------
   //
-  // Hors ligne, depuis l'instantané, 390×844. La carte France doit dire
-  // les effectifs que Node recalcule (26 / 15 au lot D2), une carte
-  // « prochaine » doit porter son libellé de procédure depuis le
-  // vocabulaire fermé, aucune carte ne peut dire « pas à pas », et la
-  // page ne doit manquer aucun fichier ni lever d'erreur console.
+  // Lot PRÉINSCRIPTIONS-VITRINE (2026-09-09). La page ne montre plus sept
+  // cartes-pays chargées d'effectifs : elle montre des DESTINATIONS. Ce
+  // contrôle vérifie les deux états, et surtout ce qui NE doit plus s'y
+  // trouver — un zéro répété six fois, et le contenu que le Diagnostic
+  // et le Dossier France vendent.
   {
     const { contexte, page, erreurs } = await ouvrir(navigateur, base);
 
@@ -820,72 +828,197 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
 
       const snapshot = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
       const pays = lirePays();
-      const france = pays[0];
+      const ouvertes = pays.filter(estOuverte);
+      const aVenir = pays.filter((p) => !estOuverte(p));
+      const france = ouvertes[0];
       const attenduFrance = etatDunPays(france, snapshot);
-      const prochaine = pays[1];
 
       await page.goto(`${base}/preinscriptions.html`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector("#paysListe .pre-pays", { timeout: 20000 });
-      await page.waitForFunction(() => document.querySelectorAll("#paysListe .pre-pays").length >= 7, null, { timeout: 15000 });
+      await page.waitForSelector("#paysListe .pre-dest", { timeout: 20000 });
+      await page.waitForFunction((n) => document.querySelectorAll("#paysListe .pre-dest").length >= n, pays.length, { timeout: 15000 });
 
       const vu = await page.evaluate(() => {
         const texte = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
-        const cartes = [...document.querySelectorAll("#paysListe .pre-pays")].map((c) => ({
-          id: c.id, nom: texte(c.querySelector("h3")), effectifs: texte(c.querySelector(".pre-pays-effectifs")),
-          procedure: texte(c.querySelector(".pre-pays-procedure")), principal: c.classList.contains("pre-pays--principal"),
-          // Lot E2 : les sources de la procédure (détails « pre-procedure ») ne sont pas des faits de la carte.
-lien: c.querySelector(".pre-pays-lien")?.getAttribute("href") || "", texte: texte(c), dates: [...c.querySelectorAll(".pre-fait-source")].filter((a) => !a.closest(".pre-procedure")).length
+        const cartes = [...document.querySelectorAll("#paysListe .pre-dest")].map((c) => ({
+          id: c.id,
+          nom: texte(c.querySelector("h3")),
+          ouverte: c.classList.contains("pre-dest--ouverte"),
+          effectifs: texte(c.querySelector(".pre-dest-effectifs")),
+          cta: c.querySelector("a") ? c.querySelector("a").getAttribute("href") : "",
+          texte: texte(c)
         }));
-        return { cartes, deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth, faitsFrance: document.querySelectorAll("#faitsFrance .pre-fait").length };
+        return {
+          cartes,
+          deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          corps: document.body.innerText
+        };
       });
 
-      if (vu.cartes.length !== 7) anomalies.push(`preinscriptions.html : ${vu.cartes.length} carte(s) de pays au lieu de 7.`);
+      if (vu.cartes.length !== pays.length) anomalies.push(`preinscriptions.html : ${vu.cartes.length} destination(s) au lieu de ${pays.length}.`);
       if (vu.deborde) anomalies.push("preinscriptions.html : débordement horizontal à 390 px.");
 
-      const cFrance = vu.cartes[0];
-      if (!cFrance || cFrance.nom !== "France" || !cFrance.principal) anomalies.push(`preinscriptions.html : la première carte n'est pas la France en plein (${cFrance && cFrance.nom}).`);
+      const cOuvertes = vu.cartes.filter((c) => c.ouverte);
+      if (cOuvertes.length !== ouvertes.length) anomalies.push(`preinscriptions.html : ${cOuvertes.length} destination(s) ouverte(s) rendue(s) pour ${ouvertes.length} dans les données.`);
+
+      const cFrance = vu.cartes.find((c) => c.id === `pays-${france.id}`);
+      if (!cFrance || !cFrance.ouverte) anomalies.push(`preinscriptions.html : ${france.nom} n'est pas rendue comme destination ouverte.`);
       const attenduTexte = `${attenduFrance.etablissements} établissements au catalogue · ${attenduFrance.coutsVerifies} avec coût vérifié`;
-      if (cFrance && cFrance.effectifs !== attenduTexte) anomalies.push(`carte France : « ${cFrance.effectifs} » au lieu de « ${attenduTexte} » (recalculé depuis l'instantané).`);
-      if (cFrance && !cFrance.lien.includes("country=France")) anomalies.push(`carte France : lien « ${cFrance.lien} » sans filtre pays.`);
+      if (cFrance && cFrance.effectifs !== attenduTexte) anomalies.push(`carte ${france.nom} : « ${cFrance.effectifs} » au lieu de « ${attenduTexte} » (recalculé depuis l'instantané).`);
+      if (cFrance && !cFrance.cta.includes(`preinscription-${france.id}.html`)) anomalies.push(`carte ${france.nom} : bouton « ${cFrance.cta} » au lieu de sa page dédiée.`);
 
-      const cProchaine = vu.cartes[1];
-      if (cProchaine && !cProchaine.procedure.startsWith(LIBELLES_PROCEDURE[prochaine.procedure])) anomalies.push(`carte ${cProchaine.nom} : procédure « ${cProchaine.procedure} » au lieu du libellé « ${LIBELLES_PROCEDURE[prochaine.procedure]} ».`);
-
-      for (const c of vu.cartes) {
-        const p = pays.find((x) => `pays-${x.id}` === c.id);
-        // Le droit de dire « pas à pas » se lit sur le code CALCULÉ, pas
-        // sur le code déclaré du pays (2026-09-08). `pays.procedure` est
-        // un plancher : il sert quand aucune procédure n'existe, ou qu'il
-        // lui reste des étapes à confirmer. Quand une procédure est
-        // entièrement vérifiée, c'est elle qui décide — la France est
-        // passée « documentee » sans que sa fiche pays change, et c'est
-        // voulu : mettre « documentee » dans la fiche ferait dire
-        // « documentée » à codeProcedurePour même s'il restait des étapes
-        // douteuses, ce qui casserait justement le garde-fou.
-        //
-        // Lot S1b (2026-09-08) : on interroge la procédure comme la PAGE
-        // l'interroge — sans pays de résidence, parce qu'un visiteur
-        // public n'en a pas. Passer « Sénégal » ici rendait le contrôle
-        // muet : il autorisait un « pas à pas » que la page, elle, ne
-        // pouvait plus produire.
-        const codeReel = p ? codeProcedurePour(p, trouverProcedure({ paysDestination: p.nom })) : null;
-        if (p && codeReel !== "documentee" && /pas à pas/i.test(c.texte)) anomalies.push(`carte ${c.nom} : dit « pas à pas » sans procédure documentée.`);
-        if (p) {
-          const e = etatDunPays(p, snapshot);
-          if (!c.effectifs.startsWith(String(e.etablissements))) anomalies.push(`carte ${c.nom} : « ${c.effectifs} » ne commence pas par ${e.etablissements}.`);
-          // La carte France ne répète pas ses faits (ils vivent dans « Ce que ça
-          // coûte vraiment ») : zéro date attendue sur elle.
-          const datesAttendues = c.id === "pays-france" ? 0 : p.faits.length;
-          if (c.dates !== datesAttendues) anomalies.push(`carte ${c.nom} : ${c.dates} date(s) de vérification pour ${datesAttendues} attendue(s).`);
-        }
+      // UNE DESTINATION À VENIR N'AFFICHE NI BOUTON, NI COMPTEUR, NI ZÉRO.
+      // Un zéro affiché six fois coûte plus qu'il ne rapporte.
+      for (const p of aVenir) {
+        const c = vu.cartes.find((x) => x.id === `pays-${p.id}`);
+        if (!c) { anomalies.push(`preinscriptions.html : ${p.nom} absente.`); continue; }
+        if (c.ouverte) anomalies.push(`${p.nom} : rendue comme ouverte alors qu'elle est « ${p.accompagnement} ».`);
+        if (c.cta) anomalies.push(`${p.nom} : un lien « ${c.cta} » sur une destination à venir.`);
+        if (c.effectifs) anomalies.push(`${p.nom} : un compteur d'établissements sur une destination à venir.`);
+        if (/\b0\b/.test(c.texte)) anomalies.push(`${p.nom} : un zéro affiché — « ${c.texte.slice(0, 80)} ».`);
+        if (/coût vérifié|procédure/i.test(c.texte)) anomalies.push(`${p.nom} : « ${c.texte.slice(0, 80)} » — une destination à venir ne détaille rien.`);
+        if (!c.texte.includes("Prochaine destination")) anomalies.push(`${p.nom} : la mention « Prochaine destination » manque.`);
       }
 
-      if (vu.faitsFrance !== france.faits.length) anomalies.push(`« Ce que ça coûte vraiment » : ${vu.faitsFrance} fait(s) affiché(s) pour ${france.faits.length} dans la source.`);
+      for (const interdite of CHAINES_INTERDITES) {
+        if (vu.corps.includes(interdite)) anomalies.push(`preinscriptions.html : « ${interdite} » sur une page publique.`);
+      }
 
-      notes.push(`preinscriptions.html : ${vu.cartes.length} pays — France « ${cFrance ? cFrance.effectifs : "?"} » — ${cProchaine ? cProchaine.nom + " : " + cProchaine.procedure.slice(0, 44) : "?"}`);
+      notes.push(`preinscriptions.html : ${vu.cartes.length} destinations — ${cOuvertes.length} ouverte(s) (« ${cFrance ? cFrance.effectifs : "?"} »), ${aVenir.length} annoncée(s) sans bouton ni compteur`);
 
     } catch (e) {
       anomalies.push(`ÉCHEC preinscriptions.html : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 7 bis. offers.html — la grille est publique elle aussi ----------
+  //
+  // La règle du lot vaut pour TOUTE page publique, pas seulement pour les
+  // deux nouvelles. La grille des offres portait « avant les 85 000 F non
+  // remboursables » dans le pitch du Dossier France + Conseiller : un
+  // montant sénégalais, faux ailleurs (80 000 en Côte d Ivoire, 101 000 au
+  // Cameroun, 1 500 000 GNF en Guinée), et vendu par le Diagnostic.
+  {
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base);
+
+    try {
+
+      await page.goto(`${base}/offers.html?parcours=preinscription`, { waitUntil: "domcontentloaded" });
+      // Les deux grilles sont `hidden` dans le HTML : c'est
+      // js/offres-parcours.js qui révèle celle du parcours demandé. On
+      // attend donc la RÉVÉLATION, pas la présence — sinon on lit une
+      // page dont le texte est encore invisible, et l'innerText est vide.
+      await page.waitForFunction(() => {
+        const vue = document.querySelector('.pricing-view[data-parcours="preinscription"]');
+        return vue && !vue.hidden;
+      }, null, { timeout: 20000 });
+
+      const corps = await page.evaluate(() => document.body.innerText);
+
+      for (const interdite of CHAINES_INTERDITES) {
+        if (corps.includes(interdite)) anomalies.push(`offers.html : « ${interdite} » sur une page publique.`);
+      }
+
+      notes.push("offers.html : aucune chaîne réservée aux clients dans la grille publique");
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC offers.html : ${e.message}`);
+    }
+
+    anomalies.push(...erreurs);
+    await contexte.close();
+  }
+
+  // ---------- 8. preinscription-france.html — LA PAGE QUI VEND ----------
+  //
+  // La ligne du lot : publier la RÈGLE, vendre le CALCUL. Ce contrôle lit
+  // les deux côtés — les seuils publics DOIVENT y être avec leur source,
+  // et aucune des chaînes que le Diagnostic vend ne doit s'y trouver.
+  {
+    const { contexte, page, erreurs } = await ouvrir(navigateur, base);
+
+    try {
+
+      const france = lirePays().find(estOuverte);
+      const procedure = trouverProcedure({ paysDestination: france.nom });
+      const residences = residencesDocumentees(france.nom).map((r) => r.pays);
+      const publics = faitsPublics(france);
+
+      await page.goto(`${base}/preinscription-${france.id}.html`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => {
+        const t = document.getElementById("destTitre");
+        return t && t.textContent.trim() && t.textContent.trim() !== "—";
+      }, null, { timeout: 20000 });
+
+      const vu = await page.evaluate(() => {
+        const texte = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
+        return {
+          titre: texte(document.getElementById("destTitre")),
+          regles: document.querySelectorAll("#destRegles .pre-fait").length,
+          sources: [...document.querySelectorAll("#destRegles .pre-fait-source")].map((a) => a.getAttribute("href")),
+          dates: [...document.querySelectorAll("#destRegles .pre-fait-source")].map((a) => a.textContent.trim()),
+          promesses: document.querySelectorAll(".pre-promesses li").length,
+          residences: [...document.querySelectorAll("#destResidencesListe li")].map((li) => li.textContent.trim()),
+          residencesPhrase: texte(document.getElementById("destResidencesPhrase")),
+          procedureTitre: texte(document.getElementById("destProcedureTitre")),
+          offres: [...document.querySelectorAll("#destOffres .pre-offre")].map((o) => ({
+            titre: texte(o.querySelector("h3")), prix: texte(o.querySelector(".pre-offre-prix")), lien: o.querySelector("a").getAttribute("href")
+          })),
+          deduction: texte(document.getElementById("destDeduction")),
+          catalogue: texte(document.getElementById("destCatalogue")),
+          deborde: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          corps: document.body.innerText
+        };
+      });
+
+      if (vu.titre !== `Étudier en ${france.nom}`) anomalies.push(`page destination : titre « ${vu.titre} ».`);
+      if (vu.deborde) anomalies.push("preinscription-france.html : débordement horizontal à 390 px.");
+
+      // LES SEUILS PUBLICS SONT UNE PREUVE : leur disparition est une régression.
+      if (vu.regles !== publics.length) anomalies.push(`page destination : ${vu.regles} règle(s) publique(s) pour ${publics.length} dans les données.`);
+      for (const attendu of ["877,50 €", "2 902 €", "3 950 €", "30 %", "sept (7)"]) {
+        if (!vu.corps.includes(attendu)) anomalies.push(`page destination : le seuil public « ${attendu} » a disparu.`);
+      }
+      if (vu.sources.some((h) => !/^https?:\/\//.test(h || ""))) anomalies.push("page destination : une règle sans lien de source.");
+      if (vu.dates.some((t) => !/Vérifié le \d/.test(t))) anomalies.push("page destination : une règle sans date de vérification.");
+
+      // Le bloc anti-officine, mot pour mot.
+      if (vu.promesses !== 3) anomalies.push(`page destination : ${vu.promesses} promesse(s) au lieu de 3.`);
+      for (const phrase of ["Vous déposez vous-même", "Aucun taux de réussite affiché"]) {
+        if (!vu.corps.includes(phrase)) anomalies.push(`page destination : « ${phrase} » manque.`);
+      }
+
+      // Les pays de résidence sont NOMMÉS, lus depuis le registre.
+      if (vu.residences.join("|") !== residences.join("|")) anomalies.push(`page destination : pays de résidence « ${vu.residences.join(", ")} » au lieu de « ${residences.join(", ")} ».`);
+      for (const p of residences) {
+        if (!vu.residencesPhrase.includes(p)) anomalies.push(`page destination : ${p} absent de la phrase de résidence.`);
+      }
+
+      // Le NOMBRE d'étapes, jamais leur contenu.
+      if (!vu.procedureTitre.includes(String(procedure.etapes.length))) anomalies.push(`page destination : « ${vu.procedureTitre} » n'annonce pas les ${procedure.etapes.length} étapes.`);
+      for (const e of procedure.etapes) {
+        if (vu.corps.includes(e.titre)) anomalies.push(`page destination : le titre d'étape « ${e.titre} » est publié.`);
+      }
+
+      // Le pays voyage jusqu'à la caisse.
+      if (vu.offres.length !== 3) anomalies.push(`page destination : ${vu.offres.length} offre(s) au lieu de 3.`);
+      for (const o of vu.offres) {
+        if (!o.lien.includes(`destination=${france.id}`)) anomalies.push(`offre « ${o.titre} » : lien « ${o.lien} » sans destination.`);
+        if (!/\d/.test(o.prix)) anomalies.push(`offre « ${o.titre} » : aucun prix.`);
+      }
+      if (!/10 000 F/.test(vu.deduction)) anomalies.push("page destination : la déduction du diagnostic n'est pas annoncée.");
+
+      // ET SURTOUT : rien de ce que le Diagnostic vend.
+      for (const interdite of CHAINES_INTERDITES) {
+        if (vu.corps.includes(interdite)) anomalies.push(`page destination : « ${interdite} » sur une page publique.`);
+      }
+
+      notes.push(`preinscription-france.html : ${vu.regles} règles sourcées, ${vu.residences.length} pays de résidence nommés, « ${vu.procedureTitre} », ${vu.offres.length} offres vers destination=${france.id}`);
+
+    } catch (e) {
+      anomalies.push(`ÉCHEC preinscription-france.html : ${e.message}`);
     }
 
     anomalies.push(...erreurs);

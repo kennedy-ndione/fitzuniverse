@@ -298,7 +298,14 @@ assert.ok(!/Ambition \(9 candidatures, 75 000 F\)/.test(offersHtml), "le comment
 // ------------------------------------------------------------------
 
 test("preinscriptions.html mène à ?parcours=preinscription ; le contexte bourse à ?parcours=bourse ; le menu à offers.html nu", () => {
-assert.ok(lire("preinscriptions.html").includes('href="offers.html?parcours=preinscription"'));
+// LOT PRÉINSCRIPTIONS-VITRINE (2026-09-09) : le hub ne vend plus, il
+// ORIENTE. Le lien vers la grille est parti sur la page de la
+// destination, où il porte en plus le pays (voir §5, « le pays voyage
+// jusqu'à la caisse »). Un hub qui vend avant d'avoir dit à quel pays
+// on s'adresse vend dans le vide.
+assert.ok(!lire("preinscriptions.html").includes("offers.html?parcours"), "le hub n'a plus de lien d'achat direct");
+assert.ok(lire("preinscription-france.html").includes("preinscription-destination.js"), "c'est la page de destination qui vend");
+assert.ok(lire("js/preinscription-destination.js").includes("offers.html?parcours=preinscription&amp;destination="));
 assert.ok(!lire("preinscriptions.html").includes("offers.html#preinscriptions"));
 assert.ok(lire("js/diagnostic-france-page.js").includes("offers.html?parcours=preinscription"));
 assert.ok(lire("results.html").includes('href="offers.html?parcours=bourse"'));
