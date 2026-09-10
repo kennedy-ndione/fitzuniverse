@@ -6,6 +6,7 @@ import { auth, db } from "../firebase-config.js";
 
 import {
 collection,
+collectionGroup,
 getDocs,
 getDoc,
 getCountFromServer,
@@ -562,6 +563,34 @@ id: docSnap.id,
 }
 
 // Répartition des tentatives de paiement par formule.
+// ==========================================================
+// LES BLOCAGES LES PLUS FRÉQUENTS (lot FITZ-RECOURS, 2026-09-10)
+// ==========================================================
+// Le journal users/{uid}/blocages ne porte que le code du blocage, son
+// issue et la formule — jamais un texte, jamais une donnée personnelle.
+// Compté ici par code, trié : c'est ce qui dira, en janvier, quelles
+// questions les étudiants posent réellement, et sur quoi entraîner
+// l'IA. Lecture par collectionGroup, autorisée à l'admin par
+// firestore.rules (match /{path=**}/blocages).
+export async function getBlocagesFrequents() {
+
+const snapshot = await getDocs(collectionGroup(db, "blocages"));
+
+const parCode = new Map();
+
+snapshot.docs.forEach((d) => {
+const data = d.data() || {};
+const code = String(data.code || "inconnu");
+const entree = parCode.get(code) || { code, total: 0, resolus: 0 };
+entree.total += 1;
+if (data.resolu === true) entree.resolus += 1;
+parCode.set(code, entree);
+});
+
+return [...parCode.values()].sort((a, b) => b.total - a.total);
+
+}
+
 export async function getPlanBreakdown() {
 
 const snapshot = await getDocs(collection(db, "analyticsPlanCounters"));

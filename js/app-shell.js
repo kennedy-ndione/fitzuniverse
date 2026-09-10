@@ -55,6 +55,10 @@ HUB_ESPACE
 // Le droit « Mon conseiller » se décide dans plan-features.js, en un
 // seul endroit — voir advisorOuvert() et la note qui l'accompagne.
 import { advisorOuvert, ESPACE_OUTILS } from "./plan-features.js";
+// Lot FITZ-RECOURS : à la place d'un outil verrouillé, « Bloqué ?
+// Demandez à Fitz » — le diagnostic (quelle formule l'ouvre) est
+// calculé, donc gratuit ; la conversation, elle, reste réservée.
+import { boutonRecours } from "./fitz-recours.js";
 
 // applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
 // DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
@@ -115,6 +119,13 @@ const link = el.matches("a") ? el : el.querySelector("a[data-real-href]");
 if (!link) return;
 
 if (locked) {
+// Un OUTIL verrouillé (tuile jy-tool ou bouton d'action) ne laisse
+// pas un trou : il laisse le recours, qui nomme la formule qui
+// l'ouvre. Rien d'autre n'est remplacé — un lien de menu, une
+// section réservée, disparaissent comme avant (lot S4).
+if (link.classList.contains("jy-tool") || link.classList.contains("jy-btn")) {
+el.insertAdjacentHTML("beforebegin", boutonRecours({ code: "verrou", feature: key }, { classe: "fitz-recours--outil", libelle: `${(link.textContent || "").trim().replace(/\s+/g, " ")} — bloqué ? Demandez à Fitz` }));
+}
 el.remove();
 return;
 }

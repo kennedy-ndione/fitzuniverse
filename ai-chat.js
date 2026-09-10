@@ -16,6 +16,13 @@ import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { getSuggestedQuestions } from "./js/ai/simulated-responses.js";
 import { parcoursDOutil } from "./js/parcours.js";
+// Lot FITZ-RECOURS : ?bloc=<code> — Fitz ouvre lui-même la conversation
+// avec le diagnostic déjà fait. Même motif que ?prep=, étendu.
+import { lireBlocage, diagnostiquer, echelleDeRecours, messageDeFitz } from "./js/fitz-recours.js";
+import { contexteDeBlocage } from "./js/fitz-recours-contexte.js";
+import { enregistrerBlocage } from "./js/fitz-recours-journal.js";
+
+const blocageDemande = lireBlocage(window.location.search);
 
 // Le parcours du chat est celui de l'ESPACE où l'étudiant se trouve
 // (posé par bootstrapShell) : le chat n'est lié à aucune candidature.
@@ -43,6 +50,36 @@ import { TESTS } from "./js/test-prep-data.js";
 
 initShellChrome();
 
+// LE DIAGNOSTIC EST CALCULÉ, DONC GRATUIT (lot FITZ-RECOURS, règle
+// d'honnêteté b). Un compte sans accès au chat — gratuit, Diagnostic
+// France — arrive ici avec ?bloc= : il DOIT voir ce qui le bloque. C'est
+// la conversation qui est réservée. Et c'est le meilleur moment de vente
+// qui existe : le problème, puis la formule — jamais un cadenas muet.
+async function renderDiagnosticVerrouille(container, ctx) {
+
+if (!blocageDemande) return;
+
+let applications = [];
+try {
+const snapshot = await getDocs(collection(db, "users", ctx.user.uid, "applications"));
+applications = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+} catch (error) {
+console.warn("Diagnostic sans candidatures :", error);
+}
+
+const contexte = await contexteDeBlocage(ctx, blocageDemande, applications);
+const diag = diagnostiquer(blocageDemande, contexte);
+const echelle = echelleDeRecours(ctx);
+
+const bloc = document.createElement("div");
+bloc.className = "fitz-recours-diagnostic";
+bloc.innerHTML = `<h3>${escapeHtml(diag.titre || "Ce qui vous bloque")}</h3>${renderMarkdownLite(messageDeFitz(diag, echelle))}`;
+container.insertAdjacentElement("afterbegin", bloc);
+
+enregistrerBlocage(ctx.user.uid, { code: diag.code, applicationId: blocageDemande.app, etapeId: blocageDemande.etape, parcours: contexte.parcours, plan: ctx.planPreinscriptionId && contexte.parcours === "preinscription" ? ctx.planPreinscriptionId : ctx.planId, resolu: diag.resolu === true });
+
+}
+
 function renderLockedState(container, ctx) {
 
 const flags = ctx.featureFlags.ai_chat;
@@ -62,6 +99,8 @@ container.innerHTML = `
 container.hidden = false;
 
 if (window.lucide) lucide.createIcons();
+
+renderDiagnosticVerrouille(container, ctx);
 
 }
 
@@ -774,6 +813,29 @@ renderHelpCards();
 renderAll();
 renderHistoryList();
 
+// Arrivée depuis un blocage (?bloc=) : Fitz ouvre lui-même.
+if (blocageDemande) {
+
+applicationsReady.then(async () => {
+
+const contexte = await contexteDeBlocage(ctx, blocageDemande, studentApplications);
+const diag = diagnostiquer(blocageDemande, contexte);
+const echelle = echelleDeRecours(ctx);
+
+active = createConversation(user.uid);
+conversations = listConversations(user.uid);
+active.title = diag.titre ? `Bloqué : ${diag.titre}`.slice(0, 60) : "Un blocage";
+active.messages.push({ id: uid(), role: "assistant", content: messageDeFitz(diag, echelle), createdAt: Date.now(), recours: diag.code });
+persist();
+renderAll();
+scrollToBottom(false);
+
+enregistrerBlocage(user.uid, { code: diag.code, applicationId: blocageDemande.app, etapeId: blocageDemande.etape, parcours: contexte.parcours, plan: ctx.planPreinscriptionId && contexte.parcours === "preinscription" ? ctx.planPreinscriptionId : ctx.planId, resolu: diag.resolu === true });
+
+});
+
+}
+
 // Arrivée en mode entraînement : on attend le contexte candidatures
 // (la stratégie se cale sur les échéances réelles), puis Fitz reçoit
 // un message d'ouverture naturel — visible, comme si l'étudiant
@@ -818,3 +880,16 @@ parcoursChat = parcoursDOutil({ espace: ctx.espace });
 initChat(ctx);
 
 });
+
+// ==========================================================
+// ARRIVÉE DEPUIS UN BLOCAGE (lot FITZ-RECOURS) — Fitz parle le premier
+// ==========================================================
+// Le diagnostic est déjà fait : Fitz ouvre une conversation neuve avec
+// la réponse, la source et sa date, et le maillon suivant ouvert au
+// compte. Pas de question « que puis-je pour vous ? » — un étudiant
+// bloqué qui doit d'abord expliquer a perdu la partie.
+//
+// Rien de tout ceci n'appelle un modèle : chaque réponse vient d'une
+// fonction que la page utilise déjà. Le jour où le modèle arrivera, il
+// prendra la main sur les cas où `diag.resolu` est faux — et là
+// seulement.

@@ -91,7 +91,11 @@ import { trouverProcedure } from "./js/procedures/index.js";
 // l'audit du 2026-08-28 avait justement fait remplir.
 import { chargerPortails, portailUniversite } from "./js/portails.js";
 import { texteConsigne, LIBELLES_FIABILITE, LIBELLES_PREUVE } from "./js/procedures/vocabulaire.js";
-import { joursRestants } from "./js/next-action.js";
+import { joursRestants, JOURS_PROCHE } from "./js/next-action.js";
+// Lot FITZ-RECOURS : le recours est à l'endroit du blocage — une étape
+// prématurée, une étape de procédure, une échéance proche, un élément de
+// dossier. Un seul composant, le contexte voyage dans le lien.
+import { boutonRecours } from "./js/fitz-recours.js";
 import { storage } from "./firebase-config.js";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 
@@ -259,7 +263,7 @@ return item.meta.recommenderContact;
 return "";
 }
 
-function renderChecklistItem(item) {
+function renderChecklistItem(item, app) {
 
 const typeMeta = CHECKLIST_TYPE_META[item.type];
 const statusLabel = typeMeta.statusLabels[item.status] || item.status;
@@ -273,6 +277,7 @@ return `
 <strong>${item.label}</strong>
 ${metaLine ? `<span class="checklist-item-meta">${metaLine}</span>` : ""}
 ${calibration ? `<span class="checklist-calibration ${calibration.ok ? "is-ok" : "is-warning"}"><i data-lucide="${calibration.ok ? "check-circle" : "alert-triangle"}"></i>${calibration.text}</span>` : ""}
+${app ? boutonRecours({ code: "documents", app: app.id, etape: item.type }) : ""}
 </div>
 <button type="button" class="checklist-item-remove" data-action="remove" aria-label="Supprimer cet élément"><i data-lucide="x"></i></button>
 </li>`;
@@ -396,7 +401,7 @@ return `
 <span><i data-lucide="${typeMeta.icon}"></i>${typeMeta.title}</span>
 <button type="button" class="checklist-add-btn" data-action="add" data-type="${type}"><i data-lucide="plus"></i><span>${typeMeta.addLabel}</span></button>
 </div>
-${items.length ? `<ul class="checklist-items">${items.map(renderChecklistItem).join("")}</ul>` : `<p class="checklist-group-empty">Rien pour l'instant.</p>`}
+${items.length ? `<ul class="checklist-items">${items.map((item) => renderChecklistItem(item, app)).join("")}</ul>` : `<p class="checklist-group-empty">Rien pour l'instant.</p>`}
 ${type === "recommendation" ? `<button type="button" class="checklist-guide-link" data-action="guide"><i data-lucide="book-open"></i><span>Guide : qui solliciter et comment</span></button>` : ""}
 </div>`;
 
@@ -508,7 +513,8 @@ const avertissement = alertes.length
 ? `<p class="journey-warning">
 <i data-lucide="info"></i>
 <span>${escapeHtml(alertes[0].consequence)} Commencez par ${escapeHtml(alertes[0].prerequisLisible)}.</span>
-</p>`
+</p>
+${boutonRecours({ code: "prerequis", app: app.id, etape: alertes[0].id }, { classe: "fitz-recours--bloc" })}`
 : "";
 
 return `
@@ -595,6 +601,7 @@ ${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : "
 
 <div class="app-card-meta">
 ${renderEcheanceCandidature(app, lecture)}
+${recoursEcheance(app)}
 <span class="${urgency.urgent ? "is-urgent" : ""}"><i data-lucide="bell"></i>${urgency.text}</span>
 <span class="is-protected"><i data-lucide="shield-check"></i>Suivi maintenu même après votre abonnement</span>
 </div>
@@ -1525,6 +1532,7 @@ return `<li class="app-procedure-etape is-${s.etat} fiab-${p.fiabilite}" data-pr
 ${echeance}
 ${pieces}
 ${s.etat === "prematuree" ? `<p class="app-procedure-attente"><i data-lucide="info"></i><span>À faire après ${escapeHtml((s.bloqueParLibelles || s.bloquePar).join(" et "))}.</span></p>` : ""}
+${boutonRecours({ code: p.type === "paiement" ? "paiement" : "etape", app: app.id, etape: s.id })}
 <form class="app-procedure-faire" data-procedure-form="${s.id}">
 <label><input type="checkbox" name="faite" ${saisie.faite === true ? "checked" : ""}> <span>Fait${saisie.faitLe ? ` le ${escapeHtml(formaterDate(String(saisie.faitLe).slice(0, 10)))}` : ""}</span></label>
 ${demandePreuve ? `<input type="text" name="preuve" maxlength="64" placeholder="${escapeHtml(LIBELLES_PREUVE[p.preuve] || "référence")}" value="${escapeHtml(saisie.preuve || "")}" aria-label="${escapeHtml(LIBELLES_PREUVE[p.preuve] || "référence")}">` : ""}
@@ -1580,6 +1588,14 @@ await updateDoc(doc(db, "users", uid, "applications", app.id), patchDoc);
 trackEvent("procedure_etape", { etape: etape.id, faite: saisie.faite });
 showToast(saisie.faite ? `« ${etape.label} » enregistrée.` : `« ${etape.label} » décochée.`, { type: "success" });
 
+}
+
+// Sur une échéance proche ou dépassée — seuils de js/next-action.js
+// (3 j critique, 14 j proche) — le recours se pose sur la carte.
+function recoursEcheance(app) {
+const jours = app.deadline ? joursRestants(app.deadline, new Date()) : null;
+if (jours === null || jours > JOURS_PROCHE) return "";
+return boutonRecours({ code: "echeance", app: app.id });
 }
 
 function renderCard(app, lecture) {

@@ -21,6 +21,8 @@ import { retenirOpportunites } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
+// Lot FITZ-RECOURS : le recours est à l'endroit du blocage.
+import { boutonRecours } from "./js/fitz-recours.js";
 import { lireParcours } from "./js/parcours.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
 
@@ -134,6 +136,17 @@ document.getElementById("jyActionTitle").textContent = action.titre;
 document.getElementById("jyActionText").textContent = action.texte;
 document.getElementById("jyActionCta").setAttribute("href", action.href);
 document.getElementById("jyActionCtaLabel").textContent = action.cta;
+
+// « Bloqué ? Demandez à Fitz » sous la carte — toujours. Fitz y
+// répond par la MÊME prochaineAction() (test anti-divergence).
+let recours = document.getElementById("jyActionRecours");
+if (!recours) {
+recours = document.createElement("p");
+recours.id = "jyActionRecours";
+recours.className = "jy-action-recours";
+document.getElementById("jyActionCta").insertAdjacentElement("afterend", recours);
+}
+recours.innerHTML = boutonRecours({ code: "quoi_faire", app: action.applicationId || "" }, { classe: "fitz-recours--bloc" });
 
 section.hidden = false;
 

@@ -167,7 +167,10 @@ assert.ok(hubPre.includes('href="diagnostic-france.html"'), "aucun lien vers le 
 assert.ok(hubPre.includes('id="jyDiagnosticFranceBtn"'), "la carte doit être identifiable");
 assert.match(hubPre, /data-feature="diagnostic_france"/, "la carte doit porter le droit qui la conditionne");
 // Retirée du DOM (remove), pas seulement masquée ni grisée.
-assert.match(shell, /if \(locked\) \{\s*el\.remove\(\);/, "un droit fermé RETIRE l'élément, il ne le grise pas");
+// Lot FITZ-RECOURS : un OUTIL verrouillé laisse d'abord le recours
+// (« Bloqué ? Demandez à Fitz »), puis l'élément est retiré — toujours
+// retiré, jamais grisé.
+assert.match(shell, /if \(locked\) \{[\s\S]{0,900}?el\.remove\(\);/, "un droit fermé RETIRE l'élément, il ne le grise pas");
 
 // b) L'entrée du menu mobile.
 assert.ok(nav.includes('href: "diagnostic-france.html"'), "aucune entrée de menu vers le diagnostic");

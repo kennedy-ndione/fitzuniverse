@@ -31,6 +31,13 @@ function renderInline(escaped) {
 
 return escaped
 .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+// Lot FITZ-RECOURS (2026-09-10) : Fitz cite la source officielle et
+// propose le maillon suivant — deux LIENS. Un lien Markdown devient une
+// ancre seulement vers http(s) ou une page du site (relative, sans
+// schéma) ; tout autre schéma reste du texte. Le texte est déjà échappé.
+.replace(/\[([^\]]+)\]\(((?:https?:\/\/|(?!\w+:))[^\s)]+)\)/g, (entier, texte, url) => `<a href="${url}"${/^https?:/.test(url) ? ' target="_blank" rel="noopener"' : ""}>${texte}</a>`)
+// L'italique *ainsi* — après le gras, pour ne pas manger ses étoiles.
+.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, "$1<em>$2</em>")
 .replace(/`([^`]+)`/g, "<code>$1</code>");
 
 }

@@ -459,6 +459,29 @@ allow delete: if isAdmin();
 }
 
 // ------------------------------------------------------------
+// LE JOURNAL DES BLOCAGES (lot FITZ-RECOURS, 2026-09-10).
+// À chaque ouverture de Fitz depuis un blocage, l'étudiant écrit UN
+// document : le code du blocage et son issue — jamais un texte de
+// conversation, jamais une donnée personnelle. La forme est imposée
+// ici (hasOnly) : un champ de plus est refusé. L'administrateur lit
+// l'ensemble (collectionGroup) pour compter les blocages fréquents :
+// c'est ce journal qui dira sur quoi entraîner l'IA.
+// ------------------------------------------------------------
+match /users/{uid}/blocages/{blocageId} {
+allow create: if isOwner(uid) &&
+request.resource.data.keys().hasOnly(["code", "applicationId", "etapeId", "parcours", "plan", "resolu", "date"]) &&
+request.resource.data.code is string && request.resource.data.code.size() > 0 && request.resource.data.code.size() <= 32 &&
+request.resource.data.parcours in ["bourse", "preinscription"] &&
+request.resource.data.resolu is bool;
+allow read: if isOwner(uid) || isAdmin();
+allow update, delete: if false;
+}
+
+match /{path=**}/blocages/{blocageId} {
+allow read: if isAdmin();
+}
+
+// ------------------------------------------------------------
 // Catalogue public (lu par tous les visiteurs, y compris non
 // connectés, depuis scholarships.js/universities-page.js/details.js).
 // Seuls les administrateurs déclarés peuvent le modifier.

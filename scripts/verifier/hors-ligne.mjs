@@ -39,7 +39,7 @@ const SYMBOLES = {
     "signInWithPopup", "setPersistence", "browserLocalPersistence", "browserSessionPersistence"
   ],
   "firebase-firestore.js": [
-    "getFirestore", "connectFirestoreEmulator", "collection", "doc", "getDoc",
+    "getFirestore", "connectFirestoreEmulator", "collection", "collectionGroup", "doc", "getDoc",
     "getDocs", "setDoc", "addDoc", "updateDoc", "deleteDoc", "query", "where",
     "orderBy", "limit", "onSnapshot", "serverTimestamp", "increment",
     "writeBatch", "arrayUnion", "arrayRemove", "Timestamp",

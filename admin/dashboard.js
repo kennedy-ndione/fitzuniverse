@@ -20,7 +20,8 @@ getDailyCounterHistory,
 getRecentEvents,
 getPlanBreakdown,
 getTopCountries,
-getTopUniversities
+getTopUniversities,
+getBlocagesFrequents
 } from "./firebase-admin.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
@@ -623,6 +624,23 @@ el.textContent = `${fragments.join(", ")}. Aucune anomalie détectée.`;
 // Graphique de répartition par formule
 // ==========================================================
 
+// Les blocages, triés — le libellé humain de chaque code vient du
+// catalogue de js/fitz-recours.js (import différé pour ne pas charger
+// un module de plus quand la liste est vide).
+const LIBELLES_BLOCAGE = {
+verrou: "Outil verrouillé", prerequis: "Prérequis manquant", quoi_faire: "Ne sait pas quoi faire", documents: "Quels documents ?",
+etape: "Étape de procédure", paiement: "Où et quand payer ?", echeance: "Date limite", depot_tiers: "Dépôt par un tiers",
+preuve: "Preuve de dépôt", sans_reponse: "Sans nouvelles"
+};
+
+function renderBlocages(items) {
+const liste = document.getElementById("blocagesList");
+if (!liste) return;
+if (!items.length) return;
+// Même forme que renderTopList : rang, libellé, compte.
+liste.innerHTML = items.map((b, i) => `<div class="top-list-row"><span class="top-list-rank">${i + 1}</span><span class="top-list-label">${LIBELLES_BLOCAGE[b.code] || b.code} · ${b.total ? Math.round((b.resolus / b.total) * 100) : 0} % avec réponse</span><span class="top-list-count">${b.total}</span></div>`).join("");
+}
+
 async function renderPlanChart() {
 
 const breakdown = await getPlanBreakdown();
@@ -949,6 +967,7 @@ renderPulseFootnote();
 
 await Promise.all([
 renderPlanChart(),
+getBlocagesFrequents().then(renderBlocages).catch((error) => { console.warn("Blocages non lus :", error); }),
 getTopCountries(6).then((items) => renderTopList("topCountriesList", items)),
 getTopUniversities(6).then((items) => renderTopList("topUniversitiesList", items))
 ]);

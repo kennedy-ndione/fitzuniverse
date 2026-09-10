@@ -1228,6 +1228,91 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       await contexte.close();
     }
 
+    // --- b bis) FITZ-RECOURS : le recours est à l'endroit du blocage ------
+    //
+    // Critère de fin du lot : un compte dossier-france ouvre une candidature
+    // de préinscription arrêtée à l'étape du paiement. À côté de l'étape,
+    // « Bloqué ? Demandez à Fitz ». Il clique. Fitz s'ouvre EN AYANT DÉJÀ
+    // DIAGNOSTIQUÉ : la bonne banque, le bon montant, le bon moment, la
+    // source et sa date, et une porte de sortie ouverte à sa formule.
+    // Lu dans le DOM rendu, valeur par valeur.
+    {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, CLIENT_PRE);
+      try {
+        await page.goto(`${base}/applications.html`, { waitUntil: "domcontentloaded" });
+        await page.waitForSelector("#applicationsList .app-card", { timeout: 30000 });
+        await page.waitForFunction(() => !!document.querySelector('.app-procedure-etape[data-procedure-etape="ef_paiement"] .fitz-recours'), null, { timeout: 20000 });
+
+        const recours = await page.evaluate(() => {
+          const a = document.querySelector('.app-procedure-etape[data-procedure-etape="ef_paiement"] .fitz-recours');
+          const r = a.getBoundingClientRect();
+          return { href: a.getAttribute("href"), texte: a.textContent.replace(/\s+/g, " ").trim(), visible: r.width > 0 && r.height > 0, nb: document.querySelectorAll(".fitz-recours").length };
+        });
+        if (!recours.visible) anomalies.push("recours : le lien à côté de l'étape du paiement n'est pas visible.");
+        if (!/bloc=paiement/.test(recours.href)) anomalies.push(`recours : lien « ${recours.href} » sans bloc=paiement.`);
+        if (!recours.texte.includes("Bloqué ? Demandez à Fitz")) anomalies.push(`recours : libellé « ${recours.texte} ».`);
+
+        await page.goto(`${base}/${recours.href}`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => {
+          const m = document.querySelector(".ai-msg-bot .ai-msg-bubble");
+          return m && m.innerText.trim().length > 60 && location.pathname.endsWith("ai-chat.html");
+        }, null, { timeout: 30000 });
+
+        const fitz = await page.evaluate(() => {
+          const m = document.querySelector(".ai-msg-bot .ai-msg-bubble");
+          return { texte: m.innerText, liens: [...m.querySelectorAll("a")].map((a) => a.getAttribute("href")), utilisateur: document.querySelectorAll(".ai-msg-user").length };
+        });
+        if (fitz.utilisateur) anomalies.push("recours : Fitz devait parler le premier, sans message de l'étudiant.");
+        for (const attendu of ["SUNU BANK", "85 000", "Vérifié le", "demande de paiement"]) {
+          if (!fitz.texte.includes(attendu)) anomalies.push(`recours paiement (Sénégal) : « ${attendu} » manque dans la réponse de Fitz.`);
+        }
+        if (!fitz.liens.some((h) => /campusfrance\.org/.test(h || ""))) anomalies.push("recours : la source officielle n'est pas liée.");
+        // Dossier France : la messagerie est ouverte — c'est le maillon suivant.
+        if (!fitz.liens.some((h) => /messages\.html/.test(h || ""))) anomalies.push("recours : aucune porte de sortie (messagerie) proposée à un Dossier France.");
+        if (fitz.liens.some((h) => /advisor\.html/.test(h || ""))) anomalies.push("recours : le conseiller est proposé à un Dossier France sans conseiller.");
+        notes.push(`FITZ-RECOURS paiement (Dossier France, Sénégal) : ${recours.nb} recours sur la page, Fitz ouvre par « ${fitz.texte.slice(0, 70).replace(/\n/g, " ")}… », source liée, porte : messagerie`);
+      } catch (e) {
+        anomalies.push(`ÉCHEC critère de fin FITZ-RECOURS (paiement) : ${e.message}`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // La lettre bloquée par un profil incomplet : LE NOM du prérequis, pas
+    // un conseil général. Le stub porte un profil partiel ; si le score
+    // atteint le seuil, le cas ne se présente pas et on le dit.
+    {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
+      try {
+        await page.goto(`${base}/ai-chat.html?bloc=prerequis&app=slot-2&etape=letter`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => { const m = document.querySelector(".ai-msg-bot .ai-msg-bubble"); return m && m.innerText.trim().length > 40; }, null, { timeout: 30000 });
+        const texte = await page.evaluate(() => document.querySelector(".ai-msg-bot .ai-msg-bubble").innerText);
+        if (/attend le profil/.test(texte)) notes.push("FITZ-RECOURS prérequis (bourse) : Fitz nomme le prérequis manquant — « le profil »");
+        else if (/Rien ne bloque/.test(texte)) notes.push("FITZ-RECOURS prérequis (bourse) : profil du stub au seuil — Fitz dit que rien ne bloque la lettre");
+        else anomalies.push(`recours prérequis : réponse inattendue « ${texte.slice(0, 90)} »`);
+      } catch (e) {
+        anomalies.push(`ÉCHEC FITZ-RECOURS (prérequis) : ${e.message}`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // Un code fabriqué dans la barre d'adresse : le chat normal, sans erreur.
+    {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
+      try {
+        await page.goto(`${base}/ai-chat.html?bloc=nimportequoi`, { waitUntil: "domcontentloaded" });
+        await page.waitForSelector("#chatForm", { timeout: 20000 });
+        const vu = await page.evaluate(() => ({ bots: document.querySelectorAll(".ai-msg-bot").length, vide: !document.getElementById("chatEmptyState").hidden }));
+        if (vu.bots && !vu.vide) anomalies.push("recours : un code inconnu a fait parler Fitz.");
+        else notes.push("FITZ-RECOURS code inconnu : chat normal, aucune erreur");
+      } catch (e) {
+        anomalies.push(`ÉCHEC FITZ-RECOURS (code inconnu) : ${e.message}`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
     // --- c) Le client des DEUX : la bascule, et elle seule -----------
     {
       const { vu, erreurs, contexte } = await lireEspace(etudiant, "espace-bourse.html", ["espace-bourse.html"]);

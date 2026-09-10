@@ -178,7 +178,10 @@ assert.ok(!/espace: "(bourse|preinscription)"/.test(lire(f)), `${f} ne doit appa
 
 test("un droit fermé RETIRE l'élément — l'opacité de verrouillage a disparu", () => {
 const shell = lire("js/app-shell.js");
-assert.match(shell, /if \(locked\) \{\s*el\.remove\(\);/, "applyFeatureLocks doit retirer, pas griser");
+// Lot FITZ-RECOURS : un OUTIL verrouillé laisse d'abord le recours
+// (« Bloqué ? Demandez à Fitz »), puis l'élément est retiré — toujours
+// retiré, jamais grisé.
+assert.match(shell, /if \(locked\) \{[\s\S]{0,900}?el\.remove\(\);/, "applyFeatureLocks doit retirer, pas griser");
 // Le lien n'est plus réécrit vers offers.html : il n'existe plus.
 assert.ok(!/link\.setAttribute\("href", targetPlan \? `offers\.html/.test(shell), "un lien retiré n'a pas besoin d'une destination de vente");
 
