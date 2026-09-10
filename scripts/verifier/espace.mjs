@@ -1105,28 +1105,124 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
     }
 
     // --- b) Le client PRÉINSCRIPTION --------------------------------
+    //
+    // LOT PRÉ-FITZ (2026-09-10) : ce client a désormais les cinq outils
+    // Fitz — verrouillés par FORMULE, pas par espace. On lit donc deux
+    // comptes : le Dossier France, qui doit tout voir, et le Diagnostic
+    // France (un pass, pas un accompagnement), qui ne doit rien voir.
+    const OUTILS_PRE = ["ai_chat", "ai_letter", "ai_check", "ai_email", "ai_translate"];
+    const CLIENT_DIAG = profil({ plan: "gratuit", planExpiresAt: null, planPreinscription: "diagnostic-france", planPreinscriptionExpiresAt: dansNJours(10) });
+
+    const lireOutils = async (compte) => {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, compte);
+      try {
+        await page.goto(`${base}/espace-preinscription.html`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => {
+          if (!document.body.dataset.espace) return false;
+          const el = document.getElementById("topbarPlanLabel");
+          return !el || el.textContent.trim() !== "…";
+        }, null, { timeout: 20000, polling: 100 });
+        // La VALEUR CALCULÉE, pas la position dans le DOM : un lien
+        // présent mais invisible ne compterait pas.
+        const vu = await page.evaluate((outils) => {
+          const visible = (el) => { const r = el.getBoundingClientRect(); const c = getComputedStyle(el); return r.width > 0 && r.height > 0 && c.visibility !== "hidden" && c.display !== "none"; };
+          const presents = {};
+          for (const o of outils) {
+            const span = document.querySelector(`[data-feature="${o}"]`);
+            const lien = span && span.querySelector("a");
+            presents[o] = !!lien && visible(lien);
+          }
+          return {
+            page: location.pathname.split("/").pop(),
+            presents,
+            fab: !!document.getElementById("fitzFabWrap"),
+            pastille: (document.getElementById("topbarPlanLabel") || {}).textContent || ""
+          };
+        }, OUTILS_PRE);
+        return { vu, erreurs, contexte };
+      } catch (e) {
+        return { vu: null, erreurs: [...erreurs, `ÉCHEC espace-preinscription.html : ${e.message}`], contexte };
+      }
+    };
+
     {
       const { vu, erreurs, contexte } = await lireEspace(CLIENT_PRE, "dashboard.html", ["espace-preinscription.html", "dashboard.html"]);
       if (vu) {
         if (vu.page !== "espace-preinscription.html") anomalies.push(`client préinscription : atterrit sur ${vu.page} au lieu de espace-preinscription.html.`);
         if (vu.espace !== "preinscription") anomalies.push(`client préinscription : body data-espace = « ${vu.espace} ».`);
-        // ABSENT du DOM, pas masqué : c'est toute la règle du lot.
-        if (vu.fab) anomalies.push("client préinscription : le bouton flottant Fitz est dans le DOM — il n'a aucun outil Fitz.");
-        if (vu.outilsFitz > 0) anomalies.push(`client préinscription : ${vu.outilsFitz} lien(s) vers un outil Fitz dans le DOM.`);
+        if (!vu.fab) anomalies.push("client préinscription (Dossier France) : le bouton flottant Fitz est absent — il a le chat.");
         if (vu.bascule) anomalies.push("client préinscription : la bascule d'espace est dans le DOM — il n'a qu'un accompagnement.");
         if (!/Dossier France/.test(vu.pastille)) anomalies.push(`client préinscription : la pastille dit « ${vu.pastille} » au lieu de son forfait.`);
-        notes.push(`S4 client préinscription : ${vu.page} — pastille « ${vu.pastille.trim()} », aucun Fitz dans le DOM`);
+        notes.push(`S4 client préinscription : ${vu.page} — pastille « ${vu.pastille.trim()} », Fitz présent, aucune bascule`);
       }
       anomalies.push(...erreurs);
       await contexte.close();
     }
 
     {
-      const { vu, erreurs, contexte } = await lireEspace(CLIENT_PRE, "ai-letter.html", ["espace-preinscription.html", "offers.html", "ai-letter.html"]);
+      const { vu, erreurs, contexte } = await lireOutils(CLIENT_PRE);
       if (vu) {
-        if (vu.page === "offers.html") anomalies.push("client préinscription sur ai-letter.html : renvoyé sur la page d'offres au lieu de son hub.");
-        else if (vu.page !== "espace-preinscription.html") anomalies.push(`client préinscription sur ai-letter.html : atterrit sur ${vu.page}.`);
-        else notes.push("S4 URL forcée : ai-letter.html ramène le client préinscription à espace-preinscription.html");
+        const absents = OUTILS_PRE.filter((o) => !vu.presents[o]);
+        if (absents.length) anomalies.push(`Dossier France : outil(s) absent(s) ou invisible(s) dans espace-preinscription.html : ${absents.join(", ")}.`);
+        else notes.push(`PRÉ-FITZ Dossier France : les 5 outils Fitz sont déverrouillés et visibles (${OUTILS_PRE.join(", ")})`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    {
+      const { vu, erreurs, contexte } = await lireOutils(CLIENT_DIAG);
+      if (vu) {
+        const presents = OUTILS_PRE.filter((o) => vu.presents[o]);
+        if (presents.length) anomalies.push(`Diagnostic France : outil(s) Fitz dans le DOM alors que le pass n'en ouvre aucun : ${presents.join(", ")}.`);
+        if (vu.fab) anomalies.push("Diagnostic France : le bouton flottant Fitz est dans le DOM — le pass n'a pas le chat.");
+        if (!presents.length && !vu.fab) notes.push("PRÉ-FITZ Diagnostic France : aucun outil Fitz, aucun bouton flottant — absents du DOM, pas grisés");
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+    }
+
+    // LE CRITÈRE DE FIN DU LOT : « Ma lettre pour chaque vœu » s'ouvre pour
+    // le client Dossier France et rend un texte court, propre à une
+    // formation nommée, sans le mot « bourse » — lu à l'écran.
+    {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, CLIENT_PRE);
+      try {
+        const preApp = (CLIENT_PRE.applications || []).find((a) => a.track === "preinscription");
+        if (!preApp) throw new Error("aucune candidature de préinscription dans le stub");
+        await page.goto(`${base}/ai-letter.html?applicationId=${preApp.id}`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => location.pathname.endsWith("ai-letter.html") && !!document.getElementById("generateLetterBtn") && !document.getElementById("letterApp").hidden && document.body.dataset.modeLettre, null, { timeout: 20000, polling: 100 });
+        const avant = await page.evaluate(() => ({
+          page: location.pathname.split("/").pop(),
+          mode: document.body.dataset.modeLettre,
+          styleGridCache: document.getElementById("styleGrid").hidden,
+          notice: !document.getElementById("voeuNotice").hidden,
+          titre: (document.querySelector(".ai-page-header-main h1") || {}).textContent || "",
+          formation: (document.getElementById("fieldProgram") || {}).value || "",
+          universite: (document.getElementById("fieldUniversity") || {}).value || ""
+        }));
+        if (avant.page !== "ai-letter.html") anomalies.push(`client préinscription : ai-letter.html le renvoie sur ${avant.page}.`);
+        if (avant.mode !== "voeu") anomalies.push(`ai-letter pour une préinscription : mode « ${avant.mode} » au lieu de « voeu ».`);
+        if (!avant.styleGridCache) anomalies.push("ai-letter en mode vœu : les cinq styles de lettre de bourse sont encore proposés.");
+        if (!avant.notice) anomalies.push("ai-letter en mode vœu : la note « c'est vous qui recopiez » n'est pas affichée.");
+        if (!/vœu/.test(avant.titre)) anomalies.push(`ai-letter en mode vœu : titre « ${avant.titre} ».`);
+        if (!avant.formation || !avant.universite) anomalies.push("ai-letter en mode vœu : la formation ou l'établissement n'est pas pré-rempli depuis la candidature.");
+
+        await page.click("#generateLetterBtn");
+        await page.waitForFunction(() => {
+          const btn = document.getElementById("generateLetterBtn");
+          const txt = (document.getElementById("previewContent") || {}).innerText || "";
+          return btn && !btn.disabled && txt.trim().length > 40 && !/apparaîtra ici/.test(txt);
+        }, null, { timeout: 30000, polling: 150 });
+        const lettre = await page.evaluate(() => (document.getElementById("previewContent") || {}).innerText || "");
+        const lignes = lettre.split("\n").map((l) => l.trim()).filter(Boolean);
+        if (lignes.length > 6) anomalies.push(`lettre de vœu : ${lignes.length} lignes, six au plus attendues.`);
+        if (/bourse/i.test(lettre)) anomalies.push("lettre de vœu : le mot « bourse » apparaît.");
+        if (avant.formation && !lettre.includes(avant.formation)) anomalies.push(`lettre de vœu : la formation « ${avant.formation} » n'est pas nommée.`);
+        if (/la France|excellence française|enseignement français/i.test(lettre)) anomalies.push("lettre de vœu : louange sur la France.");
+        notes.push(`PRÉ-FITZ lettre de vœu (${avant.universite} — ${avant.formation}) : ${lignes.length} lignes, sans « bourse » — « ${lignes[1] ? lignes[1].slice(0, 70) : ""}… »`);
+      } catch (e) {
+        anomalies.push(`ÉCHEC critère de fin PRÉ-FITZ (ai-letter, mode vœu) : ${e.message}`);
       }
       anomalies.push(...erreurs);
       await contexte.close();

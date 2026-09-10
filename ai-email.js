@@ -11,10 +11,13 @@
 
 import { db } from "./firebase-config.js";
 import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
-import { EMAIL_TYPES } from "./js/ai/simulated-responses.js";
+import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
+// Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
+// n'a pas de sens en préinscription) et voyage avec la demande.
+import { parcoursDOutil } from "./js/parcours.js";
 import { renderMarkdownLite } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
@@ -319,7 +322,19 @@ let currentText = "";
 let isEditing = false;
 let activeController = null;
 
-EMAIL_TYPES.forEach((type) => {
+function parcoursCourant() {
+return parcoursDOutil({ espace: ctx.espace, application });
+}
+
+// Les types d'e-mail sont ceux du PARCOURS : la grille se (re)construit
+// quand la candidature liée change de parcours.
+function renderTypeGrid() {
+
+typeGrid.innerHTML = "";
+const types = typesEmailPour(parcoursCourant());
+if (selectedType && !types.some((t) => t.key === selectedType)) selectedType = types[0] ? types[0].key : "";
+
+types.forEach((type) => {
 
 const card = document.createElement("button");
 card.type = "button";
@@ -338,6 +353,12 @@ typeGrid.appendChild(card);
 });
 
 if (window.lucide) lucide.createIcons();
+
+}
+
+renderTypeGrid();
+
+fieldApplication.addEventListener("change", renderTypeGrid);
 
 function selectType(key) {
 
@@ -389,6 +410,8 @@ downloadBtn.disabled = !enabled;
 function collectData() {
 
 return {
+parcours: parcoursCourant(),
+track: application ? application.track : undefined,
 emailType: selectedType,
 fullName: fieldFullName.value.trim(),
 nationality: fieldNationality.value.trim(),
@@ -532,7 +555,7 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-bootstrapShell({ feature: "ai_email", espace: "bourse" }).then(async (ctx) => {
+bootstrapShell({ feature: "ai_email", espace: ESPACE_OUTILS }).then(async (ctx) => {
 
 if (ctx.locked) {
 

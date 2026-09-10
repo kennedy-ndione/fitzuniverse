@@ -58,7 +58,10 @@ import { jalonDeCampagne } from "./pays-preinscription.js";
 *
 * Parcours BOURSE : aucune injection, quoi que dise l'université.
 */
-function etapesDeProcedure(app, procedure, aujourdhui) {
+// Exportée depuis le lot PRÉ-FITZ : la vérification avant dépôt d'une
+// préinscription se juge sur CES étapes (applications.js →
+// computeApplicationReadiness), pas sur le barème d'une bourse.
+export function etapesDeProcedure(app, procedure, aujourdhui) {
 
 if (!procedure || !Array.isArray(procedure.etapes) || lireParcours(app) !== "preinscription") return [];
 

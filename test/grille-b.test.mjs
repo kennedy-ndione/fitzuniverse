@@ -207,11 +207,16 @@ assert.equal(verrou("accompagnement", "", "advisor"), true);
 assert.equal(verrou("accompagnement", "", "diagnostic_france"), true);
 });
 
-test("Dossier France seul : candidatures, documents, entretiens, messagerie, diagnostic — PAS advisor, PAS les outils Fitz", () => {
+test("Dossier France seul : candidatures, documents, entretiens, messagerie, diagnostic — PAS advisor — et, depuis le lot PRÉ-FITZ, les cinq outils Fitz", () => {
 for (const k of ["applications", "documents", "interview_prep", "student_messaging", "diagnostic_france", "compress"]) assert.equal(verrou("gratuit", "dossier-france", k), false, k);
-for (const k of ["advisor", "ai_chat", "ai_letter", "ai_check", "ai_email", "ai_translate", "whatsapp_direct"]) assert.equal(verrou("gratuit", "dossier-france", k), true, k);
+// Lot PRÉ-FITZ (2026-09-10) : les cinq outils Fitz sont OUVERTS au
+// Dossier France — sept vœux = sept lettres de vœu, voir le commentaire
+// de PREINSCRIPTION_FEATURE_CONFIG. Le conseiller et WhatsApp restent
+// fermés.
+for (const k of ["advisor", "whatsapp_direct"]) assert.equal(verrou("gratuit", "dossier-france", k), true, k);
+for (const k of ["ai_chat", "ai_letter", "ai_check", "ai_email", "ai_translate"]) assert.equal(verrou("gratuit", "dossier-france", k), false, k);
 assert.equal(verrou("gratuit", "dossier-france-conseiller", "advisor"), false);
-assert.equal(verrou("gratuit", "dossier-france-conseiller", "ai_letter"), true);
+assert.equal(verrou("gratuit", "dossier-france-conseiller", "ai_letter"), false);
 });
 
 test("les deux forfaits : l'union", () => {

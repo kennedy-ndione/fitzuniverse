@@ -153,11 +153,16 @@ assert.deepEqual(unlockingPlans("gratuit", null), []);
 });
 
 test("chaque page d'outil déclare son espace", () => {
-for (const [f, espace] of [
-["ai-letter.js", "bourse"], ["ai-check.js", "bourse"], ["ai-email.js", "bourse"],
-["ai-translate.js", "bourse"], ["ai-chat.js", "bourse"], ["interview-prep.js", "bourse"],
-["test-prep.js", "bourse"], ["js/diagnostic-france-page.js", "preinscription"]
-]) {
+// Lot PRÉ-FITZ (2026-09-10) : les outils Fitz servent les DEUX parcours
+// depuis que le Dossier France les a. Ils déclarent l'espace des
+// outils (ESPACE_OUTILS) — pas « bourse », qui ramenait chez lui un
+// client préinscription avant qu'il ait vu l'outil que son forfait lui
+// ouvre. La préparation aux tests reste un outil bourse.
+for (const f of ["ai-letter.js", "ai-check.js", "ai-email.js", "ai-translate.js", "ai-chat.js", "interview-prep.js"]) {
+assert.match(lire(f), /espace: ESPACE_OUTILS/, `${f} doit déclarer espace: ESPACE_OUTILS`);
+assert.ok(!/espace: "bourse"/.test(lire(f)), `${f} ne doit plus s'enfermer dans l'espace bourse`);
+}
+for (const [f, espace] of [["test-prep.js", "bourse"], ["js/diagnostic-france-page.js", "preinscription"]]) {
 assert.match(lire(f), new RegExp(`espace: "${espace}"`), `${f} doit déclarer espace: "${espace}"`);
 }
 // Les pages COMMUNES n'en déclarent aucun : elles n'appartiennent à
@@ -190,15 +195,25 @@ const shell = lire("js/app-shell.js");
 // et resterait en cas d'échec de résolution.
 const chrome = shell.slice(shell.indexOf("export function initShellChrome"), shell.indexOf("export function bootstrapShell"));
 assert.ok(!/^\s*initFitzFab\(\);/m.test(chrome), "initFitzFab ne doit plus être appelé au montage de la coquille");
-// Il est injecté par bootstrapShell, et seulement hors préinscription.
-assert.match(shell, /if \(courant !== "preinscription"\) initFitzFab\(\);/);
+// Il est injecté par bootstrapShell — dans TOUS les espaces depuis le
+// lot PRÉ-FITZ : c'est le verrou de formule (data-feature="ai_chat")
+// qui le retire à qui n'a pas le chat, pas l'espace.
+const boot = shell.slice(shell.indexOf("export function bootstrapShell"));
+assert.match(boot, /^initFitzFab\(\);/m, "initFitzFab doit être appelé sans condition d'espace");
+assert.ok(!/courant !== "preinscription"\) initFitzFab/.test(boot), "plus aucune exclusion de l'espace préinscription");
 });
 
-test("le hub préinscription ne porte AUCUN outil Fitz", () => {
+test("le hub préinscription porte les cinq outils Fitz, verrouillés par formule — et pas la préparation aux tests", () => {
 const hub = lire("espace-preinscription.html");
-for (const outil of ["ai-chat.html", "ai-letter.html", "ai-check.html", "ai-email.html", "ai-translate.html", "interview-prep.html", "test-prep.html"]) {
-assert.ok(!hub.includes(outil), `${outil} n'a rien à faire dans l'espace préinscription`);
+// Lot PRÉ-FITZ : sept vœux = sept lettres, des courriels aux
+// établissements, des pièces à traduire, un dossier à vérifier avant
+// de soumettre, et des questions. Chaque outil est dans le span
+// data-feature qui le verrouille (applyFeatureLocks).
+for (const [feature, outil] of [["ai_chat", "ai-chat.html"], ["ai_letter", "ai-letter.html"], ["ai_check", "ai-check.html"], ["ai_email", "ai-email.html"], ["ai_translate", "ai-translate.html"]]) {
+assert.ok(hub.includes(`<span data-feature="${feature}"><a href="${outil}" data-real-href="${outil}"`), `${outil} doit être dans l'espace préinscription, sous son verrou`);
 }
+// La préparation aux tests de langue reste un outil du parcours bourse.
+assert.ok(!hub.includes("test-prep.html"), "test-prep.html n'a rien à faire dans l'espace préinscription");
 // Ce qu'il porte, en revanche : ses candidatures, ses documents, son
 // diagnostic — et la procédure, publique.
 for (const attendu of ["applications.html", "documents.html", "diagnostic-france.html", "preinscriptions.html", "universities.html"]) {
@@ -209,8 +224,10 @@ assert.ok(hub.includes(attendu), `${attendu} devrait être dans l'espace préins
 test("la navigation mobile se filtre par espace, en retirant", () => {
 const nav = lire("js/mobile-nav.js");
 assert.match(nav, /function appliquerEspace\(espace\)/);
-// L'onglet Fitz est RETIRÉ, pas masqué.
-assert.match(nav, /if \(espace === "preinscription"\) \{[\s\S]{0,160}fitz\.remove\(\)/);
+// L'onglet Fitz n'est plus retiré par l'espace (lot PRÉ-FITZ) : il porte
+// data-feature="ai_chat", et c'est le verrou de formule qui décide.
+assert.ok(!/if \(espace === "preinscription"\) \{[\s\S]{0,160}fitz\.remove\(\)/.test(nav), "l'onglet Fitz ne doit plus être retiré par l'espace");
+assert.match(nav, /data-feature="ai_chat" class="mnav-tab mnav-tab--fitz"/);
 assert.match(nav, /lien\.remove\(\)/);
 // Les entrées bourse sont marquées comme telles.
 for (const href of ["test-prep.html", "interview-prep.html", "scholarships.html"]) {

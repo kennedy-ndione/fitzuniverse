@@ -9,10 +9,13 @@
 * ============================================================
 */
 
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { LANGUAGES, detectLanguage } from "./js/ai/simulated-responses.js";
+import { parcoursDOutil } from "./js/parcours.js";
+
+let parcoursTraduction = "bourse";
 import { getTranslationHistory, addTranslationHistory, saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
@@ -286,7 +289,7 @@ try {
 
 const { text } = await generate({
 task: "translate",
-input: { text: rawText, sourceLanguage: sourceCode, targetLanguage: targetCode },
+input: { text: rawText, sourceLanguage: sourceCode, targetLanguage: targetCode, parcours: parcoursTraduction },
 signal: activeController.signal,
 onToken: (partial) => {
 if (outputEl) outputEl.value = partial;
@@ -369,7 +372,9 @@ renderHistory();
 
 }
 
-bootstrapShell({ feature: "ai_translate", espace: "bourse" }).then((ctx) => {
+bootstrapShell({ feature: "ai_translate", espace: ESPACE_OUTILS }).then((ctx) => {
+
+parcoursTraduction = parcoursDOutil({ espace: ctx.espace });
 
 if (ctx.locked) {
 

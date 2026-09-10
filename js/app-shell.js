@@ -54,12 +54,12 @@ HUB_ESPACE
 } from "./access-guard.js";
 // Le droit « Mon conseiller » se décide dans plan-features.js, en un
 // seul endroit — voir advisorOuvert() et la note qui l'accompagne.
-import { advisorOuvert } from "./plan-features.js";
+import { advisorOuvert, ESPACE_OUTILS } from "./plan-features.js";
 
 // applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
 // DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
 // après le bootstrap et doivent pouvoir re-appliquer les verrous.
-export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked, applyFeatureLocks };
+export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked, applyFeatureLocks, ESPACE_OUTILS };
 
 // "Mon conseiller" (Signature Focus / Signature) est masqué entièrement
 // plutôt que grisé-avec-CTA comme les autres [data-feature] — voir la
@@ -313,11 +313,12 @@ initSidebar();
 initReveal();
 initLogout();
 // initFitzFab() N'EST PLUS APPELÉ ICI (lot S4). Cette fonction tourne
-// avant que la session soit résolue : elle ne peut pas savoir dans quel
-// espace on est, et l'espace préinscription n'a aucun outil Fitz. Le
-// bouton est donc injecté par bootstrapShell(), une fois l'espace connu
-// — absent du DOM plutôt qu'injecté puis retiré, ce qui aurait laissé
-// un clignotement et, en cas d'échec de résolution, un bouton mort.
+// avant que la session soit résolue ; le bouton est injecté par
+// bootstrapShell(), une fois la session connue — absent du DOM plutôt
+// qu'injecté puis retiré, ce qui aurait laissé un clignotement et, en
+// cas d'échec de résolution, un bouton mort. (Depuis le lot PRÉ-FITZ,
+// il est injecté dans tous les espaces ; c'est le verrou de formule qui
+// le retire à qui n'a pas le chat.)
 
 // Navigation mobile de l'espace (2026-09-03) — barre d'onglets basse
 // + feuille « Menu », injectées par js/mobile-nav.js (script plat,
@@ -418,7 +419,10 @@ try { sessionStorage.setItem(CLE_ESPACE, espace); } catch { /* mode privé : le 
 * le droit, et pour « les-deux » le dernier choix, à défaut les bourses.
 */
 export function espaceCourant(espaceUtilisateur, espacePage = "") {
-if (espacePage) return espacePage;
+// Une page d'outil (lot PRÉ-FITZ) n'impose pas d'espace : on s'y trouve
+// dans l'espace du compte — ou, pour un client des deux, dans celui
+// qu'il a choisi.
+if (espacePage && espacePage !== ESPACE_OUTILS) return espacePage;
 if (espaceUtilisateur === "les-deux") return lireEspaceChoisi() || "bourse";
 if (espaceUtilisateur === "aucun") return "";
 return espaceUtilisateur;
@@ -521,9 +525,11 @@ topbarPlanLabel.textContent = courant === "preinscription"
 : PLAN_LABELS[session.planId];
 }
 
-// Le bouton flottant Fitz : aucun outil Fitz dans l'espace
-// préinscription, donc aucun bouton — absent, pas grisé.
-if (courant !== "preinscription") initFitzFab();
+// Le bouton flottant Fitz, dans TOUS les espaces depuis le lot PRÉ-FITZ
+// (2026-09-10) : le Dossier France a le chat. Sur un forfait qui ne l'a
+// pas (Diagnostic France, gratuit), le wrapper data-feature="ai_chat"
+// est retiré par applyFeatureLocks — absent, pas grisé, comme avant.
+initFitzFab();
 
 initBasculeEspace(espaceUtilisateur, courant);
 
@@ -534,8 +540,8 @@ applyAdvisorVisibility(session.planId, featureFlags, session.testerAccess, sessi
 if (window.FitzMobileNav) {
 window.FitzMobileNav.setUser((session.profile && session.profile.name) || session.userData.name || session.user.displayName || session.user.email);
 // Lot S4 : la barre d'onglets et la feuille « Menu » se filtrent par
-// espace. Elles proposaient « Fitz » et « Préparation aux tests » à un
-// client préinscription qui n'a aucun de ces outils.
+// espace (« Préparation aux tests » reste un outil bourse). L'onglet
+// Fitz, lui, est servi aux deux espaces depuis le lot PRÉ-FITZ.
 if (window.FitzMobileNav.appliquerEspace) window.FitzMobileNav.appliquerEspace(courant);
 // Diagnostic France : l'entrée n'entre dans le menu QUE si le droit
 // est ouvert — c'est ici, une fois la session résolue, qu'on le sait.

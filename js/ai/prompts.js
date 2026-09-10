@@ -19,6 +19,32 @@
 
 import { LANGUAGES } from "./simulated-responses.js";
 import { chatLanguageName, DEFAULT_CHAT_LANGUAGE } from "./chat-language.js";
+// LE PARCOURS ENTRE DANS LES PROMPTS (lot PRÉ-FITZ, 2026-09-10). Lu par
+// lireParcoursDeSaisie() de js/parcours.js — la fonction de lecture
+// existait déjà (lireParcours, sur le champ `track` d'une candidature),
+// on ne réécrit pas la règle ici. Son défaut est « bourse » : aucun
+// appel existant ne change de comportement.
+import { lireParcoursDeSaisie } from "../parcours.js";
+
+// ==========================================================
+// DEUX PARCOURS, DEUX CADRES — jamais mélangés dans une même sortie
+// ==========================================================
+//
+// BOURSE : un jury de bourse juge l'EXCELLENCE d'un dossier — impact,
+// distinction, retour au pays.
+//
+// PRÉINSCRIPTION : une admission que l'étudiant FINANCE LUI-MÊME, jugée
+// par la commission pédagogique d'une université sur la COHÉRENCE du
+// parcours — pas par un jury de bourse sur l'excellence. Il n'y a pas
+// de bourse à demander, pas de « retour au pays » à promettre, et la
+// lettre n'est pas une lettre de motivation d'une page : c'est une
+// lettre de vœu de quatre à cinq lignes, une par formation (Campus
+// France, étape des vœux, vérifiée le 2026-09-08).
+//
+// Le mot « bourse » n'apparaît dans AUCUN prompt du parcours
+// préinscription : un test le vérifie (test/pre-fitz.test.mjs).
+
+const CADRE_PREINSCRIPTION = "L'étudiant prépare une PRÉINSCRIPTION : une admission qu'il finance lui-même, examinée par la commission pédagogique d'un établissement, qui juge la cohérence de son parcours avec la formation demandée — pas un concours d'excellence. Il dépose lui-même son dossier sur le portail officiel. Ne parle jamais de financement par un organisme tiers ni de jury de sélection : parle d'admission, de formation, d'établissement, de pièces et de procédure.";
 
 function languageLabel(code) {
 return LANGUAGES.find((l) => l.code === code)?.label || code;
@@ -54,6 +80,11 @@ const parts = [
 if (origine) {
 parts.push("Cet étudiant vient de : " + origine + ". Tiens compte des réalités administratives de ce pays (visa, légalisation des diplômes, équivalences, moyens de paiement) quand elles sont pertinentes, sans jamais les inventer.");
 }
+
+// Le cadre du parcours PRÉINSCRIPTION s'ajoute ici, une fois, pour toutes
+// les tâches ; le parcours bourse garde exactement le texte d'avant
+// (non-régression tenue par un test).
+if (lireParcoursDeSaisie(arguments[0] || {}) === "preinscription") parts.push(CADRE_PREINSCRIPTION);
 
 parts.push("Rédige ta réponse en " + chatLanguageName(language || DEFAULT_CHAT_LANGUAGE) + ".");
 
@@ -105,6 +136,33 @@ const BUILDERS = {
 
 letter(input) {
 
+// LA LETTRE DE VŒU N'EST PAS UNE LETTRE DE MOTIVATION. Quatre à cinq
+// lignes, UNE par formation, adressée à la commission pédagogique de
+// cette formation dans cette université : parcours en bref, intérêt
+// précis pour CETTE formation, lien avec l'objectif professionnel.
+// Aucune louange sur la France ni son enseignement — la source le dit
+// elle-même, c'est inutile. Et aucun style à choisir : la forme est
+// imposée par le portail, pas par l'étudiant.
+if (lireParcoursDeSaisie(input) === "preinscription") {
+return {
+system: `${baseSystem(input)} Tu rédiges une lettre de vœu pour un dossier de préinscription : quatre à cinq lignes au total, sans faute, adressée à la commission pédagogique de la formation nommée. Contenu, dans cet ordre : le parcours en bref, l'intérêt PRÉCIS pour cette formation dans cet établissement, et le lien avec l'objectif professionnel. Interdit : toute louange sur le pays d'accueil ou son enseignement, toute phrase générique réutilisable pour une autre formation, tout paragraphe de plus. La lettre est un brouillon que l'étudiant recopiera lui-même dans son compte sur le portail.`,
+user: [
+"Rédige la lettre de vœu pour :",
+`Établissement : ${input.university || "non précisé"}`,
+`Formation : ${input.program || "non précisée"}`,
+`Niveau : ${input.level || "non précisé"}`,
+"",
+"Profil de l'étudiant :",
+describeProfile(input.profile),
+"",
+"Éléments fournis par l'étudiant :",
+`Parcours et expériences : ${input.experiences || "—"}`,
+`Ce qui l'attire dans cette formation précisément : ${input.motivations || "—"}`,
+`Objectif professionnel : ${input.goals || "—"}`
+].join("\n")
+};
+}
+
 return {
 system: `${baseSystem(input)} Tu rédiges des lettres de motivation universitaires convaincantes, structurées en 4 à 6 paragraphes, sans clichés, ancrées dans le parcours réel de l'étudiant.`,
 user: [
@@ -118,7 +176,11 @@ user: [
 describeProfile(input.profile),
 "",
 ...(() => {
-const p = input.parcours || {};
+// `parcours` porte ici les faits déclarés du profil (objet) ; la
+// chaîne "bourse"/"preinscription" du même nom est lue ailleurs,
+// par lireParcoursDeSaisie — les deux formes coexistent sans se
+// marcher dessus.
+const p = input.parcours && typeof input.parcours === "object" ? input.parcours : {};
 const lignes = Object.entries({
 "Niveau actuel": p.niveauActuel,
 "Filière du secondaire": p.filiereSecondaire,
@@ -149,8 +211,12 @@ return lignes.length ? ["Parcours déclaré :", ...lignes, ""] : [];
 
 email(input) {
 
+const preinscription = lireParcoursDeSaisie(input) === "preinscription";
+
 return {
-system: `${baseSystem(input)} Tu rédiges des e-mails universitaires professionnels, concis (150 à 250 mots), avec un objet clair et une formule de politesse adaptée.`,
+system: preinscription
+? `${baseSystem(input)} Tu rédiges des courriels professionnels à un établissement — service de scolarité, secrétariat de formation, commission pédagogique — dans le cadre d'une préinscription : concis (120 à 200 mots), objet clair, formule de politesse adaptée, et une demande précise (pièce, délai, rendez-vous, réponse).`
+: `${baseSystem(input)} Tu rédiges des e-mails universitaires professionnels, concis (150 à 250 mots), avec un objet clair et une formule de politesse adaptée.`,
 user: [
 `Type d'e-mail : ${input.emailType}`,
 `Destinataire : ${input.recipient || "service des admissions"}`,
@@ -181,8 +247,12 @@ user: `Traduis le texte suivant du ${sourceLabel} vers le ${targetLabel} :\n\n${
 
 check(input) {
 
+const preinscription = lireParcoursDeSaisie(input) === "preinscription";
+
 return {
-system: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`,
+system: preinscription
+? `${baseSystem(input)} Tu vérifies les pièces d'un dossier de préinscription avant leur dépôt sur le portail officiel — relevés, diplômes, traductions, preuve de ressources, lettres de vœu — et tu rends un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et ce qu'il faut corriger avant de soumettre.`
+: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`,
 user: [
 `Documents fournis : ${(input.files || []).map((f) => `${f.name} (${f.type || "type non précisé"})`).join(", ") || "aucun"}`,
 "",
@@ -198,6 +268,30 @@ readiness(input) {
 const checklistLines = (input.checklist || []).length
 ? input.checklist.map((item) => `- ${item.label} (${item.type}) : ${item.status}`).join("\n")
 : "Aucun élément de dossier ajouté pour l'instant.";
+
+// PRÉINSCRIPTION : « prêt » veut dire que les étapes de la procédure de
+// portail sont faites, avec leurs preuves (js/application-journey.js,
+// etapesDeProcedure). Pas un barème de bourse, pas une lettre d'une
+// page à avoir générée.
+if (lireParcoursDeSaisie(input) === "preinscription") {
+const etapes = (input.etapesProcedure || []).length
+? input.etapesProcedure.map((e) => `- ${e.label} : ${e.done ? "faite" : "à faire"}${e.preuve && e.preuve !== "aucune" ? ` (preuve attendue : ${e.preuve})` : ""}${e.echeanceISO ? ` — échéance ${e.echeanceISO}` : ""}`).join("\n")
+: "Aucune étape de procédure rattachée à ce dossier (pays de résidence non documenté, ou dossier non lié à une destination).";
+return {
+system: `${baseSystem(input)} Tu évalues si UN dossier de préinscription précis est prêt à être soumis sur le portail officiel, à partir de l'état réel de sa procédure : chaque étape faite ou non, la preuve attendue, l'échéance. Réponse structurée : un verdict clair (prêt / pas encore) et la liste concrète des étapes qu'il reste à faire, dans l'ordre de la procédure.`,
+user: [
+`Établissement : ${input.university || "non précisé"}`,
+`Formation : ${input.program || input.scholarship || "non précisée"}`,
+`Date limite : ${input.deadline || "non précisée"}`,
+"",
+"Étapes de la procédure de portail :",
+etapes,
+"",
+"Profil de l'étudiant :",
+describeProfile(input.profile)
+].join("\n")
+};
+}
 
 return {
 system: `${baseSystem(input)} Tu évalues si UNE candidature précise est prête à être déposée, à partir de son état réel (dossier de candidature, lettre de motivation, délai, profil) — pas une analyse de documents importés comme pour la tâche "check". Réponse structurée : un verdict clair (prêt / presque prêt) et la liste concrète de ce qu'il reste à faire.`,
@@ -219,8 +313,12 @@ describeProfile(input.profile)
 
 chat(input) {
 
+const preinscription = lireParcoursDeSaisie(input) === "preinscription";
+
 return {
-system: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`,
+system: preinscription
+? `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa préinscription (établissements, formations, pièces du dossier, procédure du portail, frais et preuve de ressources, entretien pédagogique, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`
+: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`,
 user: [
 "Profil de l'étudiant :",
 describeProfile(input.profile),
@@ -335,7 +433,9 @@ baseSystem(input),
 "INTERDIT : promettre un résultat, écrire qu'une candidature est",
 "« assurée », « garantie » ou « gagnée d'avance », ou laisser croire",
 "que FitzUniverse influence une décision d'admission. Nous",
-"accompagnons un dossier, nous n'attribuons aucune bourse."
+lireParcoursDeSaisie(input) === "preinscription"
+? "accompagnons un dossier, nous ne décidons d'aucune admission."
+: "accompagnons un dossier, nous n'attribuons aucune bourse."
 ].join(" ").replace(/\s+/g, " ").trim(),
 
 user: [

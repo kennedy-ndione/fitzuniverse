@@ -12,10 +12,11 @@
 
 import { db } from "./firebase-config.js";
 import { doc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
+import { parcoursDOutil } from "./js/parcours.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 import { extractTextFromFile } from "./js/ai/extract-text.js";
@@ -139,7 +140,7 @@ contextChips.innerHTML = "";
 const chips = application
 ? [
 { label: "Université", value: application.university || "" },
-{ label: "Bourse", value: application.scholarship || "" },
+{ label: parcoursDOutil({ application }) === "preinscription" ? "Formation" : "Bourse", value: application.scholarship || "" },
 { label: "Date limite", value: application.deadline || "" }
 ].filter((c) => c.value)
 : [{ label: "Portée", value: "Dossier général — reliez une candidature pour une analyse ciblée" }];
@@ -390,7 +391,7 @@ try {
 // `application` est ignorée sans risque par l'analyse simulée
 // actuelle ; le jour où l'analyse réelle sera branchée, elle saura
 // déjà POUR QUELLE candidature le dossier est vérifié.
-const { data } = await generate({ task: "check", input: { files, profile, application } });
+const { data } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursDOutil({ espace: ctx.espace, application }), track: application ? application.track : undefined } });
 
 scoreRing.style.setProperty("--ai-score", data.overallScore);
 scoreValue.textContent = data.overallScore;
@@ -450,7 +451,7 @@ analyzeBtn.addEventListener("click", runAnalysis);
 
 }
 
-bootstrapShell({ feature: "ai_check", espace: "bourse" }).then((ctx) => {
+bootstrapShell({ feature: "ai_check", espace: ESPACE_OUTILS }).then((ctx) => {
 
 if (ctx.locked) {
 

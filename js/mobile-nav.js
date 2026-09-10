@@ -311,11 +311,10 @@ if (onglet) {
 onglet.setAttribute("href", hub);
 if (isCurrent(hub)) onglet.setAttribute("aria-current", "page");
 }
-// L'onglet Fitz n'existe pas dans l'espace préinscription.
-if (espace === "preinscription") {
-const fitz = barre.querySelector(".mnav-tab--fitz");
-if (fitz) fitz.remove();
-}
+// L'onglet Fitz est servi aux DEUX espaces depuis le lot PRÉ-FITZ
+// (2026-09-10) : le Dossier France a le chat. Il portait
+// data-feature="ai_chat" avant ce lot déjà — c'est le verrou de
+// formule qui le retire à qui n'a pas le chat, pas l'espace.
 }
 
 const grille = document.getElementById("mnavMenuGrid");

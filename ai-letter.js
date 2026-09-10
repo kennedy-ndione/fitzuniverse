@@ -12,7 +12,7 @@
 
 import { db } from "./firebase-config.js";
 import { doc, getDoc, updateDoc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { LETTER_STYLES } from "./js/ai/simulated-responses.js";
@@ -21,6 +21,10 @@ import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
+// Lot PRÉ-FITZ : le parcours décide de la FORME de la lettre — une lettre
+// de motivation d'une page pour une bourse, une lettre de vœu de quatre
+// à cinq lignes, une par formation, pour une préinscription.
+import { parcoursDOutil } from "./js/parcours.js";
 
 // Contexte candidature (Phase 3, 2026-07-30) : si la page est ouverte
 // depuis applications.html (?applicationId=...), la lettre générée est
@@ -223,12 +227,66 @@ if (app) {
 fieldUniversity.value = app.university || "";
 if (app.scholarship) {
 fieldProgram.value = fieldProgram.value || app.scholarship;
-if (!fieldMotivations.value) fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
+// « Candidature à la bourse X » n'a de sens que pour une bourse : sur
+// une préinscription, le champ `scholarship` porte la FORMATION.
+if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse") fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
 }
 }
 
 syncContextBanner();
 renderContextChips();
+appliquerMode();
+
+}
+
+// ==========================================================
+// LE MODE « VŒU » (lot PRÉ-FITZ, 2026-09-10)
+// ==========================================================
+// Une préinscription ne reçoit pas une lettre de motivation d'une page :
+// elle reçoit UNE lettre de vœu par formation, quatre à cinq lignes,
+// pour la commission pédagogique de cette formation (Campus France,
+// étape des vœux, vérifiée le 2026-09-08). Le nom de la formation et
+// celui de l'établissement viennent de la candidature : ils ne
+// s'inventent pas. Les cinq styles sont ceux d'une lettre de bourse —
+// ils disparaissent : la forme est imposée par le portail.
+//
+// SUGGÉRER, JAMAIS ÉCRIRE À LA PLACE : le texte est un brouillon que
+// l'étudiant retape lui-même dans son compte Études en France.
+function parcoursCourant() {
+return parcoursDOutil({ espace: ctx.espace, application });
+}
+
+function appliquerMode() {
+
+const voeu = parcoursCourant() === "preinscription";
+
+document.body.dataset.modeLettre = voeu ? "voeu" : "motivation";
+
+styleGrid.hidden = voeu;
+const titreStyle = styleGrid.closest(".ai-panel-body")?.previousElementSibling;
+if (titreStyle) titreStyle.hidden = voeu;
+
+const notice = document.getElementById("voeuNotice");
+if (notice) notice.hidden = !voeu;
+
+const badge = document.querySelector(".ai-page-header-badge span:last-child");
+if (badge) badge.textContent = voeu ? "Une lettre par vœu · 4 à 5 lignes" : "5 styles disponibles";
+
+const titre = document.querySelector(".ai-page-header-main h1");
+if (titre) titre.textContent = voeu ? "Ma lettre pour chaque vœu" : "Lettre de motivation exceptionnelle";
+
+const sousTitre = document.querySelector(".ai-page-header-main p");
+if (sousTitre) sousTitre.textContent = voeu
+? "Choisissez la formation concernée : Fitz propose un brouillon court, propre à cette formation dans cet établissement — que vous recopiez vous-même dans votre compte sur le portail."
+: "Complétez votre projet d'études : Fitz rédige une lettre adaptée à votre profil, dans le style de votre choix.";
+
+const labelProgram = document.querySelector('label[for="fieldProgram"]');
+if (labelProgram) labelProgram.textContent = voeu ? "Formation (une lettre par formation)" : "Programme";
+
+const labelMotivations = document.querySelector('label[for="fieldMotivations"]');
+if (labelMotivations) labelMotivations.textContent = voeu ? "Ce qui vous attire dans CETTE formation précisément" : "Motivations";
+
+if (!currentText) generateBtn.querySelector("span").textContent = voeu ? "Rédiger ma lettre de vœu" : "Générer ma lettre";
 
 }
 
@@ -334,6 +392,8 @@ let currentText = "";
 let isEditing = false;
 let activeController = null;
 
+appliquerMode();
+
 Object.entries(LETTER_STYLES).forEach(([key, meta]) => {
 
 const card = document.createElement("button");
@@ -367,7 +427,7 @@ previewEdit.value = text;
 } else {
 previewContent.innerHTML = text
 ? renderMarkdownLite(text)
-: `<div class="ai-preview-empty"><i data-lucide="pen-line"></i><span>Votre lettre de motivation apparaîtra ici.</span></div>`;
+: `<div class="ai-preview-empty"><i data-lucide="pen-line"></i><span>${parcoursCourant() === "preinscription" ? "Votre lettre de vœu apparaîtra ici — quatre à cinq lignes, pour cette formation." : "Votre lettre de motivation apparaîtra ici."}</span></div>`;
 if (window.lucide) lucide.createIcons();
 }
 
@@ -387,6 +447,10 @@ downloadPdfBtn.disabled = !enabled;
 function collectData() {
 
 return {
+// Le parcours voyage avec la demande : c'est lui qui décide, dans
+// js/ai/prompts.js et le simulateur, de la forme de la lettre.
+parcours: parcoursCourant(),
+track: application ? application.track : undefined,
 style: selectedStyle,
 country: fieldCountry.value.trim(),
 university: fieldUniversity.value.trim(),
@@ -435,9 +499,11 @@ onToken: (partial) => setPreviewText(partial)
 setPreviewText(text);
 setToolbarEnabled(true);
 
+const voeu = parcoursCourant() === "preinscription";
+
 saveGeneratedDocument({
 icon: "pen-line",
-title: `Lettre de motivation (${LETTER_STYLES[selectedStyle]?.label || selectedStyle})`,
+title: voeu ? `Lettre de vœu — ${data.university || data.program}` : `Lettre de motivation (${LETTER_STYLES[selectedStyle]?.label || selectedStyle})`,
 type: "IA",
 date: new Date().toLocaleDateString("fr-FR"),
 content: text,
@@ -466,7 +532,9 @@ console.error("Impossible d'enregistrer la lettre sur la candidature :", error);
 
 trackEvent("letter_generated", { country: data.country });
 
-showToast(application ? `Lettre générée et enregistrée dans "${application.university}".` : "Lettre générée avec succès.");
+showToast(voeu
+? `Brouillon de lettre de vœu prêt${application ? ` pour "${application.university}"` : ""} — recopiez-le dans votre compte sur le portail.`
+: (application ? `Lettre générée et enregistrée dans "${application.university}".` : "Lettre générée avec succès."));
 
 } catch (error) {
 
@@ -480,7 +548,7 @@ showToast(messageErreurFitz(error), { type: "error" });
 } finally {
 
 generateBtn.disabled = false;
-generateBtn.querySelector("span").textContent = "Régénérer ma lettre";
+generateBtn.querySelector("span").textContent = parcoursCourant() === "preinscription" ? "Régénérer ma lettre de vœu" : "Régénérer ma lettre";
 activeController = null;
 
 }
@@ -549,7 +617,7 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-bootstrapShell({ feature: "ai_letter", espace: "bourse" }).then(async (ctx) => {
+bootstrapShell({ feature: "ai_letter", espace: ESPACE_OUTILS }).then(async (ctx) => {
 
 if (ctx.locked) {
 

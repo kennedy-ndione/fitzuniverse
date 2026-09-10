@@ -151,7 +151,46 @@ return `Je reste à votre entière disposition pour toute information complémen
 
 }
 
+/**
+* LA LETTRE DE VŒU (lot PRÉ-FITZ, 2026-09-10) — quatre à cinq lignes, une
+* par formation, pour la commission pédagogique de CETTE formation dans
+* CET établissement : parcours en bref, intérêt précis, lien avec
+* l'objectif professionnel. Source : Campus France Côte d'Ivoire, étape
+* des vœux, vérifiée le 2026-09-08 — qui ajoute : « Évitez le déluge de
+* louanges sur la France et son enseignement, c'est inutile ». Aucune
+* louange ici, donc, et aucun style : la forme est celle du portail.
+*
+* Six lignes au plus, sans ligne vide : un test compte les lignes.
+*/
+export function generateLettreDeVoeu(input) {
+
+const profile = input.profile || {};
+const name = fullName(profile) || "";
+const diplome = profile.lastDegree || profile.currentDegree || "";
+const domaine = profile.desiredField || "";
+const formation = input.program || "la formation demandée";
+const etablissement = input.university || "votre établissement";
+const niveau = input.level ? ` (${input.level})` : "";
+const interet = input.motivations || `son programme, que j'ai lu dans le détail, et la place qu'y tient ${domaine || "ma discipline"}`;
+const objectif = input.goals || `exercer dans ${domaine || "ce domaine"} avec un diplôme reconnu`;
+const experiences = input.experiences ? ` Mon parcours — ${input.experiences} — m'y prépare.` : "";
+
+return [
+"Madame, Monsieur,",
+`${diplome ? `Titulaire de ${diplome}${domaine ? ` en ${domaine}` : ""}, je` : "Je"} souhaite rejoindre la formation ${formation}${niveau} de ${etablissement}.`,
+`Ce qui m'y attire précisément : ${interet}.${experiences}`,
+`Cette formation s'inscrit dans mon objectif professionnel : ${objectif}.`,
+"Je vous remercie de l'attention que vous porterez à ma demande.",
+name
+].filter((ligne) => ligne !== "").join("\n");
+
+}
+
 export function generateMotivationLetter(input) {
+
+// Une candidature de préinscription ne reçoit JAMAIS une lettre de
+// bourse d'une page : elle reçoit sa lettre de vœu.
+if (lireParcoursDeSaisie(input) === "preinscription") return generateLettreDeVoeu(input);
 
 const style = LETTER_STYLES[input.style] ? input.style : "personnalise";
 
@@ -175,10 +214,16 @@ export const EMAIL_TYPES = [
 { key: "thank_you", label: "Remercier", icon: "heart-handshake" },
 { key: "send_documents", label: "Envoyer des documents", icon: "paperclip" },
 { key: "follow_up", label: "Relancer une candidature", icon: "send" },
-{ key: "request_scholarship", label: "Demander une bourse", icon: "graduation-cap" },
+// `parcours` : les seuls parcours où ce type a un sens. Absent = les deux.
+{ key: "request_scholarship", label: "Demander une bourse", icon: "graduation-cap", parcours: ["bourse"] },
 { key: "contact_professor", label: "Contacter un professeur", icon: "user-round" },
 { key: "contact_lab", label: "Contacter un laboratoire", icon: "flask-conical" }
 ];
+
+/** Les types d'e-mail qui ont un sens dans ce parcours (lot PRÉ-FITZ). */
+export function typesEmailPour(parcours) {
+return EMAIL_TYPES.filter((t) => !t.parcours || t.parcours.includes(parcours));
+}
 
 function emailGreeting(data) {
 
@@ -533,8 +578,42 @@ checklist = [],
 hasGeneratedLetter = false,
 deadline = null,
 profileScore = 0,
-applicationId = null
+applicationId = null,
+etapesProcedure = [],
+...reste
 } = {}) {
+
+// PRÉINSCRIPTION (lot PRÉ-FITZ) : « prêt » veut dire que les étapes de
+// la procédure de portail sont faites, avec leurs preuves — l'état
+// que js/application-journey.js (etapesDeProcedure) calcule déjà.
+// Ni lettre d'une page à avoir générée, ni barème de profil : ce
+// dossier n'est pas jugé sur l'excellence, il est reçu ou non.
+if (lireParcoursDeSaisie(reste) === "preinscription") {
+const etapes = Array.isArray(etapesProcedure) ? etapesProcedure : [];
+const faites = etapes.filter((e) => e.done === true);
+const missingItems = etapes.filter((e) => e.done !== true).map((e) => ({
+id: `procedure-${e.id}`,
+text: `${e.label}${e.preuve && e.preuve !== "aucune" ? ` — preuve attendue : ${e.preuve}` : ""}${e.echeanceISO ? ` (avant le ${e.echeanceISO})` : ""}.`,
+actionLabel: "Ouvrir cette étape",
+actionHref: null
+}));
+if (!etapes.length) {
+missingItems.push({
+id: "procedure-absente",
+text: "Aucune étape de procédure n'est rattachée à ce dossier : liez-le à une destination dont la procédure est documentée, et renseignez votre pays de résidence dans votre profil.",
+actionLabel: "Compléter mon profil",
+actionHref: "profile.html"
+});
+}
+return {
+ready: etapes.length > 0 && missingItems.length === 0,
+missingItems,
+checklistDone: faites.length,
+checklistTotal: etapes.length,
+hasGeneratedLetter,
+daysLeft: deadline ? daysUntil(deadline) : null
+};
+}
 
 const items = Array.isArray(checklist) ? checklist : [];
 const checklistTotal = items.length;
@@ -601,6 +680,9 @@ daysLeft: deadline ? daysUntil(deadline) : null
 // ==========================================================
 
 import { TESTS, testDepuisNom } from "../test-prep-data.js";
+// Lot PRÉ-FITZ : le simulateur lit le parcours comme les prompts, par la
+// même fonction — deux vocabulaires, jamais mélangés dans une sortie.
+import { lireParcoursDeSaisie } from "../parcours.js";
 
 function parseDeadline(app) {
 
@@ -804,12 +886,20 @@ return `Dites-moi quel test vous préparez (IELTS, TOEFL, TOPIK, JLPT, HSK, DELF
 {
 id: "greeting",
 keywords: ["bonjour", "salut", "hello", "coucou"],
-reply: (profile) => `Bonjour${profile && fullName(profile) ? ` ${fullName(profile).split(" ")[0]}` : ""}, je suis Fitz, votre assistant de candidature. Je peux vous aider sur vos bourses, vos documents, vos e-mails ou votre lettre de motivation. Que puis-je faire pour vous aujourd'hui ?`
+reply: (profile, ctx) => ctx?.parcours === "preinscription"
+? `Bonjour${profile && fullName(profile) ? ` ${fullName(profile).split(" ")[0]}` : ""}, je suis Fitz. Je peux vous aider sur vos établissements, les pièces de votre dossier, la procédure du portail, vos lettres de vœu ou un courriel à une formation. Que puis-je faire pour vous aujourd'hui ?`
+: `Bonjour${profile && fullName(profile) ? ` ${fullName(profile).split(" ")[0]}` : ""}, je suis Fitz, votre assistant de candidature. Je peux vous aider sur vos bourses, vos documents, vos e-mails ou votre lettre de motivation. Que puis-je faire pour vous aujourd'hui ?`
 },
 {
 id: "scholarship",
 keywords: ["bourse", "financement", "scholarship", "frais"],
-reply: (profile) => {
+reply: (profile, ctx) => {
+// En préinscription, « frais » et « financement » sont une question de
+// RESSOURCES À JUSTIFIER, pas de bourse à décrocher : la réponse ne
+// mélange pas les deux vocabulaires.
+if (ctx?.parcours === "preinscription") {
+return `Pour une préinscription, le financement est le vôtre — et le portail vous demandera de le PROUVER, pas de le demander :\n\n1. **Les droits d'inscription** de la formation, à budgéter en totalité : une exonération n'est jamais acquise d'avance.\n2. **La preuve de ressources** exigée pour le visa : attestation bancaire ou garant, au niveau publié par le pays d'accueil.\n3. **Les frais de dossier** de la procédure de votre pays de résidence, non remboursables — ne payez jamais avant la demande de paiement officielle.\n\nLe **Diagnostic France** de votre espace fait ce calcul avec vos chiffres, chaque montant avec sa source.`;
+}
 const field = profile?.desiredField ? ` en ${profile.desiredField}` : "";
 const country = Array.isArray(profile?.preferredCountries) && profile.preferredCountries[0] ? ` vers ${profile.preferredCountries[0]}` : "";
 return `Voici comment aborder la recherche de bourses${field}${country} :\n\n1. **Bourses d'excellence académique** — basées sur votre dossier scolaire.\n2. **Bourses gouvernementales** — souvent proposées par le pays d'accueil (Erasmus+, Chevening, Eiffel...).\n3. **Bourses spécifiques à l'université** — à vérifier directement sur le site de l'établissement visé.\n\nAstuce : préparez toujours un justificatif de financement de secours, même en visant une bourse — cela rassure les admissions.`;
@@ -875,7 +965,18 @@ reply: () => `Avec plaisir ! N'hésitez pas si vous avez d'autres questions sur 
 }
 ];
 
-export function getSuggestedQuestions(profile = {}) {
+export function getSuggestedQuestions(profile = {}, parcours = "bourse") {
+
+// Préinscription : aucune question de bourse, et une lettre de vœu de
+// quatre lignes plutôt qu'une lettre de motivation d'une page.
+if (parcours === "preinscription") {
+return [
+"Qu'est-ce qu'une lettre de vœu, et combien en faut-il ?",
+"Quelles pièces la procédure de mon pays exige-t-elle ?",
+"Comment prouver mes ressources pour le visa ?",
+"Comment se passe l'entretien pédagogique ?"
+];
+}
 
 const suggestions = [
 "Comment structurer une lettre de motivation efficace ?",
@@ -913,7 +1014,9 @@ return readable.length === 0;
 
 }
 
-export function generateChatReply({ message, profile, applications, testPrep, history }) {
+export function generateChatReply({ message, profile, applications, testPrep, history, parcours, track }) {
+
+const parcoursLu = lireParcoursDeSaisie({ parcours, track });
 
 // Arrivée depuis « M'entraîner avec Fitz » (Préparation aux tests) :
 // Fitz sait POURQUOI l'étudiant est là et ouvre directement la
@@ -927,11 +1030,15 @@ return `Je n'ai pas réussi à lire votre message — il s'est peut-être envoy�
 }
 
 const lower = String(message || "").toLowerCase();
-const ctx = { applications, message, history };
+const ctx = { applications, message, history, parcours: parcoursLu };
 
 const intent = INTENTS.find((i) => i.keywords.some((kw) => lower.includes(kw)));
 
 if (intent) return intent.reply(profile, ctx);
+
+if (parcoursLu === "preinscription") {
+return `Merci pour votre message. Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les établissements, les pièces, la procédure du portail, la preuve de ressources et l'entretien pédagogique — dites « où j'en suis » pour un point sur VOS dossiers.\n- Vous orienter vers **Ma lettre pour chaque vœu**, **Écrire à un établissement**, **Traduire une pièce** ou **Vérifier avant de soumettre**.\n\nReformulez votre question en une phrase, ou dites-moi simplement où vous en êtes dans votre préinscription.`;
+}
 
 return `Merci pour votre message ! Voici ce que je peux déjà faire pour vous :\n\n- Répondre à vos questions sur les bourses, documents, entretiens et délais — dites « où j'en suis » pour un point sur VOS candidatures.\n- Vous orienter vers **Lettre de motivation**, **E-mails Fitz**, **Traduction** ou **Vérification du dossier**.\n\nReformulez votre question en une phrase, ou dites-moi simplement où vous en êtes dans votre candidature.`;
 

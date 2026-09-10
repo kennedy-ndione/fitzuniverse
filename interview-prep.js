@@ -14,7 +14,7 @@
 import { db } from "./firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { trackEvent } from "./js/analytics.js";
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 
 initShellChrome();
@@ -111,7 +111,7 @@ renderProgress();
 
 }
 
-bootstrapShell({ feature: "interview_prep", espace: "bourse" }).then((ctx) => {
+bootstrapShell({ feature: "interview_prep", espace: ESPACE_OUTILS }).then((ctx) => {
 
 if (ctx.locked) {
 

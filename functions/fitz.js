@@ -130,108 +130,16 @@ const MAX_OCTETS_IMAGE = 4 * 1024 * 1024;
 const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 // ============================================================
-// FORMULES ET PLAFONDS
+// FORMULES ET PLAFONDS — voir functions/lib/fitz-acces.js
 // ============================================================
-/**
- * Formules donnant accès à Fitz : toutes SAUF "gratuit". Recopié de
- * PLAN_ORDER (js/plan-features.js) — à tenir à jour à chaque ajout
- * d'offre, sinon un nouveau palier payant se verrait refuser Fitz.
- *
- * Portée volontairement limitée : ce contrôle répond à « ce compte
- * a-t-il droit à Fitz », pas à « a-t-il droit à CET outil ». Le détail
- * par outil vient des indicateurs de config/planFeatures, modifiables à
- * chaud par l'administrateur ; le répliquer ici le ferait dériver.
- * Ce qui est protégé ici, c'est la facture.
- */
-const FORMULES_AVEC_FITZ = [
-  "premier-dossier",
-  "essentiel",
-  "accompagnement",
-  "premium",
-  "signature-focus",
-  "signature",
-];
-
-/**
- * Plafonds d'usage, en POINTS (voir `poids` ci-dessus).
- *
- * CALIBRAGE (2026-09-04) : environ 25 % du revenu mensuel de chaque
- * formule, à raison d'un point ≈ 10 F CFA de coût attendu. Exemple pour
- * Essentiel : 45 000 F sur 6 mois = 7 500 F/mois de recette, dont ~25 %
- * d'IA = ~1 875 F, soit ~190 points.
- *
- * ⚠️ CE SONT DES ESTIMATIONS, PAS DES MESURES. Les relever dès qu'on
- * aura la consommation réelle de vrais étudiants — c'est un chiffre à
- * corriger, pas une doctrine. Un plafond trop bas atteint par un
- * étudiant sérieux est un incident commercial : il doit être relevé,
- * pas défendu.
- *
- * Le plafond QUOTIDIEN n'existe pas pour économiser : il existe pour
- * qu'une boucle automatisée ou un compte partagé se heurte à un mur en
- * quelques heures, et pas en fin de mois.
- */
-const PLAFONDS = {
-  // Compte gratuit : la tâche `diagnostic` UNIQUEMENT, et à dose
-  // homéopathique. Trois analyses par mois suffisent largement à
-  // quelqu'un qui découvre la plateforme ; au-delà, ce n'est plus de
-  // la découverte. Deux par jour ferment la porte au rechargement en
-  // boucle avant qu'il ne coûte quoi que ce soit.
-  gratuit: { jour: 2, mois: 3 },
-
-  fitzExpress: { jour: 40, mois: 250 },
-  "premier-dossier": { jour: 50, mois: 300 },
-  essentiel: { jour: 40, mois: 190 },
-  accompagnement: { jour: 45, mois: 210 },
-  premium: { jour: 45, mois: 210 },
-  "signature-focus": { jour: 70, mois: 400 },
-  signature: { jour: 90, mois: 500 },
-};
-
-const PLAFOND_PAR_DEFAUT = { jour: 40, mois: 190 };
-
-// ============================================================
-// AUTORISATION
-// ============================================================
-
-function expire(valeur) {
-  if (!valeur) return true;
-  const date = new Date(valeur);
-  return isNaN(date.getTime()) || date.getTime() < Date.now();
-}
-
-/**
- * Reproduit resolvePlan() + hasFitzExpressAccess() de js/access-guard.js.
- * Volontairement dupliqué plutôt qu'importé : ce fichier tourne en
- * CommonJS côté serveur, access-guard.js est un module ES qui importe
- * le SDK Firebase navigateur. Toute évolution des règles de formule
- * doit être répercutée ICI AUSSI.
- *
- * Renvoie la clé de formule à utiliser pour le plafond, ou null si
- * l'accès est refusé.
- */
-function formuleActive(userData) {
-  if (!userData) return null;
-
-  const plan = String(userData.plan || "").toLowerCase();
-  const planValide =
-    FORMULES_AVEC_FITZ.includes(plan) &&
-    (!userData.planExpiresAt || !expire(userData.planExpiresAt));
-
-  if (planValide) return plan;
-
-  // Le pass Fitz Express donne accès sans formule payante. Testé APRÈS
-  // la formule : quelqu'un qui a les deux doit avoir le plafond de sa
-  // formule, qui est le plus généreux.
-  if (userData.fitzExpressExpiresAt && !expire(userData.fitzExpressExpiresAt)) {
-    return "fitzExpress";
-  }
-
-  return null;
-}
-
-function plafondsDe(formule) {
-  return PLAFONDS[formule] || PLAFOND_PAR_DEFAUT;
-}
+//
+// La décision « ce compte a-t-il droit à Fitz, et jusqu'où » vivait ici,
+// dans une liste recopiée à la main de js/plan-features.js — et elle
+// avait dérivé : cinq offres retirées de la vente, les deux formules
+// bourse vendues absentes, et aucune lecture de `planPreinscription`.
+// Elle est désormais dans un module PUR, testé sous Node et comparé à la
+// grille par test/pre-fitz.test.mjs (lot PRÉ-FITZ, 2026-09-10).
+const { formuleActive, plafondsDe } = require("./lib/fitz-acces");
 
 // ============================================================
 // COMPTEUR D'USAGE
@@ -469,7 +377,7 @@ exports.fitzGenerate = onCall(
         throw refus(
           "permission-denied",
           "QUOTA_PLAN",
-          "Fitz est inclus à partir de la formule Essentiel."
+          "Fitz est inclus dans les formules d'accompagnement — bourse ou Dossier France."
         );
       }
 

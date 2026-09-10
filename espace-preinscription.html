@@ -236,6 +236,11 @@ besoin de savoir ce que l'année coûtera vraiment.
 <a href="universities.html" class="jy-btn jy-btn--primary"><i data-lucide="landmark"></i><span>Parcourir les universités</span></a>
 <a href="preinscriptions.html" class="jy-btn"><i data-lucide="route"></i><span>La procédure, pays par pays</span></a>
 <span data-feature="diagnostic_france"><a href="diagnostic-france.html" data-real-href="diagnostic-france.html" class="jy-btn" id="jyDiagnosticFranceBtn"><i data-lucide="calculator"></i><span>Diagnostic France</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<!-- LOT PRÉ-FITZ (2026-09-10) : les outils Fitz entrent dans cet espace.
+Ils y produisent du contenu de PRÉINSCRIPTION (js/ai/prompts.js lit le
+parcours) ; leur verrou reste celui de la formule (data-feature →
+applyFeatureLocks) : le Diagnostic France ne les a pas. -->
+<span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-tool"><i data-lucide="message-circle"></i><span>Une question ? Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 </div>
 </section>
 
@@ -256,6 +261,12 @@ PHASE 3 — DOSSIERS
 <span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une préinscription</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <span data-feature="documents"><a href="documents.html" data-real-href="documents.html" class="jy-tool"><i data-lucide="file-text"></i><span>Mes documents</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <span data-feature="compress"><a href="compress.html" data-real-href="compress.html" class="jy-tool"><i data-lucide="file-archive"></i><span>Compression de pièces</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<!-- Sept vœux = sept lettres de quatre à cinq lignes (Campus France,
+étape des vœux, vérifiée le 2026-09-08). Une par formation, jamais une
+lettre de bourse dupliquée : ai-letter passe en mode « vœu » pour une
+candidature de préinscription. -->
+<span data-feature="ai_letter"><a href="ai-letter.html" data-real-href="ai-letter.html" class="jy-tool"><i data-lucide="pen-line"></i><span>Ma lettre pour chaque vœu</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<span data-feature="ai_translate"><a href="ai-translate.html" data-real-href="ai-translate.html" class="jy-tool"><i data-lucide="languages"></i><span>Traduire une pièce</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 </div>
 </section>
 
@@ -271,6 +282,12 @@ PHASE 4 — DÉPÔT
 <p class="jy-phase-sub">C'est vous qui déposez, sur votre compte, sur le portail officiel. Nous vous disons quoi préparer, dans quel ordre, et avant quelle date.</p>
 
 <div id="jyDepot"></div>
+
+<div class="jy-phase-actions">
+<!-- « Prêt à déposer » se juge ici sur les ÉTAPES DE LA PROCÉDURE, avec
+leurs preuves — pas sur le barème d'une bourse (lot PRÉ-FITZ). -->
+<span data-feature="ai_check"><a href="ai-check.html" data-real-href="ai-check.html" class="jy-tool"><i data-lucide="shield-check"></i><span>Vérifier avant de soumettre</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
 </section>
 
 <!-- ==========================================================
@@ -287,6 +304,10 @@ attendre, il y a une admission — et, ensuite, des frais à régler.
 <p class="jy-phase-sub">Les établissements répondent sur le portail, chacun selon son calendrier. Notez chaque réponse ici : c'est elle qui ouvre la phase suivante.</p>
 
 <div id="jyReponse"></div>
+
+<div class="jy-phase-actions">
+<span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>Écrire à un établissement</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
 </section>
 
 <section class="jy-phase" id="phase-depart">

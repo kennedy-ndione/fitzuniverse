@@ -215,19 +215,36 @@ support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, 
 // Les DROITS DES OFFRES PRÉINSCRIPTION (grille B). Fusionnés dans les
 // drapeaux par resolveFeatureFlags() : un drapeau vaut true pour un
 // compte si SA formule bourse OU SON offre préinscription l'ouvre.
-//   diagnostic-france : la page du diagnostic uniquement.
+//   diagnostic-france : la page du diagnostic uniquement — un pass de
+//                       diagnostic, pas un accompagnement : AUCUN outil.
 //   dossier-france    : candidatures préinscription (quota 7), documents,
-//                       préparation aux entretiens, messagerie. PAS advisor,
-//                       aucun outil Fitz (le parcours n'a pas d'étape Fitz).
+//                       préparation aux entretiens, messagerie, ET LES
+//                       CINQ OUTILS FITZ. PAS advisor.
 //   + conseiller      : idem + advisor.
+//
+// LOT PRÉ-FITZ (2026-09-10) — LA RÈGLE A CHANGÉ, ET VOICI POURQUOI.
+// Jusqu'ici : « aucun outil Fitz (le parcours n'a pas d'étape Fitz) ».
+// C'était une décision prise AVANT que la procédure soit documentée,
+// quand la préinscription était vue comme purement procédurale. Les
+// lots S1b/S2 ont lu les pages officielles, et elles disent l'inverse.
+// Campus France Côte d'Ivoire, étape des vœux (vérifiée le 2026-09-08,
+// https://www.ivoire.campusfrance.org/je-veux-m-inscrire-en-licence-23-master-12-cycle-ingenieur) :
+// « Rédigez pour chaque spécialité une lettre de motivation courte, de
+// quatre à cinq lignes, sans faute d'orthographe et adaptée à la
+// formation ». Sept vœux = sept lettres. Plus les courriels aux
+// établissements, la traduction des pièces, et l'entretien pédagogique.
+// Un client à 75 000 F recevait cinq outils de moins qu'un client à
+// 15 000 F. NE PAS « re-corriger » ceci en croyant à une régression :
+// les outils produisent du contenu de PRÉINSCRIPTION (js/ai/prompts.js
+// et js/ai/simulated-responses.js lisent le parcours), pas de bourse.
 export const PREINSCRIPTION_FEATURE_CONFIG = {
 applications: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 documents: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
-ai_chat: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
-ai_letter: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
-ai_check: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
-ai_email: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
-ai_translate: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": false },
+ai_chat: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+ai_letter: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+ai_check: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+ai_email: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
+ai_translate: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 compress: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 interview_prep: { "diagnostic-france": false, "dossier-france": true, "dossier-france-conseiller": true },
 advisor: { "diagnostic-france": false, "dossier-france": false, "dossier-france-conseiller": true },
@@ -461,6 +478,21 @@ return bourses.length ? bourses : PLAN_PREINSCRIPTION_ORDER.filter((p) => flags[
 // ne validait aucune restriction).
 export const ESPACES = ["bourse", "preinscription", "les-deux", "aucun"];
 
+/**
+* L'ESPACE DES OUTILS (lot PRÉ-FITZ, 2026-09-10).
+*
+* Une page d'outil Fitz — lettre, e-mail, vérification, traduction,
+* chat, entretien — sert les DEUX parcours depuis que le Dossier France
+* a ses outils. Elle ne peut donc plus se déclarer « bourse » : un client
+* préinscription y était ramené chez lui par la garde d'espace avant
+* même d'avoir vu l'outil que son forfait lui ouvre.
+*
+* Ce n'est pas « aucun espace » (comme profile.html) : la page reste
+* dans un espace — celui du compte — pour sa pastille, sa bascule et son
+* vocabulaire. C'est une page qui appartient aux deux, et le dit.
+*/
+export const ESPACE_OUTILS = "outils";
+
 /** Le hub de chaque espace. "aucun" reste sur dashboard.html, qui lui rend un accueil minimal. */
 export const HUB_ESPACE = {
 bourse: "espace-bourse.html",
@@ -507,6 +539,10 @@ return "aucun";
 */
 export function espaceAutorise(espaceUtilisateur, espacePage) {
 if (!espacePage) return true;
+// Une page d'outil appartient aux deux parcours (lot PRÉ-FITZ) : le
+// DROIT à l'outil se décide ensuite, par formule (decideVerrou), pas
+// par espace.
+if (espacePage === ESPACE_OUTILS) return true;
 if (espaceUtilisateur === "les-deux") return true;
 return espaceUtilisateur === espacePage;
 }

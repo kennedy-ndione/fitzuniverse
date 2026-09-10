@@ -11,10 +11,15 @@
 * ============================================================
 */
 
-import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { getSuggestedQuestions } from "./js/ai/simulated-responses.js";
+import { parcoursDOutil } from "./js/parcours.js";
+
+// Le parcours du chat est celui de l'ESPACE où l'étudiant se trouve
+// (posé par bootstrapShell) : le chat n'est lié à aucune candidature.
+let parcoursChat = "bourse";
 import { renderMarkdownLite, escapeHtml } from "./js/ai/format.js";
 import {
 listConversations,
@@ -424,7 +429,7 @@ function renderHelpCards() {
 
 if (!helpCardsEl) return;
 
-const questions = getSuggestedQuestions(profile);
+const questions = getSuggestedQuestions(profile, parcoursChat);
 if (!questions.length) return;
 
 helpCardsEl.innerHTML = "";
@@ -589,6 +594,7 @@ task: "chat",
 input: {
 message: userMessage.content,
 profile,
+parcours: parcoursChat,
 applications: studentApplications,
 testPrep,
 history: active.messages.filter((m) => m.id !== assistantMessage.id).slice(-8),
@@ -797,7 +803,7 @@ pendingTestPrep = null;
 
 }
 
-bootstrapShell({ feature: "ai_chat", espace: "bourse" }).then((ctx) => {
+bootstrapShell({ feature: "ai_chat", espace: ESPACE_OUTILS }).then((ctx) => {
 
 if (ctx.locked) {
 
@@ -806,6 +812,8 @@ renderLockedState(document.getElementById("lockedState"), ctx);
 return;
 
 }
+
+parcoursChat = parcoursDOutil({ espace: ctx.espace });
 
 initChat(ctx);
 

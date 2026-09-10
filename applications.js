@@ -48,7 +48,7 @@ import { FITZ_UNLOCK_CTA, unlockPlanPhrase, FITZ_READINESS_PHRASES } from "./js/
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
 import { showToast } from "./js/ai/toast.js";
-import { computeJourneySteps } from "./js/application-journey.js";
+import { computeJourneySteps, etapesDeProcedure } from "./js/application-journey.js";
 // Créneaux anti-triche "slot-N" — voir l'en-tête de ce module.
 import { slotIdLibre } from "./js/application-actions.js";
 import { qualifierEtapes, avertissementsPrematures, LIBELLE_PREREQUIS } from "./js/next-action.js";
@@ -1905,11 +1905,23 @@ if (btn) { btn.disabled = true; btn.querySelector("span").textContent = "Vérifi
 
 try {
 
+// Lot PRÉ-FITZ : le parcours voyage avec la demande. En préinscription,
+// « prêt » se juge sur les étapes de la procédure de portail — faites,
+// avec leurs preuves — et non sur le barème d'une bourse.
+const parcours = lireParcours(app);
+const etapesProcedure = parcours === "preinscription"
+? etapesDeProcedure(app, procedurePour(app), new Date()).map((e) => ({ id: e.id, label: e.label, done: e.done, preuve: e.procedure ? e.procedure.preuve : "", echeanceISO: e.echeanceISO || null }))
+: [];
+
 const { data } = await generate({
 task: "readiness",
 input: {
 university: app.university,
 scholarship: app.scholarship,
+program: app.scholarship,
+track: app.track,
+parcours,
+etapesProcedure,
 checklist: app.checklist || [],
 hasGeneratedLetter: !!app.generatedLetter,
 deadline: app.deadline,

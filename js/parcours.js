@@ -54,3 +54,36 @@ return track === "preinscription" ? "preinscription" : "bourse";
 export function estPreinscription(app) {
 return lireParcours(app) === "preinscription";
 }
+
+/**
+* Le parcours d'une SAISIE d'outil Fitz (lot PRÉ-FITZ, 2026-09-10).
+*
+* Une page d'outil envoie soit la candidature elle-même (champ `track`,
+* lu par lireParcours), soit — quand aucune candidature n'est liée —
+* le parcours en clair, `parcours: "preinscription"`, déduit de l'espace
+* où l'étudiant se trouve. Les deux formes passent par ICI, et par la
+* même règle : tout ce qui n'est pas exactement « preinscription » est
+* « bourse ». Ce n'est pas une seconde lecture, c'est la même, ouverte
+* à une entrée de plus.
+*
+* NOTE : `parcours` peut aussi être un OBJET sur certains prompts (les
+* faits déclarés du profil, lettre et diagnostic). Un objet n'est pas un
+* parcours : il retombe sur le champ `track`, puis sur « bourse ».
+*/
+/**
+* Le parcours dans lequel un OUTIL Fitz travaille : celui de la
+* candidature liée quand il y en a une ; sinon celui de l'espace où
+* l'étudiant se trouve (ctx.espace du shell). Un client des deux, dans
+* son espace préinscription, écrit donc une lettre de vœu — et une lettre
+* de bourse s'il bascule. Sans espace connu : « bourse », comme partout.
+*/
+export function parcoursDOutil({ espace = "", application = null } = {}) {
+if (application) return lireParcours(application);
+return espace === "preinscription" ? "preinscription" : "bourse";
+}
+
+export function lireParcoursDeSaisie(input) {
+const p = input && typeof input === "object" ? input.parcours : undefined;
+if (typeof p === "string") return p === "preinscription" ? "preinscription" : "bourse";
+return lireParcours(input);
+}
