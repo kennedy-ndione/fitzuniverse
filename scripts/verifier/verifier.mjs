@@ -37,6 +37,9 @@ import { jouerQuestionnaire } from "./questionnaire.mjs";
 import { verifierPagesCatalogue } from "./pages.mjs";
 import { verifierEspaceEtudiant } from "./espace.mjs";
 import { verifierControlCenter } from "./control-center.mjs";
+// Lot PEIGNE-FIN (2026-09-10) : la mesure de performance sur réseau lent.
+import { mesurerPerformance } from "./mesure.mjs";
+import { peignerLeSite } from "./peigne.mjs";
 import { PROFILS, profilParCle } from "./profils.mjs";
 
 import path from "node:path";
@@ -235,7 +238,12 @@ async function principal() {
   // « admin » : le Control Center seul — quatre sessions d'administrateur
   // stubbées (voir control-center.mjs).
   const seulAdmin = args.includes("admin");
-  const cles = args.filter((a) => !a.startsWith("--") && a !== "espace" && a !== "admin");
+  // « mesure » : la performance seule (mesure.mjs) — réseau ralenti,
+  // 375 px, chiffres publiés dans le rapport.
+  const seulMesure = args.includes("mesure");
+  // « peigne » : toutes les pages, deux largeurs (peigne.mjs).
+  const seulPeigne = args.includes("peigne");
+  const cles = args.filter((a) => !a.startsWith("--") && a !== "espace" && a !== "admin" && a !== "mesure" && a !== "peigne");
 
   const choisis = cles.length
     ? cles.map((c) => {
@@ -243,7 +251,7 @@ async function principal() {
         if (!p) throw new Error(`Profil inconnu : « ${c} ». Disponibles : ${PROFILS.map((x) => x.cle).join(", ")}`);
         return p;
       })
-    : (seulEspace || seulAdmin ? [] : PROFILS);
+    : (seulEspace || seulAdmin || seulMesure || seulPeigne ? [] : PROFILS);
 
   let chromium;
 
@@ -284,7 +292,7 @@ async function principal() {
   // catalogue.
   let pages = { anomalies: [], notes: [] };
 
-  if (!cles.length && !seulEspace && !seulAdmin) {
+  if (!cles.length && !seulEspace && !seulAdmin && !seulMesure && !seulPeigne) {
 
     process.stdout.write(`  ${"pages catalogue".padEnd(20)} `);
 
@@ -305,7 +313,7 @@ async function principal() {
   // regardaient.
   let espace = { anomalies: [], notes: [] };
 
-  if (!cles.length && !seulAdmin) {
+  if (!cles.length && !seulAdmin && !seulMesure && !seulPeigne) {
 
     process.stdout.write(`  ${"espace étudiant".padEnd(20)} `);
 
@@ -325,7 +333,7 @@ async function principal() {
   // ne savait franchir que dans le seul rôle où la page marchait.
   let centre = { anomalies: [], notes: [] };
 
-  if (!cles.length && !seulEspace) {
+  if (!cles.length && !seulEspace && !seulMesure && !seulPeigne) {
 
     process.stdout.write(`  ${"control center".padEnd(20)} `);
 
@@ -340,15 +348,52 @@ async function principal() {
 
   }
 
+  // La mesure de performance (lot PEIGNE-FIN) : réseau ralenti, 375 px.
+  // Ses chiffres sont le point de départ de toute correction de lenteur.
+  let mesure = { anomalies: [], notes: [] };
+
+  if (!cles.length && !seulEspace && !seulAdmin && !seulPeigne) {
+
+    process.stdout.write(`  ${"mesure (3G rapide)".padEnd(20)} `);
+
+    mesure = await mesurerPerformance({ navigateur, base: serveur.url });
+
+    console.log(mesure.anomalies.length ? "ÉCHEC" : "ok");
+
+    for (const note of mesure.notes) console.log(`      · ${note}`);
+    for (const anomalie of mesure.anomalies) console.log(`      ✗ ${anomalie}`);
+
+    console.log("");
+
+  }
+
+  // Le peigne fin (lot PEIGNE-FIN) : toutes les pages, 375 et 1280 px.
+  let peigne = { anomalies: [], notes: [] };
+
+  if (!cles.length && !seulEspace && !seulAdmin && !seulMesure) {
+
+    process.stdout.write(`  ${"peigne fin".padEnd(20)} `);
+
+    peigne = await peignerLeSite({ navigateur, base: serveur.url });
+
+    console.log(peigne.anomalies.length ? "ÉCHEC" : "ok");
+
+    for (const note of peigne.notes) console.log(`      · ${note}`);
+    for (const anomalie of peigne.anomalies) console.log(`      ✗ ${anomalie}`);
+
+    console.log("");
+
+  }
+
   await navigateur.close();
   await serveur.arreter();
 
   const echecs = resultats.filter((r) => r.anomalies.length);
 
-  const totalEchecs = echecs.length + (pages.anomalies.length ? 1 : 0) + (espace.anomalies.length ? 1 : 0) + (centre.anomalies.length ? 1 : 0);
+  const totalEchecs = echecs.length + (pages.anomalies.length ? 1 : 0) + (espace.anomalies.length ? 1 : 0) + (centre.anomalies.length ? 1 : 0) + (mesure.anomalies.length ? 1 : 0) + (peigne.anomalies.length ? 1 : 0);
 
   console.log(totalEchecs
-    ? `${totalEchecs} contrôle(s) en échec : ${[...echecs.map((r) => r.profil.cle), ...(pages.anomalies.length ? ["pages catalogue"] : []), ...(espace.anomalies.length ? ["espace étudiant"] : []), ...(centre.anomalies.length ? ["control center"] : [])].join(", ")}\n`
+    ? `${totalEchecs} contrôle(s) en échec : ${[...echecs.map((r) => r.profil.cle), ...(pages.anomalies.length ? ["pages catalogue"] : []), ...(espace.anomalies.length ? ["espace étudiant"] : []), ...(centre.anomalies.length ? ["control center"] : []), ...(mesure.anomalies.length ? ["mesure"] : []), ...(peigne.anomalies.length ? ["peigne fin"] : [])].join(", ")}\n`
     : `${resultats.length} profil(s) + les pages du catalogue + l'espace étudiant + le Control Center vérifiés de bout en bout, aucune anomalie.\n`);
 
   process.exit(totalEchecs ? 1 : 0);

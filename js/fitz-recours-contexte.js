@@ -63,10 +63,18 @@ procedure: lireParcours(a) === "preinscription" ? procedure : null,
 aujourdhui
 });
 
+// Les fiches de documents (114 Ko) : chargées seulement pour le
+// blocage qui les lit — jamais sur les autres pages (lot PEIGNE-FIN).
+let fichesDocuments = [];
+if (blocage.code === "documents") {
+try { ({ DOCUMENTS: fichesDocuments } = await import("./documents-data.js")); } catch (e) { fichesDocuments = []; }
+}
+
 return {
 app,
 bourse,
 procedure,
+fichesDocuments,
 etapes: app ? etapesDe(app) : [],
 // Toutes les candidatures, avec leurs étapes : c'est ce que
 // prochaineAction() lit sur le tableau de bord — même entrée, même

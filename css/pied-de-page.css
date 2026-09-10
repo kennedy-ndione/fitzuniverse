@@ -49,9 +49,8 @@ pointer-events:none;
 
 .footer-photo picture{
 position:absolute;
-inset:-7% 0;
+inset:0;
 display:block;
-will-change:transform;
 }
 
 .footer-photo-img{
@@ -114,7 +113,7 @@ rgba(30,23,18,.93) 68%,
 @media (prefers-reduced-motion: reduce){
 .footer-photo-img,
 .footer-photo::before{ animation:none; }
-.footer-photo picture{ transform:none !important; inset:0; }
+
 }
 
 /* ---- le contenu, posé par-dessus ---- */

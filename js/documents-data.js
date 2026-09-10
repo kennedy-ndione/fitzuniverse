@@ -52,27 +52,11 @@ export const PRIORITY_LEVELS = [
 // une map { slug: true }. Source UNIQUE depuis le lot B du chantier
 // préinscription (2026-09-07) : documents.js l'importait en local, et
 // js/application-journey.js a besoin des mêmes clés pour lire la map.
-// Ne jamais modifier ce corps : les clés déjà écrites en base en
-// dépendent.
-export function slugDocument(title) {
-return title
-.toLowerCase()
-.normalize("NFD").replace(/[̀-ͯ]/g, "")
-.replace(/[^a-z0-9]+/g, "-")
-.replace(/^-+|-+$/g, "");
-}
-
-// Les slugs que le code lit ailleurs que sur documents.html (étapes du
-// parcours préinscription). Dérivés des TITRES, jamais recopiés à la
-// main — et test/documents-data.test.mjs vérifie que chaque titre
-// existe toujours : renommer une fiche casse le test, pas l'étudiant.
-export const SLUGS = {
-traductions: slugDocument("Traductions certifiées"),
-copies: slugDocument("Copies certifiées conformes"),
-legalisation: slugDocument("Légalisation / apostille"),
-ressources: slugDocument("Justificatifs de ressources"),
-bancaire: slugDocument("Attestation bancaire")
-};
+// slugDocument et SLUGS vivent dans js/documents-slugs.js (lot
+// PEIGNE-FIN, 2026-09-10) : les pages de l'espace ne chargent plus ces
+// 114 Ko pour cinq clés. Réexportés ici, rien ne change pour documents.html.
+import { slugDocument, SLUGS } from "./documents-slugs.js";
+export { slugDocument, SLUGS };
 
 export const DOCUMENTS = [
 

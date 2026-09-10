@@ -1346,7 +1346,11 @@ border-radius:var(--radius-sm);
 
 }
 
-.skip-link:focus{
+/* :focus-visible et non :focus (lot PEIGNE-FIN, 2026-09-10) : un focus
+donné par un toucher ou par un script faisait apparaître le lien en
+bloc sombre en haut à gauche de la page (photo de Charles, offers.html
+sur téléphone). Il ne se montre qu'au clavier, son seul usage. */
+.skip-link:focus-visible{
 
 top:12px;
 

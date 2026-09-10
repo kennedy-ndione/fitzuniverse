@@ -27,45 +27,10 @@ if (window.lucide) lucide.createIcons();
 // (qui ne chargent pas main.js) en bénéficient aussi.
 
 // ==========================================================
-// PARALLAXE DU PIED DE PAGE (2026-09-03)
-// La <picture> du footer (surdimensionnée de 14 % en CSS) glisse d'une
-// fraction du défilement pendant que le footer traverse l'écran — la
-// photo semble avoir de la profondeur derrière les colonnes. Un seul
-// écouteur passif + requestAnimationFrame, transform seul. Coupé par
-// prefers-reduced-motion (le CSS force alors transform:none).
+// (Le parallaxe du pied de page, 2026-09-03, a été supprimé le
+// 2026-09-10 — lot PEIGNE-FIN : le pied de page est un composant injecté
+// après ce script, la fonction ne trouvait plus jamais sa photo.)
 // ==========================================================
-
-(function initFooterParallax() {
-
-const photo = document.querySelector(".footer-photo-feature .footer-photo picture");
-const footer = document.querySelector(".footer-photo-feature");
-if (!photo || !footer) return;
-if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-const RATIO = 0.12;
-let ticking = false;
-
-function update() {
-ticking = false;
-const rect = footer.getBoundingClientRect();
-const vh = window.innerHeight || 1;
-if (rect.bottom < 0 || rect.top > vh) return;
-// -1 quand le footer entre par le bas, 0 quand il est calé en bas.
-const progress = Math.max(-1, Math.min(1, (rect.top + rect.height - vh) / vh));
-photo.style.transform = `translate3d(0, ${(-progress * RATIO * rect.height).toFixed(1)}px, 0)`;
-}
-
-function onScroll() {
-if (ticking) return;
-ticking = true;
-requestAnimationFrame(update);
-}
-
-window.addEventListener("scroll", onScroll, { passive: true });
-window.addEventListener("resize", onScroll, { passive: true });
-update();
-
-})();
 
 // ==========================================================
 // RÉVÉLATION AU SCROLL

@@ -59,6 +59,9 @@ const IMPLEMENTATIONS = {
   onAuthStateChanged: "export function onAuthStateChanged(_app, rappel){ if (typeof rappel === 'function') setTimeout(() => rappel(null), 0); return () => {}; }",
   onSnapshot: "export function onSnapshot(){ return () => {}; }",
   serverTimestamp: "export function serverTimestamp(){ return new Date(); }",
+  // Lot PEIGNE-FIN : le Control Center appelle Timestamp.fromDate() —
+  // une fonction inerte n'a pas cette méthode statique.
+  Timestamp: "export function Timestamp(){} Timestamp.fromDate = function(d){ return { toDate: () => d, seconds: Math.floor(+d / 1000) }; }; Timestamp.now = function(){ return Timestamp.fromDate(new Date()); };",
   getCountFromServer: "export function getCountFromServer(){ return Promise.resolve({ data: () => ({ count: 0 }) }); }",
   setPersistence: "export function setPersistence(){ return Promise.resolve(); }",
   writeBatch: "export function writeBatch(){ return { set(){}, update(){}, delete(){}, commit: () => Promise.resolve() }; }",

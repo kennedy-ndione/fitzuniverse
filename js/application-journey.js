@@ -38,7 +38,7 @@
 
 import { PROFILE_READY_THRESHOLD } from "./profile-score.js";
 import { lireParcours } from "./parcours.js";
-import { SLUGS } from "./documents-data.js";
+import { SLUGS } from "./documents-slugs.js";
 import { ICONES_TYPE } from "./procedures/vocabulaire.js";
 import { jalonDeCampagne } from "./pays-preinscription.js";
 

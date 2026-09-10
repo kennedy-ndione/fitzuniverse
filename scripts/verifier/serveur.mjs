@@ -20,6 +20,7 @@
  */
 
 import http from "node:http";
+import zlib from "node:zlib";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -65,12 +66,21 @@ export async function demarrerServeur({ racine, port = 0 } = {}) {
         return;
       }
 
+      // Lot PEIGNE-FIN (2026-09-10) : Firebase Hosting sert le texte (js,
+      // css, json, html, svg) compressé — le harnais aussi, sinon la mesure
+      // sur réseau lent compte catalogue.json à 734 Ko quand la production
+      // en envoie 152.
+      const type = TYPES[path.extname(fichier).toLowerCase()] || "application/octet-stream";
+      const compressible = /^(text\/|application\/(javascript|json|xml))/.test(type) && /\bgzip\b/.test(req.headers["accept-encoding"] || "");
+      const corps = compressible ? zlib.gzipSync(data) : data;
+
       res.writeHead(200, {
-        "Content-Type": TYPES[path.extname(fichier).toLowerCase()] || "application/octet-stream",
-        "Cache-Control": "no-store"
+        "Content-Type": type,
+        "Cache-Control": "no-store",
+        ...(compressible ? { "Content-Encoding": "gzip" } : {})
       });
 
-      res.end(data);
+      res.end(corps);
 
     });
 

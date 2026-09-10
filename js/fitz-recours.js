@@ -52,7 +52,12 @@ import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS, JOU
 import { decideVerrou, unlockingPlans, PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, FEATURE_CATALOG } from "./plan-features.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
 import { lireExigences, groupees, elementsAAjouter, deposeParUnTiers } from "./exigences.js";
-import { DOCUMENTS, slugDocument } from "./documents-data.js";
+// Lot PEIGNE-FIN (2026-09-10) : les 46 fiches de documents (114 Ko) ne
+// sont plus importées ici — ce module est chargé sur chaque page de
+// l'espace. Le contexte du blocage « documents » les apporte
+// (fitz-recours-contexte.js, import à la demande) : sans elles, le
+// diagnostic liste ce qui manque, sans les fiches « où l'obtenir ».
+import { slugDocument } from "./documents-slugs.js";
 import { lirePreuve, preuveValide, libelleDemande, MODES, LIBELLES_MODES } from "./preuve-depot.js";
 import { analyserEcheance, formaterDate } from "./echeance.js";
 import { DELAI_REPONSE } from "./delai-reponse.js";
@@ -287,7 +292,7 @@ lignes.push(manquants.length
 const fiches = [];
 for (const item of [...(app.checklist || []), ...manquants]) {
 const cle = String(item.label || "").toLowerCase();
-const fiche = DOCUMENTS.find((d) => cle.includes(d.title.toLowerCase()) || (item.type && slugDocument(d.title).includes(String(item.type).replace("_", "-"))));
+const fiche = (c.fichesDocuments || []).find((d) => cle.includes(d.title.toLowerCase()) || (item.type && slugDocument(d.title).includes(String(item.type).replace("_", "-"))));
 if (fiche && !fiches.some((f) => f.title === fiche.title)) fiches.push(fiche);
 }
 for (const f of fiches.slice(0, 3)) {
