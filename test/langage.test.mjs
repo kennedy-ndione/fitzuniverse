@@ -111,11 +111,25 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 });
 
 // --- 4. le pied de page partagé ------------------------------------------
-test("langage 4 — toute page publique charge le pied de page partagé, aucune ne le recopie", () => {
+// Lot PIED-DE-PAGE (2026-09-10) : « toutes » ne protège plus rien depuis
+// qu'il y a des exceptions. Deux listes explicites, AVEC et SANS — une
+// page qui a une seule tâche (questionnaire, diagnostic, résultats,
+// connexion) n'offre pas six façons de partir. Une page qui change de
+// camp doit être déplacée ici, en le décidant.
+export const PAGES_AVEC_PIED = ["index.html", "scholarships.html", "universities.html", "scholarship-details.html",
+"preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html"];
+export const PAGES_SANS_PIED = ["eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
+
+test("langage 4 — le pied de page partagé sur les pages à plusieurs sorties, et sur elles seules ; aucune ne le recopie", () => {
+assert.deepEqual([...PAGES_AVEC_PIED, ...PAGES_SANS_PIED].sort(), [...PAGES_PUBLIQUES].sort(), "chaque page publique est dans une liste et une seule");
+for (const page of PAGES_AVEC_PIED) {
+assert.ok(/<script src="js\/pied-de-page\.js" defer><\/script>/.test(lire(page)), `${page} : sans js/pied-de-page.js`);
+}
+for (const page of PAGES_SANS_PIED) {
+assert.ok(!/pied-de-page\.(js|css)/.test(visible(lire(page))), `${page} : charge le pied de page alors qu'elle n'a qu'une tâche`);
+}
 for (const page of PAGES_PUBLIQUES) {
-const html = lire(page);
-assert.ok(/<script src="js\/pied-de-page\.js" defer><\/script>/.test(html), `${page} : sans js/pied-de-page.js`);
-assert.ok(!/<footer\b/.test(visible(html)), `${page} : un pied de page recopié`);
+assert.ok(!/<footer\b/.test(visible(lire(page))), `${page} : un pied de page recopié`);
 }
 const composant = lire("js/pied-de-page.js");
 assert.ok(/footer-photo-feature/.test(composant));

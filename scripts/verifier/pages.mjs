@@ -1051,7 +1051,10 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
         colonnes: [...f.querySelectorAll(".footer-col-title")].map((e) => e.textContent.trim()),
         legal: [...f.querySelectorAll("a[href^='bientot.html']")].map((a) => a.textContent.trim()),
         h1: document.querySelectorAll("h1").length,
-        deborde: document.scrollingElement.scrollWidth > window.innerWidth + 1
+        deborde: document.scrollingElement.scrollWidth > window.innerWidth + 1,
+        // Lot PIED-DE-PAGE : moins d'un demi-écran à 375 px, sans photo.
+        hauteur: Math.round(r.height),
+        photo: !!f.querySelector(".footer-photo") && getComputedStyle(f.querySelector(".footer-photo")).display !== "none"
       };
     });
 
@@ -1076,8 +1079,10 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
         if (pied.legal.length !== 4) anomalies.push(`LANGAGE scholarships : ${pied.legal.length} liens légaux au lieu de 4.`);
         if (pied.h1 !== 1) anomalies.push(`LANGAGE scholarships : ${pied.h1} <h1>.`);
         if (pied.deborde) anomalies.push("LANGAGE scholarships : la page déborde horizontalement à 375 px.");
+        if (pied.hauteur > 406) anomalies.push(`PIED-DE-PAGE : ${pied.hauteur} px de haut à 375 px, plus d'un demi-écran (406).`);
+        if (pied.photo) anomalies.push("PIED-DE-PAGE : la bande photo s'affiche à 375 px.");
       }
-      notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, pied de page [${pied ? pied.colonnes.join(" · ") : "absent"}], liens légaux : ${pied ? pied.legal.join(" · ") : "—"}`);
+      notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, pied de page de ${pied ? pied.hauteur : "?"} px [${pied ? pied.colonnes.join(" · ") : "absent"}], liens légaux : ${pied ? pied.legal.join(" · ") : "—"}`);
 
       // b) Le questionnaire : le bandeau avant la question.
       await page.goto(`${base}/eligibility-questions.html`, { waitUntil: "domcontentloaded" });

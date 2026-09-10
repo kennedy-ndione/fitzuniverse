@@ -1,33 +1,57 @@
 /* ==========================================================
-FitzUniverse — pied de page partagé (lot LANGAGE, 2026-09-10)
+FitzUniverse — pied de page partagé (lot LANGAGE, 2026-09-10 ;
+refondu par le lot PIED-DE-PAGE le même jour)
 ==========================================================
-Injecté par js/pied-de-page.js sur TOUTES les pages publiques ; cette
-feuille est chargée par le composant lui-même (une page n'a rien à
-recopier). Les règles viennent de css/homepage-sections.css, où elles
-ne servaient qu'à index.html — le pied de page n'existait nulle part
-ailleurs. Fond ambre : la couleur de l'arc du logo reprise en pleine
-surface, blanc dessus (5.76:1 sur --amber-700, AA). */
+Injecté par js/pied-de-page.js sur les pages publiques qui ont
+plusieurs sorties (accueil, catalogues, fiche, préinscriptions, pays,
+formules) — jamais sur une page qui n'a qu'une tâche (questionnaire,
+diagnostic, résultats, connexion), jamais dans l'espace étudiant.
+Cette feuille est chargée par le composant lui-même.
+
+UN SEUL RENDU, celui de l'accueil (décision de Charles, 2026-09-10) :
+les règles qui vivaient dans css/homepage-redesign.css — et ne
+s'appliquaient donc qu'à index.html — sont ici, et nulle part
+ailleurs. Rendu DÉTERMINISTE :
+ - fond opaque propre (encre chaude), indépendant de la page ;
+ - la photo est une COUCHE ABSOLUE de hauteur fixe (--pied-photo),
+   voilée, sous le contenu ; le fond uni reste dessous — si la photo
+   ne charge pas, rien ne change ;
+ - le texte repose sur une zone à ≥ 84 % d'encre : blanc ≥ 5:1 même
+   au-dessus du bâtiment clair de la photo (mesuré sur l'accueil,
+   2026-09-03) ;
+ - rien du fond de la page ne traverse (overflow:hidden + fond opaque).
+Sur téléphone (≤ 640px) : pas de photo, deux colonnes par rangée,
+espacements courts — le pied de page tient en moins d'un demi-écran
+à 375px (mesuré, voir test/pied-de-page.test.mjs et le harnais). */
 
 .footer{
+--pied-photo:270px;
 position:relative;
-background:linear-gradient(160deg,#7A5000 0%, var(--amber-700) 55%, #6B4600 100%);
+overflow:hidden;
+isolation:isolate;
+background:
+radial-gradient(ellipse 70% 60% at 85% 0%, rgba(217,128,90,.22) 0%, rgba(217,128,90,.07) 45%, transparent 70%),
+linear-gradient(160deg, #2A211A 0%, #1E1712 55%, #15100B 100%);
 color:rgba(255,255,255,.92);
 padding:0 0 22px;
 font-family:var(--font-body, inherit);
 }
 
-.footer .container{
-position:relative;
-z-index:1;
-padding-top:36px;
+/* ---- la photo : couche absolue, hauteur fixe, voilée ---- */
+.footer-photo{
+position:absolute;
+top:0; left:0; right:0;
+height:var(--pied-photo);
+overflow:hidden;
+z-index:0;
+pointer-events:none;
 }
 
-/* Bande photo pleine largeur au-dessus des colonnes (hero-bg4.jpg,
-diplômés divers). Le dégradé en bas la fond dans l'ambre. */
-.footer-photo{
-height:220px;
-position:relative;
-overflow:hidden;
+.footer-photo picture{
+position:absolute;
+inset:-7% 0;
+display:block;
+will-change:transform;
 }
 
 .footer-photo-img{
@@ -36,18 +60,73 @@ inset:0;
 width:100%;
 height:100%;
 object-fit:cover;
-object-position:center 30%;
+/* Le cadrage descend vers les diplômés (bas de l'image). */
+object-position:center 82%;
+transform-origin:50% 70%;
+animation:footer-breathe 28s ease-in-out infinite alternate;
+will-change:transform;
 }
 
+@keyframes footer-breathe{
+from{ transform:scale(1); }
+to{ transform:scale(1.06); }
+}
+
+/* Halo doré au-dessus de la foule (entre la photo et le voile). */
+.footer-photo::before{
+content:"";
+position:absolute;
+left:50%;
+top:22%;
+width:70%;
+height:52%;
+transform:translateX(-50%);
+background:radial-gradient(ellipse at center, rgba(233,163,25,.28) 0%, rgba(233,163,25,.10) 40%, transparent 70%);
+mix-blend-mode:screen;
+pointer-events:none;
+z-index:1;
+animation:footer-glow 9s ease-in-out infinite alternate;
+}
+
+@keyframes footer-glow{
+from{ opacity:.55; transform:translateX(-50%) scale(1); }
+to{ opacity:1; transform:translateX(-50%) scale(1.08); }
+}
+
+/* Le voile : photo lisible en haut, encre ≥ 84 % là où les colonnes
+commencent, et il SE TERMINE sur la couleur du fond (sinon une couture
+apparaît au bas de la photo). */
 .footer-photo::after{
-content:'';
+content:"";
 position:absolute;
 inset:0;
-background:linear-gradient(180deg, rgba(122,80,0,0) 0%, rgba(122,80,0,.35) 55%, var(--amber-700) 100%);
+z-index:2;
+background:
+radial-gradient(ellipse 70% 60% at 85% 0%, rgba(217,128,90,.22) 0%, rgba(217,128,90,.07) 45%, transparent 70%),
+linear-gradient(180deg,
+rgba(21,16,11,.08) 0%,
+rgba(21,16,11,.26) 28%,
+rgba(21,16,11,.84) 50%,
+rgba(30,23,18,.93) 68%,
+#15100B 100%);
 }
 
-/* Contenu resserré (~900px) : marque à gauche, trois colonnes à droite. */
+@media (prefers-reduced-motion: reduce){
+.footer-photo-img,
+.footer-photo::before{ animation:none; }
+.footer-photo picture{ transform:none !important; inset:0; }
+}
+
+/* ---- le contenu, posé par-dessus ---- */
+.footer .container{
+position:relative;
+z-index:1;
+/* ~200px de photo lisible avant les colonnes (la photo fait 270). */
+padding-top:200px;
+}
+
 .footer-top{
+position:relative;
 display:flex;
 flex-wrap:wrap;
 justify-content:space-between;
@@ -76,6 +155,7 @@ display:flex;
 font-size:var(--fs-small);
 color:rgba(255,255,255,.85);
 line-height:var(--lh-relaxed);
+text-shadow:0 1px 2px rgba(13,10,6,.5);
 }
 
 .footer-links{
@@ -103,17 +183,18 @@ text-transform:uppercase;
 }
 
 .footer-links a{
-display:block;
+display:inline-block;
 font-size:var(--fs-small);
 color:rgba(255,255,255,.85);
 padding:4px 0;
-transition:color .2s ease;
 text-decoration:none;
+transition:transform .22s var(--ease-standard, ease), color .22s var(--ease-standard, ease);
 }
 
 .footer-links a:hover,
 .footer-links a:focus-visible{
-color:#fff;
+color:#E9A319;
+transform:translateX(3px);
 }
 
 .footer-links a:focus-visible{
@@ -142,19 +223,14 @@ margin:0;
 color:inherit;
 }
 
-/* <body> en rangée flex (pages tunnel : questionnaire, connexion) — la
-classe est posée par js/pied-de-page.js : la rangée passe à la ligne et
-le pied de page prend toute la sienne, en bas, sans serrer la carte. */
-body.pied-de-page-en-rangee{
-flex-wrap:wrap;
-align-content:flex-start;
+@media (pointer:coarse){
+.footer-links a,
+.footer-bottom a{
+display:inline-flex;
+align-items:center;
+min-height:44px;
 }
-
-body.pied-de-page-en-rangee > .footer{
-flex:0 0 100%;
-width:100%;
-align-self:flex-end;
-margin-top:auto;
+.footer-links li{ line-height:1.2; }
 }
 
 /* Le pied de page public n'a pas sa place DANS l'espace étudiant : quand
@@ -179,7 +255,7 @@ pied de page ne change pas d'axe en son milieu. */
 flex-direction:column;
 align-items:flex-start;
 text-align:left;
-gap:36px;
+gap:28px;
 }
 
 .footer-brand{
@@ -193,22 +269,64 @@ text-align:left;
 
 }
 
-/* ≤640px (375px inclus) : trois colonnes sur toute la largeur, qui
-passent à la ligne quand elles ne tiennent plus côte à côte. */
+/* ≤640px (375px inclus) : PAS de photo (160px de décoration sur un
+téléphone, c'est du défilement offert à personne), deux colonnes par
+rangée, espacements courts, la phrase de marque masquée (les colonnes
+portent la navigation). La colonne Légal reste entière : c'est elle
+qui compte pour un prestataire de paiement. */
 @media(max-width:640px){
 
-.footer-links{
-flex-wrap:wrap;
-gap:28px 36px;
-width:100%;
+.footer{ padding-bottom:14px; }
+
+.footer-photo{ display:none; }
+
+.footer .container{ padding-top:20px; }
+
+/* Une seule grille à deux colonnes : Plateforme | Comprendre, puis
+Légal | la marque (le lockup seul). Deux rangées, pas quatre. */
+.footer-top{
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:14px 20px;
+padding-bottom:14px;
 }
 
-.footer-photo{
-height:160px;
+.footer-links{
+display:contents;
+}
+
+.footer-links > div{ min-width:0; }
+
+.footer-brand{
+order:4;
+align-self:end;
+}
+
+.footer-brand .fitz-lockup{ margin-bottom:0; }
+
+.footer-brand p{ display:none; }
+
+.footer-links .footer-col-title{ margin-bottom:4px; }
+
+.footer-links a{
+padding:3px 0;
+line-height:1.25;
+}
+
+/* Au doigt : 26px de haut par lien — la pleine largeur de la colonne
+sert de cible. 44px par lien ferait 13 liens × 44 : un écran entier.
+La mention « Crédits photo » reste en ligne (pas de cible de 44px).
+Mesures à 375 px, 2026-09-10 : voir test/pied-de-page.test.mjs. */
+@media (pointer:coarse){
+.footer-links a{ min-height:26px; }
+.footer-bottom a{ display:inline; min-height:0; }
 }
 
 .footer-bottom{
 justify-content:flex-start;
+padding-top:10px;
 }
+
+.footer-bottom p{ font-size:.78rem; }
 
 }

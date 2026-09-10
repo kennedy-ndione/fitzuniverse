@@ -102,16 +102,6 @@ const footer = document.createElement("footer");
 footer.className = "footer footer-photo-feature";
 footer.setAttribute("data-pied-de-page", "partage");
 footer.innerHTML = markup();
-// Les pages « tunnel » (questionnaire, connexion) font de <body> une
-// rangée flex qui centre leur carte : un pied de page ajouté en fin de
-// body y devenait une DEUXIÈME COLONNE, et la carte se serrait sur
-// 203 px à 375 px d'écran (mesuré le 2026-09-10). La classe fait passer
-// la rangée à la ligne, le pied de page occupant toute la sienne
-// (css/pied-de-page.css).
-const style = window.getComputedStyle(document.body);
-if (style.display === "flex" && /^row/.test(style.flexDirection)) {
-document.body.classList.add("pied-de-page-en-rangee");
-}
 document.body.appendChild(footer);
 }
 
