@@ -18,6 +18,10 @@ import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
 // Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
 // n'a pas de sens en préinscription) et voyage avec la demande.
 import { parcoursDOutil } from "./js/parcours.js";
+// Lot ACCEPTATION (2026-09-11) : l'e-mail exige, en bourses, une
+// candidature ACCEPTÉE — plus de mode libre pour une bourse.
+import { candidaturesPourOutils } from "./js/fitz-choisit.js";
+import { blocageOutil, afficherBlocage } from "./js/outil-acceptation.js";
 import { renderMarkdownLite } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
@@ -199,6 +203,11 @@ fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.prefe
 
 // La cible (université, programme/bourse, pays) vient de la
 // candidature sélectionnée — c'est elle qui sait à qui l'on écrit.
+// Lot ACCEPTATION : la ligne de blocage, avant le formulaire.
+function syncBlocage() {
+afficherBlocage(form, blocageOutil({ espace: ctx.espace, application }));
+}
+
 function applyApplicationContext(app) {
 
 application = app || null;
@@ -208,15 +217,30 @@ fieldUniversity.value = app.university || "";
 fieldProgram.value = app.scholarship || fieldProgram.value || "";
 }
 
+verrouillerUniversite(app);
+
 syncContextBanner();
 renderContextChips();
+syncBlocage();
 
+}
+
+// Lot ACCEPTATION : pour une candidature bourse, l'université
+// destinataire est VERROUILLÉE sur celle de la candidature — au
+// chargement (?applicationId=) comme au changement de sélecteur.
+function verrouillerUniversite(app) {
+const verrou = !!app && parcoursDOutil({ application: app }) === "bourse";
+fieldUniversity.readOnly = verrou;
+fieldUniversity.setAttribute("aria-readonly", verrou ? "true" : "false");
 }
 
 // Sélecteur des candidatures suivies. Tri : les dossiers encore en
 // jeu d'abord (ordre de STATUS pertinent inutile ici — alphabétique
 // suffit et reste stable).
-trackedApplications
+// Lot ACCEPTATION : le sélecteur ne propose que les candidatures
+// bourses ACCEPTÉES, plus les préinscriptions et les cartes sans
+// programId (js/fitz-choisit.js : candidaturesPourOutils).
+candidaturesPourOutils(trackedApplications)
 .slice()
 .sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
 .forEach((app) => {
@@ -234,6 +258,8 @@ fieldApplication.addEventListener("change", () => {
 const app = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
 applyApplicationContext(app);
 });
+
+syncBlocage();
 
 // Pastilles « Ce que Fitz sait déjà » — le miroir exact de ce que
 // collectData() enverra. Une valeur manquante s'affiche « À
@@ -313,6 +339,7 @@ CHIP_DEFS.forEach(({ input }) => input.addEventListener("input", renderContextCh
 if (application) {
 fieldUniversity.value = application.university || "";
 if (application.scholarship) fieldProgram.value = fieldProgram.value || application.scholarship;
+verrouillerUniversite(application);
 }
 
 renderContextChips();
@@ -431,6 +458,14 @@ profile
 async function generateEmail() {
 
 if (!selectedType) return;
+
+// Lot ACCEPTATION : en bourses, pas d'e-mail sans candidature acceptée.
+const blocage = blocageOutil({ espace: ctx.espace, application });
+if (blocage) {
+syncBlocage();
+showToast(blocage.texte, { type: "warning" });
+return;
+}
 
 const data = collectData();
 

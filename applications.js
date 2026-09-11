@@ -26,7 +26,8 @@ deleteDoc,
 doc,
 getDocs,
 serverTimestamp,
-arrayUnion
+arrayUnion,
+deleteField
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { trackEvent } from "./js/analytics.js";
@@ -43,7 +44,16 @@ import { isQuotaReached, PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.j
 // revenir sur une université refusée (users/{uid}.universitesRefusees).
 // Le parcours préinscription (pre-N) reste saisi à la main : hors lot.
 import { retenirOpportunites } from "./js/recommend-programs.js";
-import { profilPretPourFitz, universitesAEviter, carteFitz, identiteVerrouillee, etatChoixFitz, PHRASE_REGLE } from "./js/fitz-choisit.js";
+// Lot ACCEPTATION (2026-09-11) : l'étudiant ACCEPTE le choix de Fitz —
+// définitivement. Deux refus par place ; les outils s'ouvrent après
+// l'acceptation ; une formule en vente ne supprime jamais une carte
+// catalogue. Toutes les décisions sont dans js/fitz-choisit.js (pur).
+import {
+profilPretPourFitz, universitesAEviter, carteFitz, identiteVerrouillee, etatChoixFitz, PHRASE_REGLE,
+placesAFitz, carteCatalogue, etatCarte, estAcceptee, peutRefuser, peutAccepter, peutSupprimer, outilsOuverts,
+refusRestants, refusConsommes, statutsAutorises, bourseFermee, REFUS_MAX
+} from "./js/fitz-choisit.js";
+import { STATUTS_REPONSE } from "./js/journey-map.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase, FITZ_READINESS_PHRASES } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
@@ -767,9 +777,12 @@ async function seedRecommendedSlots(uid, planId, existingApplications, profile) 
 existingApplications = (existingApplications || []).filter((a) => lireParcours(a) !== "preinscription");
 
 const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
-const quota = plan ? plan.maxAccompaniedApplications : null;
+// Lot ACCEPTATION, partie 0 : Signature (quota Infinity, retirée de la
+// vente) n'est plus laissée vide — Fitz remplit 12 places, le plafond de
+// remplissage d'un quota infini (placesAFitz, js/fitz-choisit.js).
+const quota = placesAFitz(plan ? plan.maxAccompaniedApplications : null);
 
-if (!Number.isFinite(quota) || quota <= 0) return false;
+if (quota <= 0) return false;
 
 const missing = quota - existingApplications.length;
 
@@ -966,6 +979,23 @@ if (file.size > TAILLE_MAX_FICHIER) return false;
 return TYPES_FICHIER.some((t) => (file.type || "").startsWith(t));
 }
 
+// Lot ACCEPTATION : les statuts INTERDITS à la carte ouverte dans le
+// formulaire (statutsAutorises, js/fitz-choisit.js). Ils sont retirés
+// de la liste (hidden + disabled) ; la preuve de dépôt ne les rouvre
+// jamais.
+let statutsInterdits = new Set();
+
+function restreindreStatuts(app) {
+const tous = [...fields.status.options].map((o) => o.value);
+const autorises = new Set(statutsAutorises(app, tous));
+statutsInterdits = new Set(tous.filter((v) => !autorises.has(v)));
+fields.status.querySelectorAll("option").forEach((opt) => {
+const interdit = statutsInterdits.has(opt.value);
+opt.hidden = interdit;
+opt.disabled = interdit;
+});
+}
+
 // Active/désactive les statuts déposés selon la validité de la preuve,
 // et dit pourquoi.
 function rafraichirPreuve() {
@@ -975,7 +1005,7 @@ const file = fields.preuveFichier.files && fields.preuveFichier.files[0];
 const valide = preuveValide(preuve, { parTiers: preuveParTiers }) && fichierAcceptable(file);
 
 fields.status.querySelectorAll("option").forEach((opt) => {
-if (STATUTS_DEPOSES.includes(opt.value)) opt.disabled = !valide;
+if (STATUTS_DEPOSES.includes(opt.value)) opt.disabled = !valide || statutsInterdits.has(opt.value);
 });
 
 if (file && !fichierAcceptable(file)) {
@@ -1011,7 +1041,10 @@ const dejaValide = preuveEnregistree && preuveValide(preuveEnregistree, { parTie
 // permettre de déposer. Une candidature DÉJÀ déposée sans preuve
 // (antérieure au lot) : rien n'est exigé sur ses autres champs —
 // jamais de dégradation ; le bloc reste proposé, sans contrainte.
-preuveBlock.hidden = false;
+// Lot ACCEPTATION : une carte catalogue PROPOSÉE ne se dépose pas — on
+// accepte d'abord. Le bloc de dépôt n'a rien à lui proposer.
+preuveBlock.hidden = !!app && carteCatalogue(app) && !estAcceptee(app);
+if (preuveBlock.hidden) return;
 preuveDemande.textContent = libelleDemande(app, { parTiers: preuveParTiers });
 preuveActuelle.hidden = !preuveEnregistree;
 preuveActuelle.textContent = preuveEnregistree ? resumePreuve(preuveEnregistree) : "";
@@ -1024,8 +1057,9 @@ fields.preuveFichier.value = "";
 if (dejaDeposee && !dejaValide) {
 // Non-dégradation : les statuts déposés restent proposés tels quels
 // tant que le statut ne bouge pas (firestore.rules ne joue qu'à la
-// transition). On n'impose rien ici.
-fields.status.querySelectorAll("option").forEach((opt) => { opt.disabled = false; });
+// transition). On n'impose rien ici — sauf les statuts que le lot
+// ACCEPTATION interdit à cette carte (jamais de retour en arrière).
+fields.status.querySelectorAll("option").forEach((opt) => { opt.disabled = statutsInterdits.has(opt.value); });
 preuveEtat.textContent = "Cette candidature a été déposée avant la déclaration de dépôt ; vous pouvez la compléter ici.";
 preuveEtat.classList.remove("is-ok");
 return;
@@ -1159,6 +1193,11 @@ fields.status.value = app?.status || "a_preparer";
 fields.deadline.value = app?.deadline || "";
 fields.frequency.value = app?.reminderFrequency || "14";
 fields.notes.value = app?.notes || "";
+
+// Lot ACCEPTATION : les statuts que cette carte peut prendre — une carte
+// proposée n'offre pas les statuts déposés (on accepte d'abord), une
+// carte déposée ne redescend pas (js/fitz-choisit.js : statutsAutorises).
+restreindreStatuts(app);
 
 // Lot E1 : la déclaration de dépôt, selon la candidature (et sa bourse :
 // déposée par un tiers ou non).
@@ -1338,13 +1377,62 @@ if (jours === null || jours > JOURS_PROCHE) return "";
 return boutonRecours({ code: "echeance", app: app.id });
 }
 
-// Lot FITZ-CHOISIT : AVANT le dépôt, une candidature bourse se REFUSE
-// (Fitz propose la suivante sur le même créneau) ; on ne la supprime
-// pas. APRÈS le dépôt, « Supprimer le suivi » reste possible, et la
-// place libérée est de nouveau remplie par Fitz. Une préinscription
-// (pre-N) garde son bouton de suppression : hors lot.
-function peutRefuser(app) {
-return lireParcours(app) !== "preinscription" && !STATUTS_DEPOSES.includes(app.status);
+// Lot ACCEPTATION (2026-09-11) : une carte catalogue PROPOSÉE se refuse
+// (deux fois par place, puis Fitz tranche) ou s'accepte — et accepter
+// est définitif. Une formule EN VENTE ne supprime jamais une carte
+// catalogue : elle reste dans « Mes candidatures », c'est l'historique
+// du dossier ; une décision reçue ne libère plus de place, la suite est
+// décidée par l'équipe. Une formule retirée de la vente garde ce qui lui
+// a été vendu : suppression d'une carte acceptée dans un statut de
+// réponse. peutRefuser / peutSupprimer / etatCarte : js/fitz-choisit.js.
+// Une préinscription (pre-N) et une carte ancienne hors catalogue
+// gardent leur comportement d'avant.
+
+// La fermeture d'une bourse par l'organisme, lue dans l'instantané du
+// catalogue (bourse présente avec isActive:false, ou absente).
+// `lecture` vient de etatDeLaCandidature() : `programme` et `bourse`
+// sont null quand la fiche a été retirée. Sans index (catalogue
+// indisponible), on ne déclare jamais une bourse fermée.
+function fermeeParLOrganisme(app, lecture) {
+if (!carteCatalogue(app) || !catalogueIndex || !lecture) return false;
+return bourseFermee(app, { programme: lecture.programme || null, bourse: lecture.bourse || null });
+}
+
+function formatDateAcceptation(valeur) {
+const d = valeur && typeof valeur.toDate === "function" ? valeur.toDate() : new Date(valeur);
+return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// Le bloc d'acceptation d'une carte catalogue : bouton principal,
+// refus restants, proposition finale, pastille « Acceptée le … » ou
+// bourse fermée. Rien pour une carte qui n'est pas du catalogue.
+function renderAcceptation(app, fermee) {
+const etat = etatCarte(app);
+if (!etat) return "";
+if (fermee) {
+return `<div class="app-acceptation app-acceptation--fermee" data-etat="fermee">
+<p><i data-lucide="alert-circle"></i><span>Cette bourse a été fermée par l'organisme : Fitz vous propose une remplaçante.</span></p>
+<div class="app-acceptation-actions"><button type="button" class="btn btn-primary btn-sm app-remplacer-btn"><i data-lucide="refresh-cw"></i><span>Voir la remplaçante</span></button></div>
+</div>`;
+}
+if (etat.code === "acceptee") {
+const date = etat.sansDate ? "" : formatDateAcceptation(app.accepteeLe);
+return `<div class="app-acceptation app-acceptation--acceptee" data-etat="acceptee"><span class="app-acceptee-pill"><i data-lucide="check-circle"></i>${date ? `Acceptée le ${escapeHtml(date)}` : "Acceptée"}</span></div>`;
+}
+const restants = refusRestants(app);
+if (etat.code === "finale") {
+return `<div class="app-acceptation app-acceptation--finale" data-etat="finale">
+<p><i data-lucide="info"></i><span>Fitz a fait sa proposition finale pour cette place. Si cette université pose un vrai problème, <a href="messages.html#supportCard">écrivez-nous</a>.</span></p>
+<div class="app-acceptation-actions"><button type="button" class="btn btn-primary btn-sm app-accept-btn"><i data-lucide="check"></i><span>J'accepte cette université</span></button></div>
+</div>`;
+}
+return `<div class="app-acceptation app-acceptation--proposee" data-etat="proposee">
+<div class="app-acceptation-actions">
+<button type="button" class="btn btn-primary btn-sm app-accept-btn"><i data-lucide="check"></i><span>J'accepte cette université</span></button>
+<button type="button" class="btn btn-secondary btn-sm app-refuse-btn"><i data-lucide="refresh-cw"></i><span>Refuser et demander une autre université</span></button>
+</div>
+<p class="app-refus-restants" data-refus-restants="${restants}">Il vous reste ${restants} refus pour cette place</p>
+</div>`;
 }
 
 function renderCard(app, lecture) {
@@ -1361,6 +1449,13 @@ card.dataset.appId = app.id;
 // (voir js/next-action.js : Fitz écrit la lettre à partir du profil)
 const lettrePrematuree = qualifierEtapes(journeySteps)
 .some((e) => e.id === "letter" && e.etat === "prematuree");
+
+// Lot ACCEPTATION : ce que la carte a le droit de montrer.
+const fermee = fermeeParLOrganisme(app, lecture);
+const outils = outilsOuverts(app);
+const refusable = !fermee && peutRefuser(app);
+const etat = etatCarte(app);
+if (etat) card.dataset.acceptation = fermee ? "fermee" : etat.code;
 
 card.innerHTML = `
 <div class="app-card-top">
@@ -1392,7 +1487,9 @@ ${renderExigences(lecture)}
 
 ${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
 
-<div class="app-card-documents">
+${renderAcceptation(app, fermee)}
+
+${outils ? `<div class="app-card-documents">
 <i data-lucide="pen-line"></i>
 ${app.generatedLetter
 ? `<span>Lettre de motivation générée pour cette candidature.</span><a href="ai-letter.html?applicationId=${app.id}" class="app-doc-link">Revoir / régénérer</a>`
@@ -1411,24 +1508,30 @@ ${app.generatedLetter
 ${app.generatedEmail
 ? `<span>E-mail Fitz généré pour cette candidature.</span><a href="ai-email.html?applicationId=${app.id}" class="app-doc-link">Revoir / régénérer</a>`
 : `<span>Fitz peut rédiger un e-mail pour cette candidature.</span><a href="ai-email.html?applicationId=${app.id}" class="app-doc-link">Générer avec Fitz</a>`}
-</div>
+</div>`
+// Lot ACCEPTATION : les outils de Fitz (lettre, e-mail, vérification)
+// ne s'ouvrent qu'APRÈS l'acceptation. Sur une carte proposée, une seule
+// ligne, à leur place — et aucun lien.
+: `<div class="app-card-documents app-outils-fermes"><i data-lucide="lock"></i><span>Acceptez cette université pour commencer votre dossier.</span></div>`}
 
 ${renderChecklistSection(app, lecture)}
 
-${renderReadinessPanel(app, advisorUnlocked)}
+${outils ? renderReadinessPanel(app, advisorUnlocked) : ""}
 
 <div class="app-card-actions">
-${peutRefuser(app) ? `<button type="button" class="btn btn-secondary btn-sm app-refuse-btn"><i data-lucide="refresh-cw"></i><span>Refuser et demander une autre université</span></button>` : ""}
+${refusable && !carteCatalogue(app) ? `<button type="button" class="btn btn-secondary btn-sm app-refuse-btn"><i data-lucide="refresh-cw"></i><span>Refuser et demander une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
-<button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>
+${outils ? `<button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>` : ""}
 ${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
 ${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
 <button type="button" class="btn btn-ghost btn-sm app-edit-btn" aria-label="Modifier"><i data-lucide="pen-line"></i></button>
-${peutRefuser(app) ? "" : `<button type="button" class="btn btn-ghost btn-sm app-delete-btn" aria-label="Supprimer le suivi" title="Supprimer le suivi"><i data-lucide="trash-2"></i></button>`}
+${peutSupprimer(app, planId) ? `<button type="button" class="btn btn-ghost btn-sm app-delete-btn" aria-label="Supprimer le suivi" title="Supprimer le suivi"><i data-lucide="trash-2"></i></button>` : ""}
 </div>
 `;
 
+card.querySelector(".app-accept-btn")?.addEventListener("click", () => accepter(app));
+card.querySelector(".app-remplacer-btn")?.addEventListener("click", () => remplacerFermee(app));
 card.querySelector(".app-checkin-btn").addEventListener("click", () => checkIn(app));
 card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(app));
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
@@ -1444,7 +1547,7 @@ showToast("La capture n'a pas pu être ouverte.", { type: "error" });
 });
 card.querySelector(".app-delete-btn")?.addEventListener("click", () => removeApplication(app));
 card.querySelector(".app-refuse-btn")?.addEventListener("click", () => refuserEtRemplacer(app));
-card.querySelector(".app-readiness-btn").addEventListener("click", () => runReadinessCheck(app));
+card.querySelector(".app-readiness-btn")?.addEventListener("click", () => runReadinessCheck(app));
 
 // LE SEUL ENDROIT où une date du catalogue atteint la fiche de
 // l'étudiant : son clic, sur la date affichée dans le bouton. Aucune
@@ -1621,14 +1724,29 @@ if (!etat) return;
 if (ESPACE_ECRITURE === "preinscription") { etat.hidden = true; return; }
 
 const quota = quotaPour("bourse");
-const nombre = candidaturesDuParcours("bourse", applications).length;
-const ligne = etatChoixFitz({ quota, nombre, profilPret: profilPretPourFitz(profile).pret });
+const bourses = candidaturesDuParcours("bourse", applications);
+const nombre = bourses.length;
+// Lot ACCEPTATION : quand les N cartes ont toutes reçu une réponse,
+// c'est l'équipe qui décide la suite — la ligne le dit (code `reponses`).
+const reponses = bourses.filter((a) => STATUTS_REPONSE.includes(a.status)).length;
+const ligne = etatChoixFitz({ quota, nombre, profilPret: profilPretPourFitz(profile).pret, reponses });
+
+// « J'accepte les N choix de Fitz », dès qu'au moins 2 cartes sont
+// proposées (ni acceptées, ni fermées par l'organisme).
+const proposees = bourses.filter((a) => peutAccepter(a) && !fermeeParLOrganisme(a, catalogueIndex ? etatDeLaCandidature(a, catalogueIndex) : null));
+const toutBtn = document.getElementById("accepterToutBtn");
+if (toutBtn) {
+toutBtn.hidden = proposees.length < 2;
+const libelle = toutBtn.querySelector("span");
+if (libelle) libelle.textContent = `J'accepte les ${proposees.length} choix de Fitz`;
+}
 
 if (!ligne) { etat.hidden = true; return; }
 
 etat.hidden = false;
 etat.dataset.etat = ligne.code;
-etat.innerHTML = `<i data-lucide="${ligne.code === "complet" ? "check-circle" : "user-round"}"></i><span>${escapeHtml(ligne.texte)}</span>${ligne.lienProfil ? `<a href="profile.html" class="btn btn-secondary btn-sm">Compléter mon profil</a>` : ""}`;
+const icone = ligne.code === "complet" ? "check-circle" : (ligne.code === "reponses" ? "mail-check" : "user-round");
+etat.innerHTML = `<i data-lucide="${icone}"></i><span>${escapeHtml(ligne.texte)}</span>${ligne.lienProfil ? `<a href="profile.html" class="btn btn-secondary btn-sm">Compléter mon profil</a>` : ""}`;
 
 }
 
@@ -1658,9 +1776,16 @@ if (lien.source !== "deduit" || lien.ambigu) continue;
 
 const patch = { scholarshipId: lien.scholarshipId, programId: lien.programId, catalogueLieLe: serverTimestamp() };
 
+// Lot ACCEPTATION : une carte ancienne a été CHOISIE par l'étudiant
+// avant la doctrine — on ne la lui fait pas « accepter ». Elle devient
+// carte catalogue (programId) ET acceptée dans le même patch ; sinon
+// elle s'afficherait proposée, avec ses outils fermés.
+if (lien.programId && !app.accepteeLe) patch.accepteeLe = serverTimestamp();
+
 try {
 await updateDoc(doc(db, "users", uid, "applications", app.id), patch);
 Object.assign(app, { scholarshipId: lien.scholarshipId, programId: lien.programId, catalogueLieLe: new Date() });
+if (patch.accepteeLe) app.accepteeLe = new Date();
 } catch (error) {
 console.warn(`Liaison au catalogue non enregistrée pour ${app.id} :`, error);
 }
@@ -1772,12 +1897,11 @@ if (btn) { btn.disabled = false; btn.querySelector("span").textContent = "Vérif
 //      et pouvait afficher son échéance, son état et ses exigences ;
 //   3. les pays exclus et les universités des autres créneaux sont
 //      écartés par le moteur lui-même (exclureUniversites, paysExclu).
-async function refuserEtRemplacer(app) {
-
-const button = document.querySelector(`[data-app-id="${app.id}"] .app-refuse-btn`);
-if (button) { button.disabled = true; button.querySelector("span").textContent = "Fitz cherche…"; }
-
-try {
+// Lot ACCEPTATION : deux chemins mènent à une remplaçante — le REFUS de
+// l'étudiant (refus + 1, université mémorisée) et la FERMETURE de la
+// bourse par l'organisme (refus inchangé, rien de mémorisé, accepteeLe
+// retiré). La recherche est la même ; seule l'écriture diffère.
+async function chercherRemplacante(app, { ecarterCelleCi }) {
 
 // Deuxième lecture du catalogue dans la même page : gratuite depuis
 // le chargeur partagé.
@@ -1788,20 +1912,46 @@ const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }
 const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 const parNom = indexParNom(universitiesById);
 
-// L'université refusée : son identifiant, ou celui de son programme,
-// ou son nom rapproché (candidature ancienne).
+// L'université de la carte : son identifiant, ou celui de son
+// programme, ou son nom rapproché (candidature ancienne).
 const programme = app.programId ? programs.find((p) => p.firestoreId === app.programId) : null;
-const refuseeId = app.universityId || (programme && programme.universityId) || parNom.get(String(app.university || "").trim().toLowerCase()) || null;
+const universiteId = app.universityId || (programme && programme.universityId) || parNom.get(String(app.university || "").trim().toLowerCase()) || null;
 
-if (refuseeId && !universitesRefusees.includes(refuseeId)) universitesRefusees = [...universitesRefusees, refuseeId];
+// Une bourse fermée n'est pas un refus : l'université reste possible
+// par une autre bourse. On écarte seulement cette carte-ci du calcul,
+// pour que Fitz ne la re-propose pas telle quelle.
+const aEviter = universitesAEviter({ applications: applications.filter((a) => a.id !== app.id), universitesRefusees, universitesParNom: parNom });
+if (ecarterCelleCi && universiteId) aEviter.add(universiteId);
 
 const [alternative] = retenirOpportunites({
 profile: profile || {},
 programs,
 universitiesById,
 scholarshipsById,
-exclureUniversites: universitesAEviter({ applications, universitesRefusees, universitesParNom: parNom })
+exclureUniversites: aEviter
 }).retenues;
+
+return { alternative: alternative || null, universiteId };
+
+}
+
+async function refuserEtRemplacer(app) {
+
+// Deux refus par place, pas plus : à la troisième proposition, Fitz
+// tranche. Le bouton n'existe plus à ce stade ; on le redit ici.
+if (refusConsommes(app) >= REFUS_MAX) {
+showToast("Fitz a fait sa proposition finale pour cette place.", { type: "warning" });
+return;
+}
+
+const button = document.querySelector(`[data-app-id="${app.id}"] .app-refuse-btn`);
+if (button) { button.disabled = true; button.querySelector("span").textContent = "Fitz cherche…"; }
+
+try {
+
+const { alternative, universiteId: refuseeId } = await chercherRemplacante(app, { ecarterCelleCi: true });
+
+if (refuseeId && !universitesRefusees.includes(refuseeId)) universitesRefusees = [...universitesRefusees, refuseeId];
 
 if (!alternative) {
 showToast("Fitz n'a pas trouvé d'autre université compatible pour l'instant. Un profil plus complet élargit les possibilités.", { type: "warning" });
@@ -1814,13 +1964,16 @@ if (refuseeId) {
 await updateDoc(doc(db, "users", uid), { universitesRefusees: arrayUnion(refuseeId) });
 }
 
-// 2. La carte neuve — même fonction que le remplissage.
+// 2. La carte neuve — même fonction que le remplissage. carteFitz remet
+// `refus` à 0 : le compteur de la PLACE est réécrit après, à refus + 1
+// (firestore.rules l'exige : un refus qui n'incrémente pas est refusé).
 await updateDoc(doc(db, "users", uid, "applications", app.id), {
 ...carteFitz(alternative, { portalUrl: portailDeLEntree(alternative), nextCheckDate: nextCheckFromToday(14), reminderFrequency: app.reminderFrequency || 14 }),
+refus: refusConsommes(app) + 1,
 updatedAt: serverTimestamp()
 });
 
-trackEvent("application_recommendation_replaced", { refusee: refuseeId || "" });
+trackEvent("application_recommendation_replaced", { refusee: refuseeId || "", refus: refusConsommes(app) + 1 });
 
 showToast(`Fitz vous propose ${alternative.universityName}.`, { type: "success" });
 
@@ -1839,6 +1992,111 @@ if (button) { button.disabled = false; button.querySelector("span").textContent 
 
 }
 
+// L'exception légitime : l'organisme a fermé la bourse (isActive:false,
+// ou fiche retirée) sur une carte NON DÉPOSÉE. La remplaçante arrive à
+// l'état « proposée » : accepteeLe retiré, refus inchangé, rien dans
+// universitesRefusees — l'étudiant n'a rien refusé.
+async function remplacerFermee(app) {
+
+const button = document.querySelector(`[data-app-id="${app.id}"] .app-remplacer-btn`);
+if (button) { button.disabled = true; button.querySelector("span").textContent = "Fitz cherche…"; }
+
+try {
+
+const { alternative } = await chercherRemplacante(app, { ecarterCelleCi: true });
+
+if (!alternative) {
+showToast("Fitz n'a pas trouvé d'autre université compatible pour l'instant. Un profil plus complet élargit les possibilités.", { type: "warning" });
+return;
+}
+
+await updateDoc(doc(db, "users", uid, "applications", app.id), {
+...carteFitz(alternative, { portalUrl: portailDeLEntree(alternative), nextCheckDate: nextCheckFromToday(14), reminderFrequency: app.reminderFrequency || 14 }),
+refus: refusConsommes(app),
+accepteeLe: deleteField(),
+updatedAt: serverTimestamp()
+});
+
+trackEvent("application_bourse_fermee_remplacee", { programme: app.programId || "" });
+
+showToast(`Fitz vous propose ${alternative.universityName}.`, { type: "success" });
+
+await loadApplications();
+
+} catch (error) {
+
+console.error("Impossible de proposer une remplaçante :", error);
+showToast("Un souci est survenu — réessayez dans un instant.", { type: "error" });
+
+} finally {
+
+if (button) { button.disabled = false; button.querySelector("span").textContent = "Voir la remplaçante"; }
+
+}
+
+}
+
+// ACCEPTER, C'EST DÉFINITIF (décision 1). L'horodatage vient du
+// serveur ; firestore.rules n'accepte que request.time, une seule fois.
+async function ecrireAcceptation(app) {
+await updateDoc(doc(db, "users", uid, "applications", app.id), { accepteeLe: serverTimestamp(), updatedAt: serverTimestamp() });
+trackEvent("application_acceptee", { refus: refusConsommes(app) });
+}
+
+async function accepter(app) {
+
+if (!peutAccepter(app)) return;
+
+if (!confirm(`Accepter « ${app.university} » ? Après acceptation, vous ne pourrez plus changer cette université.`)) return;
+
+const button = document.querySelector(`[data-app-id="${app.id}"] .app-accept-btn`);
+if (button) button.disabled = true;
+
+try {
+await ecrireAcceptation(app);
+showToast(`« ${app.university} » acceptée : vos outils sont ouverts.`, { type: "success" });
+await loadApplications();
+} catch (error) {
+console.error("Impossible d'enregistrer l'acceptation :", error);
+showToast("L'acceptation n'a pas pu être enregistrée — réessayez dans un instant.", { type: "error" });
+if (button) button.disabled = false;
+}
+
+}
+
+// « J'accepte les N choix de Fitz » — toutes les cartes proposées (ni
+// acceptées, ni fermées par l'organisme), une écriture par carte.
+async function accepterTout() {
+
+const proposees = candidaturesDuParcours("bourse", applications)
+.filter((a) => peutAccepter(a) && !fermeeParLOrganisme(a, catalogueIndex ? etatDeLaCandidature(a, catalogueIndex) : null));
+
+if (proposees.length < 2) return;
+
+if (!confirm(`Accepter les ${proposees.length} universités choisies par Fitz ? Après acceptation, vous ne pourrez plus changer ces universités.`)) return;
+
+const toutBtn = document.getElementById("accepterToutBtn");
+if (toutBtn) toutBtn.disabled = true;
+
+let acceptees = 0;
+
+try {
+for (const app of proposees) {
+await ecrireAcceptation(app);
+acceptees += 1;
+}
+showToast(`${acceptees} universités acceptées : vos outils sont ouverts.`, { type: "success" });
+} catch (error) {
+console.error("Acceptation groupée interrompue :", error);
+showToast(acceptees ? `${acceptees} université${acceptees > 1 ? "s" : ""} acceptée${acceptees > 1 ? "s" : ""}, puis un souci est survenu — réessayez pour les autres.` : "L'acceptation n'a pas pu être enregistrée — réessayez dans un instant.", { type: "error" });
+} finally {
+if (toutBtn) toutBtn.disabled = false;
+}
+
+await loadApplications();
+
+}
+
 async function checkIn(app) {
 
 const nextCheckDate = nextCheckFromToday(app.reminderFrequency || 14);
@@ -1853,15 +2111,18 @@ await loadApplications();
 
 async function removeApplication(app) {
 
-// Lot FITZ-CHOISIT : après le dépôt, la suppression dit ce qui sera
-// perdu — la preuve de dépôt d'abord — et la place libérée sera de
-// nouveau remplie par Fitz (parcours bourses).
+// Lot ACCEPTATION : la suppression dit ce qui sera perdu — la preuve de
+// dépôt d'abord. Elle n'est proposée que là où peutSupprimer() le
+// permet (js/fitz-choisit.js) ; firestore.rules fait foi. Une place
+// libérée n'est plus promise à Fitz : pour une formule en vente, aucune
+// carte catalogue ne se supprime, et la suite est décidée par l'équipe.
+if (!peutSupprimer(app, planId)) return;
+
 const perdu = [];
 if (app.preuveDepot) perdu.push("votre preuve de dépôt");
 if (Array.isArray(app.checklist) && app.checklist.length) perdu.push("votre dossier de candidature");
 if (app.notes) perdu.push("vos notes");
-const suite = lireParcours(app) === "preinscription" ? "" : " Fitz proposera une autre université pour cette place.";
-const message = `Supprimer le suivi de « ${app.university} » ?${perdu.length ? ` Vous perdrez ${perdu.join(", ")} : ce suivi ne pourra pas être rétabli.` : ""}${suite}`;
+const message = `Supprimer le suivi de « ${app.university} » ?${perdu.length ? ` Vous perdrez ${perdu.join(", ")} : ce suivi ne pourra pas être rétabli.` : ""}`;
 
 if (!confirm(message)) return;
 
@@ -2050,6 +2311,11 @@ updatedAt: serverTimestamp()
 // n'a pas le droit de changer.
 if (!editingId) payload.isRecommendation = false;
 const enEdition = editingId ? applications.find((a) => a.id === editingId) : null;
+// Lot ACCEPTATION : le parcours ne change jamais (firestore.rules le
+// refuse). En édition, on ne le renvoie pas : un client des deux
+// parcours qui modifiait une bourse depuis son espace préinscription
+// lui réécrivait « preinscription » — un vrai défaut, corrigé ici.
+if (editingId) delete payload.track;
 if (enEdition && identiteVerrouillee(enEdition)) {
 delete payload.university;
 delete payload.scholarship;
@@ -2058,11 +2324,28 @@ delete payload.portalUrl;
 return;
 }
 
+// Lot ACCEPTATION : le formulaire ne propose pas un statut interdit à
+// cette carte ; on le redit ici, en clair, avant toute écriture.
+if (enEdition && !statutsAutorises(enEdition, [payload.status]).length) {
+showToast(estAcceptee(enEdition)
+? "Une candidature déposée ne redescend pas. Une erreur ? Utilisez « Signaler un problème »."
+: "Acceptez d'abord cette université pour déposer votre dossier.", { type: "warning" });
+return;
+}
+
 // Lot E1 : un statut déposé exige une déclaration valide — le select
 // ne l'offre qu'à cette condition, mais on le redit ici, en clair.
 const veutDeposer = STATUTS_DEPOSES.includes(payload.status);
 const previousApp = editingId ? applications.find((a) => a.id === editingId) : null;
 const transition = !previousApp || previousApp.status !== payload.status;
+
+// Lot ACCEPTATION : une carte ancienne déjà déposée SANS accepteeLe
+// (donnée d'avant le lot) s'affiche acceptée ; à sa prochaine écriture
+// de statut, le client pose accepteeLe dans la même écriture — sinon
+// firestore.rules la refuserait (un statut déposé exige l'acceptation).
+if (enEdition && carteCatalogue(enEdition) && !enEdition.accepteeLe && veutDeposer && transition) {
+payload.accepteeLe = serverTimestamp();
+}
 if (veutDeposer && transition) {
 const file = fields.preuveFichier.files && fields.preuveFichier.files[0];
 if (!preuveValide(preuveSaisie(), { parTiers: preuveParTiers }) || !fichierAcceptable(file)) {
@@ -2098,7 +2381,7 @@ return;
 }
 
 await updateDoc(doc(db, "users", uid, "applications", editingId), payload);
-if (payload.preuveDepot && previous && previous.status !== payload.status) trackEvent("application_deposee_declaree", { mode: payload.preuveDepot.mode, track: payload.track });
+if (payload.preuveDepot && previous && previous.status !== payload.status) trackEvent("application_deposee_declaree", { mode: payload.preuveDepot.mode, track: lireParcours(previous) });
 
 if (outcomeEvent && previous && previous.status !== payload.status) {
 trackEvent(outcomeEvent, { university: payload.university || "" });
@@ -2179,16 +2462,18 @@ await loadApplications();
 
 // Lot FITZ-CHOISIT : plus de création manuelle dans l'espace bourses —
 // le bouton n'y existe pas (Fitz remplit les places, la ligne d'état
-// #fitzChoixEtat dit où il en est). Il reste pour la préinscription
-// (vœux pre-N saisis à la main, hors lot) et, non-régression, pour une
-// formule sans plafond (Signature, dépréciée) que Fitz ne pré-remplit
-// jamais.
+// #fitzChoixEtat dit où il en est). Il ne reste que pour la
+// préinscription (vœux pre-N saisis à la main, hors lot). Lot
+// ACCEPTATION, partie 0 : Signature (sans plafond) ne l'a plus non plus —
+// les règles refusent sa création manuelle depuis FITZ-CHOISIT, et Fitz
+// lui remplit 12 places (seedRecommendedSlots).
 const addBtn = document.getElementById("addApplicationBtn");
-const creationManuelle = ESPACE_ECRITURE === "preinscription" || (peutBourse && !Number.isFinite(quotaPour("bourse")) && !peutPreinscription);
+const creationManuelle = ESPACE_ECRITURE === "preinscription";
 if (addBtn) {
 addBtn.hidden = !creationManuelle;
 addBtn.addEventListener("click", () => openModal(null));
 }
+document.getElementById("accepterToutBtn")?.addEventListener("click", accepterTout);
 const regle = document.getElementById("fitzRegle");
 if (regle) { regle.hidden = ESPACE_ECRITURE === "preinscription"; regle.textContent = PHRASE_REGLE; }
 document.getElementById("applicationModalClose").addEventListener("click", closeModal);

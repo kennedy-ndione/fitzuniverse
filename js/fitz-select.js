@@ -132,6 +132,11 @@ list.innerHTML = "";
 
 Array.from(select.options).forEach((opt, idx) => {
 
+// Lot ACCEPTATION (2026-09-11) : une option masquée (`hidden`) est
+// retirée de la liste, comme le ferait le select natif — le formulaire
+// de candidature retire ainsi les statuts interdits à une carte.
+if (opt.hidden) return;
+
 const li = document.createElement("li");
 li.setAttribute("role", "option");
 li.className = "fitz-select-option";

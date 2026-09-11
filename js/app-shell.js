@@ -54,7 +54,9 @@ HUB_ESPACE
 } from "./access-guard.js";
 // Le droit « Mon conseiller » se décide dans plan-features.js, en un
 // seul endroit — voir advisorOuvert() et la note qui l'accompagne.
-import { advisorOuvert, ESPACE_OUTILS } from "./plan-features.js";
+// passSeul / PASS_LABEL (lot ACCEPTATION, partie 4) : le Pass Découverte
+// seul ne mène qu'au chat — une seule définition, pure.
+import { advisorOuvert, ESPACE_OUTILS, passSeul, PASS_LABEL } from "./plan-features.js";
 // Lot FITZ-RECOURS : à la place d'un outil verrouillé, « Bloqué ?
 // Demandez à Fitz » — le diagnostic (quelle formule l'ouvre) est
 // calculé, donc gratuit ; la conversation, elle, reste réservée.
@@ -476,6 +478,42 @@ ancre.insertBefore(nav, ancre.firstChild);
 
 }
 
+// ==========================================================
+// LE PASS DÉCOUVERTE SEUL (lot ACCEPTATION, partie 4)
+// ==========================================================
+// Les trois pages qu'un Pass seul peut ouvrir. Tout le reste de l'espace
+// le renvoie vers le chat (bootstrapShell, ci-dessous).
+export const PAGES_DU_PASS = ["ai-chat.html", "messages.html", "account.html"];
+
+function pageCourante() {
+return (window.location.pathname.split("/").pop() || "").toLowerCase();
+}
+
+// Sa navigation ne montre que ça : barre d'onglets Fitz et Menu ; feuille
+// « Menu » Paramètres, Messages de l'équipe, Se déconnecter ; barre haute
+// sans « Mon parcours » ni icône du profil, le logo menant au chat.
+// Retiré du DOM, comme appliquerEspace le fait déjà (lot S4).
+function appliquerPassSeul() {
+
+document.body.dataset.passSeul = "true";
+
+document.querySelectorAll(".journey-topbar .back-link").forEach((el) => el.remove());
+document.querySelectorAll('.journey-topbar a[href="profile.html"]').forEach((el) => el.remove());
+document.querySelectorAll(".journey-topbar .fitz-lockup").forEach((a) => {
+a.setAttribute("href", "ai-chat.html");
+a.setAttribute("aria-label", "FitzUniverse — discuter avec Fitz");
+});
+
+// La sidebar historique (pages à shell latéral) : mêmes trois portes.
+document.querySelectorAll(".sidebar .nav-link").forEach((a) => {
+const href = (a.getAttribute("href") || "").split("?")[0].toLowerCase();
+if (!PAGES_DU_PASS.includes(href)) a.remove();
+});
+
+if (window.FitzMobileNav && window.FitzMobileNav.appliquerPassSeul) window.FitzMobileNav.appliquerPassSeul();
+
+}
+
 export function bootstrapShell({ feature, espace = "", pageLoaderId = "pageLoader", contentSelector = ".content" } = {}) {
 
 const content = document.querySelector(contentSelector);
@@ -509,6 +547,21 @@ window.location.replace("suspended.html");
 return new Promise(() => {});
 }
 
+// LOT ACCEPTATION, PARTIE 4 — LE PASS DÉCOUVERTE NE MÈNE QU'AU CHAT.
+// Un compte qui n'a QUE le Pass (passSeul, js/plan-features.js) est
+// renvoyé vers ai-chat.html dès qu'il ouvre une page de l'espace :
+// dashboard.html, les deux hubs, les candidatures, les documents, le
+// profil, les outils. Trois pages restent ouvertes : le chat, les
+// messages de l'équipe (et « Signaler un problème »), les paramètres.
+// Les pages publiques (offres, paiement, catalogue) ne passent pas par
+// ici : il peut toujours acheter une formule complète.
+const seulementLePass = passSeul(session);
+
+if (seulementLePass && !PAGES_DU_PASS.includes(pageCourante())) {
+window.location.replace("ai-chat.html");
+return new Promise(() => {});
+}
+
 // LOT S4 — L'ESPACE, AVANT TOUT LE RESTE.
 // Une page marquée qu'un client n'a pas le droit d'ouvrir ne le renvoie
 // pas aux offres : elle le ramène CHEZ LUI. On ne vend pas à quelqu'un
@@ -527,8 +580,12 @@ const featureFlags = await fetchFeatureFlags();
 document.body.dataset.plan = session.planId;
 document.body.dataset.espace = courant || "aucun";
 
+// La pastille d'un Pass seul dit « Pass Découverte », jamais « Gratuit »
+// (lot ACCEPTATION, partie 4). Elle mène aux offres, comme toute formule.
+const libelleFormule = seulementLePass ? PASS_LABEL : PLAN_LABELS[session.planId];
+
 const planBadge = document.getElementById("planBadge");
-if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
+if (planBadge) planBadge.textContent = libelleFormule;
 
 // LA PASTILLE NE DIT QUE L'ESPACE OÙ L'ON SE TROUVE (lot S4).
 // Elle concaténait les deux forfaits (« Gratuit · Diagnostic France »),
@@ -538,8 +595,8 @@ if (planBadge) planBadge.textContent = PLAN_LABELS[session.planId];
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) {
 topbarPlanLabel.textContent = courant === "preinscription"
-? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || PLAN_LABELS[session.planId])
-: PLAN_LABELS[session.planId];
+? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || libelleFormule)
+: libelleFormule;
 }
 
 // Le bouton flottant Fitz, dans TOUS les espaces depuis le lot PRÉ-FITZ
@@ -567,6 +624,10 @@ if (!isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.
 window.FitzMobileNav.ouvrirEntree("diagnostic_france");
 }
 }
+
+// Lot ACCEPTATION, partie 4 : la navigation d'un Pass seul ne montre
+// que Fitz, les messages de l'équipe, les paramètres et la déconnexion.
+if (seulementLePass) appliquerPassSeul();
 
 if (window.lucide) lucide.createIcons();
 

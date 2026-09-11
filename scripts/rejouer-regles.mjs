@@ -77,6 +77,37 @@ async function patchCommeEtudiant(uid, chemin, data) {
   return r.status;
 }
 
+// LOT ACCEPTATION (2026-09-11) : deux écritures de plus, comme l'étudiant.
+// La suppression (DELETE REST) — c'est ce que fait deleteDoc().
+async function supprimerCommeEtudiant(uid, chemin) {
+  const r = await fetch(`${BASE}/${chemin}`, { method: "DELETE", headers: { Authorization: `Bearer ${jeton(uid)}` } });
+  return r.status;
+}
+
+// Une écriture avec l'HEURE DU SERVEUR (`:commit`, transform
+// setToServerValue: REQUEST_TIME) — c'est ce que fait updateDoc() avec
+// serverTimestamp() ; firestore.rules y lit request.time. `data` porte
+// les champs ordinaires, `heureServeur` les champs horodatés, `effacer`
+// les champs retirés (deleteField()).
+async function patchAvecHeureServeur(uid, chemin, data = {}, heureServeur = [], effacer = []) {
+  const name = `projects/${PROJET}/databases/(default)/documents/${chemin}`;
+  const write = {
+    update: { name, fields: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, versValeur(v)])) },
+    updateMask: { fieldPaths: [...Object.keys(data), ...effacer] },
+    currentDocument: { exists: true }
+  };
+  if (heureServeur.length) write.updateTransforms = heureServeur.map((fieldPath) => ({ fieldPath, setToServerValue: "REQUEST_TIME" }));
+  const r = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton(uid)}` },
+    body: JSON.stringify({ writes: [write] })
+  });
+  return r.status;
+}
+
+// Accepter le choix de Fitz : accepteeLe = heure du serveur.
+const accepterCommeEtudiant = (uid, chemin, data = {}) => patchAvecHeureServeur(uid, chemin, data, ["accepteeLe"]);
+
 const resultats = [];
 function attendre(nom, obtenu, attendu) {
   const ok = obtenu === attendu;
@@ -126,6 +157,20 @@ const AUTRE_PROG = "rejeu-programme-2";
 const AUTRE_UNI = "rejeu-universite-2";
 await admin.doc(`universities/${AUTRE_UNI}`).set({ name: "Université de test 2", country: "Canada" });
 await admin.doc(`programs/${AUTRE_PROG}`).set({ universityId: AUTRE_UNI, scholarshipId: BOURSE, level: "Master" });
+// LOT ACCEPTATION : une seconde bourse, que l'organisme FERME en cours de
+// route (isActive:false) — l'exception catalogue —, et une troisième
+// université pour la remplaçante.
+const BOURSE_FERMEE = "rejeu-bourse-fermee";
+const PROG_FERME = "rejeu-programme-ferme";
+const UNI_3 = "rejeu-universite-3";
+const PROG_3 = "rejeu-programme-3";
+await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: true });
+await admin.doc(`programs/${PROG_FERME}`).set({ universityId: UNI, scholarshipId: BOURSE_FERMEE, level: "Master" });
+await admin.doc(`universities/${UNI_3}`).set({ name: "Université de test 3", country: "Belgique" });
+await admin.doc(`programs/${PROG_3}`).set({ universityId: UNI_3, scholarshipId: BOURSE, level: "Master" });
+const IDENTITE_FERMEE = { university: "Université de test", scholarship: "Bourse qui ferme", scholarshipId: BOURSE_FERMEE, programId: PROG_FERME, universityId: UNI };
+const IDENTITE_2 = { university: "Université de test 2", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: AUTRE_PROG, universityId: AUTRE_UNI };
+const IDENTITE_3 = { university: "Université de test 3", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: PROG_3, universityId: UNI_3 };
 
 const IDENTITE = { university: "Université de test", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: PROG, universityId: UNI };
 const candidature = (track) => (track === "preinscription"
@@ -209,6 +254,12 @@ await admin.doc(`users/${UID_E1}`).set({ uid: UID_E1, name: "Preuve de dépôt",
 // Une candidature ANCIENNE, déjà déposée sans preuve (écrite par l'admin SDK, comme avant le lot).
 await admin.doc(`users/${UID_E1}/applications/slot-6`).set({ university: "Ancienne", status: "deposee", notes: "" });
 attendre("création en préparation, sans preuve : acceptée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, candidature("bourse")), 200);
+// LOT ACCEPTATION : `candidature("bourse")` porte IDENTITE, donc un
+// programId — ce sont des cartes catalogue, et le dépôt SUIT
+// l'acceptation. Les cas E1 acceptent donc la carte d'abord (attente
+// changée, voulue : un dépôt sur une carte proposée est refusé).
+attendre("ACCEPTATION : déposer une carte proposée (non acceptée), même avec preuve : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", numeroDossier: "EF-0", deposeLe: "2026-09-07" } }), 403);
+attendre("ACCEPTATION : accepter slot-1 (accepteeLe = heure du serveur) : accepté", await accepterCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`), 200);
 attendre("passage en deposee SANS preuve : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee" }), 403);
 attendre("passage en deposee avec une preuve mal formée (mode inconnu) : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "ocr", numeroDossier: "1", deposeLe: "2026-09-07" } }), 403);
 attendre("passage en deposee, numero sans numéro : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", deposeLe: "2026-09-07" } }), 403);
@@ -216,11 +267,14 @@ attendre("passage en deposee, date mal formée : refusé", await patchCommeEtudi
 attendre("passage en deposee, capture hors du dossier de la candidature : refusé", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "capture", fichier: `users/${UID_E1}/applications/slot-2/preuve-depot.jpg`, deposeLe: "2026-09-07" } }), 403);
 attendre("passage en deposee AVEC preuve numero : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { status: "deposee", preuveDepot: { mode: "numero", numeroDossier: "EF-1", deposeLe: "2026-09-07" } }), 200);
 attendre("création en préparation (slot-2)", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-2`, candidature("bourse")), 200);
-attendre("passage en en_attente AVEC preuve capture : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-2`, { status: "en_attente", preuveDepot: { mode: "capture", fichier: `users/${UID_E1}/applications/slot-2/preuve-depot.jpg`, deposeLe: "2026-09-06" } }), 200);
+// Accepter ET déposer dans la MÊME écriture : accepté (accepteeLe = heure du serveur).
+attendre("passage en en_attente AVEC preuve capture, en acceptant dans la même écriture : accepté", await accepterCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-2`, { status: "en_attente", preuveDepot: { mode: "capture", fichier: `users/${UID_E1}/applications/slot-2/preuve-depot.jpg`, deposeLe: "2026-09-06" } }), 200);
 attendre("création en préparation (slot-3)", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-3`, candidature("bourse")), 200);
+attendre("accepter slot-3", await accepterCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-3`), 200);
 attendre("passage en deposee AVEC preuve transmis (numéro) : accepté", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-3`, { status: "deposee", preuveDepot: { mode: "transmis", numeroDossier: "REF-AMB", deposeLe: "2026-09-06" } }), 200);
 attendre("création DIRECTE en deposee sans preuve : refusée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-4`, { ...candidature("bourse"), status: "deposee" }), 403);
-attendre("création directe en admise avec preuve : acceptée", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-4`, { ...candidature("bourse"), status: "admise", preuveDepot: { mode: "numero", numeroDossier: "X", deposeLe: "2026-08-01" } }), 200);
+// ATTENTE CHANGÉE (lot ACCEPTATION) : une carte catalogue naît PROPOSÉE — jamais déjà « admise ».
+attendre("création directe en admise avec preuve : REFUSÉE (une carte naît proposée)", await creerCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-4`, { ...candidature("bourse"), status: "admise", preuveDepot: { mode: "numero", numeroDossier: "X", deposeLe: "2026-08-01" } }), 403);
 attendre("NON-RÉGRESSION : candidature déjà deposee sans preuve, modification des notes acceptée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { notes: "mise à jour", nextCheckDate: "2026-10-01" }), 200);
 attendre("NON-RÉGRESSION : même candidature, réécriture du même statut sans preuve (status inchangé) acceptée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "deposee", notes: "encore" }), 200);
 attendre("mais passer cette ancienne candidature en en_attente sans preuve : refusé (transition)", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "en_attente" }), 403);
@@ -239,15 +293,99 @@ attendre("création avec un programId valide mais un nom d'université libre : r
 attendre("création avec un programId valide et cohérent : acceptée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE, status: "a_preparer", track: "bourse", isRecommendation: true }), 200);
 attendre("modification du nom de l'université : refusée", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "Autre nom" }), 403);
 attendre("modification du portail seul (identité incohérente ailleurs ? non — cohérente) : acceptée", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { portalUrl: "https://portail.test" }), 200);
-attendre("remplacement avec un programId valide (carte neuve) : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "Université de test 2", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: AUTRE_PROG, universityId: AUTRE_UNI, status: "a_preparer", deadline: null, checklist: [], isRecommendation: true }), 200);
-attendre("remplacement vers un programme inconnu : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "X", programId: "inexistant", scholarshipId: BOURSE, universityId: AUTRE_UNI }), 403);
+// ATTENTE CHANGÉE (lot ACCEPTATION) : un remplacement est un REFUS, il incrémente `refus`.
+attendre("remplacement avec un programId valide SANS incrémenter refus : REFUSÉ (lot ACCEPTATION)", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE_2, status: "a_preparer", deadline: null, checklist: [], isRecommendation: true }), 403);
+attendre("remplacement avec un programId valide (carte neuve), refus 0→1 : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE_2, status: "a_preparer", deadline: null, checklist: [], isRecommendation: true, refus: 1 }), 200);
+attendre("remplacement vers un programme inconnu : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "X", programId: "inexistant", scholarshipId: BOURSE, universityId: AUTRE_UNI, refus: 2 }), 403);
 attendre("changement de statut, notes et date sur la carte choisie par Fitz : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { status: "en_cours", notes: "j'avance", deadline: "2027-01-15" }), 200);
 attendre("changement de statut sur une ancienne carte sans programId : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { status: "en_cours", notes: "ancienne" }), 200);
 attendre("mais renommer l'université d'une ancienne carte sans programId : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { university: "Encore une autre" }), 403);
-attendre("rattrapage de liaison (programId + scholarshipId cohérents, sans nom) sur une ancienne carte : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { programId: PROG, scholarshipId: BOURSE, catalogueLieLe: new Date().toISOString() }), 200);
+// Lot ACCEPTATION : le rattrapage pose aussi accepteeLe (heure du serveur) — la carte a été choisie par l'étudiant avant la doctrine.
+attendre("rattrapage de liaison (programId + scholarshipId cohérents, sans nom) sur une ancienne carte, avec accepteeLe : accepté", await accepterCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { programId: PROG, scholarshipId: BOURSE, catalogueLieLe: new Date().toISOString() }), 200);
 attendre("vœu pre-N saisi à la main : accepté", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-1`, { university: "Université de Bordeaux", status: "a_preparer", track: "preinscription", checklist: [], reminderFrequency: 14 }), 200);
 attendre("renommer l'université d'un vœu pre-N : accepté (hors lot)", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-1`, { university: "Université de Lille" }), 200);
 attendre("l'étudiant mémorise un refus (users.universitesRefusees) : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI] }), 200);
+
+console.log("\n=== ACCEPTATION — l'étudiant accepte le choix de Fitz (firestore.rules) ===");
+// Le compte : essentiel-4 (en vente), déjà semé plus haut (UID_ESS4, 4 cartes
+// proposées slot-1..4). Et un compte essentiel (retiré de la vente).
+const A = (n) => `users/${UID_ESS4}/applications/slot-${n}`;
+const R = (n) => `users/${UID_ESS_ANCIEN}/applications/slot-${n}`;
+const preuve = { mode: "numero", numeroDossier: "ACC-1", deposeLe: "2026-09-07" };
+
+console.log("Le parcours et la clé ne bougent pas :");
+attendre("passer une carte catalogue en track:preinscription : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { track: "preinscription" }), 403);
+attendre("retirer le programId d'une carte catalogue : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { programId: null }), 403);
+attendre("vider le programId d'une carte catalogue : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { programId: "" }), 403);
+
+console.log("Une bourse fermée ne se choisit pas :");
+await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: false });
+const UID_ACC = `rejeu-acceptation-${T}`;
+await admin.doc(`users/${UID_ACC}`).set({ uid: UID_ACC, name: "Acceptation", plan: "conseiller-6" });
+const C = (n) => `users/${UID_ACC}/applications/slot-${n}`;
+attendre("créer une carte vers une bourse isActive:false : refusé", await creerCommeEtudiant(UID_ACC, C(1), { ...IDENTITE_FERMEE, status: "a_preparer", track: "bourse" }), 403);
+await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: true });
+attendre("(témoin) la même carte, bourse rouverte : acceptée", await creerCommeEtudiant(UID_ACC, C(1), { ...IDENTITE_FERMEE, status: "a_preparer", track: "bourse" }), 200);
+await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: false });
+attendre("refuser VERS un programme dont la bourse est isActive:false : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { ...IDENTITE_FERMEE, refus: 1 }), 403);
+
+console.log("Une carte naît proposée :");
+attendre("créer une carte avec accepteeLe : refusé", await creerCommeEtudiant(UID_ACC, C(2), { ...candidature("bourse"), accepteeLe: new Date().toISOString() }), 403);
+attendre("créer une carte avec refus:1 : refusé", await creerCommeEtudiant(UID_ACC, C(2), { ...candidature("bourse"), refus: 1 }), 403);
+attendre("créer une carte déjà « admise » (avec preuve) : refusé", await creerCommeEtudiant(UID_ACC, C(2), { ...candidature("bourse"), status: "admise", preuveDepot: preuve }), 403);
+attendre("(témoin) créer la carte proposée, refus:0 : acceptée", await creerCommeEtudiant(UID_ACC, C(2), { ...candidature("bourse"), refus: 0 }), 200);
+
+console.log("Accepter, c'est définitif :");
+attendre("accepter avec une date choisie par le client : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { accepteeLe: "2026-09-11T10:00:00.000Z" }), 403);
+attendre("accepter (accepteeLe = heure du serveur) : accepté", await accepterCommeEtudiant(UID_ESS4, A(1)), 200);
+attendre("changer accepteeLe (nouvelle heure du serveur) : refusé", await accepterCommeEtudiant(UID_ESS4, A(1)), 403);
+attendre("effacer accepteeLe : refusé", await patchAvecHeureServeur(UID_ESS4, A(1), {}, [], ["accepteeLe"]), 403);
+attendre("changer le choix d'une carte acceptée (refus 0→1) : refusé", await patchCommeEtudiant(UID_ESS4, A(1), { ...IDENTITE_2, refus: 1 }), 403);
+attendre("modifier seulement portalUrl d'une carte acceptée : accepté", await patchCommeEtudiant(UID_ESS4, A(1), { portalUrl: "https://portail.acceptee.test" }), 200);
+
+console.log("Le dépôt suit l'acceptation :");
+attendre("déposer une carte non acceptée (slot-2), avec preuve : refusé", await patchCommeEtudiant(UID_ESS4, A(2), { status: "deposee", preuveDepot: preuve }), 403);
+attendre("déposer en acceptant dans la même écriture (slot-2) : accepté", await accepterCommeEtudiant(UID_ESS4, A(2), { status: "deposee", preuveDepot: preuve }), 200);
+attendre("faire redescendre une carte catalogue déposée en en_cours : refusé", await patchCommeEtudiant(UID_ESS4, A(2), { status: "en_cours" }), 403);
+attendre("(témoin) avancer une carte déposée vers admise : accepté", await patchCommeEtudiant(UID_ESS4, A(2), { status: "admise" }), 200);
+
+console.log("Deux refus par place, pas plus :");
+attendre("1er refus (refus 0→1, slot-3 → université 2) : accepté", await patchCommeEtudiant(UID_ESS4, A(3), { ...IDENTITE_2, status: "a_preparer", checklist: [], refus: 1 }), 200);
+attendre("refus sans incrément (refus 1→1) : refusé", await patchCommeEtudiant(UID_ESS4, A(3), { ...IDENTITE_3, refus: 1 }), 403);
+attendre("refus qui baisse (refus 1→0) : refusé", await patchCommeEtudiant(UID_ESS4, A(3), { ...IDENTITE_3, refus: 0 }), 403);
+attendre("refus modifié seul, sans changement du choix (1→2) : refusé", await patchCommeEtudiant(UID_ESS4, A(3), { refus: 2 }), 403);
+attendre("2e refus (refus 1→2, → université 3) : accepté", await patchCommeEtudiant(UID_ESS4, A(3), { ...IDENTITE_3, status: "a_preparer", checklist: [], refus: 2 }), 200);
+attendre("3e refus (refus 2→3) : refusé — Fitz a fait sa proposition finale", await patchCommeEtudiant(UID_ESS4, A(3), { ...IDENTITE, refus: 3 }), 403);
+attendre("(témoin) accepter la proposition finale : accepté", await accepterCommeEtudiant(UID_ESS4, A(3)), 200);
+
+console.log("L'exception catalogue — l'organisme ferme la bourse :");
+// slot-1 du compte Acceptation vise la bourse fermée (créée pendant qu'elle était ouverte) : on l'accepte, puis la bourse ferme.
+attendre("accepter la carte vers la bourse (rouverte le temps de l'accepter)", await (async () => { await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: true }); const s = await accepterCommeEtudiant(UID_ACC, C(1)); await admin.doc(`scholarships/${BOURSE_FERMEE}`).set({ title: "Bourse qui ferme", isActive: false }); return s; })(), 200);
+attendre("remplacer une carte acceptée non déposée, bourse fermée, refus inchangé, accepteeLe retiré : accepté", await patchAvecHeureServeur(UID_ACC, C(1), { ...IDENTITE_2, status: "a_preparer", checklist: [], refus: 0 }, [], ["accepteeLe"]), 200);
+attendre("(après remplacement) la carte est proposée : un refus normal 0→1 passe", await patchCommeEtudiant(UID_ACC, C(1), { ...IDENTITE_3, refus: 1 }), 200);
+// Le même cas sur une carte DÉPOSÉE : slot-2 du compte Acceptation, acceptée et déposée vers la bourse fermée.
+await admin.doc(`users/${UID_ACC}/applications/slot-3`).set({ ...IDENTITE_FERMEE, status: "deposee", track: "bourse", refus: 0, accepteeLe: new Date(), preuveDepot: preuve });
+attendre("même remplacement sur une carte DÉPOSÉE : refusé", await patchAvecHeureServeur(UID_ACC, C(3), { ...IDENTITE_2, refus: 0 }, [], ["accepteeLe"]), 403);
+attendre("un refus (refus 0→1) vers une carte proposée dont la bourse est fermée n'est pas un refus : refusé", await (async () => { await admin.doc(`users/${UID_ACC}/applications/slot-4`).set({ ...IDENTITE_FERMEE, status: "a_preparer", track: "bourse", refus: 0 }); return patchCommeEtudiant(UID_ACC, C(4), { ...IDENTITE_2, refus: 1 }); })(), 403);
+attendre("(témoin) la remplaçante, refus inchangé : acceptée", await patchCommeEtudiant(UID_ACC, C(4), { ...IDENTITE_2, refus: 0 }), 200);
+
+console.log("La suppression :");
+attendre("essentiel-4 : supprimer une carte catalogue proposée (slot-4) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(4)), 403);
+attendre("essentiel-4 : supprimer une carte catalogue acceptée « admise » (slot-2) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(2)), 403);
+attendre("essentiel (retirée) : supprimer une carte acceptée « à préparer » : refusé", await (async () => { await accepterCommeEtudiant(UID_ESS_ANCIEN, R(1)); return supprimerCommeEtudiant(UID_ESS_ANCIEN, R(1)); })(), 403);
+attendre("essentiel (retirée) : supprimer une carte acceptée « refusee » : accepté", await (async () => { await accepterCommeEtudiant(UID_ESS_ANCIEN, R(2), { status: "refusee", preuveDepot: preuve }); return supprimerCommeEtudiant(UID_ESS_ANCIEN, R(2)); })(), 200);
+attendre("essentiel (retirée) : supprimer une carte proposée : refusé", await supprimerCommeEtudiant(UID_ESS_ANCIEN, R(3)), 403);
+
+console.log("La liste des refus ne peut que grandir :");
+attendre("allonger universitesRefusees : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI, AUTRE_UNI] }), 200);
+attendre("raccourcir universitesRefusees : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI] }), 403);
+attendre("vider universitesRefusees : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [] }), 403);
+attendre("(témoin) le profil reste modifiable : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { name: "Fitz choisit, renommé" }), 200);
+
+console.log("Vœux pre-N : inchangé :");
+attendre("vœu pre-N : créer", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-2`, { university: "Université de Nantes", status: "a_preparer", track: "preinscription", checklist: [] }), 200);
+attendre("vœu pre-N : modifier", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-2`, { status: "en_cours", university: "Université de Rennes" }), 200);
+attendre("vœu pre-N : supprimer", await supprimerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-2`), 200);
 
 console.log("Les deux champs sont hors de portée de l'étudiant :");
 attendre("planPreinscription refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscription: "dossier-france" }), 403);
@@ -255,8 +393,8 @@ attendre("planPreinscriptionExpiresAt refusé à l'étudiant", await patchCommeE
 attendre("plan refusé à l'étudiant (inchangé)", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { plan: "signature" }), 403);
 
 // Nettoyage.
-for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `scholarships/${BOURSE}`]) await admin.doc(d).delete();
-for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1, UID_FC]) {
+for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `programs/${PROG_FERME}`, `programs/${PROG_3}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `universities/${UNI_3}`, `scholarships/${BOURSE}`, `scholarships/${BOURSE_FERMEE}`]) await admin.doc(d).delete();
+for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1, UID_FC, UID_ACC]) {
   for (const sc of ["applications", "advisorRequests", "messages"]) {
     const snap = await admin.collection(`users/${uid}/${sc}`).get();
     for (const d of snap.docs) await d.ref.delete();

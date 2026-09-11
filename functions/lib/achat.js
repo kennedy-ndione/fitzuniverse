@@ -34,28 +34,39 @@
  */
 
 /**
- * `dureeMois: null` = achat unique sans échéance (Premier Dossier).
- * `pass: true`      = pass Fitz Express (fitzExpressExpiresAt, jamais `plan`).
+ * `dureeMois: null` = achat unique sans échéance — les TROIS formules
+ *                     bourses en vente depuis le lot ACCEPTATION
+ *                     (2026-09-11, décision 7 : plus de durée en mois,
+ *                     une formule bourses = un nombre de candidatures).
+ *                     Le webhook efface alors `planExpiresAt` à
+ *                     l'activation ; c'est l'admin qui met fin à la
+ *                     formule.
+ * `pass: true`      = Pass Découverte (fitzExpressExpiresAt, jamais `plan`).
  * `parcours`        = "bourse" | "preinscription" — décide QUEL champ
  *                     du compte l'achat écrit.
  * `campagne: true`  = expire le 31 juillet de la campagne en cours.
  * `dureeJours`      = durée fixe (pass, diagnostic).
+ * `quota`           = candidatures bourses de la formule — MIROIR de
+ *                     maxAccompaniedApplications (pricing-plans.js), pour
+ *                     ne jamais vendre une formule qui n'ouvrirait aucune
+ *                     place (refusAchat).
  */
 const GRILLE = {
   fitzExpress: { label: "Pass Découverte", prix: 10000, dureeJours: 14, pass: true, parcours: "bourse" },
-  "premier-dossier": { label: "Forfait Premier Dossier", prix: 15000, dureeMois: null, parcours: "bourse" },
-  // Grille A (2026-09-07) : les deux offres bourses révisées.
-  "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse" },
-  "conseiller-6": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse" },
+  "premier-dossier": { label: "Forfait Premier Dossier", prix: 15000, dureeMois: null, parcours: "bourse", quota: 1 },
+  // Grille A (2026-09-07) : les deux offres bourses révisées. Lot
+  // ACCEPTATION : sans échéance, comme Premier Dossier.
+  "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: null, parcours: "bourse", quota: 4 },
+  "conseiller-6": { label: "Forfait Conseiller", prix: 150000, dureeMois: null, parcours: "bourse", quota: 6 },
   // DÉPRÉCIÉES (grille A) : `deprecated: true` = creerPaiement REFUSE
   // l'achat (une offre retirée de la vente ne se paie pas, même en
   // forgeant la requête), mais le webhook HONORE encore un paiement
   // créé avant le retrait — retirer l'entrée aurait laissé un étudiant
   // payé sans activation. Mêmes prix qu'à l'époque.
-  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse", deprecated: true },
-  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9, parcours: "bourse", deprecated: true },
-  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse", deprecated: true },
-  signature: { label: "Signature", prix: 250000, dureeMois: 12, parcours: "bourse", deprecated: true },
+  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse", deprecated: true, quota: 5 },
+  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9, parcours: "bourse", deprecated: true, quota: 9 },
+  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse", deprecated: true, quota: 12 },
+  signature: { label: "Signature", prix: 250000, dureeMois: 12, parcours: "bourse", deprecated: true, quota: Infinity },
   // Grille B — préinscription (France uniquement). Prix décidés, ne pas rouvrir.
   "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription" },
   "dossier-france": { label: "Dossier France", prix: 75000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
@@ -325,4 +336,80 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
   return { statut: "applique", misAJour };
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction };
+// ============================================================
+// NE JAMAIS VENDRE CE QUI N'AJOUTE RIEN (lot ACCEPTATION, 2026-09-11)
+// ============================================================
+//
+// Il n'y a jamais de remboursement : tout refus doit arriver ICI, dans
+// creerPaiement, avant que le moindre franc ne bouge. Trois refus, une
+// seule fonction pure, testée (test/functions-achat.test.mjs) :
+//
+//   1. LA MÊME FORMULE — on refuse la formule que le compte porte déjà
+//      dans `plan`, même si l'admin l'a terminée. Le message nomme la
+//      formule détenue, et la marche suivante en vente quand il y en a
+//      une.
+//   2. UNE FORMULE QUI N'OUVRIRAIT AUCUNE PLACE (bourses seulement) —
+//      quand le quota acheté est inférieur ou égal au nombre de cartes
+//      bourses déjà présentes : un détenteur d'`accompagnement`
+//      (9 cartes) qui prend conseiller-6, un conseiller-6 terminé qui
+//      prend essentiel-4. Monter reste possible quand de nouvelles places
+//      s'ouvrent (essentiel-4 → conseiller-6 : slot-5 et slot-6).
+//   3. LE PASS DÉCOUVERTE À UN COMPTE QUI A DÉJÀ LE CHAT — toute formule
+//      active de FORMULES_AVEC_FITZ comprend le chat (formuleActive,
+//      functions/lib/fitz-acces.js).
+
+const { formuleActive } = require("./fitz-acces");
+
+// La marche suivante EN VENTE, côté bourses.
+const FORMULE_SUIVANTE = { "premier-dossier": "essentiel-4", "essentiel-4": "conseiller-6", "conseiller-6": null };
+
+/**
+ * @param {Object} p
+ * @param {string} p.planId              - l'offre demandée
+ * @param {Object} [p.user]              - users/{uid}
+ * @param {number} [p.nombreCartesBourse] - cartes bourses déjà présentes
+ *                                          (users/{uid}/applications, hors
+ *                                          track "preinscription")
+ * @param {Date}   [p.maintenant]
+ * @returns {{ code: string, message: string }|null} null = rien ne s'oppose à la vente
+ */
+function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = new Date() }) {
+  const offre = GRILLE[planId];
+  if (!offre) return null;
+
+  // 3. Le Pass à un compte qui a déjà le chat.
+  if (offre.pass) {
+    const active = formuleActive(user, maintenant);
+    if (active && active !== "fitzExpress") {
+      return { code: "pass-inclus", message: "Votre formule comprend déjà Discuter avec Fitz." };
+    }
+    return null;
+  }
+
+  if (offre.parcours !== "bourse") return null;
+
+  // 1. La même formule.
+  if (String(user.plan || "") === planId) {
+    const expiration = dateValide(user.planExpiresAt);
+    const terminee = !!expiration && expiration.getTime() <= maintenant.getTime();
+    if (terminee) {
+      return { code: "meme-formule-terminee", message: `Votre ${offre.label} est terminé. L'équipe FitzUniverse vous indiquera la suite dans votre espace.` };
+    }
+    const suivante = FORMULE_SUIVANTE[planId] ? GRILLE[FORMULE_SUIVANTE[planId]].label : null;
+    return {
+      code: "meme-formule",
+      message: `Vous détenez déjà le ${offre.label} : il n'a pas d'échéance, et vos candidatures sont suivies jusqu'à la décision des universités. ` +
+        (suivante ? `Pour plus de candidatures, passez au ${suivante}.` : "Une fois vos décisions reçues, l'équipe FitzUniverse vous indiquera la suite."),
+    };
+  }
+
+  // 2. Aucune place nouvelle.
+  const n = Number.isFinite(nombreCartesBourse) ? nombreCartesBourse : 0;
+  if (Number.isFinite(offre.quota) && offre.quota <= n) {
+    return { code: "aucune-place", message: `Cet achat n'ouvrirait aucune nouvelle place : vous avez déjà ${n} candidatures. L'équipe FitzUniverse vous indiquera la suite.` };
+  }
+
+  return null;
+}
+
+module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat };

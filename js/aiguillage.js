@@ -12,6 +12,9 @@
 *   preinscription  → espace-preinscription.html
 *   les-deux        → le dernier espace ouvert, à défaut les bourses
 *   aucun           → ELLE RESTE, et rend un accueil minimal
+*   Pass Découverte seul → ai-chat.html (lot ACCEPTATION, partie 4) —
+*                     décidé AVANT tout rendu par bootstrapShell (passSeul,
+*                     js/plan-features.js), ce fichier ne le voit jamais.
 *
 * LE DERNIER CAS EST CELUI QUI COMPTE. Un compte gratuit connecté n'a
 * pas d'accompagnement, mais il a un profil, un compte, des messages, et

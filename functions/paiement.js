@@ -64,7 +64,7 @@ const API_BASE = "https://app.paydunya.com/sandbox-api/v1";
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction } = require("./lib/achat");
+const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -118,24 +118,28 @@ exports.creerPaiement = onCall(
       throw new HttpsError("permission-denied", "Ce compte est suspendu.");
     }
 
-    // 3 bis. NE JAMAIS VENDRE CE QUI EST DÉJÀ POSSÉDÉ.
+    // 3 bis. NE JAMAIS VENDRE CE QUI N'AJOUTE RIEN (lot ACCEPTATION).
     //
-    // Premier Dossier est le seul achat SANS durée : une fois acquis,
-    // il est acquis pour toujours, et son unique créneau (slot-1, voir
-    // firestore.rules) ne se dédouble pas. Le racheter ne prolongerait
-    // rien et n'ouvrirait rien — l'étudiant paierait 15 000 F pour
-    // exactement ce qu'il a déjà.
+    // Trois refus, réunis dans UNE fonction pure (functions/lib/achat.js,
+    // refusAchat) : la même formule (active, ou terminée par l'admin) ;
+    // une formule bourses qui n'ouvrirait aucune nouvelle place ; le
+    // Pass Découverte à un compte qui a déjà le chat. Il n'y a jamais de
+    // remboursement : le refus arrive ICI, avant que le moindre franc ne
+    // bouge, et non dans le webhook.
     //
-    // Le refus arrive ICI, avant que le moindre franc ne bouge, et non
-    // dans le webhook où il faudrait ensuite rembourser — ce que la
-    // politique commerciale exclut. On l'oriente vers la marche
-    // suivante, qui est ce qu'il cherchait vraiment.
-    if (offre.dureeMois === null && !offre.pass && profil.plan === planId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Vous détenez déjà le Forfait Premier Dossier, et il n'expire pas. " +
-          "Pour accompagner plusieurs candidatures, passez au Forfait Essentiel."
-      );
+    // Le nombre de cartes bourses déjà présentes se lit sur
+    // users/{uid}/applications, hors track "preinscription" (règle des
+    // trois valeurs : un champ absent vaut « bourse »).
+    let nombreCartesBourse = 0;
+    if (offre.parcours === "bourse" && !offre.pass) {
+      const cartes = await admin.firestore().collection(`users/${uid}/applications`).get();
+      nombreCartesBourse = cartes.docs.filter((d) => (d.data() || {}).track !== "preinscription").length;
+    }
+
+    const refus = refusAchat({ planId, user: profil, nombreCartesBourse });
+    if (refus) {
+      logger.info("Achat refusé avant facturation", { uid, planId, code: refus.code });
+      throw new HttpsError("failed-precondition", refus.message);
     }
 
     // 3 ter. NE JAMAIS ENCAISSER CE QUI NE SERA PAS APPLIQUÉ (grille A).

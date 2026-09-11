@@ -128,7 +128,10 @@ function preparer() {
       universityId: clos.p.universityId,
       // Une date FUTURE gelée sur la fiche de l'étudiant : c'est elle
       // qui produisait « Échéance dans N j » vers une porte fermée.
-      deadline: dansNJours(12)
+      deadline: dansNJours(12),
+      // Lot ACCEPTATION : une carte catalogue ne se dépose qu'ACCEPTÉE. Ce
+      // témoin est déposé par capture plus bas (E1) : il arrive accepté.
+      accepteeLe: dansNJours(-1)
     });
   }
 
@@ -507,7 +510,9 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         if (rattrapage.length !== 1) anomalies.push(`slot-2 : ${rattrapage.length} écriture(s) de rattrapage au lieu d'une.`);
         else {
           const cles = rattrapage[0].cles.sort().join(",");
-          if (cles !== "catalogueLieLe,programId,scholarshipId") anomalies.push(`slot-2 : le rattrapage écrit « ${cles} » au lieu de la seule clé (catalogueLieLe, programId, scholarshipId).`);
+          // Lot ACCEPTATION : le rattrapage pose aussi accepteeLe — la carte
+          // a été choisie par l'étudiant avant la doctrine.
+          if (cles !== "accepteeLe,catalogueLieLe,programId,scholarshipId") anomalies.push(`slot-2 : le rattrapage écrit « ${cles} » au lieu de la clé et de l'acceptation (accepteeLe, catalogueLieLe, programId, scholarshipId).`);
         }
         notes.push(`slot-2 ouvert (${cible.ouvert.p.id}) : clé écrite par rattrapage, bouton vers le ${cible.ouvert.lecture.dateCatalogue}`);
       }
@@ -1518,9 +1523,12 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
     const uniParId = new Map(brut.universities.map((u) => [u.id, u]));
     const bourseParId = new Map(brut.scholarships.map((b) => [b.id, b]));
     // Deux programmes d'universités distinctes, chacun avec sa bourse.
+    // Lot ACCEPTATION : vers des bourses ACTIVES — une bourse fermée par
+    // l'organisme n'offre plus « Refuser » mais « Voir la remplaçante ».
     const choisis = [];
     for (const p of brut.programs) {
-      if (!uniParId.has(p.universityId) || !bourseParId.has(p.scholarshipId)) continue;
+      const b = bourseParId.get(p.scholarshipId);
+      if (!uniParId.has(p.universityId) || !b || b.isActive === false) continue;
       if (choisis.some((c) => c.universityId === p.universityId)) continue;
       choisis.push(p);
       if (choisis.length === 2) break;
@@ -1638,6 +1646,386 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       }
       anomalies.push(...b.erreurs);
       await b.contexte.close();
+    }
+  }
+
+  // ---------- 8. L'ÉTUDIANT ACCEPTE LE CHOIX DE FITZ (lot ACCEPTATION, 2026-09-11) ----------
+  //
+  // Décisions de Charles : accepter est définitif ; deux refus par place ;
+  // les outils s'ouvrent après l'acceptation ; une formule en vente ne
+  // supprime jamais une carte catalogue ; le Pass Découverte ne mène qu'au
+  // chat ; chaque formule mène exactement à sa prochaine étape. Lu dans
+  // le DOM rendu, valeur par valeur, sous session stubbée.
+  {
+    const brut = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+    const uniParId = new Map(brut.universities.map((u) => [u.id, u]));
+    const bourseParId = new Map(brut.scholarships.map((b) => [b.id, b]));
+    // Quatre programmes d'universités distinctes, vers des bourses ACTIVES.
+    const choisis = [];
+    for (const p of brut.programs) {
+      const b = bourseParId.get(p.scholarshipId);
+      if (!uniParId.has(p.universityId) || !b || b.isActive === false) continue;
+      if (choisis.some((c) => c.universityId === p.universityId)) continue;
+      choisis.push(p);
+      if (choisis.length === 4) break;
+    }
+    const carteDe = (p, id, extra = {}) => ({
+      id, university: uniParId.get(p.universityId).name, scholarship: bourseParId.get(p.scholarshipId).title,
+      scholarshipId: p.scholarshipId, programId: p.id, universityId: p.universityId,
+      portalUrl: "", universityWebsite: "", status: "a_preparer", track: "bourse", deadline: null,
+      reminderFrequency: 14, notes: "", checklist: [], premiumProtected: false, isRecommendation: true, refus: 0, nextCheckDate: dansNJours(10), ...extra
+    });
+    const PROFIL_PRET = { ...etudiant.userData.profile, nationality: "Sénégalaise", desiredDegree: "Master", desiredField: "Informatique", languages: ["français"] };
+    const PROFIL_VIDE = { name: "Harnais", email: "harnais@fitz.local" };
+    const compte = (userData, applications, uid = "harnais-acceptation") => ({
+      ...etudiant, uid,
+      userData: { ...etudiant.userData, plan: "gratuit", planExpiresAt: null, planPreinscription: "", planPreinscriptionExpiresAt: null, fitzExpressExpiresAt: null, universitesRefusees: [], profile: PROFIL_PRET, ...userData },
+      applications
+    });
+    // Ouvre une URL, attend que la coquille soit posée (ou la redirection), rend page/URL.
+    const ouvrirEtAttendre = async (client, url, attente, selecteurPret = null) => {
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, client);
+      page.on("dialog", (d) => d.accept());
+      try {
+        await page.goto(`${base}/${url}`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction((fins) => fins.some((f) => location.pathname.endsWith(f)), attente, { timeout: 20000 }).catch(() => {});
+        const depart = url.split("?")[0];
+        const autres = attente.filter((f) => f !== depart);
+        const ici = await page.evaluate(() => location.pathname.split("/").pop()).catch(() => "");
+        if (ici === depart && autres.length) await page.waitForURL((u) => autres.some((f) => u.pathname.endsWith(f)), { timeout: 2500 }).catch(() => {});
+        await page.waitForFunction(() => {
+          if (!document.body.dataset.espace && !document.querySelector(".ai-locked-hero")) return false;
+          const el = document.getElementById("topbarPlanLabel");
+          return !el || el.textContent.trim() !== "…";
+        }, null, { timeout: 20000, polling: 100 }).catch(() => {});
+        if (selecteurPret) await page.waitForSelector(selecteurPret, { timeout: 20000 }).catch(() => {});
+        return { contexte, page, erreurs };
+      } catch (e) {
+        erreurs.push(`ÉCHEC ${url} : ${e.message.split("\n")[0]}`);
+        return { contexte, page, erreurs };
+      }
+    };
+
+    if (choisis.length < 4) {
+      anomalies.push("ACCEPTATION : moins de quatre programmes exploitables dans le catalogue — contrôle impossible.");
+    } else {
+
+      // --- a) Les trois états, sur un essentiel-4 : proposée (0 refus), proposée (1 refus), acceptée, proposition finale.
+      const CARTES = [
+        carteDe(choisis[0], "slot-1"),
+        carteDe(choisis[1], "slot-2", { refus: 1 }),
+        carteDe(choisis[2], "slot-3", { accepteeLe: dansNJours(-2) }),
+        carteDe(choisis[3], "slot-4", { refus: 2 })
+      ];
+      const ESS4 = compte({ plan: "essentiel-4" }, CARTES);
+      {
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(ESS4, "applications.html", ["applications.html"], "#applicationsList .app-card");
+        try {
+          await page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 4, null, { timeout: 20000 });
+          const vu = await page.evaluate(() => {
+            const c = (id) => document.getElementById(id);
+            const t = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
+            const lit = (id) => {
+              const carte = c(id);
+              return {
+                etat: carte?.dataset.acceptation || "",
+                accepter: !!carte?.querySelector(".app-accept-btn"),
+                refuser: !!carte?.querySelector(".app-refuse-btn"),
+                restants: t(carte?.querySelector(".app-refus-restants")),
+                // La ligne « lettre » ouverte : le lien vers l'outil, ou — profil
+                // trop mince pour Fitz — le conseil de compléter le profil (même
+                // règle qu'avant le lot). Fermée : la ligne .app-outils-fermes.
+                lettre: !!carte?.querySelector('.app-card-documents:not(.app-outils-fermes) a[href^="ai-letter.html"], .app-card-documents:not(.app-outils-fermes) a[href="profile.html"]'),
+                email: !!carte?.querySelector('a[href^="ai-email.html"]'),
+                verifier: !!carte?.querySelector(".app-readiness-btn"),
+                fermes: t(carte?.querySelector(".app-outils-fermes")),
+                pastille: t(carte?.querySelector(".app-acceptee-pill")),
+                finale: t(carte?.querySelector('[data-etat="finale"]')),
+                lienSupport: !!carte?.querySelector('[data-etat="finale"] a[href="messages.html#supportCard"]'),
+                supprimer: !!carte?.querySelector(".app-delete-btn")
+              };
+            };
+            const tout = document.getElementById("accepterToutBtn");
+            return { s1: lit("slot-1"), s2: lit("slot-2"), s3: lit("slot-3"), s4: lit("slot-4"), tout: tout && !tout.hidden ? t(tout) : "", supprimer: document.querySelectorAll("#applicationsList .app-delete-btn").length };
+          });
+          // Proposée, 0 refus.
+          if (vu.s1.etat !== "proposee") anomalies.push(`ACCEPTATION slot-1 : état « ${vu.s1.etat} » au lieu de proposee.`);
+          if (!vu.s1.accepter || !vu.s1.refuser) anomalies.push("ACCEPTATION slot-1 (proposée) : il manque « J'accepte » ou « Refuser ».");
+          if (!/Il vous reste 2 refus pour cette place/.test(vu.s1.restants)) anomalies.push(`ACCEPTATION slot-1 : compteur « ${vu.s1.restants} ».`);
+          if (vu.s1.lettre || vu.s1.email || vu.s1.verifier) anomalies.push("ACCEPTATION slot-1 (proposée) : un outil de Fitz est ouvert avant l'acceptation.");
+          if (!/Acceptez cette université pour commencer votre dossier/.test(vu.s1.fermes)) anomalies.push(`ACCEPTATION slot-1 : la ligne des outils fermés manque (« ${vu.s1.fermes} »).`);
+          // Proposée, 1 refus.
+          if (!/Il vous reste 1 refus pour cette place/.test(vu.s2.restants)) anomalies.push(`ACCEPTATION slot-2 : compteur « ${vu.s2.restants} » (1 refus consommé).`);
+          // Acceptée.
+          if (vu.s3.etat !== "acceptee") anomalies.push(`ACCEPTATION slot-3 : état « ${vu.s3.etat} » au lieu de acceptee.`);
+          if (vu.s3.refuser || vu.s3.accepter) anomalies.push("ACCEPTATION slot-3 (acceptée) : un bouton de refus ou d'acceptation subsiste — accepter est définitif.");
+          if (!/^Acceptée le /.test(vu.s3.pastille)) anomalies.push(`ACCEPTATION slot-3 : pastille « ${vu.s3.pastille} ».`);
+          if (!vu.s3.lettre || !vu.s3.email || !vu.s3.verifier) anomalies.push("ACCEPTATION slot-3 (acceptée) : un outil de Fitz reste fermé après l'acceptation.");
+          // Proposition finale.
+          if (vu.s4.etat !== "finale") anomalies.push(`ACCEPTATION slot-4 : état « ${vu.s4.etat} » au lieu de finale.`);
+          if (vu.s4.refuser) anomalies.push("ACCEPTATION slot-4 (3ᵉ proposition) : un bouton de refus est encore proposé.");
+          if (!vu.s4.accepter) anomalies.push("ACCEPTATION slot-4 : « J'accepte cette université » manque.");
+          if (!/Fitz a fait sa proposition finale pour cette place/.test(vu.s4.finale) || !vu.s4.lienSupport) anomalies.push(`ACCEPTATION slot-4 : la ligne finale ou son lien « écrivez-nous » manque (« ${vu.s4.finale.slice(0, 80)} »).`);
+          // « J'accepte les N choix » : trois cartes acceptables (slot-1, slot-2, slot-4).
+          if (!/J'accepte les 3 choix de Fitz/.test(vu.tout)) anomalies.push(`ACCEPTATION : bouton groupé « ${vu.tout} » (attendu « J'accepte les 3 choix de Fitz »).`);
+          // essentiel-4 : aucune carte catalogue supprimable.
+          if (vu.supprimer) anomalies.push(`ACCEPTATION essentiel-4 : ${vu.supprimer} bouton(s) « Supprimer » sur des cartes catalogue.`);
+
+          // Le formulaire d'une carte proposée : aucun statut déposé, pas de bloc de dépôt.
+          await page.click("#slot-1 .app-edit-btn");
+          await page.waitForSelector("#applicationModal:not([hidden])", { timeout: 10000 });
+          const form = await page.evaluate(() => ({
+            deposes: [...document.querySelectorAll("#fieldStatus option")].filter((o) => ["deposee", "en_attente", "reponse_recue", "admise", "refusee", "liste_attente"].includes(o.value)).map((o) => ({ v: o.value, hidden: o.hidden, disabled: o.disabled })),
+            preuveCache: document.getElementById("preuveBlock").hidden,
+            listeVisible: [...document.querySelectorAll("#applicationModal .fitz-select-option")].map((li) => li.textContent.trim())
+          }));
+          if (form.deposes.some((o) => !o.hidden || !o.disabled)) anomalies.push(`ACCEPTATION formulaire (proposée) : un statut déposé reste proposé — ${JSON.stringify(form.deposes)}.`);
+          if (!form.preuveCache) anomalies.push("ACCEPTATION formulaire (proposée) : le bloc de dépôt est affiché alors qu'on accepte d'abord.");
+          await page.click("#applicationModalClose");
+
+          // Accepter : une écriture accepteeLe, et rien d'autre du choix.
+          await page.click("#slot-1 .app-accept-btn");
+          await page.waitForFunction(() => (window.__harnaisEcritures || []).some((e) => e.op === "update" && e.chemin.endsWith("/applications/slot-1") && e.data && "accepteeLe" in e.data), null, { timeout: 15000 })
+            .catch(() => anomalies.push("ACCEPTATION : le clic « J'accepte » n'a rien écrit sur slot-1."));
+          const acc = await page.evaluate(() => {
+            const e = (window.__harnaisEcritures || []).find((x) => x.op === "update" && x.chemin.endsWith("/applications/slot-1") && x.data && "accepteeLe" in x.data);
+            return e ? Object.keys(e.data).sort() : null;
+          });
+          if (acc && acc.join(",") !== "accepteeLe,updatedAt") anomalies.push(`ACCEPTATION : l'acceptation écrit « ${acc.join(",")} » au lieu de accepteeLe + updatedAt.`);
+          notes.push(`ACCEPTATION : slot-1 proposée (2 refus) · slot-2 (1 refus) · slot-3 « ${vu.s3.pastille} » · slot-4 finale sans refus — « ${vu.tout} » ; acceptation écrite : ${acc ? acc.join(",") : "aucune"}`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC ACCEPTATION (états) : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+
+      // --- b) Les outils : sélecteur limité aux cartes acceptées ; lettre refusée sans candidature (bourses) ; université verrouillée.
+      {
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(ESS4, "ai-letter.html?applicationId=slot-1", ["ai-letter.html"], "#generateLetterBtn");
+        try {
+          await page.waitForSelector("#outilBlocage", { timeout: 15000 });
+          const vu = await page.evaluate(() => ({
+            code: document.getElementById("outilBlocage")?.dataset.code || "",
+            texte: (document.getElementById("outilBlocage")?.textContent || "").replace(/\s+/g, " ").trim(),
+            options: [...document.querySelectorAll("#fieldApplication option")].map((o) => o.value).filter(Boolean)
+          }));
+          if (vu.code !== "non-acceptee" || !/Acceptez d'abord cette université dans Mes candidatures/.test(vu.texte)) anomalies.push(`ACCEPTATION ai-letter (carte proposée) : blocage « ${vu.code} / ${vu.texte.slice(0, 70)} ».`);
+          if (vu.options.join(",") !== "slot-3") anomalies.push(`ACCEPTATION ai-letter : le sélecteur propose « ${vu.options.join(",")} » au lieu de la seule carte acceptée (slot-3).`);
+          // Sans candidature : mode libre refusé pour un compte bourses, rien n'est généré.
+          await page.goto(`${base}/ai-letter.html`, { waitUntil: "domcontentloaded" });
+          await page.waitForSelector("#outilBlocage", { timeout: 20000 });
+          await page.evaluate(() => { const u = document.getElementById("fieldUniversity"); u.value = "Université tapée à la main"; const p = document.getElementById("fieldProgram"); if (!p.value) p.value = "Informatique"; });
+          await page.click("#generateLetterBtn");
+          await page.waitForTimeout(1200);
+          const libre = await page.evaluate(() => ({
+            code: document.getElementById("outilBlocage")?.dataset.code || "",
+            apercu: (document.getElementById("previewContent")?.innerText || "").trim(),
+            bouton: document.getElementById("generateLetterBtn").disabled
+          }));
+          if (libre.code !== "aucune") anomalies.push(`ACCEPTATION ai-letter (sans candidature) : blocage « ${libre.code} » au lieu de « aucune ».`);
+          if (libre.apercu && !/apparaîtra ici/.test(libre.apercu)) anomalies.push(`ACCEPTATION ai-letter : une lettre a été générée sans candidature acceptée — « ${libre.apercu.slice(0, 60)} ».`);
+          if (libre.bouton) anomalies.push("ACCEPTATION ai-letter : le bouton reste désactivé (génération partie ?) après le refus.");
+          // Avec la carte acceptée : ouvert, université verrouillée.
+          await page.goto(`${base}/ai-letter.html?applicationId=slot-3`, { waitUntil: "domcontentloaded" });
+          await page.waitForFunction(() => !!document.getElementById("generateLetterBtn") && document.body.dataset.modeLettre, null, { timeout: 20000 });
+          await page.waitForTimeout(500);
+          const ok = await page.evaluate(() => ({
+            blocage: !!document.getElementById("outilBlocage"),
+            verrou: document.getElementById("fieldUniversity").readOnly,
+            universite: document.getElementById("fieldUniversity").value
+          }));
+          if (ok.blocage) anomalies.push("ACCEPTATION ai-letter (carte acceptée) : un blocage s'affiche encore.");
+          if (!ok.verrou) anomalies.push("ACCEPTATION ai-letter (bourse acceptée) : l'université destinataire n'est pas verrouillée.");
+          notes.push(`ACCEPTATION outils : sélecteur [${vu.options.join(",")}], carte proposée → « ${vu.texte.slice(0, 50)} », sans candidature → blocage « ${libre.code} », acceptée → université verrouillée (${ok.universite.slice(0, 30)})`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC ACCEPTATION (outils) : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+
+      // --- c) Le Pass Découverte seul : toutes les portes mènent au chat ; sa navigation ne montre que ça.
+      const PASS = compte({ plan: "gratuit", fitzExpressExpiresAt: dansNJours(9) }, [], "harnais-pass-seul");
+      for (const url of ["dashboard.html", "applications.html", "profile.html", "espace-bourse.html"]) {
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(PASS, url, ["ai-chat.html", url], "#chatForm, #accueilMinimal, #profileForm, #jyApps");
+        try {
+          const ici = await page.evaluate(() => location.pathname.split("/").pop());
+          if (ici !== "ai-chat.html") anomalies.push(`PASS SEUL : ${url} reste sur ${ici} au lieu de renvoyer au chat.`);
+          else notes.push(`PASS SEUL : ${url} → ai-chat.html`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC PASS SEUL (${url}) : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+      {
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(PASS, "ai-chat.html", ["ai-chat.html"], "#chatForm");
+        try {
+          await page.waitForFunction(() => document.body.dataset.passSeul === "true", null, { timeout: 15000 }).catch(() => {});
+          const vu = await page.evaluate(() => ({
+            passSeul: document.body.dataset.passSeul || "",
+            onglets: [...document.querySelectorAll("#mnavTabbar .mnav-tab")].map((t) => t.textContent.replace(/\s+/g, " ").trim()),
+            menu: [...document.querySelectorAll("#mnavMenuGrid a")].map((a) => a.getAttribute("href")),
+            site: !!document.querySelector(".mnav-menu-site"),
+            pastille: (document.getElementById("topbarPlanLabel") || {}).textContent || "",
+            menuPlan: (document.getElementById("mnavMenuPlan") || {}).textContent || "",
+            restant: (document.getElementById("chatPassRestant") || {}).textContent || "",
+            retour: !!document.querySelector(".journey-topbar .back-link"),
+            profil: !!document.querySelector('.journey-topbar a[href="profile.html"]'),
+            logo: document.querySelector(".journey-topbar .fitz-lockup")?.getAttribute("href") || "",
+            verrou: !!document.querySelector(".ai-locked-hero")
+          }));
+          if (vu.passSeul !== "true") anomalies.push("PASS SEUL : body[data-pass-seul] n'est pas posé sur le chat.");
+          if (vu.onglets.join("|") !== "Fitz|Menu") anomalies.push(`PASS SEUL : barre d'onglets « ${vu.onglets.join(" | ")} » au lieu de Fitz | Menu.`);
+          if (vu.menu.slice().sort().join(",") !== "account.html,messages.html") anomalies.push(`PASS SEUL : feuille Menu « ${vu.menu.join(", ")} » au lieu de Paramètres + Messages.`);
+          if (vu.site) anomalies.push("PASS SEUL : « Accueil du site » / « Formules » restent dans la feuille Menu.");
+          if (vu.pastille.trim() !== "Pass Découverte") anomalies.push(`PASS SEUL : pastille « ${vu.pastille.trim()} » au lieu de « Pass Découverte ».`);
+          if (!/^Pass Découverte — (\d+ jours restants|moins d'1 jour restant)$/.test(vu.restant)) anomalies.push(`PASS SEUL : temps restant « ${vu.restant} ».`);
+          if (vu.retour || vu.profil) anomalies.push("PASS SEUL : « Mon parcours » ou l'icône du profil restent dans la barre haute.");
+          if (!/ai-chat\.html$/.test(vu.logo)) anomalies.push(`PASS SEUL : le logo mène à « ${vu.logo} » au lieu du chat.`);
+          if (vu.verrou) anomalies.push("PASS SEUL : le chat est verrouillé alors que le Pass est actif.");
+          notes.push(`PASS SEUL : onglets ${vu.onglets.join("/")}, menu ${vu.menu.join("/")}, pastille « ${vu.pastille.trim()} », « ${vu.restant} »`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC PASS SEUL (chat) : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+      // Les deux pages qui restent ouvertes.
+      for (const url of ["messages.html", "account.html"]) {
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(PASS, url, [url, "ai-chat.html"]);
+        try {
+          const ici = await page.evaluate(() => location.pathname.split("/").pop());
+          if (ici !== url) anomalies.push(`PASS SEUL : ${url} devait rester ouverte, atterrit sur ${ici}.`);
+          if (url === "account.html") {
+            await page.waitForFunction(() => /Pass Découverte/.test((document.getElementById("subPlanMeta") || {}).textContent || ""), null, { timeout: 15000 }).catch(() => {});
+            const meta = await page.evaluate(() => ((document.getElementById("subPlanMeta") || {}).textContent || "").trim());
+            if (!/^Pass Découverte — actif jusqu'au .+ : vos questions à Fitz$/.test(meta)) anomalies.push(`PASS SEUL account.html : « ${meta} ».`);
+          }
+        } catch (e) {
+          anomalies.push(`ÉCHEC PASS SEUL (${url}) : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+      // Le Pass TERMINÉ : le chat le dit, avec la date.
+      {
+        const FINI = compte({ plan: "gratuit", fitzExpressExpiresAt: dansNJours(-3) }, [], "harnais-pass-fini");
+        const { contexte, page, erreurs } = await ouvrirEtAttendre(FINI, "ai-chat.html", ["ai-chat.html"], ".ai-locked-hero, #chatForm");
+        try {
+          const vu = await page.evaluate(() => ({
+            termine: document.querySelector('.ai-locked-hero[data-pass="termine"]')?.textContent.replace(/\s+/g, " ").trim() || "",
+            bouton: document.querySelector(".ai-locked-hero a.btn")?.textContent.trim() || ""
+          }));
+          if (!/Votre Pass Découverte s'est terminé le .+\. Pour continuer avec Fitz, choisissez une formule\./.test(vu.termine)) anomalies.push(`PASS TERMINÉ : « ${vu.termine.slice(0, 90)} ».`);
+          if (vu.bouton !== "Voir les formules") anomalies.push(`PASS TERMINÉ : bouton « ${vu.bouton} ».`);
+          notes.push(`PASS TERMINÉ : « ${vu.termine.slice(0, 70)} » — ${vu.bouton}`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC PASS TERMINÉ : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
+
+      // --- d) LA MATRICE DES 7 FORMULES : la cible d'après paiement, et dashboard.html.
+      const { cibleApresPaiement } = await import("../../js/fitz-choisit.js");
+      const MATRICE = [
+        { id: "fitzExpress", userData: { plan: "gratuit", fitzExpressExpiresAt: dansNJours(14) }, cartes: [], profile: PROFIL_VIDE, hub: "ai-chat.html", etape: "#chatForm" },
+        { id: "premier-dossier", userData: { plan: "premier-dossier" }, cartes: [], profile: PROFIL_VIDE, hub: "espace-bourse.html", etape: "#fitzProfilBandeau:not([hidden])", bandeau: /Fitz a besoin de ces informations pour choisir votre université : / },
+        { id: "premier-dossier", userData: { plan: "premier-dossier" }, cartes: [carteDe(choisis[0], "slot-1")], profile: PROFIL_PRET, hub: "espace-bourse.html", etape: "#applicationsList .app-accept-btn" },
+        { id: "essentiel-4", userData: { plan: "essentiel-4" }, cartes: [], profile: PROFIL_VIDE, hub: "espace-bourse.html", etape: "#fitzProfilBandeau:not([hidden])", bandeau: /Fitz a besoin de ces informations pour choisir vos 4 universités : / },
+        { id: "essentiel-4", userData: { plan: "essentiel-4" }, cartes: [carteDe(choisis[0], "slot-1"), carteDe(choisis[1], "slot-2")], profile: PROFIL_PRET, hub: "espace-bourse.html", etape: "#applicationsList .app-accept-btn" },
+        { id: "conseiller-6", userData: { plan: "conseiller-6" }, cartes: [carteDe(choisis[0], "slot-1"), carteDe(choisis[1], "slot-2"), carteDe(choisis[2], "slot-3")], profile: PROFIL_PRET, hub: "espace-bourse.html", etape: "#applicationsList .app-accept-btn" },
+        { id: "diagnostic-france", userData: { plan: "gratuit", planPreinscription: "diagnostic-france", planPreinscriptionExpiresAt: dansNJours(10) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#diagForm" },
+        { id: "dossier-france", userData: { plan: "gratuit", planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#jyApps, #applicationModal" },
+        { id: "dossier-france-conseiller", userData: { plan: "gratuit", planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#jyApps, #applicationModal" }
+      ];
+      for (const cas of MATRICE) {
+        const client = compte({ ...cas.userData, profile: cas.profile }, cas.cartes, `harnais-matrice-${cas.id}`);
+        const cible = cibleApresPaiement(cas.id, cas.profile);
+        const pageCible = cible.split("?")[0];
+        const libelle = `${cas.id}${cas.profile === PROFIL_VIDE ? " (profil vide)" : ""}`;
+        // 1. La cible d'après paiement.
+        {
+          const { contexte, page, erreurs } = await ouvrirEtAttendre(client, cible, [pageCible], cas.etape);
+          try {
+            const vu = await page.evaluate((sel) => ({
+              page: location.pathname.split("/").pop(),
+              etape: !!document.querySelector(sel),
+              verrou: !!document.querySelector(".ai-locked-hero") || !!document.querySelector("#lockedState:not([hidden]) .ai-locked-hero"),
+              grises: document.querySelectorAll(".is-locked").length,
+              bandeau: (document.getElementById("fitzProfilBandeau") || {}).textContent || ""
+            }), cas.etape);
+            if (vu.page !== pageCible) anomalies.push(`MATRICE ${libelle} : la cible ${cible} atterrit sur ${vu.page}.`);
+            if (!vu.etape) anomalies.push(`MATRICE ${libelle} : l'élément de prochaine étape (${cas.etape}) n'est pas visible sur ${vu.page}.`);
+            if (vu.verrou) anomalies.push(`MATRICE ${libelle} : un écran verrouillé s'affiche sur ${vu.page} — la formule comprend pourtant cette fonction.`);
+            if (vu.grises) anomalies.push(`MATRICE ${libelle} : ${vu.grises} entrée(s) grisée(s) vers une fonction non comprise (.is-locked).`);
+            if (cas.bandeau && !cas.bandeau.test(vu.bandeau.replace(/\s+/g, " "))) anomalies.push(`MATRICE ${libelle} : bandeau « ${vu.bandeau.replace(/\s+/g, " ").trim().slice(0, 90)} ».`);
+            notes.push(`MATRICE ${libelle} : ${cible} → ${vu.page}, étape visible${cas.bandeau ? ` — « ${vu.bandeau.replace(/\s+/g, " ").trim().slice(0, 80)} »` : ""}`);
+          } catch (e) {
+            anomalies.push(`ÉCHEC MATRICE ${libelle} (cible) : ${e.message.split("\n")[0]}`);
+          }
+          anomalies.push(...erreurs);
+          await contexte.close();
+        }
+        // 2. dashboard.html : l'aiguillage.
+        {
+          const { contexte, page, erreurs } = await ouvrirEtAttendre(client, "dashboard.html", [cas.hub, "dashboard.html"]);
+          try {
+            const ici = await page.evaluate(() => location.pathname.split("/").pop());
+            if (ici !== cas.hub) anomalies.push(`MATRICE ${libelle} : dashboard.html mène à ${ici} au lieu de ${cas.hub}.`);
+          } catch (e) {
+            anomalies.push(`ÉCHEC MATRICE ${libelle} (dashboard) : ${e.message.split("\n")[0]}`);
+          }
+          anomalies.push(...erreurs);
+          await contexte.close();
+        }
+      }
+
+      // --- e) offers.html : sans « mois d'accompagnement », deux cartes alignées à 1440, aucun débordement à 375.
+      {
+        const { contexte, page, erreurs } = await ouvrir(navigateur, base, etudiant);
+        try {
+          await page.setViewportSize({ width: 1440, height: 900 });
+          await page.goto(`${base}/offers.html?parcours=bourse`, { waitUntil: "domcontentloaded" });
+          await page.waitForSelector('.plan-card [data-plan="essentiel-4"]', { timeout: 20000 });
+          // L'alignement des deux cartes : la ligne de durée a disparu SANS
+          // laisser de trou — dans chaque carte, « candidatures » suit le
+          // prix à la marge près (14 px, css/offers-redesign.css). La carte
+          // Conseiller (featured) a un montant plus grand par dessin : on
+          // ne compare pas les hauteurs entre cartes, on mesure chaque carte.
+          const lireCartes = () => page.evaluate(() => {
+            const texte = document.body.innerText;
+            const carte = (id) => {
+              const c = document.querySelector(`.plan-cta[data-plan="${id}"]`)?.closest(".plan-card");
+              const prix = c?.querySelector(".plan-price")?.getBoundingClientRect();
+              const quota = c?.querySelector(".plan-quota")?.getBoundingClientRect();
+              return { terme: !!c?.querySelector(".plan-price-term"), ecart: prix && quota ? Math.round(quota.top - prix.bottom) : -1 };
+            };
+            return { mois: /mois d'accompagnement/.test(texte), ess: carte("essentiel-4"), cons: carte("conseiller-6") };
+          });
+          const large = await lireCartes();
+          if (large.mois) anomalies.push("offers.html : « mois d'accompagnement » est encore affiché.");
+          for (const [nom, c] of [["Essentiel", large.ess], ["Conseiller", large.cons]]) {
+            if (c.terme) anomalies.push(`offers.html 1440 : la carte ${nom} porte encore une ligne de durée (.plan-price-term).`);
+            if (c.ecart < 0 || c.ecart > 20) anomalies.push(`offers.html 1440 : carte ${nom}, ${c.ecart} px entre le prix et « candidatures » — un trou est resté à la place de la durée.`);
+          }
+          await page.setViewportSize({ width: 375, height: 812 });
+          await page.waitForTimeout(400);
+          const etroit = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+          if (etroit.scroll > etroit.client + 1) anomalies.push(`offers.html 375 : débordement horizontal (${etroit.scroll} > ${etroit.client}).`);
+          const petit = await lireCartes();
+          for (const [nom, c] of [["Essentiel", petit.ess], ["Conseiller", petit.cons]]) {
+            if (c.ecart < 0 || c.ecart > 20) anomalies.push(`offers.html 375 : carte ${nom}, ${c.ecart} px entre le prix et « candidatures ».`);
+          }
+          notes.push(`offers.html : sans « mois d'accompagnement » ; prix→candidatures ${large.ess.ecart}/${large.cons.ecart} px à 1440, ${petit.ess.ecart}/${petit.cons.ecart} px à 375 ; largeur 375 : ${etroit.scroll}/${etroit.client}`);
+        } catch (e) {
+          anomalies.push(`ÉCHEC offers.html : ${e.message.split("\n")[0]}`);
+        }
+        anomalies.push(...erreurs);
+        await contexte.close();
+      }
     }
   }
 

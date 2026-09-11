@@ -3462,3 +3462,33 @@ cursor:pointer;
 formulaire quand ils s'ouvrent. */
 #contextDetails{margin-bottom:6px;}
 
+
+/* ==========================================================
+LOT ACCEPTATION (2026-09-11)
+— la ligne de blocage des outils : « Acceptez d'abord cette université
+  dans Mes candidatures » / « Choisissez d'abord une université acceptée » ;
+— le temps qui reste au Pass Découverte, dans la barre du chat.
+========================================================== */
+.ai-outil-blocage{
+display:flex;
+align-items:center;
+flex-wrap:wrap;
+gap:10px 14px;
+margin:0 0 16px;
+padding:12px 16px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+background:var(--background-alt);
+font-weight:600;
+color:var(--text-color);
+}
+.ai-outil-blocage i,
+.ai-outil-blocage svg{ width:18px; height:18px; flex-shrink:0; color:var(--amber-600); }
+.ai-outil-blocage .btn{ margin-left:auto; }
+.ai-chat-pass-restant{
+margin-left:auto;
+font-size:var(--fs-caption);
+font-weight:600;
+color:var(--text-muted);
+white-space:nowrap;
+}

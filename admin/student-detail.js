@@ -43,6 +43,10 @@ import { succes, echec, notifier } from "./notifier.js";
 // elle-même — storage.rules la réserve au propriétaire).
 import { lirePreuve, resumePreuve, LIBELLES_MODES } from "../js/preuve-depot.js";
 import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "../js/parcours.js";
+// Lot ACCEPTATION, partie 6 : le décompte par statut des cartes bourses
+// et « toutes répondues » (STATUTS_REPONSE, jamais une liste recopiée)
+// viennent du module pur js/fitz-choisit.js — testés sous Node.
+import { decompteBourses } from "../js/fitz-choisit.js";
 // resolvePlanPreinscription manquait à cet import (corrigé 2026-09-08).
 // Elle est appelée dans renderHeader() : la fiche étudiant levait une
 // ReferenceError avant d'avoir rien affiché, donc l'admin ne pouvait
@@ -437,7 +441,13 @@ if (planExpiryInput) planExpiryInput.value = userData.planExpiresAt || "";
 if (!planExpiryStatus) { /* rien à écrire */ } else if (!userData.plan) {
 planExpiryStatus.textContent = "Aucune formule active — l'expiration ne s'applique pas.";
 } else if (!userData.planExpiresAt) {
-planExpiryStatus.textContent = "Aucune date d'expiration enregistrée.";
+// Lot ACCEPTATION, partie 6 : une formule bourses SANS échéance (les
+// trois en vente n'ont plus de durée) reste active jusqu'à la décision
+// de Charles — c'est ici qu'il y met fin.
+const formule = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[userData.plan];
+planExpiryStatus.textContent = formule && formule.parcours === "bourse" && !formule.duration
+? "Sans échéance : la formule reste active jusqu'à votre décision. Pour y mettre fin, fixez une date ci-dessous."
+: "Aucune date d'expiration enregistrée.";
 } else {
 const expired = new Date(userData.planExpiresAt).getTime() < Date.now();
 planExpiryStatus.textContent = expired
@@ -495,7 +505,7 @@ planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
 renderAttributionManuelle(userData);
 
 if (!fitzExpressStatus) { /* rien à écrire */ } else if (!userData.fitzExpressExpiresAt) {
-fitzExpressStatus.textContent = "Aucun Pass Fitz Express actif.";
+fitzExpressStatus.textContent = "Aucun Pass Découverte actif.";
 } else {
 const expired = new Date(userData.fitzExpressExpiresAt).getTime() < Date.now();
 fitzExpressStatus.textContent = expired
@@ -817,7 +827,14 @@ list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var
 return;
 }
 
-list.innerHTML = applications.map((app) => `
+// Lot ACCEPTATION, partie 6 : c'est Charles qui décide la suite. Un
+// décompte par statut des cartes BOURSES, et — quand les N cartes de la
+// formule ont toutes reçu une réponse — un bandeau qui le lui dit.
+const decompte = decompteBourses(applications, quota);
+
+list.innerHTML = (decompte.ligne ? `<p class="detail-field-value" id="candidaturesDecompte" style="font-weight:600;margin-bottom:10px;">${decompte.ligne}</p>` : "")
++ (decompte.toutesRepondues ? `<div class="detail-alert" id="candidaturesSuiteBandeau" role="status" style="margin-bottom:14px;padding:12px 14px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-alt);font-weight:600;">Les ${quota} candidatures ont reçu une réponse : à vous de décider la suite (formule, date de fin, message).</div>` : "")
++ applications.map((app) => `
 <div class="timeline-item">
 <span class="timeline-dot" style="background:${app.status === "reponse_recue" ? "var(--success)" : "var(--border-color)"}"></span>
 <div class="timeline-body">

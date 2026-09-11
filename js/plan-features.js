@@ -396,6 +396,80 @@ return !isNaN(expiry) && expiry.getTime() >= Date.now();
 
 }
 
+// ==========================================================
+// LE PASS DÉCOUVERTE SEUL (lot ACCEPTATION, partie 4 — 2026-09-11)
+// ==========================================================
+// Décision 6 de Charles : le Pass Découverte ne mène qu'à « Discuter
+// avec Fitz ». Rien d'autre. Un compte qui n'a QUE le Pass appartenait
+// à l'espace « aucun » : dashboard.html lui disait « pas d'accompagnement
+// actif », sa pastille disait « Gratuit », sa barre d'onglets lui
+// proposait Parcours, Candidatures et Documents qu'il n'a pas achetés,
+// et la garde d'espace le laissait ouvrir espace-bourse.html.
+//
+// UNE SEULE DÉFINITION, pure : vraie quand les quatre conditions sont
+// réunies — Pass actif, aucune formule bourse active, aucune offre
+// préinscription active, pas de testerAccess. Accepte une SESSION
+// (resolveSession) ou un document users/{uid} brut, comme
+// resoudreEspace.
+
+/** Le nom du produit. « Fitz Express » n'est plus le nom de rien ; l'identifiant `fitzExpress` reste. */
+export const PASS_LABEL = "Pass Découverte";
+
+export function passSeul(source) {
+
+if (!source || typeof source !== "object") return false;
+if (source.testerAccess === true) return false;
+
+const pass = source.hasFitzExpress !== undefined ? source.hasFitzExpress === true : hasFitzExpressAccess(source);
+if (!pass) return false;
+
+const bourse = source.planId !== undefined ? source.planId : resolvePlan(source);
+const preinscription = source.planPreinscriptionId !== undefined ? source.planPreinscriptionId : resolvePlanPreinscription(source);
+
+return (!bourse || bourse === "gratuit") && !preinscription;
+
+}
+
+/**
+* Un Pass TERMINÉ : le compte porte un fitzExpressExpiresAt passé, et
+* plus aucune formule qui ouvre le chat. Rend la date d'expiration
+* (Date), ou null.
+*/
+export function passTermine(userData, maintenant = Date.now()) {
+
+if (!userData || !userData.fitzExpressExpiresAt) return null;
+
+const expiry = new Date(userData.fitzExpressExpiresAt);
+if (isNaN(expiry) || expiry.getTime() >= maintenant) return null;
+
+const bourse = resolvePlan(userData);
+if (bourse && bourse !== "gratuit") return null;
+
+const pre = resolvePlanPreinscription(userData);
+if (pre === "dossier-france" || pre === "dossier-france-conseiller") return null;
+
+return expiry;
+
+}
+
+/**
+* « 9 jours restants », « moins d'1 jour restant » — le même calcul que
+* la bannière des hubs (renderFitzExpressBanner, dashboard.js). Rend ""
+* sans Pass actif.
+*/
+export function joursRestantsPass(fitzExpressExpiresAt, maintenant = Date.now()) {
+
+if (!fitzExpressExpiresAt) return "";
+
+const expiry = new Date(fitzExpressExpiresAt);
+if (isNaN(expiry) || expiry.getTime() < maintenant) return "";
+
+const jours = Math.max(0, Math.ceil((expiry.getTime() - maintenant) / 86400000));
+
+return jours <= 1 ? "moins d'1 jour restant" : `${jours} jours restants`;
+
+}
+
 // Grille B (2026-09-07) : le second forfait, PRÉINSCRIPTION. Même règle
 // que resolvePlan : hors vocabulaire ou expiré = aucune offre ("").
 export function resolvePlanPreinscription(userData) {

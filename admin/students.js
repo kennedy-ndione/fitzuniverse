@@ -12,7 +12,7 @@ getDoc
 
 import { getAllUsers } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
-import { PLAN_LABELS } from "../js/plan-features.js";
+import { PLAN_LABELS, passSeul, PASS_LABEL } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
@@ -31,6 +31,11 @@ return timestamp.toDate().toLocaleDateString("fr-FR");
 function planPill(user) {
 
 const key = resolvePlan(user);
+
+// Lot ACCEPTATION, partie 4 : un compte qui n'a QUE le Pass Découverte
+// affiche « Pass Découverte », jamais « Gratuit ».
+if (passSeul(user)) return `<span class="status-pill plan-fitzExpress">${PASS_LABEL}</span>`;
+
 const label = PLAN_LABELS[key];
 
 return `<span class="status-pill plan-${key}">${label}</span>`;

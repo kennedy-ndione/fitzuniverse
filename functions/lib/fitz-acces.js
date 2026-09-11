@@ -71,7 +71,14 @@ const OFFRES_PREINSCRIPTION = ["diagnostic-france", "dossier-france", "dossier-f
  * pour qu'une boucle ou un compte partagé se heurte à un mur en quelques
  * heures, pas en fin de mois.
  *
- * Recalculés depuis la durée RÉELLE de chaque offre (pricing-plans.js) :
+ * LES PLAFONDS RESTENT MENSUELS, et leurs valeurs ne changent pas (lot
+ * ACCEPTATION, 2026-09-11). Depuis ce lot, essentiel-4 et conseiller-6
+ * n'ont PLUS de durée vendue : 6 et 9 mois ne sont plus des durées, mais
+ * la BASE DU CALIBRAGE ci-dessous. Sans échéance, le plafond mensuel
+ * s'applique mois après mois, jusqu'à ce que l'admin mette fin à la
+ * formule (planExpiresAt, fiche étudiant).
+ *
+ * Calibrés depuis la durée qui servait de base à chaque offre :
  *   essentiel-4      45 000 F /  6 mois =  7 500 F/mois → 25 % = 1 875 F → 190 pts
  *   conseiller-6    150 000 F /  9 mois = 16 667 F/mois → 4 167 F → ~400 pts
  *   dossier-france   75 000 F / une campagne ; une campagne Études en

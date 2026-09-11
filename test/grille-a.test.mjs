@@ -73,8 +73,12 @@ assert.equal(OFFRES["essentiel-4"].maxAccompaniedApplications, 4);
 assert.equal(OFFRES["conseiller-6"].maxAccompaniedApplications, 6);
 assert.equal(OFFRES["essentiel-4"].priceFCFA, 45000);
 assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
-assert.equal(OFFRES["essentiel-4"].duration, "6 mois");
-assert.equal(OFFRES["conseiller-6"].duration, "9 mois");
+// Lot ACCEPTATION (2026-09-11), décision 7 : plus de durée en mois — une
+// formule bourses se définit par son nombre de candidatures.
+assert.equal(OFFRES["essentiel-4"].duration, undefined, "essentiel-4 n'a plus de durée");
+assert.equal(OFFRES["conseiller-6"].duration, undefined, "conseiller-6 n'a plus de durée");
+assert.equal(OFFRES["premier-dossier"].duration, undefined, "Premier Dossier n'en a jamais eu");
+assert.equal(OFFRES.fitzExpress.duration, "14 jours", "les 14 jours du Pass ne changent pas");
 assert.equal(OFFRES["essentiel-4"].label, "Forfait Essentiel");
 assert.equal(OFFRES["conseiller-6"].label, "Forfait Conseiller");
 });
@@ -220,8 +224,13 @@ assert.equal(GRILLE[id].parcours, "bourse");
 assert.ok(PLAN_ORDER.includes(id));
 assert.equal(typeof RANG[id], "number");
 }
-assert.equal(GRILLE["essentiel-4"].dureeMois, 6);
-assert.equal(GRILLE["conseiller-6"].dureeMois, 9);
+// Lot ACCEPTATION : sans échéance, comme Premier Dossier (le webhook
+// efface planExpiresAt à l'activation). Les formules retirées gardent
+// leurs mois.
+assert.equal(GRILLE["essentiel-4"].dureeMois, null);
+assert.equal(GRILLE["conseiller-6"].dureeMois, null);
+assert.equal(GRILLE.essentiel.dureeMois, 6);
+assert.equal(GRILLE.accompagnement.dureeMois, 9);
 // RANG est le miroir de PLAN_ORDER.
 for (const id of PLAN_ORDER) assert.equal(RANG[id], PLAN_ORDER.indexOf(id), `RANG[${id}]`);
 assert.ok(RANG["essentiel-4"] < RANG.essentiel && RANG["conseiller-6"] < RANG["signature-focus"], "une nouvelle offre se range sous l'ancienne qu'elle remplace");
@@ -233,10 +242,13 @@ for (const id of BOURSES_EN_VENTE) assert.equal(estEnVente(id), true, id);
 assert.equal(estEnVente("premium"), false);
 assert.equal(estEnVente("inconnue"), false);
 assert.ok(lire("functions/paiement.js").includes("estEnVente(planId)"), "creerPaiement vérifie estEnVente avant de créer la facture");
-const r = calculerMiseAJour({ planId: "essentiel-4", user: {}, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
+const SUPPRIMER = Symbol("delete");
+const r = calculerMiseAJour({ planId: "essentiel-4", user: {}, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: SUPPRIMER });
 assert.equal(r.statut, "applique");
 assert.equal(r.misAJour.plan, "essentiel-4");
-assert.equal(r.misAJour.planExpiresAt.slice(0, 10), "2027-03-07");
+// Lot ACCEPTATION : plus de durée en mois — l'échéance est EFFACÉE à
+// l'activation (elle valait « 2027-03-07 », six mois plus tard).
+assert.equal(r.misAJour.planExpiresAt, SUPPRIMER);
 // Un client Essentiel (5) encore actif ne peut pas être rétrogradé vers essentiel-4.
 const bas = calculerMiseAJour({ planId: "essentiel-4", user: { plan: "essentiel", planExpiresAt: "2027-01-01T00:00:00.000Z" }, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
 assert.equal(bas.statut, "rang-inferieur");

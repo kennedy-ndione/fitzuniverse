@@ -11,6 +11,7 @@
 */
 
 import { initShellChrome, bootstrapShell, PLAN_LABELS } from "./js/app-shell.js";
+import { passSeul, PASS_LABEL } from "./js/plan-features.js";
 import { changePassword, deleteAccount, setEmailNotifications } from "./js/account-actions.js";
 import { getAuthErrorMessage } from "./auth-ui.js";
 import { showToast } from "./js/ai/toast.js";
@@ -84,7 +85,13 @@ const d = new Date(iso);
 return isNaN(d) ? iso : d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 };
 
-if (planId === "gratuit") {
+if (passSeul(ctx)) {
+// Lot ACCEPTATION, partie 4 : un Pass seul n'est pas « Gratuit ».
+document.getElementById("accountPlan").textContent = PASS_LABEL;
+planMeta.textContent = `${PASS_LABEL} — actif jusqu'au ${formatDateFR(userData.fitzExpressExpiresAt)} : vos questions à Fitz`;
+planMeta.hidden = false;
+changeBtn.querySelector("span").textContent = "Choisir ma formule";
+} else if (planId === "gratuit") {
 planMeta.textContent = "Les outils Fitz et le suivi de candidatures s'ouvrent avec une formule payante.";
 planMeta.hidden = false;
 changeBtn.querySelector("span").textContent = "Choisir ma formule";
@@ -96,6 +103,11 @@ planMeta.textContent = expired
 planMeta.hidden = false;
 } else if (plan && plan.duration) {
 planMeta.textContent = `Accompagnement de ${plan.duration}.`;
+planMeta.hidden = false;
+} else if (plan && plan.parcours === "bourse") {
+// Lot ACCEPTATION, partie 5 : plus de durée en mois — une formule
+// bourses se définit par son nombre de candidatures.
+planMeta.textContent = "Sans échéance : chaque candidature est suivie jusqu'à la décision de l'université.";
 planMeta.hidden = false;
 }
 

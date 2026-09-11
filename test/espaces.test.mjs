@@ -36,6 +36,8 @@ import { dirname, join } from "node:path";
 import { resoudreEspace, espaceAutorise, unlockingPlans, ESPACES, HUB_ESPACE } from "../js/plan-features.js";
 import { phasesDe, PHASES_PAR_ESPACE, etatDesPhases } from "../js/journey-map.js";
 import { PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+// Lot ACCEPTATION, partie 3 : la cible d'après paiement est une fonction pure.
+import { cibleApresPaiement } from "../js/fitz-choisit.js";
 
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -378,26 +380,36 @@ assert.equal((bloc.match(/nomFormulePour\(track\)/g) || []).length, 2, "les deux
 assert.ok(!/PLAN_LABELS\[planId\]/.test(bloc), "jamais la formule bourse en dur");
 });
 
-test("aucune formule en vente ne renvoie sur dashboard.html après paiement", () => {
+test("aucune formule en vente ne renvoie sur dashboard.html après paiement — la table vit dans js/fitz-choisit.js (lot ACCEPTATION)", () => {
 const js = lire("payment.js");
-const table = js.slice(js.indexOf("const POST_ACTIVATION_TARGETS"), js.indexOf("};", js.indexOf("const POST_ACTIVATION_TARGETS")));
-const bloc = js.slice(js.indexOf("const POST_ACTIVATION_TARGETS"), js.indexOf("function initActivation"));
-assert.ok(!table.includes("dashboard.html"), "dashboard.html n'est plus qu'un aiguillage : y renvoyer ajoute une redirection");
+// payment.js ne porte plus sa propre table : il appelle la fonction pure.
+assert.ok(!js.includes("const POST_ACTIVATION_TARGETS"), "la table a déménagé dans js/fitz-choisit.js (cibleApresPaiement)");
+assert.match(js, /import \{[^}]*cibleApresPaiement[^}]*\} from "\.\/js\/fitz-choisit\.js"/);
+assert.match(js, /return cibleApresPaiement\(planId, profile \|\| \{\}\)/);
+assert.match(js, /resolvePostActivationTarget\(plan\.id, profil\)/, "la cible se décide avec le profil tel que le serveur le connaît");
+assert.ok(!js.includes("track=preinscription"), "le paramètre ?track= a disparu avec le sélecteur");
+
+const PRET = { nationality: "Sénégal", desiredDegree: "Master", desiredField: "Informatique", languages: ["français"] };
 for (const [plan, cible] of [
 ["fitzExpress", "ai-chat.html"],
-["premier-dossier", "espace-bourse.html?action=new"],
-["essentiel-4", "espace-bourse.html"],
-["conseiller-6", "espace-bourse.html"],
 ["diagnostic-france", "diagnostic-france.html"],
 ["dossier-france", "espace-preinscription.html?action=new"],
 ["dossier-france-conseiller", "espace-preinscription.html?action=new"]
 ]) {
-assert.match(bloc, new RegExp(`"?${plan}"?: "${cible.replace(/[?]/g, "\\?")}"`), `${plan} → ${cible}`);
+assert.equal(cibleApresPaiement(plan, {}), cible, `${plan} → ${cible}`);
+assert.equal(cibleApresPaiement(plan, PRET), cible, `${plan} → ${cible}, quel que soit le profil`);
+assert.ok(!cible.includes("dashboard.html"), "dashboard.html n'est plus qu'un aiguillage : y renvoyer ajoute une redirection");
+}
+// Les trois formules bourses : profil pas prêt → le profil pour Fitz ;
+// prêt → les propositions à accepter. Plus jamais ?action=new.
+for (const plan of ["premier-dossier", "essentiel-4", "conseiller-6"]) {
+assert.equal(cibleApresPaiement(plan, {}), "profile.html?pour=fitz", `${plan}, profil vide`);
+assert.equal(cibleApresPaiement(plan, PRET), "applications.html", `${plan}, profil prêt`);
+assert.equal(cibleApresPaiement(plan, { ...PRET, languages: [] }), "profile.html?pour=fitz", `${plan}, une langue manque`);
 }
 // Le repli des formules dépréciées : l'espace bourse, jamais l'aiguillage.
-assert.match(bloc, /POST_ACTIVATION_TARGETS\[planId\] \|\| "espace-bourse\.html"/);
-// Le paramètre ?track= a disparu avec le sélecteur.
-assert.ok(!bloc.includes("track=preinscription"));
+assert.equal(cibleApresPaiement("accompagnement", PRET), "espace-bourse.html");
+assert.equal(cibleApresPaiement("signature", {}), "espace-bourse.html");
 });
 
 // ------------------------------------------------------------------

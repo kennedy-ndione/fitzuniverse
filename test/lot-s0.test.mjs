@@ -82,7 +82,13 @@ return src
 function nomsImportes(src) {
 const noms = new Set();
 for (const m of src.matchAll(/import\s+([\s\S]*?)\s+from\s+["'][^"']+["']/g)) {
-const clause = m[1];
+// Un commentaire DANS la liste d'import (admin/student-detail.js :
+// « // Lot ADMIN : … » avant attribuerFormuleManuellement) collait le
+// nom au commentaire, et le nom n'était plus lu. Le test passait par
+// hasard (lot ACCEPTATION, 2026-09-11) : l'appel était avalé par une
+// paire d'apostrophes mal fermée de sansCommentaires(). On retire les
+// commentaires de la clause avant de la découper.
+const clause = m[1].replace(/\/\/[^\n]*/g, "");
 for (const accolades of clause.matchAll(/\{([\s\S]*?)\}/g)) {
 for (const piece of accolades[1].split(",")) {
 const nom = piece.trim().split(/\s+as\s+/).pop().trim();

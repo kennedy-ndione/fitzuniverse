@@ -170,6 +170,13 @@ préinscription (vœux saisis à la main). applications.js décide. -->
 
 <div class="apps-toolbar">
 <div class="fitz-choix-etat" id="fitzChoixEtat" role="status" hidden></div>
+<!-- Lot ACCEPTATION (2026-09-11) : « J'accepte les N choix de Fitz », en
+tête de liste dès qu'au moins 2 cartes sont proposées. Accepter est
+définitif : le bouton demande confirmation. -->
+<button type="button" class="btn btn-primary" id="accepterToutBtn" hidden>
+<i data-lucide="check-check"></i>
+<span>J'accepte les choix de Fitz</span>
+</button>
 <button type="button" class="btn btn-primary" id="addApplicationBtn" hidden>
 <i data-lucide="plus"></i>
 <span>Nouvelle candidature</span>

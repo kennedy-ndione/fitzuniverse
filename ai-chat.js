@@ -12,6 +12,8 @@
 */
 
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
+// Lot ACCEPTATION, partie 4 : le Pass Découverte seul, et sa fin.
+import { passSeul, passTermine, joursRestantsPass, PASS_LABEL } from "./js/plan-features.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { getSuggestedQuestions } from "./js/ai/simulated-responses.js";
@@ -84,6 +86,28 @@ function renderLockedState(container, ctx) {
 
 const flags = ctx.featureFlags.ai_chat;
 const target = unlockingPlans(ctx.planId, flags)[0];
+
+// Lot ACCEPTATION, partie 4 : un Pass Découverte TERMINÉ (et plus
+// aucune formule qui ouvre le chat) le dit, avec sa date — pas le
+// message générique « disponible avec une formule supérieure ».
+const finDuPass = passTermine(ctx.userData);
+
+if (finDuPass) {
+
+container.innerHTML = `
+<div class="ai-locked-hero" data-pass="termine">
+<div class="ai-locked-icon"><i data-lucide="lock"></i></div>
+<h2>Discuter avec Fitz</h2>
+<p>Votre Pass Découverte s'est terminé le ${escapeHtml(finDuPass.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }))}. Pour continuer avec Fitz, choisissez une formule.</p>
+<a href="offers.html" class="btn btn-primary"><span>Voir les formules</span></a>
+</div>
+`;
+
+container.hidden = false;
+if (window.lucide) lucide.createIcons();
+return;
+
+}
 
 container.innerHTML = `
 <div class="ai-locked-hero">
@@ -876,6 +900,21 @@ return;
 }
 
 parcoursChat = parcoursDOutil({ espace: ctx.espace });
+
+// Lot ACCEPTATION, partie 4 : un Pass seul voit discrètement le temps
+// qui reste — « Pass Découverte — 9 jours restants ». Aucun bouton
+// d'achat pendant le pass.
+if (passSeul(ctx)) {
+const restant = joursRestantsPass(ctx.userData && ctx.userData.fitzExpressExpiresAt);
+const barre = document.querySelector(".ai-chat-main-topbar");
+if (restant && barre) {
+const el = document.createElement("span");
+el.id = "chatPassRestant";
+el.className = "ai-chat-pass-restant";
+el.textContent = `${PASS_LABEL} — ${restant}`;
+barre.appendChild(el);
+}
+}
 
 initChat(ctx);
 

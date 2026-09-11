@@ -428,7 +428,15 @@ icon: "compass",
 tagline: "4 candidatures accompagnées à fond, avec Fitz.",
 badge: "4 candidatures à fond",
 priceFCFA: 45000,
-duration: "6 mois",
+// Lot ACCEPTATION (2026-09-11), décision 7 de Charles : PLUS DE DURÉE EN
+// MOIS. Une formule bourses se définit par son nombre de candidatures,
+// chacune suivie jusqu'à la décision de l'université ; la suite, c'est
+// l'équipe qui la décide. `duration` retirée (elle valait « 6 mois »).
+// Exception assumée à la règle « un objet existant ne se modifie pas » :
+// aucun client payant ne détient cette formule (le paiement réel n'est
+// pas ouvert, le KYC PayDunya est en attente), et le changement ne
+// retire rien — il enlève une limite. Les formules retirées de la vente
+// gardent leur durée.
 maxAccompaniedApplications: 4,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
@@ -452,7 +460,9 @@ icon: "user-check",
 tagline: "6 candidatures, chacune relue par un conseiller avant l'envoi.",
 badge: "Accompagnement humain",
 priceFCFA: 150000,
-duration: "9 mois",
+// Lot ACCEPTATION (2026-09-11) : plus de durée en mois — voir la note
+// d'essentiel-4 ci-dessus (même exception assumée, même raison).
+// `duration` retirée (elle valait « 9 mois »).
 maxAccompaniedApplications: 6,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",

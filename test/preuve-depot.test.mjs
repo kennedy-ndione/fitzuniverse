@@ -108,7 +108,10 @@ for (const s of STATUTS_DEPOSES) assert.ok(estDepose[1].includes(`'${s}'`), s);
 assert.ok(r.includes("in ['numero', 'capture', 'transmis']"));
 assert.ok(r.includes("numeroDossier.size() <= 64"));
 assert.ok(r.includes("matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')"));
-assert.ok(r.includes("depotJustifie(uid, applicationId, 'status' in request.resource.data.diff(resource.data).affectedKeys())"), "l'update ne contraint que la transition de statut");
+// Lot ACCEPTATION : la transition se lit par affecte('status') — la même
+// clé, sans la recopier (voir les fonctions du bloc ACCEPTATION).
+assert.ok(r.includes("depotJustifie(uid, applicationId, affecte('status'))"), "l'update ne contraint que la transition de statut");
+assert.ok(r.includes("function affecte(cle) {\nreturn cle in request.resource.data.diff(resource.data).affectedKeys();"), "affecte() est bien la transition");
 assert.ok(r.includes("&& depotJustifie(uid, applicationId, true)"), "la création avec un statut déposé exige la preuve");
 assert.ok(r.includes("'users/' + uid + '/applications/' + applicationId + '/.*'"), "le fichier vit dans le dossier de cette candidature");
 });

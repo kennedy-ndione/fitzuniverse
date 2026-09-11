@@ -17,6 +17,10 @@ import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
 import { parcoursDOutil } from "./js/parcours.js";
+// Lot ACCEPTATION (2026-09-11) : la vérification exige, en bourses, une
+// candidature ACCEPTÉE — elle ne tourne plus « sans candidature ».
+import { candidaturesPourOutils } from "./js/fitz-choisit.js";
+import { blocageOutil, afficherBlocage } from "./js/outil-acceptation.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 import { extractTextFromFile } from "./js/ai/extract-text.js";
@@ -164,7 +168,10 @@ contextChips.appendChild(chip);
 
 }
 
-trackedApplications
+// Lot ACCEPTATION : le sélecteur ne propose que les candidatures
+// bourses ACCEPTÉES, plus les préinscriptions et les cartes sans
+// programId (js/fitz-choisit.js : candidaturesPourOutils).
+candidaturesPourOutils(trackedApplications)
 .slice()
 .sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
 .forEach((app) => {
@@ -178,14 +185,22 @@ fieldApplication.appendChild(option);
 
 if (application) fieldApplication.value = application.id;
 
+// Lot ACCEPTATION : la ligne de blocage, avant la zone de dépôt.
+const zoneDepot = document.getElementById("dropzone");
+function syncBlocage() {
+afficherBlocage(zoneDepot, blocageOutil({ espace: ctx.espace, application }));
+}
+
 fieldApplication.addEventListener("change", () => {
 application = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
 syncContextBanner();
 renderContextChips();
+syncBlocage();
 });
 
 syncContextBanner();
 renderContextChips();
+syncBlocage();
 
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
@@ -355,6 +370,14 @@ if (window.lucide) lucide.createIcons();
 }
 
 async function runAnalysis() {
+
+// Lot ACCEPTATION : en bourses, pas de vérification sans candidature acceptée.
+const blocage = blocageOutil({ espace: ctx.espace, application });
+if (blocage) {
+syncBlocage();
+showToast(blocage.texte, { type: "warning" });
+return;
+}
 
 analyzeBtn.disabled = true;
 analyzeBtn.querySelector("span").textContent = "Analyse en cours…";

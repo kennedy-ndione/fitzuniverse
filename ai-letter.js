@@ -25,6 +25,10 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
 import { parcoursDOutil } from "./js/parcours.js";
+// Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
+// candidature ACCEPTÉE — plus de mode libre pour une bourse.
+import { candidaturesPourOutils } from "./js/fitz-choisit.js";
+import { blocageOutil, afficherBlocage } from "./js/outil-acceptation.js";
 
 // Contexte candidature (Phase 3, 2026-07-30) : si la page est ouverte
 // depuis applications.html (?applicationId=...), la lettre générée est
@@ -219,6 +223,11 @@ fieldGoals.value = profile.careerGoals || profile.dreams || "";
 
 // La cible vient de la candidature sélectionnée — elle sait à qui la
 // lettre s'adresse, et la bourse visée nourrit les motivations.
+// Lot ACCEPTATION : la ligne de blocage, avant le formulaire.
+function syncBlocage() {
+afficherBlocage(form, blocageOutil({ espace: ctx.espace, application }));
+}
+
 function applyApplicationContext(app) {
 
 application = app || null;
@@ -233,10 +242,22 @@ if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse"
 }
 }
 
+verrouillerUniversite(app);
+
 syncContextBanner();
 renderContextChips();
 appliquerMode();
+syncBlocage();
 
+}
+
+// Lot ACCEPTATION : pour une candidature bourse, l'université
+// destinataire est VERROUILLÉE sur celle de la candidature — au
+// chargement (?applicationId=) comme au changement de sélecteur.
+function verrouillerUniversite(app) {
+const verrou = !!app && parcoursDOutil({ application: app }) === "bourse";
+fieldUniversity.readOnly = verrou;
+fieldUniversity.setAttribute("aria-readonly", verrou ? "true" : "false");
 }
 
 // ==========================================================
@@ -290,7 +311,10 @@ if (!currentText) generateBtn.querySelector("span").textContent = voeu ? "Rédig
 
 }
 
-trackedApplications
+// Lot ACCEPTATION : le sélecteur ne propose que les candidatures
+// bourses ACCEPTÉES, plus les préinscriptions et les cartes sans
+// programId (js/fitz-choisit.js : candidaturesPourOutils).
+candidaturesPourOutils(trackedApplications)
 .slice()
 .sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
 .forEach((app) => {
@@ -308,6 +332,8 @@ fieldApplication.addEventListener("change", () => {
 const app = trackedApplications.find((a) => a.id === fieldApplication.value) || null;
 applyApplicationContext(app);
 });
+
+syncBlocage();
 
 // Pastilles — le miroir exact de la cible que collectData() enverra.
 const CHIP_DEFS = [
@@ -382,6 +408,7 @@ input.addEventListener("change", renderContextChips);
 
 if (application) {
 fieldUniversity.value = application.university || "";
+verrouillerUniversite(application);
 if (application.scholarship) fieldMotivations.value = fieldMotivations.value || `Candidature à la bourse ${application.scholarship}.`;
 }
 
@@ -466,6 +493,14 @@ profile
 }
 
 async function generateLetter() {
+
+// Lot ACCEPTATION : en bourses, pas de lettre sans candidature acceptée.
+const blocage = blocageOutil({ espace: ctx.espace, application });
+if (blocage) {
+syncBlocage();
+showToast(blocage.texte, { type: "warning" });
+return;
+}
 
 const data = collectData();
 

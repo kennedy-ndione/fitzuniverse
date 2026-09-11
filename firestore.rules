@@ -277,8 +277,20 @@ allow update: if
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(champsAdminOrdinaire())) ||
 // L'étudiant : tout SAUF ces champs — `attributionManuelle` comprise,
 // sans quoi il pourrait effacer la trace de sa propre régularisation.
-(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(champsFormule().concat(["disabled", "testerAccess"])));
+// LOT ACCEPTATION (2026-09-11) : `universitesRefusees` ne peut que
+// GRANDIR. Sans cela, l'étudiant viderait sa liste et reverrait les
+// universités refusées — deux refus par place n'auraient plus de sens.
+(isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(champsFormule().concat(["disabled", "testerAccess"])) && universitesRefuseesGrandit());
 allow delete: if isOwner(uid);
+}
+
+// Vrai si `universitesRefusees` n'existait pas, n'est pas touchée, ou
+// contient encore tout ce qu'elle contenait.
+function universitesRefuseesGrandit() {
+return !('universitesRefusees' in resource.data) ||
+!('universitesRefusees' in request.resource.data.diff(resource.data).affectedKeys()) ||
+(request.resource.data.get('universitesRefusees', null) is list &&
+request.resource.data.universitesRefusees.hasAll(resource.data.universitesRefusees));
 }
 
 // ------------------------------------------------------------
@@ -449,15 +461,124 @@ function programmeDe(d) {
 return get(/databases/$(database)/documents/programs/$(d.programId)).data;
 }
 
+// Une bourse ACTIVE : présente, et sans `isActive: false`. Jamais de
+// get() sur un identifiant nul (tester `is string` avant).
+function bourseActive(scholarshipId) {
+return scholarshipId is string &&
+exists(/databases/$(database)/documents/scholarships/$(scholarshipId)) &&
+get(/databases/$(database)/documents/scholarships/$(scholarshipId)).data.get('isActive', true) != false;
+}
+
 // L'identité de la candidature est celle d'un programme du catalogue.
 // `nomExige` : vrai quand le nom de l'université doit lui aussi être
 // celui du catalogue (création, ou modification du nom).
+// LOT ACCEPTATION : toute écriture d'un choix exige une bourse ACTIVE.
+// 124 programmes du catalogue mènent à 27 bourses `isActive: false` ;
+// s'y placer ouvrirait des remplacements illimités sans consommer de
+// refus (l'exception catalogue ci-dessous). Le moteur, lui, écarte déjà
+// ces bourses : cette règle ne gêne jamais Fitz.
 function identiteCatalogue(d, nomExige) {
 return d.get('programId', null) is string &&
 exists(/databases/$(database)/documents/programs/$(d.programId)) &&
 d.get('scholarshipId', null) == programmeDe(d).get('scholarshipId', null) &&
+bourseActive(programmeDe(d).get('scholarshipId', null)) &&
 (!('universityId' in d) || d.universityId == null || d.universityId == programmeDe(d).universityId) &&
 (!nomExige || d.get('university', '') == get(/databases/$(database)/documents/universities/$(programmeDe(d).universityId)).data.get('name', ''));
+}
+
+// ------------------------------------------------------------
+// LOT ACCEPTATION (2026-09-11) — l'étudiant accepte le choix de Fitz.
+// Décisions de Charles : accepter est DÉFINITIF ; deux refus par place,
+// pas plus ; un dépôt suit l'acceptation ; une formule en vente ne
+// supprime jamais une carte catalogue. Sur une CARTE CATALOGUE (une
+// bourse qui porte un `programId`, dans l'ancienne carte ou dans la
+// carte écrite) :
+//   - `accepteeLe` se pose UNE fois, à request.time (serverTimestamp),
+//     ne change jamais, ne disparaît que par l'exception catalogue ;
+//   - un statut déposé exige `accepteeLe` dans la carte écrite, et ne
+//     redescend jamais vers un statut non déposé ;
+//   - carte acceptée : les champs du CHOIX (programId, scholarshipId,
+//     universityId, university, scholarship) sont immuables, sauf
+//     exception catalogue ; portalUrl / universityWebsite restent des
+//     coordonnées modifiables ;
+//   - un REFUS (changement du choix sur une carte non acceptée) exige
+//     refus == ancien + 1, et refus <= 2 ; `refus` ne change jamais sans
+//     changement du choix, et ne baisse jamais ;
+//   - EXCEPTION CATALOGUE : la carte n'est pas déposée, et le programme
+//     ancien n'existe plus OU la bourse ancienne est fermée
+//     (`isActive == false`, lue par get()). Le choix change avec `refus`
+//     inchangé, et `accepteeLe` peut être retiré ; le nouveau choix vise
+//     toujours une bourse active (identiteCatalogue) ;
+//   - `track` est immuable, `programId` ne se retire pas.
+// Le parcours est jugé sur resource.data (la carte EXISTANTE) : en
+// écrivant track:"preinscription", un étudiant échappait à tout.
+// Lectures par écriture (plafond 10) : compte, ancien et nouveau
+// programme, université, ancienne et nouvelle bourse — six au plus.
+// ------------------------------------------------------------
+function champsChoix() {
+return ["programId", "scholarshipId", "universityId", "university", "scholarship"];
+}
+
+function aProgramme(d) {
+return d.get('programId', null) is string && d.programId != '';
+}
+
+function affecte(cle) {
+return cle in request.resource.data.diff(resource.data).affectedKeys();
+}
+
+function accepteeAvant() { return 'accepteeLe' in resource.data; }
+function accepteeApres() { return 'accepteeLe' in request.resource.data; }
+function refusAvant() { return resource.data.get('refus', 0); }
+function refusApres() { return request.resource.data.get('refus', 0); }
+
+function choixChange() {
+return request.resource.data.diff(resource.data).affectedKeys().hasAny(champsChoix());
+}
+
+// La bourse de l'ancienne carte a été fermée par l'organisme, ou son
+// programme a disparu — et la carte n'est pas déposée.
+function exceptionCatalogue() {
+return !estStatutDepose(resource.data.get('status', '')) &&
+aProgramme(resource.data) &&
+(!exists(/databases/$(database)/documents/programs/$(resource.data.programId)) ||
+(resource.data.get('scholarshipId', null) is string &&
+(!exists(/databases/$(database)/documents/scholarships/$(resource.data.scholarshipId)) ||
+get(/databases/$(database)/documents/scholarships/$(resource.data.scholarshipId)).data.get('isActive', true) == false)));
+}
+
+function accepteeLeOk() {
+return (!accepteeAvant() && !accepteeApres()) ||
+(!accepteeAvant() && accepteeApres() && request.resource.data.accepteeLe == request.time) ||
+(accepteeAvant() && accepteeApres() && request.resource.data.accepteeLe == resource.data.accepteeLe) ||
+(accepteeAvant() && !accepteeApres() && choixChange() && exceptionCatalogue());
+}
+
+function depotOk() {
+return (!estStatutDepose(request.resource.data.get('status', '')) || !affecte('status') || accepteeApres()) &&
+(!estStatutDepose(resource.data.get('status', '')) || estStatutDepose(request.resource.data.get('status', '')));
+}
+
+// Le changement du choix : un refus compté, ou l'exception catalogue.
+// Une carte ANCIENNE sans programId qui reçoit sa clé (rattrapage de
+// liaison) ou qui est refusée : refus inchangé ou premier refus.
+function choixOk() {
+return !choixChange() ||
+(exceptionCatalogue() && refusApres() == refusAvant()) ||
+(!accepteeAvant() && !exceptionCatalogue() && refusApres() <= 2 &&
+(refusApres() == refusAvant() + 1 || (!aProgramme(resource.data) && refusApres() == refusAvant())));
+}
+
+function refusStable() {
+return choixChange() || refusApres() == refusAvant();
+}
+
+function programIdGarde() {
+return !aProgramme(resource.data) || aProgramme(request.resource.data);
+}
+
+function acceptationOk() {
+return programIdGarde() && accepteeLeOk() && depotOk() && choixOk() && refusStable();
 }
 
 match /users/{uid}/applications/{applicationId} {
@@ -470,18 +591,37 @@ allow create: if isOwner(uid) && (
 (request.resource.data.get('track', 'bourse') != 'preinscription' && applicationId.matches(slotPattern(uid)))
 ) && depotJustifie(uid, applicationId, true)
 // FITZ-CHOISIT : une bourse naît du catalogue, jamais du clavier.
-&& (!estBourse(request.resource.data) || identiteCatalogue(request.resource.data, true));
-allow delete: if isOwner(uid);
+&& (!estBourse(request.resource.data) || identiteCatalogue(request.resource.data, true))
+// ACCEPTATION : une carte naît PROPOSÉE — ni acceptée, ni refusée, ni déposée.
+&& (!estBourse(request.resource.data) ||
+(!('accepteeLe' in request.resource.data) &&
+request.resource.data.get('refus', 0) == 0 &&
+!estStatutDepose(request.resource.data.get('status', ''))));
+// ACCEPTATION : une formule EN VENTE ne supprime jamais une carte
+// catalogue (l'historique du dossier) ; une formule retirée de la vente
+// supprime une carte acceptée dans un statut de réponse, et elle seule.
+// Vœux pre-N et cartes sans programId : inchangé.
+allow delete: if isOwner(uid) && (
+!estBourse(resource.data) ||
+!aProgramme(resource.data) ||
+(!(planOf(uid) in ['premier-dossier', 'essentiel-4', 'conseiller-6']) &&
+resource.data.get('status', '') in ['reponse_recue', 'admise', 'refusee', 'liste_attente'])
+);
 // E1 : la transition vers un statut déposé exige la preuve ; une
 // preuve écrite (même sans changer le statut) doit être bien formée.
 allow update: if (isOwner(uid) &&
-depotJustifie(uid, applicationId, 'status' in request.resource.data.diff(resource.data).affectedKeys()) &&
-(!('preuveDepot' in request.resource.data.diff(resource.data).affectedKeys()) || !('preuveDepot' in request.resource.data) || preuveValide(request.resource.data, uid, applicationId)) &&
+// ACCEPTATION : le parcours ne change jamais.
+request.resource.data.get('track', 'bourse') == resource.data.get('track', 'bourse') &&
+depotJustifie(uid, applicationId, affecte('status')) &&
+(!affecte('preuveDepot') || !('preuveDepot' in request.resource.data) || preuveValide(request.resource.data, uid, applicationId)) &&
 // FITZ-CHOISIT : toucher l'identité d'une bourse exige la cohérence
-// catalogue ; le nom, s'il change, est celui du catalogue.
-(!estBourse(request.resource.data) ||
+// catalogue ; le nom, s'il change, est celui du catalogue. Jugé sur la
+// carte EXISTANTE (resource.data).
+(!estBourse(resource.data) ||
 !request.resource.data.diff(resource.data).affectedKeys().hasAny(champsIdentite()) ||
-identiteCatalogue(request.resource.data, 'university' in request.resource.data.diff(resource.data).affectedKeys()))) ||
+identiteCatalogue(request.resource.data, affecte('university'))) &&
+// ACCEPTATION : sur une carte catalogue, avant ou après l'écriture.
+(!estBourse(resource.data) || (!aProgramme(resource.data) && !aProgramme(request.resource.data)) || acceptationOk())) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
 }
 

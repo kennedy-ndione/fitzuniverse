@@ -9,6 +9,16 @@ import { setButtonLoading } from "./auth-ui.js";
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { monterChampTelephone, synchroniserPays, champTelephone } from "./js/phone-field.js";
 import { computeAge } from "./js/age-limits.js";
+// Lot ACCEPTATION, partie 3 : « Fitz a besoin de ces informations pour
+// choisir votre université » — la même règle que le remplissage
+// (profilPretPourFitz), jamais une deuxième.
+import { profilPretPourFitz } from "./js/fitz-choisit.js";
+import { escapeHtml } from "./js/ai/format.js";
+
+// ?pour=fitz : arrivée depuis le paiement d'une formule bourses, profil
+// pas encore prêt pour Fitz. Le lot PROFIL-PAR-NIVEAU gardera ce
+// comportement.
+const POUR_FITZ = new URLSearchParams(window.location.search).get("pour") === "fitz";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerUniversites } from "./js/catalog-data.js";
@@ -846,6 +856,26 @@ const { user, userData } = session;
 
 const userRef = doc(db, "users", user.uid);
 
+// Lot ACCEPTATION, partie 3 : le bandeau « Fitz a besoin de ces
+// informations pour choisir votre université / vos N universités :
+// [liste des manquants] ». N = le quota de la formule bourses.
+const bandeauFitz = document.getElementById("fitzProfilBandeau");
+if (bandeauFitz && POUR_FITZ) {
+const { pret, manquants } = profilPretPourFitz(session.profile);
+const formule = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[session.planId];
+const n = formule && Number.isFinite(formule.maxAccompaniedApplications) ? formule.maxAccompaniedApplications : 0;
+const objet = n > 1 ? `vos ${n} universités` : "votre université";
+if (!pret) {
+bandeauFitz.hidden = false;
+bandeauFitz.innerHTML = `<i data-lucide="user-round"></i><span>Fitz a besoin de ces informations pour choisir ${escapeHtml(objet)} : <strong>${escapeHtml(manquants.join(", "))}</strong>.</span>`;
+if (window.lucide) lucide.createIcons();
+} else {
+// Déjà prêt : rien à compléter, les propositions attendent.
+window.location.replace("applications.html");
+return;
+}
+}
+
 const profile = Object.assign(
 defaultProfile(userData),
 userData.profile || {}
@@ -916,6 +946,14 @@ await updateDoc(userRef, {
 name: updatedProfile.name,
 profile: updatedProfile
 });
+
+// Lot ACCEPTATION, partie 3 : arrivé ici pour Fitz (?pour=fitz), dès
+// que l'enregistrement rend le profil prêt, la page renvoie vers « Mes
+// candidatures » — les propositions à accepter.
+if (POUR_FITZ && profilPretPourFitz(updatedProfile).pret) {
+window.location.href = "applications.html";
+return;
+}
 
 showToast();
 

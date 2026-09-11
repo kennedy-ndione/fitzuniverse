@@ -310,7 +310,10 @@ for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id
 // Lot LANGAGE (2026-09-10) : « L'unité : … » est devenu « Vous payez
 // par candidature » / « Vous payez pour un dossier » — même contrat,
 // dit avec le mot concret d'abord.
-assert.ok(/Vous payez une formule, en une fois\. Elle couvre un nombre de candidatures accompagnées/.test(vueB));
+// Lot ACCEPTATION (2026-09-11) : « sans abonnement », et un nombre de
+// candidatures travaillées en même temps — plus « à la fois : terminer
+// une candidature libère sa place ».
+assert.ok(/Vous payez une formule, en une fois, sans abonnement\. Elle couvre un nombre de candidatures, travaillées <strong>en même temps<\/strong>/.test(vueB));
 assert.ok(/Vous payez pour <strong>un dossier Études en France<\/strong>/.test(vueP));
 assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(vueP.replace(/jamais jusqu'à l'admission/g, "")), "aucune promesse d'admission");
 // Les prix portent leur source (offers.js les remplit depuis pricing-plans.js).

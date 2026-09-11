@@ -52,7 +52,7 @@ clearFormError,
 getAuthErrorMessage
 } from "./auth-ui.js";
 import { trackEvent } from "./js/analytics.js";
-import { PHRASE_REGLE } from "./js/fitz-choisit.js";
+import { PHRASE_REGLE, cibleApresPaiement } from "./js/fitz-choisit.js";
 
 const FITZ_MESSAGES = [
 "Fitz vous accompagnera dès la validation de votre paiement.",
@@ -507,25 +507,17 @@ return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cel
 // paramètre ?track= a disparu avec le sélecteur du formulaire : l'espace
 // impose désormais le parcours, on ne demande plus à quelqu'un de
 // choisir ce qu'il vient d'acheter.
-const POST_ACTIVATION_TARGETS = {
-fitzExpress: "ai-chat.html",
-"premier-dossier": "espace-bourse.html?action=new",
-"essentiel-4": "espace-bourse.html",
-"conseiller-6": "espace-bourse.html",
-// Grille B : le diagnostic ouvre sa page ; un Dossier France ouvre son
-// hub, prêt à enregistrer la première préinscription.
-"diagnostic-france": "diagnostic-france.html",
-"dossier-france": "espace-preinscription.html?action=new",
-"dossier-france-conseiller": "espace-preinscription.html?action=new"
-};
-
-// Le repli vise l'espace bourse, et non dashboard.html : les seules
-// formules qui passent par ici sans être listées sont les DÉPRÉCIÉES
-// (essentiel, accompagnement, signature, signature-focus), toutes des
-// offres bourse dont un client peut encore payer une facture émise
-// avant leur retrait.
-function resolvePostActivationTarget(planId) {
-return POST_ACTIVATION_TARGETS[planId] || "espace-bourse.html";
+// LOT ACCEPTATION, partie 3 (2026-09-11) : la table vit dans
+// js/fitz-choisit.js (cibleApresPaiement, pure et testée). Pass
+// Découverte → ai-chat.html ; Diagnostic France → sa page ; Dossiers
+// France → espace-preinscription.html?action=new (les vœux se saisissent
+// à la main) ; Premier Dossier, Essentiel, Conseiller → profile.html?pour=fitz
+// si le profil n'est pas prêt pour Fitz, applications.html sinon (les
+// propositions à accepter). « Prêt » se lit avec profilPretPourFitz, la
+// même fonction que le remplissage. Le repli des formules dépréciées :
+// l'espace bourse, jamais l'aiguillage.
+function resolvePostActivationTarget(planId, profile) {
+return cibleApresPaiement(planId, profile || {});
 }
 
 function initActivation(plan, session) {
@@ -696,8 +688,12 @@ sessionStorage.removeItem("scholarbridgeCheckout");
 
 resultText.textContent = `Paiement confirmé — ${plan.label} est activé. Redirection vers votre espace...`;
 
+// Le profil tel que le serveur le connaît à cet instant : un compte
+// créé au paiement a un profil vide, il ira au profil.
+const profil = Object.assign({}, (session.profile || {}), data.profile || {});
+
 setTimeout(() => {
-window.location.href = resolvePostActivationTarget(plan.id);
+window.location.href = resolvePostActivationTarget(plan.id, profil);
 }, 1600);
 
 }, (error) => {

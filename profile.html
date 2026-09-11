@@ -128,6 +128,11 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <main id="main-content" tabindex="-1" class="content" style="display:none;">
 
+<!-- Lot ACCEPTATION, partie 3 (2026-09-11) : arrivée depuis le paiement
+d'une formule bourses avec ?pour=fitz — « Fitz a besoin de ces
+informations pour choisir vos N universités : … ». profile.js décide. -->
+<div class="fitz-choix-etat fitz-profil-bandeau" id="fitzProfilBandeau" role="status" hidden></div>
+
 <form id="profileForm">
 
 <div class="profile-layout">
@@ -732,6 +737,9 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 </div>
 
 <script src="js/back-link.js"></script>
+<!-- Lot ACCEPTATION : la grille des formules, pour dire « vos N universités »
+dans le bandeau ?pour=fitz (quota de la formule bourses). -->
+<script src="pricing-plans.js"></script>
 <script type="module" src="profile.js"></script>
 
 </body>

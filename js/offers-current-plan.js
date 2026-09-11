@@ -21,7 +21,7 @@ qu'offers-context.js : ne pas convertir toute la page en module.
 import { db, auth } from "../firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { resolvePlan, hasFitzExpressAccess } from "./access-guard.js";
+import { resolvePlan, hasFitzExpressAccess, resolvePlanPreinscription, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
 
 function marquerCarte(planId, mode) {
 
@@ -33,7 +33,10 @@ const card = cta.closest(".plan-card, .express-card, article, div");
 const libelles = {
 current: { badge: "Votre formule actuelle", cta: "Votre formule actuelle" },
 pending: { badge: "Demande en cours d'activation", cta: "Demande envoyée" },
-express: { badge: "Pass actif", cta: "Pass Découverte actif" }
+express: { badge: "Pass actif", cta: "Pass Découverte actif" },
+// Lot ACCEPTATION, partie 3 : le Pass n'est pas vendu à qui a déjà le
+// chat (creerPaiement le refuse) — la carte le dit avant le clic.
+inclus: { badge: "Inclus dans votre formule", cta: "Inclus dans votre formule" }
 };
 
 const l = libelles[mode];
@@ -86,7 +89,16 @@ if (adminSnap.exists() && adminSnap.data().isActive === true) planId = "signatur
 
 if (planId !== "gratuit") marquerCarte(planId, "current");
 
-if (hasFitzExpressAccess(userData)) marquerCarte("fitzExpress", "express");
+// Le Pass : « actif » s'il l'a ; sinon « inclus dans votre formule » dès
+// qu'une formule active ouvre le chat (même décision que le serveur :
+// decideVerrou sur ai_chat, avec les bascules de config/planFeatures).
+if (hasFitzExpressAccess(userData)) {
+marquerCarte("fitzExpress", "express");
+} else {
+const flags = await fetchFeatureFlags();
+const chatDejaOuvert = !isFeatureLocked(planId, flags, "ai_chat", userData.testerAccess === true, false, resolvePlanPreinscription(userData));
+if (chatDejaOuvert) marquerCarte("fitzExpress", "inclus");
+}
 
 const pending = userData.pendingPlan;
 if (pending && pending !== planId) marquerCarte(pending, "pending");

@@ -328,6 +328,38 @@ if (lien) lien.remove();
 
 }
 
+/**
+* Lot ACCEPTATION, partie 4 (2026-09-11) : un compte qui n'a QUE le Pass
+* Découverte ne voit que Fitz et Menu dans la barre d'onglets, et
+* Paramètres, Messages de l'équipe, Se déconnecter dans la feuille.
+* Parcours, Candidatures, Documents, Mon profil, tests, entretien,
+* catalogues, « Accueil du site » et « Formules » sont RETIRÉS du DOM —
+* comme appliquerEspace le fait pour l'autre accompagnement.
+*/
+const PAGES_DU_PASS = ["ai-chat.html", "messages.html", "account.html"];
+
+function appliquerPassSeul() {
+
+const barre = document.getElementById("mnavTabbar");
+if (barre) {
+barre.querySelectorAll(".mnav-tab").forEach((tab) => {
+if (tab.classList.contains("mnav-tab--fitz") || tab.id === "mnavMenuBtn") return;
+tab.remove();
+});
+}
+
+const grille = document.getElementById("mnavMenuGrid");
+if (grille) {
+grille.querySelectorAll("a").forEach((a) => {
+const href = (a.getAttribute("href") || "").split("?")[0].toLowerCase();
+if (!PAGES_DU_PASS.includes(href) || href === "ai-chat.html") a.remove();
+});
+}
+
+document.querySelectorAll(".mnav-menu-site").forEach((el) => el.remove());
+
+}
+
 /** Insère une entrée de menu soumise à un droit, une fois ce droit connu. */
 function ouvrirEntree(feature) {
 const item = MENU_FEATURE_ITEMS.find((m) => m.feature === feature);
@@ -651,6 +683,6 @@ document.addEventListener("DOMContentLoaded", init);
 init();
 }
 
-window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree, appliquerEspace };
+window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree, appliquerEspace, appliquerPassSeul };
 
 })();
