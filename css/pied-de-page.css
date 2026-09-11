@@ -53,22 +53,22 @@ inset:0;
 display:block;
 }
 
+/* Lot HERO-PIED (2026-09-11, décision de Charles) : PLUS D'ANIMATION.
+La « respiration » (scale 1→1,06 sur 28 s) déplaçait le cadrage en
+permanence — aucun object-position ne tient dans un cadre qui bouge —,
+affichait la photo au-dessus de sa taille native (donc molle), et
+gardait une couche de composition (will-change) sur toutes les pages.
+Cadrage sur les VISAGES : mesurés de 45 % à 64 % de la hauteur de
+hero-bg4 (1200×800), centrés à 54 % ; pour une bande de 270 px pleine
+largeur en cover, 57 % garde les sept têtes à 768, 1280 et 1920 px
+(82 % montrait les robes et les marches, têtes coupées). */
 .footer-photo-img{
 position:absolute;
 inset:0;
 width:100%;
 height:100%;
 object-fit:cover;
-/* Le cadrage descend vers les diplômés (bas de l'image). */
-object-position:center 82%;
-transform-origin:50% 70%;
-animation:footer-breathe 28s ease-in-out infinite alternate;
-will-change:transform;
-}
-
-@keyframes footer-breathe{
-from{ transform:scale(1); }
-to{ transform:scale(1.06); }
+object-position:center 57%;
 }
 
 /* Halo doré au-dessus de la foule (entre la photo et le voile). */
@@ -111,9 +111,7 @@ rgba(30,23,18,.93) 68%,
 }
 
 @media (prefers-reduced-motion: reduce){
-.footer-photo-img,
 .footer-photo::before{ animation:none; }
-
 }
 
 /* ---- le contenu, posé par-dessus ---- */
