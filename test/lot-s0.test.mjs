@@ -257,7 +257,11 @@ test("le pays de résidence est demandé EN PREMIER dans le formulaire", () => {
 const html = lire("diagnostic-france.html");
 assert.ok(html.includes('id="diagPays"'), "le champ pays doit exister");
 assert.ok(html.indexOf('id="diagPays"') < html.indexOf('id="diagRessources"'), "le pays se demande avant les ressources : il décide de ce que les autres réponses veulent dire");
-assert.ok(html.includes('list="diagPaysListe"') && html.includes('id="diagPaysListe"'), "champ libre + datalist, comme partout ailleurs");
+// Lot CONTRÔLES-UNIFIÉS (2026-09-11) : le champ reste libre, mais ses
+// suggestions viennent de js/fitz-combobox.js (panneau au rendu du site),
+// plus d'un <datalist> dessiné par le système.
+assert.ok(!html.includes('list="diagPaysListe"') && !html.replace(/<!--[\s\S]*?-->/g, "").includes("<datalist"), "plus de datalist : champ à suggestions maison");
+assert.ok(lire("js/diagnostic-france-page.js").includes('initFitzCombobox(document.getElementById("diagPays"), COUNTRY_NAMES)'), "les suggestions de pays viennent du champ maison");
 const page = lire("js/diagnostic-france-page.js");
 assert.match(page, /import \{ COUNTRY_NAMES \} from "\.\/countries\.js"/, "la liste vient de js/countries.js, pas d'une nouvelle liste");
 assert.ok(page.includes("paysResidence: document.getElementById(\"diagPays\").value.trim()"), "le champ est lu à la soumission");

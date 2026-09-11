@@ -81,14 +81,15 @@ monde. Champ libre + <datalist> (js/countries.js), comme partout
 ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <div class="field">
 <label for="diagPays">Votre pays de résidence</label>
-<input type="text" id="diagPays" name="paysResidence" list="diagPaysListe" autocomplete="country-name" required placeholder="Ex. Sénégal">
-<datalist id="diagPaysListe"></datalist>
+<input type="text" id="diagPays" name="paysResidence" autocomplete="country-name" required placeholder="Ex. Sénégal">
+<!-- Suggestions : js/fitz-combobox.js (lot CONTRÔLES-UNIFIÉS) — plus de
+<datalist>, dont le panneau est dessiné par le système. -->
 <p class="field-hint">Le pays d'où vous candidatez. Il détermine l'espace Campus France dont dépendent vos frais de dossier — les seuils français, eux, sont les mêmes pour tous.</p>
 </div>
 <div class="field">
 <label for="diagRessources">Ressources disponibles par mois</label>
 <div class="diag-montant">
-<input type="number" id="diagRessources" name="ressources" min="0" step="1" inputmode="decimal" required placeholder="Ex. 600 000">
+<input type="number" class="fitz-num" id="diagRessources" name="ressources" min="0" step="1" inputmode="decimal" required placeholder="Ex. 600 000">
 <select id="diagDevise" name="devise" aria-label="Devise"><option value="XOF">F CFA</option><option value="EUR">€</option></select>
 </div>
 <p class="field-hint">Ce que vous, votre famille ou votre garant pouvez justifier chaque mois, pendant l'année.</p>

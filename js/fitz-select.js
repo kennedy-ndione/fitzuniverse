@@ -28,8 +28,20 @@ Le select d'origine reste dans le DOM, garde sa valeur et émet un
 `change` natif à chaque sélection : les scripts de page qui l'écoutent
 ne changent pas d'une ligne.
 
-Styles : css/app-shell.css, section « MENUS DÉROULANTS ».
+Styles : css/fitz-select.css — feuille PROPRIÉTAIRE, chargée ICI (lot
+CONTRÔLES-UNIFIÉS, 2026-09-11) : toute page qui habille un select l'a,
+Control Center compris, sans rien recopier.
 ========================================================== */
+
+const CSS_HREF = new URL("../css/fitz-select.css", import.meta.url).href;
+
+function chargerStyle() {
+if (document.querySelector(`link[href="${CSS_HREF}"], link[href$="css/fitz-select.css"]`)) return;
+const link = document.createElement("link");
+link.rel = "stylesheet";
+link.href = CSS_HREF;
+document.head.appendChild(link);
+}
 
 const CARET_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>`;
 
@@ -318,6 +330,7 @@ let bodyObserverStarted = false;
 
 export function initFitzSelects(root = document) {
 
+chargerStyle();
 root.querySelectorAll("select").forEach(buildFitzSelect);
 
 if (bodyObserverStarted || root !== document) return;

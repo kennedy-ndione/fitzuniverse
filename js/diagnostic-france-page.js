@@ -33,6 +33,7 @@ OFFRES_ACCOMPAGNEMENT
 } from "./diagnostic-conseil.js";
 import { chargerCatalogue } from "./catalog-data.js";
 import { COUNTRY_NAMES } from "./countries.js";
+import { initFitzCombobox } from "./fitz-combobox.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
 
@@ -248,7 +249,8 @@ return;
 }
 
 const form = document.getElementById("diagForm");
-document.getElementById("diagPaysListe").innerHTML = COUNTRY_NAMES.map((n) => `<option value="${escapeHtml(n)}"></option>`).join("");
+// Lot CONTRÔLES-UNIFIÉS : suggestions au rendu du site (plus de datalist).
+initFitzCombobox(document.getElementById("diagPays"), COUNTRY_NAMES);
 
 // Le pays de residence du profil pre-remplit le champ : la plupart des
 // etudiants candidatent depuis chez eux, et redemander ce quon sait

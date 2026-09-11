@@ -3984,55 +3984,14 @@ hauteur — sans cela le donut occupait tout un écran en une colonne. */
 }
 
 /* ==========================================================
-SÉLECTEURS NATIFS (2026-09-02) — le menu déroulant système gardait un
-surlignage BLEU (signalé par l'utilisateur, capture de la page
-Bourses). Sur les navigateurs modernes (appearance:base-select,
-Chrome 135+), le menu devient entièrement stylable aux couleurs du
-site ; les autres gardent le select natif, sans casse.
-========================================================== */
-
+SÉLECTEURS — un seul système (lot CONTRÔLES-UNIFIÉS, 2026-09-11)
+==========================================================
+L'habillage appearance:base-select (2026-09-02) ne valait que sur
+Chrome 135+ ; partout ailleurs le menu restait celui du système. Les
+<select> du Control Center sont désormais habillés par js/fitz-select.js
+(chargé par admin-auth.js), le même composant que le site — feuille
+css/fitz-select.css. Ne pas remettre de règle ::picker ici. */
 .content{ accent-color:var(--amber-600); }
-
-@supports (appearance: base-select) {
-
-.page-toolbar select,
-.field select{
-appearance:base-select;
-}
-
-.page-toolbar select::picker(select),
-.field select::picker(select){
-appearance:base-select;
-border:1px solid var(--border-color);
-border-radius:12px;
-background:#FFFFFF;
-box-shadow:var(--shadow-md);
-padding:6px;
-}
-
-.page-toolbar select option,
-.field select option{
-padding:8px 12px;
-border-radius:8px;
-color:var(--text-color);
-font-size:.88rem;
-}
-
-.page-toolbar select option:hover,
-.page-toolbar select option:focus,
-.field select option:hover,
-.field select option:focus{
-background:var(--background-light);
-color:var(--amber-700);
-}
-
-.page-toolbar select option:checked,
-.field select option:checked{
-background:var(--ink-surface);
-color:#fff;
-}
-
-}
 
 /* ==========================================================
 CENTRE DE MESSAGES (2026-09-02) — messagerie FitzUniverse

@@ -14,6 +14,8 @@
 *  5. sur l'accueil, la carte « Analyse en direct » : jamais deux
 *     lignes qui se chevauchent, observé sur un cycle entier.
 *
+*  7. (lot CONTRÔLES-UNIFIÉS, 2026-09-11) aucun contrôle dessiné par le
+*     système : select non habillé, datalist, nombre à curseur, date nue ;
 *  6. (lot ICONE-BTN, 2026-09-11) aucun élément interactif visible au
 *     contenu rendu vide : ni texte, ni <svg>/<img> de dimensions non
 *     nulles — lucide est le VRAI paquet installé, pas une coquille.
@@ -86,7 +88,22 @@ const LIRE_PAGE = () => {
     if (!descendants.length) return true;
     return !descendants.some(dessine);
   }).map(decrire);
-  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), titre: document.title };
+  // Lot CONTRÔLES-UNIFIÉS : aucun contrôle dessiné par le système ne doit
+  // rester visible — un <select> sans habillage (ni fitz-select ni
+  // catalog-select), un <datalist>, un nombre avec son curseur, une date
+  // sans son habillage. Lu dans le DOM rendu, donc aussi sur les selects
+  // créés par script.
+  const systeme = [];
+  for (const sel of document.querySelectorAll("select")) {
+    if (sel.dataset.fitzSelectReady || sel.dataset.customSelectReady) continue;
+    if (!visible(sel)) continue;
+    systeme.push("select natif " + decrire(sel));
+  }
+  for (const d of document.querySelectorAll("datalist")) systeme.push("datalist#" + (d.id || "?"));
+  for (const n of document.querySelectorAll("input[type='number']")) if (!n.classList.contains("fitz-num")) systeme.push("nombre sans .fitz-num " + decrire(n));
+  for (const d of document.querySelectorAll("input[type='date']")) if (!d.classList.contains("fitz-date")) systeme.push("date sans .fitz-date " + decrire(d));
+  for (const i of document.querySelectorAll("input[list]")) systeme.push("champ à datalist " + decrire(i));
+  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), systeme: [...new Set(systeme)].slice(0, 8), titre: document.title };
 };
 
 // Deux lignes de la carte « Analyse en direct » l'une sur l'autre.
@@ -125,6 +142,7 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
     if (lu.scrollW > lu.innerW + 1) erreurs.push(`débordement horizontal : ${lu.scrollW} px pour ${lu.innerW}`);
     if (lu.muets.length) erreurs.push(`sans nom accessible : ${lu.muets.join(", ")}`);
     if (lu.vides.length) erreurs.push(`contenu rendu vide (ni texte ni icône visible) : ${lu.vides.join(", ")}`);
+    if (lu.systeme.length) erreurs.push(`contrôle système : ${lu.systeme.join(", ")}`);
     if (cible === "index.html") {
       await page.evaluate(() => document.getElementById("fitz-demo")?.scrollIntoView());
       for (let i = 0; i < 12; i++) {

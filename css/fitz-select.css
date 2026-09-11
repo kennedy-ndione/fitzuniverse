@@ -1,0 +1,208 @@
+/* ==========================================================
+FitzUniverse — MENUS DÉROULANTS ET CHAMPS À SUGGESTIONS
+(css/fitz-select.css, feuille PROPRIÉTAIRE — lot CONTRÔLES-UNIFIÉS,
+2026-09-11)
+==========================================================
+Chargée par js/fitz-select.js et js/fitz-combobox.js eux-mêmes (une
+page n'a rien à recopier), donc présente partout où un menu est
+habillé : espace étudiant, pages publiques, Control Center. Les règles
+venaient de css/app-shell.css, où elles ne servaient qu'aux pages qui
+chargeaient cette feuille : l'admin gardait un select système.
+
+Le rendu de référence (décision de Charles) : panneau crème, police et
+couleurs de la marque, barre de défilement habillée — jamais le panneau
+noir ni la police système. */
+
+/* Le select d'origine sort du rendu, pas du DOM : il garde sa valeur,
+ses options et son évènement change pour les scripts de page. */
+select.fitz-select-native{
+display:none !important;
+}
+
+.fitz-select{
+position:relative;
+width:100%;
+/* Dans un parent flex, l'enveloppe doit pouvoir RÉTRÉCIR sous sa
+largeur de contenu — sans min-width:0, elle impose sa largeur
+minimale à la rangée (débordement constaté sur compress à 375px). */
+min-width:0;
+}
+
+.fitz-select-trigger{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+width:100%;
+font-family:var(--font-body);
+font-size:var(--fs-body);
+text-align:left;
+padding:10px 12px;
+border-radius:var(--radius-sm);
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+cursor:pointer;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.fitz-select-trigger:hover{background:#FFFFFF;}
+
+.fitz-select-trigger:focus-visible,
+.fitz-select.is-open .fitz-select-trigger{
+outline:none;
+border-color:var(--accent-color);
+}
+
+.fitz-select.is-disabled .fitz-select-trigger{
+opacity:.55;
+cursor:not-allowed;
+}
+
+.fitz-select-value{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.fitz-select-caret{
+flex-shrink:0;
+display:inline-flex;
+color:var(--text-light);
+transition:transform .18s var(--ease-standard, ease);
+}
+
+.fitz-select-caret svg{width:16px;height:16px;}
+
+.fitz-select.is-open .fitz-select-caret{transform:rotate(180deg);}
+
+/* La liste vit sous <body> en position:fixed (voir fitz-select.js) :
+aucun contexte d'empilement ni overflow de modale ne peut la rogner. */
+.fitz-select-list{
+list-style:none;
+margin:0;
+padding:6px;
+max-height:260px;
+overflow-y:auto;
+/* Le panneau de RÉFÉRENCE (capture de Charles : « Tous les pays » du
+catalogue, js/catalog-select.js) est crème. En LITTÉRAUX : sur les
+pages sombres (body.catalog-dark) --background est un voile translucide
+et --text-color est clair — le panneau devenait transparent, le texte
+illisible ; dans l'admin --background est blanc. Un panneau, une seule
+apparence, quelle que soit la page qui l'ouvre. */
+background:#FDF9EF;
+color:#14100D;
+border:1px solid rgba(20,16,13,.14);
+border-radius:12px;
+box-shadow:var(--shadow-md);
+}
+
+.fitz-select-list[hidden]{display:none;}
+
+.fitz-select-option{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+padding:9px 12px;
+border-radius:8px;
+font-size:var(--fs-small);
+color:#14100D;
+cursor:pointer;
+}
+
+.fitz-select-option-text{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.fitz-select-option:hover,
+.fitz-select-option.is-focused{
+background:rgba(233,163,25,.16);
+color:#14100D;
+}
+
+/* Option retenue : encre chaude pleine — le miroir du bouton principal
+de l'espace, jamais le surlignage bleu système. */
+.fitz-select-option.is-selected{
+background:#1E1712;
+color:#FFFFFF;
+}
+
+.fitz-select-option.is-selected:hover,
+.fitz-select-option.is-selected.is-focused{
+background:#1E1712;
+color:#FFFFFF;
+}
+
+.fitz-select-option.is-disabled{
+opacity:.45;
+cursor:default;
+}
+
+.fitz-select-option-check{
+flex-shrink:0;
+display:inline-flex;
+}
+
+.fitz-select-option-check svg{width:14px;height:14px;}
+
+/* Tactile : cibles ≥44px (doctrine regles_mobile). */
+@media(pointer:coarse){
+
+.fitz-select-trigger{min-height:44px;}
+
+.fitz-select-option{min-height:42px;}
+
+}
+
+
+/* ==========================================================
+CHAMP À SUGGESTIONS (js/fitz-combobox.js) — remplace <datalist>, dont
+le panneau est dessiné par le système (noir sur Windows/Chrome). Même
+panneau que le menu déroulant : la liste est un .fitz-select-list.
+On peut taper librement, la liste filtre à la frappe, flèches / Entrée /
+Échap au clavier, souris et doigt.
+========================================================== */
+.fitz-combobox{
+position:relative;
+min-width:0;
+}
+
+.fitz-combobox-list{
+position:absolute;
+left:0;
+right:0;
+top:calc(100% + 6px);
+z-index:60;
+max-height:260px;
+overscroll-behavior:contain;
+}
+
+.fitz-combobox-list .fitz-select-option{
+justify-content:flex-start;
+}
+
+.fitz-combobox-vide{
+padding:9px 12px;
+font-size:var(--fs-small);
+color:#57514A;
+}
+
+/* La barre de défilement, habillée comme le panneau (la barre système
+grise et épaisse trahissait « un contrôle d'ailleurs »). */
+.fitz-select-list,
+.catalog-custom-select-list{
+scrollbar-width:thin;
+scrollbar-color:rgba(20,16,13,.28) transparent;
+}
+
+.fitz-select-list::-webkit-scrollbar,
+.catalog-custom-select-list::-webkit-scrollbar{width:8px;}
+.fitz-select-list::-webkit-scrollbar-thumb,
+.catalog-custom-select-list::-webkit-scrollbar-thumb{background:rgba(20,16,13,.28);border-radius:8px;}
+.fitz-select-list::-webkit-scrollbar-track,
+.catalog-custom-select-list::-webkit-scrollbar-track{background:transparent;}

@@ -12,6 +12,7 @@ import { estEligible, paysAvecArticle } from "./js/eligibility-countries.js";
 import { bourseCompatibleAge } from "./js/age-limits.js";
 
 import { COUNTRY_NAMES } from "./js/countries.js";
+import { initFitzCombobox } from "./js/fitz-combobox.js";
 
 import {
 estFinancementIntegral,
@@ -115,7 +116,9 @@ const clearFiltersLink = document.getElementById("clearFiltersLink");
 const countryPills = document.getElementById("countryPills");
 const nationalityCheck = document.getElementById("nationalityFilterCheck");
 const nationalityInput = document.getElementById("nationalityFilterInput");
-const nationalityDatalist = document.getElementById("nationalityDatalist");
+// Lot CONTRÔLES-UNIFIÉS (2026-09-11) : les suggestions de pays sont un
+// champ maison au rendu du site (js/fitz-combobox.js), plus un datalist.
+const nationalityDatalist = null;
 const ageCheck = document.getElementById("ageFilterCheck");
 const ageInput = document.getElementById("ageFilterInput");
 
@@ -139,8 +142,8 @@ try { nationaliteCourante = localStorage.getItem("fitzNationalite") || ""; } cat
 
 if (nationalityInput) {
 nationalityInput.value = nationaliteCourante;
+initFitzCombobox(nationalityInput, COUNTRY_NAMES);
 if (nationalityDatalist) {
-nationalityDatalist.innerHTML = COUNTRY_NAMES.map((n) => `<option value="${n}"></option>`).join("");
 }
 }
 

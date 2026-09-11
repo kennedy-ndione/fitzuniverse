@@ -25,6 +25,13 @@ onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import { chargerAdmin, appliquerRole } from "./admin-role.js";
+// Lot CONTRÔLES-UNIFIÉS (2026-09-11) : les <select> du Control Center
+// étaient natifs (un habillage appearance:base-select ne valait que sur
+// Chrome 135+). Même composant que le site, chargé par le seul module
+// commun à toutes les pages admin ; les selects créés plus tard sont
+// rattrapés par son observateur.
+import { initFitzSelects } from "../js/fitz-select.js";
+initFitzSelects();
 
 onAuthStateChanged(auth, async (user) => {
 

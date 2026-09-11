@@ -356,11 +356,11 @@ des trois valeurs dans js/eligibility-countries.js. -->
 type="text"
 id="nationalityFilterInput"
 class="catalog-natio-input"
-list="nationalityDatalist"
 autocomplete="off"
 placeholder="Votre nationalité"
 aria-label="Votre nationalité">
-<datalist id="nationalityDatalist"></datalist>
+<!-- Suggestions : js/fitz-combobox.js (lot CONTRÔLES-UNIFIÉS) — plus de
+<datalist>, dont le panneau est dessiné par le système. -->
 
 <!-- Filtre par limite d'âge (2026-08-30), symétrique du filtre de
 nationalité ci-dessus et même case DÉCOCHÉE par défaut : un catalogue
@@ -377,7 +377,7 @@ js/age-limits.js. -->
 <input
 type="number"
 id="ageFilterInput"
-class="catalog-natio-input catalog-age-input"
+class="catalog-natio-input catalog-age-input fitz-num"
 min="10"
 max="99"
 step="1"

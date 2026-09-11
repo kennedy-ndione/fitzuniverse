@@ -2439,3 +2439,61 @@ textarea{
 font-size:16px !important;
 }
 }
+
+
+/* ==========================================================
+CHAMPS NOMBRE ET DATE (lot CONTRÔLES-UNIFIÉS, 2026-09-11)
+==========================================================
+Charles refuse les contrôles dessinés par le système : curseur minuscule
+du <input type="number">, calendrier du <input type="date">.
+
+NOMBRE — le curseur natif disparaît, le champ garde type="number" :
+c'est lui qui ouvre le clavier numérique sur téléphone. Même valeur,
+même nom, mêmes min/max/step ; seul l'habillage change.
+
+DATE — DÉCISION (à ne pas rouvrir sans raison) : le sélecteur natif est
+GARDÉ. Il est fiable, connu, excellent sur téléphone ; un calendrier
+maison correct (fuseaux, clavier, saisie manuelle, lecteurs d'écran)
+est le composant le plus coûteux à écrire, et un calendrier mal fait
+serait pire que le natif. On habille le CHAMP au repos (police, hauteur,
+icône) pour qu'il ressemble aux autres ; le panneau qui s'ouvre reste
+celui du navigateur. */
+input.fitz-num{
+appearance:textfield;
+-moz-appearance:textfield;
+}
+
+input.fitz-num::-webkit-outer-spin-button,
+input.fitz-num::-webkit-inner-spin-button{
+-webkit-appearance:none;
+appearance:none;
+margin:0;
+}
+
+input.fitz-date{
+appearance:none;
+-webkit-appearance:none;
+font-family:inherit;
+font-size:inherit;
+color:inherit;
+min-height:44px;
+}
+
+input.fitz-date::-webkit-calendar-picker-indicator{
+cursor:pointer;
+opacity:.65;
+}
+
+input.fitz-date:hover::-webkit-calendar-picker-indicator,
+input.fitz-date:focus::-webkit-calendar-picker-indicator{
+opacity:1;
+}
+
+/* Cases à cocher et boutons radio : le navigateur les dessine, mais il
+accepte une couleur d'accent — la marque, en littéral (les variables
+ambre sont redéfinies en terracotta par onze feuilles). Fini le bleu
+système des radios « Niveau visé » (diagnostic-france.html). */
+input[type="checkbox"],
+input[type="radio"]{
+accent-color:#E9A319;
+}
