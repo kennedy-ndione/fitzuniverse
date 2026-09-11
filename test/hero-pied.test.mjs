@@ -64,5 +64,5 @@ assert.match(css, /\.hero-door:hover svg[^{]*\{[^}]*translateX\(4px\)/, "la flè
 const html = lire("index.html").replace(/<!--[\s\S]*?-->/g, "");
 const portes = [...html.matchAll(/<a href="([^"]+)" class="hero-door"[^>]*>/g)].map((m) => m[1]);
 assert.deepEqual(portes, ["scholarships.html", "preinscriptions.html"]);
-assert.equal((html.match(/class="hero-door">\s*<span>[^<]+<\/span>\s*<svg /g) || []).length, 2, "flèche SVG en clair sur les deux portes, pas de Lucide");
+assert.equal((html.match(/class="hero-door"[^>]*>\s*<span>[^<]+<\/span>\s*<svg /g) || []).length, 2, "flèche SVG en clair sur les deux portes, pas de Lucide");
 });
