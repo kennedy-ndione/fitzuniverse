@@ -1348,11 +1348,22 @@ flex-shrink:0;
 
 .ai-chat-history-item:hover .ai-chat-history-item-actions{ display:flex; }
 
+/* Lot ICONE-BTN (2026-09-11) : ces boutons héritent de .ai-icon-btn un
+rembourrage de 8px 12px et une bordure — dans une boîte de 26px, il ne
+restait 0px à l'icône : « Renommer » et « Supprimer » étaient VIDES sur
+ordinateur (photo de Charles). Sur téléphone, le renfort tactile de
+css/mobile-nav.css (min 40×40) leur rendait la place, d'où le défaut
+invisible là-bas. Le rembourrage tombe, l'icône (14px) est centrée.
+Vu dans l'inspecteur : le <svg> existait, à 0×0. */
 .ai-chat-history-item-actions .ai-icon-btn{
 
 width:26px;
 
 height:26px;
+
+padding:0;
+
+justify-content:center;
 
 }
 

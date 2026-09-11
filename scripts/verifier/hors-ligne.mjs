@@ -29,6 +29,8 @@
 // symbole absent d'ici, le navigateur lève une SyntaxError au
 // chargement et le harnais échoue — c'est le comportement voulu : on
 // veut être prévenu, pas dépanné en silence.
+import fs from "node:fs";
+
 const SYMBOLES = {
   "firebase-app.js": ["initializeApp", "getApp", "getApps"],
   "firebase-auth.js": [
@@ -196,6 +198,11 @@ function doublureFirebase(fichier, admin = false, etudiant = null) {
 // suffisant : le harnais vérifie la logique, pas le dessin.
 const DOUBLURE_LUCIDE = `window.lucide = { createIcons: function(){}, icons: {} };`;
 
+let LUCIDE_REEL = null;
+try {
+  LUCIDE_REEL = fs.readFileSync(new URL("../../node_modules/lucide/dist/umd/lucide.js", import.meta.url), "utf8");
+} catch { LUCIDE_REEL = null; }
+
 /**
  * Branche l'interception sur un contexte Playwright.
  * Renvoie la liste (mutable) des requêtes externes vues, pour que le
@@ -241,10 +248,14 @@ export async function couperLeReseau(context, options = {}) {
     }
 
     if (url.includes("unpkg.com/lucide")) {
+      // Lot ICONE-BTN (2026-09-11) : le VRAI lucide, depuis le paquet
+      // installé (même version que le site), pour que le peigne voie les
+      // icônes rendues — une coquille qui ne dessine rien cachait un
+      // bouton dont l'icône faisait 0×0. Si le paquet manque, la coquille.
       return route.fulfill({
         status: 200,
         contentType: "text/javascript; charset=utf-8",
-        body: DOUBLURE_LUCIDE
+        body: LUCIDE_REEL || DOUBLURE_LUCIDE
       });
     }
 

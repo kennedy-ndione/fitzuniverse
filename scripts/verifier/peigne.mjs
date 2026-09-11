@@ -14,10 +14,12 @@
 *  5. sur l'accueil, la carte « Analyse en direct » : jamais deux
 *     lignes qui se chevauchent, observé sur un cycle entier.
 *
-* Ce que le peigne NE voit PAS hors ligne : les icônes lucide (doublées
-* par une coquille) — test/icones.test.mjs valide les noms contre le
-* paquet, js/icones.js convertit ce qui arrive après coup ; et les états
-* vides « muets », qui se lisent, pas ne se mesurent.
+*  6. (lot ICONE-BTN, 2026-09-11) aucun élément interactif visible au
+*     contenu rendu vide : ni texte, ni <svg>/<img> de dimensions non
+*     nulles — lucide est le VRAI paquet installé, pas une coquille.
+*
+* Ce que le peigne NE voit PAS : les états vides « muets », qui se
+* lisent, pas ne se mesurent.
 * ==========================================================
 */
 
@@ -61,9 +63,30 @@ const LIRE_PAGE = () => {
   const visible = (e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none"; };
   const nom = (e) => (e.getAttribute("aria-label") || e.getAttribute("title") || e.textContent || "").trim()
     || [...e.querySelectorAll("img[alt], svg title, [aria-label]")].map((x) => x.getAttribute("alt") || x.getAttribute("aria-label") || x.textContent).join("").trim();
-  const muets = [...document.querySelectorAll("button, a[href]")].filter((e) => visible(e) && !nom(e) && !e.closest("[aria-hidden='true']"))
-    .map((e) => `${e.tagName.toLowerCase()}${e.id ? "#" + e.id : ""}${e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : ""}`);
-  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), titre: document.title };
+  const decrire = (e) => `${e.tagName.toLowerCase()}${e.id ? "#" + e.id : ""}${e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : ""}${e.getAttribute("aria-label") ? " « " + e.getAttribute("aria-label") + " »" : ""}`;
+  const interactifs = [...document.querySelectorAll("button, a[href]")].filter((e) => visible(e) && !e.closest("[aria-hidden='true']"));
+  const muets = interactifs.filter((e) => !nom(e)).map(decrire);
+  // Lot ICONE-BTN : un bouton nommé mais au contenu RENDU vide — ni texte
+  // visible, ni <svg>/<img> de dimensions non nulles — est un bouton
+  // invisible pour l'œil (l'icône de 0×0 de l'historique du chat).
+  // Compte comme contenu : un <svg>/<img> de dimensions non nulles, ou un
+  // élément DESSINÉ en CSS (fond, bordure ou image de fond) de dimensions
+  // non nulles — le hamburger du menu mobile est trois <span> à fond plein.
+  const dessine = (d) => {
+    const r = d.getBoundingClientRect();
+    if (/^(svg|img)$/i.test(d.tagName)) return r.width > 2 && r.height > 2;
+    // Un trait dessiné en CSS peut faire 2px de haut (les barres du menu).
+    if (r.width < 1 || r.height < 1) return false;
+    const cs = getComputedStyle(d);
+    return (cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== "transparent") || cs.backgroundImage !== "none" || parseFloat(cs.borderTopWidth) > 0;
+  };
+  const vides = interactifs.filter((e) => {
+    if (e.textContent.trim()) return false;
+    const descendants = [...e.querySelectorAll("*")];
+    if (!descendants.length) return true;
+    return !descendants.some(dessine);
+  }).map(decrire);
+  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), titre: document.title };
 };
 
 // Deux lignes de la carte « Analyse en direct » l'une sur l'autre.
@@ -75,7 +98,7 @@ const CHEVAUCHEMENT_DEMO = () => {
   return null;
 };
 
-async function peignerPage({ navigateur, base, page: cible, session, vue }) {
+export async function peignerPage({ navigateur, base, page: cible, session, vue }) {
   const contexte = await navigateur.newContext({ viewport: vue.viewport, locale: "fr-FR", hasTouch: vue.mobile, isMobile: vue.mobile });
   await couperLeReseau(contexte, session);
   const page = await contexte.newPage();
@@ -94,9 +117,14 @@ async function peignerPage({ navigateur, base, page: cible, session, vue }) {
   try {
     await page.goto(`${base}/${cible}`, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForTimeout(1400);
+    // Les actions d'une conversation (renommer, supprimer) ne se montrent
+    // qu'au survol : on survole la première avant de lire la page.
+    const item = await page.$(".ai-chat-history-item");
+    if (item) { await item.hover().catch(() => {}); await page.waitForTimeout(150); }
     const lu = await page.evaluate(LIRE_PAGE);
     if (lu.scrollW > lu.innerW + 1) erreurs.push(`débordement horizontal : ${lu.scrollW} px pour ${lu.innerW}`);
     if (lu.muets.length) erreurs.push(`sans nom accessible : ${lu.muets.join(", ")}`);
+    if (lu.vides.length) erreurs.push(`contenu rendu vide (ni texte ni icône visible) : ${lu.vides.join(", ")}`);
     if (cible === "index.html") {
       await page.evaluate(() => document.getElementById("fitz-demo")?.scrollIntoView());
       for (let i = 0; i < 12; i++) {
