@@ -55,11 +55,14 @@ assert.match(base[1], /min-height:\s*52px/);
 assert.match(base[1], /box-shadow:/, "le bouton doit se détacher de la photo");
 assert.match(css, /\.hero-door:hover\{[^}]*translateY\(-2px\)/);
 assert.match(css, /\.hero-door:active\{[^}]*translateY\(1px\)/);
-assert.match(css, /\.hero-door:focus-visible\{[^}]*outline:\s*3px solid #E9A319/, "anneau ambre, littéral #E9A319 (jamais var(--amber-500))");
+// Lot PORTES-COULEUR : le fond est devenu ambre, l'anneau passe au crème
+// (un anneau ambre sur un fond ambre ne se verrait pas) — toujours un
+// littéral, jamais var(--amber-*).
+assert.match(css, /\.hero-door:focus-visible\{[^}]*outline:\s*3px solid #F5F1E8/, "anneau au clavier, en littéral");
 assert.match(css, /\.hero-door:hover svg[^{]*\{[^}]*translateX\(4px\)/, "la flèche glisse au survol");
 // Les deux portes existent, avec la même classe et la même flèche SVG en clair.
 const html = lire("index.html").replace(/<!--[\s\S]*?-->/g, "");
-const portes = [...html.matchAll(/<a href="([^"]+)" class="hero-door">/g)].map((m) => m[1]);
+const portes = [...html.matchAll(/<a href="([^"]+)" class="hero-door"[^>]*>/g)].map((m) => m[1]);
 assert.deepEqual(portes, ["scholarships.html", "preinscriptions.html"]);
 assert.equal((html.match(/class="hero-door">\s*<span>[^<]+<\/span>\s*<svg /g) || []).length, 2, "flèche SVG en clair sur les deux portes, pas de Lucide");
 });

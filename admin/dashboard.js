@@ -417,6 +417,7 @@ btn.classList.add("is-active");
 
 pulseState.days = parseInt(btn.dataset.days, 10);
 renderPulseChart();
+renderChemins(pulseState.totals);
 
 });
 
@@ -528,6 +529,41 @@ return week > 0
 ? { dir: "up", text: `+${formatNumber(week)} sur 7 jours` }
 : { dir: "flat", text: "stable sur 7 jours" };
 
+}
+
+// Lot PORTES-COULEUR (2026-09-11) : les trois chemins de l'accueil —
+// total depuis le lancement, et somme sur la période de la pulsation
+// (pulseState.days), lue dans l'historique quotidien déjà chargé.
+const CHEMINS_ACCUEIL = [
+{ type: "porte_bourse", label: "Trouver une bourse" },
+{ type: "porte_preinscription", label: "Partir en me finançant" },
+{ type: "porte_diagnostic", label: "Le diagnostic gratuit" }
+];
+
+function renderChemins(totals) {
+const container = document.getElementById("cheminsList");
+if (!container) return;
+pulseState.totals = totals || pulseState.totals || {};
+const jours = buildLastDays(pulseState.days);
+const lignes = CHEMINS_ACCUEIL.map((c) => ({
+...c,
+total: Number(pulseState.totals[c.type] || 0),
+periode: jours.reduce((somme, j) => somme + Number((pulseState.history || {})[j]?.[c.type] || 0), 0)
+}));
+container.innerHTML = "";
+if (!lignes.some((l) => l.total)) {
+container.innerHTML = `<p class="top-list-empty">Aucun clic enregistré pour l'instant.</p>`;
+return;
+}
+lignes.forEach((l) => {
+const row = document.createElement("div");
+row.className = "top-list-row";
+row.innerHTML = `<span class="top-list-rank"></span><span class="top-list-label"></span><span class="top-list-count"></span>`;
+row.querySelector(".top-list-rank").textContent = "·";
+row.querySelector(".top-list-label").textContent = l.label;
+row.querySelector(".top-list-count").textContent = `${formatNumber(l.total)} (${formatNumber(l.periode)} sur ${pulseState.days} j)`;
+container.appendChild(row);
+});
 }
 
 function renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals }) {
@@ -958,6 +994,7 @@ renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals });
 renderAiObservations({ userStats, totals });
 renderFunnel({ userStats, totals });
 renderActivityTimeline(recentEvents);
+renderChemins(totals);
 renderInfraGrid();
 
 renderSerieChips();

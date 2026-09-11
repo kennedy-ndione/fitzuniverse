@@ -378,11 +378,19 @@ surtitre et à la ligne. Un bouton ambre ferait de l'une des deux portes
 la bonne réponse.
 
 Lot HERO-PIED (2026-09-11) : « attrayants pour attirer le clic » — les
-deux remontent ENSEMBLE, l'égalité reste : 52 px de haut, fond crème
-opaque détaché de la photo par une ombre portée, flèche qui glisse au
-survol, enfoncement au clic, anneau ambre au clavier (un anneau n'est
-pas un fond : la marque reste hors du bouton). Contraste mesuré sur la
-photo réelle — voir le rapport du lot.
+deux remontent ENSEMBLE, l'égalité reste : 52 px de haut, ombre portée,
+flèche qui glisse au survol, enfoncement au clic, anneau au clavier.
+
+Lot PORTES-COULEUR (2026-09-11, Charles : « une couleur plus attrayante
+et cohérente au site ») : le crème sur photo sombre était un bouton
+fantôme. Les DEUX portes passent à l'ambre #E9A319 — la couleur
+invariante de la marque, déjà dans ce bloc (elle soulignait le lien du
+diagnostic) : aucune couleur nouvelle sur la page. Toujours le LITTÉRAL,
+jamais var(--amber-500) : onze feuilles redéfinissent l'échelle ambre en
+terracotta. Survol : #F2B640, l'ambre clair que le hero employait déjà.
+Texte encre #14100D. L'égalité reste stricte : même fond, même poids.
+L'anneau au clavier passe au crème #F5F1E8 — un anneau ambre sur un
+fond ambre ne se verrait pas.
 ========================================================== */
 
 .hero-doors{
@@ -411,7 +419,7 @@ padding:0 30px;
 
 border-radius:999px;
 
-background:#F5F1E8;
+background:#E9A319;
 
 color:#14100D;
 
@@ -443,7 +451,7 @@ transition:transform .18s ease;
 
 transform:translateY(-2px);
 
-background:#FFFDF8;
+background:#F2B640;
 
 color:#14100D;
 
@@ -462,23 +470,100 @@ box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 10px rgba(0,0,0,.28);
 
 }
 
-/* Anneau ambre au clavier : la marque, en contour, jamais en fond. */
+/* Anneau crème au clavier : un anneau ambre sur un fond ambre ne se
+verrait pas. */
 .hero-door:focus-visible{
 
-outline:3px solid #E9A319;
+outline:3px solid #F5F1E8;
 
 outline-offset:3px;
 
-background:#FFFDF8;
+background:#F2B640;
 
 color:#14100D;
+
+}
+
+/* LA LIGNE DU DIAGNOSTIC (lot PORTES-COULEUR) : sous les portes, une
+ligne de texte crème avec sa flèche — lisible comme une action,
+visiblement plus légère que les portes. Zone de clic de 44px. */
+.hero-diag{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:10px;
+
+min-height:44px;
+
+margin-top:14px;
+
+font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
+
+font-size:15px;
+
+line-height:1.4;
+
+color:rgba(245,241,232,.92);
+
+text-decoration:none;
+
+}
+
+.hero-diag strong{
+
+font-weight:700;
+
+color:#F5F1E8;
+
+text-decoration:underline;
+
+text-underline-offset:4px;
+
+text-decoration-thickness:1.5px;
+
+}
+
+.hero-diag svg{
+
+flex:none;
+
+transition:transform .18s ease;
+
+}
+
+.hero-diag:hover,
+.hero-diag:focus-visible{
+
+color:#FFFFFF;
+
+}
+
+.hero-diag:hover strong,
+.hero-diag:focus-visible strong{ color:#E9A319; }
+
+.hero-diag:hover svg,
+.hero-diag:focus-visible svg{ transform:translateX(4px); }
+
+.hero-diag:focus-visible{
+
+outline:3px solid #F5F1E8;
+
+outline-offset:4px;
+
+border-radius:6px;
 
 }
 
 @media (prefers-reduced-motion: reduce){
 
 .hero-door,
-.hero-door svg{ transition:background .18s ease, box-shadow .18s ease; }
+.hero-door svg,
+.hero-diag svg{ transition:background .18s ease, box-shadow .18s ease; }
+
+.hero-diag:hover svg,
+.hero-diag:focus-visible svg{ transform:none; }
 
 .hero-door:hover,
 .hero-door:active{ transform:none; }
@@ -854,6 +939,26 @@ min-height:52px;
 padding:0 22px;
 
 font-size:15.5px;
+
+}
+
+/* La ligne du diagnostic, sous les portes empilées : pleine largeur,
+texte à gauche, flèche à droite, 48px de zone de clic. */
+.hero-diag{
+
+display:flex;
+
+justify-content:space-between;
+
+width:100%;
+
+min-height:48px;
+
+margin-top:10px;
+
+padding:0 4px;
+
+font-size:14.5px;
 
 }
 

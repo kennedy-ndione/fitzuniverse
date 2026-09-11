@@ -107,7 +107,15 @@ advisor_request_sent: { counters: ["totals", "byDay"] },
 admin_message_sent: { counters: ["totals", "byDay"] },
 file_compressed: { counters: ["totals", "byDay"] },
 
-payment_attempted: { counters: ["totals", "byDay", "byPlan"] }
+payment_attempted: { counters: ["totals", "byDay", "byPlan"] },
+
+// Lot PORTES-COULEUR (2026-09-11) : les trois chemins de l'accueil —
+// les deux portes et la ligne du diagnostic. Un compteur par chemin,
+// rien d'autre : c'est sur ces trois nombres que l'égalité des portes
+// sera tranchée en novembre.
+porte_bourse: { counters: ["totals", "byDay"] },
+porte_preinscription: { counters: ["totals", "byDay"] },
+porte_diagnostic: { counters: ["totals", "byDay"] }
 
 };
 

@@ -33,7 +33,7 @@
 // session de navigateur, signalée depuis la page d'accueil — le point
 // d'entrée public principal (l'espace connecté a la sienne via
 // js/app-shell.js, même garde sessionStorage, jamais de doublon).
-import { trackVisitOnce } from "./analytics.js";
+import { trackVisitOnce, trackEvent } from "./analytics.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
@@ -235,3 +235,21 @@ document.querySelector(".hero-stats")?.remove();
 
 chargerChiffres();
 trackVisitOnce();
+
+// Les trois chemins de l'accueil (lot PORTES-COULEUR) : un compteur par
+// clic, rien d'autre. L'écriture part AVANT la navigation, qui attend
+// son accusé — au plus 400 ms : une écriture perdue à l'unload ne
+// compterait rien, et ces trois nombres sont la seule donnée qui
+// tranchera l'égalité des portes. Ctrl/⌘-clic et clic du milieu : le
+// navigateur fait son travail, on ne compte pas.
+for (const lien of document.querySelectorAll("[data-chemin]")) {
+lien.addEventListener("click", (e) => {
+if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+e.preventDefault();
+const href = lien.href;
+let parti = false;
+const partir = () => { if (parti) return; parti = true; window.location.assign(href); };
+setTimeout(partir, 400);
+Promise.resolve(trackEvent(lien.dataset.chemin)).catch(() => {}).finally(partir);
+});
+}
