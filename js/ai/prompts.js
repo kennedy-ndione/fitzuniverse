@@ -25,6 +25,7 @@ import { chatLanguageName, DEFAULT_CHAT_LANGUAGE } from "./chat-language.js";
 // on ne réécrit pas la règle ici. Son défaut est « bourse » : aucun
 // appel existant ne change de comportement.
 import { lireParcoursDeSaisie } from "../parcours.js";
+import { languesLisibles, libellePalier, lirePalier, phraseTestLangue } from "../profil-par-niveau.js";
 
 // ==========================================================
 // DEUX PARCOURS, DEUX CADRES — jamais mélangés dans une même sortie
@@ -119,9 +120,18 @@ if (Array.isArray(profile.preferredCountries) && profile.preferredCountries.leng
 parts.push(`Pays visés : ${profile.preferredCountries.join(", ")}`);
 }
 
-if (Array.isArray(profile.languages) && profile.languages.length) {
-parts.push(`Langues : ${profile.languages.join(", ")}`);
-}
+// Lot PROFIL-PAR-NIVEAU (2026-09-11) : les langues sont des objets
+// {code, level} depuis profile.js — un join() direct donnait
+// « [object Object] » à Fitz. languesLisibles lit les deux formes.
+const langues = languesLisibles(profile.languages);
+if (langues.length) parts.push(`Langues : ${langues.join(", ")}`);
+
+// Le palier (« Bac obtenu », « Master en cours »…) et le test de langue,
+// tels qu'enregistrés — Fitz sait à qui il parle, sans juger le test.
+const palier = libellePalier(lirePalier(profile));
+if (palier) parts.push(`Niveau d'études actuel : ${palier}`);
+const test = phraseTestLangue(profile);
+if (test) parts.push(`Test de langue : ${test}`);
 
 if (profile.city) parts.push(`Ville de résidence : ${profile.city}`);
 if (profile.academicAverage) parts.push(`Moyenne : ${profile.academicAverage} (échelle ${profile.academicAverageScale || "non précisée"})`);

@@ -32,7 +32,8 @@ attribuerFormuleManuellement,
 promouvoirAdmin
 } from "./firebase-admin.js";
 
-import { calculateAiScore, PROFILE_SECTION_RULES } from "../js/profile-score.js";
+import { calculateAiScore, bilanProfil } from "../js/profile-score.js";
+import { phraseTestLangue, libellePalier, lirePalier, languesLisibles } from "../js/profil-par-niveau.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 // Lot ADMIN : le rôle décide de ce qui est RENDU, le bandeau dit ce qui
@@ -89,6 +90,8 @@ fields: [
 {
 title: "Parcours scolaire",
 fields: [
+// Lot PROFIL-PAR-NIVEAU : le palier (8 valeurs du questionnaire public).
+["Palier", (p) => libellePalier(lirePalier(p))],
 ["Dernier diplôme", "lastDegree"], ["Établissement actuel", "currentInstitution"],
 ["Année d'obtention", "graduationYear"], ["Moyenne générale", "academicAverage"],
 ["Statut", "studentStatus"], ["Série du Bac", "bacSeries"], ["Mention", "bacMention"],
@@ -100,6 +103,14 @@ title: "Niveau académique",
 fields: [
 ["Classement", "ranking"], ["Matières fortes", "strongSubjects"], ["Matières faibles", "weakSubjects"],
 ["Projets", "projects"], ["Mémoire", "thesis"], ["Publications", "publications"], ["Recherche", "researchExperience"]
+]
+},
+{
+title: "Langues",
+fields: [
+["Langues", (p) => languesLisibles(p.languages).join(", ")],
+// Partie 3 du lot : le test de langue, tel qu'enregistré (jamais jugé).
+["Test de langue", (p) => phraseTestLangue(p)]
 ]
 },
 {
@@ -253,7 +264,9 @@ const field = document.createElement("div");
 field.className = "detail-field";
 field.innerHTML = `<span class="detail-field-label"></span><span class="detail-field-value"></span>`;
 field.querySelector(".detail-field-label").textContent = label;
-field.querySelector(".detail-field-value").textContent = val(profile[key]);
+// Une clé peut être une FONCTION du profil (palier, test de langue,
+// langues) : la valeur brute en base n'est pas lisible telle quelle.
+field.querySelector(".detail-field-value").textContent = typeof key === "function" ? (key(profile) || "—") : val(profile[key]);
 
 grid.appendChild(field);
 
@@ -265,35 +278,50 @@ container.appendChild(section);
 
 }
 
+// Lot PROFIL-PAR-NIVEAU (2026-09-11) : le score se calcule sur les
+// sections APPLICABLES au palier de l'étudiant (js/profil-par-niveau.js).
+// La fiche affiche donc le dénominateur RÉEL — « 8 sections sur 8
+// applicables », jamais « 8/10 » — sinon l'admin croirait le dossier
+// incomplet. Une section masquée ou facultative pour ce palier est dite
+// telle quelle dans la liste. Un profil sans palier se lit comme avant :
+// dix sections.
 function renderProgression(profile) {
 
+const bilan = bilanProfil(profile);
 const score = calculateAiScore(profile);
-document.getElementById("progressionScore").textContent = `${score}/10`;
+document.getElementById("progressionScore").textContent =
+`${bilan.remplies} section${bilan.remplies > 1 ? "s" : ""} sur ${bilan.applicables} applicable${bilan.applicables > 1 ? "s" : ""} (${score}/10)`;
+
+const palierEl = document.getElementById("progressionPalier");
+if (palierEl) {
+palierEl.textContent = bilan.palier
+? `Palier : ${bilan.libellePalier}.`
+: "Palier non renseigné (profil d'avant le lot PROFIL-PAR-NIVEAU) : les dix sections comptent.";
+}
 
 const list = document.getElementById("progressionList");
 list.innerHTML = "";
 
-PROFILE_SECTION_RULES.forEach((rule, index) => {
+bilan.sections.forEach((section) => {
 
-let complete = false;
-
-try {
-complete = !!rule(profile);
-} catch {
-complete = false;
-}
+const complete = section.remplie;
+const applicable = section.applicabilite === "requise";
 
 const row = document.createElement("div");
 row.className = "timeline-item";
 row.innerHTML = `
-<span class="timeline-dot" style="background:${complete ? "var(--success)" : "var(--border-color)"}"></span>
+<span class="timeline-dot" style="background:${!applicable ? "transparent" : complete ? "var(--success)" : "var(--border-color)"};${!applicable ? "border:1.5px dashed var(--border-color);" : ""}"></span>
 <div class="timeline-body">
 <div class="timeline-label"></div>
 </div>
 `;
 
-row.querySelector(".timeline-label").textContent =
-`${SECTION_LABELS[index]} — ${complete ? "complète" : "à compléter"}`;
+let etat;
+if (section.applicabilite === "masquee") etat = "ne s'applique pas à ce palier";
+else if (section.applicabilite === "facultative") etat = complete ? "renseignée (facultative, non comptée)" : "facultative, non comptée";
+else etat = complete ? "complète" : "à compléter";
+
+row.querySelector(".timeline-label").textContent = `${SECTION_LABELS[section.index]} — ${etat}`;
 
 list.appendChild(row);
 

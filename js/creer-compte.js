@@ -28,18 +28,17 @@
 * les contiendrait serait refusée en bloc. Un compte créé ici est
 * gratuit, point.
 *
-* ⚠️ DUPLICATION ASSUMÉE — À RÉSOUDRE UN JOUR
-* payment.js fait la même chose dans ensureAccount()/
-* buildDefaultUserDoc(). Les deux devraient partager ce module. Ce
-* n'est pas fait aujourd'hui parce que le parcours de paiement vient
-* d'être validé de bout en bout et qu'on ne refactore pas un chemin
-* d'encaissement le jour où il commence à marcher. Toute évolution du
-* document utilisateur par défaut doit donc être répercutée DANS LES
-* DEUX FICHIERS tant que cette dette n'est pas soldée.
+* DUPLICATION SOLDÉE (lot PROFIL-PAR-NIVEAU, 2026-09-11)
+* payment.js (buildDefaultUserDoc) et ce module construisaient chacun
+* leur copie du document utilisateur. Les deux passent désormais par
+* js/compte-par-defaut.js — un test de forme vérifie que les deux
+* fichiers l'importent (test/diagnostic-vers-profil.test.mjs).
 * ============================================================
 */
 
 import { escapeHtml } from "./ai/format.js";
+import { documentUtilisateurParDefaut } from "./compte-par-defaut.js";
+import { lireReponsesDiagnostic } from "./diagnostic-vers-profil.js";
 
 const MESSAGES = {
 nom: "Indiquez votre nom complet.",
@@ -217,24 +216,17 @@ const credential = await createUserWithEmailAndPassword(auth, email, motDePasse)
 
 await updateProfile(credential.user, { displayName: nom });
 
-// Miroir de buildDefaultUserDoc() dans payment.js, SANS pendingPlan :
-// personne n'a choisi de formule ici. Aucun champ réservé à
-// l'administrateur — firestore.rules refuserait toute la création.
-await setDoc(doc(db, "users", credential.user.uid), {
+// Le MÊME document que payment.js (js/compte-par-defaut.js), SANS
+// pendingPlan : personne n'a choisi de formule ici. Aucun champ réservé
+// à l'administrateur — firestore.rules refuserait toute la création.
+// Le profil reprend les réponses du diagnostic de la session.
+await setDoc(doc(db, "users", credential.user.uid), documentUtilisateurParDefaut({
 uid: credential.user.uid,
 name: nom,
 email,
-createdAt: serverTimestamp(),
-profile: {
-originCountry: "",
-age: "",
-currentDegree: "",
-academicAverage: "",
-englishLevel: "",
-desiredField: "",
-desiredCountry: ""
-}
-});
+reponsesDiagnostic: lireReponsesDiagnostic(),
+serverTimestamp
+}));
 
 return credential.user;
 

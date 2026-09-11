@@ -26,6 +26,8 @@
 
 import { app, auth, db } from "./firebase-config.js";
 import { resolveSession } from "./js/access-guard.js";
+import { documentUtilisateurParDefaut } from "./js/compte-par-defaut.js";
+import { lireReponsesDiagnostic } from "./js/diagnostic-vers-profil.js";
 import {
 createUserWithEmailAndPassword,
 updateProfile
@@ -304,25 +306,22 @@ section.hidden = !!session;
 
 }
 
+// Lot PROFIL-PAR-NIVEAU (2026-09-11) : le document par défaut vit dans
+// js/compte-par-defaut.js, partagé avec js/creer-compte.js (la dette
+// « deux copies à tenir à l'identique » est soldée). Les réponses du
+// diagnostic gratuit, quand elles sont là, pré-remplissent le profil —
+// pour le Pass Découverte, c'est la seule façon que Fitz connaisse
+// l'étudiant dans le chat, puisque ce pass n'ouvre jamais profile.html.
 function buildDefaultUserDoc(uid, name, email, planId) {
-return {
+return documentUtilisateurParDefaut({
 uid,
 name,
 email,
-createdAt: serverTimestamp(),
 // Intention, pas un accès : voir ensureAccount() ci-dessous.
-pendingPlan: planId,
-pendingPlanRequestedAt: serverTimestamp(),
-profile: {
-originCountry: "",
-age: "",
-currentDegree: "",
-academicAverage: "",
-englishLevel: "",
-desiredField: "",
-desiredCountry: ""
-}
-};
+planId,
+reponsesDiagnostic: lireReponsesDiagnostic(),
+serverTimestamp
+});
 }
 
 // Valide le formulaire de compte (mêmes règles que l'ancien

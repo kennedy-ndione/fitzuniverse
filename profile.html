@@ -145,7 +145,17 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="profile-nav-score-label">sections<br>complétées</div>
 </div>
 
-<p class="profile-nav-score-hint">Ce score mesure votre profil général. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
+<!-- Lot PROFIL-PAR-NIVEAU (2026-09-11) : où en est l'étudiant, en
+langage simple — « Plus que 3 informations pour que Fitz choisisse
+vos universités », puis « Profil complet ». profile.js écrit. -->
+<p class="profile-etat" id="profileEtat" role="status"></p>
+
+<p class="profile-nav-score-hint">Ce score ne compte que les sections qui s'appliquent à votre niveau. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
+
+<a href="#sec-depart" class="section-nav-item" data-section="sec-depart">
+<span class="section-nav-item-check"><i data-lucide="check"></i></span>
+<span>Pour commencer</span>
+</a>
 
 <a href="#sec-personal" class="section-nav-item" data-section="sec-personal">
 <span class="section-nav-item-check"><i data-lucide="check"></i></span>
@@ -160,16 +170,6 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <a href="#sec-academique" class="section-nav-item" data-section="sec-academique">
 <span class="section-nav-item-check"><i data-lucide="check"></i></span>
 <span>Niveau académique</span>
-</a>
-
-<a href="#sec-langues" class="section-nav-item" data-section="sec-langues">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Langues</span>
-</a>
-
-<a href="#sec-projet" class="section-nav-item" data-section="sec-projet">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Projet d'études</span>
 </a>
 
 <a href="#sec-destination" class="section-nav-item" data-section="sec-destination">
@@ -201,6 +201,139 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 <!-- Sections du formulaire -->
 <div class="profile-form">
+
+<!-- 0. POUR COMMENCER — lot PROFIL-PAR-NIVEAU (2026-09-11).
+Le palier d'abord (les 8 du questionnaire public, NIVEAUX_ACTUELS),
+puis les 4 informations dont Fitz a besoin pour choisir
+(CHAMPS_PROFIL_REQUIS, js/fitz-choisit.js : nationalité, niveau
+visé, domaine, au moins une langue), puis le test de langue. Ces
+champs vivaient dans les sections 1, 4 et 5 : ils n'y sont plus,
+un champ n'existe qu'une fois. Le score, lui, reste compté sur les
+10 sections de données (js/profile-score.js). -->
+<section class="profile-section profile-section--depart" id="sec-depart">
+
+<div class="profile-section-heading">
+<div class="profile-section-icon"><i data-lucide="sparkles"></i></div>
+<div>
+<h2>Pour commencer</h2>
+<p class="field-hint">Ce qu'il faut à Fitz pour choisir vos universités. Le reste du profil s'adapte à votre niveau.</p>
+</div>
+</div>
+
+<div class="input-group field-full">
+<label id="palierLabel">Où en êtes-vous aujourd'hui dans vos études ?</label>
+<div class="palier-grid" id="palierGrid" role="radiogroup" aria-labelledby="palierLabel">
+<!-- les 8 paliers, rendus par profile.js depuis PALIERS -->
+</div>
+<small class="field-repris" data-repris="palier" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="field-grid" style="margin-top:18px;">
+
+<div class="input-group">
+<label for="nationality">Nationalité <span class="field-requis">requis</span></label>
+<div class="input-wrap"><input type="text" id="nationality"></div>
+<small class="field-repris" data-repris="nationality" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="input-group">
+<label for="desiredDegree">Diplôme recherché <span class="field-requis">requis</span></label>
+<div class="input-wrap">
+<select id="desiredDegree">
+<option value="">Sélectionner</option>
+<option value="Licence">Licence</option>
+<option value="Master">Master</option>
+<option value="Doctorat">Doctorat</option>
+</select>
+</div>
+<small class="field-repris" data-repris="desiredDegree" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="input-group">
+<label for="desiredField">Domaine souhaité <span class="field-requis">requis</span></label>
+<div class="input-wrap"><input type="text" id="desiredField" placeholder="Ex. Informatique, Médecine..."></div>
+<small class="field-repris" data-repris="desiredField" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="input-group">
+<label for="specialization">Spécialisation</label>
+<div class="input-wrap"><input type="text" id="specialization"></div>
+</div>
+
+</div>
+
+<div class="input-group field-full" style="margin-top:18px;">
+<label>Langues <span class="field-requis">au moins une</span></label>
+<p class="field-hint">Le niveau CECRL détermine les programmes accessibles selon leur langue d'enseignement.</p>
+<div id="languagesList">
+<!-- lignes de langues générées par profile.js -->
+</div>
+<small class="field-repris" data-repris="languages" hidden>Repris de votre diagnostic — vérifiez le niveau</small>
+
+<div class="language-other-row">
+<input type="text" id="otherLanguageName" placeholder="Autre langue (nom)">
+<div class="cecrl-picker" id="otherLanguagePicker" data-code="autre">
+<button type="button" data-level="A1">A1</button>
+<button type="button" data-level="A2">A2</button>
+<button type="button" data-level="B1">B1</button>
+<button type="button" data-level="B2">B2</button>
+<button type="button" data-level="C1">C1</button>
+<button type="button" data-level="C2">C2</button>
+</div>
+<button type="button" class="chip" id="addOtherLanguage">+ Ajouter</button>
+</div>
+
+<div class="chip-select" id="otherLanguagesChips" style="margin-top:12px;"></div>
+</div>
+
+<!-- Partie 3 : le test de langue devient un vrai champ (décision du
+2026-09-10). profile.testLangue = { nature, score, date, prevuLe }.
+« Pas encore passé, date prévue » est un état légitime. Aucune règle
+d'exigence ici : on enregistre, on n'invente pas de barème. -->
+<div class="input-group field-full" style="margin-top:18px;">
+<label for="testLangueNature">Test de langue</label>
+<p class="field-hint">Un test a une durée de validité : indiquez la date. Pas encore passé ? Une date prévue suffit.</p>
+<div class="input-wrap">
+<select id="testLangueNature">
+<option value="">Sélectionner</option>
+<!-- options rendues par profile.js depuis TESTS_DE_LANGUE -->
+</select>
+</div>
+<small class="field-repris" data-repris="testLangue" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="conditional-fields" id="testLangueDetails" hidden>
+
+<div class="radio-row-group" id="testLangueEtatGroup" style="margin-top:12px;">
+<label class="radio-row"><input type="radio" name="testLangueEtat" value="passe"><span>Déjà passé</span></label>
+<label class="radio-row"><input type="radio" name="testLangueEtat" value="prevu"><span>Pas encore passé, date prévue</span></label>
+</div>
+
+<div class="field-grid" id="testLanguePasse" hidden style="margin-top:14px;">
+<div class="input-group">
+<label for="testLangueScore">Niveau ou score obtenu</label>
+<div class="input-wrap"><input type="text" id="testLangueScore" placeholder="Ex. B2, 6.5, 95"></div>
+</div>
+<div class="input-group">
+<label for="testLangueDate">Date de passage</label>
+<div class="input-wrap"><input type="date" class="fitz-date" id="testLangueDate"></div>
+</div>
+</div>
+
+<div class="field-grid" id="testLanguePrevu" hidden style="margin-top:14px;">
+<div class="input-group">
+<label for="testLanguePrevuLe">Date prévue</label>
+<div class="input-wrap"><input type="date" class="fitz-date" id="testLanguePrevuLe"></div>
+</div>
+</div>
+
+</div>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
+</div>
+
+</section>
 
 <!-- 1. Informations personnelles -->
 <section class="profile-section" id="sec-personal">
@@ -248,13 +381,9 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 </div>
 
 <div class="input-group">
-<label for="nationality">Nationalité</label>
-<div class="input-wrap"><input type="text" id="nationality"></div>
-</div>
-
-<div class="input-group">
 <label for="country">Pays de résidence</label>
 <div class="input-wrap"><input type="text" id="country"></div>
+<small class="field-repris" data-repris="country" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
@@ -279,6 +408,10 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 </div>
 
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
+</div>
+
 </section>
 
 <!-- 2. Parcours scolaire -->
@@ -294,9 +427,10 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 <div class="field-grid">
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="lastDegree">
 <label for="lastDegree">Dernier diplôme obtenu</label>
 <div class="input-wrap"><input type="text" id="lastDegree" placeholder="Ex. Baccalauréat, Licence..."></div>
+<small class="field-repris" data-repris="lastDegree" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
@@ -307,32 +441,23 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="input-group">
 <label for="graduationYear">Année d'obtention</label>
 <div class="input-wrap"><input type="number" class="fitz-num" id="graduationYear" min="1990" max="2035"></div>
+<small class="field-repris" data-repris="graduationYear" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="academicAverage">
 <label for="academicAverage">Moyenne générale</label>
 <p class="field-hint">Choisissez d'abord votre système de notation — quel qu'il soit, votre moyenne compte.</p>
 <div class="chip-select" id="academicAverageScaleChips"></div>
 <div class="input-wrap"><input type="text" id="academicAverage" placeholder="Ex. 14,5"></div>
 <div class="chip-select" id="academicAverageLetters" hidden></div>
+<small class="field-repris" data-repris="academicAverage" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 </div>
 
-<div class="status-toggle" id="statusToggle" role="radiogroup" aria-label="Votre situation actuelle">
-
-<label class="status-toggle-option" data-value="nouveau_bachelier">
-<input type="radio" name="studentStatus" value="nouveau_bachelier">
-<span>Nouveau bachelier</span>
-</label>
-
-<label class="status-toggle-option" data-value="en_cours">
-<input type="radio" name="studentStatus" value="en_cours">
-<span>Étudiant en cours</span>
-</label>
-
-</div>
-
+<!-- Le bloc « Bac » s'ouvre pour un lycéen ou un bachelier, le bloc
+« niveau actuel » pour les autres — décidé par le palier du premier
+écran (js/profil-par-niveau.js), plus par un second bouton. -->
 <div class="conditional-fields" id="bacFieldsBlock" hidden>
 
 <div class="profile-section-heading" style="margin-bottom:14px;">
@@ -347,6 +472,7 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="input-group">
 <label for="bacSeries">Série / filière (si applicable à votre système)</label>
 <div class="input-wrap"><input type="text" id="bacSeries"></div>
+<small class="field-repris" data-repris="bacSeries" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
@@ -368,6 +494,7 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="chip-select" id="bacAverageScaleChips"></div>
 <div class="input-wrap"><input type="text" id="bacAverage" placeholder="Ex. 13"></div>
 <div class="chip-select" id="bacAverageLetters" hidden></div>
+<small class="field-repris" data-repris="bacAverage" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 </div>
@@ -389,14 +516,20 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <option value="Doctorat">Doctorat</option>
 </select>
 </div>
+<small class="field-repris" data-repris="currentLevel" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 </div>
+</div>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
 </div>
 
 </section>
 
-<!-- 3. Niveau académique -->
+<!-- 3. Niveau académique — masquée pour un lycéen ou un bachelier ; ses
+champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <section class="profile-section" id="sec-academique">
 
 <div class="profile-section-heading">
@@ -409,17 +542,17 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 <div class="field-grid">
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="ranking">
 <label for="ranking">Classement éventuel</label>
 <div class="input-wrap"><input type="text" id="ranking" placeholder="Ex. 2ᵉ sur 45"></div>
 </div>
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="strongSubjects">
 <label for="strongSubjects">Matières fortes</label>
 <div class="input-wrap"><input type="text" id="strongSubjects"></div>
 </div>
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="weakSubjects">
 <label for="weakSubjects">Matières faibles</label>
 <div class="input-wrap"><input type="text" id="weakSubjects"></div>
 </div>
@@ -428,97 +561,30 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 <div class="field-grid" style="margin-top:18px;">
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="projects">
 <label for="projects">Projets réalisés</label>
 <div class="input-wrap"><textarea id="projects"></textarea></div>
 </div>
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="thesis">
 <label for="thesis">Mémoire</label>
 <div class="input-wrap"><textarea id="thesis"></textarea></div>
 </div>
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="publications">
 <label for="publications">Publications scientifiques</label>
 <div class="input-wrap"><textarea id="publications"></textarea></div>
 </div>
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="researchExperience">
 <label for="researchExperience">Expériences de recherche</label>
 <div class="input-wrap"><textarea id="researchExperience"></textarea></div>
 </div>
 
 </div>
 
-</section>
-
-<!-- 4. Langues -->
-<section class="profile-section" id="sec-langues">
-
-<div class="profile-section-heading">
-<div class="profile-section-icon"><i data-lucide="languages"></i></div>
-<div>
-<h2>Langues</h2>
-<p class="field-hint">Le niveau CECRL détermine les programmes accessibles selon leur langue d'enseignement.</p>
-</div>
-</div>
-
-<div id="languagesList">
-<!-- lignes de langues générées par profile.js -->
-</div>
-
-<div class="language-other-row">
-<input type="text" id="otherLanguageName" placeholder="Autre langue (nom)">
-<div class="cecrl-picker" id="otherLanguagePicker" data-code="autre">
-<button type="button" data-level="A1">A1</button>
-<button type="button" data-level="A2">A2</button>
-<button type="button" data-level="B1">B1</button>
-<button type="button" data-level="B2">B2</button>
-<button type="button" data-level="C1">C1</button>
-<button type="button" data-level="C2">C2</button>
-</div>
-<button type="button" class="chip" id="addOtherLanguage">+ Ajouter</button>
-</div>
-
-<div class="chip-select" id="otherLanguagesChips" style="margin-top:12px;"></div>
-
-</section>
-
-<!-- 5. Projet d'études -->
-<section class="profile-section" id="sec-projet">
-
-<div class="profile-section-heading">
-<div class="profile-section-icon"><i data-lucide="target"></i></div>
-<div>
-<h2>Projet d'études</h2>
-<p class="field-hint">Le cœur de la recherche d'opportunités : domaine, spécialisation et niveau visé.</p>
-</div>
-</div>
-
-<div class="field-grid">
-
-<div class="input-group">
-<label for="desiredField">Domaine souhaité</label>
-<div class="input-wrap"><input type="text" id="desiredField" placeholder="Ex. Informatique, Médecine..."></div>
-</div>
-
-<div class="input-group">
-<label for="specialization">Spécialisation</label>
-<div class="input-wrap"><input type="text" id="specialization"></div>
-</div>
-
-<div class="input-group">
-<label for="desiredDegree">Diplôme recherché</label>
-<div class="input-wrap">
-<select id="desiredDegree">
-<option value="">Sélectionner</option>
-<option value="Licence">Licence</option>
-<option value="Master">Master</option>
-<option value="Doctorat">Doctorat</option>
-</select>
-</div>
-</div>
-
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
 </div>
 
 </section>
@@ -537,6 +603,7 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="input-group field-full">
 <label>Pays souhaités</label>
 <div class="chip-select" id="preferredCountriesChips" data-store="preferredCountries"></div>
+<small class="field-repris" data-repris="preferredCountries" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group field-full" style="margin-top:18px;">
@@ -556,6 +623,10 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <label class="radio-row"><input type="radio" name="universityType" value="privee"><span>Privée</span></label>
 <label class="radio-row"><input type="radio" name="universityType" value="les_deux"><span>Les deux</span></label>
 </div>
+</div>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
 </div>
 
 </section>
@@ -597,6 +668,11 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <label class="checkbox-row"><input type="checkbox" value="housing"><span>Logement inclus</span></label>
 <label class="checkbox-row"><input type="checkbox" value="insurance"><span>Assurance incluse</span></label>
 </div>
+<small class="field-repris" data-repris="fundingWanted" hidden>Repris de votre diagnostic — vérifiez</small>
+</div>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
 </div>
 
 </section>
@@ -623,6 +699,11 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <label class="doc-check-card"><input type="checkbox" value="photos"><i data-lucide="image"></i><span>Photos</span></label>
 <label class="doc-check-card"><input type="checkbox" value="other"><i data-lucide="plus"></i><span>Autres</span></label>
 </div>
+<small class="field-repris" data-repris="documentsAvailable" hidden>Repris de votre diagnostic — vérifiez</small>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
+</div>
 
 </section>
 
@@ -632,21 +713,22 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="profile-section-heading">
 <div class="profile-section-icon"><i data-lucide="briefcase"></i></div>
 <div>
-<h2>Expériences</h2>
-<p class="field-hint">Fitz s'appuiera sur ces expériences pour valoriser votre CV et vos lettres de motivation.</p>
+<h2>Expériences <span class="section-facultative" id="experiencesFacultatif" hidden>si vous en avez</span></h2>
+<p class="field-hint" id="experiencesHint">Fitz s'appuiera sur ces expériences pour valoriser votre CV et vos lettres de motivation.</p>
 </div>
 </div>
 
 <div class="field-grid">
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="internships">
 <label for="internships">Stages</label>
 <div class="input-wrap"><textarea id="internships"></textarea></div>
 </div>
 
-<div class="input-group field-full">
+<div class="input-group field-full" data-palier-champ="workExperience">
 <label for="workExperience">Travail</label>
 <div class="input-wrap"><textarea id="workExperience"></textarea></div>
+<small class="field-repris" data-repris="workExperience" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group field-full">
@@ -674,6 +756,10 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 <div class="input-wrap"><input type="text" id="computerSkills"></div>
 </div>
 
+</div>
+
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
 </div>
 
 </section>
@@ -708,11 +794,15 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 </div>
 
+<div class="profile-section-actions">
+<button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>
+</div>
+
 </section>
 
 <!-- Barre d'enregistrement -->
 <div class="profile-save-bar">
-<span class="profile-save-note">Vos données restent privées et servent uniquement à personnaliser votre accompagnement.</span>
+<span class="profile-save-note">Vos données restent privées et servent uniquement à personnaliser votre accompagnement. Vous pouvez enregistrer à tout moment, section par section.</span>
 <button type="submit" class="btn-profile-save" id="saveProfileBtn">
 <i data-lucide="save"></i>
 <span>Enregistrer mon profil</span>

@@ -39,6 +39,9 @@ import { indexerCatalogue, etatDeLaCandidature, normaliserTitre } from "../../js
 import { etatCandidature } from "../../js/echeance.js";
 import { lireExigences, deposeParUnTiers, elementsAAjouter } from "../../js/exigences.js";
 import { DOCUMENTS, SLUGS } from "../../js/documents-data.js";
+// Lot PROFIL-PAR-NIVEAU (2026-09-11) : le profil par palier, dans son
+// propre module — même session stubbée, mêmes deux moteurs.
+import { verifierProfilParNiveau } from "./profil-par-niveau.mjs";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -2027,6 +2030,13 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         await contexte.close();
       }
     }
+  }
+
+  // ---------- PROFIL-PAR-NIVEAU (2026-09-11) : lycéen, doctorant, diagnostic repris, ?pour=fitz, 375 px ----------
+  {
+    const r = await verifierProfilParNiveau({ navigateur, base, ouvrir, etudiant, dansNJours });
+    anomalies.push(...r.anomalies);
+    notes.push(...r.notes);
   }
 
   return { anomalies, notes };

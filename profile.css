@@ -1445,3 +1445,156 @@ line-height:1.5;
 }
 .fitz-profil-bandeau i,
 .fitz-profil-bandeau svg{ width:18px; height:18px; flex-shrink:0; margin-top:2px; color:var(--amber-600); }
+
+/* ==========================================================
+LOT PROFIL-PAR-NIVEAU (2026-09-11) — le palier d'abord, puis seulement
+ce qui s'applique. Le premier écran (#sec-depart), les 8 cartes de
+palier, les mentions « Repris de votre diagnostic », la ligne d'état,
+les boutons d'enregistrement par section.
+========================================================== */
+
+.profile-section--depart{
+border-color:var(--amber-700);
+}
+
+.palier-grid{
+display:grid;
+grid-template-columns:repeat(4, minmax(0, 1fr));
+gap:10px;
+}
+
+.palier-option{
+display:flex;
+align-items:center;
+gap:10px;
+min-width:0;
+padding:12px 14px;
+border-radius:var(--radius-md);
+border:1.5px solid var(--border-color);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.palier-option:hover{ border-color:var(--primary-color); }
+
+.palier-option.is-selected{
+border-color:var(--primary-color);
+background:var(--background-light);
+}
+
+.palier-option input{
+accent-color:var(--primary-color);
+width:16px;
+height:16px;
+flex-shrink:0;
+}
+
+.palier-option i,
+.palier-option svg{ width:18px; height:18px; flex-shrink:0; color:var(--amber-700); }
+
+.palier-option span{
+font-weight:600;
+font-size:.86rem;
+color:var(--text-color);
+line-height:1.3;
+}
+
+.field-requis{
+display:inline-block;
+margin-left:6px;
+padding:1px 7px;
+border-radius:999px;
+background:var(--background-alt);
+color:var(--text-light);
+font-size:.68rem;
+font-weight:700;
+letter-spacing:.02em;
+vertical-align:middle;
+}
+
+.field-repris{
+display:block;
+margin-top:6px;
+font-size:.74rem;
+font-weight:600;
+color:var(--amber-700);
+}
+
+.field-repris[hidden]{ display:none; }
+
+.language-row--sans-niveau .language-row-label::after{
+content:" — niveau à préciser";
+font-size:.74rem;
+font-weight:600;
+color:var(--amber-700);
+}
+
+.section-facultative{
+display:inline-block;
+margin-left:8px;
+padding:2px 8px;
+border-radius:999px;
+background:var(--background-alt);
+color:var(--text-light);
+font-family:var(--font-body);
+font-size:.7rem;
+font-weight:700;
+vertical-align:middle;
+}
+
+.section-facultative[hidden]{ display:none; }
+
+.section-nav-item.is-facultative > span:last-child{ color:var(--text-light); }
+
+.profile-etat{
+margin:0 8px 12px;
+padding:10px 12px;
+border-radius:var(--radius-md);
+background:var(--background-alt);
+font-size:.8rem;
+font-weight:600;
+line-height:1.45;
+color:var(--text-color);
+}
+
+.profile-etat:empty{ display:none; }
+
+
+.profile-section-actions{
+display:flex;
+justify-content:flex-end;
+margin-top:18px;
+padding-top:14px;
+border-top:1px solid var(--border-color);
+}
+
+.btn-section-save{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:9px 16px;
+border-radius:999px;
+border:1.5px solid var(--border-color);
+background:transparent;
+color:var(--text-color);
+font-family:var(--font-body);
+font-size:.82rem;
+font-weight:700;
+cursor:pointer;
+transition:var(--transition);
+}
+
+.btn-section-save:hover{ border-color:var(--primary-color); }
+
+.btn-section-save i,
+.btn-section-save svg{ width:16px; height:16px; }
+
+@media(max-width:1023px){
+.palier-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+
+@media(max-width:520px){
+.palier-grid{ grid-template-columns:1fr; }
+.profile-section-actions{ justify-content:stretch; }
+.btn-section-save{ width:100%; justify-content:center; }
+}
