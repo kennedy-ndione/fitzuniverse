@@ -554,7 +554,13 @@ PALIERS.forEach((p) => {
 const option = document.createElement("label");
 option.className = "palier-option";
 option.dataset.value = p.id;
-option.innerHTML = `<input type="radio" name="palier" value="${escapeHtml(p.id)}"><i data-lucide="${escapeHtml(p.icon)}"></i><span></span>`;
+// Lot FINITIONS-VISUELLES : le rond du système ne se voit plus — l'input
+// reste pour le clavier et le lecteur d'écran (profile.css le masque
+// visuellement). Une seule icône AVANT le texte, une coche à droite
+// quand la carte est choisie.
+option.innerHTML = `<input type="radio" name="palier" value="${escapeHtml(p.id)}"><i data-lucide="${escapeHtml(p.icon)}"></i><span class="palier-option-text"></span><span class="palier-option-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M20 6 9 17l-5-5"/></svg></span>`;
+option.querySelector("input").addEventListener("focus", () => option.classList.add("has-focus"));
+option.querySelector("input").addEventListener("blur", () => option.classList.remove("has-focus"));
 option.querySelector("span").textContent = p.label;
 
 option.querySelector("input").addEventListener("change", () => {

@@ -141,12 +141,20 @@ assert.ok(!html.includes(`value="${id}"`), `« ${id} » est écrit en dur dans l
 assert.match(html, /<select id="planSelect"[^>]*><\/select>/, "le sélecteur bourse doit être vide dans le HTML");
 assert.match(html, /<select id="planPreinscriptionSelect"[^>]*><\/select>/, "le sélecteur préinscription doit être vide dans le HTML");
 
+// Lot FINITIONS-VISUELLES (2026-09-11) : les deux groupes viennent du
+// module pur js/formules-admin.js (lui-même construit sur PLAN_ORDER et
+// PLAN_PREINSCRIPTION_ORDER — test/formules-admin.test.mjs), qui donne à
+// chaque formule une étiquette DISTINCTE (« Essentiel · 4 candidatures »
+// ≠ « Essentiel (ancienne) · 5 candidatures »).
 const js = lire("admin/student-detail.js");
-assert.match(js, /PLAN_ORDER\.filter\(\(p\) => p !== "gratuit" && estEnVente\(p\)\)/, "le groupe « En vente » vient de PLAN_ORDER");
-assert.match(js, /PLAN_ORDER\.filter\(\(p\) => p !== "gratuit" && !estEnVente\(p\)\)/, "le groupe « Retirées » aussi");
-assert.match(js, /optgroup label="En vente"/);
-assert.match(js, /optgroup label="Retirées de la vente"/);
-assert.match(js, /PLAN_PREINSCRIPTION_ORDER\.map/);
+assert.match(js, /optionsFormules\(\{ vide: "Sans formule", pass: false, preinscription: false \}\)/, "le sélecteur bourse vient du module");
+assert.match(js, /optionsFormules\(\{ vide: "Sans offre", pass: false, bourse: false \}\)/, "le sélecteur préinscription vient du module");
+const module_ = lire("js/formules-admin.js");
+assert.match(module_, /PLAN_ORDER\.filter\(\(id\) => id !== "gratuit" && !estRetiree\(id\)\)/, "le groupe « En vente » vient de PLAN_ORDER");
+assert.match(module_, /PLAN_ORDER\.filter\(\(id\) => id !== "gratuit" && estRetiree\(id\)\)/, "le groupe « Retirées » aussi");
+assert.match(module_, /TITRE_EN_VENTE = "En vente"/);
+assert.match(module_, /TITRE_RETIREES = "Retirées de la vente — anciens comptes"/);
+assert.match(module_, /\.\.\.PLAN_PREINSCRIPTION_ORDER/);
 
 });
 

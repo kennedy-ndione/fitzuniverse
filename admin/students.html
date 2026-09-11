@@ -111,13 +111,11 @@
 <input type="text" id="searchInput" placeholder="Rechercher par nom ou e-mail...">
 </div>
 
-<select id="planFilter">
-<option value="">Toutes les formules</option>
-<option value="gratuit">Gratuit</option>
-<option value="essentiel">Essentiel</option>
-<option value="accompagnement">Avancé</option>
-<option value="premium">Premium</option>
-</select>
+<!-- Les options viennent de js/formules-admin.js (students.js) : les 7
+offres en vente, puis les formules retirées sous leur titre de groupe.
+Plus rien d'écrit en dur — « Avancé » a vécu ici un mois après sa
+disparition (lot FINITIONS-VISUELLES, 2026-09-11). -->
+<select id="planFilter" aria-label="Filtrer par formule"></select>
 
 <select id="statusFilter">
 <option value="">Tous les statuts</option>

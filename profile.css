@@ -897,98 +897,50 @@ height:16px;
 
 }
 
-.radio-row-group{
-
-display:flex;
-
-gap:16px;
-
-flex-wrap:wrap;
-
-}
-
-.radio-row{
-
-display:flex;
-
-align-items:center;
-
-gap:8px;
-
-font-size:.88rem;
-
-color:var(--text-color);
-
-font-weight:600;
-
-cursor:pointer;
-
-}
-
-.radio-row input{
-
-accent-color:var(--primary-color);
-
-width:16px;
-
-height:16px;
-
-}
+/* Les anciens .radio-row (rond du système) sont devenus des .fitz-choice
+(css/base.css) — lot FINITIONS-VISUELLES, 2026-09-11. */
 
 /* ==========================================================
-BOUTON D'ENREGISTREMENT
-========================================================== */
+ENREGISTREMENT FINAL — dans le flux, tout en bas
+==========================================================
+Lot FINITIONS-VISUELLES (2026-09-11). L'ancienne .profile-save-bar
+était collante (sticky, bottom:20px) sur un fond sombre flouté : elle
+flottait sur les champs pendant toute la saisie. Ce bloc vit à la fin
+du formulaire, comme un dernier paragraphe : rien ne recouvre jamais
+un champ, et le backdrop-filter (famille des défauts WebKit du lot
+DEUX-MOTEURS) a disparu avec elle. */
 
-.profile-save-bar{
-
-position:sticky;
-
-bottom:20px;
+.profile-save-final{
 
 display:flex;
 
-align-items:center;
+flex-direction:column;
 
-justify-content:space-between;
+align-items:flex-start;
 
-gap:16px;
+gap:14px;
 
-padding:18px 24px;
+padding:22px 24px;
 
 margin-top:4px;
 
 border-radius:var(--radius-lg);
 
-background:rgba(23,19,16,.85);
+background:var(--background-soft);
 
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-/* Seule barre flottante au-dessus de tout le reste de la page —
-migrée de --shadow-xl (transitoire, retiré) vers --shadow-lg (le
-nouveau plafond) + une bordure d'accent, pour marquer la hiérarchie
-par la bordure plutôt que par une ombre plus grosse (règle du
-Design System 2.0). Fond fixé en sombre (pas var(--background)) car
-cette barre doit rester lisible même si migrée vers une page claire. */
-/* Liseré ambre : le violet #7E71D8 a quitté l'espace étudiant
-(voir css/app-shell.css section 11). */
-border:1px solid rgba(233,163,25,.42);
-
-box-shadow:var(--shadow-lg);
-
-flex-wrap:wrap;
+border:1px solid var(--border-color);
 
 }
 
-/* La barre de sauvegarde est sombre (rgba(23,19,16,.85)) : cette note
-retombait sur la couleur de `p{}` de css/base.css — 1,53:1, mesuré
-au pixel. Même piège que le bandeau d'abonnement, voir la section 12
-de css/app-shell.css. */
 .profile-save-note{
 
-color:rgba(255,255,255,.78);
+margin:0;
+
+color:var(--text-light);
 
 font-size:.84rem;
+
+line-height:1.55;
 
 }
 
@@ -1188,13 +1140,9 @@ padding:22px 18px;
 
 }
 
-.profile-save-bar{
-
-flex-direction:column;
+.profile-save-final{
 
 align-items:stretch;
-
-text-align:center;
 
 }
 
@@ -1463,7 +1411,13 @@ grid-template-columns:repeat(4, minmax(0, 1fr));
 gap:10px;
 }
 
-.palier-option{
+/* .palier-grid .palier-option (0,2,0) et non .palier-option (0,1,0) :
+« .input-group label » (profile.css) pose display:block sur tout label
+de la grille — c'est CE qui posait l'icône SUR le texte dans la capture
+de Charles (mesuré par le harnais : display:block, icône et texte à la
+même abscisse). */
+.palier-grid .palier-option{
+position:relative;
 display:flex;
 align-items:center;
 gap:10px;
@@ -1482,22 +1436,50 @@ border-color:var(--primary-color);
 background:var(--background-light);
 }
 
+/* Lot FINITIONS-VISUELLES (2026-09-11) : plus de rond du système sur la
+carte. L'input reste dans le DOM (radiogroup, clavier, lecteur
+d'écran) mais sort du rendu ; le focus clavier se voit sur la carte
+(.has-focus, posé par profile.js). */
 .palier-option input{
-accent-color:var(--primary-color);
-width:16px;
-height:16px;
-flex-shrink:0;
+position:absolute;
+width:1px;
+height:1px;
+padding:0;
+margin:-1px;
+overflow:hidden;
+clip:rect(0,0,0,0);
+white-space:nowrap;
+border:0;
 }
 
-.palier-option i,
-.palier-option svg{ width:18px; height:18px; flex-shrink:0; color:var(--amber-700); }
+.palier-option.has-focus{
+outline:2px solid var(--primary-color);
+outline-offset:2px;
+}
 
-.palier-option span{
+/* UNE icône, AVANT le texte, avec son espacement — jamais dessus. */
+.palier-option > i,
+.palier-option > svg{ width:18px; height:18px; flex-shrink:0; color:var(--amber-700); }
+
+.palier-option-text{
+flex:1 1 auto;
+min-width:0;
 font-weight:600;
 font-size:.86rem;
 color:var(--text-color);
 line-height:1.3;
 }
+
+/* La coche : à droite, visible sur la carte choisie seulement. */
+.palier-option-check{
+display:none;
+flex-shrink:0;
+width:18px;
+height:18px;
+color:var(--primary-color);
+}
+.palier-option-check svg{ width:18px; height:18px; display:block; }
+.palier-option.is-selected .palier-option-check{ display:inline-flex; }
 
 .field-requis{
 display:inline-block;

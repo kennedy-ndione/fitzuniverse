@@ -372,7 +372,9 @@ parcours: "bourse",
 type: "human",
 deprecated: true,
 label: "Signature",
-icon: "star",
+// « medal » et non « star » : sparkles / star / wand sont interdites sur
+// tout le site (2026-09-02 ; test/icones.test.mjs). Formule retirée.
+icon: "medal",
 tagline: "Conseiller dédié, candidatures illimitées.",
 badge: "Notre formule la plus complète",
 // 199 000 → 250 000 le 2026-08-29 (même décision) : offre rare (20

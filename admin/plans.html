@@ -103,12 +103,10 @@
 
 <main class="content" style="display:none;">
 
-<div class="plans-legend">
-<span class="plans-legend-item"><span class="status-pill plan-gratuit">Gratuit</span></span>
-<span class="plans-legend-item"><span class="status-pill plan-essentiel">Essentiel</span></span>
-<span class="plans-legend-item"><span class="status-pill plan-accompagnement">Avancé</span></span>
-<span class="plans-legend-item"><span class="status-pill plan-premium">Premium</span></span>
-</div>
+<!-- La légende est rendue par plans.js depuis js/formules-admin.js : les
+offres en vente, puis les retirées, sous leur vrai nom. Elle était écrite
+en dur ici et disait encore « Avancé » (lot FINITIONS-VISUELLES). -->
+<div class="plans-legend" aria-label="Légende des formules"></div>
 
 <p class="text-small" style="color:var(--text-muted);margin:-8px 0 20px;">La formule Gratuit est verrouillée à 0 fonctionnalité par philosophie produit (aucun outil Fitz, 0 candidature accompagnée) — les cases de sa colonne restent normalement décochées.</p>
 

@@ -51,19 +51,32 @@ overflow:hidden;
 un grand écran, un hero qui remplit 1200 px de haut fait passer le
 reste de la page pour une deuxième page). svh et non vh : sur
 téléphone, vh compte la barre d'adresse rétractée et laisse le pied
-de cadre sous le pouce. */
-height:clamp(620px, 100svh, 820px);
+de cadre sous le pouce.
+
+Lot FINITIONS-VISUELLES (2026-09-11) : min-height et non height. Sur
+un portable 1366 × 768 (≈ 640 px utiles), le contenu centré dépassait
+le cadre des deux côtés et remontait SOUS l'en-tête fixe : le logo se
+collait au surtitre. Un minimum laisse le cadre grandir avec son
+contenu ; rien ne déborde plus, rien ne passe sous l'en-tête. */
+min-height:clamp(620px, 100svh, 820px);
 
 display:flex;
 
 flex-direction:column;
 
 /* Le contenu est centré dans ce qui reste une fois retirés le
-dégagement sous l'en-tête fixe (76 px) et la place du pied de
-cadre (124 px). */
+dégagement sous l'en-tête fixe et la place du pied de cadre (124 px).
+
+Le dégagement haut = la hauteur RÉELLE de l'en-tête (82 px,
+.header-container dans css/header.css) + 32 px. Il valait 76 px, soit
+moins que l'en-tête lui-même : dès que le contenu était plus haut que
+l'espace disponible, le logo chevauchait le surtitre (capture de
+Charles, portable). Le harnais (scripts/verifier/finitions.mjs) mesure
+désormais l'écart logo → premier contenu sur toutes les pages à
+en-tête fixe : jamais moins de 24 px. */
 justify-content:center;
 
-padding:76px 0 124px;
+padding:114px 0 124px;
 
 /* LE CORPS DU TITRE, UNE SEULE FOIS
 La maquette pose 70 px sur une planche de 1366 px, soit 5,1vw. Le
@@ -725,7 +738,8 @@ hauteur que cette seconde rangée réclame.
 
 .hero{
 
-padding:88px 0 172px;
+/* L'en-tête mesure 76 px sous 992 px (css/header.css) : 76 + 32. */
+padding:108px 0 172px;
 
 }
 

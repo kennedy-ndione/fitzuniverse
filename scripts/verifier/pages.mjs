@@ -1063,26 +1063,27 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       await page.goto(`${base}/scholarships.html`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("#scholarshipsContainer .scholarship-card, #resultsCount", { timeout: 30000 });
       await page.waitForFunction(() => !document.getElementById("heroBoursesTotal").hidden, null, { timeout: 20000 });
-      await page.waitForSelector("footer.footer", { timeout: 20000 });
+      await page.waitForTimeout(800);
       const bourses = await page.evaluate(() => ({
         phrase: document.querySelector(".bourses-hero p").innerText.replace(/\s+/g, " ").trim(),
         nombre: document.getElementById("heroBoursesNombre").textContent.trim(),
-        stat: (document.getElementById("statScholarships") || {}).textContent
+        stat: (document.getElementById("statScholarships") || {}).textContent,
+        h1: document.querySelectorAll("h1").length,
+        deborde: document.scrollingElement.scrollWidth > window.innerWidth + 1,
+        pied: !!document.querySelector("footer.footer"),
+        glossaire: !!document.querySelector("script[src='js/glossaire-seul.js']")
       }));
       if (!/^Filtrez les bourses par pays et par niveau/.test(bourses.phrase)) anomalies.push(`LANGAGE scholarships : la première phrase ne dit pas ce qu'on fait — « ${bourses.phrase.slice(0, 60)} »`);
       if (!/^\d+$/.test(bourses.nombre) || Number(bourses.nombre) < 1) anomalies.push(`LANGAGE scholarships : nombre de bourses « ${bourses.nombre} ».`);
       if (bourses.stat && bourses.stat.trim() !== bourses.nombre) anomalies.push(`LANGAGE scholarships : la phrase dit ${bourses.nombre} bourses, le bloc de chiffres ${bourses.stat}.`);
-      const pied = await lirePied();
-      if (!pied || !pied.visible) anomalies.push("LANGAGE scholarships : pas de pied de page visible.");
-      else {
-        if (!pied.colonnes.includes("Légal")) anomalies.push(`LANGAGE scholarships : colonnes « ${pied.colonnes.join(", ")} » sans Légal.`);
-        if (pied.legal.length !== 4) anomalies.push(`LANGAGE scholarships : ${pied.legal.length} liens légaux au lieu de 4.`);
-        if (pied.h1 !== 1) anomalies.push(`LANGAGE scholarships : ${pied.h1} <h1>.`);
-        if (pied.deborde) anomalies.push("LANGAGE scholarships : la page déborde horizontalement à 375 px.");
-        if (pied.hauteur > 406) anomalies.push(`PIED-DE-PAGE : ${pied.hauteur} px de haut à 375 px, plus d'un demi-écran (406).`);
-        if (pied.photo) anomalies.push("PIED-DE-PAGE : la bande photo s'affiche à 375 px.");
-      }
-      notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, pied de page de ${pied ? pied.hauteur : "?"} px [${pied ? pied.colonnes.join(" · ") : "absent"}], liens légaux : ${pied ? pied.legal.join(" · ") : "—"}`);
+      if (bourses.h1 !== 1) anomalies.push(`LANGAGE scholarships : ${bourses.h1} <h1>.`);
+      if (bourses.deborde) anomalies.push("LANGAGE scholarships : la page déborde horizontalement à 375 px.");
+      // Lot FINITIONS-VISUELLES (2026-09-11, décision de Charles) : le pied
+      // de page ne reste que sur l'accueil (vérifié en d) ; ici, aucun, et
+      // le glossaire reste.
+      if (bourses.pied) anomalies.push("PIED-DE-PAGE : scholarships.html porte encore un pied de page (accueil seul).");
+      if (!bourses.glossaire) anomalies.push("LANGAGE scholarships : js/glossaire-seul.js absent — le glossaire a disparu avec le pied de page.");
+      notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, sans pied de page, glossaire chargé`);
 
       // b) Le questionnaire : le bandeau avant la question.
       await page.goto(`${base}/eligibility-questions.html`, { waitUntil: "domcontentloaded" });
@@ -1121,6 +1122,21 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       for (const k of ["bourses", "etablissements", "pays", "residences"]) if (!/^\d+$/.test(c[k] || "")) anomalies.push(`LANGAGE chiffres : « ${k} » = « ${c[k]} ».`);
       if (Number(c.residences) !== COUCHES.length) anomalies.push(`LANGAGE chiffres : ${c.residences} pays de départ affichés, ${COUCHES.length} couches documentées.`);
       notes.push(`LANGAGE accueil : ${c.bourses} bourses · ${c.etablissements} établissements · ${c.pays} pays · ${c.residences} pays de départ documentés — lus, pas écrits`);
+
+      // e) Le pied de page, sur l'accueil — le seul qui le porte (lot
+      // FINITIONS-VISUELLES) : colonne Légal entière, moins d'un demi-écran
+      // à 375 px, sans photo.
+      await page.waitForSelector("footer.footer", { timeout: 20000 });
+      const pied = await lirePied();
+      if (!pied || !pied.visible) anomalies.push("PIED-DE-PAGE accueil : pas de pied de page visible.");
+      else {
+        if (!pied.colonnes.includes("Légal")) anomalies.push(`PIED-DE-PAGE accueil : colonnes « ${pied.colonnes.join(", ")} » sans Légal.`);
+        if (pied.legal.length !== 4) anomalies.push(`PIED-DE-PAGE accueil : ${pied.legal.length} liens légaux au lieu de 4.`);
+        if (pied.deborde) anomalies.push("PIED-DE-PAGE accueil : la page déborde horizontalement à 375 px.");
+        if (pied.hauteur > 406) anomalies.push(`PIED-DE-PAGE : ${pied.hauteur} px de haut à 375 px, plus d'un demi-écran (406).`);
+        if (pied.photo) anomalies.push("PIED-DE-PAGE : la bande photo s'affiche à 375 px.");
+      }
+      notes.push(`PIED-DE-PAGE accueil à 375 px : ${pied ? pied.hauteur : "?"} px [${pied ? pied.colonnes.join(" · ") : "absent"}], liens légaux : ${pied ? pied.legal.join(" · ") : "—"}`);
     } catch (e) {
       anomalies.push(`ÉCHEC LOT LANGAGE : ${e.message}`);
     }

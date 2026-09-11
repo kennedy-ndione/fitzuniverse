@@ -25,6 +25,11 @@ getBlocagesFrequents
 } from "./firebase-admin.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
+// Lot FINITIONS-VISUELLES (2026-09-11) : le graphique par formule nomme
+// chaque identifiant avec l'étiquette de l'admin et couvre AUSSI le Pass
+// et les offres France (les compteurs analyticsPlanCounters/{planId} sont
+// écrits pour tout `plan` d'un payment_attempted, France comprise).
+import { tousLesIdentifiants, etiquetteAdmin } from "../js/formules-admin.js";
 import { PLAN_LABELS } from "../js/plan-features.js";
 import { hidePageLoader } from "../js/app-shell.js";
 
@@ -680,7 +685,9 @@ liste.innerHTML = items.map((b, i) => `<div class="top-list-row"><span class="to
 async function renderPlanChart() {
 
 const breakdown = await getPlanBreakdown();
-const planIds = Object.keys(PLAN_LABELS);
+// Gratuit, puis les 7 offres en vente, puis les formules retirées — le
+// même ordre et les mêmes étiquettes que partout dans l'admin.
+const planIds = tousLesIdentifiants();
 
 const ctx = document.getElementById("planChart");
 const emptyState = document.getElementById("planChartEmpty");
@@ -694,14 +701,14 @@ if (!ctx || !window.Chart) return;
 planChart = new Chart(ctx, {
 type: "doughnut",
 data: {
-labels: planIds.map((id) => PLAN_LABELS[id]),
+labels: planIds.map((id) => etiquetteAdmin(id)),
 datasets: [{
 data: planIds.map((id) => breakdown[id] || 0),
 // Refonte claire 2026-09-02 : la palette bleu/violet de l'admin
 // sombre est remplacée par la progression chaude du site —
-// gris chauds (gratuit) → gamme ambre (formules) → encre puis
-// violet Fitz (accompagnement humain/premium).
-backgroundColor: ["#B7AFA3", "#8A837A", "#E9A319", "#C9860B", "#8A5D00", "#211D18", "#7E71D8"],
+// gris chaud (gratuit) → gamme ambre (offres en vente : Pass, 3
+// bourses, 3 France) → gris et encre (formules retirées).
+backgroundColor: ["#B7AFA3", "#F2B640", "#E9A319", "#C9860B", "#8A5D00", "#D9B26A", "#B08A3E", "#7A5F25", "#8A837A", "#6E6860", "#524D46", "#3A3630", "#211D18"],
 borderColor: "#FFFFFF",
 borderWidth: 2
 }]

@@ -12,13 +12,36 @@ getDoc
 
 import { getAllUsers } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
-import { PLAN_LABELS, passSeul, PASS_LABEL } from "../js/plan-features.js";
+import { passSeul, resolvePlanPreinscription, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
+// Lot FINITIONS-VISUELLES (2026-09-11) : un seul nommage pour l'admin.
+import { PASS_ID, etiquetteAdmin, etiquettesDuCompte, optionsFormules } from "../js/formules-admin.js";
 
 initSidebarToggle();
 
 let allUsers = [];
+
+// Le filtre « Toutes les formules » : les 7 offres en vente d'abord (Pass
+// Découverte, bourses, France), puis les retirées sous leur titre de
+// groupe — construit depuis PLAN_ORDER / PLAN_PREINSCRIPTION_ORDER et le
+// Pass, jamais écrit en dur.
+function construireFiltre() {
+const sel = document.getElementById("planFilter");
+if (!sel || sel.options.length) return;
+sel.innerHTML = optionsFormules({ vide: "Toutes les formules", avecGratuit: true });
+}
+
+construireFiltre();
+
+// Ce qu'un compte porte : formule bourse, offre France, ou Pass seul.
+function resoudre(user) {
+return {
+planId: resolvePlan(user),
+planPreinscriptionId: resolvePlanPreinscription(user),
+passSeul: passSeul(user)
+};
+}
 
 function formatDate(timestamp) {
 
@@ -28,17 +51,14 @@ return timestamp.toDate().toLocaleDateString("fr-FR");
 
 }
 
+// La colonne « Formule » : la formule bourse ET l'offre France quand le
+// compte a les deux ; « Pass Découverte » quand il n'a que lui (lot
+// ACCEPTATION, partie 4), jamais « Gratuit » dans ce cas.
 function planPill(user) {
 
-const key = resolvePlan(user);
-
-// Lot ACCEPTATION, partie 4 : un compte qui n'a QUE le Pass Découverte
-// affiche « Pass Découverte », jamais « Gratuit ».
-if (passSeul(user)) return `<span class="status-pill plan-fitzExpress">${PASS_LABEL}</span>`;
-
-const label = PLAN_LABELS[key];
-
-return `<span class="status-pill plan-${key}">${label}</span>`;
+return etiquettesDuCompte(resoudre(user))
+.map(({ id, etiquette }) => `<span class="status-pill plan-${id}">${etiquette}</span>`)
+.join(" ");
 
 }
 
@@ -64,7 +84,18 @@ function matchesPlan(user, planFilter) {
 
 if (!planFilter) return true;
 
-return resolvePlan(user) === planFilter;
+const r = resoudre(user);
+
+// « Pass Découverte seul » : le Pass actif et rien d'autre.
+if (planFilter === PASS_ID) return r.passSeul;
+
+// Une offre France se lit sur planPreinscription, jamais sur plan.
+if (PLAN_PREINSCRIPTION_ORDER.includes(planFilter)) return r.planPreinscriptionId === planFilter;
+
+// « Gratuit » = aucune formule bourse, aucune offre France, pas le Pass.
+if (planFilter === "gratuit") return r.planId === "gratuit" && !r.planPreinscriptionId && !r.passSeul;
+
+return r.planId === planFilter;
 
 }
 

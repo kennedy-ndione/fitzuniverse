@@ -113,8 +113,16 @@ page dans l'identité papier chaud. -->
 
 <section class="ai-panel reveal messages-page-card">
 
-<div class="ai-panel-header">
-<h2><i data-lucide="messages-square"></i>Conversation avec FitzUniverse</h2>
+<div class="ai-panel-header messages-page-header">
+<h2><i data-lucide="messages-square"></i><span class="messages-page-title">Conversation avec FitzUniverse</span></h2>
+<!-- « Signaler un problème » est un BOUTON (lot FINITIONS-VISUELLES,
+2026-09-11) : il ouvre la feuille #supportSheet, en bas de l'écran
+sur téléphone, en fenêtre sur ordinateur. Masqué tant que le droit
+n'est pas vérifié ; jamais montré au plan Gratuit (support_ticket,
+js/support-ticket.js). -->
+<button type="button" class="messages-support-btn" id="supportOpenBtn" aria-haspopup="dialog" aria-controls="supportSheet" hidden>
+<i data-lucide="life-buoy"></i><span>Signaler un problème</span>
+</button>
 </div>
 
 <div class="ai-panel-body messages-page-body">
@@ -136,18 +144,33 @@ ici n'est qu'un repli sans JavaScript. -->
 
 </section>
 
-<!-- SIGNALER UN PROBLÈME (grille A, 2026-09-07) — service après-vente,
-ouvert à toute formule payante (fonctionnalité "support_ticket",
-js/support-ticket.js). Voie SÉPARÉE de la messagerie : rien ici ne
-traite une question de dossier. Masquée tant que le droit n'est pas
-vérifié ; jamais montrée au plan Gratuit. -->
-<section class="ai-panel reveal messages-page-card messages-support-card" id="supportCard" hidden>
+</main>
 
-<div class="ai-panel-header">
-<h2><i data-lucide="life-buoy"></i>Signaler un problème</h2>
 </div>
 
-<div class="ai-panel-body messages-support-body">
+</div>
+
+<!-- SIGNALER UN PROBLÈME (grille A, 2026-09-07) — service après-vente,
+ouvert à toute formule payante, Pass Découverte compris (fonctionnalité
+"support_ticket", js/support-ticket.js), jamais au Gratuit. Voie
+SÉPARÉE de la messagerie : rien ici ne traite une question de dossier.
+
+Lot FINITIONS-VISUELLES (2026-09-11) : ce formulaire vivait dans une
+seconde carte .messages-page-card, sous la conversation. Sur téléphone
+la page est un cadre plein écran qui ne défile pas (css/mobile-nav.css)
+: les deux cartes se partageaient l'écran, la conversation était
+écrasée, le bouton d'envoi coupé. Le formulaire est maintenant une
+FEUILLE hors du flux, ouverte par le bouton de l'en-tête de la
+conversation : en bas de l'écran sur téléphone, en fenêtre sur
+ordinateur. Elle se ferme par la croix, par Échap et en touchant
+l'extérieur. -->
+<div class="fitz-feuille" id="supportSheet" role="dialog" aria-modal="true" aria-labelledby="supportSheetTitle" hidden>
+<div class="fitz-feuille-card" role="document">
+
+<div class="fitz-feuille-head">
+<h2 id="supportSheetTitle"><i data-lucide="life-buoy"></i>Signaler un problème</h2>
+<button type="button" class="fitz-feuille-close" id="supportCloseBtn" aria-label="Fermer"><i data-lucide="x"></i></button>
+</div>
 
 <p class="messages-support-lead">Service après-vente, compris dans toute formule payante : un problème technique, un paiement, une erreur du site. Ce n'est pas un accompagnement — aucune question sur votre dossier ni relecture n'est traitée ici. Réponse sous <strong data-delai-reponse>48 h ouvrées</strong>.</p>
 
@@ -171,13 +194,6 @@ vérifié ; jamais montrée au plan Gratuit. -->
 </form>
 
 </div>
-
-</section>
-
-</main>
-
-</div>
-
 </div>
 
 <script type="module" src="js/messages-page.js"></script>

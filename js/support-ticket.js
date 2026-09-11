@@ -11,6 +11,14 @@
 * est traitée, et le libellé le dit. Fonctionnalité "support_ticket"
 * (js/plan-features.js), jamais "student_messaging".
 *
+* Lot FINITIONS-VISUELLES (2026-09-11) : le formulaire n'est plus une
+* carte sous la conversation (sur téléphone, la page est un cadre plein
+* écran qui ne défile pas : les deux cartes se partageaient l'écran et
+* la conversation était écrasée). Il vit dans une FEUILLE
+* (#supportSheet, role="dialog") ouverte par le bouton #supportOpenBtn
+* de l'en-tête de la conversation. La feuille se ferme par la croix,
+* par Échap et en touchant l'extérieur ; le focus revient au bouton.
+*
 * Écrit dans la collection de premier niveau `supportTickets`, avec la
 * forme imposée par firestore.rules ; atterrit dans le centre de
 * messages de l'administration (admin/messages.html).
@@ -27,23 +35,64 @@ technique: "Problème technique",
 site: "Erreur sur le site"
 };
 
+// Après un envoi réussi, la feuille dit « envoyé » puis se ferme seule.
+const FERMETURE_APRES_ENVOI_MS = 1400;
+
 /**
 * @param {{user:{uid:string,email?:string}, userData?:Object, profile?:Object}} ctx - résultat de bootstrapShell()
 */
 export function initSupportForm(ctx) {
 
-const card = document.getElementById("supportCard");
+const sheet = document.getElementById("supportSheet");
 const form = document.getElementById("supportForm");
-if (!card || !form) return;
+const ouvrirBtn = document.getElementById("supportOpenBtn");
+if (!sheet || !form || !ouvrirBtn) return;
 
 document.querySelectorAll("[data-delai-reponse]").forEach((el) => { el.textContent = DELAI_REPONSE; });
 
-card.hidden = false;
+// Le droit est vérifié par l'appelant (js/messages-page.js) : ici, on
+// montre le bouton.
+ouvrirBtn.hidden = false;
 
+const fermerBtn = document.getElementById("supportCloseBtn");
 const sujet = document.getElementById("supportSujet");
 const texte = document.getElementById("supportTexte");
 const bouton = document.getElementById("supportSend");
 const fait = document.getElementById("supportDone");
+
+let minuterie = null;
+
+function ouvrir() {
+clearTimeout(minuterie);
+fait.hidden = true;
+sheet.hidden = false;
+ouvrirBtn.setAttribute("aria-expanded", "true");
+document.addEventListener("keydown", surTouche);
+// Le champ de texte reçoit le focus : sur téléphone le clavier s'ouvre
+// et la feuille suit le viewport visible (--vvh, css).
+setTimeout(() => texte.focus(), 30);
+}
+
+function fermer() {
+clearTimeout(minuterie);
+sheet.hidden = true;
+ouvrirBtn.setAttribute("aria-expanded", "false");
+document.removeEventListener("keydown", surTouche);
+ouvrirBtn.focus();
+}
+
+function surTouche(event) {
+if (event.key === "Escape") { event.preventDefault(); fermer(); }
+}
+
+ouvrirBtn.addEventListener("click", ouvrir);
+if (fermerBtn) fermerBtn.addEventListener("click", fermer);
+
+// Toucher l'extérieur de la carte ferme la feuille — le voile est la
+// feuille elle-même, la carte est son seul enfant.
+sheet.addEventListener("click", (event) => {
+if (event.target === sheet) fermer();
+});
 
 form.addEventListener("submit", async (event) => {
 
@@ -71,6 +120,7 @@ createdAt: serverTimestamp()
 
 texte.value = "";
 fait.hidden = false;
+minuterie = setTimeout(fermer, FERMETURE_APRES_ENVOI_MS);
 
 } catch (error) {
 

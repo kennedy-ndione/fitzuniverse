@@ -213,7 +213,11 @@ un champ n'existe qu'une fois. Le score, lui, reste compté sur les
 <section class="profile-section profile-section--depart" id="sec-depart">
 
 <div class="profile-section-heading">
-<div class="profile-section-icon"><i data-lucide="sparkles"></i></div>
+<!-- « flag » et non « sparkles » : les icônes sparkles / sparkle / star /
+wand sont interdites sur tout le site (décision de Charles,
+2026-09-02 ; test/icones.test.mjs les refuse). Un drapeau dit
+« point de départ ». -->
+<div class="profile-section-icon"><i data-lucide="flag"></i></div>
 <div>
 <h2>Pour commencer</h2>
 <p class="field-hint">Ce qu'il faut à Fitz pour choisir vos universités. Le reste du profil s'adapte à votre niveau.</p>
@@ -304,9 +308,12 @@ d'exigence ici : on enregistre, on n'invente pas de barème. -->
 
 <div class="conditional-fields" id="testLangueDetails" hidden>
 
-<div class="radio-row-group" id="testLangueEtatGroup" style="margin-top:12px;">
-<label class="radio-row"><input type="radio" name="testLangueEtat" value="passe"><span>Déjà passé</span></label>
-<label class="radio-row"><input type="radio" name="testLangueEtat" value="prevu"><span>Pas encore passé, date prévue</span></label>
+<!-- Lot FINITIONS-VISUELLES : le composant .fitz-choice (css/base.css)
+remplace le bouton radio du système — le rond natif reste dans le DOM
+pour le clavier et le lecteur d'écran, masqué à l'œil. -->
+<div class="fitz-choice-group" id="testLangueEtatGroup" role="radiogroup" aria-label="État du test de langue" style="margin-top:12px;">
+<label class="fitz-choice"><input type="radio" name="testLangueEtat" value="passe"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Déjà passé</span></label>
+<label class="fitz-choice"><input type="radio" name="testLangueEtat" value="prevu"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Pas encore passé, date prévue</span></label>
 </div>
 
 <div class="field-grid" id="testLanguePasse" hidden style="margin-top:14px;">
@@ -618,10 +625,10 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 
 <div class="input-group field-full" style="margin-top:18px;">
 <label>Type d'université</label>
-<div class="radio-row-group" id="universityTypeGroup">
-<label class="radio-row"><input type="radio" name="universityType" value="publique"><span>Publique</span></label>
-<label class="radio-row"><input type="radio" name="universityType" value="privee"><span>Privée</span></label>
-<label class="radio-row"><input type="radio" name="universityType" value="les_deux"><span>Les deux</span></label>
+<div class="fitz-choice-group" id="universityTypeGroup" role="radiogroup" aria-label="Type d'université">
+<label class="fitz-choice"><input type="radio" name="universityType" value="publique"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Publique</span></label>
+<label class="fitz-choice"><input type="radio" name="universityType" value="privee"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Privée</span></label>
+<label class="fitz-choice"><input type="radio" name="universityType" value="les_deux"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Les deux</span></label>
 </div>
 </div>
 
@@ -651,9 +658,9 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 
 <div class="input-group field-full">
 <label>Possédez-vous déjà un sponsor ?</label>
-<div class="radio-row-group" id="hasSponsorGroup">
-<label class="radio-row"><input type="radio" name="hasSponsor" value="oui"><span>Oui</span></label>
-<label class="radio-row"><input type="radio" name="hasSponsor" value="non"><span>Non</span></label>
+<div class="fitz-choice-group" id="hasSponsorGroup" role="radiogroup" aria-label="Garant financier">
+<label class="fitz-choice"><input type="radio" name="hasSponsor" value="oui"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Oui</span></label>
+<label class="fitz-choice"><input type="radio" name="hasSponsor" value="non"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Non</span></label>
 </div>
 </div>
 
@@ -800,9 +807,15 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 
 </section>
 
-<!-- Barre d'enregistrement -->
-<div class="profile-save-bar">
-<span class="profile-save-note">Vos données restent privées et servent uniquement à personnaliser votre accompagnement. Vous pouvez enregistrer à tout moment, section par section.</span>
+<!-- Enregistrement final — DANS LE FLUX, tout en bas (lot
+FINITIONS-VISUELLES, 2026-09-11). L'ancienne barre était collante
+(position:sticky, fond sombre flouté) : elle flottait sur les champs
+pendant toute la saisie et gênait la lecture (capture de Charles).
+Chaque section garde son bouton « Enregistrer » à SA fin ; ici, le
+dernier, avec la phrase sur la confidentialité au-dessus. Rien ne
+recouvre jamais un champ. -->
+<div class="profile-save-final">
+<p class="profile-save-note">Vos données restent privées et servent uniquement à personnaliser votre accompagnement. Vous pouvez enregistrer à tout moment, section par section.</p>
 <button type="submit" class="btn-profile-save" id="saveProfileBtn">
 <i data-lucide="save"></i>
 <span>Enregistrer mon profil</span>

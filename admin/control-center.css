@@ -1131,6 +1131,33 @@ color:var(--danger);
 .status-pill.plan-premium{ background:var(--gradient-primary); color:#fff; }
 .status-pill.plan-none{ background:var(--background-light); color:var(--text-muted); }
 
+/* Lot FINITIONS-VISUELLES (2026-09-11) : les offres EN VENTE en ambre,
+le Pass et les offres France distingués, les retirées en gris. */
+.status-pill.plan-premier-dossier,
+.status-pill.plan-essentiel-4,
+.status-pill.plan-conseiller-6{ background:rgba(233,163,25,.16); color:var(--amber-700); }
+.status-pill.plan-diagnostic-france,
+.status-pill.plan-dossier-france,
+.status-pill.plan-dossier-france-conseiller{ background:rgba(33,29,24,.08); color:var(--text-color); }
+.status-pill.plan-fitzExpress{ background:rgba(233,163,25,.10); color:var(--amber-700); border:1px dashed rgba(233,163,25,.5); }
+.status-pill.plan-signature-focus,
+.status-pill.plan-signature{ background:var(--background-light); color:var(--text-light); }
+
+/* Page « Formules » : rangée de titres de groupe et légende par groupe. */
+.plans-group-row th.plans-group-title{
+font-size:.72rem;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:var(--text-muted);
+text-align:left;
+border-bottom:none;
+padding-bottom:2px;
+}
+.plans-group-row th.plans-group-title.is-empty{ padding:0; }
+.plans-legend{ flex-direction:column; align-items:flex-start; gap:8px; }
+.plans-legend-group{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.plans-legend-title{ font-size:.78rem; font-weight:700; color:var(--text-muted); margin-right:4px; }
+
 /* ---- Fiche détail : en-tête + onglets ---- */
 
 .detail-header{

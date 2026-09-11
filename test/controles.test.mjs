@@ -102,6 +102,46 @@ assert.ok(modules.some((m) => /js\/(fitz-select|catalog-select)\.js$/.test(m)), 
 }
 });
 
+// Lot FINITIONS-VISUELLES (2026-09-11) : les boutons radio de profile.html
+// (cartes de niveau, test de langue, type d'université, garant) ne
+// montrent plus le rond du système. Chaque <input type="radio"> de la page
+// — écrit dans le HTML ou fabriqué par profile.js — vit dans un label
+// .fitz-choice (css/base.css) ou .palier-option (profile.css), et ces deux
+// composants sortent l'input du rendu (clip) sans le retirer du DOM.
+// Preuve par mutation : un <label class="radio-row"> remis → rouge.
+export const RADIOS_COUVERTS = ["profile.html"];
+
+test("contrôles 7 — sur profile.html, aucun bouton radio du système : .fitz-choice ou .palier-option, input masqué visuellement", () => {
+for (const page of RADIOS_COUVERTS) {
+const html = sansCommentaires(lire(page));
+for (const m of html.matchAll(/<label class="([^"]*)"><input\b[^>]*type="radio"/g)) {
+assert.ok(/\bfitz-choice\b/.test(m[1]), `${page} : radio hors .fitz-choice (${m[1]})`);
+}
+// Aucun radio orphelin (hors label .fitz-choice) dans le HTML.
+const radios = [...html.matchAll(/<input\b[^>]*type="radio"[^>]*>/g)].length;
+const couverts = [...html.matchAll(/<label class="fitz-choice"><input\b[^>]*type="radio"/g)].length;
+assert.equal(radios, couverts, `${page} : ${radios} radios, ${couverts} dans un .fitz-choice`);
+assert.ok(!/radio-row/.test(html), `${page} : la classe radio-row (rond système) est revenue`);
+}
+// Les cartes de niveau, rendues par profile.js.
+const js = lire("profile.js");
+assert.match(js, /option\.className = "palier-option"/);
+assert.match(js, /<input type="radio" name="palier"[^>]*><i data-lucide=/, "l'icône vient AVANT le texte");
+assert.match(js, /palier-option-check/, "la carte choisie porte une coche");
+// Les deux composants masquent l'input sans le retirer.
+const base = lire("css/base.css").replace(/\/\*[\s\S]*?\*\//g, "");
+const profil = lire("profile.css").replace(/\/\*[\s\S]*?\*\//g, "");
+assert.match(base, /\.fitz-choice input\{[^}]*clip:rect\(0,0,0,0\)/);
+assert.match(profil, /\.palier-option input\{[^}]*clip:rect\(0,0,0,0\)/);
+assert.ok(!/\.palier-option input\{[^}]*accent-color/.test(profil), "accent-color = rond système");
+assert.ok(!/\.radio-row/.test(profil), "profile.css garde des règles .radio-row");
+// Plus de barre collante d'enregistrement.
+assert.ok(!/profile-save-bar/.test(sansCommentaires(lire("profile.html"))), "la barre collante est revenue dans profile.html");
+assert.ok(!/\.profile-save-bar\{[^}]*position:sticky/.test(profil), "la barre collante est revenue dans profile.css");
+assert.match(sansCommentaires(lire("profile.html")), /<div class="profile-save-final">[\s\S]*?<p class="profile-save-note">[\s\S]*?<button type="submit" class="btn-profile-save" id="saveProfileBtn">/);
+assert.ok(!/\.profile-save-final\{[^}]*(position:sticky|position:fixed|backdrop-filter)/.test(profil));
+});
+
 test("contrôles 5 — un seul système : plus de appearance:base-select, et fitz-select charge sa feuille", () => {
 const feuilles = [
 ...readdirSync(path.join(RACINE, "css")).filter((f) => f.endsWith(".css")).map((f) => `css/${f}`),

@@ -71,6 +71,23 @@ const invalides = [...noms].filter(([n]) => !icones[pascal(n)]);
 assert.deepEqual(invalides.map(([n, f]) => `${n} (${[...f].slice(0, 3).join(", ")})`), [], "icônes inconnues du paquet");
 });
 
+// Lot FINITIONS-VISUELLES (2026-09-11) : les icônes sparkles / sparkle /
+// star / wand sont INTERDITES sur tout le site depuis le 2026-09-02
+// (décision de Charles). profile.html en portait une (« sparkles » sur
+// « Pour commencer »). Les variantes (star-half, wand-2, wand-sparkles…)
+// tombent sous le même refus. Preuve par mutation : data-lucide="star"
+// remis dans profile.html → rouge.
+export const ICONES_INTERDITES = /^(sparkles?|star|stars|wand)(-|$)/;
+
+test("icônes 3 — aucune icône interdite (sparkles, sparkle, star, wand) dans un fichier HTML ou JS servi", () => {
+const noms = nomsEmployes();
+const interdites = [...noms].filter(([n]) => ICONES_INTERDITES.test(n));
+assert.deepEqual(interdites.map(([n, f]) => `${n} (${[...f].slice(0, 3).join(", ")})`), [], "icônes interdites présentes");
+// Le détecteur voit bien un nom interdit.
+assert.ok(ICONES_INTERDITES.test("sparkles") && ICONES_INTERDITES.test("star") && ICONES_INTERDITES.test("wand-2") && ICONES_INTERDITES.test("star-half"));
+assert.ok(!ICONES_INTERDITES.test("flag") && !ICONES_INTERDITES.test("start"));
+});
+
 test("icônes 2 — toute page qui charge lucide charge js/icones.js juste après", () => {
 const pages = fichiersDuSite().filter((f) => f.endsWith(".html"));
 let n = 0;

@@ -16,11 +16,15 @@
 <link rel="stylesheet" href="css/base.css">
 <style>
 /* Lot LANGAGE (2026-09-10) : la page « bientôt disponible » que visent
-les liens de la colonne Légal du pied de page partagé
-(js/pied-de-page.js). Les pages mentions légales, CGV, confidentialité
+les liens de la colonne Légal du pied de page de l'accueil
+(le seul pied de page du site depuis le 2026-09-11). Les pages mentions légales, CGV, confidentialité
 et contact attendent le NINEA et le RCCM : ce lot ne pose que les
 liens. Une page, quatre libellés (?page=…). */
-.bientot{ min-height:60vh; display:flex; align-items:center; }
+/* Lot FINITIONS-VISUELLES (2026-09-11) : sans pied de page, la page
+prend tout l'écran et centre son contenu — elle ne se termine plus sur
+un vide de 430 px sous le bouton. */
+body{ min-height:100svh; display:flex; flex-direction:column; }
+.bientot{ flex:1 0 auto; min-height:60vh; display:flex; align-items:center; }
 .bientot .container{ max-width:640px; padding:56px 24px 72px; }
 .bientot h1{ font-family:var(--font-affirmation); font-size:var(--fs-h2, 2rem); margin:0 0 14px; }
 .bientot p{ color:var(--text-light); line-height:var(--lh-relaxed); margin:0 0 12px; }
@@ -70,6 +74,7 @@ document.getElementById("bientotTitre").textContent = libelle + " : bientôt dis
 document.title = libelle + " | FitzUniverse";
 })();
 </script>
-<script src="js/pied-de-page.js" defer></script>
+<!-- Plus de pied de page ici (décision de Charles, 2026-09-11) : il ne reste que sur l'accueil ; le glossaire reste. -->
+<script src="js/glossaire-seul.js" defer></script>
 </body>
 </html>

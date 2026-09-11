@@ -2499,3 +2499,93 @@ input[type="checkbox"],
 input[type="radio"]{
 accent-color:#E9A319;
 }
+
+/* ==========================================================
+CHOIX UNIQUE — .fitz-choice (lot FINITIONS-VISUELLES, 2026-09-11)
+==========================================================
+Le bouton radio du SITE, dans la lignée de fitz-select : le rond dessiné
+par le système ne se voit plus. Structure :
+
+  <label class="fitz-choice">
+    <input type="radio" name="…" value="…">
+    <span class="fitz-choice-dot" aria-hidden="true"></span>
+    <span>Libellé</span>
+  </label>
+
+L'input reste dans le DOM — clavier, lecteur d'écran, `:checked`,
+form.reset() — mais sort du rendu ; le point est dessiné en CSS et
+suit `input:checked ~ .fitz-choice-dot`, sans JavaScript ni :has().
+Le focus clavier se voit sur le point (input:focus-visible ~ .dot).
+Première page servie : profile.html (test de langue, type
+d'université, garant). */
+.fitz-choice-group{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+/* Le second sélecteur (0,2,0) l'emporte sur les « .input-group label »
+des formulaires (0,1,1), qui posent display:block sur tout label. */
+.fitz-choice,
+.fitz-choice-group .fitz-choice{
+position:relative;
+display:inline-flex;
+align-items:center;
+gap:9px;
+min-height:40px;
+padding:8px 14px 8px 12px;
+border:1.5px solid var(--border-color);
+border-radius:999px;
+background:var(--background-soft);
+color:var(--text-color);
+font-size:.88rem;
+font-weight:600;
+line-height:1.3;
+cursor:pointer;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.fitz-choice:hover{ border-color:var(--primary-color); }
+
+.fitz-choice input{
+position:absolute;
+width:1px;
+height:1px;
+padding:0;
+margin:-1px;
+overflow:hidden;
+clip:rect(0,0,0,0);
+white-space:nowrap;
+border:0;
+}
+
+.fitz-choice-dot{
+flex-shrink:0;
+width:16px;
+height:16px;
+border-radius:50%;
+border:1.5px solid var(--text-light);
+background:#FFFFFF;
+box-sizing:border-box;
+transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+/* Choisi : l'ambre de la marque, en LITTÉRAL (onze feuilles redéfinissent
+l'échelle ambre en terracotta), avec un point d'encre au centre. */
+.fitz-choice input:checked ~ .fitz-choice-dot{
+border-color:#E9A319;
+background:#E9A319;
+box-shadow:inset 0 0 0 3px #FFFFFF;
+}
+
+.fitz-choice:has(input:checked){
+border-color:#E9A319;
+background:rgba(233,163,25,.10);
+}
+
+.fitz-choice input:focus-visible ~ .fitz-choice-dot{
+outline:2px solid var(--primary-color);
+outline-offset:2px;
+}
+
+.fitz-choice input:disabled ~ *{ opacity:.55; }

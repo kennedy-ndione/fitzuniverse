@@ -26,15 +26,19 @@ const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
 const visible = (html) => html.replace(/<!--[\s\S]*?-->/g, "");
 
-export const PAGES_AVEC_PIED = [
-"index.html", "scholarships.html", "universities.html", "scholarship-details.html",
-"preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html"
+// Lot FINITIONS-VISUELLES (2026-09-11), décision de Charles : le pied de
+// page ne reste que sur l'accueil. Toutes les autres pages publiques le
+// perdent et gardent le glossaire (js/glossaire-seul.js).
+export const PAGES_AVEC_PIED = ["index.html"];
+export const PAGES_SANS_PIED = [
+"scholarships.html", "universities.html", "scholarship-details.html",
+"preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"
 ];
-export const PAGES_SANS_PIED = ["eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
 
 const chargePied = (html) => /pied-de-page\.(js|css)/.test(visible(html));
 
-test("pied-de-page 1 — les pages qui n'ont qu'une tâche ne chargent ni le script ni la feuille", () => {
+test("pied-de-page 1 — toute page publique hors accueil : ni le script ni la feuille, mais le glossaire", () => {
 for (const page of PAGES_SANS_PIED) {
 assert.ok(!chargePied(lire(page)), `${page} : charge le pied de page`);
 // Le glossaire y reste, sans le pied de page.
@@ -42,7 +46,7 @@ assert.ok(/js\/glossaire-seul\.js/.test(lire(page)), `${page} : sans glossaire`)
 }
 });
 
-test("pied-de-page 2 — les pages à plusieurs sorties le chargent toutes, et aucune autre page publique", () => {
+test("pied-de-page 2 — index.html seule le charge, et aucune autre page publique", () => {
 for (const page of PAGES_AVEC_PIED) {
 assert.ok(/<script src="js\/pied-de-page\.js" defer><\/script>/.test(lire(page)), `${page} : sans js/pied-de-page.js`);
 }

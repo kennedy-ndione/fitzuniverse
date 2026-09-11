@@ -45,6 +45,7 @@
  *   npm run verifier -- --montrer           fenêtre visible (débogage)
  *   npm run verifier -- espace              seulement l'espace étudiant (session stubbée)
  *   npm run verifier -- iphone              captures ciblées 375×812 (captures-iphone.mjs)
+ *   npm run verifier -- finitions           logo/contenu, profil, messages, pied de page (finitions.mjs)
  *
  * PRÉ-REQUIS, UNE SEULE FOIS :  npx playwright install chromium webkit
  * (toujours AVEC les noms : sans argument, Playwright télécharge aussi
@@ -61,6 +62,9 @@ import { verifierControlCenter } from "./control-center.mjs";
 // Lot PEIGNE-FIN (2026-09-10) : la mesure de performance sur réseau lent.
 import { mesurerPerformance } from "./mesure.mjs";
 import { peignerLeSite } from "./peigne.mjs";
+// Lot FINITIONS-VISUELLES (2026-09-11) : logo / premier contenu, profil,
+// messages sur téléphone, pied de page — ce que le peigne ne voyait pas.
+import { verifierFinitions } from "./finitions.mjs";
 import { PROFILS, profilParCle } from "./profils.mjs";
 
 import path from "node:path";
@@ -83,7 +87,7 @@ const MOTEURS = ["chromium", "webkit"];
 // Les mots-clés qui ne sont PAS des profils. Un mot absent d'ici est
 // pris pour une clé de profil et arrête l'exécution sur « Profil
 // inconnu » — c'est voulu, une faute de frappe ne doit pas passer.
-const MOTS_CLES = ["espace", "admin", "mesure", "peigne", "iphone"];
+const MOTS_CLES = ["espace", "admin", "mesure", "peigne", "iphone", "finitions"];
 
 function estBloquante(url) {
   const chemin = new URL(url).pathname.toLowerCase();
@@ -374,6 +378,11 @@ async function passerUnMoteur({ moteur, lanceur, montrer, base, choisis, cles, s
 
   // Le peigne fin (lot PEIGNE-FIN) : toutes les pages, 375 et 1280 px.
   if (toutSauf("peigne")) noter("peigne fin", await peignerLeSite({ navigateur, base }));
+
+  // Les finitions (lot FINITIONS-VISUELLES) : logo / premier contenu à
+  // sept tailles, profil sans barre flottante, messages sur téléphone,
+  // pied de page sur l'accueil seul.
+  if (toutSauf("finitions")) noter("finitions", await verifierFinitions({ navigateur, base }));
 
   // Les captures ciblées de l'iPhone (lot DEUX-MOTEURS) — sur demande
   // seulement : elles laissent passer les polices Google (réseau) et

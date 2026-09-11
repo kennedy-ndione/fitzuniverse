@@ -2008,11 +2008,171 @@ padding:0;
 
 }
 
-/* ---- Signaler un problème (grille A, 2026-09-07) ---- */
+/* ---- Signaler un problème (grille A, 2026-09-07) ----
+Lot FINITIONS-VISUELLES (2026-09-11) : plus de seconde carte sous la
+conversation — un BOUTON dans l'en-tête de la carte, et une FEUILLE
+(.fitz-feuille) hors du flux : fenêtre centrée sur ordinateur, feuille
+ancrée en bas sur téléphone, qui suit le viewport visible (--vvh /
+--vvtop posés par js/mobile-nav.js) pour rester lisible clavier ouvert.
+Aucun backdrop-filter, aucun flou : fond opaque (lot DEUX-MOTEURS). */
 
-.messages-support-card{ margin-top:18px; }
+.messages-page-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+flex-wrap:wrap;
+}
 
-.messages-support-body{ padding:16px 18px 18px; }
+.messages-page-header h2{ min-width:0; }
+
+/* Le titre de la carte : entier sur ordinateur ; sur téléphone il se
+coupe (…) pour laisser le bouton sur la même ligne (voir plus bas). */
+.messages-page-title{ min-width:0; }
+
+.messages-support-btn{
+display:inline-flex;
+align-items:center;
+gap:8px;
+min-height:36px;
+padding:6px 14px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--text-color);
+font-family:inherit;
+font-size:.82rem;
+font-weight:600;
+cursor:pointer;
+white-space:nowrap;
+transition:border-color .15s ease, background .15s ease;
+}
+
+.messages-support-btn:hover{ border-color:var(--amber-700); background:#FFFFFF; }
+.messages-support-btn:focus-visible{ outline:2px solid var(--primary-color); outline-offset:2px; }
+.messages-support-btn i,
+.messages-support-btn svg{ width:16px; height:16px; color:var(--amber-700); flex-shrink:0; }
+
+.fitz-feuille{
+position:fixed;
+top:0;
+left:0;
+right:0;
+height:var(--vvh, 100%);
+transform:translateY(var(--vvtop, 0px));
+z-index:2200;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+background:rgba(20,16,13,.58);
+}
+
+.fitz-feuille[hidden]{ display:none; }
+
+.fitz-feuille-card{
+width:100%;
+max-width:520px;
+max-height:100%;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+padding:22px 24px 24px;
+border-radius:var(--radius-lg);
+background:#FDF9EF;
+color:#14100D;
+border:1px solid rgba(20,16,13,.14);
+box-shadow:var(--shadow-lg);
+}
+
+.fitz-feuille-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:12px;
+}
+
+.fitz-feuille-head h2{
+display:flex;
+align-items:center;
+gap:10px;
+margin:0;
+font-size:1.05rem;
+}
+
+.fitz-feuille-head h2 i,
+.fitz-feuille-head h2 svg{ width:18px; height:18px; color:var(--amber-700); flex-shrink:0; }
+
+.fitz-feuille-close{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:36px;
+height:36px;
+border-radius:999px;
+border:1px solid transparent;
+background:transparent;
+color:var(--text-light);
+cursor:pointer;
+flex-shrink:0;
+}
+
+.fitz-feuille-close:hover{ background:rgba(20,16,13,.06); color:var(--text-color); }
+.fitz-feuille-close:focus-visible{ outline:2px solid var(--primary-color); outline-offset:2px; }
+.fitz-feuille-close i,
+.fitz-feuille-close svg{ width:18px; height:18px; }
+
+@media(max-width:720px){
+
+.fitz-feuille{
+align-items:flex-end;
+padding:0;
+}
+
+.fitz-feuille-card{
+max-width:none;
+max-height:min(92%, 640px);
+border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+padding:18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Le bandeau d'information se replie en une ligne sur téléphone ; on
+le déplie en le touchant (js/messages-page.js). */
+.messages-page-notice{ cursor:pointer; }
+
+.messages-page-notice > span{
+display:block;
+min-width:0;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.messages-page-notice.is-open > span{ white-space:normal; }
+
+.messages-support-btn span{ display:none; }
+.messages-support-btn{ padding:6px 10px; }
+
+/* L'en-tête de la carte tient sur UNE ligne : titre et bouton côte à
+côte, le titre se coupe (…) plutôt que de passer le bouton à la ligne —
+mesuré à 375 × 667 : un en-tête sur deux rangées (103 px) laissait au
+fil moins de la moitié de l'écran. */
+.messages-page-header{ flex-wrap:nowrap; padding-top:12px; padding-bottom:12px; }
+.messages-page-header h2{ flex:1 1 auto; min-width:0; }
+
+/* Le cadre plein écran du téléphone : le rembourrage de .ai-panel-body
+(22 px haut et bas, css/ai-suite.css, chargée après cette feuille)
+mangeait 44 px de fil. Mesuré à 375 × 667 : fil 303 px → 359 px. */
+body:has(.messages-page-card) .messages-page-body{ padding:0; }
+.messages-page-header .messages-page-title{
+display:block;
+min-width:0;
+overflow:hidden;
+white-space:nowrap;
+text-overflow:ellipsis;
+}
+
+}
 
 .messages-support-lead{
 margin:0 0 14px;

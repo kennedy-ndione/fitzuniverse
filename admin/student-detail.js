@@ -36,6 +36,10 @@ import { calculateAiScore, bilanProfil } from "../js/profile-score.js";
 import { phraseTestLangue, libellePalier, lirePalier, languesLisibles } from "../js/profil-par-niveau.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+// Lot FINITIONS-VISUELLES (2026-09-11) : les étiquettes de l'admin, un
+// seul nommage (« Essentiel · 4 candidatures » ≠ « Essentiel (ancienne)
+// · 5 candidatures »), et les groupes « En vente » / « Retirées ».
+import { optionsFormules } from "../js/formules-admin.js";
 // Lot ADMIN : le rôle décide de ce qui est RENDU, le bandeau dit ce qui
 // s est passé, et firebase-admin porte les écritures tracées.
 import { chargerAdmin, appliquerRole } from "./admin-role.js";
@@ -344,35 +348,20 @@ function construireSelecteurs() {
 
 const selPlan = document.getElementById("planSelect");
 
+// Lot FINITIONS-VISUELLES (2026-09-11) : les options et leurs groupes
+// viennent de js/formules-admin.js — la liste habillée (js/fitz-select.js)
+// affiche désormais les titres de groupe, et chaque étiquette dit ce qui
+// distingue la formule : plus deux « Conseiller » indiscernables.
 if (selPlan && !selPlan.options.length) {
-
-const enVente = PLAN_ORDER.filter((p) => p !== "gratuit" && estEnVente(p));
-const retirees = PLAN_ORDER.filter((p) => p !== "gratuit" && !estEnVente(p));
-
-const option = (id) => `<option value="${id}">${PLAN_LABELS[id] || id}</option>`;
-
-selPlan.innerHTML = `<option value="">Sans formule</option>`
-+ `<optgroup label="En vente">${enVente.map(option).join("")}</optgroup>`
-+ `<optgroup label="Retirées de la vente">${retirees.map(option).join("")}</optgroup>`;
-
+selPlan.innerHTML = optionsFormules({ vide: "Sans formule", pass: false, preinscription: false });
 }
 
 const selPre = document.getElementById("planPreinscriptionSelect");
 
 if (selPre && !selPre.options.length) {
-selPre.innerHTML = `<option value="">Sans offre</option>`
-+ PLAN_PREINSCRIPTION_ORDER.map((id) => `<option value="${id}">${PLAN_PREINSCRIPTION_LABELS[id] || id}</option>`).join("");
+selPre.innerHTML = optionsFormules({ vide: "Sans offre", pass: false, bourse: false });
 }
 
-}
-
-// Une offre encore vendue ? `deprecated` vit dans pricing-plans.js, un
-// script classique chargé par la page. Absent (test, page sans lui), on
-// ne filtre rien : mieux vaut tout proposer que de masquer une formule
-// qu'un compte détient.
-function estEnVente(planId) {
-const plans = typeof window !== "undefined" && window.SCHOLARBRIDGE_PLANS;
-return !plans || !plans[planId] || plans[planId].deprecated !== true;
 }
 
 function renderAttributionManuelle(userData) {

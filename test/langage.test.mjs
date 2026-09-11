@@ -116,11 +116,18 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 // page qui a une seule tâche (questionnaire, diagnostic, résultats,
 // connexion) n'offre pas six façons de partir. Une page qui change de
 // camp doit être déplacée ici, en le décidant.
-export const PAGES_AVEC_PIED = ["index.html", "scholarships.html", "universities.html", "scholarship-details.html",
-"preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html"];
-export const PAGES_SANS_PIED = ["eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
+// Lot FINITIONS-VISUELLES (2026-09-11), décision de Charles : le pied de
+// page ne reste que sur l'accueil ; chaque autre page garde le glossaire.
+export const PAGES_AVEC_PIED = ["index.html"];
+export const PAGES_SANS_PIED = ["scholarships.html", "universities.html", "scholarship-details.html",
+"preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
 
-test("langage 4 — le pied de page partagé sur les pages à plusieurs sorties, et sur elles seules ; aucune ne le recopie", () => {
+test("langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire", () => {
+for (const page of PAGES_SANS_PIED) {
+// visible() retire les <script> : on lit le fichier sans ses commentaires.
+assert.ok(/<script src="js\/glossaire-seul\.js" defer><\/script>/.test(lire(page).replace(/<!--[\s\S]*?-->/g, "")), `${page} : sans glossaire`);
+}
 assert.deepEqual([...PAGES_AVEC_PIED, ...PAGES_SANS_PIED].sort(), [...PAGES_PUBLIQUES].sort(), "chaque page publique est dans une liste et une seule");
 for (const page of PAGES_AVEC_PIED) {
 assert.ok(/<script src="js\/pied-de-page\.js" defer><\/script>/.test(lire(page)), `${page} : sans js/pied-de-page.js`);

@@ -99,6 +99,20 @@ box-shadow:var(--shadow-md);
 }
 
 .fitz-select-list[hidden]{display:none;}
+/* Titre de groupe (<optgroup>) — lot FINITIONS-VISUELLES, 2026-09-11 :
+« En vente » / « Retirées de la vente — anciens comptes » dans les
+listes de formules de l'admin. Jamais focusable, jamais surligné. */
+.fitz-select-group{
+padding:10px 12px 4px;
+font-size:.72rem;
+font-weight:700;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:rgba(20,16,13,.55);
+cursor:default;
+}
+.fitz-select-group + .fitz-select-group{padding-top:4px;}
+.fitz-select-option + .fitz-select-group{margin-top:4px;border-top:1px solid rgba(20,16,13,.10);padding-top:12px;}
 
 .fitz-select-option{
 display:flex;

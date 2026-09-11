@@ -23,8 +23,23 @@ resolveFeatureFlags
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
+// Lot FINITIONS-VISUELLES (2026-09-11) : un seul nommage pour l'admin.
+import { formulesAdmin, etiquetteAdmin, TITRE_EN_VENTE, TITRE_RETIREES } from "../js/formules-admin.js";
 
 initSidebarToggle();
+
+// Les colonnes, dans l'ordre de l'admin : Gratuit, puis les offres en
+// vente (bourses puis France — le Pass Découverte n'est pas une formule
+// et n'a pas de colonne), puis les formules retirées sous leur titre.
+const GROUPES = (() => {
+const { enVente, retirees } = formulesAdmin({ pass: false, avecGratuit: false });
+return [
+{ titre: "", ids: ["gratuit"] },
+{ titre: TITRE_EN_VENTE, ids: enVente },
+{ titre: TITRE_RETIREES, ids: retirees }
+];
+})();
+const COLONNES = GROUPES.flatMap((g) => g.ids);
 
 // État local en mémoire : copie éditable des indicateurs, initialisée
 // à partir de resolveFeatureFlags() (valeurs par défaut fusionnées
@@ -43,15 +58,31 @@ if (!head) return;
 
 head.querySelectorAll("th:not(:first-child)").forEach((th) => th.remove());
 
-// Grille B : les offres préinscription ont leurs colonnes, après les bourses.
-[...PLAN_ORDER, ...PLAN_PREINSCRIPTION_ORDER].forEach((planId) => {
+// Lot FINITIONS-VISUELLES : une rangée de TITRES DE GROUPE au-dessus des
+// colonnes — « En vente », puis « Retirées de la vente — anciens
+// comptes » — et chaque colonne porte l'étiquette de l'admin.
+const thead = head.parentElement;
+thead.querySelectorAll(".plans-group-row").forEach((tr) => tr.remove());
+const groupes = document.createElement("tr");
+groupes.className = "plans-group-row";
+groupes.innerHTML = `<td></td>` + GROUPES.map((g) => `<th scope="colgroup" colspan="${g.ids.length}" class="plans-group-title${g.titre ? "" : " is-empty"}">${g.titre}</th>`).join("");
+thead.insertBefore(groupes, head);
+
+COLONNES.forEach((planId) => {
 
 const th = document.createElement("th");
 th.setAttribute("scope", "col");
-th.textContent = PLAN_LABELS[planId] || PLAN_PREINSCRIPTION_LABELS[planId];
+th.textContent = etiquetteAdmin(planId);
 head.appendChild(th);
 
 });
+
+// La légende reprend les mêmes étiquettes (plus de pastilles écrites en
+// dur dans plans.html — « Avancé » y a survécu un mois).
+const legende = document.querySelector(".plans-legend");
+if (legende) {
+legende.innerHTML = GROUPES.filter((g) => g.ids.length && g.titre).map((g) => `<div class="plans-legend-group"><span class="plans-legend-title">${g.titre}</span>${g.ids.map((id) => `<span class="plans-legend-item"><span class="status-pill plan-${id}">${etiquetteAdmin(id)}</span></span>`).join("")}</div>`).join("");
+}
 
 }
 
@@ -71,7 +102,7 @@ row.innerHTML = `
 <div>${label}</div>
 <div class="plans-feature-description">${description}</div>
 </td>
-${[...PLAN_ORDER, ...PLAN_PREINSCRIPTION_ORDER].map((planId) => `
+${COLONNES.map((planId) => `
 <td>
 <label class="plan-toggle">
 <input type="checkbox" data-key="${key}" data-plan="${planId}" ${featureFlags[key][planId] ? "checked" : ""}>

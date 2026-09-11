@@ -130,7 +130,25 @@ function renderOptions() {
 
 list.innerHTML = "";
 
-Array.from(select.options).forEach((opt, idx) => {
+// Lot FINITIONS-VISUELLES (2026-09-11) : les TITRES DE GROUPE. Un
+// <optgroup label="…"> devient une ligne de titre (role="presentation",
+// jamais focusable) au-dessus de ses options — l'admin distingue ainsi
+// « En vente » de « Retirées de la vente ». Les options gardent leur
+// index GLOBAL dans select.options.
+Array.from(select.querySelectorAll("optgroup, option")).forEach((el) => {
+
+if (el.tagName === "OPTGROUP") {
+if (el.hidden || !el.querySelector("option:not([hidden])")) return;
+const titre = document.createElement("li");
+titre.setAttribute("role", "presentation");
+titre.className = "fitz-select-group";
+titre.textContent = el.label || "";
+list.appendChild(titre);
+return;
+}
+
+const opt = el;
+const idx = opt.index;
 
 // Lot ACCEPTATION (2026-09-11) : une option masquée (`hidden`) est
 // retirée de la liste, comme le ferait le select natif — le formulaire
@@ -195,7 +213,7 @@ wrap.classList.add("is-open");
 trigger.setAttribute("aria-expanded", "true");
 
 list.querySelectorAll(".is-focused").forEach((el) => el.classList.remove("is-focused"));
-const current = list.querySelector(".is-selected") || list.firstElementChild;
+const current = list.querySelector(".is-selected") || list.querySelector('[role="option"]');
 if (current) {
 current.classList.add("is-focused");
 current.scrollIntoView({ block: "nearest" });
@@ -244,7 +262,8 @@ target.scrollIntoView({ block: "nearest" });
 
 function onKeyDown(event) {
 
-const options = Array.from(list.children);
+// Les titres de groupe (role="presentation") ne se parcourent pas.
+const options = Array.from(list.querySelectorAll('[role="option"]'));
 const focused = list.querySelector(".is-focused");
 const idx = options.indexOf(focused);
 

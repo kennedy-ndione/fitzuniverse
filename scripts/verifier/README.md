@@ -135,3 +135,18 @@ identifiant de question**. Les identifiants sont ceux de
 `js/eligibility-pistes.js`, donc aussi ceux écrits dans `sessionStorage` à la
 fin du questionnaire. Pour les questions à cartes, la valeur doit être le
 libellé exact de la carte — le test le vérifie.
+
+## finitions (lot FINITIONS-VISUELLES, 2026-09-11)
+
+`npm run verifier -- finitions` — sous les deux moteurs, ce que le peigne ne
+voyait pas : l'écart logo / premier contenu (≥ 24 px) sur toute page publique
+à en-tête fixe, à sept tailles (dont le zoom 125 %) ; le profil sans barre
+flottante, sans icône interdite, sans rond système, sans chevauchement
+icône/texte sur les cartes de niveau ; la messagerie sur téléphone (saisie et
+envoi dans l'écran, clavier fermé et simulé ouvert ; message et signalement
+envoyés en session doublée ; feuille « Signaler un problème ») ; le pied de
+page sur l'accueil seul, sans page collée au bas ni finissant sur un vide.
+
+`node scripts/verifier/captures-finitions.mjs avant|apres` — les captures des
+écrans de Charles (accueil 1366 × 768, profil 1440, messages 390 × 844, fiche
+admin liste ouverte, bas de page), dans sortie/<date>/finitions/.
