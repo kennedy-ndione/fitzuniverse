@@ -360,11 +360,38 @@ color:var(--text-color);
 box-shadow:0 1px 2px rgba(0,0,0,.06);
 }
 
+.espace-bascule-btn{
+display:inline-flex;
+align-items:center;
+gap:6px;
+}
+
+.espace-bascule-btn i,
+.espace-bascule-btn svg{ width:14px; height:14px; flex-shrink:0; }
+
+/* Le libellé : règle de base HORS @media (test icone-btn 3 : aucune
+   classe ne vit uniquement dans un @media) ; masqué sous 400 px. */
+.espace-bascule-libelle{ display:inline; }
+
 /* Sous 720px la barre haute est déjà dense : on garde la bascule,
    mais compacte — c'est la seule façon de changer d'espace. */
 @media (max-width: 720px){
 .espace-bascule{ margin-right:2px; }
 .espace-bascule-btn{ padding:5px 9px; }
+}
+
+/* Lot FITZ-CHOISIT, partie 0 (2026-09-11) : sous 400 px, la bascule
+   (183 px avec ses libellés) + la cloche + la pastille « Dossier
+   France » débordaient de 2 à 32 px sur quatre pages de l'espace (vu
+   par le harnais sous les deux moteurs). Icône seule : le libellé
+   reste dans aria-label et title (js/app-shell.js), l'état actif
+   reste le fond plein. Règle mobile : zéro débordement, jamais une
+   barre sur deux lignes. */
+@media (max-width: 400px){
+.espace-bascule-btn{ padding:6px 8px; }
+.espace-bascule-btn i,
+.espace-bascule-btn svg{ width:16px; height:16px; }
+.espace-bascule-libelle{ display:none; }
 }
 
 /* ==================================================================

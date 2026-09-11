@@ -80,6 +80,19 @@ function idDe(doc) {
 return (doc && (doc.id || doc.firestoreId)) || "";
 }
 
+// Le pays de l'université figure-t-il dans les pays EXCLUS par
+// l'étudiant ? Comparaison insensible à la casse et aux accents (les
+// libellés de profile.html sont ceux du catalogue, mais on ne parie pas
+// dessus). Rien d'exclu, ou pays inconnu → false.
+const normPays = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+
+export function paysExclu(university, profile) {
+const exclus = profile && Array.isArray(profile.excludedCountries) ? profile.excludedCountries : [];
+if (!exclus.length || !university || !university.country) return false;
+const pays = normPays(university.country);
+return exclus.some((e) => normPays(e) === pays);
+}
+
 function normalizeLevel(value) {
 const text = String(value || "").toLowerCase();
 for (const key in LEVEL_ALIASES) {
@@ -307,6 +320,15 @@ return -1;
 // explainMatch() : c'est un FILTRE, pas un bonus. Uniquement sur
 // false — jamais sur null (limite ou âge inconnus, tranche à cheval).
 if (ageMatch(scholarship, profile) === false) {
+return -1;
+}
+
+// Lot FITZ-CHOISIT (2026-09-11) : un pays que l'étudiant a EXCLU
+// (profile.html, « Pays exclus » → excludedCountries) est un filtre
+// DUR, même mécanique : le champ était collecté et jamais lu. Vaut pour
+// le remplissage des créneaux, le remplacement et le sélecteur du
+// diagnostic — jamais un pays exclu, faute de mieux ou non.
+if (paysExclu(university, profile)) {
 return -1;
 }
 
@@ -601,11 +623,16 @@ aujourdhui = new Date(),
 max = 12,
 min = 5,
 marge = 3,
-maxParPays = 3
+maxParPays = 3,
+// Lot FITZ-CHOISIT (2026-09-11) : les universités qu'un choix de Fitz
+// doit éviter — déjà occupées par un autre créneau, ou REFUSÉES par
+// l'étudiant (users/{uid}.universitesRefusees). Un Set d'identifiants.
+exclureUniversites = null
 }) {
 
 const p = profile || {};
 const cible = studentTargetLevel(p);
+const aEviter = exclureUniversites instanceof Set ? exclureUniversites : new Set(exclureUniversites || []);
 
 const candidats = [];
 
@@ -614,6 +641,9 @@ for (const program of programs) {
 const university = universitiesById.get(program.universityId);
 
 if (!university) continue;
+
+// 0 — jamais une université refusée ou déjà occupée.
+if (aEviter.has(program.universityId)) continue;
 
 const scholarship = program.scholarshipId ? scholarshipsById.get(program.scholarshipId) : null;
 

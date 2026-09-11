@@ -111,7 +111,26 @@ await admin.doc(`users/${UID_GRATUIT}`).set({ uid: UID_GRATUIT, name: "Gratuit" 
 await admin.doc(`users/${UID_PASS}`).set({ uid: UID_PASS, name: "Pass Découverte", fitzExpressExpiresAt: dans(14) });
 await admin.doc(`users/${UID_SIGNATURE}`).set({ uid: UID_SIGNATURE, name: "Signature (ancienne)", plan: "signature", planExpiresAt: dans(365) });
 
-const candidature = (track) => ({ university: "Université de test", status: "a_preparer", track, checklist: [], reminderFrequency: 14 });
+// LOT FITZ-CHOISIT (2026-09-11) : une candidature BOURSE naît du
+// catalogue — firestore.rules exige un programId qui existe dans
+// /programs, avec scholarshipId, universityId et le nom de l'université
+// cohérents. On sème donc un programme et son université avec le SDK
+// Admin ; les cas « texte libre » restent plus bas, refusés.
+const PROG = "rejeu-programme";
+const UNI = "rejeu-universite";
+const BOURSE = "rejeu-bourse";
+await admin.doc(`universities/${UNI}`).set({ name: "Université de test", country: "France" });
+await admin.doc(`scholarships/${BOURSE}`).set({ title: "Bourse de test", isActive: true });
+await admin.doc(`programs/${PROG}`).set({ universityId: UNI, scholarshipId: BOURSE, level: "Master" });
+const AUTRE_PROG = "rejeu-programme-2";
+const AUTRE_UNI = "rejeu-universite-2";
+await admin.doc(`universities/${AUTRE_UNI}`).set({ name: "Université de test 2", country: "Canada" });
+await admin.doc(`programs/${AUTRE_PROG}`).set({ universityId: AUTRE_UNI, scholarshipId: BOURSE, level: "Master" });
+
+const IDENTITE = { university: "Université de test", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: PROG, universityId: UNI };
+const candidature = (track) => (track === "preinscription"
+  ? { university: "Université de test", status: "a_preparer", track, checklist: [], reminderFrequency: 14 }
+  : { ...IDENTITE, status: "a_preparer", track, checklist: [], reminderFrequency: 14 });
 
 console.log("\n=== Quotas par parcours (firestore.rules) ===");
 
@@ -125,7 +144,7 @@ console.log("Ambition seul :");
 attendre("une bourse slot-1 est acceptée", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-1`, candidature("bourse")), 200);
 attendre("une préinscription pre-1 est refusée sur un compte bourse seul", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/pre-1`, candidature("preinscription")), 403);
 attendre("une préinscription déguisée en slot-2 est refusée", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-2`, candidature("preinscription")), 403);
-attendre("une candidature SANS track sur slot-2 passe (parcours bourse par défaut)", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-2`, { university: "Sans track", status: "a_preparer" }), 200);
+attendre("une candidature SANS track sur slot-2 passe (parcours bourse par défaut)", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-2`, { ...IDENTITE, status: "a_preparer" }), 200);
 
 console.log("Les deux forfaits :");
 attendre("bourse slot-1 acceptée", await creerCommeEtudiant(UID_LES_DEUX, `users/${UID_LES_DEUX}/applications/slot-1`, candidature("bourse")), 200);
@@ -208,13 +227,36 @@ attendre("mais passer cette ancienne candidature en en_attente sans preuve : ref
 attendre("une preuve mal formée écrite seule (sans changer le statut) : refusée", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-1`, { preuveDepot: { mode: "numero", deposeLe: "2026-09-07" } }), 403);
 attendre("redescendre en en_cours (statut non déposé) : accepté sans preuve", await patchCommeEtudiant(UID_E1, `users/${UID_E1}/applications/slot-6`, { status: "en_cours" }), 200);
 
+console.log("\n=== FITZ-CHOISIT — c'est Fitz qui choisit (firestore.rules) ===");
+const UID_FC = `rejeu-fitz-choisit-${T}`;
+await admin.doc(`users/${UID_FC}`).set({ uid: UID_FC, name: "Fitz choisit", plan: "essentiel-4", planExpiresAt: dans(200), planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dans(200) });
+// Une candidature ANCIENNE, sans programId (écrite par l'admin SDK, comme avant le lot).
+await admin.doc(`users/${UID_FC}/applications/slot-4`).set({ university: "Université de Nulle Part", status: "a_preparer", notes: "" });
+attendre("création d'un créneau bourse avec une université en texte libre, sans programId : refusée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "Université de Nulle Part", scholarship: "Bourse maison", status: "a_preparer", track: "bourse" }), 403);
+attendre("création avec un programId inconnu du catalogue : refusée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE, programId: "inexistant", status: "a_preparer", track: "bourse" }), 403);
+attendre("création avec un programId valide mais un scholarshipId incohérent : refusée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE, scholarshipId: "autre-bourse", status: "a_preparer", track: "bourse" }), 403);
+attendre("création avec un programId valide mais un nom d'université libre : refusée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE, university: "Mon université à moi", status: "a_preparer", track: "bourse" }), 403);
+attendre("création avec un programId valide et cohérent : acceptée", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { ...IDENTITE, status: "a_preparer", track: "bourse", isRecommendation: true }), 200);
+attendre("modification du nom de l'université : refusée", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "Autre nom" }), 403);
+attendre("modification du portail seul (identité incohérente ailleurs ? non — cohérente) : acceptée", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { portalUrl: "https://portail.test" }), 200);
+attendre("remplacement avec un programId valide (carte neuve) : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "Université de test 2", scholarship: "Bourse de test", scholarshipId: BOURSE, programId: AUTRE_PROG, universityId: AUTRE_UNI, status: "a_preparer", deadline: null, checklist: [], isRecommendation: true }), 200);
+attendre("remplacement vers un programme inconnu : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { university: "X", programId: "inexistant", scholarshipId: BOURSE, universityId: AUTRE_UNI }), 403);
+attendre("changement de statut, notes et date sur la carte choisie par Fitz : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-1`, { status: "en_cours", notes: "j'avance", deadline: "2027-01-15" }), 200);
+attendre("changement de statut sur une ancienne carte sans programId : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { status: "en_cours", notes: "ancienne" }), 200);
+attendre("mais renommer l'université d'une ancienne carte sans programId : refusé", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { university: "Encore une autre" }), 403);
+attendre("rattrapage de liaison (programId + scholarshipId cohérents, sans nom) sur une ancienne carte : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/slot-4`, { programId: PROG, scholarshipId: BOURSE, catalogueLieLe: new Date().toISOString() }), 200);
+attendre("vœu pre-N saisi à la main : accepté", await creerCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-1`, { university: "Université de Bordeaux", status: "a_preparer", track: "preinscription", checklist: [], reminderFrequency: 14 }), 200);
+attendre("renommer l'université d'un vœu pre-N : accepté (hors lot)", await patchCommeEtudiant(UID_FC, `users/${UID_FC}/applications/pre-1`, { university: "Université de Lille" }), 200);
+attendre("l'étudiant mémorise un refus (users.universitesRefusees) : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI] }), 200);
+
 console.log("Les deux champs sont hors de portée de l'étudiant :");
 attendre("planPreinscription refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscription: "dossier-france" }), 403);
 attendre("planPreinscriptionExpiresAt refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscriptionExpiresAt: dans(400) }), 403);
 attendre("plan refusé à l'étudiant (inchangé)", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { plan: "signature" }), 403);
 
 // Nettoyage.
-for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1]) {
+for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `scholarships/${BOURSE}`]) await admin.doc(d).delete();
+for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1, UID_FC]) {
   for (const sc of ["applications", "advisorRequests", "messages"]) {
     const snap = await admin.collection(`users/${uid}/${sc}`).get();
     for (const d of snap.docs) await d.ref.delete();

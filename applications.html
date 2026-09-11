@@ -161,8 +161,16 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </div>
 
+<!-- Lot FITZ-CHOISIT (2026-09-11) : dans l'espace bourses, c'est Fitz
+qui choisit. La règle est dite en tête (#fitzRegle, le même littéral
+qu'offers.html et payment.html), et la ligne d'état (#fitzChoixEtat)
+remplace le bouton « Nouvelle candidature » — qui ne reste que pour la
+préinscription (vœux saisis à la main). applications.js décide. -->
+<p class="fitz-regle" id="fitzRegle" hidden></p>
+
 <div class="apps-toolbar">
-<button type="button" class="btn btn-primary" id="addApplicationBtn">
+<div class="fitz-choix-etat" id="fitzChoixEtat" role="status" hidden></div>
+<button type="button" class="btn btn-primary" id="addApplicationBtn" hidden>
 <i data-lucide="plus"></i>
 <span>Nouvelle candidature</span>
 </button>
@@ -170,8 +178,8 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div id="applicationsEmpty" class="apps-empty" hidden>
 <div class="apps-empty-icon"><i data-lucide="list-checks"></i></div>
-<h3>Prêt à suivre votre première candidature ?</h3>
-<p>Ajoutez-la dès maintenant pour que Fitz commence à vous relancer aux bons moments.</p>
+<h3>Aucune candidature suivie pour l'instant</h3>
+<p>Dans le parcours bourses, Fitz choisit vos universités dès qu'il connaît votre profil ; en préinscription, ajoutez vos vœux ici.</p>
 </div>
 
 <div id="applicationsList" class="apps-list"></div>
@@ -198,36 +206,14 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <form id="applicationForm">
 
-<!-- ÉTAPE 1 — LE CHOIX VIENT DU CATALOGUE, PAS DU CLAVIER
-(refonte 2026-09-02). L'étudiant ne tape plus un nom d'université ni
-un lien de portail : Fitz propose les universités du catalogue les
-plus compatibles avec son profil (js/recommend-programs.js, mêmes
-règles que les créneaux suggérés), la recherche couvre tout le
-catalogue, et la sélection remplit bourse/portail/échéance d'un coup.
-La saisie manuelle reste possible en repli (candidature hors
-catalogue) — mais ce n'est plus le chemin par défaut. -->
-<div id="pickerSection">
-
-<p class="apps-picker-lead"><i data-lucide="zap"></i><span>Choisissez une université du catalogue : Fitz remplit la bourse, le portail officiel et l'échéance pour vous.</span></p>
-
-<label class="apps-field apps-picker-searchfield">
-<span class="sr-only">Rechercher dans le catalogue</span>
-<input type="search" id="pickerSearch" placeholder="Rechercher une université, un pays, une bourse…" autocomplete="off">
-</label>
-
-<div id="pickerList" class="apps-picker-list" aria-live="polite"></div>
-
-<button type="button" class="apps-picker-manual" id="manualModeBtn">Ma candidature ne figure pas dans le catalogue</button>
-
-</div>
-
-<!-- Sélection faite : résumé confirmable, rempli par applications.js -->
-<div id="pickerSummary" class="apps-selection" hidden></div>
-
-<!-- Champs libres — visibles uniquement en repli hors catalogue ou en
-modification d'une candidature existante. En création via le
-catalogue, ils restent cachés mais PORTENT les valeurs choisies :
-le chemin d'enregistrement est le même dans tous les cas. -->
+<!-- Lot FITZ-CHOISIT (2026-09-11) : le sélecteur de catalogue, la
+recherche libre et le lien « hors catalogue » de la refonte du
+2026-09-02 ont DISPARU. Dans le parcours bourses, l'étudiant ne
+choisit pas : Fitz remplit les places, et une proposition se refuse
+depuis la carte. Les champs ci-dessous ne servent qu'à la
+préinscription (vœux saisis à la main) et aux candidatures bourse
+anciennes hors catalogue ; sur une candidature choisie par Fitz, les
+trois champs d'identité sont en lecture seule (applications.js). -->
 <!-- LOT S4 (2026-09-08) : le sélecteur « Ce que vise cette candidature »
 a DISPARU. L'espace impose le parcours — on ne demande plus à
 quelqu'un de choisir dans un menu ce qu'il vient d'acheter, et un
@@ -236,6 +222,8 @@ champ « track » continue d'être écrit sur la candidature, depuis
 l'espace courant (applications.js). -->
 
 <div id="manualFields" hidden>
+
+<p class="apps-identite-note" id="identiteVerrouilleeNote" hidden><i data-lucide="lock"></i><span>Université, bourse et portail sont choisis par Fitz. Vous modifiez le statut, la date, les notes, les rappels et la preuve de dépôt. Pour changer d'université, refusez la proposition depuis la carte.</span></p>
 
 <label class="apps-field">
 <span>Université</span>

@@ -676,21 +676,25 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         notes.push("aucune suggestion de dossier parmi les témoins — contrôle du clic sauté.");
       }
 
-      // ---- Le sélecteur ne propose plus de porte fermée
-      await page.click("#addApplicationBtn");
-      await page.waitForSelector("#pickerList .apps-pick", { timeout: 20000 });
-
-      const picker = await page.evaluate(() => ({
-        propositions: document.querySelectorAll("#pickerList .apps-pick").length,
-        closes: document.querySelectorAll("#pickerList .apps-pick-deadline.is-close").length,
-        datesSurCloses: [...document.querySelectorAll("#pickerList .apps-pick-deadline.is-close")].filter((el) => /Échéance :/.test(el.textContent)).length
+      // ---- LOT FITZ-CHOISIT (2026-09-11) : plus de sélecteur de catalogue.
+      //
+      // Le contrôle « le sélecteur ne propose plus de porte fermée » et
+      // l'enregistrement d'une bourse DEPUIS le sélecteur (lot S4, point 2)
+      // ont disparu avec lui : dans l'espace bourses, c'est Fitz qui
+      // choisit — voir le bloc 7 plus bas, qui vérifie l'absence du
+      // sélecteur, du lien hors catalogue et du bouton de création, puis
+      // le refus d'une proposition. Ce client-ci a les DEUX parcours, mais
+      // la page est ouverte dans l'espace BOURSES (lot S4 : l'espace
+      // courant décide de ce qu'on crée) : le bouton y est masqué ; il
+      // réapparaît une fois passé en préinscription (point 3 ci-dessous).
+      const creation = await page.evaluate(() => ({
+        bouton: !!document.getElementById("addApplicationBtn") && !document.getElementById("addApplicationBtn").hidden,
+        selecteur: !!document.getElementById("pickerList") || !!document.getElementById("pickerSearch"),
+        horsCatalogue: !!document.getElementById("manualModeBtn")
       }));
-
-      if (!picker.propositions) anomalies.push("Sélecteur : aucune suggestion affichée.");
-      if (picker.closes) anomalies.push(`Sélecteur : ${picker.closes} bourse(s) close(s) parmi les suggestions.`);
-      if (picker.datesSurCloses) anomalies.push(`Sélecteur : « Échéance : … » sur ${picker.datesSurCloses} bourse(s) close(s).`);
-
-      notes.push(`sélecteur : ${picker.propositions} suggestions, aucune close`);
+      if (creation.selecteur) anomalies.push("Formulaire : le sélecteur de catalogue est encore dans le DOM (lot FITZ-CHOISIT).");
+      if (creation.horsCatalogue) anomalies.push("Formulaire : le lien « hors catalogue » est encore dans le DOM (lot FITZ-CHOISIT).");
+      if (creation.bouton) anomalies.push("Espace bourses : le bouton « Nouvelle candidature » est encore visible (lot FITZ-CHOISIT).");
 
       // ---- LOT S4 : l'ESPACE impose le parcours, il n'y a plus de select ----
       //
@@ -698,12 +702,11 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       // formulaire : on ne demande plus à quelqu'un de choisir dans un
       // menu ce qu'il vient d'acheter. Ce qu'on vérifie maintenant :
       //   1. le select n'est nulle part dans le DOM ;
-      //   2. dans l'espace BOURSE, une candidature part en track="bourse"
-      //      sur un identifiant slot-N ;
-      //   3. dans l'espace PRÉINSCRIPTION, la même saisie part en
+      //   3. dans l'espace PRÉINSCRIPTION, la saisie manuelle part en
       //      track="preinscription" sur un pre-N — sans qu'on ait rien
-      //      choisi.
-      if (picker.propositions) {
+      //      choisi. (Le point 2, la bourse enregistrée depuis le
+      //      sélecteur, n'existe plus : lot FITZ-CHOISIT.)
+      {
 
         const selectPresent = await page.evaluate(() => ({
           select: !!document.getElementById("applicationTrack"),
@@ -711,27 +714,6 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         }));
         if (selectPresent.select || selectPresent.section) {
           anomalies.push("Formulaire : le sélecteur de parcours est encore dans le DOM — l'espace doit imposer le parcours.");
-        }
-
-        // 2. Espace BOURSE (celui de la page à ce stade) : une entrée du
-        //    catalogue s'enregistre en bourse, sur un slot-N.
-        await page.click("#pickerList .apps-pick");
-        await page.waitForSelector("#detailsSection", { state: "visible", timeout: 10000 });
-        await page.evaluate(() => document.getElementById("applicationForm").requestSubmit());
-
-        await page.waitForFunction(
-          () => (window.__harnaisEcritures || []).some((e) => e.op === "set" && e.data && e.data.track === "bourse"),
-          null,
-          { timeout: 10000 }
-        ).catch(() => anomalies.push("Espace bourse : aucune candidature écrite depuis le catalogue."));
-
-        const enBourse = await page.evaluate(() => {
-          const e = (window.__harnaisEcritures || []).find((x) => x.op === "set" && x.data && x.data.track === "bourse");
-          return e ? { chemin: e.chemin, track: e.data.track } : null;
-        });
-
-        if (enBourse && !/\/applications\/slot-\d+$/.test(enBourse.chemin)) {
-          anomalies.push(`Espace bourse : écrit sur ${enBourse.chemin} au lieu d'un identifiant slot-N.`);
         }
 
         // 3. Espace PRÉINSCRIPTION : on bascule comme le ferait le
@@ -1515,6 +1497,148 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
 
     }
 
+  }
+
+  // ---------- 7. C'EST FITZ QUI CHOISIT (lot FITZ-CHOISIT, 2026-09-11) ----------
+  //
+  // Décision de Charles : l'étudiant ne choisit pas ses universités. Sous
+  // session stubbée, deux clients bourse (Essentiel, 4 places), deux
+  // cartes choisies par Fitz chacun :
+  //   COMPLET    profil minimal renseigné — dans l'espace bourses, aucun
+  //              lien hors catalogue ni recherche libre ni bouton de
+  //              création ; l'identité d'une carte est en lecture seule ;
+  //              « Refuser et demander une autre » change d'université ET
+  //              met à jour scholarshipId / programId (écritures consignées
+  //              dans window.__harnaisEcritures) ;
+  //   INCOMPLET  ni niveau visé ni langue — AUCUN remplissage (aucun `set`
+  //              sur /applications), et la ligne d'état dit « Complétez
+  //              votre profil ».
+  {
+    const brut = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
+    const uniParId = new Map(brut.universities.map((u) => [u.id, u]));
+    const bourseParId = new Map(brut.scholarships.map((b) => [b.id, b]));
+    // Deux programmes d'universités distinctes, chacun avec sa bourse.
+    const choisis = [];
+    for (const p of brut.programs) {
+      if (!uniParId.has(p.universityId) || !bourseParId.has(p.scholarshipId)) continue;
+      if (choisis.some((c) => c.universityId === p.universityId)) continue;
+      choisis.push(p);
+      if (choisis.length === 2) break;
+    }
+    const carteFitzDe = (p, id) => ({
+      id, university: uniParId.get(p.universityId).name, scholarship: bourseParId.get(p.scholarshipId).title,
+      scholarshipId: p.scholarshipId, programId: p.id, universityId: p.universityId,
+      portalUrl: "", universityWebsite: "", status: "a_preparer", track: "bourse", deadline: null,
+      reminderFrequency: 14, notes: "", checklist: [], premiumProtected: false, isRecommendation: true, nextCheckDate: dansNJours(10)
+    });
+    const cartes = choisis.map((p, i) => carteFitzDe(p, `slot-${i + 1}`));
+    const profilComplet = { ...etudiant.userData.profile, nationality: "Sénégalaise", desiredDegree: "Master", desiredField: "Informatique", languages: ["français"] };
+    const profilIncomplet = { ...etudiant.userData.profile, desiredDegree: "", languages: [] };
+    const client = (profile) => ({
+      ...etudiant,
+      uid: "harnais-fitz-choisit",
+      userData: { ...etudiant.userData, plan: "essentiel-4", planExpiresAt: dansNJours(120), planPreinscription: "", planPreinscriptionExpiresAt: null, universitesRefusees: [], profile },
+      applications: cartes
+    });
+
+    if (choisis.length < 2) {
+      anomalies.push("FITZ-CHOISIT : moins de deux programmes exploitables dans le catalogue — contrôle impossible.");
+    } else {
+      // --- a) profil COMPLET
+      const { contexte, page, erreurs } = await ouvrir(navigateur, base, client(profilComplet));
+      try {
+        await page.goto(`${base}/applications.html`, { waitUntil: "domcontentloaded" });
+        await page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 2, null, { timeout: 20000 });
+        const vu = await page.evaluate(() => {
+          const visible = (el) => !!el && !el.hidden && el.getBoundingClientRect().width > 0;
+          return {
+            horsCatalogue: !!document.getElementById("manualModeBtn"),
+            recherche: !!document.getElementById("pickerSearch"),
+            boutonCreation: visible(document.getElementById("addApplicationBtn")),
+            etat: document.getElementById("fitzChoixEtat")?.dataset.etat || "",
+            regle: (document.getElementById("fitzRegle")?.textContent || "").trim(),
+            refuser: document.querySelectorAll("#applicationsList .app-refuse-btn").length,
+            supprimer: document.querySelectorAll("#applicationsList .app-delete-btn").length,
+            sets: (window.__harnaisEcritures || []).filter((e) => e.op === "set" && e.chemin.includes("/applications/")).length
+          };
+        });
+        if (vu.horsCatalogue) anomalies.push("FITZ-CHOISIT : le lien « hors catalogue » (#manualModeBtn) est encore dans le DOM.");
+        if (vu.recherche) anomalies.push("FITZ-CHOISIT : la recherche libre du catalogue (#pickerSearch) est encore dans le DOM.");
+        if (vu.boutonCreation) anomalies.push("FITZ-CHOISIT : le bouton « Nouvelle candidature » est visible dans l'espace bourses.");
+        if (!/^Vous ne choisissez pas vos universités/.test(vu.regle)) anomalies.push(`FITZ-CHOISIT : la règle n'est pas dite en tête de « Mes candidatures » (« ${vu.regle.slice(0, 60)} »).`);
+        if (vu.refuser !== 2) anomalies.push(`FITZ-CHOISIT : ${vu.refuser} bouton(s) « Refuser » pour 2 cartes à préparer.`);
+        if (vu.supprimer !== 0) anomalies.push(`FITZ-CHOISIT : ${vu.supprimer} bouton(s) « Supprimer » sur des cartes bourse non déposées.`);
+        if (!vu.sets) anomalies.push("FITZ-CHOISIT (profil complet) : aucun remplissage des places libres — seedRecommendedSlots n'a rien écrit.");
+        if (!["complet", "aucune"].includes(vu.etat)) anomalies.push(`FITZ-CHOISIT (profil complet) : ligne d'état « ${vu.etat} » (attendu complet ou aucune).`);
+
+        // L'édition : identité en lecture seule.
+        await page.click("#slot-1 .app-edit-btn");
+        await page.waitForSelector("#applicationModal:not([hidden])", { timeout: 10000 });
+        const edition = await page.evaluate(() => ({
+          universite: document.getElementById("fieldUniversity").readOnly,
+          bourse: document.getElementById("fieldScholarship").readOnly,
+          portail: document.getElementById("fieldPortalUrl").readOnly,
+          statut: document.getElementById("fieldStatus").disabled,
+          notes: document.getElementById("fieldNotes").readOnly,
+          note: !document.getElementById("identiteVerrouilleeNote").hidden
+        }));
+        if (!edition.universite || !edition.bourse || !edition.portail) anomalies.push("FITZ-CHOISIT : un champ d'identité (université, bourse, portail) est modifiable sur une carte choisie par Fitz.");
+        if (edition.statut || edition.notes) anomalies.push("FITZ-CHOISIT : le statut ou les notes sont verrouillés — l'étudiant doit pouvoir les modifier.");
+        if (!edition.note) anomalies.push("FITZ-CHOISIT : la note « choisis par Fitz » n'est pas affichée dans le formulaire.");
+        await page.click("#applicationModalClose");
+
+        // Le refus : une autre université, et les clés du catalogue à jour.
+        const avant = cartes[0];
+        await page.click("#slot-1 .app-refuse-btn");
+        await page.waitForFunction(() => (window.__harnaisEcritures || []).some((e) => e.op === "update" && e.chemin.endsWith("/applications/slot-1") && e.data && "programId" in e.data), null, { timeout: 20000 })
+          .catch(() => anomalies.push("FITZ-CHOISIT : aucune écriture de remplacement sur slot-1 après le refus."));
+        const refus = await page.evaluate(() => {
+          const ecritures = window.__harnaisEcritures || [];
+          const carte = ecritures.find((e) => e.op === "update" && e.chemin.endsWith("/applications/slot-1") && e.data && "programId" in e.data);
+          // Le chemin consigné par la doublure est « users/<uid> », sans barre initiale.
+          const memoire = ecritures.find((e) => e.op === "update" && /^\/?users\/[^/]+$/.test(e.chemin) && e.data && "universitesRefusees" in e.data);
+          return { carte: carte ? carte.data : null, memoire: !!memoire, ordre: ecritures.map((e) => e.chemin) };
+        });
+        if (refus.carte) {
+          const c = refus.carte;
+          if (c.university === avant.university) anomalies.push("FITZ-CHOISIT : après le refus, la carte porte encore la même université.");
+          if (c.programId === avant.programId) anomalies.push("FITZ-CHOISIT : après le refus, programId n'a pas changé.");
+          if (c.scholarshipId === avant.scholarshipId && c.universityId === avant.universityId) anomalies.push("FITZ-CHOISIT : après le refus, ni scholarshipId ni universityId n'ont changé.");
+          if (c.universityId === cartes[1].universityId) anomalies.push("FITZ-CHOISIT : Fitz a proposé l'université déjà occupée par slot-2.");
+          if (c.universityId === avant.universityId) anomalies.push("FITZ-CHOISIT : Fitz a re-proposé l'université refusée.");
+          if (c.status !== "a_preparer" || c.deadline !== null || !Array.isArray(c.checklist) || c.checklist.length) anomalies.push("FITZ-CHOISIT : la carte de remplacement ne repart pas neuve (statut, date ou dossier hérités).");
+          if (!c.universityId || !c.programId || !c.scholarshipId) anomalies.push("FITZ-CHOISIT : la carte de remplacement n'a pas ses trois clés du catalogue.");
+          notes.push(`FITZ-CHOISIT : refus de « ${avant.university} » → « ${c.university} » (${c.programId})`);
+        }
+        if (!refus.memoire) anomalies.push("FITZ-CHOISIT : le refus n'est pas mémorisé sur users/{uid} (universitesRefusees).");
+      } catch (e) {
+        anomalies.push(`ÉCHEC FITZ-CHOISIT (profil complet) : ${e.message.split("\n")[0]}`);
+      }
+      anomalies.push(...erreurs);
+      await contexte.close();
+
+      // --- b) profil INCOMPLET : aucun remplissage, et le message.
+      const b = await ouvrir(navigateur, base, client(profilIncomplet));
+      try {
+        await b.page.goto(`${base}/applications.html`, { waitUntil: "domcontentloaded" });
+        await b.page.waitForFunction(() => document.querySelectorAll("#applicationsList .app-card").length >= 2, null, { timeout: 20000 });
+        await b.page.waitForTimeout(800);
+        const vu = await b.page.evaluate(() => ({
+          sets: (window.__harnaisEcritures || []).filter((e) => e.op === "set" && e.chemin.includes("/applications/")).length,
+          etat: document.getElementById("fitzChoixEtat")?.dataset.etat || "",
+          texte: (document.getElementById("fitzChoixEtat")?.textContent || "").replace(/\s+/g, " ").trim(),
+          lien: !!document.querySelector('#fitzChoixEtat a[href="profile.html"]')
+        }));
+        if (vu.sets) anomalies.push(`FITZ-CHOISIT (profil incomplet) : ${vu.sets} place(s) remplie(s) alors que Fitz ne connaît pas l'étudiant.`);
+        if (vu.etat !== "profil" || !/Complétez votre profil/.test(vu.texte)) anomalies.push(`FITZ-CHOISIT (profil incomplet) : ligne d'état « ${vu.texte.slice(0, 80)} » (état ${vu.etat}).`);
+        if (!vu.lien) anomalies.push("FITZ-CHOISIT (profil incomplet) : aucun lien vers le profil dans la ligne d'état.");
+        notes.push(`FITZ-CHOISIT : profil incomplet → aucun remplissage, « ${vu.texte.slice(0, 70)} »`);
+      } catch (e) {
+        anomalies.push(`ÉCHEC FITZ-CHOISIT (profil incomplet) : ${e.message.split("\n")[0]}`);
+      }
+      anomalies.push(...b.erreurs);
+      await b.contexte.close();
+    }
   }
 
   return { anomalies, notes };

@@ -25,25 +25,25 @@ updateDoc,
 deleteDoc,
 doc,
 getDocs,
-serverTimestamp
+serverTimestamp,
+arrayUnion
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { trackEvent } from "./js/analytics.js";
 import { initShellChrome, bootstrapShell, unlockingPlans, isFeatureLocked, PLAN_LABELS } from "./js/app-shell.js";
 import { isQuotaReached, PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
-// DEUX MOTEURS, DEUX USAGES — et c'est voulu (passe 2/3, 2026-09-06) :
-//
-//   retenirOpportunites  ce que Fitz PROPOSE de lui-même (créneaux
-//                        pré-remplis, remplacement d'une suggestion).
-//                        Cinq filtres : jamais un cycle clos, jamais un
-//                        mauvais niveau. La même sélection que le
-//                        diagnostic gratuit.
-//   recommendPrograms    ce que l'étudiant CHERCHE dans le sélecteur.
-//                        Le catalogue entier, classé. Il a le droit de
-//                        chercher n'importe quoi — la passe 1 y a mis
-//                        l'état honnête et écarté les closes des seules
-//                        suggestions.
-import { recommendPrograms, retenirOpportunites } from "./js/recommend-programs.js";
+// UN SEUL MOTEUR DE CHOIX — lot FITZ-CHOISIT (2026-09-11), décision de
+// Charles : « l'étudiant ne choisit pas ses universités ». La doctrine
+// de la passe 2/3 (« il a le droit de chercher n'importe quoi ») est
+// RÉVOQUÉE : le sélecteur de catalogue, la recherche libre et le lien
+// « hors catalogue » ont disparu du parcours bourses. Fitz remplit les
+// places (retenirOpportunites — cinq filtres, la même sélection que le
+// diagnostic gratuit) ; une proposition ne convient pas ? l'étudiant la
+// REFUSE et Fitz propose la suivante, sur le même créneau, sans jamais
+// revenir sur une université refusée (users/{uid}.universitesRefusees).
+// Le parcours préinscription (pre-N) reste saisi à la main : hors lot.
+import { retenirOpportunites } from "./js/recommend-programs.js";
+import { profilPretPourFitz, universitesAEviter, carteFitz, identiteVerrouillee, etatChoixFitz, PHRASE_REGLE } from "./js/fitz-choisit.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase, FITZ_READINESS_PHRASES } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { calculateAiScore } from "./js/profile-score.js";
@@ -563,6 +563,12 @@ let ESPACE = "";
 // préinscription, sur un identifiant slot-N ; le harnais l'a attrapé.
 let ESPACE_ECRITURE = "";
 
+// Lot FITZ-CHOISIT : les universités que l'étudiant a refusées
+// (users/{uid}.universitesRefusees). Lues avec la session ; complétées
+// localement à chaque refus, pour que le remplacement suivant les évite
+// sans relire le document.
+let universitesRefusees = [];
+
 async function fetchApplications(uid) {
 const snapshot = await getDocs(collection(db, "users", uid, "applications"));
 const toutes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -769,6 +775,12 @@ const missing = quota - existingApplications.length;
 
 if (missing <= 0) return false;
 
+// Lot FITZ-CHOISIT : pas de choix avant de connaître l'étudiant. Sans
+// nationalité, niveau visé, domaine et au moins une langue, Fitz ne
+// remplit pas : un profil vide recevait des propositions génériques qui
+// occupaient ses places. Le moteur, lui, tolère les champs absents.
+if (!profilPretPourFitz(profile).pret) return false;
+
 // Chargeur partagé (js/catalog-data.js) : ce fichier lisait les trois
 // collections DEUX fois par page — ici, puis à nouveau dans la
 // suggestion d'alternative plus bas. Le second appel ne coûte plus
@@ -790,38 +802,18 @@ const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestore
 const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 
-// Les candidatures existantes n'ont qu'un nom d'université en texte
-// libre (pas d'identifiant Firestore — voir la note du schéma en tête
-// de fichier) : seul un rapprochement par nom permet d'éviter de
-// suggérer une université déjà occupée par un autre créneau.
-const excludeNames = new Set(
-existingApplications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolean)
-);
-
-const eligiblePrograms = programs.filter((p) => {
-const uni = universitiesById.get(p.universityId);
-// Bug corrigé (audit du 2026-08-14) : lisait uni.university, qui n'existe
-// pas sur le schéma relationnel ("universities" porte name) — le filtre
-// n'excluait donc jamais rien en pratique. Voir la même correction dans
-// js/recommend-programs.js.
-return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
-});
-
-// retenirOpportunites, et non plus recommendPrograms : un créneau que
-// Fitz remplit LUI-MÊME ne doit jamais viser un cycle clos ni un
-// mauvais niveau. L'ancien appel gardait tout `score >= 0`, sans
-// filtrer ni le cycle ni l'échéance — l'étudiant trouvait donc en
-// arrivant des candidatures vers des portes fermées, pré-remplies par
-// le service qu'il paie.
-//
-// `eligiblePrograms` (et non tout le catalogue) reste passé tel quel :
-// c'est lui qui écarte les universités déjà occupées par un autre
-// créneau, ce que retenirOpportunites ne peut pas savoir.
+// Lot FITZ-CHOISIT : les universités à éviter — celles des autres
+// créneaux (par identifiant, ou par nom pour les candidatures
+// anciennes) et celles que l'étudiant a refusées — passent au moteur
+// (exclureUniversites), qui les écarte AVANT toute sélection.
+// retenirOpportunites, et non recommendPrograms : un créneau que Fitz
+// remplit lui-même ne vise jamais un cycle clos ni un mauvais niveau.
 const { retenues } = retenirOpportunites({
 profile: profile || {},
-programs: eligiblePrograms,
+programs,
 universitiesById,
-scholarshipsById
+scholarshipsById,
+exclureUniversites: universitesAEviter({ applications: existingApplications, universitesRefusees, universitesParNom: indexParNom(universitiesById) })
 });
 
 // Dans l'ordre, autant que de créneaux libres.
@@ -843,30 +835,11 @@ for (const rec of recommendations) {
 const slotId = slotIdLibre(dejaCreees, quota);
 if (!slotId) break;
 
+// La carte, construite par la MÊME fonction pure que le remplacement
+// (js/fitz-choisit.js) : clés du catalogue, portail, site, statut « à
+// préparer », date à zéro, dossier vide.
 await setDoc(doc(appsCol, slotId), {
-university: rec.universityName,
-scholarship: rec.scholarshipTitle,
-// La clé vers le catalogue (passe 1/3, 2026-09-06) : c'est elle qui
-// permet à la carte d'afficher l'état publié par la fiche, et à une
-// correction de catalogue d'atteindre la candidature.
-scholarshipId: rec.scholarshipId || null,
-programId: rec.programId || null,
-// Audit du 2026-08-28 : ces deux champs étaient "" en dur alors que
-// rec porte déjà applicationUrl/universityWebsite (recommend-programs.js)
-// — un créneau suggéré par Fitz n'affichait donc jamais aucun lien tant
-// que l'étudiant n'éditait pas la carte à la main pour en coller un.
-portalUrl: portailDeLEntree(rec),
-universityWebsite: rec.universityWebsite || "",
-status: "a_preparer",
-// Lot A : ces créneaux viennent de retenirOpportunites() — toujours
-// des bourses.
-track: "bourse",
-deadline: null,
-reminderFrequency: 14,
-notes: "",
-premiumProtected: false,
-isRecommendation: true,
-nextCheckDate: nextCheckFromToday(14),
+...carteFitz(rec, { portalUrl: portailDeLEntree(rec), nextCheckDate: nextCheckFromToday(14) }),
 createdAt: serverTimestamp()
 });
 
@@ -885,6 +858,14 @@ return true;
 // candidatures se comptent PAR PARCOURS : slot-N pour les bourses (quota
 // maxAccompaniedApplications), pre-N pour les préinscriptions (quota
 // maxPreinscriptions) — le serveur fait foi (firestore.rules).
+// nom d'université (normalisé) → identifiant, pour rapprocher les
+// candidatures anciennes qui n'ont qu'un nom (universitesAEviter).
+function indexParNom(universitiesById) {
+const m = new Map();
+for (const [id, u] of universitiesById) m.set(String(u.name || "").trim().toLowerCase(), id);
+return m;
+}
+
 function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress, documentsObtained = {}, planPreinscriptionId = "") {
 
 const profileScore = calculateAiScore(profile);
@@ -1101,29 +1082,18 @@ let applications = [];
 let editingId = null;
 
 // ==========================================================
-// SÉLECTEUR CATALOGUE (refonte 2026-09-02) — « c'est pas à
-// l'étudiant de remplir des universités auxquelles candidater ni le
-// lien de candidature » : le modal de création ne demande plus de
-// taper quoi que ce soit. Fitz propose les universités du catalogue
-// classées par compatibilité avec le profil (recommendPrograms —
-// exactement les mêmes règles que les créneaux qu'il pré-remplit
-// lui-même : nationalité et âge filtrés en dur, cycle visé, pays
-// souhaités, langue, financement), la recherche couvre tout le
-// catalogue, et la sélection remplit université, bourse, portail
-// officiel, site de l'université et échéance d'un coup.
-//
-// L'enregistrement passe par les MÊMES champs cachés (#fieldUniversity
-// etc.) : un seul chemin de soumission, que la valeur vienne du
-// catalogue ou du repli manuel « hors catalogue ». L'édition d'une
-// candidature existante ouvre directement les champs libres — on ne
-// force jamais un re-choix de catalogue sur un dossier déjà en route.
+// LE FORMULAIRE (lot FITZ-CHOISIT, 2026-09-11). Le sélecteur de
+// catalogue de la refonte du 2026-09-02 (recherche libre + repli « hors
+// catalogue ») a DISPARU : dans le parcours bourses, c'est Fitz qui
+// choisit (seedRecommendedSlots), et l'étudiant refuse une proposition
+// plutôt que d'en saisir une. Les champs libres ne servent plus qu'à
+// la PRÉINSCRIPTION (vœux pre-N, saisis à la main — hors lot) et aux
+// candidatures bourse anciennes créées hors catalogue, qui restent
+// modifiables sur leurs champs autorisés (aucune régression).
 // ==========================================================
-const pickerSection = document.getElementById("pickerSection");
-const pickerList = document.getElementById("pickerList");
-const pickerSearch = document.getElementById("pickerSearch");
-const pickerSummary = document.getElementById("pickerSummary");
 const manualFields = document.getElementById("manualFields");
 const detailsSection = document.getElementById("detailsSection");
+const identiteNote = document.getElementById("identiteVerrouilleeNote");
 
 // Lot A : une candidature liée à une bourse du catalogue ne peut pas
 // être une préinscription — le select se verrouille sur « Bourse » et
@@ -1145,245 +1115,29 @@ fields.scholarship.value = "";
 fields.portalUrl.value = "";
 fields.deadline.value = "";
 }
-const manualModeBtn = document.getElementById("manualModeBtn");
 const saveBtn = document.getElementById("applicationSaveBtn");
 
-let pickerEntries = null;
-let pickedEntry = null;
 let manualMode = false;
 
-async function ensurePickerEntries() {
-
-if (pickerEntries) return pickerEntries;
-
-// Chargeur partagé (js/catalog-data.js) : si seedRecommendedSlots a
-// déjà lu le catalogue sur cette page, cet appel ne coûte rien.
-const catalogueSnap = await chargerCatalogue();
-
-const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestoreId: id, ...reste }));
-const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
-const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
-
-// count: Infinity — on veut TOUT le catalogue éligible, classé. Les
-// bourses fermées à la nationalité ou au-delà de la limite d'âge sont
-// écartées par recommendPrograms (score sentinelle) : Fitz ne propose
-// jamais une porte fermée, même via la recherche.
-const picks = recommendPrograms({
-profile: profile || {},
-programs,
-universitiesById,
-scholarshipsById,
-count: Infinity
-});
-
-// L'état complet de chaque bourse (etatCandidature via le module de
-// liaison), mémoïsé par couple bourse/programme : c'est l'état que la
-// fiche publie, pas une deuxième lecture de la date.
-const index = indexerCatalogue(catalogueSnap);
-const etatsMemo = new Map();
-
-function lectureDe(scholarshipId, programId) {
-const cle = `${scholarshipId}|${programId || ""}`;
-if (!etatsMemo.has(cle)) etatsMemo.set(cle, etatDeLaCandidature({ scholarshipId, programId }, index));
-return etatsMemo.get(cle);
+// Les champs d'identité : université, bourse, portail. Verrouillés quand
+// l'identité vient du catalogue (Fitz a choisi), libres pour une
+// préinscription ou une candidature bourse ancienne hors catalogue.
+function verrouillerIdentite(verrouille) {
+for (const champ of [fields.university, fields.scholarship, fields.portalUrl]) {
+champ.readOnly = verrouille;
+champ.setAttribute("aria-readonly", verrouille ? "true" : "false");
+champ.closest(".apps-field")?.classList.toggle("is-verrouille", verrouille);
 }
-
-pickerEntries = picks.map((pick) => {
-
-const uni = universitiesById.get(pick.universityId) || {};
-const programId = pick.programId || null;
-const lecture = pick.scholarshipId ? lectureDe(pick.scholarshipId, programId) : null;
-const etat = lecture && lecture.lie ? lecture.etat : null;
-
-return {
-...pick,
-programId,
-etat,
-// Passe 3/3 : de quoi dire, AVANT d'ouvrir un créneau, qu'une bourse
-// ne se dépose pas soi-même. Seuls les codes « voie » et l'ordre
-// d'admission sont retenus ici — le reste appartient à la carte, une
-// fois la candidature créée.
-exigences: lecture && lecture.bourse ? lireExigences(lecture.bourse) : [],
-country: uni.country || "",
-deadlineText: pick.deadline || "",
-// Pré-remplissage du champ date UNIQUEMENT quand l'état dit le cycle
-// ouvert ET porte un décompte — donc jamais sur une échéance par
-// pays agrégée (« Selon votre pays »), jamais sur « pas encore
-// ouverte », jamais sur un cycle clos. L'ISO vient du même calcul
-// que l'état (dateCatalogue), au format d'un <input type="date">.
-deadlineISO: (etat && etat.ouvert === true && etat.jours !== null && lecture.dateCatalogue) ? lecture.dateCatalogue : ""
-};
-
-});
-
-return pickerEntries;
-
-}
-
-function renderPickerList() {
-
-if (!pickerEntries) return;
-
-// Insensible aux accents et à la casse (clôture, 2026-09-07) : « ecole »
-// trouve « École », « koc » trouve « Koç ». Même normalisation que le
-// rapprochement de candidature.
-const q = normaliserTitre((pickerSearch.value || "").trim());
-
-// Le sélecteur ne propose plus de porte fermée (passe 1/3) :
-//  - « Suggérées pour votre profil » écarte les cycles clos — Fitz ne
-//    propose pas un train déjà parti ;
-//  - la RECHERCHE les garde (un étudiant peut vouloir suivre une bourse
-//    qui rouvrira), avec la pastille honnête et classées après les
-//    ouvertes.
-const estClose = (e) => e.etat && e.etat.ton === "close";
-const rang = (e) => (!e.etat ? 2 : e.etat.ton === "ouverte" ? 0 : e.etat.ton === "attente" ? 1 : e.etat.ton === "close" ? 3 : 2);
-
-const matches = q
-? pickerEntries
-.filter((e) =>
-normaliserTitre(e.universityName).includes(q) ||
-normaliserTitre(e.country || "").includes(q) ||
-normaliserTitre(e.scholarshipTitle || "").includes(q))
-.sort((a, b) => rang(a) - rang(b))
-: pickerEntries.filter((e) => !estClose(e));
-
-const shown = matches.slice(0, q ? 12 : 6);
-
-if (!shown.length) {
-pickerList.innerHTML = `<p class="apps-picker-empty">Aucune université du catalogue ne correspond à « ${escapeHtml(q)} ». Si votre candidature est ailleurs, utilisez le lien hors catalogue ci-dessous.</p>`;
-return;
-}
-
-pickerList.innerHTML = (q ? "" : `<p class="apps-picker-label">Suggérées pour votre profil</p>`) + shown.map((e) => {
-
-// La pastille d'échéance porte déjà la date : la raison affichée est
-// la première qui ne la répète pas (l'explication « candidatures
-// ouvertes (échéance : …) » ferait doublon sur la même carte).
-const reason = (e.reasons || []).find((r) => !r.toLowerCase().includes("chéance")) || "";
-
-// La pastille : « Échéance : … » seulement sur une date ferme d'un
-// cycle ouvert ; sinon le badge de l'état (« Candidatures closes »,
-// « pas encore ouvertes », « Selon votre pays »…) — jamais une date
-// sur une porte fermée.
-const deadlineShort = e.deadlineISO
-? `Échéance : ${formatDateFR(e.deadlineISO)}`
-: e.etat ? (e.etat.ton === "ouverte" ? `${e.etat.etiquette} : ${e.etat.valeur}` : e.etat.badge) : e.deadlineText;
-const tonPastille = e.etat ? ` is-${e.etat.ton}` : "";
-
-return `
-<button type="button" class="apps-pick" data-university-id="${escapeHtml(e.universityId)}">
-<span class="apps-pick-main">
-<strong>${escapeHtml(e.universityName)}</strong>
-<span class="apps-pick-meta">${escapeHtml([e.country, e.scholarshipTitle].filter(Boolean).join(" · "))}</span>
-${reason ? `<span class="apps-pick-reason">${escapeHtml(reason)}</span>` : ""}
-</span>
-${deadlineShort ? `<span class="apps-pick-deadline${tonPastille}">${escapeHtml(deadlineShort)}</span>` : ""}
-</button>`;
-
-}).join("");
-
-pickerList.querySelectorAll(".apps-pick").forEach((btn) => {
-btn.addEventListener("click", () => {
-const entry = pickerEntries.find((e) => e.universityId === btn.dataset.universityId);
-if (entry) selectPickerEntry(entry);
-});
-});
-
-}
-
-// CE QU'ON DOIT SAVOIR AVANT D'OUVRIR UN CRÉNEAU (passe 3/3)
-//
-// Une bourse qu'on ne dépose pas soi-même, ça se sait AVANT — pas après
-// avoir consommé un créneau de sa formule. On ne montre ici que les
-// deux faits qui changent la démarche : la voie de dépôt, et l'ordre
-// admission/bourse. Le détail complet attend la carte.
-function lignePreDepot(entry) {
-
-const g = groupees(entry.exigences || []);
-
-const bouts = [];
-
-if (g.voie.length) bouts.push(g.voie[0].libelle);
-if (g.ordre.length) bouts.push(g.ordre[0].libelle);
-
-if (!bouts.length) return "";
-
-return `<li class="apps-selection-depot"><i data-lucide="users"></i><span>${escapeHtml(bouts.join(" · "))}</span></li>`;
-
-}
-
-function selectPickerEntry(entry) {
-
-pickedEntry = entry;
-manualMode = false;
-
-fields.university.value = entry.universityName;
-fields.scholarship.value = entry.scholarshipTitle || "";
-fields.portalUrl.value = portailDeLEntree(entry);
-// Pré-rempli UNIQUEMENT sur une date ferme d'un cycle ouvert (voir
-// ensurePickerEntries) ; sinon le champ reste vide et l'état s'explique
-// dans le résumé ci-dessous.
-fields.deadline.value = entry.deadlineISO || "";
-
-pickerSection.hidden = true;
-manualFields.hidden = true;
-fields.university.required = false;
-verrouillerParcours(true);
-detailsSection.hidden = false;
-saveBtn.disabled = false;
-
-pickerSummary.innerHTML = `
-<div class="apps-selection-head">
-<i data-lucide="check-circle"></i>
-<div>
-<strong>${escapeHtml(entry.universityName)}</strong>
-<span>${escapeHtml([entry.country, entry.scholarshipTitle].filter(Boolean).join(" · "))}</span>
-</div>
-<button type="button" class="apps-selection-change" id="pickerChangeBtn">Changer</button>
-</div>
-<ul class="apps-selection-facts">
-${portailDeLEntree(entry) ? `<li><i data-lucide="link"></i><span>Portail officiel de candidature renseigné automatiquement</span></li>` : ""}
-${entry.etat ? `<li class="apps-selection-etat is-${escapeHtml(entry.etat.ton)}"><i data-lucide="calendar-check"></i><span><strong>${escapeHtml(entry.etat.etiquette)} : ${escapeHtml(entry.etat.valeur)}</strong>${entry.etat.detail ? ` — ${escapeHtml(entry.etat.detail)}` : ""}${entry.etat.verifie ? ` (${escapeHtml(entry.etat.verifie)})` : ""}</span></li>` : ""}
-${lignePreDepot(entry)}
-${entry.deadlineText ? `<li><i data-lucide="calendar-clock"></i><span>Échéance du catalogue : ${escapeHtml(entry.deadlineText)}${entry.deadlineISO ? " — date limite pré-remplie" : ""}</span></li>` : ""}
-${entry.reasons && entry.reasons.length ? `<li><i data-lucide="target"></i><span>${escapeHtml(entry.reasons[0])}</span></li>` : ""}
-</ul>`;
-
-pickerSummary.hidden = false;
-pickerSummary.querySelector("#pickerChangeBtn").addEventListener("click", showPickerAgain);
-
-if (window.lucide) lucide.createIcons();
-
-}
-
-function showPickerAgain() {
-
-pickedEntry = null;
-manualMode = false;
-
-pickerSummary.hidden = true;
-pickerSummary.innerHTML = "";
-manualFields.hidden = true;
-verrouillerParcours(false);
-viderChampsCatalogue();
-detailsSection.hidden = true;
-saveBtn.disabled = true;
-pickerSection.hidden = false;
-
-renderPickerList();
-
+if (identiteNote) identiteNote.hidden = !verrouille;
 }
 
 function enterManualMode() {
 
-pickedEntry = null;
 manualMode = true;
 
-pickerSection.hidden = true;
-pickerSummary.hidden = true;
-pickerSummary.innerHTML = "";
 manualFields.hidden = false;
 fields.university.required = true;
+verrouillerIdentite(false);
 verrouillerParcours(false);
 viderChampsCatalogue();
 detailsSection.hidden = false;
@@ -1392,9 +1146,6 @@ saveBtn.disabled = false;
 fields.university.focus();
 
 }
-
-pickerSearch.addEventListener("input", renderPickerList);
-manualModeBtn.addEventListener("click", enterManualMode);
 
 function openModal(app) {
 
@@ -1413,37 +1164,26 @@ fields.notes.value = app?.notes || "";
 // déposée par un tiers ou non).
 preparerPreuve(app, app && catalogueIndex ? etatDeLaCandidature(app, catalogueIndex) : null);
 
-pickedEntry = null;
-pickerSummary.hidden = true;
-pickerSummary.innerHTML = "";
-
 if (app) {
 
-// Édition : champs libres directement — jamais de re-choix forcé.
+// Édition. Lot FITZ-CHOISIT : l'université, la bourse, le portail et
+// le site d'une candidature bourse choisie par Fitz sont en LECTURE
+// SEULE — l'étudiant ne modifie que le statut, la date, les notes, les
+// rappels et la preuve de dépôt. Une préinscription, ou une candidature
+// bourse ancienne hors catalogue, garde ses champs libres.
 manualMode = true;
-pickerSection.hidden = true;
 manualFields.hidden = false;
 fields.university.required = true;
+verrouillerIdentite(identiteVerrouillee(app));
 verrouillerParcours(false);
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
 } else {
 
-manualMode = false;
-manualFields.hidden = true;
-fields.university.required = false;
-verrouillerParcours(false);
-detailsSection.hidden = true;
-saveBtn.disabled = true;
-pickerSection.hidden = false;
-pickerSearch.value = "";
-pickerList.innerHTML = `<p class="apps-picker-empty">Fitz lit le catalogue…</p>`;
-
-ensurePickerEntries().then(renderPickerList).catch((error) => {
-console.warn("Catalogue indisponible pour le sélecteur de candidature :", error);
-pickerList.innerHTML = `<p class="apps-picker-empty">Le catalogue est momentanément indisponible. Vous pouvez saisir votre candidature via le lien hors catalogue ci-dessous.</p>`;
-});
+// Création : saisie manuelle — seule la préinscription y arrive encore
+// (le bouton n'existe plus dans l'espace bourses).
+enterManualMode();
 
 }
 
@@ -1454,8 +1194,8 @@ modal.hidden = false;
 function closeModal() {
 modal.hidden = true;
 editingId = null;
-pickedEntry = null;
 manualMode = false;
+verrouillerIdentite(false);
 form.reset();
 }
 
@@ -1598,6 +1338,15 @@ if (jours === null || jours > JOURS_PROCHE) return "";
 return boutonRecours({ code: "echeance", app: app.id });
 }
 
+// Lot FITZ-CHOISIT : AVANT le dépôt, une candidature bourse se REFUSE
+// (Fitz propose la suivante sur le même créneau) ; on ne la supprime
+// pas. APRÈS le dépôt, « Supprimer le suivi » reste possible, et la
+// place libérée est de nouveau remplie par Fitz. Une préinscription
+// (pre-N) garde son bouton de suppression : hors lot.
+function peutRefuser(app) {
+return lireParcours(app) !== "preinscription" && !STATUTS_DEPOSES.includes(app.status);
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
@@ -1669,14 +1418,14 @@ ${renderChecklistSection(app, lecture)}
 ${renderReadinessPanel(app, advisorUnlocked)}
 
 <div class="app-card-actions">
-${app.isRecommendation ? `<button type="button" class="btn btn-secondary btn-sm app-replace-btn"><i data-lucide="refresh-cw"></i><span>Suggérer une autre université</span></button>` : ""}
+${peutRefuser(app) ? `<button type="button" class="btn btn-secondary btn-sm app-refuse-btn"><i data-lucide="refresh-cw"></i><span>Refuser et demander une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
 <button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>
 ${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
 ${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
-<button type="button" class="btn btn-ghost btn-sm app-edit-btn"><i data-lucide="pen-line"></i></button>
-<button type="button" class="btn btn-ghost btn-sm app-delete-btn"><i data-lucide="trash-2"></i></button>
+<button type="button" class="btn btn-ghost btn-sm app-edit-btn" aria-label="Modifier"><i data-lucide="pen-line"></i></button>
+${peutRefuser(app) ? "" : `<button type="button" class="btn btn-ghost btn-sm app-delete-btn" aria-label="Supprimer le suivi" title="Supprimer le suivi"><i data-lucide="trash-2"></i></button>`}
 </div>
 `;
 
@@ -1693,8 +1442,8 @@ console.error("Capture illisible :", error);
 showToast("La capture n'a pas pu être ouverte.", { type: "error" });
 }
 });
-card.querySelector(".app-delete-btn").addEventListener("click", () => removeApplication(app));
-card.querySelector(".app-replace-btn")?.addEventListener("click", () => replaceRecommendation(app));
+card.querySelector(".app-delete-btn")?.addEventListener("click", () => removeApplication(app));
+card.querySelector(".app-refuse-btn")?.addEventListener("click", () => refuserEtRemplacer(app));
 card.querySelector(".app-readiness-btn").addEventListener("click", () => runReadinessCheck(app));
 
 // LE SEUL ENDROIT où une date du catalogue atteint la fiche de
@@ -1854,8 +1603,32 @@ emptyEl.hidden = applications.length > 0;
 applications.forEach((app) => listEl.appendChild(renderCard(app, catalogueIndex ? etatDeLaCandidature(app, catalogueIndex) : null)));
 
 renderStats();
+renderEtatChoixFitz();
 
 if (window.lucide) lucide.createIcons();
+
+}
+
+// Lot FITZ-CHOISIT : la ligne d'état honnête qui remplace le bouton
+// « Nouvelle candidature » dans l'espace bourses. Trois cas
+// (js/fitz-choisit.js) : toutes les places remplies ; profil trop mince
+// pour choisir ; aucune université compatible restante.
+function renderEtatChoixFitz() {
+
+const etat = document.getElementById("fitzChoixEtat");
+if (!etat) return;
+
+if (ESPACE_ECRITURE === "preinscription") { etat.hidden = true; return; }
+
+const quota = quotaPour("bourse");
+const nombre = candidaturesDuParcours("bourse", applications).length;
+const ligne = etatChoixFitz({ quota, nombre, profilPret: profilPretPourFitz(profile).pret });
+
+if (!ligne) { etat.hidden = true; return; }
+
+etat.hidden = false;
+etat.dataset.etat = ligne.code;
+etat.innerHTML = `<i data-lucide="${ligne.code === "complet" ? "check-circle" : "user-round"}"></i><span>${escapeHtml(ligne.texte)}</span>${ligne.lienProfil ? `<a href="profile.html" class="btn btn-secondary btn-sm">Compléter mon profil</a>` : ""}`;
 
 }
 
@@ -1987,10 +1760,22 @@ if (btn) { btn.disabled = false; btn.querySelector("span").textContent = "Vérif
 // universités déjà occupées par les autres créneaux — jamais de
 // créneau supplémentaire créé, jamais le quota dépassé : c'est une
 // mise à jour du document existant (même id), pas une création.
-async function replaceRecommendation(app) {
+// Lot FITZ-CHOISIT : l'étudiant REFUSE la proposition ; Fitz propose
+// l'université compatible suivante sur le MÊME créneau (jamais de
+// créneau supplémentaire, jamais le quota dépassé). Trois choses que
+// l'ancien replaceRecommendation() ne faisait pas :
+//   1. l'université refusée est MÉMORISÉE (users/{uid}.universitesRefusees)
+//      — elle ne reviendra ni ici ni au remplissage ;
+//   2. la carte repart NEUVE (carteFitz : scholarshipId, programId,
+//      universityId, portail, site, statut « à préparer », date à zéro,
+//      dossier vide) — l'ancienne gardait la clé de la bourse précédente
+//      et pouvait afficher son échéance, son état et ses exigences ;
+//   3. les pays exclus et les universités des autres créneaux sont
+//      écartés par le moteur lui-même (exclureUniversites, paysExclu).
+async function refuserEtRemplacer(app) {
 
-const button = document.querySelector(`[data-app-id="${app.id}"] .app-replace-btn`);
-if (button) { button.disabled = true; button.querySelector("span").textContent = "Recherche..."; }
+const button = document.querySelector(`[data-app-id="${app.id}"] .app-refuse-btn`);
+if (button) { button.disabled = true; button.querySelector("span").textContent = "Fitz cherche…"; }
 
 try {
 
@@ -2001,59 +1786,54 @@ const catalogueSnap = await chargerCatalogue();
 const programs = catalogueSnap.programmes.map(({ id, ...reste }) => ({ firestoreId: id, ...reste }));
 const universitiesById = new Map(catalogueSnap.universites.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
 const scholarshipsById = new Map(catalogueSnap.bourses.map(({ id, ...reste }) => [id, { firestoreId: id, ...reste }]));
+const parNom = indexParNom(universitiesById);
 
-const excludeNames = new Set(
-applications.map((a) => (a.university || "").trim().toLowerCase()).filter(Boolean)
-);
+// L'université refusée : son identifiant, ou celui de son programme,
+// ou son nom rapproché (candidature ancienne).
+const programme = app.programId ? programs.find((p) => p.firestoreId === app.programId) : null;
+const refuseeId = app.universityId || (programme && programme.universityId) || parNom.get(String(app.university || "").trim().toLowerCase()) || null;
 
-const eligiblePrograms = programs.filter((p) => {
-const uni = universitiesById.get(p.universityId);
-// uni.name, pas uni.university (voir la note plus haut dans ce fichier).
-return uni && !excludeNames.has((uni.name || "").trim().toLowerCase());
-});
+if (refuseeId && !universitesRefusees.includes(refuseeId)) universitesRefusees = [...universitesRefusees, refuseeId];
 
-// Même moteur que seedRecommendedSlots : « Suggérer une autre
-// université » repose le drapeau `isRecommendation`, c'est donc un
-// créneau rempli par Fitz au même titre. Le laisser sur
-// recommendPrograms aurait gardé ici, et ici seulement, la porte que
-// la passe 2/3 vient de fermer ailleurs.
 const [alternative] = retenirOpportunites({
 profile: profile || {},
-programs: eligiblePrograms,
+programs,
 universitiesById,
-scholarshipsById
+scholarshipsById,
+exclureUniversites: universitesAEviter({ applications, universitesRefusees, universitesParNom: parNom })
 }).retenues;
 
 if (!alternative) {
-alert("Aucune autre université compatible avec votre profil n'est disponible pour le moment.");
+showToast("Fitz n'a pas trouvé d'autre université compatible pour l'instant. Un profil plus complet élargit les possibilités.", { type: "warning" });
 return;
 }
 
+// 1. La mémoire du refus, AVANT la carte : si l'écriture de la carte
+// échoue, le refus reste acquis et la proposition suivante l'évitera.
+if (refuseeId) {
+await updateDoc(doc(db, "users", uid), { universitesRefusees: arrayUnion(refuseeId) });
+}
+
+// 2. La carte neuve — même fonction que le remplissage.
 await updateDoc(doc(db, "users", uid, "applications", app.id), {
-university: alternative.universityName,
-scholarship: alternative.scholarshipTitle,
-// Audit du 2026-08-28 : manquait ici aussi (même oubli que
-// seedRecommendedSlots) — la nouvelle université suggérée gardait les
-// liens de l'ancienne, ou aucun lien si le créneau remplacé n'en avait
-// jamais eu.
-portalUrl: portailDeLEntree(alternative),
-universityWebsite: alternative.universityWebsite || "",
-isRecommendation: true,
+...carteFitz(alternative, { portalUrl: portailDeLEntree(alternative), nextCheckDate: nextCheckFromToday(14), reminderFrequency: app.reminderFrequency || 14 }),
 updatedAt: serverTimestamp()
 });
 
-trackEvent("application_recommendation_replaced", {});
+trackEvent("application_recommendation_replaced", { refusee: refuseeId || "" });
+
+showToast(`Fitz vous propose ${alternative.universityName}.`, { type: "success" });
 
 await loadApplications();
 
 } catch (error) {
 
 console.error("Impossible de proposer une autre université :", error);
-alert("Un souci est survenu — réessayez dans un instant.");
+showToast("Un souci est survenu — réessayez dans un instant.", { type: "error" });
 
 } finally {
 
-if (button) { button.disabled = false; button.querySelector("span").textContent = "Suggérer une autre université"; }
+if (button) { button.disabled = false; button.querySelector("span").textContent = "Refuser et demander une autre université"; }
 
 }
 
@@ -2073,7 +1853,17 @@ await loadApplications();
 
 async function removeApplication(app) {
 
-if (!confirm(`Supprimer le suivi de "${app.university}" ?`)) return;
+// Lot FITZ-CHOISIT : après le dépôt, la suppression dit ce qui sera
+// perdu — la preuve de dépôt d'abord — et la place libérée sera de
+// nouveau remplie par Fitz (parcours bourses).
+const perdu = [];
+if (app.preuveDepot) perdu.push("votre preuve de dépôt");
+if (Array.isArray(app.checklist) && app.checklist.length) perdu.push("votre dossier de candidature");
+if (app.notes) perdu.push("vos notes");
+const suite = lireParcours(app) === "preinscription" ? "" : " Fitz proposera une autre université pour cette place.";
+const message = `Supprimer le suivi de « ${app.university} » ?${perdu.length ? ` Vous perdrez ${perdu.join(", ")} : ce suivi ne pourra pas être rétabli.` : ""}${suite}`;
+
+if (!confirm(message)) return;
 
 await deleteDoc(doc(db, "users", uid, "applications", app.id));
 
@@ -2248,32 +2038,25 @@ deadline: fields.deadline.value || null,
 reminderFrequency: parseInt(fields.frequency.value, 10),
 notes: fields.notes.value.trim(),
 premiumProtected: SCHOLARBRIDGE_PLANS[planId]?.extendsPendingApplications === true && fields.status.value === "en_attente",
-// Un enregistrement manuel (création ou modification via ce formulaire)
-// est un choix délibéré de l'étudiant — même si ce créneau avait été
-// pré-rempli par Fitz (isRecommendation), il perd ce statut dès qu'il
-// est touché ici. Seul replaceRecommendation() (bouton "Suggérer une
-// autre université") repose le flag.
-isRecommendation: false,
 updatedAt: serverTimestamp()
 };
 
-// Sélection catalogue (2026-09-02) : le site officiel de l'université
-// et son identifiant Firestore accompagnent la candidature — même
-// paire de champs que les créneaux suggérés par Fitz
-// (seedRecommendedSlots), pour que la carte affiche les mêmes liens.
-if (pickedEntry) {
-payload.universityWebsite = pickedEntry.universityWebsite || "";
-payload.universityId = pickedEntry.universityId || null;
-// La clé vers le catalogue (passe 1/3) — même paire que les créneaux
-// suggérés par Fitz (seedRecommendedSlots).
-payload.scholarshipId = pickedEntry.scholarshipId || null;
-payload.programId = pickedEntry.programId || null;
-// Lot A : une candidature liée à une bourse du catalogue ne peut pas
-// être une préinscription. La donnée gagne sur le formulaire.
-if (pickedEntry.scholarshipId) payload.track = "bourse";
+// Lot FITZ-CHOISIT : une candidature choisie par Fitz GARDE son badge
+// quand l'étudiant modifie ses notes ou sa date — son identité est en
+// lecture seule. Seule une CRÉATION manuelle (préinscription) est un
+// choix de l'étudiant. Sur une carte verrouillée, les champs
+// d'identité ne sont pas envoyés du tout : firestore.rules n'aurait
+// rien à redire (valeurs inchangées), mais on ne renvoie pas ce qu'on
+// n'a pas le droit de changer.
+if (!editingId) payload.isRecommendation = false;
+const enEdition = editingId ? applications.find((a) => a.id === editingId) : null;
+if (enEdition && identiteVerrouillee(enEdition)) {
+delete payload.university;
+delete payload.scholarship;
+delete payload.portalUrl;
+} else if (!payload.university) {
+return;
 }
-
-if (!payload.university) return;
 
 // Lot E1 : un statut déposé exige une déclaration valide — le select
 // ne l'offre qu'à cette condition, mais on le redit ici, en clair.
@@ -2394,7 +2177,20 @@ await loadApplications();
 
 });
 
-document.getElementById("addApplicationBtn").addEventListener("click", () => openModal(null));
+// Lot FITZ-CHOISIT : plus de création manuelle dans l'espace bourses —
+// le bouton n'y existe pas (Fitz remplit les places, la ligne d'état
+// #fitzChoixEtat dit où il en est). Il reste pour la préinscription
+// (vœux pre-N saisis à la main, hors lot) et, non-régression, pour une
+// formule sans plafond (Signature, dépréciée) que Fitz ne pré-remplit
+// jamais.
+const addBtn = document.getElementById("addApplicationBtn");
+const creationManuelle = ESPACE_ECRITURE === "preinscription" || (peutBourse && !Number.isFinite(quotaPour("bourse")) && !peutPreinscription);
+if (addBtn) {
+addBtn.hidden = !creationManuelle;
+addBtn.addEventListener("click", () => openModal(null));
+}
+const regle = document.getElementById("fitzRegle");
+if (regle) { regle.hidden = ESPACE_ECRITURE === "preinscription"; regle.textContent = PHRASE_REGLE; }
 document.getElementById("applicationModalClose").addEventListener("click", closeModal);
 document.getElementById("applicationCancelBtn").addEventListener("click", closeModal);
 
@@ -2422,6 +2218,12 @@ const track = params.get("track") === "preinscription" ? "preinscription" : "bou
 if (!shouldOpen) return;
 
 window.history.replaceState({}, "", window.location.pathname);
+
+// Lot FITZ-CHOISIT : dans l'espace bourses, il n'y a plus de création
+// manuelle — Fitz remplit les places à l'ouverture de la page. Le
+// ?action=new de Premier Dossier (payment.js) n'ouvre donc plus rien ;
+// il reste utile à la préinscription.
+if (!creationManuelle) return;
 
 if (isQuotaReached(quotaPour(track), candidaturesDuParcours(track, applications).length)) return;
 
@@ -2502,6 +2304,8 @@ renderLockedState(document.getElementById("lockedState"), ctx);
 return;
 
 }
+
+universitesRefusees = Array.isArray(ctx.userData?.universitesRefusees) ? ctx.userData.universitesRefusees.filter((x) => typeof x === "string") : [];
 
 initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress, ctx.userData?.documentsObtained || {}, ctx.planPreinscriptionId || "");
 

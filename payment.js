@@ -52,6 +52,7 @@ clearFormError,
 getAuthErrorMessage
 } from "./auth-ui.js";
 import { trackEvent } from "./js/analytics.js";
+import { PHRASE_REGLE } from "./js/fitz-choisit.js";
 
 const FITZ_MESSAGES = [
 "Fitz vous accompagnera dès la validation de votre paiement.",
@@ -191,6 +192,17 @@ durationEl.textContent = plan.duration || "";
 if (durationRow) durationRow.style.display = plan.duration ? "" : "none";
 document.getElementById("summaryIncluded").textContent = plan.tagline;
 document.getElementById("summaryFitzAccess").textContent = plan.fitzAccess;
+
+// Lot FITZ-CHOISIT (2026-09-11) : la règle du parcours bourses, dite
+// AVANT le paiement — il n'y a jamais de remboursement. Sur les seules
+// formules qui accompagnent des candidatures bourse (quota > 0) ; le
+// Pass Découverte et les offres préinscription n'ont rien à en dire.
+const regleRow = document.getElementById("summaryRegleRow");
+const regleBourse = plan.parcours === "bourse" && Number(plan.maxAccompaniedApplications) > 0;
+if (regleRow) {
+regleRow.style.display = regleBourse ? "" : "none";
+document.getElementById("summaryRegle").textContent = regleBourse ? PHRASE_REGLE : "";
+}
 
 }
 

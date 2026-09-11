@@ -455,10 +455,16 @@ nav.id = "espaceBascule";
 nav.className = "espace-bascule";
 nav.setAttribute("role", "group");
 nav.setAttribute("aria-label", "Changer d'accompagnement");
-nav.innerHTML = `
-<a href="espace-bourse.html" class="espace-bascule-btn${courant === "bourse" ? " is-active" : ""}"${courant === "bourse" ? ' aria-current="page"' : ""} data-espace="bourse">Bourses</a>
-<a href="espace-preinscription.html" class="espace-bascule-btn${courant === "preinscription" ? " is-active" : ""}"${courant === "preinscription" ? ' aria-current="page"' : ""} data-espace="preinscription">Préinscription</a>
-`;
+// Lot FITZ-CHOISIT, partie 0 (2026-09-11) : sous 400 px, la barre haute
+// débordait (bascule 183 px + cloche + pastille de formule). La pastille
+// garde son libellé (décision du 2026-09-02) ; c'est la bascule qui se
+// compacte : icône seule sous 400 px (css/journey-shell.css), les mêmes
+// icônes que le choix de parcours d'offers.html — `award` pour Bourses,
+// `landmark` pour Préinscription. Le libellé reste dans aria-label et
+// title ; l'état actif reste visible (fond plein).
+const entree = (href, cle, icone, libelle) => `
+<a href="${href}" class="espace-bascule-btn${courant === cle ? " is-active" : ""}"${courant === cle ? ' aria-current="page"' : ""} data-espace="${cle}" aria-label="${libelle}" title="${libelle}"><i data-lucide="${icone}" aria-hidden="true"></i><span class="espace-bascule-libelle">${libelle}</span></a>`;
+nav.innerHTML = entree("espace-bourse.html", "bourse", "award", "Bourses") + entree("espace-preinscription.html", "preinscription", "landmark", "Préinscription");
 
 nav.addEventListener("click", (e) => {
 const lien = e.target.closest("[data-espace]");

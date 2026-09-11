@@ -258,8 +258,13 @@ test("applications.js remplit encore le portail d'une candidature suggérée", (
 const source = lire("applications.js");
 assert.ok(source.includes('from "./js/portails.js"'));
 assert.ok(source.includes("function portailDeLEntree(entree)"));
-// Les quatre endroits qui écrivaient portalUrl depuis le catalogue.
-assert.equal((source.match(/portailDeLEntree\(/g) || []).length, 5, "la définition + les quatre points de remplissage");
+// Les endroits qui écrivent portalUrl depuis le catalogue : le
+// remplissage et le remplacement (via carteFitz). Les deux points du
+// sélecteur de catalogue ont disparu avec lui (lot FITZ-CHOISIT,
+// 2026-09-11 : c'est Fitz qui choisit, plus de recherche libre).
+assert.equal((source.match(/portailDeLEntree\(/g) || []).length, 3, "la définition + les deux points de remplissage");
+assert.ok(/carteFitz\(rec, \{ portalUrl: portailDeLEntree\(rec\)/.test(source), "le remplissage passe le portail à carteFitz");
+assert.ok(/carteFitz\(alternative, \{ portalUrl: portailDeLEntree\(alternative\)/.test(source), "le remplacement aussi");
 assert.ok(!/portalUrl: rec\.applicationUrl/.test(source));
 assert.ok(!/portalUrl: alternative\.applicationUrl/.test(source));
 });

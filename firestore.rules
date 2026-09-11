@@ -417,6 +417,49 @@ return !estStatutDepose(request.resource.data.get('status', '')) ||
 preuveValide(request.resource.data, uid, applicationId);
 }
 
+// ------------------------------------------------------------
+// LOT FITZ-CHOISIT (2026-09-11) — c'est Fitz qui choisit.
+// Pour une candidature du parcours BOURSES (track != preinscription),
+// l'identité (université, bourse, programme, portail, site) doit
+// venir du CATALOGUE : un programId qui existe dans /programs, avec
+// un scholarshipId et un universityId cohérents avec ce programme,
+// et — quand le nom est écrit — le nom de l'université du catalogue.
+// C'est ce qui interdit le texte libre tout en autorisant le
+// remplacement par Fitz.
+//
+// Jamais de dégradation : une candidature ancienne sans programId
+// reste modifiable sur ses autres champs (statut, notes, preuve…) ;
+// seule une écriture qui TOUCHE l'identité exige la cohérence. Les
+// vœux pre-N (préinscription) et les droits de l'admin sont inchangés.
+//
+// RISQUE RÉSIDUEL, ACCEPTÉ : un étudiant très technique pourrait,
+// depuis la console, viser un AUTRE programme DU CATALOGUE. Il ne
+// pourra jamais viser une université hors catalogue. Les règles ne
+// savent pas refaire le calcul de Fitz : on n'essaie pas.
+// ------------------------------------------------------------
+function champsIdentite() {
+return ["university", "scholarship", "scholarshipId", "programId", "universityId", "portalUrl", "universityWebsite"];
+}
+
+function estBourse(d) {
+return d.get('track', 'bourse') != 'preinscription';
+}
+
+function programmeDe(d) {
+return get(/databases/$(database)/documents/programs/$(d.programId)).data;
+}
+
+// L'identité de la candidature est celle d'un programme du catalogue.
+// `nomExige` : vrai quand le nom de l'université doit lui aussi être
+// celui du catalogue (création, ou modification du nom).
+function identiteCatalogue(d, nomExige) {
+return d.get('programId', null) is string &&
+exists(/databases/$(database)/documents/programs/$(d.programId)) &&
+d.get('scholarshipId', null) == programmeDe(d).get('scholarshipId', null) &&
+(!('universityId' in d) || d.universityId == null || d.universityId == programmeDe(d).universityId) &&
+(!nomExige || d.get('university', '') == get(/databases/$(database)/documents/universities/$(programmeDe(d).universityId)).data.get('name', ''));
+}
+
 match /users/{uid}/applications/{applicationId} {
 allow read: if isOwner(uid) || isAdmin();
 // Grille B : le quota se lit PAR PARCOURS (request.resource.data.track,
@@ -425,13 +468,20 @@ allow read: if isOwner(uid) || isAdmin();
 allow create: if isOwner(uid) && (
 (request.resource.data.get('track', 'bourse') == 'preinscription' && applicationId.matches(preSlotPattern(uid))) ||
 (request.resource.data.get('track', 'bourse') != 'preinscription' && applicationId.matches(slotPattern(uid)))
-) && depotJustifie(uid, applicationId, true);
+) && depotJustifie(uid, applicationId, true)
+// FITZ-CHOISIT : une bourse naît du catalogue, jamais du clavier.
+&& (!estBourse(request.resource.data) || identiteCatalogue(request.resource.data, true));
 allow delete: if isOwner(uid);
 // E1 : la transition vers un statut déposé exige la preuve ; une
 // preuve écrite (même sans changer le statut) doit être bien formée.
 allow update: if (isOwner(uid) &&
 depotJustifie(uid, applicationId, 'status' in request.resource.data.diff(resource.data).affectedKeys()) &&
-(!('preuveDepot' in request.resource.data.diff(resource.data).affectedKeys()) || !('preuveDepot' in request.resource.data) || preuveValide(request.resource.data, uid, applicationId))) ||
+(!('preuveDepot' in request.resource.data.diff(resource.data).affectedKeys()) || !('preuveDepot' in request.resource.data) || preuveValide(request.resource.data, uid, applicationId)) &&
+// FITZ-CHOISIT : toucher l'identité d'une bourse exige la cohérence
+// catalogue ; le nom, s'il change, est celui du catalogue.
+(!estBourse(request.resource.data) ||
+!request.resource.data.diff(resource.data).affectedKeys().hasAny(champsIdentite()) ||
+identiteCatalogue(request.resource.data, 'university' in request.resource.data.diff(resource.data).affectedKeys()))) ||
 (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["checklist", "updatedAt"]));
 }
 
