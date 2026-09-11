@@ -1732,9 +1732,13 @@ inset:-70px;
 
 z-index:-1;
 
-background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.14) 45%, transparent 72%);
-
-filter:blur(32px);
+/* Sans filter:blur (lot DEUX-MOTEURS, 2026-09-11) : le flou sur ce
+calque négatif forçait WebKit à séparer le fond de la carte de son
+premier plan — c'est cette séparation qui a laissé deux messages
+superposés sur l'accueil (captures iPhone de Charles). La douceur est
+dans les arrêts du dégradé. Couleurs mesurées avant/après : voir le
+rapport du lot. isolation:isolate ci-dessus reste INTOUCHÉ. */
+background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.26) 24%, rgba(233,163,25,.14) 45%, rgba(233,163,25,.05) 62%, transparent 78%);
 
 pointer-events:none;
 
@@ -1745,8 +1749,6 @@ pointer-events:none;
 .fitz-surface::after{
 
 inset:-36px;
-
-filter:blur(20px);
 
 }
 

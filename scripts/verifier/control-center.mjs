@@ -36,7 +36,7 @@
  * ============================================================
  */
 
-import { couperLeReseau } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
 
 const ADMIN_UID = "harnais-admin";
 const ETUDIANT_UID = "harnais-etudiant-fiche";
@@ -125,6 +125,7 @@ async function ouvrirLaFiche({ navigateur, base, session }) {
 
   page.on("pageerror", (e) => erreursPage.push(e.message));
   page.on("console", (msg) => {
+    if (estBruitConsole(msg.text())) return;
     if (msg.type() === "error" || msg.type() === "warning") messages.push(`${msg.type()}: ${msg.text()}`);
   });
 

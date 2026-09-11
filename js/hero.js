@@ -100,14 +100,18 @@ if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
 
 }
 
+// Lot DEUX-MOTEURS (2026-09-11) : un NOUVEAU <span> par message, avec
+// son animation d'entrée CSS (css/hero.css, #fitz-message > span). Avant :
+// opacité à 0, puis textContent changé 200 ms plus tard pendant la
+// transition — sur l'iPhone de Charles, WebKit dessinait l'ancien et le
+// nouveau message l'un sur l'autre. Plus de minuteur ici : rien à
+// annuler dans stopDemo(), et resetDemo() ne peut plus recevoir un
+// ancien message en retard.
 function setMessage(text) {
 
-message.style.opacity = "0";
-
-setTimeout(() => {
-message.textContent = text;
-message.style.opacity = "1";
-}, 200);
+const span = document.createElement("span");
+span.textContent = text;
+message.replaceChildren(span);
 
 }
 

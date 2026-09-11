@@ -118,7 +118,10 @@ function decouper(texte) {
 return texte
 .split(/(\n+)/)
 .filter(Boolean)
-.flatMap((partie) => (partie.trim() === "" ? [partie] : partie.split(/(?<=\s)/)));
+// Chaque mot avec l'espace qui le suit — sans lookbehind (lot
+// DEUX-MOTEURS, 2026-09-11) : `(?<=\s)` est une SyntaxError avant
+// Safari 16.4 et faisait tomber ce module ET ai-client.js qui l'importe.
+.flatMap((partie) => (partie.trim() === "" ? [partie] : (partie.match(/\S*\s|\S+/g) || [])));
 
 }
 

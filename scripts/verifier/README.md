@@ -54,16 +54,58 @@ des doublures (`hors-ligne.mjs`). Le catalogue doit donc arriver par
 à lire Firestore, le harnais le verrait sous la forme d'un catalogue vide —
 pas sous la forme d'une facture.
 
+## Deux moteurs (lot DEUX-MOTEURS, 2026-09-11)
+
+Sur iPhone, **tous** les navigateurs sont WebKit — Chrome iOS compris, et
+les navigateurs intégrés de WhatsApp, Instagram et Facebook. Deux défauts
+vus sur l'iPhone de Charles (un carré noir en haut d'`offers.html`, deux
+messages superposés dans la carte « Analyse en direct ») n'avaient jamais
+été vus ici, parce que le harnais ne lançait que Chromium.
+
+Il lance désormais **les deux moteurs** sur le même serveur local. Chaque
+ligne du rapport est préfixée de son moteur (`[chromium]`, `[webkit]`), et
+une section **« Écarts entre moteurs »** clôt le rapport : les anomalies
+présentes sous un moteur et absentes de l'autre, comparées par
+« page @vue + catégorie » (exception, console, fichier absent, débordement,
+sans nom, rendu vide, contrôle système, chevauchement) et jamais par texte
+exact — WebKit et Chromium ne formulent pas leurs exceptions pareil.
+
+- `--moteur=chromium|webkit|tous` — défaut `tous`. `--moteur=chromium` pour
+  itérer vite (une passe à deux moteurs dure environ le double).
+- **Témoin d'émulation** : sous chaque moteur, à 375 px, le harnais exige
+  `innerWidth === 375` et `clientWidth === 375`, sinon ÉCHEC explicite
+  (« émulation mobile inopérante sous <moteur> »). Un défaut de ce type a
+  existé dans WebKit sous Windows (playwright#33702).
+- `mesure` repose sur le protocole Chrome (CDP) : **Chromium seulement**. Sous
+  WebKit, le rapport le dit en clair ; ce n'est jamais une erreur.
+- `npm run verifier -- iphone` : captures ciblées 375 × 812, dpr 3, avec les
+  VRAIES polices (`captures-iphone.mjs`) — la carte « Analyse en direct »
+  image par image pendant deux cycles, et le coin haut-gauche d'`offers.html`
+  (trois états) et de `payment.html`, dont la part de pixels noirs est
+  mesurée (seuil 5 %, contrôle prouvé par mutation). Sortie dans
+  `scripts/verifier/sortie/<date>/<moteur>/` (ignoré par git).
+
+**Ce que le WebKit de Playwright sous Windows ne reproduit PAS** : le moteur
+de composition de l'iPhone (la façon dont le GPU peint et empile les
+calques). Les deux défauts de Charles sont des défauts de composition ; il
+est possible que WebKit-Windows n'en reproduise aucun. « Non reproduit ici »
+ne veut jamais dire « inexistant » : les captures de l'iPhone sont la preuve.
+Le gardien contre la cause probable (les flous décoratifs sur calque négatif)
+est `test/flou.test.mjs`, qui ne dépend d'aucun navigateur.
+
 ## Lancer
 
 ```
-npx playwright install chromium     # une seule fois, ~150 Mo
-npm run verifier                    # les 6 profils (~2 min)
-npm run verifier -- licence-obtenue # un seul profil (saute les pages)
-npm run verifier -- --montrer       # fenêtre visible, pour regarder
+npx playwright install chromium webkit   # une seule fois, ~250 Mo — TOUJOURS avec les noms (sans argument : Firefox aussi)
+npm run verifier                         # tout, sous les deux moteurs
+npm run verifier -- --moteur=chromium    # un seul moteur
+npm run verifier -- licence-obtenue      # un seul profil (saute les pages)
+npm run verifier -- --montrer            # fenêtre visible, pour regarder
+npm run verifier -- iphone               # captures ciblées iPhone, deux moteurs
 ```
 
-Code de sortie 0 = tout va bien, 1 = au moins un profil en échec.
+Code de sortie 0 = tout va bien, 1 = au moins un contrôle en échec sous un
+moteur.
 
 ## Les fichiers
 
@@ -73,7 +115,9 @@ Code de sortie 0 = tout va bien, 1 = au moins un profil en échec.
 | `questionnaire.mjs` | joue le questionnaire ; pilote par `#question[data-question]`, et attend après chaque clic *soit* la question suivante *soit* l'arrivée sur `results.html` (la dernière réponse peut finir pendant l'attente) |
 | `profils.mjs` | les six étudiants joués — un par piste d'études |
 | `pages.mjs` | la liste des bourses et deux fiches, recomptées contre le catalogue |
-| `hors-ligne.mjs` | les doublures Firebase / Lucide / polices |
+| `hors-ligne.mjs` | les doublures Firebase / Lucide / polices (option `polices: true` : les polices Google passent, et elles seules) ; la liste du bruit de console commune à tous les modules |
+| `captures-iphone.mjs` | les captures ciblées 375 × 812 sous chaque moteur (`iphone`) |
+| `captures-avant-apres.mjs` | captures Chromium 375/1280 des pages touchées par un lot visuel, couleurs de la surface Fitz, comparaison pixel à pixel (`node scripts/verifier/captures-avant-apres.mjs avant\|apres`) |
 | `serveur.mjs` | le site servi en local (`Cache-Control: no-store`) |
 
 ## Le garde-fou rapide

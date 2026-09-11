@@ -52,3 +52,8 @@ sauvegardes/
 # plus lourd que le code qu'elles ont servi à écrire. Elles restent sur
 # le disque de la machine où elles ont été produites.
 Claude outputs/
+
+# Captures du harnais (scripts/verifier/captures-iphone.mjs, lot
+# DEUX-MOTEURS) : planches et rapports PNG/JSON par date et par moteur.
+# Des pièces de séance, jamais des sources du site.
+scripts/verifier/sortie/

@@ -30,7 +30,12 @@
 
 // Frontières de mot en Unicode : `\b` ne connaît que l'ASCII, et
 // « Études » ou « vœu » commencent ou finissent hors de l'ASCII.
-const mot = (corps, drapeaux = "") => new RegExp(`(?<!\\p{L})(?:${corps})(?!\\p{L})`, `u${drapeaux}`);
+// Sans lookbehind (lot DEUX-MOTEURS, 2026-09-11) : `(?<!\p{L})` est une
+// SyntaxError avant Safari 16.4 (iPhone 8/X sous iOS 16.7 au plus, MDN),
+// et elle tombait ICI, à l'exécution — le glossaire entier avec elle. Le
+// groupe 1 capture le caractère précédent (ou le début) ; annotations()
+// le retranche.
+const mot = (corps, drapeaux = "") => new RegExp(`(^|[^\\p{L}])(?:${corps})(?!\\p{L})`, `u${drapeaux}`);
 
 export const GLOSSAIRE = [
 { id: "apostille", motif: mot("apostilles?", "i"), explication: "un tampon officiel qui rend votre document valable à l'étranger" },
@@ -65,7 +70,9 @@ if (vus.has(terme.id)) continue;
 const m = terme.motif.exec(texte);
 if (!m) continue;
 vus.add(terme.id);
-liste.push({ id: terme.id, position: m.index + m[0].length, texte: ` (${explicationDe(terme, m[0])})` });
+// m[1] est le caractère qui précède le terme (voir mot() plus haut).
+const trouve = m[0].slice(m[1].length);
+liste.push({ id: terme.id, position: m.index + m[0].length, texte: ` (${explicationDe(terme, trouve)})` });
 }
 return liste.sort((a, b) => a.position - b.position);
 }

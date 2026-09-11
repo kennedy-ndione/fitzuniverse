@@ -227,11 +227,33 @@ export async function couperLeReseau(context, options = {}) {
   // implementationsEtudiant() ci-dessus.
   const etudiant = options.etudiant && typeof options.etudiant === "object" ? options.etudiant : null;
 
+  // Lot DEUX-MOTEURS (2026-09-11) : `polices: true` laisse passer vers le
+  // réseau fonts.googleapis.com et fonts.gstatic.com — et SEULEMENT eux.
+  // Raison : sans les vraies polices, le harnais rend tout en police
+  // système, alors que sur l'iPhone, Public Sans et Newsreader produisent
+  // d'autres coupures de ligne. Réservé aux captures ciblées
+  // (captures-iphone.mjs) ; le défaut reste hors ligne, tout compris.
+  const polices = options.polices === true;
+
   await context.route("**/*", async (route) => {
 
     const url = route.request().url();
 
     if (url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")) {
+      return route.continue();
+    }
+
+    // Lot DEUX-MOTEURS (2026-09-11) : sous WebKit, l'interception voit
+    // AUSSI les URL blob: et data: (Chromium ne les lui montre pas). Les
+    // traiter comme « externes » les remplaçait par une réponse vide —
+    // l'<img> de la compression d'une capture (js/compression-image.js)
+    // tombait en onerror, et le harnais accusait le site : « Capture non
+    // envoyée ». Ce sont des objets de la page, jamais du réseau.
+    if (url.startsWith("blob:") || url.startsWith("data:")) {
+      return route.continue();
+    }
+
+    if (polices && (url.startsWith("https://fonts.googleapis.com/") || url.startsWith("https://fonts.gstatic.com/"))) {
       return route.continue();
     }
 
@@ -272,4 +294,27 @@ export async function couperLeReseau(context, options = {}) {
 
   return externes;
 
+}
+
+/**
+ * Le bruit de console qu'aucun moteur ne doit compter comme une erreur
+ * du site (lot DEUX-MOTEURS, 2026-09-11 — une seule liste pour les cinq
+ * modules qui écoutent la console) :
+ *
+ *  - « Failed to load resource » : le doublon console d'un 404 que
+ *    l'écouteur de réponses attrape déjà, avec l'URL ;
+ *  - « Viewport argument key "interactive-widget" not recognized » :
+ *    WebKit signale, en type `error`, une clé de <meta viewport> qu'il
+ *    ne connaît pas. `interactive-widget=resizes-content` est une clé
+ *    Chrome/Android (comportement du clavier virtuel) ; Safari l'ignore
+ *    par conception, sans autre effet. Ce n'est pas un défaut du site :
+ *    retirer la clé dégraderait Android pour faire taire un message.
+ */
+const BRUIT_CONSOLE = [
+  /Failed to load resource/i,
+  /Viewport argument key "interactive-widget" not recognized/i
+];
+
+export function estBruitConsole(texte) {
+  return BRUIT_CONSOLE.some((r) => r.test(String(texte || "")));
 }

@@ -439,6 +439,11 @@ neutralisés. */
 .fitz-demo .hero-demo{
 position:relative;
 isolation:isolate;
+/* Lot DEUX-MOTEURS (2026-09-11) : le fond de la carte est opaque à 97 %
+(css/hero.css) — le backdrop-filter hérité n'a aucun effet visible et
+coûte un calque composé de plus sous WebKit. */
+backdrop-filter:none;
+-webkit-backdrop-filter:none;
 right:auto;
 bottom:auto;
 width:100%;
@@ -456,8 +461,9 @@ content:"";
 position:absolute;
 inset:-70px;
 z-index:-1;
-background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.14) 45%, transparent 72%);
-filter:blur(32px);
+/* Sans filter:blur (lot DEUX-MOTEURS) : voir .fitz-surface::after dans
+css/base.css, même recette, même raison. */
+background:radial-gradient(circle, rgba(233,163,25,.38) 0%, rgba(233,163,25,.26) 24%, rgba(233,163,25,.14) 45%, rgba(233,163,25,.05) 62%, transparent 78%);
 pointer-events:none;
 }
 
@@ -473,7 +479,6 @@ padding:15px;
 
 .fitz-demo .hero-demo::after{
 inset:-36px;
-filter:blur(20px);
 }
 
 }

@@ -34,7 +34,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { couperLeReseau } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
 import { indexerCatalogue, etatDeLaCandidature, normaliserTitre } from "../../js/candidature-catalogue.js";
 import { etatCandidature } from "../../js/echeance.js";
 import { lireExigences, deposeParUnTiers, elementsAAjouter } from "../../js/exigences.js";
@@ -294,7 +294,7 @@ async function ouvrir(navigateur, base, etudiant) {
 
   page.on("console", (m) => {
     if (m.type() !== "error") return;
-    if (/Failed to load resource/i.test(m.text())) return;
+    if (estBruitConsole(m.text())) return;
     erreurs.push(`Erreur console : ${m.text()}`);
   });
 
@@ -1056,21 +1056,45 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         // un window.location.replace peut résoudre la condition sur le
         // document d'AVANT la navigation, et l'evaluate qui suit lit alors
         // le nouveau, encore à « … ».
-        await page.waitForFunction(() => {
+        const coquillePrete = () => page.waitForFunction(() => {
           if (!document.body.dataset.espace) return false;
           const el = document.getElementById("topbarPlanLabel");
           return !el || el.textContent.trim() !== "…";
         }, null, { timeout: 20000, polling: 100 }).catch(() => {});
-        const vu = await page.evaluate(() => ({
-          page: location.pathname.split("/").pop(),
-          espace: document.body.dataset.espace || "",
-          fab: !!document.getElementById("fitzFabWrap"),
-          bascule: !!document.getElementById("espaceBascule"),
-          basculeEntrees: [...document.querySelectorAll("#espaceBascule [data-espace]")].map((a) => a.dataset.espace),
-          pastille: (document.getElementById("topbarPlanLabel") || {}).textContent || "",
-          accueilMinimal: !!document.getElementById("accueilMinimal") && !document.getElementById("accueilMinimal").hidden,
-          outilsFitz: [...document.querySelectorAll('a[href^="ai-"], a[href^="test-prep"], a[href^="interview-prep"]')].length
-        }));
+        await coquillePrete();
+        // Lot DEUX-MOTEURS (2026-09-11) : sous WebKit, l'aiguillage
+        // (dashboard.html) pose sa coquille PUIS redirige — la condition
+        // ci-dessus était vraie sur le document de départ, et l'evaluate
+        // lisait dashboard.html (passe 2) ou tombait sur « Execution
+        // context was destroyed » (passe 3). Si on est encore sur la page
+        // de départ alors qu'une autre est attendue, on laisse 1,5 s à la
+        // redirection, puis on attend de nouveau la coquille. L'evaluate
+        // est rejoué si une navigation le coupe.
+        const depart = url.split("?")[0];
+        const autres = attente.filter((f) => f !== depart);
+        let vu = null;
+        for (let essai = 0; essai < 3 && !vu; essai++) {
+          try {
+            const ici = await page.evaluate(() => location.pathname.split("/").pop());
+            if (ici === depart && autres.length) {
+              await page.waitForURL((u) => autres.some((f) => u.pathname.endsWith(f)), { timeout: 1500 }).catch(() => {});
+              await coquillePrete();
+            }
+            vu = await page.evaluate(() => ({
+              page: location.pathname.split("/").pop(),
+              espace: document.body.dataset.espace || "",
+              fab: !!document.getElementById("fitzFabWrap"),
+              bascule: !!document.getElementById("espaceBascule"),
+              basculeEntrees: [...document.querySelectorAll("#espaceBascule [data-espace]")].map((a) => a.dataset.espace),
+              pastille: (document.getElementById("topbarPlanLabel") || {}).textContent || "",
+              accueilMinimal: !!document.getElementById("accueilMinimal") && !document.getElementById("accueilMinimal").hidden,
+              outilsFitz: [...document.querySelectorAll('a[href^="ai-"], a[href^="test-prep"], a[href^="interview-prep"]')].length
+            }));
+          } catch (e) {
+            if (essai === 2 || !/Execution context was destroyed|navigation/i.test(e.message)) throw e;
+            await page.waitForLoadState("domcontentloaded").catch(() => {});
+          }
+        }
         return { vu, erreurs, contexte };
       } catch (e) {
         return { vu: null, erreurs: [...erreurs, `ÉCHEC ${url} : ${e.message}`], contexte };

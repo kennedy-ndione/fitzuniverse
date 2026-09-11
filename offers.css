@@ -106,9 +106,16 @@ border-radius:50%;
 
 pointer-events:none;
 
-filter:blur(70px);
-
 }
+
+/* Lot DEUX-MOTEURS (2026-09-11) : plus AUCUN filter:blur() sur les halos.
+Un dégradé radial qui va jusqu'à transparent est déjà doux ; le flou
+n'adoucissait que le dernier bord, au prix d'un calque composé que
+WebKit (tous les navigateurs de l'iPhone) a mal peint et mal empilé :
+carré noir de ~180 px au coin haut-gauche d'offers.html, deux messages
+superposés sur l'accueil (captures de Charles, 2026-09-10). La douceur
+est reproduite par des arrêts intermédiaires et un arrêt transparent
+repoussé. Gardien : test/flou.test.mjs (rien au-dessus de 8 px). */
 
 .container::before{
 
@@ -120,7 +127,7 @@ width:420px;
 
 height:420px;
 
-background:radial-gradient(circle,rgba(233,163,25,.20) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(233,163,25,.20) 0%,rgba(233,163,25,.13) 28%,rgba(233,163,25,.06) 50%,rgba(233,163,25,.02) 64%,transparent 78%);
 
 }
 
@@ -134,7 +141,7 @@ width:380px;
 
 height:380px;
 
-background:radial-gradient(circle,rgba(126,113,216,.20) 0%,transparent 70%);
+background:radial-gradient(circle,rgba(126,113,216,.20) 0%,rgba(126,113,216,.13) 28%,rgba(126,113,216,.06) 50%,rgba(126,113,216,.02) 64%,transparent 78%);
 
 }
 
@@ -513,11 +520,10 @@ z-index:0;
 
 pointer-events:none;
 
+/* Sans filter:blur (lot DEUX-MOTEURS) : voir la note des halos plus haut. */
 background:
-radial-gradient(ellipse at 60% 20%,rgba(233,163,25,.16) 0%,transparent 55%),
-radial-gradient(ellipse at 25% 75%,rgba(126,113,216,.16) 0%,transparent 55%);
-
-filter:blur(50px);
+radial-gradient(ellipse at 60% 20%,rgba(233,163,25,.16) 0%,rgba(233,163,25,.10) 22%,rgba(233,163,25,.04) 42%,rgba(233,163,25,.01) 56%,transparent 68%),
+radial-gradient(ellipse at 25% 75%,rgba(126,113,216,.16) 0%,rgba(126,113,216,.10) 22%,rgba(126,113,216,.04) 42%,rgba(126,113,216,.01) 56%,transparent 68%);
 
 }
 
@@ -1477,8 +1483,6 @@ padding:32px 24px;
 }
 
 .pricing-glow{
-
-filter:blur(30px);
 
 opacity:.7;
 

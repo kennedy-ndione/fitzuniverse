@@ -28,7 +28,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { couperLeReseau } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const UID = "harnais-peigne";
@@ -123,7 +123,7 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
   page.on("pageerror", (e) => erreurs.push(`exception : ${e.message.split("\n")[0].slice(0, 140)}`));
   page.on("console", (m) => {
     if (m.type() !== "error") return;
-    if (/Failed to load resource/i.test(m.text())) return;
+    if (estBruitConsole(m.text())) return;
     erreurs.push(`console : ${m.text().split("\n")[0].slice(0, 140)}`);
   });
   page.on("response", (r) => {
@@ -139,7 +139,13 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
     const item = await page.$(".ai-chat-history-item");
     if (item) { await item.hover().catch(() => {}); await page.waitForTimeout(150); }
     const lu = await page.evaluate(LIRE_PAGE);
-    if (lu.scrollW > lu.innerW + 1) erreurs.push(`débordement horizontal : ${lu.scrollW} px pour ${lu.innerW}`);
+    // Lot DEUX-MOTEURS (2026-09-11) : la largeur de référence est celle
+    // de la FENÊTRE DEMANDÉE, pas window.innerWidth. En émulation mobile,
+    // Chromium élargit innerWidth jusqu'à contenir le contenu (407 px pour
+    // une fenêtre de 375) : scrollWidth ≤ innerWidth toujours, et cinq
+    // débordements réels de l'espace étudiant sont restés invisibles
+    // jusqu'à ce que WebKit, qui garde innerWidth = 375, les montre.
+    if (lu.scrollW > vue.viewport.width + 1) erreurs.push(`débordement horizontal : ${lu.scrollW} px pour ${vue.viewport.width}${lu.innerW !== vue.viewport.width ? ` (innerWidth élargi à ${lu.innerW})` : ""}`);
     if (lu.muets.length) erreurs.push(`sans nom accessible : ${lu.muets.join(", ")}`);
     if (lu.vides.length) erreurs.push(`contenu rendu vide (ni texte ni icône visible) : ${lu.vides.join(", ")}`);
     if (lu.systeme.length) erreurs.push(`contrôle système : ${lu.systeme.join(", ")}`);

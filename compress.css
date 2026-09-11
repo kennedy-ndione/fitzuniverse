@@ -152,6 +152,11 @@ Ici, l'unité garde sa largeur naturelle. */
 
 .cpr-target-row input{
 flex:1;
+/* Lot DEUX-MOTEURS (2026-09-11) : un <input type=number> a une largeur
+minimale intrinsèque (~20 caractères) et, enfant flex, min-width:auto —
+il ne rétrécissait pas sous 375 px : le panneau faisait 379 px pour 343
+disponibles. Vu par WebKit ; Chromium élargissait innerWidth. */
+min-width:0;
 font-family:var(--font-body);
 font-size:var(--fs-body);
 padding:11px 14px;
@@ -283,5 +288,11 @@ to{transform:rotate(360deg);}
 qui mérite le glassmorphism — pas les cartes de formulaire au repos. */
 
 @media(max-width:900px){
-.cpr-layout{grid-template-columns:1fr;}
+/* minmax(0,1fr) et non 1fr (lot DEUX-MOTEURS, 2026-09-11) : `1fr` vaut
+minmax(auto,1fr), et le minimum « auto » de la piste est la largeur
+min-content du panneau — 379 px à 375, imposée par la rangée cible
+(champ nombre + sélecteur d'unité). Avec 0, la piste suit la fenêtre et
+le champ, en min-width:0, rétrécit. Vu par WebKit (scrollWidth 386),
+Chromium élargissait innerWidth à 395 et ne voyait rien. */
+.cpr-layout{grid-template-columns:minmax(0,1fr);}
 }

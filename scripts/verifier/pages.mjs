@@ -28,7 +28,7 @@ import { COUCHES } from "../../js/procedures/residences/index.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { couperLeReseau } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
 import { etatCandidature, analyserEcheance, etatAffichable } from "../../js/echeance.js";
 import { lirePays, etatDunPays, estOuverte, faitsPublics } from "../../js/pays-preinscription.js";
 import { trouverProcedure, residencesDocumentees } from "../../js/procedures/index.js";
@@ -152,7 +152,7 @@ async function ouvrir(navigateur, base, options = {}) {
 
   page.on("console", (m) => {
     if (m.type() !== "error") return;
-    if (/Failed to load resource/i.test(m.text())) return;
+    if (estBruitConsole(m.text())) return;
     erreurs.push(`Erreur console : ${m.text()}`);
   });
 

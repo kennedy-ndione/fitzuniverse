@@ -257,8 +257,10 @@ assert.match(harnais, /const ECRANS_D_ECHEC = \[/);
 // Le harnais tourne dans `npm run verifier` sans qu'on ait à y penser.
 const verifieur = lire("scripts/verifier/verifier.mjs");
 assert.match(verifieur, /import \{ verifierControlCenter \} from "\.\/control-center\.mjs";/);
-assert.match(verifieur, /centre = await verifierControlCenter\(/);
-assert.match(verifieur, /\(centre\.anomalies\.length \? 1 : 0\)/, "un échec du Control Center doit faire échouer le harnais entier");
+// Lot DEUX-MOTEURS (2026-09-11) : chaque contrôle passe par noter(), sous
+// chaque moteur ; le décompte final additionne les contrôles en échec.
+assert.match(verifieur, /noter\("control center", await verifierControlCenter\(/);
+assert.match(verifieur, /totalEchecs \+= echecs\.length/, "un échec du Control Center doit faire échouer le harnais entier");
 
 });
 

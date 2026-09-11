@@ -79,9 +79,16 @@ border-radius:50%;
 
 pointer-events:none;
 
-filter:blur(70px);
-
 }
+
+/* Lot DEUX-MOTEURS (2026-09-11) : plus AUCUN filter:blur() sur les halos.
+Un dégradé radial qui va jusqu'à transparent est déjà doux ; le flou
+n'adoucissait que le dernier bord, au prix d'un calque composé que
+WebKit (tous les navigateurs de l'iPhone) a mal peint et mal empilé :
+carré noir de ~180 px au coin haut-gauche d'offers.html, deux messages
+superposés sur l'accueil (captures de Charles, 2026-09-10). La douceur
+est reproduite par des arrêts intermédiaires et un arrêt transparent
+repoussé. Gardien : test/flou.test.mjs (rien au-dessus de 8 px). */
 
 .container::before{
 
@@ -93,9 +100,7 @@ width:360px;
 
 height:360px;
 
-background:radial-gradient(circle,rgba(233,163,25,.20) 0%,transparent 70%);
-
-animation:heroHaloA 24s ease-in-out infinite;
+background:radial-gradient(circle,rgba(233,163,25,.20) 0%,rgba(233,163,25,.13) 28%,rgba(233,163,25,.06) 50%,rgba(233,163,25,.02) 64%,transparent 78%);
 
 }
 
@@ -109,25 +114,14 @@ width:320px;
 
 height:320px;
 
-background:radial-gradient(circle,rgba(126,113,216,.2) 0%,transparent 70%);
-
-animation:heroHaloB 28s ease-in-out infinite;
+background:radial-gradient(circle,rgba(126,113,216,.2) 0%,rgba(126,113,216,.13) 28%,rgba(126,113,216,.06) 50%,rgba(126,113,216,.02) 64%,transparent 78%);
 
 }
 
-@keyframes heroHaloA{
-
-0%,100%{ transform:translate(0,0) scale(1); }
-50%{ transform:translate(26px,18px) scale(1.08); }
-
-}
-
-@keyframes heroHaloB{
-
-0%,100%{ transform:translate(0,0) scale(1); }
-50%{ transform:translate(-20px,22px) scale(1.06); }
-
-}
+/* Les animations heroHaloA / heroHaloB (24 s et 28 s, infinies) ont été
+retirées avec le lot DEUX-MOTEURS : règle déjà écrite pour offers.css,
+aucune animation en boucle hors halo Fitz — et un calque animé en
+permanence sur la page où l'on paie. */
 
 @media (prefers-reduced-motion: reduce){
 
@@ -683,6 +677,7 @@ border:0;
 
 --method-color:var(--primary-color);
 --method-glow:rgba(233,163,25,.30);
+--method-glow-soft:rgba(233,163,25,.14);
 --method-tint:var(--background-light);
 
 display:block;
@@ -702,6 +697,7 @@ réelle déjà présente dans la page, pas d'un choix arbitraire. */
 
 --method-color:#0089C7;
 --method-glow:rgba(0,137,199,.32);
+--method-glow-soft:rgba(0,137,199,.15);
 --method-tint:rgba(0,137,199,.08);
 
 }
@@ -710,6 +706,7 @@ réelle déjà présente dans la page, pas d'un choix arbitraire. */
 
 --method-color:#FF7900;
 --method-glow:rgba(255,121,0,.32);
+--method-glow-soft:rgba(255,121,0,.15);
 --method-tint:rgba(255,121,0,.08);
 
 }
@@ -801,9 +798,9 @@ z-index:-1;
 
 border-radius:inherit;
 
-background:radial-gradient(ellipse at 50% 35%,var(--method-glow),transparent 70%);
-
-filter:blur(20px);
+/* Sans filter:blur (lot DEUX-MOTEURS) : un arrêt intermédiaire
+(--method-glow-soft, la même teinte à demi-alpha) remplace le flou. */
+background:radial-gradient(ellipse at 50% 35%,var(--method-glow) 0%,var(--method-glow-soft) 34%,transparent 78%);
 
 opacity:0;
 
