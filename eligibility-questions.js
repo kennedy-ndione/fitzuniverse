@@ -492,6 +492,29 @@ validerEtAvancer();
 }
 });
 
+// ============================================================
+// COMPARAISON SANS ACCENTS (2026-09-12)
+// ============================================================
+// Un étudiant qui tape « senegal » sur le clavier de son téléphone ne
+// voyait AUCUNE suggestion : le filtre comparait « senegal » à
+// « sénégal » caractère par caractère. Sur 194 pays proposés, 51
+// portent un accent — Sénégal, Côte d'Ivoire, Guinée, Bénin, Algérie,
+// République démocratique du Congo… soit la majorité de l'audience.
+//
+// LA RÉPONSE RESTE ACCENTUÉE : c'est la SAISIE qui est mise à plat
+// pour la comparaison, jamais le nom du pays. Retirer les accents des
+// noms eux-mêmes aurait écrit « Senegal » et « Cote d'Ivoire » à
+// l'écran, et aurait cassé la résolution en code ISO
+// (js/eligibility-countries.js) pour les nouvelles réponses.
+//
+// Même recette que normaliser() de js/fitz-combobox.js, qui habille
+// les champs à suggestions du reste du site. Ce fichier a son propre
+// panneau (#suggestions), antérieur au composant : il ne peut pas
+// l'importer sans refondre la page.
+function sansAccents(texte) {
+return String(texte || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+}
+
 answerInput.addEventListener("input", () => {
 
 const question = parcours.courante();
@@ -502,7 +525,7 @@ const suggestions = resoudre(question.suggestions, parcours.reponses) || [];
 
 if (!suggestions.length) return;
 
-const value = answerInput.value.toLowerCase();
+const value = sansAccents(answerInput.value);
 
 suggestionsBox.innerHTML = "";
 
@@ -511,9 +534,17 @@ suggestionsBox.style.display = "none";
 return;
 }
 
-const matches = suggestions
-.filter((suggestion) => suggestion.toLowerCase().includes(value))
-.slice(0, 6);
+// PRÉFIXE D'ABORD, PUIS CONTENU (2026-09-12) : « mali » doit proposer
+// le Mali avant la Somalie. L'ancien filtre était un simple includes(),
+// qui rangeait les pays dans l'ordre de la liste et enterrait parfois
+// le pays cherché sous ses homonymes partiels.
+const prefixe = [], contenu = [];
+for (const suggestion of suggestions) {
+const n = sansAccents(suggestion);
+if (n.startsWith(value)) prefixe.push(suggestion);
+else if (n.includes(value)) contenu.push(suggestion);
+}
+const matches = [...prefixe, ...contenu].slice(0, 6);
 
 // LA LISTE SE FERME QUAND IL N'Y A PLUS RIEN À SUGGÉRER (2026-09-05).
 // Elle est en `position:absolute` juste sous le champ : sur un
@@ -523,7 +554,7 @@ const matches = suggestions
 // suggestion PAR-DESSUS le bouton, et son pouce retombait sur la
 // suggestion au lieu de valider. Quand la saisie est déjà exactement
 // une suggestion, il n'y a plus rien à proposer : on referme.
-const dejaExact = matches.some((suggestion) => suggestion.toLowerCase() === value);
+const dejaExact = matches.some((suggestion) => sansAccents(suggestion) === value);
 
 if (!matches.length || dejaExact) {
 suggestionsBox.style.display = "none";

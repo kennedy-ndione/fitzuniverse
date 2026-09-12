@@ -44,14 +44,21 @@
 * ============================================================
 */
 
+import { NATIONALITES } from "./nationalites.js";
+
 // ============================================================
-// PAYS — liste mondiale, réutilisée par « country » (résidence) ET
-// « nationality ». Les deux questions posaient la même liste :
-// factoriser évite que les deux copies divergent. type:"search"
-// n'impose jamais cette liste — la saisie libre est enregistrée telle
-// quelle, donc un pays absent d'ici fonctionne déjà. Les 15 premiers
-// restent en tête (cœur probable de l'audience), le reste suit par
-// continent.
+// PAYS — la liste mondiale, servie par la question « country » (le
+// pays de résidence). type:"search" ne l'impose jamais : une saisie
+// libre est enregistrée telle quelle, donc un pays absent d'ici
+// fonctionne déjà. Les 15 premiers restent en tête (cœur probable de
+// l'audience), le reste suit par continent.
+//
+// JUSQU'AU 2026-09-12, cette même liste servait aussi « nationality ».
+// Elle ne la sert plus : à « Quelle est votre nationalité ? » on répond
+// « Sénégalais(e) », pas « Sénégal ». Les gentilés vivent dans
+// js/nationalites.js, dans le MÊME ORDRE que cette liste —
+// test/nationalites.test.mjs vérifie qu'elles restent jumelles, donc un
+// pays ajouté ici sans son gentilé fait rougir la suite.
 // ============================================================
 export const PAYS_DU_MONDE = [
 
@@ -750,7 +757,13 @@ icon: "id-card",
 question: "Quelle est votre nationalité ?",
 assistant: "Beaucoup de bourses posent leurs conditions sur la citoyenneté, pas sur le lieu de vie : un étudiant sénégalais installé au Maroc reste éligible aux programmes réservés aux Sénégalais.",
 type: "search",
-suggestions: PAYS_DU_MONDE
+// LES GENTILÉS, ET NON LES PAYS (lot NATIONALITÉS, 2026-09-12) : à
+// « Quelle est votre nationalité ? » on répond « Sénégalais(e) », pas
+// « Sénégal ». La réponse enregistrée change donc de forme — c'est
+// paysDeNationalite() (js/nationalites.js), appelée par
+// isoDeNationalite(), qui la ramène au pays puis au code ISO, et qui
+// continue d'accepter les réponses « Sénégal » d'avant ce lot.
+suggestions: NATIONALITES
 },
 
 {

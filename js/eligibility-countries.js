@@ -62,6 +62,7 @@
 
 import { COUNTRIES } from "./countries.js";
 import { duPays } from "./pays-grammaire.js";
+import { paysDeNationalite } from "./nationalites.js";
 
 // ------------------------------------------------------------
 // Groupes de pays, en codes ISO 3166-1 alpha-2
@@ -210,7 +211,28 @@ const code = brut.toUpperCase();
 return COUNTRIES.some((c) => c.iso === code) ? code : null;
 }
 const clef = normalize(brut);
-return PAR_NOM.get(clef) || ALIAS[clef] || null;
+const direct = PAR_NOM.get(clef) || ALIAS[clef];
+if (direct) return direct;
+
+// UN GENTILÉ (lot NATIONALITÉS, 2026-09-12). Depuis ce lot, la question
+// « Quelle est votre nationalité ? » enregistre « Sénégalais(e) » et non
+// plus « Sénégal ». Sans ce dernier recours, isoDeNationalite() rendrait
+// null sur TOUTES les réponses neuves : estEligible() deviendrait muet
+// et les bourses réservées resteraient affichées à tout le monde, sans
+// que rien ne le signale à l'écran. paysDeNationalite() accepte aussi
+// les noms de pays, donc les réponses d'avant ce lot passent toujours
+// par la voie directe ci-dessus.
+//
+// ET LA TABLE D'ALIAS EST RELUE SUR LE PAYS OBTENU, pas seulement le
+// référentiel : dix pays du questionnaire ne s'écrivent pas comme
+// countries.js (Vietnam / Viêt Nam, les deux Congo, Taïwan, Myanmar,
+// Kosovo, Îles Marshall, Antigua-et-Barbuda, Saint-Kitts-et-Nevis,
+// Saint-Vincent-et-les-Grenadines). Sans cette seconde lecture, leurs
+// gentilés rendaient null — vérifié avant correction.
+const pays = paysDeNationalite(brut);
+if (!pays) return null;
+const clefPays = normalize(pays);
+return PAR_NOM.get(clefPays) || ALIAS[clefPays] || null;
 }
 
 // ------------------------------------------------------------
