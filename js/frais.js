@@ -57,14 +57,36 @@ inconnue: "Exonération non vérifiée"
 * « Hubs », gratuit de 0 à 500 €/an, peu cher jusqu'à ~2 500 €/an.
 *
 * Une devise ABSENTE de ce tableau -> bande « inconnu », et c'est
-* voulu : un seuil n'est pas une conversion de taux, c'est un jugement
-* sur ce qu'« abordable » veut dire dans ce pays. Il se pose à la main,
-* une fois, avec une source — jamais calculé depuis un taux de change.
-* Les devises des pays cibles (MAD, TRY, CAD, XOF…) se remplissent au
-* lot D2, chacune avec sa source.
+* voulu : le seuil se pose à la main, une fois, avec une source — jamais
+* recalculé à la volée depuis un taux de change.
+*
+* CE QUE LE SEUIL JUGE (précisé au lot SEUILS-DEVISES, 2026-09-12).
+* « Abordable » ne parle pas du coût de la vie dans le pays d'accueil :
+* il parle du PORTEFEUILLE DE L'ÉTUDIANT — une famille de Dakar, d'Abidjan
+* ou de Douala — devant un droit d'inscription. Ce portefeuille est le
+* même que l'établissement facture en francs suisses ou en wons. Les
+* seuils des autres devises sont donc les MÊMES 500 € et 2 500 €, écrits
+* dans la devise facturée : convertis UNE FOIS, à la main, au taux de
+* référence de la BCE du 11 septembre 2026 (1 € = 1,1592 USD, 0,85815 GBP,
+* 0,9451 CHF, 1,6064 CAD, 178,56 JPY, 1 556,56 KRW, 7,7762 CNY — source :
+* ecb.europa.eu, taux de référence quotidiens), puis ARRONDIS à un chiffre
+* rond. C'est un jugement figé avec sa source et sa date, pas un calcul :
+* si un taux bouge de 10 %, la bande d'aucune université du catalogue ne
+* change (le plus proche d'un seuil est Pavia à 390 €, en euros). À
+* revoir seulement si l'euro décroche durablement contre une devise.
+*
+* Devises à venir avec leurs universités (MAD, TRY, XOF…) : même méthode,
+* même source, une ligne chacune.
 */
 export const SEUILS_PAR_DEVISE = {
-EUR: { gratuit: 500, abordable: 2500 }
+EUR: { gratuit: 500, abordable: 2500 },
+USD: { gratuit: 600, abordable: 3000 },
+GBP: { gratuit: 450, abordable: 2200 },
+CHF: { gratuit: 500, abordable: 2400 },
+CAD: { gratuit: 800, abordable: 4000 },
+JPY: { gratuit: 90000, abordable: 450000 },
+KRW: { gratuit: 800000, abordable: 4000000 },
+CNY: { gratuit: 4000, abordable: 20000 }
 };
 
 // Compatibilité : les deux anciens noms restent exportés, mais dérivés
@@ -107,7 +129,10 @@ export const JOURS_FRAICHEUR = 180;
 
 const NIVEAUX = { licence: "licence", master: "master", doctorat: "doctorat" };
 
-const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA" };
+// « ¥ CN » et non « ¥ » pour le yuan : le yen et le yuan partagent le
+// symbole, et Tokyo comme Fudan sont au catalogue — l'ambiguïté coûterait
+// un facteur 25 à qui lit vite.
+const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN" };
 
 function cleNiveau(niveau) {
 if (typeof niveau !== "string") return null;
