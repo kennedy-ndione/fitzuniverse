@@ -315,9 +315,12 @@ comme les portes : pas de Lucide dans le hero. -->
 <!-- La ligne de preuve : deux réserves, rien d'autre. Le diagnostic n'est
 pas une réserve, c'est un chemin — il a sa propre ligne sous les portes
 (.hero-diag) depuis le lot PORTES-COULEUR (2026-09-11). -->
+<!-- Lot VITRINE-COMMERCIALE (2026-09-11) : « Aucune promesse d'admission »
+a quitté la ligne de preuve — on dit ce que le site fait (gratuit,
+sans compte, cinq minutes), jamais ce qu'il ne fait pas. -->
 <p class="hero-proof reveal hero-stagger">
 <span>Coûts et échéances vérifiés à la source, datés.</span>
-<span>Aucune promesse d'admission · sans compte pour commencer.</span>
+<span>Gratuit, sans compte, en cinq minutes.</span>
 </p>
 
 <!-- Les trois compteurs gardent leurs identifiants, leur « — » de
@@ -575,26 +578,10 @@ Bonjour, je suis Fitz.
 COMMENT ÇA FONCTIONNE
 =========================================== -->
 
-<!-- ==========================================
-LE CATALOGUE EN CHIFFRES (lot LANGAGE, 2026-09-10)
-==========================================
-Les nombres se LISENT, ils ne s'écrivent pas : js/homepage-teaser.js
-les compte sur l'instantané assets/data/catalogue.json (bourses,
-établissements, pays) et sur le registre js/procedures/residences/
-index.js (pays de départ documentés). La bande reste `hidden` tant que
-le catalogue n'a pas répondu — pas de zéro, pas d'estimation. Un test
-échoue si l'un de ces nombres est écrit en clair ici. -->
-<section id="chiffres" class="chiffres" aria-label="Le catalogue en chiffres" hidden>
-<div class="container">
-<ul class="chiffres-liste">
-<li><strong data-chiffre="bourses">—</strong><span>bourses vérifiées une par une</span></li>
-<li><strong data-chiffre="etablissements">—</strong><span>établissements</span></li>
-<li><strong data-chiffre="pays">—</strong><span>pays au catalogue</span></li>
-<li><strong data-chiffre="residences">—</strong><span>pays de départ documentés à la source officielle</span></li>
-</ul>
-<p class="chiffres-note">Chaque fiche porte sa date de vérification et le lien vers sa source.</p>
-</div>
-</section>
+<!-- La bande « le catalogue en chiffres » (lot LANGAGE) est partie avec le
+lot VITRINE-COMMERCIALE (2026-09-11, décision de Charles) : ses quatre
+nombres répétaient les compteurs du hero. Le bas de page est devenu un
+appel à l'action (voir .cta-box plus bas). -->
 
 <section id="how-it-works" class="how-it-works section">
 
@@ -731,7 +718,7 @@ diagnostic reste primaire (btn-primary btn-lg), le catalogue est
 secondaire, comme il l'était déjà dans .teaser-actions. Le CTA ambre
 de fin de page, lui, reste le seul geste ambre. -->
 <div class="steps-footer">
-<a href="eligibility-test.html" class="btn btn-primary btn-lg steps-cta">
+<a href="eligibility-test.html" class="btn btn-accent btn-lg steps-cta">
 <span>Commencer gratuitement</span>
 <span class="steps-cta-arrow" aria-hidden="true">→</span>
 </a>
@@ -871,34 +858,44 @@ alt=""
 loading="lazy" decoding="async">
 </picture>
 
+<!-- LE BLOC DE CONCLUSION (lot VITRINE-COMMERCIALE, 2026-09-11) — à la
+place de la bande de chiffres : un titre porteur, trois étapes courtes
+(diagnostic gratuit → formule → dossier déposé), UN bouton principal
+vers le diagnostic gratuit et un lien vers les formules. Aucun nombre
+d'étudiants accompagnés, aucun avis : FitzUniverse n'a pas encore de
+client payant, et un chiffre inventé serait de la publicité
+mensongère. Un vrai compteur viendra avec de vrais clients. -->
 <div class="cta-box-panel">
 
-<span class="kicker kicker--on-dark">Votre avenir commence aujourd'hui</span>
+<span class="kicker kicker--on-dark">Et maintenant</span>
 
 <h2>
-Découvrez votre potentiel et le nombre d'opportunités faites pour vous.
+Votre projet d'études commence aujourd'hui.
 </h2>
 
 <p>
-Deux minutes suffisent à Fitz pour situer votre niveau de préparation, les bourses qui vous correspondent et ce que coûterait une année que vous financez vous-même.
+Cinq minutes suffisent à Fitz pour situer votre profil et les opportunités faites pour vous. Le reste, on le construit ensemble, jusqu'au dépôt.
 </p>
+
+<ol class="cta-steps">
+<li><span class="cta-step-num">1</span><span>Le diagnostic gratuit, sans compte</span></li>
+<li><span class="cta-step-num">2</span><span>La formule qui vous correspond</span></li>
+<li><span class="cta-step-num">3</span><span>Votre dossier complet, vérifié, déposé</span></li>
+</ol>
 
 <div class="cta-buttons">
 
-<!-- Seul bouton ambre de la page : c'est l'action que tout le reste
-de la page prépare. Les autres CTA restent bleus. Pointe vers les
-formules (offers.html) plutôt qu'une inscription indépendante :
-le compte se crée désormais au moment du paiement (payment.html),
-voir payment.js. -->
-<a href="offers.html" class="btn btn-accent btn-lg">
-
-<span>Choisir ma formule</span>
-<!-- Flèche directionnelle (passe mobile 2026-09-01) : même vocabulaire
-que la .steps-cta-arrow du bloc « Comment ça fonctionne » et que les
-liens de carte du catalogue — le CTA final était le seul geste
-principal sans repère visuel. -->
+<!-- Le bouton principal de ce bloc mène au diagnostic gratuit : c'est
+l'action que toute la page prépare, et elle ne coûte rien. Les formules
+sont un lien, à côté. -->
+<a href="eligibility-questions.html" class="btn btn-accent btn-lg">
+<span>Commencer mon diagnostic gratuit</span>
 <i data-lucide="arrow-right" aria-hidden="true"></i>
+</a>
 
+<a href="offers.html" class="btn btn-link btn-link--on-dark">
+<span>Voir les formules</span>
+<i data-lucide="arrow-right" aria-hidden="true"></i>
 </a>
 
 </div>

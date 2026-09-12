@@ -239,37 +239,13 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 </div>
 </div>
 
-<!-- Avant de candidater : diagnostic Fitz — placé en premier dans la
-colonne principale (plutôt qu'après "À propos"/"Informations clés")
-pour rester au même niveau vertical que la carte "Être accompagné par
-Fitz" de la sidebar, elle-même visible dès le premier écran sur
-desktop (colonnes alignées en haut, voir .details-body). Sans ce
-repositionnement, le diagnostic gratuit n'apparaissait qu'après ~2
-écrans de scroll, bien après le CTA payant — audit du 2026-08-10. -->
-<section class="details-section diagnostic-block">
-
-<div class="diagnostic-head">
-<div class="fitz-avatar fitz-avatar--sm" aria-hidden="true"></div>
-<h2>Avant de candidater</h2>
-</div>
-
-<p class="diagnostic-intro">Fitz peut analyser votre compatibilité avec cette université.</p>
-
-<ul class="diagnostic-checklist">
-<li><i data-lucide="check"></i>Niveau académique</li>
-<li><i data-lucide="check"></i>Langue</li>
-<li><i data-lucide="check"></i>Documents</li>
-<li><i data-lucide="check"></i>Chances de compléter votre dossier</li>
-</ul>
-
-<button type="button" class="btn btn-secondary" id="analyzeBtn">
-<i data-lucide="scan-search"></i>
-<span>Analyser mon profil</span>
-</button>
-
-<div id="diagnosticResult" class="diagnostic-result" hidden></div>
-
-</section>
+<!-- Le bloc « Avant de candidater — Fitz peut analyser votre compatibilité
+avec cette université » a quitté toutes les fiches avec le lot
+VITRINE-COMMERCIALE (2026-09-11, décision de Charles) : le diagnostic
+général (eligibility-questions.html) suffit. Son JS (details.js), son
+CSS (scholarship-details.css, css/details-redesign.css) et ses
+écouteurs sont partis avec lui. La colonne de droite « Être accompagné
+par Fitz » et le lien vers le site de l'université restent. -->
 
 <section class="details-section">
 <h2>À propos de cette opportunité</h2>
@@ -441,7 +417,7 @@ explique le cas général. Rempli en textContent par details.js. -->
 
 <p>Diagnostic personnalisé, checklists, assistance étape par étape, préparation des documents.</p>
 
-<a href="offers.html?parcours=bourse" id="fitzCtaPrimary" class="btn btn-secondary btn-lg">
+<a href="offers.html?parcours=bourse" id="fitzCtaPrimary" class="btn btn-accent btn-lg">
 <span>Choisir ma formule</span>
 <i data-lucide="arrow-right"></i>
 </a>

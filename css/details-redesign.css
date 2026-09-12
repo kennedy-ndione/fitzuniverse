@@ -106,66 +106,6 @@ font-family:var(--font-affirmation);
 font-weight:700;
 }
 
-/* ==========================================================
-DIAGNOSTIC — l'icône à côté de « Avant de candidater » (voir
-scholarship-details.html) n'est plus une icône générique (sparkles) :
-c'est l'avatar Fitz lui-même — le même halo qui respire que sur
-ai-chat.html/ai-letter.html/etc. (.fitz-avatar, css/ai-suite.css), pour
-que « Fitz peut analyser votre compatibilité » soit signé par le
-visage que l'étudiant connaît déjà des autres outils, plutôt qu'une
-icône interchangeable. Repris ici plutôt que d'ajouter
-css/ai-suite.css (chargée par les seuls outils ai-*.html : bien plus
-lourde qu'un halo, avec ses bulles de chat et son en-tête d'outil que
-cette page n'utilise pas) — même logique que les tokens de couleur
-ci-dessus, dupliqués plutôt que partagés par fichier. Recoloré en
-terracotta (var(--amber-500)/var(--amber-700), plus haut) : l'original
-est resté à l'ancien ambre (#E9A319/#8A5D00, pas encore audité), qui
-aurait détonné seul sur une page désormais terracotta partout ailleurs. */
-.diagnostic-head{
-gap:12px;
-align-items:center;
-}
-
-.fitz-avatar{
-position:relative;
-flex-shrink:0;
-width:44px;
-height:44px;
-border-radius:50%;
-isolation:isolate;
-}
-
-.fitz-avatar::after{
-content:"";
-position:absolute;
-inset:4px;
-border-radius:50%;
-background:radial-gradient(circle, var(--amber-500) 0%, var(--amber-700) 45%, transparent 72%);
-filter:blur(6px);
-animation:fitzPulse 2.2s ease-in-out infinite;
-}
-
-.fitz-avatar--sm{
-width:40px;
-height:40px;
-}
-
-.fitz-avatar--sm::after{ inset:3px; }
-
-@keyframes fitzPulse{
-0%,100%{ opacity:.4; transform:scale(.85); }
-50%{ opacity:1; transform:scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce){
-.fitz-avatar::after{ animation:none; }
-}
-
-.diagnostic-head h2{
-font-family:var(--font-affirmation);
-font-weight:700;
-}
-
 .details-section h2{
 font-family:var(--font-affirmation);
 font-weight:700;
@@ -183,30 +123,6 @@ background:rgba(217,128,90,.14);
 /* ==========================================================
 CORRECTIFS D'AUDIT — 2026-08-29
 ========================================================== */
-
-/* ----------------------------------------------------------
-LE HALO DE FITZ SUR UNE CARTE CLAIRE
-
-Même constat que sur la carte de démonstration de la page d'accueil
-(voir css/homepage-redesign.css, correctif 4) : le halo est un radial
-flouté à 6 px, pensé pour les fonds sombres de l'espace connecté où il
-brille. Posé sur le fond crème de la carte « Avant de candidater » et
-recoloré en terracotta, il ne brille plus — il fait une auréole brune
-qui se lit comme une tache, pas comme une présence.
-
-On garde le principe (Fitz est une présence, pas un pictogramme — voir
-DESIGN_SYSTEM.md, « Le halo — Fitz n'a pas d'icône ») en lui rendant un
-cœur net : flou réduit, arrêts resserrés, fin anneau pour lui donner un
-bord. Le battement reste, et reste désactivé sous
-prefers-reduced-motion par la règle plus haut.
----------------------------------------------------------- */
-.diagnostic-head .fitz-avatar::after{
-inset:6px;
-background:
-radial-gradient(circle,#FBE7DC 0%,var(--amber-500) 38%,var(--amber-700) 68%,rgba(143,62,34,.22) 100%);
-filter:blur(1.5px);
-box-shadow:0 0 0 2.5px rgba(143,62,34,.14), 0 2px 8px rgba(143,62,34,.30);
-}
 
 /* ----------------------------------------------------------
 « VILLE · NIVEAU » ÉTAIT GRIS FONCÉ SUR LA PHOTO SOMBRE

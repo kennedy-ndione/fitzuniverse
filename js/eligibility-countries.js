@@ -61,6 +61,7 @@
 */
 
 import { COUNTRIES } from "./countries.js";
+import { duPays } from "./pays-grammaire.js";
 
 // ------------------------------------------------------------
 // Groupes de pays, en codes ISO 3166-1 alpha-2
@@ -279,43 +280,20 @@ return autorises.has(iso);
 // Libellés d'affichage
 // ------------------------------------------------------------
 
-/** Pays dont le nom français s'emploie SANS article (« de Madagascar »). */
-const PAYS_SANS_ARTICLE = new Set([
-"Madagascar","Cuba","Haïti","Djibouti","Monaco","Malte","Chypre","Bahreïn",
-"Oman","Singapour","Sri Lanka","Israël","Maurice","Nauru","Tuvalu","Vanuatu",
-"Kiribati","Sao Tomé-et-Principe","Trinité-et-Tobago","Brunei","Taïwan"
-]);
-
-/** Pays au pluriel (« des Comores »). */
-const PAYS_PLURIELS = new Set([
-"Comores","États-Unis","Émirats arabes unis","Pays-Bas","Philippines",
-"Seychelles","Maldives","Bahamas","Fidji"
-]);
-
-/** Masculins malgré le -e final (« du Mozambique »). */
-const MASCULINS_EN_E = new Set([
-"Mexique","Mozambique","Zimbabwe","Cambodge","Suriname","Belize"
-]);
-
 /**
 * « du Sénégal », « de la France », « de l'Algérie », « des Comores »,
 * « de Madagascar » — pour composer « Non ouverte aux ressortissants … ».
-* La saisie est d'abord ramenée au nom canonique de countries.js (via
-* son code ISO), pour qu'un « senegal » tapé en minuscules s'affiche
-* « du Sénégal ». Heuristique du français assumée : les rares pays hors
-* des listes d'exception suivent la règle générale voyelle/-e final.
+*
+* Lot VITRINE-COMMERCIALE (2026-09-11) : les trois listes d'exception et
+* l'heuristique voyelle/-e final qui vivaient ici ont rejoint
+* js/pays-grammaire.js, le SEUL module qui accorde un article à un pays
+* — il donne aussi « au / en / aux » et « le / la / l' / les ». Le nom
+* de cette fonction est gardé pour ses appelants (details.js,
+* scholarships.js, catalogue-vue.js) ; elle n'est plus qu'un relais.
+* Un pays inconnu revient NU, sans article deviné.
 */
 export function paysAvecArticle(nom) {
-const iso = isoDeNationalite(nom);
-const canonique = iso ? COUNTRIES.find((c) => c.iso === iso) : null;
-const nomPays = canonique ? canonique.name : String(nom || "").trim();
-if (!nomPays) return "";
-if (PAYS_PLURIELS.has(nomPays)) return `des ${nomPays}`;
-if (PAYS_SANS_ARTICLE.has(nomPays)) return `de ${nomPays}`;
-const premiere = nomPays.normalize("NFD")[0].toLowerCase();
-if ("aeiouy".includes(premiere)) return `de l'${nomPays}`;
-if (nomPays.endsWith("e") && !MASCULINS_EN_E.has(nomPays)) return `de la ${nomPays}`;
-return `du ${nomPays}`;
+return duPays(nom);
 }
 
 /**

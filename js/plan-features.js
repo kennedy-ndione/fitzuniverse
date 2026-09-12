@@ -234,7 +234,8 @@ support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, 
 // formation ». Sept vœux = sept lettres. Plus les courriels aux
 // établissements, la traduction des pièces, et l'entretien pédagogique.
 // Un client à 75 000 F recevait cinq outils de moins qu'un client à
-// 15 000 F. NE PAS « re-corriger » ceci en croyant à une régression :
+// 15 000 F (25 000 F depuis le 2026-09-11). NE PAS « re-corriger » ceci
+// en croyant à une régression :
 // les outils produisent du contenu de PRÉINSCRIPTION (js/ai/prompts.js
 // et js/ai/simulated-responses.js lisent le parcours), pas de bourse.
 export const PREINSCRIPTION_FEATURE_CONFIG = {

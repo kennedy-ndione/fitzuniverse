@@ -987,10 +987,14 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       if (vu.sources.some((h) => !/^https?:\/\//.test(h || ""))) anomalies.push("page destination : une règle sans lien de source.");
       if (vu.dates.some((t) => !/Vérifié le \d/.test(t))) anomalies.push("page destination : une règle sans date de vérification.");
 
-      // Le bloc anti-officine, mot pour mot.
-      if (vu.promesses !== 3) anomalies.push(`page destination : ${vu.promesses} promesse(s) au lieu de 3.`);
-      for (const phrase of ["Vous déposez vous-même", "Aucun taux de réussite affiché"]) {
+      // Les trois engagements (lot VITRINE-COMMERCIALE : positifs, jamais
+      // « ce qu'il ne promet pas »).
+      if (vu.promesses !== 3) anomalies.push(`page destination : ${vu.promesses} engagement(s) au lieu de 3.`);
+      for (const phrase of ["Vous gardez la main", "vérifiée à la source officielle"]) {
         if (!vu.corps.includes(phrase)) anomalies.push(`page destination : « ${phrase} » manque.`);
+      }
+      for (const interdit of ["Aucun taux de réussite", "jamais jusqu'à l'admission", "ne promet pas"]) {
+        if (vu.corps.includes(interdit)) anomalies.push(`page destination : « ${interdit} » décourage encore.`);
       }
 
       // Les pays de résidence sont NOMMÉS, lus depuis le registre.
@@ -1115,13 +1119,24 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       if (g.defs.filter((d) => d === "apostille").length > 1) anomalies.push("LANGAGE glossaire : apostille expliquée deux fois.");
       notes.push(`LANGAGE glossaire (preinscriptions.html) : termes expliqués à leur première apparition — ${g.defs.join(", ")}`);
 
-      // d) L'accueil : la bande de chiffres, lue.
+      // d) L'accueil : la bande de chiffres est partie (lot VITRINE-
+      // COMMERCIALE, 2026-09-11) ; ce sont les compteurs du hero qui se
+      // LISENT, et le bas de page est un appel à l'action : trois étapes,
+      // un bouton principal vers le diagnostic gratuit, un lien formules.
       await page.goto(`${base}/index.html`, { waitUntil: "domcontentloaded" });
-      await page.waitForFunction(() => { const c = document.getElementById("chiffres"); return c && !c.hidden; }, null, { timeout: 30000 });
-      const c = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll("#chiffres [data-chiffre]")].map((e) => [e.getAttribute("data-chiffre"), e.textContent.trim()])));
-      for (const k of ["bourses", "etablissements", "pays", "residences"]) if (!/^\d+$/.test(c[k] || "")) anomalies.push(`LANGAGE chiffres : « ${k} » = « ${c[k]} ».`);
-      if (Number(c.residences) !== COUCHES.length) anomalies.push(`LANGAGE chiffres : ${c.residences} pays de départ affichés, ${COUCHES.length} couches documentées.`);
-      notes.push(`LANGAGE accueil : ${c.bourses} bourses · ${c.etablissements} établissements · ${c.pays} pays · ${c.residences} pays de départ documentés — lus, pas écrits`);
+      await page.waitForFunction(() => { const c = document.getElementById("heroScholarshipCount"); return c && /^\d+$/.test(c.textContent.trim()); }, null, { timeout: 30000 });
+      const c = await page.evaluate(() => ({
+        bande: !!document.getElementById("chiffres"),
+        bourses: document.getElementById("heroScholarshipCount")?.textContent.trim(),
+        etapes: document.querySelectorAll(".cta-steps li").length,
+        principaux: [...document.querySelectorAll(".cta-box-panel .btn-accent")].map((b) => b.getAttribute("href")),
+        lien: document.querySelector(".cta-box-panel .btn-link")?.getAttribute("href")
+      }));
+      if (c.bande) anomalies.push("LANGAGE accueil : la bande de chiffres est revenue.");
+      if (c.etapes !== 3) anomalies.push(`LANGAGE accueil : ${c.etapes} étape(s) dans le bloc de conclusion au lieu de 3.`);
+      if (c.principaux.length !== 1 || c.principaux[0] !== "eligibility-questions.html") anomalies.push(`LANGAGE accueil : bouton principal du bloc de conclusion = ${c.principaux.join(", ") || "aucun"}.`);
+      if (c.lien !== "offers.html") anomalies.push(`LANGAGE accueil : le lien vers les formules manque (${c.lien}).`);
+      notes.push(`LANGAGE accueil : ${c.bourses} bourses lues dans le hero · bloc de conclusion : 3 étapes, diagnostic gratuit en principal, formules en lien (${COUCHES.length} pays de départ documentés, plus affichés en bande)`);
 
       // e) Le pied de page, sur l'accueil — le seul qui le porte (lot
       // FINITIONS-VISUELLES) : colonne Légal entière, moins d'un demi-écran

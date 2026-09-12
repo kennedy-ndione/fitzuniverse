@@ -93,12 +93,13 @@ hero, et css/homepage-sections.css étant chargée après css/hero.css,
 toute correction écrite sur un simple `.hero-cta` restait sans effet.
 D'où le `.btn.hero-cta` du correctif responsive (voir css/hero.css).
 Règle générale : ne pas redéfinir un composant de base.css dans une
-feuille de page — c'est la dérive que le système de design nomme. */
+feuille de page — c'est la dérive que le système de design nomme.
 
-.btn-lg{
-padding:16px 30px;
-font-size:1.02rem;
-}
+RETIRÉE avec le lot VITRINE-COMMERCIALE (2026-09-11) : les boutons sont
+définis une seule fois, dans css/base.css. Elle ne s'appliquait plus
+qu'aux deux boutons du pied d'étapes et au CTA final, à 2 px et
+0,03 rem près de la valeur de base — rien à l'écran, un piège de
+cascade en moins. */
 
 /* ==========================================================
 BLOC MORT, VÉRIFIÉ LE 2026-09-08 — CONSERVÉ HORS PÉRIMÈTRE
@@ -961,11 +962,11 @@ deux dans la même boîte. Elle ne se voit pas — le fond du bouton passe
 dessous, background-clip valant border-box par défaut — et elle est
 préférable à un min-height, qui aurait figé une hauteur calculée pour
 une police donnée et se serait décalé au premier changement de
-libellé ou de taille de texte. Portée limitée à ce pied : le reste du
-site continue d'utiliser .btn-primary tel quel. */
-.steps-footer .btn-primary{
-border:1px solid transparent;
-}
+libellé ou de taille de texte.
+
+Depuis le lot VITRINE-COMMERCIALE (2026-09-11), cette bordure
+transparente est portée par .btn lui-même dans css/base.css, pour
+toutes les variantes : la règle locale est partie avec. */
 
 /* Le doublet .steps-cta-text-full / .steps-cta-text-short a disparu le
 2026-09-01 : le bouton portait "Commencer mon diagnostic gratuit" (33
@@ -1542,59 +1543,88 @@ padding:34px 18px;
 
 
 
+/* La bande « le catalogue en chiffres » (.chiffres*) est partie avec le
+lot VITRINE-COMMERCIALE (2026-09-11) : elle répétait les compteurs du
+hero. Le bas de page est un appel à l'action (.cta-steps, plus bas). */
+
 /* ==========================================================
-LE CATALOGUE EN CHIFFRES (lot LANGAGE, 2026-09-10)
+LE BLOC DE CONCLUSION (lot VITRINE-COMMERCIALE, 2026-09-11)
 ==========================================================
-Bande claire entre la démonstration de Fitz et « Comment ça
-fonctionne » : quatre nombres lus sur le catalogue (js/homepage-teaser.js)
-et une phrase. Chasse fixe sur les nombres, comme .hero-figure. */
-.chiffres{
-padding:36px 0;
-background:var(--surface-color, #fff);
-border-top:1px solid var(--border-color);
-border-bottom:1px solid var(--border-color);
+À la place de la bande de chiffres : un titre porteur, trois étapes
+courtes, UN bouton principal vers le diagnostic gratuit et un lien vers
+les formules. Le panneau perd son backdrop-filter (flou de 16 px :
+même famille de défauts WebKit que le lot DEUX-MOTEURS) au profit d'un
+voile d'encre plus opaque — le contraste ne dépend plus de ce qu'il y
+a derrière. Blanc sur rgba(14,14,16,.78) au-dessus de la photo la plus
+claire : ≥ 9:1 mesuré. */
+.cta-box-panel{
+background:rgba(14,14,16,.78);
+backdrop-filter:none;
+-webkit-backdrop-filter:none;
 }
 
-.chiffres-liste{
+/* Trois lignes alignées sur un seul bord gauche, et le bloc centré dans
+le panneau : en rangée, les trois libellés de longueurs différentes
+faisaient un escalier une fois passés à la ligne (même leçon que
+.cta-trust, lot ACCUEIL-5). */
+.cta-steps{
 list-style:none;
-margin:0;
+margin:6px auto 0;
 padding:0;
-display:grid;
-grid-template-columns:repeat(4, minmax(0, 1fr));
-gap:24px 32px;
-}
-
-.chiffres-liste li{
 display:flex;
 flex-direction:column;
-gap:6px;
+align-items:flex-start;
+width:max-content;
+max-width:100%;
+gap:12px;
+text-align:left;
 }
 
-.chiffres-liste strong{
-font-family:var(--font-affirmation);
-font-size:2.2rem;
-font-weight:500;
-line-height:1;
-font-variant-numeric:tabular-nums;
-color:var(--text-color);
+.cta-steps li{
+display:flex;
+align-items:center;
+gap:10px;
+font-size:var(--fs-body);
+font-weight:600;
+color:#fff;
+text-shadow:0 1px 2px rgba(0,0,0,.3);
 }
 
-.chiffres-liste span{
-font-size:var(--fs-small);
-color:var(--text-light);
-line-height:var(--lh-relaxed);
+/* Le numéro : un disque ambre, chiffre encre (7,8:1). */
+.cta-step-num{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:28px;
+height:28px;
+border-radius:999px;
+background:#E9A319;
+color:#211D18;
+font-family:var(--font-display);
+font-size:.86rem;
+font-weight:800;
+flex-shrink:0;
 }
 
-.chiffres-note{
-margin:22px 0 0;
-font-size:var(--fs-small);
-color:var(--text-light);
+/* Le lien vers les formules, sur le panneau sombre : crème souligné,
+ambre au survol. Le niveau « lien » de css/base.css, retinté pour le
+fond d'encre. */
+.btn-link--on-dark{
+color:#F5F1E8;
 }
 
-@media(max-width:900px){
-.chiffres-liste{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+.btn-link--on-dark:hover,
+.btn-link--on-dark:focus-visible{
+color:#F2B640;
 }
 
-@media(max-width:400px){
-.chiffres-liste{ grid-template-columns:1fr; }
+@media(max-width:640px){
+.cta-steps{
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+}
+.cta-buttons .btn{
+flex:1 1 100%;
+}
 }

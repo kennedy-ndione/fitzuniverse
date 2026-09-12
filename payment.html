@@ -52,6 +52,10 @@ feuille d'animations partagée. -->
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="payment.css">
 <link rel="stylesheet" href="css/payment-redesign.css">
+<!-- Le récapitulatif de la formule est la même carte que sur offers.html
+(css/formule.css, lot VITRINE-COMMERCIALE) : payment.js pose
+plan-card--<niveau> depuis pricing-plans.js. -->
+<link rel="stylesheet" href="css/formule.css">
 
 </head>
 
@@ -491,7 +495,7 @@ fait qu'on le reconnaît. -->
 <!-- Activation -->
 <div class="activation reveal">
 
-<button type="button" id="activateButton" class="btn btn-primary btn-lg activation-cta" disabled>
+<button type="button" id="activateButton" class="btn btn-accent btn-lg activation-cta" disabled>
 <i data-lucide="lock"></i>
 <span id="activateButtonLabel">Sélectionnez un moyen de paiement</span>
 </button>

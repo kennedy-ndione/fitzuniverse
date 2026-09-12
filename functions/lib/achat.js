@@ -53,7 +53,10 @@
  */
 const GRILLE = {
   fitzExpress: { label: "Pass Découverte", prix: 10000, dureeJours: 14, pass: true, parcours: "bourse" },
-  "premier-dossier": { label: "Forfait Premier Dossier", prix: 15000, dureeMois: null, parcours: "bourse", quota: 1 },
+  // 15 000 → 25 000 F le 2026-09-11 (lot VITRINE-COMMERCIALE, décision de
+  // Charles) : c'est CE montant qui est facturé, pricing-plans.js n'est
+  // que le miroir affiché — test/grille-b.test.mjs les compare.
+  "premier-dossier": { label: "Forfait Premier Dossier", prix: 25000, dureeMois: null, parcours: "bourse", quota: 1 },
   // Grille A (2026-09-07) : les deux offres bourses révisées. Lot
   // ACCEPTATION : sans échéance, comme Premier Dossier.
   "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: null, parcours: "bourse", quota: 4 },

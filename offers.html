@@ -57,6 +57,10 @@ cette page n'avait jamais chargé la feuille d'animations partagée. -->
 <link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="offers.css">
 <link rel="stylesheet" href="css/offers-redesign.css">
+<!-- La carte de formule, un seul composant pour tout le site (lot
+VITRINE-COMMERCIALE, 2026-09-11) — chargée après les feuilles de page
+pour que rien ne la redéfinisse. -->
+<link rel="stylesheet" href="css/formule.css">
 <link rel="stylesheet" href="css/mobile-nav.css">
 
 <script src="js/mobile-nav.js" defer></script>
@@ -116,7 +120,7 @@ vaut pour les deux parcours ; chaque grille explique ensuite son unité. -->
 <h1>Jusqu'où voulez-vous être accompagné ?</h1>
 
 <p class="lead">
-Deux parcours, deux grilles. Pour une bourse : des candidatures accompagnées à fond, avec Fitz seul ou avec un conseiller. Pour une préinscription en France : un dossier Études en France mené jusqu'au dépôt. Paiement en une fois, aucune formule ne promet un résultat.
+Deux parcours, deux grilles. Pour une bourse : des candidatures accompagnées à fond, avec Fitz seul ou avec un conseiller. Pour une préinscription en France : un dossier Études en France mené jusqu'au dépôt. Paiement en une fois. Chaque formule met toutes les chances de votre côté.
 </p>
 
 </header>
@@ -199,20 +203,23 @@ les limites — deux refus par place, une acceptation définitive. -->
 <p>Des réponses à vos questions, ou directement votre première candidature. Le diagnostic d'éligibilité, lui, reste gratuit.</p>
 </div>
 
+<!-- Lot VITRINE-COMMERCIALE (2026-09-11) : un SEUL composant de carte
+pour tout le site (css/formule.css), en trois niveaux. Ici les deux
+cartes d'ENTRÉE. Chaque puce est le littéral `highlights` de
+pricing-plans.js (test/vitrine-commerciale.test.mjs les compare), et
+chacune correspond à ce que l'espace étudiant rend vraiment. Le Pass
+n'ouvre que le chat ; Premier Dossier ouvre 100 % des outils sur une
+candidature. Aucun humain n'intervient sur ces deux offres. -->
 <div class="starter-stack">
 
 <!-- Le Pass Découverte n'est pas une formule (type "pass") et ne doit
 jamais apparaître comme une colonne des formules complètes. -->
-<div class="consult-banner reveal">
+<article class="plan-card plan-card--entree reveal">
 
-<i class="consult-icon" data-lucide="zap"></i>
-
-<div class="consult-body">
-<h3>Pass Découverte</h3>
-<p>Posez toutes vos questions à Fitz pendant 14 jours : critères, procédures, orientation. Pour avancer vite avant de choisir un accompagnement complet.</p>
+<div class="plan-head">
+<h2>Pass Découverte</h2>
+<p class="plan-tagline">Des réponses immédiates de Fitz, sans engagement.</p>
 </div>
-
-<div class="consult-cta-wrap">
 
 <div class="plan-price">
 <span class="plan-price-local" data-price-of="fitzExpress"></span>
@@ -220,28 +227,29 @@ jamais apparaître comme une colonne des formules complètes. -->
 <span class="plan-price-term">14 jours</span>
 </div>
 
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Toutes vos questions à Fitz, pendant 14 jours</span></li>
+<li><i data-lucide="check"></i><span>Vos critères et vos procédures expliqués, bourse par bourse</span></li>
+<li><i data-lucide="check"></i><span>Une orientation vers les programmes faits pour votre profil</span></li>
+<li><i data-lucide="check"></i><span>Sans engagement : le Pass s'arrête tout seul au bout de 14 jours</span></li>
+</ul>
+
 <button type="button" class="btn btn-secondary plan-cta" data-plan="fitzExpress">
-<span>Activer le Pass Découverte</span>
+<span>Activer mon Pass Découverte</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
-</div>
-
-</div>
+</article>
 
 <!-- Premier Dossier — un paiement unique qui achète UNE candidature
 accompagnée, jamais une colonne des formules complètes. Porte d'entrée
 vers le produit cœur, la candidature de l'étudiant. -->
-<div class="consult-banner reveal">
+<article class="plan-card plan-card--entree reveal">
 
-<i class="consult-icon" data-lucide="file-text"></i>
-
-<div class="consult-body">
-<h3>Forfait Premier Dossier</h3>
-<p>Votre candidature, accompagnée de bout en bout : compatibilité, stratégie, lettre, CV, vérification complète, et un suivi maintenu jusqu'à la réponse de l'université.</p>
+<div class="plan-head">
+<h2>Forfait Premier Dossier</h2>
+<p class="plan-tagline">Votre candidature, accompagnée de bout en bout — sans abonnement.</p>
 </div>
-
-<div class="consult-cta-wrap">
 
 <div class="plan-price">
 <span class="plan-price-local" data-price-of="premier-dossier"></span>
@@ -249,14 +257,20 @@ vers le produit cœur, la candidature de l'étudiant. -->
 <span class="plan-price-term">1 candidature, sans abonnement</span>
 </div>
 
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Votre première candidature, accompagnée de bout en bout</span></li>
+<li><i data-lucide="check"></i><span>Votre lettre de motivation et vos e-mails rédigés avec Fitz</span></li>
+<li><i data-lucide="check"></i><span>Votre dossier vérifié pièce par pièce avant le dépôt</span></li>
+<li><i data-lucide="check"></i><span>Un suivi maintenu jusqu'à la réponse de l'université</span></li>
+<li><i data-lucide="check"></i><span>Un paiement unique, sans abonnement</span></li>
+</ul>
+
 <button type="button" class="btn btn-secondary plan-cta" data-plan="premier-dossier">
-<span>Choisir Premier Dossier</span>
+<span>Commencer mon premier dossier</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
-</div>
-
-</div>
+</article>
 
 </div>
 
@@ -271,11 +285,15 @@ vers le produit cœur, la candidature de l'étudiant. -->
 <p>Le catalogue retient huit à douze opportunités par profil. L'objectif : déposer chacune sans erreur.</p>
 </div>
 
+<!-- Les deux formules complètes : RECOMMANDÉ (Essentiel, Fitz seul) et
+ACCOMPAGNEMENT HUMAIN (Conseiller). Un seul bouton ambre par rangée :
+celui de la formule recommandée. Sur la carte d'encre du Conseiller, le
+bouton papier plein tient 15,6:1 — il ressort sans concurrencer. -->
 <div class="pricing-grid pricing-grid--duo">
 
-<article class="plan-card reveal">
+<article class="plan-card plan-card--recommande reveal">
 
-<span class="plan-badge plan-badge--recommended">Avec Fitz</span>
+<span class="plan-badge plan-badge--recommended"><i data-lucide="award"></i>Recommandé</span>
 
 <div class="plan-head">
 <h2>Forfait Essentiel</h2>
@@ -293,33 +311,32 @@ est juste en dessous (.plan-quota). -->
 
 <div class="plan-quota">
 <strong>4</strong>
-<span>candidatures accompagnées à fond, à la fois</span>
+<span>candidatures accompagnées à fond, en même temps</span>
 </div>
 
 <!-- Chaque puce correspond à quelque chose que l'ESPACE ÉTUDIANT rend
-réellement. Aucun humain n'intervient ici : Essentiel est assuré par
-Fitz seul — c'est la seule justification du prix du Conseiller. -->
+réellement, et reprend mot pour mot `highlights` (pricing-plans.js).
+Aucun humain n'intervient ici : Essentiel est assuré par Fitz seul —
+c'est la seule justification du prix du Conseiller. -->
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>Parcours guidé en 6 étapes — de l'éligibilité jusqu'au visa</span></li>
-<li><i data-lucide="check"></i><span>100 % des outils Fitz : lettre de motivation, e-mails, vérification du dossier, traduction, compression</span></li>
-<li><i data-lucide="check"></i><span>Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests (IELTS, TOPIK…) calé sur vos échéances</span></li>
-<li><i data-lucide="check"></i><span>Préparation aux entretiens : banque de questions par type de bourse</span></li>
-<li><i data-lucide="check"></i><span>Suivi des candidatures : statuts, rappels d'échéances, checklists de documents</span></li>
-<li><i data-lucide="check"></i><span>2 révisions par dossier</span></li>
-<li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
-<li><i data-lucide="check"></i><span>Service après-vente « Signaler un problème », réponse sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>4 candidatures accompagnées à fond, en même temps</span></li>
+<li><i data-lucide="check"></i><span>Votre lettre de motivation rédigée avec Fitz pour chaque université</span></li>
+<li><i data-lucide="check"></i><span>100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression</span></li>
+<li><i data-lucide="check"></i><span>Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests calé sur vos échéances</span></li>
+<li><i data-lucide="check"></i><span>Préparation aux entretiens, 2 révisions par dossier, et chaque candidature suivie jusqu'à la décision de l'université</span></li>
+<li><i data-lucide="check"></i><span>Service après-vente : signaler un problème, réponse sous 48 h ouvrées</span></li>
 </ul>
 
-<button type="button" class="btn btn-secondary plan-cta" data-plan="essentiel-4">
-<span>Choisir Essentiel</span>
+<button type="button" class="btn btn-accent plan-cta" data-plan="essentiel-4">
+<span>Commencer avec Essentiel</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
 </article>
 
-<article class="plan-card plan-card--human plan-card-featured reveal">
+<article class="plan-card plan-card--humain reveal">
 
-<span class="plan-badge plan-badge--human">Accompagnement humain</span>
+<span class="plan-badge plan-badge--human"><i data-lucide="user-check"></i>Accompagnement humain</span>
 
 <div class="plan-head">
 <h2>Forfait Conseiller</h2>
@@ -339,20 +356,21 @@ est juste en dessous (.plan-quota). -->
 </div>
 
 <!-- Ce que fait l'humain, concrètement. Le Conseiller est le seul
-palier bourses où quelqu'un lit votre dossier avant vous ne l'envoyiez
-— et le seul avec la messagerie FitzUniverse : une bourse se décide par
-un jury, l'échange n'a de valeur qu'avec la personne qui relit. Liste
-tenue en phase avec `highlights` de pricing-plans.js. -->
+palier bourses où quelqu'un lit votre dossier avant que vous ne
+l'envoyiez — et le seul avec la messagerie FitzUniverse : une bourse se
+décide par un jury, l'échange n'a de valeur qu'avec la personne qui
+relit. Liste = `highlights` de pricing-plans.js, mot pour mot. -->
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel, Fitz en renfort</span></li>
-<li><i data-lucide="check"></i><span>Vérification humaine de chaque dossier avant l'envoi</span></li>
+<li><i data-lucide="check"></i><span>6 candidatures accompagnées à fond, chacune relue par un conseiller</span></li>
+<li><i data-lucide="check"></i><span>Un humain vérifie chaque dossier avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
 <li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées</span></li>
-<li><i data-lucide="check"></i><span>Candidatures en attente suivies jusqu'à la décision de l'université</span></li>
+<li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel, Fitz en renfort</span></li>
+<li><i data-lucide="check"></i><span>Chaque candidature suivie jusqu'à la décision de l'université</span></li>
 </ul>
 
-<button type="button" class="btn btn-accent plan-cta" data-plan="conseiller-6">
-<span>Choisir Conseiller</span>
+<button type="button" class="btn btn-secondary plan-cta" data-plan="conseiller-6">
+<span>Être accompagné par un conseiller</span>
 <i data-lucide="arrow-right"></i>
 </button>
 
@@ -375,34 +393,46 @@ tenue en phase avec `highlights` de pricing-plans.js. -->
 <div class="pricing-column-head reveal">
 <span class="plans-kicker">Préinscriptions</span>
 <h2 id="colPreTitre">Partir en finançant vos études</h2>
-<p>Vous payez pour <strong>un dossier Études en France</strong> : jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant : <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné jusqu'au dépôt, jamais jusqu'à l'admission. La messagerie FitzUniverse est comprise dans les trois offres : un dossier bloqué se débloque.</p>
+<!-- Lot VITRINE-COMMERCIALE (2026-09-11) : « Accompagné jusqu'au dépôt,
+jamais jusqu'à l'admission » est devenu une promesse tenable et
+positive — on dit ce qu'on FAIT (un dossier complet et vérifié),
+les limites vivront dans les conditions de vente. -->
+<p>Vous payez pour <strong>un dossier Études en France</strong> : jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant : <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié. La messagerie FitzUniverse est comprise dans les trois offres : un dossier bloqué se débloque.</p>
 </div>
 
-<div class="starter-stack">
-<div class="consult-banner reveal">
-<i class="consult-icon" data-lucide="calculator"></i>
-<div class="consult-body">
-<h3>Diagnostic France</h3>
-<p>Vos ressources contre le seuil publié, les droits d'inscription, le plafond d'exonération et les frais de dossier Campus France. Une réponse honnête, chiffrée et sourcée, avant de les payer. Aucune IA : de l'arithmétique sur des seuils publiés.</p>
+<!-- Les trois cartes de la préinscription sur UNE rangée : entrée
+(Diagnostic), recommandé (Dossier France), accompagnement humain
+(Dossier France + Conseiller). Même composant que les bourses
+(css/formule.css) ; chaque puce = `highlights` de pricing-plans.js. -->
+<div class="pricing-grid-wrap">
+<div class="pricing-grid pricing-grid--trio">
+
+<article class="plan-card plan-card--entree reveal">
+<div class="plan-head">
+<h2>Diagnostic France</h2>
+<p class="plan-tagline">Une réponse honnête avant de payer Campus France.</p>
 </div>
-<div class="consult-cta-wrap">
 <div class="plan-price">
 <span class="plan-price-local" data-price-of="diagnostic-france"></span>
 <span class="plan-price-main"><span class="plan-amount" data-eur-of="diagnostic-france"></span><span class="plan-currency">€</span></span>
 <span class="plan-price-term">14 jours</span>
 </div>
+<ul class="plan-features">
+<li><i data-lucide="check"></i><span>Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année</span></li>
+<li><i data-lucide="check"></i><span>Chaque montant avec sa source officielle et sa date de vérification</span></li>
+<li><i data-lucide="check"></i><span>Les points de vigilance de votre pays, avant qu'ils ne coûtent une année</span></li>
+<li><i data-lucide="check"></i><span>Votre calendrier en jours, et les étapes de votre procédure, en entier</span></li>
+<li><i data-lucide="check"></i><span>Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes</span></li>
+<li><i data-lucide="check"></i><span>Les 10 000 F se déduisent d'un Dossier France acheté dans les 30 jours</span></li>
+</ul>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="diagnostic-france">
 <span>Faire mon Diagnostic France</span>
 <i data-lucide="arrow-right"></i>
 </button>
-</div>
-</div>
-</div>
+</article>
 
-<div class="pricing-grid-wrap">
-<div class="pricing-grid pricing-grid--duo">
-
-<article class="plan-card plan-card-featured reveal">
+<article class="plan-card plan-card--recommande reveal">
+<span class="plan-badge plan-badge--recommended"><i data-lucide="award"></i>Recommandé</span>
 <div class="plan-head">
 <h2>Dossier France</h2>
 <p class="plan-tagline">Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.</p>
@@ -418,23 +448,24 @@ tenue en phase avec `highlights` de pricing-plans.js. -->
 <span>vœux Études en France, dans un seul dossier</span>
 </div>
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>Profil, pièces, traductions et légalisations, preuve de ressources, vérifiés avant l'envoi</span></li>
+<li><i data-lucide="check"></i><span>Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources</span></li>
 <li><i data-lucide="check"></i><span>Le Diagnostic France inclus</span></li>
+<li><i data-lucide="check"></i><span>Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Préparation à l'entretien Campus France</span></li>
 <li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions, réponse sous 48 h ouvrées</span></li>
-<li><i data-lucide="check"></i><span>Vous déposez vous-même sur Études en France : jusqu'au dépôt, jamais jusqu'à l'admission</span></li>
+<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
 </ul>
 <button type="button" class="btn btn-accent plan-cta" data-plan="dossier-france">
-<span>Choisir Dossier France</span>
+<span>Préparer mon dossier France</span>
 <i data-lucide="arrow-right"></i>
 </button>
 </article>
 
-<article class="plan-card plan-card--human reveal">
-<span class="plan-badge plan-badge--human">Relecture humaine</span>
+<article class="plan-card plan-card--humain reveal">
+<span class="plan-badge plan-badge--human"><i data-lucide="user-check"></i>Relecture humaine</span>
 <div class="plan-head">
 <h2>Dossier France + Conseiller</h2>
-<p class="plan-tagline">Le même dossier, plus une relecture humaine avant les frais de dossier non remboursables.</p>
+<p class="plan-tagline">Le même dossier, plus une relecture humaine avant des frais de dossier non remboursables.</p>
 </div>
 <div class="plan-price">
 <span class="plan-price-local" data-price-of="dossier-france-conseiller"></span>
@@ -449,10 +480,10 @@ tenue en phase avec `highlights` de pricing-plans.js. -->
 <li><i data-lucide="check"></i><span>Tout le contenu de Dossier France</span></li>
 <li><i data-lucide="check"></i><span>Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables</span></li>
 <li><i data-lucide="check"></i><span>Un conseiller joignable pendant toute la campagne</span></li>
-<li><i data-lucide="check"></i><span>Vous déposez vous-même sur Études en France : jusqu'au dépôt, jamais jusqu'à l'admission</span></li>
+<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
 </ul>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="dossier-france-conseiller">
-<span>Choisir Dossier France + Conseiller</span>
+<span>Préparer mon dossier avec un conseiller</span>
 <i data-lucide="arrow-right"></i>
 </button>
 </article>
@@ -509,7 +540,7 @@ précis où l'on choisit de payer ou non. -->
 
 <details class="faq-item">
 <summary><span>Pourquoi viser une bourse, et que couvre-t-elle concrètement ?</span><i data-lucide="chevron-down"></i></summary>
-<p>Pour un étudiant international, une bourse est souvent ce qui fait la différence entre un projet envisageable et un projet impossible à financer. Ce qu'elle prend en charge varie d'un programme à l'autre : les frais de scolarité, en partie ou en totalité ; le logement, généralement en résidence universitaire ; l'assurance santé, obligatoire pour obtenir un titre de séjour dans la plupart des pays ; le billet d'avion aller-retour ; et, pour les plus complètes, une allocation mensuelle destinée à couvrir les dépenses courantes. Certaines bourses réunissent tous ces volets, d'autres ne financent que la scolarité : le détail figure sur la fiche de chaque bourse, en accès libre. Un point moins connu mérite d'être signalé : l'attestation de bourse sert aussi de justificatif de ressources dans le dossier de visa, une pièce que beaucoup de candidatures peinent à réunir autrement.</p>
+<p>Pour un étudiant international, une bourse est souvent ce qui rend un projet d'études finançable. Ce qu'elle prend en charge varie d'un programme à l'autre : les frais de scolarité, en partie ou en totalité ; le logement, généralement en résidence universitaire ; l'assurance santé, obligatoire pour obtenir un titre de séjour dans la plupart des pays ; le billet d'avion aller-retour ; et, pour les plus complètes, une allocation mensuelle destinée à couvrir les dépenses courantes. Certaines bourses réunissent tous ces volets, d'autres ne financent que la scolarité : le détail figure sur la fiche de chaque bourse, en accès libre. Un point moins connu mérite d'être signalé : l'attestation de bourse sert aussi de justificatif de ressources dans le dossier de visa, une pièce que beaucoup de candidatures peinent à réunir autrement.</p>
 </details>
 
 <details class="faq-item">
@@ -518,8 +549,8 @@ précis où l'on choisit de payer ou non. -->
 </details>
 
 <details class="faq-item">
-<summary><span>Est-ce que je suis sûr d'obtenir une bourse ?</span><i data-lucide="chevron-down"></i></summary>
-<p>La décision finale appartient toujours aux universités et aux organismes de bourses. C'est vrai pour toutes les plateformes sérieuses. Ce sur quoi FitzUniverse s'engage pleinement, c'est la qualité de votre accompagnement : un dossier réellement plus solide, préparé avec rigueur à chaque étape.</p>
+<summary><span>Comment FitzUniverse augmente-t-il mes chances ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Fitz choisit vos universités parmi celles où votre profil a le plus de chances, construit avec vous un dossier complet, rédige vos lettres et vos e-mails, tient vos échéances et vérifie chaque pièce à la source avant le dépôt. Les universités et les jurys décident ; notre travail est de vous présenter sous votre meilleur jour.</p>
 </details>
 
 <details class="faq-item">

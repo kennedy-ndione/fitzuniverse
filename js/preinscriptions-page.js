@@ -29,6 +29,10 @@ import { chargerCatalogue } from "./catalog-data.js";
 import { lirePays, etatDunPays, estOuverte, pageDeDestination } from "./pays-preinscription.js";
 import { residencesDocumentees } from "./procedures/index.js";
 import { escapeHtml } from "./ai/format.js";
+// « Étudier en France », « au Canada », « en Roumanie » : la préposition
+// suit le pays. Le gabarit écrivait « en France » en dur et « — <pays> »
+// pour les autres (lot VITRINE-COMMERCIALE, 2026-09-11).
+import { auPays } from "./pays-grammaire.js";
 
 const liste = document.getElementById("paysListe");
 
@@ -74,7 +78,7 @@ return `<article class="pre-dest pre-dest--ouverte" id="pays-${escapeHtml(pays.i
 ${etat ? `<p class="pre-dest-effectifs"><strong>${etat.etablissements}</strong> établissement${etat.etablissements > 1 ? "s" : ""} au catalogue · <strong>${etat.coutsVerifies}</strong> avec coût vérifié</p>` : ""}
 ${residences.length ? `<p class="pre-dest-residences"><i data-lucide="map-pin" aria-hidden="true"></i><span>Frais, calendrier et pièces vérifiés depuis <strong>${residences.length} pays de résidence</strong></span></p>` : ""}
 <p class="pre-dest-langues"><i data-lucide="languages" aria-hidden="true"></i><span>${escapeHtml(pays.langue.join(", "))}</span></p>
-<a class="btn btn-primary pre-dest-cta" href="${escapeHtml(pageDeDestination(pays))}"><span>Étudier ${escapeHtml(pays.nom === "France" ? "en France" : `— ${pays.nom}`)}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+<a class="btn btn-accent pre-dest-cta" href="${escapeHtml(pageDeDestination(pays))}"><span>Étudier ${escapeHtml(auPays(pays.nom))}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
 </article>`;
 
 }

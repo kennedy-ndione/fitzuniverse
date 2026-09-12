@@ -41,6 +41,7 @@
 // Le chemin d'import est relatif à CE fichier (js/) — eligibility-
 // countries.js vit dans le même dossier.
 import { estEligible } from "./eligibility-countries.js";
+import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
 import { familleDeDomaine } from "./eligibility-pistes.js";
 import { analyserEcheance, joursAvant } from "./echeance.js";
@@ -419,7 +420,9 @@ reasons.push(`Programme de niveau ${program.level} — le cycle que vous visez`)
 
 const preferredCountries = Array.isArray(profile.preferredCountries) ? profile.preferredCountries : [];
 if (university.country && preferredCountries.includes(university.country)) {
-reasons.push(`Situé en ${university.country}, votre destination souhaitée`);
+// « Situé au Canada », « en France », « aux États-Unis » : la
+// préposition vient de js/pays-grammaire.js, jamais d'un « en » unique.
+reasons.push(`Situé ${auPays(university.country)}, votre destination souhaitée`);
 }
 
 const lang = languageMatch(program, profile);

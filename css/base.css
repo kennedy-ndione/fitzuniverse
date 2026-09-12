@@ -917,6 +917,39 @@ sélection du libellé au double-tap ou à l'appui long, et le délai de
 double-tap d'un zoom.
 ========================================================== */
 
+/* ==========================================================
+TROIS NIVEAUX, DÉFINIS ICI ET NULLE PART AILLEURS
+(lot VITRINE-COMMERCIALE, 2026-09-11)
+==========================================================
+« Tous imposants », pris à la lettre, voudrait dire que plus aucun ne
+ressort. La hiérarchie est donc portée par le NIVEAU, pas par la taille :
+
+  1. PRINCIPAL   .btn-accent — ambre plein, libellé encre, 52 px de haut
+                 (48 sur téléphone), flèche qui glisse au survol, légère
+                 élévation, enfoncement au clic. UN SEUL par section
+                 visible : deux boutons ambre côte à côte s'annulent.
+  2. SECONDAIRE  .btn-secondary — papier PLEIN et bordure franche, en
+                 valeurs LITTÉRALES : sur les pages sombres
+                 (body.catalog-dark, l'espace), --background vaut un
+                 voile translucide et --text-color du crème — un bouton
+                 qui les consommait devenait un fantôme transparent au
+                 libellé clair (capture 2 de Charles).
+  3. LIEN        .btn-link — texte souligné avec flèche, pour une action
+                 mineure à côté d'un principal.
+
+.btn-primary (encre) reste l'action STRUCTURANTE des formulaires et de
+l'espace étudiant (« Enregistrer », « Calculer », « Continuer ») : même
+gabarit et même physique que le principal, mais il n'est pas un appel
+commercial. Sur les pages publiques, l'action qui vend est ambre.
+
+« Vivant » : transform et opacity seulement, 150 à 250 ms, tout
+désactivé sous prefers-reduced-motion. Aucun clignotement, aucun
+rebond permanent. Une feuille de page ne redéfinit AUCUN de ces
+niveaux — les redéfinitions locales (.steps-footer .btn-primary,
+.catalog-dark .pre-entree .btn-primary, .btn-lg de l'accueil, §6 de
+css/vivant.css) ont été retirées avec ce lot.
+========================================================== */
+
 .btn{
 
 --btn-press:90ms;
@@ -932,6 +965,11 @@ justify-content:center;
 gap:10px;
 
 padding:13px 22px;
+
+/* Une bordure sur TOUTES les variantes (transparente là où la surface
+est pleine) : deux boutons côte à côte partagent la même boîte, sans
+les 2 px d'écart que la seule bordure du secondaire créait. */
+border:1px solid transparent;
 
 border-radius:var(--radius-md);
 
@@ -953,6 +991,26 @@ touch-action:manipulation;
 
 }
 
+/* LA FLÈCHE QUI GLISSE — sur les trois niveaux. Lucide remplace
+<i data-lucide="arrow-right"> par <svg class="lucide lucide-arrow-right">
+(js/icones.js) ; .steps-cta-arrow est la flèche en clair du pied
+d'étapes de l'accueil. transform seul, 200 ms. */
+.btn > .lucide-arrow-right,
+.btn > .steps-cta-arrow{
+
+transition:transform 200ms var(--ease-standard);
+
+}
+
+.btn:hover > .lucide-arrow-right,
+.btn:hover > .steps-cta-arrow,
+.btn:focus-visible > .lucide-arrow-right,
+.btn:focus-visible > .steps-cta-arrow{
+
+transform:translateX(4px);
+
+}
+
 /* ENCRE — l'action structurante (« Continuer », « Enregistrer »).
 Passé du bleu --primary-600 à l'encre le 2026-08-28. C'était la
 dernière surface bleue de taille du site : les grands fonds sont
@@ -971,6 +1029,8 @@ trou dans la page plutôt qu'un objet posé dessus. Blanc sur #211D18 :
 16,8:1. */
 .btn-primary{
 
+min-height:52px;
+
 background:var(--ink-surface);
 
 color:#fff;
@@ -981,9 +1041,9 @@ color:#fff;
 
 background:var(--ink-surface-hover);
 
-transform:translateY(-1px);
+transform:translateY(-2px);
 
-box-shadow:var(--shadow-sm);
+box-shadow:var(--shadow-md);
 
 }
 
@@ -998,21 +1058,31 @@ ici, en variable, plutôt que dans :active — c'est ce qui la protège de
 .btn:active, qui arrive plus loin dans le fichier à poids égal. */
 --btn-press:0s;
 
-border:1px solid var(--border-color);
+min-height:48px;
 
-background:var(--background);
+/* LITTÉRAUX, PAS DES TOKENS (lot VITRINE-COMMERCIALE) : voir la note
+en tête du bloc. Papier #FDFCFA, encre #1A1714 (15,6:1), bordure
+franche rgba(26,23,20,.32) — un bouton qui se lit sur le papier comme
+sur l'encre des pages sombres, sans jamais devenir un fantôme. */
+border-color:rgba(26,23,20,.32);
 
-color:var(--text-color);
+background:#FDFCFA;
+
+color:#1A1714;
 
 }
 
 .btn-secondary:hover{
 
-border-color:var(--text-light);
+border-color:#1A1714;
 
-color:var(--text-color);
+color:#1A1714;
 
-background:var(--background-soft);
+background:#F3EFE8;
+
+transform:translateY(-1px);
+
+box-shadow:var(--shadow-sm);
 
 }
 
@@ -1065,21 +1135,88 @@ encre courants sans que la page devienne dorée. Un seul par page : si deux
 boutons ambre se retrouvent à l'écran, aucun des deux ne ressort. */
 .btn-accent{
 
-background:var(--amber-500);
+min-height:52px;
 
-color:var(--ink-surface);
+padding-left:26px;
+
+padding-right:26px;
+
+/* LITTÉRAUX (voir --amber-500/--ink-surface) : les pages sombres
+remappent --amber-700 mais pas ceux-ci — écrits en clair pour qu'aucun
+scope ne puisse les atteindre. Encre sur ambre : 7,8:1. */
+background:#E9A319;
+
+color:#211D18;
 
 font-weight:var(--fw-bold);
+
+box-shadow:0 1px 2px rgba(33,29,24,.08), 0 8px 18px -10px rgba(233,163,25,.7);
 
 }
 
 .btn-accent:hover{
 
-background:var(--amber-600);
+background:#F2B640;
 
-transform:translateY(-1px);
+color:#211D18;
 
-box-shadow:var(--shadow-sm);
+transform:translateY(-2px);
+
+box-shadow:0 2px 4px rgba(33,29,24,.08), 0 14px 26px -12px rgba(233,163,25,.85);
+
+}
+
+/* LIEN — le troisième niveau : texte souligné avec flèche, pour une
+action mineure posée à côté d'un principal (« Voir les formules »).
+Aucune surface, aucune ombre ; la flèche glisse comme sur les autres.
+Cible tactile de 44 px tenue par la hauteur de boîte, pas par du
+rembourrage qui l'aurait détaché de son texte. */
+.btn-link{
+
+--btn-press:0s;
+
+/* 46 et non 44 : la boîte fractionnaire rend un cheveu de moins que la
+valeur déclarée (43 px mesurés à 44) — un plancher se dépasse. */
+min-height:46px;
+
+padding:6px 2px;
+
+border-color:transparent;
+
+border-radius:var(--radius-xs);
+
+background:transparent;
+
+color:var(--text-color);
+
+text-decoration:underline;
+
+text-decoration-thickness:1.5px;
+
+text-underline-offset:4px;
+
+}
+
+.btn-link:hover{
+
+color:var(--amber-700);
+
+background:transparent;
+
+box-shadow:none;
+
+}
+
+.btn-link:active{
+
+transform:none;
+
+}
+
+@media(max-width:640px){
+
+.btn-accent,
+.btn-primary{ min-height:48px; }
 
 }
 
@@ -1233,9 +1370,15 @@ css/animations.css, qui ramène toute animation à .01ms. */
 
 .btn,
 .btn:hover,
-.btn:active{
+.btn:active,
+.btn > .lucide-arrow-right,
+.btn:hover > .lucide-arrow-right,
+.btn > .steps-cta-arrow,
+.btn:hover > .steps-cta-arrow{
 
 transform:none;
+
+transition:none;
 
 }
 

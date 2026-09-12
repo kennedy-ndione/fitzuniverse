@@ -115,6 +115,13 @@ label: "Pass Découverte",
 icon: "zap",
 tagline: "Des réponses immédiates de Fitz, sans engagement.",
 badge: "Pass rapide",
+// Lot VITRINE-COMMERCIALE (2026-09-11) : `niveau` place la carte dans
+// l'un des trois rangs du composant unique (css/formule.css) —
+// « entree », « recommande », « humain » — et `cta` est le libellé de
+// son bouton, à la première personne. Lus par preinscription-
+// destination.js et payment.js ; offers.html les recopie tels quels.
+niveau: "entree",
+cta: "Activer mon Pass Découverte",
 priceFCFA: 10000,
 duration: "14 jours",
 fitzAccess: "Questions illimitées, réponses instantanées",
@@ -125,10 +132,16 @@ fitzAccess: "Questions illimitées, réponses instantanées",
 // donnée morte. Si une condition commerciale doit réapparaître un jour,
 // la rétablir ici ET la brancher quelque part, sinon elle ne s'affichera
 // nulle part.
+// Lot VITRINE-COMMERCIALE (2026-09-11) : chaque puce est un bénéfice
+// concret, et chacune correspond à ce que le Pass ouvre vraiment —
+// le chat avec Fitz, rien d'autre (hasFitzExpressAccess). Le texte
+// des cartes d'offers.html est le même, mot pour mot :
+// test/vitrine-commerciale.test.mjs les compare.
 highlights: [
-"Questions illimitées à Fitz pendant 14 jours",
-"Explication des critères et des procédures de candidature",
-"Orientation vers les programmes adaptés à votre profil"
+"Toutes vos questions à Fitz, pendant 14 jours",
+"Vos critères et vos procédures expliqués, bourse par bourse",
+"Une orientation vers les programmes faits pour votre profil",
+"Sans engagement : le Pass s'arrête tout seul au bout de 14 jours"
 ]
 },
 
@@ -138,10 +151,14 @@ highlights: [
 // marche entre Découverte (parler à Fitz, 10 000 F) et Standard
 // (5 candidatures, 29 000 F) — la porte d'entrée vers le produit
 // cœur, LA candidature de l'étudiant. Prix relevé de 12 000 à
-// 15 000 F : un pas net au-dessus de Découverte, et un prix PAR
-// candidature volontairement ~1,67× celui de Standard (garde-fou
-// anti-cannibalisation : Solo n'est jamais la bonne affaire pour qui
-// veut plusieurs dossiers). Pas de déduction sur les formules
+// 15 000 F le 2026-08-29, puis de 15 000 à 25 000 F le 2026-09-11
+// (décision de Charles, lot VITRINE-COMMERCIALE — seul prix de la
+// grille à bouger ce jour-là) : un pas net au-dessus de Découverte, et
+// un prix PAR candidature volontairement ~2,2× celui d'Essentiel
+// (45 000 F / 4 = 11 250 F ; garde-fou anti-cannibalisation : Solo
+// n'est jamais la bonne affaire pour qui veut plusieurs dossiers).
+// Miroir serveur : functions/lib/achat.js (GRILLE) — le prix facturé
+// est calculé là-bas, celui-ci n'est qu'affiché. Pas de déduction sur les formules
 // supérieures (décision utilisateur du 2026-08-29, cohérente avec la
 // suppression des déductions du 2026-08-22). Même identifiant
 // qu'avant la dépréciation : quota, accès outils et redirection
@@ -169,16 +186,18 @@ label: "Forfait Premier Dossier",
 icon: "file-text",
 tagline: "Votre candidature, accompagnée de bout en bout — sans abonnement.",
 badge: "Pour démarrer",
-priceFCFA: 15000,
+niveau: "entree",
+cta: "Commencer mon premier dossier",
+priceFCFA: 25000,
 maxAccompaniedApplications: 1,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
 highlights: [
-"1 candidature accompagnée de bout en bout",
-"100% des outils Fitz : lettre, CV, e-mails, traduction",
-"Vérification complète du dossier avant dépôt",
-"Suivi maintenu jusqu'à la réponse de l'université",
-"Paiement unique, sans abonnement"
+"Votre première candidature, accompagnée de bout en bout",
+"Votre lettre de motivation et vos e-mails rédigés avec Fitz",
+"Votre dossier vérifié pièce par pièce avant le dépôt",
+"Un suivi maintenu jusqu'à la réponse de l'université",
+"Un paiement unique, sans abonnement"
 ]
 },
 
@@ -211,9 +230,10 @@ tagline: "Jusqu'à 5 candidatures accompagnées de bout en bout, avec Fitz.",
 badge: "Jusqu'à 5 candidatures",
 // 29 000 → 45 000 le 2026-08-29 (décision utilisateur, voir le chantier
 // grille) : à 29 000 F, 5 candidatures coûtaient à peine 2× l'unité
-// (Premier Dossier 15 000 F) — le volume écrasait la valeur du travail.
-// À 45 000 F : 9 000 F/candidature, toujours 1,67× moins cher que
-// l'unité — l'upgrade reste évident sans devenir insultant.
+// (Premier Dossier, alors 15 000 F) — le volume écrasait la valeur du
+// travail. À 45 000 F : 9 000 F/candidature, 1,67× moins cher que
+// l'unité — l'upgrade reste évident sans devenir insultant. (Depuis le
+// 2026-09-11, l'unité vaut 25 000 F : l'écart n'a fait que se creuser.)
 priceFCFA: 45000,
 duration: "6 mois",
 maxAccompaniedApplications: 5,
@@ -429,6 +449,8 @@ label: "Forfait Essentiel",
 icon: "compass",
 tagline: "4 candidatures accompagnées à fond, avec Fitz.",
 badge: "4 candidatures à fond",
+niveau: "recommande",
+cta: "Commencer avec Essentiel",
 priceFCFA: 45000,
 // Lot ACCEPTATION (2026-09-11), décision 7 de Charles : PLUS DE DURÉE EN
 // MOIS. Une formule bourses se définit par son nombre de candidatures,
@@ -443,12 +465,11 @@ maxAccompaniedApplications: 4,
 extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
 highlights: [
-"4 candidatures accompagnées à fond, à la fois",
-"100 % des outils Fitz : lettre, e-mails, vérification, traduction, compression",
+"4 candidatures accompagnées à fond, en même temps",
+"Votre lettre de motivation rédigée avec Fitz pour chaque université",
+"100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression",
 "Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests calé sur vos échéances",
-"Préparation aux entretiens et suivi complet des candidatures",
-"2 révisions par dossier",
-"Candidatures en attente suivies jusqu'à la décision de l'université",
+"Préparation aux entretiens, 2 révisions par dossier, et chaque candidature suivie jusqu'à la décision de l'université",
 "Service après-vente : signaler un problème, réponse sous 48 h ouvrées"
 ]
 },
@@ -461,6 +482,8 @@ label: "Forfait Conseiller",
 icon: "user-check",
 tagline: "6 candidatures, chacune relue par un conseiller avant l'envoi.",
 badge: "Accompagnement humain",
+niveau: "humain",
+cta: "Être accompagné par un conseiller",
 priceFCFA: 150000,
 // Lot ACCEPTATION (2026-09-11) : plus de durée en mois — voir la note
 // d'essentiel-4 ci-dessus (même exception assumée, même raison).
@@ -470,11 +493,11 @@ extendsPendingApplications: true,
 fitzAccess: "100% des outils Fitz, sans restriction",
 highlights: [
 "6 candidatures accompagnées à fond, chacune relue par un conseiller",
-"Vérification humaine de chaque dossier avant l'envoi",
+"Un humain vérifie chaque dossier avant l'envoi",
 "Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
 "Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées",
 "Tout le contenu du Forfait Essentiel, Fitz en renfort",
-"Candidatures en attente suivies jusqu'à la décision de l'université"
+"Chaque candidature suivie jusqu'à la décision de l'université"
 ]
 },
 
@@ -497,6 +520,8 @@ label: "Diagnostic France",
 icon: "calculator",
 tagline: "Une réponse honnête avant de payer Campus France.",
 badge: "Avant de payer",
+niveau: "entree",
+cta: "Faire mon Diagnostic France",
 priceFCFA: 10000,
 duration: "14 jours",
 fitzAccess: "Aucun outil Fitz : de l'arithmétique sur des seuils publiés, avec leurs sources",
@@ -509,10 +534,9 @@ maxPreinscriptions: 0,
 highlights: [
 "Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année",
 "Chaque montant avec sa source officielle et sa date de vérification",
-"Les points de vigilance de votre pays : les règles éliminatoires, avant qu'elles ne coûtent une année",
-"Votre calendrier en jours, ou la raison pour laquelle aucune date n'est encore publiée",
+"Les points de vigilance de votre pays, avant qu'ils ne coûtent une année",
+"Votre calendrier en jours, et les étapes de votre procédure, en entier",
 "Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes",
-"Les étapes de votre procédure, en entier — rien n'est masqué pour faire payer la suite",
 "Les 10 000 F se déduisent d'un Dossier France acheté dans les 30 jours"
 ]
 },
@@ -525,6 +549,8 @@ label: "Dossier France",
 icon: "file-check",
 tagline: "Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.",
 badge: "Une campagne",
+niveau: "recommande",
+cta: "Préparer mon dossier France",
 priceFCFA: 75000,
 duration: "une campagne, jusqu'au 31 juillet",
 fitzAccess: "Documents, traductions et légalisations, preuve de ressources, préparation à l'entretien, messagerie FitzUniverse",
@@ -532,9 +558,10 @@ maxPreinscriptions: 7,
 highlights: [
 "Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources",
 "Le Diagnostic France inclus",
+"Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
 "Préparation à l'entretien Campus France",
-"Messagerie FitzUniverse pour vos questions",
-"Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission"
+"Messagerie FitzUniverse pour vos questions, réponse sous 48 h ouvrées",
+"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
 ]
 },
 
@@ -553,6 +580,8 @@ icon: "user-check",
 // « non remboursables ».
 tagline: "Le même dossier, plus une relecture humaine avant des frais de dossier non remboursables.",
 badge: "Relecture humaine",
+niveau: "humain",
+cta: "Préparer mon dossier avec un conseiller",
 priceFCFA: 150000,
 duration: "une campagne, jusqu'au 31 juillet",
 fitzAccess: "Tout Dossier France, plus la relecture de votre conseiller",
@@ -561,7 +590,7 @@ highlights: [
 "Tout le contenu de Dossier France",
 "Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables",
 "Un conseiller joignable pendant toute la campagne",
-"Vous déposez vous-même sur Études en France — jusqu'au dépôt, jamais jusqu'à l'admission"
+"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
 ]
 }
 

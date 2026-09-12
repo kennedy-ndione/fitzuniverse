@@ -103,7 +103,36 @@ const LIRE_PAGE = () => {
   for (const n of document.querySelectorAll("input[type='number']")) if (!n.classList.contains("fitz-num")) systeme.push("nombre sans .fitz-num " + decrire(n));
   for (const d of document.querySelectorAll("input[type='date']")) if (!d.classList.contains("fitz-date")) systeme.push("date sans .fitz-date " + decrire(d));
   for (const i of document.querySelectorAll("input[list]")) systeme.push("champ à datalist " + decrire(i));
-  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), systeme: [...new Set(systeme)].slice(0, 8), titre: document.title };
+  // Lot VITRINE-COMMERCIALE (2026-09-11), trois contrôles de plus :
+  //  8. aucun bouton (.btn) visible sous 44 px de haut ;
+  //  9. au plus UN bouton principal (.btn-accent) par section visible —
+  //     la section la plus proche, sinon <main>, sinon le corps ;
+  // 10. dans une grille de cartes de formule, les cartes d'une même rangée
+  //     ont la même hauteur (± 2 px) et leurs boutons sont alignés en bas
+  //     (± 2 px) — mesuré, pas supposé.
+  const boutons = [...document.querySelectorAll(".btn")].filter((b) => visible(b) && !b.closest("[aria-hidden='true']"));
+  const courts = boutons.filter((b) => b.getBoundingClientRect().height < 44).map((b) => `${decrire(b)} (${Math.round(b.getBoundingClientRect().height)} px)`);
+  const parSection = new Map();
+  for (const b of boutons.filter((x) => x.classList.contains("btn-accent"))) {
+    const s = b.closest("section, main, body");
+    const cle = s ? decrire(s) : "?";
+    parSection.set(cle, (parSection.get(cle) || 0) + 1);
+  }
+  const principaux = [...parSection].filter(([, n]) => n > 1).map(([s, n]) => `${n} boutons principaux dans ${s}`);
+  const cartes = [];
+  for (const grille of document.querySelectorAll(".pricing-grid, .starter-stack, .pre-offres")) {
+    const items = [...grille.querySelectorAll(":scope > .plan-card")].filter(visible);
+    const rangees = new Map();
+    for (const c of items) { const r = c.getBoundingClientRect(); const k = Math.round(r.top); rangees.set(k, [...(rangees.get(k) || []), c]); }
+    for (const [, rangee] of rangees) {
+      if (rangee.length < 2) continue;
+      const hauteurs = rangee.map((c) => c.getBoundingClientRect().height);
+      if (Math.max(...hauteurs) - Math.min(...hauteurs) > 2) cartes.push(`hauteurs ${hauteurs.map(Math.round).join(" / ")} px sur une même rangée`);
+      const bas = rangee.map((c) => c.querySelector(".plan-cta")).filter(Boolean).map((b) => b.getBoundingClientRect().bottom);
+      if (bas.length === rangee.length && Math.max(...bas) - Math.min(...bas) > 2) cartes.push(`boutons non alignés (${bas.map(Math.round).join(" / ")} px)`);
+    }
+  }
+  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), systeme: [...new Set(systeme)].slice(0, 8), courts: [...new Set(courts)].slice(0, 8), principaux, cartes: [...new Set(cartes)].slice(0, 8), titre: document.title };
 };
 
 // Deux lignes de la carte « Analyse en direct » l'une sur l'autre.
@@ -134,6 +163,12 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
   try {
     await page.goto(`${base}/${cible}`, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForTimeout(1400);
+    // Les mesures portent sur la MISE EN PAGE, pas sur l'animation d'entrée :
+    // un .reveal non encore déclenché est en scale(.97), et un bouton de
+    // 44 px s'y mesure 42,7 (lot VITRINE-COMMERCIALE, faux positif vu sur
+    // le lien du bloc de conclusion de l'accueil).
+    await page.addStyleTag({ content: ".reveal{opacity:1!important;transform:none!important;transition:none!important}" }).catch(() => {});
+    await page.waitForTimeout(150);
     // Les actions d'une conversation (renommer, supprimer) ne se montrent
     // qu'au survol : on survole la première avant de lire la page.
     const item = await page.$(".ai-chat-history-item");
@@ -149,6 +184,10 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
     if (lu.muets.length) erreurs.push(`sans nom accessible : ${lu.muets.join(", ")}`);
     if (lu.vides.length) erreurs.push(`contenu rendu vide (ni texte ni icône visible) : ${lu.vides.join(", ")}`);
     if (lu.systeme.length) erreurs.push(`contrôle système : ${lu.systeme.join(", ")}`);
+    // Lot VITRINE-COMMERCIALE : boutons, hiérarchie, cartes alignées.
+    if (vue.mobile && lu.courts.length) erreurs.push(`bouton sous 44 px sur téléphone : ${lu.courts.join(", ")}`);
+    if (lu.principaux.length) erreurs.push(`hiérarchie des boutons : ${lu.principaux.join(" ; ")}`);
+    if (!vue.mobile && lu.cartes.length) erreurs.push(`cartes de formule : ${lu.cartes.join(" ; ")}`);
     if (cible === "index.html") {
       await page.evaluate(() => document.getElementById("fitz-demo")?.scrollIntoView());
       for (let i = 0; i < 12; i++) {

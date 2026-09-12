@@ -511,39 +511,34 @@ background:var(--background-soft);
 line-height:1.6;
 }
 
+/* Les trois offres sont LA carte de formule du site (css/formule.css,
+lot VITRINE-COMMERCIALE, 2026-09-11) : .pre-offre ne porte plus que
+la grille — les anciennes règles de surface (translucides sur cette
+page sombre, avec des boutons fantômes) sont parties. Trois colonnes
+à égalité ; une seule sous 1024 px. */
 .pre-offres{
 list-style:none;
 padding:0;
-margin:8px 0 0;
+margin:24px 0 0;
 display:grid;
-grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
-gap:18px;
+grid-template-columns:repeat(3, minmax(0, 1fr));
+align-items:stretch;
+gap:22px;
 }
-.pre-offre{
-border:1px solid var(--border-color);
-border-radius:var(--radius-md, 16px);
-background:var(--background-soft);
-padding:22px;
-display:flex;
-flex-direction:column;
-gap:10px;
-min-width:0;
-}
-.pre-offre-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.pre-offre-head h3{ margin:0; font-size:var(--fs-h4); }
-.pre-offre-prix{ font-weight:700; white-space:nowrap; color:var(--text-color); }
-.pre-offre p{ margin:0; line-height:1.55; color:var(--text-light); flex:1; }
-.pre-offre .btn{ align-self:flex-start; }
 
-.dest-deduction{ margin-top:4px; }
+@media(max-width:1023px){
+.pre-offres{ grid-template-columns:minmax(0, 1fr); max-width:460px; }
+}
+
+.dest-deduction{ margin-top:18px; }
 
 @media(max-width:640px){
 .pre-dest{ padding:18px; }
 .pre-dest-liste{ grid-template-columns:1fr; }
 .pre-dest-cta{ align-self:stretch; justify-content:center; }
-.pre-offre .btn{ align-self:stretch; justify-content:center; }
 }
 
-/* Le bouton encre sur le fond encre (pré-existant) : un filet le découpe,
-sans en faire un bouton papier. */
-.catalog-dark .pre-entree .btn-primary{ border:1px solid var(--border-color); }
+/* Le filet local sur .btn-primary (« le bouton encre sur le fond encre »)
+est parti avec le lot VITRINE-COMMERCIALE (2026-09-11) : l'action
+principale de ce bloc est désormais ambre (.btn-accent), définie dans
+css/base.css, et aucune feuille de page ne redéfinit un bouton. */

@@ -169,6 +169,12 @@ function renderPlan(plan, session) {
 
 TARIF = tarifDe(plan, session);
 
+// Le récapitulatif est LA carte de formule du site (css/formule.css),
+// au niveau de la formule choisie — entree / recommande / humain, lu
+// dans pricing-plans.js (lot VITRINE-COMMERCIALE, 2026-09-11).
+const summary = document.querySelector(".plan-summary");
+if (summary) summary.classList.add("plan-card", `plan-card--${plan.niveau || "entree"}`);
+
 document.getElementById("planSummaryIcon").setAttribute("data-lucide", plan.icon);
 document.getElementById("planSummaryBadge").textContent = plan.badge;
 document.getElementById("planSummaryLabel").textContent = plan.label;

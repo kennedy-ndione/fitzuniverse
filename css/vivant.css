@@ -310,10 +310,13 @@ où un bouton peut bouger sans devenir bruyant : elle avance quand on
 s'apprête à la suivre.
 ========================================================== */
 
+/* Les .btn-* ne sont plus cités ici (lot VITRINE-COMMERCIALE,
+2026-09-11) : la flèche qui glisse, l'élévation au survol et
+l'enfoncement au clic sont définis une seule fois dans css/base.css,
+pour les trois niveaux de bouton. Cette feuille ne garde que les
+gestes qui ne sont PAS des .btn (.cta-button, .app-cta, .voir-plus). */
 @media (hover: hover) and (pointer: fine) {
 
-  .btn-primary,
-  .btn-secondary,
   .cta-button,
   .app-cta {
     transition:
@@ -322,7 +325,6 @@ s'apprête à la suivre.
       background-color .25s var(--ease-standard);
   }
 
-  .btn-primary:hover,
   .cta-button:hover {
     transform: translateY(-2px);
   }
@@ -330,8 +332,6 @@ s'apprête à la suivre.
   /* La flèche : +4px vers la droite. Elle est écrite dans le
   libellé (« Commencer gratuitement → ») ou posée en <i>/<svg> —
   les deux cas sont couverts. */
-  .btn-primary i,
-  .btn-primary svg,
   .cta-button i,
   .cta-button svg,
   .app-cta i,
@@ -341,8 +341,6 @@ s'apprête à la suivre.
     transition: transform .28s var(--ease-premium);
   }
 
-  .btn-primary:hover i,
-  .btn-primary:hover svg,
   .cta-button:hover i,
   .cta-button:hover svg,
   .app-cta:hover i,
@@ -355,8 +353,6 @@ s'apprête à la suivre.
 }
 
 /* L'appui rend le bouton — au doigt, c'est ce qui accuse réception. */
-.btn-primary:active,
-.btn-secondary:active,
 .cta-button:active,
 .app-cta:active {
   transform: scale(.97);

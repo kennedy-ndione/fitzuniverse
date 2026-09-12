@@ -1,0 +1,507 @@
+/* ==========================================================
+LA CARTE DE FORMULE — UN SEUL COMPOSANT POUR TOUT LE SITE
+(lot VITRINE-COMMERCIALE, 2026-09-11)
+==========================================================
+Partout où un prix s'affiche — offers.html, preinscription-france.html,
+le récapitulatif de payment.html — c'est CETTE carte, déclinée en trois
+niveaux posés par une classe (et par le champ `niveau` de
+pricing-plans.js, d'où les pages rendues par script la lisent) :
+
+  .plan-card--entree      Pass Découverte, Premier Dossier, Diagnostic
+                          France — papier doux, sobre, trouvable.
+  .plan-card--recommande  Essentiel, Dossier France — badge
+                          « Recommandé », bordure ambre, légère élévation.
+  .plan-card--humain      Conseiller, Dossier France + Conseiller — carte
+                          prestige : encre profonde, accent ambre.
+
+LES NOMS DE CLASSE SONT CEUX D'AVANT (.plan-card, .plan-cta, .plan-price,
+.plan-quota, .plan-features, .plan-badge, .plan-price-term…) : ils sont
+lus par js/offers-current-plan.js, scripts/verifier/espace.mjs et
+test/acceptation.test.mjs. Le composant change, les identifiants
+techniques ne bougent pas. Les anciennes règles (.consult-banner,
+.plan-card-featured, .plan-card-premium, .plan-card--human…) ont
+quitté offers.css et css/offers-redesign.css avec ce lot.
+
+TOUT EST EN VALEURS LITTÉRALES, pas en tokens de page : sur
+preinscription-france.html (body.catalog-dark), --background vaut un
+voile translucide et --text-color du crème — c'est ce qui rendait les
+trois cartes « transparentes et sombres, avec des boutons fantômes »
+(capture 2 de Charles). Une carte doit se lire pareil sur le papier
+d'offers.html et sur l'encre d'une page catalogue.
+
+CONTRASTES MESURÉS (WCAG AA partout) :
+  papier #FDFCFA / encre #1A1714 ............ 15,6:1
+  papier / gris #57514A (texte courant) ..... 7,4:1
+  papier / ambre texte #8A5D00 (prix) ....... 5,8:1
+  papier / vert coche #1B7A45 ............... 5,4:1
+  encre #211D18 / crème #FDFCFA (titre) ..... 15,0:1
+  encre / #D8CBB4 (texte courant) ........... 9,6:1
+  encre / ambre #E9A319 (prix, coches) ...... 7,8:1
+  badge ambre #E9A319 / encre #211D18 ....... 7,8:1
+
+PAS DE backdrop-filter, PAS DE flou (défauts WebKit du lot
+DEUX-MOTEURS) : l'élévation vient de la bordure et d'une ombre nette.
+Les cartes d'une même rangée ont la même hauteur (grille étirée), et
+leurs boutons sont alignés en bas (.plan-cta{margin-top:auto}).
+Aucun débordement à 375 px : une colonne, largeur fluide.
+========================================================== */
+
+/* ---------- La grille ---------- */
+
+.pricing-grid,
+.starter-stack{
+position:relative;
+z-index:1;
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+align-items:stretch;
+gap:22px;
+max-width:920px;
+margin:0 auto 44px;
+}
+
+.pricing-grid--duo{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+
+/* Trois cartes sur une rangée (préinscription : Diagnostic, Dossier,
+Dossier + Conseiller). */
+.pricing-grid--trio{
+grid-template-columns:repeat(3, minmax(0, 1fr));
+max-width:1080px;
+}
+
+/* Une seule carte d'entrée dans sa rangée (Diagnostic France sur
+offers.html) : elle garde une largeur de carte, centrée. */
+.starter-stack--seule{
+grid-template-columns:minmax(0, 460px);
+justify-content:center;
+}
+
+@media(max-width:1023px){
+.pricing-grid,
+.pricing-grid--duo,
+.pricing-grid--trio,
+.starter-stack{
+grid-template-columns:minmax(0, 1fr);
+max-width:460px;
+}
+}
+
+/* ---------- La carte ---------- */
+
+.plan-card{
+position:relative;
+display:flex;
+flex-direction:column;
+min-width:0;
+padding:28px 26px 26px;
+border:1px solid #E1DBD0;
+border-radius:20px;
+background:#FDFCFA;
+color:#1A1714;
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.9),
+0 1px 2px rgba(33,29,24,.06),
+0 14px 32px -18px rgba(33,29,24,.22);
+transition:transform 200ms cubic-bezier(.4,0,.2,1), box-shadow 200ms cubic-bezier(.4,0,.2,1);
+}
+
+.plan-card:hover{
+transform:translateY(-3px);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.9),
+0 2px 4px rgba(33,29,24,.07),
+0 22px 44px -20px rgba(33,29,24,.30);
+}
+
+/* Le fond de la carte est le sien, jamais celui de la page : les <p>
+et <li> reçoivent leur couleur ici parce que css/base.css peint tout
+<p> en var(--text-light) — qui vaut du crème sur une page sombre. */
+.plan-card p,
+.plan-card li,
+.plan-card span{ color:inherit; }
+
+/* ---------- Niveau 1 : entrée ---------- */
+
+.plan-card--entree{
+background:#F8F6F2;
+border-color:#E1DBD0;
+}
+
+/* ---------- Niveau 2 : recommandé ---------- */
+
+.plan-card--recommande{
+border-color:#E9A319;
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.9),
+0 0 0 1px rgba(233,163,25,.35),
+0 2px 4px rgba(33,29,24,.06),
+0 22px 44px -18px rgba(233,163,25,.40);
+}
+
+.plan-card--recommande:hover{
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.9),
+0 0 0 1px rgba(233,163,25,.45),
+0 3px 6px rgba(33,29,24,.07),
+0 28px 54px -20px rgba(233,163,25,.50);
+}
+
+/* Un filet ambre en tête : le signal « mis en avant », sans grossir la
+carte. */
+.plan-card--recommande::before{
+content:"";
+position:absolute;
+top:0;
+left:20px;
+right:20px;
+height:3px;
+border-radius:0 0 3px 3px;
+background:#E9A319;
+}
+
+/* ---------- Niveau 3 : accompagnement humain ---------- */
+
+.plan-card--humain{
+background:
+radial-gradient(120% 80% at 100% 0%, rgba(233,163,25,.16) 0%, rgba(233,163,25,0) 55%),
+#211D18;
+border-color:rgba(233,163,25,.42);
+color:#D8CBB4;
+box-shadow:
+0 1px 2px rgba(0,0,0,.20),
+0 18px 40px -18px rgba(0,0,0,.55);
+}
+
+.plan-card--humain:hover{
+box-shadow:
+0 2px 4px rgba(0,0,0,.22),
+0 26px 52px -20px rgba(0,0,0,.65);
+}
+
+.plan-card--humain .plan-head h2,
+.plan-card--humain .plan-head h3{ color:#FDFCFA; }
+
+.plan-card--humain .plan-tagline{ color:#D8CBB4; }
+
+.plan-card--humain .plan-price-local,
+.plan-card--humain .plan-price-term,
+.plan-card--humain .plan-price-note{ color:#A2957F; }
+
+.plan-card--humain .plan-amount,
+.plan-card--humain .plan-currency{ color:#E9A319; }
+
+.plan-card--humain .plan-quota{
+background:rgba(233,163,25,.12);
+border-color:rgba(233,163,25,.28);
+}
+
+.plan-card--humain .plan-quota strong{ color:#E9A319; }
+.plan-card--humain .plan-quota span{ color:#FDFCFA; }
+
+.plan-card--humain .plan-features li{ color:#D8CBB4; }
+
+.plan-card--humain .plan-features i,
+.plan-card--humain .plan-features svg{ color:#E9A319; }
+
+/* ---------- Le badge ---------- */
+
+.plan-badge{
+position:absolute;
+top:-15px;
+left:26px;
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 14px;
+border-radius:999px;
+border:1px solid #E1DBD0;
+background:#FDFCFA;
+color:#1A1714;
+font-size:.76rem;
+font-weight:700;
+letter-spacing:.02em;
+white-space:nowrap;
+box-shadow:0 2px 6px rgba(33,29,24,.08);
+}
+
+.plan-badge i,
+.plan-badge svg{ width:13px; height:13px; }
+
+/* « Recommandé » — le seul badge plein. Encre sur ambre : 7,8:1. */
+.plan-badge--recommended{
+background:#E9A319;
+border-color:#E9A319;
+color:#211D18;
+box-shadow:0 6px 16px rgba(233,163,25,.38);
+}
+
+/* « Accompagnement humain » / « Relecture humaine » — sur la carte
+d'encre, une pastille sombre bordée d'ambre. */
+.plan-badge--human{
+background:#2C2620;
+border-color:rgba(233,163,25,.55);
+color:#F2B640;
+}
+
+/* ---------- Tête : nom + promesse ---------- */
+
+.plan-head{ margin:0 0 14px; }
+
+.plan-head h2,
+.plan-head h3{
+margin:0 0 6px;
+font-family:var(--font-display, inherit);
+font-size:1.22rem;
+font-weight:800;
+letter-spacing:-.01em;
+line-height:1.2;
+color:#1A1714;
+}
+
+.plan-tagline{
+margin:0;
+font-size:.9rem;
+line-height:1.5;
+color:#57514A;
+}
+
+/* ---------- Le prix : le FCFA en petit, l'euro qui porte ---------- */
+
+.plan-price{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:2px;
+margin:0 0 14px;
+}
+
+.plan-price-local{
+font-size:.78rem;
+font-weight:700;
+letter-spacing:.02em;
+color:#6E6760;
+}
+
+.plan-price-main{
+display:flex;
+align-items:baseline;
+gap:4px;
+}
+
+.plan-amount{
+font-family:var(--font-display, inherit);
+font-size:2.2rem;
+font-weight:800;
+letter-spacing:-.02em;
+line-height:1;
+color:#8A5D00;
+}
+
+.plan-currency{
+font-family:var(--font-display, inherit);
+font-size:1.15rem;
+font-weight:700;
+color:#8A5D00;
+}
+
+.plan-price-term{
+margin-top:4px;
+font-size:.8rem;
+color:#6E6760;
+}
+
+.plan-price-note{
+display:block;
+margin-top:4px;
+font-size:.78rem;
+font-weight:600;
+line-height:1.45;
+color:#57514A;
+}
+
+/* ---------- Le nombre de candidatures / de vœux ---------- */
+
+.plan-quota{
+display:flex;
+align-items:baseline;
+gap:10px;
+margin:0 0 18px;
+padding:10px 14px;
+border:1px solid #E1DBD0;
+border-radius:14px;
+background:#F1EEE8;
+}
+
+.plan-quota strong{
+font-family:var(--font-display, inherit);
+font-size:1.35rem;
+font-weight:800;
+line-height:1;
+color:#8A5D00;
+/* « Jusqu'à 7 » ne se coupe pas en deux dans une carte à trois colonnes. */
+white-space:nowrap;
+}
+
+.plan-quota span{
+font-size:.8rem;
+font-weight:600;
+line-height:1.3;
+color:#1A1714;
+}
+
+/* ---------- Les avantages ---------- */
+
+.plan-features{
+display:flex;
+flex-direction:column;
+gap:9px;
+margin:0 0 22px;
+padding:0;
+list-style:none;
+flex:1;
+}
+
+.plan-features li{
+display:flex;
+align-items:flex-start;
+gap:10px;
+font-size:.88rem;
+line-height:1.5;
+color:#1A1714;
+}
+
+.plan-features i,
+.plan-features svg{
+flex-shrink:0;
+width:15px;
+height:15px;
+margin-top:3px;
+color:#1B7A45;
+}
+
+/* ---------- Le bouton : pleine largeur, ancré en bas ---------- */
+
+.plan-cta{
+width:100%;
+margin-top:auto;
+/* Rembourrage latéral réduit (26 → 16 px) : à trois colonnes, un libellé
+comme « Préparer mon dossier avec un conseiller » garde une ligne de
+plus pour lui. */
+padding-left:16px;
+padding-right:16px;
+/* Un libellé sur deux lignes reste centré, comme le bouton l'est. */
+text-align:center;
+}
+
+/* ---------- Formule actuelle / demande en cours (js/offers-current-plan.js) ---------- */
+
+.plan-card--current,
+.plan-card--pending{
+border-color:rgba(233,163,25,.7);
+box-shadow:0 0 0 1px rgba(233,163,25,.4), 0 4px 12px rgba(26,23,20,.08);
+}
+
+.plan-current-badge{
+display:inline-flex;
+align-items:center;
+align-self:flex-start;
+gap:6px;
+margin:0 0 10px;
+padding:4px 12px;
+border-radius:999px;
+background:#E9A319;
+color:#211D18;
+font-size:.72rem;
+font-weight:800;
+text-transform:uppercase;
+letter-spacing:.05em;
+}
+
+.plan-current-badge.is-pending{
+background:rgba(233,163,25,.14);
+color:#8A5D00;
+border:1px dashed rgba(233,163,25,.5);
+}
+
+.plan-card--humain .plan-current-badge.is-pending{ color:#F2B640; }
+
+.plan-cta--inactive{
+pointer-events:none;
+background:#F8F6F2 !important;
+color:#57514A !important;
+border:1px dashed #CFC8BC !important;
+box-shadow:none !important;
+transform:none !important;
+}
+
+/* ---------- Le récapitulatif de payment.html ---------- */
+/* La même carte, couchée : icône, badge, nom et prix sur une ligne.
+payment.js pose plan-card--<niveau> depuis pricing-plans.js. */
+
+.plan-summary.plan-card{
+flex-direction:row;
+align-items:center;
+gap:20px;
+padding:26px 28px;
+margin-bottom:36px;
+}
+
+.plan-summary.plan-card:hover{ transform:none; }
+
+.plan-summary.plan-card .plan-summary-icon{ color:#8A5D00; }
+.plan-summary.plan-card--humain .plan-summary-icon{ color:#E9A319; }
+
+.plan-summary.plan-card .plan-summary-badge{
+display:inline-block;
+margin-bottom:8px;
+padding:5px 14px;
+border-radius:999px;
+background:#E9A319;
+color:#211D18;
+font-weight:700;
+font-size:.76rem;
+}
+
+.plan-summary.plan-card h2{
+margin:0 0 6px;
+font-size:1.3rem;
+font-weight:800;
+color:#1A1714;
+}
+
+.plan-summary.plan-card--humain h2{ color:#FDFCFA; }
+
+.plan-summary.plan-card .price-local{ color:#6E6760; }
+.plan-summary.plan-card--humain .price-local{ color:#A2957F; }
+.plan-summary.plan-card .price-main,
+.plan-summary.plan-card .price-currency{ color:#8A5D00; }
+.plan-summary.plan-card--humain .price-main,
+.plan-summary.plan-card--humain .price-currency{ color:#E9A319; }
+
+/* ---------- Téléphone ---------- */
+
+@media(max-width:767px){
+
+.pricing-grid,
+.starter-stack{ gap:26px; }
+
+.plan-card{ padding:26px 20px 22px; }
+
+.plan-badge{ left:20px; }
+
+.plan-amount{ font-size:2rem; }
+
+.plan-summary.plan-card{
+flex-direction:column;
+align-items:flex-start;
+padding:24px 20px;
+}
+
+}
+
+@media (prefers-reduced-motion:reduce){
+
+.plan-card,
+.plan-card:hover{ transform:none; transition:none; }
+
+}

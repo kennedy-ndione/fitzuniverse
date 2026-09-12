@@ -79,8 +79,13 @@ assert.ok(texteDe(lire("index.html")).includes("il vous dit ce qu'il ne sait pas
 });
 
 // --- 3. les phrases intouchables ---------------------------------------
+// « Aucune promesse d'admission » a quitté cette liste avec le lot
+// VITRINE-COMMERCIALE (2026-09-11, décision 6 de Charles) : le site dit
+// ce qu'il fait et garantit, jamais ce qu'il ne fait pas. Les limites
+// vivront dans les conditions de vente. La franchise de Fitz (« il vous
+// dit ce qu'il ne sait pas ») et la phrase de portée d'offers.html
+// restent : ce ne sont pas des découragements.
 export const INTOUCHABLES = [
-"Aucune promesse d'admission",
 "il vous dit ce qu'il ne sait pas",
 "Vous déposez toujours vous-même",
 "Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite",
@@ -229,15 +234,15 @@ const t = texteDe(lire("index.html"));
 for (const n of attendus) {
 assert.ok(!new RegExp(`(^|[^\\d])${n}([^\\d]|$)`).test(t), `« ${n} » est écrit en clair sur l'accueil`);
 }
-// La bande existe, cachée par défaut, et le script la remplit depuis le
-// catalogue et le registre des couches.
+// Lot VITRINE-COMMERCIALE (2026-09-11) : la bande #chiffres est partie
+// (elle répétait le hero). Les trois compteurs du hero restent lus par
+// js/homepage-teaser.js ; aucune bande, aucun data-chiffre ne revient.
 const html = lire("index.html");
-assert.ok(/<section id="chiffres"[^>]*hidden>/.test(html));
-for (const cle of ["bourses", "etablissements", "pays", "residences"]) assert.ok(html.includes(`data-chiffre="${cle}"`), cle);
+assert.ok(!/id="chiffres"/.test(html), "la bande de chiffres est revenue");
+assert.ok(!/data-chiffre=/.test(html));
 const teaser = lire("js/homepage-teaser.js");
-assert.ok(/import \{ COUCHES \} from "\.\/procedures\/residences\/index\.js"/.test(teaser));
-assert.ok(/residences: COUCHES\.length/.test(teaser));
-assert.ok(/bande\.hidden = false/.test(teaser));
+assert.ok(!/renderChiffres\(/.test(teaser.replace(/^\s*\/\/.*$/gm, "")), "renderChiffres est du code mort");
+assert.ok(/setCount\(heroScholarshipCountEl, scholarshipCount\)/.test(teaser));
 // scholarships.html : le nombre de la phrase d'entrée vient du script.
 assert.ok(/id="heroBoursesNombre"><\/strong>/.test(lire("scholarships.html")));
 assert.ok(/nombreEntree\.textContent = String\(allScholarships\.length\)/.test(lire("scholarships.js")));

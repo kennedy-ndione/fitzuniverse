@@ -62,8 +62,10 @@ assert.match(texte, /minutes/, "la durée");
 // La durée est celle que le questionnaire annonce lui-même.
 assert.match(texte, /cinq minutes/);
 assert.match(lire("eligibility-questions.html"), /cinq minutes/);
-// La réserve reste, seule.
-assert.ok(html.includes("Aucune promesse d'admission"));
+// La ligne de preuve dit ce que le site FAIT (lot VITRINE-COMMERCIALE,
+// 2026-09-11) : « Aucune promesse d'admission » a quitté l'accueil.
+assert.ok(html.includes("Gratuit, sans compte, en cinq minutes."));
+assert.ok(!html.includes("Aucune promesse d'admission"));
 assert.ok(!/hero-proof[\s\S]*?<a href="eligibility-test\.html">Diagnostic gratuit/.test(html), "le diagnostic n'est plus collé à la réserve");
 // Une zone de clic confortable sur téléphone.
 const css = sansCommentaires(lire("css/hero.css"));

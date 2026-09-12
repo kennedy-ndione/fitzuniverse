@@ -57,7 +57,6 @@ TITRES — même signature Newsreader que le reste du parcours.
 ========================================================== */
 .offer-header h1,
 .section-heading-plans h2,
-.plan-head h2,
 .faq h2{
 font-family:var(--font-affirmation);
 font-weight:700;
@@ -92,20 +91,6 @@ background:linear-gradient(135deg,rgba(217,128,90,.06),rgba(190,96,50,.05));
 background:
 radial-gradient(ellipse at 60% 20%,rgba(217,128,90,.18) 0%,transparent 55%),
 radial-gradient(ellipse at 25% 75%,rgba(190,96,50,.14) 0%,transparent 55%);
-}
-
-.plan-card-featured{
-background:
-radial-gradient(circle at top right,rgba(217,128,90,.10),transparent 55%),
-radial-gradient(circle at bottom left,rgba(190,96,50,.07),transparent 50%),
-var(--background);
-border-color:rgba(217,128,90,.40);
-}
-
-.plan-card-featured .plan-amount{
-background:linear-gradient(135deg,var(--amber-500),var(--amber-600) 55%,var(--amber-700));
--webkit-background-clip:text;
-background-clip:text;
 }
 
 .faq-item[open]{
@@ -155,14 +140,6 @@ url("../assets/images/graduation-1600w.jpg") type("image/jpeg")
 }
 }
 
-/* ==========================================================
-BADGE « LE PLUS POPULAIRE » — ombre portée ambre écrite en dur (pas un
-token) → terracotta ; le fond/texte suivent déjà --amber-500/
---primary-900 via les tokens plus haut.
-========================================================== */
-.plan-badge--recommended{
-box-shadow:0 8px 20px rgba(217,128,90,.32);
-}
 
 /* ==========================================================
 AVATAR FITZ — même levier que results.html/scholarship-details.html :
@@ -213,213 +190,7 @@ animation:fitzPulse 2.2s ease-in-out infinite;
 }
 
 
-/* ==========================================================
-LE PRIX RACONTÉ (chantier grille du 2026-08-29) — deux nouveaux
-éléments sous les blocs de prix :
 
-.plan-price-note : la traduction du prix en unités que l'étudiant
-compare déjà (par mois, par candidature, en 3 fois). Volontairement
-discret — c'est un sous-titre du prix, pas un deuxième prix.
-
-.plan-anchor : l'ancre de marché (comparaison Campus France sur
-Avancé, rareté sur Signature). Encadré léger teinté terracotta pour
-se détacher de la liste de puces sans crier. color: posé
-explicitement — piège connu : base.css peint tout <p> en
-var(--text-light), l'héritage ne suffit pas (DESIGN_SYSTEM.md).
-========================================================== */
-.plan-price-note{
-display:block;
-margin-top:6px;
-font-size:.78rem;
-font-weight:600;
-color:var(--text-light);
-}
-
-.plan-anchor{
-display:flex;
-align-items:flex-start;
-gap:10px;
-margin:16px 0 14px;
-padding:12px 14px;
-border-radius:12px;
-background:rgba(217,128,90,.08);
-border:1px solid rgba(217,128,90,.22);
-font-size:.86rem;
-line-height:1.5;
-color:var(--primary-900);
-}
-
-.plan-anchor i,
-.plan-anchor svg{
-flex-shrink:0;
-width:18px;
-height:18px;
-margin-top:2px;
-color:var(--amber-700);
-}
-
-.plan-anchor strong{
-color:var(--amber-700);
-}
-
-
-/* Note sous « Demander ma place » (Signature) — rassure sur l'ordre des
-opérations : demande d'abord, paiement seulement une fois la place
-confirmée. color: explicite (piège base.css p{color:var(--text-light)}
-— ici c'est justement la teinte voulue, mais on la fige pour ne pas
-dépendre du piège). */
-.plan-request-note{
-display:flex;
-align-items:flex-start;
-gap:8px;
-margin:10px 0 0;
-font-size:.8rem;
-line-height:1.5;
-color:var(--text-light);
-}
-
-.plan-request-note i,
-.plan-request-note svg{
-flex-shrink:0;
-width:15px;
-height:15px;
-margin-top:2px;
-color:var(--amber-700);
-}
-
-/* ==========================================================
-CARTES DE FORFAIT — COMPACTES ET PREMIUM (2026-08-29, retour
-utilisateur : « rends les cartes plus premium… elles sont énormes »)
-
-Deux leviers, dans cet ordre d'importance :
-
-1. LA LARGEUR, pas seulement le rembourrage. Le conteneur fait
-   1160 px : à deux colonnes, chaque carte dépassait 550 px de large —
-   c'est surtout ÇA qui les rendait énormes. Les grilles de forfaits
-   sont plafonnées à 920 px et centrées : des cartes de ~440 px, plus
-   denses, qui se lisent d'un seul regard.
-
-2. UNE ÉCHELLE RESSERRÉE. Rembourrages, prix, quota et interlignes
-   réduits d'environ un cran chacun — aucune information supprimée,
-   uniquement de l'air en trop. Le « premium » vient de la retenue :
-   survol adouci (‑3 px au lieu de ‑8), ombre en deux couches (contact
-   net + halo diffus) avec un liseré de lumière en haut, filet
-   terracotta sur la carte mise en avant.
-
-Ces règles battent offers.css par ordre de cascade (feuille chargée en
-dernier), y compris ses règles @media : ne pas les déplacer plus haut.
-========================================================== */
-.pricing-grid,
-.pricing-grid--duo,
-.starter-stack,
-.section-heading-plans{
-max-width:920px;
-margin-left:auto;
-margin-right:auto;
-}
-
-/* ≤1023px, les deux grilles passent en UNE colonne (offers.css) et
-doivent retrouver leur plafond « carte à taille humaine » : sans cette
-garde, le max-width:920px ci-dessus (posé sans media, et cette feuille
-gagne la cascade) étirait chaque carte sur ~920px avec sa typo de
-grille — constaté par l'utilisateur dans une fenêtre ~980px, carte
-Signature démesurée (2026-09-02). */
-@media(max-width:1023px){
-
-.pricing-grid,
-.pricing-grid--duo{
-max-width:460px;
-}
-
-}
-
-.pricing-grid{gap:20px;}
-
-.plan-card{
-padding:26px 24px 24px;
-border-radius:18px;
-box-shadow:
-inset 0 1px 0 rgba(255,255,255,.85),
-0 1px 2px rgba(33,29,24,.06),
-0 14px 32px -18px rgba(33,29,24,.25);
-}
-
-.plan-card:hover{
-transform:translateY(-3px);
-box-shadow:
-inset 0 1px 0 rgba(255,255,255,.85),
-0 2px 4px rgba(33,29,24,.07),
-0 22px 44px -20px rgba(33,29,24,.32);
-}
-
-/* Filet terracotta discret en tête de la carte mise en avant — le
-signal « premium » remplace l'emphase par la taille. */
-.plan-card-featured{
-border-color:rgba(190,96,50,.45);
-}
-
-.plan-card-featured::before{
-content:"";
-position:absolute;
-top:0;
-left:18px;
-right:18px;
-height:2px;
-border-radius:0 0 2px 2px;
-background:linear-gradient(90deg, transparent, var(--amber-600), transparent);
-}
-
-.plan-head{margin-bottom:14px;}
-.plan-head h2{font-size:1.12rem;letter-spacing:-.01em;}
-.plan-tagline{font-size:.84rem;}
-
-.plan-price{margin-bottom:14px;gap:1px;}
-.plan-amount{font-size:1.9rem;}
-.plan-currency{font-size:1.05rem;}
-.plan-price-local{font-size:.74rem;}
-.plan-price-term{font-size:.78rem;margin-top:3px;}
-.plan-price-note{margin-top:4px;font-size:.74rem;}
-
-.plan-quota{
-margin-bottom:16px;
-padding:9px 13px;
-gap:8px;
-}
-.plan-quota strong{font-size:1.25rem;}
-.plan-quota span{font-size:.78rem;}
-
-.plan-anchor{
-margin:0 0 14px;
-padding:9px 12px;
-font-size:.8rem;
-line-height:1.45;
-}
-.plan-anchor i,
-.plan-anchor svg{width:16px;height:16px;margin-top:1px;}
-
-.plan-features{gap:8px;margin-bottom:20px;}
-.plan-features li{font-size:.85rem;line-height:1.5;}
-.plan-features i,
-.plan-features svg{width:14px;height:14px;margin-top:3px;}
-
-.plan-cta{padding:12px 18px;font-size:.92rem;}
-
-.plan-request-note{margin-top:9px;font-size:.76rem;}
-
-/* Bandeaux « Pour démarrer » — même cure d'amaigrissement, même
-plafond de largeur, pour que toute la page respire au même rythme. */
-.consult-banner{
-padding:20px 24px;
-margin-bottom:20px;
-gap:22px;
-border-radius:18px;
-box-shadow:
-inset 0 1px 0 rgba(255,255,255,.85),
-0 1px 2px rgba(33,29,24,.06),
-0 10px 24px -16px rgba(33,29,24,.2);
-}
-.consult-body h3{font-size:17px;}
-.consult-body p{font-size:13.5px;}
 
 /* ==========================================================
 DÉBORDEMENT HORIZONTAL SUR TÉLÉPHONE (2026-09-03)

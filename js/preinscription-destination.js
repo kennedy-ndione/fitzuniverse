@@ -30,6 +30,7 @@ import { lirePays, etatDunPays, estOuverte, faitsPublics, defautsDeDestination }
 import { trouverProcedure, residencesDocumentees } from "./procedures/index.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
+import { auPays, avecArticle } from "./pays-grammaire.js";
 
 const ID = (document.body && document.body.dataset.destination) || "";
 
@@ -55,8 +56,11 @@ if (el) el.innerHTML = html;
 // a) LE HERO
 // ----------------------------------------------------------
 function renderHero(pays) {
-document.title = `Étudier en ${pays.nom} : préinscription accompagnée | FitzUniverse`;
-poser("destTitre", `Étudier en ${pays.nom}`);
+// « Étudier en France », mais « Étudier au Canada », « au Maroc » : la
+// préposition suit le pays (js/pays-grammaire.js). Un « en » écrit en
+// dur ici aurait donné « Étudier en Canada » le jour de l'ouverture.
+document.title = `Étudier ${auPays(pays.nom)} : préinscription accompagnée | FitzUniverse`;
+poser("destTitre", `Étudier ${auPays(pays.nom)}`);
 poser("destPosition", pays.positionnement);
 poser("destBadge", pays.nom);
 const drapeau = document.getElementById("destDrapeau");
@@ -118,7 +122,10 @@ if (section) section.hidden = false;
 const portail = (pays.portail && pays.portail.nom) || "";
 poser("destResidencesIntro", `Les frais de dossier, la banque où l'on paie, le moment où l'on paie et les dates de la campagne ne sont pas les mêmes selon le pays d'où vous déposez. Nous les avons vérifiés, un pays à la fois, sur les pages officielles qui encadrent la procédure${portail ? ` ${portail}` : ""}.`);
 
-poser("destResidencesPhrase", `Frais, calendrier et pièces vérifiés depuis ${enumerer(residences.map((p) => (/^[AEIOUY]/i.test(p) ? `l'${p}` : `le ${p}`)))}.`);
+// Chaque pays avec SON article : « la Côte d'Ivoire », « la Guinée »,
+// « le Sénégal ». Le test d'initiale vocalique qui vivait ici donnait
+// « le » à tout pays féminin (lot VITRINE-COMMERCIALE, 2026-09-11).
+poser("destResidencesPhrase", `Frais, calendrier et pièces vérifiés depuis ${enumerer(residences.map((p) => avecArticle(p)))}.`);
 poser("destResidencesNombre", String(residences.length));
 poserHtml("destResidencesListe", residences.map((p) => `<li>${escapeHtml(p)}</li>`).join(""));
 
@@ -175,24 +182,56 @@ const grille = window.SCHOLARBRIDGE_PLANS || {};
 return Object.values(grille).filter((o) => o && o.parcours === "preinscription" && o.deprecated !== true);
 }
 
+// Parité fixe FCFA → euro, la même que sur offers.html (offers.js) et
+// payment.html : l'euro porte le montant, le FCFA le surmonte en petit.
+const EUR_PER_XOF = 655.957;
+
+/**
+* La carte d'une formule : LE composant unique du site (css/formule.css),
+* au niveau déclaré dans pricing-plans.js (`niveau`), avec ses puces
+* (`highlights`) et son bouton (`cta`). Un seul bouton ambre par
+* rangée — celui de la formule recommandée ; les autres sont papier
+* plein. La classe .pre-offre et .pre-offre-prix restent : le harnais
+* (scripts/verifier/pages.mjs) lit la liste par elles.
+*/
+function carteFormule(offre, pays) {
+
+const niveau = offre.niveau || "entree";
+const badge = niveau === "recommande"
+? `<span class="plan-badge plan-badge--recommended"><i data-lucide="award" aria-hidden="true"></i>Recommandé</span>`
+: niveau === "humain"
+? `<span class="plan-badge plan-badge--human"><i data-lucide="user-check" aria-hidden="true"></i>${escapeHtml(offre.badge || "Accompagnement humain")}</span>`
+: "";
+
+const quota = offre.maxPreinscriptions
+? `<div class="plan-quota"><strong>Jusqu'à ${offre.maxPreinscriptions}</strong><span>vœux, dans un seul dossier</span></div>`
+: "";
+
+return `<li class="pre-offre plan-card plan-card--${escapeHtml(niveau)}">
+${badge}
+<div class="plan-head">
+<h3>${escapeHtml(offre.label)}</h3>
+<p class="plan-tagline">${escapeHtml(offre.tagline)}</p>
+</div>
+<div class="plan-price">
+<span class="plan-price-local pre-offre-prix">${escapeHtml(espacer(offre.priceFCFA))} FCFA</span>
+<span class="plan-price-main"><span class="plan-amount">${Math.round(offre.priceFCFA / EUR_PER_XOF)}</span><span class="plan-currency">€</span></span>
+${offre.duration ? `<span class="plan-price-term">${escapeHtml(offre.duration)}</span>` : ""}
+</div>
+${quota}
+<ul class="plan-features">
+${(offre.highlights || []).map((h) => `<li><i data-lucide="check" aria-hidden="true"></i><span>${escapeHtml(h)}</span></li>`).join("")}
+</ul>
+<a class="btn ${niveau === "recommande" ? "btn-accent" : "btn-secondary"} plan-cta" href="offers.html?parcours=preinscription&amp;destination=${escapeHtml(pays.id)}"><span>${escapeHtml(offre.cta || `Choisir ${offre.label}`)}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+</li>`;
+
+}
+
 function renderOffres(pays) {
 
 const offres = offresPreinscription();
 
-// L'offre MISE EN AVANT est la première formule « campagne » — le
-// dossier complet, pas le pass de diagnostic. Se régler sur le `type`
-// et non sur un identifiant, c'est ce qui permet à la destination
-// suivante d'avoir les siennes sans toucher à ce fichier.
-const misEnAvant = (offres.find((o) => o.type === "campagne") || {}).id;
-
-poserHtml("destOffres", offres.map((offre) => `<li class="pre-offre">
-<div class="pre-offre-head">
-<h3>${escapeHtml(offre.label)}</h3>
-<span class="pre-offre-prix">${escapeHtml(espacer(offre.priceFCFA))} F</span>
-</div>
-<p>${escapeHtml(offre.tagline)}</p>
-<a class="btn ${offre.id === misEnAvant ? "btn-primary" : "btn-secondary"}" href="offers.html?parcours=preinscription&amp;destination=${escapeHtml(pays.id)}"><span>Choisir ${escapeHtml(offre.label)}</span></a>
-</li>`).join(""));
+poserHtml("destOffres", offres.map((offre) => carteFormule(offre, pays)).join(""));
 
 // La déduction, dite en clair et sans compte : c'est une règle
 // commerciale, pas un calcul personnel. Le montant exact est recalculé

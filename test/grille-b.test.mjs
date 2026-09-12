@@ -92,7 +92,9 @@ for (const mot of [/mensualit/i, /par mois/i, /fractionn/i, /coupon/i]) assert.o
 });
 
 test("les prix et quotas des offres BOURSE n'ont pas bougé", () => {
-assert.equal(OFFRES["premier-dossier"].priceFCFA, 15000);
+// 15 000 → 25 000 F le 2026-09-11 (lot VITRINE-COMMERCIALE) : le seul
+// prix de la grille qui ait bougé ce jour-là.
+assert.equal(OFFRES["premier-dossier"].priceFCFA, 25000);
 assert.equal(OFFRES.essentiel.priceFCFA, 45000);
 assert.equal(OFFRES.accompagnement.priceFCFA, 75000);
 assert.equal(OFFRES["signature-focus"].priceFCFA, 150000);

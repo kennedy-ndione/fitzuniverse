@@ -41,7 +41,7 @@
 * ============================================================
 */
 
-import { paysAvecArticle } from "./eligibility-countries.js";
+import { formesDePays, duPays } from "./pays-grammaire.js";
 
 /**
 * Combien de cartes la vue d'aperçu vise. « Environ » : on ne coupe
@@ -221,14 +221,15 @@ return `${vue.affichees} ${mot(vue.affichees)} ${accorde(vue.affichees)} sur ${v
 * Le NOMBRE RÉEL est dans la phrase : c'est lui qui transforme une
 * troncature subie en information.
 *
-* L'article passe par paysAvecArticle() (js/eligibility-countries.js),
-* déjà écrit et testé : « en Japon » et « en États-Unis » sont les deux
-* fautes qu'une préposition unique aurait garanties.
+* L'article passe par js/pays-grammaire.js, le seul module qui accorde
+* un pays : « en Japon » et « en États-Unis » sont les deux fautes
+* qu'une préposition unique aurait garanties. Un pays que le référentiel
+* ne connaît pas garde un « de » nu — jamais un article deviné.
 */
 export function libelleVoirTout(groupe, noms) {
 
 const n = groupe.total;
-const ou = paysAvecArticle(groupe.country) || `de ${groupe.country}`;
+const ou = formesDePays(groupe.country) ? duPays(groupe.country) : `de ${groupe.country}`;
 
 return `Voir les ${n} ${n > 1 ? noms.plusieurs : noms.un} ${ou}`;
 

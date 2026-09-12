@@ -428,18 +428,23 @@ assert.ok(dest.includes("destProcedureClient"), "la page doit dire ce que le cli
 
 });
 
-test("le bloc « ce que ça promet et ce que ça ne promet pas » est présent, mot pour mot", () => {
+test("le bloc « ce que nous vous garantissons » est présent, mot pour mot", () => {
 
 const html = lire("preinscription-france.html");
 
-// La signature anti-officine. Elle a quitté le hub pour la page qui
-// vend : c'est là qu'elle sert.
-assert.ok(html.includes("Ce que cet accompagnement promet, et ce qu'il ne promet pas"));
+// Lot VITRINE-COMMERCIALE (2026-09-11) : trois engagements POSITIFS ont
+// remplacé « ce que ça promet et ce que ça ne promet pas ». La
+// signature anti-officine reste (vous déposez vous-même, sans
+// intermédiaire ; chaque règle vérifiée à la source, datée) — dite par
+// ce que FitzUniverse fait, jamais par ce qu'il ne fait pas.
+assert.ok(html.includes("Ce que nous vous garantissons"));
+assert.ok(!html.includes("ce qu'il ne promet pas"));
+assert.ok(!/Jamais jusqu'à l'admission|Aucun taux de réussite/.test(html));
 
 for (const phrase of [
-"Il va jusqu'au <strong>dépôt</strong> d'un dossier conforme : pièces, traductions, légalisations et preuve de ressources vérifiées avant l'envoi. Jamais jusqu'à l'admission, qui appartient à l'établissement.",
-"<strong>Vous déposez vous-même</strong>, sur le portail officiel du pays ou de l'établissement. Personne ne dépose à votre place, et aucun intermédiaire n'est nécessaire.",
-"<strong>Aucun taux de réussite affiché</strong> : un dossier conforme est ce que nous pouvons garantir, une décision d'admission ne l'est pas."
+"Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.",
+"<strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.",
+"<strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique."
 ]) {
 assert.ok(html.includes(phrase), `phrase altérée ou absente : « ${phrase.slice(0, 60)}… »`);
 }
@@ -464,8 +469,11 @@ assert.ok(!dest.includes("destination=france"), "la destination ne s'écrit pas 
 assert.ok(dest.includes('o.parcours === "preinscription"'), "les offres doivent être lues dans pricing-plans.js");
 assert.ok(dest.includes('o.deprecated !== true'), "une offre retirée de la vente ne s'affiche pas");
 assert.ok(!dest.includes("OFFRES_PAGE"), "la liste des offres ne s'écrit pas dans le module");
-// Et la mise en avant se règle sur le TYPE, pas sur un identifiant.
-assert.ok(dest.includes('o.type === "campagne"'), "l'offre mise en avant se reconnaît à son type");
+// Et la mise en avant se règle sur une DONNÉE de la grille (`niveau`,
+// lot VITRINE-COMMERCIALE), jamais sur un identifiant écrit ici.
+assert.ok(dest.includes("offre.niveau"), "le niveau de la carte vient de pricing-plans.js");
+const codeSeul = dest.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+assert.ok(!/"dossier-france"|"diagnostic-france"/.test(codeSeul), "aucun identifiant d'offre en dur dans le module");
 
 // Et la déduction est annoncée, sans compte : c'est une règle
 // commerciale, pas un calcul personnel.

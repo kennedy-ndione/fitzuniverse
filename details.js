@@ -15,7 +15,6 @@ import { documentDuCatalogue } from "./js/catalog-data.js";
 
 import { trackEvent } from "./js/analytics.js";
 import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
-import { languageLevelScore } from "./eligibility-ai.js";
 
 import { resolveCityImage } from "./js/scholarship-image.js";
 
@@ -44,88 +43,11 @@ import { isQuotaReached } from "./js/plan-features.js";
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-// ===============================
-// Diagnostic Fitz — compatibilité réelle avec CETTE université,
-// calculée à partir des réponses déjà données par l'étudiant sur
-// eligibility-questions.html (sessionStorage). Ne réutilise pas le
-// score global de results.html : ce sont des critères propres à cette
-// université précise (son niveau, sa langue), comparés au profil.
-// ===============================
-function computeCompatibility(university, responses) {
-
-const checks = [];
-
-// "Nouveau bachelier" (questions.js) cible en réalité le même palier
-// que "Licence" côté catalogue — aucun programme n'a de palier "Nouveau
-// bachelier" distinct (même alias que LEVEL_ALIASES dans
-// js/recommend-programs.js). Et university.level peut lister plusieurs
-// paliers à la fois (ex. "Licence / Master / Doctorat" pour un programme
-// flexible comme MEXT, voir admin/expand-catalog-batch5.js) : une
-// égalité stricte écartait à tort ces programmes pour tout étudiant,
-// même parfaitement éligible — remplacée par une inclusion (audit
-// 2026-08-22).
-// ⚠️ CORRECTIF DU 2026-09-05 — cette ligne lisait `studyLevel`, un
-// champ SUPPRIMÉ du questionnaire lors de la refonte du 2026-08-29 :
-// elle valait donc `undefined` pour tout le monde depuis huit jours,
-// et le contrôle « Niveau académique » passait toujours au vert sans
-// rien vérifier. Le cycle visé s'appelle `targetLevel` (et il est
-// désormais toujours écrit, même quand la question a été sautée —
-// voir finish() dans eligibility-questions.js).
-//
-// « Licence (Bachelor) » et « Doctorat (PhD) » portent une précision
-// entre parenthèses que le catalogue n'utilise pas : on la retire
-// avant de comparer, comme le fait LEVEL_ALIASES dans
-// js/recommend-programs.js. university.level peut lister plusieurs
-// paliers (« Licence / Master / Doctorat ») — d'où l'inclusion
-// plutôt qu'une égalité stricte.
-const cycleVise = responses.targetLevel || responses.studyLevel || "";
-
-const targetLevel = cycleVise === "Nouveau bachelier"
-? "Licence"
-: cycleVise.replace(/\s*\((Bachelor|PhD)\)\s*$/i, "").trim();
-
-checks.push({
-label: "Niveau académique",
-ok: !university.level || !targetLevel || university.level.includes(targetLevel),
-detail: university.level
-? `Cette opportunité recherche un profil "${university.level}".`
-: "Niveau non précisé pour cette opportunité."
-});
-
-// Meilleur des deux langues (audit 2026-08-22, ajout de la question
-// "french" dans questions.js) : ne regardait jusqu'ici que l'anglais,
-// ce qui écartait à tort un étudiant francophone confirmé mais débutant
-// en anglais d'une opportunité enseignée en français — même principe
-// que calculateLanguage() dans eligibility-ai.js. Seuil ">= 10" (palier
-// "Intermédiaire") inchangé par rapport à l'ancien seuil ">= 1".
-const languageOk = Math.max(languageLevelScore(responses.english), languageLevelScore(responses.french)) >= 10;
-
-checks.push({
-label: "Langue",
-ok: languageOk,
-detail: university.language
-? `Programme enseigné en ${university.language}.`
-: "Langue non précisée pour cette opportunité."
-});
-
-checks.push({
-label: "Documents",
-ok: responses.passport === "Passeport valide",
-detail: "Un passeport valide (ou en cours de renouvellement) est généralement le premier document demandé."
-});
-
-checks.push({
-label: "Chances de compléter votre dossier",
-ok: responses.timeline === "Dans les 6 prochains mois" || responses.timeline === "D'ici 1 an",
-detail: "Un dossier préparé suffisamment à l'avance a plus de chances d'aboutir avant l'échéance."
-});
-
-const okCount = checks.filter((c) => c.ok).length;
-const percent = Math.round((okCount / checks.length) * 100);
-
-return { checks, percent };
-
-}
+// Le bloc « Avant de candidater — Fitz peut analyser votre compatibilité
+// avec cette université » a quitté la fiche avec le lot VITRINE-COMMERCIALE
+// (2026-09-11, décision de Charles) : le diagnostic général suffit.
+// computeCompatibility(), renderDiagnostic(), renderDiagnosticPrompt() et
+// buildReturnUrl() sont partis avec lui — sans laisser de code mort.
 
 // Transmet le programme (et le score de compatibilité, une fois connu)
 // aux 3 CTA de cette page qui mènent à offers.html — sans ça, cliquer
@@ -389,10 +311,10 @@ sectionEl.hidden = false;
 }
 
 // Met à jour les 2 CTA statiques de la page (sidebar + nudge de retour
-// portail) avec le programme courant, et le score dès qu'un diagnostic
-// a été calculé cette session. Le 3e CTA (résultat du diagnostic,
-// construit dynamiquement) porte déjà son propre lien avec le score —
-// voir renderDiagnostic.
+// portail) avec le programme courant. Le paramètre `score` reste
+// accepté (buildOffersUrl le transmet à offers.html), mais plus rien ne
+// le fournit depuis le retrait du diagnostic par université (lot
+// VITRINE-COMMERCIALE, 2026-09-11).
 function updateFitzCtas(programId, score) {
 
 const primary = document.getElementById("fitzCtaPrimary");
@@ -402,81 +324,6 @@ const url = buildOffersUrl(programId, score);
 
 if (primary) primary.href = url;
 if (nudge) nudge.href = url;
-
-}
-
-// URL de retour transmise à eligibility-test.html : cette page +
-// fromTest=1, pour que chargerUniversite() sache relancer le
-// diagnostic automatiquement une fois le test terminé (voir plus bas).
-function buildReturnUrl() {
-
-const url = new URL(window.location.href);
-url.searchParams.set("fromTest", "1");
-
-return `${url.pathname}${url.search}`;
-
-}
-
-// Remplace l'ancien redirect silencieux (window.location.href direct) :
-// explique pourquoi un test est nécessaire et laisse l'étudiant décider
-// de continuer, plutôt que de le faire disparaître de la page sans
-// préavis.
-function renderDiagnosticPrompt(container) {
-
-container.innerHTML = `
-<p class="diagnostic-intro">Pour analyser votre compatibilité avec cette université, Fitz a besoin de connaître votre profil — un test rapide (5 minutes), à faire une seule fois. Vous reviendrez directement ici ensuite.</p>
-<a href="eligibility-test.html?returnTo=${encodeURIComponent(buildReturnUrl())}" class="btn btn-secondary btn-sm">
-<span>Faire le test (2 min)</span>
-<i data-lucide="arrow-right"></i>
-</a>
-`;
-
-container.hidden = false;
-
-if (window.lucide) lucide.createIcons();
-
-}
-
-function renderDiagnostic(container, university) {
-
-const rawResponses = sessionStorage.getItem("eligibilityResponses");
-
-if (!rawResponses) {
-renderDiagnosticPrompt(container);
-return;
-}
-
-const responses = JSON.parse(rawResponses);
-const { checks, percent } = computeCompatibility(university, responses);
-
-container.innerHTML = `
-<div class="diagnostic-score">
-<strong>${percent}%</strong>
-<span>compatibilité avec votre profil</span>
-</div>
-<ul class="diagnostic-result-list">
-${checks.map((c) => `
-<li class="${c.ok ? "is-ok" : "is-gap"}">
-<i data-lucide="${c.ok ? "check-circle" : "alert-circle"}"></i>
-<div><strong>${c.label}</strong><p>${c.detail}</p></div>
-</li>
-`).join("")}
-</ul>
-<a href="${buildOffersUrl(university.id, percent)}" class="btn btn-secondary btn-sm">
-<span>Renforcer mon dossier avec Fitz</span>
-<i data-lucide="arrow-right"></i>
-</a>
-`;
-
-container.hidden = false;
-
-// Le score vient d'être calculé pour ce programme : les 2 autres CTA
-// (sidebar, nudge de retour portail) en profitent aussi, plutôt que de
-// rester sur un lien "programme seul" pendant que celui-ci ci-dessus
-// porte déjà le score.
-updateFitzCtas(university.id, percent);
-
-if (window.lucide) lucide.createIcons();
 
 }
 
@@ -1160,9 +1007,8 @@ ageLimitWarning.textContent = `D'après les critères officiels, ce programme fi
 ageLimitWarning.hidden = false;
 }
 
-// Sans score pour l'instant (le diagnostic n'a pas encore tourné) —
-// renderDiagnostic() les remettra à jour avec le score dès qu'il sera
-// disponible.
+// Les CTA portent le programme, sans score : le diagnostic par
+// université a quitté la fiche (lot VITRINE-COMMERCIALE).
 updateFitzCtas(university.id);
 
 trackEvent("scholarship_viewed", {
@@ -1321,24 +1167,9 @@ university: university.university
 
 initPortalNudge();
 
-// ===============================
-// Diagnostic Fitz
-// ===============================
-const analyzeBtn = document.getElementById("analyzeBtn");
-const diagnosticResult = document.getElementById("diagnosticResult");
-
-if (analyzeBtn) {
-analyzeBtn.addEventListener("click", () => renderDiagnostic(diagnosticResult, university));
-}
-
-// Retour automatique depuis eligibility-test.html (voir buildReturnUrl/
-// renderDiagnosticPrompt) : le test vient d'être complété pour CE
-// programme précis, pas la peine de faire recliquer "Analyser mon
-// profil" — le diagnostic se relance de lui-même et défile jusqu'à lui.
-if (params.get("fromTest") === "1" && sessionStorage.getItem("eligibilityResponses") && diagnosticResult) {
-renderDiagnostic(diagnosticResult, university);
-diagnosticResult.scrollIntoView({ behavior: "smooth", block: "center" });
-}
+// Un retour du questionnaire avec ?fromTest=1 (ancien bloc « Avant de
+// candidater ») aboutit ici sans rien de plus : la fiche se lit, entière,
+// sans bloc à relancer — ni erreur ni impasse.
 
 } catch (error) {
 
