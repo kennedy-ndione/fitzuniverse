@@ -373,13 +373,36 @@ if (String(program.status || "").toLowerCase().includes("ouvert")) score += 1;
 // PLUS souvent qu'avant, pas moins — elles sont rattachées à des
 // universités pluridisciplinaires, qui correspondent à tous.
 //
-// CONTREPARTIE ASSUMÉE, à relire quand les 28 universités restantes
-// seront renseignées : les disciplines rares du catalogue reçoivent
-// moins de pistes (agriculture 11,6 → 8,4 ; architecture 10,9 → 8,8 ;
-// plancher individuel 9 → 6). Une partie de cette baisse n'est pas la
-// réalité du monde mais un trou de notre catalogue — seules 7 des 48
-// universités renseignées déclarent l'agriculture. La remesurer après
-// avoir complété les 28 (scripts/data/domaines-a-completer-2026-09-05.md).
+// CONTREPARTIE ASSUMÉE au 2026-09-05 : les disciplines rares du
+// catalogue recevaient moins de pistes (agriculture 11,6 → 8,4 ;
+// architecture 10,9 → 8,8 ; plancher individuel 9 → 6). Le diagnostic
+// posé alors était qu'une partie de cette baisse n'était pas la réalité
+// du monde mais un TROU DE NOTRE CATALOGUE, et qu'il fallait remesurer
+// une fois les 28 universités manquantes renseignées.
+//
+// REMESURE DU 2026-09-12, après les lots 46 et 47 (0 université sans
+// domaine sur 155). Même protocole, même grille de 360 profils, seule
+// la donnée a changé — les 28 ont été neutralisées dans une copie du
+// catalogue pour obtenir la colonne « avant » :
+//
+//                        avant les 28   après les 28
+//   agriculture              8,4            9,1      universités : 11 → 21
+//   architecture            10,2           10,8      universités : 19 → 28
+//   plancher individuel         6              7
+//   bourses distinctes         51             54
+//
+// LE DIAGNOSTIC ÉTAIT LE BON : les deux disciplines rares remontent, et
+// le plancher avec elles, sans qu'aucun poids ne soit touché. Le nombre
+// d'universités déclarant l'agriculture a presque doublé (11 → 21).
+//
+// CE QUI N'A PAS BOUGÉ : le recouvrement entre domaines. Deux profils
+// identiques sauf le domaine partagent toujours ~7,9 pistes sur 12 en
+// moyenne sur les 45 paires de domaines (Sénégal, master). Compléter la
+// donnée sert les disciplines rares ; cela ne sépare pas davantage les
+// disciplines courantes, qui partagent réellement les mêmes grandes
+// bourses pluridisciplinaires. Ne pas relever le poids pour « corriger »
+// ce chiffre : à 5, la mesure du 2026-09-05 montrait qu'un étudiant ne
+// voyait plus du tout les bourses ouvertes à toutes les disciplines.
 //
 // domaineCorrespond() rend null quand l'université ne déclare aucun
 // domaine : un trou de données ne vaut donc pas non-correspondance, il

@@ -54,14 +54,22 @@ export const CYCLES = ["Licence (Bachelor)", "Master", "Doctorat (PhD)"];
 
 // NOMS DE PAYS, PAS ADJECTIFS DE NATIONALITÉ (corrigé le 2026-09-05).
 //
-// La question « nationality » du questionnaire (js/eligibility-pistes.js,
-// suggestions PAYS_DU_MONDE) enregistre « Sénégal », et results.js le
-// transmet tel quel à scoreProgram(). Or isoDeNationalite() ne reconnaît
-// que les NOMS de pays et les codes ISO : « Sénégalaise » lui renvoie
-// null, donc estEligible() renvoyait null pour toutes les bourses à
-// restriction, et le filtre de nationalité était DÉSACTIVÉ dans toute la
-// grille. Mesuré ce jour-là : 0 exclusion au lieu de 33 pour un profil
-// français, 5 pour un profil sénégalais.
+// La question « nationality » du questionnaire enregistrait « Sénégal »,
+// et results.js le transmet tel quel à scoreProgram(). Or
+// isoDeNationalite() ne reconnaissait alors que les NOMS de pays et les
+// codes ISO : « Sénégalaise » lui renvoyait null, donc estEligible()
+// renvoyait null pour toutes les bourses à restriction, et le filtre de
+// nationalité était DÉSACTIVÉ dans toute la grille. Mesuré ce jour-là :
+// 0 exclusion au lieu de 33 pour un profil français, 5 pour un profil
+// sénégalais.
+//
+// MISE À JOUR DU 2026-09-12 (lot NATIONALITÉS) : la question enregistre
+// désormais le GENTILÉ — « Sénégalais(e) » — et non plus le nom du pays.
+// isoDeNationalite() résout maintenant les deux formes
+// (js/nationalites.js), donc cette grille reste juste telle quelle et
+// mesure bien ce que vit un étudiant réel. Les noms de pays sont
+// conservés ici À DESSEIN : ils sont la forme commune aux réponses
+// d'avant et d'après le lot, et la plus lisible dans un rapport.
 //
 // Conséquence : l'exposition du radar surestimait la portée des bourses
 // réservées (Commonwealth, listes fermées, programmes réservés à
