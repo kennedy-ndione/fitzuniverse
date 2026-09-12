@@ -222,7 +222,11 @@ for (const id of ["dossier-france", "dossier-france-conseiller"]) {
 assert.ok(OFFRES[id].highlights.includes("Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"), id);
 }
 // Ce qui reste, parce que ce n'est pas un découragement.
-assert.ok(texteDe(lire("index.html")).includes("il vous dit ce qu'il ne sait pas"));
+// « il vous dit ce qu'il ne sait pas » A QUITTÉ CETTE GARDE le
+// 2026-09-12 (décision de Charles) : la refonte des accroches de
+// l'accueil a réécrit le sous-titre du hero, seul endroit du site où
+// la phrase vivait. Elle n'est plus exigée nulle part — voir aussi
+// INTOUCHABLES dans test/langage.test.mjs.
 assert.ok(lire("offers.html").includes("La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires"));
 });
 

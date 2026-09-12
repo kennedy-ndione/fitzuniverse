@@ -74,19 +74,23 @@ for (const page of PAGES_PUBLIQUES) {
 const t = antitheses(texteDe(lire(page)));
 assert.ok(t.length <= 1, `${page} : ${t.length} antithèses — ${t.join(" | ")}`);
 }
-// La marque reste : « il vous dit ce qu'il ne sait pas » sur l'accueil.
-assert.ok(texteDe(lire("index.html")).includes("il vous dit ce qu'il ne sait pas"));
 });
 
 // --- 3. les phrases intouchables ---------------------------------------
 // « Aucune promesse d'admission » a quitté cette liste avec le lot
 // VITRINE-COMMERCIALE (2026-09-11, décision 6 de Charles) : le site dit
 // ce qu'il fait et garantit, jamais ce qu'il ne fait pas. Les limites
-// vivront dans les conditions de vente. La franchise de Fitz (« il vous
-// dit ce qu'il ne sait pas ») et la phrase de portée d'offers.html
-// restent : ce ne sont pas des découragements.
+// vivront dans les conditions de vente. La phrase de portée
+// d'offers.html reste : ce n'est pas un découragement.
+//
+// « il vous dit ce qu'il ne sait pas » A QUITTÉ CETTE LISTE le
+// 2026-09-12, sur décision explicite de Charles. Elle ne vivait que
+// dans le sous-titre du hero d'index.html, réécrit ce jour-là
+// (« … puis vous guide dossier par dossier jusqu'au départ. »). La
+// franchise de Fitz n'est donc plus imprimée sur l'accueil : si elle y
+// revient un jour, remettre l'entrée ici ET la garde de « langage 2 »,
+// retirée en même temps.
 export const INTOUCHABLES = [
-"il vous dit ce qu'il ne sait pas",
 "Vous déposez toujours vous-même",
 "Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite",
 "Le catalogue est ouvert à tous",

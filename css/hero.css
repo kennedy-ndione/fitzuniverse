@@ -361,21 +361,32 @@ paragraphe dont la ligne naturelle dépasse largement 560 px prend
 exactement ces 560 px — le rendu est celui de la maquette — mais il
 n'a plus besoin d'être remis à zéro sur chaque écran étroit, où un
 width figé déborderait. */
+/* SOUS-TITRE EN NEWSREADER (2026-09-12) — et non plus Public Sans :
+la phrase du sous-titre est la promesse, elle doit avoir la même voix
+éditoriale que le h1. Le contraste avec le titre ne vient plus de la
+police mais du CORPS (≈72px contre 19,5px) et de la graisse (500
+contre 400) — c'est la hiérarchie des pages éditoriales haut de gamme,
+et elle tient sans ajouter de troisième police. Le 400 de Newsreader
+est déjà chargé par le <link> Google Fonts d'index.html, rien à
+ajouter. Opacité remontée de .80 à .88 : un sérif de corps moyen sur
+photo sombre a besoin d'un peu plus de blanc que le sans. */
 .hero-subtitle{
 
 margin:0;
 
-max-width:560px;
+max-width:600px;
 
-font-family:'Public Sans','Segoe UI',Helvetica,sans-serif;
+font-family:'Newsreader',Georgia,'Times New Roman',serif;
 
-font-size:16.5px;
+font-size:19.5px;
 
 font-weight:400;
 
-line-height:1.62;
+line-height:1.6;
 
-color:rgba(245,241,232,.80);
+letter-spacing:.004em;
+
+color:rgba(245,241,232,.88);
 
 }
 
@@ -922,11 +933,13 @@ max-width:none;
 
 max-width:none;
 
-font-size:15.5px;
+/* 17px et non 15,5 : un sérif paraît plus petit qu'un sans au même
+corps — c'est l'ajustement optique, pas un grossissement. */
+font-size:17px;
 
-line-height:1.5;
+line-height:1.52;
 
-color:rgba(245,241,232,.8);
+color:rgba(245,241,232,.88);
 
 }
 
