@@ -667,7 +667,18 @@ flag: universityProfile.flag || "",
 level: program.level || "",
 scholarship: scholarshipData.title || "",
 deadline: program.deadline || "",
-coverage: program.coverage || "",
+// PRISE EN CHARGE : le programme gagne, la bourse comble le trou (lot
+// PROGRAMMES, 2026-09-12) — même règle que `description` plus bas.
+// Mesuré ce jour-là : 296 programmes sur 507 n'avaient pas de
+// `coverage`, et la fiche affichait « — » alors que la bourse porte,
+// pour CHACUN d'eux, un `funding` vérifié et détaillé (Eiffel : 1 200
+// €/mois, frais NON couverts ; Excellence-Major : 280 ou 860 €/mois…).
+// Le `funding` d'une bourse vaut pour toutes les universités qu'elle
+// finance : le recopier dans 296 programmes aurait créé 296 copies qui
+// divergent. Un `coverage` propre au programme ne s'écrit que quand la
+// prise en charge diffère VRAIMENT d'une université à l'autre (Bilkent :
+// exonération de 20 à 100 % selon le classement).
+coverage: program.coverage || scholarshipData.funding || "",
 language: program.language || "",
 duration: program.duration || "",
 status: program.status || "",
