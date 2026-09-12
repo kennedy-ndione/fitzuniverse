@@ -17,9 +17,32 @@ transform:translateY(22px) scale(.97);
 transition:opacity .7s var(--ease-premium,ease-out), transform .7s var(--ease-premium,ease-out);
 }
 
+/* transform:none — ET NON translateY(0) scale(1) (correctif du
+2026-09-12, bug trouvé par Charles sur le catalogue).
+
+UN TRANSFORM, MÊME NEUTRE, CRÉE UN CONTEXTE D'EMPILEMENT. Tout élément
+révélé en gardait un À VIE, et tout panneau flottant posé à
+l'intérieur — la liste d'un menu déroulant (.fitz-select-list), celle
+d'un champ à suggestions (.fitz-combobox-list) — s'y trouvait ENFERMÉ :
+son z-index:60 ne valait plus que DANS l'élément révélé, plus dans la
+page. Le panneau passait donc DERRIÈRE tout ce qui suit dans le flux.
+
+Ce que Charles voyait sur scholarships.html : il tapait « sen » dans
+« Ouvertes à ma nationalité », et la rangée de pastilles de pays juste
+en dessous traversait la liste des suggestions — « Royaume-Uni » lisible
+par-dessus « Sénégal ». Reproduit à 1440 px (à fenêtre étroite la barre
+passe à la ligne et le chevauchement n'a pas lieu, ce qui explique que
+le harnais 390 px ne l'ait jamais vu), puis vérifié corrigé :
+document.elementFromPoint() au centre du panneau rendait
+A.catalog-country-pill, il rend maintenant LI.fitz-select-option.
+
+L'ANIMATION NE CHANGE PAS : CSS interpole une transformation vers
+`none` comme vers l'identité, donc l'entrée est exactement la même. Le
+contexte d'empilement n'existe plus que pendant les 0,7 s de la
+transition. */
 html.js-ready .reveal.is-visible{
 opacity:1;
-transform:translateY(0) scale(1);
+transform:none;
 }
 
 .cards-grid .reveal:nth-child(2),
