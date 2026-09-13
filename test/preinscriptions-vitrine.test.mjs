@@ -158,10 +158,34 @@ assert.ok(defauts.some((d) => motif.test(d)), `attendu ${motif} — reçu ${JSON
 assert.ok(defautsDeDestination(france, { procedure: null }).some((d) => /procédure de portail/.test(d)));
 assert.ok(defautsDeDestination(france, { procedure: { etapes: [] } }).some((d) => /procédure de portail/.test(d)));
 
-// Les six destinations à venir ne tiendraient PAS le contrat
-// aujourd'hui — c'est précisément pourquoi elles ne sont pas vendues.
+// RÉÉCRIT EN CONSCIENCE LE 2026-09-13 (lot S3).
+//
+// Ce bloc affirmait : « les six destinations à venir ne tiendraient PAS
+// le contrat aujourd'hui — c'est précisément pourquoi elles ne sont pas
+// vendues ». C'était vrai le jour de son écriture, et son auteur avait
+// prévu celui-ci : le message d'échec disait déjà quoi faire —
+// « elle pourrait être ouverte, ou le contrat est trop lâche ».
+//
+// C'est la première branche. Le lot S3 a écrit les six procédures
+// manquantes (81 étapes), rempli les six portails, et remplacé les faits
+// sourcés sur des agrégateurs par des sources officielles. Les six
+// tiennent donc le contrat de DONNÉES. Ce qui les retient n'est plus une
+// lacune : c'est une décision commerciale (`accompagnement`) et une page
+// de destination qui n'est pas encore écrite.
+//
+// La garde qui remplace est PLUS dure, et c'est voulu : elle porte sur
+// les SEPT pays, pas sur la seule France, et elle tombe si un lot futur
+// retire à l'un d'eux son portail, son fait public ou sa procédure.
+for (const p of PAYS) {
+const defautsDuPays = defautsDeDestination(p, { procedure: procedureDe(p) });
+assert.deepEqual(defautsDuPays, [], `${p.nom} ne tient plus le contrat de données : ${defautsDuPays.join(" ; ")}`);
+}
+
+// Et on nomme ici ce qui sépare désormais une destination NOMMÉE d'une
+// destination VENDUE, pour que personne ne le cherche dans les données :
+// le champ `accompagnement`, et rien d'autre.
 for (const p of destinationsAVenir()) {
-assert.ok(defautsDeDestination(p, { procedure: procedureDe(p) }).length > 0, `${p.nom} tient le contrat : elle pourrait être ouverte, ou le contrat est trop lâche`);
+assert.equal(p.accompagnement, "a_venir", `${p.nom} : destination à venir dont l'accompagnement n'est pas « a_venir »`);
 }
 
 });
