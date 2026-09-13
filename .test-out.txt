@@ -2,409 +2,1225 @@
 > fitzuniverse@0.2.0 test
 > node --test "test/*.test.mjs"
 
-(node:11684) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
+(node:9076) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/fitz-choisit.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ note seule (Chevening) : ouvrir puis enregistrer sans toucher conserve la note (7.3337ms)
-✔ scope groupes (Commonwealth Master's) : aller-retour sans modification, aucune régression (4.0337ms)
-✔ formulaire vierge : toujours null (même effet que le champ absent) (1.7749ms)
-✔ le champ note reste visible même sans scope — sinon les 9 bourses « note seule » sont inéditables (3.7078ms)
-✔ scope monde + note (Türkiye Araştırma) : les deux survivent à l'aller-retour (1.9868ms)
-(node:11380) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/age-limits.js is not specified and it doesn't parse as CommonJS.
+✔ acceptation 1 — trois états pour une carte catalogue, aucun pour une carte qui n'en est pas (6.6838ms)
+✔ acceptation 2 — refus restants : 2, 1, 0 ; une carte ancienne sans `refus` se lit 0 (0.5101ms)
+✔ acceptation 3 — refuser : une carte proposée seulement ; accepter : proposée ou finale (0.7806ms)
+✔ acceptation 4 — le compteur : + 1 par refus, inchangé par une remplaçante ; carteFitz repart à 0 (0.8062ms)
+✔ acceptation 5 — les outils suivent l'acceptation ; le sélecteur ne propose que ce qui est ouvert (0.8213ms)
+✔ acceptation 6 — plus de mode libre pour une bourse ; le blocage nomme la porte (1.3984ms)
+✔ acceptation 7 — le formulaire : une carte proposée n'offre pas les statuts déposés ; une carte déposée ne redescend pas (0.8007ms)
+✔ acceptation 8 — la suppression : jamais une carte catalogue pour une formule en vente ; réponse seulement pour une formule retirée (2.689ms)
+✔ acceptation 9 — l'exception catalogue : une carte NON déposée dont la bourse est fermée ou retirée (1.0104ms)
+✔ acceptation 10 — etatChoixFitz au singulier (Premier Dossier), et le code `reponses` (2.9867ms)
+✔ acceptation 11 — Signature (quota Infinity) : Fitz remplit 12 places, jamais l'infini (6.2384ms)
+✔ acceptation 12 — le décompte de l'admin par statut, et le signal « toutes répondues » (1ms)
+✔ acceptation 13 — passSeul : les quatre conditions, sur une session ou un document brut (1.3647ms)
+✔ acceptation 14 — passTermine et le temps qui reste (0.7046ms)
+✔ acceptation 15 — le Pass seul est renvoyé au chat, sauf trois pages ; sa navigation ne montre que ça (3.4292ms)
+✔ acceptation 16 — plus aucun texte visible « Fitz Express » ou « Pass Express » (identifiants et commentaires exceptés) (26.7789ms)
+✔ acceptation 17 — cible après paiement : chaque formule mène exactement à sa prochaine étape (4.2697ms)
+✔ acceptation 18 — dureeMois null pour essentiel-4 et conseiller-6 ; planExpiresAt effacé à l'activation ; les retirées gardent leurs mois (1.0022ms)
+✔ acceptation 19 — les trois refus d'achat : même formule (active ou terminée), aucune place, Pass à un compte qui a le chat (2.3839ms)
+✔ acceptation 20 — offers.html sans « mois d'accompagnement », la nouvelle règle partout, la FAQ réécrite (18.0096ms)
+✔ acceptation 21 — les champs du choix et les règles serveur : ce que le client écrit, les règles l'exigent (13.4534ms)
+(node:5940) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ les 5 tranches lues dans questions.js sont bien celles attendues (2.451ms)
-✔ ageMax absent -> null partout, et l'appelant n'exclut rien (0.5659ms)
-✔ `tous` l'emporte sur les clés de cycle (0.3312ms)
-✔ niveau inconnu ou absent -> null, jamais la plus basse des limites (0.344ms)
-✔ âge exact : <= limite -> true, > limite -> false, âge inexploitable -> null (0.6203ms)
-✔ tranches vs limite 26 : la tranche ne tranche que si elle tombe entière d'un côté (0.3636ms)
-✔ tranches : « 35 ans et plus » ne peut jamais donner true, « Moins de 18 ans » jamais false (0.3931ms)
-✔ libelleLimiteAge : "" si rien — jamais « pas de limite » (0.3928ms)
-✔ libelleLimiteAge : "26 ans" pour `tous`, cycles dans l'ordre avec « · » (0.3925ms)
-✔ computeAge : âge exact depuis birthDate, null quand la date est absente ou illisible (2.1702ms)
-✔ le moteur écarte une bourse dont l'âge exact dépasse le plafond (filtre dur) (4.1813ms)
-✔ le moteur n'écarte PAS sur null : tranche à cheval, âge inconnu, limite absente (1.1069ms)
-✔ le moteur écarte sur une tranche entièrement au-dessus du plafond (diagnostic gratuit) (0.3355ms)
-✔ l'âge exact prime sur la tranche quand les deux existent (profil connecté) (0.4686ms)
-✔ filtre catalogue : retire sur false pour le niveau filtré, garde l'inconnu (0.2979ms)
-✔ filtre catalogue sans niveau filtré : retirée seulement si false sur TOUS ses niveaux (0.4043ms)
-✔ admin : refus de « tous cycles » saisi en même temps qu'une clé de cycle (2.9892ms)
-✔ admin : refus d'un nombre non entier, négatif ou supérieur à 99 (2.1252ms)
-✔ admin : ouvrir puis ré-enregistrer sans toucher conserve ageMax et sa note (3.6318ms)
-✔ admin : formulaire vierge -> AUCUN champ écrit (ni ageMax:{} ni note vide) (2.0592ms)
-✔ admin : note seule (sans limite chiffrée) -> seul ageMaxNote est écrit (1.9017ms)
-(node:14408) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/ai/ai-errors.js is not specified and it doesn't parse as CommonJS.
+✔ note seule (Chevening) : ouvrir puis enregistrer sans toucher conserve la note (10.7997ms)
+✔ scope groupes (Commonwealth Master's) : aller-retour sans modification, aucune régression (2.534ms)
+✔ formulaire vierge : toujours null (même effet que le champ absent) (3.2491ms)
+✔ le champ note reste visible même sans scope — sinon les 9 bourses « note seule » sont inéditables (2.3271ms)
+✔ scope monde + note (Türkiye Araştırma) : les deux survivent à l'aller-retour (2.4865ms)
+(node:4768) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ chaque code d'erreur porte un message en français, jamais le message brut (3.0686ms)
-✔ un code inconnu retombe sur INCONNU plutôt que de produire un message vide (0.7906ms)
-✔ messageErreurFitz ne laisse jamais fuiter le message d'un fournisseur (1.3068ms)
-✔ estArret reconnaît l'AbortError natif comme la FitzError (0.4252ms)
-✔ on ne réessaie jamais ce qui ne peut pas aboutir (0.5485ms)
-✔ un quota atteint n'est pas signalé comme un incident (0.2955ms)
-✔ les statuts HTTP se traduisent en codes distincts (1.8099ms)
-✔ chaque tâche a un délai et une fonctionnalité d'offre (0.4302ms)
-✔ les tâches structurées sont bien des tâches connues (0.4077ms)
-✔ le délai du chat est le plus court de tous (1.0932ms)
-✔ aucune clé d'API n'est écrite dans la configuration (4.2847ms)
-✔ une tâche de rédaction renvoie du texte, pas une structure (382.8289ms)
-✔ une tâche structurée renvoie une structure, pas du texte (570.858ms)
-✔ onToken reçoit le texte complet ET le fragment ajouté (3138.2589ms)
-✔ onEtat annonce l'envoi puis la rédaction (1469.6774ms)
-✔ une tâche inconnue est refusée avant tout appel (1.1697ms)
-✔ une entrée trop longue est refusée tout de suite, avec le bon conseil (0.4047ms)
-✔ un arrêt demandé lève une erreur reconnaissable par estArret (557.5792ms)
-✔ un signal déjà arrêté ne lance aucune génération (0.3307ms)
-(node:7372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalog-cache.js is not specified and it doesn't parse as CommonJS.
+✔ un document admins ACTIF et SANS champ role est reconnu superAdmin (3.6264ms)
+✔ pourquoi l'amorçage n'est pas une faille : aucun client ne peut créer un document sans rôle (0.4485ms)
+✔ admins : seul un superAdmin écrit, et il ne peut fabriquer qu'un « admin » (0.6576ms)
+✔ isAdmin() n'a pas changé : un lot qui touche aux rôles ne doit pas fermer une porte au passage (0.4435ms)
+✔ aucun identifiant de formule n'est écrit en dur dans admin/student-detail.html (3.9311ms)
+✔ la fiche ne dit plus que l'offre préinscription est non modifiable (3.395ms)
+✔ sélecteurs, dates et promotion sont RETIRÉS du DOM pour un admin ordinaire (3.7915ms)
+✔ une attribution manuelle écrit sa trace dans la MÊME requête que la formule (1.511ms)
+✔ un VRAI paiement efface la mention d'attribution manuelle (10.1093ms)
+✔ un compte posé à la main n'est pas compté comme une vente (2.1528ms)
+✔ la mention se lit en tête de fiche, et disparaît quand le champ est absent (3.4413ms)
+✔ chaque action rend un message de succès OU d'échec, et relit l'état (3.5812ms)
+✔ on ne se révoque pas soi-même, et le propriétaire n'a pas de bouton (1.2744ms)
+✔ la page des administrateurs est fermée à un admin ordinaire — jusqu'à l'URL tapée à la main (9.7603ms)
+✔ on ne crée jamais de compte depuis le Control Center : on promeut un compte existant (3.6832ms)
+(node:7056) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/age-limits.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ deux appels au catalogue ne déclenchent qu'un aller-retour par collection (6.2928ms)
-✔ deux appels EN PARALLÈLE partagent le même aller-retour (1.6892ms)
-✔ les deux appelants reçoivent les mêmes données (0.6532ms)
-✔ demander les universités seules ne lit QUE les universités (0.4781ms)
-✔ un sous-ensemble déjà chargé n'est jamais relu (2.6746ms)
-✔ le compteur additionne les documents réellement lus, une seule fois (0.7168ms)
-✔ une lecture qui échoue est évincée du cache : le prochain appel réessaie (1.8737ms)
-✔ un échec n'empêche pas une réussite ultérieure, et le compteur reste juste (1.6437ms)
-✔ aucun module du site ne lit les collections du catalogue en direct (159.6116ms)
-✔ le chargeur partagé est bien le seul point d'entrée, et il existe (1.0864ms)
-(node:11760) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalog-snapshot.js is not specified and it doesn't parse as CommonJS.
+✔ les 5 tranches lues dans questions.js sont bien celles attendues (3.7279ms)
+✔ ageMax absent -> null partout, et l'appelant n'exclut rien (0.626ms)
+✔ `tous` l'emporte sur les clés de cycle (0.6788ms)
+✔ niveau inconnu ou absent -> null, jamais la plus basse des limites (1.0895ms)
+✔ âge exact : <= limite -> true, > limite -> false, âge inexploitable -> null (0.6782ms)
+✔ tranches vs limite 26 : la tranche ne tranche que si elle tombe entière d'un côté (0.5153ms)
+✔ tranches : « 35 ans et plus » ne peut jamais donner true, « Moins de 18 ans » jamais false (0.4129ms)
+✔ libelleLimiteAge : "" si rien — jamais « pas de limite » (0.4875ms)
+✔ libelleLimiteAge : "26 ans" pour `tous`, cycles dans l'ordre avec « · » (0.5216ms)
+✔ computeAge : âge exact depuis birthDate, null quand la date est absente ou illisible (2.5954ms)
+✔ le moteur écarte une bourse dont l'âge exact dépasse le plafond (filtre dur) (1.3831ms)
+✔ le moteur n'écarte PAS sur null : tranche à cheval, âge inconnu, limite absente (1.6001ms)
+✔ le moteur écarte sur une tranche entièrement au-dessus du plafond (diagnostic gratuit) (0.3498ms)
+✔ l'âge exact prime sur la tranche quand les deux existent (profil connecté) (0.5285ms)
+✔ filtre catalogue : retire sur false pour le niveau filtré, garde l'inconnu (0.3218ms)
+✔ filtre catalogue sans niveau filtré : retirée seulement si false sur TOUS ses niveaux (0.4443ms)
+✔ admin : refus de « tous cycles » saisi en même temps qu'une clé de cycle (2.9752ms)
+✔ admin : refus d'un nombre non entier, négatif ou supérieur à 99 (2.1801ms)
+✔ admin : ouvrir puis ré-enregistrer sans toucher conserve ageMax et sa note (6.1564ms)
+✔ admin : formulaire vierge -> AUCUN champ écrit (ni ageMax:{} ni note vide) (2.8185ms)
+✔ admin : note seule (sans limite chiffrée) -> seul ageMaxNote est écrit (2.1354ms)
+(node:16372) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/ai/ai-errors.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ un instantané complet est accepté et normalisé (2.6018ms)
-✔ null, un tableau, une chaîne ou un objet vide sont refusés (0.4664ms)
-✔ une collection manquante refuse TOUT l'instantané (jamais partiel) (0.4233ms)
-✔ un document sans id refuse l'instantané (0.3468ms)
-✔ l'ancien export d'audit (scripts/export-catalog.json, clés françaises) N'EST PAS un instantané (0.368ms)
-✔ avec un instantané valide, Firestore n'est jamais appelé (1.3621ms)
-✔ sans instantané (404 → null), on relit Firestore comme avant (2.1207ms)
-✔ un téléchargement qui REJETTE (réseau) retombe sur Firestore sans propager l'erreur (0.7096ms)
-✔ un instantané CASSÉ (JSON valide mais forme fausse) retombe sur Firestore (0.6784ms)
-✔ le fichier n'est téléchargé qu'UNE fois pour les trois collections (0.9274ms)
-✔ une lecture qui échoue N'ÉCRASE PAS la mémoïsation de l'instantané (4.8524ms)
-✔ un document ciblé est trouvé par id, null s'il est absent (0.6119ms)
-✔ scripts/lot.mjs écrit bien assets/data/catalogue.json avec les noms des collections (1.9582ms)
-✔ js/catalog-data.js lit l'instantané à l'emplacement que l'export écrit (1.0679ms)
-✔ firebase.json ne déploie pas le fichier avec un cache long (1.1645ms)
-✔ aucun .html du site (hors admin/) ne contient « partenaire » hors commentaire (218.8093ms)
-✖ aucun .js du site (hors admin/) ne contient « partenaire » hors commentaire (139.6576ms)
-✔ le balayage couvre bien les pages du site (80.9448ms)
-(node:12220) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
+✔ chaque code d'erreur porte un message en français, jamais le message brut (3.7222ms)
+✔ un code inconnu retombe sur INCONNU plutôt que de produire un message vide (1.1976ms)
+✔ messageErreurFitz ne laisse jamais fuiter le message d'un fournisseur (2.422ms)
+✔ estArret reconnaît l'AbortError natif comme la FitzError (1.5186ms)
+✔ on ne réessaie jamais ce qui ne peut pas aboutir (0.858ms)
+✔ un quota atteint n'est pas signalé comme un incident (1.2446ms)
+✔ les statuts HTTP se traduisent en codes distincts (0.8172ms)
+✔ chaque tâche a un délai et une fonctionnalité d'offre (0.425ms)
+✔ les tâches structurées sont bien des tâches connues (0.7527ms)
+✔ le délai du chat est le plus court de tous (0.555ms)
+✔ aucune clé d'API n'est écrite dans la configuration (4.1683ms)
+✔ une tâche de rédaction renvoie du texte, pas une structure (382.1528ms)
+✔ une tâche structurée renvoie une structure, pas du texte (525.2129ms)
+✔ onToken reçoit le texte complet ET le fragment ajouté (3250.9232ms)
+✔ onEtat annonce l'envoi puis la rédaction (1478.1412ms)
+✔ une tâche inconnue est refusée avant tout appel (1.4319ms)
+✔ une entrée trop longue est refusée tout de suite, avec le bon conseil (0.778ms)
+✔ un arrêt demandé lève une erreur reconnaissable par estArret (402.7486ms)
+✔ un signal déjà arrêté ne lance aucune génération (0.9421ms)
+(node:15980) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/application-journey.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ la mention « réservé aux abonnés » et son cadenas ont disparu de la page (2.8859ms)
-✔ details.js ne référence plus l'élément de verrou supprimé (0.4216ms)
-✔ la phrase de confiance parle de l'accompagnement, jamais d'un lien caché (0.9839ms)
-✔ le portail du bailleur est conditionné à isPaidUser, pas seulement au site de la bourse (0.7404ms)
-✔ la section « situation » est masquée par défaut dans le HTML — invisible sans abonnement (0.7704ms)
-✔ le rendu de la situation n'est appelé que pour un abonné (0.5855ms)
-✔ le bloc des portails porte un id, pour pouvoir être masqué entièrement (0.6008ms)
-✔ nationalité éligible -> verdict favorable nommant le pays (1.4083ms)
-✔ nationalité exclue -> verdict défavorable, sans blocage (0.9464ms)
-✔ RÈGLE : un inconnu (null) ne devient JAMAIS « vous êtes éligible » (0.8779ms)
-✔ nationalité absente du profil -> invitation avec lien vers le profil (0.3724ms)
-✔ RÈGLE : aucune limite connue -> rien du tout, jamais « aucune limite » (1.9608ms)
-✔ dans les limites -> verdict favorable avec le libellé (0.5166ms)
-✔ au-delà du plafond -> avertissement, sans blocage (0.3293ms)
-✔ limite connue mais date de naissance absente -> invitation (0.2665ms)
-✔ limite existante mais niveau sans plafond applicable -> rien (inconnu) (0.2333ms)
-✔ explainMatch vide -> message d'invitation, jamais un bloc vide (0.2899ms)
-✔ explainMatch non vide -> aucun message, on affiche les raisons (0.1579ms)
-✔ quota atteint -> pas de création possible ; quota libre -> création permise (0.2396ms)
-✔ details.js vérifie le quota AVANT de proposer la création (0.5863ms)
-✔ une candidature déjà existante ne crée pas de doublon et renvoie vers le parcours (0.654ms)
-✔ la lettre passe par ?applicationId= — aucune logique de ai-letter.js dupliquée (0.304ms)
-✔ le drapeau `applications` gouverne le bouton de parcours (0.3242ms)
-(node:9436) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/echeance.js is not specified and it doesn't parse as CommonJS.
+✔ sans `track` : exactement les étapes d'aujourd'hui, mêmes ids, même ordre (5.8616ms)
+✔ track:"bourse" explicite = même parcours que sans track (0.6691ms)
+✔ bourse : letter/readiness gardent leurs libellés, icônes et marqueurs Fitz (0.6868ms)
+✔ bourse : documentsObtained n'a aucun effet (0.7234ms)
+✔ preinscription : [profile, checklist, traductions, ressources], jamais letter ni readiness (0.9869ms)
+✔ preinscription + advisorUnlocked : advisor en cinquième (0.6331ms)
+✔ preinscription : profile et checklist se calculent comme en bourse (0.7687ms)
+✔ traductions : done seulement si traductions ET (legalisation OU copies) (0.7417ms)
+✔ ressources : done si ressources OU bancaire (0.6468ms)
+✔ étapes documents : libellés, icônes et liens vers la bonne catégorie (1.983ms)
+✔ documentsObtained absent, null ou d'un autre type : aucune étape document done, aucune exception (4.1719ms)
+✔ isJourneyComplete : inchangée, vraie seulement si tout est fait (0.5733ms)
+✔ preinscription : « Revue conseiller » attend traductions et ressources, jamais une readiness qui n'existe pas (2.0769ms)
+✔ bourse : « Revue conseiller » reste prématurée tant que la vérification n'est pas faite (1.5004ms)
+(node:15496) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/candidature-catalogue.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ lit une date simple du catalogue (4.1303ms)
-✔ lit les autres dates simples présentes en base (0.8161ms)
-✔ lit une date suivie d'une parenthèse de campagne (0.4456ms)
-✔ lit l'heure et le fuseau quand ils sont donnés (0.5297ms)
-✔ lit une heure sans minutes (0.4378ms)
-✔ lit « 12h00 » sur la ligne ARES (0.6118ms)
-✔ refuse de dater « À confirmer selon l'année académique » (0.4937ms)
-✔ refuse de dater « À confirmer selon l'appel à candidatures » (0.4914ms)
-✔ une date « estimée » n'est jamais présentée comme une échéance (0.4165ms)
-✔ le GKS, avec ses deux fenêtres estimées, reste inconnu (1.0134ms)
-✔ un cycle clos ne rend pas la date de sa propre clôture (0.4212ms)
-✔ un appel clos avec réouverture annoncée reste clos (0.3214ms)
-✔ « Fermée, réouverture annuelle non datée » (0.2172ms)
-✔ « Variable, fixée chaque année par le ministère » reste inconnu (0.2455ms)
-✔ « deadline par pays publiée ensuite » reste inconnu malgré la date d'ouverture (0.3054ms)
-✔ une date impossible n'est pas rattrapée en silence (0.2103ms)
-✔ une chaîne vide ou absente ne casse rien (0.1404ms)
-✔ retient la date de clôture, pas celle d'ouverture (0.1869ms)
-✔ reconnaît une candidature continue (0.1934ms)
-✔ compte les jours restants en jours pleins (0.3156ms)
-✔ le décompte ignore l'heure de la journée (0.2631ms)
-✔ une échéance dépassée bascule en « close » (0.1804ms)
-✔ les trois paliers d'urgence (0.1801ms)
-✔ les seuils sont ceux du bandeau public, pas ceux du parcours (0.1036ms)
-✔ le libellé affiché dit ce qu'il faut, au bon ton (2.0072ms)
-✔ le titre au survol porte l'heure et le fuseau quand ils existent (0.3373ms)
-✔ formaterDate écrit « 1er » et pas « 1 » (0.3106ms)
-✔ une opportunité réservée aux Africains est valorisée (0.8087ms)
-✔ une couverture totale passe devant une couverture partielle, à urgence égale (0.3256ms)
-✔ la pertinence pour le public passe devant l'urgence (0.5439ms)
-✔ le palier « proche » prime sur « critique » : deux mois valent mieux que quatre jours (0.3766ms)
-✔ à pertinence et urgence égales, la plus proche de sa clôture d'abord (0.3552ms)
-✔ une opportunité clôturée ne remonte jamais, même à 100 % de couverture (0.5064ms)
-✔ classerOpportunites ne modifie pas le tableau reçu (0.4055ms)
-✔ le bandeau ne montre que ce qui est réellement ouvert (0.3449ms)
-(node:15188) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
+✔ normaliserTitre : minuscules, sans accents, espaces compactés (2.6032ms)
+✔ 1. scholarshipId présent → source « champ », programId repris tel quel (2.4104ms)
+✔ 2. université + titre exacts → LE programme est résolu (« deduit ») (0.5719ms)
+✔ 2 bis. bourse reconnue mais université inconnue → la bourse seule (0.4023ms)
+✔ un titre approchant ne rapproche rien — jamais d'approximation (0.643ms)
+✔ un titre vide ne rapproche rien (0.4461ms)
+✔ 3. deux programmes possibles → ambigu, aucun lien (1.3683ms)
+✔ 4. isActive:false → ton « close », jours null, jamais « dans N j » (4.4969ms)
+✔ 5. echeanceVariable « pays » AVEC programId → la date ferme du programme (1.6782ms)
+✔ 6. echeanceVariable « pays » SANS programId (plusieurs échéances) → « Selon votre pays », jours null (1.503ms)
+✔ 6 bis. date ferme saisie sur une bourse variable sans programme → divergence « date_variable » (0.9461ms)
+✔ 7. la date de l'étudiant diffère de la date ferme du catalogue → « date_differente » avec l'ISO (0.7303ms)
+✔ 7 bis. même date → aucune divergence (1.3594ms)
+✔ 8. cycle clos alors que l'étudiant porte une date future → « cycle_clos », aucune date à reprendre (0.8074ms)
+✔ 8 bis. cycle clos et date étudiante déjà passée → rien à signaler (0.5876ms)
+✔ 9. candidature hors catalogue → lie:false, etat:null, divergence:null (0.4549ms)
+✔ 9 bis. scholarshipId écrit mais absent du catalogue → non liée, sans erreur (0.3635ms)
+✔ 10. bourse sans verifieLe → aucune mention « Vérifié le » ; avec → la mention (0.8912ms)
+✔ indexerCatalogue : deux bourses au même titre ne sont plus désignables par ce titre (0.5199ms)
+✔ un programId qui ne correspond plus à rien retombe sur la vue d'ensemble (0.3242ms)
+✔ prochaineAction : un cycle clos n'est jamais « pressé », même avec une date étudiante à 2 jours (2.2087ms)
+✔ prochaineAction : une vraie urgence sur un dossier ouvert passe avant le cycle clos (1.772ms)
+✔ prochaineAction : la date ferme du catalogue l'emporte sur la date gelée de l'étudiant (2.2407ms)
+✔ radarEcheances : le cycle clos sort du radar, la date du catalogue prime, le hors catalogue reste (1.1798ms)
+(node:15756) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalog-cache.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ Sénégal ↛ Commonwealth : exclu (false) (3.1102ms)
-✔ Ghana → Commonwealth : éligible (true) (0.5616ms)
-✔ Sénégal → BID : éligible (true) (0.353ms)
-✔ Cap-Vert ↛ BID : exclu (false) — piège connu d'Afrique de l'Ouest (0.3268ms)
-✔ scope monde : true — c'est une affirmation d'ouverture, pas une inconnue (0.3374ms)
-✔ champ eligibility absent : null (0.3784ms)
-✔ nationalité vide : null, même avec une restriction explicite (1.8646ms)
-✔ pays hors référentiel (Wakanda) : null, jamais false (0.4774ms)
-✔ null et false sont distincts — un `=== false` ne capture aucun null (0.7193ms)
-✔ include ajoute un pays hors groupe (0.7693ms)
-✔ exclude retire un pays membre du groupe (0.4585ms)
-✔ liste explicite sans groupe (0.44ms)
-✔ résolution accents/casse/alias/code ISO direct (0.3842ms)
-✔ paysEligibles : monde et champ vide donnent null (personne n'est exclu) (0.2167ms)
-✔ monde et champ absent ne se confondent plus (0.3521ms)
-✔ libelleEligibilite : note prioritaire, sinon libellé de groupe, sinon null (0.9135ms)
-✔ effectifs des groupes : 56/57/54/141/44/16 (0.2486ms)
-✔ aucun doublon dans les listes, et GROUPES les référence toutes (1.564ms)
-✔ pièges documentés : CV/GH/LR hors BID, SN hors Commonwealth, ZW hors Commonwealth (0.3217ms)
-✔ tout lockup porte le balisage canonique — mêmes classes, mêmes attributs SVG (365.7163ms)
-✔ aucune page ne porte plus les anciennes classes de lockup (62.6737ms)
-✖ --logo-descriptor est déclaré deux fois, et seulement dans css/base.css (48.004ms)
-✔ les règles du lockup n'utilisent aucun token de police ni d'ambre (1.347ms)
-✔ chaque page listée porte exactement le nombre de lockups attendu (18.0137ms)
-✔ les cinq pages qui n'avaient aucun logo en ont un désormais (3.0562ms)
-✔ le lockup admin reste enveloppé dans .sidebar-brand (4.6039ms)
-✔ patch minimal correct : aucune erreur (4.9544ms)
-✔ collection hors énuméré refusée ; les trois collections légitimes acceptées (1.0845ms)
-✔ champs vide ou absent refusé — un patch qui n'écrit rien n'a pas lieu d'être (0.5839ms)
-✔ motif absent, vide ou blanc refusé (0.4975ms)
-✔ deux patches sur le même document refusés (conflit d'intention) (0.5039ms)
-✔ même id dans DEUX collections différentes : accepté, ce sont deux documents (0.3981ms)
-✔ UNE CHAÎNE VIDE EST UNE VALEUR : le validateur l'accepte comme n'importe quelle autre (0.318ms)
-✔ attendu doit être un sous-ensemble des clés de champs (0.4771ms)
-✔ un lot peut porter PATCHES SEUL, sans les trois autres formes (1.4733ms)
-✔ PATCHES cohabite avec les formes de création dans un même lot (2.8104ms)
-✔ REFUS : poser une applicationUrl sur un programme sans motif d'exception (0.7635ms)
-✔ ACCEPTATION : la même écriture passe avec overrideApplicationUrl motivé (0.369ms)
-✔ un override vide ou blanc ne vaut pas motif (0.3881ms)
-✔ VIDER reste toujours permis, sans motif — c'est le remède, pas la maladie (0.31ms)
-✔ la garde ne vise QUE la collection programs (0.2063ms)
-✔ la garde s'applique aussi aux LIENS de création, pas seulement aux patches (0.65ms)
-✔ refusPortailProgramme : null quand le champ n'est pas touché du tout (0.3243ms)
-✔ lot 33 : aucune erreur bloquante hors ligne (0.3744ms)
-✔ lot 33 : 24 patches, tous sur universities (0.2376ms)
-✔ lot 33 : exactement 3 patches vident le portail (les publiques marocaines) (0.5299ms)
-✔ lot 33 : les 21 autres portent une URL https, et chaque patch a son motif (0.4534ms)
-✔ lot 33 : chaque patch ne touche QUE applicationPortalUrl (0.3907ms)
-✔ lot 33 : aucun patch ne réécrit la valeur qu'il dit attendre (0.3496ms)
-✔ une bourse liée et une bourse orpheline : compte 1, et c'est le bon id (0.4085ms)
-✔ aucun programme du tout : toutes les bourses sont orphelines (0.2072ms)
-✔ plusieurs programmes sur la même bourse ne la comptent pas deux fois (0.1959ms)
-✔ un programme sans scholarshipId ne rattache rien (0.2432ms)
-✔ entrées absentes ou vides : jamais d'exception (0.2589ms)
-✔ lot 31 : aucune erreur bloquante hors ligne (2.7672ms)
-✔ lot 31 : le compte annoncé — 12 universités, 14 bourses, 15 programmes (0.3185ms)
-✔ lot 31 : aucun identifiant en double, dans aucune des trois familles (0.3366ms)
-✔ lot 31 : chaque universityIds pointe vers une université du même lot (0.4577ms)
-✔ lot 31 : la garde pays passe, comparaison stricte accents compris (0.3955ms)
-✔ lot 31 : funder et entryPoint restent dans leurs énumérés (0.3189ms)
-✔ lot 31 : al-azhar est la seule orpheline volontaire, et elle porte sa propre image (0.4611ms)
-✔ lot 31 : la langue d'un programme n'est écrite que lorsqu'elle est vérifiée (jamais "") (0.3061ms)
-✔ validateur : un lot minimal correct passe sans erreur (0.3889ms)
-✔ validateur : funder hors énuméré refusé, funder absent accepté (0.4945ms)
-✔ validateur : ageMax.tous + clé de cycle refusé ; entiers 1..99 exigés ; {} refusé (2.0251ms)
-✔ validateur : garde pays stricte — un accent manquant bloque (0.2932ms)
-✔ validateur : une bourse LIÉE sans niveau bloque ; une orpheline sans niveau ne bloque pas (0.3548ms)
-✔ validateur : identifiants en double refusés (0.2092ms)
-(node:12236) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/next-action.js is not specified and it doesn't parse as CommonJS.
+✔ deux appels au catalogue ne déclenchent qu'un aller-retour par collection (5.9853ms)
+✔ deux appels EN PARALLÈLE partagent le même aller-retour (1.2348ms)
+✔ les deux appelants reçoivent les mêmes données (0.8873ms)
+✔ demander les universités seules ne lit QUE les universités (0.7012ms)
+✔ un sous-ensemble déjà chargé n'est jamais relu (5.3787ms)
+✔ le compteur additionne les documents réellement lus, une seule fois (0.7341ms)
+✔ une lecture qui échoue est évincée du cache : le prochain appel réessaie (1.7276ms)
+✔ un échec n'empêche pas une réussite ultérieure, et le compteur reste juste (0.9227ms)
+✔ aucun module du site ne lit les collections du catalogue en direct (259.9053ms)
+✔ le chargeur partagé est bien le seul point d'entrée, et il existe (0.9866ms)
+(node:16348) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalog-snapshot.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ les prérequis correspondent aux données réellement consommées (4.1218ms)
-✔ une étape sans prérequis satisfait est prématurée, pas à faire (0.9527ms)
-✔ une étape devient à faire dès que ses prérequis sont remplis (0.4567ms)
-✔ la vérification attend SES DEUX prérequis (0.4488ms)
-✔ la prochaine étape faisable n'est pas la première non cochée (0.5019ms)
-✔ aucune étape faisable quand tout est fait (0.291ms)
-✔ les jours restants se comptent en jours de calendrier (1.8766ms)
-✔ une date absente ou illisible ne fait pas planter le calcul (0.2315ms)
-✔ une échéance dépassée passe avant tout le reste (0.9713ms)
-✔ une échéance à trois jours est critique, à dix jours seulement haute (1.4743ms)
-✔ au-delà de la fenêtre, l'échéance n'est plus une urgence (0.4045ms)
-✔ l'action pressée porte une étape FAISABLE, jamais une étape bloquée (0.2077ms)
-✔ un profil incomplet passe avant une étape ordinaire quand une candidature est en cours (0.1951ms)
-✔ sans candidature en cours, le profil reste une action normale (0.1219ms)
-✔ la candidature la plus pressée l'emporte sur les autres (0.3078ms)
-✔ une candidature sans date limite passe après celles qui en ont une (0.3997ms)
-✔ une candidature terminée n'est jamais proposée (0.2329ms)
-✔ quand tout est prêt, l'action devient une invitation (0.215ms)
-✔ l'invitation reste correcte au singulier et à zéro (0.1606ms)
-✔ une action est toujours renvoyée, même sans aucune donnée (0.1353ms)
-✔ chaque action porte un lien et un libellé de bouton exploitables (0.2639ms)
-✔ un avertissement n'apparaît que quand il ne manque QU'UN prérequis (0.2466ms)
-✔ l'avertissement dit la conséquence, pas l'interdiction (0.2006ms)
-✔ aucun avertissement quand le parcours est propre (0.1151ms)
-✔ offers.html n'affiche un bouton d'achat que pour des offres existantes (1.9183ms)
-✔ offers.html n'affiche aucun bouton d'achat pour une offre dépréciée (0.6145ms)
-✔ toute offre dépréciée est bien absente de la page (0.2948ms)
-✔ le balayage voit bien les boutons d'achat de la page (0.2234ms)
-✔ payment.js expose bien un sélecteur de moyens de paiement (2.3473ms)
-✔ offers.html ne cite que des moyens de paiement réellement proposés (0.9497ms)
-✔ la page cite bien les moyens de paiement au moins une fois (0.4935ms)
-(node:2608) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/phone-international.js is not specified and it doesn't parse as CommonJS.
+✔ un instantané complet est accepté et normalisé (2.6798ms)
+✔ null, un tableau, une chaîne ou un objet vide sont refusés (0.3848ms)
+✔ une collection manquante refuse TOUT l'instantané (jamais partiel) (0.3859ms)
+✔ un document sans id refuse l'instantané (0.3305ms)
+✔ l'ancien export d'audit (scripts/export-catalog.json, clés françaises) N'EST PAS un instantané (0.4853ms)
+✔ avec un instantané valide, Firestore n'est jamais appelé (1.0904ms)
+✔ sans instantané (404 → null), on relit Firestore comme avant (2.0949ms)
+✔ un téléchargement qui REJETTE (réseau) retombe sur Firestore sans propager l'erreur (0.6092ms)
+✔ un instantané CASSÉ (JSON valide mais forme fausse) retombe sur Firestore (0.554ms)
+✔ le fichier n'est téléchargé qu'UNE fois pour les trois collections (0.6646ms)
+✔ une lecture qui échoue N'ÉCRASE PAS la mémoïsation de l'instantané (3.7205ms)
+✔ un document ciblé est trouvé par id, null s'il est absent (0.3825ms)
+✔ scripts/lot.mjs écrit bien assets/data/catalogue.json avec les noms des collections (2.4224ms)
+✔ js/catalog-data.js lit l'instantané à l'emplacement que l'export écrit (1.0065ms)
+✔ firebase.json ne déploie pas le fichier avec un cache long (2.6169ms)
+(node:700) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalogue-vue.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ chaque pays est complet et sans doublon (3.7621ms)
-✔ l'exemple de chaque pays respecte sa propre règle de longueur (1.2666ms)
-✔ le public prioritaire est bien couvert (2.0682ms)
-✔ les pays d'accueil les plus visés sont présents (0.4586ms)
-✔ le pays est reconnu quelle que soit la façon de l'écrire (1.0103ms)
-✔ les noms usuels sont reconnus, pas seulement les noms officiels (0.3577ms)
-✔ un pays inconnu ne renvoie rien plutôt qu'un pays au hasard (0.7904ms)
-✔ un fragment trop court ne s'apparie à aucun pays (0.5041ms)
-✔ le zéro initial du format national est retiré (0.4009ms)
-✔ le zéro initial est CONSERVÉ là où il fait partie du numéro (0.594ms)
-✔ un zéro conservé n'autorise pas pour autant les zéros en rafale (0.3333ms)
-✔ un aller-retour E.164 rend exactement le numéro saisi (1.2372ms)
-✔ espaces, tirets, points et parenthèses sont ignorés (1.6472ms)
-✔ une saisie vide ou absurde ne fait pas planter la normalisation (0.6856ms)
-✔ le E.164 produit est celui qu'un opérateur accepte (0.345ms)
-✔ un champ vide donne une valeur vide, jamais un indicatif seul (0.506ms)
-✔ un E.164 enregistré se relit correctement (6.066ms)
-✔ l'indicatif le plus long gagne — sinon +221 serait lu comme +2 (1.1214ms)
-✔ un numéro enregistré avant le champ international n'est pas perdu (0.3235ms)
-✔ un champ vide est valide — le téléphone n'est pas obligatoire (0.1841ms)
-✔ un numéro de la bonne longueur passe (0.1584ms)
-✔ un chiffre manquant est signalé avec le compte attendu (1.1469ms)
-✔ l'indicatif recopié à tort a son propre message (0.3364ms)
-✔ un pays admettant plusieurs longueurs les accepte toutes (0.3516ms)
-✔ sans pays sélectionné, le message le dit au lieu d'accuser le numéro (0.2587ms)
-✔ aucun message de validation ne contient de jargon technique (0.4604ms)
-✔ le numéro WhatsApp est prêt pour un lien wa.me (0.2119ms)
-(node:2644) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+✔ l'aperçu remplit jusqu'au plafond puis s'arrête net, sans couper un pays (4.7298ms)
+✔ un pays plus gros que le plafond par pays est écourté, et le dit (0.4968ms)
+✔ un pays unique, plus gros que le plafond, s'écourte sans vider la page (0.4106ms)
+✔ le dépassement du plafond est borné par le plafond PAR PAYS (0.5909ms)
+✔ un catalogue plus petit que le plafond s'affiche en entier, sans mention « sur » (0.6961ms)
+✔ l'ordre reçu est conservé — ce module ne trie jamais (0.4287ms)
+✔ un pays filtré est seul et ENTIER, plafond par pays compris (2.6878ms)
+✔ un pays filtré inconnu ne rend aucun groupe, sans erreur (0.4276ms)
+✔ « Tout afficher » restaure exactement le rendu d'avant (0.5193ms)
+✔ une vue partielle DIT qu'elle est partielle (0.5702ms)
+✔ l'accord suit le mot : « affichées » pour des bourses, « affichés » pour des établissements (0.6645ms)
+✔ un pays choisi annonce son compte, et ses ouvertes quand la page en a (0.3979ms)
+✔ zéro ouverte se dit, et ne se confond pas avec « pas d'information » (0.2852ms)
+✔ le lien d'un groupe écourté porte le nombre réel et le bon article (2.4621ms)
+✔ un pays inconnu du référentiel garde une phrase lisible (1.2316ms)
+✔ une liste vide ne casse rien (0.2893ms)
+✔ les constantes restent celles qu'on a mesurées (0.2211ms)
+✔ contrôles 1 — plus aucun <datalist> dans le dépôt (827.6409ms)
+✔ contrôles 2 — chaque <input type="number"> masque son curseur (.fitz-num) et garde son type (125.4375ms)
+✔ contrôles 3 — chaque <input type="date"> est habillé (.fitz-date), sélecteur natif gardé et décision écrite (157.7611ms)
+✔ contrôles 4 — chaque page qui porte un <select> atteint fitz-select ou catalog-select (796.2605ms)
+✔ contrôles 7 — sur profile.html, aucun bouton radio du système : .fitz-choice ou .palier-option, input masqué visuellement (11.7904ms)
+✔ contrôles 5 — un seul système : plus de appearance:base-select, et fitz-select charge sa feuille (90.2455ms)
+✔ aucun .html du site (hors admin/) ne contient « partenaire » hors commentaire (477.1833ms)
+✖ aucun .js du site (hors admin/) ne contient « partenaire » hors commentaire (198.5322ms)
+✔ le balayage couvre bien les pages du site (141.4464ms)
+(node:4488) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/procedures/france.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ Standard (essentiel) : les 5 premières candidatures passent, la 6e est bloquée (2.7354ms)
-✔ Premier Dossier : une seule candidature, la 2e est bloquée (0.3705ms)
-✔ chaque offre bloque exactement à son quota annoncé (0.3954ms)
-✔ Signature : illimité, ne bloque jamais (0.354ms)
-✔ un quota absent, nul ou à zéro ne bloque pas ici (0.4628ms)
-✔ le tiers gratuit ne débloque aucune fonctionnalité payante (0.5024ms)
-✔ le gratuit n'a ni entrée tarifaire ni quota (0.3104ms)
-✔ toute offre payante donne 100% des outils Fitz (3.0614ms)
-✔ "whatsapp_direct" n'est vrai que pour Signature (0.4224ms)
-✔ "advisor" (conseiller humain) n'est vrai que pour les offres d'accompagnement humain (1.2628ms)
-✔ chaque formule de PLAN_ORDER existe dans la grille tarifaire (1.0066ms)
-✔ PLAN_ORDER suit le prix croissant (2.7389ms)
-✔ premier-dossier est vendable : c'est la première offre proposée à un compte gratuit (0.4637ms)
-✔ premium est déprécié : la formule suivante après Avancé est désormais Renforcé (0.251ms)
-✔ une offre dépréciée reste résolvable par identifiant (compte existant) (0.311ms)
-✔ Fitz Express n'est pas une formule (0.2935ms)
-✔ PLAN_LABELS et DEFAULT_FEATURE_CONFIG couvrent exactement PLAN_ORDER (0.4366ms)
-✔ Signature : le même libellé court en interface et dans la grille (0.2499ms)
-✔ aucun prix en euros ne subsiste dans la grille (0.4432ms)
-✔ chaque offre porte les champs affichés par la page de paiement (0.3914ms)
-✔ pricing-plans.js expose bien la grille sur window (0.1998ms)
-(node:1256) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-filters.js is not specified and it doesn't parse as CommonJS.
+✔ absences.calendrier : les étapes qui en dépendent portent la phrase de la couche, sans échéance (7.6335ms)
+✔ absences : une clé libre ne touche que les étapes qui la déclarent (Maroc : les jalons d'aval) (1.15ms)
+✔ absences : deux phrases sur une même étape se suivent, dans l'ordre de dependDe (0.5211ms)
+✔ absences : refusée si vide, si le fait est pourtant présent, ou si personne ne la consomme (1.0456ms)
+✔ decomposition : la somme doit être ÉGALE au montant, au franc près (1.3846ms)
+✔ decomposition : toutes les lignes portent la devise du fait (0.8008ms)
+✔ decomposition : une ligne sans libellé, sans montant, ou une liste vide sont refusées (1.0439ms)
+✔ decomposition : le total ET le détail s'affichent ensemble, jamais l'un sans l'autre (0.9329ms)
+✔ avertissement : rendu quand la couche en porte un, absent sinon — jamais de bloc vide (1.1145ms)
+✔ avertissement : affiché EN TÊTE du parcours, hors du bloc repliable (8.884ms)
+✔ on n'additionne que XOF et EUR ; toute autre devise ne se convertit pas (0.595ms)
+✔ formatMontant : chaque devise dans la sienne, jamais un symbole inventé (0.4908ms)
+✔ un fait en MAD : ni la composition ni le diagnostic ne se cassent, et aucun total en euros ne l'absorbe (3.0538ms)
+✔ la couche Sénégal, inchangée, produit exactement le même résultat qu'avant ce lot (6.4975ms)
+(node:9312) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/procedures/france.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ 100 % suivi de n'importe quel détail est intégral (4.216ms)
-✔ « pas de bourse partielle » ne doit pas être confondu avec « partielle » (0.3031ms)
-✔ « Scolarité gratuite » sans réserve est intégral (0.5011ms)
-✔ une réserve ailleurs dans la phrase (montant à confirmer) ne doit pas annuler « scolarité gratuite » (0.3322ms)
-✔ « quasi gratuite » n'est PAS un financement intégral (0.4897ms)
-✔ une charge explicitement NON couverte exclut le financement intégral, même avec « intégralement pris en charge » ailleurs (0.3571ms)
-✔ « Non quantifié publiquement » n'est pas un financement intégral (0.3093ms)
-✔ « Variable selon dossier » n'est pas un financement intégral (0.3107ms)
-✔ un montant plafonné (« Jusqu'à X ») n'est pas un financement intégral (0.5522ms)
-✔ « Partielle » n'est jamais un financement intégral (0.6087ms)
-✔ une liste de postes couverts sans « 100% »/« gratuite » n'est PAS présumée intégrale (0.5882ms)
-✔ un champ funding vide ou absent n'est jamais un financement intégral (0.3923ms)
-✔ extrait le rang d'un classement simple (0.4284ms)
-✔ sur un intervalle, retient la première valeur (la plus favorable) (0.3175ms)
-✔ une description sans numéro ne renvoie aucun rang — jamais un rang inventé (0.2659ms)
-✔ meilleurRangQS retient le rang le plus favorable (le plus petit nombre) (0.2743ms)
-✔ meilleurRangQS ignore les universités sans rang numérique plutôt que de les traiter comme les moins bien classées (0.1774ms)
-✔ meilleurRangQS renvoie null si aucune université liée n'a de rang numérique (0.231ms)
-✔ partnerCount : 3 programmes sur 2 universités comptent 2 partenaires, pas 3 (4.0382ms)
-✔ partnerCount : 0 pour une bourse sans programme lié (stub) (2.5018ms)
-(node:10244) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-filters.js is not specified and it doesn't parse as CommonJS.
+✔ les huit couches passent defautsDeCouche() sans un seul défaut (5.9049ms)
+✔ chaque pays rend une procédure documentée, avec SON montant et SA devise (12.4025ms)
+✔ aucun pays ne porte le montant d'un autre (8.6644ms)
+✔ le registre est la seule liste, et il est trié comme la page l'affiche (7.7737ms)
+✔ MAROC : la soumission tombe au 15 novembre 2026, et pas 2027 (2.9053ms)
+✔ MAROC : jalonsAval — le calendrier existe, mais pas ses dates d'aval (1.6446ms)
+✔ CAMEROUN : 85 000 + 16 000 = 101 000, et la décomposition se lit (2.6197ms)
+✔ les six pays sans calendrier publié le DISENT, et n'affichent aucune date (7.0594ms)
+✔ les quatre avertissements officiels sont rendus, et seulement ceux-là (10.6607ms)
+✖ une résidence non documentée reçoit toujours les onze étapes du tronc (18.7176ms)
+✔ le dirham et le franc guinéen restent hors du total en euros (53.0259ms)
+✔ la page publique compte les pays documentés depuis le registre, jamais en dur (2.6591ms)
+✔ NON-RÉGRESSION : le Sénégal rend exactement ce qu'il rendait avant ce lot (3.849ms)
+(node:2704) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ funder absent : visible avec « Tous les types », jamais reclassé dans un type (2.393ms)
-✔ filtre sur un type précis : correspondance EXACTE, rien d'autre (0.3538ms)
-✔ libelleFunder : jamais de libellé deviné pour un champ absent ou hors énuméré (0.3466ms)
-✔ entryPoint === "bourse" : #funderPortalBtn passe avant #universityPortalBtn dans le DOM (4.5149ms)
-✔ entryPoint absent : ordre actuel inchangé (#universityPortalBtn puis #applyBtn), bailleur en dernier (3.4445ms)
-✔ entryPoint === "universite" : même ordre que le cas absent (1.4885ms)
-✔ #funderPortalBtn reste caché quand la bourse n'a pas d'officialWebsite (1.8219ms)
-✔ #funderPortalBtn reste caché pour un NON-ABONNÉ, même quand la bourse a un site officiel (1.9542ms)
-✔ #funderPortalBtn visible pour un ABONNÉ, libellé complété du nom du bailleur (1.8241ms)
-✔ #funderPortalBtn sans funderName : libellé nu, jamais de « non renseigné » (2.0772ms)
-✔ generalCriteria vide -> #criteriaSection reste hidden (1.8235ms)
-✔ generalCriteria renseigné -> section visible, texte injecté tel quel (textContent) (1.7328ms)
-✔ phrase d'orientation : rien ("") quand entryPoint est absent — la phrase du HTML reste telle quelle (2.4177ms)
-✔ entryPoint=bourse SANS portail bailleur affiché : la phrase ne nie plus l'université (1.6858ms)
-✔ entryPoint=universite : formulation inchangée, quel que soit le public (1.5909ms)
-✔ la phrase est calculée avec isPaidUser && scholarshipWebsite, pas avec entryPoint seul (0.9032ms)
-✔ ré-enregistrer une fiche sans toucher au bloc bailleur conserve les 3 champs (régression « note seule ») (3.0304ms)
-✔ formulaire vierge : AUCUN champ écrit — jamais funder:"" ni valeur par défaut (1.1867ms)
-✔ champs partiels : seuls les champs renseignés survivent, funder absent n'est pas inventé (1.2886ms)
-✔ aller-retour entryPoint=universite sans funder : conservé tel quel (1.4669ms)
-(node:6868) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-image.js is not specified and it doesn't parse as CommonJS.
+✔ la mention « réservé aux abonnés » et son cadenas ont disparu de la page (2.0704ms)
+✔ details.js ne référence plus l'élément de verrou supprimé (0.2822ms)
+✔ la phrase de confiance parle de l'accompagnement, jamais d'un lien caché (0.1971ms)
+✔ le portail du bailleur est conditionné à isPaidUser, pas seulement au site de la bourse (0.4142ms)
+✔ la section « situation » est masquée par défaut dans le HTML — invisible sans abonnement (0.5836ms)
+✔ le rendu de la situation n'est appelé que pour un abonné (0.5515ms)
+✔ le bloc des portails porte un id, pour pouvoir être masqué entièrement (0.5244ms)
+✔ nationalité éligible -> verdict favorable nommant le pays (1.0939ms)
+✔ nationalité exclue -> verdict défavorable, sans blocage (1.3174ms)
+✔ RÈGLE : un inconnu (null) ne devient JAMAIS « vous êtes éligible » (0.6282ms)
+✔ nationalité absente du profil -> invitation avec lien vers le profil (0.4085ms)
+✔ RÈGLE : aucune limite connue -> rien du tout, jamais « aucune limite » (2.0846ms)
+✔ dans les limites -> verdict favorable avec le libellé (0.3152ms)
+✔ au-delà du plafond -> avertissement, sans blocage (0.2538ms)
+✔ limite connue mais date de naissance absente -> invitation (0.3926ms)
+✔ limite existante mais niveau sans plafond applicable -> rien (inconnu) (0.2221ms)
+✔ explainMatch vide -> message d'invitation, jamais un bloc vide (0.2727ms)
+✔ explainMatch non vide -> aucun message, on affiche les raisons (0.1659ms)
+✔ quota atteint -> pas de création possible ; quota libre -> création permise (0.2328ms)
+✔ details.js vérifie le quota AVANT de proposer la création (0.6474ms)
+✔ une candidature déjà existante ne crée pas de doublon et renvoie vers le parcours (0.6706ms)
+✔ la lettre passe par ?applicationId= — aucune logique de ai-letter.js dupliquée (0.2991ms)
+✔ le drapeau `applications` gouverne le bouton de parcours (0.2905ms)
+(node:7924) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/diagnostic-france.js is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ étage 1 : bourseImage prime sur tout le reste (4.2868ms)
-✔ étage 2 : sans bourseImage, la photo de l'université liée (0.4259ms)
-✔ étage 3 : Royaume-Uni -> Londres (lot 24 — les 3 bourses Commonwealth quittent le fond générique) (0.2551ms)
-✔ étage 3 : Russie -> Moscou (lot 24 — spbu-open-olympiad quitte le fond générique) (0.3305ms)
-✔ étage 3 : une entrée historique (Italie -> Rome) inchangée (0.3956ms)
-✔ les 8 variantes Londres/Moscou existent réellement sur le disque — pas seulement dans la table (1.1301ms)
-✔ chaque entrée de COUNTRY_FALLBACK_IMAGE a ses 4 variantes sur le disque (8.3481ms)
-✔ étage 4 : atteint uniquement quand le pays est absent de la table (0.5479ms)
-✔ étage 4 : plus jamais atteint pour le Royaume-Uni ni la Russie (le défaut corrigé) (0.2375ms)
-ℹ tests 327
+✔ les trois verdicts basculent aux bons seuils (24.9289ms)
+✔ l'écart affiché est exact, au mois comme à l'année (8.9111ms)
+✔ le montant manquant se redit en franc CFA, jamais en dirham ni en franc guinéen (15.6458ms)
+✔ aucun montant ne s'affiche sans sa source et sa date (10.4041ms)
+✔ les trois lignes du total sont toujours rendues, et leur somme est le total (4.2408ms)
+✔ les huit pays documentés portent au moins un point de vigilance, sourcé et daté (9.2541ms)
+✔ un point de vigilance sans source, sans date ou sans texte est REFUSÉ (6.0985ms)
+✔ un pays sans calendrier publié n'affiche AUCUNE date, seulement sa phrase d'absence (34.9159ms)
+✔ le Maroc annonce sa clôture au 15 novembre, en jours (5.5784ms)
+✔ le levier « université » n'apparaît qu'avec des frais vérifiés (4.3828ms)
+✔ le levier « bourses » ne compte que des échéances ouvertes, lues à la source, et pour la France (16.7869ms)
+✔ les quatre leviers sont rendus, et deux disparaissent sans catalogue (25.975ms)
+✔ les onze étapes de la procédure sont rendues en entier, pour tout le monde (15.8113ms)
+✔ l'offre est dite une seule fois, et elle rappelle qu'on peut tout faire seul (2.0394ms)
+✔ les quatre phrases de fin, chacune sur son cas (17.7426ms)
+✔ le ton : aucun point d'exclamation, aucune promesse, jamais un prix en dernier mot (30.2952ms)
+✔ NON-RÉGRESSION : les huit totaux du lot S2-PAYS sont inchangés (9.8491ms)
+✔ la page rend les sept sections, dans l'ordre, et rien n'est masqué pour faire payer (4.296ms)
+✔ un diagnostic payé depuis moins de 30 jours retire 10 000 F des deux Dossiers France (1.4805ms)
+✔ le filet pour les comptes payés AVANT ce lot, et la date que le webhook pose désormais (3.2782ms)
+✔ la déduction est écrite DEUX fois, et les deux disent la même chose (2.234ms)
+✔ c'est le prix SERVEUR qui est facturé, et la déduction est tracée sur le paiement (2.9485ms)
+(node:6992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/recommend-programs.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ une échéance passée ferme la porte, même si le statut dit « Ouverte » (5.8639ms)
+✔ une échéance absente ou illisible vaut INCONNUE, jamais fermée (0.7946ms)
+✔ un statut « Fermée » ferme, quelle que soit la date (0.3542ms)
+✔ le domaine est traduit avant d'être comparé (0.6981ms)
+✔ un étudiant débutant dans les deux langues n'est pas exclu du monde entier (0.5056ms)
+✔ une bourse n'apparaît qu'UNE fois, même présente dans quatre universités (3.4441ms)
+✔ une opportunité dont l'échéance est passée n'est jamais retenue (1.3558ms)
+✔ le cycle visé est un filtre, pas un bonus (0.5502ms)
+✔ les échéances ouvertes passent devant celles qu'on ne connaît pas (3.0686ms)
+✔ un même pays ne monopolise pas la liste (1.7637ms)
+✔ le nombre retenu est borné et jamais négatif (1.0892ms)
+✔ chaque cycle est noté sur les axes qui le concernent, et sur eux seuls (3.0262ms)
+✔ chaque barème totalise exactement 100 (0.5173ms)
+✔ le score EST la somme pondérée de sa décomposition (0.3249ms)
+✔ l'expérience professionnelle change réellement le score d'un candidat au master (0.4048ms)
+✔ le projet de recherche et l'encadrement pèsent sur un dossier de doctorat (0.3458ms)
+✔ chaque axe affiché porte son propre conseil (0.2542ms)
+✔ l'absence de publication n'est jamais présentée comme un frein (0.2332ms)
+✔ le cycle visé reste résolu même quand la question a été sautée (0.2184ms)
+✔ results.js démarre en fin de module, jamais avant ses constantes (8.2434ms)
+✔ loadRealOpportunities renvoie tout ce que main() lui demande (3.6506ms)
+✔ deux étudiants de disciplines différentes ne reçoivent pas la même première piste (1.1856ms)
+✔ une université sans domaine déclaré n'est jamais pénalisée pour ce trou de données (0.4598ms)
+(node:8824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-pistes.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ diagnostic-vers-profil 1 — la correspondance, champ par champ, pour un bachelier (6.1737ms)
+✔ diagnostic-vers-profil 2 — les autres pistes : dernier diplôme, niveau actuel, moyenne générale, expérience (0.8893ms)
+✔ diagnostic-vers-profil 3 — une valeur qu'on ne sait pas convertir reste vide, jamais devinée (0.7873ms)
+✔ diagnostic-vers-profil 4 — jamais écraser une valeur déjà saisie (1.3787ms)
+✔ diagnostic-vers-profil 5 — le document de compte par défaut, un seul pour les deux chemins (1.1143ms)
+✔ diagnostic-vers-profil 6 — forme : payment.js et js/creer-compte.js passent par le module partagé (1.7888ms)
+✔ diagnostic-vers-profil 7 — chaque identifiant lu existe bien dans le questionnaire (1.4563ms)
+(node:7900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/documents-data.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugDocument : comportement historique inchangé (2.0516ms)
+✔ 46 documents, titres uniques (2.16ms)
+✔ chaque SLUGS.* correspond à un document réellement présent (2.5338ms)
+✔ « Légalisation / apostille » : administratif, fréquent, fiche complète (0.6636ms)
+✔ chaque document a le même schéma, une catégorie et une priorité connues (1.4072ms)
+(node:16088) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/echeance.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ une date encore à venir ouvre, et annonce les jours restants (5.8453ms)
+✔ LE CAS EIFFEL — statut « Ouverte », échéance dépassée : la DATE gagne (1.6523ms)
+✔ LE CAS DU CATALOGUE — statut « Fermée » : la carte ne dit plus « ouvertes » (0.4629ms)
+✔ LE CAS STIPENDIUM — statut « Fermée » + date future : PAS ENCORE ouverte (0.6581ms)
+✔ « pas encore ouverte » : periodeOuverture dit QUAND revenir (1.2038ms)
+✔ une date future n'ouvre QUE si le statut ne dit pas le contraire (0.7332ms)
+✔ la règle est DISSYMÉTRIQUE : une date passée ferme quoi qu'il arrive (0.7778ms)
+✔ parmi plusieurs dates dont une future, statut ouvert : la future gagne (0.4801ms)
+✔ entre deux dates ouvertes, c'est la plus proche qui est annoncée (0.9917ms)
+✔ le retrait volontaire (actif:false) ferme, quoi que dise le reste (0.7687ms)
+✔ ouverte sans date lisible : ouverte, mais la date est dite NON PUBLIÉE (0.5682ms)
+✔ candidatures continues : au fil de l'eau, sans date inventée (0.341ms)
+✔ rien de lisible et rien de dit : ouvert vaut null, jamais false (0.2269ms)
+✔ periodeOuverture, quand elle existe, remplace « non annoncée » (0.3279ms)
+✔ verifieLe produit une mention datée en français, et rien sans lui (0.2789ms)
+✔ aucune date n'est inventée quand la prose n'en donne pas (0.6025ms)
+✔ DEUX STATUTS — « fermée » quelque part suffit à fermer (0.3263ms)
+✔ deux statuts ouverts n'ouvrent que si AUCUN ne dit le contraire (0.3126ms)
+✔ un statut unique reste accepté tel quel (compatibilité) (0.2339ms)
+✔ echeanceVariable : la page dit d'où vient la date au lieu d'en inventer une (0.3483ms)
+✔ sans echeanceVariable, rien ne change (0.2179ms)
+✔ plusieurs échéances + echeanceVariable : la mention l'emporte sur la date d'un seul (0.3738ms)
+✔ une seule échéance + echeanceVariable : c'est la fiche de cet établissement, la date reste (0.3002ms)
+✔ PONCTUATION — une periodeOuverture déjà ponctuée ne produit pas de double point (0.4814ms)
+✔ PONCTUATION — une periodeOuverture NON ponctuée reçoit son point (0.3703ms)
+✔ PONCTUATION — les deux formes produisent EXACTEMENT la même fin de phrase (0.3431ms)
+✔ PONCTUATION — « pas encore ouverte » termine sa phrase, ponctuée ou non (0.5597ms)
+✔ PONCTUATION — échéance variable agrégée : un seul point après la période (0.701ms)
+✔ PONCTUATION — statut ouvert sans date, échéance variable : idem (0.2821ms)
+✔ PONCTUATION — une période rendue SEULE garde son texte intact (0.1779ms)
+✔ PONCTUATION — une période rendue SEULE termine sa phrase (branche « ouverte ») (0.1811ms)
+✔ PONCTUATION — une période SEULE déjà ponctuée ne gagne pas un second point (0.2276ms)
+✔ PONCTUATION — une période SEULE finissant par une parenthèse reste lisible (0.2668ms)
+✔ PONCTUATION — sans période, le texte de repli reste celui d'avant (0.2687ms)
+(node:13160) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/echeance.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lit une date simple du catalogue (3.3839ms)
+✔ lit les autres dates simples présentes en base (0.7297ms)
+✔ lit une date suivie d'une parenthèse de campagne (2.0688ms)
+✔ lit l'heure et le fuseau quand ils sont donnés (0.4829ms)
+✔ lit une heure sans minutes (0.3669ms)
+✔ lit « 12h00 » sur la ligne ARES (0.3607ms)
+✔ refuse de dater « À confirmer selon l'année académique » (0.3106ms)
+✔ refuse de dater « À confirmer selon l'appel à candidatures » (0.2881ms)
+✔ une date « estimée » n'est jamais présentée comme une échéance (0.4128ms)
+✔ le GKS, avec ses deux fenêtres estimées, reste inconnu (0.8905ms)
+✔ un cycle clos ne rend pas la date de sa propre clôture (0.3722ms)
+✔ un appel clos avec réouverture annoncée reste clos (0.2769ms)
+✔ « Fermée, réouverture annuelle non datée » (0.1975ms)
+✔ « Variable, fixée chaque année par le ministère » reste inconnu (0.211ms)
+✔ « deadline par pays publiée ensuite » reste inconnu malgré la date d'ouverture (0.3275ms)
+✔ une date impossible n'est pas rattrapée en silence (0.2172ms)
+✔ une chaîne vide ou absente ne casse rien (0.2519ms)
+✔ retient la date de clôture, pas celle d'ouverture (0.2873ms)
+✔ reconnaît une candidature continue (0.2922ms)
+✔ compte les jours restants en jours pleins (0.4301ms)
+✔ le décompte ignore l'heure de la journée (0.274ms)
+✔ une échéance dépassée bascule en « close » (0.1951ms)
+✔ les trois paliers d'urgence (0.2764ms)
+✔ les seuils sont ceux du bandeau public, pas ceux du parcours (0.1503ms)
+✔ le libellé affiché dit ce qu'il faut, au bon ton (2.5838ms)
+✔ le titre au survol porte l'heure et le fuseau quand ils existent (0.3888ms)
+✔ formaterDate écrit « 1er » et pas « 1 » (0.2017ms)
+✔ une opportunité réservée aux Africains est valorisée (0.8379ms)
+✔ une couverture totale passe devant une couverture partielle, à urgence égale (0.3598ms)
+✔ la pertinence pour le public passe devant l'urgence (0.6488ms)
+✔ le palier « proche » prime sur « critique » : deux mois valent mieux que quatre jours (0.345ms)
+✔ à pertinence et urgence égales, la plus proche de sa clôture d'abord (0.3146ms)
+✔ une opportunité clôturée ne remonte jamais, même à 100 % de couverture (0.2023ms)
+✔ classerOpportunites ne modifie pas le tableau reçu (0.3429ms)
+✔ le bandeau ne montre que ce qui est réellement ouvert (0.5078ms)
+(node:10984) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-countries.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Sénégal ↛ Commonwealth : exclu (false) (6.0073ms)
+✔ Ghana → Commonwealth : éligible (true) (0.4875ms)
+✔ Sénégal → BID : éligible (true) (0.3354ms)
+✔ Cap-Vert ↛ BID : exclu (false) — piège connu d'Afrique de l'Ouest (0.2869ms)
+✔ scope monde : true — c'est une affirmation d'ouverture, pas une inconnue (0.4032ms)
+✔ champ eligibility absent : null (0.4723ms)
+✔ nationalité vide : null, même avec une restriction explicite (0.4164ms)
+✔ pays hors référentiel (Wakanda) : null, jamais false (3.3044ms)
+✔ null et false sont distincts — un `=== false` ne capture aucun null (2.0894ms)
+✔ include ajoute un pays hors groupe (0.7605ms)
+✔ exclude retire un pays membre du groupe (0.386ms)
+✔ liste explicite sans groupe (0.3764ms)
+✔ résolution accents/casse/alias/code ISO direct (2.1108ms)
+✔ paysEligibles : monde et champ vide donnent null (personne n'est exclu) (0.3529ms)
+✔ monde et champ absent ne se confondent plus (0.2849ms)
+✔ libelleEligibilite : note prioritaire, sinon libellé de groupe, sinon null (0.7055ms)
+✔ effectifs des groupes : 56/57/54/141/44/16 (0.231ms)
+✔ aucun doublon dans les listes, et GROUPES les référence toutes (0.5224ms)
+✔ pièges documentés : CV/GH/LR hors BID, SN hors Commonwealth, ZW hors Commonwealth (0.3209ms)
+(node:15404) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-pistes.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ les huit libellés du questionnaire donnent huit pistes distinctes (4.2295ms)
+✔ « en cours » et « obtenu » ne sont jamais confondus (0.5669ms)
+✔ les anciens libellés restent reconnus (sessions en cours) (0.4692ms)
+✔ un niveau vide ou inconnu ne renvoie aucune piste (0.3361ms)
+✔ un bachelier ne peut pas viser un doctorat (0.4784ms)
+✔ un cycle unique est déduit sans poser la question (0.3629ms)
+✔ la question du cycle visé n'est posée que s'il y a un choix (1.1757ms)
+✔ le lycéen est interrogé sur sa filière et sa DATE D'EXAMEN, jamais sur une date d'obtention (0.6786ms)
+✔ le bachelier est interrogé sur la DATE D'OBTENTION, jamais sur une date d'examen (0.3929ms)
+✔ un doctorant en cours n'est pas interrogé sur un projet de recherche qu'il a déjà (0.4451ms)
+✔ le titulaire d'un doctorat est interrogé sur sa soutenance et son expérience (0.3781ms)
+✔ le titulaire de licence qui vise un master est interrogé sur son expérience et ses candidatures (0.3408ms)
+✔ viser un doctorat ouvre le bloc recherche, quel que soit le niveau actuel (0.2691ms)
+✔ la précision de filière n'apparaît que sur « Autre filière » (0.2991ms)
+✔ tout parcours commence par l'aiguillage et contient le tronc commun (0.5018ms)
+✔ aucune question n'est posée deux fois dans un même parcours (1.552ms)
+✔ toute question a un type valide, et toute question à cartes a des options (2.9387ms)
+✔ la moyenne est formulée selon le cycle de l'étudiant (1.9209ms)
+✔ changer de niveau efface les réponses qui n'ont plus de question (0.7584ms)
+✔ un cycle visé devenu impossible est effacé (0.3117ms)
+✔ un cycle visé toujours valide est conservé (0.2779ms)
+✔ aucun total n'est affiché tant que le niveau est inconnu (2.4913ms)
+✔ changer de niveau en cours de route ne perd pas l'étudiant (0.7588ms)
+✔ la progression reste bornée entre 4 et 100 (0.8939ms)
+✔ les pays du catalogue remplacent le filet de secours (0.4456ms)
+✔ les spécialités fines retombent sur les familles du catalogue (0.8437ms)
+✔ « sciences sociales » et « sciences humaines » ne sont pas absorbées par « Sciences » (0.2795ms)
+✔ un domaine inconnu ne vaut jamais « ne correspond pas » (0.1945ms)
+✔ les dix familles du catalogue sont toutes atteignables (0.4143ms)
+(node:16116) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/recommend-programs.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ un profil connecté qui VISE un master ne se voit plus proposer sa licence (15.9733ms)
+✔ sans desiredDegree, le repli sur le diplôme obtenu reste celui d'avant (8.5686ms)
+✔ targetLevel garde la priorité sur desiredDegree (1.3356ms)
+✔ le bonus de score suit la même règle que le filtre (2.5037ms)
+✔ un cycle clos ne sort JAMAIS des retenues, même bien noté par ailleurs (1.0014ms)
+✔ une bourse retirée (isActive:false) ne sort pas non plus (0.7873ms)
+✔ `nombre` compte les retenues, jamais la taille du catalogue (1.0948ms)
+✔ `ouvertes` ne dépasse jamais `nombre` — c'est le M de « dont M ouvertes » (0.857ms)
+✔ un profil vide ne fait pas s'effondrer la sélection (2.6158ms)
+✔ le sélecteur (recommendPrograms) voit ce que le hub (retenirOpportunites) écarte (1.7851ms)
+✔ les deux formes de document rendent EXACTEMENT la même sélection (1.7368ms)
+✔ la clé de bourse est renseignée dans les DEUX formes (0.7876ms)
+✔ recommendPrograms rend aussi les deux clés, dans les deux formes (1.4393ms)
+(node:1836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ resoudreEspace : un accompagnement, un espace (6.5961ms)
+✔ resoudreEspace : testerAccess rend « les-deux », et c'est dit en toutes lettres (1.7719ms)
+✔ resoudreEspace : L'EXPIRATION EST COMPRISE — un forfait fini ne donne pas d'espace (0.9437ms)
+✔ espaceAutorise : une page sans espace est ouverte à tous (0.4647ms)
+✔ une page d'un autre espace RAMÈNE CHEZ SOI, elle n'envoie pas aux offres (3.1374ms)
+✔ unlockingPlans cherche dans la bonne grille (2.9283ms)
+✔ chaque page d'outil déclare son espace (11.7015ms)
+✔ un droit fermé RETIRE l'élément — l'opacité de verrouillage a disparu (2.8684ms)
+✔ le bouton flottant Fitz n'est PAS injecté avant de connaître l'espace (1.333ms)
+✔ le hub préinscription porte les cinq outils Fitz, verrouillés par formule — et pas la préparation aux tests (2.9656ms)
+✔ la navigation mobile se filtre par espace, en retirant (2.5855ms)
+✔ la bascule n'entre dans le DOM que pour « les-deux » (2.0532ms)
+✔ la pastille de formule ne dit que l'espace courant (1.886ms)
+✔ dashboard.html reste, et AIGUILLE (1.3189ms)
+✔ les deux hubs partagent la coquille et pas le vocabulaire (12.9309ms)
+✔ les trois pages d'espace portent EXACTEMENT la même barre haute (9.5991ms)
+✔ le guide visa n'est plus écrit dans le HTML : un seul conteneur, rempli par js/visa-depart.js (7.0813ms)
+✔ applications.html est scopée par l'espace, et n'a plus de sélecteur de parcours (6.0387ms)
+✔ le message de quota nomme la formule DU PARCOURS dépassé (2.331ms)
+✔ aucune formule en vente ne renvoie sur dashboard.html après paiement — la table vit dans js/fitz-choisit.js (lot ACCEPTATION) (1.9297ms)
+✔ un compte gratuit garde son profil et son compte, et n'est jamais renvoyé en boucle (1.1076ms)
+✔ les procédures, les couches et le diagnostic rendent ce qu'ils rendaient avant ce lot (53.2738ms)
+(node:4104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/exigences.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ champ absent = INCONNU : rien à afficher, jamais « aucune exigence » (4.9244ms)
+✔ un code inconnu est IGNORÉ, jamais rendu tel quel (0.9046ms)
+✔ une bourse dont TOUS les codes sont inconnus n'affiche rien (0.5657ms)
+✔ un code répété n'est compté qu'une fois (0.4172ms)
+✔ chaque code du vocabulaire a une forme connue, un libellé et une explication (1.3652ms)
+✔ DEUX codes seulement deviennent des éléments de dossier (0.8154ms)
+✔ les quatre voies de dépôt par un tiers sont reconnues comme telles (0.5566ms)
+✔ groupees range chaque code sous sa forme, sans en perdre (0.7796ms)
+✔ elementsDeDossier ne rend que les deux codes cochables, avec leur type (0.7813ms)
+✔ un type déjà présent au dossier n'est jamais proposé deux fois (1.0088ms)
+✔ quand tout est déjà là, il n'y a plus rien à proposer — le bouton disparaît (2.3882ms)
+✔ une checklist absente ou malformée ne fait pas disparaître les suggestions (0.8178ms)
+✔ une bourse sans exigences ne propose rien à ajouter (0.336ms)
+✔ REJEU — les effectifs du catalogue réel sont exactement ceux mesurés (1.7379ms)
+✔ REJEU — 27 bourses ne se déposent PAS par l'étudiant lui-même (2.4892ms)
+✔ REJEU — aucun code inconnu n'existe dans le catalogue, et aucun ne serait affiché (2.0699ms)
+✔ REJEU — 16 bourses proposent un élément de dossier, et jamais plus de deux (1.4454ms)
+✔ REJEU — les 57 bourses sans exigence ne produisent aucun bloc (3.4403ms)
+(node:15540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/recommend-programs.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fitz-choisit 1 — un pays exclu par l'étudiant ne sort jamais, ni du hub ni du sélecteur (9.5965ms)
+✔ fitz-choisit 2 — les universités refusées ou déjà occupées sont écartées par le moteur (1.6736ms)
+✔ fitz-choisit 3 — la décision de remplir attend le profil minimal (0.9351ms)
+✔ fitz-choisit 4 — la carte du remplacement porte les clés du catalogue et repart neuve (0.8311ms)
+✔ fitz-choisit 5 — l'identité d'une bourse choisie par Fitz est verrouillée, pas celle d'un vœu ni d'une carte ancienne (0.5837ms)
+✔ fitz-choisit 6 — la ligne d'état dit la vérité, et la règle est un seul littéral (1.2308ms)
+(node:9112) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/fitz-recours.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ chaque code du catalogue rend une réponse non vide et différente des autres (16.5586ms)
+✔ un code inconnu ou fabriqué retombe sur le chat normal, sans erreur (6.9389ms)
+✔ bloc=etape rend la consigne AVEC sa source et son verifieLe (56.0668ms)
+✔ bloc=paiement : Bénin (Société Générale, compte 502, 70 000 F, AVANT) contre Sénégal (SUNU BANK, 85 000 F, APRÈS) (10.2928ms)
+✔ bloc=verrou sur un compte gratuit : la formule qui ouvre, et une échelle sans maillon fermé (1.5975ms)
+✔ l'échelle de recours d'un compte diagnostic-france propose la messagerie et le ticket, jamais le conseiller (0.8168ms)
+✔ bloc=quoi_faire EST prochaineAction() — même entrée, même sortie (6.1283ms)
+✔ bloc=prerequis nomme ce qui manque, avec le libellé de next-action.js (0.6273ms)
+✔ depot_tiers, documents, preuve, echeance, sans_reponse lisent la donnée réelle — et disent quand elle manque (8.6874ms)
+✔ un seul composant, posé aux six endroits du blocage (7.2713ms)
+✔ le chat arrive en sachant déjà : ?bloc= ouvre par Fitz, et le diagnostic s'affiche même verrouillé (1.2284ms)
+✔ le journal ne porte que le code et son issue — et les règles l'imposent (5.9174ms)
+✔ flou 1 — aucune feuille servie ne porte filter: blur() au-delà de 8 px (liste blanche vide) (425.1353ms)
+✔ flou 2 — le détecteur voit blur(70px), ignore les commentaires, les petits flous et backdrop-filter (0.7032ms)
+✔ flou 3 — aucun lookbehind (?<= (?<! dans le JS servi : SyntaxError avant iOS 16.4, le module entier tombe (418ms)
+✔ flou 4 — aucun requestIdleCallback sans garde (désactivé par défaut dans tous les Safari) (368.0377ms)
+(node:10272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ formules-admin 1 — aucune étiquette n'est identique à une autre (2.7056ms)
+✔ formules-admin 2 — chaque identifiant (PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER, Pass) a l'étiquette du brief (1.9858ms)
+✔ formules-admin 3 — retirées et distinctifs ne divergent pas de pricing-plans.js (6.2142ms)
+✔ formules-admin 4 — en vente d'abord (7), retirées ensuite, sous leur titre ; le balisage porte les deux groupes (1.7125ms)
+✔ formules-admin 5 — plus rien d'écrit en dur : filtre de students.html vide, légende « Avancé » partie, quatre pages sur le module (10.041ms)
+✔ formules-admin 6 — la liste habillée affiche les titres de groupe (2.7781ms)
+(node:15748) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/frais.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ POLITIQUES_EXONERATION est fermé et chaque code a un libellé non vide (7.4893ms)
+✔ BANDES est fermé, chaque bande a un libellé, seuils 500 / 2 500 (0.5983ms)
+✔ les libellés de bandes sont neutres : ni symbole monétaire ni chiffre (0.6518ms)
+✔ aucun libellé de bande ne contient « non vérifié » — seule la puce de la carte le dit (0.8474ms)
+✔ replie → bande « inconnu », même pour un montant qui serait « gratuit » ; sans repli, le 0 € du niveau le plus bas reste « gratuit » (2.9085ms)
+✔ règle des bandes françaises : « gratuit » exige une exonération systématique, et le repli laisse « inconnu » (22.7097ms)
+✔ SEUIL_GRATUIT / SEUIL_ABORDABLE dérivent de SEUILS_PAR_DEVISE.EUR (source unique) (0.9806ms)
+✔ université sans le champ → etat inconnu, libellé sans « 0 » ni « gratuit » (0.5407ms)
+✔ montant présent mais source absente → inconnu (le chiffre non sourcé ne s'affiche pas) (0.6217ms)
+✔ montant présent mais verifieLe absent ou illisible → inconnu (0.7419ms)
+✔ niveau sans ligne → inconnu, même si un autre niveau est vérifié (2.978ms)
+✔ montant 0 vérifié et sourcé → verifie, montant 0 (jamais un « inconnu » déguisé) (0.5954ms)
+✔ zéro vérifié → « Gratuit · vérifié le … », jamais « 0 € » (1.3158ms)
+✔ zéro vérifié mais pas fraîche → « Gratuit · à recouper » (0.4416ms)
+✔ libelleMontant : un montant non nul passe par formaterMontant, un état inconnu reste « Frais non vérifiés » (0.3529ms)
+✔ vérifié il y a 10 jours → fraiche, libellé daté (0.4793ms)
+✔ verifieLe vieux de 200 jours → fraiche false, libellé « à recouper » (0.4246ms)
+✔ exactement 180 jours → encore fraîche ; 181 → à recouper (0.2721ms)
+✔ formaterMontant : milliers séparés, devise telle que facturée, période (0.2234ms)
+✔ bandeCout : 0 et 450 → gratuit ; 2 400 → abordable ; 3 950 → eleve ; absent → inconnu (0.2316ms)
+✔ bandeCout : une devise sans seuils posés reste « inconnu » — jamais convertie (0.1855ms)
+✔ bandeCout lit SEUILS_PAR_DEVISE : des seuils MAD posés (dans ce test seulement) rangent un montant en dirhams (0.2646ms)
+✔ lireExoneration : absent ou code hors vocabulaire → inconnue (0.3605ms)
+✔ montant en master seulement, sans filtre → le master s'affiche, « à partir de » et le nom du niveau (0.4452ms)
+✔ montant en licence → libellé inchangé, PAS de « à partir de » (non-régression) (0.4307ms)
+✔ aucun montant vérifié → « Frais non vérifiés », niveau le plus bas comme avant (0.3026ms)
+✔ ordre Licence / Master / Doctorat : un doctorat vérifié ne passe pas devant un master vérifié (0.4324ms)
+✔ les niveaux PROPOSÉS passent d'abord : HEC (master seulement au catalogue) affiche son master, pas son bachelor (0.3273ms)
+✔ filtre master actif sur une université sans prix master → « Frais non vérifiés », le repli ne s'applique pas (0.2528ms)
+✔ libellePuce : replié ET pas fraîche → les deux mentions ; zéro vérifié replié → « à partir de Gratuit » jamais (0.3284ms)
+✔ rejeu sur les 26 universités françaises de l'instantané : au moins 25 affichent un montant (17.8549ms)
+✔ lireFrais et libelleFrais ne mutent jamais l'université (0.6079ms)
+(node:4184) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/pays-preinscription.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la clôture de campagne du serveur est le MIROIR de CAMPAGNE_FRANCE (une seule règle, deux fichiers) (6.2908ms)
+✔ finDeCampagne : septembre → 31 juillet de l'année suivante ; mars → 31 juillet de la même année (0.58ms)
+✔ Dossier France sur un compte Ambition (septembre) : plan INCHANGÉ, planPreinscription posé, expiration 2027-07-31 (1.1108ms)
+✔ Dossier France + Conseiller acheté en mars : expiration au 31 juillet de la même année (0.4039ms)
+✔ Diagnostic France : 14 jours, sans toucher plan ; prolongé s'il est encore actif (0.5819ms)
+✔ inversement : une offre bourse n'écrit jamais le forfait préinscription (0.4997ms)
+✔ préinscription : pas de rétrogradation (Diagnostic acheté sur un Dossier actif = compte inchangé, paiement signalé) (0.3788ms)
+✔ le forfait bourse garde son comportement d'avant (non-régression) : prolongation, pas de rétrogradation, Premier Dossier sans échéance (0.4832ms)
+✔ GRILLE serveur : les trois offres préinscription, prix décidés, parcours sur toutes les offres (0.8551ms)
+(node:544) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ côté bourses, exactement 4 offres non dépréciées ; aucune ne dépasse un quota de 6 (4.5886ms)
+✔ aucune offre en vente, tous parcours confondus, n'a un quota Infinity (0.5515ms)
+✔ Ambition, Signature, essentiel et signature-focus sont dépréciées — premium l'était déjà (0.407ms)
+✔ les offres préinscription du lot B sont intactes : mêmes ids, mêmes prix, mêmes quotas (0.3992ms)
+✔ un compte `essentiel` conserve un quota de 5 ET la messagerie (0.5517ms)
+✔ un compte `accompagnement` conserve 9 ; un compte `signature` conserve son quota, la messagerie ET whatsapp_direct (0.5322ms)
+✔ aucun ancien identifiant n'a disparu : PLAN_ORDER, PLAN_LABELS, chaque drapeau, la GRILLE serveur, les règles (0.7615ms)
+✔ aucune offre NON dépréciée ne porte whatsapp_direct ; aucune n'en parle dans sa copie (0.6567ms)
+✔ student_messaging : les TROIS offres préinscription et la SEULE offre bourse à 150 000 F ; absente de fitzExpress, premier-dossier et du nouvel Essentiel (0.6618ms)
+✔ support_ticket : accessible à toute formule payante (Pass compris), à aucune gratuite (0.9722ms)
+✔ firestore.rules : messagerie resserrée (anciennes formules conservées), supportTickets ouvert au payant, nouveaux quotas ajoutés (1.1839ms)
+✔ aucune chaîne « 24 h » ne subsiste comme délai de réponse ; « 48 h » partout où le délai est annoncé (11.2195ms)
+✔ cohérence pricing-plans.js ↔ GRILLE serveur ↔ PLAN_ORDER ↔ RANG pour les nouveaux ids (0.4464ms)
+✔ le serveur refuse un achat sur un id déprécié, accepte les nouveaux, et n'écrit jamais un forfait déprécié depuis un achat (3.5049ms)
+✔ routage : ?parcours=, #<id> (grille du parcours de la formule), alias, ancre inconnue → le choix (1.3485ms)
+✔ offers.html : le choix à deux boutons de poids égal, une bascule par vue, les deux vues masquées d'office (0.9959ms)
+✔ offers.html ne contient plus « par candidature », aucun « illimité », aucun prix écrit en dur, aucune comparaison de nombre (1.9727ms)
+✔ preinscriptions.html mène à ?parcours=preinscription ; le contexte bourse à ?parcours=bourse ; le menu à offers.html nu (6.8113ms)
+✔ scholarships.html et universities.html n'ont plus « Connexion » (en-tête ni menu mobile) ; l'accueil et preinscriptions.html sont inchangés (13.3165ms)
+✔ le diagnostic d'éligibilité bourses reste gratuit : aucune fonctionnalité ne le verrouille (3.585ms)
+(node:15788) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ trois offres préinscription, aux prix décidés : 10 000 / 75 000 / 150 000 (5.3749ms)
+✔ `parcours` sur TOUTES les offres, bourse ou préinscription (0.6713ms)
+✔ aucune mensualité, aucun paiement fractionné, aucune remise dans la grille ni sur la page (1.1021ms)
+✔ les prix et quotas des offres BOURSE n'ont pas bougé (0.3344ms)
+✔ GRILLE serveur : mêmes prix que pricing-plans.js ; une offre dépréciée y est refusée à la vente (0.7425ms)
+✔ firestore.rules : les quotas des règles sont le miroir des quotas de pricing-plans.js (1.4007ms)
+✔ firestore.rules : les formules restent hors de portée de l'étudiant, et de l'admin ORDINAIRE (1.8811ms)
+✔ PREINSCRIPTION_FEATURE_CONFIG couvre chaque fonctionnalité et chaque offre préinscription (0.7198ms)
+✔ Ambition seul : ses droits d'avant, et pas le diagnostic France (0.6815ms)
+✔ Dossier France seul : candidatures, documents, entretiens, messagerie, diagnostic — PAS advisor — et, depuis le lot PRÉ-FITZ, les cinq outils Fitz (1.0865ms)
+✔ les deux forfaits : l'union (0.4939ms)
+✔ Diagnostic seul : la page du diagnostic et la messagerie (grille A), aucun droit de candidature (0.5774ms)
+✔ quota préinscription : 7 vœux passent, le 8e est bloqué (décision client, le serveur fait foi) (0.2697ms)
+✔ diagnostic : 900 €/mois → atteint ; 800 → pas atteint, écart 77,50 € (4.1107ms)
+✔ diagnostic en F CFA, residence Senegal : la parite fixe, et le total annuel (5.5973ms)
+✔ aucune sortie ne contient « visa accordé » ni « admis » ; le verdict parle de seuil publié (1.7095ms)
+✔ chaque chiffre affiché correspond à un fait sourcé de pays-preinscription.js (2.7008ms)
+✔ offers.html : les deux vues existent, aucune offre bourse dans la vue préinscription et inversement (1.019ms)
+✔ diagnostic-france.html : verrouillée par diagnostic_france, sans IA, sans promesse (5.6858ms)
+✔ hero-pied 1 — footer-breathe n'apparaît plus nulle part dans css/ (60.3841ms)
+✔ hero-pied 2 — la photo du pied de page ne porte ni animation ni will-change, et son cadrage n'est plus à 82 % (5.8275ms)
+✔ hero-pied 3 — les deux portes : égal poids, 52 px, états visibles, flèche qui glisse (9.4961ms)
+✔ le déploiement ne contient QUE des fichiers du site (7.2286ms)
+✔ le contrôle regarde bien le vrai site, et pas une liste vide (0.7047ms)
+✔ les deux fuites du 2026-09-08 ne peuvent plus se produire (3.3568ms)
+✔ le site, lui, n'est pas exclu par mégarde (3.178ms)
+✔ un dossier oublié dans hosting.ignore est détecté, et disparaît une fois exclu (15.5926ms)
+✔ le contrôle attrape aussi un fichier inattendu DANS un dossier autorisé (0.5383ms)
+✔ motifVersRegex : la double étoile vaut zéro segment ou plus, l'étoile simple ne traverse pas une barre (0.6076ms)
+✔ un motif d'une forme non gérée est REFUSÉ, jamais interprété de travers (1.1241ms)
+✔ hosting.ignore exclut explicitement tout ce qui n'est pas le site (2.8661ms)
+✔ la liste blanche reste étroite : quatre dossiers, et des extensions comptées (0.6965ms)
+✔ aucun fichier de clés parmi les fichiers publiés (1.7555ms)
+✔ la clé Firebase publique de firebase-config.js est la SEULE chaîne qui ressemble à un secret (346.0445ms)
+✔ icone-btn 1 — .ai-icon-btn et .ai-mode-tab ont une règle de base, hors @media (145.4485ms)
+✔ icone-btn 2 — le bouton d'action de l'historique laisse la place à son icône (5.159ms)
+✔ icone-btn 3 — aucune classe nouvelle n'existe uniquement dans un @media (134.6109ms)
+✔ icônes 1 — chaque nom d'icône du site existe dans le paquet lucide installé (339.9225ms)
+✔ icônes 3 — aucune icône interdite (sparkles, sparkle, star, wand) dans un fichier HTML ou JS servi (207.0581ms)
+✔ icônes 2 — toute page qui charge lucide charge js/icones.js juste après (116.1185ms)
+(node:15596) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/glossaire.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ langage 1 — un seul <h1> par page publique (22.6894ms)
+✔ langage 2 — au plus une tournure en balance par page (21.2133ms)
+✔ langage 3 — les phrases intouchables existent encore dans les fichiers servis (13.805ms)
+✔ langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire (55.269ms)
+✔ langage 5 — un seul fichier de définitions, et chaque terme est expliqué à sa première occurrence (98.1548ms)
+✔ langage 6 — le questionnaire dit la durée, la gratuité, l'absence de compte et le résultat avant la première question (2.5514ms)
+✔ langage 7 — les chiffres de l'accueil se lisent, ils ne s'écrivent pas (23.2486ms)
+✔ langage 8 — le titre et la description de la fiche bourse se construisent depuis la bourse (9.8101ms)
+✔ liens — chaque href/src interne des pages existe et est publié (456.2675ms)
+✔ tout lockup porte le balisage canonique — mêmes classes, mêmes attributs SVG (137.7379ms)
+✔ aucune page ne porte plus les anciennes classes de lockup (153.515ms)
+✔ --logo-descriptor est déclaré deux fois, et seulement dans css/base.css (404.6697ms)
+✔ les règles du lockup n'utilisent aucun token de police ni d'ambre (7.923ms)
+✔ chaque page listée porte exactement le nombre de lockups attendu (54.9291ms)
+✔ les cinq pages qui n'avaient aucun logo en ont un désormais (8.1985ms)
+✔ le lockup admin reste enveloppé dans .sidebar-brand (26.6067ms)
+✔ patch minimal correct : aucune erreur (5.0639ms)
+✔ collection hors énuméré refusée ; les trois collections légitimes acceptées (1.1753ms)
+✔ champs vide ou absent refusé — un patch qui n'écrit rien n'a pas lieu d'être (0.5222ms)
+✔ motif absent, vide ou blanc refusé (0.4839ms)
+✔ deux patches sur le même document refusés (conflit d'intention) (2.0269ms)
+✔ même id dans DEUX collections différentes : accepté, ce sont deux documents (0.3882ms)
+✔ UNE CHAÎNE VIDE EST UNE VALEUR : le validateur l'accepte comme n'importe quelle autre (0.495ms)
+✔ attendu doit être un sous-ensemble des clés de champs (0.441ms)
+✔ un lot peut porter PATCHES SEUL, sans les trois autres formes (1.8375ms)
+✔ PATCHES cohabite avec les formes de création dans un même lot (0.9041ms)
+✔ REFUS : poser une applicationUrl sur un programme sans motif d'exception (0.6702ms)
+✔ ACCEPTATION : la même écriture passe avec overrideApplicationUrl motivé (0.385ms)
+✔ un override vide ou blanc ne vaut pas motif (0.3177ms)
+✔ VIDER reste toujours permis, sans motif — c'est le remède, pas la maladie (0.3237ms)
+✔ la garde ne vise QUE la collection programs (0.2911ms)
+✔ la garde s'applique aussi aux LIENS de création, pas seulement aux patches (0.5972ms)
+✔ refusPortailProgramme : null quand le champ n'est pas touché du tout (0.2213ms)
+✔ lot 33 : aucune erreur bloquante hors ligne (0.3212ms)
+✔ lot 33 : 24 patches, tous sur universities (0.2496ms)
+✔ lot 33 : exactement 3 patches vident le portail (les publiques marocaines) (0.464ms)
+✔ lot 33 : les 21 autres portent une URL https, et chaque patch a son motif (0.422ms)
+✔ lot 33 : chaque patch ne touche QUE applicationPortalUrl (0.397ms)
+✔ lot 33 : aucun patch ne réécrit la valeur qu'il dit attendre (0.3611ms)
+✔ une bourse liée et une bourse orpheline : compte 1, et c'est le bon id (0.4667ms)
+✔ aucun programme du tout : toutes les bourses sont orphelines (0.3071ms)
+✔ plusieurs programmes sur la même bourse ne la comptent pas deux fois (0.2404ms)
+✔ un programme sans scholarshipId ne rattache rien (0.2148ms)
+✔ entrées absentes ou vides : jamais d'exception (0.1777ms)
+✔ LINKS sans niveaux : un programme par niveau de la bourse, comme avant (0.3586ms)
+✔ LINKS avec niveaux : seuls les cycles déclarés produisent un programme (0.5154ms)
+✔ LINKS.niveaux hors vocabulaire : refusé, jamais approximé (0.3355ms)
+✔ LINKS.niveaux qui ne recoupe aucun niveau de la bourse : refusé (0.2553ms)
+✔ LINKS.niveaux vide : refusé — omettre le champ veut dire « tous » (0.3364ms)
+✔ LINKS.niveaux sur une bourse DÉJÀ EN BASE : la restriction voyage jusqu'à analyser (0.4243ms)
+(node:15452) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ aucun fichier de admin/ n'appelle une fonction exportée qu'il a oublié d'importer (187.7124ms)
+✔ student-detail : resolvePlanPreinscription est importée, et le parcours de chaque candidature est affiché (4.3364ms)
+✔ diagnostic-france.html a deux entrées hors paiement, et chacune disparaît quand le droit est fermé (8.4654ms)
+✔ résidence non documentée : ni « 85 000 », ni « Sénégal », et le total dit ce qu'il exclut (6.026ms)
+✔ les chiffres FRANÇAIS sont les mêmes pour tous : seuls les frais locaux changent (4.345ms)
+✔ residenceDocumentee : insensible à la casse et aux accents, fermée par défaut (11.108ms)
+✔ le pays de résidence est demandé EN PREMIER dans le formulaire (3.9895ms)
+✔ advisorOuvert : vrai pour conseiller-6 ET pour dossier-france-conseiller (0.6238ms)
+✔ les listes de formules « conseiller » sont dérivées de la config, plus recopiées (1.3555ms)
+✔ les trois coquilles décident du conseiller avec la MÊME fonction, et lui passent le forfait préinscription (4.6827ms)
+✔ aucune occurrence de offers.html#signature-focus dans le dépôt (681.7357ms)
+✔ preinscriptions.html n'appelle plus la coquille authentifiée, qui ne faisait rien (0.7649ms)
+✔ lot 31 : aucune erreur bloquante hors ligne (3.8896ms)
+✔ lot 31 : le compte annoncé — 12 universités, 14 bourses, 15 programmes (0.508ms)
+✔ lot 31 : aucun identifiant en double, dans aucune des trois familles (0.411ms)
+✔ lot 31 : chaque universityIds pointe vers une université du même lot (0.59ms)
+✔ lot 31 : la garde pays passe, comparaison stricte accents compris (0.49ms)
+✔ lot 31 : funder et entryPoint restent dans leurs énumérés (0.3228ms)
+✔ lot 31 : al-azhar est la seule orpheline volontaire, et elle porte sa propre image (0.5839ms)
+✔ lot 31 : la langue d'un programme n'est écrite que lorsqu'elle est vérifiée (jamais "") (0.4082ms)
+✔ validateur : un lot minimal correct passe sans erreur (0.6221ms)
+✔ validateur : funder hors énuméré refusé, funder absent accepté (2.2027ms)
+✔ validateur : ageMax.tous + clé de cycle refusé ; entiers 1..99 exigés ; {} refusé (0.7006ms)
+✔ validateur : garde pays stricte — un accent manquant bloque (0.3296ms)
+✔ validateur : une bourse LIÉE sans niveau bloque ; une orpheline sans niveau ne bloque pas (0.4641ms)
+✔ validateur : identifiants en double refusés (0.2927ms)
+(node:3740) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/nationalites.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ nationalités 1 — la table couvre PAYS_DU_MONDE, dans le même ordre (3.7873ms)
+✔ nationalités 2 — aucun gentilé en double (1.0868ms)
+✔ nationalités 3 — la forme : masculin, puis le féminin entre parenthèses (1.4875ms)
+✔ nationalités 4 — l'aller-retour pays → gentilé → pays tient sur les 194 (168.262ms)
+✔ nationalités 5 — chaque gentilé se résout en code ISO (122.2768ms)
+✔ nationalités 6 — les réponses d'avant le lot se résolvent toujours (2.1723ms)
+✔ nationalités 7 — saisie libre tolérée, ambiguïté refusée (9.9994ms)
+(node:4652) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/next-action.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ les prérequis correspondent aux données réellement consommées (3.8679ms)
+✔ toute clé citée dans PREREQUIS a une entrée dans LIBELLE_PREREQUIS et dans NOM_ETAPE (1.5057ms)
+✔ bourse : la revue conseiller attend la vérification Fitz, et elle seule (1.1972ms)
+✔ bourse : vérification faite → revue conseiller à faire (non-régression) (0.4668ms)
+✔ preinscription : la revue conseiller attend traductions ET ressources, jamais readiness (0.7365ms)
+✔ preinscription : traductions et ressources faites → revue conseiller à faire (0.3525ms)
+✔ aucun message rendu ne contient « undefined », dans les deux parcours (1.0089ms)
+✔ une étape sans prérequis satisfait est prématurée, pas à faire (0.4802ms)
+✔ une étape devient à faire dès que ses prérequis sont remplis (0.5453ms)
+✔ la vérification attend SES DEUX prérequis (0.8892ms)
+✔ la prochaine étape faisable n'est pas la première non cochée (0.5462ms)
+✔ aucune étape faisable quand tout est fait (0.3085ms)
+✔ les jours restants se comptent en jours de calendrier (2.3367ms)
+✔ une date absente ou illisible ne fait pas planter le calcul (0.222ms)
+✔ une échéance dépassée passe avant tout le reste (1.3479ms)
+✔ une échéance à trois jours est critique, à dix jours seulement haute (0.4656ms)
+✔ au-delà de la fenêtre, l'échéance n'est plus une urgence (0.3395ms)
+✔ l'action pressée porte une étape FAISABLE, jamais une étape bloquée (0.223ms)
+✔ un profil incomplet passe avant une étape ordinaire quand une candidature est en cours (0.3038ms)
+✔ sans candidature en cours, le profil reste une action normale (0.1855ms)
+✔ la candidature la plus pressée l'emporte sur les autres (0.3688ms)
+✔ une candidature sans date limite passe après celles qui en ont une (0.3065ms)
+✔ une candidature terminée n'est jamais proposée (0.272ms)
+✔ quand tout est prêt, l'action devient une invitation (0.2173ms)
+✔ l'invitation reste correcte au singulier et à zéro (0.2646ms)
+✔ une action est toujours renvoyée, même sans aucune donnée (0.2139ms)
+✔ chaque action porte un lien et un libellé de bouton exploitables (0.5403ms)
+✔ un avertissement n'apparaît que quand il ne manque QU'UN prérequis (0.3305ms)
+✔ l'avertissement dit la conséquence, pas l'interdiction (0.4195ms)
+✔ aucun avertissement quand le parcours est propre (0.1726ms)
+✔ offers.html n'affiche un bouton d'achat que pour des offres existantes (2.0174ms)
+✔ offers.html n'affiche aucun bouton d'achat pour une offre dépréciée (0.5304ms)
+✔ toute offre dépréciée est bien absente de la page (0.4198ms)
+✔ le balayage voit bien les boutons d'achat de la page (0.3141ms)
+✔ payment.js expose bien un sélecteur de moyens de paiement (2.0988ms)
+✔ offers.html ne cite que des moyens de paiement réellement proposés (3.2006ms)
+✔ la page cite bien les moyens de paiement au moins une fois (0.7692ms)
+(node:4768) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/parcours.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ PARCOURS a exactement deux valeurs (7.496ms)
+✔ un document sans `track` se lit « bourse » (0.5111ms)
+✔ « preinscription » exactement se lit « preinscription » (1.831ms)
+✔ mauvaise casse, valeur inconnue, null, undefined : « bourse », sans exception (0.4425ms)
+✔ l'argument n'est jamais muté (0.4397ms)
+✔ chaque valeur de PARCOURS a un LIBELLES avec court et long non vides (0.5927ms)
+(node:12832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/pays-grammaire.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pays-grammaire 1 — chaque forme attendue est rendue telle quelle (30.3488ms)
+✔ pays-grammaire 2 — catalogue, résidences et destinations sont tous couverts par une forme vérifiée (25.3288ms)
+✔ pays-grammaire 3 — un pays inconnu n'est jamais précédé d'un article deviné (2.1812ms)
+✔ pays-grammaire 4 — la saisie libre est ramenée au nom canonique (0.8663ms)
+✔ pays-grammaire 5 — tout pays connu a une forme, et « l' » ne laisse pas d'espace (72.8639ms)
+✔ pays-grammaire 6 — paysAvecArticle (eligibility-countries) n'est plus qu'un relais (1.07ms)
+✔ pays-grammaire 7 — plus aucun gabarit du site ne colle un article ou une préposition à un pays (4.3227ms)
+(node:2508) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/pays-preinscription.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ PROCEDURE est fermé et chaque code a un libellé non vide (10.0502ms)
+✔ exactement 7 pays, dans l'ordre validé ; ni États-Unis ni USA (1.0948ms)
+✔ chaque pays a un nom présent dans le catalogue et un code de drapeau existant (2.191ms)
+✔ CHAQUE fait de CHAQUE pays porte une source http(s) ET une date valide (1.1246ms)
+✔ un pays « documentee » a réellement un tronc complet — seule la France reste « en_cours », et pour une raison nommée (13.2995ms)
+✔ aucun agrégateur ne source un fait de pays, et chaque pays a un portail officiel (0.9331ms)
+✔ etatDunPays : planchers par pays, cohérence, et accord des deux formes de catalogue (3.5198ms)
+✔ « pas à pas » n'apparaît sur aucun texte rendu d'un pays non documenté (0.8233ms)
+✔ lirePays ne mute pas PAYS (7.3141ms)
+✔ preinscriptions.html charge mobile-nav.css et mobile-nav.js, sans noindex, et figure au sitemap (4.0627ms)
+(node:13136) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/phone-international.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ chaque pays est complet et sans doublon (7.2568ms)
+✔ l'exemple de chaque pays respecte sa propre règle de longueur (1.9871ms)
+✔ le public prioritaire est bien couvert (6.7495ms)
+✔ les pays d'accueil les plus visés sont présents (0.6728ms)
+✔ le pays est reconnu quelle que soit la façon de l'écrire (2.2448ms)
+✔ les noms usuels sont reconnus, pas seulement les noms officiels (0.5286ms)
+✔ un pays inconnu ne renvoie rien plutôt qu'un pays au hasard (0.8877ms)
+✔ un fragment trop court ne s'apparie à aucun pays (0.5738ms)
+✔ le zéro initial du format national est retiré (0.8634ms)
+✔ le zéro initial est CONSERVÉ là où il fait partie du numéro (0.7063ms)
+✔ un zéro conservé n'autorise pas pour autant les zéros en rafale (3.4991ms)
+✔ un aller-retour E.164 rend exactement le numéro saisi (1.3453ms)
+✔ espaces, tirets, points et parenthèses sont ignorés (0.338ms)
+✔ une saisie vide ou absurde ne fait pas planter la normalisation (0.598ms)
+✔ le E.164 produit est celui qu'un opérateur accepte (0.9511ms)
+✔ un champ vide donne une valeur vide, jamais un indicatif seul (0.3425ms)
+✔ un E.164 enregistré se relit correctement (2.3381ms)
+✔ l'indicatif le plus long gagne — sinon +221 serait lu comme +2 (0.3192ms)
+✔ un numéro enregistré avant le champ international n'est pas perdu (0.2012ms)
+✔ un champ vide est valide — le téléphone n'est pas obligatoire (0.1654ms)
+✔ un numéro de la bonne longueur passe (0.1623ms)
+✔ un chiffre manquant est signalé avec le compte attendu (0.2152ms)
+✔ l'indicatif recopié à tort a son propre message (0.3011ms)
+✔ un pays admettant plusieurs longueurs les accepte toutes (0.3803ms)
+✔ sans pays sélectionné, le message le dit au lieu d'accuser le numéro (0.2126ms)
+✔ aucun message de validation ne contient de jargon technique (0.739ms)
+✔ le numéro WhatsApp est prêt pour un lien wa.me (0.7943ms)
+✔ pied-de-page 1 — toute page publique hors accueil : ni le script ni la feuille, mais le glossaire (76.7275ms)
+✔ pied-de-page 2 — index.html seule le charge, et aucune autre page publique (68.3961ms)
+✔ pied-de-page 3 — le bandeau d'entrée du questionnaire est toujours là (2.087ms)
+✔ pied-de-page 4 — la classe « en rangée » du body n'existe plus nulle part (634.3119ms)
+✔ pied-de-page 5 — un seul rendu : celui de l'accueil, dans une seule feuille (75.7692ms)
+(node:14104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Standard (essentiel) : les 5 premières candidatures passent, la 6e est bloquée (4.974ms)
+✔ Premier Dossier : une seule candidature, la 2e est bloquée (0.6511ms)
+✔ chaque offre bloque exactement à son quota annoncé (0.4364ms)
+✔ Signature : illimité, ne bloque jamais (2.3753ms)
+✔ un quota absent, nul ou à zéro ne bloque pas ici (0.7597ms)
+✔ le tiers gratuit ne débloque aucune fonctionnalité payante (0.9421ms)
+✔ le gratuit n'a ni entrée tarifaire ni quota (0.3647ms)
+✔ toute offre payante donne 100% des outils Fitz (0.4104ms)
+✔ "whatsapp_direct" n'est vrai que pour Signature (0.4034ms)
+✔ "advisor" (conseiller humain) n'est vrai que pour les offres d'accompagnement humain (0.801ms)
+✔ chaque formule de PLAN_ORDER existe dans la grille tarifaire (0.6612ms)
+✔ PLAN_ORDER suit le prix croissant (2.5724ms)
+✔ premier-dossier est vendable : c'est la première offre proposée à un compte gratuit (0.4323ms)
+✔ premium est déprécié : la formule suivante après Ambition est le Conseiller en vente (conseiller-6) (0.6744ms)
+✔ une offre dépréciée reste résolvable par identifiant (compte existant) (0.3589ms)
+✔ Fitz Express n'est pas une formule (0.2764ms)
+✔ PLAN_LABELS et DEFAULT_FEATURE_CONFIG couvrent exactement PLAN_ORDER (0.8961ms)
+✔ Signature : le même libellé court en interface et dans la grille (0.2115ms)
+✔ aucun prix en euros ne subsiste dans la grille (0.2605ms)
+✔ chaque offre porte les champs affichés par la page de paiement (0.3663ms)
+✔ pricing-plans.js expose bien la grille sur window (0.1345ms)
+(node:9704) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/catalog-snapshot.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ assets/data/catalogue.json ne contient AUCUN champ de portail (14.7ms)
+✔ tout le reste du catalogue est intact, et js/catalog-snapshot.js le lit sans modification (1.3967ms)
+✔ functions/data/catalogue-portails.json porte les 147 portails d'université (1.8335ms)
+✔ firebase.json ne publie ni la fonction, ni ses données, ni les scripts qui portent les mêmes URL (2.4093ms)
+✔ aucun fichier PUBLIÉ ne porte d'URL de portail en clair (267.1308ms)
+✔ separerPortails : retire les trois champs, n'en touche aucun autre (1.739ms)
+✔ les trois champs de portail sont nommés une seule fois, dans le module pur (10.3494ms)
+✔ droitAuxPortails REFUSE : sans compte, gratuit, formule expirée (0.9586ms)
+✔ droitAuxPortails ACCEPTE : plan bourse, plan préinscription, testerAccess, Fitz Express (1.3689ms)
+✔ les listes de formules du serveur sont le MIROIR de celles du site (1.0759ms)
+✔ la fonction refuse un anonyme AVANT toute lecture Firestore, et la carte ne vient pas de la base (1.378ms)
+✔ js/portails.js n'écrit rien dans localStorage ni sessionStorage (1.3869ms)
+✔ details.js résout le portail par le module, plus par l'objet université (5.0808ms)
+✔ applications.js remplit encore le portail d'une candidature suggérée (2.4964ms)
+✔ boursesSansPortail : un dépôt chez le bailleur sans portail est un trou de catalogue (0.6745ms)
+✔ admin/scholarships expose les DEUX liens, avec la distinction écrite (2.7426ms)
+✔ le triage des 156 bourses existe et n'écrit rien en base (3.3305ms)
+✔ aucune page ne promet le portail de candidature à un visiteur (8.3101ms)
+✔ portes-couleur 1 — les deux portes ont la même couleur : une seule règle de fond, aucune variante (12.594ms)
+✔ portes-couleur 2 — le fond n'est plus le crème d'avant, et l'ambre est le littéral #E9A319 (7.3658ms)
+✔ portes-couleur 3 — la ligne du diagnostic : une ligne, pas une troisième porte ; la réserve reste (7.111ms)
+✔ portes-couleur 4 — les trois chemins sont comptés au clic et lus dans le Control Center (5.0389ms)
+(node:11804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/plan-features.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ decideVerrou : diagnostic-france fermé partout, les deux Dossiers France ouverts sur les cinq outils (5.7601ms)
+✔ un compte SANS formule bourse et avec dossier-france n'est verrouillé sur aucun des cinq — l'union des deux grilles (0.5829ms)
+✔ le commentaire de la grille dit POURQUOI la règle a changé, avec sa source et sa date (1.6625ms)
+✔ les pages d'outils appartiennent aux deux espaces (9.3803ms)
+✔ espace-preinscription.html porte les cinq outils, dans le gabarit exact de l'espace bourse (3.5263ms)
+✔ buildPrompt en préinscription ne contient aucune occurrence de « bourse » — et le parcours bourse reste identique (6.4396ms)
+✔ lireParcoursDeSaisie : la chaîne, puis le champ track, puis « bourse » — jamais une troisième règle (0.4145ms)
+✔ la lettre de vœu simulée tient en 6 lignes au plus, nomme la formation, et ne loue pas la France (1.5261ms)
+✔ la vérification avant dépôt d'une préinscription se juge sur les étapes de la procédure (7.8662ms)
+✔ le chat et les e-mails simulés ne mélangent pas les deux vocabulaires (3.8995ms)
+✔ formuleActive() rend une formule pour un compte dossier-france sans formule bourse, et null quand elle est expirée (1.4329ms)
+✔ LE MIROIR : toute offre en vente qui ouvre ai_letter est dans FORMULES_AVEC_FITZ et dans PLAFONDS (1.5519ms)
+✔ functions/fitz.js n'a plus sa propre copie de la décision, et son refus ne renvoie plus vers une formule bourse (4.0053ms)
+(node:14148) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/pays-preinscription.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ chaque destination porte un `accompagnement` du vocabulaire fermé (8.6052ms)
+✔ toute destination « ouvert » tient le contrat, et il est écrit en clair (3.0646ms)
+✔ un pays marqué « ouvert » sans l'un des champs du contrat fait ÉCHOUER la suite (9.3928ms)
+✔ un fait sans `diffusion` déclarée n'est PAS public (2.0973ms)
+✔ LES FAITS CLIENTS RESTENT DANS LES DONNÉES — seul leur affichage public est retiré (0.7554ms)
+✔ aucune page publique ne porte les chaînes que le Diagnostic vend (11.7695ms)
+✔ le hub ne rend plus les onze étapes, ni les faits clients (2.2914ms)
+✔ le hub ne contient aucun nom de pays ni compteur écrit en dur (20.1331ms)
+✔ une destination « a_venir » n'affiche ni bouton, ni compteur, ni zéro (1.7855ms)
+✔ basculer un pays de « a_venir » à « ouvert » suffit à lui donner son bouton (1.4337ms)
+✔ les seuils publics sont TOUJOURS affichés, avec leur source et leur date (1.3095ms)
+✔ la page nomme les pays de résidence, lus depuis le registre (2.6996ms)
+✔ la procédure est annoncée par son NOMBRE d'étapes, jamais par son contenu (3.3311ms)
+✔ le bloc « ce que nous vous garantissons » est présent, mot pour mot (1.4139ms)
+✔ le lien d'achat porte destination=france (1.9486ms)
+✔ la page de destination ne nomme sa destination qu'à UN endroit (1.4645ms)
+✔ une destination repassée « a_venir » n'affiche pas une page à moitié remplie (0.7092ms)
+✔ la nouvelle page est publiable : liste blanche, plan du site, menu (3.0943ms)
+(node:15992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/preuve-depot.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ MODES est un vocabulaire fermé, chacun avec un libellé (3.8459ms)
+✔ numero : numeroDossier non vide et ≤ 64 caractères (1.0626ms)
+✔ capture : au moins fichier ; les deux preuves peuvent coexister (0.4697ms)
+✔ transmis : exigé quand parTiers, interdit sinon ; fichier OU numéro (1.0323ms)
+✔ deposeLe : format date, date réelle, jamais dans le futur (0.7532ms)
+✔ lirePreuve : copie normalisée, jamais l'original ; null sans preuve (1.5304ms)
+✔ libelleDemande et resumePreuve disent ce qu'on attend, et ce qui a été déclaré (1.3612ms)
+✔ firestore.rules : miroir du vocabulaire et des statuts déposés ; la règle ne joue qu'à la transition (3.1075ms)
+✔ storage.rules : capture réservée au propriétaire, image ou PDF, 5 Mo ; rien d'autre n'est inscriptible (1.9176ms)
+✔ aucune capture dans l'export du catalogue : scripts/lot.mjs ne lit pas users/ (2.3093ms)
+✔ journey-map : non-régression des 6 phases — le dépôt se lit sur le statut, avec ou sans preuve (1.465ms)
+(node:4832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/procedures/vocabulaire.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ vocabulaire fermé : les trois listes du briefing, telles quelles (4.9506ms)
+✔ chaque étape a source + verifieLe ; chaque prérequis cite un id existant ; aucun cycle (9.9133ms)
+✔ une étape sans source ou sans date n'existe pas : aucune dans la composition France × Sénégal (0.5182ms)
+✔ au moins une étape « paiement » à 85 000 F CFA, sourcée sur la FAQ Campus France Sénégal (0.4972ms)
+✔ une étape après connexion n'est ferme que si sa source est la page qui décrit ces écrans (0.6771ms)
+✔ aucun agrégateur : toutes les sources sont des pages de l'organisme lui-même (1.4062ms)
+✔ les vœux : le plafond de 7 est GLOBAL, et le sous-plafond de la Licence 1 est dit (0.9976ms)
+✔ la saisie dit l'exemption CEDEAO, et ne présente plus le choix de l'antenne comme une règle de la source (0.6697ms)
+✔ les pièces : la règle de traduction mot pour mot, le plafond général, et le test de français avant dépôt pour L-AR (0.5046ms)
+✔ aucune étape n'a une taille de fichier sans source ; les tailles citées sont celles de la page « je constitue mon dossier » ou de la FAQ (1.4164ms)
+✔ le calendrier n'est pas recopié : chaque échéance désigne un jalon de la couche, daté pour la campagne en cours (5.0877ms)
+✔ trouverProcedure : la destination seule décide qu'une procédure existe (17.5114ms)
+✔ appariement des pays : par code ISO, jamais par chaîne libre (20.4534ms)
+✔ le tronc ne connaît aucune résidence : ni montant, ni banque, ni pièce locale (0.8782ms)
+✔ résidence documentée : la composition rend, en substance, la procédure d'avant la scission (1.6422ms)
+✔ résidence non documentée : les onze étapes, et pas un fait sénégalais (2.4574ms)
+✔ résidence vide : le même résultat qu'une résidence non documentée, jamais null (2.0669ms)
+✔ un fragment qui remplace sans source ou sans verifieLe est REFUSÉ (4.6007ms)
+✔ la source suit le texte : un remplacement change la source affichée, un ajout la garde (0.3795ms)
+✔ le registre des couches est le seul endroit qui déclare un pays documenté (1.8013ms)
+✔ aucune occurrence de RESIDENCE_PAR_DEFAUT dans le dépôt (393.8368ms)
+✔ candidature préinscription liée à Études en France → les étapes apparaissent, dans l'ordre, entre ressources et la revue conseiller (1.1141ms)
+✔ résidence non documentée : les mêmes étapes dans le parcours, sans échéance ni montant (0.4462ms)
+✔ même université en parcours bourse → aucune étape de procédure ; université sans procédure → aucune, sans erreur (0.3903ms)
+✔ done = cochée ET preuve présente quand une preuve est attendue (0.66ms)
+✔ cocher « soumission » avec un numéro remplit preuveDepot (E1) et rend la transition « déposée » possible (1.6012ms)
+✔ next-action : la prochaine étape faisable traverse les étapes injectées dans le bon ordre (0.8922ms)
+✔ next-action : une étape « a_confirmer » n'est jamais rendue comme consigne ferme, et les phrases nomment l'étape (1.0235ms)
+✔ France : plus aucune étape à confirmer, la procédure est « documentee » et le dit (0.3149ms)
+✔ la page préinscriptions et la fiche université branchent la procédure (5.6792ms)
+✔ les sept pays de la page Préinscriptions ont un tronc, et chaque tronc est valide (1.0411ms)
+✔ aucun agrégateur dans les sources des six nouveaux troncs (0.7747ms)
+✔ les six nouveaux troncs n'inventent ni taille de fichier ni échéance (0.956ms)
+✔ residenceRequise : la France l'exige, les six du lot S3 non — et c'est dit (4.9492ms)
+✔ chaque tronc marque ses étapes de la phase « Visa & départ », et seulement les bonnes (0.3657ms)
+(node:13576) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-pistes.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profil-par-niveau 1 — les huit paliers sont ceux du questionnaire public, dans son ordre (5.7679ms)
+✔ profil-par-niveau 2 — la table d'applicabilité, palier par palier (1.6527ms)
+✔ profil-par-niveau 3 — un score de 10/10 est possible pour CHAQUE palier, et un bachelier n'est plus plafonné à 8 (1.9863ms)
+✔ profil-par-niveau 4 — un profil ancien, sans palier, se lit comme aujourd'hui (0.7921ms)
+✔ profil-par-niveau 5 — le seuil de préparation est inchangé pour les consommateurs (0.7751ms)
+✔ profil-par-niveau 6 — le bilan donne le dénominateur réel à l'admin (0.6131ms)
+✔ profil-par-niveau 7 — le test de langue : lecture tolérante, « pas encore passé » est légitime (1.0366ms)
+✔ profil-par-niveau 8 — les langues lisibles, chaînes et objets (0.4674ms)
+✔ profil-par-niveau 9 — le studentStatus hérité se dérive du palier (0.649ms)
+✔ profil-par-niveau 10 — le parcours scolaire d'un lycéen : série ou mention, et moyenne du bac (0.6722ms)
+✔ profil-par-niveau 11 — calculateAiScore rend toujours un nombre sur 10 (0.7344ms)
+(node:14900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/radar.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ annoncée ouverte avec une date dépassée = contradiction (6.1519ms)
+✔ annoncée ouverte alors que la prose dit elle-même « clos » = contradiction (0.548ms)
+✔ fermée et cohérente : à documenter, pas une alerte (0.6961ms)
+✔ les seuils suivent js/echeance.js : 14 jours critique, 60 jours proche (1.1753ms)
+✔ ouverte sans date exploitable : l'étudiant ne sait pas de combien de temps il dispose (0.3994ms)
+✔ l'ordre des poids fait remonter la contradiction avant tout le reste (0.4364ms)
+✔ radar et carte disent la même chose de chaque bourse (22.9385ms)
+✔ aucune bourse annoncée ouverte ne peut être classée fermée, et réciproquement (13.1595ms)
+✔ une échéance dépassée mais LUE il y a moins de 90 jours ne remonte plus en tête (2026-09-05, lot 40) (30.7467ms)
+✔ chaque origine de la grille est une nationalité que le moteur sait résoudre (1.5448ms)
+✔ la grille discrimine réellement : une bourse réservée exclut au moins une origine (0.6963ms)
+✔ tous les pays proposés par le questionnaire sont résolus par le module d'éligibilité (2.9733ms)
+(node:13644) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/roles-admin.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ firestore.rules et le client acceptent EXACTEMENT les mêmes valeurs de rôle (6.2013ms)
+✔ la graphie héritée est ACCEPTÉE, et signalée comme un défaut de donnée (1.6189ms)
+✔ le défaut de rôle est DIT : en console au chargement, et à l'écran sur la page des administrateurs (5.5264ms)
+✔ aucune chaîne de rôle n'est écrite en dur hors de js/roles-admin.js (675.9434ms)
+✔ le harnais navigateur joue les trois rôles qui existent en base, pas seulement celui qui marchait (8.2738ms)
+✔ un élément réservé au propriétaire n'est jamais déréférencé sans garde (109.54ms)
+✔ renderSubscriptionTab survit à un DOM d'où tout le réservé a été retiré (5.4723ms)
+✔ l'écran d'erreur distingue une panne réseau, un refus du serveur et une erreur de code (2.4952ms)
+✔ l'erreur réelle est nommée à l'écran, et laissée entière en console (2.2492ms)
+✔ « on n'a pas pu savoir » n'est jamais rendu comme « vous n'avez pas ce droit » (1.7785ms)
+(node:600) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-filters.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 100 % suivi de n'importe quel détail est intégral (3.0459ms)
+✔ « pas de bourse partielle » ne doit pas être confondu avec « partielle » (0.9075ms)
+✔ « Scolarité gratuite » sans réserve est intégral (0.7553ms)
+✔ une réserve ailleurs dans la phrase (montant à confirmer) ne doit pas annuler « scolarité gratuite » (0.5125ms)
+✔ « quasi gratuite » n'est PAS un financement intégral (0.3938ms)
+✔ une charge explicitement NON couverte exclut le financement intégral, même avec « intégralement pris en charge » ailleurs (0.5097ms)
+✔ « Non quantifié publiquement » n'est pas un financement intégral (0.3118ms)
+✔ « Variable selon dossier » n'est pas un financement intégral (0.2776ms)
+✔ un montant plafonné (« Jusqu'à X ») n'est pas un financement intégral (0.5967ms)
+✔ « Partielle » n'est jamais un financement intégral (0.6994ms)
+✔ une liste de postes couverts sans « 100% »/« gratuite » n'est PAS présumée intégrale (0.5695ms)
+✔ un champ funding vide ou absent n'est jamais un financement intégral (0.2997ms)
+✔ extrait le rang d'un classement simple (0.48ms)
+✔ sur un intervalle, retient la première valeur (la plus favorable) (0.313ms)
+✔ une description sans numéro ne renvoie aucun rang — jamais un rang inventé (0.2554ms)
+✔ meilleurRangQS retient le rang le plus favorable (le plus petit nombre) (0.4262ms)
+✔ meilleurRangQS ignore les universités sans rang numérique plutôt que de les traiter comme les moins bien classées (0.1931ms)
+✔ meilleurRangQS renvoie null si aucune université liée n'a de rang numérique (0.3078ms)
+✔ partnerCount : 3 programmes sur 2 universités comptent 2 partenaires, pas 3 (12.0471ms)
+✔ partnerCount : 0 pour une bourse sans programme lié (stub) (3.0896ms)
+(node:14916) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-filters.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ funder absent : visible avec « Tous les types », jamais reclassé dans un type (3.457ms)
+✔ filtre sur un type précis : correspondance EXACTE, rien d'autre (2.0212ms)
+✔ libelleFunder : jamais de libellé deviné pour un champ absent ou hors énuméré (2.1063ms)
+✔ entryPoint === "bourse" : #funderPortalBtn passe avant #universityPortalBtn dans le DOM (6.0024ms)
+✔ entryPoint absent : ordre actuel inchangé (#universityPortalBtn puis #applyBtn), bailleur en dernier (2.7328ms)
+✔ entryPoint === "universite" : même ordre que le cas absent (2.1993ms)
+✔ #funderPortalBtn reste caché quand la bourse n'a pas d'officialWebsite (2.2061ms)
+✔ #funderPortalBtn reste caché pour un NON-ABONNÉ, même quand la bourse a un site officiel (2.4152ms)
+✔ #funderPortalBtn visible pour un ABONNÉ, libellé complété du nom du bailleur (2.127ms)
+✔ #funderPortalBtn sans funderName : libellé nu, jamais de « non renseigné » (4.4405ms)
+✔ generalCriteria vide -> #criteriaSection reste hidden (3.1442ms)
+✔ generalCriteria renseigné -> section visible, texte injecté tel quel (textContent) (2.558ms)
+✔ phrase d'orientation : rien ("") quand entryPoint est absent — la phrase du HTML reste telle quelle (2.4396ms)
+✔ entryPoint=bourse SANS portail bailleur affiché : la phrase ne nie plus l'université (5.6008ms)
+✔ entryPoint=universite : formulation inchangée, quel que soit le public (6.4681ms)
+✔ la phrase est calculée avec isPaidUser && scholarshipWebsite, pas avec entryPoint seul (1.3532ms)
+✔ ré-enregistrer une fiche sans toucher au bloc bailleur conserve les 3 champs (régression « note seule ») (4.4232ms)
+✔ formulaire vierge : AUCUN champ écrit — jamais funder:"" ni valeur par défaut (4.3343ms)
+✔ champs partiels : seuls les champs renseignés survivent, funder absent n'est pas inventé (2.9475ms)
+✔ aller-retour entryPoint=universite sans funder : conservé tel quel (2.5265ms)
+(node:5988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/scholarship-image.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ étage 1 : bourseImage prime sur tout le reste (9.4639ms)
+✔ étage 2 : sans bourseImage, la photo de l'université liée (2.3427ms)
+✔ étage 3 : Royaume-Uni -> Londres (lot 24 — les 3 bourses Commonwealth quittent le fond générique) (1.1351ms)
+✔ étage 3 : Russie -> Moscou (lot 24 — spbu-open-olympiad quitte le fond générique) (0.9524ms)
+✔ étage 3 : une entrée historique (Italie -> Rome) inchangée (0.5597ms)
+✔ les 8 variantes Londres/Moscou existent réellement sur le disque — pas seulement dans la table (1.857ms)
+✔ chaque entrée de COUNTRY_FALLBACK_IMAGE a ses 4 variantes sur le disque (22.1804ms)
+✔ étage 4 : atteint uniquement quand le pays est absent de la table (2.562ms)
+✔ étage 4 : plus jamais atteint pour le Royaume-Uni ni la Russie (le défaut corrigé) (1.7877ms)
+(node:160) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/eligibility-parcours.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profil « lycee » : toutes les questions de sa piste ont une réponse (14.6725ms)
+✔ profil « lycee » : aucune réponse inutile (3.0729ms)
+✔ profil « lycee » : un cycle visé et une piste sont bien produits (1.4617ms)
+✔ profil « bac » : toutes les questions de sa piste ont une réponse (4.5741ms)
+✔ profil « bac » : aucune réponse inutile (20.3558ms)
+✔ profil « bac » : un cycle visé et une piste sont bien produits (4.3838ms)
+✔ profil « licence-en-cours » : toutes les questions de sa piste ont une réponse (9.1532ms)
+✔ profil « licence-en-cours » : aucune réponse inutile (2.4388ms)
+✔ profil « licence-en-cours » : un cycle visé et une piste sont bien produits (8.2372ms)
+✔ profil « licence-obtenue » : toutes les questions de sa piste ont une réponse (3.7032ms)
+✔ profil « licence-obtenue » : aucune réponse inutile (1.7661ms)
+✔ profil « licence-obtenue » : un cycle visé et une piste sont bien produits (1.5284ms)
+✔ profil « master-obtenu » : toutes les questions de sa piste ont une réponse (3.3427ms)
+✔ profil « master-obtenu » : aucune réponse inutile (1.2341ms)
+✔ profil « master-obtenu » : un cycle visé et une piste sont bien produits (3.0564ms)
+✔ profil « doctorat-en-cours » : toutes les questions de sa piste ont une réponse (2.1996ms)
+✔ profil « doctorat-en-cours » : aucune réponse inutile (2.0143ms)
+✔ profil « doctorat-en-cours » : un cycle visé et une piste sont bien produits (2.2017ms)
+(node:14740) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP/Documents/ScholarBridge/js/journey-map.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\HP\Documents\ScholarBridge\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ le socle couvre exactement les six étapes de VISA_ETAPES, et il est substantiel (5.0165ms)
+✔ aucun chiffre de pays dans le socle : les montants vivent dans les procédures (0.917ms)
+✔ deux parcours, une seule variante servie — jamais les deux (0.8791ms)
+✔ sans destination documentée, le guide sert le socle et n'annonce aucun bloc vide (0.8276ms)
+✔ chaque destination apporte ses propres étapes de départ, sourcées et datées (8.6974ms)
+✔ les délais d'après-arrivée, qui sont les plus courts du parcours, sont réellement dits (3.5929ms)
+✔ le guide reste branché sur la mesure de la phase 06 (0.3734ms)
+✔ tous les troncs déclarent leurs étapes de départ : aucune destination muette (0.2648ms)
+✔ vitrine 1 — Premier Dossier à 25 000 F, affiché ET facturé ; rien d'autre n'a bougé (4.7436ms)
+✔ vitrine 2 — chaque offre vendue porte un niveau et un cta (4.4644ms)
+✔ vitrine 2b — offers.html : chaque puce est un highlight, mot pour mot, et le bouton porte le cta (4.0948ms)
+✔ vitrine 2c — la page de destination rend la même carte depuis la grille (1.7545ms)
+✔ vitrine 3 — css/formule.css est le seul composant de carte, sans flou (19.2986ms)
+✔ vitrine 4 — trois niveaux dans base.css, aucun redéfini par une feuille de page (17.4361ms)
+✔ vitrine 4b — au plus un bouton principal par section, dans le HTML statique (23.3634ms)
+✔ vitrine 5 — aucune phrase qui décourage, aucune promesse de résultat, dans le texte visible (34.8025ms)
+✔ vitrine 6 — plus de bloc « Avant de candidater », et plus de code mort derrière (5.7127ms)
+✔ vitrine 7 — le bas de l'accueil : un appel à l'action, pas des chiffres répétés (6.6418ms)
+ℹ tests 989
 ℹ suites 0
-ℹ pass 325
+ℹ pass 987
 ℹ fail 2
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 6355.0832
+ℹ duration_ms 6351.0028
 
 ✖ failing tests:
 
-test at test\copy-partenaire.test.mjs:70:1
-✖ aucun .js du site (hors admin/) ne contient « partenaire » hors commentaire (139.6576ms)
-  AssertionError [ERR_ASSERTION]: js/homepage-teaser.js contient encore « partenaire » (chaîne ou identifiant) : « …/default.svg'">` : ""}
-  <h3>${university.name || "Université partenaire"}</h3>
-  <p>${[univer… »
+test at test\copy-partenaire.test.mjs:104:1
+✖ aucun .js du site (hors admin/) ne contient « partenaire » hors commentaire (198.5322ms)
+  AssertionError [ERR_ASSERTION]: js/procedures/canada.js contient encore « partenaire » (chaîne ou identifiant) : « …ge vers le compte sécurisé IRCC (avec une CléGC/GCKey ou un partenaire de connexion) ou ve… »
   
-  2785 !== -1
+  11304 !== -1
   
-      at TestContext.<anonymous> (file:///C:/Users/HP/Documents/ScholarBridge/test/copy-partenaire.test.mjs:74:8)
+      at TestContext.<anonymous> (file:///C:/Users/HP/Documents/ScholarBridge/test/copy-partenaire.test.mjs:108:8)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1325:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
@@ -413,29 +1229,511 @@ test at test\copy-partenaire.test.mjs:70:1
       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
     generatedMessage: false,
     code: 'ERR_ASSERTION',
-    actual: 2785,
+    actual: 11304,
     expected: -1,
     operator: 'strictEqual',
     diff: 'simple'
   }
 
-test at test\logo-lockup.test.mjs:96:1
-✖ --logo-descriptor est déclaré deux fois, et seulement dans css/base.css (48.004ms)
-  AssertionError [ERR_ASSERTION]: admin/control-center.css redéclare --logo-descriptor — la source doit rester unique
+test at test\couches-pays.test.mjs:213:1
+✖ une résidence non documentée reçoit toujours les onze étapes du tronc (18.7176ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
   
-  1 !== 0
+  + {
+  +   absences: null,
+  +   avertissement: '',
+  +   couche: null,
+  +   etapes: [
+  +     {
+  +       consigne: "Choisissez dans le catalogue officiel du portail Study in Romania, qui affiche pour chaque programme la langue d'enseignement, la durée, les crédits ECTS et les frais de scolarité annuels applicables aux non-UE. Le portail officiel annonce une fourchette allant d'environ 400 € par an à près de 9 000 € par an selon le domaine, chaque université fixant ses propres tarifs au-dessus d'un plancher légal. Vérifiez impérativement que l'établissement est accrédité ou autorisé provisoirement selon la loi roumaine : sinon, aucune lettre d'acceptation ne pourra être émise et tout le reste s'écroule. Sortez de cette étape avec le nom exact de l'université, le programme, la langue d'enseignement et le montant annuel.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_programme',
+  +       pieces: [],
+  +       prerequis: [],
+  +       preuve: 'capture',
+  +       source: 'https://studyinromania.gov.ro/faq-costs',
+  +       titre: 'Choisir mon programme et mon université',
+  +       type: 'voeux',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "L'ORDRE COMPTE, et l'inverser oblige à tout recommencer. D'abord vous faites AUTHENTIFIER vos documents originaux dans le pays qui les a émis : apostille de La Haye, ou visa d'authentification de l'ambassade de Roumanie de ce pays. ENSUITE seulement vous faites établir les traductions légalisées. Le portail officiel accepte la traduction en roumain OU dans une langue de circulation internationale, donc le français ou l'anglais conviennent — ce qui vous évite souvent un traducteur roumain assermenté. Cette authentification préalable n'est pas exigée si vos études antérieures ont été faites en Roumanie, dans un pays de l'Union européenne, ou dans un pays lié à la Roumanie par un accord d'assistance juridique. Vous devez détenir, à la fin, chaque acte en original apostillé ET sa traduction légalisée.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_apostille',
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: true,
+  +           nom: 'Diplôme de baccalauréat, ou de licence / master selon le cycle visé',
+  +           precision: "apostille de La Haye d'abord, traduction légalisée ensuite ; roumain, français ou anglais acceptés",
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: true,
+  +           nom: 'Relevés de notes des études effectuées (foi matricole)',
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: true,
+  +           nom: 'Acte de naissance',
+  +           tailleMax: null,
+  +           traduction: true
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_programme'
+  +       ],
+  +       preuve: 'aucune',
+  +       source: 'https://studyinromania.gov.ro/recognition',
+  +       titre: 'Apostiller mes documents, PUIS les faire traduire',
+  +       type: 'pieces',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "Envoyez votre dossier complet au bureau des admissions de l'université choisie : le ministère de l'Éducation ne reçoit AUCUN dossier directement d'un candidat, c'est l'université qui saisit le ministère. Votre dossier contient obligatoirement la demande de délivrance de la lettre d'acceptation aux études (ANEXA nr. 2) remplie EN DEUX EXEMPLAIRES, plus un exemplaire en copie légalisée et une photocopie des autres pièces. Comptez environ 15 jours pour une décision préliminaire de l'université. Toutes les universités facturent des frais de dossier par programme, dont le montant n'est pas publié de façon centralisée : demandez-le. Sortez de cette étape avec l'accusé de réception de votre dossier.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_dossier',
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Cerere de eliberare a Scrisorii de acceptare la studii (ANEXA nr. 2), en deux exemplaires',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'copie légalisée + traduction',
+  +           legalisation: true,
+  +           nom: "Acte d'études qualifiant pour le cycle visé",
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'copie légalisée + traduction',
+  +           legalisation: true,
+  +           nom: "Relevés de notes et programme analytique, si vous demandez la reconnaissance de périodes d'études",
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'copie',
+  +           legalisation: false,
+  +           nom: "Diplôme de fin d'année préparatoire ou certificat de compétence linguistique, selon le cas",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'copie légalisée + traduction',
+  +           legalisation: true,
+  +           nom: 'Acte de naissance',
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'copie',
+  +           legalisation: false,
+  +           nom: 'Passeport',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier, en langue de circulation internationale',
+  +           legalisation: false,
+  +           nom: "Certificat médical attestant l'absence de maladies contagieuses ou d'affections incompatibles avec la future profession",
+  +           tailleMax: null,
+  +           traduction: true
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_apostille'
+  +       ],
+  +       preuve: 'numero_dossier',
+  +       source: 'https://www.edu.ro/studenti%20non%20ue',
+  +       titre: "Déposer mon dossier auprès de l'université",
+  +       type: 'soumission',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "C'est la pièce qui commande tout. L'université évalue votre dossier puis le transmet ELLE-MÊME au ministère de l'Éducation et de la Recherche, avec la liste des personnes proposées. Le délai maximal de traitement par le ministère est de 30 JOURS OUVRABLES. En cas de décision favorable, le ministère émet la scrisoare de acceptare la studii et l'envoie à l'établissement et, selon le cas, aux missions diplomatiques. Un cas à connaître : si l'université demandée ne peut pas honorer la demande, le ministère peut vous proposer un AUTRE établissement correspondant à votre profil. Sans cette lettre, vous n'obtiendrez ni visa ni inscription.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_scrisoare',
+  +       pieces: [],
+  +       prerequis: [
+  +         'ro_dossier'
+  +       ],
+  +       preuve: 'capture',
+  +       source: 'https://studyinromania.gov.ro/procedures',
+  +       titre: 'Obtenir la scrisoare de acceptare du ministère',
+  +       type: 'reponse',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "Les ressortissants hors UE ne sont inscrits en langue roumaine qu'APRÈS avoir suivi l'année préparatoire : une année scolaire ou universitaire complète pour le préuniversitaire et la licence, au moins 6 mois pour le master, le doctorat et le rezidentiat. À noter : le rezidentiat, la spécialisation médicale postuniversitaire, ne se fait QU'EN ROUMAIN, sans exception. Vous êtes dispensé de l'année préparatoire si vous présentez des actes d'études roumains ou attestant au moins quatre années consécutives dans le système national roumain, ou si vous réussissez le test de langue roumaine devant une commission de spécialité composée d'enseignants d'au moins rang de lecteur, qui vous délivre alors un Certificat de compétence linguistique. Pour un programme enseigné en langue étrangère, l'admission est conditionnée par un test de connaissances linguistiques, sauf si vous venez d'un pays dont la langue officielle est celle de l'enseignement et que vos documents scolaires le prouvent.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_langue',
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Certificat de compétence linguistique en roumain, ou diplôme de fin d'année préparatoire",
+  +           tailleMax: null,
+  +           traduction: false
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_scrisoare'
+  +       ],
+  +       preuve: 'aucune',
+  +       source: 'https://www.edu.ro/studenti%20non%20ue',
+  +       titre: 'Année préparatoire de roumain, ou preuve de compétence',
+  +       type: 'complement',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "Voie facultative et parallèle, ouverte aux ressortissants de tous les pays non-UE, fondée sur la Décision de Gouvernement n° 288/1993. La candidature se fait EXCLUSIVEMENT en ligne sur la plateforme Study in Romania : toute candidature envoyée directement au ministère des Affaires étrangères, au ministère de l'Éducation, à l'adresse personnelle d'un agent ou à une mission diplomatique est REJETÉE. Pour la campagne publiée, les dépôts étaient ouverts du 16 février au 31 mars 2026, résultats autour du 15 juillet 2026. Trois limites décisives : aucune bourse en MÉDECINE, MÉDECINE DENTAIRE ni PHARMACIE ; en licence et master les études se font uniquement en roumain, seul le doctorat pouvant être en langue étrangère fixée par l'école doctorale ; et il faut une moyenne des années du dernier cycle achevé d'au moins 7 sur l'échelle roumaine, ou la mention « Bien ». Pour les admis, c'est le ministère de l'Éducation qui émet la lettre d'acceptation, dont l'original part vers l'université, une copie scannée restant téléchargeable. Avantage notable : les boursiers de l'État roumain sont exonérés des taxes consulaires et de la taxe de permis de séjour, et n'ont pas à prouver leurs moyens de subsistance. Le calendrier 2027 n'est pas publié à ce jour.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_bourse_mae',
+  +       pieces: [
+  +         {
+  +           format: "PDF scanné individuellement d'après l'original",
+  +           legalisation: true,
+  +           nom: 'Copies des diplômes obtenus',
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: "PDF scanné individuellement d'après l'original",
+  +           legalisation: true,
+  +           nom: 'Copies des relevés de notes des études achevées',
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'PDF',
+  +           legalisation: true,
+  +           nom: "Copie de l'acte de naissance",
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'PDF',
+  +           legalisation: false,
+  +           nom: 'Copie des trois premières pages du passeport en cours de validité',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'PDF',
+  +           legalisation: false,
+  +           nom: 'Curriculum vitae, en anglais, français ou roumain',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'PDF',
+  +           legalisation: false,
+  +           nom: "Doctorat : lettre d'intention, liste des travaux scientifiques, projet de recherche détaillé, accord écrit d'un directeur de thèse membre de l'école doctorale",
+  +           tailleMax: null,
+  +           traduction: false
+  +         }
+  +       ],
+  +       prerequis: [],
+  +       preuve: 'capture',
+  +       source: 'https://scholarships.studyinromania.gov.ro/scholarship-about',
+  +       titre: 'Voie parallèle : la bourse du ministère roumain des Affaires étrangères',
+  +       type: 'soumission',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "Avant de déposer votre demande de visa, vous devez régler à l'université les frais couvrant AU MOINS UNE ANNÉE d'études : l'Inspectorat général pour l'immigration exige explicitement la preuve de ce paiement parmi les pièces du dossier de visa. Le montant est celui affiché par l'université pour votre programme ; le cadre légal des montants minimaux en devises pour les ressortissants d'États tiers est fixé par l'Ordonnance du Gouvernement n° 22/2009, approuvée par la Loi n° 1/2010, chaque établissement fixant ensuite ses tarifs au-dessus de ce plancher — que le ministère ne reproduit pas sur sa page, et que nous ne devinons pas. Les boursiers de l'État roumain et ceux des établissements d'enseignement supérieur d'État accrédités en sont dispensés. Conservez le justificatif émis par l'université.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_scolarite',
+  +       phaseDepart: true,
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Preuve du paiement des frais de scolarité pour au moins une année d'études",
+  +           tailleMax: null,
+  +           traduction: false
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_scrisoare'
+  +       ],
+  +       preuve: 'recu',
+  +       source: 'https://igi.mai.gov.ro/studii/',
+  +       titre: 'Payer au moins une année de scolarité',
+  +       type: 'paiement',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "La demande se dépose OBLIGATOIREMENT par voie électronique via le portail e-Viza du ministère des Affaires étrangères — c'est aussi le seul moyen de prendre rendez-vous — puis physiquement à la mission diplomatique ou au poste consulaire roumain territorialement compétent, où vous présentez en original votre document de voyage et vos pièces. ATTENTION AU TARIF, il a changé : la taxe de visa de long séjour est de 300 EUROS pour les demandes transmises via e-Viza à partir du 27 avril 2026, contre 120 euros avant cette date. Le non-paiement rend la demande irrecevable et elle n'est pas prise au guichet. La décision intervient dans un délai maximal de 30 jours à compter de la présentation au poste, et le Centre national des visas n'approuve qu'après l'avis de l'Inspectorat général pour l'immigration, rendu en 30 jours au plus, prolongeable de 15. Un point qui surprend souvent : la Roumanie est dans l'espace Schengen depuis le 1er janvier 2025, mais ce visa n'autorise l'entrée QU'EN ROUMANIE — il ne donne pas le droit de voyager ni de résider dans les autres pays Schengen ou de l'UE. Il est accordé pour 90 jours, avec un ou plusieurs voyages. Sur les moyens de subsistance, deux chiffres officiels coexistent et nous ne tranchons pas : l'IGI exige au moins le salaire de base minimum brut national par mois pour toute la période du visa ; le portail Study in Romania parle d'au moins 2 000 euros sur le compte. Prévoyez le plus exigeant.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_visa',
+  +       phaseDepart: true,
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Scrisoare de acceptare la studii délivrée par le ministère de l'Éducation",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Preuve du paiement des frais de scolarité pour au moins une année',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Preuve des moyens de subsistance pour toute la période inscrite dans le visa',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Preuve de la connaissance de la langue d'enseignement, sauf pour l'année préparatoire de roumain",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: true,
+  +           nom: 'Certificat de casier judiciaire ou document de même valeur juridique',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Assurance médicale de voyage couvrant le rapatriement, les soins et l'hospitalisation d'urgence ou le décès, valable dans tous les États membres, couverture minimale 30 000 EUR",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Accord des parents ou du tuteur, si vous êtes mineur',
+  +           tailleMax: null,
+  +           traduction: false
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_scrisoare',
+  +         'ro_scolarite'
+  +       ],
+  +       preuve: 'recu',
+  +       source: 'https://igi.mai.gov.ro/studii/',
+  +       titre: 'Demander mon visa de long séjour pour études (D/SD)',
+  +       type: 'visa',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "L'inscription se fait selon le calendrier de l'établissement, AU PLUS TARD à la fin du premier semestre de l'année universitaire pour laquelle l'acceptation a été émise. Présentez les documents de votre dossier EN ORIGINAL, visés pour authentification par l'ambassade de Roumanie du pays émetteur ou apostillés selon le cas, avec la scrisoare de acceptare et votre passeport portant un visa valable en scope « études ». Les universités peuvent exiger que tous les documents soient accompagnés de copies authentifiées ET de traductions légalisées en roumain : demandez leur liste avant de partir. Vous présentez aussi le certificat médical attestant votre aptitude aux études et l'absence de maladies contagieuses. Vous devez ressortir avec votre contrat d'études signé et votre statut d'étudiant inscrit.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_inmatriculare',
+  +       phaseDepart: true,
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: true,
+  +           nom: 'Dossier complet en documents originaux',
+  +           tailleMax: null,
+  +           traduction: true
+  +         },
+  +         {
+  +           format: 'original + copie',
+  +           legalisation: false,
+  +           nom: 'Scrisoare de acceptare la studii',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original + copie',
+  +           legalisation: false,
+  +           nom: 'Passeport avec visa D/SD valable',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Certificat médical d'aptitude aux études et d'absence de maladies contagieuses",
+  +           tailleMax: null,
+  +           traduction: true
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_visa',
+  +         'ro_langue'
+  +       ],
+  +       preuve: 'recu',
+  +       source: 'https://www.edu.ro/studenti%20non%20ue',
+  +       titre: "M'inscrire (înmatriculare) à l'université",
+  +       type: 'confirmation',
+  +       verifieLe: '2026-09-13'
+  +     },
+  +     {
+  +       consigne: "Votre visa ne vaut que 90 jours. Adressez-vous au service territorial de l'Inspectorat général pour l'immigration du département où vous résidez PENDANT LES 30 PREMIERS JOURS suivant votre entrée, et en tout état de cause déposez votre dossier personnellement AU MOINS 30 JOURS AVANT l'expiration du droit de séjour accordé par le visa ; le dépôt en ligne est également possible sur le portail de l'IGI. La demande est tranchée en 30 jours à compter du dépôt, prolongeables de 15 si des vérifications supplémentaires sont nécessaires. Le permis de séjour temporaire coûte 265 lei TVA comprise, payables aux caisses ou automates de CEC BANK ; les boursiers de l'État roumain l'obtiennent avec exonération des taxes. Il est valable UN AN et se renouvelle chaque année, au moins 30 jours avant l'expiration du précédent ; la scrisoare de acceptare n'est demandée qu'à la première prolongation. Enfin, les étudiants étrangers ayant atteint 26 ans doivent présenter une assurance sociale de santé au titre de la Loi n° 95/2006 : sur son coût, deux pages officielles du même portail se contredisent (463 €/an d'un côté, « à partir de 12 €/mois » de l'autre), nous ne tranchons pas à leur place.",
+  +       echeance: null,
+  +       fiabilite: 'verifie_source_officielle',
+  +       id: 'ro_permis',
+  +       phaseDepart: true,
+  +       pieces: [
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Cerere — formulaire de demande',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original + copie',
+  +           legalisation: false,
+  +           nom: 'Document de franchissement de la frontière (passeport, titre de voyage)',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Scrisoare de acceptare la studii, uniquement à la première prolongation',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Adeverință de l'établissement prouvant l'inscription en formation à fréquence de jour",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Preuve des moyens de subsistance pour au moins 6 mois',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original + copie',
+  +           legalisation: false,
+  +           nom: "Preuve de la détention légale de l'espace d'habitation",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Adeverință medicală',
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: "Preuve d'assurance santé valable en Roumanie (assurance sociale obligatoire à partir de 26 ans)",
+  +           tailleMax: null,
+  +           traduction: false
+  +         },
+  +         {
+  +           format: 'original papier',
+  +           legalisation: false,
+  +           nom: 'Justificatif de paiement des taxes — 265 lei TVA comprise pour le permis',
+  +           tailleMax: null,
+  +           traduction: false
+  +         }
+  +       ],
+  +       prerequis: [
+  +         'ro_inmatriculare'
+  +       ],
+  +       preuve: 'recu',
+  +       source: 'https://igi.mai.gov.ro/studii/',
+  +       titre: "Obtenir mon permis de séjour auprès de l'IGI",
+  +       type: 'complement',
+  +       verifieLe: '2026-09-13'
+  +     }
+  +   ],
+  +   faits: null,
+  +   id: 'roumanie',
+  +   paysDestination: 'Roumanie',
+  +   pointsDeVigilance: [],
+  +   portail: {
+  +     motif: 'studyinromania\\.gov\\.ro',
+  +     nom: 'Study in Romania',
+  +     url: 'https://studyinromania.gov.ro'
+  +   },
+  +   residence: '',
+  +   residenceDocumentee: false,
+  +   residenceRequise: false,
+  +   sources: {
+  +     BOURSES: 'https://scholarships.studyinromania.gov.ro/scholarship-about',
+  +     CNRED: 'https://cnred.edu.ro/',
+  +     COUTS: 'https://studyinromania.gov.ro/faq-costs',
+  +     EVIZA: 'https://eviza.mae.ro/',
+  +     EVIZA_TAXES: 'https://eviza.mae.ro/ro_VisaFees',
+  +     IGI_ETUDES: 'https://igi.mai.gov.ro/studii/',
+  +     IGI_PERMIS: 'https://igi.mai.gov.ro/permis-de-sedere/',
+  +     MINISTERE: 'https://www.edu.ro/studenti%20non%20ue',
+  +     PORTAIL: 'https://studyinromania.gov.ro/procedures',
+  +     RECONNAISSANCE: 'https://studyinromania.gov.ro/recognition',
+  +     SEJOUR_PORTAIL: 'https://studyinromania.gov.ro/residence-procedures',
+  +     VISA: 'https://studyinromania.gov.ro/visa'
+  +   }
+  + }
+  - null
   
-      at TestContext.<anonymous> (file:///C:/Users/HP/Documents/ScholarBridge/test/logo-lockup.test.mjs:102:8)
+      at TestContext.<anonymous> (file:///C:/Users/HP/Documents/ScholarBridge/test/couches-pays.test.mjs:225:8)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1325:25)
       at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
       at Test.postRun (node:internal/test_runner/test:1465:19)
       at Test.run (node:internal/test_runner/test:1390:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
       at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
-    generatedMessage: false,
+    generatedMessage: true,
     code: 'ERR_ASSERTION',
-    actual: 1,
-    expected: 0,
+    actual: {
+      id: 'roumanie',
+      paysDestination: 'Roumanie',
+      portail: { nom: 'Study in Romania', url: 'https://studyinromania.gov.ro', motif: 'studyinromania\\.gov\\.ro' },
+      sources: { MINISTERE: 'https://www.edu.ro/studenti%20non%20ue', PORTAIL: 'https://studyinromania.gov.ro/procedures', RECONNAISSANCE: 'https://studyinromania.gov.ro/recognition', VISA: 'https://studyinromania.gov.ro/visa', SEJOUR_PORTAIL: 'https://studyinromania.gov.ro/residence-procedures', BOURSES: 'https://scholarships.studyinromania.gov.ro/scholarship-about', COUTS: 'https://studyinromania.gov.ro/faq-costs', EVIZA: 'https://eviza.mae.ro/', EVIZA_TAXES: 'https://eviza.mae.ro/ro_VisaFees', IGI_ETUDES: 'https://igi.mai.gov.ro/studii/', IGI_PERMIS: 'https://igi.mai.gov.ro/permis-de-sedere/', CNRED: 'https://cnred.edu.ro/' },
+      residenceRequise: false,
+      etapes: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      residence: '',
+      residenceDocumentee: false,
+      faits: null,
+      absences: null,
+      avertissement: '',
+      pointsDeVigilance: [],
+      couche: null
+    },
+    expected: null,
     operator: 'strictEqual',
     diff: 'simple'
   }

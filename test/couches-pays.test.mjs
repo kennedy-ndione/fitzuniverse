@@ -221,8 +221,16 @@ assert.equal(p.etapes.filter((e) => e.mention).length, 9, pays || "(vide)");
 assert.equal(p.avertissement, "");
 assert.equal(p.etapes.find((e) => e.id === "ef_paiement").montant, undefined, "aucun montant emprunté aux huit pays");
 }
-// Et la destination inconnue reste le seul null.
-assert.equal(trouverProcedure({ paysDestination: "Roumanie", paysResidence: "Sénégal" }), null);
+// LA DESTINATION INCONNUE RESTE LE SEUL NULL — mais « Roumanie » n'en
+// est plus une depuis le lot S3 (2026-09-13), qui lui a écrit son tronc.
+// La même assertion vivait dans test/procedures.test.mjs : elle a été
+// corrigée là-bas et pas ici, et ce fichier l'a rattrapée. On la rejoue
+// donc sur une destination qui, elle, n'a toujours aucun tronc — choisie
+// dynamiquement, pour que le jour où elle en aura un, ce soit encore le
+// test qui le dise plutôt que le silence.
+const sansTronc = ["Japon", "Chine", "Corée du Sud", "Afrique du Sud", "Inde"].find((nom) => !trouverProcedure({ paysDestination: nom }));
+assert.ok(sansTronc, "toutes les destinations témoins ont un tronc : ce test doit être repensé, pas supprimé");
+assert.equal(trouverProcedure({ paysDestination: sansTronc, paysResidence: "Sénégal" }), null);
 });
 
 // ------------------------------------------------------------------
