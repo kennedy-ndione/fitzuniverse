@@ -99,28 +99,74 @@ assert.equal(r.replie, false);
 assert.equal(bandeCout(r.frais.montant, r.frais.devise, { replie: r.replie }), "gratuit");
 });
 
-// Onze « eleve », pas douze : Polytechnique n'affiche qu'un master
-// replié (pas de prix de licence vérifié), donc elle est non classée
-// elle aussi — le repli est la condition, quel que soit le montant.
-test("rejeu : aucune université française en « gratuit » ; Dauphine « abordable », onze « eleve » ; Sorbonne, Paris Cité et Polytechnique non classées mais affichées", () => {
+/**
+* LA RÈGLE, PAS LE DÉCOMPTE (réécrit le 2026-09-13, lots 57 et 58).
+*
+* Ce test comptait « onze eleve, zéro gratuit ». Le lot 57 a rempli dix
+* universités françaises de plus et les deux affirmations sont tombées.
+* La seconde avait raison sur le fond et a rendu un vrai service : elle a
+* révélé que l'Université Grenoble Alpes affichait 178 €, c'est-à-dire le
+* montant APRÈS une exonération qu'il faut DEMANDER et qui est plafonnée
+* à 30 % des inscrits hors UE. Un étudiant aurait budgété 178 € et reçu
+* une facture de 2 902 €. Corrigé par le lot 58.
+*
+* Ce qui est verrouillé ici n'est donc plus un nombre — il bougera à
+* chaque lot — mais LA RÈGLE que cette erreur a mise au jour :
+*
+*   une université ne peut apparaître en bande « gratuit » que si son
+*   exonération est `systematique`, c'est-à-dire accordée d'office.
+*
+* Si une exonération doit être demandée, le montant retenu doit être le
+* TARIF PLEIN, le montant réduit allant dans la note. Toute violation
+* future de cette règle fera tomber ce test avec le nom du coupable.
+*/
+test("règle des bandes françaises : « gratuit » exige une exonération systématique, et le repli laisse « inconnu »", () => {
 const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
 const francaises = catalogue.universities.filter((u) => u.country === "France");
 const niveauxDe = (u) => [...new Set(catalogue.programs.filter((p) => p.universityId === u.id).map((p) => p.level).filter(Boolean))];
-const bandes = new Map();
+const lu = new Map();
 for (const u of francaises) {
 const r = premierNiveauVerifie(u, niveauxDe(u));
-bandes.set(u.name, { bande: bandeCout(r.frais.montant, r.frais.devise, { replie: r.replie }), puce: plat(libellePuce(r.frais, r)) });
+lu.set(u.name, {
+bande: bandeCout(r.frais.montant, r.frais.devise, { replie: r.replie }),
+puce: plat(libellePuce(r.frais, r)),
+politique: (u.exoneration || {}).politique || "inconnue",
+replie: r.replie
+});
 }
-const par = (b) => [...bandes.entries()].filter(([, v]) => v.bande === b).map(([n]) => n).sort();
-assert.deepEqual(par("gratuit"), [], "depuis le 1er septembre 2026, aucune université française n'est gratuite pour un étudiant hors UE");
-assert.deepEqual(par("abordable"), ["Université Paris Dauphine-PSL"]);
-assert.equal(par("eleve").length, 11, par("eleve").join(", "));
-assert.deepEqual(par("inconnu").filter((n) => /polytechnique|Sorbonne Université|Paris Cité/i.test(n)).length, 3);
-assert.equal(bandes.get("Sorbonne Université").bande, "inconnu");
-assert.equal(bandes.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
-assert.equal(bandes.get("Université Paris Cité").bande, "inconnu");
-assert.equal(bandes.get("Université Paris Cité").puce, "à partir de 398 €/an · doctorat");
-assert.equal(bandes.get("École polytechnique").bande, "inconnu");
+const par = (b) => [...lu.entries()].filter(([, v]) => v.bande === b).map(([n]) => n).sort();
+
+// LA RÈGLE. Un prix quasi nul ne s'affiche que si personne n'a de
+// démarche à faire pour l'obtenir.
+for (const nom of par("gratuit")) {
+assert.equal(lu.get(nom).politique, "systematique",
+`${nom} est en bande « gratuit » alors que son exonération est « ${lu.get(nom).politique} » : retenir le tarif plein et mettre le montant réduit dans la note`);
+}
+// Deux l'appliquent d'office au 2026-09-13. La liste peut s'allonger.
+for (const nom of ["Université de Toulouse", "Université Paris-Saclay"]) {
+assert.equal(lu.get(nom).bande, "gratuit", nom);
+assert.equal(lu.get(nom).politique, "systematique", nom);
+}
+// Une exonération systématique n'impose pas « gratuit » : Rennes
+// exonère d'office mais à 650 €, donc « abordable ».
+assert.equal(lu.get("Université de Rennes").bande, "abordable");
+assert.equal(lu.get("Université de Rennes").politique, "systematique");
+
+// LE REPLI. Un niveau replié n'est jamais classé, quel que soit le
+// montant — mais il s'affiche quand même, avec « à partir de ».
+for (const nom of ["Sorbonne Université", "Université Paris Cité", "École polytechnique", "École normale supérieure — PSL"]) {
+assert.equal(lu.get(nom).replie, true, nom);
+assert.equal(lu.get(nom).bande, "inconnu", nom);
+assert.match(lu.get(nom).puce, /^à partir de /, `${nom} : ${lu.get(nom).puce}`);
+}
+assert.equal(lu.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
+assert.equal(lu.get("Université Paris Cité").puce, "à partir de 398 €/an · doctorat");
+
+// L'ESSEC ne publie aucun montant : non classée ET sans prix, ce qui
+// n'est pas la même chose qu'un repli.
+assert.equal(lu.get("ESSEC Business School").bande, "inconnu");
+assert.equal(lu.get("ESSEC Business School").replie, false);
+assert.equal(lu.get("ESSEC Business School").puce, "Frais non vérifiés");
 });
 
 test("SEUIL_GRATUIT / SEUIL_ABORDABLE dérivent de SEUILS_PAR_DEVISE.EUR (source unique)", () => {
@@ -129,7 +175,7 @@ assert.equal(SEUIL_ABORDABLE, SEUILS_PAR_DEVISE.EUR.abordable);
 // Lot SEUILS-DEVISES (2026-09-12) : les sept devises facturées par les
 // universités des lots 48-50, chacune posée à la main au taux BCE du
 // 2026-09-11 puis arrondie — voir le commentaire de SEUILS_PAR_DEVISE.
-assert.deepEqual(Object.keys(SEUILS_PAR_DEVISE), ["EUR", "USD", "GBP", "CHF", "CAD", "JPY", "KRW", "CNY", "ZAR", "MAD", "TRY", "RUB", "TND"]);
+assert.deepEqual(Object.keys(SEUILS_PAR_DEVISE), ["EUR", "USD", "GBP", "CHF", "CAD", "JPY", "KRW", "CNY", "ZAR", "MAD", "TRY", "RUB", "TND", "SEK", "MYR", "INR", "SAR"]);
 for (const [devise, s] of Object.entries(SEUILS_PAR_DEVISE)) {
 assert.ok(Number.isInteger(s.gratuit) && Number.isInteger(s.abordable) && s.gratuit > 0 && s.abordable > s.gratuit, devise);
 }
@@ -138,7 +184,7 @@ assert.ok(Number.isInteger(s.gratuit) && Number.isInteger(s.abordable) && s.grat
 // rond ne doit jamais déformer le jugement).
 // RUB (lot 54) : la BCE ne cote plus le rouble depuis 2022. Taux de
 // référence : Banque centrale de Russie du 12.09.2026, 1 EUR = 97,8728 RUB.
-const TAUX = { USD: 1.1592, GBP: 0.85815, CHF: 0.9451, CAD: 1.6064, JPY: 178.56, KRW: 1556.56, CNY: 7.7762, ZAR: 20.45, MAD: 10.82, TRY: 48.20, RUB: 97.8728, TND: 3.3824 };
+const TAUX = { USD: 1.1592, GBP: 0.85815, CHF: 0.9451, CAD: 1.6064, JPY: 178.56, KRW: 1556.56, CNY: 7.7762, ZAR: 20.45, MAD: 10.82, TRY: 48.20, RUB: 97.8728, TND: 3.3824, SEK: 11.2373, MYR: 4.7185, INR: 110.7675, SAR: 4.3559 };
 for (const [devise, taux] of Object.entries(TAUX)) {
 const s = SEUILS_PAR_DEVISE[devise];
 assert.ok(Math.abs(s.gratuit / (500 * taux) - 1) <= 0.10, `${devise} gratuit hors tolérance`);
@@ -157,6 +203,16 @@ assert.equal(bandeCout(200000, "RUB"), "abordable", "HSE Perm, licence la moins 
 // TND (lot 56) : cours Banque Centrale de Tunisie du 10/09/2026, 1 EUR = 3,3824 TND.
 assert.equal(bandeCout(5000, "TND"), "abordable", "grille nationale tunisienne, licence");
 assert.equal(bandeCout(15000, "TND"), "eleve", "grille nationale tunisienne, etudes medicales");
+// Lot 57 (2026-09-13) : quatre devises de plus.
+assert.equal(bandeCout(192500, "SEK"), "eleve", "KTH, master");
+assert.equal(bandeCout(21600, "MYR"), "eleve", "Universiti Malaya, master");
+assert.equal(bandeCout(129000, "INR"), "abordable", "University of Delhi, master");
+assert.equal(bandeCout(0, "SAR"), "gratuit", "universites publiques saoudiennes : bourse d'Etat");
+// KES et RWF n'ont PAS de seuil, et c'est voulu : aucun cours officiel
+// lisible le 2026-09-13. Verrouille ici pour que l'ajout d'un seuil soit
+// un geste conscient, pas un effet de bord.
+assert.equal(bandeCout(343200, "KES"), "inconnu", "shilling kenyan : seuil non pose");
+assert.equal(bandeCout(1600000, "RWF"), "inconnu", "franc rwandais : seuil non pose");
 assert.equal(bandeCout(1000, "XOF"), "inconnu", "une devise sans seuil reste non classée");
 assert.match(formaterMontant(23000, "CNY"), /^23.000.¥ CN\/an$/, "yuan distingué du yen");
 assert.match(formaterMontant(642960, "JPY"), /^642.960.¥\/an$/);
@@ -375,15 +431,36 @@ assert.equal(plat(libellePuce(vieux.frais, vieux)), "à partir de 3 950 €/an �
 assert.deepEqual(ORDRE_NIVEAUX, ["Licence", "Master", "Doctorat"]);
 });
 
-test("rejeu sur les 26 universités françaises de l'instantané : 15 affichent un montant, pas 12", () => {
+/**
+* PLANCHER, PAS PHOTOGRAPHIE (corrigé le 2026-09-13, lot 57).
+*
+* Ce test exigeait EXACTEMENT 15 universités françaises avec un montant.
+* C'était le relevé du jour où il a été écrit. Le lot 57 en a rempli dix
+* de plus : 25 sur 26, seule l'ESSEC restant sans prix publié. Le test
+* est donc tombé en annonçant 25 au lieu de 15 — en disant la réussite
+* du lot, pas un défaut.
+*
+* Même correction qu'au test pays-preinscription : un PLANCHER. Un lot
+* peut ajouter des prix, jamais en effacer. Le relever est normal ; le
+* BAISSER veut dire qu'on a perdu des données — chercher pourquoi avant
+* de toucher au chiffre.
+*
+* Ce qui reste une égalité, parce que c'est un vrai contrat de code :
+* la liste des fiches REPLIÉES, celles où le niveau affiché n'est pas
+* celui demandé. L'ENS-PSL y est entrée au lot 57 et c'est juste — elle
+* ne délivre pas de licence, un profil licence voit donc son master.
+*/
+test("rejeu sur les 26 universités françaises de l'instantané : au moins 25 affichent un montant", () => {
 const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
 const francaises = catalogue.universities.filter((u) => u.country === "France");
 assert.equal(francaises.length, 26);
 const niveauxDe = (u) => [...new Set(catalogue.programs.filter((p) => p.universityId === u.id).map((p) => p.level).filter(Boolean))];
 const affichees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).frais.etat === "verifie");
-assert.equal(affichees.length, 15, affichees.map((u) => u.name).join(", "));
+// Plancher relevé le 2026-09-13 après le lot 57. Ne jamais le baisser.
+assert.ok(affichees.length >= 25, `${affichees.length} universités françaises affichent un montant, plancher 25 — des prix ont été effacés`);
+assert.ok(affichees.length <= francaises.length, "plus d'affichées que d'établissements");
 const repliees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).replie).map((u) => u.name).sort();
-assert.deepEqual(repliees, ["Sorbonne Université", "Université Paris Cité", "École polytechnique"].sort());
+assert.deepEqual(repliees, ["Sorbonne Université", "Université Paris Cité", "École normale supérieure — PSL", "École polytechnique"].sort());
 });
 
 // ------------------------------------------------------------------

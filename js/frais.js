@@ -99,7 +99,21 @@ RUB: { gratuit: 49000, abordable: 245000 },
 // TND (lot 56) : la BCE ne cote pas le dinar tunisien. Reference :
 // Banque Centrale de Tunisie, cours moyen du 10/09/2026,
 // 1 EUR = 3,3824 TND (https://www.bct.gov.tn).
-TND: { gratuit: 1700, abordable: 8500 }
+TND: { gratuit: 1700, abordable: 8500 },
+// Lot 57 (2026-09-13) : quatre devises de plus, converties depuis les
+// seuils EUR aux cours de reference de la BCE du 11 septembre 2026
+// (1 EUR = 11,2373 SEK ; 4,7185 MYR ; 110,7675 INR), et pour le riyal
+// saoudien — que la BCE ne cote pas — au cours de la Banque centrale de
+// Russie du 12.09.2026, soit 1 EUR = 4,3559 SAR.
+SEK: { gratuit: 5600, abordable: 28000 },
+MYR: { gratuit: 2400, abordable: 11800 },
+INR: { gratuit: 55000, abordable: 277000 },
+SAR: { gratuit: 2200, abordable: 10900 }
+// KES et RWF restent volontairement SANS seuil : aucun cours officiel
+// lisible n'a ete trouve le 2026-09-13 (la table de la Banque centrale
+// du Kenya ne sert qu'un historique de 2024, celle du Rwanda est en
+// erreur). Les montants s'affichent, la bande reste « inconnu » — c'est
+// le comportement voulu pour une devise sans seuil pose a la main.
 };
 
 // Compatibilité : les deux anciens noms restent exportés, mais dérivés
@@ -145,7 +159,7 @@ const NIVEAUX = { licence: "licence", master: "master", doctorat: "doctorat" };
 // « ¥ CN » et non « ¥ » pour le yuan : le yen et le yuan partagent le
 // symbole, et Tokyo comme Fudan sont au catalogue — l'ambiguïté coûterait
 // un facteur 25 à qui lit vite.
-const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN", ZAR: "R", MAD: "MAD", TRY: "TL", RUB: "₽", TND: "DT" };
+const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN", ZAR: "R", MAD: "MAD", TRY: "TL", RUB: "₽", TND: "DT", SEK: "SEK", MYR: "RM", INR: "₹", SAR: "SAR", KES: "KSh", RWF: "RWF" };
 
 function cleNiveau(niveau) {
 if (typeof niveau !== "string") return null;
