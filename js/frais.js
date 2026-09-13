@@ -95,7 +95,11 @@ TRY: { gratuit: 24000, abordable: 120000 },
 // RUB : la BCE ne publie plus de cours du rouble depuis 2022.
 // Référence retenue : Banque centrale de Russie, 12.09.2026,
 // 1 EUR = 97,8728 RUB (https://www.cbr.ru/scripts/XML_daily.asp).
-RUB: { gratuit: 49000, abordable: 245000 }
+RUB: { gratuit: 49000, abordable: 245000 },
+// TND (lot 56) : la BCE ne cote pas le dinar tunisien. Reference :
+// Banque Centrale de Tunisie, cours moyen du 10/09/2026,
+// 1 EUR = 3,3824 TND (https://www.bct.gov.tn).
+TND: { gratuit: 1700, abordable: 8500 }
 };
 
 // Compatibilité : les deux anciens noms restent exportés, mais dérivés
@@ -141,7 +145,7 @@ const NIVEAUX = { licence: "licence", master: "master", doctorat: "doctorat" };
 // « ¥ CN » et non « ¥ » pour le yuan : le yen et le yuan partagent le
 // symbole, et Tokyo comme Fudan sont au catalogue — l'ambiguïté coûterait
 // un facteur 25 à qui lit vite.
-const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN", ZAR: "R", MAD: "MAD", TRY: "TL", RUB: "₽" };
+const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN", ZAR: "R", MAD: "MAD", TRY: "TL", RUB: "₽", TND: "DT" };
 
 function cleNiveau(niveau) {
 if (typeof niveau !== "string") return null;
