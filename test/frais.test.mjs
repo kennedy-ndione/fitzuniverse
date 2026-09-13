@@ -129,14 +129,14 @@ assert.equal(SEUIL_ABORDABLE, SEUILS_PAR_DEVISE.EUR.abordable);
 // Lot SEUILS-DEVISES (2026-09-12) : les sept devises facturées par les
 // universités des lots 48-50, chacune posée à la main au taux BCE du
 // 2026-09-11 puis arrondie — voir le commentaire de SEUILS_PAR_DEVISE.
-assert.deepEqual(Object.keys(SEUILS_PAR_DEVISE), ["EUR", "USD", "GBP", "CHF", "CAD", "JPY", "KRW", "CNY"]);
+assert.deepEqual(Object.keys(SEUILS_PAR_DEVISE), ["EUR", "USD", "GBP", "CHF", "CAD", "JPY", "KRW", "CNY", "ZAR", "MAD", "TRY"]);
 for (const [devise, s] of Object.entries(SEUILS_PAR_DEVISE)) {
 assert.ok(Number.isInteger(s.gratuit) && Number.isInteger(s.abordable) && s.gratuit > 0 && s.abordable > s.gratuit, devise);
 }
 // Les seuils sont les 500 € / 2 500 € du jugement Hubs exprimés dans la
 // devise : à ±10 % près du taux BCE du 2026-09-11 (l'arrondi à un chiffre
 // rond ne doit jamais déformer le jugement).
-const TAUX = { USD: 1.1592, GBP: 0.85815, CHF: 0.9451, CAD: 1.6064, JPY: 178.56, KRW: 1556.56, CNY: 7.7762 };
+const TAUX = { USD: 1.1592, GBP: 0.85815, CHF: 0.9451, CAD: 1.6064, JPY: 178.56, KRW: 1556.56, CNY: 7.7762, ZAR: 20.45, MAD: 10.82, TRY: 48.20 };
 for (const [devise, taux] of Object.entries(TAUX)) {
 const s = SEUILS_PAR_DEVISE[devise];
 assert.ok(Math.abs(s.gratuit / (500 * taux) - 1) <= 0.10, `${devise} gratuit hors tolérance`);
@@ -147,7 +147,10 @@ assert.equal(bandeCout(642960, "JPY"), "eleve");
 assert.equal(bandeCout(390, "EUR"), "gratuit");
 assert.equal(bandeCout(4380, "CHF"), "eleve");
 assert.equal(bandeCout(23000, "CNY"), "eleve");
-assert.equal(bandeCout(1000, "MAD"), "inconnu", "une devise sans seuil reste non classée");
+assert.equal(bandeCout(176, "EUR"), "gratuit", "Trieste : exonérée, seuls timbre et taxe régionale");
+assert.equal(bandeCout(139300, "ZAR"), "eleve");
+assert.equal(bandeCout(79000, "TRY"), "abordable", "ITU, licence lettres et sciences");
+assert.equal(bandeCout(1000, "XOF"), "inconnu", "une devise sans seuil reste non classée");
 assert.match(formaterMontant(23000, "CNY"), /^23.000.¥ CN\/an$/, "yuan distingué du yen");
 assert.match(formaterMontant(642960, "JPY"), /^642.960.¥\/an$/);
 });
@@ -270,8 +273,8 @@ test("bandeCout : une devise sans seuils posés reste « inconnu » — jamais c
 assert.equal(bandeCout(0, "EUR"), "gratuit");
 // USD a ses seuils depuis le lot SEUILS-DEVISES (2026-09-12) : la devise
 // « sans seuils » de ce test devient la livre turque, absente du tableau.
-assert.equal(bandeCout(450, "TRY"), "inconnu");
-assert.equal(bandeCout(12000, "MAD"), "inconnu", "MAD absent du tableau tant que le lot D2 n'a pas posé ses seuils");
+assert.equal(bandeCout(450, "XOF"), "inconnu");
+assert.equal(bandeCout(12000, "XOF"), "inconnu", "une devise sans seuils posés reste non classée");
 assert.equal(bandeCout(450, "EUR"), "gratuit");
 });
 
