@@ -86,7 +86,16 @@ CHF: { gratuit: 500, abordable: 2400 },
 CAD: { gratuit: 800, abordable: 4000 },
 JPY: { gratuit: 90000, abordable: 450000 },
 KRW: { gratuit: 800000, abordable: 4000000 },
-CNY: { gratuit: 4000, abordable: 20000 }
+CNY: { gratuit: 4000, abordable: 20000 },
+// Rand, dirham, livre turque, rouble : ajoutés avec les lots 53 et 54.
+// Convertis depuis les seuils EUR au taux du jour, puis arrondis.
+ZAR: { gratuit: 10000, abordable: 50000 },
+MAD: { gratuit: 5500, abordable: 27000 },
+TRY: { gratuit: 24000, abordable: 120000 },
+// RUB : la BCE ne publie plus de cours du rouble depuis 2022.
+// Référence retenue : Banque centrale de Russie, 12.09.2026,
+// 1 EUR = 97,8728 RUB (https://www.cbr.ru/scripts/XML_daily.asp).
+RUB: { gratuit: 49000, abordable: 245000 }
 };
 
 // Compatibilité : les deux anciens noms restent exportés, mais dérivés
@@ -132,7 +141,7 @@ const NIVEAUX = { licence: "licence", master: "master", doctorat: "doctorat" };
 // « ¥ CN » et non « ¥ » pour le yuan : le yen et le yuan partagent le
 // symbole, et Tokyo comme Fudan sont au catalogue — l'ambiguïté coûterait
 // un facteur 25 à qui lit vite.
-const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN" };
+const SYMBOLES = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF", CAD: "$ CA", JPY: "¥", KRW: "₩", CNY: "¥ CN", ZAR: "R", MAD: "MAD", TRY: "TL", RUB: "₽" };
 
 function cleNiveau(niveau) {
 if (typeof niveau !== "string") return null;

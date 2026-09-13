@@ -74,20 +74,63 @@ assert.deepEqual(PAYS.filter((p) => p.procedure === "documentee").map((p) => p.n
 assert.equal(PAYS.find((p) => p.nom === "France").procedure, "en_cours");
 });
 
-test("etatDunPays(France, catalogue.json) rejoue le lot D2 : 26 établissements, 15 coûts vérifiés", () => {
-const france = PAYS.find((p) => p.nom === "France");
-const etat = etatDunPays(france, catalogue);
-assert.equal(etat.etablissements, 26);
-assert.equal(etat.coutsVerifies, 15);
-assert.equal(etat.procedure, "en_cours");
-// La forme du chargeur du site (universites) donne le même compte.
-assert.deepEqual(etatDunPays(france, { universites: catalogue.universities }), etat);
-// Aucun autre pays n'a de coût vérifié : le lot D2 n'a touché que la France.
-for (const p of PAYS.filter((x) => x.nom !== "France")) {
+/**
+* PLANCHERS, PAS PHOTOGRAPHIE (corrigé le 2026-09-13).
+*
+* Ce test affirmait : « aucun autre pays que la France n'a de coût
+* vérifié — le lot D2 n'a touché que la France ». C'était vrai le jour
+* du lot D2. Ça a cessé de l'être au lot 48, quand le chantier des frais
+* réels a commencé à remplir toutes les nationalités : la Turquie a
+* aujourd'hui 3 coûts vérifiés, l'Italie 11, le Canada 3.
+*
+* Le test avait donc raison de tomber — il disait le contraire de ce que
+* le catalogue contient. Mais l'égalité stricte était le mauvais outil :
+* elle retombera en rouge à CHAQUE lot de frais, et un test qu'on
+* rafistole à chaque fois finit par être modifié sans y penser, ce qui
+* est exactement ce qu'il devait empêcher.
+*
+* Ce qui est gardé ici est ce qui doit vraiment tenir :
+*   - un PLANCHER par pays, jamais une égalité — un lot peut ajouter des
+*     coûts, jamais en effacer. Une régression (champ écrasé, export
+*     parti d'une sauvegarde ancienne) fait tomber le test ; un lot qui
+*     enrichit ne le fait pas ;
+*   - la COHÉRENCE : on ne peut pas avoir plus de coûts vérifiés que
+*     d'établissements ;
+*   - l'accord entre les deux formes de catalogue (universities /
+*     universites), qui est un vrai contrat de code.
+*
+* Relever un plancher est légitime et attendu. Le BAISSER veut dire
+* qu'on a perdu des données : chercher pourquoi avant de toucher au
+* chiffre.
+*/
+test("etatDunPays : planchers par pays, cohérence, et accord des deux formes de catalogue", () => {
+// Relevé du 2026-09-13, après le lot 54. Ce sont des minimums.
+const PLANCHERS = {
+France: { etablissements: 26, coutsVerifies: 15 },
+Roumanie: { etablissements: 2, coutsVerifies: 0 },
+Turquie: { etablissements: 6, coutsVerifies: 3 },
+Maroc: { etablissements: 5, coutsVerifies: 1 },
+Italie: { etablissements: 16, coutsVerifies: 9 },
+Allemagne: { etablissements: 3, coutsVerifies: 2 },
+Canada: { etablissements: 3, coutsVerifies: 3 }
+};
+assert.deepEqual(Object.keys(PLANCHERS).sort(), PAYS.map((p) => p.nom).sort(), "un plancher par pays, ni plus ni moins");
+
+for (const p of PAYS) {
 const e = etatDunPays(p, catalogue);
-assert.ok(e.etablissements > 0, `${p.nom} : aucun établissement au catalogue`);
-assert.equal(e.coutsVerifies, 0, `${p.nom} : coût vérifié inattendu`);
+const min = PLANCHERS[p.nom];
+assert.ok(e.etablissements >= min.etablissements, `${p.nom} : ${e.etablissements} établissements, plancher ${min.etablissements} — des données ont été perdues`);
+assert.ok(e.coutsVerifies >= min.coutsVerifies, `${p.nom} : ${e.coutsVerifies} coûts vérifiés, plancher ${min.coutsVerifies} — des frais ont été effacés`);
+assert.ok(e.coutsVerifies <= e.etablissements, `${p.nom} : ${e.coutsVerifies} coûts pour ${e.etablissements} établissements`);
+assert.equal(e.procedure, p.procedure);
+// La forme du chargeur du site (universites) donne le même compte.
+assert.deepEqual(etatDunPays(p, { universites: catalogue.universities }), e, `${p.nom} : les deux formes de catalogue divergent`);
 }
+
+// La France reste le seul pays « en_cours », et son compte est celui
+// que la page annonce.
+const france = PAYS.find((p) => p.nom === "France");
+assert.equal(etatDunPays(france, catalogue).procedure, "en_cours");
 assert.deepEqual(etatDunPays(france, null), { etablissements: 0, coutsVerifies: 0, procedure: "en_cours" });
 });
 
