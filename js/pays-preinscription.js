@@ -190,17 +190,55 @@ nom: "Roumanie",
 ordre: 2,
 code: "ro",
 langue: ["français", "anglais", "allemand", "roumain"],
-portail: null,
-procedure: "a_venir",
+portail: { nom: "Study in Romania", url: "https://studyinromania.gov.ro" },
+procedure: "documentee",
 accompagnement: "a_venir",
+// Lot S3 (2026-09-13) : le fait d'avant venait de etudier-en-roumanie.com,
+// un agrégateur — interdit par la doctrine du dépôt, et faux sur un point :
+// il présentait la lettre d'acceptation comme une approbation ministérielle
+// consécutive à une « pré-acceptation », en taisant que c'est l'UNIVERSITÉ
+// qui saisit le ministère, jamais le candidat. Les cinq faits ci-dessous
+// ont été lus le 2026-09-13 sur studyinromania.gov.ro, eviza.mae.ro et
+// igi.mai.gov.ro.
 faits: [
 {
-texte: "Admission sur dossier : lettre d'acceptation délivrée après pré-acceptation par l'université puis approbation du ministère. Un dossier incomplet est rejeté sans explication. Frais de traitement de 100 à 250 € selon l'université. Programmes en français, anglais, allemand ou roumain.",
-source: "https://etudier-en-roumanie.com/etudiants-internationaux-en-roumanie/citoyens-non-eu-eea-et-swiss/103-acceptation-roumanie.html",
-verifieLe: "2026-09-07"
+cle: "acceptation",
+diffusion: "public",
+texte: "La lettre d'acceptation aux études (scrisoare de acceptare la studii) est délivrée par le ministère de l'Éducation, pas par l'université : c'est l'université qui évalue le dossier puis saisit le ministère, dont le délai maximal de traitement est de 30 jours ouvrables.",
+source: "https://studyinromania.gov.ro/procedures",
+verifieLe: "2026-09-13"
+},
+{
+cle: "droits",
+diffusion: "public",
+texte: "Frais de scolarité pour les non-UE : d'environ 400 € à près de 9 000 € par an selon le domaine, publiés programme par programme par chaque université. Le plancher légal en devises est fixé par l'Ordonnance du Gouvernement n° 22/2009 ; ses montants ne sont pas reproduits sur la page du ministère.",
+source: "https://studyinromania.gov.ro/faq-costs",
+verifieLe: "2026-09-13"
+},
+{
+cle: "visa",
+diffusion: "public",
+texte: "Visa de long séjour pour études (D/SD) : 300 € pour les demandes transmises via le portail e-Viza à partir du 27 avril 2026, contre 120 € auparavant. Décision en 30 jours au plus, après avis de l'Inspectorat général pour l'immigration.",
+montant: 300, devise: "EUR",
+source: "https://eviza.mae.ro/ro_VisaFees",
+verifieLe: "2026-09-13"
+},
+{
+cle: "sejour",
+diffusion: "client",
+texte: "Le visa ne vaut que 90 jours : le permis de séjour temporaire, 265 lei TVA comprise, se dépose dans les 30 premiers jours suivant l'entrée et au plus tard 30 jours avant l'expiration du visa. Il est valable un an et se renouvelle chaque année.",
+source: "https://igi.mai.gov.ro/studii/",
+verifieLe: "2026-09-13"
+},
+{
+cle: "bourse",
+diffusion: "public",
+texte: "Bourses du ministère roumain des Affaires étrangères : candidature exclusivement en ligne sur la plateforme officielle, du 16 février au 31 mars 2026, résultats vers le 15 juillet. Ni médecine, ni médecine dentaire, ni pharmacie ; licence et master uniquement en roumain.",
+source: "https://scholarships.studyinromania.gov.ro/scholarship-about",
+verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Admission sur dossier, possible en français, dans l'espace Schengen. Le coût annuel des études n'a pas encore été vérifié."
+positionnement: "Admission sur dossier, possible en français, dans l'espace Schengen — mais le visa roumain n'ouvre que la Roumanie. Toute la procédure tient à une pièce : la lettre d'acceptation du ministère."
 },
 
 {
@@ -209,18 +247,56 @@ nom: "Turquie",
 ordre: 3,
 code: "tr",
 langue: ["turc", "anglais"],
-portail: null,
-procedure: "a_venir",
+portail: { nom: "Study in Türkiye (YÖK)", url: "https://studyinturkiye.gov.tr/" },
+procedure: "documentee",
 accompagnement: "a_venir",
+// Lot S3 (2026-09-13) : le fait d'avant venait de study-abroad.org, un
+// agrégateur. Les fourchettes de frais qu'il donnait ne sont publiées par
+// aucune source officielle — aucun barème national n'existe, chaque
+// université fixe les siens — et le catalogue porte désormais trois coûts
+// turcs réellement vérifiés. Les faits ci-dessous ont été lus le
+// 2026-09-13 sur turkiyeburslari.gov.tr, studyinturkiye.gov.tr,
+// edenklik.meb.gov.tr et goc.gov.tr.
 faits: [
 {
-texte: "Universités publiques : de 500 à 4 000 $ par an ; universités de fondation : de 5 000 à 20 000 $ par an. La licence en université publique passe par l'examen YÖS. Plus de 250 000 étudiants internationaux.",
-source: "https://www.study-abroad.org/fr/etudier-en-turquie/",
-verifieLe: "2026-09-07"
+cle: "bourse",
+diffusion: "public",
+texte: "Türkiye Bursları : une seule période de candidature par an, du 10 janvier au 20 février, sur un système unique. Évaluation en mars-avril, entretiens d'avril à juin, résultats début août, départs en septembre. Il n'existe aucune session de rattrapage.",
+source: "https://turkiyeburslari.gov.tr/announcements/turkiye-scholarships-2026-applications-121",
+verifieLe: "2026-09-13"
+},
+{
+cle: "bourseMontant",
+diffusion: "public",
+texte: "La bourse d'État couvre le placement en université, les frais de scolarité, une année de cours de turc, l'hébergement, l'assurance maladie et le billet d'avion. Allocation mensuelle : 4 500 TL en licence, 6 500 TL en master, 9 000 TL en doctorat.",
+montant: 4500, devise: "TRY",
+source: "https://turkiyeburslari.gov.tr/fulltimeprograms",
+verifieLe: "2026-09-13"
+},
+{
+cle: "denklik",
+diffusion: "public",
+texte: "L'équivalence du diplôme de fin de secondaire (denklik) est délivrée par le ministère de l'ÉDUCATION NATIONALE, pas par le YÖK, via le système e-Denklik : 227 centres, dont 81 à l'étranger, ce qui permet d'engager la démarche avant le départ.",
+source: "https://edenklik.meb.gov.tr/",
+verifieLe: "2026-09-13"
+},
+{
+cle: "sejour",
+diffusion: "client",
+texte: "Permis de séjour étudiant : demande en ligne gratuite sur e-ikamet, uniquement depuis la Turquie. La carte coûte 964,00 TL en 2026, sans exemption ; le droit de séjour n'est pas perçu pour les étudiants des écoles et facultés turques. La date de référence est l'expiration du visa, avec 10 jours de tolérance.",
+montant: 964, devise: "TRY",
+source: "https://www.goc.gov.tr/ikamet-sss",
+verifieLe: "2026-09-13"
+},
+{
+cle: "sante",
+diffusion: "client",
+texte: "L'assurance maladie publique (GSS) doit être demandée dans les trois mois suivant l'inscription universitaire. Passé ce délai, le droit est perdu et une assurance privée devient obligatoire.",
+source: "https://studyinturkiye.gov.tr/StudyinTurkey/ShowDetail?rID=aOSryNclUYg=&&cId=PE4Nr0mMoY4=",
+verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Un très gros volume d'accueil. Pas cher ET accessible suppose de passer l'examen YÖS.",
-avertissement: "La bourse d'État turque est un pari à très faible probabilité : elle se tente, elle ne se planifie pas."
+positionnement: "Un très gros volume d'accueil, et deux voies distinctes : la bourse d'État, qui place elle-même ses lauréats, ou l'autofinancement, qui passe par l'examen TR-YÖS et une candidature par université.",
 },
 
 {
@@ -229,11 +305,52 @@ nom: "Maroc",
 ordre: 4,
 code: "ma",
 langue: ["français", "arabe"],
-portail: null,
-procedure: "a_venir",
+portail: { nom: "AMCI — Agence Marocaine de Coopération Internationale", url: "https://www.amci.ma/" },
+procedure: "documentee",
 accompagnement: "a_venir",
-faits: [],
-positionnement: "Proche, francophone, visa simple : un hub d'admission autofinancée plutôt que de bourses. Dans le public, l'admission des étudiants étrangers passe surtout par les quotas de l'AMCI, par voie diplomatique. Le coût du privé n'a pas encore été vérifié."
+// Lot S3 (2026-09-13) : ce pays n'avait AUCUN fait — sa carte publique
+// était donc une promesse sans une seule ligne vérifiable. Les cinq faits
+// ci-dessous ont été lus le 2026-09-13 sur fr.diplomatie.ma, consulat.ma,
+// uca.ma, um5.ac.ma et aui.ma.
+faits: [
+{
+cle: "porteEntree",
+diffusion: "public",
+texte: "Pour toute université publique, il n'existe aucune candidature directe : le dossier part de l'autorité compétente du pays d'origine et passe par la voie diplomatique jusqu'à l'AMCI. L'Université Cadi Ayyad l'écrit — « Tout dossier non transmis par l'AMCI ne sera pas pris en considération ».",
+source: "https://www.uca.ma/fr/page/agence-marocaine-de-la-cooperation-internationale-amci",
+verifieLe: "2026-09-13"
+},
+{
+cle: "calendrier",
+diffusion: "public",
+texte: "Les dossiers doivent parvenir à l'AMCI avant le 31 juillet de chaque année. C'est la seule date publiée : les délais nationaux de dépôt, eux, sont communiqués chaque année par l'Agence aux représentations diplomatiques marocaines, et ferment plus tôt.",
+source: "https://fr.diplomatie.ma/fr/etudier-au-maroc",
+verifieLe: "2026-09-13"
+},
+{
+cle: "visa",
+diffusion: "public",
+texte: "Dispense de visa d'entrée au Maroc : Sénégal, Côte d'Ivoire, Burkina Faso, Togo, Niger et Gabon sont dispensés ; Mali, Guinée (Conakry) et Congo-Brazzaville le sont avec une AEVM à demander en ligne. Le Bénin et le Cameroun ne figurent pas sur la liste : visa requis.",
+source: "https://www.consulat.ma/fr/liste-des-pays-dont-les-ressortissants-sont-dispenses-du-visa-dentree-au-maroc",
+verifieLe: "2026-09-13"
+},
+{
+cle: "piegeVisa",
+diffusion: "public",
+texte: "« Le changement de type de visa déjà obtenu n'est pas autorisé une fois son titulaire entré sur le territoire marocain » : entrer en touriste pour s'inscrire ensuite est impossible, il faut ressortir et redemander depuis le pays de résidence. Et une dispense de visa ne dispense pas du titre de séjour.",
+source: "https://www.consulat.ma/fr/visas-ordinaires",
+verifieLe: "2026-09-13"
+},
+{
+cle: "voiePrivee",
+diffusion: "public",
+texte: "Deux établissements admettent en direct, sans passer par l'AMCI : l'UM6P, dont chaque programme affiche sa propre date de clôture, et Al Akhawayn, qui publie un coût total estimé de 77 790 MAD par an — scolarité 50 400, logement 5 880, restauration 8 500, inscription 5 100, et frais annexes.",
+montant: 77790, devise: "MAD",
+source: "https://aui.ma/admission-aid/internationals",
+verifieLe: "2026-09-13"
+}
+],
+positionnement: "Proche, francophone, souvent sans visa : mais dans le public, la porte d'entrée est diplomatique et se ferme le 31 juillet. Pour candidater soi-même, il faut viser le privé — UM6P ou Al Akhawayn."
 },
 
 {
@@ -242,17 +359,78 @@ nom: "Italie",
 ordre: 5,
 code: "it",
 langue: ["italien", "anglais"],
-portail: { nom: "Universitaly", url: "https://www.universitaly.it/" },
-procedure: "a_venir",
+portail: { nom: "Universitaly", url: "https://www.universitaly.it/it/studenti-stranieri" },
+// Passée à « documentee » le 2026-09-13, en fin de journée : les quatre
+// PDF officiels (circulaire, Allegato 1, Allegato 2, FAQ) ont été lus
+// page par page après que Charles les a ouverts lui-même — le serveur du
+// ministère interdit l'accès automatisé. Les treize étapes sont
+// désormais vérifiées sur la source, et quatre erreurs ont été corrigées.
+procedure: "documentee",
 accompagnement: "a_venir",
+// Lot S3 (2026-09-13) : le fait d'avant venait de study-abroad.org, un
+// agrégateur, et le catalogue porte désormais onze coûts italiens
+// réellement vérifiés. Les faits ci-dessous ont été lus le 2026-09-13 sur
+// universitaly.it, esteri.it et portaleimmigrazione.it.
 faits: [
 {
-texte: "Étudiant non européen sans ISEE : de 1 000 à 4 000 € par an en université publique. Les bourses régionales DSU (exonération, logement, repas) sont ouvertes aux étudiants internationaux sur critères de revenu. Admission via Universitaly.",
-source: "https://www.study-abroad.org/fr/etudier-en-italie/couts-et-financement/",
-verifieLe: "2026-09-07"
+cle: "portail",
+diffusion: "public",
+texte: "Universitaly est le seul portail officiel de préinscription, et il est gratuit. Sans préinscription validée par l'établissement, aucun consulat italien n'accepte une demande de visa d'études — et un candidat titulaire d'un titre étranger ne peut indiquer qu'UN SEUL cours : il n'y a pas de vœux multiples.",
+source: "https://www.universitaly.it/it/studenti-stranieri",
+verifieLe: "2026-09-13"
+},
+{
+cle: "quota",
+diffusion: "public",
+texte: "Nouveauté 2026-2027 : un établissement ne peut valider que 120 % de ses places réservées aux étudiants étrangers. Passé ce plafond, un système de suivi suspend toute nouvelle validation — une préinscription peut donc rester sans suite pour épuisement du quota, quelle que soit la qualité du dossier. Les places ne se libèrent qu'au fil des refus de visa signalés sur le portail : déposer tôt est décisif.",
+source: "https://universitaly-private.cineca.it/uploads/universitaly-pubblico/Circolare_2026-2027_studenti_internazionali.pdf",
+verifieLe: "2026-09-13"
+},
+{
+cle: "titre",
+diffusion: "public",
+texte: "Le diplôme de fin d'études secondaires doit sanctionner au moins 12 années de scolarité. L'année préscolaire compte si elle est obligatoire, officiellement intégrée au parcours national et comprend lecture, écriture et calcul. S'il manque des années, elles se comblent par une ou deux années d'université validées dans le pays d'origine, un titre post-secondaire, ou un foundation course — mais cela n'ouvre que la première année, jamais une abréviation de cursus.",
+source: "https://universitaly-private.cineca.it/uploads/universitaly-pubblico/Allegato_1-Circolare_2026_2027.pdf",
+verifieLe: "2026-09-13"
+},
+{
+cle: "comparabilite",
+diffusion: "client",
+texte: "Piège fréquent : l'université n'est pas tenue d'exiger une attestation CIMEA ou une dichiarazione di valore, mais le CONSULAT, lui, l'exige pour délivrer le visa. « Mon université ne me le demande pas » ne dispense de rien. Et depuis 2026-2027, une préinscription ne peut plus être validée « avec réserve » pour dossier incomplet : la réserve n'est admise que si le diplôme n'est pas encore obtenu, ou si des épreuves doivent être passées en Italie.",
+source: "https://universitaly-private.cineca.it/uploads/universitaly-pubblico/FAQ.pdf",
+verifieLe: "2026-09-13"
+},
+{
+cle: "calendrier",
+diffusion: "public",
+texte: "Année académique 2026/2027 : la demande de visa doit être déposée au plus tard le 30 novembre 2026 pour les cursus ordinaires — Laurea, Laurea Magistrale, diplômes académiques de 1er et 2e niveau. Pour les masters, doctorats et Foundation Courses, pas de date butoir ministérielle, mais jamais après le début des cours.",
+source: "https://ambulaanbaatar.esteri.it/wp-content/uploads/2026/07/Checklist-Visto-studio-immatricolazione-2026-2027_Luglio26.pdf",
+verifieLe: "2026-09-13"
+},
+{
+cle: "ressources",
+diffusion: "public",
+texte: "Moyens de subsistance exigés pour le visa : 10 179,85 € pour l'année, d'origine licite et traçable, hors billet retour et hors frais d'inscription. Les espèces, les garanties de tiers et les cautions bancaires sont refusées, et une candidature à une bourse régionale sans attestation d'attribution ne compte pas.",
+montant: 10179.85, devise: "EUR",
+source: "https://ambulaanbaatar.esteri.it/wp-content/uploads/2026/07/Checklist-Visto-studio-immatricolazione-2026-2027_Luglio26.pdf",
+verifieLe: "2026-09-13"
+},
+{
+cle: "sejour",
+diffusion: "client",
+texte: "Permesso di soggiorno : à demander dans les HUIT JOURS OUVRABLES suivant l'arrivée, auprès de la Questura, via le kit postale. Coût : 16 € de marca da bollo, 30,46 € pour le titre électronique, 30 € d'expédition, plus 40 € de contribution pour un permis de 3 mois à 1 an ou 50 € de 1 à 2 ans.",
+source: "https://www.portaleimmigrazione.it/ITA/tabelleCosti.html",
+verifieLe: "2026-09-13"
+},
+{
+cle: "immatriculation",
+diffusion: "public",
+texte: "À compter du 31 janvier de l'année académique, tout candidat en Laurea qui n'apparaît pas immatriculé sur Universitaly voit son visa d'entrée révoqué, avec signalement simultané à la Questura. L'immatriculation n'est donc pas une formalité de fin de parcours.",
+source: "https://www.universitaly.it/it/studenti-stranieri",
+verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales DSU déjà listées."
+positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales DSU déjà listées. La procédure est entièrement publique et gratuite, mais elle tient à deux dates et à un quota — le 30 novembre pour le visa, le 31 janvier pour l'immatriculation, et 120 % de places validables seulement."
 },
 
 {
@@ -261,18 +439,55 @@ nom: "Allemagne",
 ordre: 6,
 code: "de",
 langue: ["allemand", "anglais"],
-portail: { nom: "uni-assist", url: "https://www.uni-assist.de/" },
-procedure: "a_venir",
+portail: { nom: "uni-assist", url: "https://my.uni-assist.de/" },
+procedure: "documentee",
 accompagnement: "a_venir",
+// Lot S3 (2026-09-13) : le montant du compte bloqué était juste, mais sa
+// source était mygermanuniversity.com, un agrégateur — pour un chiffre que
+// le portail consulaire fédéral publie lui-même. Il est désormais sourcé
+// là. Les quatre autres faits ont été lus le 2026-09-13 sur
+// digital.diplo.de, dakar.diplo.de, uni-assist.de et uni-bonn.de.
 faits: [
 {
-texte: "Compte bloqué exigé pour le visa : 11 904 € par an, soit 992 € par mois, depuis septembre 2024.",
+cle: "ressources",
+diffusion: "public",
+texte: "Compte bloqué exigé pour le visa : au minimum 992 € par mois pour un visa d'études, soit 11 904 € par an, aligné sur les taux maximaux du BAföG (1 091 €/mois, soit 13 092 €/an, pour un visa de recherche de place d'études).",
 montant: 11904, devise: "EUR",
-source: "https://www.mygermanuniversity.com/fr/articles/Germany-Blocked-Account-Amount",
-verifieLe: "2026-09-07"
+montants: { mensuel: 992, annuel: 11904 },
+source: "https://digital.diplo.de/studium/",
+verifieLe: "2026-09-13"
+},
+{
+cle: "banques",
+diffusion: "public",
+texte: "Point décisif pour un candidat africain : l'ambassade d'Allemagne à Dakar n'accepte que les banques allemandes et européennes pour le compte bloqué — les banques africaines sont refusées. Et l'attestation d'ouverture doit indiquer le montant crédité ET la somme disponible chaque mois, sans quoi elle est rejetée.",
+source: "https://dakar.diplo.de/sn-fr/service/visa/sperrkonto-1895102",
+verifieLe: "2026-09-13"
+},
+{
+cle: "fraisDossier",
+diffusion: "public",
+texte: "Frais de dossier uni-assist : 75 € pour le premier cursus choisi, puis 30 € par cursus supplémentaire, quel que soit le nombre d'universités. Même tarif en procédure VPD et pour les Studienkollegs ; le compteur repart à 75 € à chaque nouveau semestre.",
+montant: 75, devise: "EUR",
+source: "https://www.uni-assist.de/en/how-to-apply/pay-all-fees/handling-fees/",
+verifieLe: "2026-09-13"
+},
+{
+cle: "calendrier",
+diffusion: "public",
+texte: "Dates limites les plus courantes : 15 juillet pour une rentrée au semestre d'hiver, 15 janvier pour le semestre d'été. Mais la date opposable est celle que chaque université fixe pour chaque formation, souvent plus précoce — uni-assist recommande de candidater au moins 8 semaines avant.",
+source: "https://www.uni-assist.de/en/how-to-apply/plan-your-application/deadlines-processing-time/",
+verifieLe: "2026-09-13"
+},
+{
+cle: "assurance",
+diffusion: "client",
+texte: "L'immatriculation ne peut pas être finalisée tant que l'université n'a pas reçu une notification ÉLECTRONIQUE émise par une caisse d'assurance maladie légale allemande — et cela vaut même pour un étudiant couvert par une assurance privée, qui doit alors obtenir une exemption délivrée par une caisse légale.",
+source: "https://www.uni-bonn.de/en/studying/application-admission-and-enrollment/insurance-for-students",
+verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Réputée gratuite à étudier — à vérifier Land par Land avant d'y compter — et chère à entrer : le compte bloqué se constitue avant le visa."
+positionnement: "Réputée gratuite à étudier — les universités publiques ne prélèvent pas de frais de scolarité, seulement une contribution sociale par semestre — et chère à entrer : le compte bloqué se constitue avant le visa, dans une banque européenne."
 },
 
 {
@@ -281,18 +496,56 @@ nom: "Canada",
 ordre: 7,
 code: "ca",
 langue: ["anglais", "français"],
-portail: null,
-procedure: "a_venir",
+portail: { nom: "Compte IRCC", url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/ircc-accounts.html" },
+procedure: "documentee",
 accompagnement: "a_venir",
+// Lot S3 (2026-09-13) : le fait d'avant était juste mais sourcé sur
+// visahq.news, un agrégateur — pour une règle qu'IRCC publie lui-même.
+// Il est désormais sourcé sur canada.ca, et quatre faits l'accompagnent,
+// dont celui qui compte le plus : la fin du Volet direct pour les études,
+// que beaucoup de pages non officielles annoncent encore comme en vigueur.
 faits: [
 {
-texte: "Depuis le 1er janvier 2026, les candidats en master et doctorat dans un établissement public sont dispensés de la lettre d'attestation provinciale ou territoriale (PAL/TAL).",
-source: "https://www.visahq.news/fr/2026-01-10/ca/graduate-students-exempt-from-study-permit-cap-as-ircc-drops-provincial-attestation-letter-requirement/",
-verifieLe: "2026-09-07"
+cle: "finVde",
+diffusion: "public",
+texte: "Le Volet direct pour les études (VDE/SDS) et le Nigeria Student Express ont été SUPPRIMÉS le 8 novembre 2024. Le Sénégal et le Maroc en faisaient partie. Il n'existe plus de voie accélérée par pays, plus d'obligation de CPG ni de test de langue à ce titre : tout passe par le volet régulier. Depuis la même date, on ne peut plus changer d'école sur le même permis.",
+source: "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices/end-student-direct-stream-nigeria-student-express.html",
+verifieLe: "2026-09-13"
+},
+{
+cle: "lap",
+diffusion: "public",
+texte: "Depuis le 1er janvier 2026, les étudiants de maîtrise et de doctorat menant à un diplôme dans un établissement d'enseignement désigné PUBLIC sont dispensés de la lettre d'attestation provinciale ou territoriale (LAP/LAT). L'exemption vise les établissements publics, pas les privés.",
+source: "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices/2026-provincial-territorial-allocations-under-international-student-cap.html",
+verifieLe: "2026-09-13"
+},
+{
+cle: "fonds",
+diffusion: "public",
+texte: "Preuve de fonds hors Québec, pour toute demande déposée le 1er septembre 2026 ou après : 23 448 $ CA pour une personne seule sur la première année, hors droits de scolarité et hors transport (29 192 $ pour 2 personnes, 35 888 $ pour 3). Au Québec, le barème du ministère s'applique : 24 617 $ CA pour une personne depuis le 1er janvier 2026.",
+montant: 23448, devise: "CAD",
+source: "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/get-documents/financial-support.html",
+verifieLe: "2026-09-13"
+},
+{
+cle: "frais",
+diffusion: "public",
+texte: "Frais fédéraux : 150 $ CA pour le permis d'études, plus 85 $ CA de biométrie par demandeur, plafonnés à 170 $ CA pour une famille déposant en même temps. L'AVE ou le visa de résident temporaire est délivré automatiquement avec le permis, sans frais supplémentaires.",
+montant: 150, devise: "CAD",
+source: "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/apply.html",
+verifieLe: "2026-09-13"
+},
+{
+cle: "caq",
+diffusion: "public",
+texte: "Québec : le CAQ pour études est obligatoire au-delà de six mois, coûte 135 $ CA depuis le 1er janvier 2026, et se demande sur Arrima AVANT la demande de permis d'études. Le paiement doit être fait dans l'heure suivant l'envoi de la demande, puis les pièces téléversées sous 15 jours.",
+montant: 135, devise: "CAD",
+source: "https://www.quebec.ca/en/education/study-quebec/temporary-selection-studies",
+verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Master et doctorat en établissement public uniquement.",
-avertissement: "Ce n'est pas une destination « pas cher et facile » : les frais sont élevés et les refus de permis fréquents — non chiffrés ici faute de source vérifiée."
+positionnement: "Master et doctorat en établissement public uniquement — c'est aussi le seul profil dispensé de lettre d'attestation provinciale depuis 2026.",
+avertissement: "Ce n'est pas une destination « pas cher et facile » : les frais sont élevés, la preuve de fonds est le premier motif de refus, et le Volet direct pour les études n'existe plus depuis le 8 novembre 2024."
 }
 
 ];

@@ -34,7 +34,7 @@ import { FIABILITE, TYPES_ETAPE, TYPES_PREUVE, RESERVE_A_CONFIRMER, texteConsign
 import { PROCEDURE_FRANCE } from "../js/procedures/france.js";
 import { COUCHE_FRANCE_SENEGAL } from "../js/procedures/residences/france-senegal.js";
 import { COUCHES } from "../js/procedures/residences/index.js";
-import { TRONCS, trouverProcedure, composerProcedure, coucheDeResidence, residencesDocumentees, memePays, portailDocumente, defautsDeProcedure, defautsDeCouche, etapesAConfirmer, codeProcedurePour, libelleProcedureDocumentee, MENTION_RESIDENCE_ABSENTE } from "../js/procedures/index.js";
+import { TRONCS, residenceRequise, trouverProcedure, composerProcedure, coucheDeResidence, residencesDocumentees, memePays, portailDocumente, defautsDeProcedure, defautsDeCouche, etapesAConfirmer, codeProcedurePour, libelleProcedureDocumentee, MENTION_RESIDENCE_ABSENTE } from "../js/procedures/index.js";
 import { computeJourneySteps } from "../js/application-journey.js";
 import { qualifierEtapes, prochaineEtapeFaisable, prochaineAction, avertissementsPrematures } from "../js/next-action.js";
 import { PAYS, CAMPAGNE_FRANCE, jalonDeCampagne, finDeCampagne } from "../js/pays-preinscription.js";
@@ -227,9 +227,20 @@ assert.equal(trouverProcedure({ portailUrl: PASTEL, paysResidence: "Sénégal" }
 assert.equal(trouverProcedure({ paysDestination: "France", paysResidence: TEMOIN }).residenceDocumentee, false);
 assert.equal(trouverProcedure({ paysDestination: "France" }).etapes.length, FR.etapes.length, "sans résidence, les étapes du tronc, toutes");
 assert.equal(trouverProcedure({ portailUrl: PASTEL }).residenceDocumentee, false);
-// La destination inconnue reste le seul null.
-assert.equal(trouverProcedure({ paysDestination: "Roumanie", paysResidence: "Sénégal" }), null);
+// LA DESTINATION INCONNUE RESTE LE SEUL NULL — et depuis le lot S3
+// (2026-09-13), « Roumanie » n'en est plus une : les six destinations
+// manquantes ont leur tronc. Ce test affirmait le contraire, il avait
+// raison de tomber. On le rejoue sur une destination qui, elle, n'a
+// toujours aucun tronc — et c'est le catalogue qui la choisit, pour que
+// le jour où elle en aura un, ce soit encore le test qui le dise.
+const sansTronc = ["Japon", "Chine", "Corée du Sud", "Afrique du Sud", "Inde"].find((nom) => !trouverProcedure({ paysDestination: nom }));
+assert.ok(sansTronc, "toutes les destinations témoins ont un tronc : ce test doit être repensé, pas supprimé");
+assert.equal(trouverProcedure({ paysDestination: sansTronc, paysResidence: "Sénégal" }), null);
 assert.equal(trouverProcedure(), null);
+// Et les sept pays de la page Préinscriptions, eux, en ont tous un.
+for (const pays of PAYS) {
+assert.ok(trouverProcedure({ paysDestination: pays.nom }), `${pays.nom} : aucun tronc — la promesse de la page Préinscriptions est vide pour ce pays`);
+}
 assert.equal(portailDocumente(PASTEL), true);
 assert.equal(portailDocumente("https://formulaires.ens.psl.eu/"), false);
 // LOT S3 : les portails ont quitté l'instantané public (ils étaient
@@ -541,7 +552,10 @@ for (const e of FR.etapes) assert.ok(!texteConsigne(e).toLowerCase().includes(RE
 const douteuse = { ...FR, etapes: FR.etapes.map((e, i) => (i === 0 ? { ...e, fiabilite: "a_confirmer" } : e)) };
 assert.equal(codeProcedurePour(france, douteuse), "en_cours");
 assert.match(libelleProcedureDocumentee(douteuse), /^Procédure documentée depuis les sources publiques ; 1 étape à confirmer$/);
-assert.equal(codeProcedurePour(PAYS.find((p) => p.id === "roumanie"), null), "a_venir");
+// Sans procédure du tout, codeProcedurePour rend le code DÉCLARÉ du
+// pays. Celui de la Roumanie est passé de « a_venir » à « documentee »
+// au lot S3, le jour où son tronc a été écrit.
+assert.equal(codeProcedurePour(PAYS.find((p) => p.id === "roumanie"), null), "documentee");
 // « Pas à pas » demande AUSSI une résidence documentée : une procédure
 // entièrement vérifiée mais sans couche ne le promet pas.
 assert.ok(!/pas à pas/.test(libelleProcedureDocumentee(CI)));
@@ -582,4 +596,108 @@ assert.ok(!src.includes("depuis le ${escapeHtml(procedure.paysResidence)}"), "la
 const apps = lire("applications.js");
 assert.ok(!apps.includes("Procédure Études en France, depuis le Sénégal"), "le titre ne nomme plus le Sénégal pour tout le monde");
 assert.ok(apps.includes("(résidence : ${escapeHtml(residence)})"), "il nomme la résidence du profil");
+});
+
+
+// ------------------------------------------------------------------
+// Lot S3 (2026-09-13) — les six destinations manquantes
+// ------------------------------------------------------------------
+
+test("les sept pays de la page Préinscriptions ont un tronc, et chaque tronc est valide", () => {
+assert.equal(TRONCS.length, 7);
+assert.deepEqual(TRONCS.map((t) => t.paysDestination), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
+for (const tronc of TRONCS) {
+assert.deepEqual(defautsDeProcedure(tronc), [], tronc.id);
+assert.ok(tronc.etapes.length >= 8, `${tronc.id} : ${tronc.etapes.length} étapes, c'est trop peu pour accompagner`);
+assert.match(tronc.portail.url, /^https:\/\//, tronc.id);
+assert.ok(tronc.portail.motif && new RegExp(tronc.portail.motif, "i").test(tronc.portail.url), `${tronc.id} : le motif ne reconnaît pas son propre portail`);
+// Un tronc ne connaît AUCUN pays de résidence.
+assert.equal(tronc.paysResidence, undefined, tronc.id);
+}
+// Le total : ce que l'espace étudiant sait dire, étape par étape.
+assert.ok(TRONCS.reduce((n, t) => n + t.etapes.length, 0) >= 90, "moins de 90 étapes sur sept pays : une destination a maigri");
+});
+
+test("aucun agrégateur dans les sources des six nouveaux troncs", () => {
+// La doctrine du dépôt : une source est une page de l'organisme
+// lui-même. Les agrégateurs se trompent, et surtout ils se trompent
+// SILENCIEUSEMENT — « 7 vœux par niveau » venait de là.
+const INTERDITS = /demarchesetrangers|study-abroad|studyabroad|mygermanuniversity|visahq|etudier-en-roumanie|campus-channel|studies-overseas|eduopinions|mastersportal|studyportals|topuniversities|timeshighereducation|wikipedia/i;
+for (const tronc of TRONCS.filter((t) => t.id !== "france")) {
+for (const url of Object.values(tronc.sources || {})) {
+assert.ok(!INTERDITS.test(url), `${tronc.id} : agrégateur cité — ${url}`);
+assert.match(url, /^https:\/\//, `${tronc.id} : source non https — ${url}`);
+}
+for (const e of tronc.etapes) {
+assert.ok(Object.values(tronc.sources).includes(e.source), `${tronc.id} / ${e.id} : source hors de la table SOURCES`);
+}
+}
+});
+
+test("les six nouveaux troncs n'inventent ni taille de fichier ni échéance", () => {
+for (const tronc of TRONCS.filter((t) => t.id !== "france")) {
+for (const e of tronc.etapes) {
+// Aucune échéance : ces pays n'ont pas de couche de calendrier, et
+// une date recopiée dans une étape vieillirait sans que personne ne
+// le voie. Les dates réelles sont DANS les consignes, avec leur année.
+assert.equal(e.echeance, null, `${tronc.id} / ${e.id} : échéance recopiée`);
+for (const piece of e.pieces || []) {
+assert.ok(piece.nom && piece.nom.trim(), `${tronc.id} / ${e.id} : pièce sans nom`);
+assert.equal(piece.tailleMax, null, `${tronc.id} / ${e.id} : taille « ${piece.tailleMax} » inventée — aucun de ces portails ne la publie`);
+assert.equal(typeof piece.traduction, "boolean", `${tronc.id} / ${e.id} : traduction doit être un booléen, comme en France`);
+assert.equal(typeof piece.legalisation, "boolean", `${tronc.id} / ${e.id}`);
+}
+}
+}
+});
+
+test("residenceRequise : la France l'exige, les six du lot S3 non — et c'est dit", () => {
+assert.equal(residenceRequise(PROCEDURE_FRANCE), true, "Campus France a un espace PAR PAYS : la couche reste nécessaire");
+for (const tronc of TRONCS.filter((t) => t.id !== "france")) {
+assert.equal(residenceRequise(tronc), false, `${tronc.id} : doit déclarer residenceRequise: false`);
+}
+// La conséquence : une destination du lot S3 est « documentee » sans
+// couche, quand aucune de ses étapes n'est « a_confirmer ».
+for (const pays of PAYS) {
+const proc = trouverProcedure({ paysDestination: pays.nom, paysResidence: TEMOIN });
+const attendu = etapesAConfirmer(proc).length === 0 && (proc.residenceDocumentee || proc.residenceRequise === false) ? "documentee" : pays.procedure;
+assert.equal(codeProcedurePour(pays, proc), attendu, pays.nom);
+}
+// La France, elle, ne promet toujours pas « pas à pas » sans couche.
+assert.ok(!/pas à pas/.test(libelleProcedureDocumentee(CI)));
+// L'ITALIE A ÉTÉ COMPLÉTÉE EN FIN DE JOURNÉE (2026-09-13). Elle gardait
+// trois étapes « a_confirmer » parce que leurs faits ne vivaient que
+// dans des PDF que le serveur du ministère refuse aux lecteurs
+// automatiques. Charles a ouvert les quatre documents lui-même ; ils ont
+// été lus page par page, et quatre erreurs ont été corrigées au passage
+// — dont une affirmation fausse sur l'obligation de la dichiarazione di
+// valore. Plus aucune étape n'est à confirmer.
+const italie = trouverProcedure({ paysDestination: "Italie" });
+assert.equal(etapesAConfirmer(italie).length, 0);
+assert.equal(codeProcedurePour(PAYS.find((p) => p.id === "italie"), italie), "documentee");
+// Les faits qui ne pouvaient venir QUE des PDF sont bien là, et sourcés
+// sur eux : si quelqu'un réécrit ces étapes sans rouvrir les documents,
+// ces trois-là tomberont les premiers.
+const textes = italie.etapes.map((e) => e.consigne).join("  ");
+assert.match(textes, /120 %/, "le plafond de validation de 120 % vient de la circulaire");
+assert.match(textes, /12 ANNÉES|12 années/, "la règle des 12 ans vient de l'Allegato 1");
+assert.match(textes, /Laurea Magistrale, Diploma accademico de premier ou de second niveau/, "le périmètre exact de la révocation au 31 janvier");
+assert.ok(italie.etapes.some((e) => e.source === italie.sources.FAQ), "la FAQ ministérielle est citée");
+});
+
+test("chaque tronc marque ses étapes de la phase « Visa & départ », et seulement les bonnes", () => {
+for (const tronc of TRONCS) {
+const depart = tronc.etapes.filter((e) => e.phaseDepart === true);
+assert.ok(depart.length >= 3, `${tronc.id} : ${depart.length} étape(s) de départ, c'est trop peu`);
+// Une étape de départ vient forcément APRÈS la première réponse :
+// on ne demande pas un visa avant d'être admis.
+const premiereReponse = tronc.etapes.findIndex((e) => e.type === "reponse");
+if (premiereReponse >= 0) {
+for (const e of depart) {
+assert.ok(tronc.etapes.indexOf(e) > premiereReponse, `${tronc.id} / ${e.id} : marquée « départ » alors qu'elle précède la première réponse`);
+}
+}
+// Et il y a toujours une étape de type visa parmi elles.
+assert.ok(depart.some((e) => e.type === "visa"), `${tronc.id} : aucune étape de type visa dans la phase départ`);
+}
 });

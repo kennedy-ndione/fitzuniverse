@@ -16,6 +16,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { PROCEDURE, LIBELLES_PROCEDURE, PAYS, lirePays, etatDunPays, libelleProcedure } from "../js/pays-preinscription.js";
+import { trouverProcedure, etapesAConfirmer } from "../js/procedures/index.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
@@ -69,9 +70,60 @@ assert.ok(typeof f.devise === "string" && f.devise, `${p.nom} : montant sans dev
 assert.ok(total >= 7, `au moins un fait par pays sourcé attendu au total, trouvé ${total}`);
 });
 
-test("aucun pays n'est « documentee » aujourd'hui — changer ce test en conscience, pas par accident", () => {
-assert.deepEqual(PAYS.filter((p) => p.procedure === "documentee").map((p) => p.nom), []);
+/**
+ * CE TEST A ÉTÉ CHANGÉ EN CONSCIENCE LE 2026-09-13 (lot S3).
+ *
+ * Il disait : « aucun pays n'est documentee aujourd'hui ». C'était vrai,
+ * et c'était le problème — la page Préinscriptions promettait sept
+ * destinations et n'en documentait aucune, la France comprise. Le lot S3
+ * a écrit les six troncs manquants : Roumanie, Turquie, Maroc, Italie,
+ * Allemagne, Canada. Cinq d'entre eux sont entièrement vérifiés sur
+ * source officielle et passent donc à « documentee ».
+ *
+ * Ce qui remplace l'ancienne garde n'est pas « plus rien » : c'est une
+ * garde PLUS DURE. Un pays ne peut être déclaré « documentee » que s'il
+ * a réellement un tronc, avec des étapes, dont aucune n'est
+ * « a_confirmer ». Déclarer « documentee » un pays sans procédure
+ * redevient donc rouge — ce qui était exactement l'accident que
+ * l'ancienne formulation cherchait à empêcher.
+ */
+test("un pays « documentee » a réellement un tronc complet — seule la France reste « en_cours », et pour une raison nommée", () => {
+for (const pays of PAYS) {
+const procedure = trouverProcedure({ paysDestination: pays.nom });
+assert.ok(procedure, `${pays.nom} : aucun tronc de procédure`);
+if (pays.procedure === "documentee") {
+assert.ok(procedure.etapes.length >= 8, `${pays.nom} : déclaré « documentee » avec ${procedure.etapes.length} étapes`);
+assert.deepEqual(etapesAConfirmer(procedure).map((e) => e.id), [], `${pays.nom} : déclaré « documentee » alors que des étapes restent à confirmer`);
+}
+assert.notEqual(pays.procedure, "a_venir", `${pays.nom} : plus aucun pays ne doit rester « a_venir » depuis le lot S3`);
+}
+// La France reste seule « en_cours », et pour une raison qui lui est
+// propre : elle exige une couche de résidence, parce que Campus France a
+// un espace par pays avec ses frais et son calendrier. Huit pays l'ont ;
+// les autres lisent la procédure sans les montants locaux.
 assert.equal(PAYS.find((p) => p.nom === "France").procedure, "en_cours");
+assert.equal(PAYS.filter((p) => p.procedure === "documentee").length, 6);
+});
+
+test("aucun agrégateur ne source un fait de pays, et chaque pays a un portail officiel", () => {
+// LA DOCTRINE DU DÉPÔT, appliquée aux sept pays et plus seulement à la
+// France. Avant le lot S3, cinq des sept pays avaient leur seul fait
+// sourcé sur un agrégateur — etudier-en-roumanie.com, study-abroad.org,
+// mygermanuniversity.com, visahq.news — et l'un d'eux était faux. Ces
+// sites ne sont pas seulement interdits par principe : ils se trompent,
+// et ils se trompent silencieusement.
+const INTERDITS = /study-abroad|studyabroad|mygermanuniversity|visahq|etudier-en-roumanie|demarchesetrangers|campus-channel|eduopinions|mastersportal|studyportals|topuniversities|timeshighereducation|wikipedia/i;
+for (const pays of PAYS) {
+assert.ok(pays.portail && /^https?:\/\//.test(pays.portail.url), `${pays.nom} : portail officiel manquant`);
+for (const f of pays.faits) {
+assert.ok(!INTERDITS.test(f.source), `${pays.nom} : fait sourcé sur un agrégateur — ${f.source}`);
+}
+// Un pays qu'on affiche publiquement doit avoir de quoi être lu.
+const publics = pays.faits.filter((f) => f.diffusion === "public");
+assert.ok(publics.length >= 1, `${pays.nom} : aucun fait diffusable publiquement`);
+}
+// Et le compte global : sept pays, au moins trente faits sourcés.
+assert.ok(PAYS.reduce((n, p) => n + p.faits.length, 0) >= 30);
 });
 
 /**

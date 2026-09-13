@@ -295,6 +295,7 @@ verifieLe: VERIFIE
 
 {
 id: "ef_confirmation",
+phaseDepart: true,
 type: "confirmation",
 titre: "Confirmer mon choix définitif et télécharger l'accord préalable",
 consigne: "Validez votre choix de formation sur la plateforme avant la date limite, puis téléchargez l'accord préalable d'inscription.",
@@ -311,6 +312,7 @@ verifieLe: VERIFIE
 
 {
 id: "ef_complement",
+phaseDepart: true,
 type: "complement",
 titre: "Fournir les compléments et présenter les originaux, si demandé",
 consigne: "Si Campus France vous le demande, joignez tout complément de dossier ou présentez vos documents originaux, dès que possible et avant la date limite. Tous les compléments (relevés de l'année en cours, diplôme en cours d'obtention) doivent être ajoutés avant la clôture de la campagne.",
@@ -327,6 +329,7 @@ verifieLe: VERIFIE
 
 {
 id: "ef_visa",
+phaseDepart: true,
 type: "visa",
 titre: "Demander mon visa étudiant après le courriel de fin de procédure",
 // france-visas.gouv.fr est le guichet national : il reste au tronc. Le

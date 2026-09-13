@@ -345,14 +345,26 @@ coché est persisté dans le champ `visaChecklist` du document
 utilisateur, et nourrit l'état de la phase 06 (etatDesPhases). -->
 <p class="jy-phase-sub" id="jyVisaProgress" style="font-weight:700;"></p>
 
-<div class="jy-card jy-guide" id="jyVisaGuide">
-<div class="jy-guide-step" data-visa-step="pieces"><h3><i data-lucide="file-badge"></i>1 · Les pièces d'admission</h3><p>Lettre d'admission officielle et attestation de bourse — demandez les originaux si le consulat les exige.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-<div class="jy-guide-step" data-visa-step="finances"><h3><i data-lucide="banknote"></i>2 · La preuve financière</h3><p>L'attestation de bourse sert souvent de justificatif de ressources ; sinon, le consulat précise le montant à démontrer.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-<div class="jy-guide-step" data-visa-step="rdv_visa"><h3><i data-lucide="building-2"></i>3 · Le rendez-vous visa</h3><p>Prenez rendez-vous tôt : dans beaucoup de pays, les créneaux d'été partent des semaines à l'avance.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-<div class="jy-guide-step" data-visa-step="assurance"><h3><i data-lucide="heart-pulse"></i>4 · L'assurance santé</h3><p>Exigée pour la plupart des titres de séjour étudiants — certains pays l'incluent dans la bourse, vérifiez avant de payer.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-<div class="jy-guide-step" data-visa-step="logement"><h3><i data-lucide="home"></i>5 · Le logement</h3><p>Résidence universitaire d'abord (souvent incluse ou prioritaire pour les boursiers), parc privé ensuite.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-<div class="jy-guide-step" data-visa-step="depart"><h3><i data-lucide="plane"></i>6 · Le départ</h3><p>Billet, copies de tous les documents (papier + téléphone), et l'adresse de votre premier logement notée hors ligne.</p><button type="button" class="jy-visa-check" aria-pressed="false"></button></div>
-</div>
+<!-- LOT S3 (2026-09-13) — LE CONTENU A QUITTÉ CE FICHIER.
+Ces six cartes étaient écrites en dur ICI et, à l'identique, dans
+l'autre espace : côté préinscription, un étudiant qui finance
+lui-même ses études lisait « attestation de bourse ». Une phrase
+par étape, dupliquée, et fausse pour la moitié des lecteurs.
+
+Le guide vit maintenant dans js/visa-depart.js et il est rendu par
+dashboard.js (initVisaChecklist) : un socle générique avec, pour
+chaque étape, ce qu'il faut faire et ce qui fait échouer ; la
+variante propre au parcours ; puis, dans #jyVisaDestination, les
+étapes RÉELLES de la destination de l'étudiant, avec leur source
+et leur date, tirées de js/procedures/<pays>.js.
+
+Les data-visa-step restent alignés sur VISA_ETAPES : l'état coché
+est toujours persisté dans `visaChecklist` et nourrit la phase 06. -->
+<div class="jy-card jy-guide" id="jyVisaGuide"></div>
+
+<!-- Rempli seulement quand la destination de l'étudiant a des étapes
+de départ documentées. Masqué sinon : pas de titre au-dessus du vide. -->
+<div class="jy-card jy-destination" id="jyVisaDestination" hidden></div>
 
 <div class="jy-phase-actions">
 <span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-btn"><i data-lucide="message-circle"></i><span>Poser une question à Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>

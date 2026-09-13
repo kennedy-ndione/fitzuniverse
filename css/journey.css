@@ -551,10 +551,14 @@ color:var(--text-color);
 .jy-list li i,
 .jy-list li svg{ flex-shrink:0; width:16px; height:16px; margin-top:2px; color:var(--amber-700); }
 
+/* Lot S3 (2026-09-13) : les cartes portent maintenant un « quand », un
+« pourquoi », la variante du parcours et un dépliant. À 230px elles
+étaient illisibles ; à 340px elles tiennent deux colonnes sur un
+portable et trois sur un écran large. */
 .jy-guide{
 display:grid;
-grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
-gap:14px;
+grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));
+gap:16px;
 }
 
 .jy-guide-step h3{
@@ -694,3 +698,137 @@ border:1px solid var(--border-color);
 .jy-app-deadline.is-attente{ color:var(--amber-700); }
 .jy-app-deadline.is-close{ color:var(--text-muted); font-weight:600; }
 .jy-app-deadline.is-inconnue{ color:var(--text-light); font-weight:600; }
+
+
+/* ==========================================================
+   GUIDE VISA & DÉPART — le contenu réel (lot S3, 2026-09-13)
+   ==========================================================
+   Six cartes rendues par dashboard.js depuis js/visa-depart.js, plus un
+   bloc de destination alimenté par la procédure du pays. Le « quand »
+   et le « pourquoi » sont visibles d'emblée ; les actions et les pièges
+   vivent dans un <details>, parce qu'une carte qui affiche neuf
+   paragraphes d'un coup n'est plus lue du tout. */
+
+.jy-guide-quand{
+display:flex;
+align-items:center;
+gap:6px;
+margin:0 0 8px !important;
+font-size:.78rem !important;
+font-weight:700 !important;
+color:var(--amber-700) !important;
+}
+.jy-guide-quand i,
+.jy-guide-quand svg{ width:13px; height:13px; flex:none; }
+
+.jy-guide-pourquoi{ margin:0 0 10px !important; }
+
+/* La phrase propre au parcours de l'étudiant — boursier ou autofinancé.
+   Elle est encadrée parce que c'est la seule qui change d'un espace à
+   l'autre, et qu'elle porte l'information la plus actionnable. */
+.jy-guide-variante{
+margin:0 !important;
+padding:9px 11px;
+border-left:2px solid var(--amber-600);
+border-radius:0 8px 8px 0;
+background:var(--journey-paper);
+font-size:.81rem !important;
+color:var(--journey-ink) !important;
+}
+
+.jy-guide-plus{ margin-top:11px; }
+
+.jy-guide-plus > summary{
+cursor:pointer;
+font-size:.79rem;
+font-weight:700;
+color:var(--amber-700);
+list-style:none;
+padding:5px 0;
+}
+.jy-guide-plus > summary::-webkit-details-marker{ display:none; }
+.jy-guide-plus > summary::before{ content:"+ "; font-weight:800; }
+.jy-guide-plus[open] > summary::before{ content:"− "; }
+.jy-guide-plus > summary:hover{ text-decoration:underline; }
+
+.jy-guide-soustitre{
+margin:10px 0 5px !important;
+font-size:.72rem !important;
+font-weight:800 !important;
+letter-spacing:.04em;
+text-transform:uppercase;
+color:var(--journey-ink) !important;
+}
+.jy-guide-soustitre--alerte{ color:var(--amber-700) !important; }
+
+.jy-guide-actions,
+.jy-guide-vigilance{
+margin:0;
+padding-left:17px;
+font-size:.81rem;
+line-height:1.55;
+color:var(--text-light);
+}
+.jy-guide-actions li,
+.jy-guide-vigilance li{ margin-bottom:6px; }
+.jy-guide-vigilance li::marker{ color:var(--amber-700); }
+
+.jy-guide-step.is-done .jy-guide-variante{ opacity:.62; }
+
+/* ---- Le bloc de destination ---- */
+.jy-destination{ margin-top:16px; }
+
+.jy-destination h3{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 6px;
+font-size:1rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+.jy-destination h3 i,
+.jy-destination h3 svg{ width:17px; height:17px; color:var(--amber-700); }
+
+.jy-destination-sub{
+margin:0 0 14px;
+font-size:.83rem;
+line-height:1.55;
+color:var(--text-light);
+}
+
+.jy-destination-list{
+margin:0;
+padding-left:20px;
+display:grid;
+gap:14px;
+}
+.jy-destination-list > li::marker{ font-weight:800; color:var(--amber-700); }
+
+.jy-destination-list h4{
+margin:0 0 4px;
+font-size:.88rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+.jy-destination-list p{
+margin:0;
+font-size:.83rem;
+line-height:1.6;
+color:var(--text-light);
+}
+
+/* La source et la date : discrètes, mais toujours là. C'est ce qui
+   sépare une consigne d'une opinion. */
+.jy-destination-src{
+margin-top:5px !important;
+font-size:.74rem !important;
+color:var(--text-light) !important;
+opacity:.82;
+}
+.jy-destination-src a{ color:var(--amber-700); text-decoration:underline; }
+
+@media (max-width: 560px){
+.jy-guide{ grid-template-columns:1fr; }
+.jy-destination-list{ padding-left:17px; }
+}

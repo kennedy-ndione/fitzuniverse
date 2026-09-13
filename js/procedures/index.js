@@ -43,12 +43,59 @@
 */
 
 import { PROCEDURE_FRANCE } from "./france.js";
+import { PROCEDURE_ROUMANIE } from "./roumanie.js";
+import { PROCEDURE_TURQUIE } from "./turquie.js";
+import { PROCEDURE_MAROC } from "./maroc.js";
+import { PROCEDURE_ITALIE } from "./italie.js";
+import { PROCEDURE_ALLEMAGNE } from "./allemagne.js";
+import { PROCEDURE_CANADA } from "./canada.js";
 import { COUCHES } from "./residences/index.js";
 import { FIABILITE, TYPES_ETAPE, TYPES_PREUVE } from "./vocabulaire.js";
 import { findCountry } from "../countries.js";
 
-/** Les troncs connus : une DESTINATION chacun. */
-export const TRONCS = [PROCEDURE_FRANCE];
+/**
+* Les troncs connus : une DESTINATION chacun. L'ordre est celui des sept
+* pays de js/pays-preinscription.js — la France d'abord, parce qu'elle
+* est la seule à avoir des couches de résidence, puis les six du lot S3.
+*/
+export const TRONCS = [
+PROCEDURE_FRANCE,
+PROCEDURE_ROUMANIE,
+PROCEDURE_TURQUIE,
+PROCEDURE_MAROC,
+PROCEDURE_ITALIE,
+PROCEDURE_ALLEMAGNE,
+PROCEDURE_CANADA
+];
+
+/**
+* LA RÉSIDENCE N'EST PAS TOUJOURS UNE CONDITION (lot S3, 2026-09-13).
+*
+* La France exige une couche de résidence parce que Campus France a un
+* espace PAR PAYS, avec ses frais, son calendrier et son lieu
+* d'entretien : sans la couche, la procédure française est réellement
+* incomplète, et `codeProcedurePour` avait raison d'exiger
+* `residenceDocumentee`.
+*
+* Les six destinations du lot S3 ne marchent pas comme ça. La circulaire
+* italienne est biennale et vaut pour tous les pays ; le Sperrkonto
+* allemand est fédéral ; les seuils de fonds canadiens sont fédéraux ou
+* québécois ; le calendrier Türkiye Bursları et celui de l'ÖSYM sont
+* nationaux ; la lettre d'acceptation roumaine vient du ministère ; et
+* la voie AMCI marocaine est la même depuis les huit pays qu'elle
+* dessert — la seule chose qui varie, la dispense de visa, est écrite
+* nationalité par nationalité DANS la consigne. Exiger d'eux une couche
+* de résidence reviendrait à leur reprocher de ne pas avoir un problème
+* qu'ils n'ont pas, et à afficher « en cours de documentation » sur des
+* procédures entièrement documentées.
+*
+* Un tronc déclare donc `residenceRequise: false` quand il est complet
+* sans couche. Absent, le champ vaut true : la France, et tout tronc
+* futur, garde l'exigence par défaut.
+*/
+export function residenceRequise(tronc) {
+return !tronc || tronc.residenceRequise !== false;
+}
 
 /**
 * Le début de la mention servie à une étape dont le pays de résidence
@@ -235,6 +282,8 @@ return {
 id: couche ? couche.id : tronc.id,
 residence: couche ? couche.pays : "",
 residenceDocumentee: !!couche,
+// Voir residenceRequise() : false = ce tronc est complet sans couche.
+residenceRequise: residenceRequise(tronc),
 faits: (couche && couche.faits) || null,
 // Ce que la couche déclare NE PAS savoir, et ce que l'organisme
 // officiel du pays dit de nous. Les deux sont des champs facultatifs de
@@ -310,7 +359,8 @@ return ((procedure && procedure.etapes) || []).filter((e) => e.fiabilite === "a_
 */
 export function codeProcedurePour(pays, procedure) {
 if (!procedure || !Array.isArray(procedure.etapes) || !procedure.etapes.length) return pays && pays.procedure;
-const complete = etapesAConfirmer(procedure).length === 0 && procedure.residenceDocumentee === true;
+const residenceOk = procedure.residenceDocumentee === true || procedure.residenceRequise === false;
+const complete = etapesAConfirmer(procedure).length === 0 && residenceOk;
 return complete ? "documentee" : (pays && pays.procedure) || "en_cours";
 }
 
@@ -320,7 +370,7 @@ return complete ? "documentee" : (pays && pays.procedure) || "en_cours";
 */
 export function libelleProcedureDocumentee(procedure) {
 if (!procedure) return "";
-if (procedure.residenceDocumentee === false) return "Procédure de portail documentée ; les détails de votre pays de résidence restent à vérifier";
+if (procedure.residenceDocumentee === false && procedure.residenceRequise !== false) return "Procédure de portail documentée ; les détails de votre pays de résidence restent à vérifier";
 const n = etapesAConfirmer(procedure).length;
 if (n === 0) return "Procédure de portail documentée, accompagnée pas à pas";
 return `Procédure documentée depuis les sources publiques ; ${n} étape${n > 1 ? "s" : ""} à confirmer`;

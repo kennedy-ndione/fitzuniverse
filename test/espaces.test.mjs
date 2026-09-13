@@ -333,12 +333,51 @@ assert.equal(barre("espace-preinscription.html"), reference, "la barre haute du 
 assert.equal(barre("dashboard.html"), reference, "la barre haute de l'aiguillage a divergé");
 });
 
-test("la checklist visa reste commune : c'est la seule chose que les deux parcours partagent", () => {
+/**
+ * RÉÉCRIT EN CONSCIENCE LE 2026-09-13 (lot S3).
+ *
+ * Ce test vérifiait que les six data-visa-step étaient présents dans les
+ * DEUX fichiers HTML. Il passait — et c'était précisément le problème :
+ * ce qu'il constatait, c'était une DUPLICATION. Les six cartes étaient
+ * écrites deux fois, et côté préinscription le texte de la bourse avait
+ * été recopié tel quel : un étudiant qui finance lui-même ses études
+ * lisait « attestation de bourse » à deux endroits sur six.
+ *
+ * Le guide vit maintenant dans js/visa-depart.js, en un seul endroit, et
+ * il sert la variante du parcours. Ce que ce test protège désormais,
+ * c'est l'inverse de ce qu'il protégeait : que le contenu ne REVIENNE
+ * pas dans le HTML.
+ */
+test("le guide visa n'est plus écrit dans le HTML : un seul conteneur, rempli par js/visa-depart.js", () => {
 const bourse = lire("espace-bourse.html");
 const pre = lire("espace-preinscription.html");
-for (const etape of ["pieces", "finances", "rdv_visa", "assurance", "logement", "depart"]) {
-assert.ok(bourse.includes(`data-visa-step="${etape}"`) && pre.includes(`data-visa-step="${etape}"`), `étape visa ${etape}`);
+for (const html of [bourse, pre]) {
+assert.ok(html.includes('id="jyVisaGuide"'), "le conteneur du guide a disparu");
+assert.ok(html.includes('id="jyVisaDestination"'), "le conteneur des étapes de destination a disparu");
+assert.ok(!html.includes("data-visa-step="), "le contenu du guide est revenu en dur dans le HTML — il doit rester dans js/visa-depart.js");
+assert.ok(!html.includes("jy-guide-step"), "une carte du guide est revenue en dur dans le HTML");
 }
+// Et la faute d'origine ne peut pas revenir : le mot « bourse » n'a rien
+// à faire dans le guide de l'espace préinscription.
+// Hors commentaires : le commentaire du lot S3 cite lui-même la faute
+// qu'il répare, et le test ne doit pas se déclencher là-dessus.
+const sansCommentaires = pre.replace(/<!--[\s\S]*?-->/g, " ");
+const phase = sansCommentaires.slice(sansCommentaires.indexOf('id="phase-depart"'), sansCommentaires.indexOf('id="phase-depart"') + 3000);
+assert.ok(!/attestation de bourse/i.test(phase), "le texte de la bourse est revenu dans l'espace préinscription");
+// Le module qui porte le contenu existe, et il sert bien deux variantes.
+const guide = lire("js/visa-depart.js");
+assert.match(guide, /variantes:\s*\{/);
+assert.match(guide, /preinscription:/);
+// On teste le LITTÉRAL du socle, pas le fichier entier : defautsDuSocle()
+// contient volontairement les symboles monétaires, puisque c'est elle
+// qui les interdit.
+const litteral = guide.slice(guide.indexOf("export const SOCLE_VISA"), guide.indexOf("/** Le socle, par id. */"));
+assert.ok(litteral.length > 2000, "le socle a maigri — trois actions et deux pièges par étape, au minimum");
+assert.ok(!/[€$£]/.test(litteral), "un montant dans le socle : il doit vivre dans la procédure du pays");
+// Et dashboard.js le rend, avec la variante du parcours ouvert.
+const js = lire("dashboard.js");
+assert.match(js, /guideVisaPour\(\{/);
+assert.match(js, /espace: ESPACE/);
 });
 
 // ------------------------------------------------------------------

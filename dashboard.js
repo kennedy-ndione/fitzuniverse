@@ -25,6 +25,15 @@ import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } fr
 import { boutonRecours } from "./js/fitz-recours.js";
 import { lireParcours } from "./js/parcours.js";
 import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
+// Lot S3 (2026-09-13) : le contenu du guide visa a quitté le HTML, où il
+// était écrit DEUX FOIS — dans espace-bourse.html et dans
+// espace-preinscription.html, avec le texte de la bourse recopié tel quel
+// côté préinscription (« attestation de bourse » s'affichait à un
+// autofinancé). Il vit désormais dans un seul module, qui sert la
+// variante du parcours et va chercher, dans la procédure de la
+// destination, les étapes réelles avec leur source et leur date.
+import { guideVisaPour } from "./js/visa-depart.js";
+import { texteConsigne } from "./js/procedures/vocabulaire.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
@@ -486,16 +495,95 @@ wrap.innerHTML = blocs.join("");
 }
 
 // ==========================================================
-// PHASE 6 — CHECKLIST VISA & DÉPART (cochable, persistée)
+// PHASE 6 — GUIDE VISA & DÉPART (rendu, cochable, persisté)
 // ==========================================================
 // L'état vit dans le champ `visaChecklist` (map id → bool) du document
-// utilisateur — ids définis par VISA_ETAPES (js/journey-map.js), les
-// mêmes que les data-visa-step de dashboard.html. Cocher une étape
-// re-calcule la carte du voyage en direct (rail, pastilles, %).
-function initVisaChecklist(uid, initial, rafraichirCarte) {
+// utilisateur — ids définis par VISA_ETAPES (js/journey-map.js). Cocher
+// une étape re-calcule la carte du voyage en direct (rail, pastilles, %).
+//
+// LE CONTENU, LUI, EST RENDU ICI depuis js/visa-depart.js : le HTML ne
+// porte plus qu'un conteneur vide. Deux étages — le socle générique, et
+// les étapes réelles de la destination, servies telles quelles avec leur
+// source et leur date.
+
+/** Échappement : les URL et les textes passent par innerHTML. */
+function ech(v) {
+return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+* La destination qui commande le guide : celle du dossier le plus
+* avancé. Un étudiant admis en Italie et encore en attente au Canada
+* doit lire le guide italien — c'est celui dont les délais courent.
+* Sans aucun dossier, on rend null et le guide sert le socle seul.
+*/
+function procedureDeDepart(applications, procedureDe) {
+const rang = (app) => (STATUTS_REPONSE.includes(app.status) ? 3 : STATUTS_DEPOSES.includes(app.status) ? 2 : 1);
+const trie = applications.slice().sort((a, b) => rang(b) - rang(a));
+for (const app of trie) {
+const procedure = procedureDe(app);
+if (procedure) return procedure;
+}
+return null;
+}
+
+/** Le socle : une carte par étape, avec son « pourquoi », ses actions et ses pièges. */
+function htmlEtapeSocle(etape, rang) {
+return `
+<div class="jy-guide-step" data-visa-step="${ech(etape.id)}">
+<h3><i data-lucide="${ech(etape.icone)}"></i>${rang} · ${ech(etape.titre)}</h3>
+<p class="jy-guide-quand"><i data-lucide="clock"></i>${ech(etape.quand)}</p>
+<p class="jy-guide-pourquoi">${ech(etape.pourquoi)}</p>
+<p class="jy-guide-variante">${ech(etape.variante)}</p>
+<details class="jy-guide-plus">
+<summary>Ce qu'il faut faire, et ce qui fait échouer</summary>
+<p class="jy-guide-soustitre">À faire, dans cet ordre</p>
+<ul class="jy-guide-actions">${etape.actions.map((a) => `<li>${ech(a)}</li>`).join("")}</ul>
+<p class="jy-guide-soustitre jy-guide-soustitre--alerte">Ce qui fait échouer</p>
+<ul class="jy-guide-vigilance">${etape.vigilance.map((v) => `<li>${ech(v)}</li>`).join("")}</ul>
+</details>
+<button type="button" class="jy-visa-check" aria-pressed="false"></button>
+</div>`;
+}
+
+/**
+* Le bloc de destination : les étapes réelles du pays, dans l'ordre,
+* chacune avec sa source et sa date de vérification. On ne recopie
+* aucun chiffre — on sert ce que la procédure porte.
+*/
+function renderVisaDestination(destination) {
+
+const bloc = document.getElementById("jyVisaDestination");
+if (!bloc) return;
+
+// Pas de bloc vide sous un titre prometteur.
+if (!destination || !destination.documentee) { bloc.hidden = true; bloc.innerHTML = ""; return; }
+
+bloc.hidden = false;
+bloc.innerHTML = `
+<h3><i data-lucide="map-pin"></i>Et pour ${ech(destination.pays)}, précisément</h3>
+<p class="jy-destination-sub">${destination.etapes.length} étape${destination.etapes.length > 1 ? "s" : ""} de votre destination, vérifiée${destination.etapes.length > 1 ? "s" : ""} sur les sources officielles. Les délais ci-dessous sont ceux qui vous concernent vraiment.</p>
+<ol class="jy-destination-list">
+${destination.etapes.map((e) => `
+<li>
+<h4>${ech(e.titre)}</h4>
+<p>${ech(texteConsigne(e))}</p>
+<p class="jy-destination-src">Vérifié le ${ech(e.verifieLe)} · <a href="${ech(e.source)}" target="_blank" rel="noopener noreferrer">la source officielle</a></p>
+</li>`).join("")}
+</ol>`;
+
+}
+
+function initVisaChecklist(uid, initial, rafraichirCarte, guide) {
 
 const etat = {};
 VISA_ETAPES.forEach((id) => { etat[id] = initial && initial[id] === true; });
+
+// Le guide est rendu AVANT d'aller chercher les cases : sans ça, les
+// data-visa-step n'existent pas encore dans le DOM.
+const conteneur = document.getElementById("jyVisaGuide");
+if (conteneur && guide) conteneur.innerHTML = guide.etapes.map((e, i) => htmlEtapeSocle(e, i + 1)).join("");
+if (guide) renderVisaDestination(guide.destination);
 
 const steps = Array.from(document.querySelectorAll("#jyVisaGuide [data-visa-step]"));
 
@@ -754,7 +842,10 @@ renderReponse(applications, opps.count);
 // donc evalues sur la seule formule bourse.
 applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, session.planPreinscriptionId);
 
-initVisaChecklist(user.uid, visaChecklist, rafraichirCarte);
+initVisaChecklist(user.uid, visaChecklist, rafraichirCarte, guideVisaPour({
+espace: ESPACE,
+procedure: procedureDeDepart(applications, procedureDe)
+}));
 
 if (window.lucide) lucide.createIcons();
 
