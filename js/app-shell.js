@@ -61,6 +61,14 @@ import { advisorOuvert, ESPACE_OUTILS, passSeul, PASS_LABEL } from "./plan-featu
 // Demandez à Fitz » — le diagnostic (quelle formule l'ouvre) est
 // calculé, donc gratuit ; la conversation, elle, reste réservée.
 import { boutonRecours } from "./fitz-recours.js";
+// Les portails sont une donnée PAYANTE gardée en mémoire le temps de la
+// session. js/portails.js annonce depuis le lot S3 qu'elle est retirée à
+// la déconnexion — mais `oublierPortails()` n'était appelée NULLE PART.
+// Sans conséquence tant que la déconnexion navigue (l'état du module
+// meurt avec la page), et c'est pourtant exactement le scénario que le
+// commentaire invoque — cybercafé, salle informatique — qui mérite de ne
+// pas dépendre d'un effet de bord. On l'appelle.
+import { oublierPortails } from "./portails.js";
 
 // applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
 // DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
@@ -267,6 +275,10 @@ logoutBtn.dataset.busy = "true";
 // Sortie volontaire — signalée AVANT signOut (après, l'écriture du
 // journal partirait sans uid). Pas d'await : jamais bloquant.
 trackEvent("logout", {});
+
+// La carte des portails ne survit pas à la session : un poste partagé
+// ne doit pas garder les portails de l'étudiant précédent.
+oublierPortails();
 
 try {
 

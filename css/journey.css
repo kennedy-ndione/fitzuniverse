@@ -1141,3 +1141,100 @@ transition:var(--transition);
 .jy-phase.is-ouverte > .jy-phase-body{ animation:none; }
 .jy-phase-resume-caret{ transition:none; }
 }
+
+/* ==========================================================
+   LES TROIS PORTES D'UNE OPPORTUNITÉ (lot PORTAILS, 2026-09-14)
+   ==========================================================
+   Le site de l'établissement, le portail d'admission, le portail du
+   bailleur. Les deux derniers sont une donnée payante servie par la
+   Cloud Function `portails` : sur un compte sans abonnement actif, ils
+   ne sont pas dans le DOM — pas grisés, pas cadenassés, absents
+   (doctrine du verrou abonné, 2026-08-31).
+
+   Le hub n'en affichait AUCUN avant ce lot : les 147 portails
+   d'université déjà renseignés étaient invisibles pour l'étudiant qui
+   les avait payés. */
+
+.jy-opp-orientation{
+display:flex;
+align-items:flex-start;
+gap:7px;
+margin:0 0 10px;
+font-size:.79rem;
+line-height:1.5;
+color:var(--journey-ink);
+}
+
+.jy-opp-orientation i,
+.jy-opp-orientation svg{ flex-shrink:0; width:13px; height:13px; margin-top:3px; color:var(--amber-700); }
+
+.jy-portes{
+display:flex;
+flex-direction:column;
+gap:6px;
+margin:0 0 14px;
+}
+
+.jy-porte{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 11px;
+border:1px solid var(--border-color);
+border-radius:10px;
+font-size:.79rem;
+font-weight:600;
+color:var(--text-color);
+text-decoration:none;
+transition:var(--transition);
+}
+
+.jy-porte:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+
+.jy-porte i,
+.jy-porte svg{ flex-shrink:0; width:14px; height:14px; color:var(--amber-700); }
+
+.jy-porte span{
+flex:1 1 auto;
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+/* L'icône de sortie dit « ce lien quitte FitzUniverse » — discrète, et
+   la seule du lot qui ne prend pas la couleur d'accent. */
+.jy-porte .jy-porte-sortie,
+.jy-porte svg.jy-porte-sortie{ width:12px; height:12px; color:var(--text-muted); }
+
+/* LA PORTE OÙ L'ON DÉPOSE SE DISTINGUE DES DEUX AUTRES.
+   Sans ce repère, trois liens identiques laissent l'étudiant choisir au
+   hasard la porte par laquelle il dépose — et c'est précisément ce
+   qu'on lui vend.
+
+   DEUX CORRECTIONS DU 2026-09-14, toutes deux trouvées en relecture :
+
+   1. La règle visait `:first-child`, c'est-à-dire qu'elle DÉDUISAIT le
+      sens de la position. Faux deux fois : sur les 8 universités sans
+      portail d'admission, la première porte devient celle de la bourse
+      alors que l'orientation dit de déposer à l'université ; et pour un
+      NON-abonné, le seul lien restant — le site de l'université —
+      héritait du repère, alors que 71 bourses sur 156 se déposent chez
+      le bailleur. C'est `liensDOpportunite` qui sait laquelle c'est, et
+      qui pose maintenant `.jy-porte--depot`.
+
+   2. Le fond valait `var(--background)` et les portes
+      `var(--journey-paper)` — or css/journey-shell.css redéfinit les
+      DEUX à #FDF9EF, comme `.jy-card`. La déclaration était donc sans
+      aucun effet, et les portes n'avaient même pas de contraste avec la
+      carte qui les contient. On prend un fond réellement distinct. */
+.jy-porte{
+background:var(--background-soft);
+}
+
+.jy-porte--depot{
+border-color:rgba(190,96,50,.55);
+background:var(--background);
+box-shadow:inset 2px 0 0 var(--amber-600);
+font-weight:700;
+}

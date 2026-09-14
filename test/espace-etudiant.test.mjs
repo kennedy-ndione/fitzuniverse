@@ -759,3 +759,463 @@ assert.match(css, /\.docs-toolbar\{flex-direction:column/,
 "la barre d'outils ne passe plus en colonne : revoir la borne ci-dessus");
 
 });
+
+// ==========================================================
+// 6. LES TROIS PORTES D'UNE OPPORTUNITÉ (lot PORTAILS, 2026-09-14)
+// ==========================================================
+// Charles : « chaque université doit avoir tous ses portails et chaque
+// bourse aussi, mais l'espace public ne montre aux visiteurs que le site
+// des universités uniquement ».
+//
+// L'architecture existait (les portails ont quitté le catalogue public au
+// lot S3, une Cloud Function vérifie l'abonnement) ; le hub n'en
+// affichait AUCUN. Ces gardes verrouillent les deux moitiés de la
+// phrase : les portails arrivent dans l'espace étudiant, et ne fuient
+// pas dans le public.
+
+import { liensDOpportunite, portailDeBourseOuRepli, lienValide, ORIENTATION } from "../js/portails-opportunite.js";
+
+const OPP = {
+site: "https://uni.example/",
+portailAdmission: "https://portail.uni.example/apply",
+portailBourse: "https://bailleur.example/candidater",
+funderName: "DAAD"
+};
+
+test("portes 1 — UN NON-ABONNÉ NE VOIT QUE LE SITE DE L'UNIVERSITÉ", () => {
+
+const r = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: false });
+
+assert.deepEqual(r.liens.map((l) => l.cle), ["site"]);
+// Pas d'orientation : elle parlerait de portes qu'il ne voit pas.
+assert.equal(r.orientation, "");
+// Et surtout : aucun lien réservé dans le résultat, donc rien à griser,
+// rien à cadenasser — c'est la doctrine du 2026-08-31.
+assert.ok(r.liens.every((l) => l.reserve === false));
+
+});
+
+test("portes 2 — un abonné reçoit les trois portes, dans l'ordre du PARCOURS RÉEL", () => {
+
+// entryPoint "bourse" : on dépose chez le bailleur d'abord.
+assert.deepEqual(
+liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true }).liens.map((l) => l.cle),
+["bourse", "admission", "site"]);
+
+// entryPoint "universite" : l'admission d'abord, le bailleur en dernier.
+assert.deepEqual(
+liensDOpportunite({ ...OPP, entryPoint: "universite", abonne: true }).liens.map((l) => l.cle),
+["admission", "bourse", "site"]);
+
+// entryPoint ABSENT : on ne devine pas, on garde l'ordre neutre.
+assert.deepEqual(
+liensDOpportunite({ ...OPP, entryPoint: "", abonne: true }).liens.map((l) => l.cle),
+["admission", "bourse", "site"]);
+
+});
+
+test("portes 3 — ON N'ANNONCE JAMAIS UNE PORTE QU'ON NE MONTRE PAS", () => {
+
+// C'est la faute que details.js dit avoir corrigée le 2026-08-31 : « on
+// annonçait une porte, et la seule visible était l'autre ». Elle valait
+// pour la branche « bourse » ; elle vaut aussi pour « universite ».
+
+// Dépôt chez le bailleur, et son portail est CONFIRMÉ.
+assert.equal(
+liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: true }).orientation,
+ORIENTATION.bourse_avec_portail);
+
+// Dépôt chez le bailleur, aucun lien du tout.
+assert.equal(
+liensDOpportunite({ ...OPP, portailBourse: "", entryPoint: "bourse", abonne: true }).orientation,
+ORIENTATION.bourse_sans_portail);
+
+// Dépôt chez le bailleur, mais le lien est le REPLI (son site, pas son
+// portail de dépôt) : « pas auprès de l'université » serait une
+// affirmation qu'on ne peut pas tenir. C'était le cas de 100 % des
+// cartes avant la correction, le champ confirmé étant vide sur les 156.
+assert.equal(
+liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: false }).orientation,
+ORIENTATION.bourse_sans_portail);
+
+// Dépôt auprès de l'université, et son portail d'admission est là.
+assert.equal(
+liensDOpportunite({ ...OPP, entryPoint: "universite", abonne: true }).orientation,
+ORIENTATION.universite);
+
+// Dépôt auprès de l'université, mais AUCUN portail d'admission connu
+// (8 établissements sur 155) : on se taisait, on annonçait une porte
+// absente. Plus d'orientation du tout.
+assert.equal(
+liensDOpportunite({ ...OPP, portailAdmission: "", entryPoint: "universite", abonne: true }).orientation,
+"");
+
+// entryPoint inconnu : aucune orientation. Jamais une valeur par défaut.
+assert.equal(liensDOpportunite({ ...OPP, entryPoint: "", abonne: true }).orientation, "");
+
+});
+
+test("portes 3b — le repli n'est PAS étiqueté « portail »", () => {
+
+// Le champ confirmé du lot S3 est vide sur les 156 bourses : sans cette
+// distinction, chaque carte appelait « le portail où se dépose le
+// dossier de bourse » un lien que le triage du dépôt classe, 51 fois
+// sur 156, comme une simple page d'information.
+const sur = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: true }).liens.find((l) => l.cle === "bourse");
+const repli = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: false }).liens.find((l) => l.cle === "bourse");
+
+assert.equal(sur.libelle, "Portail de la bourse");
+assert.equal(sur.confirme, true);
+assert.match(sur.titre, /où se dépose/);
+
+assert.equal(repli.libelle, "Site du bailleur");
+assert.equal(repli.confirme, false);
+assert.ok(!/où se dépose/.test(repli.titre), repli.titre);
+assert.match(repli.titre, /vérifiez/);
+
+// Le lien reste servi : un lien vers la bonne organisation vaut mieux
+// que rien. C'est son ÉTIQUETTE qui ne mentait plus.
+assert.equal(repli.url, OPP.portailBourse);
+
+});
+
+test("portes 3c — la porte de dépôt est MARQUÉE, jamais déduite de sa position", () => {
+
+// Le CSS peignait `:first-child` comme « la porte où l'on dépose ».
+// Deux cas le démentaient.
+
+// (a) Université sans portail d'admission : la première porte devient
+// celle de la bourse, sous une orientation qui parle de l'université.
+const a = liensDOpportunite({ ...OPP, portailAdmission: "", entryPoint: "universite", abonne: true, bourseConfirmee: true });
+assert.equal(a.liens[0].cle, "bourse");
+assert.ok(!a.liens[0].depot, "la première porte est peinte comme la porte de dépôt alors qu'elle ne l'est pas");
+assert.equal(a.porteDeDepot, "");
+
+// (b) NON-abonné : le seul lien restant est le site de l'université, et
+// 71 bourses sur 156 se déposent chez le bailleur.
+const b = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: false });
+assert.equal(b.liens[0].cle, "site");
+assert.ok(!b.liens[0].depot, "le site de l'université est peint comme la porte de dépôt");
+
+// Et quand on la connaît, elle est marquée — une seule fois.
+const c = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: true });
+assert.equal(c.porteDeDepot, "bourse");
+assert.deepEqual(c.liens.filter((l) => l.depot).map((l) => l.cle), ["bourse"]);
+
+const d = liensDOpportunite({ ...OPP, entryPoint: "universite", abonne: true });
+assert.equal(d.porteDeDepot, "admission");
+assert.deepEqual(d.liens.filter((l) => l.depot).map((l) => l.cle), ["admission"]);
+
+// Et le CSS écoute la classe, plus la position.
+const css = lire("css/journey.css");
+assert.match(css, /\.jy-porte--depot\{/, "la classe de la porte de dépôt a disparu du CSS");
+assert.ok(!/\.jy-portes > \.jy-porte:first-child\{/.test(css),
+"le CSS déduit de nouveau la porte de dépôt de sa position dans le DOM");
+
+});
+
+test("portes 3d — le repère de la porte de dépôt est VISIBLE", () => {
+
+const shell = lire("css/journey-shell.css");
+const css = lire("css/journey.css");
+
+// Le fond des portes valait `--journey-paper` et celui de la porte de
+// dépôt `--background` — or journey-shell.css redéfinit les DEUX à
+// #FDF9EF, comme `.jy-card`. La règle était donc strictement sans
+// effet, et les portes n'avaient aucun contraste avec leur carte.
+const valeur = (nom) => (shell.match(new RegExp(`--${nom}:\\s*([^;]+);`)) || [])[1];
+
+assert.notEqual(valeur("background"), valeur("background-soft"),
+"les deux fonds employés sont identiques : le repère redevient invisible");
+
+const i = css.indexOf(".jy-porte--depot{");
+const bloc = css.slice(i, css.indexOf("}", i));
+assert.match(bloc, /background:var\(--background\)/);
+assert.match(bloc, /box-shadow:inset/, "la porte de dépôt n'a plus de repère qui survive à une égalité de fonds");
+
+});
+
+test("portes 4 — ANTI-DIVERGENCE : les phrases sont MOT POUR MOT celles de details.js", () => {
+
+// details.js (la fiche bourse) et le hub décrivent le même dossier. Si
+// quelqu'un réécrit la phrase d'un seul côté, ce test tombe — c'est le
+// seul moyen d'éviter que les deux surfaces ne disent deux choses.
+const details = lire("details.js");
+
+for (const [cle, phrase] of Object.entries(ORIENTATION)) {
+assert.ok(details.includes(phrase),
+`la phrase « ${cle} » n'existe plus dans details.js : les deux surfaces ont divergé`);
+}
+
+});
+
+test("portes 5 — un href n'est émis que s'il est http(s)", () => {
+
+assert.ok(lienValide("https://x.example/a"));
+assert.ok(lienValide("http://x.example"));
+assert.ok(!lienValide("javascript:alert(1)"));
+assert.ok(!lienValide("data:text/html,x"));
+assert.ok(!lienValide("//x.example"));
+assert.ok(!lienValide("x.example"));
+assert.ok(!lienValide(""));
+assert.ok(!lienValide(null));
+
+// Et le module les écarte réellement, il ne se contente pas de savoir.
+const r = liensDOpportunite({
+site: "javascript:alert(1)",
+portailAdmission: "https://ok.example/apply",
+entryPoint: "universite",
+abonne: true
+});
+assert.deepEqual(r.liens.map((l) => l.cle), ["admission"]);
+assert.ok(r.manquants.includes("site"));
+
+});
+
+test("portes 6 — le repli du portail de bourse est SIGNALÉ comme non confirmé", () => {
+
+// Le champ confirmé (lot S3) est vide sur les 156 bourses. En attendant,
+// le site du bailleur sert de repli — mais il se trompe une fois sur
+// deux (page d'information contre vrai portail), et le lot de données
+// doit savoir lequel corriger.
+assert.deepEqual(
+portailDeBourseOuRepli({ portailConfirme: "https://a.example/apply", siteDeLaBourse: "https://b.example" }),
+{ url: "https://a.example/apply", confirme: true });
+
+assert.deepEqual(
+portailDeBourseOuRepli({ portailConfirme: "", siteDeLaBourse: "https://b.example" }),
+{ url: "https://b.example", confirme: false });
+
+assert.deepEqual(
+portailDeBourseOuRepli({}),
+{ url: "", confirme: false });
+
+});
+
+test("portes 7 — ce qui manque est MESURÉ, jamais affiché", () => {
+
+// Un abonné ne doit pas lire « portail de bourse manquant » : ce n'est
+// pas son problème. `manquants` sert au décompte de complétude.
+const r = liensDOpportunite({ site: "https://uni.example", entryPoint: "bourse", abonne: true });
+
+assert.deepEqual(r.manquants.sort(), ["admission", "bourse"]);
+// Et rien de tout cela n'entre dans un libellé montré à l'étudiant.
+assert.ok(r.liens.every((l) => !/manquant|absent|indisponible/i.test(l.libelle + l.titre)));
+
+// Un non-abonné n'a pas de portail « manquant » : il n'y a pas droit.
+const v = liensDOpportunite({ site: "https://uni.example", entryPoint: "bourse", abonne: false });
+assert.deepEqual(v.manquants, []);
+
+});
+
+test("portes 8 — LE PUBLIC NE VOIT QUE LE SITE : le catalogue ne porte aucun portail", () => {
+
+const cat = JSON.parse(lire("assets/data/catalogue.json"));
+
+// Garantie au niveau de la DONNÉE : même un bug de rendu ne peut pas
+// faire fuir un portail, puisque le fichier public n'en contient aucun.
+const champsInterdits = ["applicationPortalUrl", "applicationUrl", "portalUrl", "scholarshipPortalUrl"];
+
+for (const [collection, lignes] of Object.entries({ universities: cat.universities, programs: cat.programs, scholarships: cat.scholarships })) {
+for (const champ of champsInterdits) {
+const fautifs = lignes.filter((x) => x && String(x[champ] || "").trim());
+assert.equal(fautifs.length, 0,
+`${collection}.${champ} est revenu dans le catalogue public (${fautifs.length} entrées) — les portails doivent rester derrière la Cloud Function`);
+}
+}
+
+});
+
+test("portes 9 — les pages PUBLIQUES n'importent même pas le module des portails", () => {
+
+// La meilleure garantie n'est pas un `if` : c'est que le code des pages
+// publiques ne sache pas lire un portail.
+for (const f of ["universities-page.js", "scholarships.js", "results.js", "js/homepage-teaser.js", "js/preinscriptions-page.js"]) {
+const src = lire(f);
+assert.ok(!/from ["'].*portails\.js["']/.test(src),
+`${f} importe js/portails.js — une page publique n'a rien à lire dans la carte des portails`);
+}
+
+});
+
+test("portes 10 — dans le hub, les portes réservées passent TOUTES par le droit d'accès", () => {
+
+const hub = sansCommentaires(lire("dashboard.js"));
+
+// `abonne` vient de portailsDisponibles(), vrai seulement si la Cloud
+// Function a répondu. C'est le seul interrupteur, et il doit être câblé.
+assert.match(hub, /const abonne = portailsDisponibles\(\);/,
+"le hub ne lit plus le droit d'accès aux portails");
+assert.match(hub, /abonne\s*$|abonne\s*\n\}\);/m,
+"le droit d'accès n'est plus transmis à liensDOpportunite");
+
+// Et le BALISAGE ne fabrique aucune porte à la main : il ne consomme
+// que la liste rendue par le module. Résoudre un portail directement
+// dans le gabarit rejouerait la doctrine (ordre, droit d'accès,
+// validité du lien) à un deuxième endroit.
+const i = hub.indexOf('<div class="jy-portes">');
+assert.notEqual(i, -1, "le bloc des portes a disparu du hub");
+const balisage = hub.slice(i, hub.indexOf("</div>", i));
+assert.match(balisage, /liens\.map\(/,
+"le bloc des portes ne se construit plus depuis la liste du module");
+assert.ok(!/portailUniversite\(|portailBourse\(|officialWebsite/.test(balisage),
+"un portail est résolu dans le gabarit : la décision doit rester dans js/portails-opportunite.js");
+
+// Le lien d'action emporte le portail RÉSOLU, pas `pick.applicationUrl`
+// qui est vide depuis que les portails ont quitté le catalogue.
+assert.ok(!/portail=\$\{encodeURIComponent\(pick\.applicationUrl/.test(hub),
+"le formulaire de vœu reçoit de nouveau un portail vide");
+assert.match(hub, /portailPourLeVoeu/,
+"le portail d'admission résolu n'est plus transmis au formulaire de vœu");
+
+});
+
+test("portes 11 — le droit d'accès se compare à `true`, il ne se devine pas", () => {
+
+// `abonne ? … : ""` ouvrait la donnée payante sur n'importe quelle
+// valeur vraie. Aujourd'hui la seule source est portailsDisponibles(),
+// qui rend un vrai booléen — mais un futur appelant qui passerait
+// `abonne: session`, `abonne: planId` ou `abonne: "gratuit"` aurait
+// servi les portails réservés sans qu'aucun test ne tombe.
+for (const valeur of ["non", "gratuit", 1, {}, [], "false", new Date()]) {
+const r = liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: valeur });
+assert.deepEqual(r.liens.map((l) => l.cle), ["site"],
+`abonne: ${JSON.stringify(valeur)} a ouvert un portail réservé`);
+}
+
+// Et seul `true` ouvre.
+assert.ok(liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true }).liens.length > 1);
+
+});
+
+test("portes 12 — le module ne jette JAMAIS : une exception y tue tout le rendu", () => {
+
+// `renderOpportunites` est appelée AVANT renderDossiers, renderDepot,
+// renderReponse, applyFeatureLocks et initVisaChecklist. Un jet ici
+// laisse les phases 03 à 06 vides et les verrous de formule non
+// réappliqués.
+const entrees = [
+undefined, null, 0, "", false, [], "texte", 42,
+{ site: null, portailAdmission: undefined, portailBourse: 0, entryPoint: null, funderName: {}, abonne: null },
+{ site: 123, portailAdmission: [], portailBourse: {}, entryPoint: 7, funderName: 9, abonne: true },
+{ site: "  https://a.example  ", entryPoint: "  BOURSE  ", portailBourse: "https://b.example", abonne: true, bourseConfirmee: true }
+];
+
+for (const e of entrees) {
+const r = liensDOpportunite(e);
+assert.ok(Array.isArray(r.liens), `liens n'est pas un tableau pour ${JSON.stringify(e)}`);
+assert.equal(typeof r.orientation, "string");
+assert.ok(Array.isArray(r.manquants));
+// Aucun href vide ou non http(s) ne sort d'ici.
+for (const l of r.liens) assert.match(l.url, /^https?:\/\/\S+$/);
+}
+
+// Idem pour le repli.
+for (const e of [undefined, null, 0, "", { portailConfirme: 1, siteDeLaBourse: [] }]) {
+const r = portailDeBourseOuRepli(e);
+assert.equal(typeof r.url, "string");
+assert.equal(typeof r.confirme, "boolean");
+}
+
+});
+
+test("portes 13 — `entryPoint` est normalisé : casse et espaces n'effacent pas l'orientation", () => {
+
+for (const brut of ["bourse", "Bourse", "BOURSE", " bourse ", "\tbourse\n"]) {
+const r = liensDOpportunite({ ...OPP, entryPoint: brut, abonne: true, bourseConfirmee: true });
+assert.equal(r.porteDeDepot, "bourse", `entryPoint « ${JSON.stringify(brut)} » n'est plus reconnu`);
+assert.equal(r.orientation, ORIENTATION.bourse_avec_portail);
+}
+
+for (const brut of ["universite", "Universite", " UNIVERSITE "]) {
+assert.equal(liensDOpportunite({ ...OPP, entryPoint: brut, abonne: true }).porteDeDepot, "admission");
+}
+
+// Une valeur inconnue reste inconnue : on ne devine pas.
+assert.equal(liensDOpportunite({ ...OPP, entryPoint: "autre", abonne: true }).porteDeDepot, "");
+
+});
+
+test("portes 14 — DANS L'ESPACE PRÉINSCRIPTION, la bourse ne parle pas", () => {
+
+const hub = sansCommentaires(lire("dashboard.js"));
+
+// espace-preinscription.html dit en toutes lettres « ici l'étudiant ne
+// cherche pas un financement : il choisit où déposer ». Sans coupure,
+// un client Dossier France lisait « Le dossier se dépose auprès du
+// bailleur, pas auprès de l'université » sur une carte qui lui demande
+// de choisir un établissement.
+assert.match(hub, /portailBourse: preinscription \? "" : bailleur\.url/,
+"le portail de bourse n'est plus coupé dans l'espace préinscription");
+assert.match(hub, /entryPoint: preinscription \? "" : /,
+"l'entryPoint de la bourse n'est plus coupé dans l'espace préinscription");
+
+// Et le module sait quoi faire d'un entryPoint vide : ni ordre, ni
+// orientation.
+const r = liensDOpportunite({ ...OPP, portailBourse: "", entryPoint: "", abonne: true });
+assert.deepEqual(r.liens.map((l) => l.cle), ["admission", "site"]);
+assert.equal(r.orientation, "");
+
+});
+
+test("portes 15 — la confirmation du repli est TRANSMISE, pas calculée puis jetée", () => {
+
+const hub = sansCommentaires(lire("dashboard.js"));
+
+// `portailDeBourseOuRepli` rend `{url, confirme}`. Le hub capturait
+// l'objet et ne lisait jamais `confirme` : le signal était calculé, puis
+// perdu, et 100 % des cartes étiquetaient un repli « Portail de la
+// bourse ».
+assert.match(hub, /bourseConfirmee: bailleur\.confirme/,
+"la confirmation du portail de bourse n'est plus transmise au module");
+
+});
+
+test("portes 16 — les portails ne mettent pas le parcours entier en otage", () => {
+
+const hub = sansCommentaires(lire("dashboard.js"));
+
+// `chargerPortails()` ne rejette jamais, mais il ATTEND : un import
+// cross-origin depuis gstatic puis un appel callable que le SDK laisse
+// tourner 70 s. Or le loader est déjà retiré et le CSS replie par
+// défaut : pendant l'attente, la page est visible et ne montre que six
+// en-têtes de phase nus.
+assert.match(hub, /Promise\.race\(\[/,
+"l'attente des portails n'est plus bornée : un réseau lent affiche un hub mort");
+assert.match(hub, /DELAI_PORTAILS/, "le délai des portails n'est plus nommé");
+const delai = Number((hub.match(/const DELAI_PORTAILS = (\d+);/) || [])[1]);
+assert.ok(delai > 0 && delai <= 8000, `délai des portails hors bornes : ${delai}`);
+
+// Et la chaîne d'amorçage a un filet : sans lui, une exception laissait
+// six en-têtes nus, sans un mot.
+assert.match(hub, /\}\)\.catch\(\(erreur\) => \{/,
+"la chaîne d'amorçage du hub n'a plus de .catch");
+assert.match(hub, /catch[\s\S]{0,400}dataset\.parcoursPret = "1"/,
+"le .catch ne lève plus le repli par défaut : le parcours resterait replié");
+
+});
+
+test("portes 17 — l'ordre qui DIFFÈRE de details.js est épinglé, pas subi", () => {
+
+// Le module n'est pas encore la source unique : details.js garde son
+// `ordonnerPortails`, qui déplace des nœuds du DOM de la fiche. Les
+// PHRASES sont partagées (portes 4) ; l'ORDRE ne l'est pas :
+//   fiche  entryPoint=bourse : bourse, site, admission
+//   hub    entryPoint=bourse : bourse, admission, site
+// Ce test épingle les deux, pour que la différence reste un constat et
+// non une surprise — et il tombera le jour où l'un des deux changera.
+assert.deepEqual(
+liensDOpportunite({ ...OPP, entryPoint: "bourse", abonne: true, bourseConfirmee: true }).liens.map((l) => l.cle),
+["bourse", "admission", "site"]);
+
+const details = lire("details.js");
+assert.match(details, /function ordonnerPortails\(/,
+"ordonnerPortails a disparu de details.js : si l'ordre est passé dans le module, retirer cet épinglage et unifier");
+
+// Et le module le dit dans son en-tête, pour que personne ne le croie
+// source unique de l'ordre.
+const module = lire("js/portails-opportunite.js");
+assert.match(module, /N'EST PAS ENCORE LA SOURCE UNIQUE/,
+"l'en-tête du module ne signale plus la divergence d'ordre avec details.js");
+
+});

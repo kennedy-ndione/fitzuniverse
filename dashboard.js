@@ -35,6 +35,13 @@ import { etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_RE
 import { quotaDeLaFormule, nombreAProposer, phraseDuQuota, motDeLaPlace } from "./js/parcours-quota.js";
 import { revelerPhases, promesseDePhase, resumeDePhase, revelerEtapesVisa } from "./js/revelation.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
+// LOT PORTAILS (2026-09-14) — les trois portes d'une opportunité.
+// Les portails ont quitté le catalogue public au lot S3 : ils sont
+// servis par la Cloud Function `portails`, qui vérifie l'abonnement.
+// Le hub n'en affichait AUCUN — les 147 portails d'université déjà
+// renseignés étaient invisibles pour l'étudiant qui les avait payés.
+import { chargerPortails, portailUniversite, portailBourse, portailsDisponibles } from "./js/portails.js";
+import { liensDOpportunite, portailDeBourseOuRepli } from "./js/portails-opportunite.js";
 // Lot S3 (2026-09-13) : le contenu du guide visa a quitté le HTML, où il
 // était écrit DEUX FOIS — dans espace-bourse.html et dans
 // espace-preinscription.html, avec le texte de la bourse recopié tel quel
@@ -540,10 +547,56 @@ return;
 // choisit vraiment : le lien emporte alors l'établissement.
 const preinscription = quotaCtx && quotaCtx.espace === "preinscription";
 
+// L'ACCÈS AUX PORTAILS EST UNE DONNÉE PAYANTE.
+// `portailsDisponibles()` est vrai seulement si la Cloud Function a
+// répondu — donc pour un abonné actif. Faux : la carte ne porte que le
+// site de l'université, exactement ce qu'un visiteur verrait. Ni
+// cadenas, ni « réservé », ni bloc vide (doctrine du 2026-08-31).
+const abonne = portailsDisponibles();
+const bourseDe = (id) => (opps.index && id ? opps.index.bourseParId.get(id) : null) || null;
+
 grid.innerHTML = opps.top.slice(0, combien).map((pick) => {
 
+const bourse = bourseDe(pick.scholarshipId);
+
+// Le portail du bailleur : le champ confirmé du lot S3 d'abord, le
+// site officiel de la bourse en repli — MÊME règle que details.js.
+// Le champ neuf est vide sur les 156 bourses tant que le lot de
+// données n'a pas eu lieu ; le repli évite une carte sans aucune
+// porte vers la bourse, et se corrigera tout seul au remplissage.
+const bailleur = portailDeBourseOuRepli({
+portailConfirme: portailBourse(pick.scholarshipId),
+siteDeLaBourse: bourse ? bourse.officialWebsite : ""
+});
+
+// DANS L'ESPACE PRÉINSCRIPTION, LA BOURSE N'A RIEN À DIRE.
+// espace-preinscription.html écrit en toutes lettres « ici l'étudiant
+// ne cherche pas un financement : il choisit où déposer ». Sans cette
+// coupure, un client Dossier France lisait « Le dossier se dépose
+// auprès du bailleur, pas auprès de l'université » sur une carte qui
+// lui demande de choisir un établissement — et son seul lien utile, le
+// portail d'admission, passait en deuxième.
+const { liens, orientation } = liensDOpportunite({
+site: pick.universityWebsite,
+// Le portail d'ADMISSION ne vient plus du catalogue (il en a été
+// retiré au lot S3) : `pick.applicationUrl` est donc vide sur les
+// 155 universités. C'est portailUniversite() qui le sert.
+portailAdmission: portailUniversite({ universityId: pick.universityId, programId: pick.programId }),
+portailBourse: preinscription ? "" : bailleur.url,
+bourseConfirmee: bailleur.confirme,
+entryPoint: preinscription ? "" : (bourse ? bourse.entryPoint : ""),
+funderName: bourse ? bourse.funderName : "",
+abonne
+});
+
+// LE LIEN D'ACTION EMPORTE LE VRAI PORTAIL.
+// Il emportait `pick.applicationUrl`, vide depuis le lot S3 : le champ
+// « portail » du formulaire de vœu arrivait donc toujours vide. C'est
+// le portail d'admission résolu qu'il faut passer.
+const portailPourLeVoeu = (liens.find((l) => l.cle === "admission") || {}).url || "";
+
 const lien = preinscription
-? `applications.html?action=new&universite=${encodeURIComponent(pick.universityName || "")}&portail=${encodeURIComponent(pick.applicationUrl || "")}`
+? `applications.html?action=new&universite=${encodeURIComponent(pick.universityName || "")}&portail=${encodeURIComponent(portailPourLeVoeu)}`
 : "applications.html";
 
 const libelle = preinscription ? "Ajouter ce vœu" : "Voir cette proposition";
@@ -553,6 +606,11 @@ return `
 <h3>${ech(pick.scholarshipTitle || "Programme")}</h3>
 <p class="jy-opp-uni">${ech(pick.universityName)}</p>
 ${pick.reasons && pick.reasons.length ? `<p class="jy-opp-reason"><i data-lucide="check"></i><span>${ech(pick.reasons[0])}</span></p>` : ""}
+${orientation ? `<p class="jy-opp-orientation"><i data-lucide="signpost"></i><span>${ech(orientation)}</span></p>` : ""}
+${liens.length ? `<div class="jy-portes">${liens.map((l) => `
+<a href="${ech(l.url)}" target="_blank" rel="noopener noreferrer" class="jy-porte jy-porte--${ech(l.cle)}${l.depot ? " jy-porte--depot" : ""}" title="${ech(l.titre)}">
+<i data-lucide="${ech(l.icone)}"></i><span>${ech(l.libelle)}</span><i class="jy-porte-sortie" data-lucide="external-link"></i>
+</a>`).join("")}</div>` : ""}
 <a href="${ech(lien)}" class="jy-btn"><span>${libelle}</span><i data-lucide="arrow-right"></i></a>
 </article>`;
 
@@ -1074,10 +1132,34 @@ applications = applicationsSnap.docs
 console.error("Impossible de charger les candidatures :", error);
 }
 
-const opps = await chargerOpportunites(
+// LES PORTAILS NE METTENT PAS TOUT LE PARCOURS EN OTAGE.
+//
+// `chargerPortails()` ne rejette jamais (il avale ses erreurs et rend
+// null) — mais il ATTEND : un import cross-origin depuis gstatic, puis
+// un appel callable dont le SDK Firebase laisse tourner 70 secondes par
+// défaut. Or js/app-shell.js retire le loader AVANT de résoudre sa
+// promesse : pendant toute cette attente la page est VISIBLE, et le
+// repli par défaut du CSS ne montre que six en-têtes de phase nus. Un
+// réseau qui filtre gstatic (le cas décrit dans js/icones.js pour
+// unpkg) ou un démarrage à froid de la fonction aurait donc affiché un
+// hub mort, sans message et sans bouton, pour une donnée qui ne décore
+// que trois liens.
+//
+// On borne donc l'attente. Le dépassement a déjà un comportement
+// défini : portailsDisponibles() reste faux, et la carte se rend
+// exactement comme pour un visiteur.
+const DELAI_PORTAILS = 4000;
+
+const [opps] = await Promise.all([
+chargerOpportunites(
 profile,
 new Set(applications.map((app) => app.universityId).filter(Boolean))
-);
+),
+Promise.race([
+chargerPortails(),
+new Promise((resoudre) => setTimeout(resoudre, DELAI_PORTAILS))
+])
+]);
 
 // Étapes réelles de chaque dossier — calculées UNE fois, réutilisées
 // par la prochaine action, les phases et les cartes. Et, depuis la
@@ -1202,5 +1284,16 @@ procedure: procedureDeDepart(applications, procedureDe)
 }));
 
 if (window.lucide) lucide.createIcons();
+
+}).catch((erreur) => {
+
+// LE PARCOURS NE RESTE JAMAIS REPLIÉ SUR UNE ERREUR.
+// Cette chaîne n'avait aucun `.catch`. Une exception levée n'importe où
+// dans le rendu laissait une rejection non gérée en console ET —
+// depuis que le CSS replie par défaut — six en-têtes de phase nus,
+// sans un mot. On journalise, et on lève le repli : ce qui a été peint
+// avant l'erreur devient au moins lisible.
+console.error("Le parcours n'a pas pu être rendu en entier :", erreur);
+document.body.dataset.parcoursPret = "1";
 
 });
