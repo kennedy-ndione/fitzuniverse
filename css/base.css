@@ -2764,12 +2764,24 @@ outline-offset:2px;
      </div>
    ========================================================== */
 
+/* ⚠️ CE COMPOSANT NE DÉCLARE PAS SON `flex`. C'EST LE CONTENEUR QUI DÉCIDE.
+   Il portait `flex:1 1 260px` — juste dans la barre d'outils de « Mes
+   documents », qui est une RANGÉE, et catastrophique dans la colonne de
+   l'historique de Fitz : sur l'axe vertical, ce `260px` devient une
+   HAUTEUR, le champ s'est étiré sur 260 px et a écrasé la liste des
+   conversations contre le bas du panneau. C'est le grand vide que
+   Charles a entouré en rouge le 2026-09-14.
+   Un composant réutilisable décrit son APPARENCE ; sa place dans un flux
+   appartient à la page qui le pose. Voir documents.css, qui l'étire
+   lui-même dans sa rangée. */
 .fitz-recherche{
 position:relative;
 display:flex;
 align-items:center;
 gap:9px;
-flex:1 1 260px;
+flex:0 0 auto;
+width:100%;
+box-sizing:border-box;
 min-width:0;
 padding:9px 14px;
 border:1px solid var(--border-color);

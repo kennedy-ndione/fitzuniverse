@@ -107,6 +107,20 @@ align-items:center;
 margin-bottom:18px;
 }
 
+/* LE CHAMP NE S'ÉTIRE QUE LÀ OÙ LA BARRE EST UNE RANGÉE.
+   `.fitz-recherche` ne déclare plus son propre `flex` (voir la note dans
+   css/base.css) : c'est la page qui l'étire. Mais sous 640 px,
+   `.docs-toolbar` passe en `flex-direction:column` — et un
+   `flex:1 1 260px` y redeviendrait une HAUTEUR de 260 px, exactement le
+   défaut corrigé le 2026-09-14 dans l'historique de Fitz. La borne
+   min-width n'est donc pas une précaution : elle est la correction. */
+@media(min-width:641px){
+.docs-toolbar .fitz-recherche{
+flex:1 1 260px;
+width:auto;
+}
+}
+
 /* LA RECETTE BESPOKE A ÉTÉ RETIRÉE (2026-09-13).
 Elle est remplacée par `.fitz-recherche` (css/base.css), le champ de
 recherche unique de l'espace étudiant. Le commentaire qui vivait ici
@@ -513,5 +527,7 @@ pour une rangée) devenait alors une HAUTEUR de base de 260px qui
 grandissait encore — un pavé vide de 370px avec le champ au milieu.
 En colonne, le champ reprend sa hauteur naturelle. */
 @media(max-width:640px){
-.fitz-recherche{ flex:0 0 auto; }
+/* `.fitz-recherche{flex:0 0 auto}` vivait ici. Inutile désormais : c'est
+   le défaut du composant, et la règle d'étirement ne s'applique plus
+   au-dessous de 641 px. */
 }

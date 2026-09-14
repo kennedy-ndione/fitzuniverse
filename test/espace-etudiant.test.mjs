@@ -701,3 +701,61 @@ assert.match(bloc, /\^\(https\?:/,
 "un href venu du modèle est émis sans vérifier son schéma");
 
 });
+
+// ==========================================================
+// 5. LE DÉFAUT DU 2026-09-14 — TROISIÈME OCCURRENCE
+// ==========================================================
+// `flex:1 1 260px` sur un champ de recherche : juste dans une RANGÉE,
+// désastreux dans une COLONNE, où le flex-basis devient une HAUTEUR de
+// 260 px. Ce défaut a déjà frappé DEUX fois :
+//   - 2026-09-03, documents.html sur iPhone (« un pavé vide de 370px
+//     avec le champ au milieu » — le commentaire est encore dans
+//     documents.css) ;
+//   - 2026-09-14, l'historique de Fitz, quand j'ai copié ce même `flex`
+//     dans le composant partagé `.fitz-recherche` : la liste des
+//     conversations s'est retrouvée écrasée contre le bas du panneau.
+//
+// La règle qui ferme le sujet : UN COMPOSANT RÉUTILISABLE NE DÉCLARE PAS
+// SA PLACE DANS LE FLUX. Il décrit son apparence ; c'est le conteneur
+// qui décide s'il s'étire, et dans quel axe.
+
+test("composant 1 — .fitz-recherche ne décide pas de sa place dans le flux", () => {
+
+const css = lire("css/base.css");
+
+const i = css.indexOf(".fitz-recherche{");
+assert.notEqual(i, -1, ".fitz-recherche a disparu de css/base.css");
+const bloc = css.slice(i, css.indexOf("}", i));
+
+// Un facteur de croissance dans le composant, c'est le bug de retour :
+// il s'appliquerait à l'axe du conteneur, quel qu'il soit.
+assert.ok(!/flex:\s*[1-9]/.test(bloc),
+"`.fitz-recherche` déclare un facteur de croissance : en colonne, son flex-basis devient une hauteur");
+assert.match(bloc, /flex:\s*0 0 auto/,
+"`.fitz-recherche` doit rester neutre dans le flux (flex:0 0 auto)");
+
+});
+
+test("composant 2 — la page qui étire le champ le fait, et SEULEMENT en rangée", () => {
+
+const css = lire("documents.css");
+
+// La barre d'outils de « Mes documents » est une rangée au-dessus de
+// 640px et une COLONNE en dessous (flex-direction:column). L'étirement
+// doit donc être borné : non borné, il refait le pavé vide de 370px.
+const i = css.indexOf(".docs-toolbar .fitz-recherche{");
+assert.notEqual(i, -1, "l'étirement du champ dans la barre d'outils a disparu");
+
+const avant = css.slice(0, i);
+const media = avant.lastIndexOf("@media");
+const accolade = avant.lastIndexOf("}");
+assert.ok(media > accolade, "la règle d'étirement n'est plus dans une requête de média : elle s'appliquera aussi en colonne");
+assert.match(css.slice(media, i), /min-width:\s*641px/,
+"l'étirement doit être borné à min-width:641px — la largeur où la barre est une rangée");
+
+// Et la colonne mobile passe bien en flex-direction:column : c'est la
+// prémisse de tout ce test. Si elle disparaît, la borne n'a plus de sens.
+assert.match(css, /\.docs-toolbar\{flex-direction:column/,
+"la barre d'outils ne passe plus en colonne : revoir la borne ci-dessus");
+
+});
