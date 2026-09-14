@@ -232,7 +232,21 @@ assert.equal(placesAFitz(undefined), 0);
 // Et le bouton « Nouvelle candidature » n'existe plus que pour la préinscription.
 const js = lire("applications.js");
 assert.match(js, /const creationManuelle = ESPACE_ECRITURE === "preinscription";/);
-assert.match(js, /placesAFitz\(plan \? plan\.maxAccompaniedApplications : null\)/, "seedRecommendedSlots passe par placesAFitz");
+// RÉÉCRIT EN CONSCIENCE le 2026-09-13 (lot ESPACE-ÉTUDIANT).
+// Cette assertion photographiait l'EXPRESSION —
+// `placesAFitz(plan ? plan.maxAccompaniedApplications : null)` — et non
+// la règle. Le lot a déplacé la lecture du quota dans
+// js/parcours-quota.js (une seule définition pour la page et pour le
+// hub) : l'expression a changé, la règle n'a pas bougé. On vérifie
+// donc ce qui compte vraiment, et un cran plus dur qu'avant :
+//   1. le plafonnement passe toujours par placesAFitz ;
+//   2. le quota vient de la définition unique, pas d'une relecture du
+//      champ à la main ici.
+const sansCom = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const seed = sansCom(js.slice(js.indexOf("async function seedRecommendedSlots"), js.indexOf("function initApplicationsPage")));
+assert.match(seed, /placesAFitz\(/, "seedRecommendedSlots ne plafonne plus le quota infini");
+assert.match(seed, /quotaDeLaFormule\(/, "seedRecommendedSlots relit le quota au lieu de passer par la définition unique");
+assert.ok(!/maxAccompaniedApplications/.test(seed), "seedRecommendedSlots relit le champ de quota à la main");
 assert.ok(!/removeApplication[\s\S]*Fitz proposera une autre université pour cette place/.test(js), "la phrase « Fitz proposera une autre université pour cette place » a disparu");
 });
 

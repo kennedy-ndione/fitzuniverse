@@ -24,13 +24,24 @@ doivent gagner sur ceux de css/base.css et sur les font-family
 
 :root{
 
-/* Mêmes valeurs que css/catalog-typography.css et
-css/homepage-typography.css, redéclarées ici plutôt que partagées :
-chaque famille de pages charge son propre fichier autonome, et
-aucune ne charge celui d'une autre. */
---font-affirmation:'Space Grotesk', system-ui, sans-serif;
+/* DEUX POLICES QUE PERSONNE NE TÉLÉCHARGE (corrigé le 2026-09-13).
+Ce fichier déclarait 'Space Grotesk' et 'Plus Jakarta Sans'. Or les
+quatorze pages qui le chargent — tout l'espace étudiant — ne
+demandent à Google que **Newsreader** et **Public Sans** (voir leur
+<head>). Ces deux familles-là n'arrivaient donc jamais : la seule
+raison pour laquelle l'espace s'affichait juste, c'est que
+css/journey-shell.css est chargée APRÈS et redéclare les mêmes
+variables avec les bonnes valeurs.
 
---font-product:'Plus Jakarta Sans', system-ui, sans-serif;
+Autrement dit : une page de l'espace qui oublierait journey-shell.css
+basculait en silence sur une police système, sur toute la page. On
+déclare ici ce qui est réellement chargé — aucun changement visible
+aujourd'hui, et le piège est désamorcé. Les fichiers du catalogue et
+de l'accueil gardent les leurs : ces pages-là téléchargent bien Plus
+Jakarta Sans. */
+--font-affirmation:'Newsreader', Georgia, serif;
+
+--font-product:'Public Sans', system-ui, sans-serif;
 
 --font-body:var(--font-product);
 

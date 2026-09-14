@@ -1185,46 +1185,19 @@ cursor:pointer;
 .ai-chat-history-close i,
 .ai-chat-history-close svg{ width:18px; height:18px; }
 
+/* La géométrie de ce champ vit maintenant dans `.fitz-recherche`
+   (css/base.css) : il ne garde ici que sa place dans la colonne. */
 .ai-chat-history-search{
 
-display:flex;
-
-align-items:center;
-
-gap:8px;
-
-margin:10px 14px 4px;
-
-padding:8px 12px;
-
-border-radius:var(--radius-sm);
-
-border:1px solid var(--border-color);
-
-background:var(--background);
+margin:0 0 10px;
 
 }
 
-.ai-chat-history-search i,
-.ai-chat-history-search svg{width:15px;height:15px;color:var(--text-muted);flex-shrink:0;}
 
-.ai-chat-history-search input{
 
-flex:1;
 
-border:none;
 
-background:transparent;
 
-font-size:.84rem;
-
-color:var(--text-color);
-
-min-width:0;
-
-}
-
-.ai-chat-history-search input:focus{outline:none;}
 
 .ai-chat-history-empty{
 
@@ -3091,6 +3064,16 @@ border-color:rgba(239,68,68,.4);
 .ai-toast-success{
 
 border-color:rgba(34,197,94,.35);
+
+}
+
+/* `type: "warning"` est utilisé à quatre endroits d'applications.js
+   (proposition finale de Fitz, aucune remplaçante trouvée, statut
+   refusé) et n'avait AUCUN style : ces avertissements sortaient avec la
+   bordure neutre, indiscernables d'une confirmation. */
+.ai-toast-warning{
+
+border-color:rgba(190,96,50,.45);
 
 }
 

@@ -2732,3 +2732,84 @@ outline-offset:2px;
 }
 
 .fitz-choice input:disabled ~ *{ opacity:.55; }
+
+/* ==========================================================
+   LA RECHERCHE — UN SEUL CHAMP POUR TOUT L'ESPACE ÉTUDIANT
+   ==========================================================
+   (lot ESPACE-ÉTUDIANT, 2026-09-13)
+
+   L'audit des champs a trouvé TROIS recherches texte, trois recettes,
+   aucune partagée :
+     - le catalogue (.catalog-search-field) : loupe en absolu, bouton
+       d'effacement, focus terracotta sur le conteneur ;
+     - « Mes documents » (.docs-search-field) : loupe en ligne, fond
+       beige, **aucun état de focus** ;
+     - l'historique de Fitz (.ai-chat-history-search) : troisième
+       géométrie, troisième taille de police, **aucun état de focus**.
+
+   Deux champs sur trois ne réagissaient donc pas au clavier : pour qui
+   navigue à la tabulation, le curseur disparaissait purement et
+   simplement. Et trois rayons, trois tailles et deux positions de loupe
+   se voyaient d'un écran à l'autre du même espace.
+
+   `.fitz-recherche` est le champ du site. Il reprend ce qui marchait
+   dans le catalogue — focus sur le conteneur, icône qui vire à l'ambre —
+   et le pose sur le papier chaud de l'espace étudiant. Une seule
+   définition : la prochaine page qui cherche quelque chose l'utilise.
+
+   Structure attendue :
+     <div class="fitz-recherche">
+       <i data-lucide="search"></i>
+       <input type="search" placeholder="…">
+     </div>
+   ========================================================== */
+
+.fitz-recherche{
+position:relative;
+display:flex;
+align-items:center;
+gap:9px;
+flex:1 1 260px;
+min-width:0;
+padding:9px 14px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-sm);
+background:var(--background);
+transition:border-color .15s var(--ease-standard, ease), box-shadow .15s var(--ease-standard, ease);
+}
+
+.fitz-recherche i,
+.fitz-recherche svg{
+flex-shrink:0;
+width:16px;
+height:16px;
+color:var(--text-muted);
+transition:color .15s var(--ease-standard, ease);
+}
+
+.fitz-recherche input{
+flex:1 1 auto;
+min-width:0;
+border:none;
+outline:none;
+background:transparent;
+font-family:var(--font-body);
+font-size:.88rem;
+color:var(--text-color);
+/* La croix native de <input type="search"> est dessinée par l'OS et
+   ignore la charte : on la retire, le champ se vide à la main. */
+appearance:none;
+-webkit-appearance:none;
+}
+
+.fitz-recherche input::-webkit-search-cancel-button{ display:none; }
+.fitz-recherche input::placeholder{ color:var(--text-muted); }
+
+/* CE QUI MANQUAIT : le champ répond au clavier. */
+.fitz-recherche:focus-within{
+border-color:var(--accent-color);
+box-shadow:0 0 0 3px rgba(190,96,50,.16);
+}
+
+.fitz-recherche:focus-within i,
+.fitz-recherche:focus-within svg{ color:var(--accent-color); }

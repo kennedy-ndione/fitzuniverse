@@ -555,10 +555,16 @@ color:var(--text-color);
 « pourquoi », la variante du parcours et un dépliant. À 230px elles
 étaient illisibles ; à 340px elles tiennent deux colonnes sur un
 portable et trois sur un écran large. */
+/* UNE COLONNE, ET NON DEUX (lot ESPACE-ÉTUDIANT).
+   Deux colonnes juxtaposaient les étapes 1-2, 3-4, 5-6 : le regard lisait
+   en Z une suite qui se fait dans l'ordre, et les six cartes, de hauteurs
+   très inégales, laissaient des trous. Depuis que les étapes se
+   dévoilent une à une, la colonne unique dit ce qu'elle est — un chemin,
+   du consulat à l'avion. */
 .jy-guide{
-display:grid;
-grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));
-gap:16px;
+display:flex;
+flex-direction:column;
+gap:12px;
 }
 
 .jy-guide-step h3{
@@ -829,6 +835,309 @@ opacity:.82;
 .jy-destination-src a{ color:var(--amber-700); text-decoration:underline; }
 
 @media (max-width: 560px){
-.jy-guide{ grid-template-columns:1fr; }
 .jy-destination-list{ padding-left:17px; }
+}
+
+/* ==========================================================
+   LA RÉVÉLATION PROGRESSIVE (lot ESPACE-ÉTUDIANT, 2026-09-13)
+   ==========================================================
+   Les six phases étaient dépliées EN ENTIER, tout le temps : neuf écrans
+   de texte le jour de l'inscription, dont huit ne concernaient pas
+   encore l'étudiant. Ce qui compte aujourd'hui était noyé, et il ne
+   restait rien à découvrir.
+
+   Ce qui se cache, c'est le DÉTAIL. Le rail des six phases reste entier
+   (voir .jy-rail plus haut) : on ne cache jamais la route à quelqu'un
+   qui paie pour la parcourir. Et rien n'est verrouillé — `.is-devoilee`
+   est posée par un bouton, sur décision de l'étudiant.
+
+   Les états viennent de js/revelation.js et sont posés par
+   dashboard.js : is-faite / is-ouverte / is-entrouverte / is-scellee. */
+
+/* LE REPLI PAR DÉFAUT — avant que le JS n'ait rien peint.
+   js/app-shell.js retire le loader dès que la session est résolue, mais
+   dashboard.js attend encore deux allers-retours réseau (candidatures,
+   puis catalogue) avant de poser le premier état de révélation. Entre
+   les deux, la page est visible. Sans cette règle, l'étudiant voit les
+   six phases dépliées — précisément ce que ce lot supprime — puis les
+   voit s'effondrer sous ses yeux, avec un saut de défilement.
+   `data-parcours-pret` est posé par dashboard.js à la fin du premier
+   rafraîchissement de la carte. */
+body:not([data-parcours-pret]) .jy-phase > *:not(.jy-phase-head){
+display:none;
+}
+
+.jy-phase-body{
+display:block;
+}
+
+/* Ces trois blocs sont pilotés par la propriété `hidden` depuis le JS et
+   portent un `display` d'auteur, qui bat la feuille du navigateur. Les
+   deux hubs ont bien `[hidden]{display:none !important}` dans leur
+   <head> — mais c'est une ligne de HTML, facile à perdre à la prochaine
+   refonte de gabarit, et le jour où elle partirait la ligne verte
+   « 6 démarches sur 6 accomplies » resterait affichée au-dessus d'un
+   compteur qui dirait 5. On ne dépend pas d'elle. */
+.jy-phase-resume[hidden],
+.jy-phase-voile[hidden],
+.jy-quota[hidden],
+.jy-radar[hidden]{
+display:none;
+}
+
+/* Ce qui n'est pas la phase en cours est replié — jusqu'à ce que
+   l'étudiant décide le contraire. */
+.jy-phase.is-faite:not(.is-devoilee) > .jy-phase-body,
+.jy-phase.is-entrouverte:not(.is-devoilee) > .jy-phase-body,
+.jy-phase.is-scellee:not(.is-devoilee) > .jy-phase-body{
+display:none;
+}
+
+.jy-phase.is-faite > .jy-phase-voile,
+.jy-phase.is-ouverte > .jy-phase-voile,
+.jy-phase.is-devoilee > .jy-phase-voile{
+display:none;
+}
+
+/* L'ouverture : un mouvement court, jamais un rideau. Respecté par
+   prefers-reduced-motion plus bas. */
+.jy-phase.is-devoilee > .jy-phase-body,
+.jy-phase.is-ouverte > .jy-phase-body{
+animation:jy-devoile .34s cubic-bezier(.22,.61,.36,1) both;
+}
+
+@keyframes jy-devoile{
+from{ opacity:0; transform:translateY(-6px); }
+to{ opacity:1; transform:none; }
+}
+
+/* ---------- LE VOILE — ce qui vous attend, et ce qui l'ouvre ---------- */
+.jy-phase-voile{
+position:relative;
+margin:4px 0 6px;
+padding:20px 22px;
+border:1px dashed var(--border-color);
+border-radius:16px;
+background:
+linear-gradient(160deg, rgba(217,128,90,.05) 0%, transparent 58%),
+var(--background-soft);
+}
+
+.jy-voile-attend{
+margin:0 0 12px;
+max-width:64ch;
+font-family:var(--font-affirmation);
+font-size:1rem;
+line-height:1.55;
+color:var(--journey-ink);
+}
+
+.jy-voile-cle{
+display:flex;
+align-items:flex-start;
+gap:8px;
+margin:0 0 14px;
+font-size:.82rem;
+line-height:1.5;
+color:var(--text-light);
+}
+
+.jy-voile-cle i,
+.jy-voile-cle svg{ flex-shrink:0; width:14px; height:14px; margin-top:2px; color:var(--amber-700); }
+.jy-voile-cle strong{ color:var(--journey-ink); font-weight:700; }
+
+.jy-voile-btn{
+display:inline-flex;
+align-items:center;
+gap:7px;
+padding:8px 15px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--background);
+font-family:inherit;
+font-size:.79rem;
+font-weight:700;
+color:var(--text-light);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.jy-voile-btn:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+.jy-voile-btn i,
+.jy-voile-btn svg{ width:14px; height:14px; }
+
+/* La phase juste après la courante se distingue de celles du fond :
+   c'est la prochaine, elle doit donner envie un cran plus fort. */
+.jy-phase.is-entrouverte > .jy-phase-voile{
+border-style:solid;
+border-color:rgba(190,96,50,.34);
+}
+
+.jy-phase.is-scellee > .jy-phase-voile{ opacity:.82; }
+
+/* ---------- LA LIGNE D'UNE PHASE FAITE ---------- */
+.jy-phase-resume{
+display:flex;
+align-items:center;
+gap:10px;
+width:100%;
+margin:2px 0 6px;
+padding:12px 16px;
+border:1px solid rgba(47,122,70,.28);
+border-radius:14px;
+background:#F3F8F4;
+font-family:inherit;
+font-size:.85rem;
+font-weight:600;
+text-align:left;
+color:var(--journey-done);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.jy-phase-resume:hover{ border-color:var(--journey-done); }
+.jy-phase-resume > i,
+.jy-phase-resume > svg{ flex-shrink:0; width:15px; height:15px; }
+.jy-phase-resume span{ flex:1 1 auto; }
+
+.jy-phase-resume-caret{ transition:transform .2s var(--ease-standard, ease); }
+.jy-phase.is-devoilee .jy-phase-resume-caret{ transform:rotate(180deg); }
+
+/* ---------- LE RAIL : estompé, jamais amputé ---------- */
+.jy-rail-item.is-scellee .jy-rail-dot{ opacity:.5; }
+.jy-rail-item.is-scellee .jy-rail-label{ opacity:.62; }
+.jy-rail-item.is-entrouverte .jy-rail-dot{ border-style:dashed; }
+
+/* ==========================================================
+   LA LIGNE DU QUOTA — « votre formule vous donne N »
+   ==========================================================
+   Le nombre de candidatures était APPLIQUÉ (applications.js bloquait au
+   dépassement) et jamais DIT. Un client Conseiller pouvait parcourir son
+   espace entier sans lire une seule fois le chiffre six. */
+
+.jy-quota{
+display:flex;
+align-items:flex-start;
+gap:9px;
+margin:0 0 18px;
+padding:11px 14px;
+border:1px solid var(--border-color);
+border-left:3px solid var(--amber-600);
+border-radius:0 12px 12px 0;
+background:var(--journey-paper);
+font-size:.85rem;
+line-height:1.55;
+color:var(--journey-ink);
+}
+
+.jy-quota i,
+.jy-quota svg{ flex-shrink:0; width:15px; height:15px; margin-top:2px; color:var(--amber-700); }
+.jy-quota.is-complet{ border-left-color:var(--journey-done); }
+.jy-quota.is-complet i,
+.jy-quota.is-complet svg{ color:var(--journey-done); }
+
+/* Le conteneur portait .jy-card ET chaque étape a maintenant son propre
+   cadre : deux boîtes emboîtées. Le conteneur redevient un simple
+   empilement — la carte, désormais, c'est l'étape. (La classe reste dans
+   les deux HTML, qui sont identiques au caractère près et qu'un test
+   compare : on la neutralise ici plutôt que de les modifier deux fois.) */
+#jyVisaGuide.jy-card{
+padding:0;
+border:none;
+background:transparent;
+box-shadow:none;
+}
+
+/* ==========================================================
+   LE GUIDE VISA, RÉVÉLÉ LUI AUSSI (phase 06)
+   ==========================================================
+   Six cartes ouvertes d'un coup, c'est neuf paragraphes avant la
+   première action. On n'en montre qu'une — celle en cours. Le contenu
+   des autres est écrit dans le DOM : dévoiler est instantané. */
+
+.jy-guide-step{
+position:relative;
+padding:16px 18px;
+border:1px solid var(--border-color);
+border-radius:14px;
+background:var(--background);
+transition:border-color .2s ease, background .2s ease;
+}
+
+/* Le numéro quitte le titre pour une pastille : à six cartes, « 1 · »
+   collé au texte se lisait comme une puce, pas comme un rang. */
+.jy-guide-rang{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+flex:none;
+width:20px;
+height:20px;
+margin-right:2px;
+border-radius:50%;
+background:var(--background-soft);
+font-family:var(--font-affirmation);
+font-size:.72rem;
+font-weight:800;
+color:var(--amber-700);
+}
+
+.jy-guide-step.is-ouverte{
+border-color:rgba(190,96,50,.4);
+box-shadow:0 1px 2px rgba(33,29,24,.05), 0 12px 28px -20px rgba(33,29,24,.28);
+}
+
+.jy-guide-step.is-ouverte .jy-guide-rang{ background:var(--amber-600); color:#FDF9EF; }
+
+.jy-guide-step.is-faite .jy-guide-rang{ background:#EAF3EC; color:var(--journey-done); }
+
+/* Repliées ou scellées : le titre, le « quand », et rien d'autre. */
+.jy-guide-step.is-entrouverte:not(.is-devoilee) .jy-guide-corps,
+.jy-guide-step.is-scellee:not(.is-devoilee) .jy-guide-corps{
+display:none;
+}
+
+/* Une étape encore scellée ne montre même pas son calendrier : le
+   « quand » d'une démarche qu'on ne peut pas entamer n'est qu'une
+   inquiétude de plus. */
+.jy-guide-step.is-scellee .jy-guide-quand{ display:none; }
+
+.jy-guide-devoiler{
+display:none;
+align-items:center;
+gap:7px;
+margin-top:10px;
+padding:6px 12px;
+border-radius:999px;
+border:1px dashed var(--border-color);
+background:transparent;
+font-family:inherit;
+font-size:.75rem;
+font-weight:700;
+color:var(--text-light);
+cursor:pointer;
+transition:var(--transition);
+}
+
+.jy-guide-devoiler:hover{ border-color:var(--amber-600); color:var(--amber-700); }
+.jy-guide-devoiler i,
+.jy-guide-devoiler svg{ width:13px; height:13px; }
+
+.jy-guide-step.is-entrouverte:not(.is-devoilee) .jy-guide-devoiler,
+.jy-guide-step.is-scellee:not(.is-devoilee) .jy-guide-devoiler{ display:inline-flex; }
+
+/* Une étape faite garde son bouton « Fait » — c'est par lui qu'on la
+   décoche. Elle perd seulement ce qu'on a déjà lu : pas de second bouton
+   pour la même carte. */
+.jy-guide-step.is-faite:not(.is-devoilee) .jy-guide-pourquoi,
+.jy-guide-step.is-faite:not(.is-devoilee) .jy-guide-variante,
+.jy-guide-step.is-faite:not(.is-devoilee) .jy-guide-plus{ display:none; }
+
+.jy-guide-step.is-scellee{ background:var(--background-soft); }
+.jy-guide-step.is-scellee h3{ color:var(--text-light); }
+
+@media (prefers-reduced-motion: reduce){
+.jy-phase.is-devoilee > .jy-phase-body,
+.jy-phase.is-ouverte > .jy-phase-body{ animation:none; }
+.jy-phase-resume-caret{ transition:none; }
 }

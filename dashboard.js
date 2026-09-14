@@ -24,7 +24,17 @@ import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } fr
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage.
 import { boutonRecours } from "./js/fitz-recours.js";
 import { lireParcours } from "./js/parcours.js";
-import { PHASES, etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
+import { etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
+// LOT ESPACE-ÉTUDIANT (2026-09-13) — deux décisions sortent d'ici, et
+// elles ne se prennent plus au jugé dans le rendu :
+//   - COMBIEN de candidatures on propose : celui de la formule, jamais 3
+//     écrit en dur (js/parcours-quota.js) ;
+//   - CE QU'ON MONTRE d'une phase selon où en est l'étudiant
+//     (js/revelation.js). Le rail reste entier ; c'est le détail qui se
+//     dévoile.
+import { quotaDeLaFormule, nombreAProposer, phraseDuQuota, motDeLaPlace } from "./js/parcours-quota.js";
+import { revelerPhases, promesseDePhase, resumeDePhase, revelerEtapesVisa } from "./js/revelation.js";
+import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 // Lot S3 (2026-09-13) : le contenu du guide visa a quitté le HTML, où il
 // était écrit DEUX FOIS — dans espace-bourse.html et dans
 // espace-preinscription.html, avec le texte de la bourse recopié tel quel
@@ -50,7 +60,7 @@ import { indexerCatalogue, etatDeLaCandidature } from "./js/candidature-catalogu
 // moteur que applications.js — jamais une deuxième façon de compter
 // (voir js/recommend-programs.js).
 // ==========================================================
-async function chargerOpportunites(profile) {
+async function chargerOpportunites(profile, dejaSuivies = null) {
 
 try {
 
@@ -78,17 +88,28 @@ const scholarshipsById = new Map(catalogue.bourses.map((s) => [s.id, renommer(s)
 // Autrement dit, l'étudiant qui PAYAIT recevait la liste la moins
 // travaillée des deux. On sert désormais la même que results.js — une
 // seule définition de « ce qui correspond à ce profil ».
+// `exclureUniversites` existait déjà (lot FITZ-CHOISIT) et n'était pas
+// utilisé ici : le hub pouvait proposer, à un Conseiller qui suit deux
+// dossiers, deux cartes pour les universités qu'il suit déjà — avec le
+// bouton « voir cette proposition » à côté. On écarte ce qu'il a.
 const selection = retenirOpportunites({
 profile: profile || {},
 programs,
 universitiesById,
-scholarshipsById
+scholarshipsById,
+exclureUniversites: dejaSuivies
 });
 
 // On rend `selection` tel quel : `nombre`, `ouvertes` et `pays` sont
 // déjà calculés là-bas. Les recompter ici serait la deuxième source de
 // vérité que cette passe supprime.
-return { selection, count: selection.nombre, top: selection.retenues.slice(0, 3), index };
+// `top` s'arrêtait à TROIS. C'était le plafond d'affichage déguisé en
+// plafond de données : même en corrigeant le rendu, un Conseiller
+// n'aurait jamais pu voir ses six places, faute de six entrées à
+// montrer. On remonte tout ce que la sélection a retenu, dans la limite
+// du plus grand quota affichable, et c'est le rendu qui coupe — au
+// nombre de la formule (js/parcours-quota.js).
+return { selection, count: selection.nombre, top: selection.retenues.slice(0, 12), index };
 
 } catch (error) {
 
@@ -112,16 +133,27 @@ return fallback;
 // RENDU — salutation, prochaine action, rail, radar
 // ==========================================================
 
-const NOMS_PHASES = Object.fromEntries(PHASES.map((p) => [p.id, p.label]));
-
+// LE NOM DE LA PHASE VIENT DE L'ESPACE, PAS D'UNE TABLE FIGÉE.
+// Ici vivait `NOMS_PHASES`, construit sur PHASES — c'est-à-dire sur le
+// vocabulaire BOURSE, et lui seul. Dans l'espace préinscription, un
+// étudiant qui venait de choisir ses établissements lisait « Vous êtes à
+// la phase Opportunités », mot que sa page n'emploie nulle part (elle dit
+// « Établissements »), et « Réponse » là où elle dit « Admission ». Le lot
+// DEUX-VOCABULAIRES avait dédoublé les libellés dans phasesDe() ; cette
+// ligne-ci était restée branchée sur l'ancienne table. Les phases reçues
+// portent DÉJÀ le bon `label` — on le lit, on ne le recherche plus.
 function renderHello(nom, phases) {
-
-const courante = phases.find((p) => p.courante);
 
 document.getElementById("welcomeMessage").textContent = `Bonjour ${nom}`;
 
-document.getElementById("jyPhaseLine").innerHTML =
-`Vous êtes à la phase <strong>${NOMS_PHASES[courante.id] || ""}</strong> de votre parcours.`;
+const ligne = document.getElementById("jyPhaseLine");
+const courante = phases.find((p) => p.courante && !p.faite);
+
+// Parcours accompli : « vous êtes à la phase Visa & départ » serait faux
+// — il n'y a plus de phase où être.
+ligne.innerHTML = courante
+? `Vous êtes à la phase <strong>${ech(courante.label)}</strong> de votre parcours.`
+: `Vos six phases sont accomplies. <strong>Bon voyage, et bonne rentrée.</strong>`;
 
 }
 
@@ -165,17 +197,23 @@ function renderRail(phases, progressionPct) {
 
 const rail = document.getElementById("jyRail");
 
+// LE RAIL RESTE ENTIER — C'EST LA CARTE, PAS LE CONTENU.
+// La révélation progressive cache le DÉTAIL d'une phase, jamais son
+// existence : un étudiant qui paie doit voir les six étapes de son
+// voyage dès le premier jour. Le rail se contente donc d'estomper ce qui
+// n'est pas encore atteint, et les six noms restent lisibles et
+// cliquables.
 rail.innerHTML = phases.map((phase, idx) => `
-<a href="#phase-${phase.id}" class="jy-rail-item ${phase.faite ? "is-done" : ""} ${phase.courante ? "is-current" : ""}">
+<a href="#phase-${phase.id}" class="jy-rail-item is-${phase.revelation || "ouverte"} ${phase.faite ? "is-done" : ""} ${phase.courante && !phase.faite ? "is-current" : ""}">
 <span class="jy-rail-dot"><i data-lucide="${phase.faite ? "check" : phase.icon}"></i></span>
-<span class="jy-rail-label">${idx + 1}. ${phase.label}</span>
+<span class="jy-rail-label">${idx + 1}. ${ech(phase.label)}</span>
 </a>
 `).join("");
 
 document.getElementById("jyProgressLine").innerHTML =
 progressionPct >= 100
 ? `<strong>Parcours accompli à 100 %</strong> — bon voyage, et bonne rentrée !`
-: `Parcours accompli à <strong>${progressionPct} %</strong> — chaque phase se déverrouille avec de vraies avancées, jamais avec des clics.`;
+: `Parcours accompli à <strong>${progressionPct} %</strong> — chaque phase s'ouvre sur une avancée réelle, jamais sur un clic.`;
 
 }
 
@@ -197,7 +235,7 @@ const quand = jours < 0
 : jours === 0 ? "aujourd'hui"
 : `${jours} j`;
 
-return `<a href="applications.html" class="jy-radar-chip jy-radar-chip--${tonEcheance(jours)}">${app.university || "Candidature"} · <strong>${quand}</strong></a>`;
+return `<a href="applications.html" class="jy-radar-chip jy-radar-chip--${tonEcheance(jours)}">${ech(app.university || "Candidature")} · <strong>${quand}</strong></a>`;
 
 }).join("");
 
@@ -208,9 +246,7 @@ radar.hidden = false;
 // ==========================================================
 // ÉTATS DE PHASE (pastille en tête de chaque section)
 // ==========================================================
-function renderEtatsPhases(phases) {
-
-const cibles = {
+const CIBLES_ETAT = {
 profil: "stateProfil",
 opportunites: "stateOpportunites",
 dossiers: "stateDossiers",
@@ -219,24 +255,167 @@ reponse: "stateReponse",
 depart: "stateDepart"
 };
 
-phases.forEach((phase) => {
+const PASTILLES = {
+faite: `<i data-lucide="check-circle"></i>Faite`,
+ouverte: `<i data-lucide="circle-dot"></i>Vous êtes ici`,
+entrouverte: `<i data-lucide="circle-dashed"></i>Juste après`,
+scellee: `<i data-lucide="circle"></i>À venir`
+};
 
-const el = document.getElementById(cibles[phase.id]);
+/**
+* LE CORPS D'UNE PHASE EST ENVELOPPÉ ICI, PAS DANS LE HTML.
+*
+* Les deux hubs partagent leur coquille au caractère près (un test le
+* vérifie) et le guide visa a déjà quitté le HTML : ajouter un conteneur
+* dans les deux fichiers aurait été deux occasions de diverger. Le corps
+* d'une phase, c'est tout ce qui suit son en-tête ; on l'emballe une
+* seule fois, au premier rendu, et on le retrouve ensuite.
+*/
+function corpsDePhase(section) {
+
+let corps = section.querySelector(":scope > .jy-phase-body");
+if (corps) return corps;
+
+corps = document.createElement("div");
+corps.className = "jy-phase-body";
+
+const tete = section.querySelector(".jy-phase-head");
+let noeud = tete ? tete.nextSibling : section.firstChild;
+
+while (noeud) {
+const suivant = noeud.nextSibling;
+corps.appendChild(noeud);
+noeud = suivant;
+}
+
+section.appendChild(corps);
+return corps;
+
+}
+
+/**
+* LE VOILE — ce qu'on lit d'une phase qu'on n'a pas encore atteinte.
+*
+* Il dit deux choses, et c'est tout : ce qui vous y attend, et ce qui
+* l'ouvrira. Pas un aperçu du contenu, pas une liste d'outils grisés :
+* la phase suivante doit donner envie, pas frustrer.
+*
+* Le bouton n'est pas une politesse. `etatDesPhases` dit en toutes
+* lettres que les phases à venir NE SONT PAS VERROUILLÉES : l'étudiant
+* reste libre d'aller voir. On cachette l'enveloppe, on ne ferme pas la
+* porte — et c'est lui qui décide de l'ouvrir.
+*/
+function voileDePhase(section, phase, espace) {
+
+let voile = section.querySelector(":scope > .jy-phase-voile");
+const promesse = promesseDePhase(phase.id, espace);
+if (!promesse) return null;
+
+if (!voile) {
+voile = document.createElement("div");
+voile.className = "jy-phase-voile";
+voile.innerHTML = `
+<p class="jy-voile-attend"></p>
+<p class="jy-voile-cle"><i data-lucide="key-round"></i><span></span></p>
+<button type="button" class="jy-voile-btn"><i data-lucide="eye"></i><span>Jeter un œil</span></button>`;
+section.insertBefore(voile, section.querySelector(":scope > .jy-phase-body"));
+voile.querySelector(".jy-voile-btn").addEventListener("click", () => {
+section.classList.add("is-devoilee");
+section.dataset.devoileeALaMain = "1";
+if (window.lucide) lucide.createIcons();
+});
+}
+
+voile.querySelector(".jy-voile-attend").textContent = promesse.attend;
+voile.querySelector(".jy-voile-cle span").innerHTML =
+`Cette phase s'ouvre avec <strong>${ech(promesse.ouvrePar)}</strong>.`;
+
+return voile;
+
+}
+
+/** La ligne d'une phase repliée : ce qui a été accompli, et le chiffre. */
+function resumeReplie(section, phase, ctx) {
+
+let ligne = section.querySelector(":scope > .jy-phase-resume");
+
+if (!ligne) {
+ligne = document.createElement("button");
+ligne.type = "button";
+ligne.className = "jy-phase-resume";
+ligne.innerHTML = `<i data-lucide="check"></i><span></span><i class="jy-phase-resume-caret" data-lucide="chevron-down"></i>`;
+section.insertBefore(ligne, section.querySelector(":scope > .jy-phase-body"));
+ligne.addEventListener("click", () => {
+const ouverte = section.classList.toggle("is-devoilee");
+section.dataset.devoileeALaMain = ouverte ? "1" : "0";
+if (window.lucide) lucide.createIcons();
+});
+}
+
+ligne.querySelector("span").textContent = resumeDePhase(phase.id, ctx);
+return ligne;
+
+}
+
+/**
+* Le rendu d'une phase : sa pastille d'état, et ce qu'elle laisse voir.
+* `ctx` porte les chiffres réels du résumé — jamais un compte recalculé.
+*/
+function renderPhases(phases, ctx) {
+
+const revelees = revelerPhases(phases);
+
+revelees.forEach((phase) => {
+
+const el = document.getElementById(CIBLES_ETAT[phase.id]);
 if (!el) return;
 
 const section = el.closest(".jy-phase");
-section.classList.toggle("is-done", phase.faite);
-section.classList.toggle("is-current", phase.courante);
+if (!section) return;
 
-if (phase.faite) {
-el.innerHTML = `<i data-lucide="check-circle"></i>Faite`;
-} else if (phase.courante) {
-el.innerHTML = `<i data-lucide="circle-dot"></i>Vous êtes ici`;
-} else {
-el.innerHTML = `<i data-lucide="circle"></i>À venir`;
+corpsDePhase(section);
+
+section.classList.toggle("is-done", phase.faite);
+section.classList.toggle("is-current", phase.courante && !phase.faite);
+
+// L'état de révélation change : on repart fermé — SAUF si l'étudiant
+// avait ouvert cette phase lui-même.
+//
+// Sans la remise à zéro, une phase dévoilée restait ouverte en
+// devenant « faite » et son résumé s'affichait sous son contenu. Mais
+// sans l'exception, la phase 06 se refermait SOUS LE DOIGT : à la
+// sixième démarche cochée, elle passe « faite », le guide dans lequel
+// l'étudiant venait de cliquer disparaissait, et le geste de
+// félicitation se lisait comme une perte. Un dévoilement à la main
+// tient jusqu'à ce qu'il le referme.
+const precedent = section.dataset.revelation;
+if (precedent !== phase.revelation) {
+if (section.dataset.devoileeALaMain !== "1") section.classList.remove("is-devoilee");
+section.dataset.revelation = phase.revelation;
 }
 
+for (const etat of ["faite", "ouverte", "entrouverte", "scellee"]) {
+section.classList.toggle(`is-${etat}`, phase.revelation === etat);
+}
+
+el.innerHTML = PASTILLES[phase.revelation] || PASTILLES.scellee;
+
+// Une phase FAITE porte son résumé ; une phase à venir porte son
+// voile ; la phase en cours ne porte ni l'un ni l'autre. Les deux
+// éléments sont créés à la demande et réutilisés ensuite — on ne les
+// refabrique pas à chaque re-peinture.
+const faite = phase.revelation === "faite";
+const ouverte = phase.revelation === "ouverte";
+
+const voile = voileDePhase(section, phase, ctx.espace);
+const resume = faite ? resumeReplie(section, phase, ctx) : section.querySelector(":scope > .jy-phase-resume");
+
+if (voile) voile.hidden = faite || ouverte;
+if (resume) resume.hidden = !faite;
+
 });
+
+return revelees;
 
 }
 
@@ -264,10 +443,44 @@ cta.classList.add("jy-btn--primary");
 // ==========================================================
 // PHASE 2 — OPPORTUNITÉS
 // ==========================================================
-function renderOpportunites(opps, profileScore) {
+/**
+* LA LIGNE DU QUOTA — « votre formule vous donne N ».
+*
+* Elle n'existait nulle part. Le quota était appliqué (applications.js
+* bloquait à N+1) mais jamais DIT : un client Conseiller à 150 000 F
+* pouvait parcourir tout son espace sans lire une seule fois le nombre
+* six. On l'écrit là où il sert, au-dessus des propositions.
+*/
+function renderLigneQuota(quotaCtx) {
+
+const ancre = document.getElementById("jyOppsSub");
+if (!ancre) return;
+
+let ligne = document.getElementById("jyQuotaLine");
+const phrase = phraseDuQuota(quotaCtx);
+
+if (!phrase) { if (ligne) ligne.hidden = true; return; }
+
+if (!ligne) {
+ligne = document.createElement("p");
+ligne.id = "jyQuotaLine";
+ligne.className = "jy-quota";
+ligne.innerHTML = `<i data-lucide="ticket"></i><span></span>`;
+ancre.insertAdjacentElement("afterend", ligne);
+}
+
+ligne.hidden = false;
+ligne.classList.toggle("is-complet", phrase.complet);
+ligne.querySelector("span").textContent = phrase.texte;
+
+}
+
+function renderOpportunites(opps, profileScore, quotaCtx) {
 
 const grid = document.getElementById("jyOpps");
 const sub = document.getElementById("jyOppsSub");
+
+renderLigneQuota(quotaCtx);
 
 if (profileScore < PROFILE_READY_THRESHOLD && !opps.top.length) {
 sub.textContent = "Complétez d'abord votre profil : c'est lui que Fitz croise avec le catalogue pour repérer où votre dossier est compétitif.";
@@ -289,14 +502,61 @@ sub.textContent = n > 0
 ? `Fitz a retenu ${n} opportunité${n > 1 ? "s" : ""} pour votre profil, dont ${m} aux candidatures encore ouvertes.`
 : "Le catalogue n'a pas encore de correspondance nette avec votre profil — explorez-le librement, il s'enrichit chaque semaine.";
 
-grid.innerHTML = opps.top.map((pick) => `
+// COMBIEN DE CARTES : CELUI DE LA FORMULE.
+//
+// Ici, `opps.top` valait `retenues.slice(0, 3)` — trois, toujours trois.
+// Un Premier Dossier (UNE place) en voyait trois et se faisait proposer
+// d'en suivre une quatrième ; un Conseiller (SIX places) en voyait trois
+// et ignorait qu'il avait payé le double. On sert désormais exactement
+// le nombre de places LIBRES (js/parcours-quota.js), plafonné par ce que
+// le catalogue peut réellement remplir.
+const combien = nombreAProposer({
+quota: quotaCtx ? quotaCtx.quota : null,
+dejaSuivies: quotaCtx ? quotaCtx.dejaSuivies : 0,
+disponibles: opps.top.length
+});
+
+// Rien à proposer : DEUX causes, et il faut les distinguer.
+// `nombreAProposer` rend 0 aussi bien quand toutes les places sont
+// prises que quand le catalogue n'a rien à offrir (ou n'a pas pu être
+// chargé). Annoncer « toutes vos places sont engagées » à un Conseiller
+// qui n'a suivi aucune candidature — parce que le catalogue est hors
+// ligne — serait faux, et juste sous un sous-titre qui dit le contraire.
+if (!combien) {
+const quota = quotaCtx ? quotaCtx.quota : null;
+const restantes = quota ? Math.max(0, (quota === Infinity ? Infinity : quota) - (quotaCtx.dejaSuivies || 0)) : null;
+grid.innerHTML = (quota && restantes === 0)
+? `<div class="jy-card jy-empty">Toutes les places de votre formule sont engagées. Fitz suit ${quota > 1 ? "chacune" : "votre dossier"} jusqu'à la décision de l'établissement — <a href="applications.html">ouvrez vos dossiers</a> pour voir où ${quota > 1 ? "elles en sont" : "il en est"}.</div>`
+: "";
+return;
+}
+
+// LE LIEN DIT CE QU'IL FAIT.
+// Les trois cartes menaient toutes à `applications.html?action=new`, sous
+// le libellé « Suivre cette candidature ». Or, côté bourses, ce paramètre
+// n'ouvre plus rien depuis le lot FITZ-CHOISIT (c'est Fitz qui remplit
+// les places) : trois boutons différents produisaient le même écran, et
+// aucun ne faisait ce qu'il annonçait. Côté préinscription, l'étudiant
+// choisit vraiment : le lien emporte alors l'établissement.
+const preinscription = quotaCtx && quotaCtx.espace === "preinscription";
+
+grid.innerHTML = opps.top.slice(0, combien).map((pick) => {
+
+const lien = preinscription
+? `applications.html?action=new&universite=${encodeURIComponent(pick.universityName || "")}&portail=${encodeURIComponent(pick.applicationUrl || "")}`
+: "applications.html";
+
+const libelle = preinscription ? "Ajouter ce vœu" : "Voir cette proposition";
+
+return `
 <article class="jy-card jy-opp" style="margin-bottom:0;">
-<h3>${pick.scholarshipTitle || "Programme"}</h3>
-<p class="jy-opp-uni">${pick.universityName}</p>
-${pick.reasons && pick.reasons.length ? `<p class="jy-opp-reason"><i data-lucide="check"></i><span>${pick.reasons[0]}</span></p>` : ""}
-<a href="applications.html?action=new" class="jy-btn"><span>Suivre cette candidature</span><i data-lucide="arrow-right"></i></a>
-</article>
-`).join("");
+<h3>${ech(pick.scholarshipTitle || "Programme")}</h3>
+<p class="jy-opp-uni">${ech(pick.universityName)}</p>
+${pick.reasons && pick.reasons.length ? `<p class="jy-opp-reason"><i data-lucide="check"></i><span>${ech(pick.reasons[0])}</span></p>` : ""}
+<a href="${ech(lien)}" class="jy-btn"><span>${libelle}</span><i data-lucide="arrow-right"></i></a>
+</article>`;
+
+}).join("");
 
 }
 
@@ -336,7 +596,7 @@ liste_attente: "Liste d'attente",
 refusee: "Refusée"
 };
 
-function renderDossiers(applications) {
+function renderDossiers(applications, espace = "bourse") {
 
 const wrap = document.getElementById("jyApps");
 
@@ -344,9 +604,16 @@ const enPreparation = applications.filter((app) => !STATUTS_DEPOSES.includes(app
 
 if (!enPreparation.length) {
 
+// Le vide parlait le vocabulaire des bourses aux deux espaces : un
+// autofinancé y lisait « suivez votre première candidature » et
+// « Choisissez une opportunité », deux mots que sa page n'emploie pas.
+const mot = motDeLaPlace(espace);
+
 wrap.innerHTML = applications.length
 ? ""
-: `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Choisissez une opportunité en phase 02, puis <a href="applications.html?action=new">suivez votre première candidature</a>.</div>`;
+: espace === "preinscription"
+? `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Choisissez un établissement en phase 02, puis <a href="applications.html?action=new">suivez votre premier ${mot}</a>.</div>`
+: `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Fitz remplit vos places dès que votre profil lui permet de choisir — <a href="applications.html">ouvrez vos candidatures</a> pour voir ses propositions.</div>`;
 
 return;
 
@@ -372,8 +639,8 @@ echeance = jours === null ? "" :
 return `
 <article class="jy-card">
 <div class="jy-app-top">
-<h3>${app.university || "Votre candidature"}</h3>
-<span class="jy-app-meta">${[app.scholarship, STATUS_LABELS[app.status] || ""].filter(Boolean).join(" · ")}</span>
+<h3>${ech(app.university || "Votre candidature")}</h3>
+<span class="jy-app-meta">${ech([app.scholarship, STATUS_LABELS[app.status] || ""].filter(Boolean).join(" · "))}</span>
 ${echeance}
 </div>
 <div class="jy-steps">${renderEtapesChips(app.etapes)}</div>
@@ -405,7 +672,7 @@ wrap.innerHTML = `
 <ul class="jy-list">
 ${deposees.map((app) => `
 <li><i data-lucide="${STATUTS_REPONSE.includes(app.status) ? "mail-open" : "send"}"></i>
-<span><strong>${app.university || "Candidature"}</strong> — <span class="jy-status-pill ${["reponse_recue", "admise"].includes(app.status) ? "is-positive" : ""}">${STATUS_LABELS[app.status]}</span></span></li>
+<span><strong>${ech(app.university || "Candidature")}</strong> — <span class="jy-status-pill ${["reponse_recue", "admise"].includes(app.status) ? "is-positive" : ""}">${STATUS_LABELS[app.status]}</span></span></li>
 `).join("")}
 </ul>
 </div>`;
@@ -439,7 +706,7 @@ blocs.push(`
 <div class="jy-card jy-reponse jy-reponse--admise">
 <h3><i data-lucide="party-popper"></i>Félicitations — ${admissions.length > 1 ? `${admissions.length} admissions` : "vous êtes admis(e)"} !</h3>
 <ul class="jy-list">
-${admissions.map((app) => `<li><i data-lucide="award"></i><span><strong>${app.university || "Candidature"}</strong>${app.scholarship ? ` · ${app.scholarship}` : ""} — admission confirmée.</span></li>`).join("")}
+${admissions.map((app) => `<li><i data-lucide="award"></i><span><strong>${ech(app.university || "Candidature")}</strong>${app.scholarship ? ` · ${ech(app.scholarship)}` : ""} — admission confirmée.</span></li>`).join("")}
 </ul>
 <p class="jy-opp-reason"><i data-lucide="file-badge"></i><span>Vérifiez si la bourse est automatique ou demande une confirmation séparée, gardez les originaux de la lettre d'admission — puis cap sur le dernier kilomètre.</span></p>
 <div class="jy-tools">
@@ -454,7 +721,7 @@ blocs.push(`
 <div class="jy-card jy-reponse">
 <h3><i data-lucide="hourglass"></i>Liste d'attente — rien n'est perdu</h3>
 <ul class="jy-list">
-${attente.map((app) => `<li><i data-lucide="clock"></i><span><strong>${app.university || "Candidature"}</strong> — sur liste d'attente. Un court e-mail confirmant votre intérêt (et toute pièce nouvelle : résultat de test, distinction) peut faire la différence.</span></li>`).join("")}
+${attente.map((app) => `<li><i data-lucide="clock"></i><span><strong>${ech(app.university || "Candidature")}</strong> — sur liste d'attente. Un court e-mail confirmant votre intérêt (et toute pièce nouvelle : résultat de test, distinction) peut faire la différence.</span></li>`).join("")}
 </ul>
 <div class="jy-tools">
 <span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>Écrire l'e-mail d'intérêt</span><i class="jy-lock" data-lucide="lock"></i></a></span>
@@ -467,7 +734,7 @@ blocs.push(`
 <div class="jy-card jy-reponse">
 <h3><i data-lucide="compass"></i>Refus — on rebondit</h3>
 <ul class="jy-list">
-${refus.map((app) => `<li><i data-lucide="corner-up-right"></i><span><strong>${app.university || "Candidature"}</strong> — refusée. Un refus dit rarement quelque chose de votre valeur : les taux d'admission des bourses sélectives sont très bas, et votre dossier est déjà prêt à resservir.</span></li>`).join("")}
+${refus.map((app) => `<li><i data-lucide="corner-up-right"></i><span><strong>${ech(app.university || "Candidature")}</strong> — refusée. Un refus dit rarement quelque chose de votre valeur : les taux d'admission des bourses sélectives sont très bas, et votre dossier est déjà prêt à resservir.</span></li>`).join("")}
 </ul>
 <p class="jy-opp-reason"><i data-lucide="target"></i><span>${opportunitesCount > 0 ? `${opportunitesCount} autre${opportunitesCount > 1 ? "s" : ""} opportunité${opportunitesCount > 1 ? "s" : ""} du catalogue correspond${opportunitesCount > 1 ? "ent" : ""} à votre profil — vos lettres, traductions et relevés sont réutilisables tout de suite.` : "Le catalogue s'enrichit chaque semaine — votre dossier déjà constitué est réutilisable tout de suite."}</span></p>
 <div class="jy-tools">
@@ -482,7 +749,7 @@ blocs.push(`
 <div class="jy-card jy-reponse">
 <h3><i data-lucide="mail-question"></i>Réponse reçue — précisez l'issue</h3>
 <ul class="jy-list">
-${aPreciser.map((app) => `<li><i data-lucide="mail-open"></i><span><strong>${app.university || "Candidature"}</strong> — indiquez si c'est une admission, un refus ou une liste d'attente : votre parcours s'adaptera aussitôt.</span></li>`).join("")}
+${aPreciser.map((app) => `<li><i data-lucide="mail-open"></i><span><strong>${ech(app.university || "Candidature")}</strong> — indiquez si c'est une admission, un refus ou une liste d'attente : votre parcours s'adaptera aussitôt.</span></li>`).join("")}
 </ul>
 <div class="jy-tools">
 <a href="applications.html" class="jy-btn"><i data-lucide="list-checks"></i><span>Préciser dans mes candidatures</span></a>
@@ -527,12 +794,23 @@ if (procedure) return procedure;
 return null;
 }
 
-/** Le socle : une carte par étape, avec son « pourquoi », ses actions et ses pièges. */
-function htmlEtapeSocle(etape, rang) {
+/**
+* Le socle : une carte par étape, avec son « pourquoi », ses actions et
+* ses pièges.
+*
+* LE CONTENU EST TOUJOURS ÉCRIT, L'AFFICHAGE EST DÉCIDÉ PAR UNE CLASSE.
+* Six cartes dépliées d'un coup faisaient neuf paragraphes avant la
+* première action ; on n'en montre qu'une, celle en cours. Mais tout est
+* là, dans le DOM : dévoiler une étape est instantané, et rien n'est
+* refabriqué. Le bouton « Découvrir » n'appelle pas le serveur, il retire
+* un cachet.
+*/
+function htmlEtapeSocle(etape) {
 return `
 <div class="jy-guide-step" data-visa-step="${ech(etape.id)}">
-<h3><i data-lucide="${ech(etape.icone)}"></i>${rang} · ${ech(etape.titre)}</h3>
+<h3><i data-lucide="${ech(etape.icone)}"></i><span class="jy-guide-rang">${etape.rang}</span>${ech(etape.titre)}</h3>
 <p class="jy-guide-quand"><i data-lucide="clock"></i>${ech(etape.quand)}</p>
+<div class="jy-guide-corps">
 <p class="jy-guide-pourquoi">${ech(etape.pourquoi)}</p>
 <p class="jy-guide-variante">${ech(etape.variante)}</p>
 <details class="jy-guide-plus">
@@ -543,7 +821,8 @@ return `
 <ul class="jy-guide-vigilance">${etape.vigilance.map((v) => `<li>${ech(v)}</li>`).join("")}</ul>
 </details>
 <button type="button" class="jy-visa-check" aria-pressed="false"></button>
-</div>`;
+</div>
+<button type="button" class="jy-guide-devoiler"><i data-lucide="eye"></i><span>Découvrir cette étape</span></button>`;
 }
 
 /**
@@ -582,18 +861,40 @@ VISA_ETAPES.forEach((id) => { etat[id] = initial && initial[id] === true; });
 // Le guide est rendu AVANT d'aller chercher les cases : sans ça, les
 // data-visa-step n'existent pas encore dans le DOM.
 const conteneur = document.getElementById("jyVisaGuide");
-if (conteneur && guide) conteneur.innerHTML = guide.etapes.map((e, i) => htmlEtapeSocle(e, i + 1)).join("");
+if (conteneur && guide) conteneur.innerHTML = revelerEtapesVisa(guide.etapes, etat).map(htmlEtapeSocle).join("");
 if (guide) renderVisaDestination(guide.destination);
 
 const steps = Array.from(document.querySelectorAll("#jyVisaGuide [data-visa-step]"));
 
+// Les étapes que l'étudiant a devoilees lui-même restent ouvertes : on
+// ne lui reprend pas ce qu'il a choisi de voir, même quand il coche
+// ailleurs et que le rang de l'étape courante se déplace.
+const devoilees = new Set();
+
+steps.forEach((step) => {
+step.querySelector(".jy-guide-devoiler").addEventListener("click", () => {
+devoilees.add(step.getAttribute("data-visa-step"));
+peindre();
+});
+});
+
 function peindre() {
+
+const revelees = revelerEtapesVisa(guide ? guide.etapes : [], etat);
+const parId = new Map(revelees.map((e) => [e.id, e.revelation]));
 
 steps.forEach((step) => {
 const id = step.getAttribute("data-visa-step");
 const btn = step.querySelector(".jy-visa-check");
 const fait = etat[id] === true;
+
 step.classList.toggle("is-done", fait);
+
+const revelation = devoilees.has(id) ? "ouverte" : (parId.get(id) || "ouverte");
+for (const e of ["faite", "ouverte", "entrouverte", "scellee"]) {
+step.classList.toggle(`is-${e}`, revelation === e);
+}
+
 btn.setAttribute("aria-pressed", String(fait));
 btn.innerHTML = fait
 ? `<i data-lucide="check-circle"></i><span>Fait</span>`
@@ -601,10 +902,16 @@ btn.innerHTML = fait
 });
 
 const faites = VISA_ETAPES.filter((id) => etat[id]).length;
+const restantes = VISA_ETAPES.length - faites;
+
+// « 0 étape sur 6 accomplie » ne dit rien à qui n'a pas commencé. La
+// ligne dit maintenant OÙ ON EN EST, et ce qui vient.
 document.getElementById("jyVisaProgress").textContent =
 faites === VISA_ETAPES.length
-? "6 étapes sur 6 — vous êtes prêt(e) au départ. Bon voyage !"
-: `${faites} étape${faites > 1 ? "s" : ""} sur ${VISA_ETAPES.length} accomplie${faites > 1 ? "s" : ""}.`;
+? "Les six démarches sont accomplies — vous êtes prêt(e) au départ. Bon voyage !"
+: faites === 0
+? `Six démarches vous séparent du départ. La première est ci-dessous ; les suivantes se découvrent au fur et à mesure.`
+: `${faites} démarche${faites > 1 ? "s" : ""} accomplie${faites > 1 ? "s" : ""} sur ${VISA_ETAPES.length} — il vous en reste ${restantes}.`;
 
 if (window.lucide) lucide.createIcons();
 
@@ -767,7 +1074,10 @@ applications = applicationsSnap.docs
 console.error("Impossible de charger les candidatures :", error);
 }
 
-const opps = await chargerOpportunites(profile);
+const opps = await chargerOpportunites(
+profile,
+new Set(applications.map((app) => app.universityId).filter(Boolean))
+);
 
 // Étapes réelles de chaque dossier — calculées UNE fois, réutilisées
 // par la prochaine action, les phases et les cartes. Et, depuis la
@@ -800,11 +1110,39 @@ const nomAffiche = user.displayName || userData.name || "Étudiant";
 // Re-calcule et re-peint la carte (rail, pastilles, salutation) — la
 // checklist visa la rappelle à chaque étape cochée, pour que la
 // phase 06 vive comme les autres.
+// LE QUOTA DE L'ESPACE OÙ L'ON SE TROUVE — une seule lecture, ici.
+// Côté bourses c'est `maxAccompaniedApplications`, côté préinscription
+// `maxPreinscriptions` : les deux ne se remplacent pas l'un l'autre
+// (7 vœux Campus France n'est pas une décision commerciale, c'est le
+// plafond du portail). Un accès test n'a pas de formule : le quota est
+// alors null, et l'espace retombe sur son comportement d'exploration.
+const quota = testerAccess ? null : quotaDeLaFormule({
+espace: ESPACE,
+planId,
+planPreinscriptionId: session.planPreinscriptionId || "",
+plans: typeof SCHOLARBRIDGE_PLANS !== "undefined" ? SCHOLARBRIDGE_PLANS : null
+});
+
+const nomFormule = ESPACE === "preinscription"
+? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "")
+: (PLAN_LABELS[planId] || "");
+
 function rafraichirCarte(visa) {
 const etat = etatDesPhases({ profileScore, applications, visaChecklist: visa, espace: ESPACE });
 renderHello(nomAffiche, etat.phases);
-renderRail(etat.phases, etat.progressionPct);
-renderEtatsPhases(etat.phases);
+// Les pastilles et les voiles d'abord : renderPhases rend les phases
+// enrichies de leur état de révélation, dont le rail se sert pour
+// estomper ce qui n'est pas encore atteint.
+const revelees = renderPhases(etat.phases, {
+espace: ESPACE,
+profileScore,
+candidatures: applications.length,
+deposees: applications.filter((a) => STATUTS_DEPOSES.includes(a.status)).length,
+reponses: applications.filter((a) => STATUTS_REPONSE.includes(a.status)).length,
+visaFaites: VISA_ETAPES.filter((id) => visa && visa[id]).length,
+visaTotal: VISA_ETAPES.length
+});
+renderRail(revelees, etat.progressionPct);
 // Le rail et les pastilles viennent d'être re-injectés : leurs
 // icônes doivent être re-transformées ici même (le createIcons de
 // fin d'amorçage est déjà passé lors d'un rafraîchissement).
@@ -813,6 +1151,17 @@ return etat;
 }
 
 rafraichirCarte(visaChecklist);
+
+// LE PARCOURS EST PEINT — le CSS peut cesser de tout replier.
+// Entre hideLoader() (js/app-shell.js, avant même la résolution de la
+// promesse) et cette ligne, il y a deux allers-retours réseau : les
+// candidatures, puis le catalogue entier. Pendant tout ce temps la page
+// est VISIBLE. Sans repli par défaut en CSS, l'étudiant voyait les six
+// phases dépliées — exactement les neuf écrans que ce lot supprime —
+// avant de les voir s'effondrer d'un coup. On replie par défaut, et
+// c'est l'arrivée des données qui ouvre.
+document.body.dataset.parcoursPret = "1";
+
 renderRadar(applications);
 
 // La prochaine action ne se calcule que sur les dossiers ENCORE EN
@@ -828,8 +1177,13 @@ opportunitesCount: opps.count
 }));
 
 renderProfil(profileScore);
-renderOpportunites(opps, profileScore);
-renderDossiers(applications);
+renderOpportunites(opps, profileScore, {
+espace: ESPACE,
+quota,
+dejaSuivies: applications.length,
+nomFormule
+});
+renderDossiers(applications, ESPACE);
 renderDepot(applications);
 renderReponse(applications, opps.count);
 

@@ -76,7 +76,7 @@ import { chargerCatalogue } from "./js/catalog-data.js";
 // publie — etatCandidature(), la seule autorité. La date saisie par
 // l'étudiant n'est JAMAIS écrasée : une divergence s'affiche, avec un
 // bouton qu'il clique lui-même.
-import { indexerCatalogue, lierCandidature, etatDeLaCandidature, normaliserTitre } from "./js/candidature-catalogue.js";
+import { indexerCatalogue, lierCandidature, etatDeLaCandidature } from "./js/candidature-catalogue.js";
 import { formaterDate } from "./js/echeance.js";
 // Passe 3/3 : `exigences` (99 bourses) trouve enfin un destinataire.
 // Vocabulaire et libellés dans js/exigences.js — jamais deux façons de
@@ -102,6 +102,9 @@ import { trouverProcedure } from "./js/procedures/index.js";
 import { chargerPortails, portailUniversite } from "./js/portails.js";
 import { texteConsigne, LIBELLES_FIABILITE, LIBELLES_PREUVE } from "./js/procedures/vocabulaire.js";
 import { joursRestants, JOURS_PROCHE } from "./js/next-action.js";
+// Le quota de candidatures : une seule définition pour la page ET pour
+// le hub (lot ESPACE-ÉTUDIANT, 2026-09-13).
+import { quotaDeLaFormule } from "./js/parcours-quota.js";
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage — une étape
 // prématurée, une étape de procédure, une échéance proche, un élément de
 // dossier. Un seul composant, le contexte voyage dans le lien.
@@ -188,7 +191,6 @@ liste_attente: "Liste d'attente",
 refusee: "Refusée"
 };
 
-const STATUS_ORDER = ["a_preparer", "en_cours", "deposee", "en_attente", "reponse_recue", "liste_attente", "admise", "refusee"];
 
 // ==========================================================
 // DOSSIER DE CANDIDATURE — checklist par candidature (lettres de
@@ -284,8 +286,8 @@ return `
 <li class="checklist-item" data-item-id="${item.id}">
 <button type="button" class="checklist-status-chip checklist-status-${item.status}" data-action="cycle">${statusLabel}</button>
 <div class="checklist-item-body">
-<strong>${item.label}</strong>
-${metaLine ? `<span class="checklist-item-meta">${metaLine}</span>` : ""}
+<strong>${escapeHtml(item.label)}</strong>
+${metaLine ? `<span class="checklist-item-meta">${escapeHtml(metaLine)}</span>` : ""}
 ${calibration ? `<span class="checklist-calibration ${calibration.ok ? "is-ok" : "is-warning"}"><i data-lucide="${calibration.ok ? "check-circle" : "alert-triangle"}"></i>${calibration.text}</span>` : ""}
 ${app ? boutonRecours({ code: "documents", app: app.id, etape: item.type }) : ""}
 </div>
@@ -461,20 +463,27 @@ if (daysLeft === 0) return FITZ_READINESS_PHRASES.deadlineToday;
 return FITZ_READINESS_PHRASES.deadlineSoon(daysLeft);
 }
 
+// `item.text` et `item.actionHref` viennent de la réponse du modèle
+// (data.missingItems) : c'est du texte qu'on n'a pas écrit, injecté par
+// innerHTML. Il s'échappe comme une saisie d'étudiant, et pour la même
+// raison — on ne fait confiance qu'à ce qui vient du code.
 function renderReadinessItem(item) {
 
-if (item.actionHref) {
+// Un href ne se protège pas en échappant : `javascript:…` ne contient
+// aucun caractère à échapper. On n'émet une ancre que pour une
+// destination interne ou http(s) ; tout le reste redevient un bouton.
+if (item.actionHref && /^(https?:\/\/|[\w./?=&#-]+)$/.test(item.actionHref)) {
 return `
-<a href="${item.actionHref}" class="ai-checklist-item app-readiness-item">
+<a href="${escapeHtml(item.actionHref)}" class="ai-checklist-item app-readiness-item">
 <i data-lucide="arrow-right-circle"></i>
-<span>${item.text}</span>
+<span>${escapeHtml(item.text)}</span>
 </a>`;
 }
 
 return `
 <button type="button" class="ai-checklist-item app-readiness-item" data-action="focus-checklist">
 <i data-lucide="arrow-right-circle"></i>
-<span>${item.text}</span>
+<span>${escapeHtml(item.text)}</span>
 </button>`;
 
 }
@@ -585,6 +594,27 @@ const toutes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 return ESPACE ? toutes.filter((app) => lireParcours(app) === ESPACE) : toutes;
 }
 
+// ÉCRAN BLANC POUR UN ABONNEMENT EXPIRÉ — corrigé le 2026-09-13.
+//
+// Cette fonction vivait À L'INTÉRIEUR de initApplicationsPage(). Or
+// renderProtectedReadOnlyState, juste en dessous, est déclarée au niveau
+// du module et l'appelle : une déclaration de fonction n'est hissée que
+// dans SA portée, donc `recoursEcheance is not defined`. Le `.then()`
+// d'amorçage n'a pas de `.catch`, le loader avait déjà été retiré par
+// bootstrapShell : l'étudiant tombait sur une PAGE VIDE.
+//
+// Et le chemin qui casse est exactement celui que ce code existe pour
+// protéger : abonnement terminé + au moins une candidature encore en
+// attente de réponse. Remontée au niveau du module — elle n'utilise que
+// des imports (joursRestants, JOURS_PROCHE, boutonRecours).
+//
+// Seuils de js/next-action.js : 3 j critique, 14 j proche.
+function recoursEcheance(app) {
+const jours = app.deadline ? joursRestants(app.deadline, new Date()) : null;
+if (jours === null || jours > JOURS_PROCHE) return "";
+return boutonRecours({ code: "echeance", app: app.id });
+}
+
 function renderProtectedReadOnlyState(container, protectedApps, index = null) {
 
 container.innerHTML = `
@@ -609,8 +639,8 @@ return `
 <article class="card app-card">
 <div class="app-card-top">
 <div>
-<h3>${app.university}</h3>
-${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : ""}
+<h3>${escapeHtml(app.university)}</h3>
+${app.scholarship ? `<p class="app-card-scholarship">${escapeHtml(app.scholarship)}</p>` : ""}
 </div>
 <span class="app-status-pill app-status-${app.status}">${STATUS_LABELS[app.status] || app.status}</span>
 </div>
@@ -624,11 +654,11 @@ ${recoursEcheance(app)}
 
 ${renderDivergence(app, lecture, { bouton: false })}
 
-${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
+${app.notes ? `<p class="app-card-notes">${escapeHtml(app.notes)}</p>` : ""}
 
 ${(app.universityWebsite || app.portalUrl) ? `<div class="app-card-actions">
-${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
-${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
+${app.universityWebsite ? `<a href="${escapeHtml(app.universityWebsite)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
+${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
 </div>` : ""}
 </article>
 `;
@@ -652,7 +682,14 @@ if (window.lucide) lucide.createIcons();
 function renderLockedState(container, ctx) {
 
 const flags = ctx.featureFlags.applications;
-const target = unlockingPlans(ctx.planId, flags)[0];
+// LE 3e ARGUMENT EST L'ESPACE, ET IL MANQUAIT.
+// unlockingPlans(planId, flags, espace) existe précisément pour ça (voir
+// sa note dans js/plan-features.js : « on montrait la porte des bourses
+// à quelqu'un venu acheter un dossier France »). Sans lui, un client
+// Diagnostic France — qui n'a pas `applications` — atterrissait ici et
+// se voyait proposer le Forfait Premier Dossier et offers.html#premier-
+// dossier : une offre BOURSE, à quelqu'un qui prépare une préinscription.
+const target = unlockingPlans(ctx.planId, flags, ctx.espace || "")[0];
 
 container.innerHTML = `
 <div class="ai-locked-hero">
@@ -776,11 +813,17 @@ async function seedRecommendedSlots(uid, planId, existingApplications, profile) 
 // consomment pas ce quota.
 existingApplications = (existingApplications || []).filter((a) => lireParcours(a) !== "preinscription");
 
-const plan = window.SCHOLARBRIDGE_PLANS && window.SCHOLARBRIDGE_PLANS[planId];
 // Lot ACCEPTATION, partie 0 : Signature (quota Infinity, retirée de la
 // vente) n'est plus laissée vide — Fitz remplit 12 places, le plafond de
 // remplissage d'un quota infini (placesAFitz, js/fitz-choisit.js).
-const quota = placesAFitz(plan ? plan.maxAccompaniedApplications : null);
+// Le quota lui-même passe par quotaDeLaFormule : c'était la troisième
+// lecture directe de `maxAccompaniedApplications` du fichier, et une
+// lecture de plus est une divergence de plus.
+const quota = placesAFitz(quotaDeLaFormule({
+espace: "bourse",
+planId,
+plans: window.SCHOLARBRIDGE_PLANS || null
+}));
 
 if (quota <= 0) return false;
 
@@ -890,9 +933,19 @@ const peutBourse = testerAccess || !!(planBourse && planBourse.maxAccompaniedApp
 const peutPreinscription = testerAccess || !!(planPre && planPre.maxPreinscriptions > 0);
 
 function estPreinscription(track) { return track === "preinscription"; }
+// LE QUOTA A UNE SEULE DÉFINITION, ET ELLE N'EST PLUS ICI.
+// Le hub (dashboard.js) doit répondre à la même question — « combien de
+// candidatures cette formule donne-t-elle ? » — pour n'en proposer ni
+// plus ni moins. Deux lectures des mêmes deux champs auraient divergé au
+// premier correctif ; elles vivent maintenant dans js/parcours-quota.js,
+// pure et testée sous Node.
 function quotaPour(track) {
-if (estPreinscription(track)) return planPre ? planPre.maxPreinscriptions : null;
-return planBourse ? planBourse.maxAccompaniedApplications : null;
+return quotaDeLaFormule({
+espace: estPreinscription(track) ? "preinscription" : "bourse",
+planId,
+planPreinscriptionId,
+plans: window.SCHOLARBRIDGE_PLANS || null
+});
 }
 function candidaturesDuParcours(track, liste) {
 return (liste || []).filter((a) => (lireParcours(a) === "preinscription") === estPreinscription(track));
@@ -1023,10 +1076,22 @@ preuveEtat.classList.remove("is-ok");
 }
 
 // Si le statut choisi vient d'être invalidé, on redescend proprement.
+//
+// « proprement » valait « en_cours », écrit en dur — et sur une carte
+// DÉJÀ DÉPOSÉE ce statut est précisément l'un de ceux que
+// statutsAutorises() interdit (une candidature déposée ne redescend
+// pas). Il suffisait d'effacer son numéro de dossier pour que le
+// formulaire sélectionne tout seul une option `hidden` + `disabled`,
+// puis refuse l'enregistrement avec « Une candidature déposée ne
+// redescend pas » : l'étudiant était bloqué par un statut qu'il n'avait
+// pas choisi. On retombe sur le premier statut RÉELLEMENT ouvert.
 const opt = fields.status.selectedOptions[0];
 if (opt && opt.disabled) {
-fields.status.value = "en_cours";
+const repli = Array.from(fields.status.options).find((o) => !o.disabled && !statutsInterdits.has(o.value));
+if (repli) {
+fields.status.value = repli.value;
 fields.status.dispatchEvent(new Event("change", { bubbles: true }));
+}
 }
 }
 
@@ -1136,7 +1201,6 @@ const identiteNote = document.getElementById("identiteVerrouilleeNote");
 // La fonction reste pour ses appelants, et ne fait plus rien : une
 // candidature créée depuis le catalogue des bourses dans l'espace
 // préinscription n'existe pas, l'espace ayant déjà tranché.
-function verrouillerParcours() {}
 
 // Résidu du lot A (corrigé lot B) : « Changer » puis « hors catalogue »
 // laissait le titre de bourse, le portail et la date de l'entrée
@@ -1150,8 +1214,6 @@ fields.portalUrl.value = "";
 fields.deadline.value = "";
 }
 const saveBtn = document.getElementById("applicationSaveBtn");
-
-let manualMode = false;
 
 // Les champs d'identité : université, bourse, portail. Verrouillés quand
 // l'identité vient du catalogue (Fitz a choisi), libres pour une
@@ -1167,12 +1229,10 @@ if (identiteNote) identiteNote.hidden = !verrouille;
 
 function enterManualMode() {
 
-manualMode = true;
 
 manualFields.hidden = false;
 fields.university.required = true;
 verrouillerIdentite(false);
-verrouillerParcours(false);
 viderChampsCatalogue();
 detailsSection.hidden = false;
 saveBtn.disabled = false;
@@ -1210,11 +1270,9 @@ if (app) {
 // SEULE — l'étudiant ne modifie que le statut, la date, les notes, les
 // rappels et la preuve de dépôt. Une préinscription, ou une candidature
 // bourse ancienne hors catalogue, garde ses champs libres.
-manualMode = true;
 manualFields.hidden = false;
 fields.university.required = true;
 verrouillerIdentite(identiteVerrouillee(app));
-verrouillerParcours(false);
 detailsSection.hidden = false;
 saveBtn.disabled = false;
 
@@ -1233,7 +1291,6 @@ modal.hidden = false;
 function closeModal() {
 modal.hidden = true;
 editingId = null;
-manualMode = false;
 verrouillerIdentite(false);
 form.reset();
 }
@@ -1369,14 +1426,6 @@ showToast(saisie.faite ? `« ${etape.label} » enregistrée.` : `« ${etape.labe
 
 }
 
-// Sur une échéance proche ou dépassée — seuils de js/next-action.js
-// (3 j critique, 14 j proche) — le recours se pose sur la carte.
-function recoursEcheance(app) {
-const jours = app.deadline ? joursRestants(app.deadline, new Date()) : null;
-if (jours === null || jours > JOURS_PROCHE) return "";
-return boutonRecours({ code: "echeance", app: app.id });
-}
-
 // Lot ACCEPTATION (2026-09-11) : une carte catalogue PROPOSÉE se refuse
 // (deux fois par place, puis Fitz tranche) ou s'accepte — et accepter
 // est définitif. Une formule EN VENTE ne supprime jamais une carte
@@ -1461,8 +1510,8 @@ card.innerHTML = `
 <div class="app-card-top">
 <div>
 ${app.isRecommendation ? `<span class="app-recommendation-badge">Suggéré par Fitz</span>` : ""}
-<h3>${app.university}</h3>
-${app.scholarship ? `<p class="app-card-scholarship">${app.scholarship}</p>` : ""}
+<h3>${escapeHtml(app.university)}</h3>
+${app.scholarship ? `<p class="app-card-scholarship">${escapeHtml(app.scholarship)}</p>` : ""}
 </div>
 <div class="app-card-pills">
 <span class="app-track-pill" data-track="${lireParcours(app)}">${LIBELLES_PARCOURS[lireParcours(app)].court}</span>
@@ -1485,7 +1534,7 @@ ${renderDivergence(app, lecture)}
 
 ${renderExigences(lecture)}
 
-${app.notes ? `<p class="app-card-notes">${app.notes}</p>` : ""}
+${app.notes ? `<p class="app-card-notes">${escapeHtml(app.notes)}</p>` : ""}
 
 ${renderAcceptation(app, fermee)}
 
@@ -1522,8 +1571,8 @@ ${outils ? renderReadinessPanel(app, advisorUnlocked) : ""}
 ${refusable && !carteCatalogue(app) ? `<button type="button" class="btn btn-secondary btn-sm app-refuse-btn"><i data-lucide="refresh-cw"></i><span>Refuser et demander une autre université</span></button>` : ""}
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
 ${outils ? `<button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>` : ""}
-${app.universityWebsite ? `<a href="${app.universityWebsite}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
-${app.portalUrl ? `<a href="${app.portalUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
+${app.universityWebsite ? `<a href="${escapeHtml(app.universityWebsite)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
+${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
 <button type="button" class="btn btn-ghost btn-sm app-edit-btn" aria-label="Modifier"><i data-lucide="pen-line"></i></button>
 ${peutSupprimer(app, planId) ? `<button type="button" class="btn btn-ghost btn-sm app-delete-btn" aria-label="Supprimer le suivi" title="Supprimer le suivi"><i data-lucide="trash-2"></i></button>` : ""}
@@ -1951,12 +2000,20 @@ try {
 
 const { alternative, universiteId: refuseeId } = await chercherRemplacante(app, { ecarterCelleCi: true });
 
-if (refuseeId && !universitesRefusees.includes(refuseeId)) universitesRefusees = [...universitesRefusees, refuseeId];
-
 if (!alternative) {
 showToast("Fitz n'a pas trouvé d'autre université compatible pour l'instant. Un profil plus complet élargit les possibilités.", { type: "warning" });
 return;
 }
+
+// LA MÉMOIRE LOCALE NE PREND PAS D'AVANCE SUR LA BASE.
+//
+// Cette ligne était AU-DESSUS du test ci-dessus. Quand Fitz ne trouvait
+// pas de remplaçante, on sortait aussitôt — mais l'université venait
+// d'entrer dans `universitesRefusees` en mémoire, sans que `refus` soit
+// incrémenté ni que Firestore soit écrit. Pour le reste de la session
+// elle était exclue (universitesAEviter la lit), et au rechargement elle
+// revenait : deux états divergents pour un refus qui n'a pas eu lieu.
+if (refuseeId && !universitesRefusees.includes(refuseeId)) universitesRefusees = [...universitesRefusees, refuseeId];
 
 // 1. La mémoire du refus, AVANT la carte : si l'écriture de la carte
 // échoue, le refus reste acquis et la proposition suivante l'évitera.
@@ -2097,11 +2154,27 @@ await loadApplications();
 
 }
 
+// LES ÉCRITURES QUI ÉCHOUAIENT EN SILENCE (corrigé le 2026-09-13).
+//
+// Quatre écritures Firestore de ce fichier n'avaient AUCUN try/catch,
+// alors que toutes les autres en ont un (voir l'enregistrement du
+// formulaire, l'acceptation, le refus). Réseau coupé, règle refusée,
+// quota dépassé : la promesse était rejetée, personne ne l'attrapait, et
+// l'étudiant repartait convaincu d'avoir enregistré. « J'ai vérifié », la
+// suppression d'un suivi, le changement de statut d'une pièce et l'ajout
+// d'une pièce au dossier tombaient tous dans ce trou.
+
 async function checkIn(app) {
 
 const nextCheckDate = nextCheckFromToday(app.reminderFrequency || 14);
 
+try {
 await updateDoc(doc(db, "users", uid, "applications", app.id), { nextCheckDate });
+} catch (error) {
+console.error("Impossible d'enregistrer la vérification :", error);
+showToast("Votre vérification n'a pas pu être enregistrée. Vérifiez votre connexion, puis réessayez.", { type: "error" });
+return;
+}
 
 trackEvent("application_checked_in", { status: app.status });
 
@@ -2126,7 +2199,13 @@ const message = `Supprimer le suivi de « ${app.university} » ?${perdu.length ?
 
 if (!confirm(message)) return;
 
+try {
 await deleteDoc(doc(db, "users", uid, "applications", app.id));
+} catch (error) {
+console.error("Impossible de supprimer le suivi :", error);
+showToast("Ce suivi n'a pas pu être supprimé. Vérifiez votre connexion, puis réessayez.", { type: "error" });
+return;
+}
 
 await loadApplications();
 
@@ -2173,10 +2252,20 @@ document.getElementById("checklistModal").hidden = true;
 checklistContext = { app: null, type: null };
 }
 
+// Rend `true` quand l'écriture a réellement eu lieu : les appelants
+// (cycle de statut, retrait, ajout) n'ont plus à deviner, et le modal ne
+// se ferme pas sur un enregistrement qui n'a pas abouti.
 async function saveChecklist(app, newChecklist, eventType) {
+try {
 await updateDoc(doc(db, "users", uid, "applications", app.id), { checklist: newChecklist, updatedAt: serverTimestamp() });
+} catch (error) {
+console.error("Impossible d'enregistrer le dossier de candidature :", error);
+showToast("Cette modification de votre dossier n'a pas pu être enregistrée. Vérifiez votre connexion, puis réessayez.", { type: "error" });
+return false;
+}
 trackEvent("application_checklist_updated", { type: eventType || "unknown" });
 await loadApplications();
+return true;
 }
 
 async function cycleChecklistStatus(app, itemId) {
@@ -2223,7 +2312,7 @@ item.meta.formatRequired = document.getElementById("clFormatRequired").value.tri
 
 const newChecklist = [...(Array.isArray(app.checklist) ? app.checklist : []), item];
 
-await saveChecklist(app, newChecklist, type);
+if (!(await saveChecklist(app, newChecklist, type))) return;
 
 closeChecklistModal();
 
@@ -2298,7 +2387,18 @@ track: ESPACE_ECRITURE === "preinscription" ? "preinscription" : "bourse",
 deadline: fields.deadline.value || null,
 reminderFrequency: parseInt(fields.frequency.value, 10),
 notes: fields.notes.value.trim(),
-premiumProtected: SCHOLARBRIDGE_PLANS[planId]?.extendsPendingApplications === true && fields.status.value === "en_attente",
+// LA FORMULE DU PARCOURS, ET UN ACCÈS GARDÉ.
+// Deux défauts en une ligne : elle lisait TOUJOURS la formule bourse —
+// y compris sur un vœu de préinscription — et c'était le seul accès non
+// protégé à SCHOLARBRIDGE_PLANS du fichier (partout ailleurs :
+// `window.SCHOLARBRIDGE_PLANS &&`). Si pricing-plans.js ne charge pas,
+// tout le reste dégradait proprement et l'enregistrement, lui, levait
+// un ReferenceError.
+//
+// On lit ESPACE_ECRITURE, et non `payload.track` : `payload` est en zone
+// morte temporelle dans son propre initialiseur. C'est la même valeur,
+// trois lignes plus haut.
+premiumProtected: (ESPACE_ECRITURE === "preinscription" ? planPre : planBourse)?.extendsPendingApplications === true && fields.status.value === "en_attente",
 updatedAt: serverTimestamp()
 };
 
@@ -2423,7 +2523,14 @@ payload.createdAt = serverTimestamp();
 const slotId = slotIdLibre(duParcours, quota, estPreinscription(track) ? "pre" : "slot");
 
 if (!slotId) {
-showToast(`Votre formule ${PLAN_LABELS[planId]} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
+// Douze lignes plus haut, le même refus dit la formule DU PARCOURS
+// (nomFormulePour). Ici il disait `PLAN_LABELS[planId]` : sur un vœu de
+// préinscription, un client sans formule bourse lisait « Votre formule
+// Gratuit permet d'accompagner 7 candidatures ». Même refus, même
+// phrase, même formule — celle de l'espace où il se trouve.
+showToast(estPreinscription(track)
+? `${nomFormulePour(track)} accompagne ${quota} vœux Études en France à la fois. Terminez-en un, ou retirez-en un.`
+: `Votre formule ${nomFormulePour(track)} permet d'accompagner ${quota} candidature${quota > 1 ? "s" : ""} à la fois. Terminez-en une, ou passez à une formule supérieure pour en suivre davantage.`, { type: "error" });
 return;
 }
 
@@ -2498,7 +2605,28 @@ const shouldOpen = params.get("action") === "new";
 // Grille B : payment.js renvoie ici avec ?track=preinscription après un
 // achat Dossier France — le formulaire s'ouvre hors catalogue, parcours
 // pré-rempli (le select du lot A).
-const track = params.get("track") === "preinscription" ? "preinscription" : "bourse";
+// L'ESPACE COMMANDE LE PARCOURS, PAS L'URL.
+// `?track=preinscription` ne vient que de payment.js ; les cartes du hub
+// (dashboard.js) n'en mettent pas. Sans ce repli sur ESPACE_ECRITURE, un
+// client dans son espace préinscription ouvrait le formulaire en mode
+// BOURSE : le pré-remplissage ne partait jamais, et c'est le quota des
+// bourses qui décidait s'il avait le droit d'ouvrir le formulaire — un
+// client des deux, ses places bourse pleines, se voyait refuser un vœu.
+const track = (params.get("track") === "preinscription" || ESPACE_ECRITURE === "preinscription")
+? "preinscription" : "bourse";
+
+// LE HUB PRÉINSCRIPTION EMPORTE L'ÉTABLISSEMENT CHOISI.
+// Les cartes de la phase 02 menaient toutes au même formulaire VIDE :
+// trois propositions différentes, trois liens identiques, et à l'arrivée
+// un champ « Université » à retaper à la main depuis une page qu'on
+// venait de quitter. Le nom et le portail voyagent maintenant dans
+// l'URL (dashboard.js, renderOpportunites) — côté préinscription
+// seulement : côté bourses, c'est Fitz qui choisit, il n'y a rien à
+// pré-remplir.
+const prerempli = {
+universite: (params.get("universite") || "").slice(0, 200),
+portail: (params.get("portail") || "").slice(0, 500)
+};
 
 if (!shouldOpen) return;
 
@@ -2516,7 +2644,18 @@ openModal(null);
 
 // Un dossier de préinscription se saisit hors catalogue : le catalogue
 // des bourses n'a rien à proposer à quelqu'un qui finance ses études.
-if (estPreinscription(track) && peutPreinscription) enterManualMode();
+// openModal(null) appelle déjà enterManualMode() : le rappeler ici ne
+// ferait que vider une deuxième fois les champs qu'on va remplir.
+if (estPreinscription(track) && peutPreinscription) {
+
+// enterManualMode() (via openModal) vide les champs du catalogue : le
+// pré-remplissage vient APRÈS, sinon il serait effacé dans la foulée.
+if (prerempli.universite) fields.university.value = prerempli.universite;
+// Un portail ne s'accepte qu'en http(s) : l'URL est publique, et ce
+// champ finit dans un href.
+if (/^https?:\/\//i.test(prerempli.portail)) fields.portalUrl.value = prerempli.portail;
+
+}
 
 }
 

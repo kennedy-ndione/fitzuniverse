@@ -169,8 +169,22 @@ assert.match(lire(f), new RegExp(`espace: "${espace}"`), `${f} doit déclarer es
 }
 // Les pages COMMUNES n'en déclarent aucun : elles n'appartiennent à
 // aucun parcours, et les marquer enfermerait un client des deux.
+//
+// RESSERRÉ le 2026-09-13 (lot ESPACE-ÉTUDIANT). La garde cherchait
+// `espace: "bourse"` N'IMPORTE OÙ dans le fichier. Or ce qui enferme un
+// client, c'est l'espace déclaré à bootstrapShell — lui seul déclenche
+// la redirection d'espaceAutorise(). Depuis que applications.js demande
+// le quota de la formule à js/parcours-quota.js, il écrit
+// `espace: "bourse"` comme ARGUMENT D'UNE FONCTION PURE, ce qui
+// n'enferme personne. On vise donc l'appel au shell, et on le vise
+// vraiment : un `espace:` dans bootstrapShell est désormais refusé quelle
+// que soit sa valeur, littérale ou calculée.
 for (const f of ["profile.js", "account.js", "documents.js", "js/messages-page.js", "applications.js"]) {
-assert.ok(!/espace: "(bourse|preinscription)"/.test(lire(f)), `${f} ne doit appartenir à aucun espace`);
+const src = lire(f);
+const i = src.indexOf("bootstrapShell(");
+if (i === -1) continue;
+const appel = src.slice(i, src.indexOf(")", i));
+assert.ok(!/\bespace\s*:/.test(appel), `${f} ne doit appartenir à aucun espace`);
 }
 });
 

@@ -237,11 +237,23 @@ besoin de savoir ce que l'année coûtera vraiment.
 <a href="universities.html" class="jy-btn jy-btn--primary"><i data-lucide="landmark"></i><span>Parcourir les universités</span></a>
 <a href="preinscriptions.html" class="jy-btn"><i data-lucide="route"></i><span>La procédure, pays par pays</span></a>
 <span data-feature="diagnostic_france"><a href="diagnostic-france.html" data-real-href="diagnostic-france.html" class="jy-btn" id="jyDiagnosticFranceBtn"><i data-lucide="calculator"></i><span>Diagnostic France</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-<!-- LOT PRÉ-FITZ (2026-09-10) : les outils Fitz entrent dans cet espace.
+</div>
+
+<!-- LOT ESPACE-ÉTUDIANT (2026-09-13) : les outils sortent de la rangée
+de boutons. Un `.jy-tool` (pastille de 8 px) était aligné avec des
+`.jy-btn` (bouton de 10 px, plus grands) dans un même flex : la rangée
+était bancale, et l'outil se lisait comme un bouton raté. Ils ont
+maintenant, comme dans l'espace bourses, leur carte à eux.
+
+LOT PRÉ-FITZ (2026-09-10) : les outils Fitz entrent dans cet espace.
 Ils y produisent du contenu de PRÉINSCRIPTION (js/ai/prompts.js lit le
 parcours) ; leur verrou reste celui de la formule (data-feature →
 applyFeatureLocks) : le Diagnostic France ne les a pas. -->
+<div class="jy-card">
+<p class="jy-app-meta" style="margin:0 0 10px;">Une question sur un établissement, un cycle, une langue :</p>
+<div class="jy-tools" style="margin-top:0;">
 <span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-tool"><i data-lucide="message-circle"></i><span>Une question ? Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
 </div>
 </section>
 
@@ -260,6 +272,15 @@ PHASE 3 — DOSSIERS
 
 <div class="jy-phase-actions">
 <span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une préinscription</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
+
+<!-- La boîte à outils, dans sa carte — le même gabarit que l'espace
+bourses. Les cinq outils étaient posés à côté du bouton principal, dans
+la même rangée : cinq pastilles et un bouton, de hauteurs différentes,
+sur une ligne qui débordait. -->
+<div class="jy-card">
+<p class="jy-app-meta" style="margin:0 0 10px;">La boîte à outils de vos vœux :</p>
+<div class="jy-tools" style="margin-top:0;">
 <span data-feature="documents"><a href="documents.html" data-real-href="documents.html" class="jy-tool"><i data-lucide="file-text"></i><span>Mes documents</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <span data-feature="compress"><a href="compress.html" data-real-href="compress.html" class="jy-tool"><i data-lucide="file-archive"></i><span>Compression de pièces</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <!-- Sept vœux = sept lettres de quatre à cinq lignes (Campus France,
@@ -268,6 +289,7 @@ lettre de bourse dupliquée : ai-letter passe en mode « vœu » pour une
 candidature de préinscription. -->
 <span data-feature="ai_letter"><a href="ai-letter.html" data-real-href="ai-letter.html" class="jy-tool"><i data-lucide="pen-line"></i><span>Ma lettre pour chaque vœu</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <span data-feature="ai_translate"><a href="ai-translate.html" data-real-href="ai-translate.html" class="jy-tool"><i data-lucide="languages"></i><span>Traduire une pièce</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
 </div>
 </section>
 
@@ -284,10 +306,24 @@ PHASE 4 — DÉPÔT
 
 <div id="jyDepot"></div>
 
-<div class="jy-phase-actions">
+<!-- LOT ESPACE-ÉTUDIANT (2026-09-13) : cette phase n'avait qu'un outil
+posé seul sous un titre. Côté bourses, la même phase porte trois repères
+de méthode ; ici, l'étudiant qui finance ses études — celui qui a le plus
+à perdre à une erreur de dépôt — n'avait rien. Trois repères de PROCÉDURE,
+sans chiffre ni date : les faits datés vivent dans la procédure de son
+pays (js/procedures/*), qui les sert avec leur source. -->
+<div class="jy-card">
+<ul class="jy-list">
+<li><i data-lucide="user-check"></i><span>Le dépôt se fait <strong>depuis votre compte, sur le portail officiel</strong>. Nous préparons et vérifions le dossier ; c'est vous qui l'envoyez, et vous gardez la main jusqu'au bout.</span></li>
+<li><i data-lucide="wallet"></i><span>Les <strong>frais de dossier ne sont pas remboursables</strong>, et ils se paient avant l'examen de votre demande. C'est la raison d'être de la vérification : ce qui manque se répare avant le paiement, jamais après.</span></li>
+<li><i data-lucide="inbox"></i><span>Gardez la <strong>confirmation du portail</strong> — numéro de dossier, accusé de réception, capture de l'écran final. C'est votre preuve de dépôt, et la seule qui compte en cas de contestation.</span></li>
+</ul>
+<div class="jy-tools">
 <!-- « Prêt à déposer » se juge ici sur les ÉTAPES DE LA PROCÉDURE, avec
 leurs preuves — pas sur le barème d'une bourse (lot PRÉ-FITZ). -->
 <span data-feature="ai_check"><a href="ai-check.html" data-real-href="ai-check.html" class="jy-tool"><i data-lucide="shield-check"></i><span>Vérifier avant de soumettre</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<a href="preinscriptions.html" class="jy-tool"><i data-lucide="route"></i><span>Les étapes de mon pays</span></a>
+</div>
 </div>
 </section>
 
@@ -306,8 +342,19 @@ attendre, il y a une admission — et, ensuite, des frais à régler.
 
 <div id="jyReponse"></div>
 
-<div class="jy-phase-actions">
+<!-- Même correction qu'en phase 04 : un outil seul sous un titre ne dit
+pas ce qu'il faut faire de cette période. Les calendriers réels
+diffèrent d'un pays et d'un établissement à l'autre : on ne les invente
+pas ici, on dit ce qui est vrai partout. -->
+<div class="jy-card">
+<ul class="jy-list">
+<li><i data-lucide="bell"></i><span>La réponse arrive <strong>sur le portail</strong>, pas toujours par e-mail — et parfois sans notification. Prenez l'habitude d'aller la chercher vous-même.</span></li>
+<li><i data-lucide="list-checks"></i><span>Notez chaque réponse ici, <strong>y compris un refus</strong> : c'est ce qui déclenche la phase suivante, et ce qui permet à Fitz de vous dire quoi faire ensuite.</span></li>
+<li><i data-lucide="file-badge"></i><span>Une admission demande souvent une <strong>confirmation dans un délai court</strong>, et parfois des pièces supplémentaires. Lisez la réponse en entier le jour où elle arrive.</span></li>
+</ul>
+<div class="jy-tools">
 <span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>Écrire à un établissement</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+</div>
 </div>
 </section>
 

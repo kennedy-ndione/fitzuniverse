@@ -107,39 +107,12 @@ align-items:center;
 margin-bottom:18px;
 }
 
-/* Recette bespoke conservée telle quelle (pas de renommage vers
-.field-control) : structure différente (icône inline, input
-transparent dans un pilule bordé) plutôt que le motif icône-absolue-
-superposée de .field-control — un renommage forcerait une reprise
-visuelle non vérifiable ici (page auth-gated). Rayon aligné sur le
-token le plus proche. */
-.docs-search-field{
-flex:1 1 260px;
-display:flex;
-align-items:center;
-gap:10px;
-background:var(--background-alt);
-border:1px solid var(--border-color);
-border-radius:var(--radius-sm);
-padding:11px 16px;
-}
-
-/* Icône ornementale du champ de recherche : le placeholder porte
-l'information. Le placeholder lui-même reste en --text-muted. */
-.docs-search-field i,
-.docs-search-field svg{width:17px;height:17px;color:var(--text-decorative);flex-shrink:0;}
-
-.docs-search-field input{
-flex:1;
-background:transparent;
-border:none;
-outline:none;
-color:var(--text-color);
-font-size:var(--fs-small);
-font-family:var(--font-body);
-}
-
-.docs-search-field input::placeholder{color:var(--text-muted);}
+/* LA RECETTE BESPOKE A ÉTÉ RETIRÉE (2026-09-13).
+Elle est remplacée par `.fitz-recherche` (css/base.css), le champ de
+recherche unique de l'espace étudiant. Le commentaire qui vivait ici
+assumait la divergence « non vérifiable, page auth-gated » ; elle
+coûtait un champ sans aucun état de focus, invisible à la tabulation,
+et une troisième géométrie de recherche dans le même espace. */
 
 .docs-category-filters{
 display:flex;
@@ -540,5 +513,5 @@ pour une rangée) devenait alors une HAUTEUR de base de 260px qui
 grandissait encore — un pavé vide de 370px avec le champ au milieu.
 En colonne, le champ reprend sa hauteur naturelle. */
 @media(max-width:640px){
-.docs-search-field{ flex:0 0 auto; }
+.fitz-recherche{ flex:0 0 auto; }
 }

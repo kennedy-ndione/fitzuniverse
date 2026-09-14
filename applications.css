@@ -97,7 +97,15 @@ color:var(--text-muted);
 
 /* ---------- Toolbar ---------- */
 
+/* Ni display, ni gap : la ligne d'état de Fitz (#fitzChoixEtat, bloc,
+   sans marge) et le bouton « J'accepte les choix de Fitz » sont visibles
+   EN MÊME TEMPS dès que Fitz a rempli deux places — c'est-à-dire le cas
+   normal — et se touchaient. */
 .apps-toolbar{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:12px;
 margin-bottom:24px;
 }
 

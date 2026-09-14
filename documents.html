@@ -145,9 +145,12 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <!-- Recherche et filtres -->
 <div class="docs-toolbar">
 
-<div class="docs-search-field">
+<!-- Le champ du site (.fitz-recherche, css/base.css). Il portait une
+recette à lui — fond beige, rayon propre, et AUCUN état de focus : à la
+tabulation, le curseur disparaissait. -->
+<div class="fitz-recherche">
 <i data-lucide="search"></i>
-<input type="text" id="searchDocument" placeholder="Rechercher un document...">
+<input type="search" id="searchDocument" placeholder="Rechercher un document…">
 </div>
 
 <div class="docs-category-filters" id="categoryFilters">
