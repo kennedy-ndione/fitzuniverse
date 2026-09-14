@@ -270,50 +270,96 @@ test("une bourse sans exigences ne propose rien à ajouter", () => {
 
 // ------------------------------------------------------------------
 // LE REJEU SUR LE CATALOGUE RÉEL — par les valeurs, pas par les symboles
+//
+// ⚠️ CES TESTS ONT FAIT ROUGIR `npm test` LE 2026-09-14, ET ILS AVAIENT
+// TORT. Ils épinglaient « 99 bourses », « 57 sans exigence », « 27 par
+// un tiers », « onze codes » — les effectifs du 2026-09-06. Les lots 59
+// et 60 ont renseigné huit fiches de plus et ajouté deux codes au
+// vocabulaire : quatre tests sont tombés d'un coup, pour des données qui
+// venaient d'être CORRIGÉES. Un décompte figé transforme chaque progrès
+// en régression apparente, et fait perdre confiance à la suite entière.
+//
+// LA FORME RETENUE, désormais, pour chacun :
+//   — ce qui est ÉPINGLÉ est la RÈGLE (un code inconnu n'est jamais
+//     affiché, une bourse sans code ne produit aucun bloc, chaque
+//     bourse « par un tiers » porte bien une voie) ;
+//   — ce qui est mesuré est un ORDRE DE GRANDEUR, avec une borne large
+//     qui attrape un effondrement (« zéro bourse annotée ») sans tomber
+//     à chaque lot de données ;
+//   — et l'invariant qui vaut mieux qu'un total : avec + sans = 156.
+//
+// Les chiffres du jour sont écrits en commentaire, pas en assertion :
+// 156 bourses, 104 annotées, 52 muettes, 30 déposées par un tiers,
+// 16 avec un élément de dossier, 13 codes distincts (2026-09-14).
 // ------------------------------------------------------------------
 
 const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
 
-test("REJEU — les effectifs du catalogue réel sont exactement ceux mesurés", () => {
+test("REJEU — le champ est réellement exploité, et chaque bourse tombe d'un côté ou de l'autre", () => {
 
   const bourses = catalogue.scholarships;
-
-  assert.equal(bourses.length, 156, "le catalogue a changé de taille — remesurer avant de toucher aux attendus");
 
   const avec = bourses.filter((b) => lireExigences(b).length > 0);
   const sans = bourses.filter((b) => lireExigences(b).length === 0);
 
-  assert.equal(avec.length, 99, "99 bourses portent au moins une exigence exploitable");
-  assert.equal(sans.length, 57, "57 bourses n'affichent RIEN — ni bloc vide, ni « aucune exigence »");
+  // L'INVARIANT, qui ne se périme pas : il n'y a pas de troisième état.
+  assert.equal(avec.length + sans.length, bourses.length);
 
+  // L'ordre de grandeur : le champ sert vraiment, et il reste des
+  // bourses à renseigner. Deux bornes larges, pour attraper un
+  // effondrement (« plus rien n'est annoté », « lireExigences rend
+  // toujours quelque chose ») sans tomber au prochain lot de données.
+  assert.ok(avec.length >= 90, `seulement ${avec.length} bourses annotées — le champ a été vidé quelque part`);
+  assert.ok(sans.length >= 1, "plus AUCUNE bourse muette : lireExigences rend quelque chose pour tout le monde, ce qui est suspect");
+  assert.ok(bourses.length >= 150, `${bourses.length} bourses — le catalogue a changé de taille`);
+
+  // Chaque code RENCONTRÉ appartient au vocabulaire, et chaque code du
+  // vocabulaire est du bon côté de la barrière des formes. C'est la
+  // règle ; le décompte par code, lui, bouge à chaque lot.
   const parCode = {};
   for (const b of bourses) for (const code of lireExigences(b)) parCode[code] = (parCode[code] || 0) + 1;
 
-  assert.equal(parCode.admission_prealable, 56);
-  assert.equal(parCode.projet_recherche, 11);
-  assert.equal(parCode.certification_langue_requise, 10);
-  assert.equal(parCode.candidature_via_etablissement, 10);
-  assert.equal(parCode.nomination_autorite_nationale, 8);
-  assert.equal(parCode.lettres_recommandation, 8);
-  assert.equal(parCode.diplome_recent, 6);
-  assert.equal(parCode.candidature_via_ambassade, 6);
-  assert.equal(parCode.experience_pro_2ans, 5);
-  assert.equal(parCode.directeur_these, 4);
-  assert.equal(parCode.nomination_par_ecole, 3);
+  for (const code of Object.keys(parCode)) {
+    assert.ok(EXIGENCES[code], `${code} est compté mais n'existe pas dans le vocabulaire`);
+    assert.ok(parCode[code] >= 1);
+  }
+
+  // Le code le plus fréquent reste « admission préalable » — c'est la
+  // structure du domaine, pas un chiffre : la plupart des bourses se
+  // demandent avec ou après l'admission.
+  const plusFrequent = Object.entries(parCode).sort((a, b) => b[1] - a[1])[0][0];
+  assert.equal(plusFrequent, "admission_prealable",
+    `le code le plus fréquent est « ${plusFrequent} » — la structure du catalogue a changé, vérifier que c'est voulu`);
 
 });
 
-test("REJEU — 27 bourses ne se déposent PAS par l'étudiant lui-même", () => {
+test("REJEU — les bourses déposées par un TIERS portent toutes une voie, et elles seules", () => {
 
-  const tiers = catalogue.scholarships.filter((b) => deposeParUnTiers(lireExigences(b)));
-
-  assert.equal(tiers.length, 27, "c'est le chiffre qui justifie toute cette passe");
+  const bourses = catalogue.scholarships;
+  const tiers = bourses.filter((b) => deposeParUnTiers(lireExigences(b)));
 
   // L'effectif d'abord : une assertion « aucun X » sur un ensemble vide
   // ne prouve rien (leçon de la passe 2).
-  assert.ok(tiers.length > 0);
+  assert.ok(tiers.length >= 20, `seulement ${tiers.length} bourses déposées par un tiers — c'est le fait qui justifie toute cette passe`);
+
   for (const b of tiers) {
-    assert.equal(groupees(lireExigences(b)).voie.length >= 1, true, b.title);
+    assert.ok(groupees(lireExigences(b)).voie.length >= 1, b.title);
+  }
+
+  // ET L'INVERSE, qui est le vrai garde depuis l'ajout de
+  // `depot_par_courriel` et `depot_par_courrier` (2026-09-14) : une
+  // bourse de forme « voie » n'est PAS forcément déposée par un tiers.
+  // Deux bourses se déposent par courriel ou par la poste, et
+  // l'étudiant les dépose lui-même — leur dire le contraire lui ferait
+  // attendre l'accusé de réception de quelqu'un d'autre.
+  const avecVoie = bourses.filter((b) => groupees(lireExigences(b)).voie.length >= 1);
+  const soiMeme = avecVoie.filter((b) => !deposeParUnTiers(lireExigences(b)));
+
+  assert.ok(avecVoie.length >= tiers.length);
+  for (const b of soiMeme) {
+    const codes = groupees(lireExigences(b)).voie.map((v) => v.code);
+    assert.ok(codes.every((c) => VOIES_PAR_SOI_MEME.includes(c)),
+      `${b.title} : voie ${codes.join(", ")} — ni tiers, ni dépôt par soi-même déclaré`);
   }
 
 });
@@ -324,7 +370,16 @@ test("REJEU — aucun code inconnu n'existe dans le catalogue, et aucun ne serai
   for (const b of catalogue.scholarships) for (const code of (b.exigences || [])) bruts.add(code);
 
   assert.ok(bruts.size > 0, "il y avait bien des codes à examiner");
-  assert.equal(bruts.size, 11, "onze codes distincts dans les données");
+  // Le NOMBRE de codes distincts n'est pas épinglé : il monte à chaque
+  // enrichissement du vocabulaire (11 le 2026-09-06, 13 le 2026-09-14).
+  // Ce qui est épinglé, c'est qu'aucun n'est hors vocabulaire, et
+  // qu'aucun code du vocabulaire ne dort sans être utilisé — un code
+  // jamais posé sur une bourse est un code qu'on a oublié de brancher.
+  assert.ok(bruts.size >= 10, `seulement ${bruts.size} codes distincts employés`);
+
+  const jamaisEmployes = Object.keys(EXIGENCES).filter((code) => !bruts.has(code));
+  assert.deepEqual(jamaisEmployes, [],
+    `code(s) du vocabulaire que AUCUNE bourse ne porte : ${jamaisEmployes.join(", ")} — ajouté sans être branché ?`);
 
   const inconnus = [...bruts].filter((code) => !EXIGENCES[code]);
 
@@ -332,11 +387,13 @@ test("REJEU — aucun code inconnu n'existe dans le catalogue, et aucun ne serai
 
 });
 
-test("REJEU — 16 bourses proposent un élément de dossier, et jamais plus de deux", () => {
+test("REJEU — les bourses qui proposent un élément de dossier n'en proposent jamais plus de deux", () => {
 
   const avecDossier = catalogue.scholarships.filter((b) => elementsDeDossier(lireExigences(b)).length > 0);
 
-  assert.equal(avecDossier.length, 16);
+  // JAMAIS PLUS DE DEUX, c'est la règle : il n'y a que deux codes de
+  // forme « dossier ». Le compte de bourses concernées, lui, bouge.
+  assert.ok(avecDossier.length >= 10, `seulement ${avecDossier.length} bourses proposent un élément de dossier`);
 
   for (const b of avecDossier) {
     const e = elementsDeDossier(lireExigences(b));
@@ -346,11 +403,15 @@ test("REJEU — 16 bourses proposent un élément de dossier, et jamais plus de 
 
 });
 
-test("REJEU — les 57 bourses sans exigence ne produisent aucun bloc", () => {
+test("REJEU — les bourses sans exigence ne produisent aucun bloc", () => {
 
   const sans = catalogue.scholarships.filter((b) => lireExigences(b).length === 0);
 
-  assert.equal(sans.length, 57);
+  // Le compte descend à chaque lot de données (57 le 2026-09-06, 52 le
+  // 2026-09-14) et c'est le but : chaque bourse renseignée en retire
+  // une. On vérifie qu'il en reste à examiner, et surtout que celles-là
+  // n'affichent RIEN — ni bloc vide, ni « aucune exigence ».
+  assert.ok(sans.length >= 1, "plus aucune bourse muette : suspect, lireExigences rend quelque chose pour tout le monde");
 
   for (const b of sans) {
     const g = groupees(lireExigences(b));

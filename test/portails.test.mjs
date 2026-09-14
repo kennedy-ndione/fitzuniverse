@@ -72,8 +72,52 @@ assert.ok(bordeaux && bordeaux.name && bordeaux.country === "France" && bordeaux
 // 2. Le fichier privé porte les portails, et n'est pas publié
 // ------------------------------------------------------------------
 
-test("functions/data/catalogue-portails.json porte les 147 portails d'université", () => {
-assert.equal(Object.keys(privee.universites).length, 147);
+// CE TEST PHOTOGRAPHIAIT 147 ET EST TOMBÉ AU LOT SUIVANT (2026-09-14).
+//
+// Le lot 61 a ajouté le portail de l'IHEID : 148. Le test disait « 147 »
+// en dur, et il a fait rougir `npm test` chez Charles pour une donnée
+// qui venait d'être CORRIGÉE. Un décompte figé transforme chaque progrès
+// en régression apparente.
+//
+// Ce qu'il voulait dire n'était pas « 147 » mais « la carte porte un
+// portail pour toutes les universités qui en ont un, et une URL valide
+// pour chacune ». C'est ça qu'on vérifie : le compte se DÉDUIT du
+// catalogue, et les sept qui n'ont pas de portail sont nommées, parce
+// que c'est un fait vérifié à la source et non un trou (elles portent
+// `voieAdmission` à la place — js/voie-admission.js).
+const VOIE_AU_LIEU_DUN_PORTAIL = [
+"universite-cadi-ayyad-marrakech",
+"universite-de-carthage-tunis",
+"universite-de-sfax-sfax",
+"universite-de-sousse-sousse",
+"universite-de-tunis-el-manar-tunis",
+"universite-hassan-ii-casablanca",
+"universite-mohammed-v-rabat"
+];
+
+test("functions/data/catalogue-portails.json porte un portail pour toute université qui en a un", () => {
+
+const ids = new Set(publique.universities.map((u) => u.id));
+const avecPortail = Object.keys(privee.universites);
+const sansPortail = [...ids].filter((id) => !privee.universites[id]).sort();
+
+// Le compte n'est plus écrit : il se déduit. Ce qui est ÉPINGLÉ, c'est
+// la liste de celles qui n'en ont pas — chacune pour une raison
+// documentée, chacune portant sa voie d'admission à la place.
+assert.deepEqual(sansPortail, [...VOIE_AU_LIEU_DUN_PORTAIL].sort(),
+"une université a perdu ou gagné son portail sans que ce test le sache");
+
+assert.equal(avecPortail.length, ids.size - sansPortail.length);
+assert.ok(avecPortail.length > 140, `seulement ${avecPortail.length} portails — quelque chose a disparu`);
+
+// Et les sept sans portail disent par où l'on passe : un champ vide
+// est une réponse, à condition d'être DITE.
+for (const id of VOIE_AU_LIEU_DUN_PORTAIL) {
+const u = publique.universities.find((x) => x.id === id);
+assert.ok(u, id);
+assert.ok(u.voieAdmission, `${id} : sans portail ET sans voie d'admission — la fiche se tairait`);
+}
+
 for (const url of Object.values(privee.universites)) assert.match(url, /^https?:\/\//);
 // Les 17 universités françaises d'Études en France s'y retrouvent.
 const pastel = Object.values(privee.universites).filter((u) => /pastel\.diplomatie\.gouv\.fr\/etudesenfrance/.test(u));
