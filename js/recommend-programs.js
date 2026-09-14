@@ -563,6 +563,12 @@ deadline: entry.program.deadline || null,
 // précis du programme prime sur le portail générique de l'université).
 applicationUrl: entry.program.applicationUrl || entry.university.applicationPortalUrl || "",
 universityWebsite: entry.university.officialWebsite || "",
+// LOT PORTAILS (2026-09-14) : 8 universités sur 155 n'ont PAS de
+// portail d'admission, et c'est un fait vérifié, pas un trou. Sans ce
+// champ, le hub se taisait — un étudiant accompagné vers le Maroc
+// pouvait guetter des mois l'ouverture d'un portail qui n'existe pas,
+// et manquer la date de l'ambassade. Voir js/voie-admission.js.
+voieAdmission: entry.university.voieAdmission || "",
 // Refonte 2026-08-29 : les raisons PROPRES à ce programme, dérivées
 // des mêmes règles que le score (voir explainMatch). Clé nouvelle,
 // ignorée sans risque par les appelants qui ne la lisent pas.
@@ -768,6 +774,10 @@ echeanceOuverte: c.echeance.ouverte,
 score: c.score,
 applicationUrl: c.program.applicationUrl || c.university.applicationPortalUrl || "",
 universityWebsite: c.university.officialWebsite || "",
+// Même champ que dans recommendPrograms ci-dessus : les deux
+// constructeurs de « pick » doivent porter la même chose, sinon la
+// phrase apparaît dans un hub et pas dans l'autre.
+voieAdmission: c.university.voieAdmission || "",
 reasons: explainMatch(c.program, c.university, c.scholarship, p)
 });
 

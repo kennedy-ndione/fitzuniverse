@@ -28,7 +28,11 @@ import {
   groupees,
   elementsDeDossier,
   elementsAAjouter,
-  deposeParUnTiers
+  deposeParUnTiers,
+  voiesHorsPortail,
+  bilanExigences,
+  VOIES_PAR_UN_TIERS,
+  VOIES_PAR_SOI_MEME
 } from "../js/exigences.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -111,6 +115,87 @@ test("les quatre voies de dépôt par un tiers sont reconnues comme telles", () 
 
   assert.equal(deposeParUnTiers(["admission_prealable", "projet_recherche"]), false);
   assert.equal(deposeParUnTiers([]), false);
+  assert.equal(deposeParUnTiers(null), false, "un appel sans tableau ne doit pas jeter");
+
+});
+
+// ------------------------------------------------------------------
+// LOT DES PORTAILS DE BOURSE (2026-09-14) — « voie » ne veut plus dire
+// « quelqu'un d'autre dépose »
+// ------------------------------------------------------------------
+
+test("dépôt par courriel ou par la poste : l'étudiant dépose BIEN lui-même", () => {
+
+  // LE PIÈGE. `deposeParUnTiers` rendait « un code de forme voie
+  // existe ». C'était juste tant que les cinq codes de cette forme
+  // décrivaient tous une nomination par un tiers. Avec les deux codes
+  // neufs, le candidat de la bourse FAO-Hongrie aurait lu « Vous ne
+  // déposez pas vous-même » sur une bourse qu'il dépose lui-même par
+  // courriel — et applications.js lui aurait demandé l'accusé de
+  // réception de quelqu'un d'autre au lieu de sa preuve d'envoi.
+  for (const code of ["depot_par_courriel", "depot_par_courrier"]) {
+    assert.equal(EXIGENCES[code].forme, "voie", code);
+    assert.equal(deposeParUnTiers([code]), false, `${code} : l'étudiant dépose lui-même`);
+    assert.equal(voiesHorsPortail([code]).length, 1, code);
+  }
+
+  // Et l'inverse : une nomination par un tiers n'est pas un dépôt hors
+  // portail, c'est un dépôt par quelqu'un d'autre.
+  assert.equal(voiesHorsPortail(["candidature_via_ambassade"]).length, 0);
+  assert.equal(voiesHorsPortail([]).length, 0);
+
+  // Une bourse peut porter les deux : elle est alors déposée par un
+  // tiers, ET on sait par quel canal.
+  assert.equal(deposeParUnTiers(["nomination_par_ecole", "depot_par_courrier"]), true);
+
+});
+
+test("LA GARDE QUI COMPTE : tout code de forme « voie » est rangé d'un côté ou de l'autre", () => {
+
+  // Sans elle, un code ajouté demain tomberait par défaut du mauvais
+  // côté — et c'est exactement la faute que les deux codes du
+  // 2026-09-14 ont failli introduire, en silence.
+  const voie = Object.entries(EXIGENCES).filter(([, m]) => m.forme === "voie").map(([c]) => c).sort();
+  const couverts = [...VOIES_PAR_UN_TIERS, ...VOIES_PAR_SOI_MEME].sort();
+
+  assert.deepEqual(couverts, voie,
+    "un code de forme « voie » n'est ni dans VOIES_PAR_UN_TIERS ni dans VOIES_PAR_SOI_MEME");
+
+  // Aucun chevauchement : une voie est l'un OU l'autre.
+  for (const code of VOIES_PAR_SOI_MEME) {
+    assert.ok(!VOIES_PAR_UN_TIERS.includes(code), `${code} est dans les deux listes`);
+  }
+
+  // Et les deux listes ne contiennent que des codes qui existent.
+  for (const code of couverts) {
+    assert.ok(EXIGENCES[code], `${code} est listé mais n'existe pas dans le vocabulaire`);
+  }
+
+});
+
+test("le bilan remplace les comptes écrits en dur, et compte des BOURSES", () => {
+
+  // L'en-tête du module portait « 27 bourses », « 56 bourses »… Justes
+  // le jour de leur écriture, un peu plus faux à chaque lot. Ce bilan
+  // se recalcule ; le test vérifie qu'il compte ce qu'il dit.
+  const b = bilanExigences([
+    { exigences: ["candidature_via_ambassade", "nomination_par_ecole"] },  // DEUX codes de forme voie
+    { exigences: ["admission_prealable"] },
+    { exigences: [] },
+    { exigences: ["code_inconnu"] },
+    {}
+  ]);
+
+  assert.equal(b.total, 5);
+  assert.equal(b.avecChamp, 2, "une bourse sans code exploitable n'est pas « sans exigences », elle est inconnue");
+  assert.equal(b.parForme.voie, 1, "deux codes de la même forme sur UNE bourse comptent pour une bourse");
+  assert.equal(b.parForme.ordre, 1);
+  assert.equal(b.parCode.candidature_via_ambassade, 1);
+  assert.equal(b.parCode.nomination_par_ecole, 1);
+  assert.equal(b.parCode.code_inconnu, undefined, "un code inconnu n'entre pas dans le bilan");
+
+  assert.deepEqual(bilanExigences([]).parForme, { voie: 0, ordre: 0, condition: 0, piece: 0, dossier: 0 });
+  assert.equal(bilanExigences(null).total, 0);
 
 });
 

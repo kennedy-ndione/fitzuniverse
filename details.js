@@ -23,6 +23,17 @@ import { trouverProcedure } from "./js/procedures/index.js";
 // (il en a été retiré), mais de la Cloud Function `portails`, qui
 // vérifie l'abonnement avant de rendre quoi que ce soit.
 import { chargerPortails, portailUniversite, portailBourse } from "./js/portails.js";
+// Les phrases et les libellés du bloc « portails » vivent dans le
+// module du hub : la fiche et le hub décrivent le même dossier, et la
+// seule façon de garantir qu'ils n'en disent pas deux choses est de
+// lire la même source (le test « portes 4 » vérifiait jusqu'ici que les
+// phrases étaient copiées mot pour mot — une copie surveillée reste une
+// copie).
+import { porteDeBourseDeLaFiche } from "./js/portails-opportunite.js";
+// Les 8 universités sans portail d'admission : la fiche doit dire par
+// où l'on passe, sinon elle laisse le visiteur guetter un portail qui
+// n'existe pas. Champ PUBLIC, contrairement au portail.
+import { phraseVoieAdmission } from "./js/voie-admission.js";
 import { etatCandidature } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
@@ -105,17 +116,36 @@ return `offers.html?${searchParams.toString()}`;
 // scripts/data/triage-portails-bourses.mjs.
 function configurerPortailBailleur(university, funderBtn, funderLabelEl, isPaidUser) {
 
-const lien = portailBourse(university.scholarshipId) || university.scholarshipWebsite;
+// UN REPLI NE S'ANNONCE PAS COMME UN PORTAIL (corrigé le 2026-09-14).
+// La ligne d'avant était `portailBourse(...) || scholarshipWebsite`,
+// et le libellé promettait le portail officiel de la bourse dans les
+// DEUX cas. Sur les 51 bourses dont `officialWebsite` est une
+// page d'information (triage du 2026-09-08), l'abonné lisait donc
+// « portail officiel de la bourse » et arrivait sur une page qui ne
+// reçoit aucun dossier. Le hub a été réparé le matin même ; la fiche
+// gardait le défaut, et c'est elle que voit le visiteur.
+//
+// LA DÉCISION N'EST PLUS ICI. `porteDeBourseDeLaFiche` rend l'URL, le
+// libellé et la phrase ; cette fonction ne fait que les poser. C'est ce
+// qui rend les trois vérifiables sous Node — les deux tests qui
+// surveillaient les littéraux de ce fichier n'avaient rien vu.
+const porte = porteDeBourseDeLaFiche({
+portailConfirme: portailBourse(university.scholarshipId),
+siteDeLaBourse: university.scholarshipWebsite,
+funderName: university.funderName,
+entryPoint: university.entryPoint,
+abonne: isPaidUser === true
+});
 
-if (!funderBtn || !isPaidUser || !lien) return;
+if (!funderBtn || !porte.visible) return porte;
 
-funderBtn.href = lien;
+funderBtn.href = porte.url;
 
-if (funderLabelEl) {
-funderLabelEl.textContent = "Accéder au portail officiel de la bourse" + (university.funderName ? ` — ${university.funderName}` : "");
-}
+if (funderLabelEl) funderLabelEl.textContent = porte.libelle;
 
 funderBtn.hidden = false;
+
+return porte;
 
 }
 
@@ -139,32 +169,27 @@ parent.insertBefore(funderBtn, lockedNote || null);
 
 }
 
-// Phrase d'orientation au-dessus des liens : ne remplace le texte
-// générique du HTML que quand entryPoint est RENSEIGNÉ — absent, on ne
-// devine rien et la phrase actuelle reste telle quelle ("" ici).
+// LA PHRASE D'ORIENTATION A QUITTÉ CE FICHIER (2026-09-14).
 //
-// `portailBailleurVisible` (2026-08-31) vaut
-// `isPaidUser && !!university.scholarshipWebsite` : faux pour tout
-// visiteur, et faux aussi pour un abonné sur une bourse sans site
-// officiel. Sans ce second paramètre, un visiteur lisait « le dossier
-// ne se dépose PAS auprès de l'université » juste au-dessus d'un
-// bouton qui mène à l'université — l'information était vraie, mais la
-// page se contredisait : on annonçait une porte, et la seule visible
-// était l'autre. On GARDE donc l'information, on change la formulation
-// pour qu'elle désigne ce qui est réellement à l'écran.
-function phraseOrientationPortails(entryPoint, portailBailleurVisible) {
-
-if (entryPoint === "bourse") {
-return portailBailleurVisible
-? "Le dossier se dépose auprès du bailleur, pas auprès de l'université."
-: "Le dossier de cette bourse se dépose auprès du bailleur. Le lien ci-dessous mène à l'établissement d'accueil.";
-}
-
-if (entryPoint === "universite") return "Le dossier se dépose auprès de l'université ; la bourse s'attribue dans le cadre de l'admission.";
-
-return "";
-
-}
+// Elle y vivait depuis le 2026-08-31, avec un second paramètre qui
+// répondait à « le lien du bailleur est-il VISIBLE ? ». La correction
+// d'août était juste dans son intention — ne jamais annoncer une porte
+// qu'on ne montre pas — et le paramètre a fini par répondre à la
+// mauvaise question : visible ne veut pas dire que c'en est une. Il
+// valait `isPaidUser && (portail de dépôt || site du bailleur)`, donc
+// vrai sur les 51 bourses dont le seul lien est une page
+// d'information. La fiche affirmait « PAS auprès de l'université »
+// au-dessus d'un bouton qui mène à une page d'information, à côté d'un
+// autre qui mène à l'université. La même faute, revenue par une autre
+// porte, dix-huit jours plus tard.
+//
+// C'est `porteDeBourseDeLaFiche` (js/portails-opportunite.js) qui rend
+// désormais la phrase, EN MÊME TEMPS que l'URL et le libellé : les
+// trois dérivent de la même donnée, elles ne peuvent plus se
+// contredire, et un test Node les vérifie par le COMPORTEMENT et non
+// en photographiant ce fichier. La règle « entryPoint absent, on ne
+// devine rien et le texte du HTML reste tel quel » n'a pas changé : le
+// module rend "" dans ce cas.
 
 // L'âge du profil dépasse-t-il le plafond ageMax sur TOUS les cycles
 // que ce programme mentionne ? university.level peut en lister
@@ -662,6 +687,12 @@ university: universityProfile.name || "",
 country: universityProfile.country || "",
 city: universityProfile.city || "",
 ranking: universityProfile.ranking || "",
+// LOT PORTAILS (2026-09-14) : le code de voie d'admission des 8
+// universités qui n'ont PAS de portail (ambassade/AMCI, procédure
+// nationale, dépôt sur place). Champ PUBLIC — ce n'est pas une adresse
+// réservée, c'est un fait de procédure, et le taire ferait perdre une
+// année au visiteur. Voir js/voie-admission.js.
+voieAdmission: universityProfile.voieAdmission || "",
 image: universityProfile.image || "",
 flag: universityProfile.flag || "",
 level: program.level || "",
@@ -1080,15 +1111,24 @@ university: university.university
 // L'ordre des liens suit entryPoint, et la phrase d'orientation
 // au-dessus des boutons aussi — quand il est renseigné.
 // ===============================
-configurerPortailBailleur(university, funderPortalBtn, funderPortalLabel, isPaidUser);
+const bailleurAffiche = configurerPortailBailleur(university, funderPortalBtn, funderPortalLabel, isPaidUser);
 ordonnerPortails(university.entryPoint, funderPortalBtn, universityPortalBtn, null);
 
-// Lot S3 : la MÊME condition que configurerPortailBailleur ci-dessus,
-// portail de dépôt compris — sans quoi la phrase d'orientation et le
-// bouton pourraient se contredire le jour où une bourse portera son
-// applicationPortalUrl sans officialWebsite.
-const portailBailleurVisible = isPaidUser && !!(portailBourse(university.scholarshipId) || university.scholarshipWebsite);
-const phraseOrientation = phraseOrientationPortails(university.entryPoint, portailBailleurVisible);
+// La phrase vient du MÊME calcul que l'URL et le libellé, et arrive
+// déjà faite. L'ancien code la recalculait ici à partir de
+// `isPaidUser && (portail || site)` — deux réponses possibles pour la
+// même bourse, et c'est la mauvaise qui s'affichait.
+// LA VOIE D'ADMISSION S'AJOUTE À L'ORIENTATION, ELLE NE LA REMPLACE PAS
+// (2026-09-14). Deux faits distincts : où le dossier se dépose, et
+// comment on atteint l'université quand elle n'a pas de portail. La
+// phrase s'éteint d'elle-même le jour où un portail apparaît, parce
+// qu'elle est conditionnée à son absence — voir js/voie-admission.js.
+const voieAdmission = phraseVoieAdmission({
+portailAdmission: portailUniversite({ universityId: university.universityId, programId: university.programId }),
+universite: { voieAdmission: university.voieAdmission || "" }
+});
+
+const phraseOrientation = [bailleurAffiche.orientation, voieAdmission].filter(Boolean).join(" ");
 if (portalIntro && phraseOrientation) portalIntro.textContent = phraseOrientation;
 
 // CAS LIMITE : plus aucun lien à montrer (université sans site — aucune
@@ -1154,11 +1194,28 @@ applyBtn.hidden = !isPaidUser || !aUnPortail;
 // université — la faire dépendre d'un champ propre à chaque
 // établissement était déjà une incohérence, qui masquait le lien sur
 // les universités françaises dont le portail n'est pas Études en France.
+//
+// ET LE LIBELLÉ NOMME LA PROCÉDURE (2026-09-14). Il disait « Voir la
+// procédure du portail », ce qui, sur la fiche de l'Université
+// Mohammed V, se lisait trois lignes sous « Cette université n'a pas de
+// portail de candidature en ligne ». Deux « portails » différents, rien
+// pour les distinguer : celui de la procédure nationale (AMCI) et
+// celui, inexistant, de l'établissement. On le nomme, et l'ambiguïté
+// disparaît — au passage, l'étudiant apprend le nom de ce qu'il devra
+// affronter.
 const procedureLink = document.getElementById("procedureLink");
 if (procedureLink) {
 const procedure = trouverProcedure({ paysDestination: university.country });
 procedureLink.hidden = !procedure;
-if (procedure) procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
+if (procedure) {
+procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
+const etiquette = document.getElementById("procedureLabel");
+// « AMCI — Agence Marocaine de Coopération Internationale » ne tient
+// pas sur un bouton : on garde ce qui précède le tiret cadratin, qui
+// est le nom sous lequel l'étudiant la rencontrera partout.
+const nom = String((procedure.portail && procedure.portail.nom) || "").split(" — ")[0].trim();
+if (etiquette && nom) etiquette.textContent = `Voir la procédure : ${nom}`;
+}
 }
 
 if (isPaidUser && aUnPortail) {

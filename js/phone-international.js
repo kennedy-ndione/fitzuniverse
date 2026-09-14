@@ -318,25 +318,92 @@ return `+${pays.indicatif}${national}`;
 * premier de la liste est retenu, et l'étudiant peut corriger le pays
 * d'un clic si besoin.
 *
+* DEUX ÉCRITURES DISENT « INTERNATIONAL », ET L'AUTRE EST LA PLUS
+* COURANTE (corrigé le 2026-09-14)
+* -----------------------------------------------------------------
+* « +221 77 123 45 67 » est la forme que ce module écrit. Ce n'est pas
+* la forme que les gens écrivent : dans toute l'Afrique francophone on
+* compose le préfixe international, et un carnet d'adresses, une carte
+* de visite ou un profil rempli avant ce champ contient
+* « 00221 77 123 45 67 ». Les deux désignent le même numéro.
+*
+* Ce fichier ne lisait que le « + ». Un numéro enregistré en « 00 »
+* était donc rendu comme un national de douze chiffres, réécrit en
+* « +221221771234567 », et l'étudiant se retrouvait bloqué à
+* l'enregistrement de son profil — sur un champ qu'il n'avait pas
+* touché — jusqu'à ce qu'il devine qu'il faut effacer « 221 » à la
+* main. On reconnaît donc « 00 » comme on reconnaît « + ».
+*
+* LE ZÉRO SE PERDAIT SUR LE CHEMIN DE RETOUR
+* -------------------------------------------
+* Sans « + » ni « 00 », il reste un numéro national — et un national
+* ne se lit qu'en sachant DE QUEL PAYS il vient : en Côte d'Ivoire, au
+* Gabon, au Congo et en Italie le zéro de tête fait partie du numéro
+* (`zeroSignificatif`). `chiffresNationaux` était appelé sans pays :
+* « 07 07 07 07 07 » revenait à neuf chiffres au lieu de dix, et
+* l'ivoirien qui rouvrait son profil lisait « un numéro compte 10
+* chiffres — vous en avez saisi 9 » sur le numéro qu'il avait
+* lui-même saisi correctement. Le pays présumé est donc un paramètre.
+*
 * @param {string} e164
+* @param {string} [isoSuggere] pays présumé, utilisé UNIQUEMENT quand
+*        la valeur n'est ni « + » ni « 00 » — c'est-à-dire quand elle
+*        ne porte aucun indicatif et qu'il faut bien la lire depuis
+*        quelque part.
 * @returns {{iso:string, national:string}}
 */
-export function depuisE164(e164) {
+export function depuisE164(e164, isoSuggere = "") {
 
 const brut = String(e164 || "").trim();
 
-if (!brut.startsWith("+")) {
-return { iso: "", national: chiffresNationaux(brut) };
+// Le « 00 » n'est international que suivi d'un chiffre, et seulement
+// après avoir écarté les séparateurs de saisie : « 00 221 77... » et
+// « 00221-77... » sont la même chose.
+const nu = brut.replace(/[\s.\-()\u00A0]+/g, "");
+const apresIndicatif = nu.startsWith("+")
+? nu.slice(1)
+: (/^00\d/.test(nu) ? nu.slice(2) : null);
+
+if (apresIndicatif === null) {
+return { iso: "", national: chiffresNationaux(brut, isoSuggere) };
 }
 
-const chiffres = brut.slice(1).replace(/\D+/g, "");
+const chiffres = apresIndicatif.replace(/\D+/g, "");
 
 const candidats = [...PAYS_TELEPHONE]
 .filter((p) => chiffres.startsWith(p.indicatif))
 .sort((a, b) => b.indicatif.length - a.indicatif.length);
 
+// AUCUN INDICATIF CONNU DERRIÈRE LE PRÉFIXE.
+//
+// Deux cas, et le second est dangereux :
+//
+//  — ce n'était pas de l'international, juste une saisie qui commence
+//    par des zéros. On la relit comme un national du pays présumé,
+//    sans quoi on renverrait un numéro amputé de son début.
+//
+//  — c'était bien de l'international, mais d'un pays qui n'est pas
+//    dans les 88 de cette liste (Ukraine, Chypre, Israël, Pakistan…
+//    des destinations d'études réelles). Ranger ce numéro sous le
+//    pays présumé est alors une réécriture silencieuse : « +675123456 »
+//    fait neuf chiffres, le Sénégal en attend neuf, et Fitz
+//    enregistrerait « +221675123456 » — un numéro parfaitement valide
+//    qui n'est pas celui de l'étudiant, et qu'aucun message
+//    n'aurait signalé.
+//
+// On ne peut pas deviner le pays ; on peut DIRE qu'on ne le
+// reconnaît pas. `indicatifInconnu` ne change rien pour les appelants
+// qui déstructurent `{iso, national}` — c'est le champ téléphone qui
+// s'en sert pour afficher une phrase au lieu d'enregistrer un numéro
+// faux.
 if (!candidats.length) {
-return { iso: "", national: chiffres };
+
+const explicite = nu.startsWith("+") || /^00\d/.test(nu);
+
+return explicite
+? { iso: "", national: chiffres, indicatifInconnu: true }
+: { iso: "", national: chiffresNationaux(brut, isoSuggere) };
+
 }
 
 const pays = candidats[0];

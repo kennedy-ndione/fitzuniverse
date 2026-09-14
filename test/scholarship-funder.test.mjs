@@ -32,6 +32,11 @@ import { dirname, join } from "node:path";
 import vm from "node:vm";
 
 import { correspondTypeBourse, libelleFunder } from "../js/scholarship-filters.js";
+// LOT PORTAILS (2026-09-14) : les trois décisions du bloc « portails »
+// de la fiche — quelle URL, quel libellé, quelle phrase — ont quitté
+// details.js pour ce module pur. Le contexte vm ci-dessous doit donc le
+// lui fournir, exactement comme le fait son `import`.
+import { porteDeBourseDeLaFiche, LIBELLES_BOURSE, ORIENTATION } from "../js/portails-opportunite.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sourceAdmin = readFileSync(join(racine, "admin", "scholarships.js"), "utf8");
@@ -127,9 +132,17 @@ function contexteDetails(portails = {}) {
 return chargerFonctions(sourceDetails, "details.js", [
 "configurerPortailBailleur",
 "ordonnerPortails",
-"phraseOrientationPortails",
 "afficherCriteresGeneraux"
-], { portailBourse: (id) => portails[id] || "" });
+], {
+portailBourse: (id) => portails[id] || "",
+// `phraseOrientationPortails` n'existe plus : sa décision est rendue
+// par `porteDeBourseDeLaFiche`, en même temps que l'URL et le
+// libellé, pour qu'elles ne puissent plus se contredire. Les tests de
+// cette phrase vivent désormais dans test/espace-etudiant.test.mjs
+// (« portes 4 bis »), où elle s'appelle avec des valeurs au lieu
+// d'être extraite d'un fichier.
+porteDeBourseDeLaFiche
+});
 }
 
 function position(parent, node) {
@@ -184,14 +197,34 @@ assert.equal(s.funderBtn.href, "#");
 assert.equal(label.textContent, "", "aucun libellé ne doit être préparé pour un non-abonné");
 });
 
-test("#funderPortalBtn visible pour un ABONNÉ, libellé complété du nom du bailleur", () => {
+// LE LIBELLÉ DIT LEQUEL DES DEUX LIENS IL TIENT (2026-09-14).
+// Il promettait le portail officiel de la bourse dans les DEUX cas.
+// Sur MEXT, `officialWebsite` est studyinjapan.go.jp — une page qui
+// décrit la bourse, pas un formulaire : l'abonné lisait « portail
+// officiel » et arrivait sur une page qui ne reçoit aucun dossier.
+test("#funderPortalBtn visible pour un ABONNÉ ; sur un REPLI, le libellé ne promet pas un portail", () => {
 const f = contexteDetails();
 const s = monterSidebar();
 const label = { textContent: "" };
 f.configurerPortailBailleur({ scholarshipWebsite: "https://www.studyinjapan.go.jp/", funderName: "MEXT" }, s.funderBtn, label, true);
 assert.equal(s.funderBtn.hidden, false);
 assert.equal(s.funderBtn.href, "https://www.studyinjapan.go.jp/");
-assert.equal(label.textContent, "Accéder au portail officiel de la bourse — MEXT");
+assert.equal(label.textContent, `${LIBELLES_BOURSE.repli.action} — MEXT`);
+});
+
+test("#funderPortalBtn sur un PORTAIL CONFIRMÉ : le libellé le promet, et l'URL est celle du portail", () => {
+// `portailBourse()` rend une valeur : c'est l'état d'une bourse dont
+// le lot de données a rempli `applicationPortalUrl`.
+const f = contexteDetails({ "mext-japon": "https://www.jasso.go.jp/apply" });
+const s = monterSidebar();
+const label = { textContent: "" };
+f.configurerPortailBailleur(
+{ scholarshipId: "mext-japon", scholarshipWebsite: "https://www.studyinjapan.go.jp/", funderName: "MEXT" },
+s.funderBtn, label, true
+);
+assert.equal(s.funderBtn.href, "https://www.jasso.go.jp/apply",
+"le portail de dépôt doit passer avant la page d'information");
+assert.equal(label.textContent, `${LIBELLES_BOURSE.confirme.action} — MEXT`);
 });
 
 test("#funderPortalBtn sans funderName : libellé nu, jamais de « non renseigné »", () => {
@@ -199,7 +232,7 @@ const f = contexteDetails();
 const s = monterSidebar();
 const label = { textContent: "" };
 f.configurerPortailBailleur({ scholarshipWebsite: "https://exemple.org/" }, s.funderBtn, label, true);
-assert.equal(label.textContent, "Accéder au portail officiel de la bourse");
+assert.equal(label.textContent, LIBELLES_BOURSE.repli.action);
 });
 
 test("generalCriteria vide -> #criteriaSection reste hidden", () => {
@@ -223,40 +256,53 @@ assert.equal(section.hidden, false);
 assert.equal(p.textContent, critere);
 });
 
-test("phrase d'orientation : rien (\"\") quand entryPoint est absent — la phrase du HTML reste telle quelle", () => {
-const f = contexteDetails();
-assert.equal(f.phraseOrientationPortails("", true), "");
-assert.equal(f.phraseOrientationPortails(undefined, true), "");
-assert.match(f.phraseOrientationPortails("bourse", true), /auprès du bailleur/);
-assert.match(f.phraseOrientationPortails("universite", true), /auprès de l'université/);
-});
+// LES QUATRE TESTS DE `phraseOrientationPortails` SONT REMPLACÉS PAR UN
+// SEUL, QUI PASSE PAR LE CHEMIN RÉEL (2026-09-14).
+//
+// Ils extrayaient la fonction du fichier et l'appelaient avec un
+// booléen « le lien est-il visible ? ». Ils sont restés VERTS pendant
+// que la fiche affirmait « pas auprès de l'université » sur les 51
+// bourses dont le seul lien est une page d'information : le booléen
+// qu'on leur passait n'était pas celui que details.js calculait.
+// Photographier une fonction ne dit rien de la valeur qu'on lui donne.
+//
+// La phrase arrive maintenant avec l'URL et le libellé, du même calcul.
+// Son comportement est vérifié dans test/espace-etudiant.test.mjs
+// (« portes 4 bis ») ; ce test-ci vérifie le BRANCHEMENT — que la fiche
+// prenne bien la phrase qui va avec le lien qu'elle affiche.
+test("la fiche prend la phrase QUI VA AVEC le lien qu'elle affiche", () => {
 
-// 2026-08-31 : la phrase ne doit jamais désigner une porte absente de
-// l'écran. `portailBailleurVisible` est faux pour tout visiteur, et
-// pour un abonné sur une bourse sans site officiel.
-test("entryPoint=bourse SANS portail bailleur affiché : la phrase ne nie plus l'université", () => {
-const f = contexteDetails();
-const phrase = f.phraseOrientationPortails("bourse", false);
-assert.match(phrase, /se dépose auprès du bailleur/, "l'information doit être conservée");
-assert.match(phrase, /Le lien ci-dessous mène à l'établissement d'accueil/);
-// La contradiction de mise en page vient de cette négation : elle ne
-// doit apparaître que si le lien du bailleur est réellement affiché.
-assert.ok(!/pas auprès de l'université/.test(phrase));
-});
-
-test("entryPoint=universite : formulation inchangée, quel que soit le public", () => {
-const f = contexteDetails();
-const attendue = "Le dossier se dépose auprès de l'université ; la bourse s'attribue dans le cadre de l'admission.";
-assert.equal(f.phraseOrientationPortails("universite", true), attendue);
-assert.equal(f.phraseOrientationPortails("universite", false), attendue);
-});
-
-test("la phrase est calculée avec isPaidUser && scholarshipWebsite, pas avec entryPoint seul", () => {
 const source = readFileSync(join(racine, "details.js"), "utf8");
-// Lot S3 : la condition inclut le portail de DÉPÔT de la bourse, pour
-// que la phrase et le bouton ne puissent pas se contredire.
-assert.match(source, /const portailBailleurVisible = isPaidUser && !!\(portailBourse\(university\.scholarshipId\) \|\| university\.scholarshipWebsite\);/);
-assert.match(source, /phraseOrientationPortails\(university\.entryPoint, portailBailleurVisible\)/);
+
+// Plus de recalcul : c'est le retour de configurerPortailBailleur qui
+// porte la phrase. Deux calculs de la même chose, c'était deux
+// réponses possibles pour la même bourse.
+assert.match(source, /const bailleurAffiche = configurerPortailBailleur\(/);
+// La phrase de la porte de bourse vient du module, et la voie
+// d'admission (les 8 universités sans portail, 2026-09-14) s'y AJOUTE
+// au lieu de la remplacer : deux faits distincts, une seule ligne à
+// l'écran.
+assert.match(source, /const phraseOrientation = \[bailleurAffiche\.orientation, voieAdmission\]\.filter\(Boolean\)\.join\(" "\);/,
+"la fiche ne compose plus l'orientation et la voie d'admission");
+assert.match(source, /phraseVoieAdmission\(/, "la fiche n'affiche plus la voie d'admission");
+assert.ok(!/portailBailleurVisible/.test(source),
+"la phrase est de nouveau calculée sur la VISIBILITÉ du lien et non sur sa nature");
+assert.ok(!/function phraseOrientationPortails/.test(source),
+"une seconde définition de la phrase est revenue dans details.js");
+
+for (const [cle, phrase] of Object.entries(ORIENTATION)) {
+assert.ok(!source.includes(phrase), `la phrase « ${cle} » est réécrite en dur dans details.js`);
+}
+
+// Le branchement bout en bout, sur le vrai module : un repli ne nie
+// jamais l'université, un portail confirmé le peut.
+const repli = porteDeBourseDeLaFiche({ siteDeLaBourse: "https://info.example/", entryPoint: "bourse", abonne: true });
+assert.ok(!/pas auprès de l'université/.test(repli.orientation));
+assert.match(repli.orientation, /se dépose auprès du bailleur/, "l'information doit être conservée");
+
+const confirme = porteDeBourseDeLaFiche({ portailConfirme: "https://apply.example/", entryPoint: "bourse", abonne: true });
+assert.match(confirme.orientation, /pas auprès de l'université/);
+
 });
 
 // ============================================================

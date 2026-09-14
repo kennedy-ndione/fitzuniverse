@@ -25,6 +25,38 @@
 *
 * Règle du lot : ne jamais perdre une condition. Une explication dit ce
 * que la chose EST ; elle ne remplace pas la règle qui la suit.
+*
+* OÙ L'EXPLICATION NE DOIT PAS SE POSER (mesuré en ligne le 2026-09-14)
+* ---------------------------------------------------------------------
+* L'insertion se faisait juste après le mot, sans regarder ce qui
+* l'entourait. Vu sur la fiche PUBLIQUE de l'Université Mohammed V :
+*
+*   « …du pays d'origine (pas de portail (le site officiel où vous
+*     déposez) en ligne unique), transmission par voie diplomatique. »
+*
+* Une parenthèse DANS une parenthèse : la phrase se casse en deux et
+* « en ligne unique) » se retrouve orphelin. Ce n'est pas un cas
+* limite — les notes du catalogue sont pleines de parenthèses, et le
+* balayage des 3 375 textes longs du catalogue public en a compté
+* **19**, dont Polytechnique (« exonération (…) des droits »), la
+* Rosa-Luxemburg-Stiftung, l'UGA et la Statale de Milan.
+*
+* DEUX RÈGLES, toutes deux décidables sans analyser le français :
+*  1. jamais À L'INTÉRIEUR d'une parenthèse ouverte — une incise dans
+*     une incise est toujours fautive, quel que soit le texte. On passe
+*     à l'occurrence SUIVANTE du même terme, et s'il n'y en a pas, le
+*     terme reste à expliquer plus loin dans la page (il n'est PAS
+*     marqué comme vu) ;
+*  2. jamais collée à une parenthèse qui s'ouvre — « (…) (…) » est
+*     illisible. Zéro cas aujourd'hui dans le catalogue, la garde est
+*     là pour demain.
+*
+* ET DEUX EXPLICATIONS RÉÉCRITES, pour la même raison de lecture : elles
+* répétaient le mot qui suivait le plus souvent le terme. « le portail
+* officiel » donnait « le portail (le site OFFICIEL où vous déposez)
+* officiel », et « l'exonération des droits » donnait « l'exonération
+* (une réduction des DROITS d'inscription) des droits ». Un glossaire
+* qui fait bégayer la phrase qu'il éclaire manque son but.
 * ==========================================================
 */
 
@@ -43,9 +75,9 @@ export const GLOSSAIRE = [
 { id: "dap", motif: mot("DAP"), explication: "la demande d'admission préalable, pour une première année de licence" },
 { id: "etudes-en-france", motif: mot("Études en France"), explication: "la plateforme en ligne de Campus France" },
 { id: "voeu", motif: mot("v(?:œ|oe)ux?", "i"), explication: (m) => (/x$/i.test(m) ? "les formations que vous demandez" : "une formation que vous demandez") },
-{ id: "exoneration", motif: mot("exonérations?", "i"), explication: "une réduction des droits d'inscription" },
+{ id: "exoneration", motif: mot("exonérations?", "i"), explication: "une réduction de ce que vous payez" },
 { id: "preinscription", motif: mot("préinscriptions?", "i"), explication: "une demande d'admission, avant l'inscription" },
-{ id: "portail", motif: mot("portails?", "i"), explication: "le site officiel où vous déposez" },
+{ id: "portail", motif: mot("portails?", "i"), explication: "le site où vous déposez votre candidature" },
 { id: "attestation-de-ressources", motif: mot("attestations? de ressources", "i"), explication: "la preuve que vous pouvez financer vos études" },
 { id: "tcf-delf-dalf", motif: mot("TCF|DELF|DALF"), explication: "un test officiel de niveau de français" },
 { id: "ninea", motif: mot("NINEA"), explication: "le numéro d'identification des entreprises au Sénégal" }
@@ -62,17 +94,69 @@ return typeof terme.explication === "function" ? terme.explication(mot) : terme.
 * `vus` (Set d'identifiants) traverse les appels : une page n'explique
 * chaque terme qu'une fois. Triées par position croissante.
 */
+/**
+* Le mot est-il DANS une parenthèse déjà ouverte ?
+* On compte les parenthèses avant le point d'insertion : une incise
+* dans une incise est toujours fautive. Les guillemets français et les
+* apostrophes ne comptent pas — seules les parenthèses créent le
+* télescopage.
+*/
+function dansUneParenthese(texte, position) {
+const avant = texte.slice(0, position);
+const ouvertes = (avant.match(/\(/g) || []).length;
+const fermees = (avant.match(/\)/g) || []).length;
+return ouvertes > fermees;
+}
+
+/** Une parenthèse s'ouvre-t-elle juste après ? « (…) (…) » est illisible. */
+function colleeAUneParenthese(texte, position) {
+return /^\s*\(/.test(texte.slice(position));
+}
+
+/**
+* La première place LISIBLE pour l'explication d'un terme, ou null.
+*
+* On parcourt toutes les occurrences, pas seulement la première : un
+* terme dont la première apparition tombe dans une parenthèse peut très
+* bien réapparaître en clair deux phrases plus loin, et c'est là qu'il
+* s'explique. C'est le cas de la fiche AMCI, où « portail » apparaît
+* trois fois.
+*/
+function placeLisible(texte, terme) {
+
+// `mot()` rend une expression sans `g` : on en fabrique une version
+// globale pour itérer, sans toucher à la table.
+const balayeur = new RegExp(terme.motif.source, `${terme.motif.flags}g`);
+
+for (let m = balayeur.exec(texte); m; m = balayeur.exec(texte)) {
+
+// m[1] est le caractère qui précède le terme (voir mot() plus haut).
+const position = m.index + m[0].length;
+
+if (dansUneParenthese(texte, position)) continue;
+if (colleeAUneParenthese(texte, position)) continue;
+
+return { position, mot: m[0].slice(m[1].length) };
+
+}
+
+return null;
+
+}
+
 export function annotations(texte, vus = new Set()) {
 const liste = [];
 if (!texte) return liste;
 for (const terme of GLOSSAIRE) {
 if (vus.has(terme.id)) continue;
-const m = terme.motif.exec(texte);
-if (!m) continue;
+const place = placeLisible(texte, terme);
+// AUCUNE PLACE LISIBLE N'EST PAS « DÉJÀ VU ». `vus.add` était appelé
+// dès qu'un motif matchait : un terme dont la seule occurrence de ce
+// texte tombait dans une parenthèse aurait été marqué comme expliqué
+// sans l'être, et il ne le serait plus jamais sur la page.
+if (!place) continue;
 vus.add(terme.id);
-// m[1] est le caractère qui précède le terme (voir mot() plus haut).
-const trouve = m[0].slice(m[1].length);
-liste.push({ id: terme.id, position: m.index + m[0].length, texte: ` (${explicationDe(terme, trouve)})` });
+liste.push({ id: terme.id, position: place.position, texte: ` (${explicationDe(terme, place.mot)})` });
 }
 return liste.sort((a, b) => a.position - b.position);
 }

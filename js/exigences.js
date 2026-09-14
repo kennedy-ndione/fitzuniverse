@@ -20,16 +20,32 @@
 * CINQ FORMES, PARCE QUE CE NE SONT PAS CINQ FOIS LA MÊME CHOSE
 * -------------------------------------------------------------
 * La tentation était de tout verser dans la checklist du dossier. Ce
-* serait faux : sur onze codes, DEUX seulement sont des pièces à
+* serait faux : sur treize codes, DEUX seulement sont des pièces à
 * rassembler. Les autres sont un ordre à respecter, une voie de dépôt,
 * une condition d'éligibilité ou une pièce à produire — rien qu'on
 * « coche ».
 *
-*   voie       l'étudiant ne dépose pas lui-même        (27 bourses)
-*   ordre      l'admission vient avant la bourse        (56 bourses)
-*   condition  une condition d'éligibilité              (11 bourses)
-*   piece      un document à produire                   (15 bourses)
-*   dossier    un élément de la checklist existante      (16 bourses)
+*   voie       PAR OÙ le dossier passe
+*   ordre      l'admission vient avant la bourse
+*   condition  une condition d'éligibilité
+*   piece      un document à produire
+*   dossier    un élément de la checklist existante
+*
+* « VOIE » VEUT DIRE LA ROUTE, PAS « QUELQU'UN D'AUTRE DÉPOSE »
+* (précisé le 2026-09-14). La forme était glosée « l'étudiant ne dépose
+* pas lui-même », parce que ses cinq premiers codes décrivaient tous une
+* nomination par un tiers. Le lot des portails a buté sur deux bourses
+* où l'étudiant dépose bel et bien lui-même, mais ailleurs que sur un
+* portail : par courriel (bourse FAO-Hongrie) et par la poste
+* (Mastercard Foundation à KNUST). Sans code pour ça, ces candidats ne
+* lisaient RIEN sur l'endroit du dépôt — ni portail, ni phrase : la
+* fiche se taisait sur la seule chose qui comptait. La forme dit donc
+* par où le dossier passe, et « un tiers vous présente » n'en est qu'un
+* cas parmi d'autres.
+*
+* Les comptes par forme ne sont plus écrits ici : ils changeaient à
+* chaque lot de données et personne ne les remettait à jour. Pour les
+* obtenir, `bilanExigences` (en bas de ce fichier) les calcule.
 *
 * LA RÈGLE DES TROIS VALEURS, ENCORE
 * -----------------------------------
@@ -85,6 +101,28 @@ nomination_par_ecole: {
 forme: "voie",
 libelle: "Nomination par votre école",
 explication: "C'est votre établissement actuel qui vous présente. Adressez-vous à son service des relations internationales : c'est lui qui détient la procédure et les délais."
+},
+
+// LES DEUX CODES OÙ L'ÉTUDIANT DÉPOSE LUI-MÊME, MAIS PAS SUR UN PORTAIL
+// (ajoutés le 2026-09-14, lot des portails de bourse).
+//
+// Le champ `applicationPortalUrl` reste VIDE sur ces bourses, et un
+// champ vide est une réponse — mais une réponse muette. Ces deux codes
+// la rendent lisible : sans eux, le candidat de la bourse FAO-Hongrie
+// n'avait aucun moyen d'apprendre qu'il fallait écrire à une adresse
+// électronique, et celui de KNUST qu'il fallait poster un dossier
+// papier. Aucune des deux fiches ne disait où aller.
+
+depot_par_courriel: {
+forme: "voie",
+libelle: "Dépôt par courriel",
+explication: "Il n'y a pas de formulaire en ligne : le dossier complet s'envoie par courrier électronique, à l'adresse publiée par le bailleur. Vérifiez le format exigé — un seul PDF, ou des pièces séparées et nommées : c'est souvent éliminatoire."
+},
+
+depot_par_courrier: {
+forme: "voie",
+libelle: "Dépôt par la poste",
+explication: "Il n'y a pas de dépôt en ligne : le dossier part par la poste ou par transporteur. C'est la date de RÉCEPTION qui compte, pas celle de l'envoi — comptez les délais largement, et gardez une preuve d'expédition."
 },
 
 experience_pro_2ans: {
@@ -184,6 +222,55 @@ return sortie;
 }
 
 /**
+* COMBIEN DE BOURSES PAR FORME, ET PAR CODE.
+*
+* L'en-tête de ce fichier portait ces comptes en dur (« 27 bourses »,
+* « 56 bourses »…). Ils étaient justes le jour où ils ont été écrits, et
+* chaque lot de données les a rendus un peu plus faux sans que personne
+* ne les corrige. Un chiffre qu'on ne recalcule pas est un chiffre qui
+* mentira : celui-ci se recalcule.
+*
+* @param {Array<Object>} bourses - documents `scholarships`
+* @returns {{parForme:Object, parCode:Object, avecChamp:number, total:number}}
+*          `avecChamp` compte les bourses qui portent au moins un code
+*          exploitable — les autres ne sont pas « sans exigences », elles
+*          sont INCONNUES (règle des trois valeurs, voir plus haut).
+*/
+export function bilanExigences(bourses = []) {
+
+const parForme = { voie: 0, ordre: 0, condition: 0, piece: 0, dossier: 0 };
+const parCode = {};
+let avecChamp = 0;
+
+const liste = Array.isArray(bourses) ? bourses : [];
+
+for (const bourse of liste) {
+
+const codes = lireExigences(bourse);
+
+if (!codes.length) continue;
+
+avecChamp++;
+
+const vues = new Set();
+
+for (const code of codes) {
+parCode[code] = (parCode[code] || 0) + 1;
+// Une bourse qui porte deux codes de la même forme ne compte
+// qu'une fois pour cette forme : on compte des BOURSES, pas des
+// codes — sinon « 56 bourses » voudrait dire autre chose selon la
+// ligne qu'on lit.
+const forme = EXIGENCES[code].forme;
+if (!vues.has(forme)) { parForme[forme]++; vues.add(forme); }
+}
+
+}
+
+return { parForme, parCode, avecChamp, total: liste.length };
+
+}
+
+/**
 * Les seuls codes qui deviennent des éléments de la checklist existante
 * (applications.js : recommendation / language_test / financial_proof).
 *
@@ -229,6 +316,46 @@ return elementsDeDossier(codes).filter((e) => !dejaLa.has(e.type));
 * plus utile que ce module sache répondre : elle change la nature même
 * de ce qu'il doit surveiller.
 */
+//
+// LA FORME NE SUFFIT PLUS À RÉPONDRE (corrigé le 2026-09-14).
+//
+// Cette fonction rendait « un code de forme voie existe ». C'était juste
+// tant que les cinq codes de cette forme décrivaient tous une
+// nomination par un tiers. Les deux codes ajoutés le 2026-09-14
+// (courriel, poste) sont des voies de dépôt où l'étudiant dépose
+// LUI-MÊME : sans cette liste explicite, un candidat de la bourse
+// FAO-Hongrie aurait lu « Vous ne déposez pas vous-même », et
+// `applications.js` lui aurait demandé l'accusé de réception de
+// quelqu'un d'autre au lieu de sa propre preuve d'envoi.
+//
+// Les deux ensembles ci-dessous doivent couvrir la forme « voie » en
+// entier : un test le vérifie, pour qu'un code ajouté demain doive être
+// rangé d'un côté ou de l'autre au lieu de tomber dans le mauvais par
+// défaut.
+
+/** Les voies où QUELQU'UN D'AUTRE présente le dossier. */
+export const VOIES_PAR_UN_TIERS = Object.freeze([
+"candidature_via_etablissement",
+"candidature_via_ambassade",
+"nomination_autorite_nationale",
+"nomination_par_ecole"
+]);
+
+/** Les voies où l'étudiant dépose lui-même, mais hors portail. */
+export const VOIES_PAR_SOI_MEME = Object.freeze([
+"depot_par_courriel",
+"depot_par_courrier"
+]);
+
 export function deposeParUnTiers(codes) {
-return groupees(codes).voie.length > 0;
+const liste = Array.isArray(codes) ? codes : [];
+return liste.some((code) => VOIES_PAR_UN_TIERS.includes(code));
+}
+
+/**
+* L'étudiant dépose lui-même, mais pas sur un portail.
+* @returns {Array<{code:string, libelle:string, explication:string}>}
+*/
+export function voiesHorsPortail(codes) {
+return groupees(codes).voie.filter((v) => VOIES_PAR_SOI_MEME.includes(v.code));
 }

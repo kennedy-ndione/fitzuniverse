@@ -156,23 +156,53 @@ original.value = versE164(select.value, national.value);
 
 }
 
+/**
+* UNE VALEUR ENREGISTRÉE PEUT PORTER UN INDICATIF QU'ON NE CONNAÎT PAS,
+* ET LA LONGUEUR NE SUFFIT PAS À LE DIRE.
+* ---------------------------------------------------------------------
+* `verifier` ne sait vérifier qu'une longueur. « +675123456 »
+* (Papouasie-Nouvelle-Guinée, hors des 88 pays de la liste) fait neuf
+* chiffres ; le Sénégal en attend neuf ; `verifier` répond donc
+* « valide » et Fitz enregistre « +221675123456 » — un numéro
+* parfaitement composable qui n'est pas celui de l'étudiant.
+*
+* `depuisE164` sait, elle, que l'indicatif ne lui dit rien. Ce drapeau
+* retient cette information entre le chargement du profil et
+* l'enregistrement, et il ne tombe qu'à la première correction :
+* l'étudiant tape, ou change de pays, et le champ redevient un champ
+* ordinaire dont seule la longueur décide.
+*/
+let indicatifInconnu = false;
+
+const PHRASE_INDICATIF_INCONNU = "Nous ne reconnaissons pas l'indicatif de ce numéro. Choisissez votre pays dans la liste, puis saisissez votre numéro sans l'indicatif.";
+
+/** Le verdict du champ, tel que l'affichage ET `valider()` le lisent. */
+function verdict() {
+
+if (indicatifInconnu) return { valide: false, message: PHRASE_INDICATIF_INCONNU };
+
+return verifier(select.value, national.value);
+
+}
+
 // La validation ne s'affiche PAS à chaque frappe : signaler « 7
 // chiffres au lieu de 9 » à quelqu'un qui en a tapé sept et
 // s'apprête à taper le huitième est une réprimande, pas une aide.
 // On efface l'erreur pendant la saisie, on la pose à la sortie du
 // champ.
 national.addEventListener("input", () => {
+indicatifInconnu = false;   // il corrige : le champ repart à neuf
 afficherErreur("");
 synchroniser();
 });
 
 national.addEventListener("blur", () => {
-const { message } = verifier(select.value, national.value);
-afficherErreur(message);
+afficherErreur(verdict().message);
 synchroniser();
 });
 
 select.addEventListener("change", () => {
+indicatifInconnu = false;
 majPlaceholder();
 afficherErreur("");
 synchroniser();
@@ -180,18 +210,49 @@ synchroniser();
 
 const api = {
 
-/** Remplit le champ depuis une valeur enregistrée (E.164 ou non). */
+/**
+* Remplit le champ depuis une valeur enregistrée (E.164 ou non).
+*
+* L'ORDRE DES DEUX DÉCISIONS A ÉTÉ INVERSÉ (2026-09-14)
+* ------------------------------------------------------
+* On lisait d'abord la valeur, on choisissait le pays ensuite. Pour un
+* numéro sans indicatif — tous ceux enregistrés avant ce champ — la
+* lecture se faisait donc SANS pays, et le zéro de tête des pays qui
+* le comptent (Côte d'Ivoire, Gabon, Congo, Italie) disparaissait
+* avant même que le pays soit connu. Le pays présumé se décide
+* maintenant en premier, et sert à la lecture.
+*
+* ET L'ERREUR N'EST PLUS EFFACÉE D'OFFICE
+* ----------------------------------------
+* `afficherErreur("")` partait du principe qu'une valeur enregistrée
+* est une valeur valide. Un profil ancien contient des numéros écrits
+* n'importe comment : le champ s'ouvrait muet, et l'étudiant
+* découvrait le problème au moment où « Enregistrer » refusait de
+* partir. On pose le message tout de suite — il dit combien de
+* chiffres sont attendus, ce qui est exactement ce qu'il faut savoir
+* pour corriger.
+*/
 definir(valeur, isoSuggere) {
 
-const { iso, national: numero } = depuisE164(valeur);
-const choisi = iso || isoSuggere || select.value || PAYS_PAR_DEFAUT;
+const prealable = (isoSuggere && paysParIso(isoSuggere))
+? isoSuggere
+: (select.value || PAYS_PAR_DEFAUT);
+
+const lu = depuisE164(valeur, prealable);
+const choisi = lu.iso || prealable;
 
 if (paysParIso(choisi)) select.value = choisi;
 
-national.value = numero;
+national.value = lu.national;
+indicatifInconnu = lu.indicatifInconnu === true;
 
 majPlaceholder();
-afficherErreur("");
+
+// Un champ vide n'est pas une erreur : `verdict()` rend
+// `{valide:true, message:""}` dans ce cas, et n'affiche donc rien sur
+// un profil neuf.
+afficherErreur(verdict().message);
+
 synchroniser();
 
 },
@@ -208,10 +269,17 @@ synchroniser();
 
 },
 
-/** @returns {boolean} true si le champ est valide (vide compris) */
+/**
+* @returns {boolean} true si le champ est valide (vide compris)
+*
+* Le même juge que l'affichage : `verifier` seule répondait
+* « valide » à un numéro dont l'indicatif est inconnu mais dont la
+* longueur tombait juste — le message s'affichait, et
+* l'enregistrement partait quand même.
+*/
 valider() {
 
-const { valide, message } = verifier(select.value, national.value);
+const { valide, message } = verdict();
 
 afficherErreur(message);
 

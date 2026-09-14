@@ -584,6 +584,10 @@ site: pick.universityWebsite,
 portailAdmission: portailUniversite({ universityId: pick.universityId, programId: pick.programId }),
 portailBourse: preinscription ? "" : bailleur.url,
 bourseConfirmee: bailleur.confirme,
+// Les 8 universités SANS portail d'admission : leur voie (ambassade,
+// procédure nationale, dépôt sur place) est dite au lieu d'un silence.
+// Le champ vient du catalogue public via recommend-programs.js.
+voieAdmission: pick.voieAdmission || "",
 entryPoint: preinscription ? "" : (bourse ? bourse.entryPoint : ""),
 funderName: bourse ? bourse.funderName : "",
 abonne

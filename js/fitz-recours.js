@@ -51,7 +51,7 @@
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS, JOURS_CRITIQUE, JOURS_PROCHE } from "./next-action.js";
 import { decideVerrou, unlockingPlans, PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, FEATURE_CATALOG } from "./plan-features.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
-import { lireExigences, groupees, elementsAAjouter, deposeParUnTiers } from "./exigences.js";
+import { lireExigences, groupees, elementsAAjouter, deposeParUnTiers, voiesHorsPortail } from "./exigences.js";
 // Lot PEIGNE-FIN (2026-09-10) : les 46 fiches de documents (114 Ko) ne
 // sont plus importées ici — ce module est chargé sur chaque page de
 // l'espace. Le contexte du blocage « documents » les apporte
@@ -391,7 +391,25 @@ const bourse = c.bourse || null;
 const codes = lireExigences(bourse);
 if (!bourse || !codes.length) return { resolu: false, texte: "Ce dossier n'est pas lié à une bourse du catalogue dont je connais la voie de dépôt. Vérifiez sur le site officiel qui dépose : vous, ou un établissement." };
 const voie = groupees(codes).voie;
-if (!deposeParUnTiers(codes)) return { resolu: true, titre: "Vous déposez vous-même", texte: `Pour ${bourse.title || "cette bourse"}, c'est vous qui déposez, sur le portail officiel. Gardez la confirmation du portail : c'est votre preuve de dépôt.` };
+// « VOUS DÉPOSEZ VOUS-MÊME » NE VEUT PAS DIRE « SUR UN PORTAIL »
+// (corrigé le 2026-09-14). La phrase promettait un portail et une
+// confirmation de portail à tout le monde. Deux bourses se déposent
+// par courriel ou par la poste : leur candidat cherchait un bouton
+// « soumettre » qui n'existe pas, et une confirmation qui n'arrivera
+// jamais. Les codes `depot_par_courriel` et `depot_par_courrier`
+// disent la vraie voie ; on la répète ici plutôt que d'affirmer
+// l'inverse.
+if (!deposeParUnTiers(codes)) {
+const horsPortail = voiesHorsPortail(codes);
+if (horsPortail.length) {
+return {
+resolu: true,
+titre: "Vous déposez vous-même, mais pas sur un portail",
+texte: `Pour ${bourse.title || "cette bourse"}, ${horsPortail.map((v) => `${v.libelle.toLowerCase()} : ${v.explication}`).join(" ")} Votre preuve de dépôt, c'est donc votre envoi — gardez-en la trace.`
+};
+}
+return { resolu: true, titre: "Vous déposez vous-même", texte: `Pour ${bourse.title || "cette bourse"}, c'est vous qui déposez, sur le portail officiel. Gardez la confirmation du portail : c'est votre preuve de dépôt.` };
+}
 return {
 resolu: true,
 titre: "Vous ne déposez pas vous-même",

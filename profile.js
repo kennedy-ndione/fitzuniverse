@@ -8,6 +8,7 @@ updateDoc
 import { setButtonLoading } from "./auth-ui.js";
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { monterChampTelephone, synchroniserPays, champTelephone } from "./js/phone-field.js";
+import { isoDepuisNom } from "./js/phone-international.js";
 import { computeAge } from "./js/age-limits.js";
 // Lot ACCEPTATION, partie 3 : « Fitz a besoin de ces informations pour
 // choisir votre université » — la même règle que le remplissage
@@ -18,7 +19,7 @@ import { escapeHtml } from "./js/ai/format.js";
 // s'affiche et ce qui compte ; le score vient de la MÊME fonction que le
 // tableau de bord, les outils Fitz et la fiche admin (bilanProfil) — plus
 // de règles de complétion recopiées sur le DOM.
-import { PALIERS, lirePalier, champsAcademiques, estSecondaire, studentStatusDuPalier, TESTS_DE_LANGUE, lireTestLangue, sectionsPour } from "./js/profil-par-niveau.js";
+import { PALIERS, lirePalier, champsAcademiques, estSecondaire, studentStatusDuPalier, TESTS_DE_LANGUE, lireTestLangue, sectionsPour, domDeSection } from "./js/profil-par-niveau.js";
 import { bilanProfil } from "./js/profile-score.js";
 // Partie 4 : ne pas refaire répondre à ce que l'étudiant a déjà dit au
 // diagnostic gratuit — pré-remplir les champs vides, jamais écraser.
@@ -601,18 +602,95 @@ secAcademique.querySelectorAll("[data-palier-champ]").forEach((el) => {
 el.hidden = !academiques.has(el.dataset.palierChamp);
 });
 
-// Section 9 : facultative ou comptée ; stages et travail au secondaire.
-const facultative = sections.get("sec-experiences") === "facultative";
-document.getElementById("experiencesFacultatif").hidden = !facultative;
-document.getElementById("experiencesHint").textContent = facultative
-? "Associations, bénévolat, premiers projets — si vous en avez. Cette section ne compte pas dans votre score."
-: "Fitz s'appuiera sur ces expériences pour valoriser votre CV et vos lettres de motivation.";
+// Section 9 : stages et travail ne se demandent pas au secondaire.
 document.querySelectorAll('#sec-experiences [data-palier-champ]').forEach((el) => { el.hidden = secondaire; });
 
-// La navigation reflète ce qui est masqué.
+// CHAQUE SECTION FACULTATIVE LE DIT ELLE-MÊME (2026-09-14).
+//
+// Seule « Expériences » portait sa pastille et sa phrase, écrites en
+// dur ici. Depuis que QUATRE sections sont facultatives — celles dont
+// aucun champ ne décide des opportunités proposées (voir la note du
+// noyau dans js/profil-par-niveau.js) — les trois autres seraient
+// restées muettes : l'étudiant aurait continué à les croire
+// obligatoires, et c'est précisément ce qu'on répare.
+//
+// La pastille est injectée à côté du titre, la phrase complète le
+// libellé d'aide existant. Aucun texte n'est perdu : on AJOUTE une
+// phrase, on ne remplace pas celle qui explique à quoi la section sert.
+const PROMESSE_FACULTATIVE = "Cette section n'entre pas dans votre score — remplissez-la quand vous voudrez : elle sert à Fitz pour vos lettres et la vérification de vos dossiers.";
+
+// L'APPLICABILITÉ PAR ÉLÉMENT DE PAGE, ET NON PAR RÈGLE DE SCORE.
+//
+// `sections` est indexée sur les dix règles de profile-score.js.
+// profile.html n'a que neuf `<section>` : « Langues » et « Projet
+// d'études » vivent toutes deux dans « Pour commencer »
+// (#sec-depart), et `document.getElementById("sec-langues")` rendait
+// donc `null` — la boucle passait son chemin sans que rien ne le
+// signale, et #sec-depart n'était atteint par aucune règle.
+//
+// Quand deux règles partagent une section, la plus exigeante gagne :
+// une section qui porte un champ requis est requise. C'est le seul
+// sens sûr — l'inverse masquerait une section à cause d'une règle
+// qui ne la concerne qu'en partie.
+const EXIGENCE = { masquee: 0, facultative: 1, requise: 2 };
+const parElement = new Map();
+
+for (const [id, applicable] of sections) {
+const cible = domDeSection(id);
+const deja = parElement.get(cible);
+if (deja === undefined || EXIGENCE[applicable] > EXIGENCE[deja]) parElement.set(cible, applicable);
+}
+
+for (const [id, applicable] of parElement) {
+
+const section = document.getElementById(id);
+if (!section) continue;
+
+const facultative = applicable === "facultative";
+const titre = section.querySelector(".profile-section-heading h2");
+const aide = section.querySelector(".profile-section-heading .field-hint");
+
+// LA PASTILLE DIT « FACULTATIF », ET RIEN D'AUTRE.
+//
+// Elle disait « si vous en avez » : écrit pour « Expériences », où
+// c'est juste. Sur les trois autres, ça ne veut rien dire —
+// « Niveau académique si vous en avez », « Objectifs si vous en
+// avez ». Un seul mot tient pour les quatre, et c'est celui que
+// l'étudiant cherche.
+//
+// Le HTML n'en porte plus aucune : elles sont toutes créées ici, une
+// fois, au même endroit que la phrase qui les explique.
+if (titre) {
+let pastille = titre.querySelector(".section-facultative");
+if (!pastille && facultative) {
+pastille = document.createElement("span");
+pastille.className = "section-facultative";
+pastille.textContent = "facultatif";
+titre.appendChild(document.createTextNode(" "));
+titre.appendChild(pastille);
+}
+if (pastille) pastille.hidden = !facultative;
+}
+
+if (aide) {
+// Le libellé d'origine est mémorisé au premier passage : sans ça, un
+// second appel (changement de palier) concaténerait deux fois.
+if (aide.dataset.aideOrigine === undefined) aide.dataset.aideOrigine = aide.textContent.trim();
+const origine = aide.dataset.aideOrigine;
+aide.textContent = facultative ? `${origine} ${PROMESSE_FACULTATIVE}` : origine;
+}
+
+}
+
+// La navigation reflète ce qui est masqué — sur la même table que
+// les sections elles-mêmes, sinon l'entrée « Pour commencer »
+// n'était décidée par rien du tout (`sections.get` rendait
+// `undefined` pour elle, et c'est seulement par chance que cela
+// revenait à « visible et non facultative »).
 document.querySelectorAll(".section-nav-item").forEach((item) => {
-item.hidden = sections.get(item.dataset.section) === "masquee";
-item.classList.toggle("is-facultative", sections.get(item.dataset.section) === "facultative");
+const applicable = parElement.get(item.dataset.section);
+item.hidden = applicable === "masquee";
+item.classList.toggle("is-facultative", applicable === "facultative");
 });
 
 }
@@ -849,10 +927,22 @@ document.getElementById("city").value = profile.city || "";
 // mais porte désormais du E.164, et c'est lui que val("phone") lit
 // plus bas — buildUpdatedProfile n'a donc rien eu à changer.
 //
-// Le pays de résidence est passé en suggestion : un profil déjà
-// enregistré contient un numéro écrit sans indicatif, et c'est la
-// seule information dont on dispose pour deviner d'où il vient.
-const isoSuggere = null;
+// LE COMMENTAIRE DISAIT VRAI, LE CODE NON (corrigé le 2026-09-14).
+// `isoSuggere` valait `null` : le pays de résidence n'était pas passé
+// du tout, et un numéro enregistré sans indicatif retombait donc sur
+// le pays par défaut du sélecteur — le Sénégal. Un étudiant en France
+// dont le profil portait « 0612345678 » se voyait attribuer +221 ; le
+// numéro faisait neuf chiffres, le Sénégal en attend neuf, la
+// validation le laissait passer, et Fitz enregistrait
+// « +221612345678 » : un numéro parfaitement valide qui n'est pas le
+// sien, et qu'aucun message n'aurait signalé.
+//
+// `synchroniserPays` ne pouvait pas réparer ça : elle refuse — à
+// juste titre — de déplacer le pays d'un champ déjà rempli (un
+// Sénégalais installé au Canada a un numéro canadien). Elle ne sert
+// donc qu'aux champs restés vides, et la suggestion doit arriver AVEC
+// la valeur, pas après.
+const isoSuggere = isoDepuisNom(profile.country || profile.originCountry || "");
 champTelephone("phone")?.definir(profile.phone || "", isoSuggere);
 champTelephone("whatsapp")?.definir(profile.whatsapp || "", isoSuggere);
 synchroniserPays(profile.country || profile.originCountry || "");

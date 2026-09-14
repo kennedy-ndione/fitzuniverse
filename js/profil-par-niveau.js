@@ -88,27 +88,139 @@ export const SECTIONS = [
 
 export const APPLICABILITES = ["requise", "facultative", "masquee"];
 
-// La table du brief, telle quelle. Tout ce qui n'y figure pas est
-// « requise » : seules les sections 3 et 9 varient.
-const TABLE = {
-[PISTES.LYCEE]: { "sec-academique": "masquee", "sec-experiences": "facultative" },
-[PISTES.BAC_OBTENU]: { "sec-academique": "masquee", "sec-experiences": "facultative" },
-[PISTES.LICENCE_EN_COURS]: { "sec-experiences": "facultative" },
-[PISTES.LICENCE_OBTENUE]: {},
-[PISTES.MASTER_EN_COURS]: {},
-[PISTES.MASTER_OBTENU]: {},
-[PISTES.DOCTORAT_EN_COURS]: {},
-[PISTES.DOCTORAT_OBTENU]: {}
-};
+/**
+* ============================================================
+* LE NOYAU : CE QUI DÉCIDE DE CE QU'ON PROPOSE (2026-09-14)
+* ============================================================
+*
+* Charles, le 2026-09-14 : « regarde à nouveau la partie compléter mon
+* profil car je vois il y a des questions qui ne sont pas nécessaires
+* pour connaitre réellement le client et lui proposer ses opportunités
+* [...] essaie juste de poser au client des questions simples et
+* efficaces qu'il pourra répondre sans se casser la tête ».
+*
+* Il a raison, et c'est DÉMONTRABLE. Le moteur de recommandation
+* (js/recommend-programs.js) ne lit que huit champs du profil :
+*   preferredCountries, excludedCountries, languages, desiredField,
+*   desiredDegree/targetLevel, fundingWanted, nationality, birthDate.
+*
+* Or pour atteindre le seuil de 7/10 — celui qui fait basculer la phase
+* 01 du parcours, qui débloque l'affichage des opportunités et qui
+* commande la prochaine action — l'étudiant devait remplir DIX sections,
+* dont quatre que le moteur n'ouvre jamais :
+*
+*   sec-academique  mémoire, publications, recherche, classement,
+*                   matières fortes et faibles ;
+*   sec-experiences stages, emploi, associations, bénévolat,
+*                   entrepreneuriat ;
+*   sec-documents   les pièces déjà en main ;
+*   sec-objectifs   pourquoi partir, objectifs de carrière, rêves.
+*
+* Une vingtaine de champs, donc, dont aucun ne change UNE SEULE des
+* opportunités qu'on lui propose. Le lot PROFIL-PAR-NIVEAU du
+* 2026-09-11 avait allégé DEUX sections sur dix ; les huit autres
+* restaient obligatoires pour tout le monde.
+*
+* CE QUI CHANGE, ET CE QUI NE CHANGE PAS
+* --------------------------------------
+* Ces quatre sections deviennent « facultative » : elles restent
+* AFFICHÉES, remplissables, et Fitz s'en sert toujours pour écrire les
+* lettres et vérifier les dossiers — elles ne BLOQUENT plus. Rien n'est
+* retiré du profil, rien n'est effacé en base.
+*
+* Et la règle ne dépend plus du palier : elle vaut pour tous, profils
+* anciens compris. Un profil sans palier n'a aucune raison de rester
+* soumis à des questions qui ne servent à personne — la compatibilité
+* ascendante protégeait le SCORE, pas l'inconfort.
+*
+* `sec-academique` reste MASQUÉE pour un lycéen ou un bachelier : il n'a
+* pas de niveau académique supérieur à décrire (décision du 2026-09-11).
+*
+* Il reste donc SIX sections mesurées, et toutes les six portent au
+* moins un champ que le moteur lit :
+*   sec-personal    birthDate (plafonds d'âge), pays d'origine
+*   sec-parcours    le dernier diplôme -> le cycle
+*   sec-langues     languages
+*   sec-projet      desiredField, desiredDegree
+*   sec-destination preferredCountries, excludedCountries
+*   sec-financier   fundingWanted
+*
+* L'AUTRE PORTE NE BOUGE PAS. `profilPretPourFitz` (js/fitz-choisit.js,
+* quatre champs) reste ce qui autorise Fitz à CHOISIR les universités.
+* Les deux mesures se rapprochent au lieu de se contredire, et c'était
+* tout le problème : la porte commerciale demandait quatre champs, le
+* parcours en exigeait une vingtaine de plus.
+* ============================================================
+*/
+const ENRICHISSENT = new Set([
+"sec-academique",
+"sec-experiences",
+"sec-documents",
+"sec-objectifs"
+]);
+
+/** Les sections qui entrent dans la mesure — utile au test et à l'admin. */
+export const SECTIONS_DU_NOYAU = SECTIONS.map((s) => s.id).filter((id) => !ENRICHISSENT.has(id));
 
 /**
-* L'applicabilité d'une section pour un palier. Sans palier (ou palier
-* inconnu) : "requise" — le profil d'avant ce lot.
+* ============================================================
+* DEUX SECTIONS DE SCORE N'ONT PAS DE SECTION À ELLES DANS LA PAGE
+* ============================================================
+*
+* `SECTIONS` ci-dessus compte DIX entrées parce que profile-score.js
+* compte dix règles, et que les deux listes s'indexent l'une sur
+* l'autre (le garde-fou est en bas de profile-score.js). Mais
+* profile.html n'a que NEUF `<section>` : « Langues » et « Projet
+* d'études » ont été remontées dans « Pour commencer » (#sec-depart)
+* au lot PROFIL-PAR-NIVEAU, avec les quatre champs dont Fitz a besoin
+* pour choisir — « un champ n'existe qu'une fois », dit le commentaire
+* du HTML.
+*
+* Les identifiants `sec-langues` et `sec-projet` sont donc des noms de
+* RÈGLES, pas des identifiants d'éléments. `document.getElementById`
+* rendait `null` sur les deux, et profile.js passait son chemin sans
+* rien dire : aujourd'hui c'est sans conséquence (les deux sont du
+* noyau, donc toujours requises, donc rien à afficher), mais le jour
+* où l'une deviendrait facultative, sa pastille ne serait jamais posée
+* et personne ne le verrait.
+*
+* Cette table dit lequel des neuf `<section>` porte chaque règle. Le
+* test la vérifie contre le HTML livré, ce qui ferme le piège dans les
+* deux sens : une section renommée dans la page, ou une règle ajoutée
+* sans emplacement, casse le test au lieu de disparaître en silence.
+*/
+export const SECTION_DOM = Object.freeze({
+"sec-personal": "sec-personal",
+"sec-parcours": "sec-parcours",
+"sec-academique": "sec-academique",
+"sec-langues": "sec-depart",
+"sec-projet": "sec-depart",
+"sec-destination": "sec-destination",
+"sec-financier": "sec-financier",
+"sec-documents": "sec-documents",
+"sec-experiences": "sec-experiences",
+"sec-objectifs": "sec-objectifs"
+});
+
+/**
+* L'élément de page qui porte une section de score.
+* @returns {string} l'id du `<section>`, ou l'id reçu s'il est inconnu.
+*/
+export function domDeSection(sectionId) {
+return SECTION_DOM[sectionId] || sectionId;
+}
+
+/**
+* L'applicabilité d'une section pour un palier.
+*
+* Une section du noyau est toujours « requise ». Les quatre autres sont
+* « facultative » pour tout le monde — sauf « Niveau académique », qui
+* est MASQUÉE au secondaire (un bachelier n'a rien à y écrire).
 */
 export function applicabilite(sectionId, palierId) {
-const ligne = TABLE[palierId];
-if (!ligne) return "requise";
-return ligne[sectionId] || "requise";
+if (sectionId === "sec-academique" && estSecondaire(palierId)) return "masquee";
+if (ENRICHISSENT.has(sectionId)) return "facultative";
+return "requise";
 }
 
 /** Les sections avec leur applicabilité, dans l'ordre. */

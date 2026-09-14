@@ -163,13 +163,23 @@ assert.ok(/glossaire\.js/.test(composant));
 });
 
 // --- 5. le glossaire ---------------------------------------------------
-test("langage 5 — un seul fichier de définitions, et chaque terme est expliqué à sa première occurrence", () => {
+test("langage 5 — un seul fichier de définitions, et chaque terme est expliqué à sa première place LISIBLE", () => {
 const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea"];
 assert.deepEqual(GLOSSAIRE.map((t) => t.id), attendus);
 for (const t of GLOSSAIRE) {
 const ex = typeof t.explication === "function" ? t.explication("x") : t.explication;
 assert.ok(ex.split(" ").length >= 3 && ex.split(" ").length <= 12, `${t.id} : explication de ${ex.split(" ").length} mots`);
 }
+
+// DEUX EXPLICATIONS RÉÉCRITES LE 2026-09-14, parce qu'elles faisaient
+// bégayer la phrase qu'elles éclairaient : « le portail (le site
+// OFFICIEL où vous déposez) officiel » et « l'exonération (une
+// réduction des DROITS d'inscription) des droits ». Un glossaire qui
+// répète le mot suivant manque son but.
+assert.ok(!/officiel/i.test(GLOSSAIRE.find((t) => t.id === "portail").explication),
+"l'explication de « portail » contient « officiel » — elle bégaie sur « le portail officiel »");
+assert.ok(!/droits/i.test(GLOSSAIRE.find((t) => t.id === "exoneration").explication),
+"l'explication de « exonération » contient « droits » — elle bégaie sur « l'exonération des droits »");
 // Une seule table de définitions dans le dépôt : aucune page ne recopie
 // une explication.
 const pages = PAGES_PUBLIQUES.map((p) => visible(lire(p))).join("\n");
@@ -187,7 +197,7 @@ assert.equal(annoterTexte("Préinscription en France, puis préinscription aille
 // contient un mot du glossaire.
 const vus = new Set();
 const a = annoterTexte("le dossier Études en France se dépose sur le portail", vus);
-assert.equal(a, "le dossier Études en France (la plateforme en ligne de Campus France) se dépose sur le portail (le site officiel où vous déposez)");
+assert.equal(a, "le dossier Études en France (la plateforme en ligne de Campus France) se dépose sur le portail (le site où vous déposez votre candidature)");
 assert.equal(annotations("encore un portail", vus).length, 0);
 // « adapté » ne contient pas DAP.
 assert.equal(annoterTexte("un dossier adapté"), "un dossier adapté");
@@ -203,11 +213,71 @@ const registre = new Set();
 const annote = annoterTexte(corps, registre);
 for (const t of GLOSSAIRE) {
 if (!registre.has(t.id)) continue;
-const m = t.motif.exec(corps);
-const ex = typeof t.explication === "function" ? t.explication(m[0]) : t.explication;
-assert.ok(annote.includes(`${m[0]} (${ex})`), `${page} : « ${m[0]} » sans explication`);
+// LA PLACE N'EST PLUS FORCÉMENT LA PREMIÈRE OCCURRENCE (2026-09-14) :
+// un terme dont la première apparition tombe DANS une parenthèse
+// s'explique à l'occurrence suivante. On vérifie donc qu'il est
+// expliqué quelque part, avec le mot réellement rencontré là.
+const global = new RegExp(t.motif.source, `${t.motif.flags}g`);
+const formes = new Set();
+for (let m = global.exec(corps); m; m = global.exec(corps)) formes.add(m[0].slice(m[1].length));
+const explique = [...formes].some((forme) => {
+const ex = typeof t.explication === "function" ? t.explication(forme) : t.explication;
+return annote.includes(`${forme} (${ex})`);
+});
+assert.ok(explique, `${page} : « ${t.id} » est marqué vu mais n'est expliqué nulle part`);
 }
 }
+});
+
+// --- 5 bis. le défaut mesuré EN LIGNE le 2026-09-14 ----------------------
+test("langage 5 bis — une explication ne se pose JAMAIS dans une parenthèse déjà ouverte", () => {
+
+// LE DÉFAUT, lu sur la fiche PUBLIQUE de l'Université Mohammed V :
+//   « …du pays d'origine (pas de portail (le site officiel où vous
+//     déposez) en ligne unique), transmission par voie diplomatique. »
+// Une incise dans une incise : la phrase se casse et « en ligne
+// unique) » se retrouve orphelin. Le balayage des 3 375 textes longs du
+// catalogue public en comptait DIX-NEUF, dont Polytechnique, la
+// Rosa-Luxemburg-Stiftung, l'UGA et la Statale de Milan.
+const amci = "Candidature via le ministère de l'enseignement supérieur du pays d'origine (pas de portail en ligne unique), transmission par voie diplomatique.";
+assert.equal(annoterTexte(amci, new Set()), amci,
+"le glossaire annote encore à l'intérieur d'une parenthèse");
+
+// Et l'occurrence SUIVANTE, en clair, reçoit bien l'explication : on
+// saute la place fautive, on ne renonce pas au terme.
+const deux = annoterTexte("Une demande est requise (via le portail national), puis le portail ouvre en mai.", new Set());
+assert.match(deux, /le portail \(le site où vous déposez votre candidature\) ouvre en mai/);
+assert.equal((deux.match(/le site où vous déposez/g) || []).length, 1, "le terme est expliqué deux fois");
+
+// « (…) (…) » : deux incises collées sont illisibles.
+assert.equal(annoterTexte("Le portail (ouvert en mai) reçoit les dossiers.", new Set()),
+"Le portail (ouvert en mai) reçoit les dossiers.");
+
+// LA GARDE DE FOND : sur AUCUN des textes longs du catalogue public,
+// l'annotation ne doit produire une parenthèse de profondeur 2.
+const catalogue = JSON.parse(lire("assets/data/catalogue.json"));
+const textes = [];
+const pousser = (o) => {
+for (const [k, v] of Object.entries(o || {})) {
+if (typeof v === "string" && v.length > 40) textes.push([o.id, k, v]);
+else if (v && typeof v === "object" && !Array.isArray(v)) pousser({ ...v, id: o.id });
+}
+};
+for (const coll of ["scholarships", "universities", "programs"]) for (const d of catalogue[coll]) pousser(d);
+
+assert.ok(textes.length > 3000, `seulement ${textes.length} textes longs — le catalogue a changé de forme`);
+
+const fautifs = [];
+for (const [id, champ, t] of textes) {
+const out = annoterTexte(t, new Set());
+let profondeur = 0, max = 0;
+for (const ch of out) { if (ch === "(") profondeur++; if (ch === ")") profondeur--; if (profondeur > max) max = profondeur; }
+if (max > 1) fautifs.push(`${id}/${champ}`);
+if (/\)\s*\(/.test(out)) fautifs.push(`${id}/${champ} (parenthèses collées)`);
+}
+
+assert.deepEqual(fautifs, [], `${fautifs.length} texte(s) du catalogue produisent une parenthèse imbriquée`);
+
 });
 
 // --- 6. le bandeau du questionnaire ---------------------------------------
@@ -264,4 +334,32 @@ assert.ok(!/Votre espace vous attend/.test(lire("dashboard.html")));
 assert.ok(/Jusqu'où voulez-vous être accompagné/.test(lire("offers.html")));
 assert.ok(/sans erreur/.test(lire("offers.html")) && !/sans faille/.test(visible(lire("offers.html"))));
 assert.ok(/Là où vous êtes né ne devrait pas décider de votre/.test(lire("index.html")));
+});
+
+
+test("langage 5 ter — la fiche ne parle jamais de « portail » quand elle vient de dire qu'il n'y en a pas", () => {
+
+// LU EN LIGNE LE 2026-09-14, sur la fiche publique de l'Université
+// Mohammed V : « Voir la procédure du portail », trois lignes sous
+// « Cette université n'a pas de portail de candidature en ligne ».
+// Deux « portails » différents — celui de la procédure nationale AMCI
+// et celui, inexistant, de l'établissement — et rien pour les
+// distinguer. Le libellé nomme donc la procédure.
+const html = lire("scholarship-details.html");
+
+assert.ok(!html.includes("Voir la procédure du portail"),
+"le libellé statique dit encore « du portail »");
+assert.match(html, /<span id="procedureLabel">/,
+"le libellé n'est plus nommable par details.js");
+
+const details = lire("details.js");
+assert.match(details, /Voir la procédure : \$\{nom\}/,
+"details.js ne nomme plus la procédure");
+
+// Le repli du HTML — celui que voit un visiteur si le script n'a pas
+// tourné — ne doit contredire aucune phrase de la page.
+const repli = (html.match(/<span id="procedureLabel">([^<]*)<\/span>/) || [])[1] || "";
+assert.ok(repli.trim(), "le repli est vide");
+assert.ok(!/portail/i.test(repli), `le repli « ${repli} » parle encore de portail`);
+
 });

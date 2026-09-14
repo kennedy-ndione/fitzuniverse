@@ -28,6 +28,7 @@ import vm from "node:vm";
 
 import { estEligible, paysAvecArticle } from "../js/eligibility-countries.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "../js/age-limits.js";
+import { porteDeBourseDeLaFiche } from "../js/portails-opportunite.js";
 import { isQuotaReached } from "../js/plan-features.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -106,9 +107,35 @@ assert.ok(sourceHtml.includes("les informations de cette fiche restent gratuites
 assert.ok(!sourceHtml.includes("cette information restera toujours gratuite"), "ancienne formulation encore présente");
 });
 
-test("le portail du bailleur est conditionné à isPaidUser, pas seulement au site de la bourse", () => {
+// LE VERROU A CHANGÉ D'ENDROIT, PAS DE FORCE (2026-09-14).
+// Ce test cherchait `!isPaidUser` DANS `configurerPortailBailleur`. La
+// décision vit maintenant dans js/portails-opportunite.js, qui la prend
+// pour la fiche ET pour le hub ; cette fonction ne fait plus que lui
+// passer le droit d'accès et poser le résultat. On vérifie donc les
+// deux moitiés : que le droit est bien transmis, et qu'il ferme bien.
+test("le portail du bailleur est conditionné au droit d'accès, jamais au seul site de la bourse", () => {
+
 const fn = extraireFonction(sourceDetails, "configurerPortailBailleur");
-assert.match(fn, /!isPaidUser/, "configurerPortailBailleur ne teste pas isPaidUser");
+
+assert.match(fn, /abonne:\s*isPaidUser === true/,
+"configurerPortailBailleur ne transmet plus le droit d'accès — ou le transmet sans le comparer à true");
+assert.match(fn, /porteDeBourseDeLaFiche\(/,
+"configurerPortailBailleur ne passe plus par la décision partagée");
+assert.ok(!/\|\|\s*university\.scholarshipWebsite/.test(fn),
+"le repli est de nouveau calculé ici : c'est une seconde définition");
+
+// Et le verrou ferme réellement, sur les DEUX valeurs — un non-abonné
+// ne reçoit ni le portail de dépôt ni le site du bailleur.
+const ferme = porteDeBourseDeLaFiche({
+portailConfirme: "https://apply.example/",
+siteDeLaBourse: "https://info.example/",
+entryPoint: "bourse",
+abonne: false
+});
+
+assert.equal(ferme.url, "");
+assert.equal(ferme.visible, false);
+
 });
 
 test("la section « situation » est masquée par défaut dans le HTML — invisible sans abonnement", () => {

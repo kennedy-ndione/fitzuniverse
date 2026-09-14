@@ -773,7 +773,7 @@ assert.match(css, /\.docs-toolbar\{flex-direction:column/,
 // phrase : les portails arrivent dans l'espace étudiant, et ne fuient
 // pas dans le public.
 
-import { liensDOpportunite, portailDeBourseOuRepli, lienValide, ORIENTATION } from "../js/portails-opportunite.js";
+import { liensDOpportunite, portailDeBourseOuRepli, porteDeBourseDeLaFiche, lienValide, ORIENTATION, LIBELLES_BOURSE } from "../js/portails-opportunite.js";
 
 const OPP = {
 site: "https://uni.example/",
@@ -935,17 +935,109 @@ assert.match(bloc, /box-shadow:inset/, "la porte de dépôt n'a plus de repère 
 
 });
 
-test("portes 4 — ANTI-DIVERGENCE : les phrases sont MOT POUR MOT celles de details.js", () => {
+test("portes 4 — LA FICHE ET LE HUB DÉCIDENT AU MÊME ENDROIT", () => {
 
-// details.js (la fiche bourse) et le hub décrivent le même dossier. Si
-// quelqu'un réécrit la phrase d'un seul côté, ce test tombe — c'est le
-// seul moyen d'éviter que les deux surfaces ne disent deux choses.
+// CE TEST A CHANGÉ DE NATURE LE 2026-09-14, ET C'EST L'AVEU D'UN ÉCHEC.
+//
+// Il vérifiait que les trois phrases d'orientation étaient recopiées
+// MOT POUR MOT dans details.js. Elles l'étaient. Il est resté vert
+// pendant que la fiche affirmait « pas auprès de l'université » sur les
+// 51 bourses dont le seul lien est une page d'information : la copie
+// était exacte au caractère, et la CONDITION qui la déclenchait était
+// fausse. Un test qui lit du texte ne voit pas un défaut de sens.
+//
+// La décision vit donc dans le module, et ce test l'appelle avec des
+// valeurs. C'est la seule forme d'anti-divergence qui vaille : non pas
+// « les deux fichiers disent la même chose », mais « il n'y a plus
+// qu'un endroit qui décide ».
 const details = lire("details.js");
 
+assert.ok(details.includes("porteDeBourseDeLaFiche"),
+"details.js ne passe plus par la décision partagée");
+
 for (const [cle, phrase] of Object.entries(ORIENTATION)) {
-assert.ok(details.includes(phrase),
-`la phrase « ${cle} » n'existe plus dans details.js : les deux surfaces ont divergé`);
+assert.ok(!details.includes(phrase),
+`la phrase « ${cle} » est de nouveau écrite en dur dans details.js — c'est une seconde définition`);
 }
+
+for (const libelle of [LIBELLES_BOURSE.confirme.action, LIBELLES_BOURSE.repli.action, LIBELLES_BOURSE.confirme.court, LIBELLES_BOURSE.repli.court]) {
+assert.ok(!details.includes(libelle),
+`« ${libelle} » est écrit en dur dans details.js — c'est une seconde définition`);
+}
+
+// Et le hub lit la même table de libellés.
+const hub = lire("js/portails-opportunite.js");
+assert.ok(hub.includes("LIBELLES_BOURSE.confirme.court") && hub.includes("LIBELLES_BOURSE.repli.court"),
+"le hub n'utilise plus LIBELLES_BOURSE pour ses pastilles");
+
+});
+
+test("portes 4 bis — LE COMPORTEMENT : un repli ne se dit jamais « portail officiel »", () => {
+
+const CONFIRME = "https://tbbs.turkiyeburslari.gov.tr";
+const PAGE_INFO = "https://www.turkiyeburslari.gov.tr";
+
+// 1. Portail de dépôt confirmé : le libellé promet le portail, et la
+//    phrase peut dire « pas auprès de l'université ».
+const avec = porteDeBourseDeLaFiche({
+portailConfirme: CONFIRME, siteDeLaBourse: PAGE_INFO,
+funderName: "YTB", entryPoint: "bourse", abonne: true
+});
+
+assert.equal(avec.url, CONFIRME, "le portail confirmé passe avant le site du bailleur");
+assert.equal(avec.confirme, true);
+assert.equal(avec.libelle, `${LIBELLES_BOURSE.confirme.action} — YTB`);
+assert.equal(avec.orientation, ORIENTATION.bourse_avec_portail);
+
+// 2. LE DÉFAUT DU 2026-09-14 : rien que le site du bailleur. Le lien
+//    est le même qu'avant, le libellé et la phrase ne doivent pas
+//    l'être.
+const sans = porteDeBourseDeLaFiche({
+portailConfirme: "", siteDeLaBourse: PAGE_INFO,
+funderName: "YTB", entryPoint: "bourse", abonne: true
+});
+
+assert.equal(sans.url, PAGE_INFO, "le repli reste affiché : mieux qu'aucune porte");
+assert.equal(sans.confirme, false);
+assert.equal(sans.libelle, `${LIBELLES_BOURSE.repli.action} — YTB`,
+"le repli s'annonce encore comme un portail officiel");
+assert.equal(sans.orientation, ORIENTATION.bourse_sans_portail,
+"la phrase affirme « pas auprès de l'université » sur une page d'information");
+
+// 3. Un non-abonné ne reçoit AUCUNE des deux URL — pas même le repli.
+const ferme = porteDeBourseDeLaFiche({
+portailConfirme: CONFIRME, siteDeLaBourse: PAGE_INFO,
+funderName: "YTB", entryPoint: "bourse", abonne: false
+});
+
+assert.equal(ferme.url, "");
+assert.equal(ferme.visible, false);
+assert.equal(ferme.libelle, "", "un libellé sans bouton est une porte annoncée qu'on ne montre pas");
+assert.equal(ferme.orientation, ORIENTATION.bourse_sans_portail,
+"la phrase du non-abonné doit désigner le lien réellement à l'écran, celui de l'université");
+
+// Et le droit d'accès se compare à `true`, il ne se devine pas.
+for (const valeur of ["oui", 1, {}, "premium"]) {
+assert.equal(porteDeBourseDeLaFiche({ portailConfirme: CONFIRME, abonne: valeur }).url, "",
+`abonne=${JSON.stringify(valeur)} ouvre la donnée payante`);
+}
+
+// 4. entryPoint côté université, et entryPoint absent.
+assert.equal(porteDeBourseDeLaFiche({ portailConfirme: CONFIRME, entryPoint: "universite", abonne: true }).orientation,
+ORIENTATION.universite);
+assert.equal(porteDeBourseDeLaFiche({ portailConfirme: CONFIRME, entryPoint: "", abonne: true }).orientation, "",
+"un entryPoint absent oriente quand même — on ne devine pas");
+assert.equal(porteDeBourseDeLaFiche({ portailConfirme: CONFIRME, entryPoint: "  BOURSE ", abonne: true }).orientation,
+ORIENTATION.bourse_avec_portail, "un entryPoint mal cadré fait disparaître l'orientation en silence");
+
+// 5. Sans bailleur nommé, pas de tiret orphelin.
+assert.equal(porteDeBourseDeLaFiche({ portailConfirme: CONFIRME, funderName: "   ", abonne: true }).libelle,
+LIBELLES_BOURSE.confirme.action);
+
+// 6. Et un contexte absent ne jette pas : une exception ici vide la fiche.
+assert.doesNotThrow(() => porteDeBourseDeLaFiche(null));
+assert.doesNotThrow(() => porteDeBourseDeLaFiche());
+assert.equal(porteDeBourseDeLaFiche(null).visible, false);
 
 });
 

@@ -476,11 +476,20 @@ le déplace en PREMIER quand entryPoint="bourse", en dernier sinon
 <i data-lucide="external-link"></i>
 </a>
 
-<!-- Lot E2 (2026-09-07) : quand l'université est sur un portail dont la
-procédure est documentée (js/procedures/index.js), le lien mène aux
-étapes lues sur les sources publiques — page publique, pour tous. -->
+<!-- Lot E2 (2026-09-07) : quand la DESTINATION a une procédure
+documentée (js/procedures/index.js), le lien mène aux étapes lues sur
+les sources publiques — page publique, pour tous.
+
+LE LIBELLÉ DISAIT « du portail » (corrigé le 2026-09-14). Lu sur la
+fiche en ligne de l'Université Mohammed V, il tombait juste sous la
+phrase « Cette université n'a pas de portail de candidature en
+ligne » : deux « portails » différents à trois lignes d'écart, sans
+rien pour distinguer celui de la procédure nationale (AMCI) de celui,
+inexistant, de l'université. details.js nomme donc la procédure —
+« Voir la procédure : AMCI ». Le texte ci-dessous n'est que le repli
+si le script n'a pas tourné : il ne doit contredire aucune page. -->
 <a id="procedureLink" href="preinscriptions.html#procedure-france" class="portal-link" hidden>
-<span>Voir la procédure du portail</span>
+<span id="procedureLabel">Voir la procédure du pays</span>
 <i data-lucide="route"></i>
 </a>
 

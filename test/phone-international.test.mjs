@@ -356,3 +356,86 @@ assert.equal(pourWhatsApp("FR", "06 12 34 56 78"), "33612345678");
 assert.equal(pourWhatsApp("SN", ""), "");
 
 });
+
+
+// ==========================================================
+// LOT ESPACE-ÉTUDIANT (2026-09-14) — LES NUMÉROS DÉJÀ ENREGISTRÉS
+//
+// Ces quatre gardes viennent d'un même défaut : `depuisE164` ne
+// savait lire qu'une seule des deux écritures de l'international, et
+// lisait le reste sans savoir de quel pays il venait. Les deux
+// oublis se rejoignaient au même endroit — un étudiant bloqué à
+// l'enregistrement de son profil sur un champ qu'il n'avait pas
+// touché, ou pire, un numéro valide mais faux enregistré en silence.
+// ==========================================================
+
+test("« 00 » est de l'international, comme « + » — c'est même l'écriture la plus courante", () => {
+
+// La forme qu'on trouve sur toutes les cartes de visite d'Afrique
+// francophone. Avant ce lot, elle était lue comme un national de
+// douze chiffres et réécrite « +221221771234567 ».
+assert.deepEqual(depuisE164("00221771234567"), { iso: "SN", national: "771234567" });
+assert.deepEqual(depuisE164("00 221 77 123 45 67"), { iso: "SN", national: "771234567" });
+assert.deepEqual(depuisE164("0033612345678"), { iso: "FR", national: "612345678" });
+
+// L'aller-retour doit rendre le numéro d'origine, pas un numéro
+// gonflé de son propre indicatif.
+const { iso, national } = depuisE164("00221771234567");
+assert.equal(versE164(iso, national), "+221771234567");
+
+});
+
+test("un seul zéro n'est pas un préfixe international", () => {
+
+// « 0033... » est international, « 0612345678 » est un national
+// français. Confondre les deux ferait d'un numéro parisien un
+// numéro de l'indicatif +61.
+assert.deepEqual(depuisE164("0612345678", "FR"), { iso: "", national: "612345678" });
+assert.equal(depuisE164("0612345678", "FR").iso, "");
+
+});
+
+test("un national se relit AVEC son pays, sinon le zéro qui compte disparaît", () => {
+
+// Côte d'Ivoire : le zéro fait partie du numéro (zeroSignificatif).
+// Sans le pays, « 07 07 07 07 07 » revenait à neuf chiffres et
+// l'étudiant lisait « un numéro compte 10 chiffres — vous en avez
+// saisi 9 » sur le numéro qu'il avait lui-même saisi.
+assert.deepEqual(depuisE164("07 07 07 07 07", "CI"), { iso: "", national: "0707070707" });
+assert.equal(verifier("CI", depuisE164("07 07 07 07 07", "CI").national).valide, true);
+
+assert.deepEqual(depuisE164("061234567", "IT"), { iso: "", national: "061234567" });
+assert.equal(verifier("IT", depuisE164("061234567", "IT").national).valide, true);
+
+// Et le pays présumé ne doit jamais l'emporter sur un indicatif
+// réellement présent dans la valeur.
+assert.equal(depuisE164("+33612345678", "CI").iso, "FR");
+
+});
+
+test("un indicatif que nous ne connaissons pas est DIT, pas rangé sous le pays présumé", () => {
+
+// LE PIÈGE : « +675123456 » (Papouasie-Nouvelle-Guinée, hors des 88
+// pays de la liste) fait neuf chiffres. Le Sénégal en attend neuf.
+// Sans ce drapeau, le numéro passait la validation et Fitz
+// enregistrait « +221675123456 » — un numéro valide qui n'est pas
+// celui de l'étudiant, et qu'aucun message n'aurait signalé.
+const inconnu = depuisE164("+675123456", "SN");
+
+assert.equal(inconnu.iso, "");
+assert.equal(inconnu.indicatifInconnu, true);
+assert.equal(inconnu.national, "675123456", "le numéro reste lisible en entier");
+
+// La même chose écrite avec le préfixe composé.
+assert.equal(depuisE164("00999123").indicatifInconnu, true);
+
+// Et surtout : un numéro dont l'indicatif EST reconnu, ou un
+// national sans indicatif du tout, ne doit jamais porter ce drapeau
+// — sinon le message s'afficherait sur des numéros justes.
+assert.ok(!depuisE164("+221771234567").indicatifInconnu);
+assert.ok(!depuisE164("00221771234567").indicatifInconnu);
+assert.ok(!depuisE164("0612345678", "FR").indicatifInconnu);
+assert.ok(!depuisE164("77 123 45 67", "SN").indicatifInconnu);
+assert.ok(!depuisE164("").indicatifInconnu);
+
+});

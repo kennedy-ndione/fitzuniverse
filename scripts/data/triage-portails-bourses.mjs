@@ -43,6 +43,20 @@ import { dirname, join } from "node:path";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CATALOGUE = join(racine, "assets", "data", "catalogue.json");
+// LA COLONNE « DÉJÀ REMPLI » LISAIT AU MAUVAIS ENDROIT (corrigé le 2026-09-14).
+//
+// Elle valait `b.applicationPortalUrl ? "oui" : ""`, lu dans
+// l'instantané PUBLIC — d'où `separerPortails` retire précisément ce
+// champ. La colonne était donc condamnée à rester vide pour toujours,
+// quel que soit le remplissage : le script aurait dit « 0 fait, 156 à
+// faire » le jour où les 156 seraient faites, et le deuxième passage
+// qu'il annonce servir n'aurait servi à rien.
+//
+// Le champ vit dans la carte privée, embarquée avec les Cloud
+// Functions. On la lit là. Si le fichier n'existe pas encore (dépôt
+// frais, avant le premier `export`), on continue sans : c'est une
+// colonne d'information, elle ne doit pas empêcher le triage.
+const PORTAILS = join(racine, "functions", "data", "catalogue-portails.json");
 const SORTIE = join(racine, "scripts", "data", "triage-portails-bourses.csv");
 
 // Les marqueurs d'un DÉPÔT dans un chemin d'URL. Volontairement courts
@@ -97,6 +111,14 @@ return { code: "a_ouvrir", raison: "aucun marqueur reconnu" };
 const catalogue = JSON.parse(await readFile(CATALOGUE, "utf8"));
 const bourses = Array.isArray(catalogue.scholarships) ? catalogue.scholarships : [];
 
+let portailsRemplis = {};
+try {
+const carte = JSON.parse(await readFile(PORTAILS, "utf8"));
+portailsRemplis = (carte && carte.bourses) || {};
+} catch {
+console.log("  (functions/data/catalogue-portails.json illisible : la colonne « dejaRempli » restera vide)");
+}
+
 const lignes = bourses
 .map((b) => {
 const url = String(b.officialWebsite || "").trim();
@@ -109,18 +131,19 @@ entryPoint: b.entryPoint || "",
 url,
 verdict: v.code,
 raison: v.raison,
-// Déjà rempli ? Le champ neuf est absent partout au 2026-09-08 ;
-// la colonne existe pour que le script reste utile au deuxième
-// passage, quand une partie sera faite.
-dejaRempli: b.applicationPortalUrl ? "oui" : ""
+// Déjà rempli ? Lu dans la carte PRIVÉE : le champ ne peut pas
+// figurer dans l'instantané public, qui en est amputé par
+// construction. C'est ce qui rend le deuxième passage utile.
+dejaRempli: portailsRemplis[b.id] ? "oui" : "",
+portail: portailsRemplis[b.id] || ""
 };
 })
 .sort((a, b) => (a.verdict + a.pays + a.titre).localeCompare(b.verdict + b.pays + b.titre, "fr"));
 
 // CSV en point-virgule : c'est ce qu'un tableur francophone ouvre sans
 // poser de question.
-const entete = "id;titre;pays;entryPoint;url;verdict;raison;dejaRempli";
-const csv = [entete, ...lignes.map((l) => [l.id, l.titre, l.pays, l.entryPoint, l.url, l.verdict, l.raison, l.dejaRempli].join(";"))].join("\n");
+const entete = "id;titre;pays;entryPoint;url;verdict;raison;dejaRempli;portail";
+const csv = [entete, ...lignes.map((l) => [l.id, l.titre, l.pays, l.entryPoint, l.url, l.verdict, l.raison, l.dejaRempli, l.portail].join(";"))].join("\n");
 
 await writeFile(SORTIE, `${csv}\n`, "utf8");
 
@@ -135,5 +158,34 @@ console.log(`  ${String(n).padStart(4)}  ${code}`);
 const depotChezLeBailleur = lignes.filter((l) => l.entryPoint === "bourse");
 console.log(`\n  ${depotChezLeBailleur.length} bourse(s) déclarent un dépôt CHEZ LE BAILLEUR (entryPoint="bourse") :`);
 console.log(`  ce sont celles dont l'absence de portail est un trou de catalogue (boursesSansPortail).`);
+
+// LE SEUL CHIFFRE QUI COMPTE POUR LA SUITE : combien de ces bourses
+// n'ont toujours pas de lieu de dépôt renseigné, et par quel verdict
+// les attaquer. Les « information » d'abord — ce sont celles où
+// l'étudiant clique et n'arrive nulle part.
+const restantes = depotChezLeBailleur.filter((l) => !l.dejaRempli);
+const faites = depotChezLeBailleur.length - restantes.length;
+
+console.log(`\n  FAIT : ${faites} / ${depotChezLeBailleur.length}. RESTE : ${restantes.length}.`);
+
+if (restantes.length) {
+const parVerdictRestant = {};
+for (const l of restantes) parVerdictRestant[l.verdict] = (parVerdictRestant[l.verdict] || 0) + 1;
+for (const [code, n] of Object.entries(parVerdictRestant).sort((a, b) => b[1] - a[1])) {
+console.log(`    ${String(n).padStart(4)}  ${code}`);
+}
+// PAS DE CHIFFRE EN DUR ICI. Une première version disait « neuf de ces
+// bourses » : c'était vrai entre le lot 59 et le lot 60, et faux
+// ensuite. Le rappel porte la RÈGLE, le compte est juste au-dessus.
+console.log(`\n  RAPPEL : un champ VIDE peut être la bonne réponse. Une partie de ces`);
+console.log(`  bourses n'a aucun lieu de dépôt en ligne chez le bailleur — dépôt à`);
+console.log(`  l'ambassade, au ministère du pays d'origine, à l'établissement`);
+console.log(`  d'accueil, par courriel ou par la poste. Pour celles-là, c'est le champ`);
+console.log(`  « exigences » qui doit parler (js/exigences.js : candidature_via_*,`);
+console.log(`  nomination_*, depot_par_courriel, depot_par_courrier), jamais une URL`);
+console.log(`  inventée. Les 71 ont été passées une par une aux lots 59 et 60 :`);
+console.log(`  scripts/data/lot59-portails-bourses.mjs et lot60-portails-bourses.mjs`);
+console.log(`  disent, bourse par bourse, pourquoi chaque champ vide l'est.`);
+}
 console.log(`\n  Écrit : scripts/data/triage-portails-bourses.csv`);
 console.log(`  AUCUNE valeur n'a été écrite en base. Ouvrir les liens avant de remplir quoi que ce soit.\n`);

@@ -306,8 +306,40 @@ test("le triage des 156 bourses existe et n'écrit rien en base", () => {
 const source = lire("scripts/data/triage-portails-bourses.mjs");
 assert.ok(!/firestore|firebase|setDoc|updateDoc/i.test(source.replace(/^\s*\*.*$/gm, "")), "un triage ne touche pas la base");
 const csv = lire("scripts/data/triage-portails-bourses.csv").trim().split("\n");
-assert.equal(csv[0], "id;titre;pays;entryPoint;url;verdict;raison;dejaRempli");
+assert.equal(csv[0], "id;titre;pays;entryPoint;url;verdict;raison;dejaRempli;portail");
 assert.equal(csv.length, 157, "l'en-tête + les 156 bourses");
+});
+
+test("la colonne « déjà rempli » du triage lit la carte PRIVÉE, jamais l'instantané public", () => {
+
+// LE DÉFAUT (corrigé le 2026-09-14). Elle valait
+// `b.applicationPortalUrl ? "oui" : ""`, lu dans
+// assets/data/catalogue.json — d'où `separerPortails` RETIRE ce champ
+// par construction. La colonne était condamnée à rester vide quel que
+// soit le remplissage : le script aurait annoncé « 0 fait » le jour où
+// les 156 seraient faites, et le deuxième passage qu'il dit servir
+// n'aurait servi à rien. C'est un outil de travail dont le compteur
+// était mort-né.
+const source = lire("scripts/data/triage-portails-bourses.mjs");
+
+assert.ok(source.includes('join(racine, "functions", "data", "catalogue-portails.json")'),
+"le triage ne lit plus la carte privée : sa colonne « dejaRempli » ne peut pas se remplir");
+
+const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+assert.ok(!/b\.applicationPortalUrl/.test(code),
+"le triage relit applicationPortalUrl dans l'instantané public, d'où le champ est absent");
+
+// Et il survit à l'absence du fichier privé : c'est une colonne
+// d'information, elle ne doit pas empêcher le triage sur un dépôt
+// frais où `export` n'a pas encore tourné.
+assert.match(code, /try\s*\{[\s\S]{0,400}?readFile\(PORTAILS[\s\S]{0,400}?\}\s*catch/,
+"un fichier privé manquant fait échouer tout le triage");
+
+// Le compte qui sert à la suite : combien restent, par verdict.
+assert.ok(source.includes("FAIT :") && source.includes("RESTE :"),
+"le triage ne dit plus combien de portails restent à trouver");
+
 });
 
 test("aucune page ne promet le portail de candidature à un visiteur", () => {

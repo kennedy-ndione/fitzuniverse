@@ -77,6 +77,32 @@
 * côté, le test tombe : c'est le seul moyen d'éviter que la fiche bourse
 * et le hub ne disent deux choses différentes du même dossier.
 */
+/**
+* LES DEUX LIBELLÉS DU LIEN DE BOURSE — une seule définition (2026-09-14).
+*
+* Le hub écrivait « Portail de la bourse » / « Site du bailleur » en dur
+* ici, et details.js écrivait « Accéder au portail officiel de la
+* bourse » en dur là-bas, SANS distinction de confirmation : la fiche
+* publique appelait donc « portail officiel de la bourse » les 51 liens
+* que le triage classe comme pages d'information. Le hub a été réparé le
+* matin, la fiche non — exactement le genre de correction à moitié faite
+* que l'anti-divergence existe pour empêcher.
+*
+* `court` : la pastille du hub. `action` : le libellé d'un bouton, qui
+* commence par un verbe. Le nom du bailleur est ajouté par l'appelant,
+* qui seul sait s'il en a un.
+*/
+// Le hub prend la version COURTE : la version longue fait 467 signes
+// quand les trois orientations existantes en font 68, 96 et 109 — sur
+// quatre à six cartes, elle aurait noyé le hub. La fiche, elle, prend la
+// longue (details.js).
+import { resumeVoieAdmission } from "./voie-admission.js";
+
+export const LIBELLES_BOURSE = {
+confirme: { court: "Portail de la bourse", action: "Accéder au portail officiel de la bourse" },
+repli: { court: "Site du bailleur", action: "Ouvrir le site du bailleur" }
+};
+
 export const ORIENTATION = {
 bourse_avec_portail: "Le dossier se dépose auprès du bailleur, pas auprès de l'université.",
 bourse_sans_portail: "Le dossier de cette bourse se dépose auprès du bailleur. Le lien ci-dessous mène à l'établissement d'accueil.",
@@ -118,7 +144,11 @@ portailBourse = "",
 entryPoint = "",
 funderName = "",
 abonne = false,
-bourseConfirmee = false
+bourseConfirmee = false,
+// Le code de voie d'admission de l'université, quand elle n'a pas de
+// portail (8 sur 155). Public, contrairement aux portails : ce n'est
+// pas une adresse qu'on paie, c'est un fait de procédure.
+voieAdmission = ""
 } = (ctx && typeof ctx === "object") ? ctx : {};
 
 // LE DROIT D'ACCÈS SE COMPARE À `true`, IL NE SE DEVINE PAS.
@@ -171,7 +201,7 @@ const bailleurNomme = typeof funderName === "string" && funderName.trim() ? fund
 
 const lienBourse = urlBourse ? {
 cle: "bourse",
-libelle: bourseSure ? "Portail de la bourse" : "Site du bailleur",
+libelle: bourseSure ? LIBELLES_BOURSE.confirme.court : LIBELLES_BOURSE.repli.court,
 titre: bourseSure
 ? (bailleurNomme ? `Le portail où se dépose le dossier de bourse — ${bailleurNomme}` : "Le portail où se dépose le dossier de bourse")
 : (bailleurNomme ? `Le site de ${bailleurNomme} — vérifiez-y les modalités de dépôt` : "Le site du bailleur — vérifiez-y les modalités de dépôt"),
@@ -221,6 +251,23 @@ orientation = bourseSure ? ORIENTATION.bourse_avec_portail : ORIENTATION.bourse_
 orientation = ORIENTATION.universite;
 }
 
+// LA VOIE D'ADMISSION QUAND IL N'Y A PAS DE PORTAIL (2026-09-14).
+//
+// Elle s'ajoute à l'orientation au lieu de la remplacer : ce sont deux
+// faits distincts. L'orientation dit OÙ le dossier se dépose (chez le
+// bailleur ou à l'université) ; la voie dit COMMENT on atteint
+// l'université quand elle n'a pas de portail — par l'ambassade, par la
+// procédure nationale, sur place.
+//
+// Et elle ne dépend PAS de l'abonnement : les huit universités
+// concernées n'ont aucun portail à réserver, et taire « le dossier
+// passe par l'ambassade » à un visiteur ne protège rien — ça lui fait
+// perdre un an. C'est la limite de la doctrine du verrou : on ne montre
+// pas une porte fermée, mais on ne cache pas l'absence de porte.
+const voie = resumeVoieAdmission({ portailAdmission: urlAdmission, universite: voieAdmission });
+
+if (voie) orientation = orientation ? `${orientation} ${voie}` : voie;
+
 // Ce qui manque VRAIMENT, pour le mesurer — jamais pour l'afficher.
 // Un abonné ne doit pas lire « portail de bourse manquant » : ce n'est
 // pas son problème, c'est le nôtre.
@@ -247,6 +294,76 @@ return { liens, orientation, manquants, porteDeDepot: porteDeDepot ? porteDeDepo
 * données sache quoi corriger. `triage-portails-bourses.csv` classe déjà
 * les 156 : 51 « information », 16 « portail_probable », 89 « a_ouvrir ».
 */
+/**
+* LA PORTE DE BOURSE DE LA FICHE — la décision, hors du DOM (2026-09-14).
+*
+* POURQUOI CETTE FONCTION EXISTE. Les mêmes trois décisions — quelle
+* URL, quel libellé, quelle phrase — étaient prises une fois ici pour le
+* hub et une seconde fois dans details.js pour la fiche. Elles ont
+* divergé exactement là où c'était le plus coûteux : la fiche promettait
+* « le portail officiel de la bourse » et affirmait « pas auprès de
+* l'université » dès qu'un lien existait, page d'information comprise.
+*
+* Deux tests de source (« portes 4 » et « portes 4 bis ») surveillaient
+* les littéraux de details.js. Ils ont laissé passer les deux défauts :
+* ils lisaient du TEXTE, pas du comportement. La décision vient donc
+* ici, où un test peut l'appeler avec des valeurs et vérifier ce qu'elle
+* répond ; details.js ne fait plus que poser un href et un libellé.
+*
+* @param {Object} ctx
+* @param {string} ctx.portailConfirme  scholarships.applicationPortalUrl
+* @param {string} ctx.siteDeLaBourse   scholarships.officialWebsite (repli)
+* @param {string} ctx.funderName       le nom du bailleur, s'il est connu
+* @param {string} ctx.entryPoint       "bourse" | "universite" | absent
+* @param {boolean} ctx.abonne          droit d'accès, comparé à `true`
+* @returns {{url:string, confirme:boolean, visible:boolean, libelle:string, orientation:string}}
+*/
+export function porteDeBourseDeLaFiche(ctx) {
+
+const {
+portailConfirme = "",
+siteDeLaBourse = "",
+funderName = "",
+entryPoint = "",
+abonne = false
+} = (ctx && typeof ctx === "object") ? ctx : {};
+
+// Même règle que le hub : le droit d'accès se compare à `true`, et un
+// non-abonné ne reçoit AUCUNE des deux URL — pas même le repli, qui
+// est une donnée de bourse au même titre que l'autre.
+const ouvert = abonne === true;
+
+const bailleur = portailDeBourseOuRepli({
+portailConfirme: ouvert ? portailConfirme : "",
+siteDeLaBourse: ouvert ? siteDeLaBourse : ""
+});
+
+const visible = bailleur.url !== "";
+const confirme = visible && bailleur.confirme === true;
+
+const nom = typeof funderName === "string" && funderName.trim() ? funderName.trim() : "";
+const action = confirme ? LIBELLES_BOURSE.confirme.action : LIBELLES_BOURSE.repli.action;
+
+const ep = String(entryPoint || "").trim().toLowerCase();
+
+// L'orientation suit la NATURE de la porte, jamais sa seule présence :
+// « pas auprès de l'université » n'est vrai que sur un portail de dépôt
+// confirmé. Un non-abonné, qui ne voit aucune porte de bourse, lit donc
+// la phrase de repli — celle qui désigne le lien réellement à l'écran.
+let orientation = "";
+if (ep === "bourse") orientation = confirme ? ORIENTATION.bourse_avec_portail : ORIENTATION.bourse_sans_portail;
+else if (ep === "universite") orientation = ORIENTATION.universite;
+
+return {
+url: bailleur.url,
+confirme,
+visible,
+libelle: visible ? action + (nom ? ` — ${nom}` : "") : "",
+orientation
+};
+
+}
+
 export function portailDeBourseOuRepli(ctx) {
 // `= {}` ne couvre que `undefined` : un `null` explicite jetait un
 // TypeError, et ce jet-là remonte jusqu'au rendu du hub.
