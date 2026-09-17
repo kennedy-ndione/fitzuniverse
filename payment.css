@@ -340,8 +340,8 @@ margin-bottom:6px;
 
 }
 
-/* Prix du résumé — l'euro porte le montant, le FCFA le surmonte en
-petit. Le balisage vient de payment.js (formatPriceHTML) et non du
+/* Prix du résumé — le FCFA porte le montant, l'euro le suit en petit
+(lot PAIEMENT-SÛR, 2026-09-17 ; l'inverse avant). Le balisage vient de payment.js (formatPriceHTML) et non du
 HTML : la page ne connaît pas la formule choisie avant l'exécution.
 
 Le dégradé sur le chiffre a été retiré au passage : sur un montant de

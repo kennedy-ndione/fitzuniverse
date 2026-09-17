@@ -360,11 +360,33 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
 //   3. LE PASS DÉCOUVERTE À UN COMPTE QUI A DÉJÀ LE CHAT — toute formule
 //      active de FORMULES_AVEC_FITZ comprend le chat (formuleActive,
 //      functions/lib/fitz-acces.js).
+//   4. LE MÊME DOSSIER DE CAMPAGNE, ENCORE ACTIF (lot PAIEMENT-SÛR,
+//      2026-09-17) — racheter Dossier France (ou + Conseiller) pendant la
+//      campagne qu'il couvre déjà : calculerMiseAJour l'appliquait
+//      (« applique »), mais l'échéance restait le même 31 juillet. Le
+//      paiement était encaissé sans rien ouvrir. Refusé ici. Une
+//      nouvelle campagne (achat d'août pour un dossier qui finit le
+//      31 juillet) reste possible, et le Diagnostic France se prolonge
+//      toujours : racheter ses 14 jours ajoute 14 jours.
+//
+// Le cinquième cas — une formule d'un rang INFÉRIEUR à celle, active,
+// que le compte détient déjà — est refusé dans creerPaiement même, en
+// rejouant calculerMiseAJour à blanc (statut « rang-inferieur »).
 
 const { formuleActive } = require("./fitz-acces");
 
 // La marche suivante EN VENTE, côté bourses.
 const FORMULE_SUIVANTE = { "premier-dossier": "essentiel-4", "essentiel-4": "conseiller-6", "conseiller-6": null };
+
+// La marche suivante EN VENTE, côté préinscription (dossiers de campagne).
+const PREINSCRIPTION_SUIVANTE = { "dossier-france": "dossier-france-conseiller", "dossier-france-conseiller": null };
+
+const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+// « 31 juillet 2027 », en UTC : les échéances sont écrites en UTC.
+function dateLongue(d) {
+  return `${d.getUTCDate()} ${MOIS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
 
 /**
  * @param {Object} p
@@ -385,6 +407,23 @@ function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = ne
     const active = formuleActive(user, maintenant);
     if (active && active !== "fitzExpress") {
       return { code: "pass-inclus", message: "Votre formule comprend déjà Discuter avec Fitz." };
+    }
+    return null;
+  }
+
+  // 4. Le même dossier de campagne, encore actif.
+  if (offre.parcours === "preinscription") {
+    if (offre.campagne && String(user.planPreinscription || "") === planId) {
+      const expiration = dateValide(user.planPreinscriptionExpiresAt);
+      const fin = finDeCampagne(maintenant);
+      if (expiration && expiration.getTime() >= fin.getTime()) {
+        const suivante = PREINSCRIPTION_SUIVANTE[planId] ? GRILLE[PREINSCRIPTION_SUIVANTE[planId]].label : null;
+        return {
+          code: "meme-dossier",
+          message: `Vous détenez déjà le ${offre.label} pour cette campagne : il reste actif jusqu'au ${dateLongue(expiration)}. ` +
+            (suivante ? `Pour un conseiller à vos côtés, passez au ${suivante}.` : "Il n'y a rien de plus à acheter pour cette campagne."),
+        };
+      }
     }
     return null;
   }
@@ -415,4 +454,4 @@ function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = ne
   return null;
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat };
+module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat };

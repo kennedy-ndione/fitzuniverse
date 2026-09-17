@@ -114,8 +114,10 @@ return Math.round(amountFCFA / EUR_PER_XOF).toLocaleString("fr-FR");
 
 }
 
-// Affichage du prix : l'euro porte le montant, le FCFA le surmonte en
-// petit (demande du 2026-08-22, cohérent avec offers.html).
+// Affichage du prix : le FCFA porte le montant, l'euro le suit en petit
+// (lot PAIEMENT-SÛR, 2026-09-17 — c'était l'inverse depuis la demande du
+// 2026-08-22). Cohérent avec offers.html : le chiffre en gros est celui
+// que PayDunya débite.
 //
 // Le FCFA n'est jamais masqué, et c'est délibéré : Wave, Orange Money et
 // MTN MoMo sont des rails en francs CFA, c'est donc ce montant-là qui
@@ -131,13 +133,14 @@ return Math.round(amountFCFA / EUR_PER_XOF).toLocaleString("fr-FR");
 // cette liste-là et rien d'autre ; test/offers-plans.test.mjs le vérifie.
 function formatPriceHTML(amountFCFA) {
 
-return `<span class="price-local">${formatFCFA(amountFCFA)} FCFA</span>`
-+ `<span class="price-main">${formatEUR(amountFCFA)}<span class="price-currency">€</span></span>`;
+return `<span class="price-main">${formatFCFA(amountFCFA)}<span class="price-currency">FCFA</span></span>`
++ `<span class="price-local">soit environ ${formatEUR(amountFCFA)} €</span>`;
 
 }
 
-// Libellé du bouton d'activation. L'euro annonce, le FCFA précise ce qui
-// part du compte — les deux sur la même ligne, jamais l'un sans l'autre.
+// Libellé du bouton d'activation. Le FCFA annonce ce qui part du compte,
+// l'euro suit en repère — les deux sur la même ligne, jamais l'un sans
+// l'autre.
 // LE PRIX RÉELLEMENT DÛ (lot DIAGNOSTIC-2, 2026-09-09) : les 10 000 F
 // d'un diagnostic payé depuis moins de trente jours se déduisent d'un
 // Dossier France. Calculé par pricing-plans.js, et RECALCULÉ côté
@@ -161,7 +164,7 @@ function activationLabel(plan) {
 
 const montant = TARIF ? TARIF.prix : plan.priceFCFA;
 
-return `Activer mon accompagnement — ${formatEUR(montant)} € (${formatFCFA(montant)} FCFA)`;
+return `Activer mon accompagnement — ${formatFCFA(montant)} FCFA (environ ${formatEUR(montant)} €)`;
 
 }
 
@@ -184,8 +187,8 @@ document.getElementById("summaryOffer").textContent = plan.label;
 document.getElementById("summaryPrice").textContent = TARIF.deduction
 // Le prix barré ET la raison : un montant qui baisse sans explication
 // se lit comme une erreur, et on appelle le support pour la signaler.
-? `${formatEUR(TARIF.prix)} € — ${formatFCFA(TARIF.prix)} FCFA débités, au lieu de ${formatFCFA(TARIF.base)} FCFA : ${TARIF.mention}.`
-: `${formatEUR(TARIF.prix)} € — ${formatFCFA(TARIF.prix)} FCFA débités`;
+? `${formatFCFA(TARIF.prix)} FCFA débités (environ ${formatEUR(TARIF.prix)} €), au lieu de ${formatFCFA(TARIF.base)} FCFA : ${TARIF.mention}.`
+: `${formatFCFA(TARIF.prix)} FCFA débités (environ ${formatEUR(TARIF.prix)} €)`;
 // Toutes les offres n'ont pas de durée : Premier Dossier, Signature
 // Focus et Signature achètent un nombre de candidatures, pas une
 // période. La ligne entière est masquée dans ce cas — la page

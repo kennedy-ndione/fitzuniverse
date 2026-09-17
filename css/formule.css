@@ -265,7 +265,9 @@ line-height:1.5;
 color:#57514A;
 }
 
-/* ---------- Le prix : le FCFA en petit, l'euro qui porte ---------- */
+/* ---------- Le prix : le FCFA qui porte, l'euro en petit dessous ----------
+Lot PAIEMENT-SÛR (2026-09-17) : .plan-price-main (le FCFA) passe en premier,
+.plan-price-local (l'équivalent en euros) le suit. */
 
 .plan-price{
 display:flex;

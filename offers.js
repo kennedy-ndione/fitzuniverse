@@ -102,14 +102,17 @@ const formatF = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " 
 
 function initDerivedPrices() {
 
+// Lot PAIEMENT-SÛR (2026-09-17) : le FCFA porte le montant (en gros,
+// l'unité « FCFA » est écrite à côté dans le HTML), l'euro n'est plus
+// qu'un repère en petit. C'est le FCFA que PayDunya débite.
 document.querySelectorAll("[data-price-of]").forEach((el) => {
 const plan = SCHOLARBRIDGE_PLANS[el.dataset.priceOf];
-if (plan) el.textContent = `${formatF(plan.priceFCFA)} FCFA`;
+if (plan) el.textContent = formatF(plan.priceFCFA);
 });
 
 document.querySelectorAll("[data-eur-of]").forEach((el) => {
 const plan = SCHOLARBRIDGE_PLANS[el.dataset.eurOf];
-if (plan) el.textContent = String(Math.round(plan.priceFCFA / EUR_PER_XOF));
+if (plan) el.textContent = `soit environ ${Math.round(plan.priceFCFA / EUR_PER_XOF)} €`;
 });
 
 }
