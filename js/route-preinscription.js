@@ -80,12 +80,25 @@ export const QUESTIONS_SITUATION = [
   { cle: "country", libelle: "Dans quel pays vivez-vous aujourd'hui ?", type: "pays", aide: "C'est ce pays qui décide des frais, des dates et du lieu de votre entretien." },
   { cle: "nationality", libelle: "Quelle est votre nationalité ?", type: "pays" },
   { cle: "desiredDegree", libelle: "Quel niveau visez-vous en France ?", type: "choix", options: ["Licence", "Master", "Doctorat"] },
-  { cle: "desiredField", libelle: "Dans quel domaine ?", type: "texte", exemple: "Informatique, Droit, Médecine…" },
-  { cle: "lastDegree", libelle: "Votre dernier diplôme (obtenu ou en cours) ?", type: "texte", exemple: "Baccalauréat S2, Licence 3 Économie…" },
+  { cle: "desiredField", libelle: "Dans quel domaine ?", type: "texte", exemple: "Informatique, Droit, Médecine…", suggestions: "desiredField" },
+  { cle: "lastDegree", libelle: "Votre dernier diplôme (obtenu ou en cours) ?", type: "texte", exemple: "Baccalauréat S2, Licence 3 Économie…", suggestions: "lastDegree" },
   { cle: "currentInstitution", libelle: "Dans quel établissement ?", type: "texte", exemple: "Lycée, université ou école" },
   { cle: "situationFrancais", libelle: "Et le français ?", type: "choix", options: ["etudes_en_francais", "test_passe", "test_prevu", "aucun"], libelles: { etudes_en_francais: "J'ai fait mes études en français", test_passe: "J'ai passé un test (TCF, DELF, DALF)", test_prevu: "Je vais passer un test", aucun: "Pas encore décidé" } },
-  { cle: "budget", libelle: "De combien disposez-vous par mois pour vivre en France ?", type: "texte", exemple: "Ex. 500 000 F CFA, ou 800 €", aide: "Vous, votre famille ou un garant. Fitz s'en sert à l'étape suivante pour vérifier que le projet tient." }
+  { cle: "budget", libelle: "De combien disposez-vous par mois pour vivre en France ?", type: "texte", exemple: "Ex. 500 000 F CFA, ou 800 €", suggestions: "budget", aide: "Vous, votre famille ou un garant. Fitz s'en sert à l'étape suivante pour vérifier que le projet tient." }
 ];
+
+/**
+ * LES RÉPONSES PROPOSÉES — l'étudiant choisit ou tape (demande de Charles,
+ * 2026-09-17) : un champ vide fait douter, une liste d'exemples fait
+ * répondre. Ce sont des exemples, jamais une contrainte : le texte libre
+ * reste possible partout.
+ */
+export const SUGGESTIONS = {
+  desiredField: ["Informatique", "Droit", "Économie / Gestion", "Médecine / Santé", "Ingénierie", "Mathématiques", "Physique / Chimie", "Biologie", "Lettres / Langues", "Sciences politiques", "Architecture", "Commerce / Marketing", "Comptabilité / Finance", "Psychologie", "Communication", "Agronomie", "Génie civil", "Data / Intelligence artificielle"],
+  lastDegree: ["Baccalauréat (en cours)", "Baccalauréat (obtenu)", "Licence 1", "Licence 2", "Licence 3", "BTS", "DUT / BUT", "Master 1", "Master 2", "Diplôme d'ingénieur"],
+  budget: ["300 000 F CFA", "450 000 F CFA", "600 000 F CFA", "800 000 F CFA", "600 €", "900 €", "1 200 €"],
+  formation: ["Licence Informatique", "Licence Droit", "Licence Économie et gestion", "Licence Mathématiques", "Licence Physique", "Licence Sciences de la vie", "Licence LEA (langues)", "BUT Informatique", "BUT Génie civil", "BUT Techniques de commercialisation", "Master Informatique", "Master Data science", "Master Droit des affaires", "Master Finance", "Master Marketing", "Master Génie civil", "Master Économie", "Master Management", "Master Santé publique", "Diplôme d'ingénieur"]
+};
 
 /** Ce qu'il manque à la situation, en libellés lisibles. */
 export function situationComplete(profile) {

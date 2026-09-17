@@ -49,7 +49,7 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, SUGGESTIONS
 } from "./js/route-preinscription.js";
 
 // ==========================================================
@@ -246,13 +246,88 @@ function htmlGeste(e) {
     </div>`;
 }
 
+/** Des réponses à un clic sous un champ : un exemple choisi remplit le champ. */
+function htmlChips(cle, liste) {
+  if (!liste || !liste.length) return "";
+  return `<div class="rt-chips" data-chips-pour="${ech(cle)}">${liste.map((v) => `<button type="button" class="rt-chip">${ech(v)}</button>`).join("")}</div>`;
+}
+
+/**
+ * Le champ à suggestions du site : un input, et une liste crème filtrée
+ * en tapant — jamais le panneau noir du système (lot CONTRÔLES-UNIFIÉS).
+ */
+function htmlSuggest(nom, valeur, placeholder, source) {
+  return `<div class="rt-suggest" data-suggest="${ech(source)}">
+    <input type="text" name="${ech(nom)}" value="${ech(valeur)}" placeholder="${ech(placeholder)}" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list">
+    <ul class="rt-suggest-liste" hidden></ul>
+  </div>`;
+}
+
+const SOURCES_SUGGEST = {
+  pays: () => COUNTRY_NAMES,
+  unis: () => etat.universites || [],
+  formation: () => SUGGESTIONS.formation
+};
+
+function sansAccent(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+
+function brancherSuggest(section) {
+  section.querySelectorAll(".rt-suggest").forEach((bloc) => {
+    const input = bloc.querySelector("input");
+    const liste = bloc.querySelector(".rt-suggest-liste");
+    const source = SOURCES_SUGGEST[bloc.getAttribute("data-suggest")] || (() => []);
+    let actif = -1;
+    function fermer() { liste.hidden = true; liste.innerHTML = ""; input.setAttribute("aria-expanded", "false"); actif = -1; }
+    function ouvrir() {
+      const q = sansAccent(input.value.trim());
+      const tout = source();
+      const trouves = (q ? tout.filter((v) => sansAccent(v).includes(q)) : tout).slice(0, 8);
+      if (!trouves.length) { fermer(); return; }
+      liste.innerHTML = trouves.map((v) => `<li role="option">${ech(v)}</li>`).join("");
+      liste.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      actif = -1;
+    }
+    input.addEventListener("input", ouvrir);
+    input.addEventListener("focus", ouvrir);
+    input.addEventListener("keydown", (ev) => {
+      const items = [...liste.querySelectorAll("li")];
+      if (!items.length) return;
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+        ev.preventDefault();
+        actif = ev.key === "ArrowDown" ? Math.min(actif + 1, items.length - 1) : Math.max(actif - 1, 0);
+        items.forEach((li, i) => li.classList.toggle("is-actif", i === actif));
+      } else if (ev.key === "Enter" && actif >= 0) {
+        ev.preventDefault(); input.value = items[actif].textContent; fermer();
+      } else if (ev.key === "Escape") fermer();
+    });
+    liste.addEventListener("mousedown", (ev) => {
+      const li = ev.target.closest("li");
+      if (!li) return;
+      ev.preventDefault(); input.value = li.textContent; fermer();
+    });
+    input.addEventListener("blur", () => setTimeout(fermer, 120));
+  });
+  section.querySelectorAll(".rt-chips").forEach((bloc) => {
+    const cible = section.querySelector(`[name="${bloc.getAttribute("data-chips-pour")}"]`);
+    if (!cible) return;
+    bloc.addEventListener("click", (ev) => {
+      const chip = ev.target.closest(".rt-chip");
+      if (!chip) return;
+      cible.value = chip.textContent;
+      bloc.querySelectorAll(".rt-chip").forEach((c) => c.classList.toggle("is-choisie", c === chip));
+      cible.focus();
+    });
+  });
+}
+
 // ---- Étape 1 : la situation ----
 function htmlSituation(e) {
   const p = etat.profile || {};
   const champ = (q) => {
     const val = String(p[q.cle] || "");
     if (q.type === "pays") {
-      return `<input type="text" name="${ech(q.cle)}" value="${ech(val)}" list="rtPays" autocomplete="off" placeholder="Commencez à écrire le nom du pays">`;
+      return htmlSuggest(q.cle, val, "Commencez à écrire le nom du pays", "pays");
     }
     if (q.type === "choix") {
       const libelles = q.libelles || {};
@@ -261,7 +336,7 @@ function htmlSituation(e) {
       return `<div class="fitz-choice-group" role="radiogroup" aria-label="${ech(q.libelle)}">${q.options.map((o) => `
         <label class="fitz-choice"><input type="radio" name="${ech(q.cle)}" value="${ech(o)}"${val === o ? " checked" : ""}><span class="fitz-choice-dot" aria-hidden="true"></span><span>${ech(libelles[o] || o)}</span></label>`).join("")}</div>`;
     }
-    return `<input type="text" name="${ech(q.cle)}" value="${ech(val)}" placeholder="${ech(q.exemple || "")}" autocomplete="off">`;
+    return `<input type="text" name="${ech(q.cle)}" value="${ech(val)}" placeholder="${ech(q.exemple || "")}" autocomplete="off">${htmlChips(q.cle, q.suggestions ? SUGGESTIONS[q.suggestions] : null)}`;
   };
   return `
     <form class="rt-form" id="rtSituation" novalidate>
@@ -271,7 +346,6 @@ function htmlSituation(e) {
           ${champ(q)}
           ${q.aide ? `<p class="rt-q-aide">${ech(q.aide)}</p>` : ""}
         </div>`).join("")}
-      <datalist id="rtPays">${COUNTRY_NAMES.map((n) => `<option value="${ech(n)}"></option>`).join("")}</datalist>
       <div class="rt-geste">
         <button type="submit" class="rt-btn rt-btn--fait"><i data-lucide="check-circle-2"></i><span>${e.faite ? "Mettre à jour" : "Enregistrer mes réponses"}</span></button>
         <a href="profile.html" class="rt-lien-discret">Le profil complet, si vous voulez en dire plus</a>
@@ -313,13 +387,12 @@ function htmlVoeux(e) {
   const form = reste > 0 ? `
     <form class="rt-form rt-form--voeu" id="rtVoeu" novalidate>
       <p class="rt-form-titre">Ajouter un vœu <span class="rt-quota">${etat.voeux.length} sur ${quota}</span></p>
-      <label class="rt-q"><span class="rt-q-libelle">L'établissement</span><input type="text" name="university" list="rtUnis" required maxlength="120" placeholder="Université de Lille, IUT de Rennes…" autocomplete="off"></label>
-      <label class="rt-q"><span class="rt-q-libelle">La formation</span><input type="text" name="formation" required maxlength="120" placeholder="Licence Informatique, Master Droit des affaires…" autocomplete="off"></label>
+      <div class="rt-q"><span class="rt-q-libelle">L'établissement</span>${htmlSuggest("university", "", "Commencez à écrire : Université de Lille, IUT de Rennes…", "unis")}<p class="rt-q-aide">Les établissements français du catalogue vous sont proposés en tapant. Un autre établissement ? Écrivez son nom.</p></div>
+      <div class="rt-q"><span class="rt-q-libelle">La formation</span>${htmlSuggest("formation", "", "Licence Informatique, Master Droit des affaires…", "formation")}</div>
       <div class="rt-q"><span class="rt-q-libelle">Le niveau d'entrée</span>
         <div class="fitz-choice-group" role="radiogroup" aria-label="Le niveau d'entrée">${NIVEAUX_VOEU.map((n) => `
           <label class="fitz-choice"><input type="radio" name="niveau" value="${ech(n)}"><span class="fitz-choice-dot" aria-hidden="true"></span><span>${ech(n)}</span></label>`).join("")}</div>
       </div>
-      <datalist id="rtUnis">${(etat.universites || []).map((u) => `<option value="${ech(u)}"></option>`).join("")}</datalist>
       <div class="rt-geste"><button type="submit" class="rt-btn rt-btn--fait"><i data-lucide="plus"></i><span>Ajouter ce vœu</span></button></div>
     </form>` : `<p class="rt-quota-plein">Vos ${quota} vœux sont posés. Pour en changer un, retirez-le d'abord.</p>`;
   return `${liste}${avert}${form}`;
@@ -650,6 +723,7 @@ async function cocherVisa(id, fait) {
 
 function brancherEtape(e) {
   const section = document.getElementById("rtEtape");
+  brancherSuggest(section);
 
   const situation = section.querySelector("#rtSituation");
   if (situation) situation.addEventListener("submit", (ev) => { ev.preventDefault(); enregistrerSituation(situation); });
@@ -730,8 +804,7 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
     etat.universites = unis
       .filter((u) => /^france$/i.test(String(u.country || "").trim()))
       .map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, "fr"));
-    const dl = document.getElementById("rtUnis");
-    if (dl) dl.innerHTML = etat.universites.map((u) => `<option value="${ech(u)}"></option>`).join("");
+    // Le champ lit la source à chaque frappe : rien à re-peindre.
   } catch (error) {
     console.warn("Catalogue indisponible pour la liste d'aide :", error);
   }
