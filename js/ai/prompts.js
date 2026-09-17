@@ -52,6 +52,34 @@ return LANGUAGES.find((l) => l.code === code)?.label || code;
 }
 
 /**
+* « du français », mais « de l'anglais » — ET « de l'arabe ».
+*
+* Le prompt disait `du ${label}` : il produisait donc « du Anglais »,
+* « du Espagnol », « du Allemand », « du Italien », et l'ajout de
+* l'arabe allait écrire « du Arabe ». Cinq fautes sur sept langues,
+* dans la seule phrase que le fournisseur d'IA lit, et que le modèle
+* peut reprendre dans sa réponse à l'étudiant.
+*
+* La règle est celle de l'élision : un nom de langue qui commence par
+* une voyelle prend « de l' » et « vers l' », les autres « du » et
+* « vers le ». Et en français courant, un nom de langue ne porte pas de
+* majuscule au milieu d'une phrase.
+*/
+function commenceParUneVoyelle(mot) {
+return /^[aeiouâêîôûàéèùAEIOUÂÊÎÔÛÀÉÈÙ]/.test(String(mot || ""));
+}
+
+function deLaLangue(code) {
+const nom = languageLabel(code).toLowerCase();
+return commenceParUneVoyelle(nom) ? `de l'${nom}` : `du ${nom}`;
+}
+
+function versLaLangue(code) {
+const nom = languageLabel(code).toLowerCase();
+return commenceParUneVoyelle(nom) ? `vers l'${nom}` : `vers le ${nom}`;
+}
+
+/**
 * Instruction système de base.
 *
 * CORRIGÉ LE 2026-08-21 — la version précédente disait mot pour mot
@@ -245,12 +273,12 @@ describeProfile(input.profile),
 
 translate(input) {
 
-const sourceLabel = languageLabel(input.sourceLanguage);
-const targetLabel = languageLabel(input.targetLanguage);
+const depuis = deLaLangue(input.sourceLanguage);
+const vers = versLaLangue(input.targetLanguage);
 
 return {
-system: `${baseSystem(input)} Tu traduis fidèlement des documents académiques du ${sourceLabel} vers le ${targetLabel}, en conservant le registre formel et la terminologie universitaire.`,
-user: `Traduis le texte suivant du ${sourceLabel} vers le ${targetLabel} :\n\n${input.text}`
+system: `${baseSystem(input)} Tu traduis fidèlement des documents académiques ${depuis} ${vers}, en conservant le registre formel et la terminologie universitaire.`,
+user: `Traduis le texte suivant ${depuis} ${vers} :\n\n${input.text}`
 };
 
 },

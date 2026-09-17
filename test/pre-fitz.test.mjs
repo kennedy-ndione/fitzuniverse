@@ -43,7 +43,7 @@ ESPACE_OUTILS
 
 import * as ROUTE from "../js/route-preinscription.js";
 import { buildPrompt } from "../js/ai/prompts.js";
-import { generateMotivationLetter, generateLettreDeVoeu, computeApplicationReadiness, generateChatReply, typesEmailPour, getSuggestedQuestions, EMAIL_TYPES } from "../js/ai/simulated-responses.js";
+import { generateMotivationLetter, generateLettreDeVoeu, computeApplicationReadiness, generateChatReply, typesEmailPour, getSuggestedQuestions, EMAIL_TYPES, LANGUAGES, LANGUES_RTL, estRTL, detectLanguage, translateText } from "../js/ai/simulated-responses.js";
 import { lireParcoursDeSaisie, parcoursDOutil, paysDuVoeu, degreDuVoeu, PAYS_PREINSCRIPTION } from "../js/parcours.js";
 
 const require = createRequire(import.meta.url);
@@ -316,6 +316,107 @@ src.indexOf("parcoursTraduction = parcoursDOutil(") < src.indexOf("initTranslate
 // La détection automatique reste la règle pour la SOURCE : on ne devine
 // pas la langue des documents de l'étudiant, on la lit.
 assert.match(lire("ai-translate.html"), /id="autoDetect" checked/, "la détection automatique n'est plus cochée par défaut");
+});
+
+test("L'ARABE : la langue, tout le lexique, l'écriture qui tranche, le sens de lecture — et ce que l'outil ne remplace pas", () => {
+// DEMANDÉ PAR CHARLES le 2026-09-17, après ce constat : l'étape 4 de la
+// route liste une pièce « Certification B2 de français (bac Arabe L-AR
+// uniquement) » — les étudiants concernés ont leurs relevés et leurs
+// diplômes EN ARABE — et l'outil de traduction ne connaissait que six
+// langues latines. Il les accueillait sans pouvoir les servir.
+//
+// Preuves par mutation (2026-09-17) : `ar` retiré de LANGUAGES → rouge ;
+// l'arabe retiré d'UNE entrée du lexique → rouge (test 2) ; le garde
+// d'écriture retiré de detectLanguage → rouge (test 3) ; le `dir` des
+// zones de texte retiré → rouge (test 6).
+
+// 1. La langue existe, à sa place, avec son libellé.
+assert.deepEqual(LANGUAGES.map((l) => l.code), ["fr", "en", "es", "de", "it", "pt", "ar"]);
+assert.equal(LANGUAGES.find((l) => l.code === "ar").label, "Arabe");
+
+// 2. LE LEXIQUE LA COUVRE ENTIÈREMENT. `translateText` ne garde que les
+// paires dont les DEUX langues sont remplies : une seule entrée sans
+// arabe et l'expression la plus utile du dossier passerait à travers,
+// silencieusement, dans les deux sens.
+const bank = lire("js/ai/simulated-responses.js");
+const entrees = [...bank.matchAll(/^\{ fr: "([^"]+)"(.*)\},?$/gm)];
+assert.ok(entrees.length >= 20, `${entrees.length} entrées de lexique`);
+for (const [, fr, reste] of entrees) {
+for (const code of ["en", "es", "de", "it", "pt", "ar"]) {
+assert.match(reste, new RegExp(`\\b${code}: "`), `« ${fr} » n'a pas de ${code}`);
+}
+}
+
+// 3. L'ÉCRITURE TRANCHE AVANT LES MARQUEURS. Les six langues latines se
+// départagent à coups de « le »/« the »/« der » parce qu'elles
+// partagent l'alphabet ; un texte en lettres arabes EST en arabe, et
+// aucun compte de marqueurs ne fait mieux que ce fait.
+assert.equal(detectLanguage("كشف الدرجات للسنوات الثلاث الأخيرة"), "ar");
+assert.equal(detectLanguage("جامعة"), "ar", "un seul mot arabe suffit à trancher");
+assert.equal(detectLanguage("Le relevé de notes de l'université"), "fr");
+assert.equal(detectLanguage("The academic transcript and the university"), "en");
+
+// 4. LES DEUX SENS. Celui dont un étudiant au bac arabe a besoin est
+// arabe → français : lire son propre relevé avant de le faire traduire.
+assert.equal(translateText({ text: "جواز السفر", sourceLanguage: "ar", targetLanguage: "fr" }).text, "passeport");
+assert.equal(translateText({ text: "passeport", sourceLanguage: "fr", targetLanguage: "ar" }).text, "جواز السفر");
+
+// 5. UNE ÉCRITURE SANS CASSE NE SE FAIT PLUS CAPITALISER. L'ancien test
+// (`source[0] === source[0].toUpperCase()`) était VRAI pour toute
+// lettre arabe — elle est égale à sa propre majuscule — et capitalisait
+// donc la traduction française de n'importe quel mot, au milieu d'une
+// phrase comme ailleurs. Le latin, lui, ne change pas de comportement.
+assert.equal(translateText({ text: "مع خالص التقدير", sourceLanguage: "ar", targetLanguage: "fr" }).text, "cordialement");
+assert.equal(translateText({ text: "Cordialement", sourceLanguage: "fr", targetLanguage: "en" }).text, "Kind regards");
+assert.equal(translateText({ text: "cordialement", sourceLanguage: "fr", targetLanguage: "en" }).text, "kind regards");
+
+// 6. LE SENS DE LECTURE, par zone et non par page : les deux zones
+// peuvent porter deux langues de sens opposés. Il se repose à CHAQUE
+// changement de langue — y compris celui que la détection automatique
+// fait sans passer par le sélecteur.
+assert.deepEqual(LANGUES_RTL, ["ar"]);
+assert.equal(estRTL("ar"), true);
+assert.equal(estRTL("AR"), true, "la casse du code ne doit pas décider du sens");
+assert.equal(estRTL("fr"), false);
+assert.equal(estRTL(null), false);
+const outil = lire("ai-translate.js");
+assert.match(outil, /sourceText\.dir = estRTL\(sourceLanguageSelect\.value\) \? "rtl" : "ltr";/);
+assert.match(outil, /targetText\.dir = estRTL\(targetLanguageSelect\.value\) \? "rtl" : "ltr";/);
+assert.match(outil, /sourceLanguageSelect\.addEventListener\("change", appliquerSens\);/);
+assert.match(outil, /targetLanguageSelect\.addEventListener\("change", appliquerSens\);/);
+const rappels = (outil.match(/^appliquerSens\(\);$/gm) || []).length;
+assert.ok(rappels >= 4, `le sens n'est rappelé que ${rappels} fois : au départ, à l'inversion, à la reprise d'un historique et après la détection`);
+
+// 7. CE QUE L'OUTIL NE REMPLACE PAS. La consigne officielle des étapes 4
+// et 7 exige un traducteur assermenté, original joint. Sans cette
+// phrase, un étudiant repartait avec la sortie de Fitz en croyant tenir
+// une pièce déposable — et l'aurait découvert APRÈS les frais de
+// dossier, non remboursables.
+const html = lire("ai-translate.html");
+assert.match(html, /id="traductionNotice" class="journey-warning" hidden/);
+assert.match(html, /traducteur assermenté/);
+assert.match(outil, /traductionNotice\.hidden = parcoursTraduction !== "preinscription";/);
+
+// 8. ET LE FRANÇAIS DU PROMPT. `du ${label}` écrivait « du Anglais »,
+// « du Espagnol », « du Allemand », « du Italien » — et l'arabe allait
+// ajouter « du Arabe ». Cinq fautes sur sept langues, dans la seule
+// phrase que le fournisseur d'IA lit et que le modèle peut reprendre
+// dans sa réponse à l'étudiant. Élision, et pas de majuscule au milieu
+// d'une phrase.
+const attendu = {
+"ar|fr": "de l'arabe vers le français",
+"en|fr": "de l'anglais vers le français",
+"fr|en": "du français vers l'anglais",
+"fr|pt": "du français vers le portugais",
+"de|it": "de l'allemand vers l'italien",
+"es|ar": "de l'espagnol vers l'arabe"
+};
+for (const [paire, phrase] of Object.entries(attendu)) {
+const [sourceLanguage, targetLanguage] = paire.split("|");
+const prompt = buildPrompt("translate", { text: "x", sourceLanguage, targetLanguage });
+assert.ok(prompt.user.includes(phrase), `${paire} : « ${phrase} » attendu, reçu « ${prompt.user.split("\n")[0]} »`);
+assert.ok(prompt.system.includes(phrase), `${paire} : l'instruction système garde l'ancienne tournure`);
+}
 });
 
 // ------------------------------------------------------------------

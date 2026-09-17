@@ -312,34 +312,67 @@ export const LANGUAGES = [
 { code: "es", label: "Espagnol" },
 { code: "de", label: "Allemand" },
 { code: "it", label: "Italien" },
-{ code: "pt", label: "Portugais" }
+{ code: "pt", label: "Portugais" },
+// L'ARABE (2026-09-17, demandé par Charles). L'étape 4 de la route
+// liste une pièce « Certification B2 de français (bac Arabe L-AR
+// uniquement) » : les étudiants concernés ont leurs relevés et leurs
+// diplômes EN ARABE, et l'outil ne connaissait que des langues
+// latines. Il les accueillait sans pouvoir les servir.
+{ code: "ar", label: "Arabe" }
 ];
+
+/**
+* Les langues qui s'écrivent de droite à gauche. Une seule aujourd'hui,
+* mais la liste existe pour que la page n'ait pas à tester `=== "ar"` :
+* le persan, l'ourdou et l'hébreu viendraient s'ajouter ici, et le
+* rendu suivrait sans une ligne de plus.
+*/
+export const LANGUES_RTL = ["ar"];
+
+/** Vrai si cette langue s'écrit de droite à gauche. */
+export function estRTL(code) {
+return LANGUES_RTL.includes(String(code || "").toLowerCase());
+}
 
 // Lexique restreint (phrases académiques les plus fréquentes dans un
 // dossier de candidature). Traduction "assistée" par substitution :
 // honnête sur ses limites, mais réellement utile sur le vocabulaire
 // qui compte le plus dans ce contexte précis.
+//
+// L'ARABE EST ENTRÉ ICI LE 2026-09-17, dans les deux sens : le pivot
+// est le français, et `translateText` ne garde que les paires dont les
+// DEUX langues sont remplies — l'arabe vers le français marche donc
+// avec les mêmes entrées, ce qui est le sens dont un étudiant au bac
+// arabe a besoin (lire son propre relevé en français avant de le faire
+// traduire pour de bon).
+//
+// CE QUE CE LEXIQUE N'EST PAS : une traduction assermentée. La
+// procédure Études en France exige un traducteur assermenté pour les
+// diplômes et les relevés ; ai-translate.html le dit désormais en
+// clair sur le parcours préinscription. Vingt expressions substituées
+// aident à COMPRENDRE et à PRÉPARER, elles ne produisent aucune pièce
+// déposable.
 const PHRASE_BANK = [
-{ fr: "Madame, Monsieur", en: "Dear Sir or Madam", es: "Estimados señores", de: "Sehr geehrte Damen und Herren", it: "Gentile Signora, egregio Signore", pt: "Prezados Senhores" },
-{ fr: "lettre de motivation", en: "motivation letter", es: "carta de motivación", de: "Motivationsschreiben", it: "lettera di motivazione", pt: "carta de motivação" },
-{ fr: "curriculum vitae", en: "curriculum vitae", es: "currículum vitae", de: "Lebenslauf", it: "curriculum vitae", pt: "currículo" },
-{ fr: "relevé de notes", en: "academic transcript", es: "expediente académico", de: "Notenübersicht", it: "certificato dei voti", pt: "histórico escolar" },
-{ fr: "bourse d'études", en: "scholarship", es: "beca de estudios", de: "Stipendium", it: "borsa di studio", pt: "bolsa de estudos" },
-{ fr: "candidature", en: "application", es: "candidatura", de: "Bewerbung", it: "candidatura", pt: "candidatura" },
-{ fr: "université", en: "university", es: "universidad", de: "Universität", it: "università", pt: "universidade" },
-{ fr: "programme", en: "program", es: "programa", de: "Programm", it: "programma", pt: "programa" },
-{ fr: "diplôme", en: "degree", es: "título", de: "Abschluss", it: "diploma", pt: "diploma" },
-{ fr: "documents requis", en: "required documents", es: "documentos requeridos", de: "erforderliche Unterlagen", it: "documenti richiesti", pt: "documentos exigidos" },
-{ fr: "date limite", en: "deadline", es: "fecha límite", de: "Frist", it: "scadenza", pt: "prazo final" },
-{ fr: "entretien", en: "interview", es: "entrevista", de: "Vorstellungsgespräch", it: "colloquio", pt: "entrevista" },
-{ fr: "je vous remercie", en: "thank you", es: "les agradezco", de: "ich danke Ihnen", it: "vi ringrazio", pt: "agradeço" },
-{ fr: "cordialement", en: "kind regards", es: "atentamente", de: "mit freundlichen Grüßen", it: "cordiali saluti", pt: "atenciosamente" },
-{ fr: "je reste à votre disposition", en: "I remain at your disposal", es: "quedo a su disposición", de: "ich stehe Ihnen gerne zur Verfügung", it: "resto a vostra disposizione", pt: "permaneço à disposição" },
-{ fr: "passeport", en: "passport", es: "pasaporte", de: "Reisepass", it: "passaporto", pt: "passaporte" },
-{ fr: "lettre de recommandation", en: "recommendation letter", es: "carta de recomendación", de: "Empfehlungsschreiben", it: "lettera di raccomandazione", pt: "carta de recomendação" },
-{ fr: "test de langue", en: "language test", es: "examen de idioma", de: "Sprachtest", it: "test di lingua", pt: "teste de idioma" },
-{ fr: "frais de scolarité", en: "tuition fees", es: "matrícula", de: "Studiengebühren", it: "tasse universitarie", pt: "propinas" },
-{ fr: "admission", en: "admission", es: "admisión", de: "Zulassung", it: "ammissione", pt: "admissão" }
+{ fr: "Madame, Monsieur", en: "Dear Sir or Madam", es: "Estimados señores", de: "Sehr geehrte Damen und Herren", it: "Gentile Signora, egregio Signore", pt: "Prezados Senhores", ar: "سيدي، سيدتي" },
+{ fr: "lettre de motivation", en: "motivation letter", es: "carta de motivación", de: "Motivationsschreiben", it: "lettera di motivazione", pt: "carta de motivação", ar: "رسالة الدافع" },
+{ fr: "curriculum vitae", en: "curriculum vitae", es: "currículum vitae", de: "Lebenslauf", it: "curriculum vitae", pt: "currículo", ar: "السيرة الذاتية" },
+{ fr: "relevé de notes", en: "academic transcript", es: "expediente académico", de: "Notenübersicht", it: "certificato dei voti", pt: "histórico escolar", ar: "كشف الدرجات" },
+{ fr: "bourse d'études", en: "scholarship", es: "beca de estudios", de: "Stipendium", it: "borsa di studio", pt: "bolsa de estudos", ar: "منحة دراسية" },
+{ fr: "candidature", en: "application", es: "candidatura", de: "Bewerbung", it: "candidatura", pt: "candidatura", ar: "طلب الترشح" },
+{ fr: "université", en: "university", es: "universidad", de: "Universität", it: "università", pt: "universidade", ar: "جامعة" },
+{ fr: "programme", en: "program", es: "programa", de: "Programm", it: "programma", pt: "programa", ar: "برنامج" },
+{ fr: "diplôme", en: "degree", es: "título", de: "Abschluss", it: "diploma", pt: "diploma", ar: "شهادة" },
+{ fr: "documents requis", en: "required documents", es: "documentos requeridos", de: "erforderliche Unterlagen", it: "documenti richiesti", pt: "documentos exigidos", ar: "الوثائق المطلوبة" },
+{ fr: "date limite", en: "deadline", es: "fecha límite", de: "Frist", it: "scadenza", pt: "prazo final", ar: "الموعد النهائي" },
+{ fr: "entretien", en: "interview", es: "entrevista", de: "Vorstellungsgespräch", it: "colloquio", pt: "entrevista", ar: "مقابلة" },
+{ fr: "je vous remercie", en: "thank you", es: "les agradezco", de: "ich danke Ihnen", it: "vi ringrazio", pt: "agradeço", ar: "أشكركم" },
+{ fr: "cordialement", en: "kind regards", es: "atentamente", de: "mit freundlichen Grüßen", it: "cordiali saluti", pt: "atenciosamente", ar: "مع خالص التقدير" },
+{ fr: "je reste à votre disposition", en: "I remain at your disposal", es: "quedo a su disposición", de: "ich stehe Ihnen gerne zur Verfügung", it: "resto a vostra disposizione", pt: "permaneço à disposição", ar: "أبقى رهن إشارتكم" },
+{ fr: "passeport", en: "passport", es: "pasaporte", de: "Reisepass", it: "passaporto", pt: "passaporte", ar: "جواز السفر" },
+{ fr: "lettre de recommandation", en: "recommendation letter", es: "carta de recomendación", de: "Empfehlungsschreiben", it: "lettera di raccomandazione", pt: "carta de recomendação", ar: "رسالة توصية" },
+{ fr: "test de langue", en: "language test", es: "examen de idioma", de: "Sprachtest", it: "test di lingua", pt: "teste de idioma", ar: "اختبار اللغة" },
+{ fr: "frais de scolarité", en: "tuition fees", es: "matrícula", de: "Studiengebühren", it: "tasse universitarie", pt: "propinas", ar: "الرسوم الدراسية" },
+{ fr: "admission", en: "admission", es: "admisión", de: "Zulassung", it: "ammissione", pt: "admissão", ar: "القبول" }
 ];
 
 function escapeRegExp(value) {
@@ -347,7 +380,14 @@ return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function matchCase(source, translated) {
-if (source[0] === source[0].toUpperCase()) {
+// LE TEST PORTE SUR LA MINUSCULE, PAS SUR LA MAJUSCULE (2026-09-17).
+// `source[0] === source[0].toUpperCase()` est VRAI pour toute écriture
+// sans casse : un « ش » est égal à sa propre majuscule, et la règle
+// capitalisait donc la traduction française de n'importe quel mot
+// arabe, y compris au milieu d'une phrase. Comparer à la minuscule ne
+// change rien pour les écritures latines — « M » ≠ « m », « m » = « m »
+// — et rend l'arabe à ce qu'il est : une écriture sans casse.
+if (source[0] !== source[0].toLowerCase()) {
 return translated.charAt(0).toUpperCase() + translated.slice(1);
 }
 return translated;
@@ -387,12 +427,30 @@ en: ["the", "and", "you", "university", "application", "studies"],
 es: ["el", "la", "los", "y", "usted", "universidad", "estudios"],
 de: ["der", "die", "und", "sie", "universität", "studium"],
 it: ["il", "la", "e", "lei", "università", "studi"],
-pt: ["o", "a", "e", "você", "universidade", "estudos"]
+pt: ["o", "a", "e", "você", "universidade", "estudos"],
+ar: ["في", "من", "على", "جامعة", "شهادة", "الدراسة"]
 };
+
+/**
+* L'ÉCRITURE TRANCHE AVANT LES MOTS (2026-09-17).
+*
+* Les six langues latines se départagent à coups de marqueurs — « le »,
+* « the », « der » — parce qu'elles partagent l'alphabet. L'arabe n'a
+* pas ce problème : un texte qui contient des lettres arabes EST en
+* arabe, et aucun compte de marqueurs ne peut faire mieux que ce fait.
+* Ce garde passe donc avant, et il est le seul certain de la fonction.
+*
+* Plage U+0600–U+06FF (arabe de base) plus U+0750–U+077F (supplément) :
+* de quoi couvrir un relevé de notes maghrébin ou moyen-oriental.
+*/
+const ECRITURE_ARABE = /[\u0600-\u06FF\u0750-\u077F]/;
 
 export function detectLanguage(text) {
 
-const lower = String(text || "").toLowerCase();
+const brut = String(text || "");
+if (ECRITURE_ARABE.test(brut)) return "ar";
+
+const lower = brut.toLowerCase();
 
 let bestCode = "fr";
 let bestScore = -1;

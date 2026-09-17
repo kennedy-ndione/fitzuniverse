@@ -12,7 +12,7 @@
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
-import { LANGUAGES, detectLanguage } from "./js/ai/simulated-responses.js";
+import { LANGUAGES, detectLanguage, estRTL } from "./js/ai/simulated-responses.js";
 import { parcoursDOutil } from "./js/parcours.js";
 
 let parcoursTraduction = "bourse";
@@ -105,6 +105,39 @@ targetLanguageSelect.value = parcoursTraduction === "preinscription" ? "fr" : "e
 sourceLanguageSelect.value = targetLanguageSelect.value === "fr" ? "en" : "fr";
 sourceLanguageSelect.disabled = true;
 
+/**
+* LE SENS D'ÉCRITURE SUIT LA LANGUE (2026-09-17).
+*
+* Un relevé de notes arabe collé dans une zone alignée à gauche s'écrit
+* à l'envers sous les yeux de l'étudiant : la ponctuation saute à
+* l'autre bout de la ligne, les chiffres se mélangent au texte, et il
+* croit que l'outil a abîmé son document. `dir` est le seul attribut
+* qui règle cela, et il se pose par zone, pas sur la page — les deux
+* zones peuvent porter deux langues de sens opposés.
+*
+* `estRTL` vit dans js/ai/simulated-responses.js avec la liste des
+* langues : le jour où le persan ou l'hébreu s'ajoutent, rien à écrire
+* ici.
+*/
+function appliquerSens() {
+sourceText.dir = estRTL(sourceLanguageSelect.value) ? "rtl" : "ltr";
+targetText.dir = estRTL(targetLanguageSelect.value) ? "rtl" : "ltr";
+}
+
+appliquerSens();
+sourceLanguageSelect.addEventListener("change", appliquerSens);
+targetLanguageSelect.addEventListener("change", appliquerSens);
+
+// L'AVERTISSEMENT DU TRADUCTEUR ASSERMENTÉ, sur le parcours qui en a
+// besoin. La consigne officielle des étapes 4 et 7 est formelle : un
+// document dans une autre langue que le français doit être traduit par
+// un traducteur assermenté, original joint. Sans cette phrase, un
+// étudiant repartait avec la sortie de Fitz en croyant tenir une pièce
+// déposable — et l'aurait découvert APRÈS les 85 000 F de frais de
+// dossier, non remboursables.
+const traductionNotice = document.getElementById("traductionNotice");
+if (traductionNotice) traductionNotice.hidden = parcoursTraduction !== "preinscription";
+
 autoDetect.addEventListener("change", () => {
 sourceLanguageSelect.disabled = autoDetect.checked;
 });
@@ -125,6 +158,8 @@ sourceText.value = targetText.value;
 targetText.value = sourceValueText;
 
 if (wasAuto) autoDetect.checked = false;
+
+appliquerSens();
 
 });
 
@@ -213,6 +248,7 @@ sourceLanguageSelect.value = entry.sourceCode;
 targetLanguageSelect.value = entry.targetCode;
 sourceText.value = entry.sourceText;
 targetText.value = entry.targetText;
+appliquerSens();
 
 lastResult = entry.targetText;
 copyBtn.disabled = false;
@@ -288,6 +324,10 @@ return;
 const sourceCode = autoDetect.checked ? detectLanguage(rawText) : sourceLanguageSelect.value;
 
 if (autoDetect.checked) sourceLanguageSelect.value = sourceCode;
+
+// La détection vient de changer la langue source sans passer par le
+// sélecteur : l'événement « change » n'a pas eu lieu, le sens non plus.
+appliquerSens();
 
 translateBtn.disabled = true;
 translateBtn.querySelector("span").textContent = "Traduction en cours…";

@@ -154,6 +154,18 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <button type="button" class="ai-mode-tab" data-mode="file">Fichier</button>
 </div>
 
+<!-- CE QUE CET OUTIL NE REMPLACE PAS (2026-09-17). La procédure Études
+en France exige un TRADUCTEUR ASSERMENTÉ pour les diplômes et les
+relevés : c'est écrit dans la consigne officielle des étapes 4 et 7 de
+la route. Un outil qui rend un relevé arabe en français, sans rien
+dire, laisse croire qu'on peut le déposer tel quel — et le dossier
+serait refusé après le paiement des frais, non remboursables. La
+note s'affiche sur le parcours préinscription (ai-translate.js). -->
+<p id="traductionNotice" class="journey-warning" hidden>
+<i data-lucide="alert-triangle"></i>
+<span>Pour le portail, un diplôme ou un relevé de notes doit être traduit par un <strong>traducteur assermenté</strong>, et l'original joint avec. Fitz vous aide ici à <strong>comprendre</strong> vos documents et à préparer vos échanges — il ne produit pas une traduction déposable.</span>
+</p>
+
 <div class="ai-lang-row">
 
 <div class="ai-field">
