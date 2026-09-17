@@ -1,0 +1,1108 @@
+/* ==========================================================
+FitzUniverse — LA ROUTE de l'espace préinscription (lot R1, 2026-09-17)
+
+Chargée APRÈS css/journey.css par espace-preinscription.html. Elle ne
+définit que la route (classes .rt-*) ; la coquille (barre haute, cloche,
+pastille), les tokens papier chaud et .jy-hello viennent des feuilles
+précédentes.
+
+Trois règles de la maison, tenues ici :
+- aucune classe n'existe seulement dans un @media (test icone-btn 3) ;
+- un bouton fait au moins 44 px de haut sur téléphone ;
+- ce que le JS doit cacher, le CSS le cache d'abord : avant la première
+  peinture, la route est vide, pas dépliée.
+========================================================== */
+
+body:not([data-route-prete]) .rt-etape,
+body:not([data-route-prete]) .rt-suite-bloc{
+min-height:120px;
+visibility:hidden;
+}
+
+/* ---------- Le haut ---------- */
+.rt-hello{
+margin-bottom:18px;
+}
+
+.rt-hello p{
+margin:6px 0 0;
+}
+
+.rt-formule{
+font-size:var(--fs-caption, .78rem);
+letter-spacing:.06em;
+text-transform:uppercase;
+font-weight:700;
+color:var(--amber-700);
+}
+
+.rt-formule:empty{
+display:none;
+}
+
+/* Le fil : quinze points qu'on peut faire défiler au doigt. */
+.rt-fil{
+display:flex;
+gap:8px;
+overflow-x:auto;
+padding:4px 2px 10px;
+margin:0 -2px;
+scrollbar-width:none;
+-webkit-overflow-scrolling:touch;
+}
+
+.rt-fil::-webkit-scrollbar{
+display:none;
+}
+
+.rt-point{
+flex:0 0 auto;
+width:40px;
+height:40px;
+border-radius:50%;
+border:1.5px solid var(--border-color);
+background:var(--background);
+color:var(--text-light);
+font-weight:700;
+font-size:.85rem;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.rt-point i,
+.rt-point svg{
+width:16px;
+height:16px;
+}
+
+.rt-point.is-faite{
+background:var(--journey-done, #2F7A46);
+border-color:var(--journey-done, #2F7A46);
+color:#fff;
+}
+
+.rt-point.is-courante{
+background:var(--amber-600);
+border-color:var(--amber-600);
+color:#FDF9EF;
+box-shadow:0 0 0 4px rgba(233,163,25,.18);
+}
+
+.rt-point.is-a-venir{
+opacity:.7;
+}
+
+.rt-point.is-choisie{
+transform:translateY(-2px);
+box-shadow:0 0 0 3px var(--journey-ink, #1C1610);
+opacity:1;
+}
+
+.rt-point:focus-visible{
+outline:2px solid var(--journey-ink, #1C1610);
+outline-offset:2px;
+}
+
+/* La barre de progression, sous le fil. */
+.rt-barre{
+position:relative;
+height:6px;
+border-radius:999px;
+background:var(--background-alt);
+margin:2px 0 22px;
+--rt-pct:0%;
+}
+
+.rt-barre-remplie{
+position:absolute;
+inset:0 auto 0 0;
+width:var(--rt-pct);
+border-radius:999px;
+background:linear-gradient(90deg, var(--journey-done, #2F7A46), var(--amber-600));
+transition:width .4s ease;
+}
+
+.rt-barre-texte{
+position:absolute;
+right:0;
+top:10px;
+font-size:.78rem;
+color:var(--text-muted);
+}
+
+/* ---------- L'étape ---------- */
+.rt-etape{
+overflow:visible;
+background:var(--background);
+border:1px solid var(--border-color);
+border-radius:20px;
+padding:24px 22px 18px;
+margin:14px 0 28px;
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.85),
+0 1px 2px rgba(33,29,24,.05),
+0 18px 40px -24px rgba(33,29,24,.28);
+scroll-margin-top:84px;
+}
+
+.rt-etape.is-courante{
+border-color:var(--amber-600);
+box-shadow:
+0 0 0 3px rgba(233,163,25,.16),
+0 18px 40px -24px rgba(33,29,24,.28);
+}
+
+.rt-etape.is-faite{
+border-color:rgba(47,122,70,.45);
+}
+
+.rt-etape-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:10px;
+}
+
+.rt-num{
+font-size:.78rem;
+letter-spacing:.06em;
+text-transform:uppercase;
+font-weight:700;
+color:var(--text-muted);
+}
+
+.rt-pill{
+font-size:.75rem;
+font-weight:700;
+padding:4px 10px;
+border-radius:999px;
+background:var(--background-alt);
+color:var(--text-light);
+}
+
+.rt-pill.is-courante{
+background:var(--amber-600);
+color:#FDF9EF;
+}
+
+.rt-pill.is-faite{
+background:rgba(47,122,70,.14);
+color:var(--journey-done, #2F7A46);
+}
+
+.rt-titre{
+display:flex;
+align-items:center;
+gap:12px;
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-weight:600;
+font-size:clamp(1.5rem, 4.6vw, 2rem);
+line-height:1.15;
+margin:0 0 12px;
+color:var(--journey-ink, #1C1610);
+}
+
+.rt-titre i,
+.rt-titre svg{
+flex-shrink:0;
+width:26px;
+height:26px;
+color:var(--amber-700);
+}
+
+.rt-clair{
+font-size:1.05rem;
+line-height:1.65;
+color:var(--text-color);
+margin:0 0 16px;
+}
+
+/* Les faits servis par la procédure : date, montant, mention. */
+.rt-echeance,
+.rt-fait,
+.rt-mention{
+display:flex;
+gap:10px;
+align-items:flex-start;
+margin:0 0 10px;
+padding:10px 14px;
+border-radius:12px;
+background:var(--background-soft);
+font-size:.93rem;
+line-height:1.5;
+}
+
+.rt-echeance i,
+.rt-fait i,
+.rt-mention i,
+.rt-echeance svg,
+.rt-fait svg,
+.rt-mention svg{
+flex-shrink:0;
+width:18px;
+height:18px;
+margin-top:2px;
+color:var(--amber-700);
+}
+
+.rt-echeance.is-proche{
+background:rgba(217,128,90,.14);
+}
+
+.rt-echeance.is-passee{
+background:rgba(202,64,42,.12);
+}
+
+.rt-mention{
+background:var(--background-alt);
+color:var(--text-light);
+}
+
+/* ---------- Boutons ---------- */
+.rt-btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+min-height:44px;
+padding:10px 18px;
+border-radius:12px;
+border:1px solid var(--border-color);
+background:var(--background);
+color:var(--journey-ink, #1C1610);
+font-weight:700;
+font-size:.92rem;
+text-decoration:none;
+cursor:pointer;
+transition:transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.rt-btn i,
+.rt-btn svg{
+width:18px;
+height:18px;
+}
+
+.rt-btn:hover{
+transform:translateY(-1px);
+}
+
+.rt-btn--fait{
+background:var(--amber-600);
+border-color:var(--amber-600);
+color:#FDF9EF;
+min-height:52px;
+padding:12px 22px;
+font-size:1rem;
+}
+
+.rt-btn--fait.is-fait{
+background:var(--journey-done, #2F7A46);
+border-color:var(--journey-done, #2F7A46);
+}
+
+.rt-btn--fitz{
+background:var(--journey-ink, #1C1610);
+border-color:var(--journey-ink, #1C1610);
+color:#FDF9EF;
+}
+
+.rt-btn--portail{
+background:var(--background-soft);
+}
+
+.rt-actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin:6px 0 14px;
+}
+
+/* Le geste : la preuve, puis le bouton. */
+.rt-geste{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px;
+margin:14px 0 8px;
+padding-top:14px;
+border-top:1px dashed var(--border-color);
+}
+
+.rt-preuve{
+display:flex;
+flex-direction:column;
+gap:6px;
+flex:1 1 240px;
+font-size:.85rem;
+font-weight:600;
+color:var(--text-light);
+}
+
+.rt-preuve input,
+.rt-form input[type="text"]{
+width:100%;
+min-height:46px;
+padding:10px 14px;
+border-radius:12px;
+border:1px solid var(--border-color);
+background:#FFFDF8;
+color:var(--journey-ink, #1C1610);
+font:inherit;
+font-size:1rem;
+}
+
+.rt-preuve input:focus,
+.rt-form input[type="text"]:focus{
+outline:none;
+border-color:var(--amber-600);
+box-shadow:0 0 0 3px rgba(233,163,25,.2);
+}
+
+.rt-faitle{
+font-size:.85rem;
+color:var(--journey-done, #2F7A46);
+font-weight:600;
+}
+
+.rt-lien-discret{
+font-size:.85rem;
+color:var(--text-light);
+text-decoration:underline;
+text-underline-offset:3px;
+}
+
+/* Les outils Fitz de l'étape. */
+.rt-outils{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin:8px 0 12px;
+}
+
+.rt-outil{
+display:inline-flex;
+align-items:center;
+gap:7px;
+min-height:40px;
+padding:8px 14px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--background-soft);
+color:var(--journey-ink, #1C1610);
+font-weight:600;
+font-size:.85rem;
+text-decoration:none;
+}
+
+.rt-outil i,
+.rt-outil svg{
+width:16px;
+height:16px;
+color:var(--amber-700);
+}
+
+.rt-outil:hover{
+border-color:var(--amber-600);
+}
+
+/* Le texte officiel, replié. */
+.rt-officiel{
+margin:10px 0 6px;
+border:1px solid var(--border-color);
+border-radius:12px;
+background:var(--background-light);
+}
+
+.rt-officiel summary{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px 14px;
+cursor:pointer;
+font-weight:600;
+font-size:.9rem;
+list-style:none;
+}
+
+.rt-officiel summary::-webkit-details-marker{
+display:none;
+}
+
+.rt-officiel summary i,
+.rt-officiel summary svg{
+width:16px;
+height:16px;
+color:var(--amber-700);
+flex-shrink:0;
+}
+
+.rt-officiel p{
+margin:0;
+padding:0 14px 12px;
+font-size:.9rem;
+line-height:1.6;
+color:var(--text-color);
+}
+
+.rt-source{
+font-size:.8rem;
+color:var(--text-muted);
+}
+
+.rt-source a{
+color:var(--amber-700);
+}
+
+/* Le pied de l'étape : recours, conseiller, navigation. */
+.rt-pied{
+display:flex;
+flex-wrap:wrap;
+gap:10px 18px;
+align-items:center;
+margin:12px 0 4px;
+}
+
+.rt-conseiller{
+display:inline-flex;
+align-items:center;
+gap:7px;
+font-size:.88rem;
+font-weight:600;
+color:var(--journey-ink, #1C1610);
+text-decoration:none;
+}
+
+.rt-conseiller i,
+.rt-conseiller svg{
+width:16px;
+height:16px;
+color:var(--amber-700);
+}
+
+.rt-nav{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-top:14px;
+padding-top:12px;
+border-top:1px solid var(--border-color);
+}
+
+.rt-nav-btn{
+display:inline-flex;
+align-items:center;
+gap:6px;
+min-height:44px;
+padding:8px 12px;
+border:0;
+background:transparent;
+color:var(--text-light);
+font:inherit;
+font-weight:600;
+font-size:.88rem;
+cursor:pointer;
+border-radius:10px;
+}
+
+.rt-nav-btn:hover{
+background:var(--background-soft);
+color:var(--journey-ink, #1C1610);
+}
+
+.rt-nav-btn i,
+.rt-nav-btn svg{
+width:16px;
+height:16px;
+}
+
+/* ---------- Formulaires (situation, vœu) ---------- */
+.rt-form{
+display:flex;
+flex-direction:column;
+gap:16px;
+margin:6px 0 0;
+}
+
+.rt-form-titre{
+display:flex;
+align-items:center;
+gap:10px;
+margin:0;
+font-weight:700;
+}
+
+.rt-quota{
+font-size:.78rem;
+font-weight:700;
+padding:3px 9px;
+border-radius:999px;
+background:var(--background-alt);
+color:var(--text-light);
+}
+
+.rt-q{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.rt-q-libelle{
+display:flex;
+align-items:center;
+gap:10px;
+font-weight:600;
+font-size:.95rem;
+color:var(--journey-ink, #1C1610);
+}
+
+.rt-q-num{
+flex-shrink:0;
+width:24px;
+height:24px;
+border-radius:50%;
+background:var(--background-alt);
+color:var(--text-light);
+font-size:.75rem;
+font-weight:700;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.rt-q-aide{
+margin:0;
+font-size:.83rem;
+color:var(--text-muted);
+line-height:1.5;
+}
+
+.rt-form--voeu{
+margin-top:14px;
+padding:16px;
+border-radius:14px;
+border:1px dashed var(--border-color);
+background:var(--background-light);
+}
+
+.rt-quota-plein,
+.rt-vide{
+margin:6px 0 10px;
+padding:12px 14px;
+border-radius:12px;
+background:var(--background-alt);
+color:var(--text-light);
+font-size:.93rem;
+line-height:1.5;
+}
+
+/* Le diagnostic enregistré. */
+.rt-verdict{
+padding:14px 16px;
+border-radius:14px;
+background:var(--background-soft);
+border-left:4px solid var(--amber-600);
+margin-bottom:4px;
+}
+
+.rt-verdict-phrase{
+margin:0;
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-size:1.2rem;
+line-height:1.4;
+}
+
+.rt-verdict-date{
+margin:6px 0 0;
+font-size:.85rem;
+color:var(--text-muted);
+}
+
+/* ---------- Les vœux ---------- */
+.rt-voeux{
+list-style:none;
+margin:0 0 12px;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:10px;
+counter-reset:voeu;
+}
+
+.rt-voeu{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:10px 14px;
+padding:12px 14px;
+border-radius:14px;
+border:1px solid var(--border-color);
+background:var(--background-light);
+counter-increment:voeu;
+}
+
+.rt-voeu::before{
+content:counter(voeu);
+flex-shrink:0;
+width:28px;
+height:28px;
+border-radius:50%;
+background:var(--background-alt);
+color:var(--text-light);
+font-weight:700;
+font-size:.8rem;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.rt-voeu.is-faite::before,
+.rt-voeu.is-admise::before{
+background:var(--journey-done, #2F7A46);
+color:#fff;
+}
+
+.rt-voeu.is-refusee{
+opacity:.75;
+}
+
+.rt-voeu-texte{
+flex:1 1 200px;
+display:flex;
+flex-direction:column;
+gap:2px;
+min-width:0;
+}
+
+.rt-voeu-texte strong{
+font-size:.98rem;
+}
+
+.rt-voeu-texte span{
+font-size:.85rem;
+color:var(--text-light);
+}
+
+.rt-voeu-retirer{
+width:36px;
+height:36px;
+border-radius:50%;
+border:1px solid var(--border-color);
+background:var(--background);
+color:var(--text-light);
+display:inline-flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+}
+
+.rt-voeu-retirer i,
+.rt-voeu-retirer svg{
+width:16px;
+height:16px;
+}
+
+.rt-voeu-retirer:hover{
+border-color:#8F3E22;
+color:#8F3E22;
+}
+
+.rt-voeu-actions{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+width:100%;
+}
+
+.rt-reponse{
+width:100%;
+}
+
+.rt-avert{
+list-style:none;
+margin:0 0 12px;
+padding:0;
+}
+
+.rt-avert li{
+display:flex;
+gap:8px;
+align-items:flex-start;
+padding:8px 12px;
+border-radius:10px;
+background:rgba(217,128,90,.14);
+font-size:.88rem;
+margin-bottom:6px;
+}
+
+.rt-avert i,
+.rt-avert svg{
+flex-shrink:0;
+width:16px;
+height:16px;
+margin-top:2px;
+color:#8F3E22;
+}
+
+.rt-bravo{
+display:flex;
+gap:10px;
+align-items:center;
+margin:4px 0 10px;
+padding:12px 14px;
+border-radius:12px;
+background:rgba(47,122,70,.12);
+color:var(--journey-done, #2F7A46);
+font-weight:600;
+}
+
+.rt-bravo i,
+.rt-bravo svg{
+width:18px;
+height:18px;
+}
+
+/* La coche d'un geste par vœu ou par démarche. */
+.rt-coche{
+display:inline-flex;
+align-items:center;
+gap:8px;
+min-height:40px;
+padding:8px 14px;
+border-radius:999px;
+border:1px solid var(--border-color);
+background:var(--background);
+color:var(--journey-ink, #1C1610);
+font:inherit;
+font-weight:600;
+font-size:.85rem;
+cursor:pointer;
+text-align:left;
+}
+
+.rt-coche i,
+.rt-coche svg{
+flex-shrink:0;
+width:18px;
+height:18px;
+color:var(--text-light);
+}
+
+.rt-coche.is-fait{
+border-color:var(--journey-done, #2F7A46);
+background:rgba(47,122,70,.1);
+}
+
+.rt-coche.is-fait i,
+.rt-coche.is-fait svg{
+color:var(--journey-done, #2F7A46);
+}
+
+/* ---------- Les pièces ---------- */
+.rt-pieces{
+list-style:none;
+margin:0 0 8px;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.rt-piece label{
+display:grid;
+grid-template-columns:auto 1fr;
+gap:2px 12px;
+align-items:center;
+padding:12px 14px;
+border-radius:12px;
+border:1px solid var(--border-color);
+background:var(--background-light);
+cursor:pointer;
+}
+
+.rt-piece input{
+grid-row:span 2;
+width:22px;
+height:22px;
+accent-color:var(--journey-done, #2F7A46);
+cursor:pointer;
+}
+
+.rt-piece-nom{
+font-weight:600;
+font-size:.95rem;
+line-height:1.35;
+}
+
+.rt-piece-meta{
+font-size:.8rem;
+color:var(--text-muted);
+}
+
+.rt-piece.is-obtenue label{
+border-color:rgba(47,122,70,.45);
+}
+
+.rt-piece.is-obtenue .rt-piece-nom{
+color:var(--journey-done, #2F7A46);
+}
+
+.rt-piece.is-ecartee label{
+opacity:.55;
+}
+
+.rt-piece.is-ecartee .rt-piece-nom{
+text-decoration:line-through;
+}
+
+.rt-piece-ecarter{
+display:inline-block;
+margin:4px 0 0 14px;
+min-height:32px;
+padding:4px 8px;
+border:0;
+background:transparent;
+color:var(--text-muted);
+font:inherit;
+font-size:.8rem;
+text-decoration:underline;
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.rt-piece-ecarter:hover{
+color:var(--journey-ink, #1C1610);
+}
+
+.rt-pieces-compte{
+margin:4px 0 8px;
+font-size:.88rem;
+font-weight:600;
+color:var(--text-light);
+}
+
+/* ---------- Le départ ---------- */
+.rt-sous-titre{
+margin:18px 0 10px;
+font-weight:700;
+font-size:1rem;
+}
+
+.rt-demarches{
+list-style:none;
+margin:0;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.rt-demarche{
+padding:10px 12px;
+border-radius:14px;
+border:1px solid var(--border-color);
+background:var(--background-light);
+}
+
+.rt-demarche.is-faite{
+border-color:rgba(47,122,70,.45);
+}
+
+.rt-demarche-plus{
+margin-top:8px;
+font-size:.88rem;
+}
+
+.rt-demarche-plus summary{
+cursor:pointer;
+color:var(--text-light);
+font-weight:600;
+}
+
+.rt-demarche-plus p{
+margin:8px 0 4px;
+line-height:1.55;
+}
+
+.rt-demarche-plus ul{
+margin:0 0 6px;
+padding-left:1.2em;
+list-style:disc;
+}
+
+.rt-demarche-plus li{
+margin:0 0 4px;
+line-height:1.5;
+}
+
+.rt-demarche-soustitre{
+font-weight:700;
+color:var(--journey-ink, #1C1610);
+}
+
+/* ---------- Toute la route ---------- */
+/* css/base.css donne padding:110px 0 et overflow:hidden à tout <section>. */
+.rt-suite-bloc{
+padding:0;
+overflow:visible;
+margin-bottom:40px;
+}
+
+.rt-suite-h{
+font-family:var(--font-affirmation, 'Newsreader', serif);
+font-weight:600;
+font-size:1.3rem;
+margin:0 0 10px;
+}
+
+.rt-suite{
+list-style:none;
+margin:0;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.rt-suite-item button{
+width:100%;
+display:flex;
+align-items:center;
+gap:12px;
+min-height:44px;
+padding:8px 12px;
+border:0;
+border-radius:12px;
+background:transparent;
+color:var(--text-light);
+font:inherit;
+font-size:.93rem;
+text-align:left;
+cursor:pointer;
+}
+
+.rt-suite-item button:hover{
+background:var(--background-soft);
+}
+
+.rt-suite-item.is-courante button{
+color:var(--journey-ink, #1C1610);
+font-weight:700;
+background:var(--background-soft);
+}
+
+.rt-suite-item.is-choisie button{
+box-shadow:inset 3px 0 0 var(--amber-600);
+}
+
+.rt-suite-num{
+flex-shrink:0;
+width:26px;
+height:26px;
+border-radius:50%;
+border:1.5px solid var(--border-color);
+font-size:.75rem;
+font-weight:700;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.rt-suite-num i,
+.rt-suite-num svg{
+width:14px;
+height:14px;
+}
+
+.rt-suite-item.is-faite .rt-suite-num{
+background:var(--journey-done, #2F7A46);
+border-color:var(--journey-done, #2F7A46);
+color:#fff;
+}
+
+.rt-suite-item.is-courante .rt-suite-num{
+background:var(--amber-600);
+border-color:var(--amber-600);
+color:#FDF9EF;
+}
+
+.rt-suite-titre{
+flex:1 1 auto;
+}
+
+.rt-suite-date{
+font-size:.75rem;
+font-weight:700;
+padding:2px 8px;
+border-radius:999px;
+background:rgba(217,128,90,.16);
+color:#8F3E22;
+}
+
+/* ---------- Le toast ---------- */
+.rt-toast{
+position:fixed;
+left:50%;
+bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+transform:translate(-50%, 20px);
+max-width:min(92vw, 480px);
+padding:12px 18px;
+border-radius:12px;
+background:var(--journey-ink, #1C1610);
+color:#FDF9EF;
+font-size:.9rem;
+font-weight:600;
+opacity:0;
+pointer-events:none;
+transition:opacity .2s ease, transform .2s ease;
+z-index:60;
+}
+
+.rt-toast.is-visible{
+opacity:1;
+transform:translate(-50%, 0);
+}
+
+.rt-toast.is-erreur{
+background:#8F3E22;
+}
+
+/* ---------- Téléphone ---------- */
+@media (max-width:640px){
+
+.rt-etape{
+padding:20px 16px 14px;
+border-radius:16px;
+}
+
+.rt-geste{
+flex-direction:column;
+align-items:stretch;
+}
+
+.rt-preuve{
+flex:0 0 auto;
+}
+
+.rt-btn--fait{
+width:100%;
+}
+
+.rt-actions .rt-btn{
+flex:1 1 100%;
+}
+
+.rt-nav-btn{
+padding:8px 6px;
+}
+
+.rt-toast{
+bottom:calc(76px + env(safe-area-inset-bottom, 0px));
+}
+
+}

@@ -168,10 +168,11 @@ const hubPre = lire("espace-preinscription.html");
 const shell = lire("js/app-shell.js");
 const nav = lire("js/mobile-nav.js");
 
-// a) La carte du hub préinscription.
-assert.ok(hubPre.includes('href="diagnostic-france.html"'), "aucun lien vers le diagnostic dans le hub préinscription");
-assert.ok(hubPre.includes('id="jyDiagnosticFranceBtn"'), "la carte doit être identifiable");
-assert.match(hubPre, /data-feature="diagnostic_france"/, "la carte doit porter le droit qui la conditionne");
+// a) L'étape « Vos ressources » de la route (lot R1) : le diagnostic
+// est l'outil principal de l'étape 2, sous son verrou.
+const route = lire("js/route-preinscription.js");
+assert.ok(route.includes('feature: "diagnostic_france", href: "diagnostic-france.html"'), "aucun lien vers le diagnostic dans la route préinscription");
+assert.match(hubPre, /src="espace-preinscription\.js"/, "le hub doit être rendu par le moteur de la route");
 // Retirée du DOM (remove), pas seulement masquée ni grisée.
 // Lot FITZ-RECOURS : un OUTIL verrouillé laisse d'abord le recours
 // (« Bloqué ? Demandez à Fitz »), puis l'élément est retiré — toujours
@@ -196,7 +197,7 @@ assert.match(src, /!isFeatureLocked\([^)]*"diagnostic_france"[^)]*\)[\s\S]{0,200
 }
 
 // d) payment.js n'est plus le seul chemin.
-const liens = ["espace-preinscription.html", "js/mobile-nav.js"].filter((f) => lire(f).includes("diagnostic-france.html"));
+const liens = ["js/route-preinscription.js", "js/mobile-nav.js"].filter((f) => lire(f).includes("diagnostic-france.html"));
 assert.equal(liens.length, 2, "les deux entrées doivent exister");
 
 });

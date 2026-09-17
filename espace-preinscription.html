@@ -6,9 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
-<title>Ma préinscription | FitzUniverse</title>
+<title>Ma route vers la France | FitzUniverse</title>
 
-<meta name="description" content="Votre préinscription, étape par étape : choisir vos établissements, préparer votre dossier, déposer sur le portail officiel, obtenir votre visa.">
+<meta name="description" content="Votre préinscription en France, une étape à la fois : de votre situation au visa, quinze étapes guidées sur la procédure officielle de votre pays.">
 
 <meta name="theme-color" content="#211D18">
 <!-- Pas de mode sombre : le design "papier chaud" est clair par choix. -->
@@ -33,13 +33,15 @@ script classique attend DOMContentLoaded ; les modules sont sûrs). -->
 
 <!-- Design system Fitz. app-shell.css/dashboard.css restent chargées
 pour la cloche de messages, le loader et la pastille de formule ;
-journey-shell.css (coquille sans sidebar + tokens chauds) puis
-journey.css (le parcours) les surclassent — ordre significatif. -->
+journey-shell.css (coquille sans sidebar + tokens chauds), journey.css
+(les composants partagés) puis route.css (LA ROUTE, lot R1) les
+surclassent — ordre significatif. -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/app-shell.css">
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="css/journey-shell.css">
 <link rel="stylesheet" href="css/journey.css">
+<link rel="stylesheet" href="css/route.css">
 <link rel="stylesheet" href="css/mobile-nav.css">
 <style>[hidden]{display:none !important;}</style>
 
@@ -47,8 +49,8 @@ journey.css (le parcours) les surclassent — ordre significatif. -->
 </head>
 
 <!-- data-espace : l'espace auquel CETTE page appartient. Lu par
-     dashboard.js (le moteur des deux hubs) et posé à nouveau par
-     bootstrapShell une fois la session résolue. -->
+     espace-preinscription.js (le moteur de la route) et posé à nouveau
+     par bootstrapShell une fois la session résolue. -->
 <body data-espace="preinscription">
 
 <!-- Lien d'évitement (audit 2026-09-01) — même composant que les pages
@@ -124,278 +126,43 @@ js/student-messages.js les pilotent sans modification.
 
 <main id="main-content" tabindex="-1" class="content" style="display:none;">
 
-<!-- Bannières d'état (bienvenue, activation, Pass Express, e-mail) —
-mêmes identifiants et même logique qu'avant la refonte
-(dashboard.js), seule la mise en forme les a rejoints. -->
-<div id="welcomeAlert" class="welcome-alert" hidden>
-<i data-lucide="check-circle"></i>
-<div>
-<strong>Bienvenue sur FitzUniverse !</strong>
-<p>Votre compte a été créé avec succès.</p>
-</div>
-</div>
+<!-- ==========================================================
+LA ROUTE (lot R1, 2026-09-17) — « une route, une étape, un geste ».
 
-<div id="accompagnementAlert" class="welcome-alert welcome-alert-accompagnement" hidden>
-<div>
-<strong id="accompagnementAlertTitle">Votre accompagnement est activé.</strong>
-<p>Pour que Fitz vous connaisse vraiment et puisse vous guider, complétez votre profil — c'est la première phase de votre parcours.</p>
-<a href="profile.html" class="welcome-alert-cta">
-<span>Compléter mon profil</span>
-<i data-lucide="arrow-right"></i>
-</a>
-</div>
-</div>
+Cette page ne montre qu'UNE étape à la fois : celle où l'étudiant en
+est, ou celle qu'il a choisi de regarder. Le fil des quinze points en
+haut dit la route entière sans la faire lire ; la liste du bas la
+détaille par son seul nom. Tout le contenu est rendu par
+espace-preinscription.js depuis js/route-preinscription.js (pur, testé)
+et la procédure du pays de résidence (js/procedures/*).
 
-<div id="fitzExpressBanner" class="welcome-alert welcome-alert-accompagnement" hidden>
-<i data-lucide="zap"></i>
-<div>
-<strong>Pass Découverte — <span id="fitzExpressDaysLeft">14 jours</span> restants</strong>
-<p>Questions illimitées à Fitz, sans engagement. Passez à un forfait complet pour suivre vos candidatures et débloquer tous les outils.</p>
-<a href="offers.html" class="welcome-alert-cta">
-<span>Choisir ma formule</span>
-<i data-lucide="arrow-right"></i>
-</a>
-</div>
-</div>
+Ce qu'il n'y a PLUS ici, à dessein : les six phases et leurs voiles, le
+radar, la ligne de quota, les cartes d'opportunités, la boîte à outils.
+Chaque outil Fitz s'ouvre depuis l'étape qui lui donne un sens — et
+depuis elle seule.
+========================================================== -->
 
-<div id="emailNudge" class="welcome-alert" hidden>
-<i data-lucide="mail"></i>
-<div>
-<strong>Fitz peut aussi vous prévenir par e-mail.</strong>
-<p>Rappels de candidatures, messages de l'équipe : activez les notifications e-mail pour ne rien manquer.</p>
-<a href="account.html#emailNotifications" class="welcome-alert-cta">
-<span>Aller aux paramètres</span>
-<i data-lucide="arrow-right"></i>
-</a>
-</div>
-</div>
-
-<!-- Salutation + phase du moment -->
-<header class="jy-hello">
+<header class="jy-hello rt-hello">
 <h1 id="welcomeMessage">Bonjour</h1>
-<p id="jyPhaseLine">Chargement de votre parcours…</p>
+<p id="rtLigne">Chargement de votre route…</p>
+<p class="rt-formule" id="rtFormule"></p>
 </header>
 
-<!-- LA prochaine action (js/next-action.js) — une seule, avec son
-urgence et sa raison. Remplie par dashboard.js. -->
-<section class="jy-action" id="jyAction" hidden>
-<span class="jy-action-kicker" id="jyActionKicker"></span>
-<h2 id="jyActionTitle"></h2>
-<p id="jyActionText"></p>
-<a class="jy-action-cta" id="jyActionCta" href="#">
-<span id="jyActionCtaLabel"></span>
-<i data-lucide="arrow-right"></i>
-</a>
-</section>
-
-<!-- Rail du voyage — 6 phases (js/journey-map.js). -->
-<nav class="jy-rail" id="jyRail" aria-label="Les phases de votre parcours"></nav>
-<p class="jy-progress-line" id="jyProgressLine"></p>
-
-<!-- Radar d'échéances -->
-<div class="jy-radar" id="jyRadar" hidden>
-<span class="jy-radar-label"><i data-lucide="calendar-clock"></i>Échéances</span>
-<span id="jyRadarChips" style="display:contents;"></span>
+<!-- Le fil : quinze points, un par étape. Cliquables : regarder une
+étape à venir est toujours permis, rien n'est verrouillé. -->
+<nav class="rt-fil" id="rtFil" aria-label="Les quinze étapes de votre route"></nav>
+<div class="rt-barre" id="rtBarre" role="progressbar" aria-valuemin="0" aria-valuemax="15" aria-labelledby="rtBarreTexte">
+<span class="rt-barre-remplie"></span>
+<span class="rt-barre-texte" id="rtBarreTexte"></span>
 </div>
 
-<!-- ==========================================================
-PHASE 1 — PROFIL
-========================================================== -->
-<section class="jy-phase" id="phase-profil">
-<div class="jy-phase-head">
-<span class="jy-phase-num">01</span>
-<h2>Votre profil</h2>
-<span class="jy-phase-state" id="stateProfil"></span>
-</div>
-<p class="jy-phase-sub">Tout part d'ici : votre profil décide des établissements qui vous correspondent, des pièces qu'on vous demandera et de ce que votre dossier devra prouver.</p>
+<!-- L'étape affichée. -->
+<section class="rt-etape" id="rtEtape" aria-live="polite"></section>
 
-<div class="jy-card jy-profile">
-<div class="jy-profile-score"><strong id="jyProfileScore">0</strong><span>/10</span></div>
-<div class="jy-profile-copy"><p id="jyProfileCopy"></p></div>
-<a href="profile.html" class="jy-btn" id="jyProfileCta"><span>Compléter mon profil</span><i data-lucide="arrow-right"></i></a>
-</div>
-</section>
-
-<!--
-<!-- ==========================================================
-PHASE 2 — ÉTABLISSEMENTS
-Le pendant de « Opportunités » du parcours bourse. Ici l'étudiant
-ne cherche pas un financement : il choisit où déposer, et il a
-besoin de savoir ce que l'année coûtera vraiment.
-========================================================== -->
-<section class="jy-phase" id="phase-opportunites">
-<div class="jy-phase-head">
-<span class="jy-phase-num">02</span>
-<h2>Choisir mes établissements</h2>
-<span class="jy-phase-state" id="stateOpportunites"></span>
-</div>
-<p class="jy-phase-sub" id="jyOppsSub">Le catalogue vous donne les frais réels quand ils ont été vérifiés, la langue d'enseignement et le portail officiel de chaque établissement.</p>
-
-<div class="jy-opps" id="jyOpps"></div>
-
-<div class="jy-phase-actions">
-<a href="universities.html" class="jy-btn jy-btn--primary"><i data-lucide="landmark"></i><span>Parcourir les universités</span></a>
-<a href="preinscriptions.html" class="jy-btn"><i data-lucide="route"></i><span>La procédure, pays par pays</span></a>
-<span data-feature="diagnostic_france"><a href="diagnostic-france.html" data-real-href="diagnostic-france.html" class="jy-btn" id="jyDiagnosticFranceBtn"><i data-lucide="calculator"></i><span>Diagnostic France</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-</div>
-
-<!-- LOT ESPACE-ÉTUDIANT (2026-09-13) : les outils sortent de la rangée
-de boutons. Un `.jy-tool` (pastille de 8 px) était aligné avec des
-`.jy-btn` (bouton de 10 px, plus grands) dans un même flex : la rangée
-était bancale, et l'outil se lisait comme un bouton raté. Ils ont
-maintenant, comme dans l'espace bourses, leur carte à eux.
-
-LOT PRÉ-FITZ (2026-09-10) : les outils Fitz entrent dans cet espace.
-Ils y produisent du contenu de PRÉINSCRIPTION (js/ai/prompts.js lit le
-parcours) ; leur verrou reste celui de la formule (data-feature →
-applyFeatureLocks) : le Diagnostic France ne les a pas. -->
-<div class="jy-card">
-<p class="jy-app-meta" style="margin:0 0 10px;">Une question sur un établissement, un cycle, une langue :</p>
-<div class="jy-tools" style="margin-top:0;">
-<span data-feature="ai_chat"><a href="ai-chat.html" data-real-href="ai-chat.html" class="jy-tool"><i data-lucide="message-circle"></i><span>Une question ? Fitz</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-</div>
-</div>
-</section>
-
-<!-- ==========================================================
-PHASE 3 — DOSSIERS
-========================================================== -->
-<section class="jy-phase" id="phase-dossiers">
-<div class="jy-phase-head">
-<span class="jy-phase-num">03</span>
-<h2>Préparer mes dossiers</h2>
-<span class="jy-phase-state" id="stateDossiers"></span>
-</div>
-<p class="jy-phase-sub">Chaque dossier suit les étapes réelles de la procédure de votre pays de résidence — celles du portail, avec leurs dates et leurs pièces.</p>
-
-<div id="jyApps"></div>
-
-<div class="jy-phase-actions">
-<span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une préinscription</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-</div>
-
-<!-- La boîte à outils, dans sa carte — le même gabarit que l'espace
-bourses. Les cinq outils étaient posés à côté du bouton principal, dans
-la même rangée : cinq pastilles et un bouton, de hauteurs différentes,
-sur une ligne qui débordait. -->
-<div class="jy-card">
-<p class="jy-app-meta" style="margin:0 0 10px;">La boîte à outils de vos vœux :</p>
-<div class="jy-tools" style="margin-top:0;">
-<span data-feature="documents"><a href="documents.html" data-real-href="documents.html" class="jy-tool"><i data-lucide="file-text"></i><span>Mes documents</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-<span data-feature="compress"><a href="compress.html" data-real-href="compress.html" class="jy-tool"><i data-lucide="file-archive"></i><span>Compression de pièces</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-<!-- Sept vœux = sept lettres de quatre à cinq lignes (Campus France,
-étape des vœux, vérifiée le 2026-09-08). Une par formation, jamais une
-lettre de bourse dupliquée : ai-letter passe en mode « vœu » pour une
-candidature de préinscription. -->
-<span data-feature="ai_letter"><a href="ai-letter.html" data-real-href="ai-letter.html" class="jy-tool"><i data-lucide="pen-line"></i><span>Ma lettre pour chaque vœu</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-<span data-feature="ai_translate"><a href="ai-translate.html" data-real-href="ai-translate.html" class="jy-tool"><i data-lucide="languages"></i><span>Traduire une pièce</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-</div>
-</div>
-</section>
-
-<!-- ==========================================================
-PHASE 4 — DÉPÔT
-========================================================== -->
-<section class="jy-phase" id="phase-depot">
-<div class="jy-phase-head">
-<span class="jy-phase-num">04</span>
-<h2>Déposer sur le portail</h2>
-<span class="jy-phase-state" id="stateDepot"></span>
-</div>
-<p class="jy-phase-sub">C'est vous qui déposez, sur votre compte, sur le portail officiel. Nous vous disons quoi préparer, dans quel ordre, et avant quelle date.</p>
-
-<div id="jyDepot"></div>
-
-<!-- LOT ESPACE-ÉTUDIANT (2026-09-13) : cette phase n'avait qu'un outil
-posé seul sous un titre. Côté bourses, la même phase porte trois repères
-de méthode ; ici, l'étudiant qui finance ses études — celui qui a le plus
-à perdre à une erreur de dépôt — n'avait rien. Trois repères de PROCÉDURE,
-sans chiffre ni date : les faits datés vivent dans la procédure de son
-pays (js/procedures/*), qui les sert avec leur source. -->
-<div class="jy-card">
-<ul class="jy-list">
-<li><i data-lucide="user-check"></i><span>Le dépôt se fait <strong>depuis votre compte, sur le portail officiel</strong>. Nous préparons et vérifions le dossier ; c'est vous qui l'envoyez, et vous gardez la main jusqu'au bout.</span></li>
-<li><i data-lucide="wallet"></i><span>Les <strong>frais de dossier ne sont pas remboursables</strong>, et ils se paient avant l'examen de votre demande. C'est la raison d'être de la vérification : ce qui manque se répare avant le paiement, jamais après.</span></li>
-<li><i data-lucide="inbox"></i><span>Gardez la <strong>confirmation du portail</strong> — numéro de dossier, accusé de réception, capture de l'écran final. C'est votre preuve de dépôt, et la seule qui compte en cas de contestation.</span></li>
-</ul>
-<div class="jy-tools">
-<!-- « Prêt à déposer » se juge ici sur les ÉTAPES DE LA PROCÉDURE, avec
-leurs preuves — pas sur le barème d'une bourse (lot PRÉ-FITZ). -->
-<span data-feature="ai_check"><a href="ai-check.html" data-real-href="ai-check.html" class="jy-tool"><i data-lucide="shield-check"></i><span>Vérifier avant de soumettre</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-<a href="preinscriptions.html" class="jy-tool"><i data-lucide="route"></i><span>Les étapes de mon pays</span></a>
-</div>
-</div>
-</section>
-
-<!-- ==========================================================
-PHASE 5 — ADMISSION
-« Réponse & bourse » n'a aucun sens ici : il n'y a pas de bourse à
-attendre, il y a une admission — et, ensuite, des frais à régler.
-========================================================== -->
-<section class="jy-phase" id="phase-reponse">
-<div class="jy-phase-head">
-<span class="jy-phase-num">05</span>
-<h2>Attendre l'admission</h2>
-<span class="jy-phase-state" id="stateReponse"></span>
-</div>
-<p class="jy-phase-sub">Les établissements répondent sur le portail, chacun selon son calendrier. Notez chaque réponse ici : c'est elle qui ouvre la phase suivante.</p>
-
-<div id="jyReponse"></div>
-
-<!-- Même correction qu'en phase 04 : un outil seul sous un titre ne dit
-pas ce qu'il faut faire de cette période. Les calendriers réels
-diffèrent d'un pays et d'un établissement à l'autre : on ne les invente
-pas ici, on dit ce qui est vrai partout. -->
-<div class="jy-card">
-<ul class="jy-list">
-<li><i data-lucide="bell"></i><span>La réponse arrive <strong>sur le portail</strong>, pas toujours par e-mail — et parfois sans notification. Prenez l'habitude d'aller la chercher vous-même.</span></li>
-<li><i data-lucide="list-checks"></i><span>Notez chaque réponse ici, <strong>y compris un refus</strong> : c'est ce qui déclenche la phase suivante, et ce qui permet à Fitz de vous dire quoi faire ensuite.</span></li>
-<li><i data-lucide="file-badge"></i><span>Une admission demande souvent une <strong>confirmation dans un délai court</strong>, et parfois des pièces supplémentaires. Lisez la réponse en entier le jour où elle arrive.</span></li>
-</ul>
-<div class="jy-tools">
-<span data-feature="ai_email"><a href="ai-email.html" data-real-href="ai-email.html" class="jy-tool"><i data-lucide="mail"></i><span>Écrire à un établissement</span><i class="jy-lock" data-lucide="lock"></i></a></span>
-</div>
-</div>
-</section>
-
-<section class="jy-phase" id="phase-depart">
-<div class="jy-phase-head">
-<span class="jy-phase-num">06</span>
-<h2>Visa &amp; départ</h2>
-<span class="jy-phase-state" id="stateDepart"></span>
-</div>
-<p class="jy-phase-sub">L'admission en poche, il reste le dernier kilomètre. Cochez chaque démarche accomplie — votre parcours avance jusqu'au départ. Les détails exacts dépendent du pays : Fitz répond à vos questions pays par pays.</p>
-
-<!-- Checklist visa COCHABLE (2026-08-30) : chaque étape porte un
-data-visa-step aligné sur VISA_ETAPES (js/journey-map.js) ; l'état
-coché est persisté dans le champ `visaChecklist` du document
-utilisateur, et nourrit l'état de la phase 06 (etatDesPhases). -->
-<p class="jy-phase-sub" id="jyVisaProgress" style="font-weight:700;"></p>
-
-<!-- LOT S3 (2026-09-13) — LE CONTENU A QUITTÉ CE FICHIER.
-Ces six cartes étaient écrites en dur ICI et, à l'identique, dans
-l'autre espace : côté préinscription, un étudiant qui finance
-lui-même ses études lisait « attestation de bourse ». Une phrase
-par étape, dupliquée, et fausse pour la moitié des lecteurs.
-
-Le guide vit maintenant dans js/visa-depart.js et il est rendu par
-dashboard.js (initVisaChecklist) : un socle générique avec, pour
-chaque étape, ce qu'il faut faire et ce qui fait échouer ; la
-variante propre au parcours ; puis, dans #jyVisaDestination, les
-étapes RÉELLES de la destination de l'étudiant, avec leur source
-et leur date, tirées de js/procedures/<pays>.js.
-
-Les data-visa-step restent alignés sur VISA_ETAPES : l'état coché
-est toujours persisté dans `visaChecklist` et nourrit la phase 06. -->
-<div class="jy-card jy-guide" id="jyVisaGuide"></div>
-
-<!-- Rempli seulement quand la destination de l'étudiant a des étapes
-de départ documentées. Masqué sinon : pas de titre au-dessus du vide. -->
-<div class="jy-card jy-destination" id="jyVisaDestination" hidden></div>
-
-<div class="jy-phase-actions">
-<a href="advisor.html" class="jy-btn" id="jyAdvisorBtn" hidden><i data-lucide="user-check"></i><span>Mon conseiller</span></a>
-</div>
+<!-- Les autres étapes, par leur nom. -->
+<section class="rt-suite-bloc">
+<h2 class="rt-suite-h">Toute la route</h2>
+<ol class="rt-suite" id="rtSuite"></ol>
 </section>
 
 </main>
@@ -405,7 +172,7 @@ de départ documentées. Masqué sinon : pas de titre au-dessus du vide. -->
 </div>
 
 <script src="pricing-plans.js"></script>
-<script type="module" src="dashboard.js"></script>
+<script type="module" src="espace-preinscription.js"></script>
 
 <!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
 administrateur actif (voir js/admin-access.js) — invisible et

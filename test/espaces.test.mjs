@@ -222,21 +222,27 @@ assert.match(boot, /^initFitzFab\(\);/m, "initFitzFab doit être appelé sans co
 assert.ok(!/courant !== "preinscription"\) initFitzFab/.test(boot), "plus aucune exclusion de l'espace préinscription");
 });
 
-test("le hub préinscription porte les cinq outils Fitz, verrouillés par formule — et pas la préparation aux tests", () => {
-const hub = lire("espace-preinscription.html");
-// Lot PRÉ-FITZ : sept vœux = sept lettres, des courriels aux
-// établissements, des pièces à traduire, un dossier à vérifier avant
-// de soumettre, et des questions. Chaque outil est dans le span
-// data-feature qui le verrouille (applyFeatureLocks).
-for (const [feature, outil] of [["ai_chat", "ai-chat.html"], ["ai_letter", "ai-letter.html"], ["ai_check", "ai-check.html"], ["ai_email", "ai-email.html"], ["ai_translate", "ai-translate.html"]]) {
-assert.ok(hub.includes(`<span data-feature="${feature}"><a href="${outil}" data-real-href="${outil}"`), `${outil} doit être dans l'espace préinscription, sous son verrou`);
+test("la route préinscription porte les outils Fitz, verrouillés par formule — et pas la préparation aux tests", () => {
+// LOT R1 (2026-09-17) : le hub à six phases a laissé place à LA ROUTE.
+// Les outils ne sont plus écrits dans le HTML mais rendus DANS l'étape
+// qui leur donne un sens, par espace-preinscription.js — chacun dans le
+// span data-feature qui le verrouille (applyFeatureLocks est rappelé
+// après chaque peinture).
+const moteur = lire("espace-preinscription.js");
+const route = lire("js/route-preinscription.js");
+for (const [feature, outil] of [["ai_letter", "ai-letter.html"], ["ai_check", "ai-check.html"], ["ai_email", "ai-email.html"], ["ai_translate", "ai-translate.html"], ["compress", "compress.html"], ["interview_prep", "interview-prep.html"], ["diagnostic_france", "diagnostic-france.html"]]) {
+assert.ok(route.includes(`feature: "${feature}", href: "${outil}"`) || moteur.includes(`data-feature="${feature}"`), `${outil} doit être dans la route, sous son verrou ${feature}`);
 }
+assert.match(moteur, /applyFeatureLocks\(s\.planId, s\.featureFlags, s\.testerAccess, s\.hasFitzExpress, s\.planPreinscriptionId\)/, "les verrous doivent être rappelés après chaque peinture");
+// Le chat n'est pas un outil posé à côté : c'est le recours, sous chaque étape.
+assert.match(moteur, /boutonRecours\(\{ code: "quoi_faire", etape: e\.id \}/);
+const hub = lire("espace-preinscription.html");
 // La préparation aux tests de langue reste un outil du parcours bourse.
-assert.ok(!hub.includes("test-prep.html"), "test-prep.html n'a rien à faire dans l'espace préinscription");
-// Ce qu'il porte, en revanche : ses candidatures, ses documents, son
-// diagnostic — et la procédure, publique.
-for (const attendu of ["applications.html", "documents.html", "diagnostic-france.html", "preinscriptions.html", "universities.html"]) {
-assert.ok(hub.includes(attendu), `${attendu} devrait être dans l'espace préinscription`);
+assert.ok(!hub.includes("test-prep.html") && !moteur.includes("test-prep.html"), "test-prep.html n'a rien à faire dans l'espace préinscription");
+// Plus aucune sortie vers une page vitrine depuis l'espace : la procédure
+// est servie DANS la route, avec sa source.
+for (const vitrine of ["preinscriptions.html", "universities.html"]) {
+assert.ok(!hub.includes(`href="${vitrine}"`) && !moteur.includes(`href="${vitrine}"`), `${vitrine} est une page publique : l'espace ne doit plus y envoyer`);
 }
 });
 
@@ -304,10 +310,15 @@ test("les deux hubs partagent la coquille et pas le vocabulaire", () => {
 const bourse = lire("espace-bourse.html");
 const pre = lire("espace-preinscription.html");
 
-// La coquille : même barre haute, même moteur.
-for (const commun of ['id="messagesBellBtn"', 'id="topbarPlanLabel"', 'id="jyRail"', 'id="jyApps"', 'src="dashboard.js"']) {
+// La coquille : même barre haute. Les moteurs, eux, diffèrent depuis le
+// lot R1 : dashboard.js (six phases) côté bourse, espace-preinscription.js
+// (la route) côté préinscription — jusqu'à la refonte de l'espace bourse.
+for (const commun of ['id="messagesBellBtn"', 'id="topbarPlanLabel"', 'id="welcomeMessage"']) {
 assert.ok(bourse.includes(commun) && pre.includes(commun), `${commun} devrait être dans les deux hubs`);
 }
+assert.ok(bourse.includes('src="dashboard.js"'), "l'espace bourse garde dashboard.js");
+assert.ok(pre.includes('src="espace-preinscription.js"') && !pre.includes('src="dashboard.js"'), "l'espace préinscription est rendu par la route");
+assert.ok(!pre.includes('id="jyRail"') && !pre.includes('id="jyApps"'), "la route n'a ni rail de phases ni cartes de dossiers");
 // L'espace de chaque page est déclaré sur le <body>.
 assert.match(bourse, /<body data-espace="bourse">/);
 assert.match(pre, /<body data-espace="preinscription">/);
@@ -364,8 +375,12 @@ assert.equal(barre("dashboard.html"), reference, "la barre haute de l'aiguillage
  */
 test("le guide visa n'est plus écrit dans le HTML : un seul conteneur, rempli par js/visa-depart.js", () => {
 const bourse = lire("espace-bourse.html");
-const pre = lire("espace-preinscription.html");
-for (const html of [bourse, pre]) {
+// Lot R1 : côté préinscription, le guide est l'étape 15 de la route,
+// rendue par espace-preinscription.js depuis le MÊME js/visa-depart.js.
+const pre = lire("espace-preinscription.js");
+assert.match(pre, /guideVisaPour\(\{ espace: "preinscription", procedure: etat\.procedure \}\)/);
+assert.ok(!lire("espace-preinscription.html").includes("data-visa-step="), "le contenu du guide est revenu en dur dans le HTML");
+for (const html of [bourse]) {
 assert.ok(html.includes('id="jyVisaGuide"'), "le conteneur du guide a disparu");
 assert.ok(html.includes('id="jyVisaDestination"'), "le conteneur des étapes de destination a disparu");
 assert.ok(!html.includes("data-visa-step="), "le contenu du guide est revenu en dur dans le HTML — il doit rester dans js/visa-depart.js");
@@ -375,9 +390,8 @@ assert.ok(!html.includes("jy-guide-step"), "une carte du guide est revenue en du
 // à faire dans le guide de l'espace préinscription.
 // Hors commentaires : le commentaire du lot S3 cite lui-même la faute
 // qu'il répare, et le test ne doit pas se déclencher là-dessus.
-const sansCommentaires = pre.replace(/<!--[\s\S]*?-->/g, " ");
-const phase = sansCommentaires.slice(sansCommentaires.indexOf('id="phase-depart"'), sansCommentaires.indexOf('id="phase-depart"') + 3000);
-assert.ok(!/attestation de bourse/i.test(phase), "le texte de la bourse est revenu dans l'espace préinscription");
+const sansCommentaires = pre.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ");
+assert.ok(!/attestation de bourse/i.test(sansCommentaires), "le texte de la bourse est revenu dans l'espace préinscription");
 // Le module qui porte le contenu existe, et il sert bien deux variantes.
 const guide = lire("js/visa-depart.js");
 assert.match(guide, /variantes:\s*\{/);

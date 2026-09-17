@@ -41,6 +41,7 @@ espaceAutorise,
 ESPACE_OUTILS
 } from "../js/plan-features.js";
 
+import * as ROUTE from "../js/route-preinscription.js";
 import { buildPrompt } from "../js/ai/prompts.js";
 import { generateMotivationLetter, generateLettreDeVoeu, computeApplicationReadiness, generateChatReply, typesEmailPour, getSuggestedQuestions, EMAIL_TYPES } from "../js/ai/simulated-responses.js";
 import { lireParcoursDeSaisie, parcoursDOutil } from "../js/parcours.js";
@@ -133,29 +134,21 @@ assert.match(lire(f), /espace: ESPACE_OUTILS/, f);
 assert.match(lire("js/app-shell.js"), /if \(espacePage && espacePage !== ESPACE_OUTILS\) return espacePage;/);
 });
 
-test("espace-preinscription.html porte les cinq outils, dans le gabarit exact de l'espace bourse", () => {
-const hub = lire("espace-preinscription.html");
-const attendus = {
-ai_chat: ["ai-chat.html", "Une question ? Fitz"],
-ai_letter: ["ai-letter.html", "Ma lettre pour chaque vœu"],
-ai_translate: ["ai-translate.html", "Traduire une pièce"],
-ai_check: ["ai-check.html", "Vérifier avant de soumettre"],
-ai_email: ["ai-email.html", "Écrire à un établissement"]
-};
-for (const [feature, [href, libelle]] of Object.entries(attendus)) {
-const i = hub.indexOf(`<span data-feature="${feature}">`);
-assert.notEqual(i, -1, `${feature} absent`);
-const span = hub.slice(i, hub.indexOf("</span></a></span>", i));
-assert.ok(span.includes(`href="${href}" data-real-href="${href}" class="jy-tool"`), `${feature} : gabarit jy-tool + data-real-href`);
-assert.ok(span.includes(`<span>${libelle}</span>`), `${feature} : libellé « ${libelle} »`);
-assert.ok(span.includes('<i class="jy-lock" data-lucide="lock">'), `${feature} : cadenas`);
-}
-// Chaque outil est dans SA phase.
-const phase = (id) => hub.slice(hub.indexOf(`id="${id}"`), hub.indexOf("</section>", hub.indexOf(`id="${id}"`)));
-assert.ok(phase("phase-opportunites").includes('data-feature="ai_chat"'));
-assert.ok(phase("phase-dossiers").includes('data-feature="ai_letter"') && phase("phase-dossiers").includes('data-feature="ai_translate"'));
-assert.ok(phase("phase-depot").includes('data-feature="ai_check"'));
-assert.ok(phase("phase-reponse").includes('data-feature="ai_email"'));
+test("la route préinscription ouvre chaque outil Fitz depuis l'étape qui lui donne un sens", () => {
+// LOT R1 (2026-09-17) : les outils vivent dans js/route-preinscription.js,
+// attachés à une étape — plus dans une boîte à outils du HTML.
+const { ETAPES_ROUTE } = ROUTE;
+const outilsDe = (id) => (ETAPES_ROUTE.find((e) => e.id === id) || { outils: [] }).outils.map((o) => `${o.feature}:${o.href}`);
+assert.deepEqual(outilsDe("ressources"), ["diagnostic_france:diagnostic-france.html"]);
+assert.deepEqual(outilsDe("pieces"), ["compress:compress.html", "ai_translate:ai-translate.html"]);
+assert.deepEqual(outilsDe("ef_pieces"), ["ai_translate:ai-translate.html"]);
+assert.deepEqual(outilsDe("ef_soumission"), ["ai_check:ai-check.html"]);
+assert.deepEqual(outilsDe("ef_entretien"), ["interview_prep:interview-prep.html"], "la préparation à l'entretien, vendue avec le Dossier France, a enfin sa porte");
+assert.deepEqual(outilsDe("ef_confirmation"), ["ai_email:ai-email.html"]);
+// La lettre : une par vœu, depuis l'étape des motivations, avec le vœu.
+const moteur = lire("espace-preinscription.js");
+assert.match(moteur, /ai-letter\.html\?applicationId=\$\{encodeURIComponent\(v\.id\)\}/);
+assert.match(moteur, /<span data-feature="ai_letter">/);
 });
 
 // ------------------------------------------------------------------
