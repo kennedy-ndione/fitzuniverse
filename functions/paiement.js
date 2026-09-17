@@ -57,13 +57,15 @@ const paydunyaToken = defineSecret("PAYDUNYA_TOKEN");
 // RCCM et le dossier KYC. test/domaine.test.mjs y veille.
 const SITE = "https://fitzuniverse.com";
 
-// Mode Test tant que le compte PayDunya n'est pas vérifié (KYC). Le
-// jour du passage en production, cette seule constante change — et il
-// faudra AUSSI remplacer les trois secrets par les clés `live_`.
-// Les deux vont ensemble : une clé de test sur l'URL de production
-// répond « clé invalide », et l'inverse aussi.
-const API_BASE = "https://app.paydunya.com/sandbox-api/v1";
-// Production : "https://app.paydunya.com/api/v1"
+// TEST OU PRODUCTION : décidé par la clé privée, plus par une constante
+// (lot BASCULE-AUTO, 2026-09-17). Une clé `test_private_…` envoie vers
+// le sandbox, une clé `live_private_…` vers la production — une clé de
+// test sur l'URL de production répond « clé invalide », et l'inverse
+// aussi : les deux ne peuvent plus diverger. Passer en paiement réel =
+// remplacer les trois secrets, puis redéployer creerPaiement ET
+// paydunyaWebhook. Aucune ligne de code à changer.
+// Voir functions/lib/paydunya-mode.js.
+const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode");
 
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
@@ -211,10 +213,23 @@ exports.creerPaiement = onCall(
     // moyen habituel échoue. Le choix fait sur notre page est conservé
     // dans custom_data.method, pour la mesure.
 
+    // Le mode vient de la clé. Une clé sans préfixe connu (valeur
+    // factice, collage raté) n'est jamais devinée : on refuse la
+    // facture ici plutôt que d'envoyer l'étudiant vers une erreur
+    // PayDunya.
+    const mode = modePaydunya(paydunyaPrivateKey.value());
+    if (!mode) {
+      logger.error("Clé privée PayDunya sans préfixe test_private_ ni live_private_ — facture refusée", { uid, planId });
+      throw new HttpsError(
+        "internal",
+        "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cela persiste."
+      );
+    }
+
     let reponse;
 
     try {
-      const appel = await fetch(`${API_BASE}/checkout-invoice/create`, {
+      const appel = await fetch(`${baseApi(mode)}/checkout-invoice/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -263,11 +278,11 @@ exports.creerPaiement = onCall(
       devise: "XOF",
       methodeChoisie: method || null,
       statut: "en-attente",
-      mode: API_BASE.includes("sandbox") ? "test" : "live",
+      mode,
       creeLe: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    logger.info("Facture créée", { uid, planId, token: reponse.token });
+    logger.info("Facture créée", { uid, planId, token: reponse.token, mode });
 
     return { url: reponse.response_text, token: reponse.token };
   }
@@ -296,8 +311,13 @@ exports.creerPaiement = onCall(
  * 3. PROLONGATION — racheter la même formule avant son échéance ajoute
  *    la durée à ce qui reste, plutôt que de repartir de zéro. Un
  *    étudiant prévoyant ne doit pas être puni de l'être.
+ *
+ * 4. MÊME MODE (lot BASCULE-AUTO) — une facture de test, payée avec de
+ *    l'argent fictif, n'active jamais rien une fois le site en
+ *    production, et l'inverse. Le document est marqué, le compte n'est
+ *    pas touché.
  */
-async function appliquerAchat(token, donneesPaydunya) {
+async function appliquerAchat(token, donneesPaydunya, modeActuel) {
   const fs = admin.firestore();
   const refPaiement = fs.doc(`payments/${token}`);
 
@@ -317,6 +337,20 @@ async function appliquerAchat(token, donneesPaydunya) {
     if (p.statut === "paye") {
       logger.info("Webhook rejoué, ignoré", { token });
       return "deja-traite";
+    }
+
+    if (!modeAcceptable(p.mode, modeActuel)) {
+      logger.error("Facture d'un autre mode que le site — aucune activation", {
+        token,
+        modeFacture: p.mode || "absent",
+        modeActuel: modeActuel || "clé invalide",
+      });
+      tx.update(refPaiement, {
+        statut: "mode-incoherent",
+        modeAuTraitement: modeActuel || null,
+        traiteLe: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return "mode-incoherent";
     }
 
     // Le montant réellement encaissé doit correspondre à celui qu'on a
@@ -399,7 +433,9 @@ async function appliquerAchat(token, donneesPaydunya) {
 
 exports.paydunyaWebhook = onRequest(
   {
-    secrets: [paydunyaMasterKey],
+    // La clé privée n'est pas envoyée à PayDunya ici : elle sert
+    // seulement à savoir dans quel mode le site tourne (modeAcceptable).
+    secrets: [paydunyaMasterKey, paydunyaPrivateKey],
     region: "europe-west1",
     maxInstances: 10,
     timeoutSeconds: 60,
@@ -467,7 +503,7 @@ exports.paydunyaWebhook = onRequest(
     }
 
     try {
-      const issue = await appliquerAchat(token, data);
+      const issue = await appliquerAchat(token, data, modePaydunya(paydunyaPrivateKey.value()));
       logger.info("Webhook traité", { token, issue });
     } catch (erreur) {
       logger.error("Échec du traitement du webhook", { token, message: erreur.message });
