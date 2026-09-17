@@ -16,7 +16,7 @@ import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OU
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
-import { parcoursDOutil } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la vérification exige, en bourses, une
 // candidature ACCEPTÉE — elle ne tourne plus « sans candidature ».
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -144,7 +144,9 @@ contextChips.innerHTML = "";
 const chips = application
 ? [
 { label: "Université", value: application.university || "" },
-{ label: parcoursDOutil({ application }) === "preinscription" ? "Formation" : "Bourse", value: application.scholarship || "" },
+// La formation d'un vœu vit dans son propre champ depuis le lot R1 :
+    // titreDuVoeu() lit le neuf puis l'ancien (js/parcours.js).
+    { label: parcoursDOutil({ application }) === "preinscription" ? "Formation" : "Bourse", value: titreDuVoeu(application) },
 { label: "Date limite", value: application.deadline || "" }
 ].filter((c) => c.value)
 : [{ label: "Portée", value: "Dossier général — reliez une candidature pour une analyse ciblée" }];
@@ -178,7 +180,8 @@ candidaturesPourOutils(trackedApplications)
 
 const option = document.createElement("option");
 option.value = app.id;
-option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+const titre = titreDuVoeu(app);
+option.textContent = titre ? `${app.university} — ${titre}` : (app.university || "Candidature sans nom");
 fieldApplication.appendChild(option);
 
 });

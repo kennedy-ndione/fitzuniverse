@@ -587,6 +587,17 @@ return new Promise(() => {});
 
 const courant = espaceCourant(espaceUtilisateur, espace);
 
+// LE HUB DE CET ESPACE, POUR LES LIENS DE RETOUR (lot R2, 2026-09-17).
+// Les douze pages d'outils portent un « ← Mon parcours » écrit en dur
+// sur dashboard.html, qui n'est qu'un aiguillage : y revenir coûtait
+// deux chargements de coquille. js/back-link.js lit cette note et
+// récrit le lien. Écrite ici parce que c'est le seul endroit qui
+// connaisse à la fois l'espace du compte et celui où l'on se trouve.
+try {
+const hub = HUB_ESPACE[courant] || HUB_ESPACE[espaceUtilisateur] || "";
+if (hub) sessionStorage.setItem("fitz_hub", hub);
+} catch (error) { /* navigation privée : le markup garde son href */ }
+
 const featureFlags = await fetchFeatureFlags();
 
 document.body.dataset.plan = session.planId;

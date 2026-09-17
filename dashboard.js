@@ -1067,6 +1067,13 @@ initShellChrome();
 // les pages le référencent, et le renommer aurait été un lot à soi.
 const ESPACE = document.body.dataset.espace === "preinscription" ? "preinscription" : "bourse";
 
+// UN CLIENT DES DEUX ESPACES NE SE FAIT PAS RENVOYER DANS L'AUTRE.
+// Le moteur de la route (espace-preinscription.js, lot R2) dépose dans
+// sessionStorage l'étape où l'étudiant se trouve, pour que le « ←
+// Mon parcours » des pages d'outils y revienne. Entrer ici veut dire
+// qu'il travaille maintenant côté bourses : la note n'a plus cours.
+try { sessionStorage.removeItem("fitz_retour"); } catch (error) { /* rien à effacer */ }
+
 bootstrapShell({ espace: ESPACE }).then(async (session) => {
 
 if (!session) return;

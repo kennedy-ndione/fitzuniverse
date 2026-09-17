@@ -258,6 +258,17 @@ propriétaire, et tracées. -->
 </div>
 
 <div class="tab-panel" id="tab-candidatures">
+<!-- LOT R2 (2026-09-17) — le dossier France, tel que l'étudiant l'a
+rempli sur sa route. Les onze étapes de la procédure ne vivent plus sur
+chaque vœu mais sur le DOSSIER (users/{uid}.dossierFrance) : sans ce
+bloc, un administrateur ne voyait plus où en est un client
+préinscription. Rendu par renderDossierFrance (student-detail.js), et
+masqué tant qu'aucune route n'a été commencée. -->
+<div class="detail-section" id="dossierFranceSection" hidden>
+<h3>Dossier France — sa route</h3>
+<p class="detail-field-value" id="dossierFranceResume" style="margin-bottom:10px;">—</p>
+<div id="dossierFranceEtapes"></div>
+</div>
 <div class="detail-section">
 <h3>Candidatures suivies</h3>
 <div id="candidaturesList"></div>

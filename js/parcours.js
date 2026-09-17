@@ -82,6 +82,29 @@ if (application) return lireParcours(application);
 return espace === "preinscription" ? "preinscription" : "bourse";
 }
 
+/**
+* CE QUE LA CANDIDATURE VISE, en une ligne lisible.
+*
+* Un vœu de préinscription porte sa formation dans `formation` et son
+* niveau d'entrée dans `niveau` depuis le lot R1 (2026-09-17). Avant ce
+* lot, le formulaire rangeait la formation dans `scholarship` — le champ
+* « Bourse (optionnel) » — faute d'avoir mieux. Les trois pages d'outils
+* et l'espace admin lisaient donc `scholarship` et n'affichaient plus
+* rien pour un vœu neuf.
+*
+* Cette fonction est le SEUL endroit qui connaisse cet ordre de
+* lecture : le champ neuf, puis l'ancien. Une bourse rend le nom de la
+* bourse, inchangé.
+*/
+export function titreDuVoeu(app) {
+if (!app || typeof app !== "object") return "";
+const formation = String(app.formation || "").trim();
+if (!formation) return String(app.scholarship || "").trim();
+const niveau = String(app.niveau || "").trim();
+if (!niveau || formation.toLowerCase().includes(niveau.toLowerCase())) return formation;
+return `${formation} (${niveau})`;
+}
+
 export function lireParcoursDeSaisie(input) {
 const p = input && typeof input === "object" ? input.parcours : undefined;
 if (typeof p === "string") return p === "preinscription" ? "preinscription" : "bourse";

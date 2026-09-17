@@ -208,6 +208,12 @@ voyage jusqu'à la caisse. -->
 <!-- Plus de pied de page ici (décision de Charles, 2026-09-11) : il ne
 reste que sur l'accueil. Le glossaire (js/glossaire.js) reste :
 js/glossaire-seul.js le lance sans le pied de page. -->
+<!-- Le lien de retour restitue la position de défilement (lot R2,
+2026-09-17) : ces quatre pages portaient un `.back-link` sans charger
+son script — or ce sont les plus longues du site, et c'est exactement
+le cas que le module cite (revenir d'une fiche au milieu d'une liste de
+156 bourses, et retrouver sa place). Voir js/back-link.js. -->
+<script src="js/back-link.js"></script>
 <script src="js/glossaire-seul.js" defer></script>
 </body>
 </html>

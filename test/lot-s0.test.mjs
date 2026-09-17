@@ -143,7 +143,15 @@ assert.match(src, /import \{[^}]*resolvePlanPreinscription[^}]*\} from "\.\.\/js
 assert.ok(src.includes("resolvePlanPreinscription(userData)"), "la fonction est bien appelée");
 // Le parcours (bourse / préinscription) dans la liste des candidatures.
 assert.ok(src.includes("lireParcours(app)"), "le parcours vient de lireParcours(), pas de app.track brut");
-assert.match(src, /import \{ lireParcours, LIBELLES as LIBELLES_PARCOURS \} from "\.\.\/js\/parcours\.js"/);
+// La RÈGLE, pas la forme de la ligne : le vocabulaire du parcours vient
+// de js/parcours.js, jamais d'une liste recopiée ici. Le littéral
+// exact était photographié jusqu'au lot R2, et ajouter un import de
+// plus au même fichier le faisait rougir sans qu'aucune règle ne soit
+// enfreinte (même défaut que les deux gardes réécrites le 2026-09-13).
+const ligneParcours = (src.match(/^import \{([^}]*)\} from "\.\.\/js\/parcours\.js";$/m) || [])[1] || "";
+assert.ok(/\blireParcours\b/.test(ligneParcours), "lireParcours doit être importée de js/parcours.js");
+assert.ok(/\bLIBELLES as LIBELLES_PARCOURS\b/.test(ligneParcours), "les libellés de parcours doivent venir du même module");
+assert.ok(!/LIBELLES_PARCOURS\s*=\s*\{/.test(src), "les libellés de parcours sont recopiés dans le fichier");
 // Le bloc « offre préinscription » a sa propre section, plus celle du Pass.
 const html = lire("admin/student-detail.html");
 const avant = html.slice(0, html.indexOf('id="planPreinscriptionStatus"'));

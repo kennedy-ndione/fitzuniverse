@@ -47,7 +47,8 @@ import { succes, echec, notifier } from "./notifier.js";
 // Lot E1 : la preuve de dépôt, en lecture seule (jamais la capture
 // elle-même — storage.rules la réserve au propriétaire).
 import { lirePreuve, resumePreuve, LIBELLES_MODES } from "../js/preuve-depot.js";
-import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "../js/parcours.js";
+import { lireParcours, titreDuVoeu, LIBELLES as LIBELLES_PARCOURS } from "../js/parcours.js";
+import { ETAPES_ROUTE, TOTAL_ETAPES } from "../js/route-preinscription.js";
 // Lot ACCEPTATION, partie 6 : le décompte par statut des cartes bourses
 // et « toutes répondues » (STATUTS_REPONSE, jamais une liste recopiée)
 // viennent du module pur js/fitz-choisit.js — testés sous Node.
@@ -762,6 +763,68 @@ ${canMarkReceived ? `<button type="button" class="btn-detail-action" data-action
 
 }
 
+/**
+* LA ROUTE DE L'ÉTUDIANT, VUE D'ICI (lot R2, 2026-09-17).
+*
+* Depuis le lot R1, les onze étapes de la procédure Études en France ne
+* sont plus cochées sur chaque vœu mais UNE fois, sur le dossier
+* (users/{uid}.dossierFrance). Un administrateur qui prend un appel doit
+* pouvoir dire en trois secondes où en est le client : combien d'étapes,
+* laquelle est en cours, son numéro de dossier, ses pièces.
+*
+* Lecture seule, et aucun recalcul : on ne rejoue pas ici la logique de
+* js/route-preinscription.js (qui a besoin de la procédure du pays), on
+* lit ce que l'étudiant a coché. Le titre des étapes vient du même
+* module que sa page — jamais d'une liste recopiée.
+*/
+function renderDossierFrance(userData) {
+
+const section = document.getElementById("dossierFranceSection");
+if (!section) return;
+
+const dossier = (userData && userData.dossierFrance) || null;
+const etapes = (dossier && dossier.etapes && typeof dossier.etapes === "object") ? dossier.etapes : null;
+const pieces = (dossier && dossier.pieces && typeof dossier.pieces === "object") ? dossier.pieces : {};
+
+// Pas de bloc vide sous un titre prometteur : un client bourse, ou un
+// client préinscription qui n'a pas commencé, ne voit rien.
+if (!etapes && !Object.keys(pieces).length) {
+section.hidden = true;
+return;
+}
+
+section.hidden = false;
+
+const cochees = ETAPES_ROUTE.filter((e) => etapes && etapes[e.id] && etapes[e.id].faite === true);
+const enCours = ETAPES_ROUTE.find((e) => !(etapes && etapes[e.id] && etapes[e.id].faite === true));
+const pretes = Object.values(pieces).filter((v) => v === true).length;
+const ecartees = Object.values(pieces).filter((v) => v === "non-concerne").length;
+
+const resume = document.getElementById("dossierFranceResume");
+resume.textContent = `${cochees.length} étape${cochees.length > 1 ? "s" : ""} sur ${TOTAL_ETAPES} cochée${cochees.length > 1 ? "s" : ""}`
++ (enCours ? ` — en cours : ${enCours.titre}.` : " — route accomplie.")
++ (Object.keys(pieces).length ? ` ${pretes} pièce${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""}${ecartees ? `, ${ecartees} écartée${ecartees > 1 ? "s" : ""}` : ""}.` : "");
+
+// Les étapes cochées, dans l'ordre de la route, avec leur date et la
+// référence déclarée quand l'étape en demande une.
+const liste = document.getElementById("dossierFranceEtapes");
+liste.innerHTML = cochees.length
+? cochees.map((e) => {
+const saisie = etapes[e.id];
+const preuve = typeof saisie.preuve === "string" ? saisie.preuve.trim() : "";
+return `
+<div class="timeline-item">
+<span class="timeline-dot" style="background:var(--success)"></span>
+<div class="timeline-body">
+<div class="timeline-label">${echapperTexte(e.titre)}</div>
+<div class="timeline-meta">${saisie.faitLe ? `coché le ${echapperTexte(formatISODate(String(saisie.faitLe)))}` : "coché"}${preuve ? ` · référence déclarée : ${echapperTexte(preuve)}` : ""}</div>
+</div>
+</div>`;
+}).join("")
+: `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune étape cochée pour le moment.</p>`;
+
+}
+
 function renderInterviewPrepStatus(userData) {
 
 const el = document.getElementById("interviewPrepStatus");
@@ -838,6 +901,7 @@ quotaStatus.textContent = `${suivies} — formule Gratuit, aucune candidature ac
 }
 
 renderInterviewPrepStatus(userData);
+renderDossierFrance(userData);
 
 if (!applications.length) {
 list.innerHTML = `<p class="detail-field-value" style="font-weight:400;color:var(--text-muted);">Aucune candidature suivie pour le moment.</p>`;
@@ -855,7 +919,7 @@ list.innerHTML = (decompte.ligne ? `<p class="detail-field-value" id="candidatur
 <div class="timeline-item">
 <span class="timeline-dot" style="background:${app.status === "reponse_recue" ? "var(--success)" : "var(--border-color)"}"></span>
 <div class="timeline-body">
-<div class="timeline-label">${app.university}${app.scholarship ? ` — ${app.scholarship}` : ""}</div>
+<div class="timeline-label">${app.university}${titreDuVoeu(app) ? ` — ${titreDuVoeu(app)}` : ""}</div>
 <!-- Parcours affiché depuis le 2026-09-08 : bourse et préinscription
 n'ont ni les mêmes étapes, ni les mêmes documents, ni le même
 interlocuteur. Sans cette mention, l'admin lisait deux candidatures

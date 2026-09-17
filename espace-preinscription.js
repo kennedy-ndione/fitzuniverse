@@ -355,12 +355,17 @@ function htmlSituation(e) {
 
 // ---- Étape 2 : le diagnostic ----
 function htmlDiagnostic(e) {
+  // Les champs sont ceux qu'écrit js/diagnostic-france-page.js :
+  // `calculeLe` (et non « enregistreLe »), `totalAnnuelEUR`, `verdict`,
+  // `etatVerdict`. Un nom inventé ici afficherait un bloc muet.
   const d = etat.userData.diagnosticFrance;
   if (e.faite && d) {
+    const total = typeof d.totalAnnuelEUR === "number" ? `${formatMontant(Math.round(d.totalAnnuelEUR), "EUR")} pour l'année` : "";
     return `
       <div class="rt-verdict is-${ech(d.etatVerdict || "")}">
         <p class="rt-verdict-phrase">${ech(d.verdict || "Diagnostic enregistré.")}</p>
-        ${d.enregistreLe ? `<p class="rt-verdict-date">Fait le ${ech(dateLongue(d.enregistreLe))}. Vos ressources ont changé ? Refaites-le.</p>` : ""}
+        ${total ? `<p class="rt-verdict-chiffre">${ech(total)}</p>` : ""}
+        ${d.calculeLe ? `<p class="rt-verdict-date">Fait le ${ech(dateLongue(String(d.calculeLe).slice(0, 10)))}. Vos ressources ont changé ? Refaites-le, sans rien repayer.</p>` : ""}
       </div>
       <div class="rt-geste">${htmlOutilPrincipal(e).replace("Faire mon diagnostic avec Fitz", "Refaire mon diagnostic")}</div>`;
   }
@@ -515,6 +520,7 @@ function peindreEtape() {
   const s = etat.session;
   applyFeatureLocks(s.planId, s.featureFlags, s.testerAccess, s.hasFitzExpress, s.planPreinscriptionId);
   brancherEtape(e);
+  memoriserRetour(e);
 }
 
 function peindreSuite() {
@@ -543,6 +549,27 @@ function aller(id, defiler = true) {
     const cible = document.getElementById("rtEtape");
     if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+}
+
+/**
+ * LE RETOUR RAMÈNE À L'ÉTAPE, PAS AU SAS.
+ *
+ * Les douze pages d'outils portent un `.back-link` écrit en dur sur
+ * dashboard.html — qui n'est plus qu'un aiguillage : l'étudiant y
+ * passait, était redirigé, et rechargeait toute la coquille pour
+ * revenir là d'où il venait. On dépose donc ici, à chaque peinture,
+ * l'étape où il se trouve ; js/back-link.js (chargé par ces pages) lit
+ * cette note et récrit le lien. sessionStorage : l'onglet, et lui seul.
+ */
+function memoriserRetour(e) {
+  try {
+    sessionStorage.setItem("fitz_retour", JSON.stringify({
+      href: `espace-preinscription.html?etape=${encodeURIComponent(e.id)}`,
+      court: `Étape ${e.numero}`,
+      libelle: `Étape ${e.numero} · ${e.titre}`,
+      espace: "preinscription"
+    }));
+  } catch (error) { /* navigation privée : le repli du markup suffit */ }
 }
 
 // ==========================================================

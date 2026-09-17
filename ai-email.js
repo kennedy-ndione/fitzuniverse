@@ -17,7 +17,7 @@ import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
 // Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
 // n'a pas de sens en préinscription) et voyage avec la demande.
-import { parcoursDOutil } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : l'e-mail exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -214,7 +214,7 @@ application = app || null;
 
 if (app) {
 fieldUniversity.value = app.university || "";
-fieldProgram.value = app.scholarship || fieldProgram.value || "";
+fieldProgram.value = titreDuVoeu(app) || fieldProgram.value || "";
 }
 
 verrouillerUniversite(app);
@@ -247,7 +247,8 @@ candidaturesPourOutils(trackedApplications)
 
 const option = document.createElement("option");
 option.value = app.id;
-option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+const titre = titreDuVoeu(app);
+option.textContent = titre ? `${app.university} — ${titre}` : (app.university || "Candidature sans nom");
 fieldApplication.appendChild(option);
 
 });
@@ -338,7 +339,7 @@ CHIP_DEFS.forEach(({ input }) => input.addEventListener("input", renderContextCh
 
 if (application) {
 fieldUniversity.value = application.university || "";
-if (application.scholarship) fieldProgram.value = fieldProgram.value || application.scholarship;
+if (titreDuVoeu(application)) fieldProgram.value = fieldProgram.value || titreDuVoeu(application);
 verrouillerUniversite(application);
 }
 

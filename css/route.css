@@ -690,6 +690,12 @@ font-size:1.2rem;
 line-height:1.4;
 }
 
+.rt-verdict-chiffre{
+margin:6px 0 0;
+font-weight:700;
+color:var(--journey-ink, #1C1610);
+}
+
 .rt-verdict-date{
 margin:6px 0 0;
 font-size:.85rem;

@@ -260,6 +260,28 @@ const paysProfil = (ctx.profile && (ctx.profile.country || ctx.profile.originCou
 if (paysProfil) document.getElementById("diagPays").value = paysProfil;
 const sauvegarde = document.getElementById("diagSauvegarde");
 
+/**
+* Un lien vers l'étape de la route d'où vient l'étudiant, posé après le
+* bloc de sauvegarde. Silencieux s'il n'y a pas de note : la page reste
+* accessible depuis le menu et depuis un lien partagé.
+*/
+function retourVersLaRoute() {
+let note = null;
+try { note = JSON.parse(sessionStorage.getItem("fitz_retour") || "null"); } catch (error) { note = null; }
+if (!note || typeof note.href !== "string" || !note.href) return;
+let lien = document.getElementById("diagRetourRoute");
+if (!lien) {
+lien = document.createElement("a");
+lien.id = "diagRetourRoute";
+lien.className = "btn btn-primary";
+lien.style.marginTop = "12px";
+sauvegarde.insertAdjacentElement("afterend", lien);
+}
+lien.setAttribute("href", note.href);
+lien.innerHTML = `<i data-lucide="arrow-left" aria-hidden="true"></i><span>Revenir à mon dossier — ${String(note.court || "ma route").toLowerCase()}</span>`;
+if (window.lucide) lucide.createIcons();
+}
+
 // Le catalogue n'est chargé QUE pour les leviers, et son échec ne doit
 // rien casser : deux leviers de moins valent mieux qu'une page morte.
 try {
@@ -353,6 +375,12 @@ calculeLe: new Date().toISOString()
 });
 sauvegarde.textContent = `Diagnostic enregistré — vous le retrouverez ici, et vous pourrez le rejouer quand vos chiffres changeront. Total annuel : ${formatEUR(resultat.total.annuelEUR)}.`;
 sauvegarde.hidden = false;
+// LE CHEMIN DU RETOUR, LÀ OÙ L'ÉTUDIANT EST (lot R2, 2026-09-17).
+// Le verdict s'affiche tout en bas d'une longue page : le « ← » de la
+// barre haute est à deux écrans de défilement. Quand la route a
+// déposé l'étape d'où l'on vient (js/back-link.js décrit la note),
+// on la propose ici même, sous le verdict.
+retourVersLaRoute();
 } catch (error) {
 console.error("Impossible d'enregistrer le diagnostic :", error);
 sauvegarde.textContent = "Le diagnostic est calculé et affiché en entier ci-dessus, mais il n'a pas pu être enregistré. Vous pourrez le relancer plus tard.";

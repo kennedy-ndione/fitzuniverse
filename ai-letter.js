@@ -24,7 +24,7 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js
 // Lot PRÉ-FITZ : le parcours décide de la FORME de la lettre — une lettre
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
-import { parcoursDOutil } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -234,10 +234,16 @@ application = app || null;
 
 if (app) {
 fieldUniversity.value = app.university || "";
-if (app.scholarship) {
-fieldProgram.value = fieldProgram.value || app.scholarship;
+// LA FORMATION D'UN VŒU A SON PROPRE CHAMP (lot R1, 2026-09-17).
+// L'ancien formulaire de candidature rangeait la formation dans
+// `scholarship` — le champ « Bourse (optionnel) » — faute d'avoir mieux.
+// La route écrit maintenant `formation` et `niveau`. On lit le neuf,
+// puis l'ancien : les vœux créés avant le lot gardent leur libellé.
+const formation = titreDuVoeu(app);
+if (formation) {
+fieldProgram.value = fieldProgram.value || formation;
 // « Candidature à la bourse X » n'a de sens que pour une bourse : sur
-// une préinscription, le champ `scholarship` porte la FORMATION.
+// une préinscription, c'est la formation, et Fitz ne parle pas de bourse.
 if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse") fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
 }
 }
@@ -321,7 +327,8 @@ candidaturesPourOutils(trackedApplications)
 
 const option = document.createElement("option");
 option.value = app.id;
-option.textContent = app.scholarship ? `${app.university} — ${app.scholarship}` : (app.university || "Candidature sans nom");
+const titre = titreDuVoeu(app);
+option.textContent = titre ? `${app.university} — ${titre}` : (app.university || "Candidature sans nom");
 fieldApplication.appendChild(option);
 
 });
@@ -409,7 +416,13 @@ input.addEventListener("change", renderContextChips);
 if (application) {
 fieldUniversity.value = application.university || "";
 verrouillerUniversite(application);
-if (application.scholarship) fieldMotivations.value = fieldMotivations.value || `Candidature à la bourse ${application.scholarship}.`;
+// Le MÊME garde que dans applyApplicationContext (lot R2, 2026-09-17) :
+// il manquait ici. Un vœu de préinscription arrivait donc avec
+// « Candidature à la bourse <formation>. » déjà écrit dans ses
+// motivations — sur un parcours où il n'y a aucune bourse.
+if (parcoursDOutil({ application }) === "bourse" && application.scholarship) {
+fieldMotivations.value = fieldMotivations.value || `Candidature à la bourse ${application.scholarship}.`;
+}
 }
 
 renderContextChips();
