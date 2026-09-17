@@ -563,7 +563,7 @@ assert.match(publie, /"": \[".html"/, "la racine doit accepter les .html");
 // Le plan du site : une page indexable qui n'y est pas est une page
 // qu'on a écrite pour rien.
 assert.ok(lire("sitemap.xml").includes("preinscription-france.html"));
-assert.ok(lire("preinscription-france.html").includes('rel="canonical" href="https://scholarbridge-e0d84.web.app/preinscription-france.html"'));
+assert.ok(lire("preinscription-france.html").includes('rel="canonical" href="https://fitzuniverse.com/preinscription-france.html"'));
 
 // Le menu public reste à quatre entrées : la page de destination
 // s'atteint par le hub, elle n'ajoute pas une cinquième entrée.

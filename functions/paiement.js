@@ -51,7 +51,11 @@ const paydunyaToken = defineSecret("PAYDUNYA_TOKEN");
 // en en-tête). Elle reste dans Secret Manager pour le jour où une
 // intégration côté navigateur en aurait besoin.
 
-const SITE = "https://scholarbridge-e0d84.web.app";
+// Domaine de production depuis le 2026-09-17 (fitzuniverse.com, branché sur
+// Firebase Hosting). PayDunya l'affiche comme site de la boutique et y
+// renvoie l'étudiant après paiement : il doit être le MÊME nom que le
+// RCCM et le dossier KYC. test/domaine.test.mjs y veille.
+const SITE = "https://fitzuniverse.com";
 
 // Mode Test tant que le compte PayDunya n'est pas vérifié (KYC). Le
 // jour du passage en production, cette seule constante change — et il
