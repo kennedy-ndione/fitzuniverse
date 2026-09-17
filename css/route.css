@@ -19,9 +19,26 @@ min-height:120px;
 visibility:hidden;
 }
 
-/* ---------- Le haut ---------- */
+/* ---------- Le haut : le COCKPIT ---------- */
+/* Une seule carte pour « où j'en suis » : la salutation, la phrase de
+route, le fil des quinze points et la barre. Avant, les quatre
+flottaient sur le papier, et la page commençait par du vide (lot R3,
+2026-09-17 — « l'espace doit être moderne et premium »). */
+.rt-cockpit{
+padding:22px 22px 16px;
+margin:0 0 22px;
+border-radius:22px;
+background:
+radial-gradient(120% 140% at 0% 0%, rgba(233,163,25,.10) 0%, transparent 58%),
+linear-gradient(180deg, #FFFDF8 0%, var(--background) 100%);
+border:1px solid var(--border-color);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.9),
+0 18px 42px -30px rgba(33,29,24,.5);
+}
+
 .rt-hello{
-margin-bottom:18px;
+margin-bottom:14px;
 }
 
 .rt-hello p{
@@ -53,6 +70,15 @@ scrollbar-width:none;
 
 .rt-fil::-webkit-scrollbar{
 display:none;
+}
+
+/* Le fil continue derrière le bord droit : on le dit, comme pour les
+pastilles d'exemples (css/guide.css). */
+@supports (mask-image: linear-gradient(#000, #000)){
+.rt-fil{
+mask-image:linear-gradient(to right, #000 calc(100% - 26px), transparent);
+-webkit-mask-image:linear-gradient(to right, #000 calc(100% - 26px), transparent);
+}
 }
 
 .rt-point{
@@ -110,9 +136,10 @@ outline-offset:2px;
 .rt-barre{
 position:relative;
 height:6px;
+margin-bottom:26px;
 border-radius:999px;
 background:var(--background-alt);
-margin:2px 0 22px;
+margin:2px 0 0;
 --rt-pct:0%;
 }
 
@@ -146,6 +173,24 @@ inset 0 1px 0 rgba(255,255,255,.85),
 0 1px 2px rgba(33,29,24,.05),
 0 18px 40px -24px rgba(33,29,24,.28);
 scroll-margin-top:84px;
+}
+
+/* L'étape ARRIVE. Trois dixièmes de seconde : assez pour que l'œil
+suive le changement, trop court pour faire attendre. Coupé net si le
+système demande moins d'animation. */
+@keyframes rt-entree{
+from{ opacity:0; transform:translateY(10px); }
+to{ opacity:1; transform:none; }
+}
+
+.rt-etape{
+animation:rt-entree .3s ease both;
+}
+
+@media (prefers-reduced-motion:reduce){
+.rt-etape{
+animation:none;
+}
 }
 
 .rt-etape.is-courante{
@@ -606,74 +651,6 @@ font-size:.93rem;
 line-height:1.5;
 }
 
-/* Les réponses proposées : un exemple à un clic, sous le champ. */
-.rt-chips{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-margin-top:2px;
-}
-
-.rt-chip{
-min-height:34px;
-padding:6px 12px;
-border-radius:999px;
-border:1px solid var(--border-color);
-background:var(--background-light);
-color:var(--text-light);
-font:inherit;
-font-size:.82rem;
-font-weight:600;
-cursor:pointer;
-transition:border-color .15s ease, background .15s ease, color .15s ease;
-}
-
-.rt-chip:hover{
-border-color:var(--amber-600);
-color:var(--journey-ink, #1C1610);
-}
-
-.rt-chip.is-choisie{
-background:var(--amber-600);
-border-color:var(--amber-600);
-color:#FDF9EF;
-}
-
-/* Le champ à suggestions : liste crème, jamais le panneau noir. */
-.rt-suggest{
-position:relative;
-}
-
-.rt-suggest-liste{
-position:absolute;
-left:0;
-right:0;
-top:calc(100% + 6px);
-z-index:20;
-margin:0;
-padding:6px;
-list-style:none;
-max-height:260px;
-overflow-y:auto;
-border:1px solid var(--border-color);
-border-radius:12px;
-background:#FFFDF8;
-box-shadow:0 14px 34px -14px rgba(33,29,24,.35);
-}
-
-.rt-suggest-liste li{
-padding:10px 12px;
-border-radius:8px;
-font-size:.92rem;
-cursor:pointer;
-}
-
-.rt-suggest-liste li:hover,
-.rt-suggest-liste li.is-actif{
-background:var(--background-soft);
-color:var(--journey-ink, #1C1610);
-}
-
 /* Le diagnostic enregistré. */
 .rt-verdict{
 padding:14px 16px;
@@ -1046,6 +1023,23 @@ padding:0;
 display:flex;
 flex-direction:column;
 gap:4px;
+/* LA FRISE : un filet vertical passe derrière les quinze pastilles.
+Sans lui, la liste se lisait comme un menu ; avec lui, elle se lit
+comme une route — ce qu'elle est. Le filet part du centre des
+pastilles (12 px + le padding du bouton). */
+position:relative;
+}
+
+.rt-suite::before{
+content:"";
+position:absolute;
+left:25px;
+top:22px;
+bottom:22px;
+width:2px;
+border-radius:2px;
+background:linear-gradient(180deg, var(--journey-done, #2F7A46) 0%, var(--border-color) 100%);
+opacity:.45;
 }
 
 .rt-suite-item button{
@@ -1080,6 +1074,9 @@ box-shadow:inset 3px 0 0 var(--amber-600);
 }
 
 .rt-suite-num{
+position:relative;
+z-index:1;
+background:var(--background);
 flex-shrink:0;
 width:26px;
 height:26px;

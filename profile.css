@@ -19,244 +19,192 @@ Ne jamais faire figurer cette séquence dans un commentaire.
 ========================================================== */
 
 /* ==========================================================
-MISE EN PAGE DU PROFIL — nav collante + colonne formulaire
+MISE EN PAGE DU PROFIL — une colonne, et une barre pilote en haut
+(lot R3, 2026-09-17)
+
+La colonne de gauche collante (240 px, panneau « verre », neuf liens
+empilés) est remplacée par `.profile-pilote` : deux lignes en haut de
+page, collantes sous la barre haute, qui disent OÙ ON EN EST et donnent
+accès aux sections sans occuper un écran entier sur téléphone.
+
+Trois règles de la maison tenues ici :
+- aucune classe n'existe seulement dans un @media (test icone-btn 3) ;
+- aucune barre collante d'ENREGISTREMENT (décision de Charles, gardée
+  par le test « contrôles 7 ») : le pilote ne porte aucun bouton
+  d'enregistrement, seulement l'état et la navigation ;
+- un contrôle tactile fait au moins 44 px de haut.
 ========================================================== */
 
 .topbar-title p{
-
 color:var(--text-light);
-
 font-size:var(--fs-meta);
-
 }
 
 .profile-layout{
-
-display:grid;
-
-grid-template-columns:240px 1fr;
-
-gap:32px;
-
-align-items:start;
-
+display:block;
+max-width:820px;
+margin:0 auto;
 }
 
-.profile-nav{
-
+/* ---------- LA BARRE PILOTE ---------- */
+.profile-pilote{
 position:sticky;
-
-top:calc(var(--topbar-height) + 24px);
-
+top:calc(var(--topbar-height) - 8px);
+z-index:40;
 display:flex;
-
 flex-direction:column;
-
-gap:2px;
-
-padding:14px;
-
-border-radius:var(--radius-lg);
-
-/* Seule surface "verre" de la page — panneau flottant sticky,
-donc justifie le glassmorphism ; les .profile-section répétées
-plus bas restent en carte plate (règle "avec parcimonie" du
-Design System 2.0). */
-background:var(--glass);
-
-border:1px solid var(--glass-border);
-
-backdrop-filter:blur(16px);
--webkit-backdrop-filter:blur(16px);
-
-box-shadow:var(--shadow-xs);
-
-}
-
-.profile-nav-score{
-
-display:flex;
-
-align-items:center;
-
 gap:12px;
-
-padding:10px 8px 10px;
-
+margin:0 0 22px;
+padding:16px 18px;
+border-radius:var(--radius-lg);
+background:rgba(253,249,239,.94);
+border:1px solid var(--border-color);
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+box-shadow:0 14px 34px -22px rgba(33,29,24,.4);
 }
 
-.profile-nav-score-ring{
-
-flex-shrink:0;
-
+.profile-pilote-tete{
 display:flex;
-
 align-items:center;
-
-justify-content:center;
-
-width:44px;
-
-height:44px;
-
-border-radius:50%;
-
-background:var(--gradient-primary);
-
-color:#fff;
-
-font-family:var(--font-display);
-
-font-weight:800;
-
-font-size:.85rem;
-
+gap:14px;
 }
 
-.profile-nav-score-label{
-
-font-size:.76rem;
-
-color:var(--text-light);
-
-line-height:1.4;
-
-}
-
-.profile-nav-score-hint{
-
-font-size:.72rem;
-
-line-height:1.5;
-
-color:var(--text-muted);
-
-padding:0 8px 14px;
-
-margin-bottom:8px;
-
-border-bottom:1px solid var(--border-color);
-
-}
-
-.profile-nav-score-hint a{
-
-font-weight:700;
-
-/* Corrigé le 2026-08-23. Le commentaire d'origine justifiait
---accent-100 par un « panneau verre sombre » : ce panneau est
-clair depuis longtemps — mesuré rgba(255,255,255,.72). Sur ce
-fond-là, ce lavande très pâle tombait à 1,18:1. Le lien était
-invisible, et rien ne le signalait puisque le raisonnement écrit
-juste au-dessus paraissait solide.
-
---amber-700 est la valeur de l'échelle prévue pour du texte :
-5,8:1 sur blanc, et c'est désormais la couleur des liens de tout
-l'espace. */
-color:var(--amber-700);
-
-text-decoration:underline;
-
-}
-
-.section-nav-item{
-
+.profile-pilote-score{
 display:flex;
-
 align-items:center;
-
 gap:10px;
+flex-shrink:0;
+}
 
-padding:10px 10px;
+.profile-pilote-ring{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:52px;
+height:44px;
+padding:0 10px;
+border-radius:var(--radius-full);
+background:var(--ink-surface, #211D18);
+color:#FDF9EF;
+font-weight:800;
+font-size:1rem;
+letter-spacing:.01em;
+}
 
-border-radius:var(--radius-md);
+.profile-pilote-ring-label{
+font-size:var(--fs-caption, .76rem);
+line-height:1.2;
+color:var(--text-muted);
+text-transform:uppercase;
+letter-spacing:var(--ls-wide, .06em);
+font-weight:700;
+}
 
-color:var(--text-light);
-
+.profile-etat{
+margin:0;
+font-size:.95rem;
 font-weight:600;
+line-height:1.4;
+color:var(--text-color);
+}
 
-font-size:.86rem;
+.profile-etat[data-etat="complet"]{
+color:var(--journey-done, #2F7A46);
+}
 
-transition:var(--transition);
+.profile-pilote-liens{
+display:flex;
+gap:6px;
+overflow-x:auto;
+scrollbar-width:none;
+padding-bottom:2px;
+/* Le dernier centimètre s'estompe : c'est ce qui dit « ça continue ». */
+mask-image:linear-gradient(to right, #000 calc(100% - 32px), transparent);
+-webkit-mask-image:linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
 
-cursor:pointer;
+.profile-pilote-liens::-webkit-scrollbar{
+display:none;
+}
 
+.profile-pilote-note{
+margin:0;
+font-size:var(--fs-caption, .76rem);
+line-height:1.45;
+color:var(--text-muted);
+}
+
+.profile-pilote-note a{
+color:var(--amber-700);
+}
+
+/* Les entrées : mêmes classes qu'avant, pilotées par profile.js. */
+.section-nav-item{
+flex:0 0 auto;
+display:inline-flex;
+align-items:center;
+gap:7px;
+min-height:40px;
+padding:8px 14px;
+border-radius:var(--radius-full);
+border:1px solid var(--border-color);
+background:var(--background-light, #F7F1E3);
+color:var(--text-light);
+font-size:.84rem;
+font-weight:600;
+text-decoration:none;
+white-space:nowrap;
+transition:border-color .15s ease, background .15s ease, color .15s ease;
 }
 
 .section-nav-item:hover{
-
-background:var(--background-alt);
-
+border-color:var(--amber-600);
 color:var(--text-color);
-
 }
 
 .section-nav-item.is-active{
-
-/* Ambre plutôt que bleu : dans l'espace étudiant, l'ambre est
-désormais la couleur de ce qui est actif ou cliquable (voir la
-section 11 de css/app-shell.css). */
-background:rgba(233,163,25,.20);
-
-/* Encre et non blanc. L'ancien fond était un bleu à 22 % — assez
-sombre pour porter du blanc. Le lavis ambre, lui, est CLAIR :
-mesuré au pixel, du blanc dessus tombe à 1,17:1. C'est le piège
-d'un changement de teinte à opacité égale — la lisibilité ne suit
-pas la couleur. */
+background:var(--background-alt, #EFE6D1);
+border-color:var(--text-light);
 color:var(--text-color);
+}
 
-font-weight:700;
+.section-nav-item.is-complete{
+color:var(--journey-done, #2F7A46);
+border-color:rgba(47,122,70,.45);
+background:rgba(47,122,70,.08);
+}
 
+.section-nav-item.is-facultative span:last-child::after{
+content:" · facultatif";
+color:var(--text-muted);
+font-weight:600;
 }
 
 .section-nav-item-check{
-
-flex-shrink:0;
-
-display:flex;
-
+display:inline-flex;
 align-items:center;
-
 justify-content:center;
-
-width:20px;
-
-height:20px;
-
+width:18px;
+height:18px;
 border-radius:50%;
-
 border:1.5px solid var(--border-color);
-
+background:var(--background);
 color:transparent;
-
-font-size:.7rem;
-
-transition:var(--transition);
-
+flex-shrink:0;
 }
 
 .section-nav-item-check i,
 .section-nav-item-check svg{
-
 width:12px;
-
 height:12px;
-
 }
 
 .section-nav-item.is-complete .section-nav-item-check{
-
-background:var(--success);
-
-border-color:var(--success);
-
+background:var(--journey-done, #2F7A46);
+border-color:var(--journey-done, #2F7A46);
 color:#fff;
-
 }
-
-/* ==========================================================
-SECTIONS DU FORMULAIRE
-========================================================== */
 
 .profile-form{
 
@@ -270,17 +218,22 @@ gap:24px;
 
 .profile-section{
 
-scroll-margin-top:calc(var(--topbar-height) + 20px);
+/* La barre pilote est collante : l'ancre d'une section doit s'arrêter
+SOUS elle, sinon le titre visé passe dessous. */
+scroll-margin-top:calc(var(--topbar-height) + 108px);
 
 padding:28px 30px;
 
-border-radius:var(--radius-lg);
+border-radius:20px;
 
 background:var(--background);
 
 border:1px solid var(--border-color);
 
-box-shadow:var(--shadow-xs);
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.8),
+0 1px 2px rgba(33,29,24,.04),
+0 16px 36px -26px rgba(33,29,24,.26);
 
 }
 
@@ -347,11 +300,25 @@ color:var(--accent-color);
 
 }
 
+/* L'AIDE SOUS UN CHAMP (lot R3) — une ligne, jamais deux.
+Elle répond à « pourquoi on me demande ça » ou « que faire si je ne
+sais pas ». `.field-hint` explique une SECTION, `.field-aide` un
+CHAMP : deux portées, deux classes. */
+.field-aide{
+margin:6px 0 0;
+font-size:.82rem;
+line-height:1.45;
+color:var(--text-muted);
+}
+
 .field-grid{
 
 display:grid;
 
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+/* 300 px et non 220 : sous 220, un placeholder d'exemple (« Ex.
+Cybersécurité, Droit des affaires… ») se coupait au tiers, et trois
+colonnes tenaient sur un écran de bureau là où deux se lisent mieux. */
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
 
 gap:18px 20px;
 
@@ -1089,34 +1056,19 @@ RESPONSIVE — TABLETTE (768–1023px)
 
 @media(max-width:1023px){
 
-.profile-layout{
+/* La page est déjà sur une colonne : il n'y a plus de grille à
+défaire ici (lot R3). Le pilote, lui, se resserre. */
+.profile-pilote{
 
-grid-template-columns:1fr;
+padding:12px 14px;
 
-}
-
-.profile-nav{
-
-position:static;
-
-flex-direction:row;
-
-overflow-x:auto;
-
-gap:6px;
+gap:10px;
 
 }
 
-.profile-nav-score,
-.profile-nav-score-hint{
+.profile-pilote-note{
 
 display:none;
-
-}
-
-.section-nav-item{
-
-flex-shrink:0;
 
 }
 
@@ -1137,6 +1089,15 @@ padding:24px 18px 100px;
 .profile-section{
 
 padding:22px 18px;
+
+/* Le pilote n'a plus qu'une ligne et demie sur téléphone. */
+scroll-margin-top:calc(var(--topbar-height) + 84px);
+
+}
+
+.profile-pilote-ring-label{
+
+display:none;
 
 }
 

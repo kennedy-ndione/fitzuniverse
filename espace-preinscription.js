@@ -49,8 +49,11 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, SUGGESTIONS
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
 } from "./js/route-preinscription.js";
+// Les deux composants guidés (pastilles d'exemples, champ à suggestions)
+// sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
+import { EXEMPLES, htmlChips, htmlSuggest, brancherChampsGuides } from "./js/champs-guides.js";
 
 // ==========================================================
 // Outillage
@@ -246,80 +249,17 @@ function htmlGeste(e) {
     </div>`;
 }
 
-/** Des réponses à un clic sous un champ : un exemple choisi remplit le champ. */
-function htmlChips(cle, liste) {
-  if (!liste || !liste.length) return "";
-  return `<div class="rt-chips" data-chips-pour="${ech(cle)}">${liste.map((v) => `<button type="button" class="rt-chip">${ech(v)}</button>`).join("")}</div>`;
-}
-
 /**
- * Le champ à suggestions du site : un input, et une liste crème filtrée
- * en tapant — jamais le panneau noir du système (lot CONTRÔLES-UNIFIÉS).
+ * LES SOURCES DE SUGGESTIONS PROPRES À LA ROUTE.
+ * Les pays viennent du référentiel du site ; les établissements, du
+ * catalogue chargé après la première peinture (etat.universites) — la
+ * fonction est relue à chaque frappe, donc la liste s'enrichit d'elle-même
+ * sans rien re-peindre.
  */
-function htmlSuggest(nom, valeur, placeholder, source) {
-  return `<div class="rt-suggest" data-suggest="${ech(source)}">
-    <input type="text" name="${ech(nom)}" value="${ech(valeur)}" placeholder="${ech(placeholder)}" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list">
-    <ul class="rt-suggest-liste" hidden></ul>
-  </div>`;
-}
-
-const SOURCES_SUGGEST = {
+const SOURCES_ROUTE = {
   pays: () => COUNTRY_NAMES,
-  unis: () => etat.universites || [],
-  formation: () => SUGGESTIONS.formation
+  unis: () => etat.universites || []
 };
-
-function sansAccent(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
-
-function brancherSuggest(section) {
-  section.querySelectorAll(".rt-suggest").forEach((bloc) => {
-    const input = bloc.querySelector("input");
-    const liste = bloc.querySelector(".rt-suggest-liste");
-    const source = SOURCES_SUGGEST[bloc.getAttribute("data-suggest")] || (() => []);
-    let actif = -1;
-    function fermer() { liste.hidden = true; liste.innerHTML = ""; input.setAttribute("aria-expanded", "false"); actif = -1; }
-    function ouvrir() {
-      const q = sansAccent(input.value.trim());
-      const tout = source();
-      const trouves = (q ? tout.filter((v) => sansAccent(v).includes(q)) : tout).slice(0, 8);
-      if (!trouves.length) { fermer(); return; }
-      liste.innerHTML = trouves.map((v) => `<li role="option">${ech(v)}</li>`).join("");
-      liste.hidden = false;
-      input.setAttribute("aria-expanded", "true");
-      actif = -1;
-    }
-    input.addEventListener("input", ouvrir);
-    input.addEventListener("focus", ouvrir);
-    input.addEventListener("keydown", (ev) => {
-      const items = [...liste.querySelectorAll("li")];
-      if (!items.length) return;
-      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-        ev.preventDefault();
-        actif = ev.key === "ArrowDown" ? Math.min(actif + 1, items.length - 1) : Math.max(actif - 1, 0);
-        items.forEach((li, i) => li.classList.toggle("is-actif", i === actif));
-      } else if (ev.key === "Enter" && actif >= 0) {
-        ev.preventDefault(); input.value = items[actif].textContent; fermer();
-      } else if (ev.key === "Escape") fermer();
-    });
-    liste.addEventListener("mousedown", (ev) => {
-      const li = ev.target.closest("li");
-      if (!li) return;
-      ev.preventDefault(); input.value = li.textContent; fermer();
-    });
-    input.addEventListener("blur", () => setTimeout(fermer, 120));
-  });
-  section.querySelectorAll(".rt-chips").forEach((bloc) => {
-    const cible = section.querySelector(`[name="${bloc.getAttribute("data-chips-pour")}"]`);
-    if (!cible) return;
-    bloc.addEventListener("click", (ev) => {
-      const chip = ev.target.closest(".rt-chip");
-      if (!chip) return;
-      cible.value = chip.textContent;
-      bloc.querySelectorAll(".rt-chip").forEach((c) => c.classList.toggle("is-choisie", c === chip));
-      cible.focus();
-    });
-  });
-}
 
 // ---- Étape 1 : la situation ----
 function htmlSituation(e) {
@@ -329,6 +269,10 @@ function htmlSituation(e) {
     if (q.type === "pays") {
       return htmlSuggest(q.cle, val, "Commencez à écrire le nom du pays", "pays");
     }
+    // Une liste longue (le domaine d'études) se cherche en tapant.
+    if (q.type === "liste") {
+      return htmlSuggest(q.cle, val, q.exemple || "", q.liste);
+    }
     if (q.type === "choix") {
       const libelles = q.libelles || {};
       // Le composant de choix du site (.fitz-choice, css/base.css) : jamais
@@ -336,7 +280,7 @@ function htmlSituation(e) {
       return `<div class="fitz-choice-group" role="radiogroup" aria-label="${ech(q.libelle)}">${q.options.map((o) => `
         <label class="fitz-choice"><input type="radio" name="${ech(q.cle)}" value="${ech(o)}"${val === o ? " checked" : ""}><span class="fitz-choice-dot" aria-hidden="true"></span><span>${ech(libelles[o] || o)}</span></label>`).join("")}</div>`;
     }
-    return `<input type="text" name="${ech(q.cle)}" value="${ech(val)}" placeholder="${ech(q.exemple || "")}" autocomplete="off">${htmlChips(q.cle, q.suggestions ? SUGGESTIONS[q.suggestions] : null)}`;
+    return `<input type="text" name="${ech(q.cle)}" value="${ech(val)}" placeholder="${ech(q.exemple || "")}" autocomplete="off">${htmlChips(q.cle, q.suggestions ? EXEMPLES[q.suggestions] : null)}`;
   };
   return `
     <form class="rt-form" id="rtSituation" novalidate>
@@ -750,7 +694,7 @@ async function cocherVisa(id, fait) {
 
 function brancherEtape(e) {
   const section = document.getElementById("rtEtape");
-  brancherSuggest(section);
+  brancherChampsGuides(section, SOURCES_ROUTE);
 
   const situation = section.querySelector("#rtSituation");
   if (situation) situation.addEventListener("submit", (ev) => { ev.preventDefault(); enregistrerSituation(situation); });

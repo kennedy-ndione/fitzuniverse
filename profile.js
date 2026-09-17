@@ -9,6 +9,9 @@ import { setButtonLoading } from "./auth-ui.js";
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { monterChampTelephone, synchroniserPays, champTelephone } from "./js/phone-field.js";
 import { isoDepuisNom } from "./js/phone-international.js";
+// Le référentiel de pays du site : il sert la liste de suggestions des
+// champs « Nationalité » et « Pays de résidence » (lot R3).
+import { COUNTRY_NAMES } from "./js/countries.js";
 import { computeAge } from "./js/age-limits.js";
 // Lot ACCEPTATION, partie 3 : « Fitz a besoin de ces informations pour
 // choisir votre université » — la même règle que le remplissage
@@ -21,6 +24,10 @@ import { escapeHtml } from "./js/ai/format.js";
 // de règles de complétion recopiées sur le DOM.
 import { PALIERS, lirePalier, champsAcademiques, estSecondaire, studentStatusDuPalier, TESTS_DE_LANGUE, lireTestLangue, sectionsPour, domDeSection } from "./js/profil-par-niveau.js";
 import { bilanProfil } from "./js/profile-score.js";
+// Lot R3 (2026-09-17) : les pastilles d'exemples et le champ à
+// suggestions, partagés avec la route (js/champs-guides.js). Le HTML ne
+// porte que `data-exemples="domaine"` ; tout le reste est ici.
+import { brancherChampsGuides } from "./js/champs-guides.js";
 // Partie 4 : ne pas refaire répondre à ce que l'étudiant a déjà dit au
 // diagnostic gratuit — pré-remplir les champs vides, jamais écraser.
 import { appliquerDiagnostic, lireReponsesDiagnostic } from "./js/diagnostic-vers-profil.js";
@@ -1196,6 +1203,12 @@ synchroniserPays(event.target.value);
 });
 
 hydrateForm(profile, user);
+
+// LES EXEMPLES APRÈS L'HYDRATATION, ET APRÈS ELLE SEULEMENT : posés
+// avant, une pastille se serait allumée sur une valeur que le
+// formulaire n'avait pas encore reçue. La fonction est idempotente —
+// appliquerPalier() la rappelle quand des champs apparaissent.
+brancherChampsGuides(document, { pays: () => COUNTRY_NAMES });
 
 // Rendu instantané avec la liste de secours (ci-dessus), puis mise à
 // jour en place des chips de pays dès que le vrai catalogue est chargé —

@@ -36,6 +36,7 @@ l'étudiant changeait de police en passant du catalogue à son espace. -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/app-shell.css">
 <link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/guide.css">
 <link rel="stylesheet" href="profile.css">
 <!-- Chargé en dernier : redéfinit --font-display/--font-body au niveau
 :root, doit donc gagner sur base.css et sur les font-family
@@ -137,65 +138,44 @@ informations pour choisir vos N universités : … ». profile.js décide. -->
 
 <div class="profile-layout">
 
-<!-- Navigation collante des sections -->
-<nav class="profile-nav" id="profileNav" aria-label="Sections du profil">
+<!-- ==========================================================
+LA BARRE PILOTE (lot R3, 2026-09-17) — où j'en suis, en haut.
 
-<div class="profile-nav-score">
-<div class="profile-nav-score-ring"><span id="navScoreValue">0</span></div>
-<div class="profile-nav-score-label">sections<br>complétées</div>
+Elle remplace la COLONNE DE GAUCHE collante. Charles, ce jour-là :
+« pas de sidebar à l'ancienne, ça doit être moderne ». Elle avait un
+autre défaut, plus grave : sur téléphone, les neuf entrées se
+retrouvaient empilées AVANT la première question — un écran entier de
+navigation avant de pouvoir répondre. Ici, tout tient sur deux lignes
+qui défilent au doigt, et le formulaire commence tout de suite.
+
+Les classes et les identifiants ne changent pas (`.section-nav-item`,
+`#navScoreValue`, `#profileEtat`) : profile.js les pilote sans une
+ligne de modification — coches, sections masquées par le palier,
+pastille « facultatif », section active au défilement.
+========================================================== -->
+<nav class="profile-pilote" id="profileNav" aria-label="Sections du profil">
+
+<div class="profile-pilote-tete">
+<div class="profile-pilote-score">
+<span class="profile-pilote-ring" id="navScoreValue">0</span>
+<span class="profile-pilote-ring-label">sections<br>complétées</span>
+</div>
+<p class="profile-etat" id="profileEtat" role="status"></p>
 </div>
 
-<!-- Lot PROFIL-PAR-NIVEAU (2026-09-11) : où en est l'étudiant, en
-langage simple — « Plus que 3 informations pour que Fitz choisisse
-vos universités », puis « Profil complet ». profile.js écrit. -->
-<p class="profile-etat" id="profileEtat" role="status"></p>
+<div class="profile-pilote-liens">
+<a href="#sec-depart" class="section-nav-item" data-section="sec-depart"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Pour commencer</span></a>
+<a href="#sec-personal" class="section-nav-item" data-section="sec-personal"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Informations personnelles</span></a>
+<a href="#sec-parcours" class="section-nav-item" data-section="sec-parcours"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Parcours scolaire</span></a>
+<a href="#sec-academique" class="section-nav-item" data-section="sec-academique"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Niveau académique</span></a>
+<a href="#sec-destination" class="section-nav-item" data-section="sec-destination"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Destination</span></a>
+<a href="#sec-financier" class="section-nav-item" data-section="sec-financier"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Préférences financières</span></a>
+<a href="#sec-documents" class="section-nav-item" data-section="sec-documents"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Documents disponibles</span></a>
+<a href="#sec-experiences" class="section-nav-item" data-section="sec-experiences"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Expériences</span></a>
+<a href="#sec-objectifs" class="section-nav-item" data-section="sec-objectifs"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Objectifs</span></a>
+</div>
 
-<p class="profile-nav-score-hint">Ce score ne compte que les sections qui s'appliquent à votre niveau. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
-
-<a href="#sec-depart" class="section-nav-item" data-section="sec-depart">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Pour commencer</span>
-</a>
-
-<a href="#sec-personal" class="section-nav-item" data-section="sec-personal">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Informations personnelles</span>
-</a>
-
-<a href="#sec-parcours" class="section-nav-item" data-section="sec-parcours">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Parcours scolaire</span>
-</a>
-
-<a href="#sec-academique" class="section-nav-item" data-section="sec-academique">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Niveau académique</span>
-</a>
-
-<a href="#sec-destination" class="section-nav-item" data-section="sec-destination">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Destination</span>
-</a>
-
-<a href="#sec-financier" class="section-nav-item" data-section="sec-financier">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Préférences financières</span>
-</a>
-
-<a href="#sec-documents" class="section-nav-item" data-section="sec-documents">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Documents disponibles</span>
-</a>
-
-<a href="#sec-experiences" class="section-nav-item" data-section="sec-experiences">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Expériences</span>
-</a>
-
-<a href="#sec-objectifs" class="section-nav-item" data-section="sec-objectifs">
-<span class="section-nav-item-check"><i data-lucide="check"></i></span>
-<span>Objectifs</span>
-</a>
+<p class="profile-pilote-note">Le compteur ne retient que les sections qui s'appliquent à votre niveau. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
 
 </nav>
 
@@ -236,7 +216,7 @@ wand sont interdites sur tout le site (décision de Charles,
 
 <div class="input-group">
 <label for="nationality">Nationalité <span class="field-requis">requis</span></label>
-<div class="input-wrap"><input type="text" id="nationality"></div>
+<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="nationality" placeholder="Commencez à écrire : Sénégal, Côte d'Ivoire…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">Votre nationalité, pas votre pays de résidence : c'est elle qui ouvre ou ferme une bourse.</p>
 <small class="field-repris" data-repris="nationality" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -255,13 +235,13 @@ wand sont interdites sur tout le site (décision de Charles,
 
 <div class="input-group">
 <label for="desiredField">Domaine souhaité <span class="field-requis">requis</span></label>
-<div class="input-wrap"><input type="text" id="desiredField" placeholder="Ex. Informatique, Médecine..."></div>
+<div class="fitz-suggest" data-suggest="domaine"><div class="input-wrap"><input type="text" id="desiredField" placeholder="Ex. Informatique, Droit, Médecine…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div>
 <small class="field-repris" data-repris="desiredField" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
 <label for="specialization">Spécialisation</label>
-<div class="input-wrap"><input type="text" id="specialization"></div>
+<div class="input-wrap"><input type="text" id="specialization" placeholder="Ex. Cybersécurité, Droit des affaires…" data-exemples="specialisation"></div><p class="field-aide">Si vous ne savez pas encore, laissez vide : le domaine suffit à Fitz.</p>
 </div>
 
 </div>
@@ -319,7 +299,7 @@ pour le clavier et le lecteur d'écran, masqué à l'œil. -->
 <div class="field-grid" id="testLanguePasse" hidden style="margin-top:14px;">
 <div class="input-group">
 <label for="testLangueScore">Niveau ou score obtenu</label>
-<div class="input-wrap"><input type="text" id="testLangueScore" placeholder="Ex. B2, 6.5, 95"></div>
+<div class="input-wrap"><input type="text" id="testLangueScore" placeholder="Ex. B2, TCF 450, IELTS 6.5" data-exemples="langueTest"></div>
 </div>
 <div class="input-group">
 <label for="testLangueDate">Date de passage</label>
@@ -357,12 +337,12 @@ pour le clavier et le lecteur d'écran, masqué à l'œil. -->
 
 <div class="input-group">
 <label for="firstName">Prénom</label>
-<div class="input-wrap"><input type="text" id="firstName" autocomplete="given-name"></div>
+<div class="input-wrap"><input type="text" id="firstName" autocomplete="given-name" placeholder="Comme sur votre passeport"></div>
 </div>
 
 <div class="input-group">
 <label for="lastName">Nom</label>
-<div class="input-wrap"><input type="text" id="lastName" autocomplete="family-name"></div>
+<div class="input-wrap"><input type="text" id="lastName" autocomplete="family-name" placeholder="Comme sur votre passeport"></div>
 </div>
 
 <div class="input-group">
@@ -389,23 +369,25 @@ pour le clavier et le lecteur d'écran, masqué à l'œil. -->
 
 <div class="input-group">
 <label for="country">Pays de résidence</label>
-<div class="input-wrap"><input type="text" id="country"></div>
+<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="country" placeholder="Le pays où vous vivez aujourd'hui" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">C'est ce pays qui décide des frais, des dates et du lieu de votre entretien.</p>
 <small class="field-repris" data-repris="country" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
 <label for="city">Ville</label>
-<div class="input-wrap"><input type="text" id="city"></div>
+<div class="input-wrap"><input type="text" id="city" placeholder="Ex. Mbour, Abidjan, Douala…"></div>
 </div>
 
 <div class="input-group">
 <label for="phone">Téléphone</label>
 <div class="input-wrap"><input type="tel" id="phone"></div>
+<p class="field-aide">Le pays se choisit à gauche, le numéro s'écrit sans l'indicatif.</p>
 </div>
 
 <div class="input-group">
 <label for="whatsapp">WhatsApp</label>
 <div class="input-wrap"><input type="tel" id="whatsapp"></div>
+<p class="field-aide">C'est par là que l'équipe vous joint le plus vite. Le même numéro que ci-dessus ? Recopiez-le.</p>
 </div>
 
 <div class="input-group">
@@ -436,18 +418,18 @@ pour le clavier et le lecteur d'écran, masqué à l'œil. -->
 
 <div class="input-group" data-palier-champ="lastDegree">
 <label for="lastDegree">Dernier diplôme obtenu</label>
-<div class="input-wrap"><input type="text" id="lastDegree" placeholder="Ex. Baccalauréat, Licence..."></div>
+<div class="input-wrap"><input type="text" id="lastDegree" placeholder="Ex. Baccalauréat, Licence 3…" data-exemples="diplome"></div>
 <small class="field-repris" data-repris="lastDegree" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group">
-<label for="currentInstitution">Établissement actuel</label>
-<div class="input-wrap"><input type="text" id="currentInstitution"></div>
+<label for="currentInstitution">Votre établissement</label>
+<div class="input-wrap"><input type="text" id="currentInstitution" placeholder="Le nom de votre lycée, université ou école" data-exemples="etablissement"></div>
 </div>
 
 <div class="input-group">
 <label for="graduationYear">Année d'obtention</label>
-<div class="input-wrap"><input type="number" class="fitz-num" id="graduationYear" min="1990" max="2035"></div>
+<div class="input-wrap"><input type="number" class="fitz-num" id="graduationYear" min="1990" max="2035" placeholder="Ex. 2025"></div><p class="field-aide">L'année où vous l'avez obtenu, ou celle où vous l'obtiendrez.</p>
 <small class="field-repris" data-repris="graduationYear" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -478,7 +460,7 @@ pour le clavier et le lecteur d'écran, masqué à l'œil. -->
 
 <div class="input-group">
 <label for="bacSeries">Série / filière (si applicable à votre système)</label>
-<div class="input-wrap"><input type="text" id="bacSeries"></div>
+<div class="input-wrap"><input type="text" id="bacSeries" placeholder="Ex. S2, L1, G…" data-exemples="serieBac"></div>
 <small class="field-repris" data-repris="bacSeries" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -550,18 +532,18 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="field-grid">
 
 <div class="input-group" data-palier-champ="ranking">
-<label for="ranking">Classement éventuel</label>
-<div class="input-wrap"><input type="text" id="ranking" placeholder="Ex. 2ᵉ sur 45"></div>
+<label for="ranking">Votre rang dans la classe, si vous le connaissez</label>
+<div class="input-wrap"><input type="text" id="ranking" placeholder="Ex. 2ᵉ sur 45"></div><p class="field-aide">Si vous ne le connaissez pas, laissez vide — personne ne vous le reprochera.</p>
 </div>
 
 <div class="input-group" data-palier-champ="strongSubjects">
-<label for="strongSubjects">Matières fortes</label>
-<div class="input-wrap"><input type="text" id="strongSubjects"></div>
+<label for="strongSubjects">Vos matières les plus fortes</label>
+<div class="input-wrap"><input type="text" id="strongSubjects" placeholder="Ex. Mathématiques, Physique-Chimie" data-exemples="matieres"></div>
 </div>
 
 <div class="input-group" data-palier-champ="weakSubjects">
-<label for="weakSubjects">Matières faibles</label>
-<div class="input-wrap"><input type="text" id="weakSubjects"></div>
+<label for="weakSubjects">Les matières où vous êtes le moins à l'aise</label>
+<div class="input-wrap"><input type="text" id="weakSubjects" placeholder="Ex. Philosophie" data-exemples="matieres"></div><p class="field-aide">Le dire ne vous pénalise pas : Fitz évite d'insister dessus dans vos lettres.</p>
 </div>
 
 </div>
@@ -569,23 +551,23 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="field-grid" style="margin-top:18px;">
 
 <div class="input-group field-full" data-palier-champ="projects">
-<label for="projects">Projets réalisés</label>
-<div class="input-wrap"><textarea id="projects"></textarea></div>
+<label for="projects">Un projet dont vous êtes fier</label>
+<div class="input-wrap"><textarea id="projects" placeholder="Ex. Application de gestion de stock pour la boutique familiale, faite en PHP — 2025."></textarea></div>
 </div>
 
 <div class="input-group field-full" data-palier-champ="thesis">
-<label for="thesis">Mémoire</label>
-<div class="input-wrap"><textarea id="thesis"></textarea></div>
+<label for="thesis">Mémoire ou projet de fin d'études</label>
+<div class="input-wrap"><textarea id="thesis" placeholder="Ex. Mémoire de licence : « L'accès à l'eau potable dans la région de Thiès », note 16/20."></textarea></div>
 </div>
 
 <div class="input-group field-full" data-palier-champ="publications">
-<label for="publications">Publications scientifiques</label>
-<div class="input-wrap"><textarea id="publications"></textarea></div>
+<label for="publications">Publications, si vous en avez</label>
+<div class="input-wrap"><textarea id="publications" placeholder="Le titre, la revue et l'année. Rien à déclarer ? Laissez vide."></textarea></div>
 </div>
 
 <div class="input-group field-full" data-palier-champ="researchExperience">
-<label for="researchExperience">Expériences de recherche</label>
-<div class="input-wrap"><textarea id="researchExperience"></textarea></div>
+<label for="researchExperience">Expérience en laboratoire ou en recherche</label>
+<div class="input-wrap"><textarea id="researchExperience" placeholder="Ex. Deux mois au laboratoire de biologie de l'UCAD, sur les sols salés — été 2025."></textarea></div>
 </div>
 
 </div>
@@ -652,8 +634,8 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="field-grid">
 
 <div class="input-group">
-<label for="budget">Budget personnel</label>
-<div class="input-wrap"><input type="text" id="budget" placeholder="Ex. 2 000 000 FCFA / an"></div>
+<label for="budget">De combien disposez-vous pour vivre là-bas ?</label>
+<div class="input-wrap"><input type="text" id="budget" placeholder="Ex. 600 000 F CFA par mois, ou 900 € par mois" data-exemples="budget"></div><p class="field-aide">Ce dont vous disposez vraiment, vous, votre famille ou un garant. Un chiffre approximatif suffit.</p>
 </div>
 
 <div class="input-group field-full">
@@ -728,39 +710,39 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="field-grid">
 
 <div class="input-group field-full" data-palier-champ="internships">
-<label for="internships">Stages</label>
-<div class="input-wrap"><textarea id="internships"></textarea></div>
+<label for="internships">Vos stages</label>
+<div class="input-wrap"><textarea id="internships" placeholder="Ex. Stage d'un mois au service informatique de la SONATEL — juillet 2025."></textarea></div>
 </div>
 
 <div class="input-group field-full" data-palier-champ="workExperience">
-<label for="workExperience">Travail</label>
-<div class="input-wrap"><textarea id="workExperience"></textarea></div>
+<label for="workExperience">Un travail, même petit</label>
+<div class="input-wrap"><textarea id="workExperience" placeholder="Ex. Vendeur dans la boutique familiale, deux ans, le week-end."></textarea></div>
 <small class="field-repris" data-repris="workExperience" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="input-group field-full">
 <label for="associations">Associations</label>
-<div class="input-wrap"><textarea id="associations"></textarea></div>
+<div class="input-wrap"><textarea id="associations" placeholder="Ex. Trésorier du club informatique du lycée, 2024-2025."></textarea></div>
 </div>
 
 <div class="input-group field-full">
 <label for="volunteering">Bénévolat</label>
-<div class="input-wrap"><textarea id="volunteering"></textarea></div>
+<div class="input-wrap"><textarea id="volunteering" placeholder="Ex. Cours de soutien en mathématiques aux élèves de 3e, chaque samedi."></textarea></div>
 </div>
 
 <div class="input-group field-full">
 <label for="entrepreneurship">Entrepreneuriat</label>
-<div class="input-wrap"><textarea id="entrepreneurship"></textarea></div>
+<div class="input-wrap"><textarea id="entrepreneurship" placeholder="Ex. Petite activité de réparation de téléphones, depuis 2024."></textarea></div>
 </div>
 
 <div class="input-group">
 <label for="technicalSkills">Compétences techniques</label>
-<div class="input-wrap"><input type="text" id="technicalSkills"></div>
+<div class="input-wrap"><input type="text" id="technicalSkills" placeholder="Ex. Soudure, topographie, comptabilité, laboratoire…"></div>
 </div>
 
 <div class="input-group">
 <label for="computerSkills">Compétences informatiques</label>
-<div class="input-wrap"><input type="text" id="computerSkills"></div>
+<div class="input-wrap"><input type="text" id="computerSkills" placeholder="Ex. Word, Excel, Python, Photoshop…"></div>
 </div>
 
 </div>
@@ -786,17 +768,17 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 
 <div class="input-group field-full">
 <label for="whyLeave">Pourquoi voulez-vous partir ?</label>
-<div class="input-wrap"><textarea id="whyLeave"></textarea></div>
+<div class="input-wrap"><textarea id="whyLeave" placeholder="Ex. La filière que je veux n'existe pas chez moi, et je veux apprendre là où elle se fait le mieux."></textarea></div><p class="field-aide">Trois phrases suffisent, dans vos mots. Fitz s'en sert pour écrire vos lettres — pas pour vous juger.</p>
 </div>
 
 <div class="input-group field-full">
 <label for="careerGoals">Quels sont vos objectifs professionnels ?</label>
-<div class="input-wrap"><textarea id="careerGoals"></textarea></div>
+<div class="input-wrap"><textarea id="careerGoals" placeholder="Ex. Devenir ingénieur réseau, puis monter ma société de maintenance au Sénégal."></textarea></div>
 </div>
 
 <div class="input-group field-full">
 <label for="dreams">Quels sont vos rêves ?</label>
-<div class="input-wrap"><textarea id="dreams"></textarea></div>
+<div class="input-wrap"><textarea id="dreams" placeholder="Ex. Que mes petits frères n'aient pas à partir pour bien étudier."></textarea></div>
 </div>
 
 </div>
