@@ -39,6 +39,7 @@ import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp
 import { initShellChrome, bootstrapShell, applyFeatureLocks, isFeatureLocked } from "./js/app-shell.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { lireParcours, PAYS_PREINSCRIPTION } from "./js/parcours.js";
+import { formaterDate } from "./js/echeance.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
 import { slotIdLibre } from "./js/application-actions.js";
 import { boutonRecours } from "./js/fitz-recours.js";
@@ -62,12 +63,15 @@ function ech(v) {
   return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-
+// LA DATE VIENT DE js/echeance.js (lot R9, 2026-09-17).
+// Cette page avait sa propre `dateLongue`, sans l'ordinal : elle
+// affichait « À partir du 1 mai 2027 » à l'étape 15, quand tout le
+// reste du site écrit « 1er mai 2027 ». Une seconde copie d'une règle
+// finit toujours par en donner une seconde version — c'est la faute que
+// ce dépôt a déjà payée trois fois. `formaterDate` la tient, seule.
 function dateLongue(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
-  if (!m) return "";
-  return `${parseInt(m[3], 10)} ${MOIS[parseInt(m[2], 10) - 1]} ${m[1]}`;
+  return m ? formaterDate(`${m[1]}-${m[2]}-${m[3]}`) : "";
 }
 
 function aujourdhuiISO() {
@@ -179,11 +183,19 @@ function htmlEcheance(e) {
   if (!e.echeance) return "";
   const j = e.echeance.jours;
   const ton = j === null ? "" : j < 0 ? "is-passee" : j <= 14 ? "is-proche" : "";
-  const quand = e.echeance.debut
-    ? `À partir du <strong>${ech(dateLongue(e.echeance.iso))}</strong>`
-    : `Avant le <strong>${ech(dateLongue(e.echeance.iso))}</strong>`;
   const reste = j === null ? "" : j < 0 ? ` — dépassé de ${Math.abs(j)} jour${Math.abs(j) > 1 ? "s" : ""}` : j === 0 ? " — c'est aujourd'hui" : ` — dans ${j} jour${j > 1 ? "s" : ""}`;
-  return `<p class="rt-echeance ${ton}"><i data-lucide="calendar-clock"></i><span>${quand}${ech(reste)}${e.echeance.libelle ? ` · ${ech(e.echeance.libelle)}` : ""} · calendrier de votre pays de résidence.</span></p>`;
+  // UN JALON D'OUVERTURE PORTE DÉJÀ SA PRÉPOSITION (lot R9, 2026-09-17).
+  // Le libellé du calendrier est « Demande de visa possible à partir
+  // du » — écrit pour être suivi d'une date. On le préfixait quand même
+  // de « À partir du », et on le rejetait en fin de phrase : l'étape 15
+  // affichait « À partir du 1 mai 2027 — dans 226 jours · Demande de
+  // visa possible à partir du · calendrier… ». Deux fois la préposition,
+  // et une phrase qui finit sur « du ». Un jalon `debut` prend donc son
+  // libellé DEVANT la date ; les autres gardent « Avant le ».
+  const phrase = e.echeance.debut && e.echeance.libelle
+    ? `${ech(e.echeance.libelle)} <strong>${ech(dateLongue(e.echeance.iso))}</strong>${ech(reste)}`
+    : `${e.echeance.debut ? "À partir du" : "Avant le"} <strong>${ech(dateLongue(e.echeance.iso))}</strong>${ech(reste)}${e.echeance.libelle ? ` · ${ech(e.echeance.libelle)}` : ""}`;
+  return `<p class="rt-echeance ${ton}"><i data-lucide="calendar-clock"></i><span>${phrase} · calendrier de votre pays de résidence.</span></p>`;
 }
 
 function htmlFaits(e) {

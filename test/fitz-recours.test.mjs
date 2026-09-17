@@ -37,6 +37,7 @@ import { composerProcedure, coucheDeResidence } from "../js/procedures/index.js"
 import { PROCEDURE_FRANCE } from "../js/procedures/france.js";
 import { computeJourneySteps } from "../js/application-journey.js";
 import { prochaineAction, LIBELLE_PREREQUIS } from "../js/next-action.js";
+import { construireRoute, situationComplete, TOTAL_ETAPES } from "../js/route-preinscription.js";
 import { resolveFeatureFlags, decideVerrou, PLAN_LABELS } from "../js/plan-features.js";
 import { DELAI_REPONSE } from "../js/delai-reponse.js";
 
@@ -191,6 +192,129 @@ assert.deepEqual(echelleDeRecours({ planId: "gratuit", featureFlags: flags }), [
 assert.deepEqual(echelleDeRecours({ planId: "gratuit", hasFitzExpress: true, featureFlags: flags }).map((m) => m.id), ["signalement"]);
 // L'ordre est imposé : messagerie, conseiller, signalement.
 for (const m of echelleDeRecours({ planId: "conseiller-6", featureFlags: flags })) assert.ok(m.href && m.label && m.detail);
+});
+
+// ------------------------------------------------------------------
+// 6 bis. LA ROUTE : Fitz sait à quelle étape on est (lot R9)
+// ------------------------------------------------------------------
+
+/**
+* Le contexte tel que js/fitz-recours-contexte.js le construit quand
+* l'URL porte `?etape=<id>` sur le parcours préinscription : la MÊME
+* route que la page, par la MÊME fonction.
+*/
+function contexteRoute(id, { profile = PROFIL_ROUTE, dossier = {}, voeux = [], diagnostic = null, visaChecklist = {} } = {}) {
+const route = construireRoute({ procedure: procedure("Sénégal"), profile, diagnostic, voeux, dossier, visaChecklist, aujourdhui: AUJOURDHUI });
+const trouvee = route.etapes.find((e) => e.id === id) || null;
+const etapeRoute = trouvee ? { ...trouvee, total: route.total } : null;
+if (etapeRoute && trouvee.kind === "situation") etapeRoute.manquants = situationComplete(profile).manquants;
+return { route, etapeRoute, applications: [], profileScore: 3, planId: "gratuit", planPreinscriptionId: "dossier-france", featureFlags: flags, aujourdhui: AUJOURDHUI };
+}
+
+const PROFIL_ROUTE = { country: "Sénégal", nationality: "Sénégal", desiredDegree: "Licence", desiredField: "Psychologie", lastDegree: "Baccalauréat S2", currentInstitution: "Lycée de Dakar", situationFrancais: "Langue maternelle", budget: "600 000 F CFA" };
+const VOEU_ROUTE = { id: "pre-1", track: "preinscription", university: "Université de Lille", formation: "Licence Psychologie", niveau: "Licence 1", status: "a_preparer", motivation: { faite: false } };
+
+test("bloc=quoi_faire depuis la route répond avec L'ÉTAPE, son geste, son échéance et le texte officiel", () => {
+// CE QUI S'EST PASSÉ (lot R9) : la route pose « Bloqué ? Demandez à
+// Fitz » sous ses quinze étapes avec `?bloc=quoi_faire&etape=<id>`, et
+// Fitz ignorait `etape` : un étudiant coincé à l'étape 9 devant son
+// numéro de dossier s'entendait parler de son profil. Preuve par
+// mutation : le garde `if (c.etapeRoute)` retiré de `quoi_faire` → ce
+// test rouge, et le test anti-divergence ci-dessous reste vert (les
+// deux règles ne se marchent pas dessus).
+const d = diagnostiquer({ code: "quoi_faire", etape: "ef_soumission" }, contexteRoute("ef_soumission", { voeux: [VOEU_ROUTE] }));
+assert.equal(d.resolu, true);
+assert.equal(d.titre, `Étape 9 sur ${TOTAL_ETAPES} : Vérifier, puis soumettre`);
+// Le geste EXACT, pas « complétez cette étape ».
+assert.match(d.texte, /notez ici votre numéro de dossier/i);
+// L'échéance du pays, avec les jours qui restent.
+assert.match(d.texte, /Avant le 15 décembre 2026 — dans \d+ jours · Soumission du dossier/);
+// Le texte officiel, avec sa source et sa date — règle 2 du module.
+assert.match(d.texte, /Ce que dit le portail, mot pour mot/);
+assert.match(d.texte, /Vérifié le 8 septembre 2026/);
+assert.match(d.source, /^https:\/\/www\.senegal\.campusfrance\.org\//);
+// Et le retour vers l'étape, pas vers un hub.
+assert.equal(d.lien, "espace-preinscription.html?etape=ef_soumission");
+assert.equal(d.cta, "Ouvrir l'étape 9");
+});
+
+test("le geste qui suit est nommé pour chacun des sept types d'étape — jamais « complétez cette étape »", () => {
+// Étape 1 : les questions encore sans réponse, par leur libellé.
+const situation = diagnostiquer({ code: "quoi_faire", etape: "situation" }, contexteRoute("situation", { profile: { country: "Sénégal" } }));
+assert.match(situation.texte, /Il reste à répondre à :/);
+assert.match(situation.texte, /Quelle est votre nationalité \?/);
+
+// Étape 4 : les pièces qui restent, nommées, et la sortie « Ne me concerne pas ».
+const pieces = diagnostiquer({ code: "quoi_faire", etape: "pieces" }, contexteRoute("pieces"));
+assert.match(pieces.texte, /Il reste \d+ pièces :/);
+assert.match(pieces.texte, /Photo d'identité/);
+assert.match(pieces.texte, /Ne me concerne pas/);
+
+// Étape 3 : le vœu à poser. Étape 8 : la lettre, par établissement.
+assert.match(diagnostiquer({ code: "quoi_faire", etape: "voeux" }, contexteRoute("voeux")).texte, /Posez au moins un vœu/);
+const motiv = diagnostiquer({ code: "quoi_faire", etape: "ef_voeux" }, contexteRoute("ef_voeux", { voeux: [VOEU_ROUTE] }));
+assert.match(motiv.texte, /Université de Lille/);
+// Sans vœu, l'empêchement de la route est rendu tel quel — pas inventé.
+assert.match(diagnostiquer({ code: "quoi_faire", etape: "ef_voeux" }, contexteRoute("ef_voeux")).texte, /Posez d'abord au moins un vœu \(étape 3\)/);
+
+// Étape 12 : la réponse à noter, même un refus.
+const rep = diagnostiquer({ code: "quoi_faire", etape: "ef_reponse" }, contexteRoute("ef_reponse", { voeux: [VOEU_ROUTE] }));
+assert.match(rep.texte, /Même un refus/);
+
+// Étape 15 : la demande de visa, puis les six démarches.
+const visa = diagnostiquer({ code: "quoi_faire", etape: "ef_visa" }, contexteRoute("ef_visa"));
+assert.match(visa.texte, /Déposez votre demande de visa/);
+// UN JALON D'OUVERTURE PORTE DÉJÀ SA PRÉPOSITION : « Demande de visa
+// possible à partir du » est écrit pour être suivi d'une date. On
+// affichait « À partir du 1er mai 2027 … · Demande de visa possible à
+// partir du », deux fois la préposition et une phrase finissant sur
+// « du ». Même règle des deux côtés : Fitz ici, htmlEcheance() sur la
+// page. Preuve par mutation : le garde `ech.debut && ech.libelle`
+// retiré → rouge.
+assert.match(visa.texte, /Demande de visa possible à partir du 1er mai 2027 — dans \d+ jours\./);
+assert.ok(!/À partir du .*Demande de visa possible à partir du/.test(visa.texte), "la préposition est écrite deux fois");
+assert.match(lire("espace-preinscription.js"), /e\.echeance\.debut && e\.echeance\.libelle/, "la page ne tient plus la même règle");
+// Et la date du site, avec son ordinal : la page avait sa propre
+// fonction, sans « 1er ».
+assert.match(lire("espace-preinscription.js"), /import \{ formaterDate \} from "\.\/js\/echeance\.js"/);
+assert.ok(!/MOIS\[parseInt/.test(lire("espace-preinscription.js")), "une seconde table des mois est revenue");
+const visaCoche = contexteRoute("ef_visa", { dossier: { etapes: { ef_visa: { faite: true, preuve: "" } } }, visaChecklist: { pieces: true } });
+assert.match(diagnostiquer({ code: "quoi_faire", etape: "ef_visa" }, visaCoche).texte, /Il reste 5 démarches du départ sur 6/);
+
+// Étape 10 : le montant du pays, en clair, et jamais en dur.
+const paiement = diagnostiquer({ code: "quoi_faire", etape: "ef_paiement" }, contexteRoute("ef_paiement"));
+assert.match(paiement.texte, /85 000 F CFA à prévoir pour cette étape/);
+
+// Une étape FAITE se dit faite, avec sa date — pas un geste à refaire.
+const faite = contexteRoute("ef_compte", { dossier: { etapes: { ef_compte: { faite: true, faitLe: "2026-09-08", preuve: "" } } } });
+assert.match(diagnostiquer({ code: "quoi_faire", etape: "ef_compte" }, faite).texte, /Cette étape est déjà faite \(le 8 septembre 2026\)/);
+assert.ok(!/Le geste qui suit/.test(diagnostiquer({ code: "quoi_faire", etape: "ef_compte" }, faite).texte), "une étape faite ne propose pas un geste à refaire");
+
+// AUCUNE des quinze étapes ne rend une réponse creuse.
+for (const e of construireRoute({ procedure: procedure("Sénégal"), profile: PROFIL_ROUTE, voeux: [VOEU_ROUTE], aujourdhui: AUJOURDHUI }).etapes) {
+const d = diagnostiquer({ code: "quoi_faire", etape: e.id }, contexteRoute(e.id, { voeux: [VOEU_ROUTE] }));
+assert.equal(d.resolu, true, `${e.id} : non résolu`);
+assert.ok(d.texte.length > 120, `${e.id} : réponse trop courte (${d.texte.length})`);
+assert.equal(d.lien, `espace-preinscription.html?etape=${e.id}`, `${e.id} : mauvais retour`);
+assert.ok(!/complétez cette étape/i.test(d.texte), `${e.id} : réponse creuse`);
+}
+});
+
+test("bloc=etape depuis la route couvre AUSSI les quatre étapes que la procédure ne connaît pas", () => {
+// La procédure du portail n'a que ses onze étapes ef_* ; la route en a
+// quinze. « situation », « ressources », « voeux » et « pieces »
+// n'existent que dans la route : sans elle, `bloc=etape` répondait
+// « Je ne trouve pas cette étape ». Preuve par mutation : le garde
+// `if (c.etapeRoute)` retiré de `etape` → rouge.
+for (const id of ["situation", "ressources", "voeux", "pieces"]) {
+const d = diagnostiquer({ code: "etape", etape: id }, contexteRoute(id));
+assert.equal(d.resolu, true, `${id} : non résolu`);
+assert.ok(!/Je ne trouve pas cette étape/.test(d.texte), `${id} : introuvable`);
+}
+// Hors de la route (une candidature bourse), le comportement d'avant
+// est intact : c'est la procédure qui répond, ou personne.
+assert.match(diagnostiquer({ code: "etape", etape: "ef_paiement" }, contexte(APP_PRE)).texte, /Vous êtes bloqué à l'étape/);
+assert.equal(diagnostiquer({ code: "etape", etape: "inconnue" }, contexte(APP_PRE)).resolu, false);
 });
 
 // ------------------------------------------------------------------

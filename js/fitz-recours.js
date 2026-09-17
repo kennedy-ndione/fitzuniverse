@@ -200,6 +200,129 @@ const etapes = Array.isArray(contexte.etapes) ? qualifierEtapes(contexte.etapes)
 return etapes.find((e) => e.id === id) || null;
 }
 
+// ==========================================================
+// LA ROUTE PRÉINSCRIPTION — Fitz répond avec l'étape où l'on est
+// ==========================================================
+/**
+* LOT R9 (2026-09-17). La route pose « Bloqué ? Demandez à Fitz » sous
+* chacune de ses quinze étapes, avec `?bloc=quoi_faire&etape=<id>` :
+* c'est le seul recours de l'étudiant à chaque étape, et Fitz y arrivait
+* aveugle (voir js/fitz-recours-contexte.js pour le récit).
+*
+* Ces trois fonctions ne CALCULENT rien : l'étape de route leur arrive
+* déjà construite par `construireRoute` — la fonction même que la page
+* utilise. Elles la mettent en phrases. C'est la règle 1 du module :
+* jamais une seconde copie de la règle.
+*/
+function echeanceEnClair(ech) {
+if (!ech || !ech.iso) return "";
+const j = ech.jours;
+const reste = j === null || j === undefined ? ""
+: j < 0 ? ` — c'est dépassé depuis ${Math.abs(j)} jour${Math.abs(j) > 1 ? "s" : ""}`
+: j === 0 ? " — c'est aujourd'hui"
+: ` — dans ${j} jour${j > 1 ? "s" : ""}`;
+// Un jalon d'OUVERTURE porte déjà sa préposition dans son libellé
+// (« Demande de visa possible à partir du ») : il passe donc DEVANT la
+// date. Même règle que la page, au mot près — voir htmlEcheance() dans
+// espace-preinscription.js.
+if (ech.debut && ech.libelle) return `${ech.libelle} ${formaterDate(ech.iso)}${reste}.`;
+const quand = ech.debut ? `À partir du ${formaterDate(ech.iso)}` : `Avant le ${formaterDate(ech.iso)}`;
+return `${quand}${reste}${ech.libelle ? ` · ${ech.libelle}` : ""}.`;
+}
+
+/**
+* LE GESTE QUI SUIT, nommé. Pas « complétez cette étape » : ce qu'il
+* reste exactement à faire, tiré de l'état réel du dossier. C'est la
+* seule chose qu'un étudiant bloqué cherche.
+*/
+function gesteQuiSuit(e) {
+if (e.faite) return e.faitLe ? `C'est déjà fait (le ${formaterDate(e.faitLe)}).` : "C'est déjà fait.";
+if (e.empechement) return e.empechement;
+switch (e.kind) {
+case "situation":
+return (e.manquants || []).length
+? `Il reste à répondre à : ${e.manquants.join(" · ")}.`
+: "Répondez aux questions de l'étape, puis enregistrez.";
+case "diagnostic":
+return "Faites le diagnostic : Fitz compare ce dont vous disposez à ce qu'une année coûte, et vous dit ce qui manque, s'il manque quelque chose.";
+case "voeux":
+return "Posez au moins un vœu : l'établissement, la formation et le niveau — trois champs, Fitz s'occupe du reste.";
+case "pieces": {
+const restent = (e.pieces || []).filter((p) => !p.obtenue && !p.ecartee);
+if (!restent.length) return "Toutes les pièces sont réglées.";
+return `Il reste ${restent.length} pièce${restent.length > 1 ? "s" : ""} : ${restent.map((p) => p.nom).join(" · ")}. Une pièce qui ne vous concerne pas se met de côté avec « Ne me concerne pas » — elle compte comme réglée.`;
+}
+case "motivations": {
+const restent = (e.voeux || []).filter((v) => !(v.motivation && v.motivation.faite === true));
+if (!restent.length) return "";
+const noms = restent.map((v) => v.university).filter(Boolean);
+return `Lettre encore à recopier sur le portail pour : ${noms.length ? noms.join(" · ") : `${restent.length} vœu(x)`}.`;
+}
+case "reponses": {
+const restent = (e.voeux || []).filter((v) => !["admise", "refusee", "liste_attente"].includes(v.status));
+if (!restent.length) return "";
+const noms = restent.map((v) => v.university).filter(Boolean);
+return `Réponse encore à noter pour : ${noms.length ? noms.join(" · ") : `${restent.length} vœu(x)`}. Même un refus : c'est ce qui ouvre la suite.`;
+}
+case "visa": {
+const v = e.visa || { faites: 0, total: 0 };
+if (!e.cochee) return "Déposez votre demande de visa dès le courriel de fin de procédure, puis cochez-la ici.";
+const reste = Math.max(0, (v.total || 0) - (v.faites || 0));
+return reste ? `Il reste ${reste} démarche${reste > 1 ? "s" : ""} du départ sur ${v.total}.` : "";
+}
+default:
+if (e.preuve && e.preuve.requise && !e.preuve.valeur) return `Faites l'étape sur le portail, puis notez ici ${e.preuve.libelle} : c'est ce qui la coche.`;
+return "Faites l'étape sur le portail, puis cochez « C'est fait ».";
+}
+}
+
+/**
+* OÙ L'ON EST PAR RAPPORT À CETTE ÉTAPE. Un étudiant peut très bien
+* demander de l'aide sur l'étape 13 alors que la route en est à la 4 :
+* lui répondre « vous en êtes là » serait faux, et le laisser croire
+* qu'il a sauté des étapes.
+*/
+function cadreDeLEtape(e) {
+if (e.etat === "faite" || e.faite) return e.faitLe ? `Cette étape est déjà faite (le ${formaterDate(e.faitLe)}).` : "Cette étape est déjà faite.";
+if (e.etat === "a-venir" && e.courant && e.courant.numero) return `Cette étape vient plus loin : vous en êtes à l'étape ${e.courant.numero}, « ${e.courant.titre} ».`;
+return "Vous en êtes là.";
+}
+
+/**
+* La réponse, en blocs séparés — le chat rend le markdown (le bloc des
+* pièces le fait déjà avec `\n\n`). Un mur de texte sur un téléphone
+* est une réponse qu'on ne lit pas : le geste qui suit doit sauter aux
+* yeux, et le texte officiel rester dessous, entier et daté.
+*/
+function reponseDeLaRoute(e) {
+const blocs = [cadreDeLEtape(e)];
+if (e.enClair) blocs.push(e.enClair);
+
+const geste = e.faite || e.etat === "faite" ? "" : gesteQuiSuit(e);
+if (geste) blocs.push(`**Le geste qui suit** — ${geste}`);
+
+// Les faits du pays : l'échéance, le montant, la mention d'absence.
+const faits = [];
+const ech = echeanceEnClair(e.echeance);
+if (ech) faits.push(ech);
+const o = e.officielle || null;
+if (o && typeof o.montant === "number") faits.push(`${formatMontant(o.montant, o.devise)} à prévoir pour cette étape, dans votre pays.`);
+if (o && o.mention) faits.push(o.mention);
+if (faits.length) blocs.push(faits.join(" "));
+
+if (o && o.titre && o.consigne) blocs.push(`**Ce que dit le portail, mot pour mot** — « ${o.titre} » : ${o.consigne}`);
+
+return {
+resolu: true,
+titre: `Étape ${e.numero} sur ${e.total || 15} : ${e.titre}`,
+texte: `${blocs.join("\n\n")}${o ? sourceDatee(o.source, o.verifieLe) : ""}`,
+source: (o && o.source) || null,
+verifieLe: (o && o.verifieLe) || null,
+lien: `espace-preinscription.html?etape=${encodeURIComponent(e.id)}`,
+cta: `Ouvrir l'étape ${e.numero}`
+};
+}
+
 const DIAGNOSTICS = {
 
 // « cet outil est fermé » — nommer la formule qui l'ouvre. Calculé,
@@ -250,6 +373,10 @@ manquants: etape.bloquePar
 // « je ne sais pas quoi faire » — LA prochaine action, calculée par la
 // même fonction que le tableau de bord (test anti-divergence).
 quoi_faire(blocage, c) {
+// SUR LA ROUTE, LA PROCHAINE ACTION EST L'ÉTAPE OÙ L'ON EST — pas
+// celle du tableau de bord (lot R9). Hors de la route, rien ne change :
+// `prochaineAction` reste la source, et le test anti-divergence aussi.
+if (c.etapeRoute) return reponseDeLaRoute(c.etapeRoute);
 const action = prochaineAction({
 profileScore: c.profileScore || 0,
 applications: c.applications || [],
@@ -304,6 +431,10 @@ return { resolu: true, titre: "Les pièces de ce dossier", texte: lignes.join("\
 // « je ne comprends pas cette étape » — la consigne telle que la page la
 // rend, AVEC sa source et sa date.
 etape(blocage, c) {
+// La route d'abord : ses quinze étapes portent les quatre qui
+// n'existent pas dans la procédure du portail (situation, ressources,
+// vœux, pièces), et la procédure ne les connaîtrait pas.
+if (c.etapeRoute) return reponseDeLaRoute(c.etapeRoute);
 const etape = etapeDe(c, blocage.etape);
 const p = etape && etape.procedure;
 if (!p) return { resolu: false, texte: "Je ne trouve pas cette étape dans la procédure de ce dossier. Dites-moi ce que vous essayez de faire." };
