@@ -37,7 +37,9 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 export const PAGES_PUBLIQUES = [
 "index.html", "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html",
-"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html"
+"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html",
+// Lot LÉGAL (2026-09-17)
+"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"
 ];
 
 // Le texte VISIBLE d'une page : sans commentaires, scripts, styles, head.
@@ -130,7 +132,8 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = ["scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html",
+"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"];
 
 test("langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire", () => {
 for (const page of PAGES_SANS_PIED) {
@@ -152,8 +155,13 @@ assert.ok(/footer-photo-feature/.test(composant));
 for (const libelle of ["Légal", "Mentions légales", "Conditions de vente", "Confidentialité", "Contact"]) {
 assert.ok(composant.includes(libelle), `colonne Légal : « ${libelle} » manque`);
 }
-assert.ok(/bientot\.html\?page=/.test(composant), "les liens légaux mènent à la page « bientôt disponible »");
-assert.ok(existsSync(path.join(RACINE, "bientot.html")));
+// Lot LÉGAL (2026-09-17) : les liens légaux mènent aux vraies pages,
+// plus à la page « bientôt disponible ».
+assert.ok(!/bientot\.html/.test(composant), "un lien légal mène encore à la page « bientôt disponible »");
+for (const page of ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"]) {
+assert.ok(composant.includes(`["${page}", `), `colonne Légal : lien vers ${page} manquant`);
+assert.ok(existsSync(path.join(RACINE, page)), `${page} absente`);
+}
 assert.ok(/css\/pied-de-page\.css/.test(composant), "le composant charge sa feuille");
 assert.ok(existsSync(path.join(RACINE, "css/pied-de-page.css")));
 // Le CSS n'est plus dans homepage-sections.css (une seule source).

@@ -15,9 +15,9 @@
 * css/base.css, que toute page charge déjà.
 *
 * Colonne « Légal » : mentions légales, CGV, confidentialité, contact.
-* Ces pages attendent le NINEA et le RCCM ; en attendant les liens
-* mènent à bientot.html — mais la colonne est là, c'est elle qui se
-* voit.
+* Les quatre pages existent depuis le lot LÉGAL (2026-09-17, NINEA et
+* RCCM reçus) ; la page « bientôt disponible » n'est plus visée par aucun
+* lien du site.
 *
 * Une fois le pied de page posé, le glossaire (js/glossaire.js) explique
 * les termes techniques de la page, à leur première apparition.
@@ -57,10 +57,10 @@ const COLONNES = [
 ["login.html", "Connexion"]
 ] },
 { titre: "Légal", liens: [
-["bientot.html?page=mentions-legales", "Mentions légales"],
-["bientot.html?page=cgv", "Conditions de vente"],
-["bientot.html?page=confidentialite", "Confidentialité"],
-["bientot.html?page=contact", "Contact"]
+["mentions-legales.html", "Mentions légales"],
+["cgv.html", "Conditions de vente"],
+["confidentialite.html", "Confidentialité"],
+["contact.html", "Contact"]
 ] }
 ];
 

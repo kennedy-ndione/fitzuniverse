@@ -1,0 +1,252 @@
+/* ==========================================================
+FitzUniverse — pages légales (lot LÉGAL, 2026-09-17)
+
+Une seule feuille pour mentions-legales.html, cgv.html,
+confidentialite.html et contact.html. Elle ne style que ce qui leur
+est propre : le reste (tokens, .container, .btn, .page-brandbar,
+lockup) vient de css/base.css.
+
+Deux pièges du dépôt évités à dessein :
+- css/base.css donne padding:110px 0 et overflow:hidden à TOUT
+  <section> : les sections de ces pages remettent les deux à zéro ;
+- aucune classe n'existe seulement dans un @media (test icone-btn 3) :
+  chaque règle mobile ci-dessous précise une classe déjà posée hors
+  @media.
+========================================================== */
+
+body.legal-page{
+background:var(--background);
+color:var(--text-color);
+}
+
+.legal{
+padding:28px 0 72px;
+}
+
+.legal .container{
+max-width:760px;
+}
+
+.legal section{
+padding:0;
+overflow:visible;
+}
+
+.legal-kicker{
+font-size:var(--fs-caption);
+letter-spacing:var(--ls-wide);
+text-transform:uppercase;
+font-weight:700;
+color:var(--amber-700);
+margin:0 0 10px;
+}
+
+.legal h1{
+font-family:var(--font-display);
+font-size:var(--fs-h2);
+line-height:var(--lh-tight);
+margin:0 0 12px;
+}
+
+.legal-maj{
+font-size:var(--fs-small);
+color:var(--text-muted);
+margin:0 0 28px;
+}
+
+/* Navigation entre les quatre pages. */
+.legal .legal-nav{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin:0 0 32px;
+padding:0;
+list-style:none;
+}
+
+.legal-nav a{
+display:inline-flex;
+align-items:center;
+min-height:40px;
+padding:0 14px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-full);
+font-size:var(--fs-small);
+font-weight:600;
+color:var(--text-color);
+text-decoration:none;
+background:var(--background-soft);
+}
+
+.legal-nav a:hover{
+border-color:var(--text-light);
+}
+
+.legal-nav a[aria-current="page"]{
+background:var(--ink-surface);
+border-color:var(--ink-surface);
+color:#fff;
+}
+
+.legal-intro{
+font-size:var(--fs-lead);
+line-height:var(--lh-relaxed);
+color:var(--text-light);
+margin:0 0 32px;
+}
+
+.legal-bloc{
+margin:0 0 32px;
+}
+
+.legal h2{
+font-family:var(--font-display);
+font-size:var(--fs-h4);
+line-height:var(--lh-snug);
+margin:0 0 10px;
+}
+
+.legal h3{
+font-size:var(--fs-body);
+font-weight:700;
+margin:18px 0 6px;
+}
+
+.legal p,
+.legal li{
+line-height:var(--lh-relaxed);
+color:var(--text-color);
+}
+
+.legal p{
+margin:0 0 12px;
+}
+
+/* css/base.css retire les puces de toutes les listes : le texte légal
+les remet, sinon une énumération se lit comme une suite de phrases. */
+.legal-bloc ul,
+.legal-bloc ol{
+margin:0 0 12px;
+padding-left:1.3em;
+}
+
+.legal-bloc ul{
+list-style:disc;
+}
+
+.legal-bloc ol{
+list-style:decimal;
+}
+
+.legal li{
+margin:0 0 6px;
+}
+
+/* Liens du texte seulement : les onglets, les cartes de contact et le
+bouton gardent leurs propres couleurs. */
+.legal-bloc a{
+color:var(--amber-700);
+text-underline-offset:2px;
+}
+
+/* Fiche d'identité : libellé à gauche, valeur à droite. */
+.legal-fiche{
+display:grid;
+grid-template-columns:minmax(150px, 34%) 1fr;
+gap:8px 20px;
+margin:0 0 12px;
+padding:18px 20px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+background:var(--background-soft);
+}
+
+.legal-fiche dt{
+font-weight:600;
+color:var(--text-light);
+}
+
+.legal-fiche dd{
+margin:0;
+overflow-wrap:anywhere;
+}
+
+/* Encadré d'une règle à ne pas manquer (paiement unique, etc.). */
+.legal-note{
+margin:0 0 12px;
+padding:14px 18px;
+border-left:3px solid var(--amber-500);
+border-radius:var(--radius-sm);
+background:var(--background-alt);
+}
+
+.legal-note p:last-child{
+margin-bottom:0;
+}
+
+/* Cartes de contact. */
+.legal-contacts{
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:14px;
+margin:0 0 28px;
+}
+
+.legal-contact{
+display:block;
+padding:20px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+background:var(--background-soft);
+text-decoration:none;
+}
+
+.legal-bloc .legal-contact{
+color:var(--text-color);
+}
+
+.legal-contact:hover{
+border-color:var(--text-light);
+}
+
+.legal-contact-label{
+display:block;
+font-size:var(--fs-caption);
+letter-spacing:var(--ls-wide);
+text-transform:uppercase;
+font-weight:700;
+color:var(--text-muted);
+margin-bottom:6px;
+}
+
+.legal-contact-valeur{
+display:block;
+font-size:var(--fs-h5);
+font-weight:700;
+overflow-wrap:anywhere;
+}
+
+.legal-retour{
+margin-top:12px;
+}
+
+@media (max-width:640px){
+
+.legal{
+padding:16px 0 56px;
+}
+
+.legal-fiche{
+grid-template-columns:1fr;
+gap:2px;
+}
+
+.legal-fiche dd{
+margin-bottom:10px;
+}
+
+.legal-contacts{
+grid-template-columns:1fr;
+}
+
+}

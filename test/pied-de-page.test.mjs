@@ -33,7 +33,9 @@ export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = [
 "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html",
+// Lot LÉGAL (2026-09-17) : les quatre pages légales suivent la même règle.
+"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"
 ];
 
 const chargePied = (html) => /pied-de-page\.(js|css)/.test(visible(html));
@@ -104,5 +106,8 @@ assert.ok(!/^\.footer\{/m.test(autre) && !/^\.footer(-photo|-top|-brand|-links|-
 }
 // La colonne Légal est entière : quatre liens, jamais repliés.
 const composant = lire("js/pied-de-page.js");
-assert.equal((composant.match(/bientot\.html\?page=/g) || []).length, 4);
+// Lot LÉGAL (2026-09-17) : les quatre liens visent les vraies pages.
+const legaux = ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"];
+assert.equal(legaux.filter((p) => composant.includes(`["${p}", `)).length, 4);
+assert.ok(!/bientot\.html/.test(composant));
 });
