@@ -129,6 +129,32 @@ assert.equal(outilsOuverts(null), false);
 const liste = [proposee(), acceptee({ id: "slot-2" }), ancienne(), voeu(), proposee({ id: "slot-3", refus: 2 })];
 assert.deepEqual(candidaturesPourOutils(liste).map((a) => a.id), ["slot-2", "slot-9", "pre-1"]);
 assert.deepEqual(candidaturesPourOutils([]), []);
+
+// ET SEULEMENT LE PARCOURS OÙ L'ON EST (2026-09-17). Mesuré en ligne à
+// l'étape 9 de la route — « Vérifier, puis soumettre » un dossier
+// Études en France — le sélecteur proposait « Mastercard Foundation
+// Scholars Program » et une bourse de théologie turque. L'espace où
+// l'on se trouve EST le contexte ; la barre haute suffit à passer à
+// l'autre. Preuve par mutation : le filtre retiré → ce test rouge.
+assert.deepEqual(candidaturesPourOutils(liste, "preinscription").map((a) => a.id), ["pre-1"]);
+assert.deepEqual(candidaturesPourOutils(liste, "bourse").map((a) => a.id), ["slot-2", "slot-9"]);
+// Sans parcours, l'ancien comportement — les pages sans espace en vivent.
+assert.deepEqual(candidaturesPourOutils(liste, "").map((a) => a.id), ["slot-2", "slot-9", "pre-1"]);
+// La candidature NOMMÉE PAR L'URL reste sélectionnable, même venue de
+// l'autre parcours : sinon un lien ancien afficherait un sélecteur vide
+// en prétendant l'avoir choisie.
+assert.deepEqual(candidaturesPourOutils(liste, "preinscription", "slot-2").map((a) => a.id), ["slot-2", "pre-1"]);
+assert.deepEqual(candidaturesPourOutils(liste, "preinscription", "slot-3").map((a) => a.id), ["pre-1"], "un créneau fermé ne s'ouvre pas parce que l'URL le nomme");
+
+// LES TROIS OUTILS PASSENT LE PARCOURS ET L'IDENTIFIANT DE L'URL.
+for (const page of ["ai-letter.js", "ai-email.js", "ai-check.js"]) {
+const src = lire(page);
+assert.match(
+src,
+/candidaturesPourOutils\(trackedApplications, parcoursDOutil\(\{ espace: ctx\.espace \}\), applicationId \|\| ""\)/,
+`${page} : le sélecteur propose encore les candidatures de l'autre espace`
+);
+}
 });
 
 test("acceptation 6 — plus de mode libre pour une bourse ; le blocage nomme la porte", () => {

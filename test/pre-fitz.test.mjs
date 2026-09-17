@@ -295,6 +295,29 @@ assert.match(bloc, /href="\$\{href\}" data-real-href="\$\{href\}"/, `${rendu} : 
 }
 });
 
+test("sur la route, on traduit VERS LE FRANÇAIS — et le repli du sélecteur source ne vaut jamais la cible", () => {
+// Mesuré en ligne le 2026-09-17 : l'outil de traduction s'ouvrait sur
+// « Traduire vers : Anglais », y compris depuis l'étape 4 ou 7, dont la
+// consigne officielle dit l'inverse (« un document dans une autre
+// langue que le français doit être traduit »). Un étudiant ghanéen
+// venait faire traduire son relevé pour Études en France et repartait
+// avec de l'anglais vers de l'anglais.
+//
+// Preuve par mutation : la cible remise en dur à « en » → rouge ; les
+// deux valeurs mises à "fr" → rouge.
+const src = lire("ai-translate.js");
+assert.match(src, /targetLanguageSelect\.value = parcoursTraduction === "preinscription" \? "fr" : "en";/, "la destination ne suit plus le parcours");
+assert.match(src, /sourceLanguageSelect\.value = targetLanguageSelect\.value === "fr" \? "en" : "fr";/, "le repli du sélecteur source peut égaler la cible (« français → français »)");
+// Le parcours est connu AVANT que les défauts soient posés.
+assert.ok(
+src.indexOf("parcoursTraduction = parcoursDOutil(") < src.indexOf("initTranslateTool();"),
+"les défauts se posent avant que le parcours soit connu"
+);
+// La détection automatique reste la règle pour la SOURCE : on ne devine
+// pas la langue des documents de l'étudiant, on la lit.
+assert.match(lire("ai-translate.html"), /id="autoDetect" checked/, "la détection automatique n'est plus cochée par défaut");
+});
+
 // ------------------------------------------------------------------
 // 3. LES PROMPTS PARLENT « PRÉINSCRIPTION »
 // ------------------------------------------------------------------

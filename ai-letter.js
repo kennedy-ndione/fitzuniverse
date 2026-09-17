@@ -336,7 +336,11 @@ if (!currentText) generateBtn.querySelector("span").textContent = voeu ? "Rédig
 // Lot ACCEPTATION : le sélecteur ne propose que les candidatures
 // bourses ACCEPTÉES, plus les préinscriptions et les cartes sans
 // programId (js/fitz-choisit.js : candidaturesPourOutils).
-candidaturesPourOutils(trackedApplications)
+// ET SEULEMENT CELLES DU PARCOURS OÙ L'ON EST (2026-09-17) : vu en
+// ligne, un outil ouvert depuis la route proposait deux bourses.
+// js/fitz-choisit.js documente la règle ; l'identifiant de l'URL est
+// gardé quoi qu'il arrive, un lien ancien reste sélectionnable.
+candidaturesPourOutils(trackedApplications, parcoursDOutil({ espace: ctx.espace }), applicationId || "")
 .slice()
 .sort((a, b) => String(a.university || "").localeCompare(String(b.university || ""), "fr"))
 .forEach((app) => {

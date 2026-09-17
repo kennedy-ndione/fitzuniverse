@@ -20,6 +20,7 @@
 */
 
 import { STATUTS_DEPOSES, STATUTS_REPONSE } from "./journey-map.js";
+import { lireParcours } from "./parcours.js";
 
 // Ce que Fitz doit savoir AVANT de choisir. Le moteur tolère les
 // champs absents ; c'est la DÉCISION de remplir qui attend.
@@ -227,9 +228,28 @@ return estAcceptee(app);
 * Les candidatures qu'un outil de Fitz PROPOSE dans « Candidature
 * concernée » : les bourses acceptées, les préinscriptions, les cartes
 * sans programId.
+*
+* ET CELLES DU PARCOURS OÙ L'ON SE TROUVE, SEULEMENT (2026-09-17).
+* Mesuré en ligne : à l'étape 9 de la route — « Vérifier, puis
+* soumettre » votre dossier Études en France — le sélecteur proposait
+* « Mastercard Foundation Scholars Program » et « Bourses de théologie
+* de la Fondation Diyanet ». Deux bourses, dans un outil ouvert depuis
+* la préinscription, à un étudiant qui vérifie un dossier de
+* préinscription. C'est exactement la confusion que la refonte doit
+* supprimer : l'espace où l'on est EST le contexte, et la barre haute
+* suffit à passer à l'autre en un clic.
+*
+* `parcours` absent ⇒ aucun filtre (l'ancien comportement, encore utile
+* aux pages qui n'ont pas d'espace : le suivi de candidatures).
+* `garder` est l'identifiant d'une candidature à ne JAMAIS retirer —
+* celle que l'URL a nommée (`?applicationId=`) : un lien ancien qui
+* désigne l'autre parcours doit rester sélectionnable, sinon la page
+* afficherait un sélecteur vide en prétendant l'avoir choisie.
 */
-export function candidaturesPourOutils(applications) {
-return (applications || []).filter((a) => outilsOuverts(a));
+export function candidaturesPourOutils(applications, parcours = "", garder = "") {
+const liste = (applications || []).filter((a) => outilsOuverts(a));
+if (!parcours) return liste;
+return liste.filter((a) => lireParcours(a) === parcours || (garder && a.id === garder));
 }
 
 /**

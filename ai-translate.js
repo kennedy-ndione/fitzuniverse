@@ -86,8 +86,23 @@ targetLanguageSelect.add(new Option(lang.label, lang.code));
 
 });
 
-sourceLanguageSelect.value = "fr";
-targetLanguageSelect.value = "en";
+// SUR LA ROUTE, ON TRADUIT VERS LE FRANÇAIS (2026-09-17).
+//
+// Mesuré en ligne : l'outil s'ouvrait sur « Traduire vers : Anglais »,
+// y compris quand on y arrivait par l'étape 4 ou 7 de la route, dont la
+// consigne officielle dit l'inverse — « un document dans une autre
+// langue que le français doit être traduit ». Un étudiant ghanéen
+// venait faire traduire son relevé pour Études en France et repartait
+// avec de l'anglais vers de l'anglais.
+//
+// La détection automatique s'occupe de la langue SOURCE (case cochée,
+// sélecteur désactivé) : il n'y a donc rien à deviner sur les documents
+// de l'étudiant, seulement une destination à ne pas se tromper. La
+// valeur de repli du sélecteur source ne sert qu'à celui qui décoche la
+// détection — elle ne doit jamais égaler la cible, sinon il lit
+// « français → français ».
+targetLanguageSelect.value = parcoursTraduction === "preinscription" ? "fr" : "en";
+sourceLanguageSelect.value = targetLanguageSelect.value === "fr" ? "en" : "fr";
 sourceLanguageSelect.disabled = true;
 
 autoDetect.addEventListener("change", () => {
