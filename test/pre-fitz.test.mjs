@@ -44,7 +44,7 @@ ESPACE_OUTILS
 import * as ROUTE from "../js/route-preinscription.js";
 import { buildPrompt } from "../js/ai/prompts.js";
 import { generateMotivationLetter, generateLettreDeVoeu, computeApplicationReadiness, generateChatReply, typesEmailPour, getSuggestedQuestions, EMAIL_TYPES } from "../js/ai/simulated-responses.js";
-import { lireParcoursDeSaisie, parcoursDOutil, paysDuVoeu, degreDuVoeu } from "../js/parcours.js";
+import { lireParcoursDeSaisie, parcoursDOutil, paysDuVoeu, degreDuVoeu, PAYS_PREINSCRIPTION } from "../js/parcours.js";
 
 const require = createRequire(import.meta.url);
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -160,14 +160,35 @@ test("LA CANDIDATURE DICTE LA CIBLE : pays, formation et niveau viennent du vœu
 //
 // Preuve par mutation (2026-09-17) : `fieldProgram.value = formation`
 // remis en `fieldProgram.value || formation` → ce test rouge ; la ligne
-// `country: PAYS_DESTINATION` retirée du payload → rouge.
-assert.equal(ROUTE.PAYS_DESTINATION, "France");
+// `country: PAYS_PREINSCRIPTION` retirée du payload → rouge.
+//
+// La constante vit dans js/parcours.js (7 Ko, déjà importé par les trois
+// outils) et NON dans js/route-preinscription.js : l'importer de là
+// coûterait 75 Ko aux pages d'outils — la route, le référentiel des pays,
+// la carte du parcours, le vocabulaire — pour une chaîne de six lettres.
+assert.equal(PAYS_PREINSCRIPTION, "France");
+assert.ok(!/PAYS_DESTINATION =/.test(lire("js/route-preinscription.js")), "la constante est redéclarée dans la route");
+assert.ok(!("PAYS_DESTINATION" in ROUTE), "la route exporte encore un second nom pour la même chose");
 
 // Le vœu PORTE sa destination — sinon aucune page d'outil ne peut la
 // connaître sans importer les 300 Ko de js/procedures.
 const moteur = lire("espace-preinscription.js");
-assert.match(moteur, /country: PAYS_DESTINATION,/, "la création d'un vœu n'écrit plus sa destination");
-assert.match(moteur, /applications", v\.id\), \{ country: PAYS_DESTINATION \}/, "le rattrapage des vœux d'avant le lot a disparu");
+assert.match(moteur, /country: PAYS_PREINSCRIPTION,/, "la création d'un vœu n'écrit plus sa destination");
+assert.match(moteur, /applications", v\.id\), \{ country: PAYS_PREINSCRIPTION \}/, "le rattrapage des vœux d'avant le lot a disparu");
+
+// SANS CANDIDATURE, C'EST L'ESPACE QUI DIT LA DESTINATION. Vu en ligne
+// le 2026-09-17 : le lien de l'étape 13 vers l'outil de courriel ne
+// portait aucun vœu, et la page s'ouvrait sur « Pays visé : Chine » —
+// `preferredCountries`, une préférence de parcours BOURSES.
+for (const page of ["ai-letter.js", "ai-email.js"]) {
+const src = lire(page);
+assert.match(src, /if \(parcoursDOutil\(\{ espace: ctx\.espace \}\) === "preinscription"\) fieldCountry\.value = PAYS_PREINSCRIPTION;/, `${page} : l'espace ne dit pas la destination`);
+// L'ORDRE COMPTE : le vœu repasse après et gagne.
+assert.ok(
+src.indexOf("fieldCountry.value = PAYS_PREINSCRIPTION") < src.indexOf("if (application) applyApplicationContext(application);"),
+`${page} : le pays de l'espace écraserait celui du vœu`
+);
+}
 
 // paysDuVoeu ne DEVINE jamais : pas de pays écrit, pas de pays rendu.
 assert.equal(paysDuVoeu({ country: "France" }), "France");
@@ -242,6 +263,36 @@ lettre.indexOf("let currentText") < lettre.indexOf("if (application) applyApplic
 );
 // Une bourse sans nom n'écrit pas « Candidature à la bourse undefined ».
 assert.match(lettre, /=== "bourse" && app\.scholarship\) fieldMotivations\.value = /, "ai-letter : le nom de la bourse n'est plus vérifié avant d'être écrit");
+});
+
+test("un outil ouvert depuis une étape qui concerne un vœu porte ce vœu — et ne le devine jamais", () => {
+// L'étape 8 le fait depuis R1 (une lettre par vœu). L'étape 13 — la
+// confirmation du choix définitif — ouvrait `ai-email.html` NU : un
+// formulaire sans destinataire, à comprendre et remplir au sélecteur.
+// Mesuré en ligne le 2026-09-17.
+//
+// La règle interdit de deviner : l'unique vœu admis, à défaut l'unique
+// vœu du dossier ; plusieurs admissions ⇒ rien dans l'URL, l'étudiant
+// choisit. Preuve par mutation : `admis.length === 1` remplacé par
+// `admis.length >= 1` → rouge.
+const moteur = lire("espace-preinscription.js");
+assert.match(moteur, /function voeuDeLOutil\(e\) \{/, "le moteur ne sait plus quel vœu une étape concerne");
+const corps = moteur.slice(moteur.indexOf("function voeuDeLOutil"), moteur.indexOf("function hrefOutil"));
+assert.match(corps, /e\.id !== "ef_confirmation"/, "l'étape visée n'est plus nommée");
+assert.match(corps, /admis\.length === 1/, "une seule admission, sinon rien — un « >= 1 » choisirait à la place de l'étudiant");
+assert.match(corps, /!admis\.length && etat\.voeux\.length === 1/, "le repli sur l'unique vœu du dossier a disparu");
+assert.match(moteur, /return v \? `\$\{o\.href\}\?applicationId=\$\{encodeURIComponent\(v\.id\)\}` : o\.href;/, "l'identifiant du vœu n'est plus passé (ou n'est plus encodé)");
+
+// Les DEUX rendus d'outil passent par là : le principal et les autres.
+for (const rendu of ["htmlOutils", "htmlOutilPrincipal"]) {
+const debut = moteur.indexOf(`function ${rendu}(e)`);
+const bloc = moteur.slice(debut, debut + 700);
+assert.match(bloc, /hrefOutil\(e, o\)/, `${rendu} garde un href figé`);
+// Le verrou de formule lit `data-real-href` : les deux attributs
+// doivent porter la même adresse, sinon un outil déverrouillé
+// retomberait sur le lien nu.
+assert.match(bloc, /href="\$\{href\}" data-real-href="\$\{href\}"/, `${rendu} : les deux attributs divergent`);
+}
 });
 
 // ------------------------------------------------------------------

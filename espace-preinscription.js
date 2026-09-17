@@ -38,7 +38,7 @@ import { db } from "./firebase-config.js";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell, applyFeatureLocks, isFeatureLocked } from "./js/app-shell.js";
 import { trouverProcedure } from "./js/procedures/index.js";
-import { lireParcours } from "./js/parcours.js";
+import { lireParcours, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
 import { slotIdLibre } from "./js/application-actions.js";
 import { boutonRecours } from "./js/fitz-recours.js";
@@ -49,7 +49,7 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PAYS_DESTINATION, PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
 } from "./js/route-preinscription.js";
 // Les deux composants guidés (pastilles d'exemples, champ à suggestions)
 // sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
@@ -209,17 +209,51 @@ function htmlOfficiel(e) {
     </details>`;
 }
 
+/**
+ * UN OUTIL OUVERT DEPUIS UNE ÉTAPE QUI CONCERNE UN VŒU DOIT PORTER CE
+ * VŒU (2026-09-17).
+ *
+ * L'étape 8 le fait depuis le lot R1 : chaque vœu a son « Écrire avec
+ * Fitz » vers `ai-letter.html?applicationId=pre-N`. L'étape 13 — la
+ * confirmation du choix définitif — ne le faisait pas : son lien
+ * « Écrire à l'établissement » ouvrait `ai-email.html` nu. L'étudiant
+ * arrivait donc sur un formulaire sans destinataire, qu'il devait
+ * comprendre et remplir au sélecteur. Mesuré en ligne le 2026-09-17.
+ *
+ * On ne DEVINE jamais le vœu : l'étape 13 parle de celui qu'on accepte,
+ * donc l'unique admis ; à défaut d'admission déclarée, l'unique vœu du
+ * dossier, qui ne laisse aucune ambiguïté. Plusieurs admissions ⇒ rien
+ * dans l'URL, c'est à l'étudiant de choisir, et le sélecteur de la page
+ * est fait pour ça.
+ */
+function voeuDeLOutil(e) {
+  if (e.id !== "ef_confirmation") return null;
+  const admis = etat.voeux.filter((v) => v.status === "admise");
+  if (admis.length === 1) return admis[0];
+  if (!admis.length && etat.voeux.length === 1) return etat.voeux[0];
+  return null;
+}
+
+function hrefOutil(e, o) {
+  const v = voeuDeLOutil(e);
+  return v ? `${o.href}?applicationId=${encodeURIComponent(v.id)}` : o.href;
+}
+
 function htmlOutils(e) {
   const outils = e.outils.filter((o) => !o.principal);
   if (!outils.length) return "";
-  return `<div class="rt-outils">${outils.map((o) => `
-    <span data-feature="${ech(o.feature)}"><a href="${ech(o.href)}" data-real-href="${ech(o.href)}" class="rt-outil"><i data-lucide="${ech(o.icone)}"></i><span>${ech(o.libelle)}</span></a></span>`).join("")}</div>`;
+  return `<div class="rt-outils">${outils.map((o) => {
+    const href = ech(hrefOutil(e, o));
+    return `
+    <span data-feature="${ech(o.feature)}"><a href="${href}" data-real-href="${href}" class="rt-outil"><i data-lucide="${ech(o.icone)}"></i><span>${ech(o.libelle)}</span></a></span>`;
+  }).join("")}</div>`;
 }
 
 function htmlOutilPrincipal(e) {
   const o = e.outils.find((x) => x.principal);
   if (!o) return "";
-  return `<span data-feature="${ech(o.feature)}"><a href="${ech(o.href)}" data-real-href="${ech(o.href)}" class="rt-btn rt-btn--fitz"><i data-lucide="${ech(o.icone)}"></i><span>${ech(o.libelle)}</span></a></span>`;
+  const href = ech(hrefOutil(e, o));
+  return `<span data-feature="${ech(o.feature)}"><a href="${href}" data-real-href="${href}" class="rt-btn rt-btn--fitz"><i data-lucide="${ech(o.icone)}"></i><span>${ech(o.libelle)}</span></a></span>`;
 }
 
 function htmlPortail(e) {
@@ -557,7 +591,7 @@ async function ajouterVoeu(form) {
     // LE VŒU PORTE SA DESTINATION (lot R4, 2026-09-17). Sans elle, les
     // trois outils préremplissaient « Pays visé » avec le premier pays
     // souhaité du profil : un vœu à Lille partait pour la Chine.
-    country: PAYS_DESTINATION,
+    country: PAYS_PREINSCRIPTION,
     portalUrl: PORTAIL_ETUDES_EN_FRANCE,
     status: "a_preparer",
     track: "preinscription",
@@ -770,8 +804,8 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
   for (const v of etat.voeux) {
     if (String(v.country || "").trim()) continue;
     try {
-      await updateDoc(doc(db, "users", session.user.uid, "applications", v.id), { country: PAYS_DESTINATION });
-      v.country = PAYS_DESTINATION;
+      await updateDoc(doc(db, "users", session.user.uid, "applications", v.id), { country: PAYS_PREINSCRIPTION });
+      v.country = PAYS_PREINSCRIPTION;
     } catch (error) {
       console.warn("Destination non rattrapée sur un vœu :", v.id, error);
     }

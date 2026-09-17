@@ -17,7 +17,7 @@ import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
 // Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
 // n'a pas de sens en préinscription) et voyage avec la demande.
-import { parcoursDOutil, titreDuVoeu, paysDuVoeu } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu, paysDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : l'e-mail exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -200,6 +200,14 @@ fieldFullName.value = [profile.firstName, profile.lastName].filter(Boolean).join
 fieldNationality.value = profile.nationality || profile.country || profile.originCountry || "";
 fieldDegree.value = profile.lastDegree || profile.currentDegree || "";
 fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.preferredCountries[0]) || "";
+// SANS CANDIDATURE, C'EST L'ESPACE QUI DIT LA DESTINATION (2026-09-17).
+// `preferredCountries` est une préférence de parcours BOURSES : elle n'a
+// rien à dire sur une préinscription, où la destination est celle de la
+// route. Vu en ligne à l'étape 13, dont le lien vers cet outil ne porte
+// aucun vœu : la page s'ouvrait sur « Pays visé : Chine ».
+// L'ordre compte — le vœu, quand il y en a un, repasse après et gagne
+// (`applyApplicationContext` → `paysDuVoeu`).
+if (parcoursDOutil({ espace: ctx.espace }) === "preinscription") fieldCountry.value = PAYS_PREINSCRIPTION;
 
 // La cible (université, programme/bourse, pays) vient de la
 // candidature sélectionnée — c'est elle qui sait à qui l'on écrit.

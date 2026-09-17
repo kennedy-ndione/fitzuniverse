@@ -24,7 +24,7 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js
 // Lot PRÉ-FITZ : le parcours décide de la FORME de la lettre — une lettre
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
-import { parcoursDOutil, titreDuVoeu, paysDuVoeu, degreDuVoeu } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu, paysDuVoeu, degreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -215,6 +215,14 @@ const contextDetails = document.getElementById("contextDetails");
 const contextAdjustBtn = document.getElementById("contextAdjustBtn");
 
 fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.preferredCountries[0]) || "";
+// SANS CANDIDATURE, C'EST L'ESPACE QUI DIT LA DESTINATION (2026-09-17).
+// `preferredCountries` est une préférence de parcours BOURSES : elle n'a
+// rien à dire sur une préinscription, où la destination est celle de la
+// route. Vu en ligne à l'étape 13, dont le lien vers cet outil ne porte
+// aucun vœu : la page s'ouvrait sur « Pays visé : Chine ».
+// L'ordre compte — le vœu, quand il y en a un, repasse après et gagne
+// (`applyApplicationContext` → `paysDuVoeu`).
+if (parcoursDOutil({ espace: ctx.espace }) === "preinscription") fieldCountry.value = PAYS_PREINSCRIPTION;
 fieldProgram.value = profile.desiredField || "";
 if (profile.desiredDegree) fieldLevel.value = profile.desiredDegree;
 fieldExperiences.value = describedExperiences(profile);

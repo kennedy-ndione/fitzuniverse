@@ -138,6 +138,29 @@ return String(app.country || "").trim();
 }
 
 /**
+* LE PAYS DU PARCOURS PRÉINSCRIPTION — « France », aujourd'hui.
+*
+* Il vit ICI, dans le module qui sait déjà distinguer les deux parcours,
+* et non dans js/route-preinscription.js : les trois pages d'outils en
+* ont besoin, et importer la route leur coûterait 75 Ko (la route, le
+* référentiel des pays, la carte du parcours, le vocabulaire) pour une
+* chaîne de six lettres, sur des pages qu'un étudiant ouvre depuis un
+* téléphone en Afrique de l'Ouest.
+*
+* À QUOI IL SERT : quand AUCUNE candidature n'est sélectionnée, un outil
+* du parcours préinscription doit quand même savoir où l'on va. Sans
+* cela, « Pays visé » gardait le premier pays souhaité du profil — vu en
+* ligne le 2026-09-17 sur l'étape 13, dont le lien vers l'outil de
+* courriel ne porte aucun vœu : la page s'ouvrait sur « Chine ».
+*
+* CE N'EST PAS UNE VÉRITÉ ÉTERNELLE, c'est l'état du produit : le jour
+* où une deuxième destination ouvre à la préinscription, cette constante
+* disparaît au profit du `country` que chaque vœu porte déjà — et qui
+* gagne DÉJÀ contre elle (voir `paysDuVoeu`, appliqué après).
+*/
+export const PAYS_PREINSCRIPTION = "France";
+
+/**
 * Le DIPLÔME d'un niveau d'entrée : « Licence 2 » se prépare en licence,
 * « Master 1 » en master. Les sélecteurs des outils n'offrent que ces
 * trois valeurs (Licence, Master, Doctorat) — BUT et Architecture se
