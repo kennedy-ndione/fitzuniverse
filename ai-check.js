@@ -16,7 +16,7 @@ import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OU
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
-import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la vérification exige, en bourses, une
 // candidature ACCEPTÉE — elle ne tourne plus « sans candidature ».
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -410,18 +410,68 @@ content = undefined;
 return {
 name: entry.name,
 size: (entry.size / 1024 / 1024).toFixed(2),
+// LE POIDS EN OCTETS, BRUT (lot R11, 2026-09-17). `size` ci-dessus est
+// une CHAÎNE en mégaoctets, arrondie à deux décimales : lisible pour
+// une phrase, inutilisable pour un contrôle. Le plafond du portail
+// s'exprime en kilo-octets (500 Ko, 50 Ko pour la photo) et se joue à
+// quelques octets près — js/ai/controle-depot.js ne lit donc que ce
+// champ-ci, et refuse de conclure quand il manque.
+octets: entry.size,
 type: entry.type || undefined,
 content
 };
 
 }));
 
+// LES PIÈCES DE LA ROUTE, CHARGÉES À LA DEMANDE (lot R11, 2026-09-17).
+//
+// Le contrôle avant dépôt d'une préinscription se juge sur des faits
+// que seule la procédure du pays porte : le plafond de poids de chaque
+// pièce, la liste des pièces, celles qui demandent une traduction. Les
+// modules qui les connaissent pèsent 75 Ko à eux deux — on ne les
+// impose donc pas aux comptes du parcours bourses, qui n'en ont aucun
+// usage. Même patron que js/fitz-recours-contexte.js pour les fiches
+// de documents.
+//
+// Un échec de chargement ne bloque RIEN : le contrôle se fait alors
+// sans la liste des pièces, et dit ce qu'il a pu vérifier.
+const parcoursCheck = parcoursDOutil({ espace: ctx.espace, application });
+let piecesRoute = [];
+let traductionRoute = null;
+
+if (parcoursCheck === "preinscription") {
+try {
+const [route, procedures] = await Promise.all([
+import("./js/route-preinscription.js"),
+import("./js/procedures/index.js")
+]);
+const profil = ctx.profile || {};
+const procedure = procedures.trouverProcedure({
+paysDestination: PAYS_PREINSCRIPTION,
+portailUrl: route.PORTAIL_ETUDES_EN_FRANCE,
+paysResidence: profil.country || profil.originCountry || ""
+});
+const dossier = (ctx.userData && ctx.userData.dossierFrance) || {};
+const cochees = (dossier.pieces && typeof dossier.pieces === "object") ? dossier.pieces : {};
+piecesRoute = route.piecesDuDossier(procedure).map((p) => ({
+...p,
+obtenue: cochees[p.slug] === true,
+ecartee: cochees[p.slug] === "non-concerne"
+}));
+traductionRoute = route.etatTraduction(piecesRoute, dossier);
+} catch (error) {
+console.warn("Contrôle sans la liste des pièces :", error);
+piecesRoute = [];
+traductionRoute = null;
+}
+}
+
 try {
 
 // `application` est ignorée sans risque par l'analyse simulée
 // actuelle ; le jour où l'analyse réelle sera branchée, elle saura
 // déjà POUR QUELLE candidature le dossier est vérifié.
-const { data } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursDOutil({ espace: ctx.espace, application }), track: application ? application.track : undefined } });
+const { data } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursCheck, pieces: piecesRoute, traduction: traductionRoute, track: application ? application.track : undefined } });
 
 scoreRing.style.setProperty("--ai-score", data.overallScore);
 scoreValue.textContent = data.overallScore;

@@ -18,6 +18,7 @@
 */
 
 import { PROFILE_READY_THRESHOLD } from "../profile-score.js";
+import { controleDepot } from "./controle-depot.js";
 
 // ==========================================================
 // Outils internes
@@ -334,6 +335,11 @@ export function estRTL(code) {
 return LANGUES_RTL.includes(String(code || "").toLowerCase());
 }
 
+// Le contrôle avant dépôt du parcours préinscription — importé en haut
+// de ce module pour que la tâche « check » n'ait aucun chargement à
+// attendre : le fichier est pur et pèse moins de huit kilo-octets.
+// (Voir computeApplicationReport plus bas.)
+
 // Lexique restreint (phrases académiques les plus fréquentes dans un
 // dossier de candidature). Traduction "assistée" par substitution :
 // honnête sur ses limites, mais réellement utile sur le vocabulaire
@@ -531,7 +537,33 @@ note: base >= 80
 
 }
 
-export function computeApplicationReport({ files = [], profile = {} }) {
+/**
+* LA VÉRIFICATION AVANT DÉPÔT.
+*
+* PARCOURS PRÉINSCRIPTION : elle passe par js/ai/controle-depot.js, qui
+* ne juge QUE des faits vérifiables — le poids de chaque fichier contre
+* le plafond publié par la procédure du pays, les pièces réglées, la
+* langue des pièces. Ce module-là documente en long le défaut qui a
+* rendu ce détour nécessaire (un score calculé sur le HASH DU NOM DE
+* FICHIER, qui déclarait « conforme aux attentes » un relevé de 3 Mo
+* six fois au-dessus du plafond).
+*
+* 🔴 DETTE CONNUE, PARCOURS BOURSES (2026-09-17) : la branche ci-dessous
+* garde ce défaut. `analyzeDocument` y calcule encore un score depuis le
+* hash du nom, et trois catégories sur cinq — grammaire,
+* professionnalisme, cohérence — sortent du même hash alors que
+* personne ne lit le contenu des documents en mode simulé. Ce n'est PAS
+* une omission : la refonte de l'espace bourse suit immédiatement, et
+* corriger cette branche à l'aveugle, sans sa page sous les yeux, est la
+* façon connue de casser deux choses au lieu d'en réparer une. À
+* traiter AU PREMIER LOT de l'espace bourse, avec le même principe :
+* aucune note sur ce qui n'a pas été lu.
+*/
+export function computeApplicationReport({ files = [], profile = {}, parcours = "", pieces = [], traduction = null } = {}) {
+
+if (parcours === "preinscription") {
+return controleDepot({ fichiers: files, pieces, traduction });
+}
 
 const analyzed = files.map(analyzeDocument);
 
