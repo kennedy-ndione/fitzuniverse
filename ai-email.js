@@ -342,11 +342,13 @@ contextAdjustBtn.textContent = "Ajuster";
 // Toute retouche manuelle se reflète immédiatement dans les pastilles.
 CHIP_DEFS.forEach(({ input }) => input.addEventListener("input", renderContextChips));
 
-if (application) {
-fieldUniversity.value = application.university || "";
-if (titreDuVoeu(application)) fieldProgram.value = fieldProgram.value || titreDuVoeu(application);
-verrouillerUniversite(application);
-}
+// UN SEUL ENDROIT APPLIQUE LE CONTEXTE (lot R5, 2026-09-17) — même
+// défaut que dans ai-letter.js, qui le documente en long : un bloc écrit
+// à la main ici, incomplet, sur le chemin même que la route emprunte
+// (`?applicationId=`). Il posait l'université et laissait « Pays visé »
+// au premier pays souhaité du profil. Rien à corriger : il n'y a plus
+// qu'une fonction, et elle sert les deux chemins.
+if (application) applyApplicationContext(application);
 
 renderContextChips();
 

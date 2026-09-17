@@ -252,7 +252,7 @@ if (formation) {
 fieldProgram.value = formation;
 // « Candidature à la bourse X » n'a de sens que pour une bourse : sur
 // une préinscription, c'est la formation, et Fitz ne parle pas de bourse.
-if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse") fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
+if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse" && app.scholarship) fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;
 }
 }
 
@@ -421,18 +421,6 @@ input.addEventListener("input", renderContextChips);
 input.addEventListener("change", renderContextChips);
 });
 
-if (application) {
-fieldUniversity.value = application.university || "";
-verrouillerUniversite(application);
-// Le MÊME garde que dans applyApplicationContext (lot R2, 2026-09-17) :
-// il manquait ici. Un vœu de préinscription arrivait donc avec
-// « Candidature à la bourse <formation>. » déjà écrit dans ses
-// motivations — sur un parcours où il n'y a aucune bourse.
-if (parcoursDOutil({ application }) === "bourse" && application.scholarship) {
-fieldMotivations.value = fieldMotivations.value || `Candidature à la bourse ${application.scholarship}.`;
-}
-}
-
 renderContextChips();
 
 let selectedStyle = "personnalise";
@@ -440,7 +428,30 @@ let currentText = "";
 let isEditing = false;
 let activeController = null;
 
-appliquerMode();
+// UN SEUL ENDROIT APPLIQUE LE CONTEXTE (lot R5, 2026-09-17).
+//
+// CE QUI S'EST PASSÉ : il y en avait DEUX. `applyApplicationContext()`
+// pour le changement de sélecteur, et un bloc écrit à la main ici pour
+// l'arrivée par `?applicationId=` — qui ne posait que l'université. Le
+// chemin du chargement est pourtant CELUI QUE LA ROUTE EMPRUNTE : depuis
+// l'étape 8, « Écrire avec Fitz » ouvre
+// ai-letter.html?applicationId=pre-N. Mesuré en ligne le 2026-09-17,
+// après le lot R4 : le correctif « la candidature dicte la cible » était
+// déployé et la page affichait toujours « Pays visé : Chine » pour un vœu
+// à Lille — parce qu'il vivait dans la fonction que ce chemin n'appelle
+// pas. Le même oubli avait produit le défaut du lot R2 (le garde de
+// parcours manquant à cet endroit précis) : deux fois le même piège, au
+// même endroit. On supprime donc le second chemin au lieu de le corriger
+// une troisième fois.
+//
+// POURQUOI ICI, et pas trente lignes plus haut où vivait le bloc :
+// `applyApplicationContext()` termine par `appliquerMode()`, qui lit
+// `currentText` — déclaré en `let` juste au-dessus. Appelée avant cette
+// déclaration, elle lèverait une ReferenceError de zone morte et la page
+// entière ne s'afficherait plus. L'appel prend donc la place de
+// `appliquerMode()`, qui n'a jamais été qu'une partie de ce travail.
+if (application) applyApplicationContext(application);
+else appliquerMode();
 
 Object.entries(LETTER_STYLES).forEach(([key, meta]) => {
 

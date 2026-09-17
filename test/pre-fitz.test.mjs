@@ -196,6 +196,54 @@ assert.match(lettre, /fieldProgram\.value = formation;/, "ai-letter garde le dom
 assert.match(lettre, /const degre = degreDuVoeu\(app\);\nif \(degre\) fieldLevel\.value = degre;/, "ai-letter garde le diplôme du profil contre le niveau du vœu");
 });
 
+test("UN SEUL ENDROIT APPLIQUE LE CONTEXTE d'une candidature — le chargement et le sélecteur passent par la même fonction", () => {
+// CE QUI S'EST PASSÉ, deux fois au même endroit. `ai-letter.js` et
+// `ai-email.js` avaient DEUX chemins : `applyApplicationContext()` pour
+// le changement de sélecteur, et un bloc écrit à la main pour l'arrivée
+// par `?applicationId=` — le chemin que LA ROUTE EMPRUNTE (« Écrire avec
+// Fitz » à l'étape 8). Ce bloc ne posait que l'université.
+//   - lot R2 : le garde « Candidature à la bourse X » manquait dans ce
+//     bloc ; un vœu de préinscription l'affichait donc quand même ;
+//   - lot R4 : le correctif « la candidature dicte la cible » a été
+//     déployé dans la fonction, et la page a continué d'annoncer
+//     « Pays visé : Chine » pour un vœu à Lille (mesuré en ligne le
+//     2026-09-17, après déploiement).
+// Le second chemin est supprimé, pas corrigé une troisième fois.
+//
+// Preuves par mutation (2026-09-17) : l'appel du chargement retiré →
+// rouge ; `fieldUniversity.value = application.university` réintroduit
+// hors de la fonction → rouge ; l'appel remonté au-dessus de
+// `let currentText` → rouge (c'est une ReferenceError de zone morte en
+// production, invisible pour un test qui ne charge pas la page).
+for (const page of ["ai-letter.js", "ai-email.js"]) {
+const src = lire(page);
+
+// La fonction existe, et elle est le SEUL endroit qui pose la cible.
+assert.match(src, /function applyApplicationContext\(app\) \{/, page);
+const poses = [...src.matchAll(/fieldUniversity\.value = /g)].length;
+assert.equal(poses, 1, `${page} : ${poses} endroits posent l'université destinataire`);
+
+// Elle est appelée DEUX fois : le sélecteur, et la candidature de l'URL.
+const appels = [...src.matchAll(/^applyApplicationContext\(app\);$|^if \(application\) applyApplicationContext\(application\);$/gm)].length;
+assert.equal(appels, 2, `${page} : ${appels} appels au lieu de deux (sélecteur + chargement)`);
+assert.match(src, /^if \(application\) applyApplicationContext\(application\);$/m, `${page} : l'arrivée par ?applicationId= n'applique pas le contexte`);
+
+// Et le verrou d'université ne se pose plus à la main à côté.
+assert.ok(!/verrouillerUniversite\(application\)/.test(src), `${page} : un second chemin pose encore le verrou`);
+}
+
+// LE PIÈGE DE ZONE MORTE, pinné parce qu'il ne casse qu'en production.
+// applyApplicationContext() de ai-letter.js finit par appliquerMode(),
+// qui lit `currentText`. L'appel doit donc venir APRÈS sa déclaration.
+const lettre = lire("ai-letter.js");
+assert.ok(
+lettre.indexOf("let currentText") < lettre.indexOf("if (application) applyApplicationContext(application);"),
+"ai-letter : l'appel passe avant `let currentText` — appliquerMode() lèverait une ReferenceError et la page entière resterait blanche"
+);
+// Une bourse sans nom n'écrit pas « Candidature à la bourse undefined ».
+assert.match(lettre, /=== "bourse" && app\.scholarship\) fieldMotivations\.value = /, "ai-letter : le nom de la bourse n'est plus vérifié avant d'être écrit");
+});
+
 // ------------------------------------------------------------------
 // 3. LES PROMPTS PARLENT « PRÉINSCRIPTION »
 // ------------------------------------------------------------------
