@@ -255,4 +255,25 @@ test("route 10 — la page : une seule étape à l'écran, pas de rail ni de rad
   for (const m of dansMedia.matchAll(/\.(rt-[a-z-]+)/g)) {
     assert.ok(horsMedia.includes(`.${m[1]}`), `.${m[1]} n'existe que dans un @media`);
   }
+
+  // DEUX CORRECTIONS MESURÉES À L'ÉCRAN LE 2026-09-17, à garder parce
+  // qu'un chiffre se « range » vite sans qu'on voie ce qu'il tenait.
+  //
+  // 1. La croix d'un vœu. À 375 px la carte offre 280 px à l'intérieur
+  //    et la rangée en demandait 292 (28 + 14 + 200 + 14 + 36) : la
+  //    croix passait à la ligne, seule en bas à gauche. La base du
+  //    texte doit rester assez petite pour que la rangée tienne.
+  const base = Number((css.match(/\.rt-voeu-texte\{[^}]*flex:1 1 (\d+)px/) || [])[1]);
+  assert.ok(base > 0, "la base du texte d'un vœu n'est plus déclarée en pixels");
+  assert.ok(28 + 14 + base + 14 + 36 <= 280, `base de ${base}px : la croix repasse à la ligne sur un écran de 375 px`);
+
+  // 2. « Ne me concerne pas » est posé SOUS sa carte : il doit être
+  //    plus près d'elle que de la pièce suivante, sinon l'œil le lit
+  //    comme le titre de la suivante (vu à l'écran, corrigé le même
+  //    jour). Proximité : marge haute du bouton < écart entre pièces.
+  const ecart = Number((css.match(/\.rt-pieces\{[^}]*gap:(\d+)px/) || [])[1]);
+  const colle = Number((css.match(/\.rt-piece-ecarter\{[^}]*margin:(\d+)px/) || [])[1]);
+  assert.ok(ecart > 0 && colle >= 0, "l'écart entre pièces ou la marge du bouton n'est plus en pixels");
+  assert.ok(colle * 2 < ecart, `le bouton (marge ${colle}px) est aussi proche de la pièce suivante (écart ${ecart}px) que de la sienne`);
+  assert.match(css, /\.rt-piece\{[^}]*align-items:flex-end/, "le bouton doit être attaché au bord droit de sa carte");
 });

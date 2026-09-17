@@ -56,6 +56,21 @@ import { LIBELLES_PREUVE, ICONES_TYPE, texteConsigne } from "./procedures/vocabu
 
 export const PORTAIL_ETUDES_EN_FRANCE = "https://pastel.diplomatie.gouv.fr/etudesenfrance/";
 
+/**
+ * LA DESTINATION DE CETTE ROUTE. La route se compose sur le tronc
+ * français et fixe le portail à Études en France : le pays n'est donc
+ * pas une question posée à l'étudiant, c'est une donnée de la route.
+ *
+ * Elle est écrite SUR CHAQUE VŒU (espace-preinscription.js) parce que
+ * les outils — lettre, courriel — sont des pages à part : sans elle,
+ * ils préremplissaient « Pays visé » avec le premier pays souhaité du
+ * profil, et un vœu à Lille partait pour la Chine (constaté en ligne
+ * le 2026-09-17). Le jour où une deuxième destination ouvre, c'est ici
+ * que la route cessera d'en avoir une seule — et les vœux déjà posés
+ * garderont la leur, écrite dans leur document.
+ */
+export const PAYS_DESTINATION = "France";
+
 /** Le plafond global de la plateforme, et les sous-plafonds par type. */
 export const PLAFOND_VOEUX = 7;
 export const SOUS_PLAFONDS = {

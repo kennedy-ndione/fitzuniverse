@@ -365,8 +365,42 @@ initFitzSelects();
 // pas compter ses propres passages comme des entrées étudiantes.
 trackVisitOnce();
 
+// LE SKIP D'UNE TRANSITION N'EST PAS UNE ERREUR (lot R4, 2026-09-17).
+// MESURÉ, et rien de plus : pendant la recette de la route, la console
+// de l'espace étudiant portait un « Uncaught (in promise) AbortError:
+// Transition was skipped » — le SEUL message de toute la traversée des
+// quinze étapes. Aucune feuille de l'espace ne déclare
+// `@view-transition` (vérifié à l'exécution sur document.styleSheets) :
+// la transition est donc ouverte par la page d'AVANT, sur la foi du
+// `@view-transition { navigation: auto }` de css/vivant.css, que les
+// six pages vitrine chargent. Les promesses qu'elle tend ne sont
+// reprises que par js/vivant.js — absent des pages connectées.
+//
+// On tient donc ici les mêmes promesses que js/vivant.js tient là-bas
+// (il documente la règle en long : « UN SKIP N'EST PAS UNE ERREUR »).
+// Ni `unhandledrejection` global, ni try/catch attrape-tout : seules
+// les promesses DE CETTE transition sont marquées traitées, une vraie
+// erreur continue de remonter. Une console propre est la condition
+// pour voir la prochaine erreur, celle qui comptera.
+tenirLaTransition();
+
 if (window.lucide) lucide.createIcons();
 
+}
+
+function tenirLaTransition() {
+if (window.__fitzTransitionTenue) return;
+window.__fitzTransitionTenue = true;
+const prendre = (evenement) => {
+const t = evenement && evenement.viewTransition;
+if (!t) return;
+const rien = () => {};
+if (t.finished && t.finished.catch) t.finished.catch(rien);
+if (t.ready && t.ready.catch) t.ready.catch(rien);
+if (t.updateCallbackDone && t.updateCallbackDone.catch) t.updateCallbackDone.catch(rien);
+};
+window.addEventListener("pageswap", prendre);
+window.addEventListener("pagereveal", prendre);
 }
 
 /**

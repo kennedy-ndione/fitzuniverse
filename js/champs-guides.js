@@ -57,10 +57,37 @@ export const EXEMPLES = {
 /**
  * LES LISTES LONGUES — cherchées en tapant, jamais posées en pastilles.
  * Le champ garde sa saisie libre : la liste propose, elle n'impose pas.
+ *
+ * `formation` COUVRE CHAQUE DOMAINE DE `domaine` (2026-09-17). Constaté
+ * pendant la recette de la route, à l'étape 3 : « licence psy » ne
+ * proposait RIEN. La liste, écrite d'un trait, n'avait que de
+ * l'informatique, du droit, de l'économie et du génie — alors que
+ * `domaine` proposait déjà Psychologie, Communication, Journalisme,
+ * Agronomie, Tourisme. Un étudiant qui ne trouve pas son mot croit que
+ * sa formation n'existe pas ici ; c'est exactement la confusion que
+ * cette refonte doit supprimer.
+ *
+ * La règle, gardée par un test : tout domaine de `domaine` a au moins
+ * une formation dont le libellé le nomme. Ajouter un domaine oblige
+ * donc à lui donner une formation — pas de domaine muet.
  */
 export const LISTES = {
   domaine: ["Informatique", "Droit", "Économie / Gestion", "Médecine / Santé", "Ingénierie", "Mathématiques", "Physique / Chimie", "Biologie", "Lettres / Langues", "Sciences politiques", "Architecture", "Commerce / Marketing", "Comptabilité / Finance", "Psychologie", "Communication", "Agronomie", "Génie civil", "Data / Intelligence artificielle", "Statistiques", "Journalisme", "Tourisme / Hôtellerie", "Mines / Pétrole"],
-  formation: ["Licence Informatique", "Licence Droit", "Licence Économie et gestion", "Licence Mathématiques", "Licence Physique", "Licence Sciences de la vie", "Licence LEA (langues)", "BUT Informatique", "BUT Génie civil", "BUT Techniques de commercialisation", "Master Informatique", "Master Data science", "Master Droit des affaires", "Master Finance", "Master Marketing", "Master Génie civil", "Master Économie", "Master Management", "Master Santé publique", "Diplôme d'ingénieur"]
+  formation: [
+    "Licence Informatique", "Licence Droit", "Licence Économie et gestion", "Licence Mathématiques",
+    "Licence Physique / Chimie", "Licence Biologie", "Licence Sciences de la vie", "Licence Psychologie",
+    "Licence Sociologie", "Licence LEA (langues)", "Licence Lettres modernes", "Licence Histoire / Géographie",
+    "Licence Sciences politiques", "Licence Sciences de l'éducation", "Licence Information et communication",
+    "Licence Comptabilité et finance", "Licence Statistiques", "Licence Sciences de la Terre (mines, pétrole)",
+    "Licence STAPS (sport)", "Licence Arts",
+    "BUT Informatique", "BUT Génie civil", "BUT Génie électrique", "BUT Techniques de commercialisation",
+    "BUT Gestion des entreprises", "BUT Information-communication", "BUT Génie biologique", "BUT Réseaux et télécommunications",
+    "Master Informatique", "Master Data science / Intelligence artificielle", "Master Droit des affaires", "Master Finance",
+    "Master Marketing", "Master Management", "Master Économie", "Master Génie civil",
+    "Master Santé publique", "Master Psychologie", "Master Journalisme", "Master Communication",
+    "Master Agronomie", "Master Tourisme et hôtellerie", "Master Architecture", "Master Statistiques",
+    "Diplôme d'ingénieur", "Diplôme d'architecte", "Études de médecine (PASS / L.AS)", "Études de pharmacie"
+  ]
 };
 
 /** Les sources d'un champ à suggestions, par clé de `data-suggest`. */

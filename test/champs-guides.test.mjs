@@ -84,6 +84,28 @@ test("guidé 2 — un seul système de champs guidés, et les clés déclarées 
     assert.ok(source().length >= 10, `${cle} : une liste de moins de dix entrées est une table d'exemples`);
   }
 
+  // AUCUN DOMAINE MUET (2026-09-17). Constaté à l'étape 3 en ligne :
+  // « licence psy » ne proposait RIEN, alors que la liste des domaines
+  // proposait Psychologie depuis le début. Un étudiant qui ne trouve
+  // pas son mot croit que sa formation n'existe pas ici.
+  //
+  // La racine d'un domaine : sa première branche avant le « / », puis
+  // ses six premières lettres si c'est un seul mot — « Ingénierie »
+  // doit pouvoir être servie par « Diplôme d'ingénieur », et
+  // « Biologie » par « BUT Génie biologique ». Un domaine en deux mots
+  // (« Sciences politiques ») se cherche en entier : « sciences » seul
+  // se satisferait de n'importe quelle licence de sciences.
+  //
+  // Preuve par mutation (2026-09-17) : « Licence Psychologie » et
+  // « Master Psychologie » retirés de LISTES.formation → rouge.
+  const racineDomaine = (domaine) => {
+    const branche = sansAccent(domaine).split("/")[0].replace(/\(.*/, "").trim();
+    return branche.includes(" ") ? branche : branche.slice(0, 6);
+  };
+  const formations = LISTES.formation.map(sansAccent);
+  const muets = LISTES.domaine.filter((d) => !formations.some((f) => f.includes(racineDomaine(d))));
+  assert.deepEqual(muets, [], "ces domaines n'ont aucune formation qui les nomme");
+
   // Le rendu : échappé, et sans rien inventer.
   assert.equal(htmlChips("x", null), "");
   assert.match(htmlChips("desiredField", ["A", "B"]), /^<div class="fitz-chips" data-chips-pour="desiredField">/);

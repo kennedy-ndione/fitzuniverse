@@ -222,6 +222,30 @@ assert.match(boot, /^initFitzFab\(\);/m, "initFitzFab doit être appelé sans co
 assert.ok(!/courant !== "preinscription"\) initFitzFab/.test(boot), "plus aucune exclusion de l'espace préinscription");
 });
 
+test("la coquille tient la promesse de la transition — une console propre est la condition pour voir la prochaine erreur", () => {
+// LOT R4 (2026-09-17). Pendant la traversée des quinze étapes en
+// ligne, la console de l'espace ne portait qu'un seul message :
+// « Uncaught (in promise) AbortError: Transition was skipped ». Aucune
+// feuille de l'espace ne déclare @view-transition (vérifié à
+// l'exécution) : la transition vient de la page d'avant, une des six
+// vitrines qui chargent css/vivant.css, et ses promesses n'étaient
+// reprises que par js/vivant.js — absent des pages connectées.
+//
+// Preuve par mutation : les deux addEventListener retirés → rouge.
+const shell = lire("js/app-shell.js");
+assert.match(shell, /tenirLaTransition\(\);/, "initShellChrome ne tient plus la transition");
+const garde = shell.slice(shell.indexOf("function tenirLaTransition"));
+for (const evt of ["pageswap", "pagereveal"]) {
+assert.ok(garde.includes(`addEventListener("${evt}"`), `${evt} : la promesse resterait en l'air`);
+}
+// On n'avale QUE les promesses de cette transition : pas de filet
+// global, sinon la prochaine vraie erreur disparaît avec le bruit.
+assert.ok(!/addEventListener\("unhandledrejection"/.test(shell), "un filet global masquerait les vraies erreurs");
+for (const promesse of ["finished", "ready", "updateCallbackDone"]) {
+assert.ok(garde.includes(`t.${promesse}`), `la promesse ${promesse} n'est pas tenue`);
+}
+});
+
 test("la route préinscription porte les outils Fitz, verrouillés par formule — et pas la préparation aux tests", () => {
 // LOT R1 (2026-09-17) : le hub à six phases a laissé place à LA ROUTE.
 // Les outils ne sont plus écrits dans le HTML mais rendus DANS l'étape

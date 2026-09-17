@@ -49,7 +49,7 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
+  PAYS_DESTINATION, PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
 } from "./js/route-preinscription.js";
 // Les deux composants guidés (pastilles d'exemples, champ à suggestions)
 // sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
@@ -554,6 +554,10 @@ async function ajouterVoeu(form) {
   const payload = {
     university, formation, niveau,
     scholarship: "",
+    // LE VŒU PORTE SA DESTINATION (lot R4, 2026-09-17). Sans elle, les
+    // trois outils préremplissaient « Pays visé » avec le premier pays
+    // souhaité du profil : un vœu à Lille partait pour la Chine.
+    country: PAYS_DESTINATION,
     portalUrl: PORTAIL_ETUDES_EN_FRANCE,
     status: "a_preparer",
     track: "preinscription",
@@ -757,6 +761,20 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
     etat.voeux = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((app) => lireParcours(app) === "preinscription");
   } catch (error) {
     console.error("Impossible de charger les vœux :", error);
+  }
+
+  // RATTRAPAGE DES VŒUX D'AVANT LE LOT R4 : ceux créés sans `country`
+  // reçoivent leur destination à la première visite. Une écriture par
+  // vœu, une seule fois dans la vie du dossier, et jamais bloquante :
+  // un échec laisse l'outil retomber sur le profil, comme avant.
+  for (const v of etat.voeux) {
+    if (String(v.country || "").trim()) continue;
+    try {
+      await updateDoc(doc(db, "users", session.user.uid, "applications", v.id), { country: PAYS_DESTINATION });
+      v.country = PAYS_DESTINATION;
+    } catch (error) {
+      console.warn("Destination non rattrapée sur un vœu :", v.id, error);
+    }
   }
 
   const params = new URLSearchParams(window.location.search);

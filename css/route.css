@@ -727,8 +727,15 @@ color:#fff;
 opacity:.75;
 }
 
+/* LA CROIX RESTE SUR LA LIGNE DU TITRE (2026-09-17).
+Mesuré à 375 px : la carte d'un vœu offre 280 px à l'intérieur, et la
+rangée demandait 28 (le numéro) + 14 + 200 (la base du texte) + 14 + 36
+(la croix) = 292. La croix passait donc à la ligne et se retrouvait
+seule en bas à gauche, où elle ressemblait à un bouton sans objet.
+Une base de 140 px tient (232 sur 280) et le texte, `flex-grow:1`,
+reprend tout le reste : rien ne change au-dessus de cette largeur. */
 .rt-voeu-texte{
-flex:1 1 200px;
+flex:1 1 140px;
 display:flex;
 flex-direction:column;
 gap:2px;
@@ -860,13 +867,29 @@ color:var(--journey-done, #2F7A46);
 }
 
 /* ---------- Les pièces ---------- */
+/* CHAQUE PIÈCE EST UN BLOC, ET « Ne me concerne pas » EN FAIT PARTIE
+(2026-09-17). Vu à l'écran pendant la recette : le bouton, posé sous sa
+carte et aligné à gauche, était à 8 px de la carte SUIVANTE comme de la
+sienne — il se lisait donc comme le titre de la suivante. On l'attache
+à droite, collé à sa carte, et on double l'écart entre deux pièces :
+l'œil regroupe par proximité, c'est tout ce qu'il fallait corriger. */
 .rt-pieces{
 list-style:none;
 margin:0 0 8px;
 padding:0;
 display:flex;
 flex-direction:column;
-gap:8px;
+gap:16px;
+}
+
+.rt-piece{
+display:flex;
+flex-direction:column;
+align-items:flex-end;
+}
+
+.rt-piece label{
+width:100%;
 }
 
 .rt-piece label{
@@ -918,7 +941,7 @@ text-decoration:line-through;
 
 .rt-piece-ecarter{
 display:inline-block;
-margin:4px 0 0 14px;
+margin:2px 8px 0 0;
 min-height:32px;
 padding:4px 8px;
 border:0;

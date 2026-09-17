@@ -105,6 +105,56 @@ if (!niveau || formation.toLowerCase().includes(niveau.toLowerCase())) return fo
 return `${formation} (${niveau})`;
 }
 
+/**
+* LA DESTINATION D'UNE CANDIDATURE, et le diplôme qu'elle vise.
+*
+* CE QUI S'EST PASSÉ, mesuré en ligne le 2026-09-17 pendant la recette
+* de la route : depuis l'étape 8, « Écrire avec Fitz » ouvrait
+* ai-letter.html?applicationId=pre-1 pour un vœu à l'Université de
+* Lille — et le champ « Pays visé » affichait CHINE. Le programme visé,
+* lui, gardait le domaine du profil et non la formation du vœu.
+*
+* La cause est la même des deux côtés : les trois outils préremplissent
+* d'abord avec le PROFIL (`preferredCountries[0]`, `desiredField`,
+* `desiredDegree`), puis `applyApplicationContext()` ne réécrivait que
+* l'université. Un défaut de profil vieux de six mois gagnait donc
+* contre la candidature qu'on a sous les yeux, et la lettre partait pour
+* le mauvais pays.
+*
+* La règle, désormais : QUAND UNE CANDIDATURE EST SÉLECTIONNÉE, C'EST
+* ELLE QUI DIT LA CIBLE. Le profil ne sert plus qu'à l'absence de
+* candidature (« Sans candidature liée »). Ces deux fonctions sont le
+* seul endroit qui sache lire cette cible.
+*
+* `paysDuVoeu` ne DEVINE rien : un vœu porte son pays depuis le lot R4
+* (espace-preinscription.js l'écrit à la création et le rattrape au
+* chargement pour les vœux d'avant). Sans pays écrit, elle rend "" et
+* l'outil garde ce que le profil disait — jamais une destination
+* inventée.
+*/
+export function paysDuVoeu(app) {
+if (!app || typeof app !== "object") return "";
+return String(app.country || "").trim();
+}
+
+/**
+* Le DIPLÔME d'un niveau d'entrée : « Licence 2 » se prépare en licence,
+* « Master 1 » en master. Les sélecteurs des outils n'offrent que ces
+* trois valeurs (Licence, Master, Doctorat) — BUT et Architecture se
+* rangent en licence, qui est leur cycle.
+*
+* Rend "" pour un niveau inconnu : l'outil garde alors la valeur du
+* profil plutôt que d'afficher un diplôme que personne n'a choisi.
+*/
+export function degreDuVoeu(app) {
+const niveau = String((app && app.niveau) || "").trim().toLowerCase();
+if (!niveau) return "";
+if (niveau.startsWith("doctorat")) return "Doctorat";
+if (niveau.startsWith("master")) return "Master";
+if (niveau.startsWith("licence") || niveau.startsWith("but") || niveau.startsWith("dut") || niveau.startsWith("bts") || niveau.startsWith("architecture")) return "Licence";
+return "";
+}
+
 export function lireParcoursDeSaisie(input) {
 const p = input && typeof input === "object" ? input.parcours : undefined;
 if (typeof p === "string") return p === "preinscription" ? "preinscription" : "bourse";

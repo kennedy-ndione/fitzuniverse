@@ -44,7 +44,7 @@ ESPACE_OUTILS
 import * as ROUTE from "../js/route-preinscription.js";
 import { buildPrompt } from "../js/ai/prompts.js";
 import { generateMotivationLetter, generateLettreDeVoeu, computeApplicationReadiness, generateChatReply, typesEmailPour, getSuggestedQuestions, EMAIL_TYPES } from "../js/ai/simulated-responses.js";
-import { lireParcoursDeSaisie, parcoursDOutil } from "../js/parcours.js";
+import { lireParcoursDeSaisie, parcoursDOutil, paysDuVoeu, degreDuVoeu } from "../js/parcours.js";
 
 const require = createRequire(import.meta.url);
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -149,6 +149,51 @@ assert.deepEqual(outilsDe("ef_confirmation"), ["ai_email:ai-email.html"]);
 const moteur = lire("espace-preinscription.js");
 assert.match(moteur, /ai-letter\.html\?applicationId=\$\{encodeURIComponent\(v\.id\)\}/);
 assert.match(moteur, /<span data-feature="ai_letter">/);
+});
+
+test("LA CANDIDATURE DICTE LA CIBLE : pays, formation et niveau viennent du vœu, pas du profil", () => {
+// CE QUI S'EST PASSÉ, mesuré en ligne le 2026-09-17 pendant la recette
+// de la route : depuis l'étape 8, « Écrire avec Fitz » ouvrait la lettre
+// d'un vœu à l'Université de Lille avec « Pays visé : Chine » — le
+// premier pays souhaité d'un profil de test. Le préremplissage par le
+// profil gagnait contre la candidature affichée.
+//
+// Preuve par mutation (2026-09-17) : `fieldProgram.value = formation`
+// remis en `fieldProgram.value || formation` → ce test rouge ; la ligne
+// `country: PAYS_DESTINATION` retirée du payload → rouge.
+assert.equal(ROUTE.PAYS_DESTINATION, "France");
+
+// Le vœu PORTE sa destination — sinon aucune page d'outil ne peut la
+// connaître sans importer les 300 Ko de js/procedures.
+const moteur = lire("espace-preinscription.js");
+assert.match(moteur, /country: PAYS_DESTINATION,/, "la création d'un vœu n'écrit plus sa destination");
+assert.match(moteur, /applications", v\.id\), \{ country: PAYS_DESTINATION \}/, "le rattrapage des vœux d'avant le lot a disparu");
+
+// paysDuVoeu ne DEVINE jamais : pas de pays écrit, pas de pays rendu.
+assert.equal(paysDuVoeu({ country: "France" }), "France");
+assert.equal(paysDuVoeu({ country: "  Roumanie " }), "Roumanie");
+assert.equal(paysDuVoeu({ university: "Lille" }), "", "sans pays écrit, l'outil garde ce que le profil disait");
+assert.equal(paysDuVoeu(null), "");
+
+// degreDuVoeu : les trois valeurs des sélecteurs, et rien d'autre.
+const attendu = { "Licence 1": "Licence", "Licence 3": "Licence", "BUT": "Licence", "Architecture": "Licence", "Master 1": "Master", "Master 2": "Master", "Doctorat": "Doctorat" };
+for (const niveau of ROUTE.NIVEAUX_VOEU) {
+assert.equal(degreDuVoeu({ niveau }), attendu[niveau] || "Licence", `niveau « ${niveau} » mal traduit`);
+}
+assert.equal(degreDuVoeu({ niveau: "Prépa intégrée" }), "", "un niveau inconnu ne doit pas inventer un diplôme");
+assert.equal(degreDuVoeu({}), "");
+
+// Les deux outils réécrivent la cible, sans condition sur l'ancienne
+// valeur : c'est la candidature qui sait où l'on écrit.
+for (const page of ["ai-letter.js", "ai-email.js"]) {
+const src = lire(page);
+assert.match(src, /paysDuVoeu/, `${page} ne lit pas la destination du vœu`);
+assert.match(src, /const pays = paysDuVoeu\(app\);\nif \(pays\) fieldCountry\.value = pays;/, `${page} : la destination ne gagne pas`);
+assert.ok(!/fieldCountry\.value = fieldCountry\.value \|\|/.test(src), `${page} garderait le pays du profil`);
+}
+const lettre = lire("ai-letter.js");
+assert.match(lettre, /fieldProgram\.value = formation;/, "ai-letter garde le domaine du profil contre la formation du vœu");
+assert.match(lettre, /const degre = degreDuVoeu\(app\);\nif \(degre\) fieldLevel\.value = degre;/, "ai-letter garde le diplôme du profil contre le niveau du vœu");
 });
 
 // ------------------------------------------------------------------

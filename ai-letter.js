@@ -24,7 +24,7 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js
 // Lot PRÉ-FITZ : le parcours décide de la FORME de la lettre — une lettre
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
-import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu, paysDuVoeu, degreDuVoeu } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -240,8 +240,16 @@ fieldUniversity.value = app.university || "";
 // La route écrit maintenant `formation` et `niveau`. On lit le neuf,
 // puis l'ancien : les vœux créés avant le lot gardent leur libellé.
 const formation = titreDuVoeu(app);
+// LA CANDIDATURE GAGNE CONTRE LE PROFIL (lot R4, 2026-09-17) — voir
+// `paysDuVoeu` dans js/parcours.js : le préremplissage par le profil
+// écrasait la cible réelle, et la lettre d'un vœu à Lille annonçait la
+// Chine. Le profil ne parle plus que faute de candidature.
+const pays = paysDuVoeu(app);
+if (pays) fieldCountry.value = pays;
+const degre = degreDuVoeu(app);
+if (degre) fieldLevel.value = degre;
 if (formation) {
-fieldProgram.value = fieldProgram.value || formation;
+fieldProgram.value = formation;
 // « Candidature à la bourse X » n'a de sens que pour une bourse : sur
 // une préinscription, c'est la formation, et Fitz ne parle pas de bourse.
 if (!fieldMotivations.value && parcoursDOutil({ application: app }) === "bourse") fieldMotivations.value = `Candidature à la bourse ${app.scholarship}.`;

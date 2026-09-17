@@ -17,7 +17,7 @@ import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
 // Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
 // n'a pas de sens en préinscription) et voyage avec la demande.
-import { parcoursDOutil, titreDuVoeu } from "./js/parcours.js";
+import { parcoursDOutil, titreDuVoeu, paysDuVoeu } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : l'e-mail exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -215,6 +215,11 @@ application = app || null;
 if (app) {
 fieldUniversity.value = app.university || "";
 fieldProgram.value = titreDuVoeu(app) || fieldProgram.value || "";
+// LA CANDIDATURE GAGNE CONTRE LE PROFIL (lot R4, 2026-09-17) — même
+// défaut que dans ai-letter.js : « Pays visé » gardait le premier pays
+// souhaité du profil alors que le vœu sélectionné visait la France.
+const pays = paysDuVoeu(app);
+if (pays) fieldCountry.value = pays;
 }
 
 verrouillerUniversite(app);
