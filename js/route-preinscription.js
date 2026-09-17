@@ -71,6 +71,58 @@ export const SOUS_PLAFONDS = {
   "Architecture": 2
 };
 
+/**
+ * LA LANGUE DES PIÈCES — deux réponses, jamais devinées (lot R10).
+ *
+ * POURQUOI UNE QUESTION DE PLUS, alors que la refonte en a supprimé
+ * quarante-huit : parce que celle-ci en supprime DAVANTAGE qu'elle
+ * n'en ajoute. Deux pièces du dossier français portent
+ * `traduction: true` (les relevés des trois dernières années et les
+ * diplômes obtenus) et la consigne officielle est sans échappatoire :
+ * traduites par un traducteur assermenté, original joint. Sans cette
+ * question, le site affiche « à traduire si ce n'est pas en français »
+ * à TOUS — un bruit permanent pour l'étudiant sénégalais, ivoirien ou
+ * camerounais dont tout est déjà en français, et un avertissement trop
+ * faible pour celui qui a un bac arabe et découvrira la règle en se
+ * faisant refuser.
+ *
+ * `situationFrancais` NE RÉPOND PAS à cette question : elle dit le
+ * niveau de langue de l'étudiant (« j'ai fait mes études en français »,
+ * « j'ai passé un test »), pas la langue de ses PAPIERS. Un étudiant
+ * marocain peut avoir étudié en français et tenir un baccalauréat
+ * délivré en arabe. On ne déduit donc rien : on demande.
+ *
+ * L'étape 4 ne se coche pas tant que la question reste ouverte — non
+ * pour bloquer, mais parce qu'un dossier dont on ignore s'il faut trois
+ * semaines de traduction n'est pas « prêt ».
+ */
+export const DECLARATIONS_TRADUCTION = ["francais", "a_traduire"];
+
+export const LIBELLES_TRADUCTION = {
+  francais: "Oui, ils sont en français",
+  a_traduire: "Non, ils sont dans une autre langue"
+};
+
+/**
+ * Ce que la route sait de la traduction, à un instant donné.
+ * `concernees` ne compte QUE les pièces encore en jeu : une pièce
+ * écartée (« Ne me concerne pas ») ne demande aucune traduction.
+ */
+export function etatTraduction(pieces, dossier) {
+  const liste = Array.isArray(pieces) ? pieces : [];
+  const concernees = liste.filter((p) => p.traduction && !p.ecartee).map((p) => p.nom);
+  const brut = String((dossier && dossier.traductions) || "").trim();
+  const declare = DECLARATIONS_TRADUCTION.includes(brut) ? brut : "";
+  return {
+    concernees,
+    declare,
+    // Rien à régler s'il n'y a aucune pièce concernée : la question ne
+    // se pose pas, et on ne la pose pas.
+    reglee: !concernees.length || declare !== "",
+    aFaire: declare === "a_traduire" && concernees.length > 0
+  };
+}
+
 /** Les niveaux qu'un vœu peut viser — le vocabulaire du portail. */
 export const NIVEAUX_VOEU = ["Licence 1", "Licence 2", "Licence 3", "BUT", "Master 1", "Master 2", "Architecture", "Doctorat"];
 
@@ -279,6 +331,7 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
   // hors bac Arabe) : la liste vient du pays, pas du profil, et c'est
   // l'étudiant qui sait.
   const pieces = piecesDuDossier(procedure).map((p) => ({ ...p, obtenue: piecesCochees[p.slug] === true, ecartee: piecesCochees[p.slug] === "non-concerne" }));
+  const traduction = etatTraduction(pieces, dossier);
   const visa = {};
   VISA_ETAPES.forEach((id) => { visa[id] = !!(visaChecklist && visaChecklist[id] === true); });
   const visaFaites = VISA_ETAPES.filter((id) => visa[id]).length;
@@ -305,7 +358,9 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
         faite = listeVoeux.length > 0;
         break;
       case "pieces":
-        faite = pieces.length > 0 && pieces.every((p) => p.obtenue || p.ecartee);
+        // Les pièces ET la langue des pièces : un dossier dont on ignore
+        // s'il faut trois semaines de traduction n'est pas prêt.
+        faite = pieces.length > 0 && pieces.every((p) => p.obtenue || p.ecartee) && traduction.reglee;
         break;
       case "motivations":
         faite = listeVoeux.length > 0 && listeVoeux.every((v) => v.motivation && v.motivation.faite === true);
@@ -357,6 +412,7 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
       echeance: jalon ? { iso: jalon.iso, libelle: jalon.libelle, debut: jalon.debut, jours: joursEntre(jalon.iso, aujourdhui) } : null,
       faitLe: (saisie && saisie.faitLe) || null,
       pieces: def.kind === "pieces" ? pieces : [],
+      traduction: def.kind === "pieces" ? traduction : null,
       voeux: ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
       visa: def.kind === "visa" ? { etat: visa, faites: visaFaites, total: VISA_ETAPES.length } : null
     };

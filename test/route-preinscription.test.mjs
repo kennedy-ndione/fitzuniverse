@@ -24,7 +24,8 @@ import path from "node:path";
 import {
   ETAPES_ROUTE, TOTAL_ETAPES, construireRoute, phraseDeRoute, situationComplete,
   QUESTIONS_SITUATION, piecesDuDossier, avertissementsVoeux, defautsDesEnClair,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, NIVEAUX_VOEU, slugPiece
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, NIVEAUX_VOEU, slugPiece,
+  etatTraduction, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION
 } from "../js/route-preinscription.js";
 import { trouverProcedure } from "../js/procedures/index.js";
 import { PROCEDURE_FRANCE } from "../js/procedures/france.js";
@@ -105,7 +106,9 @@ test("route 5 — l'état des étapes est celui du DOSSIER ; la lettre et la ré
       // Soumission cochée SANS numéro : pas faite.
       ef_soumission: { faite: true, faitLe: "2026-10-05", preuve: "" }
     },
-    pieces: Object.fromEntries(piecesDuDossier(SENEGAL).map((p) => [p.slug, true]))
+    pieces: Object.fromEntries(piecesDuDossier(SENEGAL).map((p) => [p.slug, true])),
+    // Lot R10 : l'étape 4 attend AUSSI la langue des pièces.
+    traductions: "francais"
   };
   const voeux = [voeu("pre-1", { motivation: { faite: true } }), voeu("pre-2", { motivation: { faite: false } })];
   const r = construireRoute({ procedure: SENEGAL, profile: SITUATION, diagnostic: { etatVerdict: "tient", verdict: "Votre projet tient." }, voeux, dossier, aujourdhui: AUJOURDHUI });
@@ -167,7 +170,7 @@ test("route 6 — les faits de pays ne viennent que de la couche : dates et mont
   // Une pièce qui ne concerne pas l'étudiant compte comme réglée.
   const cochees = Object.fromEntries(piecesSN.map((p) => [p.slug, true]));
   cochees[piecesSN[3].slug] = "non-concerne";
-  const rp = construireRoute({ procedure: SENEGAL, dossier: { pieces: cochees }, aujourdhui: AUJOURDHUI });
+  const rp = construireRoute({ procedure: SENEGAL, dossier: { pieces: cochees, traductions: "francais" }, aujourdhui: AUJOURDHUI });
   const ep = rp.etapes.find((e) => e.id === "pieces");
   assert.equal(ep.faite, true);
   assert.equal(ep.pieces[3].ecartee, true);
@@ -207,7 +210,7 @@ test("route 8 — les plafonds du portail se disent, ils ne bloquent pas", () =>
 });
 
 test("route 9 — tout accompli : plus de courante, cent pour cent, et la phrase de fin", () => {
-  const dossier = { etapes: {}, pieces: Object.fromEntries(piecesDuDossier(SENEGAL).map((p) => [p.slug, true])) };
+  const dossier = { etapes: {}, pieces: Object.fromEntries(piecesDuDossier(SENEGAL).map((p) => [p.slug, true])), traductions: "francais" };
   for (const e of ETAPES_ROUTE.filter((x) => x.procedure)) {
     dossier.etapes[e.id] = { faite: true, faitLe: "2027-01-01", preuve: "REF-1" };
   }
@@ -219,6 +222,88 @@ test("route 9 — tout accompli : plus de courante, cent pour cent, et la phrase
   assert.equal(r.faites, 15);
   assert.equal(r.pourcentage, 100);
   assert.match(phraseDeRoute(r), /accompli les 15 étapes/);
+});
+
+test("route 11 — LA LANGUE DES PIÈCES : une question, deux réponses, aucune déduction", () => {
+  // DEMANDÉ PAR LE MANDAT « renforcer la préinscription » (2026-09-17),
+  // après vérification à la source : Campus France écrit que « seules
+  // les traductions effectuées auprès de cette liste de traducteurs sont
+  // acceptées […] Toute autre traduction sera refusée ». Deux pièces du
+  // dossier français portent `traduction: true`. Le site n'affichait
+  // qu'un « à traduire si ce n'est pas en français » en petit : du bruit
+  // pour l'étudiant dont tout est en français, un avertissement trop
+  // faible pour l'autre — qui l'aurait découvert après 85 000 F de
+  // frais non remboursables.
+  //
+  // Preuves par mutation (2026-09-17) : `traduction.reglee` retiré de
+  // `faite` → test 3 rouge ; `!p.ecartee` retiré d'`etatTraduction` →
+  // test 4 rouge ; `DECLARATIONS_TRADUCTION.includes` remplacé par un
+  // test de vérité → test 5 rouge.
+
+  const pieces = piecesDuDossier(SENEGAL).map((p) => ({ ...p, obtenue: false, ecartee: false }));
+  const aTraduire = pieces.filter((p) => p.traduction).map((p) => p.nom);
+
+  // 1. EXACTEMENT les pièces que la procédure marque, jamais une liste
+  //    recopiée : ajouter une pièce à traduire dans le tronc doit
+  //    suffire à la faire apparaître ici.
+  assert.equal(aTraduire.length, 2, `${aTraduire.length} pièces à traduire dans le tronc France`);
+  assert.deepEqual(etatTraduction(pieces, {}).concernees, aTraduire);
+
+  // 2. Rien n'est réglé tant que rien n'est déclaré — et rien n'est
+  //    déduit du profil : `situationFrancais` dit le NIVEAU DE LANGUE de
+  //    l'étudiant, pas la langue de ses papiers. Un Marocain peut avoir
+  //    étudié en français et tenir un bac délivré en arabe.
+  const vide = etatTraduction(pieces, {});
+  assert.equal(vide.declare, "");
+  assert.equal(vide.reglee, false);
+  assert.equal(vide.aFaire, false);
+  assert.ok(!JSON.stringify(etatTraduction(pieces, { traductions: "" })).includes("situationFrancais"));
+
+  // 3. L'étape 4 ne se coche pas tant que la question est ouverte : un
+  //    dossier dont on ignore s'il faut trois semaines de traduction
+  //    n'est pas « prêt ».
+  const toutCoche = Object.fromEntries(piecesDuDossier(SENEGAL).map((p) => [p.slug, true]));
+  const sansReponse = construireRoute({ procedure: SENEGAL, dossier: { pieces: toutCoche }, aujourdhui: AUJOURDHUI });
+  const e4 = sansReponse.etapes.find((e) => e.id === "pieces");
+  assert.equal(e4.faite, false, "toutes les pièces cochées ne suffisent pas");
+  assert.equal(e4.traduction.reglee, false);
+  for (const reponse of ["francais", "a_traduire"]) {
+    const r = construireRoute({ procedure: SENEGAL, dossier: { pieces: toutCoche, traductions: reponse }, aujourdhui: AUJOURDHUI });
+    assert.equal(r.etapes.find((e) => e.id === "pieces").faite, true, `réponse « ${reponse} » : l'étape doit se clore`);
+  }
+  // « a_traduire » clôt l'étape mais garde la démarche ouverte : ce sont
+  // deux choses différentes, et les confondre bloquerait l'étudiant
+  // pendant les trois semaines du traducteur.
+  const aFaire = construireRoute({ procedure: SENEGAL, dossier: { pieces: toutCoche, traductions: "a_traduire" }, aujourdhui: AUJOURDHUI }).etapes.find((e) => e.id === "pieces");
+  assert.equal(aFaire.traduction.aFaire, true);
+  assert.deepEqual(aFaire.traduction.concernees, aTraduire);
+
+  // 4. Une pièce ÉCARTÉE ne demande aucune traduction — et si les deux
+  //    le sont, la question ne se pose plus du tout.
+  const ecartees = pieces.map((p) => (p.traduction ? { ...p, ecartee: true } : p));
+  const sansObjet = etatTraduction(ecartees, {});
+  assert.deepEqual(sansObjet.concernees, []);
+  assert.equal(sansObjet.reglee, true, "sans pièce concernée, la question ne se pose pas");
+
+  // 5. Une valeur hors vocabulaire ne vaut pas réponse (URL bricolée,
+  //    document ancien) : elle se lit comme « pas encore répondu ».
+  assert.equal(etatTraduction(pieces, { traductions: "oui" }).declare, "");
+  assert.equal(etatTraduction(pieces, { traductions: true }).declare, "");
+  assert.deepEqual(Object.keys(LIBELLES_TRADUCTION).sort(), [...DECLARATIONS_TRADUCTION].sort());
+
+  // 6. LA PAGE : la question, les deux réponses, le geste qui écrit au
+  //    niveau du DOSSIER, et AUCUN contenu recopié de la fiche des
+  //    documents — on y renvoie.
+  const moteur = lire("espace-preinscription.js");
+  assert.match(moteur, /function htmlTraduction\(e\) \{/);
+  assert.match(moteur, /"dossierFrance\.traductions": valeur/, "la déclaration doit vivre au niveau du dossier");
+  assert.match(moteur, /documents\.html\?categorie=administratif/, "la fiche « Traductions certifiées » n'est plus atteignable depuis l'étape");
+  assert.match(moteur, /traducteur assermenté/);
+  for (const recopie of ["1 à 3 semaines", "numéro d'agrément"]) {
+    assert.ok(!moteur.includes(recopie), `« ${recopie} » est recopié de la fiche au lieu d'être lié`);
+  }
+  // Et Fitz pose la même question, avec les mêmes mots-clés.
+  assert.match(lire("js/fitz-recours.js"), /vos relevés de notes et vos diplômes sont-ils en français/i);
 });
 
 test("route 10 — la page : une seule étape à l'écran, pas de rail ni de radar ni de boîte à outils, pas de sortie vers la vitrine", () => {

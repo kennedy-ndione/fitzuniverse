@@ -50,7 +50,8 @@ phraseDeFin,
 formatEUR,
 deviseDeResidence,
 SEUIL_ECART_IMPORTANT,
-PHRASES_INTERDITES
+PHRASES_INTERDITES,
+HORS_TOTAL
 } from "../js/diagnostic-france.js";
 
 import {
@@ -594,6 +595,25 @@ assert.equal(inconnu.total.annuelEUR, RESSOURCES_ET_DROITS);
 assert.equal(inconnu.total.inclutFraisDossier, false);
 assert.equal(inconnu.residence.documentee, false);
 assert.match(inconnu.total.texte, /HORS frais de dossier Campus France/);
+
+// CE QUE LE TOTAL NE COMPREND PAS (lot R10, 2026-09-17). « Total annuel
+// à justifier et à payer » se lit « tout », et trois dépenses réelles
+// restent dehors : la traduction assermentée (obligatoire, comptée en
+// semaines ET en argent), les frais de visa et de service, le voyage.
+// Les taire, c'est laisser un étudiant boucler un budget faux avec un
+// verdict qui dit « ça tient ». On les NOMME sans les chiffrer : ce
+// module ne porte que des montants publiés, et une estimation inventée
+// aurait l'air juste. Preuve par mutation : `${horsTotal}` retiré des
+// trois phrases du total → rouge.
+for (const r of [inconnu, calculerDiagnostic({ ressourcesMensuelles: 700, devise: "EUR", niveau: "licence", paysResidence: "Sénégal" }), calculerDiagnostic({ ressourcesMensuelles: 700, devise: "EUR", niveau: "master", paysResidence: "Maroc" })]) {
+assert.equal(r.total.horsTotal, HORS_TOTAL, "la réserve doit venir de la constante, pas d'une phrase recopiée");
+assert.ok(r.total.texte.includes(HORS_TOTAL), "le total s'affiche sans dire ce qu'il ne comprend pas");
+}
+assert.match(HORS_TOTAL, /traduction assermentée/);
+assert.match(HORS_TOTAL, /visa/);
+assert.match(HORS_TOTAL, /voyage/);
+// Nommer n'est pas chiffrer : aucun montant inventé dans la réserve.
+assert.ok(!/\d/.test(HORS_TOTAL), "la réserve ne doit porter aucun chiffre");
 
 });
 

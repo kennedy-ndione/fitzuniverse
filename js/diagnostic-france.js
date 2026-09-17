@@ -148,6 +148,27 @@ const enPlus = documente && !additionnable ? [{ montant: fDossier.montant, devis
 // chiffre publié.
 const totalAnnuelEUR = arrondi(seuilAnnuel + droitsMontant + fraisDossierEUR, 0);
 
+// CE QUE CE TOTAL NE COMPREND PAS (lot R10, 2026-09-17).
+//
+// Le total ne porte que des montants PUBLIÉS et sourcés — c'est la
+// force de ce module, et il ne faut pas l'abîmer en y glissant des
+// estimations. Mais « Total annuel à justifier et à payer » se lit
+// « tout », et trois dépenses réelles restent dehors : la traduction
+// assermentée des diplômes et relevés quand ils ne sont pas en
+// français (obligatoire, comptée en semaines et en argent), les frais
+// de visa et de service du prestataire, et le voyage. Les taire, c'est
+// laisser un étudiant boucler un budget faux avec un verdict qui dit
+// « ça tient ».
+//
+// On ne les CHIFFRE pas : on les NOMME. Un montant inventé serait pire
+// qu'une omission, parce qu'il aurait l'air juste.
+//
+// La phrase est une CONSTANTE EXPORTÉE : l'étape 2 de la route affiche
+// le total sans repasser par ce module (elle relit `totalAnnuelEUR`
+// dans Firestore), et deux formulations de la même réserve finiraient
+// par dire deux choses différentes.
+const horsTotal = HORS_TOTAL;
+
 const verdict = atteint
 ? `Vos ressources atteignent le seuil publié : ${formatEUR(disponibleEUR)} par mois pour ${formatEUR(seuilMensuel)} exigés.`
 : `Vos ressources n'atteignent pas le seuil publié : il manque ${formatEUR(Math.abs(ecartMensuel))} par mois (${formatEUR(disponibleEUR)} pour ${formatEUR(seuilMensuel)} exigés).`;
@@ -192,6 +213,9 @@ montantEUR: 0
 },
 total: {
 annuelEUR: totalAnnuelEUR,
+// Nommé et rendu à part, pour que la page et Fitz puissent le poser où
+// ils veulent sans redécouper la phrase du total.
+horsTotal,
 // `inclutFraisDossier` reste vrai seulement quand les frais sont
 // RÉELLEMENT dans la somme. Un pays documenté dans une devise non
 // convertible est documenté ET hors total : les deux booléens disent
@@ -199,13 +223,13 @@ annuelEUR: totalAnnuelEUR,
 inclutFraisDossier: additionnable,
 enPlus,
 texte: additionnable
-? `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits + ${formatEUR(fraisDossierEUR)} de dossier).`
+? `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits + ${formatEUR(fraisDossierEUR)} de dossier). ${horsTotal}`
 : documente
 // Devise sans parité fixe : le montant s'affiche À CÔTÉ du total, dans
 // sa devise, et la phrase dit qu'il s'y ajoute. Pas de conversion, donc
 // pas de taux — mais pas d'omission non plus.
-? `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} + ${enPlus.map((m) => formatMontant(m.montant, m.devise)).join(" + ")} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits, plus les frais de dossier de votre pays). Ces frais sont dans une devise sans parité fixe avec l'euro : ils s'AJOUTENT au total, ils n'y sont pas fondus — nous ne les convertissons pas à un taux qui vieillirait.`
-: `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits) — HORS frais de dossier Campus France, non encore vérifiés pour votre pays. Le montant réel sera donc plus élevé.`
+? `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} + ${enPlus.map((m) => formatMontant(m.montant, m.devise)).join(" + ")} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits, plus les frais de dossier de votre pays). Ces frais sont dans une devise sans parité fixe avec l'euro : ils s'AJOUTENT au total, ils n'y sont pas fondus — nous ne les convertissons pas à un taux qui vieillirait. ${horsTotal}`
+: `Total annuel à justifier et à payer : ${formatEUR(totalAnnuelEUR)} (${formatEUR(seuilAnnuel)} de ressources exigées + ${formatEUR(droitsMontant)} de droits) — HORS frais de dossier Campus France, non encore vérifiés pour votre pays. Le montant réel sera donc plus élevé. ${horsTotal}`
 },
 verdict
 };
@@ -278,6 +302,15 @@ return [resultat.verdict, resultat.ressources.texte, resultat.droits.texte, resu
 // c'est le montant qu'une bourse doit couvrir.
 
 /** La frontière entre « ça se comble » et « c'est un autre plan de financement ». */
+/**
+* CE QUE LE TOTAL NE COMPREND PAS (lot R10, 2026-09-17). Nommé, jamais
+* chiffré : ce module ne porte que des montants publiés et sourcés, et
+* une estimation inventée serait pire qu'une omission — elle aurait
+* l'air juste. Exporté parce que la route affiche le même total depuis
+* Firestore, et que la réserve doit s'écrire d'une seule façon.
+*/
+export const HORS_TOTAL = "Ce total ne comprend pas la traduction assermentée de vos diplômes et relevés s'ils ne sont pas en français, les frais de visa et de service, ni votre voyage. Ces dépenses existent et varient : prévoyez-les en plus.";
+
 export const SEUIL_ECART_IMPORTANT = 0.2;
 
 export const ETATS_VERDICT = ["tient", "ecart-faible", "ecart-important"];

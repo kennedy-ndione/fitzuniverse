@@ -40,6 +40,7 @@ import { initShellChrome, bootstrapShell, applyFeatureLocks, isFeatureLocked } f
 import { trouverProcedure } from "./js/procedures/index.js";
 import { lireParcours, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 import { formaterDate } from "./js/echeance.js";
+import { HORS_TOTAL } from "./js/diagnostic-france.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
 import { slotIdLibre } from "./js/application-actions.js";
 import { boutonRecours } from "./js/fitz-recours.js";
@@ -50,7 +51,7 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION
 } from "./js/route-preinscription.js";
 // Les deux composants guidés (pastilles d'exemples, champ à suggestions)
 // sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
@@ -354,7 +355,7 @@ function htmlDiagnostic(e) {
     return `
       <div class="rt-verdict is-${ech(d.etatVerdict || "")}">
         <p class="rt-verdict-phrase">${ech(d.verdict || "Diagnostic enregistré.")}</p>
-        ${total ? `<p class="rt-verdict-chiffre">${ech(total)}</p>` : ""}
+        ${total ? `<p class="rt-verdict-chiffre">${ech(total)}</p><p class="rt-verdict-hors">${ech(HORS_TOTAL)}</p>` : ""}
         ${d.calculeLe ? `<p class="rt-verdict-date">Fait le ${ech(dateLongue(String(d.calculeLe).slice(0, 10)))}. Vos ressources ont changé ? Refaites-le, sans rien repayer.</p>` : ""}
       </div>
       <div class="rt-geste">${htmlOutilPrincipal(e).replace("Faire mon diagnostic avec Fitz", "Refaire mon diagnostic")}</div>`;
@@ -406,7 +407,63 @@ function htmlPieces(e) {
         </label>
         ${p.obtenue ? "" : `<button type="button" class="rt-piece-ecarter" data-ecarter="${ech(p.slug)}" aria-pressed="${p.ecartee ? "true" : "false"}">${p.ecartee ? "Finalement, ça me concerne" : "Ne me concerne pas"}</button>`}
       </li>`).join("")}</ul>
-    <p class="rt-pieces-compte">${e.pieces.filter((p) => p.obtenue).length} pièce${e.pieces.filter((p) => p.obtenue).length > 1 ? "s" : ""} prête${e.pieces.filter((p) => p.obtenue).length > 1 ? "s" : ""} sur ${e.pieces.length}${e.pieces.some((p) => p.ecartee) ? `, ${e.pieces.filter((p) => p.ecartee).length} qui ne vous concerne${e.pieces.filter((p) => p.ecartee).length > 1 ? "nt" : ""} pas` : ""}.</p>`;
+    <p class="rt-pieces-compte">${e.pieces.filter((p) => p.obtenue).length} pièce${e.pieces.filter((p) => p.obtenue).length > 1 ? "s" : ""} prête${e.pieces.filter((p) => p.obtenue).length > 1 ? "s" : ""} sur ${e.pieces.length}${e.pieces.some((p) => p.ecartee) ? `, ${e.pieces.filter((p) => p.ecartee).length} qui ne vous concerne${e.pieces.filter((p) => p.ecartee).length > 1 ? "nt" : ""} pas` : ""}.</p>
+    ${htmlTraduction(e)}`;
+}
+
+/**
+ * LA LANGUE DES PIÈCES (lot R10, 2026-09-17).
+ *
+ * Deux pièces du dossier français doivent être traduites par un
+ * TRADUCTEUR ASSERMENTÉ, original joint — la consigne officielle de
+ * l'étape est sans échappatoire, et Campus France écrit que « toute
+ * autre traduction sera refusée ». Le site se contentait d'un
+ * « à traduire si ce n'est pas en français » en petit, sous chaque
+ * pièce : du bruit pour l'étudiant dont tout est déjà en français, et
+ * un avertissement trop faible pour celui qui ne l'est pas — il
+ * l'aurait découvert après les 85 000 F de frais, non remboursables.
+ *
+ * Une question, deux réponses, et le sujet disparaît ou devient précis.
+ * Ce bloc n'écrit AUCUN contenu neuf : la règle vient de la consigne
+ * officielle (affichée juste en dessous, avec sa source et sa date), et
+ * tout le reste — où trouver un traducteur, combien de temps, ce qu'il
+ * faut vérifier au cachet — vit déjà dans la fiche « Traductions
+ * certifiées » de documents.html, écrite et vérifiée par le lot des
+ * documents. On y renvoie ; on ne la recopie pas.
+ */
+function htmlTraduction(e) {
+  const t = e.traduction;
+  if (!t || !t.concernees.length) return "";
+  const liste = `<span class="rt-trad-pieces">${t.concernees.map((n) => ech(n)).join(" · ")}</span>`;
+
+  if (!t.declare) {
+    return `
+    <div class="rt-trad rt-trad--question">
+      <p class="rt-trad-q"><i data-lucide="languages"></i><span>Vos relevés de notes et vos diplômes sont-ils <strong>en français</strong> ?</span></p>
+      <div class="fitz-choice-group" role="radiogroup" aria-label="La langue de vos relevés et diplômes">${DECLARATIONS_TRADUCTION.map((v) => `
+        <label class="fitz-choice"><input type="radio" name="traductions" value="${ech(v)}" data-traduction="${ech(v)}"><span class="fitz-choice-dot" aria-hidden="true"></span><span>${ech(LIBELLES_TRADUCTION[v])}</span></label>`).join("")}</div>
+      <p class="rt-trad-aide">Deux pièces sont concernées : ${liste}. Votre réponse décide si vous avez une démarche de traduction à prévoir — ou rien du tout.</p>
+    </div>`;
+  }
+
+  if (t.declare === "francais") {
+    return `
+    <div class="rt-trad rt-trad--ok">
+      <p><i data-lucide="check"></i><span><strong>Aucune traduction à faire</strong> : vos pièces sont en français.</span></p>
+      <button type="button" class="rt-trad-changer" data-traduction="a_traduire">Ce n'est pas le cas ?</button>
+    </div>`;
+  }
+
+  return `
+    <div class="rt-trad rt-trad--afaire">
+      <p class="rt-trad-titre"><i data-lucide="alert-triangle"></i><span>Une démarche à lancer <strong>tôt</strong> : la traduction assermentée</span></p>
+      <p>Le portail n'accepte vos ${liste} qu'en français, traduits par un <strong>traducteur assermenté</strong> — inscrit sur la liste officielle de votre pays — et accompagnés de l'original. Une traduction faite par quelqu'un d'autre est refusée, quelle que soit sa qualité. Demandez la liste à l'espace Campus France de votre pays : c'est lui qui la tient.</p>
+      <div class="rt-outils">
+        <span><a href="documents.html?categorie=administratif" class="rt-outil"><i data-lucide="file-signature"></i><span>Où l'obtenir, en combien de temps, ce qu'il faut vérifier</span></a></span>
+        <span data-feature="ai_translate"><a href="ai-translate.html" data-real-href="ai-translate.html" class="rt-outil"><i data-lucide="languages"></i><span>Comprendre mon document en attendant</span></a></span>
+      </div>
+      <button type="button" class="rt-trad-changer" data-traduction="francais">Finalement, ils sont en français</button>
+    </div>`;
 }
 
 // ---- Étape 8 : les motivations, vœu par vœu ----
@@ -697,6 +754,25 @@ async function declarerDepot(numero) {
   }
 }
 
+/**
+ * LA DÉCLARATION DE LANGUE — un champ, deux valeurs, aucune déduction.
+ * Écrite au niveau du DOSSIER (comme les étapes et les pièces) : elle
+ * vaut pour toutes les pièces, pas pour un vœu.
+ */
+async function declarerTraduction(valeur) {
+  if (!DECLARATIONS_TRADUCTION.includes(valeur)) return;
+  try {
+    await updateDoc(refUser(), { "dossierFrance.traductions": valeur });
+    etat.dossier = { ...(etat.dossier || {}), traductions: valeur };
+    toast(valeur === "francais" ? "Noté : aucune traduction à faire." : "Noté : une traduction assermentée à prévoir.");
+    recomposer();
+    peindre();
+  } catch (error) {
+    console.error("Déclaration de langue non enregistrée :", error);
+    toast("Votre réponse n'a pas pu être enregistrée. Réessayez.", "error");
+  }
+}
+
 async function cocherLettre(id, faite) {
   const v = etat.voeux.find((x) => x.id === id);
   if (!v) return;
@@ -755,6 +831,10 @@ function brancherEtape(e) {
   section.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => retirerVoeu(b.getAttribute("data-retirer"))));
   section.querySelectorAll("[data-piece]").forEach((c) => c.addEventListener("change", () => cocherPiece(c.getAttribute("data-piece"), c.checked ? true : null)));
   section.querySelectorAll("[data-ecarter]").forEach((b) => b.addEventListener("click", () => cocherPiece(b.getAttribute("data-ecarter"), b.getAttribute("aria-pressed") === "true" ? null : "non-concerne")));
+  // La déclaration de langue : les deux radios de la question, et les
+  // deux boutons qui la corrigent après coup — un seul geste derrière.
+  section.querySelectorAll("input[data-traduction]").forEach((r) => r.addEventListener("change", () => { if (r.checked) declarerTraduction(r.getAttribute("data-traduction")); }));
+  section.querySelectorAll("button[data-traduction]").forEach((b) => b.addEventListener("click", () => declarerTraduction(b.getAttribute("data-traduction"))));
   section.querySelectorAll("[data-lettre]").forEach((b) => b.addEventListener("click", () => cocherLettre(b.getAttribute("data-lettre"), b.getAttribute("aria-pressed") !== "true")));
   section.querySelectorAll("[data-reponse]").forEach((s) => s.addEventListener("change", () => noterReponse(s.getAttribute("data-reponse"), s.value)));
   section.querySelectorAll("[data-visa]").forEach((b) => b.addEventListener("click", () => cocherVisa(b.getAttribute("data-visa"), b.getAttribute("aria-pressed") !== "true")));

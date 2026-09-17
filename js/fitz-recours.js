@@ -249,8 +249,16 @@ case "voeux":
 return "Posez au moins un vœu : l'établissement, la formation et le niveau — trois champs, Fitz s'occupe du reste.";
 case "pieces": {
 const restent = (e.pieces || []).filter((p) => !p.obtenue && !p.ecartee);
-if (!restent.length) return "Toutes les pièces sont réglées.";
-return `Il reste ${restent.length} pièce${restent.length > 1 ? "s" : ""} : ${restent.map((p) => p.nom).join(" · ")}. Une pièce qui ne vous concerne pas se met de côté avec « Ne me concerne pas » — elle compte comme réglée.`;
+const t = e.traduction || null;
+const bouts = [];
+if (restent.length) bouts.push(`Il reste ${restent.length} pièce${restent.length > 1 ? "s" : ""} : ${restent.map((p) => p.nom).join(" · ")}. Une pièce qui ne vous concerne pas se met de côté avec « Ne me concerne pas » — elle compte comme réglée.`);
+// LA LANGUE DES PIÈCES (lot R10) : la question ouverte est un
+// bloquant à part entière, parce que la réponse « non » coûte des
+// semaines. Fitz la pose, il ne la devine pas.
+if (t && !t.reglee) bouts.push("Une question reste ouverte à cette étape : vos relevés de notes et vos diplômes sont-ils en français ? S'ils ne le sont pas, le portail exige une traduction par un traducteur assermenté, original joint — c'est la démarche la plus longue du dossier, à lancer tôt.");
+else if (t && t.aFaire) bouts.push(`Traduction assermentée à faire faire pour : ${t.concernees.join(" · ")}. Seul un traducteur inscrit sur la liste officielle de votre pays est accepté ; demandez-la à votre espace Campus France.`);
+if (!bouts.length) return "Toutes les pièces sont réglées.";
+return bouts.join(" ");
 }
 case "motivations": {
 const restent = (e.voeux || []).filter((v) => !(v.motivation && v.motivation.faite === true));

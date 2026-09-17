@@ -679,6 +679,16 @@ font-size:.85rem;
 color:var(--text-muted);
 }
 
+/* Ce que le total ne comprend PAS (lot R10) : posé sous le chiffre,
+lisible, pas en note de bas de page — c'est là que se joue un budget
+faux. La phrase vient de js/diagnostic-france.js (HORS_TOTAL). */
+.rt-verdict-hors{
+margin:6px 0 0;
+font-size:.85rem;
+line-height:1.5;
+color:var(--text-light);
+}
+
 /* ---------- Les vœux ---------- */
 .rt-voeux{
 list-style:none;
@@ -963,6 +973,94 @@ margin:4px 0 8px;
 font-size:.88rem;
 font-weight:600;
 color:var(--text-light);
+}
+
+/* ---------- La langue des pièces (lot R10) ----------
+Trois états d'un même bloc : la question, la réponse « en français »
+(une ligne, et on n'en parle plus), et la démarche à lancer. Le
+troisième est le seul qui pèse à l'écran, parce qu'il est le seul qui
+coûte trois semaines à l'étudiant. */
+.rt-trad{
+margin:12px 0 4px;
+padding:14px 16px;
+border-radius:14px;
+border:1px solid var(--border-color);
+background:var(--background-light);
+}
+
+.rt-trad p{
+margin:0;
+font-size:.93rem;
+line-height:1.5;
+}
+
+.rt-trad p + p,
+.rt-trad .fitz-choice-group,
+.rt-trad .rt-outils{
+margin-top:10px;
+}
+
+.rt-trad i,
+.rt-trad svg{
+width:17px;
+height:17px;
+flex:0 0 auto;
+margin-right:8px;
+vertical-align:-3px;
+}
+
+.rt-trad-q,
+.rt-trad-titre{
+font-weight:700;
+font-size:.98rem;
+}
+
+.rt-trad-aide{
+color:var(--text-light);
+font-size:.86rem;
+}
+
+.rt-trad-pieces{
+font-weight:600;
+color:var(--text-color);
+}
+
+.rt-trad--ok{
+border-color:rgba(47,122,70,.45);
+}
+
+.rt-trad--ok i,
+.rt-trad--ok svg{
+color:var(--journey-done, #2F7A46);
+}
+
+/* La démarche à lancer : bord ambre à gauche, comme les autres blocs du
+site qui demandent une action hors du site. */
+.rt-trad--afaire{
+border-left:3px solid var(--amber-600);
+}
+
+.rt-trad--afaire .rt-trad-titre i,
+.rt-trad--afaire .rt-trad-titre svg{
+color:#8F3E22;
+}
+
+.rt-trad-changer{
+margin-top:10px;
+min-height:32px;
+padding:4px 0;
+border:0;
+background:transparent;
+color:var(--text-muted);
+font:inherit;
+font-size:.82rem;
+text-decoration:underline;
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.rt-trad-changer:hover{
+color:var(--journey-ink, #1C1610);
 }
 
 /* ---------- Le départ ---------- */
