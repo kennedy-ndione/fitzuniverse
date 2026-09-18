@@ -256,12 +256,32 @@ container.appendChild(chip);
 }
 
 // ==========================================================
-// Moyenne à échelle variable (academicAverage / bacAverage) — même
-// principe que currentScaleFor()/renderScaleSelector()/renderAverageInput()
-// dans eligibility-questions.js, adapté au style de profile.html : chips
-// .chip-select existantes pour le choix d'échelle (et pour les lettres),
-// simple champ texte pour la valeur plutôt que le curseur du diagnostic
-// (hors de propos ici, un formulaire de profil n'est pas un wizard).
+// LA MOYENNE ET SON SYSTÈME DE NOTATION — lot R18 (2026-09-18)
+// ==========================================================
+//
+// CE QUI CHANGE, ET POURQUOI. Le système de notation se choisissait
+// dans cinq PASTILLES posées AU-DESSUS du champ. Dans une colonne de
+// grille — « Mon profil » en pose trois de front sur un écran large —
+// elles tombaient sur trois rangées, et la valeur atterrissait juste
+// sous la dernière. Charles, le 2026-09-18, a lu sa moyenne « 12,20 »
+// comme une note « Autre système (%) », alors qu'elle était bien sur 20.
+// Rien, en plus, ne disait que ces pastilles étaient une QUESTION : il
+// n'y avait aucun libellé au-dessus d'elles.
+//
+// Le système devient donc un sélecteur, DANS la rangée de la valeur :
+// [ /20 ] [ 12,20 ]. Même forme que le téléphone du lot B5. Il ne
+// retourne jamais à la ligne, il porte son propre nom accessible, et la
+// valeur ne peut plus paraître appartenir à autre chose.
+//
+// La sous-mécanique des lettres — une seconde rangée de pastilles A à F,
+// affichée ou masquée — DISPARAÎT : sur un système de lettres, le champ
+// prend « Ex. B » pour exemple et l'aide nomme les lettres admises. Une
+// pièce en moins, et le même résultat en base.
+//
+// LA BASE NE CHANGE PAS : `academicAverage`/`bacAverage` gardent la
+// valeur brute et `…Scale` l'identifiant du système. AVERAGE_SCALES
+// reste la table partagée avec js/diagnostic-vers-profil.js, qui
+// reprend la moyenne du diagnostic AVEC son système, sans conversion.
 // ==========================================================
 
 function currentAverageScale(fieldId) {
@@ -269,103 +289,72 @@ const scaleId = averageScaleState[fieldId] || AVERAGE_DEFAULT_SCALE;
 return AVERAGE_SCALES.find((s) => s.id === scaleId) || AVERAGE_SCALES[0];
 }
 
-function renderAverageScaleChips(fieldId) {
+function renderAverageScaleOptions(fieldId) {
 
-const container = document.getElementById(`${fieldId}ScaleChips`);
-if (!container) return;
+const select = document.getElementById(`${fieldId}Scale`);
+if (!select) return;
 
-container.innerHTML = "";
-
-const current = currentAverageScale(fieldId);
-
+if (!select.options.length) {
 AVERAGE_SCALES.forEach((scale) => {
+const option = document.createElement("option");
+option.value = scale.id;
+option.textContent = scale.label;
+select.appendChild(option);
+});
+}
 
-const chip = document.createElement("button");
-chip.type = "button";
-chip.className = "chip";
-chip.textContent = scale.label;
-chip.setAttribute("aria-pressed", String(scale.id === current.id));
+select.value = currentAverageScale(fieldId).id;
 
-chip.addEventListener("click", () => {
+if (select.dataset.branche === "1") return;
+select.dataset.branche = "1";
 
-if (scale.id === current.id) return;
+select.addEventListener("change", () => {
+
+if (select.value === averageScaleState[fieldId]) return;
 
 // Une valeur saisie dans un système ne veut rien dire dans un autre
-// (même règle que renderScaleSelector() dans eligibility-questions.js) —
-// on efface la valeur brute, pas l'échelle affichée après coup.
+// (même règle que renderScaleSelector() dans eligibility-questions.js) :
+// on efface la valeur brute, pas le système affiché après coup.
 document.getElementById(fieldId).value = "";
 
-averageScaleState[fieldId] = scale.id;
+averageScaleState[fieldId] = select.value;
 
-renderAverageScaleChips(fieldId);
 renderAverageValueInput(fieldId);
 updateCompletion();
 
 });
 
-container.appendChild(chip);
-
-});
-
 }
 
+// L'exemple et l'aide suivent le système choisi. « Ex. 14,5 » devant un
+// système de lettres n'aide personne — même règle que l'exemple de
+// score du test de langue au lot R17.
 function renderAverageValueInput(fieldId) {
 
 const scale = currentAverageScale(fieldId);
 const input = document.getElementById(fieldId);
-const lettersContainer = document.getElementById(`${fieldId}Letters`);
+if (!input) return;
 
-if (!input || !lettersContainer) return;
+input.placeholder = scale.kind === "letters" ? "Ex. B" : scale.placeholder;
 
-if (scale.kind === "letters") {
-
-input.hidden = true;
-lettersContainer.hidden = false;
-lettersContainer.innerHTML = "";
-
-const existing = input.value;
-
-scale.options.forEach((letter) => {
-
-const btn = document.createElement("button");
-btn.type = "button";
-btn.className = "chip";
-btn.textContent = letter;
-btn.setAttribute("aria-pressed", String(letter === existing));
-
-btn.addEventListener("click", () => {
-
-lettersContainer.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
-btn.setAttribute("aria-pressed", "true");
-
-input.value = letter;
-updateCompletion();
-
-});
-
-lettersContainer.appendChild(btn);
-
-});
-
-} else {
-
-input.hidden = false;
-lettersContainer.hidden = true;
-input.placeholder = scale.placeholder;
-
+const aide = document.getElementById(`${fieldId}Aide`);
+if (aide) {
+aide.textContent = scale.kind === "letters"
+? `Une lettre : ${scale.options.join(", ")}.`
+: "Recopiez la moyenne inscrite sur votre relevé.";
 }
 
 }
 
 // Un academicAverage/bacAverage déjà rempli sur un profil existant, sans
-// echelle associée (comptes créés avant ce lot), est traité comme "/20" —
-// comportement inchangé pour ces comptes, aucune donnée perdue.
+// système associé (comptes créés avant le lot qui l'a introduit), est
+// traité comme "/20" — comportement inchangé, aucune donnée perdue.
 function initAverageScaleField(fieldId, existingValue, existingScaleId) {
 
 averageScaleState[fieldId] = existingScaleId || AVERAGE_DEFAULT_SCALE;
 document.getElementById(fieldId).value = existingValue || "";
 
-renderAverageScaleChips(fieldId);
+renderAverageScaleOptions(fieldId);
 renderAverageValueInput(fieldId);
 
 }

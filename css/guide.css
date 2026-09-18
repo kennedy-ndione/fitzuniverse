@@ -43,6 +43,22 @@ display:none;
 flex:0 0 auto;
 }
 
+/* Le mot qui ouvre la rangée — ce n'est pas un bouton, et il ne doit pas
+en avoir l'air : sans lui, « Lycée public » sous un champ où l'on vient
+d'écrire le nom de son lycée ressemble à une seconde réponse. */
+.fitz-chips-lead{
+flex:0 0 auto;
+align-self:center;
+padding-right:2px;
+font-size:.72rem;
+font-weight:700;
+letter-spacing:.04em;
+text-transform:uppercase;
+color:var(--text-light);
+white-space:nowrap;
+user-select:none;
+}
+
 .fitz-chip{
 min-height:34px;
 padding:6px 12px;

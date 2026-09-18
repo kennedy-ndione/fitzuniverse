@@ -445,12 +445,21 @@ côté : une question, un vocabulaire, deux portes. -->
 <small class="field-repris" data-repris="graduationYear" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
+<!-- LOT R18 (2026-09-18) — LE SYSTÈME DE NOTATION SE CHOISIT DANS LA
+RANGÉE DE LA VALEUR. Cinq pastilles posées au-dessus du champ
+tombaient sur trois rangées dans une colonne de grille, et la valeur
+se collait sous la dernière : Charles a lu « 12,20 » comme une note
+« Autre système (%) », alors qu'elle était bien sur 20. Une rangée
+[ système ][ valeur ], comme le téléphone. -->
 <div class="input-group" data-palier-champ="academicAverage">
 <label for="academicAverage">Moyenne générale</label>
-<p class="field-hint">Choisissez d'abord votre système de notation — quel qu'il soit, votre moyenne compte.</p>
-<div class="chip-select" id="academicAverageScaleChips"></div>
-<div class="input-wrap"><input type="text" id="academicAverage" placeholder="Ex. 14,5"></div>
-<div class="chip-select" id="academicAverageLetters" hidden></div>
+<div class="input-wrap">
+<div class="moyenne-rangee">
+<select id="academicAverageScale" aria-label="Système de notation de votre moyenne générale"></select>
+<input type="text" id="academicAverage" placeholder="Ex. 14,5">
+</div>
+</div>
+<p class="field-aide" id="academicAverageAide">Recopiez la moyenne inscrite sur votre relevé.</p>
 <small class="field-repris" data-repris="academicAverage" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -471,8 +480,9 @@ côté : une question, un vocabulaire, deux portes. -->
 <div class="field-grid cols-3">
 
 <div class="input-group">
-<label for="bacSeries">Série / filière (si applicable à votre système)</label>
+<label for="bacSeries">Série ou filière</label>
 <div class="input-wrap"><input type="text" id="bacSeries" placeholder="Ex. S2, L1, G…" data-exemples="serieBac"></div>
+<p class="field-aide">Écrivez-la comme elle figure sur votre relevé. Si votre système n'en a pas, laissez vide.</p>
 <small class="field-repris" data-repris="bacSeries" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -492,9 +502,13 @@ côté : une question, un vocabulaire, deux portes. -->
 
 <div class="input-group">
 <label for="bacAverage">Moyenne du Bac</label>
-<div class="chip-select" id="bacAverageScaleChips"></div>
-<div class="input-wrap"><input type="text" id="bacAverage" placeholder="Ex. 13"></div>
-<div class="chip-select" id="bacAverageLetters" hidden></div>
+<div class="input-wrap">
+<div class="moyenne-rangee">
+<select id="bacAverageScale" aria-label="Système de notation de votre moyenne du Bac"></select>
+<input type="text" id="bacAverage" placeholder="Ex. 13">
+</div>
+</div>
+<p class="field-aide" id="bacAverageAide">Recopiez la moyenne inscrite sur votre relevé.</p>
 <small class="field-repris" data-repris="bacAverage" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 

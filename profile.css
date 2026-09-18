@@ -1363,6 +1363,114 @@ outline:none;
    Une règle qui vise un élément masqué ne proteste pas : elle se tait.
    D'où la garde en test, sur la largeur RENDUE et pas sur la déclaration.
 */
+/* ==========================================================
+LA MOYENNE ET SON SYSTÈME — une rangée (lot R18, 2026-09-18)
+==========================================================
+Cinq pastilles au-dessus du champ tombaient sur trois rangées dans une
+colonne de grille, et la valeur se collait sous la dernière : « 12,20 »
+paraissait être une note « Autre système (%) ». Même forme que la rangée
+du téléphone ci-dessous — le système à gauche, la valeur à droite, sans
+retour à la ligne possible.
+
+Le composant fitz-select (js/fitz-select.js) MASQUE le <select> natif et
+pose son propre bouton en frère : la largeur se donne donc au .fitz-select
+qui suit, jamais au <select>. C'est la leçon du lot B5. */
+.moyenne-rangee{
+
+display:flex;
+
+align-items:stretch;
+
+width:100%;
+
+border:1.5px solid var(--border-color);
+
+border-radius:var(--radius-md);
+
+background:var(--background);
+
+transition:border-color .25s var(--ease-premium), box-shadow .25s var(--ease-premium);
+
+overflow:hidden;
+
+}
+
+/* Le focus est porté par l'ENVELOPPE, comme pour le téléphone : un
+liseré autour du seul sélecteur, alors que le curseur clignote dans le
+champ voisin, désigne le mauvais élément. */
+.moyenne-rangee:focus-within{
+
+border-color:var(--primary-color);
+
+box-shadow:0 0 0 4px rgba(233,163,25,.22);
+
+}
+
+/* 132px : « Lettres (A-F) » est le plus long des cinq libellés, et la
+colonne du parcours scolaire en fait environ 300. flex:0 0 — le
+sélecteur ne rétrécit jamais, sinon c'est lui que le flex comprime. */
+.moyenne-rangee > .fitz-select{
+
+flex:0 0 132px;
+
+width:132px;
+
+}
+
+.moyenne-rangee > .fitz-select .fitz-select-trigger{
+
+height:100%;
+
+padding:12px 6px 12px 12px;
+
+border:none;
+
+border-right:1.5px solid var(--border-color);
+
+border-radius:0;
+
+background:var(--background-soft);
+
+font-size:.82rem;
+
+color:var(--text-light);
+
+}
+
+.moyenne-rangee > .fitz-select .fitz-select-trigger:hover{
+
+background:var(--background-soft);
+
+}
+
+.moyenne-rangee > input[type="text"]{
+
+flex:1 1 auto;
+
+min-width:0;
+
+border:none;
+
+border-radius:0;
+
+background:transparent;
+
+padding:12px 14px;
+
+font-family:inherit;
+
+font-size:.92rem;
+
+color:var(--text-color);
+
+}
+
+.moyenne-rangee > input[type="text"]:focus{
+
+outline:none;
+
+}
+
 .tel-rangee > .fitz-select{
 
 flex:0 0 148px;

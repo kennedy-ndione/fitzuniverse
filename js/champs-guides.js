@@ -111,9 +111,27 @@ export function sansAccent(t) {
  * @param {string} cle - le nom du champ visé (attribut `name`, ou un id)
  * @param {string[]} liste - les exemples ; vide ou absent ⇒ chaîne vide
  */
+/**
+ * LA RANGÉE DIT CE QU'ELLE EST (lot R18, 2026-09-18).
+ *
+ * Charles, le 2026-09-18, devant « Mon profil » : sous « Série /
+ * filière » il avait tapé « serie littéraire », et lisait dessous
+ * « S1 S2 S3 L1 L2 » — deux façons de répondre à une seule question.
+ * Sous « Votre établissement », où il avait écrit le nom de son lycée,
+ * la rangée proposait « Lycée public · Lycée privé ». Rien ne disait
+ * que ces pastilles sont des EXEMPLES à recopier ou à modifier, pas la
+ * liste des réponses admises.
+ *
+ * Le mot « Exemples » ouvre donc la rangée, à l'intérieur du bloc et
+ * hors des boutons : il n'est pas cliquable, le gestionnaire ne réagit
+ * qu'à `.fitz-chip`, et rien d'autre ne change.
+ */
+export const MOT_EXEMPLES = "Exemples";
+
 export function htmlChips(cle, liste) {
   if (!Array.isArray(liste) || !liste.length) return "";
-  return `<div class="fitz-chips" data-chips-pour="${ech(cle)}">${liste.map((v) => `<button type="button" class="fitz-chip">${ech(v)}</button>`).join("")}</div>`;
+  const lead = `<span class="fitz-chips-lead" aria-hidden="true">${ech(MOT_EXEMPLES)}</span>`;
+  return `<div class="fitz-chips" data-chips-pour="${ech(cle)}">${lead}${liste.map((v) => `<button type="button" class="fitz-chip">${ech(v)}</button>`).join("")}</div>`;
 }
 
 /** Un champ à suggestions, en HTML. `source` est une clé de SOURCES. */
