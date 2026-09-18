@@ -1929,6 +1929,19 @@ render();
 
 }
 
+// Nombre de jours avant `deadline` (ISO "AAAA-MM-JJ"), ou null sans
+// échéance. Dupliqué à l'identique de js/ai/simulated-responses.js
+// (daysUntil) plutôt qu'importé : ce module est purement local à cette
+// page et n'a pas vocation à dépendre du module de simulation.
+function joursAvantEcheance(isoDate) {
+if (!isoDate) return null;
+const cible = new Date(`${isoDate}T00:00:00`);
+const aujourdhui = new Date();
+cible.setHours(0, 0, 0, 0);
+aujourdhui.setHours(0, 0, 0, 0);
+return Math.round((cible - aujourdhui) / 86400000);
+}
+
 async function runReadinessCheck(app) {
 
 const btn = document.getElementById(app.id)?.querySelector(".app-readiness-btn");
@@ -1963,13 +1976,26 @@ profile
 }
 });
 
+// checklistDone/checklistTotal/daysLeft (lot AI-STRUCTURE, 2026-09-18) :
+// calculés ICI plutôt que demandés au modèle. Ce sont de purs calculs
+// sur des données déjà connues du client — les faire recalculer par
+// Fitz n'ajoutait qu'un risque d'erreur d'arithmétique, pour un champ
+// que js/ai/prompts.js ne lui demande d'ailleurs plus (voir son
+// commentaire "RÉPONSE JSON STRICTE").
+const etapesFaites = parcours === "preinscription"
+? etapesProcedure.filter((e) => e.done === true).length
+: (app.checklist || []).filter((i) => i.status === "complete").length;
+const etapesTotal = parcours === "preinscription"
+? etapesProcedure.length
+: (app.checklist || []).length;
+
 await updateDoc(doc(db, "users", uid, "applications", app.id), {
 fitzReadiness: {
 ready: data.ready,
 missingItems: data.missingItems,
-checklistDone: data.checklistDone,
-checklistTotal: data.checklistTotal,
-daysLeft: data.daysLeft,
+checklistDone: etapesFaites,
+checklistTotal: etapesTotal,
+daysLeft: joursAvantEcheance(app.deadline),
 checkedAt: serverTimestamp()
 }
 });

@@ -147,8 +147,16 @@ detail: `${taille} caractères envoyés, maximum ${TAILLE_ENTREE_MAX}`
 // Vérifié contre ce que renvoie réellement js/ai/simulated-responses.js
 // (computeApplicationReport / computeApplicationReadiness) et contre ce
 // que lisent réellement ai-check.js et applications.js.
+//
+// "overallScore" est volontairement ABSENT de la liste "check" (lot
+// AI-STRUCTURE, 2026-09-18) : js/ai/controle-bourse.js renvoie
+// délibérément `overallScore: null` pour un dossier de bourse (aucun
+// plafond publié à comparer — règle du lot R11, "ce qu'on ne peut pas
+// juger est ABSENT, pas nul"), et ai-check.js sait déjà afficher « — »
+// dans ce cas (voir `noteChiffree`). L'exiger ici aurait rejeté cette
+// réponse, pourtant honnête, avec REPONSE_INVALIDE.
 const CHAMPS_REQUIS = {
-check: ["overallScore", "categories"],
+check: ["categories"],
 readiness: ["ready", "missingItems"]
 };
 

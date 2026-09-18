@@ -287,13 +287,54 @@ user: `Traduis le texte suivant ${depuis} ${vers} :\n\n${input.text}`
 check(input) {
 
 const preinscription = lireParcoursDeSaisie(input) === "preinscription";
+const fichiers = input.files || [];
+
+// LE CONTENU RÉEL DES PIÈCES (lot AI-STRUCTURE, 2026-09-18). Jusqu'ici
+// seuls le nom et le type du fichier étaient envoyés : un vrai modèle
+// n'avait donc RIEN à lire pour juger clarté, grammaire ou
+// professionnalisme, et n'aurait pu que les inventer — exactement ce
+// que le lot R11 a supprimé côté simulateur (scoreFromHash). L'extraction
+// (ai-check.js, extractTextFromFile) existait déjà et n'était jamais
+// transmise ici : elle l'est maintenant, avec son statut, pour que
+// Fitz sache CE QU'IL A vraiment pu lire.
+const documentsDecrits = fichiers.length
+? fichiers.map((f) => {
+const entete = `${f.name} (${f.type || "type non précisé"})`;
+if (f.extraction === "lue" && f.content) return `${entete} — contenu extrait :\n${f.content}`;
+if (f.extraction === "vide") return `${entete} — fichier lu, mais vide`;
+if (f.extraction === "format") return `${entete} — format non lisible par Fitz, aucun contenu disponible`;
+if (f.extraction === "erreur") return `${entete} — échec de lecture, aucun contenu disponible`;
+return `${entete} — contenu non disponible`;
+}).join("\n\n")
+: "Aucun document fourni.";
+
+// RÉPONSE JSON STRICTE (lot AI-STRUCTURE, 2026-09-18). Avant ce lot,
+// rien n'imposait au modèle de répondre en JSON : un vrai modèle
+// rendait de la prose, que extraireJSON() (functions/fitz.js) ne
+// parvenait pas à parser, et l'étudiant recevait REPONSE_INVALIDE.
+// Le schéma ci-dessous doit rester synchronisé avec CHAMPS_REQUIS
+// (js/ai/ai-client.js) et avec ce que lisent renderCategories/
+// renderList/renderChecklist (ai-check.js).
+const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown (pas de \`\`\`), exactement selon ce schéma :
+{
+  "overallScore": nombre entre 0 et 100, ou null si tu ne peux honnêtement noter aucune catégorie (aucun document au contenu lisible, ou aucune grille de notation applicable à ce dossier),
+  "categories": { "clé": nombre entre 0 et 100, ... } — n'inclus QUE les catégories (parmi clarté, grammaire, professionnalisme, cohérence, complétude) que tu peux vraiment juger à partir du contenu extrait ci-dessus ; objet vide {} si aucun contenu n'est lisible,
+  "categoryLabels": { "clé": "Libellé affiché en français, ex. \\"Clarté\\"" } — une entrée pour chaque clé présente dans categories,
+  "listLabels": { "strengths": "titre", "weaknesses": "titre", "suggestions": "titre" } — champ optionnel, à omettre sauf si "Points forts / Points faibles / Suggestions" ne convient pas à ce que tu rends (par exemple un dossier où tu mesures sans noter),
+  "strengths": ["phrase complète", ...],
+  "weaknesses": ["phrase complète", ...],
+  "suggestions": ["phrase complète", ...],
+  "checklist": [{ "label": "nom de la pièce attendue", "present": true ou false }, ...] — une entrée par pièce habituelle de ce type de dossier, "present" selon les documents réellement fournis
+}
+Règle absolue : ne note ni ne commente JAMAIS le contenu d'un document que tu n'as pas pu lire (statut "vide", "format non lisible" ou "échec de lecture") — signale-le en points faibles ou suggestions si utile, mais ne lui donne aucune note.`;
 
 return {
-system: preinscription
+system: (preinscription
 ? `${baseSystem(input)} Tu vérifies les pièces d'un dossier de préinscription avant leur dépôt sur le portail officiel — relevés, diplômes, traductions, preuve de ressources, lettres de vœu — et tu rends un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et ce qu'il faut corriger avant de soumettre.`
-: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`,
+: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`) + " " + consigneJSON,
 user: [
-`Documents fournis : ${(input.files || []).map((f) => `${f.name} (${f.type || "type non précisé"})`).join(", ") || "aucun"}`,
+"Documents fournis :",
+documentsDecrits,
 "",
 "Profil de l'étudiant :",
 describeProfile(input.profile)
@@ -312,12 +353,29 @@ const checklistLines = (input.checklist || []).length
 // portail sont faites, avec leurs preuves (js/application-journey.js,
 // etapesDeProcedure). Pas un barème de bourse, pas une lettre d'une
 // page à avoir générée.
+// RÉPONSE JSON STRICTE (lot AI-STRUCTURE, 2026-09-18) — même bug et
+// même correction que pour check() ci-dessus : sans cette consigne, un
+// vrai modèle rend de la prose et REPONSE_INVALIDE tombe côté serveur.
+// Volontairement PAS de champs "checklistDone"/"checklistTotal"/
+// "daysLeft" dans ce schéma : ce sont de purs calculs sur des données
+// déjà connues du client (nombre d'étapes/d'éléments faits, jours avant
+// la date limite) — les lui faire recalculer n'ajoute que du risque
+// d'erreur d'arithmétique pour aucun bénéfice. CHAMPS_REQUIS
+// (js/ai/ai-client.js) ne vérifie d'ailleurs que "ready" et
+// "missingItems" : c'est tout ce que Fitz doit vraiment juger ici.
+const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown (pas de \`\`\`), exactement selon ce schéma :
+{
+  "ready": true ou false,
+  "missingItems": [{ "id": "identifiant court sans espace", "text": "phrase complète décrivant ce qu'il reste à faire", "actionLabel": "verbe d'action court, ex. \\"Compléter mon profil\\"", "actionHref": "lien interne relatif si pertinent, sinon null" }, ...] — liste vide si "ready" est true
+}
+N'invente jamais une étape ou un document qui n'a pas été mentionné dans les données ci-dessous.`;
+
 if (lireParcoursDeSaisie(input) === "preinscription") {
 const etapes = (input.etapesProcedure || []).length
 ? input.etapesProcedure.map((e) => `- ${e.label} : ${e.done ? "faite" : "à faire"}${e.preuve && e.preuve !== "aucune" ? ` (preuve attendue : ${e.preuve})` : ""}${e.echeanceISO ? ` — échéance ${e.echeanceISO}` : ""}`).join("\n")
 : "Aucune étape de procédure rattachée à ce dossier (pays de résidence non documenté, ou dossier non lié à une destination).";
 return {
-system: `${baseSystem(input)} Tu évalues si UN dossier de préinscription précis est prêt à être soumis sur le portail officiel, à partir de l'état réel de sa procédure : chaque étape faite ou non, la preuve attendue, l'échéance. Réponse structurée : un verdict clair (prêt / pas encore) et la liste concrète des étapes qu'il reste à faire, dans l'ordre de la procédure.`,
+system: `${baseSystem(input)} Tu évalues si UN dossier de préinscription précis est prêt à être soumis sur le portail officiel, à partir de l'état réel de sa procédure : chaque étape faite ou non, la preuve attendue, l'échéance. Réponse structurée : un verdict clair (prêt / pas encore) et la liste concrète des étapes qu'il reste à faire, dans l'ordre de la procédure. ${consigneJSON}`,
 user: [
 `Établissement : ${input.university || "non précisé"}`,
 `Formation : ${input.program || input.scholarship || "non précisée"}`,
@@ -333,7 +391,7 @@ describeProfile(input.profile)
 }
 
 return {
-system: `${baseSystem(input)} Tu évalues si UNE candidature précise est prête à être déposée, à partir de son état réel (dossier de candidature, lettre de motivation, délai, profil) — pas une analyse de documents importés comme pour la tâche "check". Réponse structurée : un verdict clair (prêt / presque prêt) et la liste concrète de ce qu'il reste à faire.`,
+system: `${baseSystem(input)} Tu évalues si UNE candidature précise est prête à être déposée, à partir de son état réel (dossier de candidature, lettre de motivation, délai, profil) — pas une analyse de documents importés comme pour la tâche "check". Réponse structurée : un verdict clair (prêt / presque prêt) et la liste concrète de ce qu'il reste à faire. ${consigneJSON}`,
 user: [
 `Université : ${input.university || "non précisée"}`,
 `Bourse : ${input.scholarship || "non précisée"}`,
