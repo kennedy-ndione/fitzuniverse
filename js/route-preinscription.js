@@ -199,7 +199,7 @@ export const ETAPES_ROUTE = [
   {
     id: "ef_compte", kind: "procedure", procedure: "ef_compte",
     titre: "Créer votre compte Études en France",
-    enClair: "Tout se passe sur le portail officiel. Créez-y votre compte avec une adresse e-mail que vous lisez vraiment : c'est là que les réponses arriveront. Si vous avez déjà un compte, reconnectez-vous, n'en créez pas un second."
+    enClair: "Tout se passe sur Études en France, le portail officiel. Créez-y votre compte avec une adresse e-mail que vous lisez vraiment : c'est là que les réponses arriveront. Si vous avez déjà un compte, reconnectez-vous, n'en créez pas un second."
   },
   {
     id: "ef_saisie", kind: "procedure", procedure: "ef_saisie",

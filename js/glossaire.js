@@ -179,17 +179,32 @@ return sortie + texte.slice(curseur);
 export const HORS_CHAMP = "nav, header, footer, a, button, h1, label, option, select, textarea, input, script, style, noscript, code, pre, [data-sans-glossaire], .glossaire-def, .mnav-sheet, .mnav-tabbar, .fitz-badge, .kicker";
 
 /**
-* Annote les nœuds de texte d'une page dans l'ordre de lecture. Le
-* registre des termes déjà expliqués vit sur le document : la fonction
-* peut être rappelée après un rendu sans expliquer deux fois.
+* Annote les nœuds de texte d'une page dans l'ordre de lecture.
 * Rend le nombre d'explications posées.
+*
+* LE REGISTRE SE LIT DANS LE DOM (lot R21, 2026-09-18), et non plus sur
+* le document. Il était gardé dans `doc.__glossaireVus`, ce qui marchait
+* pour une page dont le contenu ARRIVE — les faits publics d'une fiche,
+* le catalogue. L'espace étudiant, lui, se REDESSINE : la route repeint
+* ses quinze étapes, les cartes de candidature se reconstruisent. Mesuré
+* au banc le 2026-09-18 : l'explication de « portail » se posait au
+* premier rendu, disparaissait avec le contenu au premier repeint, et ne
+* revenait JAMAIS — le registre la croyait encore là.
+*
+* Ce qui est expliqué, c'est ce qui PORTE une explication. Le registre
+* se déduit donc des <span class="glossaire-def"> présents dans la
+* cible : un contenu effacé emmène ses explications, et le mot redevient
+* à expliquer. Aucun doublon pour autant — une occurrence déjà suivie de
+* son explication est reconnue par ce même compte.
 */
 export function expliquerTermes(racine) {
 if (typeof document === "undefined") return 0;
 const doc = racine && racine.ownerDocument ? racine.ownerDocument : document;
 const cible = racine || doc.body;
 if (!cible) return 0;
-const registre = doc.__glossaireVus || (doc.__glossaireVus = new Set());
+const registre = new Set(
+[...cible.querySelectorAll(".glossaire-def[data-terme]")].map((e) => e.getAttribute("data-terme"))
+);
 if (registre.size >= GLOSSAIRE.length) return 0;
 
 const walker = doc.createTreeWalker(cible, 4 /* NodeFilter.SHOW_TEXT */, {

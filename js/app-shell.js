@@ -359,6 +359,34 @@ if (window.FitzMobileNav) window.FitzMobileNav.initShell();
 // même patron que js/catalog-select.js côté catalogue public.
 initFitzSelects();
 
+// LE GLOSSAIRE TOURNE AUSSI ICI (lot R21, 2026-09-18).
+//
+// Il ne tournait que sur les pages PUBLIQUES : js/pied-de-page.js le
+// lance après avoir posé le pied de page, et js/glossaire-seul.js le
+// lance sur les pages publiques qui n'en ont pas. Aucune page de
+// l'espace étudiant ne chargeait l'un ou l'autre.
+//
+// MESURÉ SUR LE SITE DÉPLOYÉ le 2026-09-18, sur le texte réellement
+// rendu : « portail », « Études en France », « préinscription » et
+// « vœux » apparaissaient SANS explication sur la route comme sur
+// « Mes candidatures » — c'est-à-dire précisément là où ces mots
+// décident de quelque chose, et juste après que l'étudiant a payé. Le
+// glossaire éclairait la vitrine et laissait l'atelier dans le noir.
+//
+// `surveillerTermes` explique maintenant, puis à chaque rendu : la
+// route repeint ses étapes, les cartes se redessinent, et le registre
+// des termes déjà vus vit sur le document — un mot n'est donc expliqué
+// qu'une fois par page, même après vingt repeints. On vise <main> et
+// non <body>, comme le pied de page : la barre latérale et la barre
+// d'onglets ne sont pas des phrases.
+//
+// Module chargé à part, comme sur les pages publiques : un échec
+// (réseau filtrant) laisse l'espace intact, sans explications — jamais
+// sans contenu.
+import("./glossaire.js")
+.then((g) => g.surveillerTermes(document.querySelector("main") || document.body))
+.catch((e) => console.warn("Glossaire indisponible :", e));
+
 // Entrée du site : une seule fois par session de navigateur (garde
 // sessionStorage dans analytics.js). Posé ici et non au niveau du
 // module : l'admin importe hidePageLoader() de ce fichier et ne doit

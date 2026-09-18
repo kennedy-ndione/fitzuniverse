@@ -230,6 +230,17 @@ function htmlFaits(e) {
   return parts.join("");
 }
 
+/**
+ * LE TEXTE OFFICIEL NE PORTE PAS NOS PARENTHÈSES (lot R21, 2026-09-18).
+ *
+ * Depuis que le glossaire tourne dans l'espace étudiant
+ * (js/app-shell.js), il annoterait aussi ce paragraphe — et le site
+ * afficherait « Le texte officiel : "…" » suivi d'une phrase où NOS
+ * explications se sont glissées. On n'écrit pas dans un texte qu'on
+ * présente comme officiel : l'attribut data-sans-glossaire (déjà prévu
+ * par js/glossaire.js) l'en écarte. L'explication d'un mot a sa place
+ * partout ailleurs ; ici, la citation reste la citation.
+ */
 function htmlOfficiel(e) {
   const o = e.officielle;
   if (!o) return "";
@@ -237,7 +248,7 @@ function htmlOfficiel(e) {
   return `
     <details class="rt-officiel"${e.etat === "courante" ? " open" : ""}>
       <summary><i data-lucide="scroll-text"></i><span>Le texte officiel : « ${ech(o.titre)} »</span></summary>
-      <p>${ech(o.consigne)}</p>
+      <p data-sans-glossaire>${ech(o.consigne)}</p>
       ${sources.length ? `<p class="rt-source">Vérifié le ${ech(o.verifieLe)} · ${sources.map((s, i) => `<a href="${ech(s)}" target="_blank" rel="noopener noreferrer">${i === 0 ? "la source officielle" : "la page de votre pays"}</a>`).join(" · ")}</p>` : ""}
     </details>`;
 }

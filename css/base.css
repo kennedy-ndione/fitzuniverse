@@ -2644,6 +2644,22 @@ accent-color:#E9A319;
 }
 
 /* ==========================================================
+L'EXPLICATION DU GLOSSAIRE (lot R21, 2026-09-18)
+==========================================================
+js/glossaire.js pose l'explication d'un mot technique dans un
+<span class="glossaire-def"> à sa première apparition. La règle vivait
+dans css/pied-de-page.css, chargée par js/pied-de-page.js — donc
+seulement là où il y a un pied de page, c'est-à-dire sur les pages
+publiques. Depuis que le glossaire tourne AUSSI dans l'espace étudiant
+(js/app-shell.js), elle est ici : css/base.css est chargée par les 34
+pages du site.
+
+Le même gris que le texte courant : c'est une parenthèse, pas une note. */
+.glossaire-def{
+color:var(--text-light, inherit);
+}
+
+/* ==========================================================
 CHOIX UNIQUE — .fitz-choice (lot FINITIONS-VISUELLES, 2026-09-11)
 ==========================================================
 Le bouton radio du SITE, dans la lignée de fitz-select : le rond dessiné

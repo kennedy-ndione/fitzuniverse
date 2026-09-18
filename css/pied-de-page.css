@@ -237,12 +237,13 @@ body.dashboard-shell-active .footer{
 display:none;
 }
 
-/* Une explication du glossaire (js/glossaire.js) : le même gris que le
-texte courant, légèrement en retrait — c'est une parenthèse, pas une
-note. */
-.glossaire-def{
-color:var(--text-light, inherit);
-}
+/* L'EXPLICATION DU GLOSSAIRE A DÉMÉNAGÉ dans css/base.css (lot R21,
+2026-09-18). Cette feuille-ci est chargée par js/pied-de-page.js, donc
+seulement là où il y a un pied de page : les pages publiques. Depuis
+que le glossaire tourne AUSSI dans l'espace étudiant, ses explications
+s'y affichaient sans style — le même défaut que les liens nés
+invisibles des lots R13, R14 et B2, et que la largeur du sélecteur au
+lot B5. css/base.css, lui, est chargé par les 34 pages du site. */
 
 /* ≤992px : la marque reste à gauche, comme les colonnes en dessous — le
 pied de page ne change pas d'axe en son milieu. */
