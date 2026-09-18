@@ -338,6 +338,37 @@ return `${entete} — contenu non disponible`;
 }).join("\n\n")
 : "Aucun document fourni.";
 
+// LES FAITS MESURÉS ENTRENT DANS LE PROMPT (lot MESURE-ET-JUGEMENT,
+// 2026-09-18). Le poids de chaque fichier, le plafond publié par le
+// portail, la liste officielle des pièces et l'état des traductions
+// sont CALCULÉS par js/ai/controle-depot.js ou controle-bourse.js —
+// des faits, pas des opinions. Le modèle les reçoit pour ne pas les
+// contredire et pour ne pas s'en occuper : un modèle ne voit pas les
+// octets et ne connaît pas le plafond d'un portail ; le lui faire
+// deviner serait refaire la faute que le lot R11 a effacée.
+const c = input.controle && typeof input.controle === "object" ? input.controle : null;
+
+const faitsMesures = (() => {
+if (!c) return "";
+const lignes = [];
+if (typeof c.plafondGeneralKo === "number") lignes.push(`Plafond de poids publié par le portail : ${c.plafondGeneralKo} Ko par fichier.`);
+if (Array.isArray(c.plafondsStricts) && c.plafondsStricts.length) lignes.push(`Plafonds plus stricts : ${c.plafondsStricts.map((s) => `${s.nom} — ${s.ko} Ko`).join(" ; ")}.`);
+if (Array.isArray(c.fichiers) && c.fichiers.length) {
+lignes.push("Poids mesuré de chaque fichier :");
+for (const f of c.fichiers) {
+const poids = f.lisible || (f.mesurable === false ? "poids non mesuré" : "");
+lignes.push(`- ${f.nom} : ${poids || "poids inconnu"}${f.trop ? " — AU-DESSUS DU PLAFOND" : ""}`);
+}
+}
+if (typeof c.piecesTotal === "number" && c.piecesTotal > 0) lignes.push(`Pièces de la procédure réglées : ${c.piecesReglees} sur ${c.piecesTotal}.`);
+if (typeof c.lus === "number") lignes.push(`Fichiers dont le contenu a pu être lu : ${c.lus}${typeof c.vides === "number" ? `, vides : ${c.vides}` : ""}${typeof c.illisibles === "number" ? `, illisibles ici : ${c.illisibles}` : ""}.`);
+return lignes.length ? ["", "Mesures déjà faites par FitzUniverse (des FAITS, pas des estimations) :", ...lignes].join("\n") : "";
+})();
+
+const consigneFaits = c
+? " Les mesures qui te sont données — poids des fichiers, plafonds du portail, pièces réglées, fichiers lisibles ou non — sont des FAITS déjà calculés, affichés à l'étudiant à côté de ton analyse. Ne les recalcule pas, ne les contredis pas, ne les répète pas dans tes listes, et ne les note pas : elles ont déjà leur place dans le rapport. Ton travail porte sur le CONTENU que tu as pu lire. Tiens-en compte comme d'un contexte : un document au-dessus du plafond sera refusé par le portail quoi que vaille son texte."
+: "";
+
 // RÉPONSE JSON STRICTE (lot AI-STRUCTURE, 2026-09-18). Avant ce lot,
 // rien n'imposait au modèle de répondre en JSON : un vrai modèle
 // rendait de la prose, que extraireJSON() (functions/fitz.js) ne
@@ -345,6 +376,11 @@ return `${entete} — contenu non disponible`;
 // Le schéma ci-dessous doit rester synchronisé avec CHAMPS_REQUIS
 // (js/ai/ai-client.js) et avec ce que lisent renderCategories/
 // renderList/renderChecklist (ai-check.js).
+//
+// `overallScore` et `checklist` restent demandés pour le cas où AUCUNE
+// mesure n'accompagne l'analyse (js/ai/fusion-rapport.js les remplace
+// par la mesure dès qu'elle existe) : une page qui appellerait cette
+// tâche sans contrôle pur doit encore obtenir un rapport affichable.
 const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown (pas de \`\`\`), exactement selon ce schéma :
 {
   "overallScore": nombre entre 0 et 100, ou null si tu ne peux honnêtement noter aucune catégorie (aucun document au contenu lisible, ou aucune grille de notation applicable à ce dossier),
@@ -362,10 +398,11 @@ Règle absolue : ne note ni ne commente JAMAIS le contenu d'un document que tu n
 return {
 system: (preinscription
 ? `${baseSystem(input)} Tu vérifies les pièces d'un dossier de préinscription avant leur dépôt sur le portail officiel — relevés, diplômes, traductions, preuve de ressources, lettres de vœu — et tu rends un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et ce qu'il faut corriger avant de soumettre.`
-: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`) + " " + consigneJSON,
+: `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`) + consigneFaits + " " + consigneJSON,
 user: [
 "Documents fournis :",
 documentsDecrits,
+faitsMesures,
 "",
 "Profil de l'étudiant :",
 describeProfile(input.profile)

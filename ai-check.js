@@ -15,7 +15,16 @@ import { doc, updateDoc, serverTimestamp, collection, getDocs } from "https://ww
 import { initShellChrome, bootstrapShell, unlockingPlans, PLAN_LABELS, ESPACE_OUTILS } from "./js/app-shell.js";
 import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
-import { DOCUMENT_TYPES } from "./js/ai/simulated-responses.js";
+// LA MESURE ET LE JUGEMENT (lot MESURE-ET-JUGEMENT, 2026-09-18).
+// `computeApplicationReport` porte un nom de simulateur, mais depuis le
+// lot B1 elle ne fait plus que CHOISIR entre deux modules purs —
+// controle-depot.js (préinscription) et controle-bourse.js (bourses) —
+// et leur passer les fichiers dans la forme qu'ils attendent. C'est
+// donc elle, et pas une copie de sa dispatch, qui mesure ici : une
+// deuxième façon de mapper les fichiers aurait dérivé de la première au
+// premier champ ajouté. Elle ne touche ni le réseau ni Firebase.
+import { DOCUMENT_TYPES, computeApplicationReport } from "./js/ai/simulated-responses.js";
+import { fusionnerRapport } from "./js/ai/fusion-rapport.js";
 import { parcoursDOutil, titreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 // Lot ACCEPTATION (2026-09-11) : la vérification exige, en bourses, une
 // candidature ACCEPTÉE — elle ne tourne plus « sans candidature ».
@@ -501,10 +510,21 @@ traductionRoute = null;
 
 try {
 
-// `application` est ignorée sans risque par l'analyse simulée
-// actuelle ; le jour où l'analyse réelle sera branchée, elle saura
-// déjà POUR QUELLE candidature le dossier est vérifié.
-const { data } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursCheck, pieces: piecesRoute, traduction: traductionRoute, track: application ? application.track : undefined } });
+// 1. LA MESURE — locale, gratuite, instantanée, vérifiable. Elle ne
+// dépend d'aucun réseau : même si Fitz ne répond pas, l'étudiant
+// obtient au moins les faits (poids contre plafond du portail, pièces
+// réglées, langue). C'est aussi ce qui remplit l'anneau de score,
+// décision de Charles du 2026-09-18 : le chiffre affiché est mesuré,
+// jamais un jugement de style déguisé en note.
+const mesure = computeApplicationReport({ files, profile, parcours: parcoursCheck, pieces: piecesRoute, traduction: traductionRoute });
+
+// 2. LE JUGEMENT — le modèle lit le contenu. Il reçoit les mesures
+// (`controle`) pour ne pas les contredire ni les refaire : voir la
+// consigne dans js/ai/prompts.js.
+const { data: donneesIA } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursCheck, pieces: piecesRoute, traduction: traductionRoute, controle: mesure.controle, track: application ? application.track : undefined } });
+
+// 3. LA FUSION — qui a dit quoi reste lisible (js/ai/fusion-rapport.js).
+const data = fusionnerRapport({ controle: mesure, ia: donneesIA });
 
 // UN RAPPORT PEUT N'AVOIR AUCUNE NOTE (lot B1, 2026-09-18).
 // Sur le parcours bourses, rien n'est notable : pas de plafond de poids

@@ -51,6 +51,18 @@ export const LIBELLES_CONTROLE = {
 };
 
 /**
+ * Ce que ce contrôle NE regarde pas, dit à l'étudiant. Jumelle de
+ * NON_JUGE_BOURSE (js/ai/controle-bourse.js).
+ *
+ * Exportée depuis le lot MESURE-ET-JUGEMENT (2026-09-18) : quand un
+ * jugement de contenu accompagne la mesure, js/ai/fusion-rapport.js
+ * retire cette phrase — une phrase qu'il ne peut retirer que s'il peut
+ * la reconnaître, et la recopier ailleurs l'aurait fait dériver au
+ * premier mot changé ici.
+ */
+export const NON_JUGE_DEPOT = "Ce contrôle porte sur ce que le portail refuse mécaniquement : le poids des fichiers, les pièces manquantes, la langue. Le CONTENU de vos documents n'est pas jugé ici — faites-le relire par votre conseiller, un professeur ou un proche.";
+
+/**
  * Un plafond de la procédure (« 500 Ko », « 50 Ko », « 1 Mo ») en
  * kilo-octets. Rend `null` pour une valeur vide ou non reconnue : un
  * plafond qu'on ne sait pas lire ne devient pas un plafond inventé.
@@ -222,7 +234,13 @@ export function controleDepot({ fichiers = [], pieces = [], traduction = null } 
   }
   // LA LIMITE DE CE CONTRÔLE, DITE À L'ÉTUDIANT. Un outil qui ne dit pas
   // ce qu'il n'a pas regardé laisse croire qu'il a tout regardé.
-  suggestions.push("Ce contrôle porte sur ce que le portail refuse mécaniquement : le poids des fichiers, les pièces manquantes, la langue. Le CONTENU de vos documents n'est pas jugé ici — faites-le relire par votre conseiller, un professeur ou un proche.");
+  //
+  // SORTIE EN CONSTANTE (lot MESURE-ET-JUGEMENT, 2026-09-18) : depuis
+  // que Fitz lit vraiment les documents, cette phrase devient fausse
+  // dans l'autre sens dès qu'un jugement de contenu accompagne la
+  // mesure. js/ai/fusion-rapport.js la retire alors — et pour la
+  // retirer, il faut pouvoir la reconnaître sans la recopier.
+  suggestions.push(NON_JUGE_DEPOT);
 
   return {
     overallScore,
@@ -234,7 +252,9 @@ export function controleDepot({ fichiers = [], pieces = [], traduction = null } 
     weaknesses,
     suggestions,
     // Rendu à part pour les tests et pour un affichage plus fin plus tard.
-    controle: { plafondGeneralKo: general, plafondsStricts: stricts, fichiers: mesures, trop, piecesReglees: reglees, piecesTotal: lesPieces.length, pretADeposer }
+    // `nonJuge` : reconnu par js/ai/fusion-rapport.js, comme du côté
+    // bourses (controle-bourse.js rend déjà son NON_JUGE_BOURSE ici).
+    controle: { plafondGeneralKo: general, plafondsStricts: stricts, fichiers: mesures, trop, piecesReglees: reglees, piecesTotal: lesPieces.length, pretADeposer, nonJuge: NON_JUGE_DEPOT }
   };
 
 }
