@@ -30,7 +30,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { EXEMPLES, LISTES, SOURCES, htmlChips, htmlSuggest, defautsDesExemples, sansAccent } from "../js/champs-guides.js";
+import { EXEMPLES, LISTES, SOURCES, htmlChips, htmlSuggest, defautsDesExemples, sansAccent, canoniser } from "../js/champs-guides.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
@@ -176,4 +176,64 @@ test("guidé 3 — la sidebar du profil a disparu, et profile.js pilote toujours
   }
   // L'ancre d'une section s'arrête SOUS la barre collante.
   assert.match(css, /scroll-margin-top:calc\(var\(--topbar-height\) \+ 108px\)/);
+});
+// ==========================================================
+// CANONISER — la campagne de test du 2026-09-18
+// ==========================================================
+
+test("canoniser ramène la graphie tapée à l'entrée du référentiel — et seulement elle", () => {
+
+// Le cas vu en ligne : « senegal » tapé au téléphone, la liste cachée
+// par le clavier, enregistré tel quel avec un message de succès.
+const pays = ["Sénégal", "Guinée", "Guinée-Bissau", "Guinée équatoriale", "Côte d'Ivoire", "Madagascar"];
+
+assert.equal(canoniser("senegal", pays), "Sénégal");
+assert.equal(canoniser("SENEGAL", pays), "Sénégal");
+assert.equal(canoniser("  Sénégal  ", pays), "Sénégal");
+assert.equal(canoniser("cote d'ivoire", pays), "Côte d'Ivoire");
+
+// STRICT : un préfixe, même parlant, ne choisit pas à la place de
+// l'étudiant — trois Guinées attendent derrière « guine ».
+assert.equal(canoniser("guine", pays), "guine");
+
+// La liste propose, elle n'impose pas : une valeur hors référentiel
+// reste telle que tapée, épurée de ses espaces.
+assert.equal(canoniser("Pays imaginaire ", pays), "Pays imaginaire");
+assert.equal(canoniser("", pays), "");
+assert.equal(canoniser(null, pays), "");
+assert.equal(canoniser("senegal", null), "senegal");
+
+// Et l'enregistrement de l'étape 1 s'en sert bien, pour les DEUX
+// champs, AVANT l'alias originCountry — sinon l'alias emporterait la
+// graphie brute. Preuve par mutation : canoniser retiré d'un champ
+// → rouge.
+const route = readFileSync(new URL("../espace-preinscription.js", import.meta.url), "utf8");
+assert.match(route, /maj\.country = canoniser\(maj\.country, COUNTRY_NAMES\)/);
+assert.match(route, /maj\.nationality = canoniser\(maj\.nationality, COUNTRY_NAMES\)/);
+assert.ok(
+route.indexOf("maj.country = canoniser") < route.indexOf("maj.originCountry = maj.country"),
+"l'alias originCountry doit être posé APRÈS la canonisation"
+);
+
+});
+
+test("le glossaire n'annote ni un brouillon à envoyer, ni la phrase du pays sans article", () => {
+
+// Deux constats de la campagne du 2026-09-18. L'aperçu de l'e-mail
+// affichait « Préinscription (une demande d'admission, avant
+// l'inscription) » dans l'objet même — le texte enregistré était
+// propre, mais une sélection à la main dans l'aperçu partait chez
+// l'université avec les gloses.
+for (const page of ["ai-email.html", "ai-letter.html"]) {
+const html = readFileSync(new URL("../" + page, import.meta.url), "utf8");
+assert.match(html, /id="previewContent" data-sans-glossaire/, `${page} : l'aperçu du document généré doit être hors du champ du glossaire`);
+}
+
+// Et le Diagnostic France écrivait « depuis Sénégal », sans article.
+// La phrase est tournée pour n'avoir besoin d'aucune table de
+// grammaire : « depuis votre pays de résidence (Sénégal) ».
+const diag = readFileSync(new URL("../js/diagnostic-france-page.js", import.meta.url), "utf8");
+assert.match(diag, /depuis votre pays de résidence \(\$\{pays\}\)/);
+assert.ok(!/s'applique depuis \$\{pays\}/.test(diag), "le nom du pays ne doit plus suivre directement « depuis »");
+
 });

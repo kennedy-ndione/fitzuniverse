@@ -154,7 +154,14 @@ function renderEtapes(pays) {
 const { etapes, residenceDocumentee, avertissement } = etapesRestantes(pays);
 
 document.getElementById("diagEtapesIntro").textContent = residenceDocumentee
-? `La procédure Études en France, telle qu'elle s'applique depuis ${pays} : ${etapes.length} étapes, dans l'ordre. Elle est écrite ici en entier — vous pouvez la suivre seul.`
+// « depuis votre pays de résidence (Sénégal) » et non « depuis
+// Sénégal » (vu en ligne le 2026-09-18) : un nom de pays injecté après
+// une préposition demande son article — le Sénégal, la Côte d'Ivoire,
+// mais Madagascar sans article. Plutôt qu'une table de grammaire à
+// tenir pour deux cents pays, la phrase est tournée pour n'en avoir
+// pas besoin — même esprit que l'élision des langues dans
+// js/ai/prompts.js (« de l'anglais », « du français »).
+? `La procédure Études en France, telle qu'elle s'applique depuis votre pays de résidence (${pays}) : ${etapes.length} étapes, dans l'ordre. Elle est écrite ici en entier — vous pouvez la suivre seul.`
 : `La procédure Études en France, ${etapes.length} étapes, dans l'ordre. Les montants, les dates et les lieux qui dépendent de votre pays de résidence ne sont pas encore vérifiés : chaque étape concernée le dit.`;
 
 const bandeau = document.getElementById("diagAvertissement");

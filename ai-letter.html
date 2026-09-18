@@ -288,7 +288,17 @@ la lettre, elle appartient à l'étudiant. -->
 <button type="button" class="ai-icon-btn" id="downloadPdfBtn" disabled><i data-lucide="download"></i>PDF</button>
 </div>
 
-<div class="ai-preview-content" id="previewContent">
+<!-- LE GLOSSAIRE N'ANNOTE PAS UN BROUILLON À ENVOYER (2026-09-18). Vu en
+ligne : l'objet affiché portait « Préinscription (une demande
+d'admission, avant l'inscription) », et « portail (le site où vous
+déposez votre candidature) officiel » cassait la phrase. Le texte
+ENREGISTRÉ est propre — Copier et Télécharger livrent un texte sain —
+mais l'étudiant qui sélectionne à la main dans l'aperçu enverrait les
+gloses à une université, et celui qui relit son brouillon ne sait pas
+si la parenthèse est de Fitz ou de lui. Même règle que les noms de
+fichiers (ai-check.html) : data-sans-glossaire, la sortie prévue par
+HORS_CHAMP (js/glossaire.js). -->
+<div class="ai-preview-content" id="previewContent" data-sans-glossaire>
 <div class="ai-preview-empty">
 <i data-lucide="pen-line"></i>
 <span>Votre lettre de motivation apparaîtra ici.</span>

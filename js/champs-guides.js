@@ -107,6 +107,40 @@ export function sansAccent(t) {
 }
 
 /**
+ * LA VALEUR TAPÉE REVIENT À SA FORME DU RÉFÉRENTIEL — à l'enregistrement.
+ *
+ * Constaté en ligne le 2026-09-18, étape 1 de la route : « senegal »
+ * tapé sans cliquer la suggestion est parti en base tel quel, minuscule
+ * et sans accent, avec le message « Votre situation est enregistrée ».
+ * Le clic sur la suggestion canonise bien (la liste écoute `mousedown`,
+ * voir plus bas) — le chemin qui blesse est celui du téléphone, où le
+ * clavier cache la liste et où l'étudiant enregistre directement.
+ *
+ * En aval, trouverProcedure() tolère les trois graphies (vérifié), mais
+ * les prompts recevaient « Cet étudiant vient de : senegal », et tout
+ * consommateur à correspondance exacte restait exposé.
+ *
+ * La règle est STRICTE : seule une égalité complète, accents et casse
+ * mis à part, ramène à l'entrée du référentiel. Pas de préfixe unique —
+ * « guine » ne doit pas choisir entre la Guinée, la Guinée-Bissau et la
+ * Guinée équatoriale à la place de l'étudiant. Une valeur qui ne
+ * correspond à rien reste telle que tapée : la liste propose, elle
+ * n'impose pas (règle des composants de ce fichier), et refuser
+ * d'enregistrer bloquerait un étudiant pour une faute de frappe.
+ *
+ * @param {string} valeur - ce que le champ contient à l'enregistrement
+ * @param {string[]} liste - le référentiel (COUNTRY_NAMES, LISTES...)
+ * @returns {string} l'entrée du référentiel, ou la valeur épurée telle quelle
+ */
+export function canoniser(valeur, liste) {
+  const propre = String(valeur || "").trim();
+  if (!propre) return propre;
+  const cible = sansAccent(propre);
+  const exacte = (Array.isArray(liste) ? liste : []).find((c) => sansAccent(c) === cible);
+  return exacte || propre;
+}
+
+/**
  * Les pastilles d'exemples d'un champ, en HTML.
  * @param {string} cle - le nom du champ visé (attribut `name`, ou un id)
  * @param {string[]} liste - les exemples ; vide ou absent ⇒ chaîne vide

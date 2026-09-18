@@ -68,7 +68,7 @@ import {
 } from "./js/route-preinscription.js";
 // Les deux composants guidés (pastilles d'exemples, champ à suggestions)
 // sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
-import { EXEMPLES, htmlChips, htmlSuggest, brancherChampsGuides } from "./js/champs-guides.js";
+import { EXEMPLES, htmlChips, htmlSuggest, brancherChampsGuides, canoniser } from "./js/champs-guides.js";
 
 // ==========================================================
 // Outillage
@@ -739,6 +739,15 @@ async function enregistrerSituation(form) {
     const val = el ? (el instanceof RadioNodeList ? el.value : el.value) : "";
     maj[q.cle] = String(val || "").trim();
   }
+  // LE PAYS REVIENT À SA FORME DU RÉFÉRENTIEL (2026-09-18). Constaté en
+  // ligne : « senegal » tapé sans cliquer la suggestion partait en base
+  // tel quel — le clavier du téléphone cache la liste, l'étudiant
+  // enregistre directement. canoniser() (js/champs-guides.js) ne corrige
+  // que l'égalité stricte accents/casse mises à part : « guine » ne
+  // choisit pas une Guinée à la place de l'étudiant, et une valeur
+  // inconnue du référentiel reste telle que tapée.
+  maj.country = canoniser(maj.country, COUNTRY_NAMES);
+  maj.nationality = canoniser(maj.nationality, COUNTRY_NAMES);
   // Alias hérité, lu par les outils : le pays de résidence.
   maj.originCountry = maj.country;
   const paths = {};
