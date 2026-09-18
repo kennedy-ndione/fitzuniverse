@@ -11,26 +11,45 @@
  * par le premier venu. Cette fonction est le seul endroit d'où un
  * modèle peut être appelé.
  *
- * VERTEX AI PLUTÔT QUE L'API ANTHROPIC DIRECTE (décision du 2026-09-04)
+ * L'API ANTHROPIC DIRECTE (décision du 2026-09-18, elle renverse celle
+ * du 2026-09-04)
  * ---------------------------------------------------------------------
- * Claude est revendu par Google dans Vertex AI. Trois conséquences :
+ * Le 2026-09-04, cette fonction avait été écrite pour Vertex AI, où
+ * Google revend Claude. L'argument décisif était le deuxième des trois
+ * ci-dessous, et c'est lui qui s'est révélé faux.
  *
- *  1. **Aucune clé d'API.** La fonction s'authentifie avec sa propre
- *     identité de service Google (ADC). Il n'y a rien à stocker, rien à
- *     faire fuiter, rien à faire tourner. C'est le mode le plus sûr —
- *     une clé qui n'existe pas ne peut pas être volée.
- *  2. **Facturé sur le compte Google Cloud**, donc potentiellement sur
- *     le crédit d'essai de 300 $. Vertex coûte ~50 % de plus au jeton
- *     que l'API directe (3 $/15 $ contre 2 $/10 $ pour Sonnet 5 depuis
- *     la fin de la promotion le 31/08/2026), mais 50 % de plus sur un
- *     crédit déjà payé reste gratuit.
- *  3. **Régions** : `global` est le point d'entrée le moins cher. Le
- *     régional coûte 10 % de plus pour un gain de latence négligeable
- *     depuis Dakar.
+ *  1. **Aucune clé d'API.** Vertex authentifie la fonction par son
+ *     identité de service (ADC). C'était le vrai avantage : une clé qui
+ *     n'existe pas ne peut pas être volée. On le perd, et on le paie en
+ *     rangeant la clé dans Secret Manager — exactement là où vivent
+ *     déjà les trois clés PayDunya. Le risque est connu et outillé.
+ *  2. **« Facturé sur le crédit d'essai de 300 $, donc 50 % de plus sur
+ *     un crédit déjà payé reste gratuit. »** FAUX : les modèles
+ *     PARTENAIRES de Vertex (Anthropic, Mistral, Llama) sont facturés à
+ *     part et le crédit d'essai Google ne les couvre pas. Le surcoût
+ *     Vertex était donc payé plein tarif depuis le début. Vérifié le
+ *     2026-09-18 ; source tierce, pas la doc Google elle-même, mais
+ *     Charles paie désormais par carte, ce qui rend le point sans objet.
+ *  3. **Régions** : sans objet en direct.
  *
- * Pour revenir à l'API Anthropic directe un jour, il suffit de changer
- * `construireClient()` et de rétablir un secret ANTHROPIC_API_KEY :
- * tout le reste de ce fichier est identique dans les deux voies.
+ * CE QUE ÇA COÛTE, AUX PRIX DU 2026-09-18 (platform.claude.com) :
+ *
+ *   Sonnet 5   2 $ / 10 $  le million de jetons (Vertex : ~3 $ / 15 $)
+ *   Opus 5     5 $ / 25 $
+ *
+ * Le barème de POIDS ci-dessous (« un point ≈ 10 F CFA ») a été
+ * recalculé sur ces prix et reste juste : une analyse de dossier pèse
+ * douze points et coûte de l'ordre de 110 F CFA.
+ *
+ * PAS DE CACHE DE PROMPT DANS CE LOT, ET C'EST VOULU. La lecture de
+ * cache à 0,1× le prix d'entrée est le vrai levier pour ces six tâches,
+ * qui renvoient toutes le même contexte long. Mais changer de
+ * fournisseur ET la façon de construire les messages dans le même lot,
+ * c'est ne plus savoir lequel des deux a cassé quoi. Lot suivant.
+ *
+ * Pour revenir à Vertex, il suffit de rétablir `construireClient()` et
+ * de retirer le secret : tout le reste de ce fichier est identique dans
+ * les deux voies.
  *
  * ⚠️ LE SDK EST CHARGÉ À L'INTÉRIEUR DU GESTIONNAIRE, PAS EN TÊTE DE
  * FICHIER. Ce n'est pas un oubli. La CLI Firebase démarre ce code en
@@ -43,16 +62,21 @@
  */
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 
 if (!admin.apps.length) admin.initializeApp();
 
-const PROJET = "scholarbridge-e0d84";
-
-// Point d'entrée du modèle. "global" est le moins cher (3 $/15 $ le
-// million de jetons pour Sonnet 5, contre 3,30 $/16,50 $ en régional).
-const REGION_MODELE = "global";
+// LA CLÉ DE L'API ANTHROPIC (lot FITZ-RÉEL, 2026-09-18).
+//
+// Déclarée ici, injectée dans la fonction par `secrets:` plus bas, et
+// lue UNIQUEMENT dans construireClient(). Elle n'est jamais journalisée,
+// jamais renvoyée au client, jamais écrite dans Firestore.
+//
+// Posée par : firebase functions:secrets:set ANTHROPIC_API_KEY
+// (valeur saisie à l'invite, donc absente de l'historique du shell).
+const cleAnthropic = defineSecret("ANTHROPIC_API_KEY");
 
 // ============================================================
 // LES TÂCHES — modèle, plafond de sortie, poids
@@ -217,13 +241,23 @@ function refus(codeCallable, fitzCode, message) {
 }
 
 // ============================================================
-// LE CLIENT VERTEX
+// LE CLIENT ANTHROPIC
 // ============================================================
 
 function construireClient() {
   // Chargement paresseux : voir l'avertissement en tête de fichier.
-  const { AnthropicVertex } = require("@anthropic-ai/vertex-sdk");
-  return new AnthropicVertex({ projectId: PROJET, region: REGION_MODELE });
+  const Anthropic = require("@anthropic-ai/sdk");
+  const cle = cleAnthropic.value();
+  // UNE CLÉ ABSENTE EST UN DÉFAUT DE DÉPLOIEMENT, PAS UNE PANNE DU
+  // MODÈLE. Sans ce contrôle, le SDK partirait chercher
+  // process.env.ANTHROPIC_API_KEY, échouerait plus loin, et le journal
+  // dirait « authentification refusée » — ce qui enverrait chercher une
+  // clé invalide alors qu'il n'y en a aucune.
+  if (!cle) {
+    logger.error("ANTHROPIC_API_KEY absente : le secret n'est pas attaché à la fonction");
+    throw refus("internal", "AUTH", "Fitz est momentanément indisponible.");
+  }
+  return new Anthropic({ apiKey: cle });
 }
 
 /**
@@ -317,8 +351,8 @@ function extraireJSON(texte) {
 
 exports.fitzGenerate = onCall(
   {
-    // Aucun secret : Vertex authentifie la fonction par son identité de
-    // service. C'est tout l'intérêt de cette voie.
+    // La clé de l'API Anthropic, et elle seule (lot FITZ-RÉEL).
+    secrets: [cleAnthropic],
     region: "europe-west1",
     maxInstances: 10,
     timeoutSeconds: 300,
@@ -483,8 +517,10 @@ exports.fitzGenerate = onCall(
 
       // On distingue ce qui vaut la peine d'être réessayé de ce qui ne
       // le vaut pas : l'interface affiche un bouton « Réessayer », et il
-      // doit être honnête. Les classes d'erreur du SDK Vertex héritent
-      // de celles du SDK de base.
+      // doit être honnête. Les noms de classes ci-dessous sont ceux du
+      // SDK Anthropic (RateLimitError, AuthenticationError…) ; le SDK
+      // Vertex en héritait, donc ce bloc n'a pas changé de forme en
+      // changeant de voie.
       const nom = erreur?.constructor?.name || "";
       const statut = erreur?.status;
 
@@ -497,12 +533,16 @@ exports.fitzGenerate = onCall(
       }
 
       if (nom === "AuthenticationError" || nom === "PermissionDeniedError" || statut === 401 || statut === 403) {
-        // Sur Vertex, ça ne veut PAS dire « clé invalide » : il n'y a
-        // pas de clé. Ça veut dire que le compte de service de la
-        // fonction n'a pas le rôle Vertex AI User, ou que la facturation
-        // du projet est suspendue. Deux causes à vérifier dans cet ordre.
-        logger.error("Vertex refuse l'appel — vérifier le rôle aiplatform.user et la facturation", {
+        // TROIS CAUSES, DANS CET ORDRE DE PROBABILITÉ (lot FITZ-RÉEL) :
+        // la clé a été révoquée ou remplacée dans la console Anthropic
+        // sans que le secret soit remis à jour ; le crédit du compte
+        // Anthropic est épuisé ; la limite de dépense mensuelle est
+        // atteinte. Aucune n'est un défaut de code, et toutes les trois
+        // se voient sur console.anthropic.com. Le message ne cite JAMAIS
+        // la clé, même tronquée.
+        logger.error("Anthropic refuse l'appel — vérifier, dans cet ordre : clé révoquée, crédit épuisé, limite de dépense atteinte", {
           message: erreur?.message,
+          statut: statut,
         });
         throw refus("internal", "AUTH", "Fitz est momentanément indisponible.");
       }

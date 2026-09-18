@@ -15,7 +15,7 @@
   "dependencies": {
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^7.0.0",
-    "@anthropic-ai/vertex-sdk": "^0.19.6"
+    "@anthropic-ai/sdk": "^0.126.0"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.4.1"
