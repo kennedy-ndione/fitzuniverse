@@ -213,7 +213,9 @@ tout vient du suivi de candidatures. -->
 <div class="ai-score-summary">
 
 <div class="ai-score-ring" id="scoreRing">
-<div class="ai-score-ring-value"><span id="scoreValue">0</span><small>/ 100</small></div>
+<!-- « / 100 » disparaît quand le rapport ne rend aucune note (lot B1) :
+« — / 100 » se lirait comme un zéro. -->
+<div class="ai-score-ring-value"><span id="scoreValue">0</span><small id="scoreUnite">/ 100</small></div>
 </div>
 
 <div class="ai-category-list" id="categoryList"></div>
@@ -223,19 +225,21 @@ tout vient du suivi de candidatures. -->
 <div class="ai-insight-columns">
 
 <div class="ai-insight-card is-strengths">
-<h3><i data-lucide="thumbs-up"></i>Points forts</h3>
+<!-- Le libellé est dans un <span> : ai-check.js le remplace quand le
+rapport en fournit un (lot B1) sans toucher à l'icône. -->
+<h3 id="titreForts"><i data-lucide="thumbs-up"></i><span>Points forts</span></h3>
 <ul id="strengthsList"></ul>
 </div>
 
 <div class="ai-insight-card is-weaknesses">
-<h3><i data-lucide="alert-triangle"></i>Points à améliorer</h3>
+<h3 id="titreFaibles"><i data-lucide="alert-triangle"></i><span>Points à améliorer</span></h3>
 <ul id="weaknessesList"></ul>
 </div>
 
 </div>
 
 <div class="ai-insight-card is-fitz" style="margin-top:18px;">
-<h3><i data-lucide="lightbulb"></i>Suggestions de Fitz</h3>
+<h3 id="titreSuggestions"><i data-lucide="lightbulb"></i><span>Suggestions de Fitz</span></h3>
 <ul id="suggestionsList"></ul>
 </div>
 

@@ -19,30 +19,21 @@
 
 import { PROFILE_READY_THRESHOLD } from "../profile-score.js";
 import { controleDepot } from "./controle-depot.js";
+import { controleBourse } from "./controle-bourse.js";
 
 // ==========================================================
 // Outils internes
 // ==========================================================
 
-// Hash déterministe (djb2) — sert à dériver des scores "aléatoires"
-// mais stables d'un nom de fichier, pour que ré-analyser le même
-// document donne toujours le même résultat.
-function hashString(value) {
-
-let hash = 5381;
-
-for (let i = 0; i < value.length; i++) {
-hash = ((hash << 5) + hash) + value.charCodeAt(i);
-hash |= 0;
-}
-
-return Math.abs(hash);
-
-}
-
-function scoreFromHash(seed, min = 55, max = 96) {
-return min + (hashString(seed) % (max - min + 1));
-}
+// `hashString` et `scoreFromHash` ont été SUPPRIMÉS au lot B1 (2026-09-18).
+// Le commentaire d'origine disait tout : « dériver des scores
+// "aléatoires" mais stables d'un nom de fichier ». C'est exactement ce
+// qui fabriquait
+// « Grammaire 90/100 » sur un texte que personne
+// n'avait lu. Plus aucun rapport de ce dépôt ne note ce qu'il n'a pas
+// mesuré — ni en préinscription (js/ai/controle-depot.js), ni en
+// bourses (js/ai/controle-bourse.js) — et rien ici ne dérive plus la
+// moindre valeur d'un nom de fichier.
 
 function fullName(profile = {}) {
 return [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.name || profile.fullName || "";
@@ -492,13 +483,10 @@ export const DOCUMENT_TYPES = [
 { key: "autre", label: "Autre document" }
 ];
 
-const CATEGORY_LABELS = {
-clarity: "Clarté",
-grammar: "Grammaire",
-professionalism: "Professionnalisme",
-coherence: "Cohérence",
-completeness: "Complétude du dossier"
-};
+// CATEGORY_LABELS a été SUPPRIMÉ au lot B1 : « Clarté », « Grammaire »,
+// « Professionnalisme », « Cohérence » n'étaient les libellés d'aucune
+// mesure — seulement d'un hachage. Chaque contrôle porte désormais les
+// libellés des catégories qu'il sait vraiment juger.
 
 function guessTypeFromName(name) {
 
@@ -517,47 +505,31 @@ return "autre";
 
 }
 
-export function analyzeDocument(file) {
-
-const type = file.type || guessTypeFromName(file.name);
-const base = scoreFromHash(file.name || "document");
-
-return {
-name: file.name,
-size: file.size,
-type,
-score: base,
-status: base >= 80 ? "success" : base >= 65 ? "warning" : "info",
-note: base >= 80
-? "Document bien structuré et conforme aux attentes."
-: base >= 65
-? "Document correct, quelques améliorations possibles."
-: "Document prêt pour une analyse complète — pensez à l'étoffer avant l'envoi."
-};
-
-}
+// `analyzeDocument` a été SUPPRIMÉ au lot B1 avec lui : il écrivait
+// « Document bien structuré et conforme aux attentes » dès que le hash
+// du nom passait 80. Le type d'un document se devine toujours
+// (guessTypeFromName, ci-dessus) — c'est une commodité, pas un jugement.
 
 /**
-* LA VÉRIFICATION AVANT DÉPÔT.
+* LA VÉRIFICATION AVANT DÉPÔT — un aiguillage, et rien d'autre.
 *
-* PARCOURS PRÉINSCRIPTION : elle passe par js/ai/controle-depot.js, qui
-* ne juge QUE des faits vérifiables — le poids de chaque fichier contre
-* le plafond publié par la procédure du pays, les pièces réglées, la
-* langue des pièces. Ce module-là documente en long le défaut qui a
-* rendu ce détour nécessaire (un score calculé sur le HASH DU NOM DE
-* FICHIER, qui déclarait « conforme aux attentes » un relevé de 3 Mo
-* six fois au-dessus du plafond).
+* PARCOURS PRÉINSCRIPTION : js/ai/controle-depot.js (lot R11). Il note
+* ce que la procédure du pays PUBLIE — le plafond de poids de chaque
+* fichier, les pièces réglées, la langue des pièces.
 *
-* 🔴 DETTE CONNUE, PARCOURS BOURSES (2026-09-17) : la branche ci-dessous
-* garde ce défaut. `analyzeDocument` y calcule encore un score depuis le
-* hash du nom, et trois catégories sur cinq — grammaire,
-* professionnalisme, cohérence — sortent du même hash alors que
-* personne ne lit le contenu des documents en mode simulé. Ce n'est PAS
-* une omission : la refonte de l'espace bourse suit immédiatement, et
-* corriger cette branche à l'aveugle, sans sa page sous les yeux, est la
-* façon connue de casser deux choses au lieu d'en réparer une. À
-* traiter AU PREMIER LOT de l'espace bourse, avec le même principe :
-* aucune note sur ce qui n'a pas été lu.
+* PARCOURS BOURSES : js/ai/controle-bourse.js (lot B1, 2026-09-18). Il
+* ne note RIEN, parce qu'un dossier de bourse n'a ni plafond publié ni
+* liste de pièces exacte : il mesure, il dit ce qu'il n'a pas jugé, et
+* il oriente vers une relecture humaine.
+*
+* 🟢 LA DETTE DU LOT R11 EST PAYÉE. Cette branche calculait encore trois
+* notes sur cinq — grammaire, professionnalisme, cohérence — à partir du
+* HACHAGE DU NOM DE FICHIER, et les affichait en « points forts » avec
+* leur chiffre. `scoreFromHash` et `analyzeDocument` ont été supprimés
+* du dépôt avec elle. Plus aucun rapport ne note ce qu'il n'a pas lu.
+*
+* Cette fonction ne fait plus que choisir, et c'est tout ce qu'elle doit
+* faire : deux parcours, deux modules purs, aucune règle ici.
 */
 export function computeApplicationReport({ files = [], profile = {}, parcours = "", pieces = [], traduction = null } = {}) {
 
@@ -565,78 +537,18 @@ if (parcours === "preinscription") {
 return controleDepot({ fichiers: files, pieces, traduction });
 }
 
-const analyzed = files.map(analyzeDocument);
-
-const presentTypes = new Set(analyzed.map((f) => f.type));
-const documentsAvailable = Array.isArray(profile.documentsAvailable) ? profile.documentsAvailable : [];
-
-const checklist = DOCUMENT_TYPES.filter((d) => d.key !== "autre").map((doc) => ({
-...doc,
-present: presentTypes.has(doc.key) || documentsAvailable.includes(doc.key)
-}));
-
-const completenessScore = Math.round((checklist.filter((c) => c.present).length / checklist.length) * 100);
-
-const seed = analyzed.map((f) => f.name).join("|") || "dossier-vide";
-
-const categories = {
-clarity: analyzed.length ? Math.round(analyzed.reduce((s, f) => s + f.score, 0) / analyzed.length) : scoreFromHash(`${seed}-clarity`, 40, 70),
-grammar: scoreFromHash(`${seed}-grammar`, 60, 97),
-professionalism: scoreFromHash(`${seed}-pro`, 58, 95),
-coherence: scoreFromHash(`${seed}-coherence`, 55, 93),
-completeness: analyzed.length ? completenessScore : 0
-};
-
-const overallScore = Math.round(
-Object.values(categories).reduce((sum, v) => sum + v, 0) / Object.keys(categories).length
-);
-
-const strengths = [];
-const weaknesses = [];
-const suggestions = [];
-
-Object.entries(categories).forEach(([key, value]) => {
-
-const label = CATEGORY_LABELS[key];
-
-if (value >= 80) {
-strengths.push(`${label} : très bon niveau (${value}/100).`);
-} else if (value < 60) {
-weaknesses.push(`${label} : à renforcer (${value}/100).`);
-}
-
+// Le type d'un document reste deviné d'après son nom : une commodité
+// pour l'inventaire, jamais un jugement sur le fichier.
+return controleBourse({
+fichiers: files.map((f) => ({
+nom: f.name,
+octets: f.octets,
+extraction: f.extraction,
+texte: f.content,
+type: f.type || guessTypeFromName(f.name)
+})),
+typesDeclares: Array.isArray(profile.documentsAvailable) ? profile.documentsAvailable : []
 });
-
-if (categories.completeness < 100) {
-const missing = checklist.filter((c) => !c.present).map((c) => c.label);
-suggestions.push(`Pour un dossier complet, pensez à ajouter : ${missing.join(", ")}.`);
-}
-
-if (categories.grammar < 75) {
-suggestions.push("Faites relire vos documents pour peaufiner la grammaire et l'orthographe.");
-}
-
-if (categories.professionalism < 75) {
-suggestions.push("Adoptez un ton plus formel dans vos documents (formules de politesse, structure claire).");
-}
-
-if (!analyzed.length) {
-suggestions.push("Importez au moins un document pour obtenir une analyse détaillée de son contenu.");
-}
-
-if (!strengths.length) strengths.push("Votre dossier est en cours de constitution — poursuivez sur cette lancée.");
-if (!suggestions.length) suggestions.push("Votre dossier est solide. Vérifiez tout de même les exigences spécifiques de chaque université avant l'envoi.");
-
-return {
-overallScore,
-categories,
-categoryLabels: CATEGORY_LABELS,
-files: analyzed,
-checklist,
-strengths,
-weaknesses,
-suggestions
-};
 
 }
 

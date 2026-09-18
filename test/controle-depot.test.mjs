@@ -204,16 +204,24 @@ test("contrôle 6 — la tâche « check » passe par là en préinscription, et
   assert.ok(Array.isArray(pre.checklist) && pre.checklist.every((c) => "label" in c && "present" in c));
   assert.ok(Array.isArray(pre.strengths) && Array.isArray(pre.weaknesses) && Array.isArray(pre.suggestions));
 
-  // 🔴 La branche BOURSES garde le défaut, VOLONTAIREMENT et pour un
-  // lot : la refonte de cet espace suit, et la corriger à l'aveugle
-  // sans sa page sous les yeux casserait deux choses au lieu d'en
-  // réparer une. Ce test exige que la dette reste ÉCRITE dans le code —
-  // une dette non documentée est une dette oubliée.
+  // 🟢 RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot B1) — LA DETTE EST PAYÉE.
+  //
+  // Ce test exigeait l'inverse : que la branche bourses garde son défaut
+  // et que la dette reste ÉCRITE dans le code, parce que la corriger à
+  // l'aveugle, sans sa page sous les yeux, casse deux choses au lieu
+  // d'en réparer une. Il portait sa propre condition de péremption :
+  // « si la branche bourses a changé, ce test doit changer avec elle ».
+  // Elle a changé, il change.
+  //
+  // La règle GARDÉE est maintenant la bonne : cette branche ne note plus
+  // rien qu'elle n'ait mesuré. Le détail vit dans
+  // test/controle-bourse.test.mjs.
   const bourse = computeApplicationReport({ files, parcours: "bourse", profile: {} });
-  assert.ok("grammar" in bourse.categories, "si la branche bourses a changé, ce test doit changer avec elle");
+  assert.ok(!("grammar" in bourse.categories), "une note de grammaire fabriquée est revenue côté bourses");
+  assert.equal(bourse.overallScore, null, "le parcours bourses ne rend aucune note");
   const source = lire("js/ai/simulated-responses.js");
-  assert.match(source, /DETTE CONNUE, PARCOURS BOURSES/);
-  assert.match(source, /AU PREMIER LOT de l'espace bourse/);
+  assert.ok(!/DETTE CONNUE, PARCOURS BOURSES/.test(source), "la dette est payée : sa mention n'a plus lieu d'être");
+  assert.match(source, /LA DETTE DU LOT R11 EST PAYÉE/);
 
   // Et la page charge les pièces à la demande, pour ne pas imposer
   // 75 Ko aux comptes du parcours bourses.

@@ -229,6 +229,21 @@ const strengthsList = document.getElementById("strengthsList");
 const weaknessesList = document.getElementById("weaknessesList");
 const suggestionsList = document.getElementById("suggestionsList");
 const checklist = document.getElementById("checklist");
+const scoreUnite = document.getElementById("scoreUnite");
+const titreForts = document.getElementById("titreForts");
+const titreFaibles = document.getElementById("titreFaibles");
+const titreSuggestions = document.getElementById("titreSuggestions");
+
+// Le titre d'une carte : son icône reste, seul le mot change. Le libellé
+// d'origine est mémorisé au premier passage, pour qu'un rapport sans
+// `listLabels` (parcours préinscription) le retrouve intact.
+function poserTitre(h3, texte) {
+if (!h3) return;
+const libelle = h3.querySelector("span");
+if (!libelle) return;
+if (!h3.dataset.defaut) h3.dataset.defaut = libelle.textContent;
+libelle.textContent = texte || h3.dataset.defaut;
+}
 
 let entries = [];
 let entryCounter = 0;
@@ -406,12 +421,22 @@ analyzeBtn.querySelector("span").textContent = "Analyse en cours…";
 // reste la donnée minimale garantie.
 const files = await Promise.all(entries.map(async (entry) => {
 
+// L'ÉTAT DE LECTURE, SANS AMBIGUÏTÉ (lot B1, 2026-09-18).
+// `content: undefined` ne distinguait pas « le format ne se lit pas
+// ici » de « pdf.js a échoué » de « le PDF est une image scannée sans
+// texte » — trois situations qui ne se disent pas de la même façon à
+// l'étudiant. Le contrôle ne devine plus : la page nomme le cas.
+// Même leçon que le champ `size` du lot R11 — une donnée ambiguë
+// produit un verdict faux avec l'air d'être sérieux.
 let content;
+let extraction;
 
 try {
 content = await extractTextFromFile(entry.file);
-} catch {
+extraction = String(content || "").trim() ? "lue" : "vide";
+} catch (error) {
 content = undefined;
+extraction = error && error.message === "UNSUPPORTED_FORMAT" ? "format" : "erreur";
 }
 
 return {
@@ -425,7 +450,8 @@ size: (entry.size / 1024 / 1024).toFixed(2),
 // champ-ci, et refuse de conclure quand il manque.
 octets: entry.size,
 type: entry.type || undefined,
-content
+content,
+extraction
 };
 
 }));
@@ -480,8 +506,23 @@ try {
 // déjà POUR QUELLE candidature le dossier est vérifié.
 const { data } = await generate({ task: "check", input: { files, profile, application, parcours: parcoursCheck, pieces: piecesRoute, traduction: traductionRoute, track: application ? application.track : undefined } });
 
-scoreRing.style.setProperty("--ai-score", data.overallScore);
-scoreValue.textContent = data.overallScore;
+// UN RAPPORT PEUT N'AVOIR AUCUNE NOTE (lot B1, 2026-09-18).
+// Sur le parcours bourses, rien n'est notable : pas de plafond de poids
+// publié, pas de liste de pièces exacte, et personne ne lit le contenu
+// en mode simulé. Un anneau à 0 se lirait « votre dossier est mauvais »
+// alors qu'on ne juge rien — c'est la règle du lot R11, appliquée cette
+// fois au score global : ce qu'on ne peut pas juger est ABSENT, pas nul.
+const noteChiffree = typeof data.overallScore === "number";
+scoreRing.style.setProperty("--ai-score", noteChiffree ? data.overallScore : 0);
+scoreValue.textContent = noteChiffree ? data.overallScore : "—";
+if (scoreUnite) scoreUnite.hidden = !noteChiffree;
+
+// Les trois listes changent de TITRE quand le rapport en fournit :
+// « Points forts » au-dessus d'une mesure de poids serait un compliment
+// fabriqué de plus. Sans `listLabels`, les titres du HTML restent.
+poserTitre(titreForts, data.listLabels && data.listLabels.strengths);
+poserTitre(titreFaibles, data.listLabels && data.listLabels.weaknesses);
+poserTitre(titreSuggestions, data.listLabels && data.listLabels.suggestions);
 
 renderCategories(data.categories, data.categoryLabels);
 renderList(strengthsList, data.strengths, "Vos points forts apparaîtront ici dès qu'un document sera analysé.");
