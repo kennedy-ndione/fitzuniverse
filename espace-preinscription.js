@@ -717,9 +717,18 @@ function peindre() {
 function aller(id, defiler = true) {
   etat.choisie = id;
   peindre();
-  if (defiler) {
-    const cible = document.getElementById("rtEtape");
-    if (cible) cible.scrollIntoView({ behavior: "smooth", block: "start" });
+  const cible = document.getElementById("rtEtape");
+  if (cible) {
+    // PREMIUM 2 : l'animation d'entrée (rt-entree, css/route.css) ne
+    // jouait qu'au chargement — en naviguant d'une étape à l'autre, le
+    // contenu changeait sèchement. On la rejoue : couper, forcer le
+    // navigateur à le constater (offsetWidth), rendre la main à la
+    // feuille. Sous prefers-reduced-motion la feuille dit animation:none,
+    // donc rendre la main n'anime rien.
+    cible.style.animation = "none";
+    void cible.offsetWidth;
+    cible.style.animation = "";
+    if (defiler) cible.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 

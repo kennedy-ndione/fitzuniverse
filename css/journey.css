@@ -379,6 +379,33 @@ color:#FDF9EF;
 
 .jy-btn--primary:hover{ background:var(--amber-700); border-color:var(--amber-700); color:#FDF9EF; }
 
+/* PREMIUM 2 : les mêmes gestes que la route — l'appui se sent (.06s),
+le clavier voit où il est, et le bouton principal porte la seule ombre
+ambrée de la page. */
+.jy-btn:active{
+transform:translateY(1px) scale(.98);
+transition-duration:.06s;
+}
+
+.jy-btn:focus-visible{
+outline:2px solid var(--amber-600);
+outline-offset:2px;
+}
+
+.jy-btn--primary{
+box-shadow:0 8px 18px -10px rgba(190,96,50,.55);
+}
+
+@media (hover: hover){
+.jy-btn--primary:hover{
+box-shadow:0 12px 24px -10px rgba(190,96,50,.6);
+}
+}
+
+.jy-btn--primary:active{
+box-shadow:0 4px 10px -8px rgba(190,96,50,.55);
+}
+
 .jy-btn i,
 .jy-btn svg{ width:15px; height:15px; }
 

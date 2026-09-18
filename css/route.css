@@ -379,6 +379,19 @@ height:18px;
 transform:translateY(-1px);
 }
 
+/* PREMIUM 2 : l'appui se SENT. Un bouton qui ne bouge pas sous le doigt
+paraît mort ; l'enfoncement est quasi instantané (.06s), le relâchement
+reprend la transition normale du bouton. */
+.rt-btn:active{
+transform:translateY(1px) scale(.98);
+transition-duration:.06s;
+}
+
+.rt-btn:focus-visible{
+outline:2px solid var(--amber-600);
+outline-offset:2px;
+}
+
 .rt-btn--fait{
 background:var(--amber-600);
 border-color:var(--amber-600);
@@ -386,11 +399,27 @@ color:#FDF9EF;
 min-height:52px;
 padding:12px 22px;
 font-size:1rem;
+/* PREMIUM 2 : le bouton principal PORTE une ombre ambrée — c'est le
+seul de l'étape à en avoir une, c'est ce qui dit « c'est lui ». */
+box-shadow:0 8px 18px -10px rgba(190,96,50,.55);
+transition:transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+@media (hover: hover){
+.rt-btn--fait:hover{
+box-shadow:0 12px 24px -10px rgba(190,96,50,.6);
+}
+}
+
+.rt-btn--fait:active{
+box-shadow:0 4px 10px -8px rgba(190,96,50,.55);
 }
 
 .rt-btn--fait.is-fait{
 background:var(--journey-done, #2F7A46);
 border-color:var(--journey-done, #2F7A46);
+/* Fait = l'ombre passe au vert avec le bouton. */
+box-shadow:0 8px 18px -10px rgba(47,122,70,.5);
 }
 
 .rt-btn--fitz{
@@ -1310,6 +1339,17 @@ cursor:pointer;
 
 .rt-suite-item button:hover{
 background:var(--background-soft);
+}
+
+/* PREMIUM 2 : au survol (vraies souris seulement), la ligne glisse de
+2 px vers l'étape — une invitation, pas un saut. */
+@media (hover: hover){
+.rt-suite-item button{
+transition:background .15s ease, transform .15s var(--ease-standard);
+}
+.rt-suite-item button:hover{
+transform:translateX(2px);
+}
 }
 
 .rt-suite-item.is-courante button{

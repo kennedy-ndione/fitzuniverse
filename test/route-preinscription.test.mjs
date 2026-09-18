@@ -844,3 +844,45 @@ test("route 25 — PREMIUM 1 : la bande des étapes est vivante et ne casse pas 
     "le recentrage ne vise plus l'étape choisie puis la courante");
 
 });
+
+test("route 26 — PREMIUM 2 : les gestes ont du poids, des deux côtés", () => {
+
+  const route = lire("css/route.css");
+  const journey = lire("css/journey.css");
+  const js = lire("espace-preinscription.js");
+
+  // L'APPUI SE SENT. Un bouton sans :active paraît mort sous le doigt.
+  assert.match(route, /\.rt-btn:active\{[^}]*scale\(\.98\)/,
+    "les boutons de la route n'ont plus d'état d'appui");
+  assert.match(journey, /\.jy-btn:active\{[^}]*scale\(\.98\)/,
+    "les boutons de l'espace bourse n'ont plus d'état d'appui");
+
+  // LE CLAVIER VOIT OÙ IL EST.
+  assert.match(route, /\.rt-btn:focus-visible\{[^}]*outline:\s*2px solid var\(--amber-600\)/,
+    "les boutons de la route ont perdu leur anneau clavier");
+  assert.match(journey, /\.jy-btn:focus-visible\{[^}]*outline:\s*2px solid var\(--amber-600\)/,
+    "les boutons de l'espace bourse ont perdu leur anneau clavier");
+
+  // LE BOUTON PRINCIPAL PORTE LA SEULE OMBRE — c'est ce qui dit « c'est
+  // lui » ; quand l'étape est faite, l'ombre passe au vert avec lui.
+  assert.match(route, /\.rt-btn--fait\{[^}]*box-shadow:0 8px 18px -10px rgba\(190,96,50/s,
+    "le bouton principal de l'étape n'a plus son ombre ambrée");
+  assert.match(route, /\.rt-btn--fait\.is-fait\{[^}]*rgba\(47,122,70/s,
+    "le bouton « fait » garde une ombre ambrée sur fond vert");
+  assert.match(journey, /\.jy-btn--primary\{[\s\S]*?\.jy-btn--primary\{[^}]*box-shadow:0 8px 18px -10px rgba\(190,96,50/,
+    "le bouton principal de l'espace bourse n'a plus son ombre ambrée");
+
+  // LA LISTE INVITE, SOURIS SEULEMENT : le glissement de 2px au survol
+  // reste dans @media (hover: hover) — sur tactile un :hover colle.
+  assert.match(route, /@media \(hover: hover\)\{[\s\S]*?\.rt-suite-item button:hover\{[^}]*translateX\(2px\)/,
+    "le glissement de la liste des étapes a quitté @media (hover: hover) ou a disparu");
+
+  // ET L'ÉTAPE ARRIVE À CHAQUE NAVIGATION, pas qu'au chargement :
+  // aller() rejoue rt-entree en coupant puis rendant la main à la
+  // feuille, avec le reflow forcé entre les deux.
+  const allerSrc = /function aller\(id[\s\S]*?\n\}/.exec(js);
+  assert.ok(allerSrc, "aller() n'existe plus");
+  assert.match(allerSrc[0], /style\.animation = "none";[\s\S]*?void cible\.offsetWidth;[\s\S]*?style\.animation = "";/,
+    "aller() ne rejoue plus l'entrée de l'étape : la navigation redeviendra sèche");
+
+});
