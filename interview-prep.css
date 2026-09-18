@@ -221,6 +221,22 @@ color:var(--primary-dark);
 background:rgba(255,255,255,.9);
 }
 
+/* La source du cadre officiel (lot R12) : lisible, pas cachée en note.
+Une consigne sans sa date est une consigne qu'on a recopiée quelque
+part — règle de tout le site. */
+.ivp-source{
+display:block;
+margin-top:6px;
+font-size:.84rem;
+color:var(--text-light);
+}
+
+.ivp-source a{
+color:inherit;
+text-decoration:underline;
+text-underline-offset:3px;
+}
+
 @media(max-width:900px){
 
 .ivp-layout{

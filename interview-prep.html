@@ -130,8 +130,15 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <section class="ivp-intro">
 <h2>Entraînez-vous avant le grand jour</h2>
-<p>La plupart des entretiens de bourse posent les mêmes types de questions. Préparez vos réponses à l'avance, cochez ce qui est prêt, puis entraînez-vous à voix haute avec Fitz.</p>
+<p id="ivpIntro">Préparez vos réponses à l'avance, cochez ce qui est prêt, puis entraînez-vous à voix haute avec Fitz.</p>
 </section>
+
+<!-- CE QUE L'ÉTUDIANT DOIT SAVOIR AVANT D'ENTRER (lot R12) : le
+compte-rendu de l'entretien pédagogique est lu par les établissements
+ET par le consulat, et il est obligatoire au dossier de visa. Cela ne
+figurait nulle part. Affiché sur le parcours préinscription seulement,
+avec ses deux sources et sa date — interview-prep.js. -->
+<p id="ivpCadre" class="journey-warning" hidden></p>
 
 <div class="ivp-layout">
 
@@ -139,69 +146,14 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <section class="ivp-questions" aria-label="Banque de questions d'entretien">
 
-<h3 class="ivp-section-title"><i data-lucide="help-circle"></i>Questions fréquentes par thème</h3>
+<h3 class="ivp-section-title"><i data-lucide="help-circle"></i><span id="ivpQuestionsTitre">Questions fréquentes par thème</span></h3>
 
-<div class="ivp-category">
-<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
-<span><i data-lucide="user"></i>Motivation et parcours</span>
-<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
-</button>
-<ul class="ivp-question-list">
-<li>Parlez-moi de vous en deux minutes.</li>
-<li>Pourquoi avez-vous choisi ce domaine d'études ?</li>
-<li>Qu'est-ce qui vous a motivé à candidater à cette bourse en particulier, plutôt qu'à une autre ?</li>
-<li>Quel est votre plus grand échec académique, et qu'en avez-vous retenu ?</li>
-</ul>
-</div>
-
-<div class="ivp-category">
-<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
-<span><i data-lucide="target"></i>Projet académique et professionnel</span>
-<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
-</button>
-<ul class="ivp-question-list">
-<li>Quel est votre projet d'études ou de recherche ?</li>
-<li>Où vous voyez-vous dans cinq ans ?</li>
-<li>En quoi cette formation s'inscrit-elle dans votre projet professionnel ?</li>
-<li>Comptez-vous rentrer dans votre pays d'origine après vos études ? (question très fréquente pour les bourses gouvernementales — préparez une réponse honnête et argumentée)</li>
-</ul>
-</div>
-
-<div class="ivp-category">
-<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
-<span><i data-lucide="landmark"></i>Pourquoi cette université et ce pays</span>
-<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
-</button>
-<ul class="ivp-question-list">
-<li>Pourquoi avoir choisi cette université en particulier ?</li>
-<li>Que savez-vous du programme ou du département auquel vous candidatez ?</li>
-<li>Pourquoi ce pays plutôt qu'un autre ?</li>
-</ul>
-</div>
-
-<div class="ivp-category">
-<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
-<span><i data-lucide="award"></i>Compétences et réalisations</span>
-<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
-</button>
-<ul class="ivp-question-list">
-<li>Présentez un projet ou une réalisation dont vous êtes particulièrement fier(ère).</li>
-<li>Comment expliquez-vous une baisse de niveau visible sur votre relevé de notes, le cas échéant ?</li>
-<li>Quelle est votre plus grande qualité, et votre plus grand axe d'amélioration ?</li>
-</ul>
-</div>
-
-<div class="ivp-category">
-<button type="button" class="ivp-category-head is-open" data-action="toggle-category">
-<span><i data-lucide="alert-triangle"></i>Questions difficiles</span>
-<i data-lucide="chevron-down" class="ivp-category-chevron"></i>
-</button>
-<ul class="ivp-question-list">
-<li>Comment gérez-vous le stress ou des délais serrés ?</li>
-<li>Que ferez-vous si vous n'obtenez pas cette bourse ?</li>
-<li>Avez-vous des questions pour nous ? (préparez 2 à 3 questions précises — c'est presque toujours la dernière question posée)</li>
-</ul>
-</div>
+<!-- LES THÈMES SONT RENDUS PAR interview-prep.js (lot R12, 2026-09-18).
+Ils diffèrent selon le parcours : l'entretien de bourse n'a rien à voir
+avec l'entretien pédagogique de la procédure Études en France, et la
+page servait le premier aux candidats du second. Les deux jeux vivent
+dans js/entretien-questions.js, avec leurs sources. -->
+<div id="ivpCategories"></div>
 
 </section>
 
