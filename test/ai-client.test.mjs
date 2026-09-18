@@ -7,9 +7,8 @@
 *
 * Ces tests n'ouvrent aucun navigateur, ne chargent pas Firebase et
 * n'appellent aucun fournisseur. Ils vérifient ce que le contrat de
-* generate() promet aux six pages appelantes — les promesses qui
-* devront tenir À L'IDENTIQUE le jour où MODE passera de "simule" à
-* "passerelle" :
+* generate() promet aux six pages appelantes, QUEL QUE SOIT MODE dans
+* js/ai/ai-config.js :
 *
 *   1. la forme du retour ({text} / {data}) selon la tâche ;
 *   2. les erreurs typées, y compris la correspondance HTTP ;
@@ -18,10 +17,20 @@
 *   5. le réessai des seules erreurs passagères ;
 *   6. le rejet d'une réponse structurée malformée.
 *
-* Les points 5 et 6 sont ceux qui ne servent à rien aujourd'hui — le
-* simulateur ne tombe jamais en panne et renvoie toujours la bonne
-* forme. Ils sont écrits maintenant précisément parce que le jour où
-* ils serviront, personne n'aura le temps de les écrire.
+* DEPUIS LE LOT FITZ-RÉEL (2026-09-18), MODE VAUT "passerelle" EN
+* PRODUCTION. Ces tests continuent pourtant de vérifier la MÉCANIQUE de
+* generate() (le point ci-dessus, pas le modèle lui-même) contre le
+* simulateur, passé explicitement via `adaptateur: genererViaSimulateur`.
+* Ce n'est pas une facilité de test : Node ne peut pas exécuter le vrai
+* adaptateur (js/ai/ai-gateway.js importe le SDK Firebase depuis une URL
+* https, que seul un navigateur sait charger — voir `obtenirCallable()`).
+* generate() accepte ce paramètre pour cette seule raison ; les six
+* pages appelantes ne le passent jamais et suivent MODE normalement.
+*
+* Les points 5 et 6 sont ceux que le simulateur ne déclenche jamais de
+* lui-même — il ne tombe jamais en panne et renvoie toujours la bonne
+* forme. Ils sont écrits quand même parce que le jour où une vraie panne
+* les rendra utiles, personne n'aura le temps de les écrire.
 * ============================================================
 */
 
@@ -38,6 +47,7 @@ codeDepuisStatutHttp
 } from "../js/ai/ai-errors.js";
 
 import { TACHES, TACHES_STRUCTUREES, FONCTIONNALITE_PAR_TACHE, DELAIS_MS } from "../js/ai/ai-config.js";
+import { genererViaSimulateur } from "../js/ai/ai-simulateur.js";
 
 // ==========================================================
 // ERREURS
@@ -208,7 +218,8 @@ test("une tâche de rédaction renvoie du texte, pas une structure", async () =>
 
 const resultat = await generate({
 task: "chat",
-input: { message: "Bonjour", profile: PROFIL, history: [] }
+input: { message: "Bonjour", profile: PROFIL, history: [] },
+adaptateur: genererViaSimulateur
 });
 
 assert.equal(typeof resultat.text, "string");
@@ -226,7 +237,8 @@ university: "Université de Montréal",
 checklist: [{ label: "Relevés de notes", type: "document", status: "fourni" }],
 hasGeneratedLetter: true,
 profile: PROFIL
-}
+},
+adaptateur: genererViaSimulateur
 });
 
 assert.equal(resultat.text, undefined);
@@ -244,7 +256,8 @@ const fragments = [];
 const resultat = await generate({
 task: "chat",
 input: { message: "Quelles bourses pour le Canada ?", profile: PROFIL, history: [] },
-onToken: (complet, delta) => { complets.push(complet); fragments.push(delta); }
+onToken: (complet, delta) => { complets.push(complet); fragments.push(delta); },
+adaptateur: genererViaSimulateur
 });
 
 assert.ok(complets.length > 1, "aucune diffusion progressive");
@@ -266,7 +279,8 @@ await generate({
 task: "chat",
 input: { message: "Bonjour", profile: PROFIL, history: [] },
 onToken: () => {},
-onEtat: (etat) => etats.push(etat)
+onEtat: (etat) => etats.push(etat),
+adaptateur: genererViaSimulateur
 });
 
 assert.equal(etats[0], "envoi");
@@ -311,7 +325,8 @@ const promesse = generate({
 task: "letter",
 input: { style: "classique", university: "McGill", profile: PROFIL },
 onToken: () => controleur.abort(),
-signal: controleur.signal
+signal: controleur.signal,
+adaptateur: genererViaSimulateur
 });
 
 await assert.rejects(promesse, (erreur) => {

@@ -26,10 +26,11 @@
 *                  (vérifie l'identité,
 *                   la formule et le plafond)
 *
-* Depuis le 2026-09-04 il n'y a même plus de clé à protéger : le modèle
-* est appelé via Vertex AI, et la fonction s'authentifie avec sa propre
-* identité de service Google. Une clé qui n'existe pas ne peut pas
-* fuiter.
+* Depuis le 2026-09-18 le modèle est appelé via l'API Anthropic
+* directe : une clé existe bel et bien, mais elle vit dans Secret
+* Manager (Google Cloud), attachée à la seule fonction qui la lit
+* (functions/fitz.js) — jamais transmise au navigateur, jamais
+* journalisée.
 *
 * Ce détour n'est pas seulement une précaution : c'est aussi le seul
 * endroit où le quota par offre peut être appliqué de façon fiable.
@@ -41,30 +42,32 @@
 /**
 * "simule"     — js/ai/simulated-responses.js répond localement.
 *                Aucun réseau, aucun coût, réponses déterministes.
-* "passerelle" — appel du callable fitzGenerate (js/ai/ai-gateway.js).
+* "passerelle" — appel du callable fitzGenerate (js/ai/ai-gateway.js),
+*                qui appelle désormais l'API Anthropic directe (lot
+*                FITZ-RÉEL, 2026-09-18) — voir functions/fitz.js.
 *
-* ⛔ REPASSÉ EN "simule" LE 2026-09-05 — ce n'est pas un retour en
-* arrière, c'est une réparation.
+* HISTORIQUE — ⛔ REPASSÉ EN "simule" LE 2026-09-05, RÉPARÉ LE 2026-09-18.
 *
-* Vérifié ce jour-là dans la console Google : le crédit d'essai de
-* 300 $ NE COUVRE PAS les modèles d'IA générative de partenaires
-* proposés en API gérée, et l'essai sans frais les BLOQUE purement et
-* simplement. Preuves : crédit intact à 300,00 $ sur 300,00 $, aucun
-* SKU Vertex AI en 30 jours, et surtout
+* Le 2026-09-05 : le crédit d'essai Google de 300 $ NE COUVRAIT PAS les
+* modèles d'IA générative de partenaires (Vertex AI) proposés en API
+* gérée, et l'essai sans frais les BLOQUAIT purement et simplement.
+* Preuves relevées ce jour-là : crédit intact à 300,00 $ sur 300,00 $,
+* aucun SKU Vertex AI en 30 jours, et surtout
 * `PredictionService.StreamRawPredict` à 100 % d'erreurs avec des 429.
 * La fonction `fitzGenerate` répondait donc, mais aucun modèle
 * derrière : chat, lettre, e-mail, traduction, analyse de dossier et
 * diagnostic étaient tous hors service en production.
 *
-* POUR REVENIR À "passerelle", IL FAUT D'ABORD une voie de facturation
-* réelle — compte Google Cloud converti en payant (ce qui débloque les
-* modèles de partenaires), ou API Anthropic directe (~50 % moins chère
-* que Vertex). Tant que ce n'est pas fait, remettre "passerelle" ne
-* fait que rendre le site cassé à nouveau.
+* Le 2026-09-18 : bascule sur l'API Anthropic directe, payée par carte
+* (lot FITZ-RÉEL, functions/fitz.js) — plus de dépendance à un compte
+* Google Cloud converti en payant. test/fitz-reel.test.mjs
+* (« passerelle 1 ») vire au rouge si ce mode est un jour remis actif
+* sans qu'aucun SDK ne soit réellement chargé côté serveur : le
+* 2026-09-05 ne peut plus se reproduire en silence.
 *
 * @type {"simule"|"passerelle"}
 */
-export const MODE = "simule";
+export const MODE = "passerelle";
 
 /** Raccourci de lecture, conservé pour le code déjà écrit. */
 export const IS_SIMULATED = MODE === "simule";

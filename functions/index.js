@@ -39,10 +39,11 @@ exports.paydunyaWebhook = require("./paiement").paydunyaWebhook;
 
 // ------------------------------------------------------------
 // Relais IA de Fitz — voir functions/fitz.js.
-// ÉCRIT MAIS NON BRANCHÉ : le client (js/ai/ai-gateway.js) attend un
-// endpoint HTTP en flux SSE, alors que fitz.js est un onCall. Les deux
-// contrats sont incompatibles — il faudra trancher avant d'activer
-// MODE="passerelle" dans js/ai/ai-config.js.
+// BRANCHÉ depuis le lot FITZ-RÉEL (2026-09-18) : js/ai/ai-gateway.js a
+// été réécrit le 2026-09-04 pour appeler ce callable Firebase avec le
+// SDK (httpsCallable + .stream()), et non plus un endpoint HTTP en flux
+// SSE qui n'a jamais existé. MODE="passerelle" est actif dans
+// js/ai/ai-config.js.
 // ------------------------------------------------------------
 exports.fitzGenerate = require("./fitz").fitzGenerate;
 

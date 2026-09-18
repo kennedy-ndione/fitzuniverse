@@ -263,16 +263,24 @@ return new FitzError(CODES.INCONNU, { cause: erreur });
 *        est un mensonge par omission : l'étudiant doit savoir que Fitz
 *        s'y reprend à deux fois.
 * @param {AbortSignal} [params.signal] - arrête la génération en cours
+* @param {Function} [params.adaptateur] - RÉSERVÉ AUX TESTS. Force
+*        l'adaptateur plutôt que de le déduire de MODE. Les six pages
+*        appelantes ne le passent jamais : en production, MODE seul
+*        décide. Sans ce crochet, un test de la mécanique de generate()
+*        (arrêt, délai, réessai) exigerait un vrai réseau ou un vrai
+*        Firebase dès que MODE vaut "passerelle" — ce que Node ne peut
+*        pas faire (le SDK est importé depuis une URL https, que seul
+*        un navigateur sait charger).
 * @returns {Promise<{text: string, usage?: Object} | {data: Object, usage?: Object}>}
 * @throws {FitzError} toujours une FitzError, jamais une erreur brute
 */
-export async function generate({ task, input, onToken, onEtat, signal }) {
+export async function generate({ task, input, onToken, onEtat, signal, adaptateur }) {
 
 verifierEntree(task, input);
 await verifierAcces(task);
 
 const delaiMs = DELAIS_MS[task] || DELAI_PAR_DEFAUT_MS;
-const adaptateur = MODE === "passerelle" ? genererViaPasserelle : genererViaSimulateur;
+const adaptateurEffectif = adaptateur || (MODE === "passerelle" ? genererViaPasserelle : genererViaSimulateur);
 
 let derniereErreur = null;
 
@@ -302,7 +310,7 @@ try {
 
 let premierFragment = true;
 
-const resultat = await adaptateur({
+const resultat = await adaptateurEffectif({
 task,
 input,
 signal: signalCombine,
