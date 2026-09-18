@@ -60,7 +60,8 @@ import { chargerUniversites } from "./js/catalog-data.js";
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
-  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION
+  PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION,
+  PIECES_RESIDENCE_ABSENTE, ANNUAIRE_ESPACES_CAMPUS_FRANCE
 } from "./js/route-preinscription.js";
 // Les deux composants guidés (pastilles d'exemples, champ à suggestions)
 // sont partagés avec « Mon profil » : js/champs-guides.js + css/guide.css.
@@ -400,7 +401,17 @@ function htmlVoeux(e) {
 // ---- Étape 4 : les pièces ----
 function htmlPieces(e) {
   if (!e.pieces.length) return `<p class="rt-vide">Renseignez d'abord votre pays de résidence (étape 1) : la liste des pièces en dépend.</p>`;
-  return `
+  // LE TROU EST DIT AVANT LA LISTE, PAS APRÈS (lot R14, 2026-09-18).
+  // Une réserve placée sous la liste se lit quand on a déjà cru la
+  // liste complète. Celle-ci change la façon de lire les six lignes qui
+  // suivent : elle passe donc devant. Elle reprend `.rt-avert`, le
+  // composant des avertissements de l'étape 3 — pas un style à elle,
+  // pour que les deux réserves de la route se ressemblent.
+  const reserve = e.residenceAbsente ? `
+    <ul class="rt-avert">
+      <li><i data-lucide="alert-triangle"></i><span>${ech(PIECES_RESIDENCE_ABSENTE)} <a href="${ech(ANNUAIRE_ESPACES_CAMPUS_FRANCE)}" target="_blank" rel="noopener noreferrer">Trouver mon Espace Campus France</a></span></li>
+    </ul>` : "";
+  return `${reserve}
     <ul class="rt-pieces">${e.pieces.map((p) => `
       <li class="rt-piece${p.obtenue ? " is-obtenue" : ""}${p.ecartee ? " is-ecartee" : ""}">
         <label>

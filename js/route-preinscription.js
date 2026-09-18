@@ -278,6 +278,41 @@ function etapeDeProcedure(procedure, id) {
 }
 
 /** Les pièces qu'un dossier demande (étapes de saisie et de pièces). */
+/**
+ * LA LISTE DES PIÈCES DIT CE QU'ELLE NE SAIT PAS (lot R14, 2026-09-18).
+ *
+ * TROUVÉ EN MESURANT, pas en lisant : pour un pays de résidence non
+ * documenté — le Mali, par exemple, qui relève bien de la procédure
+ * Études en France — l'étape 4 rend SIX pièces là où le Sénégal en rend
+ * huit, et elle les annonçait comme « la liste EXACTE de ce que le
+ * portail vous demandera ». Neuf des quinze étapes portent déjà la
+ * mention du tronc (`MENTION_RESIDENCE_ABSENTE`, js/procedures/index.js)
+ * parce qu'elles passent par composerEtape() ; l'étape des pièces, elle,
+ * est une étape de la ROUTE (`kind: "pieces"`), pas de la procédure :
+ * elle ne passait par aucune composition, donc par aucune mention.
+ *
+ * CE QU'ON SAIT, ET RIEN DE PLUS. Des huit pays documentés, un seul
+ * ajoute des pièces à lui (le Sénégal). On ne dit donc pas à l'étudiant
+ * qu'il en manque sûrement — on dit que nous ne savons pas, et où le
+ * savoir. Promettre « exact » ce qu'on n'a pas vérifié, c'est le laisser
+ * arriver au guichet avec une pièce en moins ; lui annoncer des pièces
+ * imaginaires, c'est le faire courir pour rien.
+ *
+ * L'ANNUAIRE OFFICIEL, vérifié le 2026-09-18 : campusfrance.org/fr/espaces
+ * recense 190 Espaces Campus France dans plus de 150 pays, cherchables
+ * par pays. C'est la seule adresse à donner : celle qui reste juste quand
+ * un site national change d'URL.
+ */
+export const ANNUAIRE_ESPACES_CAMPUS_FRANCE = "https://www.campusfrance.org/fr/espaces";
+
+export const PIECES_RESIDENCE_ABSENTE = "Cette liste est celle que la procédure demande partout. Votre pays de résidence n'est pas encore documenté ici : si votre Espace Campus France en exige d'autres, elles n'y sont pas, et les frais et les dates qui dépendent de votre pays ne le sont pas non plus. Demandez-lui sa liste avant de déposer.";
+
+// L'ÉTAPE 4 NE PROMET PAS « EXACT » CE QU'ELLE N'A PAS VÉRIFIÉ.
+// Sa phrase d'origine reste, mot pour mot, pour les pays documentés :
+// c'est une vraie promesse, tenue, et l'affaiblir pour tout le monde
+// serait payer le trou deux fois.
+export const PIECES_EN_CLAIR_SANS_RESIDENCE = "Voici les pièces que le portail demande dans tous les pays, avec le poids maximum de chaque fichier. Cochez ce que vous avez déjà, au bon format. Si une pièce est trop lourde ou dans une autre langue, Fitz vous aide juste en dessous.";
+
 export function piecesDuDossier(procedure) {
   const pieces = [];
   for (const id of ["ef_saisie", "ef_pieces"]) {
@@ -332,6 +367,12 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
   // l'étudiant qui sait.
   const pieces = piecesDuDossier(procedure).map((p) => ({ ...p, obtenue: piecesCochees[p.slug] === true, ecartee: piecesCochees[p.slug] === "non-concerne" }));
   const traduction = etatTraduction(pieces, dossier);
+  // `residenceDocumentee` est posé par procedureComposee() : false quand
+  // aucune couche ne correspond au pays de résidence, true sinon. On ne
+  // le déduit pas d'un comptage de pièces — un pays documenté qui
+  // n'ajoute aucune pièce (sept des huit) ne doit pas être pris pour un
+  // pays inconnu.
+  const residenceAbsente = !!procedure && procedure.residenceDocumentee === false;
   const visa = {};
   VISA_ETAPES.forEach((id) => { visa[id] = !!(visaChecklist && visaChecklist[id] === true); });
   const visaFaites = VISA_ETAPES.filter((id) => visa[id]).length;
@@ -386,7 +427,7 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
       id: def.id,
       kind: def.kind,
       titre: def.titre,
-      enClair: def.enClair,
+      enClair: def.kind === "pieces" && residenceAbsente ? PIECES_EN_CLAIR_SANS_RESIDENCE : def.enClair,
       icone: def.icone || (officielle ? ICONES_TYPE[officielle.type] : "circle"),
       faite,
       cochee,
@@ -413,6 +454,7 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
       faitLe: (saisie && saisie.faitLe) || null,
       pieces: def.kind === "pieces" ? pieces : [],
       traduction: def.kind === "pieces" ? traduction : null,
+      residenceAbsente: def.kind === "pieces" ? residenceAbsente : false,
       voeux: ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
       visa: def.kind === "visa" ? { etat: visa, faites: visaFaites, total: VISA_ETAPES.length } : null
     };

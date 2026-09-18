@@ -822,6 +822,20 @@ margin-top:2px;
 color:#8F3E22;
 }
 
+/* LE LIEN D'UNE RÉSERVE DOIT SE VOIR (lot R14, 2026-09-18).
+   Même piège qu'au lot R13 sur .fitz-regle : le style de base du site
+   est a{text-decoration:none;color:inherit}, donc un lien posé dans cet
+   encart s'afficherait comme du texte. Or celui-ci est la seule chose à
+   FAIRE quand son pays n'est pas documenté — aller demander sa liste à
+   son Espace Campus France. Il doit ressembler à un lien. */
+.rt-avert a{
+color:#8F3E22;
+font-weight:600;
+text-decoration:underline;
+text-underline-offset:2px;
+white-space:nowrap;
+}
+
 .rt-bravo{
 display:flex;
 gap:10px;

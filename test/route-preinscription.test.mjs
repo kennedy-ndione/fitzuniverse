@@ -25,7 +25,8 @@ import {
   ETAPES_ROUTE, TOTAL_ETAPES, construireRoute, phraseDeRoute, situationComplete,
   QUESTIONS_SITUATION, piecesDuDossier, avertissementsVoeux, defautsDesEnClair,
   PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, NIVEAUX_VOEU, slugPiece,
-  etatTraduction, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION
+  etatTraduction, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION,
+  PIECES_RESIDENCE_ABSENTE, PIECES_EN_CLAIR_SANS_RESIDENCE, ANNUAIRE_ESPACES_CAMPUS_FRANCE
 } from "../js/route-preinscription.js";
 import { trouverProcedure } from "../js/procedures/index.js";
 import { PROCEDURE_FRANCE } from "../js/procedures/france.js";
@@ -361,4 +362,111 @@ test("route 10 — la page : une seule étape à l'écran, pas de rail ni de rad
   assert.ok(ecart > 0 && colle >= 0, "l'écart entre pièces ou la marge du bouton n'est plus en pixels");
   assert.ok(colle * 2 < ecart, `le bouton (marge ${colle}px) est aussi proche de la pièce suivante (écart ${ecart}px) que de la sienne`);
   assert.match(css, /\.rt-piece\{[^}]*align-items:flex-end/, "le bouton doit être attaché au bord droit de sa carte");
+});
+
+/**
+ * ------------------------------------------------------------------
+ * LOT R14 (2026-09-18) — un pays non documenté se DIT non documenté,
+ * jusque dans la liste des pièces.
+ *
+ * LE DÉFAUT, MESURÉ : pour un pays de résidence sans couche — le Ghana
+ * ici, qui relève bien de la procédure Études en France — l'étape 4
+ * rendait SIX pièces contre HUIT au Sénégal, sous la phrase « Voici la
+ * liste EXACTE de ce que le portail vous demandera ». Neuf des quinze
+ * étapes portent déjà la mention du tronc, parce qu'elles passent par
+ * composerEtape() ; celle des pièces est une étape de la ROUTE, donc
+ * elle ne passait par aucune composition.
+ *
+ * CE QUE CES TESTS TIENNENT, et la nuance qui compte : on ne dit PAS à
+ * l'étudiant qu'il lui manque des pièces — un seul des huit pays
+ * documentés en ajoute. On dit qu'on ne sait pas, et où savoir.
+ *
+ * CINQ MUTATIONS VÉRIFIÉES : le drapeau retiré de l'étape · la phrase
+ * d'origine rendue à un pays non documenté · la réserve passée SOUS la
+ * liste · le style du lien retiré de css/route.css · la réserve qui
+ * affirme « d'autres pièces manquent sûrement ». Chacune fait tomber
+ * un test.
+ * ------------------------------------------------------------------
+ */
+
+const routeDe = (procedure) => construireRoute({
+  procedure, profile: SITUATION, diagnostic: null, voeux: [voeu("pre-1")],
+  dossier: {}, visaChecklist: {}, aujourdhui: AUJOURDHUI
+});
+const etapePieces = (procedure) => routeDe(procedure).etapes.find((e) => e.id === "pieces");
+
+test("route 12 — l'étape des pièces déclare que le pays n'est pas documenté", () => {
+  const ghana = etapePieces(GHANA);
+  const senegal = etapePieces(SENEGAL);
+
+  // Le drapeau vient de la PROCÉDURE, pas d'un comptage de pièces : sept
+  // des huit pays documentés n'ajoutent aucune pièce, et aucun d'eux ne
+  // doit être pris pour un pays inconnu.
+  assert.equal(GHANA.residenceDocumentee, false);
+  assert.equal(SENEGAL.residenceDocumentee, true);
+  assert.equal(ghana.residenceAbsente, true, "le Ghana n'est pas documenté : l'étape doit le dire");
+  assert.equal(senegal.residenceAbsente, false, "le Sénégal est documenté : aucune réserve");
+
+  // Et le drapeau ne se pose QUE sur l'étape des pièces.
+  for (const e of routeDe(GHANA).etapes) {
+    if (e.id !== "pieces") assert.equal(e.residenceAbsente, false, `${e.id} ne doit pas porter la réserve des pièces`);
+  }
+
+  // La liste est bien plus courte — c'est le fait qui a fait ce lot.
+  assert.ok(ghana.pieces.length < senegal.pieces.length,
+    `Ghana ${ghana.pieces.length} pièces, Sénégal ${senegal.pieces.length} : si les deux sont égales, ce test ne prouve plus rien`);
+});
+
+test("route 13 — la promesse « liste exacte » n'est faite qu'aux pays documentés", () => {
+  const ghana = etapePieces(GHANA);
+  const senegal = etapePieces(SENEGAL);
+
+  // Un pays documenté garde sa promesse, mot pour mot : l'affaiblir pour
+  // tout le monde serait payer le trou deux fois.
+  assert.match(senegal.enClair, /la liste exacte de ce que le portail vous demandera/i);
+  assert.equal(senegal.enClair, ETAPES_ROUTE.find((e) => e.id === "pieces").enClair);
+
+  // Un pays non documenté ne se voit rien promettre d'exact.
+  assert.equal(ghana.enClair, PIECES_EN_CLAIR_SANS_RESIDENCE);
+  assert.ok(!/exacte/i.test(ghana.enClair), "on promet encore une liste exacte à un pays non vérifié");
+  assert.match(ghana.enClair, /dans tous les pays/);
+});
+
+test("route 14 — la réserve dit ce qu'on ignore, pas ce qu'on invente", () => {
+  // La calibration est le cœur du lot. Un seul des huit pays documentés
+  // ajoute des pièces : annoncer à un Ghanéen qu'il lui en manque
+  // sûrement le ferait courir pour rien, et le dépôt a déjà payé le prix
+  // des faits fabriqués (lot R11, le score tiré d'un hash).
+  assert.match(PIECES_RESIDENCE_ABSENTE, /n'est pas encore documenté/);
+  assert.match(PIECES_RESIDENCE_ABSENTE, /\bsi\b/, "la réserve doit rester conditionnelle");
+  assert.ok(!/manquent|il vous manque|d'autres pièces sont/i.test(PIECES_RESIDENCE_ABSENTE),
+    "la réserve affirme des pièces manquantes qu'on n'a pas vérifiées");
+
+  // Elle dit aussi QUOI FAIRE, et vers l'annuaire officiel — la seule
+  // adresse qui reste juste quand un site national change d'URL.
+  assert.match(PIECES_RESIDENCE_ABSENTE, /Demandez-lui sa liste/);
+  assert.equal(ANNUAIRE_ESPACES_CAMPUS_FRANCE, "https://www.campusfrance.org/fr/espaces");
+});
+
+test("route 15 — la réserve se lit AVANT la liste, et son lien se voit", () => {
+  const moteur = lire("espace-preinscription.js");
+  const i = moteur.indexOf("function htmlPieces");
+  const html = moteur.slice(i, moteur.indexOf("\nfunction ", i + 10));
+
+  // Une réserve placée sous la liste se lit quand on a déjà cru la liste
+  // complète : elle doit passer devant.
+  assert.ok(html.indexOf("const reserve") !== -1, "htmlPieces ne construit plus la réserve");
+  assert.ok(html.indexOf("${reserve}") < html.indexOf('<ul class="rt-pieces">'),
+    "la réserve doit être rendue avant la liste des pièces");
+  assert.match(html, /e\.residenceAbsente \?/, "la réserve doit dépendre du drapeau de l'étape");
+  assert.match(html, /rel="noopener noreferrer"/, "un lien qui ouvre un onglet porte rel=noopener");
+
+  // MÊME PIÈGE QU'AU LOT R13 : sans règle propre, le style de base du
+  // site (a{text-decoration:none;color:inherit}) rendrait ce lien
+  // indistinguable du texte — alors qu'il est la seule chose À FAIRE.
+  const css = lire("css/route.css");
+  const j = css.indexOf(".rt-avert a{");
+  assert.notEqual(j, -1, "css/route.css n'a plus de style pour le lien d'une réserve");
+  const regle = css.slice(j, css.indexOf("}", j));
+  assert.match(regle, /text-decoration:underline/);
 });
