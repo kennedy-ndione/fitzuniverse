@@ -595,8 +595,13 @@ assert.ok(!/action=new/.test(hub), "le hub lie encore le formulaire de création
 assert.ok(!/prerempli|params\.get\("universite"\)|params\.get\("portail"\)/.test(apps),
 "applications.js lit encore un établissement ou un portail transmis");
 
-// 2. Le lien de la branche préinscription mène à l'étape 3.
-assert.match(hub, /const lien = preinscription \? "espace-preinscription\.html\?etape=voeux" : "applications\.html";/);
+// 2. RÉÉCRIT AU LOT B4 : la branche « préinscription » de ce lien a été
+// RETIRÉE, pas seulement rendue vraie. Le lot R13 l'avait gardée faute
+// d'être dans un lot qui touchait au hub des bourses ; B4 est ce lot.
+// Il ne reste qu'une destination, et elle est écrite.
+assert.match(hub, /const lien = "applications\.html";/);
+assert.ok(!/espace-preinscription\.html/.test(hub),
+"le hub des bourses ne doit plus fabriquer de lien vers la route");
 
 // 3. ET LA RAISON POUR LAQUELLE CETTE BRANCHE EST INOFFENSIVE : un seul
 // fichier charge ce script, et il déclare l'espace bourses. Le jour où
@@ -1267,19 +1272,28 @@ assert.equal(liensDOpportunite({ ...OPP, entryPoint: "autre", abonne: true }).po
 
 });
 
-test("portes 14 — DANS L'ESPACE PRÉINSCRIPTION, la bourse ne parle pas", () => {
+test("portes 14 — le hub des bourses ne porte plus aucune branche « préinscription »", () => {
 
 const hub = sansCommentaires(lire("dashboard.js"));
 
-// espace-preinscription.html dit en toutes lettres « ici l'étudiant ne
-// cherche pas un financement : il choisit où déposer ». Sans coupure,
-// un client Dossier France lisait « Le dossier se dépose auprès du
-// bailleur, pas auprès de l'université » sur une carte qui lui demande
-// de choisir un établissement.
-assert.match(hub, /portailBourse: preinscription \? "" : bailleur\.url/,
-"le portail de bourse n'est plus coupé dans l'espace préinscription");
-assert.match(hub, /entryPoint: preinscription \? "" : /,
-"l'entryPoint de la bourse n'est plus coupé dans l'espace préinscription");
+// RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot B4).
+//
+// Ce test gardait DEUX coupures : dans l'espace préinscription, la
+// carte d'opportunité ne devait montrer ni portail de bailleur ni
+// « entryPoint », parce qu'un client Dossier France ne cherche pas un
+// financement. La coupure n'a plus d'objet — ce hub ne sert QUE
+// l'espace bourses, espace-preinscription.html porte la route et pas ce
+// script — et B4 a retiré les branches mortes qui la portaient.
+//
+// La règle est donc gardée un cran plus haut, et elle est plus forte :
+// aucun ternaire « préinscription » ne subsiste ici, et le contrat du
+// fichier est écrit en clair. Le test « bug 10 » garde la RAISON (un
+// seul fichier charge ce script, et il déclare l'espace bourses).
+assert.ok(!/preinscription \?/.test(hub),
+"une branche « préinscription » est revenue dans le hub des bourses");
+assert.match(hub, /const ESPACE = "bourse";/,
+"le contrat du fichier doit rester écrit : ce hub est celui des bourses");
+assert.match(hub, /portailBourse: bailleur\.url/);
 
 // Et le module sait quoi faire d'un entryPoint vide : ni ordre, ni
 // orientation.

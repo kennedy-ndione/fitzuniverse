@@ -32,9 +32,8 @@ import { etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_RE
 //   - CE QU'ON MONTRE d'une phase selon où en est l'étudiant
 //     (js/revelation.js). Le rail reste entier ; c'est le détail qui se
 //     dévoile.
-import { quotaDeLaFormule, nombreAProposer, phraseDuQuota, motDeLaPlace } from "./js/parcours-quota.js";
+import { quotaDeLaFormule, nombreAProposer, phraseDuQuota } from "./js/parcours-quota.js";
 import { revelerPhases, promesseDePhase, resumeDePhase, revelerEtapesVisa } from "./js/revelation.js";
-import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 // LOT PORTAILS (2026-09-14) — les trois portes d'une opportunité.
 // Les portails ont quitté le catalogue public au lot S3 : ils sont
 // servis par la Cloud Function `portails`, qui vérifie l'abonnement.
@@ -540,13 +539,10 @@ return;
 
 // LE LIEN DIT CE QU'IL FAIT.
 // Les trois cartes menaient toutes à `applications.html?action=new`, sous
-// le libellé « Suivre cette candidature ». Or, côté bourses, ce paramètre
-// n'ouvre plus rien depuis le lot FITZ-CHOISIT (c'est Fitz qui remplit
-// les places) : trois boutons différents produisaient le même écran, et
-// aucun ne faisait ce qu'il annonçait. Côté préinscription, l'étudiant
-// choisit vraiment : depuis le lot R13, son lien mène à l'étape 3 de la
-// route, la seule porte d'un vœu.
-const preinscription = quotaCtx && quotaCtx.espace === "preinscription";
+// le libellé « Suivre cette candidature ». Or ce paramètre n'ouvre plus
+// rien depuis le lot FITZ-CHOISIT (c'est Fitz qui remplit les places) :
+// trois boutons différents produisaient le même écran, et aucun ne
+// faisait ce qu'il annonçait.
 
 // L'ACCÈS AUX PORTAILS EST UNE DONNÉE PAYANTE.
 // `portailsDisponibles()` est vrai seulement si la Cloud Function a
@@ -570,46 +566,29 @@ portailConfirme: portailBourse(pick.scholarshipId),
 siteDeLaBourse: bourse ? bourse.officialWebsite : ""
 });
 
-// DANS L'ESPACE PRÉINSCRIPTION, LA BOURSE N'A RIEN À DIRE.
-// espace-preinscription.html écrit en toutes lettres « ici l'étudiant
-// ne cherche pas un financement : il choisit où déposer ». Sans cette
-// coupure, un client Dossier France lisait « Le dossier se dépose
-// auprès du bailleur, pas auprès de l'université » sur une carte qui
-// lui demande de choisir un établissement — et son seul lien utile, le
-// portail d'admission, passait en deuxième.
 const { liens, orientation } = liensDOpportunite({
 site: pick.universityWebsite,
 // Le portail d'ADMISSION ne vient plus du catalogue (il en a été
 // retiré au lot S3) : `pick.applicationUrl` est donc vide sur les
 // 155 universités. C'est portailUniversite() qui le sert.
 portailAdmission: portailUniversite({ universityId: pick.universityId, programId: pick.programId }),
-portailBourse: preinscription ? "" : bailleur.url,
+portailBourse: bailleur.url,
 bourseConfirmee: bailleur.confirme,
 // Les 8 universités SANS portail d'admission : leur voie (ambassade,
 // procédure nationale, dépôt sur place) est dite au lieu d'un silence.
 // Le champ vient du catalogue public via recommend-programs.js.
 voieAdmission: pick.voieAdmission || "",
-entryPoint: preinscription ? "" : (bourse ? bourse.entryPoint : ""),
+entryPoint: bourse ? bourse.entryPoint : "",
 funderName: bourse ? bourse.funderName : "",
 abonne
 });
 
-// LE LIEN D'ACTION MÈNE À LA SEULE PORTE (lot R13, 2026-09-18).
-//
-// Il emportait l'établissement et le portail vers
-// `applications.html?action=new`, qui les pré-remplissait dans un
-// formulaire de dix champs. Ce formulaire n'existe plus : un vœu se pose
-// à l'étape 3 de la route, en trois champs, et son portail y est FIXÉ
-// (Études en France) — le passer dans l'URL n'aurait plus de sens.
-//
-// CETTE BRANCHE N'EST PLUS ATTEINTE : depuis le lot S4, un seul fichier
-// charge ce script — espace-bourse.html, `data-espace="bourse"` — donc
-// `preinscription` y est toujours faux. On la garde VRAIE plutôt que de
-// la retirer dans un lot qui ne touche pas au hub des bourses : si elle
-// revit un jour, elle mènera à la porte unique, pas à la seconde.
-const lien = preinscription ? "espace-preinscription.html?etape=voeux" : "applications.html";
+// Le lot R13 avait rendu vraie la branche « préinscription » de ce
+// lien plutôt que de la retirer, faute d'être dans un lot qui touchait
+// au hub des bourses. C'est ce lot-ci : elle est partie.
+const lien = "applications.html";
 
-const libelle = preinscription ? "Poser ce vœu à l'étape 3" : "Voir cette proposition";
+const libelle = "Voir cette proposition";
 
 return `
 <article class="jy-card jy-opp" style="margin-bottom:0;">
@@ -664,7 +643,9 @@ liste_attente: "Liste d'attente",
 refusee: "Refusée"
 };
 
-function renderDossiers(applications, espace = "bourse") {
+// `espace` a été retiré de la signature au lot B4 : ce hub n'en sert
+// qu'un, et le paramètre ne décidait plus de rien.
+function renderDossiers(applications) {
 
 const wrap = document.getElementById("jyApps");
 
@@ -672,17 +653,8 @@ const enPreparation = applications.filter((app) => !STATUTS_DEPOSES.includes(app
 
 if (!enPreparation.length) {
 
-// Le vide parlait le vocabulaire des bourses aux deux espaces : un
-// autofinancé y lisait « suivez votre première candidature » et
-// « Choisissez une opportunité », deux mots que sa page n'emploie pas.
-const mot = motDeLaPlace(espace);
-
 wrap.innerHTML = applications.length
 ? ""
-: espace === "preinscription"
-// Lot R13 : la création vit à l'étape 3 de la route, plus sur
-// applications.html. (Branche non atteinte, voir renderOpportunites.)
-? `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Choisissez un établissement en phase 02, puis <a href="espace-preinscription.html?etape=voeux">posez votre premier ${mot}</a>.</div>`
 : `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Fitz remplit vos places dès que votre profil lui permet de choisir — <a href="applications.html">ouvrez vos candidatures</a> pour voir ses propositions.</div>`;
 
 return;
@@ -1071,14 +1043,27 @@ section.hidden = false;
 // ==========================================================
 initShellChrome();
 
-// LOT S4 — CE FICHIER EST LE MOTEUR DES DEUX HUBS.
-// Il servait la seule page dashboard.html ; il sert maintenant
-// espace-bourse.html et espace-preinscription.html, qui partagent la
-// coquille, le rail des phases et le radar, mais pas leur vocabulaire.
-// L'espace vient du <body data-espace>, et bootstrapShell le confirme.
+// CE FICHIER EST LE MOTEUR DU HUB DES BOURSES, ET DE LUI SEUL
+// (lot B4, 2026-09-18).
+//
+// Au lot S4 il servait deux hubs, et lisait donc son espace dans le
+// <body data-espace>. La refonte de la préinscription lui a retiré le
+// second : espace-preinscription.html porte la ROUTE
+// (espace-preinscription.js), pas ce hub. Vérifié plutôt que supposé,
+// au lot R13 puis de nouveau ici, sur le site déployé — un seul fichier
+// charge ce script, espace-bourse.html, et il déclare `data-espace
+// ="bourse"`. Un test l'exige (test/espace-etudiant.test.mjs, « bug 10 »)
+// et tombera le jour où une autre page le chargera.
+//
+// Lire l'espace dans la page laissait donc vivre des branches
+// « préinscription » que rien n'atteignait — un vocabulaire fantôme
+// qu'une prochaine passe aurait cru servi à quelqu'un. Le contrat est
+// maintenant écrit : ce hub est celui des bourses. Les branches mortes
+// sont parties avec lui.
+//
 // Le nom du fichier est resté : une trentaine de tests, le harnais et
-// les pages le référencent, et le renommer aurait été un lot à soi.
-const ESPACE = document.body.dataset.espace === "preinscription" ? "preinscription" : "bourse";
+// les pages le référencent, et le renommer serait un lot à soi.
+const ESPACE = "bourse";
 
 // UN CLIENT DES DEUX ESPACES NE SE FAIT PAS RENVOYER DANS L'AUTRE.
 // Le moteur de la route (espace-preinscription.js, lot R2) dépose dans
@@ -1229,9 +1214,7 @@ planPreinscriptionId: session.planPreinscriptionId || "",
 plans: typeof SCHOLARBRIDGE_PLANS !== "undefined" ? SCHOLARBRIDGE_PLANS : null
 });
 
-const nomFormule = ESPACE === "preinscription"
-? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "")
-: (PLAN_LABELS[planId] || "");
+const nomFormule = PLAN_LABELS[planId] || "";
 
 function rafraichirCarte(visa) {
 const etat = etatDesPhases({ profileScore, applications, visaChecklist: visa, espace: ESPACE });
@@ -1289,7 +1272,7 @@ quota,
 dejaSuivies: applications.length,
 nomFormule
 });
-renderDossiers(applications, ESPACE);
+renderDossiers(applications);
 renderDepot(applications);
 renderReponse(applications, opps.count);
 
