@@ -163,6 +163,51 @@ assert.match(fitz, /check: \{ modele: "claude-opus-5", maxTokens: 8192/, "check 
 
 });
 
+test("les trois tâches qui produisent un document interdisent tout commentaire autour", () => {
+
+// MESURÉ EN LIGNE LE 2026-09-18 : la première traduction réelle a rendu
+// l'attestation traduite PUIS mille caractères de note terminologique
+// en français, dans le même champ — que l'étudiant emporte en cliquant
+// sur Copier ou Télécharger, dans un document destiné à un dossier
+// officiel. Rien ne l'interdisait, et le simulateur ne fabriquait
+// jamais de commentaire : invisible avant la bascule.
+//
+// Preuve par mutation : la consigne retirée d'une seule des trois
+// tâches → rouge.
+const cible = { university: "Université de Bordeaux", program: "Master Informatique", level: "master", country: "France", profile: {} };
+
+const sorties = {
+translate: buildPrompt("translate", { ...cible, text: "Attestation de réussite.", sourceLanguage: "fr", targetLanguage: "en" }),
+letter: buildPrompt("letter", { ...cible, style: "academique" }),
+email: buildPrompt("email", { ...cible, emailType: "contact_university", context: "" })
+};
+
+for (const [tache, prompt] of Object.entries(sorties)) {
+assert.match(prompt.system, /Ta réponse entière est le document demandé/, `${tache} : rien n'interdit le commentaire`);
+assert.match(prompt.system, /aucune proposition de faire autre chose/, `${tache} : rien n'interdit de proposer une suite qui n'existe pas`);
+}
+
+// Les deux parcours portent la consigne : un vœu de préinscription se
+// copie dans le portail, exactement comme une lettre se copie ailleurs.
+const enPreinscription = {
+letter: { ...cible, style: "academique", parcours: "preinscription" },
+email: { ...cible, emailType: "contact_university", context: "", parcours: "preinscription" },
+translate: { ...cible, text: "Attestation de réussite.", sourceLanguage: "fr", targetLanguage: "fr", parcours: "preinscription" }
+};
+
+for (const [tache, entree] of Object.entries(enPreinscription)) {
+assert.match(buildPrompt(tache, entree).system, /Ta réponse entière est le document demandé/, `${tache} en préinscription : consigne absente`);
+}
+
+// LE CHAT EN EST EXCLU, et ce n'est pas un oubli : dans une
+// conversation, la phrase d'accroche et la relance SONT le produit.
+// Le vérifier empêche d'« harmoniser » les six prompts un jour par
+// souci de symétrie.
+const chat = buildPrompt("chat", { ...cible, message: "bonjour", history: [] });
+assert.ok(!/Ta réponse entière est le document demandé/.test(chat.system), "le chat ne doit pas porter cette consigne");
+
+});
+
 test("les listes des tâches structurées sont bornées dans le prompt", () => {
 
 // Un plafond de mots plus haut ne suffit pas : sans borne sur les

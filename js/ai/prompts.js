@@ -48,6 +48,36 @@ import { phraseTestLangue } from "../test-de-langue.js";
 
 const CADRE_PREINSCRIPTION = "L'étudiant prépare une PRÉINSCRIPTION : une admission qu'il finance lui-même, examinée par la commission pédagogique d'un établissement, qui juge la cohérence de son parcours avec la formation demandée — pas un concours d'excellence. Il dépose lui-même son dossier sur le portail officiel. Ne parle jamais de financement par un organisme tiers ni de jury de sélection : parle d'admission, de formation, d'établissement, de pièces et de procédure.";
 
+// ==========================================================
+// LE LIVRABLE EST LE LIVRABLE — rien autour
+// ==========================================================
+//
+// MESURÉ EN LIGNE LE 2026-09-18. Première traduction réelle demandée à
+// un vrai modèle : une attestation de réussite. La traduction elle-même
+// était excellente — puis le modèle a ajouté, dans le même champ, mille
+// caractères de « Note terminologique » EN FRANÇAIS sur l'absence
+// d'équivalent anglais de la mention « Assez bien », un tableau
+// d'équivalences, et une proposition d'aide (« je peux adapter la
+// formulation »).
+//
+// Trois défauts en une réponse : l'étudiant clique sur Copier ou
+// Télécharger et emporte le commentaire DANS un document qu'il joint à
+// un dossier officiel ; Fitz propose une suite dans un outil qui n'a
+// pas de conversation, donc une porte qui n'existe pas ; et le champ
+// « Traduction » contient du français.
+//
+// Rien dans le prompt ne l'interdisait, et le simulateur ne fabriquait
+// jamais de commentaire : le défaut était invisible avant la bascule.
+// Cette consigne s'applique aux TROIS tâches dont la sortie est un
+// document que l'étudiant copie ou télécharge — traduction, lettre,
+// courriel. Le chat en est exclu : là, la conversation EST le produit.
+//
+// Décision de Charles, le 2026-09-18 : contenir, pas séparer. La note
+// du modèle est souvent juste, mais elle n'a pas à voyager dans le
+// document. Une zone « Note du traducteur » distincte reste possible
+// plus tard — ce serait une amélioration, pas cette réparation.
+const SANS_COMMENTAIRE = "Ta réponse entière est le document demandé, prêt à être copié tel quel : aucune phrase d'introduction, aucun commentaire final, aucune note explicative, aucune remarque sur tes choix de formulation, et aucune proposition de faire autre chose ensuite. L'étudiant copie ou télécharge exactement ce que tu écris pour le joindre à son dossier : tout ce qui n'est pas le document lui-même s'y retrouverait.";
+
 function languageLabel(code) {
 return LANGUAGES.find((l) => l.code === code)?.label || code;
 }
@@ -184,7 +214,7 @@ letter(input) {
 // imposée par le portail, pas par l'étudiant.
 if (lireParcoursDeSaisie(input) === "preinscription") {
 return {
-system: `${baseSystem(input)} Tu rédiges une lettre de vœu pour un dossier de préinscription : quatre à cinq lignes au total, sans faute, adressée à la commission pédagogique de la formation nommée. Contenu, dans cet ordre : le parcours en bref, l'intérêt PRÉCIS pour cette formation dans cet établissement, et le lien avec l'objectif professionnel. Interdit : toute louange sur le pays d'accueil ou son enseignement, toute phrase générique réutilisable pour une autre formation, tout paragraphe de plus. La lettre est un brouillon que l'étudiant recopiera lui-même dans son compte sur le portail.`,
+system: `${baseSystem(input)} Tu rédiges une lettre de vœu pour un dossier de préinscription : quatre à cinq lignes au total, sans faute, adressée à la commission pédagogique de la formation nommée. Contenu, dans cet ordre : le parcours en bref, l'intérêt PRÉCIS pour cette formation dans cet établissement, et le lien avec l'objectif professionnel. Interdit : toute louange sur le pays d'accueil ou son enseignement, toute phrase générique réutilisable pour une autre formation, tout paragraphe de plus. La lettre est un brouillon que l'étudiant recopiera lui-même dans son compte sur le portail. ${SANS_COMMENTAIRE}`,
 user: [
 "Rédige la lettre de vœu pour :",
 `Établissement : ${input.university || "non précisé"}`,
@@ -203,7 +233,7 @@ describeProfile(input.profile),
 }
 
 return {
-system: `${baseSystem(input)} Tu rédiges des lettres de motivation universitaires convaincantes, structurées en 4 à 6 paragraphes, sans clichés, ancrées dans le parcours réel de l'étudiant.`,
+system: `${baseSystem(input)} Tu rédiges des lettres de motivation universitaires convaincantes, structurées en 4 à 6 paragraphes, sans clichés, ancrées dans le parcours réel de l'étudiant. ${SANS_COMMENTAIRE}`,
 user: [
 `Rédige une lettre de motivation de style "${input.style}" pour :`,
 `Université : ${input.university || "non précisée"}`,
@@ -254,8 +284,8 @@ const preinscription = lireParcoursDeSaisie(input) === "preinscription";
 
 return {
 system: preinscription
-? `${baseSystem(input)} Tu rédiges des courriels professionnels à un établissement — service de scolarité, secrétariat de formation, commission pédagogique — dans le cadre d'une préinscription : concis (120 à 200 mots), objet clair, formule de politesse adaptée, et une demande précise (pièce, délai, rendez-vous, réponse).`
-: `${baseSystem(input)} Tu rédiges des e-mails universitaires professionnels, concis (150 à 250 mots), avec un objet clair et une formule de politesse adaptée.`,
+? `${baseSystem(input)} Tu rédiges des courriels professionnels à un établissement — service de scolarité, secrétariat de formation, commission pédagogique — dans le cadre d'une préinscription : concis (120 à 200 mots), objet clair, formule de politesse adaptée, et une demande précise (pièce, délai, rendez-vous, réponse). ${SANS_COMMENTAIRE}`
+: `${baseSystem(input)} Tu rédiges des e-mails universitaires professionnels, concis (150 à 250 mots), avec un objet clair et une formule de politesse adaptée. ${SANS_COMMENTAIRE}`,
 user: [
 `Type d'e-mail : ${input.emailType}`,
 `Destinataire : ${input.recipient || "service des admissions"}`,
@@ -278,7 +308,7 @@ const depuis = deLaLangue(input.sourceLanguage);
 const vers = versLaLangue(input.targetLanguage);
 
 return {
-system: `${baseSystem(input)} Tu traduis fidèlement des documents académiques ${depuis} ${vers}, en conservant le registre formel et la terminologie universitaire.`,
+system: `${baseSystem(input)} Tu traduis fidèlement des documents académiques ${depuis} ${vers}, en conservant le registre formel et la terminologie universitaire. Si un terme n'a pas d'équivalent exact — une mention, un intitulé de diplôme, un nom d'établissement — rends la formulation la plus fidèle possible et continue, sans le signaler ni l'expliquer. ${SANS_COMMENTAIRE}`,
 user: `Traduis le texte suivant ${depuis} ${vers} :\n\n${input.text}`
 };
 
