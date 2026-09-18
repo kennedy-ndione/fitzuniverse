@@ -951,11 +951,17 @@ align-items:flex-end;
 width:100%;
 }
 
+/* LE NOMBRE DE LIGNES N'EST PLUS ÉCRIT ICI (lot R24, 2026-09-18).
+L'ancienne mise en page était une grille, et la case à cocher y tenait
+par `grid-row:span 2` : un chiffre qui voulait dire « exactement deux
+lignes de texte ». La troisième ligne du lot R24 l'aurait décentrée sans
+que rien ne proteste — sixième règle de la semaine qui s'applique à un
+état du monde qu'elle ne vérifie pas. Les lignes sont désormais une
+colonne à part, et la case se contente d'être à côté. */
 .rt-piece label{
-display:grid;
-grid-template-columns:auto 1fr;
-gap:2px 12px;
-align-items:center;
+display:flex;
+align-items:flex-start;
+gap:12px;
 padding:12px 14px;
 border-radius:12px;
 border:1px solid var(--border-color);
@@ -963,10 +969,21 @@ background:var(--background-light);
 cursor:pointer;
 }
 
+.rt-piece-corps{
+display:flex;
+flex-direction:column;
+gap:2px;
+min-width:0;
+}
+
 .rt-piece input{
-grid-row:span 2;
+flex:0 0 22px;
 width:22px;
 height:22px;
+/* Alignée sur la PREMIÈRE ligne, pas centrée sur trois : sur une pièce
+qui porte une aide, une case centrée flotte au milieu du paragraphe et
+n'appartient plus à son nom. */
+margin-top:1px;
 accent-color:var(--journey-done, #2F7A46);
 cursor:pointer;
 }
@@ -977,9 +994,34 @@ font-size:.95rem;
 line-height:1.35;
 }
 
+/* L'AIDE D'UNE PIÈCE : « est-ce que ça me concerne, où je l'obtiens ».
+Plus lisible que la méta (qui ne porte qu'un poids de fichier), moins
+appuyée que le nom.
+
+LE POIDS EST REMIS À 400 — MESURÉ AU BANC (lot R24, 2026-09-18).
+css/base.css porte un `label, .label{ font-weight:var(--fw-semibold) }`
+global, et les trois lignes d'une pièce vivent dans un <label> : elles
+étaient TOUTES en 600, nom compris. À deux lignes, la différence de
+taille portait seule la hiérarchie et personne ne l'avait vu. À trois,
+elle s'effondre : une note en demi-gras ne se lit plus comme une note.
+Le poids est corrigé ICI, sur les deux lignes concernées, et pas dans
+css/base.css — cette feuille habille les 34 pages du site, et un lot sur
+les pièces n'a rien à y changer. */
+.rt-piece-aide{
+font-size:.85rem;
+font-weight:400;
+line-height:1.45;
+color:var(--text-light);
+}
+
 .rt-piece-meta{
 font-size:.8rem;
+font-weight:400;
 color:var(--text-muted);
+}
+
+.rt-piece-meta:empty{
+display:none;
 }
 
 .rt-piece.is-obtenue label{

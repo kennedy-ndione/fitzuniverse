@@ -621,3 +621,161 @@ test("route 20 — l'avertissement se lit AVANT le fil et l'étape, et ses liens
   assert.notEqual(j, -1, "la source d'une réserve doit rester discrète, pas grasse comme un appel à l'action");
   assert.match(css.slice(j, css.indexOf("}", j)), /font-weight:400/);
 });
+
+// ======================================================================
+// LOT R24 (2026-09-18) — LES MOTS DES PIÈCES, ET UNE PIÈCE QUI MANQUAIT
+// ======================================================================
+//
+// Balayage des huit pays documentés, sur le texte réellement composé :
+// HUIT noms de pièces distincts, et le glossaire n'en éclairait AUCUN —
+// un nom de pièce vit dans un <label>, que `HORS_CHAMP` écarte.
+//
+// Le défaut sérieux n'était pas de vocabulaire. L'unique ligne du
+// Sénégal réunissait DEUX documents sous UNE condition :
+//
+//   « Carte de séjour […] ou récépissé, ET justificatifs d'une activité
+//     au Sénégal […] (candidats non sénégalais, HORS ZONE CEDEAO) »
+//
+// La consigne officielle n'exempte les ressortissants CEDEAO que du
+// TITRE DE SÉJOUR. Les justificatifs d'activité sont dus par tout
+// candidat non sénégalais. Un étudiant malien, ivoirien, béninois,
+// togolais ou guinéen résidant au Sénégal lisait qu'il n'était concerné
+// par rien.
+//
+// Preuves par mutation faites le 2026-09-18 :
+//   les deux pièces refondues en une      -> route 21 rouge ;
+//   `p.slug ||` retiré de piecesDuDossier -> route 22 rouge ;
+//   `p.aide || ""` retiré                 -> route 23 rouge ;
+//   la ligne d'aide retirée du rendu      -> route 23 rouge.
+
+test("route 21 — au Sénégal, le titre de séjour et la preuve d'activité sont DEUX pièces", () => {
+
+  const pieces = piecesDuDossier(SENEGAL);
+
+  const sejour = pieces.find((p) => /carte de séjour/i.test(p.nom));
+  const activite = pieces.find((p) => /activité au Sénégal/i.test(p.nom));
+  assert.ok(sejour, "la carte de séjour a disparu des pièces du Sénégal");
+  assert.ok(activite, "les justificatifs d'activité ne sont plus une pièce à part : un ressortissant CEDEAO les croira facultatifs");
+  assert.notEqual(sejour.slug, activite.slug, "les deux pièces partagent un slug : une seule coche pour deux documents");
+
+  // LA CONDITION DE CHACUNE EST DITE, ET ELLES DIFFÈRENT. L'exemption
+  // CEDEAO porte sur le titre de séjour et sur lui seul.
+  assert.match(sejour.aide, /CEDEAO/, "l'exemption CEDEAO n'est plus dite sur le titre de séjour");
+  assert.match(sejour.aide, /dispens/i, "on ne dit plus que les ressortissants CEDEAO en sont dispensés");
+  assert.match(activite.aide, /CEDEAO/, "l'aide des justificatifs ne parle plus de la CEDEAO : c'est justement là que l'étudiant se trompait");
+  assert.match(activite.aide, /y compris/i, "l'aide des justificatifs ne dit plus qu'ils valent AUSSI pour un ressortissant CEDEAO");
+
+  // Et le nom du titre de séjour ne réclame plus les deux documents.
+  assert.ok(!/activité/i.test(sejour.nom), `le nom de la carte de séjour réclame encore l'activité : « ${sejour.nom} »`);
+
+  // Aucune de ces deux pièces ne part vers un pays qui n'est pas le Sénégal.
+  const ghana = piecesDuDossier(GHANA).map((p) => p.slug);
+  assert.ok(!ghana.includes(sejour.slug) && !ghana.includes(activite.slug),
+    "une pièce du Sénégal est réclamée au Ghana");
+
+});
+
+test("route 22 — le slug d'une pièce est écrit, pas déduit de son nom", () => {
+
+  // POURQUOI : la coche de l'étudiant vit dans dossierFrance.pieces[slug].
+  // Un slug déduit du nom signifiait qu'une simple reformulation effaçait
+  // toutes les coches déjà posées, sans rien dire à personne.
+  const faire = (pieces) => ({ etapes: [{ id: "ef_saisie", pieces }, { id: "ef_pieces", pieces: [] }] });
+
+  const declaree = faire([{ slug: "slug-stable", nom: "Un nom que l'on réécrira demain" }]);
+  assert.equal(piecesDuDossier(declaree)[0].slug, "slug-stable",
+    "piecesDuDossier ignore le slug déclaré : renommer une pièce reperdra les coches");
+
+  // Le repli existe toujours, pour une pièce qui n'en déclare pas.
+  const sansSlug = faire([{ nom: "Photo d'identité" }]);
+  assert.equal(piecesDuDossier(sansSlug)[0].slug, slugPiece("Photo d'identité"),
+    "le repli sur slugPiece(nom) a disparu");
+
+  // ET LES SLUGS RÉELS SONT CEUX D'AVANT LE LOT : sinon ce lot lui-même
+  // aurait effacé les coches qu'il prétend protéger. Les noms du tronc
+  // n'ont pas changé, donc chaque slug doit valoir slugPiece(son nom).
+  for (const p of piecesDuDossier(SENEGAL)) {
+    if (p.slug === "justificatifs-activite-senegal") continue;   // pièce neuve, jamais suivie
+    if (p.slug.startsWith("carte-de-sejour")) continue;          // nom réécrit, slug d'avant gardé exprès
+    assert.equal(p.slug, slugPiece(p.nom),
+      `le slug de « ${p.nom} » a bougé : les coches de cette pièce seraient perdues`);
+  }
+
+});
+
+test("route 23 — une pièce peut dire si elle vous concerne et où l'obtenir", () => {
+
+  const pieces = piecesDuDossier(SENEGAL);
+
+  // LES TROIS PIÈCES QUI LAISSAIENT L'ÉTUDIANT SEUL, mesurées le
+  // 2026-09-18 : l'accréditation (personne ne sait qui la délivre), les
+  // diplômes (« licence, master, BTS, DUT » quand on vient d'avoir le
+  // bac), et la certification B2 (le code que Charles a nommé).
+  const accreditation = pieces.find((p) => /accréditation/i.test(p.nom));
+  assert.match(accreditation.aide, /priv/i, "on ne dit plus que l'accréditation ne concerne que le privé");
+  assert.match(accreditation.aide, /administration|établissement/i, "on ne dit plus OÙ obtenir l'accréditation");
+
+  const diplomes = pieces.find((p) => /Diplômes obtenus/i.test(p.nom));
+  assert.match(diplomes.aide, /bac/i, "un nouveau bachelier n'est plus rassuré devant « licence, master, BTS, DUT »");
+
+  const b2 = pieces.find((p) => /Certification B2/i.test(p.nom));
+  assert.ok(b2, "la certification B2 a disparu des pièces du Sénégal");
+  assert.ok(!/\bB2\b/.test(b2.aide.replace(/niveau B2/i, "")) || /je pourrais étudier|suivre des cours|à l'aise/i.test(b2.aide),
+    "l'aide de la certification B2 répète le code sans le traduire en français ordinaire");
+  assert.match(b2.aide, /Arabe L-AR/, "on ne dit plus à qui la certification B2 s'applique");
+
+  // UNE AIDE RESTE FACULTATIVE : « Photo d'identité » se comprend seule,
+  // et une aide sur chaque ligne serait du bruit, pas de l'aide.
+  const photo = pieces.find((p) => /Photo d'identité/.test(p.nom));
+  assert.equal(photo.aide, "", "une aide est posée sur une pièce qui se comprend seule");
+  assert.ok(pieces.some((p) => !p.aide), "toutes les pièces portent une aide : la ligne ne veut plus rien dire");
+
+  // ET LE RENDU LA POSE, dans sa propre ligne, sous le nom.
+  const espace = lire("espace-preinscription.js");
+  assert.match(espace, /\$\{p\.aide \? `<span class="rt-piece-aide">\$\{ech\(p\.aide\)\}<\/span>` : ""\}/,
+    "la ligne d'aide n'est plus rendue sous le nom de la pièce");
+  assert.match(lire("css/route.css"), /\.rt-piece-aide\{/, "la ligne d'aide n'a pas de style");
+
+  // LE NOMBRE DE LIGNES N'EST PLUS ÉCRIT DANS LA FEUILLE. `grid-row:span 2`
+  // valait « exactement deux lignes » ; la troisième l'aurait décentrée.
+  assert.ok(!/\.rt-piece input\{[^}]*grid-row/.test(lire("css/route.css")),
+    "la case à cocher tient encore par un nombre de rangées : une quatrième ligne la décentrera en silence");
+  assert.match(lire("css/route.css"), /\.rt-piece-corps\{/, "les lignes de texte n'ont plus de colonne à elles");
+
+});
+
+test("route 24 — les deux lignes de note d'une pièce ne sont pas en demi-gras comme son nom", () => {
+
+  // MESURÉ AU BANC le 2026-09-18, à trois lignes. css/base.css porte un
+  // `label, .label{ font-weight:var(--fw-semibold) }` global, et les
+  // trois lignes d'une pièce vivent dans un <label> : elles étaient
+  // TOUTES en 600, nom compris. À deux lignes, l'écart de taille portait
+  // seul la hiérarchie et personne ne l'avait remarqué ; à trois, une
+  // note en demi-gras ne se lit plus comme une note.
+  const base = lire("css/base.css");
+  const global = /(^|\})[^{}]*\blabel\b[^{}]*\{[^}]*font-weight/m.test(base);
+
+  const route = lire("css/route.css");
+  const bloc = (classe) => {
+    const m = new RegExp(`\\.${classe}\\{([^}]*)\\}`).exec(route);
+    assert.ok(m, `.${classe} n'existe plus dans css/route.css`);
+    return m[1];
+  };
+
+  if (global) {
+    for (const classe of ["rt-piece-aide", "rt-piece-meta"]) {
+      assert.match(bloc(classe), /font-weight:\s*400/,
+        `.${classe} ne corrige plus le demi-gras que css/base.css impose à tout <label> : la note se lira comme un titre`);
+    }
+  }
+
+  // ET LE NOM RESTE LE PLUS APPUYÉ DES TROIS, quoi qu'il arrive.
+  assert.match(bloc("rt-piece-nom"), /font-weight:\s*(600|700|bold)/,
+    "le nom d'une pièce n'est plus le plus appuyé de ses trois lignes");
+
+  // LA CORRECTION EST LOCALE. css/base.css habille les 34 pages du site ;
+  // un lot sur les pièces n'a pas à y toucher.
+  assert.ok(!/rt-piece/.test(base),
+    "css/base.css connaît maintenant les pièces de la route : la règle a fui hors de sa feuille");
+
+});

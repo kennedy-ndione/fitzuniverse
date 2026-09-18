@@ -93,8 +93,35 @@ etapes: {
 // c'est encore un mensonge.
 ef_saisie: {
 consigneSup: "Si vous n'êtes pas sénégalais, joignez en plus une carte de séjour en cours de validité ou un récépissé obtenu auprès des autorités sénégalaises — sauf pour les ressortissants de la zone CEDEAO, exemptés de titre de séjour au Sénégal à la date de rédaction de cette page — ainsi que les justificatifs d'une activité au Sénégal, travail ou études, depuis au moins un an. Nous vous conseillons de déclarer une adresse proche de l'antenne Campus France où vous souhaitez passer votre entretien, le lieu de résidence déclaré déterminant l'antenne : c'est notre conseil, cette page ne le formule pas.",
+// DEUX PIÈCES, PAS UNE — ET LA PREMIÈRE DISAIT FAUX (lot R24, 2026-09-18).
+//
+// L'unique ligne d'avant réunissait deux documents et deux conditions :
+//   « Carte de séjour en cours de validité ou récépissé, ET justificatifs
+//     d'une activité au Sénégal depuis au moins un an
+//     (candidats non sénégalais, HORS ZONE CEDEAO) »
+//
+// La consigne officielle, relue mot pour mot, ne dit pas cela. Elle dit :
+// « Si vous n'êtes pas sénégalais, joignez en plus une carte de séjour
+// […] ou un récépissé […] — SAUF pour les ressortissants de la zone
+// CEDEAO, EXEMPTÉS DE TITRE DE SÉJOUR au Sénégal […] — AINSI QUE les
+// justificatifs d'une activité au Sénégal, travail ou études, depuis au
+// moins un an. »
+//
+// L'exemption CEDEAO porte sur le TITRE DE SÉJOUR, et sur lui seul. Les
+// justificatifs d'activité sont dus par TOUT candidat non sénégalais.
+// La mention « hors zone CEDEAO » placée à la fin d'une ligne unique
+// couvrait les deux documents : un étudiant malien, ivoirien, béninois,
+// togolais ou guinéen résidant au Sénégal lisait qu'il n'était concerné
+// par RIEN, et déposait un dossier incomplet. Ce n'était pas un défaut
+// de vocabulaire, c'était une pièce manquante.
+//
+// Le slug de la carte de séjour est celui que slugPiece() produisait sur
+// l'ancien nom — d'où sa longueur et sa troncature : toute coche déjà
+// posée reste posée. Les justificatifs, eux, n'étaient jamais suivis
+// séparément ; leur pièce est neuve, et décochée, ce qui est la vérité.
 piecesSup: [
-{ nom: "Carte de séjour en cours de validité ou récépissé, et justificatifs d'une activité au Sénégal depuis au moins un an (candidats non sénégalais, hors zone CEDEAO)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
+{ slug: "carte-de-sejour-en-cours-de-validite-ou-recepisse-et-justificatifs-d-une-activit", nom: "Carte de séjour en cours de validité, ou récépissé", aide: "Seulement si vous n'êtes pas sénégalais. Les ressortissants d'un pays de la CEDEAO en sont dispensés, selon la page officielle citée plus bas.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
+{ slug: "justificatifs-activite-senegal", nom: "Justificatifs d'une activité au Sénégal depuis au moins un an", aide: "Seulement si vous n'êtes pas sénégalais — y compris si vous venez d'un pays de la CEDEAO. Un travail ou des études sur place, depuis un an au moins.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
@@ -105,8 +132,16 @@ verifieLe: VERIFIE
 // candidat qui a passé ce bac-là.
 ef_pieces: {
 consigneSup: "Si votre baccalauréat porte la mention Arabe L-AR, vous devez obligatoirement passer un test de français AVANT de déposer votre dossier sur la plateforme : ne le laissez pas pour la fin, il conditionne le dépôt.",
+// « B2 » EST DIT EN FRANÇAIS ORDINAIRE (lot R24).
+//
+// Charles, le 2026-09-18 : « la plupart des étudiants ou ressortissants
+// africains ne maîtrisent pas les C1 ou A1 ou B2 […] donc je sais même
+// pas quoi cocher ». Le lot R16 a chassé ces codes du profil ; celui-ci
+// était resté, dans un nom de pièce. Le nom garde « Certification B2 »
+// — c'est le titre du papier qu'on lui demandera — et l'aide dit ce que
+// B2 veut dire, avec les mots exacts que R16 a retenus pour ce niveau.
 piecesSup: [
-{ nom: "Certification B2 de français (bac Arabe L-AR uniquement)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
+{ slug: "certification-b2-de-francais-bac-arabe-l-ar-uniquement", nom: "Certification B2 de français (bac Arabe L-AR uniquement)", aide: "Seulement si votre baccalauréat porte la mention Arabe L-AR. Le niveau B2, c'est « je suis à l'aise, je pourrais étudier en français » : passez le test AVANT de déposer votre dossier.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE

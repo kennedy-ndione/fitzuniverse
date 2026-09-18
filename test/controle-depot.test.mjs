@@ -127,15 +127,29 @@ test("contrôle 3 — le poids est binaire, le score est le minimum, et « prêt
   assert.equal(unDeTrop.overallScore, 0, "une moyenne aurait affiché 67 sur un dossier condamné");
   assert.equal(unDeTrop.pretADeposer, false);
 
-  // Le minimum, et non la moyenne : deux pièces manquantes sur huit
-  // donnent 75, pas 92.
+  // LE MINIMUM, ET NON LA MOYENNE. Deux pièces manquantes, quel que soit
+  // leur nombre total : la catégorie « pièces » tombe, et le score global
+  // vaut CETTE catégorie — pas la moyenne avec le poids, qui est à 100.
+  //
+  // Le compte total n'est plus écrit ici (lot R24, 2026-09-18). Il y était
+  // — « deux pièces manquantes sur huit donnent 75 » — et le lot R24, en
+  // scindant en deux la pièce sénégalaise qui réclamait à la fois un titre
+  // de séjour et une preuve d'activité, a fait passer le Sénégal à neuf
+  // pièces : 6/9 = 67, et ce test devenait rouge sur une règle intacte.
+  // Un test qui compte les pièces d'un pays surveille le catalogue, pas la
+  // règle qu'il prétend tenir.
+  const nb = TOUTES.length;
+  assert.ok(nb >= 8, `${nb} pièces au Sénégal : le calcul ci-dessous perd son sens`);
   const incomplet = controleDepot({
     fichiers: [{ name: "a.pdf", octets: 420 * Ko }],
-    pieces: TOUTES.map((p, i) => (i < 6 ? p : { ...p, obtenue: false })),
+    pieces: TOUTES.map((p, i) => (i < nb - 2 ? p : { ...p, obtenue: false })),
     traduction: LANGUE_OK
   });
-  assert.equal(incomplet.categories.pieces, 75);
-  assert.equal(incomplet.overallScore, 75);
+  const attendu = Math.round(((nb - 2) / nb) * 100);
+  assert.equal(incomplet.categories.pieces, attendu);
+  assert.equal(incomplet.overallScore, attendu, "le score global n'est plus le minimum de ses catégories");
+  assert.ok(incomplet.overallScore < Math.round((attendu + 100) / 2),
+    "le score global vaut la moyenne des catégories : un dossier incomplet serait flatté");
   assert.equal(incomplet.pretADeposer, false);
   assert.match(incomplet.weaknesses.join(" "), /2 pièces encore à régler/);
 

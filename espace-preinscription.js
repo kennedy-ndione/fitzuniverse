@@ -473,6 +473,24 @@ function htmlVoeux(e) {
   return `${liste}${avert}${form}`;
 }
 
+/**
+ * L'AIDE D'UNE PIÈCE, ET POURQUOI CE N'EST PAS LE GLOSSAIRE (lot R24).
+ *
+ * Un nom de pièce vit dans un <label>, que `HORS_CHAMP` écarte du
+ * glossaire — à raison : un libellé n'est pas une phrase. Mais la
+ * question d'un étudiant devant « Attestation d'accréditation de la
+ * formation » n'est pas « que veut dire accréditation », c'est « est-ce
+ * que ça me concerne, et où je l'obtiens ». Une définition de
+ * dictionnaire le laisserait aussi bloqué. D'où un champ `aide` sur la
+ * pièce, et cette troisième ligne.
+ *
+ * LE CORPS EST UNE COLONNE, PLUS UNE GRILLE À DEUX RANGÉES. L'ancien
+ * <label> était une grille et la case à cocher y tenait par
+ * `grid-row:span 2` — un chiffre qui valait « exactement deux lignes de
+ * texte ». Ajouter une troisième ligne l'aurait décentrée sans que rien
+ * ne proteste. Les lignes vivent maintenant dans `.rt-piece-corps`, et
+ * leur nombre n'est plus écrit dans la feuille de style.
+ */
 // ---- Étape 4 : les pièces ----
 function htmlPieces(e) {
   if (!e.pieces.length) return `<p class="rt-vide">Renseignez d'abord votre pays de résidence (étape 1) : la liste des pièces en dépend.</p>`;
@@ -491,8 +509,11 @@ function htmlPieces(e) {
       <li class="rt-piece${p.obtenue ? " is-obtenue" : ""}${p.ecartee ? " is-ecartee" : ""}">
         <label>
           <input type="checkbox" data-piece="${ech(p.slug)}"${p.obtenue ? " checked" : ""}${p.ecartee ? " disabled" : ""}>
-          <span class="rt-piece-nom">${ech(p.nom)}</span>
-          <span class="rt-piece-meta">${p.tailleMax ? `${ech(p.tailleMax)} maximum` : ""}${p.traduction ? " · à traduire si ce n'est pas en français" : ""}</span>
+          <span class="rt-piece-corps">
+            <span class="rt-piece-nom">${ech(p.nom)}</span>
+            ${p.aide ? `<span class="rt-piece-aide">${ech(p.aide)}</span>` : ""}
+            <span class="rt-piece-meta">${p.tailleMax ? `${ech(p.tailleMax)} maximum` : ""}${p.traduction ? " · à traduire si ce n'est pas en français" : ""}</span>
+          </span>
         </label>
         ${p.obtenue ? "" : `<button type="button" class="rt-piece-ecarter" data-ecarter="${ech(p.slug)}" aria-pressed="${p.ecartee ? "true" : "false"}">${p.ecartee ? "Finalement, ça me concerne" : "Ne me concerne pas"}</button>`}
       </li>`).join("")}</ul>

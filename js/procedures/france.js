@@ -142,10 +142,14 @@ titre: "Compléter mes informations personnelles",
 consigne: "Renseignez identité, coordonnées (adresse et deux numéros de téléphone), CV et statut particulier ; toutes ces informations doivent être exactes et conformes à vos documents officiels.",
 prerequis: ["ef_compte", "profile"],
 preuve: "aucune",
+// LES SLUGS SONT ÉCRITS (lot R24) — et ce sont EXACTEMENT ceux que
+// slugPiece(nom) produisait jusqu'ici, sinon toute coche déjà posée par
+// un étudiant serait perdue. Ils sont maintenant stables : le nom
+// au-dessus peut être réécrit sans toucher au dossier de personne.
 pieces: [
-{ nom: "Photo d'identité", format: "scan", tailleMax: "50 Ko", traduction: false, legalisation: false },
-{ nom: "Pièce d'identité (carte nationale d'identité ou passeport)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
-{ nom: "Curriculum vitae", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
+{ slug: "photo-d-identite", nom: "Photo d'identité", format: "scan", tailleMax: "50 Ko", traduction: false, legalisation: false },
+{ slug: "piece-d-identite-carte-nationale-d-identite-ou-passeport", nom: "Pièce d'identité (carte nationale d'identité ou passeport)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false },
+{ slug: "curriculum-vitae", nom: "Curriculum vitae", aide: "Un CV d'étudiant tient sur une page : vos études, vos stages ou petits boulots, vos langues.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 echeance: null,
 apresConnexion: true,
@@ -169,10 +173,20 @@ titre: "Renseigner mon parcours et joindre mes diplômes",
 consigne: "Détaillez chaque année d'études avec ses justificatifs : relevés de notes des trois dernières années, tous les diplômes obtenus (bac et son relevé, licence, master, BTS, DUT…), et l'attestation d'accréditation de la formation si votre établissement est privé. Aucun fichier téléversé ne peut dépasser 500 Ko : le plafond est général, il vaut pour chaque pièce. Tous les documents doivent être en français ou traduits en Français auprès d'un traducteur assermenté. Dans le cas où le document est traduit, il faut joindre aussi obligatoirement le document original.",
 prerequis: ["ef_saisie", "checklist", "traductions"],
 preuve: "aucune",
+// LES AIDES (lot R24) répondent aux deux questions qu'un nom de pièce
+// ne peut pas porter : EST-CE QUE ÇA ME CONCERNE, et OÙ JE L'OBTIENS.
+// Le glossaire, lui, ne peut rien ici : un nom de pièce vit dans un
+// <label>, et `HORS_CHAMP` écarte les libellés — à raison. Et de toute
+// façon une définition de dictionnaire ne dirait pas à l'étudiant
+// d'aller frapper à la porte de l'administration de son école.
+//
+// Les trois pièces ci-dessous sont celles qui laissaient un nouveau
+// bachelier devant une liste qui semble parler de quelqu'un d'autre :
+// « licence, master, BTS, DUT » quand il vient d'avoir son bac.
 pieces: [
-{ nom: "Relevés de notes des 3 dernières années", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
-{ nom: "Diplômes obtenus (bac + relevé, licence, master, BTS, DUT…)", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
-{ nom: "Attestation d'accréditation de la formation (établissements privés)", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
+{ slug: "releves-de-notes-des-3-dernieres-annees", nom: "Relevés de notes des 3 dernières années", aide: "Vos trois dernières années scolaires, même si elles sont toutes au lycée. C'est votre établissement qui les délivre.", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
+{ slug: "diplomes-obtenus-bac-releve-licence-master-bts-dut", nom: "Diplômes obtenus (bac + relevé, licence, master, BTS, DUT…)", aide: "Si vous venez d'avoir le bac, c'est le bac et son relevé : la liste s'arrête là.", format: "scan", tailleMax: "500 Ko", traduction: true, legalisation: false },
+{ slug: "attestation-d-accreditation-de-la-formation-etablissements-prives", nom: "Attestation d'accréditation de la formation (établissements privés)", aide: "Seulement si votre établissement actuel est privé. C'est son administration qui vous la délivre.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 echeance: null,
 apresConnexion: true,

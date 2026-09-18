@@ -184,7 +184,10 @@ test("langage 5 — un seul fichier de définitions, et chaque terme est expliqu
 // Deux termes ajoutés au lot R23, mesurés sur la route des huit pays :
 // tous deux apparaissent là où le glossaire ATTEINT le texte, et aucun
 // des deux n'y était.
-const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea", "espace-campus-france", "entretien-pedagogique"];
+const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea", "espace-campus-france", "entretien-pedagogique",
+// Six termes ajoutés au lot R24, chacun adossé à un comptage sur les
+// huit pays : voir langage 16.
+"recepisse", "cedeao", "accreditation", "bts-dut-but", "iut", "traducteur-assermente"];
 assert.deepEqual(GLOSSAIRE.map((t) => t.id), attendus);
 for (const t of GLOSSAIRE) {
 const ex = typeof t.explication === "function" ? t.explication("x") : t.explication;
@@ -606,6 +609,75 @@ test("langage 15 — les deux mots centraux du parcours sont au glossaire", asyn
     const t = GLOSSAIRE.find((x) => x.id === id);
     const texte = typeof t.explication === "function" ? t.explication("") : t.explication;
     assert.ok(texte.length > 20 && texte.length < 90, `l'explication de « ${id} » fait ${texte.length} caractères`);
+  }
+
+});
+
+// ======================================================================
+// LOT R24 (2026-09-18) — LES MOTS QUE LES PIÈCES ET LES CITATIONS PORTENT
+// ======================================================================
+//
+// Comptage du 2026-09-18 sur le texte réellement composé des huit pays
+// documentés, par endroit de rendu :
+//
+//   mot                     citation  en clair  nom de pièce
+//   BTS / DUT / BUT              38        0         16
+//   accréditation                 7        0          8
+//   traducteur assermenté         7        8          0
+//   récépissé                     1        0          1
+//   CEDEAO                        1        0          1
+//
+// La citation est servie depuis le lot R23 ; la phrase « en clair » l'est
+// par le glossaire lui-même. Les noms de pièces, eux, restent hors de
+// portée (<label>), et c'est le champ `aide` du lot R24 qui les couvre —
+// voir route 21, 22, 23.
+//
+// Preuve par mutation faite le 2026-09-18 :
+//   les six termes retirés du glossaire -> langage 16 rouge.
+
+test("langage 16 — les mots comptés dans les citations sont au glossaire, et « but » minuscule ne l'est pas", async () => {
+
+  const { GLOSSAIRE, motsTechniques } = await import("../js/glossaire.js");
+  const { construireRoute } = await import("../js/route-preinscription.js");
+  const { trouverProcedure } = await import("../js/procedures/index.js");
+  const { COUCHES } = await import("../js/procedures/residences/index.js");
+
+  for (const id of ["recepisse", "cedeao", "accreditation", "bts-dut-but", "iut", "traducteur-assermente"]) {
+    assert.ok(GLOSSAIRE.some((t) => t.id === id), `« ${id} » a quitté le glossaire`);
+  }
+
+  // LES FORMES RÉELLEMENT ÉCRITES SUR LA ROUTE sont reconnues.
+  const formes = {
+    "récépissé": "recepisse", "récépissés": "recepisse",
+    "CEDEAO": "cedeao",
+    "accréditation": "accreditation", "accréditations": "accreditation",
+    "BTS": "bts-dut-but", "DUT": "bts-dut-but", "BUT": "bts-dut-but",
+    "IUT": "iut",
+    "traducteur assermenté": "traducteur-assermente", "traducteurs assermentés": "traducteur-assermente"
+  };
+  for (const [forme, id] of Object.entries(formes)) {
+    const trouves = motsTechniques(`Il faut joindre ${forme} au dossier.`).map((m) => m.id);
+    assert.ok(trouves.includes(id), `« ${forme} » n'est pas reconnu comme ${id}`);
+  }
+
+  // « BUT » RESTE SENSIBLE À LA CASSE. Sans cette garde, le glossaire
+  // expliquerait « mon but est clair » comme un diplôme court.
+  assert.equal(motsTechniques("Mon but est clair et mes buts aussi.").length, 0,
+    "« but » en minuscules est expliqué comme un diplôme : le drapeau i est revenu sur le motif");
+
+  // ET CES MOTS SONT BIEN DITS SUR LA ROUTE, par le chemin du lot R23.
+  const vus = new Set();
+  for (const pays of COUCHES.map((c) => c.pays).filter(Boolean)) {
+    const procedure = trouverProcedure({ paysDestination: "France", paysResidence: pays });
+    const route = construireRoute({ procedure, profile: { country: pays, nationality: pays }, aujourdhui: new Date("2026-09-18") });
+    for (const e of route.etapes) {
+      const consigne = (e.officielle && e.officielle.consigne) || "";
+      for (const m of motsTechniques(consigne)) vus.add(m.id);
+      for (const m of motsTechniques(e.enClair || "")) vus.add(m.id);
+    }
+  }
+  for (const attendu of ["accreditation", "bts-dut-but", "traducteur-assermente"]) {
+    assert.ok(vus.has(attendu), `« ${attendu} » n'est dit nulle part sur la route, alors qu'il y est écrit`);
   }
 
 });

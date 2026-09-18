@@ -89,7 +89,29 @@ export const GLOSSAIRE = [
 // deux au glossaire. C'est pourtant le bureau où l'étudiant ira, et
 // l'épreuve qu'il redoute le plus de tout le parcours.
 { id: "espace-campus-france", motif: mot("Espaces? Campus France", "i"), explication: "le bureau de Campus France dans votre pays" },
-{ id: "entretien-pedagogique", motif: mot("entretiens? pédagogiques?", "i"), explication: "un entretien sur votre projet d'études, en français" }
+{ id: "entretien-pedagogique", motif: mot("entretiens? pédagogiques?", "i"), explication: "un entretien sur votre projet d'études, en français" },
+// LOT R24 (2026-09-18) — LES MOTS DES PIÈCES, COMPTÉS SUR LES HUIT PAYS.
+// Le balayage du texte réellement composé, le 2026-09-18, a compté ces
+// mots dans la CITATION OFFICIELLE (que le lot R23 sert désormais) et
+// dans les NOMS DE PIÈCES (que rien ne sert, voir plus bas) :
+//
+//   BTS / DUT / BUT     38 citations   16 noms de pièces
+//   accréditation        7 citations    8 noms de pièces
+//   traducteur assermenté 7 citations   8 phrases « en clair »
+//   récépissé            1 citation     1 nom de pièce
+//   CEDEAO               1 citation     1 nom de pièce
+//
+// « BUT » reste SENSIBLE À LA CASSE, sans le drapeau i : « but » est un
+// mot courant du français, et l'expliquer serait ridicule.
+//
+// « CEDEAO » se contente de développer le sigle : la liste de ses États
+// membres bouge, la définition ne doit pas vieillir avec elle.
+{ id: "recepisse", motif: mot("récépissés?", "i"), explication: "le papier provisoire remis en attendant votre carte de séjour" },
+{ id: "cedeao", motif: mot("CEDEAO"), explication: "la Communauté économique des États de l'Afrique de l'Ouest" },
+{ id: "accreditation", motif: mot("accréditations?", "i"), explication: "la reconnaissance officielle d'une formation par l'État" },
+{ id: "bts-dut-but", motif: mot("BTS|DUT|BUT"), explication: "des diplômes courts et professionnels, deux ou trois ans après le bac" },
+{ id: "iut", motif: mot("IUT"), explication: "un institut de technologie, rattaché à une université" },
+{ id: "traducteur-assermente", motif: mot("traducteurs? assermentés?", "i"), explication: "un traducteur reconnu par la justice, dont la traduction est officielle" }
 ];
 
 // Le libellé de l'explication, pour le mot rencontré.

@@ -318,12 +318,39 @@ export const PIECES_RESIDENCE_ABSENTE = "Cette liste est celle que la procédure
 // serait payer le trou deux fois.
 export const PIECES_EN_CLAIR_SANS_RESIDENCE = "Voici les pièces que le portail demande dans tous les pays, avec le poids maximum de chaque fichier. Cochez ce que vous avez déjà, au bon format. Si une pièce est trop lourde ou dans une autre langue, Fitz vous aide juste en dessous.";
 
+/**
+ * LE SLUG D'UNE PIÈCE NE SE DÉDUIT PLUS DE SON NOM (lot R24, 2026-09-18).
+ *
+ * Défaut de structure trouvé en préparant la reformulation des noms de
+ * pièces. La coche de l'étudiant est enregistrée dans Firestore sous
+ * `dossierFrance.pieces[slug]`, et le slug était `slugPiece(p.nom)` :
+ * dérivé du NOM. Conséquence — corriger une faute de frappe dans le nom
+ * d'une pièce change son slug, et TOUTES les coches déjà posées par tous
+ * les étudiants sur cette pièce sont silencieusement perdues. Le dossier
+ * repasse d'une pièce prête à une pièce à obtenir, sans rien dire.
+ *
+ * Une pièce déclare donc désormais son `slug`, stable, et le nom peut
+ * être réécrit librement. `slugPiece(p.nom)` reste le repli pour une
+ * pièce qui n'en déclare pas : aucune coche existante ne bouge.
+ *
+ * `aide` (lot R24) : une phrase qui répond à « est-ce que ça me
+ * concerne, et où je l'obtiens ». Facultative — la plupart des pièces
+ * n'en ont pas besoin ; « Photo d'identité » se comprend seule.
+ */
 export function piecesDuDossier(procedure) {
   const pieces = [];
   for (const id of ["ef_saisie", "ef_pieces"]) {
     const e = etapeDeProcedure(procedure, id);
     for (const p of (e && e.pieces) || []) {
-      pieces.push({ slug: slugPiece(p.nom), nom: p.nom, tailleMax: p.tailleMax || "", traduction: p.traduction === true, legalisation: p.legalisation === true, etape: id });
+      pieces.push({
+        slug: p.slug || slugPiece(p.nom),
+        nom: p.nom,
+        aide: p.aide || "",
+        tailleMax: p.tailleMax || "",
+        traduction: p.traduction === true,
+        legalisation: p.legalisation === true,
+        etape: id
+      });
     }
   }
   return pieces;
