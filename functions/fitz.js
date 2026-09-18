@@ -101,13 +101,21 @@ const cleAnthropic = defineSecret("ANTHROPIC_API_KEY");
  * `structuree` : la réponse doit être du JSON, pas de la prose. Voir
  * CHAMPS_REQUIS dans js/ai/ai-client.js.
  */
+// LE PLAFOND D'UNE TÂCHE STRUCTURÉE SE MESURE, IL NE S'ESTIME PAS
+// (lot AI-STRUCTURE 2/2, 2026-09-18). `check` a consommé 2 424 jetons de
+// sortie pour UNE lettre de quinze lignes, sur un plafond qui valait
+// alors 4 096 : un dossier réel de plusieurs pièces le dépassait donc,
+// et un JSON coupé en plein milieu n'est plus du JSON. Mesuré sur le
+// compte de test le jour même. Un plafond haut ne coûte rien en soi —
+// seuls les jetons réellement écrits sont facturés ; c'est la longueur
+// des listes, bornée dans js/ai/prompts.js, qui tient la dépense.
 const TACHES = {
   chat: { modele: "claude-sonnet-5", maxTokens: 2048, poids: 1, structuree: false },
   email: { modele: "claude-sonnet-5", maxTokens: 2048, poids: 1, structuree: false },
-  readiness: { modele: "claude-sonnet-5", maxTokens: 2048, poids: 1, structuree: true },
+  readiness: { modele: "claude-sonnet-5", maxTokens: 4096, poids: 1, structuree: true },
   translate: { modele: "claude-sonnet-5", maxTokens: 8192, poids: 7, structuree: false },
   letter: { modele: "claude-opus-5", maxTokens: 4096, poids: 4, structuree: false },
-  check: { modele: "claude-opus-5", maxTokens: 4096, poids: 12, structuree: true },
+  check: { modele: "claude-opus-5", maxTokens: 8192, poids: 12, structuree: true },
 
   // LA SEULE TÂCHE OUVERTE AUX COMPTES GRATUITS.
   //
@@ -493,10 +501,52 @@ exports.fitzGenerate = onCall(
       };
 
       if (config.structuree) {
+        // UNE RÉPONSE COUPÉE SE DIT, ELLE NE SE DEVINE PAS
+        // (2026-09-18). `stop_reason === "max_tokens"` veut dire que le
+        // modèle écrivait encore quand le plafond est tombé. Le test
+        // passe AVANT l'analyse du JSON, et pas seulement en cas
+        // d'échec d'analyse : un rapport tronqué peut se parser quand
+        // la coupure tombe juste après une accolade, et rendre alors un
+        // dossier « analysé » à qui il manque la moitié de ses points —
+        // pire qu'une erreur franche. Et ce refus n'est PAS réessayable
+        // (js/ai/ai-errors.js) : la même demande reproduirait la même
+        // longueur, en facturant deux appels de plus.
+        if (message.stop_reason === "max_tokens") {
+          logger.warn("Réponse structurée tronquée", {
+            task,
+            uid,
+            modele: config.modele,
+            maxTokens: config.maxTokens,
+            outputTokens: message.usage?.output_tokens,
+          });
+          throw refus(
+            "internal",
+            "REPONSE_TRONQUEE",
+            "Le rapport de Fitz a été coupé avant la fin."
+          );
+        }
+
         const donnees = extraireJSON(texte);
 
         if (!donnees) {
-          logger.warn("Réponse structurée illisible", { task, uid });
+          // CE QUI A ÉTÉ REÇU, PAS SEULEMENT LE FAIT DE L'ÉCHEC. La
+          // version précédente ne journalisait que « illisible » : le
+          // 2026-09-18, ce silence a coûté six appels facturés à
+          // chercher à l'aveugle une cause que deux lignes de journal
+          // auraient nommée. On journalise donc la FORME du texte reçu
+          // — de quoi reconnaître prose, clôture Markdown ou coupure —
+          // et volontairement pas son contenu : la réponse parle du
+          // dossier d'un étudiant, elle n'a rien à faire en clair dans
+          // un journal d'exploitation.
+          logger.warn("Réponse structurée illisible", {
+            task,
+            uid,
+            stopReason: message.stop_reason,
+            longueur: texte.length,
+            debut: texte.slice(0, 60),
+            aUneAccolade: texte.includes("{"),
+            aUneClotureMarkdown: texte.includes("```"),
+          });
           throw refus(
             "internal",
             "REPONSE_INVALIDE",

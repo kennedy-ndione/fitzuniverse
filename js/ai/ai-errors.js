@@ -78,6 +78,15 @@ FOURNISSEUR_INDISPONIBLE: "FOURNISSEUR_INDISPONIBLE",
 * modèle peut renvoyer du JSON incomplet ou entouré de prose. */
 REPONSE_INVALIDE: "REPONSE_INVALIDE",
 
+/** La réponse a été COUPÉE avant sa fin, le modèle ayant atteint le
+* nombre de mots maximum accordé à la tâche. Distinct de
+* REPONSE_INVALIDE (2026-09-18) pour une raison qui coûte de l'argent :
+* une réponse coupée le sera encore au réessai — la même demande donne
+* la même longueur. REPONSE_INVALIDE étant réessayable, chaque échec
+* facturait TROIS appels au lieu d'un. Et le message « relancez » était
+* un mauvais conseil : ce qu'il faut, c'est réduire la demande. */
+REPONSE_TRONQUEE: "REPONSE_TRONQUEE",
+
 /** Tout le reste. */
 INCONNU: "INCONNU"
 
@@ -148,6 +157,12 @@ signalable: true
 [CODES.REPONSE_INVALIDE]: {
 message: "La réponse de Fitz est arrivée incomplète. Relancez — cela n'arrive qu'occasionnellement.",
 reessayable: true,
+signalable: true
+},
+
+[CODES.REPONSE_TRONQUEE]: {
+message: "Le rapport de Fitz a été coupé avant la fin : il y avait trop à dire en une seule fois. Avec moins de documents à la fois, il aboutit.",
+reessayable: false,
 signalable: true
 },
 

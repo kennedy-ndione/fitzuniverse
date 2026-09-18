@@ -36,6 +36,12 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+// Le prompt est construit ICI, côté navigateur (js/ai/ai-gateway.js
+// l'appelle avant d'envoyer), et pas dans la fonction : c'est pourquoi
+// un lot qui ne touche que prompts.js se déploie avec le hosting seul.
+import { buildPrompt } from "../js/ai/prompts.js";
 
 import {
 CODES,
@@ -106,13 +112,67 @@ test("on ne réessaie jamais ce qui ne peut pas aboutir", () => {
 
 // Réessayer un quota épuisé fait perdre du temps à l'étudiant et,
 // sur un vrai fournisseur, facture une requête vouée à échouer.
-for (const code of [CODES.QUOTA_PLAN, CODES.CONTENU_REFUSE, CODES.ENTREE_TROP_LONGUE, CODES.AUTH, CODES.ARRET_DEMANDE]) {
+//
+// REPONSE_TRONQUEE est dans cette liste pour la même raison, mesurée
+// le 2026-09-18 : une réponse coupée par le plafond de mots le sera
+// encore au réessai — la même demande donne la même longueur. Rangée
+// avec les erreurs passagères, elle facturait trois appels par échec
+// au lieu d'un, et conseillait « relancez » quand il fallait réduire
+// la demande.
+for (const code of [CODES.QUOTA_PLAN, CODES.CONTENU_REFUSE, CODES.ENTREE_TROP_LONGUE, CODES.AUTH, CODES.ARRET_DEMANDE, CODES.REPONSE_TRONQUEE]) {
 assert.equal(estReessayable(new FitzError(code)), false, `${code} ne doit pas être réessayé`);
 }
 
 for (const code of [CODES.RESEAU, CODES.DELAI, CODES.FOURNISSEUR_INDISPONIBLE, CODES.QUOTA_FOURNISSEUR]) {
 assert.equal(estReessayable(new FitzError(code)), true, `${code} doit être réessayé`);
 }
+
+// Un rapport coupé ne se dit pas comme un rapport illisible : le
+// premier demande de réduire la demande, le second de relancer.
+assert.notEqual(
+new FitzError(CODES.REPONSE_TRONQUEE).message,
+new FitzError(CODES.REPONSE_INVALIDE).message
+);
+assert.match(new FitzError(CODES.REPONSE_TRONQUEE).message, /moins de documents/);
+
+});
+
+test("le serveur voit une réponse tronquée, et dit ce qu'il a reçu quand il ne sait pas lire", () => {
+
+// Preuve par mutation : `stop_reason` retiré du contrôle → rouge ;
+// le contrôle déplacé après extraireJSON() → rouge (un JSON tronqué
+// qui se parse par chance rendrait un dossier à moitié analysé).
+const fitz = readFileSync(new URL("../functions/fitz.js", import.meta.url), "utf8");
+
+assert.match(fitz, /message\.stop_reason === "max_tokens"/, "une réponse coupée par le plafond doit être reconnue");
+assert.match(fitz, /"REPONSE_TRONQUEE"/, "elle doit porter son propre code, non réessayable");
+assert.ok(
+fitz.indexOf('message.stop_reason === "max_tokens"') < fitz.indexOf("const donnees = extraireJSON(texte)"),
+"le contrôle de troncature doit précéder l'analyse du JSON, pas la rattraper"
+);
+
+// Le journal doit nommer la FORME du texte reçu — sans son contenu,
+// qui parle du dossier d'un étudiant.
+assert.match(fitz, /stopReason: message\.stop_reason/, "le journal doit porter la raison d'arrêt");
+assert.match(fitz, /aUneClotureMarkdown/, "le journal doit dire si le texte était entouré de Markdown");
+assert.ok(!/debutTexte: texte\.slice\(0, 500\)/.test(fitz), "le journal ne doit pas verser le contenu de la réponse");
+
+// Les plafonds des deux tâches structurées, mesurés le 2026-09-18.
+assert.match(fitz, /readiness: \{ modele: "claude-sonnet-5", maxTokens: 4096/, "readiness : plafond mesuré");
+assert.match(fitz, /check: \{ modele: "claude-opus-5", maxTokens: 8192/, "check : plafond mesuré");
+
+});
+
+test("les listes des tâches structurées sont bornées dans le prompt", () => {
+
+// Un plafond de mots plus haut ne suffit pas : sans borne sur les
+// listes, un dossier volumineux repousse simplement la coupure.
+const p = buildPrompt("check", { files: [], profile: {} });
+assert.match(p.system, /au plus 6 éléments/, "les trois listes de check doivent être bornées");
+assert.match(p.system, /au plus 12/, "la checklist de check doit être bornée");
+
+const r = buildPrompt("readiness", { university: "X", checklist: [], profile: {} });
+assert.match(r.system, /au plus 8 éléments/, "missingItems doit être borné");
 
 });
 

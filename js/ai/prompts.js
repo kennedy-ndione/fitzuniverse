@@ -321,11 +321,12 @@ const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte 
   "categories": { "clé": nombre entre 0 et 100, ... } — n'inclus QUE les catégories (parmi clarté, grammaire, professionnalisme, cohérence, complétude) que tu peux vraiment juger à partir du contenu extrait ci-dessus ; objet vide {} si aucun contenu n'est lisible,
   "categoryLabels": { "clé": "Libellé affiché en français, ex. \\"Clarté\\"" } — une entrée pour chaque clé présente dans categories,
   "listLabels": { "strengths": "titre", "weaknesses": "titre", "suggestions": "titre" } — champ optionnel, à omettre sauf si "Points forts / Points faibles / Suggestions" ne convient pas à ce que tu rends (par exemple un dossier où tu mesures sans noter),
-  "strengths": ["phrase complète", ...],
-  "weaknesses": ["phrase complète", ...],
-  "suggestions": ["phrase complète", ...],
-  "checklist": [{ "label": "nom de la pièce attendue", "present": true ou false }, ...] — une entrée par pièce habituelle de ce type de dossier, "present" selon les documents réellement fournis
+  "strengths": ["phrase complète", ...] — au plus 6 éléments,
+  "weaknesses": ["phrase complète", ...] — au plus 6 éléments,
+  "suggestions": ["phrase complète", ...] — au plus 6 éléments,
+  "checklist": [{ "label": "nom de la pièce attendue", "present": true ou false }, ...] — une entrée par pièce habituelle de ce type de dossier, au plus 12, "present" selon les documents réellement fournis
 }
+Une phrase par élément de liste, deux au maximum : garde les plus importants plutôt que d'allonger. Un rapport coupé en plein milieu n'est d'aucun usage à l'étudiant.
 Règle absolue : ne note ni ne commente JAMAIS le contenu d'un document que tu n'as pas pu lire (statut "vide", "format non lisible" ou "échec de lecture") — signale-le en points faibles ou suggestions si utile, mais ne lui donne aucune note.`;
 
 return {
@@ -366,9 +367,9 @@ const checklistLines = (input.checklist || []).length
 const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown (pas de \`\`\`), exactement selon ce schéma :
 {
   "ready": true ou false,
-  "missingItems": [{ "id": "identifiant court sans espace", "text": "phrase complète décrivant ce qu'il reste à faire", "actionLabel": "verbe d'action court, ex. \\"Compléter mon profil\\"", "actionHref": "lien interne relatif si pertinent, sinon null" }, ...] — liste vide si "ready" est true
+  "missingItems": [{ "id": "identifiant court sans espace", "text": "phrase complète décrivant ce qu'il reste à faire", "actionLabel": "verbe d'action court, ex. \\"Compléter mon profil\\"", "actionHref": "lien interne relatif si pertinent, sinon null" }, ...] — au plus 8 éléments, liste vide si "ready" est true
 }
-N'invente jamais une étape ou un document qui n'a pas été mentionné dans les données ci-dessous.`;
+Une seule phrase par élément. N'invente jamais une étape ou un document qui n'a pas été mentionné dans les données ci-dessous.`;
 
 if (lireParcoursDeSaisie(input) === "preinscription") {
 const etapes = (input.etapesProcedure || []).length
