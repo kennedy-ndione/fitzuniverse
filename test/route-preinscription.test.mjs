@@ -26,8 +26,13 @@ import {
   QUESTIONS_SITUATION, piecesDuDossier, avertissementsVoeux, defautsDesEnClair,
   PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, NIVEAUX_VOEU, slugPiece,
   etatTraduction, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION,
-  PIECES_RESIDENCE_ABSENTE, PIECES_EN_CLAIR_SANS_RESIDENCE, ANNUAIRE_ESPACES_CAMPUS_FRANCE
+  PIECES_RESIDENCE_ABSENTE, PIECES_EN_CLAIR_SANS_RESIDENCE, ANNUAIRE_ESPACES_CAMPUS_FRANCE,
+  avertissementProcedure, LIEN_CANDIDATURE_HORS_EEF
 } from "../js/route-preinscription.js";
+import {
+  PAYS_ETUDES_EN_FRANCE, releveDeLaProcedureEEF, SOURCE_PAYS_EEF, PAYS_EEF_VERIFIE_LE
+} from "../js/procedures/etudes-en-france-pays.js";
+import { findCountry } from "../js/countries.js";
 import { trouverProcedure } from "../js/procedures/index.js";
 import { PROCEDURE_FRANCE } from "../js/procedures/france.js";
 import { VISA_ETAPES } from "../js/journey-map.js";
@@ -469,4 +474,150 @@ test("route 15 — la réserve se lit AVANT la liste, et son lien se voit", () =
   assert.notEqual(j, -1, "css/route.css n'a plus de style pour le lien d'une réserve");
   const regle = css.slice(j, css.indexOf("}", j));
   assert.match(regle, /text-decoration:underline/);
+});
+
+
+/**
+ * ------------------------------------------------------------------
+ * LOT R15 (2026-09-18) — quand la route n'est PAS la sienne.
+ *
+ * Onze des quinze étapes décrivent le portail Études en France. Cette
+ * procédure ne s'applique que depuis 73 pays de résidence. Un étudiant
+ * qui vit au Rwanda, en Tanzanie, en Belgique ou en Suisse candidate
+ * DIRECTEMENT auprès de l'établissement : lui dérouler onze étapes qui
+ * ne le concernent pas lui fait perdre sa campagne.
+ *
+ * LA RÈGLE DE PRUDENCE, qui est le cœur du lot : on n'avertit que
+ * lorsqu'on SAIT. Un pays qu'on n'identifie pas ne reçoit rien — dire
+ * « la procédure ne s'applique pas chez vous » à un Vietnamien parce
+ * qu'on a mal lu sa graphie coûte plus cher qu'un silence.
+ *
+ * CINQ MUTATIONS VÉRIFIÉES : un pays inconnu qui déclenche l'avertissement ·
+ * un pays de la liste qui le déclenche · l'article collé à la main ·
+ * le compte des étapes écrit en dur · l'avertissement rendu sous le fil.
+ * ------------------------------------------------------------------
+ */
+
+test("route 16 — la liste des 73 pays est celle de sa source, et elle est traçable", () => {
+  assert.equal(PAYS_ETUDES_EN_FRANCE.length, 73,
+    "la liste ne compte plus 73 pays : a-t-elle été revérifiée sur campusfrance.org ?");
+  assert.equal(SOURCE_PAYS_EEF, "https://www.campusfrance.org/fr/faq/quels-sont-les-pays-relevant-de-la-procedure-etudes-en-france");
+  assert.match(PAYS_EEF_VERIFIE_LE, /^\d{4}-\d{2}-\d{2}$/, "un fait de pays porte sa date de vérification");
+
+  // Aucun doublon, et chaque entrée porte un nom.
+  assert.equal(new Set(PAYS_ETUDES_EN_FRANCE.map((p) => p.nom)).size, 73);
+  for (const p of PAYS_ETUDES_EN_FRANCE) assert.ok(p.nom && typeof p.nom === "string", "une entrée sans nom");
+
+  // Les codes ISO sont uniques quand ils existent. DEUX entrées n'en ont
+  // pas — Hong-Kong et Taïwan ne figurent pas dans js/countries.js. On
+  // les garde pour que la liste reste comparable à sa source ligne à
+  // ligne ; ils sont inatteignables à l'étape 1, donc inoffensifs.
+  const isos = PAYS_ETUDES_EN_FRANCE.map((p) => p.iso).filter(Boolean);
+  assert.equal(new Set(isos).size, isos.length, "deux entrées partagent un code ISO");
+  const sansIso = PAYS_ETUDES_EN_FRANCE.filter((p) => !p.iso).map((p) => p.nom);
+  assert.deepEqual(sansIso, ["Hong-Kong", "Taïwan"], "la liste des pays sans ISO a changé : vérifier js/countries.js");
+  for (const nom of sansIso) assert.ok(!findCountry(nom), `${nom} est devenu connu du référentiel : lui rendre son ISO`);
+
+  // Et chaque ISO déclaré correspond VRAIMENT à un pays du référentiel :
+  // une faute de frappe dans un code ferait taire l'avertissement pour
+  // un pays entier, sans que rien ne le signale.
+  for (const p of PAYS_ETUDES_EN_FRANCE.filter((x) => x.iso)) {
+    const trouve = findCountry(p.iso);
+    assert.ok(trouve && trouve.iso === p.iso, `${p.nom} : le code ${p.iso} n'existe pas dans js/countries.js`);
+  }
+});
+
+test("route 17 — on n'avertit que lorsqu'on sait : trois réponses, pas deux", () => {
+  // Dans la liste.
+  assert.equal(releveDeLaProcedureEEF("Sénégal"), true);
+  assert.equal(releveDeLaProcedureEEF("Ghana"), true, "le Ghana y est : c'est la liste nationale qui fait foi, pas celle d'un site local");
+  assert.equal(releveDeLaProcedureEEF("CI"), true, "le code ISO doit suffire");
+
+  // Hors de la liste, et identifié : on avertit.
+  assert.equal(releveDeLaProcedureEEF("Rwanda"), false);
+  assert.equal(releveDeLaProcedureEEF("Belgique"), false);
+
+  // Non identifiable : on se TAIT. C'est la règle qui protège le plus.
+  assert.equal(releveDeLaProcedureEEF(""), null);
+  assert.equal(releveDeLaProcedureEEF("Wakanda"), null);
+  assert.equal(releveDeLaProcedureEEF("Sénégalais"), null, "un gentilé n'est pas un pays");
+  assert.equal(avertissementProcedure("Wakanda"), null, "un pays inconnu ne doit jamais recevoir d'avertissement");
+  assert.equal(avertissementProcedure(""), null);
+  assert.equal(avertissementProcedure("Sénégal"), null);
+});
+
+test("route 18 — l'avertissement dit le pays, le compte exact et la marche à suivre", () => {
+  const a = avertissementProcedure("rwanda");
+  assert.ok(a, "un pays hors procédure doit être averti");
+
+  // L'article vient du module de grammaire, jamais collé à la main :
+  // « depuis le Rwanda », et non « depuis Rwanda ».
+  assert.equal(a.pays, "le Rwanda");
+  assert.match(a.texte, /depuis le Rwanda/);
+  assert.equal(avertissementProcedure("Belgique").pays, "la Belgique");
+
+  // Le compte se DÉDUIT de la route : il ne peut pas mentir si la route
+  // change de longueur.
+  const propres = ETAPES_ROUTE.filter((e) => !e.procedure).length;
+  const portail = ETAPES_ROUTE.length - propres;
+  assert.equal(propres, 4);
+  assert.equal(portail, 11);
+  assert.match(a.texte, new RegExp(`Les ${propres} premières étapes`));
+  assert.match(a.texte, new RegExp(`les ${portail} suivantes`));
+
+  // Ce qu'il faut faire à la place, et la preuve.
+  assert.match(a.texte, /directement auprès de chaque établissement/);
+  assert.equal(a.lien, LIEN_CANDIDATURE_HORS_EEF);
+  assert.equal(a.lien, "https://www.campusfrance.org/fr/candidature-enseignement-superieur-france");
+  assert.equal(a.source, SOURCE_PAYS_EEF);
+  assert.equal(a.verifieLe, PAYS_EEF_VERIFIE_LE);
+});
+
+test("route 19 — les deux réserves de la route ne se confondent jamais", () => {
+  // Elles disent deux choses différentes, et un étudiant peut n'avoir
+  // que l'une des deux. Les confondre reviendrait à dire à un Ghanéen
+  // que sa procédure n'est pas la bonne.
+  const routeDuPays = (pays) => construireRoute({
+    procedure: trouverProcedure({ paysDestination: "France", paysResidence: pays }),
+    profile: { ...SITUATION, country: pays }, diagnostic: null, voeux: [voeu("pre-1")],
+    dossier: {}, visaChecklist: {}, aujourdhui: AUJOURDHUI
+  });
+
+  const ghana = routeDuPays("Ghana");
+  assert.equal(ghana.avertissementProcedure, null, "le Ghana relève de la procédure : aucun avertissement de procédure");
+  assert.equal(ghana.etapes.find((e) => e.id === "pieces").residenceAbsente, true, "mais son pays n'est pas documenté : la réserve des pièces reste");
+
+  const senegal = routeDuPays("Sénégal");
+  assert.equal(senegal.avertissementProcedure, null);
+  assert.equal(senegal.etapes.find((e) => e.id === "pieces").residenceAbsente, false, "le Sénégal n'a aucune des deux");
+
+  const rwanda = routeDuPays("Rwanda");
+  assert.ok(rwanda.avertissementProcedure, "le Rwanda ne relève pas de la procédure");
+  assert.match(rwanda.avertissementProcedure.texte, /depuis le Rwanda/);
+});
+
+test("route 20 — l'avertissement se lit AVANT le fil et l'étape, et ses liens se voient", () => {
+  const html = lire("espace-preinscription.html");
+  const moteur = lire("espace-preinscription.js");
+
+  // Sa place est en haut : un étudiant qui apprend à l'étape 5 que le
+  // portail n'est pas le sien a déjà déroulé quatre étapes pour rien.
+  assert.match(html, /id="rtAvertProcedure"/);
+  assert.ok(html.indexOf('id="rtAvertProcedure"') < html.indexOf('id="rtFil"'),
+    "l'avertissement doit précéder le fil des quinze étapes");
+  assert.ok(html.indexOf('id="rtAvertProcedure"') > html.indexOf('id="rtLigne"'),
+    "il se lit après la phrase d'accueil, pas avant");
+
+  // Rempli depuis la route, et ABSENT du DOM quand il n'y a rien à dire.
+  assert.match(moteur, /etat\.route\.avertissementProcedure/);
+  assert.match(moteur, /zoneAvert\.innerHTML = avert \? `/);
+  assert.match(moteur, /: "";/);
+
+  // Deux liens sortent d'ici : la marche à suivre et la source. Sans une
+  // règle propre, le style de base du site les rendrait invisibles.
+  const css = lire("css/route.css");
+  assert.notEqual(css.indexOf(".rt-avert a{"), -1);
+  const j = css.indexOf(".rt-avert .rt-source a{");
+  assert.notEqual(j, -1, "la source d'une réserve doit rester discrète, pas grasse comme un appel à l'action");
+  assert.match(css.slice(j, css.indexOf("}", j)), /font-weight:400/);
 });

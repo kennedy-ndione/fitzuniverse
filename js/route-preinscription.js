@@ -53,6 +53,11 @@
 import { VISA_ETAPES } from "./journey-map.js";
 import { jalonDeCampagne } from "./pays-preinscription.js";
 import { LIBELLES_PREUVE, ICONES_TYPE, texteConsigne } from "./procedures/vocabulaire.js";
+import { releveDeLaProcedureEEF, SOURCE_PAYS_EEF, PAYS_EEF_VERIFIE_LE } from "./procedures/etudes-en-france-pays.js";
+// « depuis le Rwanda », « depuis la Belgique », « depuis Madagascar » :
+// l'article se demande au module qui le sait, jamais collé à la main —
+// c'est la règle du lot PAYS-GRAMMAIRE, et un test du dépôt l'exige.
+import { avecArticle } from "./pays-grammaire.js";
 
 export const PORTAIL_ETUDES_EN_FRANCE = "https://pastel.diplomatie.gouv.fr/etudesenfrance/";
 
@@ -355,6 +360,48 @@ export function avertissementsVoeux(voeux) {
  * @param {Object} p.visaChecklist    users/{uid}.visaChecklist
  * @param {Date}   p.aujourdhui
  */
+/**
+ * QUAND LA ROUTE N'EST PAS LA SIENNE (lot R15, 2026-09-18).
+ *
+ * Onze des quinze étapes décrivent le portail Études en France. Cette
+ * procédure ne s'applique que depuis 73 pays de résidence
+ * (js/procedures/etudes-en-france-pays.js). Depuis le Rwanda, la
+ * Tanzanie, la Belgique ou la Suisse, on candidate directement auprès de
+ * l'établissement — Parcoursup, la DAP ou Mon Master selon le niveau.
+ *
+ * Dérouler quinze étapes dont onze ne le concernent pas à un étudiant
+ * qui a payé, c'est lui faire perdre sa campagne. On le lui dit en haut
+ * de sa route, avant tout le reste.
+ *
+ * LE COMPTE N'EST PAS ÉCRIT EN DUR : il se déduit d'ETAPES_ROUTE, pour
+ * que la phrase ne puisse pas mentir si la route change de longueur.
+ *
+ * ON NE PARLE QUE SI L'ON SAIT : `releveDeLaProcedureEEF` rend `null`
+ * quand le pays n'est pas identifiable, et ce cas-là ne dit rien.
+ */
+export const LIEN_CANDIDATURE_HORS_EEF = "https://www.campusfrance.org/fr/candidature-enseignement-superieur-france";
+
+export function avertissementProcedure(paysResidence) {
+
+  if (releveDeLaProcedureEEF(paysResidence) !== false) return null;
+
+  const propres = ETAPES_ROUTE.filter((e) => !e.procedure).length;
+  const portail = ETAPES_ROUTE.length - propres;
+  // Le nom rendu est celui du référentiel, avec son article : un étudiant
+  // qui a tapé « rwanda » lit « le Rwanda ».
+  const pays = avecArticle(paysResidence);
+
+  return {
+    pays,
+    texte: `La procédure Études en France ne s'applique pas depuis ${pays} : on y candidate directement auprès de chaque établissement, par Parcoursup, la DAP ou Mon Master selon le niveau. Les ${propres} premières étapes de cette route vous servent quand même — votre situation, votre budget, vos vœux, vos pièces — mais les ${portail} suivantes décrivent le portail Études en France, que vous n'utiliserez pas.`,
+    lien: LIEN_CANDIDATURE_HORS_EEF,
+    libelleLien: "Comment candidater depuis votre pays",
+    source: SOURCE_PAYS_EEF,
+    verifieLe: PAYS_EEF_VERIFIE_LE
+  };
+
+}
+
 export function construireRoute({ procedure = null, profile = {}, diagnostic = null, voeux = [], dossier = {}, visaChecklist = {}, aujourdhui = new Date() } = {}) {
 
   const etatEtapes = (dossier && dossier.etapes && typeof dossier.etapes === "object") ? dossier.etapes : {};
@@ -373,6 +420,11 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
   // n'ajoute aucune pièce (sept des huit) ne doit pas être pris pour un
   // pays inconnu.
   const residenceAbsente = !!procedure && procedure.residenceDocumentee === false;
+  // Deux réserves distinctes, à ne jamais confondre : celle-ci dit que
+  // la PROCÉDURE n'est pas la sienne, celle des pièces dit que son pays
+  // n'est pas encore documenté. Un Ghanéen a la seconde, pas la
+  // première ; un Rwandais a la première.
+  const avertProcedure = avertissementProcedure(profile && (profile.country || profile.originCountry));
   const visa = {};
   VISA_ETAPES.forEach((id) => { visa[id] = !!(visaChecklist && visaChecklist[id] === true); });
   const visaFaites = VISA_ETAPES.filter((id) => visa[id]).length;
@@ -478,7 +530,8 @@ export function construireRoute({ procedure = null, profile = {}, diagnostic = n
     residence: procedure ? procedure.residence : "",
     residenceDocumentee: !!(procedure && procedure.residenceDocumentee),
     portail: (procedure && procedure.portail) || { nom: "Études en France", url: PORTAIL_ETUDES_EN_FRANCE },
-    avertissementsVoeux: avertissementsVoeux(listeVoeux)
+    avertissementsVoeux: avertissementsVoeux(listeVoeux),
+    avertissementProcedure: avertProcedure
   };
 }
 

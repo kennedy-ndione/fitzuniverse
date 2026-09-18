@@ -168,6 +168,22 @@ function peindreTete() {
   document.getElementById("welcomeMessage").textContent = prenom ? `Bonjour ${prenom}` : "Bonjour";
   document.getElementById("rtLigne").textContent = phraseDeRoute(etat.route);
 
+  // LA RÉSERVE QUI PASSE AVANT TOUT (lot R15, 2026-09-18).
+  // Elle ne dit pas qu'il manque une donnée : elle dit que ONZE des
+  // quinze étapes ne sont pas les siennes. Sa place est donc en haut,
+  // au-dessus du fil et de l'étape, et pas dans une étape. Même
+  // composant que les autres réserves de la route (.rt-avert), pour
+  // qu'un étudiant les reconnaisse d'un coup d'œil.
+  const zoneAvert = document.getElementById("rtAvertProcedure");
+  const avert = etat.route.avertissementProcedure;
+  zoneAvert.innerHTML = avert ? `
+    <ul class="rt-avert">
+      <li><i data-lucide="alert-triangle"></i><span>${ech(avert.texte)}
+        <a href="${ech(avert.lien)}" target="_blank" rel="noopener noreferrer">${ech(avert.libelleLien)}</a>
+        <span class="rt-source">Liste des pays vérifiée le ${ech(formaterDate(avert.verifieLe))} sur <a href="${ech(avert.source)}" target="_blank" rel="noopener noreferrer">campusfrance.org</a>.</span>
+      </span></li>
+    </ul>` : "";
+
   const fil = document.getElementById("rtFil");
   fil.innerHTML = etat.route.etapes.map((e) => `
     <button type="button" class="rt-point is-${e.etat}${e.id === etat.choisie ? " is-choisie" : ""}" data-etape="${ech(e.id)}" title="${ech(`${e.numero}. ${e.titre}`)}" aria-label="${ech(`Étape ${e.numero} : ${e.titre}`)}" aria-current="${e.id === etat.choisie ? "step" : "false"}">

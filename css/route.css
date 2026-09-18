@@ -836,6 +836,20 @@ text-underline-offset:2px;
 white-space:nowrap;
 }
 
+/* La source d'une réserve passe à la ligne, et reste discrète : c'est
+   une preuve à portée de main, pas un appel à l'action. Sans cette
+   règle, elle hériterait du gras et du non-retour-à-la-ligne ci-dessus
+   (.rt-avert a, déclarée après .rt-source a). */
+.rt-avert .rt-source{
+display:block;
+margin-top:5px;
+}
+
+.rt-avert .rt-source a{
+font-weight:400;
+white-space:normal;
+}
+
 .rt-bravo{
 display:flex;
 gap:10px;
