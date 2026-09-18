@@ -156,3 +156,48 @@ assert.ok(!/^\.fitz-select\{/m.test(lire("css/app-shell.css").replace(/\/\*[\s\S
 // L'admin est branché par son seul module commun.
 assert.match(lire("admin/admin-auth.js"), /import \{ initFitzSelects \} from "\.\.\/js\/fitz-select\.js";\s*initFitzSelects\(\);/);
 });
+
+test("contrôles 9 — un contrôle REMPLACÉ par fitz-select emporte sa largeur avec lui", () => {
+
+/**
+ * LE CHAMP DU NUMÉRO AVAIT DISPARU (lot B5, 2026-09-18).
+ *
+ * Signalé par Charles sur une capture, puis MESURÉ sur le site déployé
+ * à 1080 px : la rangée du téléphone fait 369 px, le sélecteur de pays
+ * en occupe 335, et il reste TRENTE-DEUX pixels pour écrire le numéro.
+ * L'étudiant voyait une case « +221 Sénégal » et, dessous, l'aide « le
+ * numéro s'écrit sans l'indicatif » — sous un champ inexistant. Sur la
+ * page qui promet « c'est par là que l'équipe vous joint le plus vite ».
+ *
+ * LA CAUSE : profile.css contraint `select.tel-pays` à 148 px, avec
+ * sept lignes de commentaire expliquant le chiffre. Or ce lot-ci
+ * (CONTRÔLES-UNIFIÉS) MASQUE les <select> natifs et rend un <div
+ * class="fitz-select"> à côté. La contrainte portait donc sur un
+ * élément en display:none — c'est-à-dire sur rien — et le composant,
+ * large de 100 % par défaut, prenait toute la rangée.
+ *
+ * LA RÈGLE GÉNÉRALE, et c'est elle qu'on garde : quand une rangée
+ * dimensionne un <select> que ce composant remplace, elle doit
+ * dimensionner AUSSI le composant. Une règle qui vise un élément
+ * masqué ne proteste pas : elle se tait.
+ */
+const css = lire("profile.css");
+
+// Le natif garde sa contrainte (il sert de repli si le composant ne
+// se charge pas)...
+assert.match(css, /\.tel-rangee \.tel-pays\{[\s\S]*?flex:0 0 148px;/);
+
+// ... et le RENDU porte la même.
+const i = css.indexOf(".tel-rangee > .fitz-select{");
+assert.notEqual(i, -1, "le composant qui remplace le select n'est pas dimensionné : le numéro n'aura plus de place");
+const regle = css.slice(i, css.indexOf("}", i));
+assert.match(regle, /flex:0 0 148px/);
+assert.match(regle, /width:148px/);
+
+// Et l'habillage suit le composant, pas le natif : sans le filet à
+// droite, le pays et le numéro ne forment plus deux cases distinctes.
+const j = css.indexOf(".tel-rangee > .fitz-select .fitz-select-trigger{");
+assert.notEqual(j, -1, "le déclencheur du composant n'est pas habillé");
+assert.match(css.slice(j, css.indexOf("}", j)), /border-right:1\.5px solid/);
+
+});

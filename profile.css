@@ -1241,6 +1241,63 @@ outline:none;
 
 }
 
+/* ==========================================================
+   LE CHAMP DU NUMÉRO AVAIT DISPARU (lot B5, 2026-09-18)
+   ==========================================================
+   Signalé par Charles sur une capture, puis MESURÉ sur le site
+   déployé à 1080 px : la rangée fait 369 px, le sélecteur de pays en
+   occupe 335, et il reste TRENTE-DEUX pixels au numéro. À l'écran,
+   l'étudiant ne voit qu'une case « +221 Sénégal » et l'aide
+   « le numéro s'écrit sans l'indicatif » sous un champ inexistant.
+   Sur la page où l'on écrit « c'est par là que l'équipe vous joint
+   le plus vite ».
+
+   LA CAUSE, et elle est instructive : tout le travail de largeur
+   ci-dessus (flex:0 0 148px, la troncature, le .85rem) porte sur
+   `select.tel-pays`. Or le lot CONTRÔLES-UNIFIÉS a remplacé les
+   `<select>` natifs par le composant .fitz-select — qui MASQUE le
+   natif (display:none) et rend un <div> à côté. La contrainte
+   s'appliquait donc à un élément invisible, c'est-à-dire à rien, et
+   le composant, large de 100 % par défaut, prenait toute la rangée.
+
+   Une règle qui vise un élément masqué ne proteste pas : elle se tait.
+   D'où la garde en test, sur la largeur RENDUE et pas sur la déclaration.
+*/
+.tel-rangee > .fitz-select{
+
+flex:0 0 148px;
+
+width:148px;
+
+}
+
+/* Le composant reprend l'habillage prévu pour le select natif : pas de
+   bordure à lui, un filet à droite qui sépare le pays du numéro, et le
+   fond doux qui dit « ceci n'est pas le champ où l'on tape ». */
+.tel-rangee > .fitz-select .fitz-select-trigger{
+
+padding:14px 8px 14px 12px;
+
+border:none;
+
+border-right:1.5px solid var(--border-color);
+
+border-radius:0;
+
+background:var(--background-soft);
+
+font-size:.85rem;
+
+color:var(--text-light);
+
+}
+
+.tel-rangee > .fitz-select .fitz-select-trigger:hover{
+
+background:var(--background-soft);
+
+}
+
 .tel-rangee .tel-national{
 
 /* base 0 : le numéro prend tout ce qui reste, et c'est lui qui cède
