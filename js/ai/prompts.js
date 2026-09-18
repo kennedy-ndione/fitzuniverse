@@ -152,7 +152,25 @@ return parts.join(" ");
 
 }
 
-function describeProfile(profile = {}) {
+/**
+* Le profil, tel que Fitz doit le lire — ET SELON LE PARCOURS.
+*
+* `parcours` est arrivé le 2026-09-18, après une vérification de dossier
+* faite en ligne : Fitz reprochait à une étudiante d'avoir écrit à une
+* université française « alors que vos pays visés sont la Chine, la
+* Malaisie et la Roumanie ». Deux suggestions sur huit portaient sur ces
+* trois pays, pour un vœu déposé à Lille.
+*
+* `preferredCountries` est une préférence du parcours BOURSES, saisie au
+* diagnostic. En préinscription, la règle est écrite depuis le lot R4 —
+* LA CANDIDATURE DICTE LA CIBLE — et js/parcours.js la tient pour les
+* pages ; le prompt, lui, continuait d'envoyer les trois pays. Le modèle
+* n'inventait rien : il lisait la contradiction qu'on lui donnait.
+*
+* @param {Object} [profile]
+* @param {string} [parcours] - "preinscription" ou "bourse"
+*/
+function describeProfile(profile = {}, parcours = "bourse") {
 
 const parts = [];
 
@@ -175,7 +193,10 @@ if (profile.currentInstitution) parts.push(`Établissement actuel : ${profile.cu
 if (profile.desiredField) parts.push(`Domaine visé : ${profile.desiredField}`);
 if (profile.desiredDegree) parts.push(`Niveau visé : ${profile.desiredDegree}`);
 
-if (Array.isArray(profile.preferredCountries) && profile.preferredCountries.length) {
+// En préinscription, la destination est celle du vœu, pas celle du
+// diagnostic : la ligne n'est pas envoyée du tout. La taire vaut mieux
+// que la corriger — Fitz a déjà l'établissement et la formation.
+if (parcours !== "preinscription" && Array.isArray(profile.preferredCountries) && profile.preferredCountries.length) {
 parts.push(`Pays visés : ${profile.preferredCountries.join(", ")}`);
 }
 
@@ -222,7 +243,7 @@ user: [
 `Niveau : ${input.level || "non précisé"}`,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile),
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
 "",
 "Éléments fournis par l'étudiant :",
 `Parcours et expériences : ${input.experiences || "—"}`,
@@ -242,7 +263,7 @@ user: [
 `Pays : ${input.country || "non précisé"}`,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile),
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
 "",
 ...(() => {
 // `parcours` porte ici les faits déclarés du profil (objet) ; la
@@ -294,7 +315,7 @@ user: [
 `Pays : ${input.country || "non précisé"}`,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile),
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
 "",
 `Contexte additionnel : ${input.context || "—"}`
 ].join("\n")
@@ -400,12 +421,21 @@ system: (preinscription
 ? `${baseSystem(input)} Tu vérifies les pièces d'un dossier de préinscription avant leur dépôt sur le portail officiel — relevés, diplômes, traductions, preuve de ressources, lettres de vœu — et tu rends un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et ce qu'il faut corriger avant de soumettre.`
 : `${baseSystem(input)} Tu évalues un dossier de candidature universitaire et donnes un retour honnête, structuré par catégories (clarté, grammaire, professionnalisme, cohérence, complétude), avec des points forts, des points faibles et des suggestions concrètes.`) + consigneFaits + " " + consigneJSON,
 user: [
+// LA CIBLE, NOMMÉE (2026-09-18). "check" était la seule tâche à ne
+// pas dire POUR QUOI le dossier est préparé : le modèle cherchait la
+// destination ailleurs et la trouvait dans les pays du diagnostic —
+// d'où « vous visez la Chine » sur un vœu déposé à Lille. La page
+// envoie `application` depuis le 2026-09-02, en attendant que
+// quelqu'un s'en serve.
+...(input.application && (input.application.university || input.application.program || input.application.scholarship)
+? [`Dossier préparé pour : ${[input.application.university, input.application.program || input.application.scholarship].filter(Boolean).join(" — ")}`, ""]
+: []),
 "Documents fournis :",
 documentsDecrits,
 faitsMesures,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile)
+describeProfile(input.profile, lireParcoursDeSaisie(input))
 ].join("\n")
 };
 
@@ -453,7 +483,7 @@ user: [
 etapes,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile)
+describeProfile(input.profile, lireParcoursDeSaisie(input))
 ].join("\n")
 };
 }
@@ -470,7 +500,7 @@ user: [
 checklistLines,
 "",
 "Profil de l'étudiant :",
-describeProfile(input.profile)
+describeProfile(input.profile, lireParcoursDeSaisie(input))
 ].join("\n")
 };
 
@@ -486,7 +516,7 @@ system: preinscription
 : `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`,
 user: [
 "Profil de l'étudiant :",
-describeProfile(input.profile),
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
 "",
 "Historique récent de la conversation :",
 (input.history || []).map((m) => `${m.role === "user" ? "Étudiant" : "Fitz"} : ${m.content}`).join("\n") || "(nouvelle conversation)",
@@ -612,7 +642,7 @@ input.niveauVise ? `Cycle visé : ${input.niveauVise}` : "",
 "",
 ...(sousScores.length ? ["Décomposition du score :", ...sousScores, ""] : []),
 "Profil de l'étudiant :",
-describeProfile(input.profile),
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
 "",
 ...liste("Points forts relevés par l'analyse :", input.strengths),
 ...liste("Points faibles relevés par l'analyse :", input.weaknesses),

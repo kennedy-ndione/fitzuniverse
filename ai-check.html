@@ -192,7 +192,14 @@ tout vient du suivi de candidatures. -->
 <input type="file" id="fileInput" multiple hidden>
 </div>
 
-<div class="ai-file-list" id="fileList"></div>
+<!-- LE GLOSSAIRE NE TOUCHE PAS AU NOM D'UN FICHIER (2026-09-18). Vu en
+ligne : « lettre-de-voeu.pdf » s'affichait « lettre-de-voeu (une
+formation que vous demandez).pdf ». Le glossaire explique NOS mots,
+pas ceux que l'étudiant a tapés sur son disque — et un nom de fichier
+doit rester comparable, caractère pour caractère, à ce qu'il voit
+dans son dossier. `data-sans-glossaire` est la sortie prévue par
+js/ai/../glossaire.js (constante HORS_CHAMP). -->
+<div class="ai-file-list" id="fileList" data-sans-glossaire></div>
 
 <button type="button" class="btn btn-primary app-cta" id="analyzeBtn" style="margin-top:18px;" disabled>
 <span>Analyser mon dossier</span>
@@ -212,10 +219,21 @@ tout vient du suivi de candidatures. -->
 
 <div class="ai-score-summary">
 
+<!-- CE QUE LE CHIFFRE MESURE, ÉCRIT SOUS LE CHIFFRE (2026-09-18).
+Depuis que Fitz lit les documents, l'anneau surplombe des catégories
+de contenu — et il porte, lui, la CONFORMITÉ AU DÉPÔT, qui est
+binaire : un seul fichier au-dessus du plafond du portail la met à
+zéro. Vu en ligne : un « 0 » nu au-dessus de catégories à 42, 30 et
+40 se lit « mon dossier ne vaut rien », alors qu'il dit « un fichier
+est trop lourd ». La légende n'apparaît que lorsqu'il y a un chiffre
+à expliquer (ai-check.js). -->
+<div class="ai-score-bloc">
 <div class="ai-score-ring" id="scoreRing">
 <!-- « / 100 » disparaît quand le rapport ne rend aucune note (lot B1) :
 « — / 100 » se lirait comme un zéro. -->
 <div class="ai-score-ring-value"><span id="scoreValue">0</span><small id="scoreUnite">/ 100</small></div>
+</div>
+<p class="ai-score-legende" id="scoreLegende" hidden></p>
 </div>
 
 <div class="ai-category-list" id="categoryList"></div>

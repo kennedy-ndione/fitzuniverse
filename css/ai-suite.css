@@ -2342,6 +2342,39 @@ transition:background 1s var(--ease-premium);
 
 }
 
+/* L'anneau et sa légende forment UN bloc : sans ce conteneur, la
+légende deviendrait un troisième élément de la rangée .ai-score-summary
+et se poserait à côté des barres de catégories, pas sous le chiffre. */
+.ai-score-bloc{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:10px;
+
+}
+
+.ai-score-legende{
+
+margin:0;
+
+max-width:200px;
+
+text-align:center;
+
+font-size:.72rem;
+
+font-weight:700;
+
+line-height:1.4;
+
+color:var(--text-muted);
+
+}
+
 .ai-score-ring-value{
 
 font-family:var(--font-display);

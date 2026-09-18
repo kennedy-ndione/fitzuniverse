@@ -537,6 +537,19 @@ scoreRing.style.setProperty("--ai-score", noteChiffree ? data.overallScore : 0);
 scoreValue.textContent = noteChiffree ? data.overallScore : "—";
 if (scoreUnite) scoreUnite.hidden = !noteChiffree;
 
+// CE QUE LE CHIFFRE MESURE, ÉCRIT SOUS LE CHIFFRE (2026-09-18).
+// Depuis le lot MESURE-ET-JUGEMENT, l'anneau porte la conformité au
+// dépôt — poids des fichiers, pièces, langue — et les catégories
+// portent le jugement du contenu. Sans légende, un « 0 » dû à un seul
+// fichier trop lourd surplombe des catégories à 40 et se lit comme un
+// verdict sur tout le dossier. Le chiffre était déjà juste ; c'est sa
+// lecture qui ne l'était plus.
+const scoreLegende = document.getElementById("scoreLegende");
+if (scoreLegende) {
+scoreLegende.textContent = "Conformité au dépôt : poids des fichiers, pièces, langue.";
+scoreLegende.hidden = !noteChiffree;
+}
+
 // Les trois listes changent de TITRE quand le rapport en fournit :
 // « Points forts » au-dessus d'une mesure de poids serait un compliment
 // fabriqué de plus. Sans `listLabels`, les titres du HTML restent.

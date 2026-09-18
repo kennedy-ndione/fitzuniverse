@@ -26,6 +26,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { fusionnerRapport } from "../js/ai/fusion-rapport.js";
 import { controleDepot, NON_JUGE_DEPOT } from "../js/ai/controle-depot.js";
@@ -213,5 +214,73 @@ assert.match(p.system, /Ne les recalcule pas/, "le modèle ne doit pas refaire l
 const sans = buildPrompt("check", { files: [], profile: {} });
 assert.ok(!/FAITS déjà calculés/.test(sans.system));
 assert.ok(!/Plafond de poids publié/.test(sans.user));
+
+});
+
+test("fusion 9 — les pays du diagnostic ne partent pas dans un prompt de préinscription", async () => {
+
+// MESURÉ EN LIGNE LE 2026-09-18 : sur un vœu déposé à l'Université de
+// Lille, Fitz écrivait « vos pays visés sont la Chine, la Malaisie et
+// la Roumanie : la commission y verra une lettre type ». Deux
+// suggestions sur huit portaient sur ces trois pays. Le modèle
+// n'inventait rien — `preferredCountries`, une préférence du parcours
+// bourses, partait dans TOUS les prompts.
+const { buildPrompt } = await import("../js/ai/prompts.js");
+
+const profil = { firstName: "Brigitte", country: "Sénégal", preferredCountries: ["Chine", "Malaisie", "Roumanie"] };
+const base = { university: "Université de Lille", program: "Licence Psychologie", files: [], checklist: [], text: "x", sourceLanguage: "fr", targetLanguage: "en", style: "academique", emailType: "contact_university", context: "", message: "bonjour", history: [], profile: profil };
+
+for (const tache of ["check", "readiness", "letter", "email", "chat", "translate"]) {
+const pre = buildPrompt(tache, { ...base, parcours: "preinscription" });
+assert.ok(!/Chine|Malaisie|Roumanie/.test(pre.user + pre.system), `${tache} : les pays du diagnostic partent encore en préinscription`);
+assert.ok(!/Pays visés/.test(pre.user), `${tache} : la ligne « Pays visés » n'a rien à faire ici`);
+}
+
+// NON-RÉGRESSION : le parcours bourses les garde, c'est là qu'ils ont
+// été saisis et qu'ils veulent dire quelque chose.
+const bourse = buildPrompt("letter", { ...base, style: "academique" });
+assert.match(bourse.user, /Pays visés : Chine, Malaisie, Roumanie/);
+
+});
+
+test("fusion 10 — la vérification de dossier dit POUR QUOI le dossier est préparé", async () => {
+
+// C'était la seule tâche sans cible nommée : le modèle cherchait la
+// destination ailleurs. La page envoie `application` depuis le
+// 2026-09-02 — le prompt s'en sert enfin.
+const { buildPrompt } = await import("../js/ai/prompts.js");
+
+const p = buildPrompt("check", {
+parcours: "preinscription",
+application: { university: "Université de Lille", program: "Licence Psychologie" },
+files: [],
+profile: {}
+});
+assert.match(p.user, /Dossier préparé pour : Université de Lille — Licence Psychologie/);
+
+// Sans candidature liée, aucune ligne fabriquée.
+assert.ok(!/Dossier préparé pour/.test(buildPrompt("check", { files: [], profile: {} }).user));
+
+});
+
+test("fusion 11 — la page dit ce que l'anneau mesure, et n'annote pas les noms de fichiers", () => {
+
+// Deux défauts vus à l'écran le 2026-09-18, sur le même rapport :
+// un « 0 » nu au-dessus de catégories à 42 et 30 (il disait « un
+// fichier est trop lourd », il se lisait « votre dossier ne vaut
+// rien »), et « lettre-de-voeu (une formation que vous demandez).pdf »
+// dans la liste des pièces — le glossaire annotant le nom d'un
+// fichier que l'étudiant a lui-même nommé sur son disque.
+const html = readFileSync(new URL("../ai-check.html", import.meta.url), "utf8");
+const js = readFileSync(new URL("../ai-check.js", import.meta.url), "utf8");
+const css = readFileSync(new URL("../css/ai-suite.css", import.meta.url), "utf8");
+
+assert.match(html, /id="scoreLegende"/, "l'anneau doit porter une légende");
+assert.match(html, /class="ai-score-bloc"/, "la légende doit vivre sous l'anneau, pas à côté des catégories");
+assert.match(css, /\.ai-score-bloc\{/, "le bloc anneau + légende a besoin de sa colonne");
+assert.match(js, /Conformité au dépôt/, "la légende doit nommer ce qui est mesuré");
+assert.match(js, /scoreLegende\.hidden = !noteChiffree/, "sans chiffre, pas de légende à expliquer");
+
+assert.match(html, /id="fileList" data-sans-glossaire/, "le glossaire ne doit pas annoter les noms de fichiers");
 
 });
