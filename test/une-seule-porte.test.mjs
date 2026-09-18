@@ -32,10 +32,12 @@
  *      n'ouvre plus rien, ni ici ni côté bourses, donc un lien qui le
  *      porte promet un écran qui ne vient jamais ;
  *   7. la route n'a plus sa copie locale de `formatMontant` ;
- *   8. et le texte PARTAGÉ de la page ne parle plus « bourse » à un
- *      vœu — trouvé en recette navigateur, pas à la lecture du code.
+ *   8. le texte PARTAGÉ de la page ne parle plus « bourse » à un vœu —
+ *      trouvé en recette navigateur, pas à la lecture du code ;
+ *   9. et le « dossier » d'un vœu renvoie à l'étape 4 de la route au
+ *      lieu de la refaire (lot B2).
  *
- * NEUF MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
+ * DOUZE MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
  *   — le bouton revient, caché, dans applications.html            → échec
  *   — la phrase de la règle est remplacée                          → échec
  *   — l'état vide redit « ajoutez vos vœux ici »                   → échec
@@ -45,8 +47,11 @@
  *   — le bouton de l'espace bourses reprend `?action=new`          → échec
  *   — le hub relie de nouveau le formulaire de création            → échec
  *   — l'intro partagée reparle des « exigences de cette bourse »    → échec
- *   — la branche du vœu quitte l'état vide du dossier               → échec
- *   — la bourse est évaluée avant le vœu dans l'état vide           → échec
+ *   — le vocabulaire des bourses atteint la carte d'un vœu        → échec
+ *   — le renvoi vers l'étape 4 passe après les groupes des bourses → échec
+ *   — le renvoi vers l'étape 4 disparaît de la carte d'un vœu      → échec
+ *   — les éléments déjà saisis sur un vœu sont cachés              → échec
+ *   — le style du lien vers l'étape 4 est retiré                   → échec
  *
  * MÉTHODE : les assertions lisent le CODE, pas le fichier brut
  * (`codeSeul`), parce que ces modules racontent en commentaire le défaut
@@ -247,23 +252,68 @@ test("porte 6 — la page ne parle plus « bourse » à un vœu", () => {
   assert.ok(!/bourse/i.test(bloc), "l'intro partagée parle encore de bourse");
   assert.ok(!/portail universitaire/.test(bloc), "le portail d'un vœu est Études en France, pas un portail d'université");
 
-  // L'état vide de la carte se choisit sur le PARCOURS de la carte, et
-  // la branche du vœu ne nomme aucune bourse.
+  // RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot B2). Ce test pinait l'état
+  // vide de la carte d'un vœu — « Rien ajouté pour l'instant » au lieu
+  // d'« Ajouter les exigences de cette bourse » — et l'ordre du ternaire
+  // qui le choisissait. Le lot B2 va plus loin : un vœu ne traverse plus
+  // ce bloc du tout, il est renvoyé à l'étape 4 avant que les groupes
+  // des bourses ne soient calculés. L'état vide qu'on gardait n'existe
+  // donc plus, et sa règle est devenue un cas particulier d'une règle
+  // plus forte, tenue par « porte 7 ».
+  //
+  // CE QU'ON GARDE ICI : le vocabulaire des bourses ne doit atteindre
+  // aucune carte de vœu, quel que soit le chemin.
   const code = codeSeul("applications.js");
-  assert.match(code, /const voeu = lireParcours\(app\) === "preinscription";/);
-  const j = code.indexOf("app-checklist-toggle");
-  const toggle = code.slice(j, code.indexOf("checklist-groups", j));
-  const brancheVoeu = toggle.slice(toggle.indexOf(": voeu"), toggle.indexOf(": suggestion"));
-  assert.ok(brancheVoeu.length > 0, "la branche du vœu a disparu de l'état vide");
-  assert.ok(!/bourse/i.test(brancheVoeu), "l'état vide d'un vœu nomme encore une bourse");
+  const j = code.indexOf("function htmlDossierDeVoeu");
+  const pourLeVoeu = code.slice(j, code.indexOf("function renderChecklistSection", j));
+  assert.ok(!/bourse/i.test(pourLeVoeu), "le bloc servi à un vœu nomme encore une bourse");
 
-  // Et la branche des bourses garde SON vocabulaire : ce lot ne lui
-  // retire rien, il cesse seulement de le servir à l'autre parcours.
+  // Et la branche des bourses garde SON vocabulaire : ces lots ne lui
+  // retirent rien, ils cessent seulement de le servir à l'autre parcours.
+  const k = code.indexOf("app-checklist-toggle");
+  const toggle = code.slice(k, code.indexOf("checklist-groups", k));
   assert.match(toggle, /Ajouter les exigences de cette bourse/);
   assert.match(toggle, /Fitz connaît les exigences de cette bourse/);
+});
 
-  // Le vœu passe AVANT la suggestion : sans bourse, `suggestion` vaut ""
-  // et l'ordre inverse retomberait sur l'invite « cette bourse ».
-  assert.ok(toggle.indexOf(": voeu") < toggle.indexOf(": suggestion"),
-    "la branche du vœu doit être évaluée avant celle de la bourse");
+test("porte 7 — le dossier d'un vœu renvoie à l'étape 4, il ne la refait pas", () => {
+  // RÉSERVE DU LOT R13, TRANCHÉE AU LOT B2. Le bloc « Dossier de
+  // candidature » proposait à un vœu trois groupes du vocabulaire des
+  // bourses — lettres de recommandation, test de langue, preuve
+  // financière. Or Études en France ne demande aucune lettre de
+  // recommandation, les pièces d'une préinscription sont au niveau du
+  // DOSSIER (le même diplôme sert les sept vœux), et la preuve
+  // financière a déjà l'étape 2.
+  const code = codeSeul("applications.js");
+
+  // Le renvoi existe, et il passe AVANT le calcul des groupes bourses :
+  // rien de ce qui suit ne concerne un vœu.
+  assert.match(code, /if \(lireParcours\(app\) === "preinscription"\) return htmlDossierDeVoeu\(app, checklist\);/);
+  const i = code.indexOf("function renderChecklistSection");
+  const fn = code.slice(i, code.indexOf("\n}", code.indexOf("app-checklist-toggle", i)));
+  assert.ok(fn.indexOf("return htmlDossierDeVoeu") < fn.indexOf("CHECKLIST_TYPE_META"),
+    "le renvoi doit précéder la construction des groupes");
+
+  // Il mène à l'étape 4, et dit pourquoi il n'y a rien à faire ici.
+  const j = code.indexOf("function htmlDossierDeVoeu");
+  const bloc = code.slice(j, code.indexOf("\n}", code.indexOf("app-voeu-pieces", j)));
+  assert.match(bloc, /espace-preinscription\.html\?etape=pieces/);
+  assert.match(bloc, /Elles valent pour tous vos vœux/);
+  assert.ok(!/recommandation|Non demandée|Demander une lettre/i.test(bloc),
+    "le vocabulaire des bourses est revenu sur la carte d'un vœu");
+
+  // CE QUI A ÉTÉ SAISI N'EST PAS CACHÉ : les éléments existants restent
+  // rendus par le composant d'origine, donc supprimables.
+  assert.match(bloc, /items\.map\(\(item\) => renderChecklistItem\(item, app\)\)/);
+  assert.match(bloc, /ils ne sont plus lus nulle part/);
+
+  // Et le lien se voit — même piège qu'au lot R13 sur .fitz-regle.
+  const css = lire("applications.css");
+  const k = css.indexOf(".app-voeu-pieces a{");
+  assert.notEqual(k, -1, "le lien vers l'étape 4 n'a pas de style : il s'afficherait comme du texte");
+  assert.match(css.slice(k, css.indexOf("}", k)), /text-decoration:underline/);
+
+  // L'espace bourses garde SON dossier, entier.
+  assert.match(code, /data-action="toggle-checklist"/);
+  assert.match(code, /Ajouter les exigences de cette bourse/);
 });

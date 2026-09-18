@@ -396,26 +396,67 @@ return `
 
 }
 
+/**
+ * Le « dossier » d'un vœu de préinscription : un renvoi vers la route,
+ * et rien d'autre — sauf si des éléments y avaient été saisis, auquel
+ * cas ils restent visibles et supprimables (voir le commentaire dans
+ * renderChecklistSection).
+ */
+function htmlDossierDeVoeu(app, checklist) {
+
+const items = Array.isArray(checklist) ? checklist : [];
+
+const anciens = items.length ? `
+<div class="checklist-groups">
+<p class="checklist-group-empty">Ces éléments avaient été ajoutés sur ce vœu avant que les pièces ne vivent dans votre route. Vous pouvez les retirer : ils ne sont plus lus nulle part.</p>
+<ul class="checklist-items">${items.map((item) => renderChecklistItem(item, app)).join("")}</ul>
+</div>` : "";
+
+return `
+<div class="app-checklist app-checklist--voeu">
+<p class="app-voeu-pieces">
+<i data-lucide="paperclip"></i>
+<span>Vos pièces se préparent <strong>à l'étape 4 de votre route</strong> — la liste exacte pour votre pays, le poids maximum de chaque fichier et ce qui doit être traduit. Elles valent pour tous vos vœux : rien à refaire ici.
+<a href="espace-preinscription.html?etape=pieces">Ouvrir l'étape 4</a></span>
+</p>
+${anciens}
+</div>`;
+
+}
+
 function renderChecklistSection(app, lecture) {
 
 const checklist = Array.isArray(app.checklist) ? app.checklist : [];
+
+// LE VŒU N'A PAS DE DOSSIER ICI (lot B2, 2026-09-18).
+//
+// RÉSERVE NOMMÉE AU LOT R13, TRANCHÉE. Ce bloc proposait à un vœu de
+// préinscription trois groupes — lettres de recommandation, test de
+// langue, preuve financière — dans le vocabulaire des bourses
+// (« Non demandée », « Demander une lettre »). Trois problèmes, pas un :
+//
+//   1. LA PROCÉDURE NE LES DEMANDE PAS toutes. Études en France ne
+//      réclame aucune lettre de recommandation ; la liste exacte des
+//      pièces, elle, vit à l'étape 4 de la route, avec le poids maximum
+//      de chaque fichier et l'état des traductions.
+//   2. LES PIÈCES D'UNE PRÉINSCRIPTION SONT AU NIVEAU DU DOSSIER, pas
+//      du vœu : le même diplôme sert les sept vœux. Une liste PAR vœu
+//      invitait à saisir sept fois la même chose.
+//   3. LA PREUVE FINANCIÈRE a déjà son étape — la 2. Un troisième
+//      endroit pour la même chose, c'est le motif que les lots R5, R6,
+//      R7 et R13 ont payé.
+//
+// CE QUI A ÉTÉ SAISI N'EST PAS CACHÉ : htmlDossierDeVoeu garde les
+// éléments existants, affichés et supprimables. Masquer une donnée
+// qu'un étudiant a entrée serait la perdre pour lui. Seuls les boutons
+// d'AJOUT s'en vont, avec le vocabulaire qui n'est pas le sien.
+//
+// Le renvoi passe AVANT le calcul des groupes : rien de ce qui suit ne
+// concerne un vœu.
+if (lireParcours(app) === "preinscription") return htmlDossierDeVoeu(app, checklist);
+
 const { completed, total } = checklistScore(checklist);
 const suggestion = renderSuggestionDossier(app, lecture);
-
-// UN VŒU N'A PAS DE BOURSE (lot R13-bis, 2026-09-18).
-// L'état vide de ce bloc disait « Ajouter les exigences de cette
-// bourse » sur la carte d'un vœu de préinscription — à un étudiant qui
-// finance ses études, sur la page même où il venait chercher ses vœux.
-// Vu en recette navigateur, pas à la lecture du code : renderExigences
-// et renderSuggestionDossier se taisent bien sans bourse, mais cet
-// état vide, lui, était écrit en dur.
-// Ses pièces vivent à l'étape 4 de sa route, avec les tailles
-// maximales et l'état des traductions ; ce bloc-ci n'est que son
-// pense-bête personnel. On ne lui promet donc rien et on ne lui parle
-// pas de bourse — RÉSERVE NOMMÉE : que ce pense-bête refasse, en
-// vocabulaire de bourse, le travail de l'étape 4 est une question de
-// fond, à trancher avec l'espace bourse.
-const voeu = lireParcours(app) === "preinscription";
 
 const groups = Object.keys(CHECKLIST_TYPE_META).map((type) => {
 
@@ -440,8 +481,6 @@ return `
 <span><i data-lucide="clipboard-list"></i>Dossier de candidature</span>
 ${total > 0
 ? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>`
-: voeu
-? `<span class="app-checklist-score is-empty">Rien ajouté pour l'instant</span>`
 // L'état vide disait « Ajouter les exigences de cette bourse » sans
 // jamais dire LESQUELLES. Quand le catalogue les connaît, la
 // suggestion ci-dessous les nomme — l'invite générique n'a plus lieu

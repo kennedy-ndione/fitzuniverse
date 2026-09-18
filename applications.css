@@ -347,6 +347,47 @@ margin-bottom:14px;
 overflow:hidden;
 }
 
+/* LE DOSSIER D'UN VŒU (lot B2, 2026-09-18) — un renvoi vers l'étape 4,
+   pas une liste à remplir ici. Il n'a ni bouton de repli ni bordure de
+   bloc : ce n'est plus un dossier, c'est une indication. Le lien reste
+   visible, même règle qu'au lot R13 pour .fitz-regle — le style de base
+   du site est a{text-decoration:none;color:inherit}. */
+.app-checklist--voeu{
+border:0;
+overflow:visible;
+}
+
+.app-voeu-pieces{
+display:flex;
+gap:8px;
+align-items:flex-start;
+margin:0 0 14px;
+padding:10px 14px;
+border-left:3px solid var(--amber-500);
+border-radius:var(--radius-sm);
+background:var(--background-light);
+color:var(--text-muted);
+font-size:var(--fs-body-sm, .92rem);
+line-height:1.5;
+}
+
+.app-voeu-pieces i,
+.app-voeu-pieces svg{
+flex-shrink:0;
+width:16px;
+height:16px;
+margin-top:3px;
+color:var(--amber-700);
+}
+
+.app-voeu-pieces a{
+color:var(--amber-700);
+font-weight:600;
+text-decoration:underline;
+text-underline-offset:2px;
+white-space:nowrap;
+}
+
 .app-checklist-toggle{
 width:100%;
 display:flex;
