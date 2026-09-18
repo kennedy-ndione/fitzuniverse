@@ -21,6 +21,7 @@
 
 import { STATUTS_DEPOSES, STATUTS_REPONSE } from "./journey-map.js";
 import { lireParcours } from "./parcours.js";
+import { languesParlees } from "./niveaux-langue.js";
 
 // Ce que Fitz doit savoir AVANT de choisir. Le moteur tolère les
 // champs absents ; c'est la DÉCISION de remplir qui attend.
@@ -28,12 +29,21 @@ export const CHAMPS_PROFIL_REQUIS = [
 { cle: "nationality", libelle: "votre nationalité" },
 { cle: "desiredDegree", libelle: "le niveau visé" },
 { cle: "desiredField", libelle: "votre domaine" },
-{ cle: "languages", libelle: "au moins une langue" }
+// Lot R16 : ce champ porte sa propre règle, parce qu'un tableau non
+// vide ne suffit plus. « Je ne parle pas cette langue » s'enregistre
+// (level "aucun", js/niveaux-langue.js) : un profil qui n'aurait que
+// des « non » aurait un tableau plein et pas une langue.
+{ cle: "languages", libelle: "au moins une langue", estRenseigne: (v) => languesParlees(v).length > 0 }
 ];
 
 function renseigne(valeur) {
 if (Array.isArray(valeur)) return valeur.length > 0;
 return typeof valeur === "string" ? valeur.trim() !== "" : valeur != null;
+}
+
+/** La règle du champ quand il en porte une, la règle générale sinon. */
+function champRenseigne(champ, profil) {
+return typeof champ.estRenseigne === "function" ? !!champ.estRenseigne(profil[champ.cle]) : renseigne(profil[champ.cle]);
 }
 
 /**
@@ -42,7 +52,7 @@ return typeof valeur === "string" ? valeur.trim() !== "" : valeur != null;
 */
 export function profilPretPourFitz(profile) {
 const p = profile || {};
-const manquants = CHAMPS_PROFIL_REQUIS.filter((c) => !renseigne(p[c.cle])).map((c) => c.libelle);
+const manquants = CHAMPS_PROFIL_REQUIS.filter((c) => !champRenseigne(c, p)).map((c) => c.libelle);
 return { pret: manquants.length === 0, manquants };
 }
 
