@@ -49,8 +49,7 @@ import { NIVEAUX_ACTUELS, PISTES } from "../js/eligibility-pistes.js";
 import {
 PALIERS, SECTIONS, SECTIONS_DU_NOYAU, APPLICABILITES, SECTION_DOM, domDeSection,
 applicabilite, sectionsPour, lirePalier, libellePalier,
-champsAcademiques, estSecondaire, studentStatusDuPalier,
-TESTS_DE_LANGUE, lireTestLangue, phraseTestLangue, languesLisibles
+champsAcademiques, estSecondaire, studentStatusDuPalier, languesLisibles
 } from "../js/profil-par-niveau.js";
 import { calculateAiScore, bilanProfil, PROFILE_READY_THRESHOLD, PROFILE_SECTION_RULES } from "../js/profile-score.js";
 
@@ -264,19 +263,11 @@ assert.ok(PROFILE_SECTION_RULES.every((r) => typeof r === "function"));
 
 });
 
-test("profil-par-niveau 7 — le test de langue : lecture tolérante, « pas encore passé » est légitime", () => {
-assert.deepEqual(TESTS_DE_LANGUE.map((t) => t.id), ["TCF", "TCF-DAP", "DELF", "DALF", "TEF", "IELTS", "TOEFL", "Duolingo", "aucun"]);
-assert.deepEqual(lireTestLangue({}), { nature: "", score: "", date: "", prevuLe: "" });
-assert.deepEqual(lireTestLangue({ testLangue: null }), { nature: "", score: "", date: "", prevuLe: "" });
-assert.deepEqual(lireTestLangue({ testLangue: "IELTS" }), { nature: "", score: "", date: "", prevuLe: "" });
-assert.deepEqual(lireTestLangue({ testLangue: { nature: "Cambridge", score: "B2" } }), { nature: "", score: "B2", date: "", prevuLe: "" });
-const prevu = lireTestLangue({ testLangue: { nature: "TCF", prevuLe: "2026-11-15" } });
-assert.deepEqual(prevu, { nature: "TCF", score: "", date: "", prevuLe: "2026-11-15" });
-assert.equal(phraseTestLangue({ testLangue: { nature: "TCF", prevuLe: "2026-11-15" } }), "TCF prévu le 2026-11-15");
-assert.equal(phraseTestLangue({ testLangue: { nature: "IELTS", score: "6.5", date: "2026-05-02" } }), "IELTS : 6.5 (passé le 2026-05-02)");
-assert.equal(phraseTestLangue({ testLangue: { nature: "aucun" } }), "Aucun test de langue pour l'instant");
-assert.equal(phraseTestLangue({}), "");
-});
+// Lot R17 (2026-09-18) : le test de langue A DÉMÉNAGÉ vers
+// js/test-de-langue.js, avec ses quatre états et la traduction vers
+// `situationFrancais`. Ce qui était garanti ici l'est désormais par
+// test/test-de-langue.test.mjs, en plus fort — la numérotation des
+// tests suivants est laissée telle quelle, elle n'a pas de sens propre.
 
 test("profil-par-niveau 8 — les langues lisibles, chaînes et objets", () => {
 assert.deepEqual(languesLisibles(["français", "Anglais"]), ["français", "Anglais"]);

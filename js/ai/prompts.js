@@ -25,7 +25,8 @@ import { chatLanguageName, DEFAULT_CHAT_LANGUAGE } from "./chat-language.js";
 // on ne réécrit pas la règle ici. Son défaut est « bourse » : aucun
 // appel existant ne change de comportement.
 import { lireParcoursDeSaisie } from "../parcours.js";
-import { languesLisibles, libellePalier, lirePalier, phraseTestLangue } from "../profil-par-niveau.js";
+import { languesLisibles, libellePalier, lirePalier } from "../profil-par-niveau.js";
+import { phraseTestLangue } from "../test-de-langue.js";
 
 // ==========================================================
 // DEUX PARCOURS, DEUX CADRES — jamais mélangés dans une même sortie

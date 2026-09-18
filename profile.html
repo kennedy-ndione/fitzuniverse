@@ -250,71 +250,79 @@ wand sont interdites sur tout le site (décision de Charles,
 
 </div>
 
+<!-- LOT R16 (2026-09-18) — LES QUATRE PHRASES REMPLACENT LES SIX
+CODES. Charles : « la plupart des étudiants ou ressortissants
+africains ne maîtrisent pas les C1 ou A1 ou B2 ». Les phrases, leur
+traduction en code CECRL (qui reste, lui, ce qu'on enregistre) et la
+valeur « aucun » sont dans js/niveaux-langue.js ; les lignes sont
+rendues par profile.js. -->
 <div class="input-group field-full" style="margin-top:18px;">
 <label>Langues <span class="field-requis">au moins une</span></label>
-<p class="field-hint">Le niveau CECRL détermine les programmes accessibles selon leur langue d'enseignement.</p>
+<p class="field-hint">Dites où vous en êtes, avec vos mots. Ce n'est pas un examen : c'est votre ressenti, et vous pourrez le corriger quand vous voudrez.</p>
 <div id="languagesList">
-<!-- lignes de langues générées par profile.js -->
+<!-- lignes de langues rendues par profile.js -->
 </div>
-<small class="field-repris" data-repris="languages" hidden>Repris de votre diagnostic — vérifiez le niveau</small>
+<small class="field-repris" data-repris="languages" hidden>Repris de votre diagnostic — dites où vous en êtes</small>
+<p class="field-aide" id="langueEchelle"><!-- MENTION_ECHELLE, js/niveaux-langue.js --></p>
 
-<div class="language-other-row">
-<input type="text" id="otherLanguageName" placeholder="Autre langue (nom)">
-<div class="cecrl-picker" id="otherLanguagePicker" data-code="autre">
-<button type="button" data-level="A1">A1</button>
-<button type="button" data-level="A2">A2</button>
-<button type="button" data-level="B1">B1</button>
-<button type="button" data-level="B2">B2</button>
-<button type="button" data-level="C1">C1</button>
-<button type="button" data-level="C2">C2</button>
+<div class="langue-ajout">
+<p class="langue-ajout-titre">Vous parlez une autre langue&nbsp;?</p>
+<div class="chip-select" id="languageAdders"><!-- pastilles rendues par profile.js --></div>
+<div class="langue-autre" id="otherLanguageRow" hidden>
+<input type="text" id="otherLanguageName" placeholder="Ex. Portugais, Wolof, Bambara…">
+<button type="button" class="chip" id="addOtherLanguage">Ajouter</button>
 </div>
-<button type="button" class="chip" id="addOtherLanguage">+ Ajouter</button>
+<p class="langue-autre-erreur" id="otherLanguageError" hidden></p>
 </div>
-
-<div class="chip-select" id="otherLanguagesChips" style="margin-top:12px;"></div>
 </div>
 
-<!-- Partie 3 : le test de langue devient un vrai champ (décision du
-2026-09-10). profile.testLangue = { nature, score, date, prevuLe }.
-« Pas encore passé, date prévue » est un état légitime. Aucune règle
-d'exigence ici : on enregistre, on n'invente pas de barème. -->
+<!-- LOT R17 (2026-09-18) — L'ÉTAT D'ABORD, LE TEST ENSUITE.
+L'ancienne version demandait « quel test ? » en premier, à des
+candidats qui n'en ont aucun. On demande maintenant où l'on en est —
+quatre phrases, js/test-de-langue.js — et le détail n'apparaît que
+lorsqu'il a un sens. Le même module traduit la réponse en
+`situationFrancais`, la clé que l'étape 1 de la route écrivait de son
+côté : une question, un vocabulaire, deux portes. -->
 <div class="input-group field-full" style="margin-top:18px;">
-<label for="testLangueNature">Test de langue</label>
-<p class="field-hint">Un test a une durée de validité : indiquez la date. Pas encore passé ? Une date prévue suffit.</p>
-<div class="input-wrap">
-<select id="testLangueNature">
-<option value="">Sélectionner</option>
-<!-- options rendues par profile.js depuis TESTS_DE_LANGUE -->
-</select>
+<label id="testLangueLabel">Test de langue</label>
+<p class="field-hint">Presque toutes les universités demandent une preuve de votre niveau dans la langue où vous allez étudier. Où en êtes-vous ? Si vous visez un pays anglophone, votre IELTS, TOEFL ou Duolingo se déclare ici aussi.</p>
+<div class="choix-cartes" id="testLangueEtatGroup" role="radiogroup" aria-labelledby="testLangueLabel">
+<!-- les quatre états, rendus par profile.js depuis ETATS_TEST_LANGUE -->
 </div>
 <small class="field-repris" data-repris="testLangue" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
 <div class="conditional-fields" id="testLangueDetails" hidden>
 
-<!-- Lot FINITIONS-VISUELLES : le composant .fitz-choice (css/base.css)
-remplace le bouton radio du système — le rond natif reste dans le DOM
-pour le clavier et le lecteur d'écran, masqué à l'œil. -->
-<div class="fitz-choice-group" id="testLangueEtatGroup" role="radiogroup" aria-label="État du test de langue" style="margin-top:12px;">
-<label class="fitz-choice"><input type="radio" name="testLangueEtat" value="passe"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Déjà passé</span></label>
-<label class="fitz-choice"><input type="radio" name="testLangueEtat" value="prevu"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Pas encore passé, date prévue</span></label>
+<div class="input-group field-full" style="margin-top:14px;">
+<label for="testLangueNature">Lequel ?</label>
+<div class="input-wrap">
+<select id="testLangueNature">
+<option value="">Sélectionner</option>
+<!-- options rendues par profile.js depuis TESTS_DE_LANGUE -->
+</select>
+</div>
+<p class="field-aide" id="testLangueAide">Le nom est écrit en haut de votre attestation, ou sur votre convocation.</p>
 </div>
 
 <div class="field-grid" id="testLanguePasse" hidden style="margin-top:14px;">
 <div class="input-group">
-<label for="testLangueScore">Niveau ou score obtenu</label>
+<label for="testLangueScore">Le score ou le niveau obtenu</label>
 <div class="input-wrap"><input type="text" id="testLangueScore" placeholder="Ex. B2, TCF 450, IELTS 6.5" data-exemples="langueTest"></div>
+<p class="field-aide">Recopiez ce qui est écrit sur votre attestation, tel quel.</p>
 </div>
 <div class="input-group">
-<label for="testLangueDate">Date de passage</label>
+<label for="testLangueDate">Le jour où vous l'avez passé</label>
 <div class="input-wrap"><input type="date" class="fitz-date" id="testLangueDate"></div>
+<p class="field-aide">Un test a une durée de validité — souvent deux ans. Cette date dit s'il sera encore valable au dépôt.</p>
 </div>
 </div>
 
 <div class="field-grid" id="testLanguePrevu" hidden style="margin-top:14px;">
 <div class="input-group">
-<label for="testLanguePrevuLe">Date prévue</label>
+<label for="testLanguePrevuLe">Le jour où vous le passez</label>
 <div class="input-wrap"><input type="date" class="fitz-date" id="testLanguePrevuLe"></div>
+<p class="field-aide">Même approximative, elle permet à Fitz de savoir si le résultat arrivera avant la date limite.</p>
 </div>
 </div>
 

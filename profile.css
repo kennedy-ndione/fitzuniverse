@@ -612,10 +612,31 @@ color:#fff;
 }
 
 /* ==========================================================
-LANGUES — sélecteur CECRL segmenté
-========================================================== */
+LANGUES — QUATRE PHRASES, PLUS SIX CODES (lot R16, 2026-09-18)
+==========================================================
+Ce qui disparaît ici : .cecrl-picker, cinq lignes de six boutons
+nommés A1 A2 B1 B2 C1 C2. Charles, le 2026-09-18 : « je ne sais même
+pas quoi cocher, et c'est un problème ».
 
-.language-row{
+Une carte de niveau EST un .fitz-choice (css/base.css) : le rond,
+l'état coché, l'ambre de la marque et l'anneau de focus clavier
+viennent de là. Ce fichier ne pose que la géométrie de la carte —
+sinon il y aurait deux définitions du même bouton, et la seconde
+dériverait de la première au premier changement de marque. */
+
+.langue-bloc{
+
+padding:16px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.langue-bloc:first-child{ padding-top:10px; }
+
+.langue-bloc:last-child{ border-bottom:none; }
+
+.langue-bloc-tete{
 
 display:flex;
 
@@ -623,89 +644,150 @@ align-items:center;
 
 justify-content:space-between;
 
-gap:16px;
+gap:12px;
 
-padding:14px 0;
-
-border-bottom:1px solid var(--border-color);
-
-flex-wrap:wrap;
+margin-bottom:10px;
 
 }
 
-.language-row:last-child{
-
-border-bottom:none;
-
-}
-
-.language-row-label{
+.langue-bloc-nom{
 
 font-weight:700;
 
-font-size:.9rem;
+font-size:.95rem;
 
 color:var(--text-color);
 
-min-width:110px;
-
 }
 
-.cecrl-picker{
-
-display:inline-flex;
-
-border-radius:var(--radius-full);
-
-border:1.5px solid var(--border-color);
-
-overflow:hidden;
-
-}
-
-.cecrl-picker button{
-
-padding:8px 13px;
+.langue-retirer{
 
 border:none;
 
-background:var(--background);
+background:none;
 
-color:var(--text-light);
+padding:4px 2px;
 
-font-weight:700;
+font-family:inherit;
 
 font-size:.78rem;
 
+font-weight:600;
+
+color:var(--text-light);
+
+text-decoration:underline;
+
+text-underline-offset:2px;
+
 cursor:pointer;
 
-border-right:1px solid var(--border-color);
+}
 
-transition:var(--transition);
+.langue-retirer:hover{ color:var(--primary-color); }
+
+/* LE JEU DE CARTES DU PROFIL — deux questions s'en servent (lot R17,
+2026-09-18) : le niveau dans une langue et l'état du test de langue.
+Il ne porte donc plus le nom de l'une d'elles.
+
+Une colonne, toujours : les phrases n'ont pas la même longueur, et deux
+colonnes les rendraient irrégulières à lire — c'est exactement ce qu'on
+répare. */
+.choix-cartes{
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
 
 }
 
-.cecrl-picker button:last-child{
+/* Posé directement sous un libellé de champ (le test de langue), il lui
+faut l'air que .langue-bloc donne aux lignes de langues. */
+.input-group > .choix-cartes{ margin-top:10px; }
 
-border-right:none;
+/* (0,2,0) — l'emporte sur « .fitz-choice » (0,1,0) de css/base.css,
+qui dessine une pastille en ligne. */
+.choix-cartes .fitz-choice--carte{
+
+display:flex;
+
+align-items:flex-start;
+
+width:100%;
+
+min-height:0;
+
+padding:11px 14px;
+
+border-radius:var(--radius-md);
+
+font-weight:500;
 
 }
 
-.cecrl-picker button:hover{
+.choix-cartes .fitz-choice--carte .fitz-choice-dot{ margin-top:2px; }
 
-color:var(--primary-color);
+/* L'exemple passe TOUJOURS sous le titre, jamais à côté : en ligne, les
+quatre phrases n'ayant pas la même longueur, deux cartes tenaient sur
+une ligne et deux sur deux — un escalier là où l'étudiant doit
+comparer quatre réponses d'un coup d'œil. */
+.carte-choix-texte{
+
+display:flex;
+
+flex-direction:column;
+
+gap:3px;
 
 }
 
-.cecrl-picker button[aria-pressed="true"]{
+.carte-choix-titre{
 
-background:var(--gradient-primary);
+font-weight:700;
 
-color:#fff;
+font-size:.88rem;
+
+color:var(--text-color);
 
 }
 
-.language-other-row{
+.carte-choix-ex{
+
+font-size:.78rem;
+
+font-weight:500;
+
+color:var(--text-light);
+
+}
+
+/* ---- Ajouter une langue ---- */
+
+.langue-ajout{
+
+margin-top:18px;
+
+padding-top:16px;
+
+border-top:1px solid var(--border-color);
+
+}
+
+.langue-ajout-titre{
+
+margin:0 0 10px;
+
+font-size:.82rem;
+
+font-weight:600;
+
+color:var(--text-light);
+
+}
+
+.langue-autre{
 
 display:flex;
 
@@ -713,17 +795,19 @@ gap:10px;
 
 align-items:center;
 
-padding-top:14px;
-
 flex-wrap:wrap;
+
+margin-top:12px;
 
 }
 
-.language-other-row input[type="text"]{
+.langue-autre[hidden]{ display:none; }
+
+.langue-autre input[type="text"]{
 
 flex:1;
 
-min-width:160px;
+min-width:180px;
 
 padding:10px 14px;
 
@@ -731,13 +815,29 @@ border:1.5px solid var(--border-color);
 
 border-radius:var(--radius-md);
 
-font-family:inherit;   /* était "Inter" en dur (corrigé le 2026-08-23) */
+font-family:inherit;
 
 font-size:.88rem;
 
 color:var(--text-color);
 
 }
+
+/* Le message d'erreur remplace une fenêtre alert() du navigateur, qui
+bloquait la page sans dire quel champ était en cause. */
+.langue-autre-erreur{
+
+margin:8px 0 0;
+
+font-size:.78rem;
+
+font-weight:600;
+
+color:var(--amber-700);
+
+}
+
+.langue-autre-erreur[hidden]{ display:none; }
 
 /* ==========================================================
 DOCUMENTS DISPONIBLES — cases à cocher en cartes
@@ -1522,7 +1622,7 @@ color:var(--amber-700);
 
 .field-repris[hidden]{ display:none; }
 
-.language-row--sans-niveau .language-row-label::after{
+.langue-bloc--sans-niveau .langue-bloc-nom::after{
 content:" — niveau à préciser";
 font-size:.74rem;
 font-weight:600;

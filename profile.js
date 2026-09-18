@@ -22,7 +22,8 @@ import { escapeHtml } from "./js/ai/format.js";
 // s'affiche et ce qui compte ; le score vient de la MÊME fonction que le
 // tableau de bord, les outils Fitz et la fiche admin (bilanProfil) — plus
 // de règles de complétion recopiées sur le DOM.
-import { PALIERS, lirePalier, champsAcademiques, estSecondaire, studentStatusDuPalier, TESTS_DE_LANGUE, lireTestLangue, sectionsPour, domDeSection } from "./js/profil-par-niveau.js";
+import { PALIERS, lirePalier, champsAcademiques, estSecondaire, studentStatusDuPalier, sectionsPour, domDeSection } from "./js/profil-par-niveau.js";
+import { ETATS_TEST_LANGUE, ETATS_AVEC_TEST, TESTS_DE_LANGUE, EXEMPLES_SCORE, lireTestLangue, testConnu, situationFrancaisDepuisTest, etatDepuisSituationFrancais } from "./js/test-de-langue.js";
 import { bilanProfil } from "./js/profile-score.js";
 // Lot R3 (2026-09-17) : les pastilles d'exemples et le champ à
 // suggestions, partagés avec la route (js/champs-guides.js). Le HTML ne
@@ -38,20 +39,30 @@ const POUR_FITZ = new URLSearchParams(window.location.search).get("pour") === "f
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerUniversites } from "./js/catalog-data.js";
+import { NIVEAUX_LANGUE, niveauDepuisCode, codeDepuisNiveau, MENTION_ECHELLE } from "./js/niveaux-langue.js";
 
 // ==========================================================
 // Listes fixes pour les chips / sélecteurs
 // ==========================================================
 
-const FIXED_LANGUAGES = [
+// LOT R16 (2026-09-18) — DEUX LANGUES AFFICHÉES, LES AUTRES SUR DEMANDE.
+// Cinq lignes de six boutons faisaient trente cases à lire avant la
+// première réponse. Le français et l'anglais sont les deux langues
+// d'enseignement des destinations que ce site accompagne : elles
+// s'affichent toujours. Les trois autres s'ajoutent d'un clic, et toute
+// langue déjà enregistrée s'affiche d'office, quelle qu'elle soit.
+const LANGUES_TOUJOURS = [
 { code: "fr", label: "Français" },
-{ code: "en", label: "Anglais" },
+{ code: "en", label: "Anglais" }
+];
+
+const LANGUES_PROPOSEES = [
 { code: "es", label: "Espagnol" },
 { code: "de", label: "Allemand" },
 { code: "ar", label: "Arabe" }
 ];
 
-const CECRL_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const FIXED_LANGUAGES = [...LANGUES_TOUJOURS, ...LANGUES_PROPOSEES];
 
 // Filet de secours si la lecture Firestore ci-dessous échoue (hors ligne...)
 // — jamais bloquer la page sur une erreur réseau. Liste codée en dur
@@ -360,8 +371,22 @@ renderAverageValueInput(fieldId);
 }
 
 // ==========================================================
-// Langues — 5 lignes fixes + langues "autres" ajoutées dynamiquement
+// LANGUES — lot R16 (2026-09-18) : quatre phrases, plus six codes
 // ==========================================================
+//
+// Ce bloc N'INVENTE AUCUN VOCABULAIRE. Les quatre phrases, leur
+// traduction en code CECRL, la règle qui interdit de dégrader un niveau
+// déjà enregistré et la valeur « aucun » vivent dans
+// js/niveaux-langue.js, avec les quatre lecteurs de `languages`. Ici,
+// il n'y a que de l'affichage.
+//
+// CLIQUER « + Espagnol » OUVRE LA QUESTION, IL N'Y RÉPOND PAS. Une
+// langue ajoutée n'entre dans `state.languages` qu'au moment où
+// l'étudiant coche une phrase : sans cette distinction, ouvrir la ligne
+// aurait déclaré l'espagnol parlé, et la section « Langues » se serait
+// comptée remplie toute seule.
+
+const languesOuvertes = [];
 
 function findLanguage(code, name) {
 return state.languages.find((entry) =>
@@ -369,145 +394,293 @@ code === "autre" ? entry.code === "autre" && entry.name === name : entry.code ==
 );
 }
 
-function setLanguageLevel(code, level, name) {
-
-const existing = findLanguage(code, name);
-
-if (existing) {
-existing.level = level;
-} else {
-state.languages.push(code === "autre" ? { code, name, level } : { code, level });
+function nomDeLangue(entry) {
+if (entry.code === "autre") return String(entry.name || "").trim();
+const connue = FIXED_LANGUAGES.find((f) => f.code === entry.code);
+return connue ? connue.label : String(entry.code || "").trim();
 }
 
-}
+const cleDeLangue = (code, nom) => (code === "autre" ? `autre:${String(nom || "").trim().toLowerCase()}` : code);
 
-function renderFixedLanguages() {
+/**
+* Les lignes à afficher, dans l'ordre : les deux toujours là, puis
+* celles que la base contient, puis celles que l'étudiant vient
+* d'ouvrir. Jamais deux fois la même.
+*/
+function langueRows() {
 
-const list = document.getElementById("languagesList");
-list.innerHTML = "";
+const rows = [];
+const vues = new Set();
 
-FIXED_LANGUAGES.forEach(({ code, label }) => {
-
-const row = document.createElement("div");
-row.className = "language-row";
-
-const current = findLanguage(code);
-
-row.innerHTML = `
-<span class="language-row-label"></span>
-<div class="cecrl-picker" data-code="${code}">
-${CECRL_LEVELS.map((lvl) => `<button type="button" data-level="${lvl}">${lvl}</button>`).join("")}
-</div>
-`;
-
-row.querySelector(".language-row-label").textContent = label;
-
-// Une langue reprise du diagnostic SANS niveau (js/diagnostic-vers-
-// profil.js ne devine pas le CECRL) : la ligne le dit, le niveau reste
-// à choisir.
-if (current && !current.level) row.classList.add("language-row--sans-niveau");
-
-const picker = row.querySelector(".cecrl-picker");
-
-picker.querySelectorAll("button").forEach((btn) => {
-
-if (current && current.level === btn.dataset.level) {
-btn.setAttribute("aria-pressed", "true");
-}
-
-btn.addEventListener("click", () => {
-
-picker.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
-btn.setAttribute("aria-pressed", "true");
-row.classList.remove("language-row--sans-niveau");
-
-setLanguageLevel(code, btn.dataset.level);
-updateCompletion();
-
+LANGUES_TOUJOURS.forEach(({ code, label }) => {
+vues.add(code);
+rows.push({ code, label, retirable: false, entry: findLanguage(code) || null });
 });
 
+state.languages.forEach((entry) => {
+const nom = nomDeLangue(entry);
+const cle = cleDeLangue(entry.code, nom);
+if (!nom || vues.has(cle)) return;
+vues.add(cle);
+rows.push({ code: entry.code, label: nom, retirable: true, entry });
 });
 
-list.appendChild(row);
-
+languesOuvertes.forEach(({ code, label }) => {
+const cle = cleDeLangue(code, label);
+if (vues.has(cle)) return;
+vues.add(cle);
+rows.push({ code, label, retirable: true, entry: null });
 });
+
+return rows;
 
 }
 
-function renderOtherLanguageChips() {
+/**
+* L'étudiant coche une phrase. Le code écrit est celui de
+* js/niveaux-langue.js — et si la base contenait déjà un code du même
+* groupe (un C1 pour « je suis à l'aise »), c'est LUI qui reste.
+*/
+function poserNiveau(row, cle) {
 
-const container = document.getElementById("otherLanguagesChips");
-container.innerHTML = "";
+const existante = row.entry;
+const code = codeDepuisNiveau(cle, existante ? existante.level : "");
 
-state.languages
-.filter((entry) => entry.code === "autre")
-.forEach((entry) => {
-
-const chip = document.createElement("span");
-chip.className = "chip";
-chip.setAttribute("aria-pressed", "true");
-chip.textContent = `${entry.name} — ${entry.level}`;
-
-const remove = document.createElement("button");
-remove.type = "button";
-remove.setAttribute("aria-label", `Retirer ${entry.name}`);
-remove.style.marginLeft = "6px";
-remove.style.background = "none";
-remove.style.border = "none";
-remove.style.color = "inherit";
-remove.style.cursor = "pointer";
-remove.textContent = "×";
-
-remove.addEventListener("click", () => {
-state.languages = state.languages.filter((item) => item !== entry);
-renderOtherLanguageChips();
-updateCompletion();
-});
-
-chip.appendChild(remove);
-container.appendChild(chip);
-
-});
-
-}
-
-function initOtherLanguageAdder() {
-
-const nameInput = document.getElementById("otherLanguageName");
-const picker = document.getElementById("otherLanguagePicker");
-const addBtn = document.getElementById("addOtherLanguage");
-
-let selectedLevel = "";
-
-picker.querySelectorAll("button").forEach((btn) => {
-
-btn.addEventListener("click", () => {
-picker.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
-btn.setAttribute("aria-pressed", "true");
-selectedLevel = btn.dataset.level;
-});
-
-});
-
-addBtn.addEventListener("click", () => {
-
-const name = nameInput.value.trim();
-
-if (!name || !selectedLevel) {
-alert("Merci d'indiquer un nom de langue et de sélectionner un niveau avant d'ajouter.");
+if (existante) {
+existante.level = code;
 return;
 }
 
-state.languages.push({ code: "autre", name, level: selectedLevel });
+const neuve = row.code === "autre"
+? { code: "autre", name: row.label, level: code }
+: { code: row.code, level: code };
 
-nameInput.value = "";
-picker.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
-selectedLevel = "";
+state.languages.push(neuve);
+row.entry = neuve;
 
-renderOtherLanguageChips();
+}
+
+function retirerLangue(row) {
+
+if (row.entry) state.languages = state.languages.filter((item) => item !== row.entry);
+
+const cle = cleDeLangue(row.code, row.label);
+for (let i = languesOuvertes.length - 1; i >= 0; i -= 1) {
+if (cleDeLangue(languesOuvertes[i].code, languesOuvertes[i].label) === cle) languesOuvertes.splice(i, 1);
+}
+
+renderLangues();
+renderAjoutsDeLangue();
 updateCompletion();
 
+}
+
+function renderLangues() {
+
+const list = document.getElementById("languagesList");
+if (!list) return;
+
+list.innerHTML = "";
+
+langueRows().forEach((row, index) => {
+
+const niveauActuel = row.entry ? niveauDepuisCode(row.entry.level) : null;
+
+const bloc = document.createElement("div");
+bloc.className = "langue-bloc";
+
+// Une langue reprise du diagnostic SANS niveau (js/diagnostic-vers-
+// profil.js ne devine pas le CECRL) : la ligne le dit.
+if (row.entry && !row.entry.level) bloc.classList.add("langue-bloc--sans-niveau");
+
+const tete = document.createElement("div");
+tete.className = "langue-bloc-tete";
+
+const nom = document.createElement("span");
+nom.className = "langue-bloc-nom";
+nom.textContent = row.label;
+tete.appendChild(nom);
+
+if (row.retirable) {
+const retirer = document.createElement("button");
+retirer.type = "button";
+retirer.className = "langue-retirer";
+retirer.textContent = "Retirer";
+retirer.setAttribute("aria-label", `Retirer ${row.label}`);
+retirer.addEventListener("click", () => retirerLangue(row));
+tete.appendChild(retirer);
+}
+
+bloc.appendChild(tete);
+
+// Le composant .fitz-choice du site (css/base.css) : le bouton radio
+// natif reste dans le DOM pour le clavier et le lecteur d'écran,
+// masqué à l'œil. Les flèches du clavier parcourent le groupe sans
+// une ligne de JavaScript.
+const choix = document.createElement("div");
+choix.className = "choix-cartes";
+choix.setAttribute("role", "radiogroup");
+choix.setAttribute("aria-label", `Votre niveau en ${row.label.toLowerCase()}`);
+
+NIVEAUX_LANGUE.forEach((niveau) => {
+
+// .fitz-choice (css/base.css) : le rond, l'état coché, l'ambre de la
+// marque et l'anneau de focus viennent de LÀ, pas d'ici. profile.css
+// ne pose que la mise en page de la carte (.fitz-choice--carte).
+const carte = document.createElement("label");
+carte.className = "fitz-choice fitz-choice--carte";
+
+const radio = document.createElement("input");
+radio.type = "radio";
+radio.name = `niveau-langue-${index}`;
+radio.value = niveau.cle;
+radio.checked = niveauActuel === niveau.cle;
+
+radio.addEventListener("change", () => {
+poserNiveau(row, niveau.cle);
+bloc.classList.remove("langue-bloc--sans-niveau");
+updateCompletion();
 });
+
+const rond = document.createElement("span");
+rond.className = "fitz-choice-dot";
+rond.setAttribute("aria-hidden", "true");
+
+const texte = document.createElement("span");
+texte.className = "carte-choix-texte";
+
+const titre = document.createElement("span");
+titre.className = "carte-choix-titre";
+titre.textContent = niveau.titre;
+
+const exemple = document.createElement("span");
+exemple.className = "carte-choix-ex";
+exemple.textContent = niveau.exemple;
+
+texte.append(titre, exemple);
+carte.append(radio, rond, texte);
+choix.appendChild(carte);
+
+});
+
+bloc.appendChild(choix);
+list.appendChild(bloc);
+
+});
+
+const echelle = document.getElementById("langueEchelle");
+if (echelle) echelle.textContent = MENTION_ECHELLE;
+
+}
+
+function renderAjoutsDeLangue() {
+
+const zone = document.getElementById("languageAdders");
+if (!zone) return;
+
+zone.innerHTML = "";
+
+const affichees = new Set(langueRows().map((row) => cleDeLangue(row.code, row.label)));
+
+LANGUES_PROPOSEES.forEach(({ code, label }) => {
+
+if (affichees.has(code)) return;
+
+const chip = document.createElement("button");
+chip.type = "button";
+chip.className = "chip";
+chip.textContent = `+ ${label}`;
+
+chip.addEventListener("click", () => {
+languesOuvertes.push({ code, label });
+renderLangues();
+renderAjoutsDeLangue();
+});
+
+zone.appendChild(chip);
+
+});
+
+const autre = document.createElement("button");
+autre.type = "button";
+autre.className = "chip";
+autre.textContent = "+ Une autre langue";
+
+autre.addEventListener("click", () => {
+const ligne = document.getElementById("otherLanguageRow");
+if (!ligne) return;
+ligne.hidden = false;
+const champ = document.getElementById("otherLanguageName");
+if (champ) champ.focus();
+});
+
+zone.appendChild(autre);
+
+}
+
+/**
+* « Une autre langue » : on ouvre la ligne, on ne l'enregistre pas. Le
+* message d'erreur s'affiche SOUS le champ — l'ancienne version ouvrait
+* une fenêtre alert() du navigateur, qui bloque la page et n'indique
+* même pas quel champ est en cause.
+*/
+function initAjoutDeLangue() {
+
+renderAjoutsDeLangue();
+
+const champ = document.getElementById("otherLanguageName");
+const bouton = document.getElementById("addOtherLanguage");
+const erreur = document.getElementById("otherLanguageError");
+
+if (!champ || !bouton) return;
+
+const direErreur = (message) => {
+if (!erreur) return;
+erreur.textContent = message;
+erreur.hidden = !message;
+};
+
+const ajouter = () => {
+
+const nom = champ.value.trim();
+
+if (!nom) {
+direErreur("Écrivez le nom de la langue, puis touchez « Ajouter ».");
+champ.focus();
+return;
+}
+
+const deja = new Set(langueRows().map((row) => cleDeLangue(row.code, row.label)));
+const connue = FIXED_LANGUAGES.find((f) => f.label.toLowerCase() === nom.toLowerCase());
+const code = connue ? connue.code : "autre";
+
+if (deja.has(cleDeLangue(code, nom))) {
+direErreur(`${connue ? connue.label : nom} est déjà dans votre liste.`);
+return;
+}
+
+languesOuvertes.push({ code, label: connue ? connue.label : nom });
+
+champ.value = "";
+direErreur("");
+
+const ligne = document.getElementById("otherLanguageRow");
+if (ligne) ligne.hidden = true;
+
+renderLangues();
+renderAjoutsDeLangue();
+
+};
+
+bouton.addEventListener("click", ajouter);
+
+champ.addEventListener("keydown", (event) => {
+if (event.key !== "Enter") return;
+event.preventDefault();
+ajouter();
+});
+
+champ.addEventListener("input", () => direErreur(""));
 
 }
 
@@ -706,6 +879,57 @@ item.classList.toggle("is-facultative", applicable === "facultative");
 // LE TEST DE LANGUE (partie 3)
 // ==========================================================
 
+// ==========================================================
+// LE TEST DE LANGUE — lot R17 (2026-09-18) : l'état d'abord
+// ==========================================================
+//
+// Le vocabulaire, les quatre états, la langue de chaque test et la
+// traduction vers `situationFrancais` sont dans js/test-de-langue.js.
+// Ici, il n'y a que de l'affichage — et la même règle qu'au lot R16 :
+// le détail n'apparaît que lorsqu'il a un sens.
+
+function renderTestLangueEtats(etatChoisi) {
+
+const groupe = document.getElementById("testLangueEtatGroup");
+if (!groupe) return;
+
+groupe.innerHTML = "";
+
+ETATS_TEST_LANGUE.forEach((etat) => {
+
+const carte = document.createElement("label");
+carte.className = "fitz-choice fitz-choice--carte";
+
+const radio = document.createElement("input");
+radio.type = "radio";
+radio.name = "testLangueEtat";
+radio.value = etat.cle;
+radio.checked = etatChoisi === etat.cle;
+radio.addEventListener("change", applyTestLangueEtat);
+
+const rond = document.createElement("span");
+rond.className = "fitz-choice-dot";
+rond.setAttribute("aria-hidden", "true");
+
+const texte = document.createElement("span");
+texte.className = "carte-choix-texte";
+
+const titre = document.createElement("span");
+titre.className = "carte-choix-titre";
+titre.textContent = etat.titre;
+
+const exemple = document.createElement("span");
+exemple.className = "carte-choix-ex";
+exemple.textContent = etat.exemple;
+
+texte.append(titre, exemple);
+carte.append(radio, rond, texte);
+groupe.appendChild(carte);
+
+});
+
+}
+
 function renderTestLangueOptions() {
 
 const select = document.getElementById("testLangueNature");
@@ -714,7 +938,7 @@ if (!select) return;
 TESTS_DE_LANGUE.forEach((t) => {
 const option = document.createElement("option");
 option.value = t.id;
-option.textContent = t.label;
+option.textContent = t.aide ? `${t.label} — ${t.aide}` : t.label;
 select.appendChild(option);
 });
 
@@ -722,13 +946,19 @@ select.appendChild(option);
 
 function applyTestLangueEtat() {
 
-const nature = val("testLangueNature");
 const etat = radioValue("testLangueEtat");
 const details = document.getElementById("testLangueDetails");
+const avecTest = ETATS_AVEC_TEST.includes(etat);
 
-details.hidden = !nature || nature === "aucun";
-document.getElementById("testLanguePasse").hidden = details.hidden || etat !== "passe";
-document.getElementById("testLanguePrevu").hidden = details.hidden || etat !== "prevu";
+details.hidden = !avecTest;
+document.getElementById("testLanguePasse").hidden = !avecTest || etat !== "passe";
+document.getElementById("testLanguePrevu").hidden = !avecTest || etat !== "prevu";
+
+// L'exemple de score suit la langue du test choisi : « Ex. B2, TCF 450 »
+// n'aide personne devant un IELTS.
+const test = testConnu(val("testLangueNature"));
+const champ = document.getElementById("testLangueScore");
+if (champ && test && EXEMPLES_SCORE[test.langue]) champ.placeholder = EXEMPLES_SCORE[test.langue];
 
 }
 
@@ -738,21 +968,20 @@ renderTestLangueOptions();
 
 const t = lireTestLangue(profile);
 
+// CE QUE LA ROUTE SAIT DÉJÀ N'EST PAS REDEMANDÉ. L'étape 1 de la route
+// pose la même question sous le nom `situationFrancais` ; si le profil
+// n'a pas encore de test enregistré, on propose la réponse qui y a été
+// donnée. Répondre à un endroit répond à l'autre.
+const etat = t.etat || etatDepuisSituationFrancais(profile && profile.situationFrancais);
+
+renderTestLangueEtats(etat);
+
 document.getElementById("testLangueNature").value = t.nature;
 document.getElementById("testLangueScore").value = t.score;
 document.getElementById("testLangueDate").value = t.date;
 document.getElementById("testLanguePrevuLe").value = t.prevuLe;
 
-// L'état se déduit de ce qui est enregistré : une date de passage ou un
-// score ⇒ « déjà passé » ; une date prévue ⇒ « pas encore passé ».
-const etat = (t.score || t.date) ? "passe" : (t.prevuLe ? "prevu" : "");
-if (etat) {
-const radio = document.querySelector(`input[name="testLangueEtat"][value="${etat}"]`);
-if (radio) radio.checked = true;
-}
-
 document.getElementById("testLangueNature").addEventListener("change", applyTestLangueEtat);
-document.querySelectorAll('input[name="testLangueEtat"]').forEach((r) => r.addEventListener("change", applyTestLangueEtat));
 
 applyTestLangueEtat();
 
@@ -760,14 +989,15 @@ applyTestLangueEtat();
 
 function lireTestLangueDuFormulaire() {
 
-const nature = val("testLangueNature");
-if (!nature) return { nature: "", score: "", date: "", prevuLe: "" };
-if (nature === "aucun") return { nature, score: "", date: "", prevuLe: "" };
-
 const etat = radioValue("testLangueEtat");
-if (etat === "passe") return { nature, score: val("testLangueScore"), date: val("testLangueDate"), prevuLe: "" };
-if (etat === "prevu") return { nature, score: "", date: "", prevuLe: val("testLanguePrevuLe") };
-return { nature, score: "", date: "", prevuLe: "" };
+const vide = { etat: "", nature: "", score: "", date: "", prevuLe: "" };
+
+if (!ETATS_TEST_LANGUE.some((e) => e.cle === etat)) return vide;
+if (!ETATS_AVEC_TEST.includes(etat)) return { ...vide, etat };
+
+const nature = val("testLangueNature");
+if (etat === "passe") return { etat, nature, score: val("testLangueScore"), date: val("testLangueDate"), prevuLe: "" };
+return { etat, nature, score: "", date: "", prevuLe: val("testLanguePrevuLe") };
 
 }
 
@@ -992,9 +1222,8 @@ const nom = String(l || "").trim();
 const fixe = FIXED_LANGUAGES.find((f) => f.label.toLowerCase() === nom.toLowerCase());
 return fixe ? { code: fixe.code, level: "" } : { code: "autre", name: nom, level: "" };
 }).filter((l) => l.code && (l.code !== "autre" || l.name));
-renderFixedLanguages();
-renderOtherLanguageChips();
-initOtherLanguageAdder();
+renderLangues();
+initAjoutDeLangue();
 
 initTestLangue(profile);
 
@@ -1113,11 +1342,33 @@ reprisDuDiagnostic: []
 
 };
 
+// LOT R17 — UNE QUESTION, UN VOCABULAIRE, DEUX PORTES.
+//
+// `situationFrancais` est la clé que l'étape 1 de la route écrit de son
+// côté (QUESTIONS_SITUATION, js/route-preinscription.js) pour la même
+// question. Elle se déduit désormais de la réponse donnée ici — mais
+// SEULEMENT quand cette réponse dit quelque chose du FRANÇAIS : un
+// IELTS déclaré ne raconte rien du français de l'étudiant, et l'écrire
+// lui mettrait dans la bouche, à l'étape 1 de sa route, une réponse
+// qu'il n'a jamais donnée (js/test-de-langue.js).
+//
+// Quand elle ne dit rien, la clé est ABSENTE de cet objet — et
+// l'enregistrement champ par champ (voir plus bas) laisse alors
+// intacte la valeur déjà en base. Avant ce lot, un tel silence était
+// impossible : la page réécrivait le bloc `profile` entier, et
+// `situationFrancais`, qui n'y figurait pas, disparaissait à chaque
+// enregistrement.
+const situation = situationFrancaisDepuisTest(updated.testLangue);
+if (situation) updated.situationFrancais = situation;
+
 // Alias hérités — recalculés pour que dashboard.js et les anciens
 // outils IA continuent de fonctionner avant leur migration.
 updated.originCountry = updated.country;
 updated.currentDegree = studentStatus === "en_cours" ? updated.currentLevel : updated.lastDegree;
-updated.englishLevel = (updated.languages.find((l) => l.code === "en") || {}).level || "";
+// Lot R16 : « Je ne parle pas cette langue » (level "aucun") n'est pas
+// un niveau d'anglais — cet alias hérité reste vide dans ce cas.
+const anglais = updated.languages.find((l) => l.code === "en");
+updated.englishLevel = anglais && niveauDepuisCode(anglais.level) !== "aucun" ? (anglais.level || "") : "";
 updated.desiredCountry = updated.preferredCountries[0] || "";
 
 updated.name = existingName;
@@ -1278,10 +1529,23 @@ try {
 
 const updatedProfile = buildUpdatedProfile(userData.name || "");
 
-await updateDoc(userRef, {
-name: updatedProfile.name,
-profile: updatedProfile
-});
+// LOT R17 — CETTE PAGE N'ÉCRASE PLUS CE QU'ELLE NE CONNAÎT PAS.
+//
+// Elle écrivait `{ profile: updatedProfile }` : une écriture de MAP
+// ENTIÈRE, qui remplace le bloc `profile` par la liste des clés
+// construites ci-dessus. Toute clé écrite ailleurs et absente de cette
+// liste était donc effacée au premier enregistrement — et c'est ce qui
+// arrivait à `situationFrancais`, la réponse donnée à l'étape 1 de la
+// route. Vérifié au banc d'essai le 2026-09-18 : « test_prevu » avant,
+// absente après un enregistrement de « Pour commencer ».
+//
+// On écrit maintenant CHAMP PAR CHAMP, comme enregistrerSituation() le
+// fait déjà dans espace-preinscription.js : une seule façon d'écrire un
+// profil dans le dépôt, et une page qui ne touche qu'à ses champs.
+const aEcrire = { name: updatedProfile.name };
+for (const [cle, valeur] of Object.entries(updatedProfile)) aEcrire[`profile.${cle}`] = valeur;
+
+await updateDoc(userRef, aEcrire);
 
 // Enregistré : les mentions « repris du diagnostic » s'éteignent.
 afficherMentionsReprises([]);

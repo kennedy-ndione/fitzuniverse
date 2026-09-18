@@ -64,7 +64,9 @@ assert.equal(p.bacSeries, "Scientifique");
 assert.equal(p.graduationYear, "2026");
 // Les langues pratiquées, SANS niveau CECRL (on ne devine pas).
 assert.deepEqual(p.languages, [{ code: "fr", level: "" }, { code: "en", level: "" }]);
-assert.deepEqual(p.testLangue, { nature: "aucun", score: "", date: "", prevuLe: "" });
+// Lot R17 : l'état a son propre champ. « Aucun test » était jusqu'ici
+// rangé dans `nature`, c'est-à-dire un état déguisé en test.
+assert.deepEqual(p.testLangue, { etat: "aucun", nature: "", score: "", date: "", prevuLe: "" });
 assert.deepEqual(p.preferredCountries, ["France"]);
 assert.deepEqual(p.fundingWanted, ["full_scholarship"]);
 assert.deepEqual(p.documentsAvailable, ["passport"]);
@@ -151,8 +153,8 @@ assert.equal(profil.testLangue.nature, "IELTS", "un test enregistré n'est pas r
 // Le profil PAR DÉFAUT de profile.js porte un testLangue aux quatre
 // valeurs vides : c'est « rien de saisi », la reprise passe (bug du
 // harnais, 2026-09-11 : cet objet bloquait le « Pas encore »).
-const defaut = fusionnerSansEcraser({ testLangue: { nature: "", score: "", date: "", prevuLe: "" }, languages: [] }, profilDepuisDiagnostic(BACHELIER, { aujourdhui: LE_JOUR }));
-assert.equal(defaut.profil.testLangue.nature, "aucun");
+const defaut = fusionnerSansEcraser({ testLangue: { etat: "", nature: "", score: "", date: "", prevuLe: "" }, languages: [] }, profilDepuisDiagnostic(BACHELIER, { aujourdhui: LE_JOUR }));
+assert.equal(defaut.profil.testLangue.etat, "aucun");
 assert.ok(defaut.repris.includes("testLangue") && defaut.repris.includes("languages"));
 assert.ok(repris.includes("desiredField") && repris.includes("preferredCountries"));
 assert.ok(!repris.includes("nationality") && !repris.includes("languages") && !repris.includes("testLangue"));

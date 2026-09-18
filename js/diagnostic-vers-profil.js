@@ -157,7 +157,9 @@ pose("languages", langues);
 
 // 8. Le test de langue : seule « Pas encore » se traduit sans deviner
 //    (aucun test) ; « Oui, en anglais (IELTS, TOEFL…) » ne dit pas lequel.
-if (chaine(r.langCert) === "Pas encore") pose("testLangue", { nature: "aucun", score: "", date: "", prevuLe: "" });
+// Lot R17 : l'état est désormais un champ à lui (`etat`) — « aucun »
+// n'est plus un test déguisé rangé dans `nature`.
+if (chaine(r.langCert) === "Pas encore") pose("testLangue", { etat: "aucun", nature: "", score: "", date: "", prevuLe: "" });
 
 // 9. La destination.
 const destination = chaine(r.destinationCountry);

@@ -33,7 +33,8 @@ promouvoirAdmin
 } from "./firebase-admin.js";
 
 import { calculateAiScore, bilanProfil } from "../js/profile-score.js";
-import { phraseTestLangue, libellePalier, lirePalier, languesLisibles } from "../js/profil-par-niveau.js";
+import { libellePalier, lirePalier, languesLisibles } from "../js/profil-par-niveau.js";
+import { phraseTestLangue } from "../js/test-de-langue.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : les étiquettes de l'admin, un

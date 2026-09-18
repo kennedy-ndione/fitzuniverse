@@ -39,6 +39,7 @@
 */
 
 import { PISTES, NIVEAUX_ACTUELS, pisteDepuisNiveau } from "./eligibility-pistes.js";
+import { langueParlee } from "./niveaux-langue.js";
 
 /** Les huit paliers, dans l'ordre du questionnaire, avec leur identifiant. */
 export const PALIERS = NIVEAUX_ACTUELS.map((n) => ({
@@ -271,60 +272,37 @@ return estSecondaire(palierId) ? "nouveau_bachelier" : "en_cours";
 }
 
 // ============================================================
-// LE TEST DE LANGUE (partie 3 — décision du 2026-09-10)
+// LE TEST DE LANGUE A DÉMÉNAGÉ (lot R17, 2026-09-18)
 // ============================================================
 //
-// `profile.testLangue` : { nature, score, date, prevuLe }. « Pas encore
-// passé, date prévue » est un état LÉGITIME (celui de la plupart des
-// candidats). Aucune règle d'exigence ici : on enregistre, on n'invente
-// pas de barème.
-
-export const TESTS_DE_LANGUE = [
-{ id: "TCF", label: "TCF" },
-{ id: "TCF-DAP", label: "TCF-DAP" },
-{ id: "DELF", label: "DELF" },
-{ id: "DALF", label: "DALF" },
-{ id: "TEF", label: "TEF" },
-{ id: "IELTS", label: "IELTS" },
-{ id: "TOEFL", label: "TOEFL" },
-{ id: "Duolingo", label: "Duolingo English Test" },
-{ id: "aucun", label: "Aucun test pour l'instant" }
-];
-
-const IDS_TESTS = new Set(TESTS_DE_LANGUE.map((t) => t.id));
-
-/** Lecture tolérante : toujours les quatre clés, toujours des chaînes. */
-export function lireTestLangue(profile) {
-const t = profile && typeof profile === "object" && profile.testLangue && typeof profile.testLangue === "object" ? profile.testLangue : {};
-const nature = typeof t.nature === "string" && IDS_TESTS.has(t.nature) ? t.nature : "";
-const chaine = (v) => (typeof v === "string" ? v.trim() : "");
-return { nature, score: chaine(t.score), date: chaine(t.date), prevuLe: chaine(t.prevuLe) };
-}
-
-/** Phrase de lecture (fiche admin, prompts) — "" quand rien n'est renseigné. */
-export function phraseTestLangue(profile) {
-const t = lireTestLangue(profile);
-if (!t.nature) return "";
-if (t.nature === "aucun") return "Aucun test de langue pour l'instant";
-const nom = (TESTS_DE_LANGUE.find((x) => x.id === t.nature) || {}).label || t.nature;
-if (t.score || t.date) {
-return `${nom}${t.score ? ` : ${t.score}` : ""}${t.date ? ` (passé le ${t.date})` : ""}`;
-}
-if (t.prevuLe) return `${nom} prévu le ${t.prevuLe}`;
-return nom;
-}
+// TESTS_DE_LANGUE, lireTestLangue et phraseTestLangue vivent désormais
+// dans js/test-de-langue.js, avec les quatre ÉTATS de la question, la
+// langue de chaque test et la traduction vers `situationFrancais` —
+// parce que c'est un seul sujet, et qu'il était réparti entre ce
+// fichier, profile.js et l'étape 1 de la route. Aucune ré-exportation
+// n'est laissée ici : une seconde porte vers la même règle est
+// exactement la faute que ce lot paie.
+//
+// Les trois lecteurs ont suivi : profile.js, js/ai/prompts.js et
+// admin/student-detail.js.
 
 /**
 * Les langues du profil, lisibles. Deux formes cohabitent en base : des
 * chaînes (« français », anciens profils et harnais) et des objets
 * {code, level, name?} écrits par profile.js. Sans cette lecture, un
 * `join(", ")` donnait « [object Object] » à Fitz.
+*
+* LOT R16 (2026-09-18) : une langue cochée « Je ne parle pas cette
+* langue » est enregistrée `level: "aucun"` (js/niveaux-langue.js). Elle
+* est ÉCARTÉE ici : sans ce filtre, Fitz lisait « Anglais aucun » et
+* comptait l'anglais parmi les langues de l'étudiant — c'est-à-dire
+* l'inverse exact de ce qu'il venait de répondre.
 */
 const NOMS_LANGUES = { fr: "Français", en: "Anglais", es: "Espagnol", de: "Allemand", ar: "Arabe" };
 
 export function languesLisibles(languages) {
 if (!Array.isArray(languages)) return [];
-return languages.map((l) => {
+return languages.filter(langueParlee).map((l) => {
 if (typeof l === "string") return l.trim();
 if (!l || typeof l !== "object") return "";
 const nom = l.code === "autre" ? String(l.name || "").trim() : (NOMS_LANGUES[l.code] || String(l.code || "").trim());
