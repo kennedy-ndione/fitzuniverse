@@ -187,7 +187,10 @@ test("langage 5 — un seul fichier de définitions, et chaque terme est expliqu
 const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea", "espace-campus-france", "entretien-pedagogique",
 // Six termes ajoutés au lot R24, chacun adossé à un comptage sur les
 // huit pays : voir langage 16.
-"recepisse", "cedeao", "accreditation", "bts-dut-but", "iut", "traducteur-assermente"];
+"recepisse", "cedeao", "accreditation", "bts-dut-but", "iut", "traducteur-assermente",
+// Six termes du CÔTÉ BOURSE au lot R25, mesurés sur les 156 bourses
+// du catalogue : voir langage 17.
+"isee", "ispe", "parificato", "toefl-ielts", "gre-gmat-sat", "gpa"];
 assert.deepEqual(GLOSSAIRE.map((t) => t.id), attendus);
 for (const t of GLOSSAIRE) {
 const ex = typeof t.explication === "function" ? t.explication("x") : t.explication;
@@ -679,5 +682,133 @@ test("langage 16 — les mots comptés dans les citations sont au glossaire, et 
   for (const attendu of ["accreditation", "bts-dut-but", "traducteur-assermente"]) {
     assert.ok(vus.has(attendu), `« ${attendu} » n'est dit nulle part sur la route, alors qu'il y est écrit`);
   }
+
+});
+
+// ======================================================================
+// LOT R25 (2026-09-18) — LE GLOSSAIRE APPREND LES MOTS DU CÔTÉ BOURSE
+// ======================================================================
+//
+// Jusqu'ici la table avait été nourrie par la ROUTE : une seule
+// destination, donc des tests de français et un vocabulaire Campus
+// France. Le catalogue des bourses couvre le monde, et son texte a son
+// propre jargon, jamais mesuré. Balayage des 156 bourses (description,
+// generalCriteria, eligibility, funding, exigences), le 2026-09-18 :
+//
+//   ISEE        12 bourses     TOEFL / IELTS / TOEIC  11 bourses
+//   parificato  12 bourses     GRE / GMAT / SAT        4 bourses
+//   ISPE         3 bourses     GPA / CGPA              3 bourses
+//
+// ISEE DÉCIDE DE DOUZE BOURSES : « Conditions : ISEE <= 26 000 EUR ET
+// ISPE <= 56 000 EUR » est le critère d'attribution des bourses
+// régionales italiennes. Et « parificato » est le mot qui OUVRE ces
+// bourses à un étudiant africain : c'est la version de l'ISEE calculée
+// pour une famille dont les revenus sont à l'étranger. Sans lui,
+// l'étudiant croit le critère hors de sa portée.
+//
+// Vérifié au banc de la fiche publique le 2026-09-18, sur
+// sapienza-master : « une attestation ISEE (l'indicateur de revenus que
+// l'Italie utilise pour attribuer ses bourses) parificato (la version de
+// l'ISEE calculée quand les revenus de la famille sont à l'étranger) ».
+// 0 doublon, 0 erreur console.
+//
+// Preuves par mutation faites le 2026-09-18 :
+//   les six termes retirés du glossaire   -> langage 17 rouge ;
+//   « CAF » ajouté à la table             -> langage 17 rouge ;
+//   le drapeau i mis sur mot("GRE|GMAT|SAT") -> langage 17 rouge.
+
+test("langage 17 — les mots du catalogue des bourses sont au glossaire, et les homonymes en sont tenus dehors", async () => {
+
+  const { GLOSSAIRE, motsTechniques } = await import("../js/glossaire.js");
+  const NEUFS = ["isee", "ispe", "parificato", "toefl-ielts", "gre-gmat-sat", "gpa"];
+
+  for (const id of NEUFS) {
+    assert.ok(GLOSSAIRE.some((t) => t.id === id), `« ${id} » a quitté le glossaire`);
+  }
+
+  // LES FORMES RÉELLEMENT ÉCRITES DANS LE CATALOGUE sont reconnues.
+  for (const [forme, id] of Object.entries({
+    "ISEE": "isee", "ISPE": "ispe", "parificato": "parificato", "Parificato": "parificato",
+    "TOEFL": "toefl-ielts", "IELTS": "toefl-ielts", "TOEIC": "toefl-ielts",
+    "GRE": "gre-gmat-sat", "GMAT": "gre-gmat-sat", "SAT": "gre-gmat-sat",
+    "GPA": "gpa", "CGPA": "gpa"
+  })) {
+    const trouves = motsTechniques(`Le dossier demande un ${forme} récent.`).map((m) => m.id);
+    assert.ok(trouves.includes(id), `« ${forme} » n'est pas reconnu comme ${id}`);
+  }
+
+  // DEUX HOMONYMES SONT TENUS DEHORS, EXPRÈS.
+  //
+  // « CAF » : en France, la caisse d'allocations familiales. En Italie,
+  // le centre agréé qui établit l'ISEE. Deux bourses l'écrivent au sens
+  // italien — pas assez pour risquer d'expliquer « la CAF » à un
+  // étudiant qui lit le mot dans son sens français.
+  //
+  // « bando » : trois bourses l'écrivent dans une phrase, mais CINQ le
+  // portent dans leur TITRE (« Bando unico per i benefici regionali ») :
+  // on expliquerait un mot au milieu d'un nom propre.
+  for (const id of ["caf", "bando"]) {
+    assert.ok(!GLOSSAIRE.some((t) => t.id === id),
+      `« ${id} » est entré au glossaire : relire pourquoi il en avait été écarté (homonyme, ou mot de titre)`);
+  }
+
+  // ISEE ET ISPE SONT DEUX CHOSES, ET GARDENT DEUX EXPLICATIONS.
+  //
+  // Un revenu n'est pas un patrimoine. La phrase réelle du catalogue les
+  // met côte à côte — « Conditions : ISEE <= 26 000 EUR ET ISPE <=
+  // 56 000 EUR » — et un seul motif qui avalerait les deux ferait lire
+  // « ISPE (l'indicateur de revenus...) », ce qui est faux.
+  //
+  // Assertion écrite le 2026-09-18 APRÈS une mutation qui passait :
+  // élargir le motif d'ISEE en mot("IS[EP]E") ne rendait aucun test
+  // rouge. Une mutation qui passe est une assertion à écrire.
+  {
+    const deux = motsTechniques("Conditions : ISEE inférieur à 26 000 euros ET ISPE inférieur à 56 000 euros.");
+    assert.deepEqual(deux.map((m) => m.id), ["isee", "ispe"],
+      "ISEE et ISPE ne sont plus deux termes distincts : l'un des deux serait défini par l'explication de l'autre");
+    assert.notEqual(deux[0].explication, deux[1].explication,
+      "ISEE et ISPE partagent la même explication : un revenu n'est pas un patrimoine");
+    assert.match(deux[0].explication, /revenus?/i, "l'explication d'ISEE ne parle plus de revenus");
+    assert.match(deux[1].explication, /patrimoine/i, "l'explication d'ISPE ne parle plus de patrimoine");
+
+    // ET CHACUN SEUL DANS SA PHRASE. C'est là que la mutation mordait
+    // vraiment : élargi en mot("IS[EP]E"), le motif d'ISEE attrapait
+    // « ISPE » tout seul et lui collait l'explication des revenus. Dans
+    // la phrase où les deux mots voisinent, l'ordre de la table sauvait
+    // les apparences — l'assertion précédente passait donc à tort.
+    for (const [seul, attendu] of [["ISPE", "ispe"], ["ISEE", "isee"]]) {
+      const un = motsTechniques(`Le plafond d'${seul} est publié chaque année.`);
+      assert.deepEqual(un.map((m) => m.id), [attendu],
+        `« ${seul} » seul dans sa phrase est expliqué comme ${un.map((m) => m.id).join("/") || "rien"} : un motif déborde sur l'autre sigle`);
+    }
+  }
+
+  // « SAT », « GRE », « GMAT », « GPA » RESTENT SENSIBLES À LA CASSE :
+  // en minuscules ce sont des syllabes de mots français courants.
+  for (const phrase of ["Il sat sur le banc.", "Son gpa importe peu.", "un gre de sable"]) {
+    assert.equal(motsTechniques(phrase).length, 0,
+      `« ${phrase} » est annoté : un drapeau i est revenu sur un motif de sigle`);
+  }
+
+  // ET CES TERMES SONT BIEN DITS SUR LE CATALOGUE RÉEL. On mesure la
+  // RÈGLE — « un terme écrit en prose est expliqué » — pas un nombre de
+  // bourses, qui bougera au prochain ajout de Charles.
+  const cat = JSON.parse(lire("assets/data/catalogue.json"));
+  const CHAMPS = ["description", "generalCriteria", "eligibility", "funding", "exigences"];
+  const plat = (v) => Array.isArray(v) ? v.map(plat).join("\n")
+    : (v && typeof v === "object") ? Object.values(v).map(plat).join("\n") : String(v ?? "");
+
+  const dits = new Set();
+  for (const b of cat.scholarships || []) {
+    for (const m of motsTechniques(CHAMPS.map((c) => plat(b[c])).join("\n"))) dits.add(m.id);
+  }
+
+  // ISEE et parificato décident de l'attribution : s'ils ne sont plus
+  // dits, c'est que le catalogue ou le motif a changé, et il faut le voir.
+  for (const id of ["isee", "parificato"]) {
+    assert.ok(dits.has(id), `« ${id} » n'est plus expliqué sur aucune bourse du catalogue`);
+  }
+  assert.ok(NEUFS.filter((id) => dits.has(id)).length >= 4,
+    `seuls ${NEUFS.filter((id) => dits.has(id)).length} des six termes neufs se montrent sur le catalogue`);
 
 });

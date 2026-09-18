@@ -111,7 +111,60 @@ export const GLOSSAIRE = [
 { id: "accreditation", motif: mot("accréditations?", "i"), explication: "la reconnaissance officielle d'une formation par l'État" },
 { id: "bts-dut-but", motif: mot("BTS|DUT|BUT"), explication: "des diplômes courts et professionnels, deux ou trois ans après le bac" },
 { id: "iut", motif: mot("IUT"), explication: "un institut de technologie, rattaché à une université" },
-{ id: "traducteur-assermente", motif: mot("traducteurs? assermentés?", "i"), explication: "un traducteur reconnu par la justice, dont la traduction est officielle" }
+{ id: "traducteur-assermente", motif: mot("traducteurs? assermentés?", "i"), explication: "un traducteur reconnu par la justice, dont la traduction est officielle" },
+// LOT R25 (2026-09-18) — LES MOTS DU CÔTÉ BOURSE.
+//
+// Jusqu'ici le glossaire avait été nourri par la ROUTE : une seule
+// destination, la France, donc des tests de français et un vocabulaire
+// Campus France. Le catalogue des bourses, lui, couvre le monde — et
+// son texte a son propre jargon, jamais mesuré. Balayage des 156
+// bourses (description, generalCriteria, eligibility, funding,
+// exigences), le 2026-09-18 :
+//
+//   ISEE          12 bourses      TOEFL / IELTS / TOEIC  11 bourses
+//   parificato    12 bourses      GRE / GMAT / SAT        4 bourses
+//   ISPE           3 bourses      GPA / CGPA              3 bourses
+//
+// SEUIL : TROIS BOURSES. Sous ce compte, un terme n'entre pas — sinon
+// la table grossit par envie de compléter la liste, et chaque motif de
+// plus est un faux positif de plus à surveiller. Écartés à ce titre :
+// ECTS (2), TOPIK, JLPT, EJU, CEFR (1 ou 2 chacun).
+//
+// LIMITE MESURÉE, ET ASSUMÉE. Le glossaire ne pose jamais sa parenthèse
+// dans une parenthèse déjà ouverte (langage 5 bis) — « Licence (180
+// ECTS) » ne peut donc pas être annoté sans écrire une parenthèse dans
+// une parenthèse. Sur les termes retenus, cela coûte : TOEFL vu dans 9
+// bourses sur 11, GRE dans 2 sur 4, GPA dans 1 sur 3. ISEE, ISPE et
+// parificato, eux, sont vus dans 100 % des bourses qui les écrivent —
+// et ce sont les trois qui décident de l'attribution.
+//
+// ISEE DÉCIDE DE DOUZE BOURSES. « Conditions : ISEE <= 26 000 EUR ET
+// ISPE <= 56 000 EUR » est le critère d'attribution des bourses
+// régionales italiennes, et un étudiant sénégalais n'a aucune idée de
+// ce que le mot désigne. « parificato » est encore plus important : c'est
+// la version de l'ISEE que l'on calcule POUR UNE FAMILLE DONT LES
+// REVENUS SONT À L'ÉTRANGER. Sans ce mot, l'étudiant croit la bourse
+// hors de portée ; avec lui, elle lui est ouverte.
+//
+// Vérifié au banc de la fiche publique (_banc-fiche.html) : ces mots
+// vivent dans un <strong id="eligibilityLabel"> — une balise que
+// HORS_CHAMP n'écarte pas. Le glossaire les atteint.
+//
+// TROIS CANDIDATS ÉCARTÉS, et pourquoi :
+//   « bando »  3 bourses, mais CINQ bourses le portent dans leur TITRE
+//              (« Bando unico per i benefici regionali ») : on
+//              expliquerait un mot au milieu d'un nom propre ;
+//   « CAF »    2 bourses, et en France la CAF est la caisse
+//              d'allocations familiales — tout autre chose ;
+//   TOPIK, JLPT, EJU, CEFR : une ou deux bourses chacun, sous le seuil
+//              que ce glossaire s'est fixé — un terme se gagne par un
+//              comptage, pas par l'envie de compléter la liste.
+{ id: "isee", motif: mot("ISEE"), explication: "l'indicateur de revenus que l'Italie utilise pour attribuer ses bourses" },
+{ id: "ispe", motif: mot("ISPE"), explication: "l'indicateur du patrimoine de la famille, en Italie" },
+{ id: "parificato", motif: mot("parificato", "i"), explication: "l'ISEE calculé quand les revenus sont à l'étranger" },
+{ id: "toefl-ielts", motif: mot("TOEFL|IELTS|TOEIC"), explication: "un test officiel de niveau d'anglais" },
+{ id: "gre-gmat-sat", motif: mot("GRE|GMAT|SAT"), explication: "un examen d'admission standardisé, demandé surtout aux États-Unis" },
+{ id: "gpa", motif: mot("CGPA|GPA"), explication: "la moyenne générale, notée sur 4 dans le système américain" }
 ];
 
 // Le libellé de l'explication, pour le mot rencontré.
