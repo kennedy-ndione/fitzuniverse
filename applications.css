@@ -1381,7 +1381,23 @@ font-size:var(--fs-body-sm, .92rem);
 line-height:1.5;
 }
 
-/* La ligne d'état qui remplace « Nouvelle candidature ». */
+/* LE LIEN DE LA RÈGLE DOIT SE VOIR (lot R13, 2026-09-18).
+   Depuis ce lot, cet encart porte la SEULE indication de l'endroit où un
+   vœu se pose — « Ouvrir l'étape 3 ». Or le style de base du site est
+   a{text-decoration:none;color:inherit} : sans cette règle, le lien
+   s'afficherait dans le gris du texte, sans soulignement, au milieu d'un
+   paragraphe — invisible en tant que lien, et précisément pour
+   l'étudiant qui cherche son bouton disparu. Même couleur que les liens
+   d'encart du reste du site (.profile-pilote-note a). */
+.fitz-regle a{
+color:var(--amber-700);
+font-weight:600;
+text-decoration:underline;
+text-underline-offset:2px;
+}
+
+/* La ligne d'état de Fitz (elle a remplacé « Nouvelle candidature »,
+   retiré de la page au lot R13). */
 .fitz-choix-etat{
 display:flex;
 align-items:center;

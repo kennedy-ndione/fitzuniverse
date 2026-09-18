@@ -40,7 +40,16 @@ import { initShellChrome, bootstrapShell, applyFeatureLocks, isFeatureLocked } f
 import { trouverProcedure } from "./js/procedures/index.js";
 import { lireParcours, PAYS_PREINSCRIPTION } from "./js/parcours.js";
 import { formaterDate } from "./js/echeance.js";
-import { HORS_TOTAL } from "./js/diagnostic-france.js";
+// LE MONTANT VIENT DE js/diagnostic-france.js (lot R13, 2026-09-18).
+// Cette page avait sa propre `formatMontant` — la deuxième copie d'une
+// règle trouvée dans ce fichier après la date (lot R9). La fonction
+// partagée fait DEUX choses de plus, et les deux comptent : elle écrit
+// le dirham « Dhs » comme au Maroc et non « MAD », et elle donne deux
+// décimales à un euro (« 13 562,50 € » et non « 13 562,5 € »).
+// Les deux appels de cette page sont gardés par `typeof === "number"`,
+// vérifié avant le remplacement : la fonction partagée rendrait
+// « 0 F CFA » sur une valeur absente, la locale rendait "".
+import { HORS_TOTAL, formatMontant } from "./js/diagnostic-france.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
 import { slotIdLibre } from "./js/application-actions.js";
 import { boutonRecours } from "./js/fitz-recours.js";
@@ -77,12 +86,6 @@ function dateLongue(iso) {
 
 function aujourdhuiISO() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function formatMontant(montant, devise) {
-  if (typeof montant !== "number") return "";
-  const n = montant.toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g, " ");
-  return devise === "XOF" ? `${n} F CFA` : devise === "EUR" ? `${n} €` : `${n} ${devise || ""}`.trim();
 }
 
 function icones() {

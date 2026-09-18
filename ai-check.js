@@ -121,9 +121,16 @@ contextBanner.hidden = false;
 contextBanner.querySelector("span").textContent =
 `Cette vérification sera enregistrée dans le suivi de "${application.university}".`;
 
+// LE LIEN SECONDAIRE NE SORT PLUS DE LA ROUTE (lot R13, 2026-09-18).
+// Pour un vœu de préinscription, il menait à applications.html — la
+// page de l'espace BOURSES, avec son vieux formulaire. Or le lien de
+// retour de cette page dit déjà « Retour à l'étape 9 » et ramène à la
+// route : deux liens pour deux destinations différentes, dont une
+// mauvaise. On garde le bon, on retire l'autre.
 if (contextBackLink) {
-contextBackLink.href = `applications.html#${application.id}`;
-contextBackLink.hidden = false;
+const versLaRoute = parcoursDOutil({ espace: ctx.espace, application }) === "preinscription";
+contextBackLink.hidden = versLaRoute;
+if (!versLaRoute) contextBackLink.href = `applications.html#${application.id}`;
 }
 
 } else {

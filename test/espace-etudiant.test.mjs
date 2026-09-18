@@ -31,7 +31,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -562,18 +562,51 @@ assert.match(css, new RegExp(`\\.ai-toast-${type}\\{`), `type: "${type}" utilis�
 
 });
 
-test("bug 10 — le hub préinscription emporte l'établissement choisi", () => {
+// RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot R13, « une seule porte »).
+//
+// CE QUE CE TEST GARDAIT (2026-09-13) : les trois cartes du hub
+// préinscription menaient au même formulaire VIDE ; l'établissement et
+// le portail voyageaient donc dans l'URL, et applications.html les
+// pré-remplissait — avec une validation http(s) sur le portail, qui
+// finissait dans un href.
+//
+// POURQUOI LA RÈGLE N'EXISTE PLUS : le lot R13 ferme la seconde porte.
+// Un vœu se pose à l'étape 3 de la route, en trois champs, et son
+// portail y est FIXÉ (Études en France) — il n'y a plus de champ
+// « portail » à pré-remplir, donc plus rien à valider, donc plus rien à
+// faire voyager. Le formulaire de dix champs a été retiré.
+//
+// CE QU'ON GARDE À LA PLACE, et qui est plus dur : le lien de cette
+// branche doit mener à LA PORTE, et la raison pour laquelle la branche
+// est inoffensive doit rester vraie.
+test("bug 10 — le hub préinscription mène à la seule porte d'un vœu", () => {
 
-const hub = sansCommentaires(lire("dashboard.js"));
-const apps = sansCommentaires(lire("applications.js"));
+// LES GABARITS DE CE FICHIER PORTENT DES COMMENTAIRES HTML, à l'intérieur
+// de chaînes JS : `sansCommentaires` ne les voit pas, et l'un d'eux cite
+// justement le lien que ce test interdit. Même leçon qu'aux lots R11 et
+// R12 : un test qui interdit un MOT doit lire le code, pas la prose qui
+// explique pourquoi le mot est interdit.
+const codeSeul = (f) => sansCommentaires(lire(f)).replace(/<!--[\s\S]*?-->/g, "");
+const hub = codeSeul("dashboard.js");
+const apps = codeSeul("applications.js");
 
-// Trois propositions, trois liens identiques vers un formulaire vide :
-// le nom voyage maintenant dans l'URL, et le formulaire le lit.
-assert.match(hub, /action=new&universite=\$\{encodeURIComponent/, "le lien ne porte plus l'établissement");
-assert.match(apps, /params\.get\("universite"\)/, "le formulaire ne lit plus l'établissement transmis");
+// 1. Plus rien ne voyage vers l'ancien formulaire.
+assert.ok(!/action=new/.test(hub), "le hub lie encore le formulaire de création");
+assert.ok(!/prerempli|params\.get\("universite"\)|params\.get\("portail"\)/.test(apps),
+"applications.js lit encore un établissement ou un portail transmis");
 
-// Et un portail ne s'accepte qu'en http(s) : ce champ finit dans un href.
-assert.match(apps, /\^https\?:\\\/\\\/.*test\(prerempli\.portail\)/, "le portail transmis n'est plus validé");
+// 2. Le lien de la branche préinscription mène à l'étape 3.
+assert.match(hub, /const lien = preinscription \? "espace-preinscription\.html\?etape=voeux" : "applications\.html";/);
+
+// 3. ET LA RAISON POUR LAQUELLE CETTE BRANCHE EST INOFFENSIVE : un seul
+// fichier charge ce script, et il déclare l'espace bourses. Le jour où
+// une page préinscription le chargera, ce test tombera — et la branche
+// devra être traitée pour de bon, pas découverte à l'usage.
+const porteurs = readdirSync(RACINE)
+.filter((f) => f.endsWith(".html"))
+.filter((f) => /<script[^>]+src="\.?\/?dashboard\.js"/.test(lire(f)));
+assert.deepEqual(porteurs, ["espace-bourse.html"], `dashboard.js est chargé par ${porteurs.join(", ")}`);
+assert.match(lire("espace-bourse.html"), /<body data-espace="bourse">/);
 
 });
 
@@ -1153,12 +1186,18 @@ assert.match(balisage, /liens\.map\(/,
 assert.ok(!/portailUniversite\(|portailBourse\(|officialWebsite/.test(balisage),
 "un portail est résolu dans le gabarit : la décision doit rester dans js/portails-opportunite.js");
 
-// Le lien d'action emporte le portail RÉSOLU, pas `pick.applicationUrl`
-// qui est vide depuis que les portails ont quitté le catalogue.
-assert.ok(!/portail=\$\{encodeURIComponent\(pick\.applicationUrl/.test(hub),
-"le formulaire de vœu reçoit de nouveau un portail vide");
-assert.match(hub, /portailPourLeVoeu/,
-"le portail d'admission résolu n'est plus transmis au formulaire de vœu");
+// RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot R13). Ces deux assertions
+// gardaient le portail TRANSMIS au formulaire de vœu : il partait vide
+// (`pick.applicationUrl`, vidé au lot S3), on passait donc le portail
+// d'admission résolu. Le lot R13 supprime le formulaire : un vœu se pose
+// à l'étape 3, où le portail est FIXÉ (Études en France). Il n'y a plus
+// de portail à transmettre — et en transmettre un serait rouvrir la
+// seconde porte. On garde donc la règle à l'envers : le hub ne fabrique
+// plus aucune URL de création.
+assert.ok(!/portail=\$\{encodeURIComponent/.test(hub),
+"le hub transmet de nouveau un portail à un formulaire de création");
+assert.ok(!/universite=\$\{encodeURIComponent/.test(hub),
+"le hub transmet de nouveau un établissement à un formulaire de création");
 
 });
 

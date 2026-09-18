@@ -255,9 +255,21 @@ assert.equal(placesAFitz(1), 1);
 assert.equal(placesAFitz(0), 0);
 assert.equal(placesAFitz(null), 0);
 assert.equal(placesAFitz(undefined), 0);
-// Et le bouton « Nouvelle candidature » n'existe plus que pour la préinscription.
 const js = lire("applications.js");
-assert.match(js, /const creationManuelle = ESPACE_ECRITURE === "preinscription";/);
+
+// RÉÉCRIT EN CONSCIENCE le 2026-09-18 (lot R13, « une seule porte »).
+// Cette assertion gardait la règle du lot FITZ-CHOISIT : l'espace
+// bourses n'a pas de création manuelle, le bouton « Nouvelle
+// candidature » ne reste que pour la préinscription. Le lot R13 ferme
+// aussi la porte de la préinscription — un vœu se pose à l'étape 3 de
+// la route — donc le bouton n'existe plus pour PERSONNE, et la variable
+// `creationManuelle` qui était pinée ici a disparu avec lui.
+// La règle de CE test (pas de création manuelle côté bourses) n'a pas
+// changé : elle est seulement devenue un cas particulier d'une règle
+// plus forte, qu'on vérifie donc un cran plus haut. Le détail du lot
+// R13 est gardé par test/une-seule-porte.test.mjs.
+assert.ok(!/addApplicationBtn/.test(js), "un bouton de création manuelle est revenu dans applications.js");
+assert.ok(!/openModal\(null\)/.test(js), "un appel crée encore une candidature à la main");
 // RÉÉCRIT EN CONSCIENCE le 2026-09-13 (lot ESPACE-ÉTUDIANT).
 // Cette assertion photographiait l'EXPRESSION —
 // `placesAFitz(plan ? plan.maxAccompaniedApplications : null)` — et non

@@ -544,7 +544,8 @@ return;
 // n'ouvre plus rien depuis le lot FITZ-CHOISIT (c'est Fitz qui remplit
 // les places) : trois boutons différents produisaient le même écran, et
 // aucun ne faisait ce qu'il annonçait. Côté préinscription, l'étudiant
-// choisit vraiment : le lien emporte alors l'établissement.
+// choisit vraiment : depuis le lot R13, son lien mène à l'étape 3 de la
+// route, la seule porte d'un vœu.
 const preinscription = quotaCtx && quotaCtx.espace === "preinscription";
 
 // L'ACCÈS AUX PORTAILS EST UNE DONNÉE PAYANTE.
@@ -593,17 +594,22 @@ funderName: bourse ? bourse.funderName : "",
 abonne
 });
 
-// LE LIEN D'ACTION EMPORTE LE VRAI PORTAIL.
-// Il emportait `pick.applicationUrl`, vide depuis le lot S3 : le champ
-// « portail » du formulaire de vœu arrivait donc toujours vide. C'est
-// le portail d'admission résolu qu'il faut passer.
-const portailPourLeVoeu = (liens.find((l) => l.cle === "admission") || {}).url || "";
+// LE LIEN D'ACTION MÈNE À LA SEULE PORTE (lot R13, 2026-09-18).
+//
+// Il emportait l'établissement et le portail vers
+// `applications.html?action=new`, qui les pré-remplissait dans un
+// formulaire de dix champs. Ce formulaire n'existe plus : un vœu se pose
+// à l'étape 3 de la route, en trois champs, et son portail y est FIXÉ
+// (Études en France) — le passer dans l'URL n'aurait plus de sens.
+//
+// CETTE BRANCHE N'EST PLUS ATTEINTE : depuis le lot S4, un seul fichier
+// charge ce script — espace-bourse.html, `data-espace="bourse"` — donc
+// `preinscription` y est toujours faux. On la garde VRAIE plutôt que de
+// la retirer dans un lot qui ne touche pas au hub des bourses : si elle
+// revit un jour, elle mènera à la porte unique, pas à la seconde.
+const lien = preinscription ? "espace-preinscription.html?etape=voeux" : "applications.html";
 
-const lien = preinscription
-? `applications.html?action=new&universite=${encodeURIComponent(pick.universityName || "")}&portail=${encodeURIComponent(portailPourLeVoeu)}`
-: "applications.html";
-
-const libelle = preinscription ? "Ajouter ce vœu" : "Voir cette proposition";
+const libelle = preinscription ? "Poser ce vœu à l'étape 3" : "Voir cette proposition";
 
 return `
 <article class="jy-card jy-opp" style="margin-bottom:0;">
@@ -674,7 +680,9 @@ const mot = motDeLaPlace(espace);
 wrap.innerHTML = applications.length
 ? ""
 : espace === "preinscription"
-? `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Choisissez un établissement en phase 02, puis <a href="applications.html?action=new">suivez votre premier ${mot}</a>.</div>`
+// Lot R13 : la création vit à l'étape 3 de la route, plus sur
+// applications.html. (Branche non atteinte, voir renderOpportunites.)
+? `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Choisissez un établissement en phase 02, puis <a href="espace-preinscription.html?etape=voeux">posez votre premier ${mot}</a>.</div>`
 : `<div class="jy-card jy-empty">Aucun dossier en préparation pour l'instant. Fitz remplit vos places dès que votre profil lui permet de choisir — <a href="applications.html">ouvrez vos candidatures</a> pour voir ses propositions.</div>`;
 
 return;
@@ -801,7 +809,12 @@ ${refus.map((app) => `<li><i data-lucide="corner-up-right"></i><span><strong>${e
 <p class="jy-opp-reason"><i data-lucide="target"></i><span>${opportunitesCount > 0 ? `${opportunitesCount} autre${opportunitesCount > 1 ? "s" : ""} opportunité${opportunitesCount > 1 ? "s" : ""} du catalogue correspond${opportunitesCount > 1 ? "ent" : ""} à votre profil — vos lettres, traductions et relevés sont réutilisables tout de suite.` : "Le catalogue s'enrichit chaque semaine — votre dossier déjà constitué est réutilisable tout de suite."}</span></p>
 <div class="jy-tools">
 <a href="#phase-opportunites" class="jy-btn"><i data-lucide="compass"></i><span>Voir mes autres opportunités</span></a>
-<a href="applications.html?action=new" class="jy-tool"><i data-lucide="plus"></i><span>Lancer une nouvelle candidature</span></a>
+<!-- Lot R13 (2026-09-18) : « Lancer une nouvelle candidature » menait à
+applications.html?action=new. Dans cet espace, c'est Fitz qui remplit les
+places depuis le lot FITZ-CHOISIT : le paramètre n'ouvrait donc RIEN, et
+le bouton promettait un écran qui ne venait jamais. Les propositions de
+Fitz sont le lien d'à côté ; celui-ci mène à la liste. -->
+<a href="applications.html" class="jy-tool"><i data-lucide="list-checks"></i><span>Ouvrir mes candidatures</span></a>
 </div>
 </div>`);
 }

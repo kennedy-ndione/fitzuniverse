@@ -166,11 +166,14 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 </div>
 
-<!-- Lot FITZ-CHOISIT (2026-09-11) : dans l'espace bourses, c'est Fitz
-qui choisit. La règle est dite en tête (#fitzRegle, le même littéral
-qu'offers.html et payment.html), et la ligne d'état (#fitzChoixEtat)
-remplace le bouton « Nouvelle candidature » — qui ne reste que pour la
-préinscription (vœux saisis à la main). applications.js décide. -->
+<!-- Lot FITZ-CHOISIT (2026-09-11), révisé au lot R13 (2026-09-18) :
+cette page ne CRÉE plus rien, dans aucun des deux espaces. Côté
+bourses, c'est Fitz qui choisit (ligne d'état #fitzChoixEtat) ; côté
+préinscription, un vœu se pose à l'étape 3 de la route, en trois
+champs. #fitzRegle dit laquelle des deux règles s'applique, et le
+bouton « Nouvelle candidature » a été retiré : applications.js ne le
+montrait plus, et un bouton caché que rien ne montre finit par être
+rebranché par erreur. -->
 <p class="fitz-regle" id="fitzRegle" hidden></p>
 
 <div class="apps-toolbar">
@@ -182,16 +185,12 @@ définitif : le bouton demande confirmation. -->
 <i data-lucide="check-check"></i>
 <span>J'accepte les choix de Fitz</span>
 </button>
-<button type="button" class="btn btn-primary" id="addApplicationBtn" hidden>
-<i data-lucide="plus"></i>
-<span>Nouvelle candidature</span>
-</button>
 </div>
 
 <div id="applicationsEmpty" class="apps-empty" hidden>
 <div class="apps-empty-icon"><i data-lucide="list-checks"></i></div>
 <h3>Aucune candidature suivie pour l'instant</h3>
-<p>Dans le parcours bourses, Fitz choisit vos universités dès qu'il connaît votre profil ; en préinscription, ajoutez vos vœux ici.</p>
+<p>Dans le parcours bourses, Fitz choisit vos universités dès qu'il connaît votre profil ; en préinscription, vos vœux se posent à l'étape 3 de votre route.</p>
 </div>
 
 <div id="applicationsList" class="apps-list"></div>

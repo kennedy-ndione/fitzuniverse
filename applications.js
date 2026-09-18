@@ -1278,8 +1278,12 @@ saveBtn.disabled = false;
 
 } else {
 
-// Création : saisie manuelle — seule la préinscription y arrive encore
-// (le bouton n'existe plus dans l'espace bourses).
+// Création : saisie manuelle. PLUS AUCUN APPEL N'ARRIVE ICI depuis le
+// lot R13 (2026-09-18) : la préinscription pose ses vœux à l'étape 3 de
+// la route, l'espace bourses laisse Fitz remplir ses places. La branche
+// reste pour le jour où l'espace bourses rouvrira une création à la
+// main ; elle n'est pas un chemin vivant, et ne doit pas être lue
+// comme tel.
 enterManualMode();
 
 }
@@ -2574,15 +2578,37 @@ await loadApplications();
 // ACCEPTATION, partie 0 : Signature (sans plafond) ne l'a plus non plus —
 // les règles refusent sa création manuelle depuis FITZ-CHOISIT, et Fitz
 // lui remplit 12 places (seedRecommendedSlots).
-const addBtn = document.getElementById("addApplicationBtn");
-const creationManuelle = ESPACE_ECRITURE === "preinscription";
-if (addBtn) {
-addBtn.hidden = !creationManuelle;
-addBtn.addEventListener("click", () => openModal(null));
-}
+// LA ROUTE EST LA SEULE PORTE D'UN VŒU (lot R13, 2026-09-18).
+//
+// Le bouton « Nouvelle candidature » ne restait que pour la
+// préinscription — c'était donc, depuis la refonte, la SECONDE façon de
+// créer un vœu, avec son vieux formulaire de dix champs (bourse,
+// statut, date, fréquence, notes, portail facultatif…) à côté des TROIS
+// champs de l'étape 3 : établissement, formation, niveau. Deux portes,
+// deux formes de vœu, et un portail facultatif qui pouvait naître vide
+// — ce qui faisait taire toute la procédure pour ce vœu.
+//
+// Ce dépôt a déjà payé trois fois le prix des deux chemins (lots R5, R6
+// et R7 : la lettre qui partait pour la Chine, l'étape 13 sans son vœu,
+// le sélecteur qui proposait l'autre espace). On ferme la seconde porte
+// au lieu d'attendre la quatrième.
+//
+// La page reste ENTIÈRE pour l'espace bourses, dont elle est le
+// gestionnaire de candidatures ; elle reste lisible en préinscription
+// (la liste, les détails) — seule la CRÉATION s'en va, vers l'étape 3.
+// Le bouton « Nouvelle candidature » est retiré de applications.html :
+// un bouton caché que rien ne montre jamais est le piège que ce lot
+// ferme — la prochaine passe l'aurait cru vivant.
 document.getElementById("accepterToutBtn")?.addEventListener("click", accepterTout);
 const regle = document.getElementById("fitzRegle");
-if (regle) { regle.hidden = ESPACE_ECRITURE === "preinscription"; regle.textContent = PHRASE_REGLE; }
+if (regle) {
+regle.hidden = false;
+if (ESPACE_ECRITURE === "preinscription") {
+regle.innerHTML = 'Vos vœux se posent dans votre route, à l\'étape 3 — l\'établissement, la formation, le niveau, et Fitz s\'occupe du reste. Cette page vous les montre, elle ne les crée plus. <a href="espace-preinscription.html?etape=voeux">Ouvrir l\'étape 3</a>';
+} else {
+regle.textContent = PHRASE_REGLE;
+}
+}
 document.getElementById("applicationModalClose").addEventListener("click", closeModal);
 document.getElementById("applicationCancelBtn").addEventListener("click", closeModal);
 
@@ -2601,61 +2627,35 @@ if (event.target === modal) closeModal();
 function maybeAutoOpenNewApplication() {
 
 const params = new URLSearchParams(window.location.search);
+
+// LOT R13 : un vieux lien `?action=new` — un signet, un message, une
+// page pas encore rejouée — n'ouvre plus le formulaire de dix champs à
+// un étudiant en préinscription. Il est renvoyé à son étape 3, où le
+// vœu se pose en trois champs. Les liens de `js/fitz-choisit.js`
+// (après paiement d'un Dossier France) mènent déjà là ; celui-ci ferme
+// le dernier passage.
+if (ESPACE_ECRITURE === "preinscription" && params.get("action") === "new") {
+window.location.replace("espace-preinscription.html?etape=voeux");
+return;
+}
+
 const shouldOpen = params.get("action") === "new";
-// Grille B : payment.js renvoie ici avec ?track=preinscription après un
-// achat Dossier France — le formulaire s'ouvre hors catalogue, parcours
-// pré-rempli (le select du lot A).
-// L'ESPACE COMMANDE LE PARCOURS, PAS L'URL.
-// `?track=preinscription` ne vient que de payment.js ; les cartes du hub
-// (dashboard.js) n'en mettent pas. Sans ce repli sur ESPACE_ECRITURE, un
-// client dans son espace préinscription ouvrait le formulaire en mode
-// BOURSE : le pré-remplissage ne partait jamais, et c'est le quota des
-// bourses qui décidait s'il avait le droit d'ouvrir le formulaire — un
-// client des deux, ses places bourse pleines, se voyait refuser un vœu.
-const track = (params.get("track") === "preinscription" || ESPACE_ECRITURE === "preinscription")
-? "preinscription" : "bourse";
 
-// LE HUB PRÉINSCRIPTION EMPORTE L'ÉTABLISSEMENT CHOISI.
-// Les cartes de la phase 02 menaient toutes au même formulaire VIDE :
-// trois propositions différentes, trois liens identiques, et à l'arrivée
-// un champ « Université » à retaper à la main depuis une page qu'on
-// venait de quitter. Le nom et le portail voyagent maintenant dans
-// l'URL (dashboard.js, renderOpportunites) — côté préinscription
-// seulement : côté bourses, c'est Fitz qui choisit, il n'y a rien à
-// pré-remplir.
-const prerempli = {
-universite: (params.get("universite") || "").slice(0, 200),
-portail: (params.get("portail") || "").slice(0, 500)
-};
-
+// PLUS AUCUNE CRÉATION MANUELLE ICI (lot R13, 2026-09-18).
+//
+// Cette fonction ouvrait le formulaire de dix champs et le pré-remplissait
+// avec l'établissement et le portail passés dans l'URL par les cartes du
+// hub préinscription. Depuis la refonte, un vœu se pose à l'étape 3 de la
+// route, en trois champs, et le portail y est fixé — pas facultatif. Le
+// bloc de pré-remplissage était donc devenu inatteignable : on le retire
+// plutôt que de le laisser derrière un `return`, où la prochaine passe
+// l'aurait cru vivant.
+//
+// Ce qui reste utile : nettoyer l'URL, pour qu'un rechargement ou un lien
+// partagé ne rejoue pas `?action=new`.
 if (!shouldOpen) return;
 
 window.history.replaceState({}, "", window.location.pathname);
-
-// Lot FITZ-CHOISIT : dans l'espace bourses, il n'y a plus de création
-// manuelle — Fitz remplit les places à l'ouverture de la page. Le
-// ?action=new de Premier Dossier (payment.js) n'ouvre donc plus rien ;
-// il reste utile à la préinscription.
-if (!creationManuelle) return;
-
-if (isQuotaReached(quotaPour(track), candidaturesDuParcours(track, applications).length)) return;
-
-openModal(null);
-
-// Un dossier de préinscription se saisit hors catalogue : le catalogue
-// des bourses n'a rien à proposer à quelqu'un qui finance ses études.
-// openModal(null) appelle déjà enterManualMode() : le rappeler ici ne
-// ferait que vider une deuxième fois les champs qu'on va remplir.
-if (estPreinscription(track) && peutPreinscription) {
-
-// enterManualMode() (via openModal) vide les champs du catalogue : le
-// pré-remplissage vient APRÈS, sinon il serait effacé dans la foulée.
-if (prerempli.universite) fields.university.value = prerempli.universite;
-// Un portail ne s'accepte qu'en http(s) : l'URL est publique, et ce
-// champ finit dans un href.
-if (/^https?:\/\//i.test(prerempli.portail)) fields.portalUrl.value = prerempli.portail;
-
-}
 
 }
 

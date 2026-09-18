@@ -244,7 +244,13 @@ colonne préinscription au milieu du parcours bourse. -->
 <div class="jy-phase-actions">
 <a href="universities.html" class="jy-btn"><i data-lucide="landmark"></i><span>Explorer les universités</span></a>
 <a href="scholarships.html" class="jy-btn"><i data-lucide="graduation-cap"></i><span>Explorer les bourses</span></a>
-<span data-feature="applications"><a href="applications.html?action=new" data-real-href="applications.html?action=new" class="jy-btn jy-btn--primary"><i data-lucide="plus"></i><span>Suivre une candidature</span><i class="jy-lock" data-lucide="lock"></i></a></span>
+<!-- Lot R13 (2026-09-18) : ce bouton disait « Suivre une candidature »
+et menait à applications.html?action=new. Dans CET espace, c'est Fitz
+qui remplit les places depuis le lot FITZ-CHOISIT : le paramètre
+n'ouvrait aucun formulaire, et le seul écran qui venait était la liste.
+Le bouton dit maintenant ce qu'il fait. `data-real-href` doit rester
+identique au href (js/app-shell.js le remet en place au déverrouillage). -->
+<span data-feature="applications"><a href="applications.html" data-real-href="applications.html" class="jy-btn jy-btn--primary"><i data-lucide="list-checks"></i><span>Ouvrir mes candidatures</span><i class="jy-lock" data-lucide="lock"></i></a></span>
 <a href="diagnostic-france.html" class="jy-btn" id="jyDiagnosticFranceBtn"><i data-lucide="calculator"></i><span>Diagnostic France</span></a>
 </div>
 </section>
