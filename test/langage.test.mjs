@@ -23,7 +23,7 @@
 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -32,14 +32,18 @@ import { COUCHES } from "../js/procedures/residences/index.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
+// Sans les commentaires : les modules de ce dépôt racontent le défaut
+// qu'ils corrigent, et citent donc les tournures qu'ils interdisent.
+const codeSeul = (f) => lire(f)
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/^\s*\/\/.*$/gm, "")
+  .replace(/<!--[\s\S]*?-->/g, "");
 
 // Les pages publiques : celles qu'un visiteur ouvre sans compte.
 export const PAGES_PUBLIQUES = [
 "index.html", "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html",
-"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html",
-// Lot LÉGAL (2026-09-17)
-"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"
+"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html"
 ];
 
 // Le texte VISIBLE d'une page : sans commentaires, scripts, styles, head.
@@ -132,8 +136,7 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = ["scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html",
-"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"];
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
 
 test("langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire", () => {
 for (const page of PAGES_SANS_PIED) {
@@ -155,13 +158,19 @@ assert.ok(/footer-photo-feature/.test(composant));
 for (const libelle of ["Légal", "Mentions légales", "Conditions de vente", "Confidentialité", "Contact"]) {
 assert.ok(composant.includes(libelle), `colonne Légal : « ${libelle} » manque`);
 }
-// Lot LÉGAL (2026-09-17) : les liens légaux mènent aux vraies pages,
-// plus à la page « bientôt disponible ».
-assert.ok(!/bientot\.html/.test(composant), "un lien légal mène encore à la page « bientôt disponible »");
-for (const page of ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"]) {
-assert.ok(composant.includes(`["${page}", `), `colonne Légal : lien vers ${page} manquant`);
-assert.ok(existsSync(path.join(RACINE, page)), `${page} absente`);
+// LES QUATRE PAGES LÉGALES EXISTENT (constaté le 2026-09-18).
+// L'assertion exigeait ici quatre « bientot.html?page= » — l'adresse
+// d'attente du temps où elles n'existaient pas — avec pour message
+// « les liens légaux mènent à la page bientôt disponible », comme si
+// c'était le but. Elles sont écrites depuis : la colonne doit pointer
+// LES PAGES, et l'assertion pinne désormais cela. Leur existence sur le
+// disque est le travail de test/liens.test.mjs, qui vérifie chaque href
+// interne du site.
+for (const cible of ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"]) {
+assert.ok(composant.includes(`"${cible}"`), `colonne Légal : le lien vers ${cible} manque`);
 }
+assert.ok(!/bientot\.html\?page=/.test(composant),
+"la colonne Légal est revenue à l'adresse d'attente, alors que ses quatre pages existent");
 assert.ok(/css\/pied-de-page\.css/.test(composant), "le composant charge sa feuille");
 assert.ok(existsSync(path.join(RACINE, "css/pied-de-page.css")));
 // Le CSS n'est plus dans homepage-sections.css (une seule source).
@@ -369,5 +378,111 @@ assert.match(details, /Voir la procédure : \$\{nom\}/,
 const repli = (html.match(/<span id="procedureLabel">([^<]*)<\/span>/) || [])[1] || "";
 assert.ok(repli.trim(), "le repli est vide");
 assert.ok(!/portail/i.test(repli), `le repli « ${repli} » parle encore de portail`);
+
+});
+// ======================================================================
+// LOT R21 (2026-09-18) — LE GLOSSAIRE ÉCLAIRAIT LA VITRINE, PAS L'ATELIER
+// ======================================================================
+//
+// Charles, le 2026-09-18 : « faudra revérifier dans le site que tout est
+// facile à comprendre pour un ressortissant africain, côté bourse comme
+// préinscription ».
+//
+// MESURÉ SUR LE SITE DÉPLOYÉ, sur le texte réellement rendu — pas lu
+// dans le code : « portail », « Études en France », « préinscription » et
+// « vœux » apparaissaient SANS explication sur la route comme sur « Mes
+// candidatures ». Le glossaire existait pourtant depuis le lot LANGAGE ;
+// il était lancé par js/pied-de-page.js (les pages publiques) et par
+// js/glossaire-seul.js (les pages publiques sans pied de page). AUCUNE
+// page de l'espace étudiant ne chargeait l'un ou l'autre.
+//
+// Autrement dit : les mots techniques étaient expliqués dans la vitrine,
+// et laissés nus dans l'atelier — là où ils décident de quelque chose,
+// et juste après que l'étudiant a payé.
+//
+// Preuves par mutation faites le 2026-09-18 :
+//   le lancement retiré de js/app-shell.js → langage 9 rouge ;
+//   .glossaire-def remis dans css/pied-de-page.css seul → langage 10 ;
+//   le registre remis sur le document (__glossaireVus) → langage 11 ;
+//   data-sans-glossaire retiré du texte officiel → langage 12.
+
+test("langage 9 — le glossaire tourne aussi dans l'espace étudiant", () => {
+
+  const shell = lire("js/app-shell.js");
+
+  // UN SEUL endroit pour tout l'espace : initShellChrome() est appelé par
+  // les quinze pages connectées. Lancer le glossaire page par page aurait
+  // été quinze occasions d'en oublier une.
+  assert.match(shell, /import\("\.\/glossaire\.js"\)/,
+    "js/app-shell.js ne charge pas le glossaire : l'espace étudiant reste sans explications");
+  assert.match(shell, /surveillerTermes\(document\.querySelector\("main"\) \|\| document\.body\)/,
+    "le glossaire n'est pas surveillé sur <main> : soit il ne suit pas les repeints, soit il annote la barre latérale");
+
+  // Le lancement vit DANS initShellChrome, pas ailleurs dans le fichier.
+  const corps = shell.slice(shell.indexOf("export function initShellChrome()"));
+  assert.ok(corps.includes('import("./glossaire.js")'),
+    "le glossaire est chargé hors de initShellChrome : les pages qui n'appellent que cette fonction ne l'auraient pas");
+
+  // Et la version publique n'a pas été perdue au passage.
+  assert.match(lire("js/pied-de-page.js"), /surveillerTermes/, "les pages publiques ont perdu leur glossaire");
+
+});
+
+test("langage 10 — le style de l'explication est chargé par TOUTES les pages", () => {
+
+  // LE PIÈGE DE LA SEMAINE, quatrième fois : une règle qui ne s'applique
+  // à rien et ne proteste jamais (liens sans soulignement aux lots R13,
+  // R14 et B2 ; largeur du sélecteur au lot B5 ; cases à cocher au lot
+  // R19). `.glossaire-def` vivait dans css/pied-de-page.css, que
+  // js/pied-de-page.js charge lui-même — donc seulement là où il y a un
+  // pied de page. Les explications de l'espace étudiant s'y seraient
+  // affichées sans style.
+  assert.match(lire("css/base.css"), /\.glossaire-def\{/,
+    "le style de l'explication n'est pas dans css/base.css");
+  assert.ok(!/\.glossaire-def\{/.test(lire("css/pied-de-page.css")),
+    "deux définitions du même style : la seconde dérivera de la première");
+
+  // css/base.css est bien la feuille que tout le monde charge.
+  const pages = readdirSync(RACINE).filter((f) => f.endsWith(".html") && !f.startsWith("_"));
+  const sans = pages.filter((f) => !lire(f).includes("css/base.css"));
+  assert.deepEqual(sans, [], `ces pages ne chargent pas css/base.css : ${sans.join(", ")}`);
+
+});
+
+test("langage 11 — le registre des termes expliqués se lit dans le DOM", () => {
+
+  const g = codeSeul("js/glossaire.js");
+
+  // MESURÉ AU BANC : le registre vivait sur le document. L'espace
+  // étudiant se REDESSINE (la route repeint ses quinze étapes, les cartes
+  // de candidature se reconstruisent) : l'explication partait avec le
+  // contenu et ne revenait jamais, le registre la croyant encore là.
+  assert.ok(!/__glossaireVus/.test(g),
+    "le registre est de nouveau gardé sur le document : une explication effacée par un repeint ne reviendra pas");
+  assert.match(g, /cible\.querySelectorAll\("\.glossaire-def\[data-terme\]"\)/,
+    "le registre ne se déduit pas des explications présentes dans la cible");
+
+  // Et l'explication reste reconnaissable pour que ce compte marche.
+  assert.match(g, /span\.className = "glossaire-def"/);
+  assert.match(g, /span\.setAttribute\("data-terme", ins\.id\)/);
+
+});
+
+test("langage 12 — un texte présenté comme officiel ne porte jamais nos parenthèses", () => {
+
+  const route = codeSeul("espace-preinscription.js");
+
+  // La route affiche « Le texte officiel : "…" » avec sa source et sa
+  // date. Le glossaire annoterait ce paragraphe comme un autre : le site
+  // citerait alors un texte officiel dans lequel NOS explications se sont
+  // glissées. Une citation reste une citation.
+  const bloc = route.slice(route.indexOf("Le texte officiel"), route.indexOf("Le texte officiel") + 400);
+  assert.match(bloc, /<p data-sans-glossaire>\$\{ech\(o\.consigne\)\}<\/p>/,
+    "le texte officiel de la route n'est plus à l'abri du glossaire");
+
+  // L'attribut est celui que le glossaire connaît déjà — pas un second
+  // système inventé pour l'occasion.
+  assert.match(codeSeul("js/glossaire.js"), /\[data-sans-glossaire\]/,
+    "js/glossaire.js ne reconnaît pas data-sans-glossaire");
 
 });

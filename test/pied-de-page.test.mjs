@@ -33,10 +33,13 @@ export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = [
 "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html",
-// Lot LÉGAL (2026-09-17) : les quatre pages légales suivent la même règle.
-"mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"
 ];
+
+const codeSeul = (f) => lire(f)
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/^\s*\/\/.*$/gm, "")
+  .replace(/<!--[\s\S]*?-->/g, "");
 
 const chargePied = (html) => /pied-de-page\.(js|css)/.test(visible(html));
 
@@ -59,9 +62,17 @@ for (const page of toutes) {
 if (PAGES_AVEC_PIED.includes(page)) continue;
 assert.ok(!chargePied(lire(page)), `${page} : charge le pied de page sans être dans la liste « avec »`);
 }
-// L'espace étudiant ne l'importe pas.
-assert.ok(!/pied-de-page/.test(lire("js/app-shell.js")));
-assert.ok(!/pied-de-page/.test(lire("js/dual-shell.js")));
+// L'espace étudiant ne l'IMPORTE pas.
+//
+// Lu SANS LES COMMENTAIRES depuis le lot R21 (2026-09-18) : le shell de
+// l'espace lance désormais le glossaire et explique, en commentaire,
+// qu'il ne le tient PAS de js/pied-de-page.js. La règle porte sur le
+// code — un import, un chemin de script — pas sur la prose qui
+// l'entoure. Chercher la chaîne dans le fichier entier rendait le test
+// rouge pour un commentaire juste.
+for (const module of ["js/app-shell.js", "js/dual-shell.js"]) {
+assert.ok(!/pied-de-page/.test(codeSeul(module)), `${module} importe le pied de page`);
+}
 });
 
 test("pied-de-page 3 — le bandeau d'entrée du questionnaire est toujours là", () => {
@@ -105,9 +116,19 @@ const autre = lire(`css/${f}`).replace(/\/\*[\s\S]*?\*\//g, "");
 assert.ok(!/^\.footer\{/m.test(autre) && !/^\.footer(-photo|-top|-brand|-links|-bottom)\b[^{]*\{/m.test(autre) && !/\.footer-photo-feature/.test(autre), `css/${f} : règle .footer hors composant`);
 }
 // La colonne Légal est entière : quatre liens, jamais repliés.
+//
+// L'ASSERTION PORTE SUR LA RÈGLE, PLUS SUR LE PROVISOIRE (2026-09-18).
+// Elle exigeait quatre « bientot.html?page= » : l'adresse d'attente du
+// temps où ces quatre pages n'existaient pas. Elles existent depuis —
+// mentions-legales.html, cgv.html, confidentialite.html, contact.html —
+// et l'assertion obligeait donc à REVENIR au provisoire pour rester
+// verte. Un test doit pinner la règle, jamais l'échafaudage.
 const composant = lire("js/pied-de-page.js");
-// Lot LÉGAL (2026-09-17) : les quatre liens visent les vraies pages.
-const legaux = ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"];
-assert.equal(legaux.filter((p) => composant.includes(`["${p}", `)).length, 4);
-assert.ok(!/bientot\.html/.test(composant));
+const apresLegal = composant.slice(composant.indexOf('titre: "Légal"'));
+assert.ok(apresLegal, "la colonne Légal a disparu du pied de page");
+const colonneLegal = apresLegal.slice(0, apresLegal.indexOf("] }"));
+const liens = colonneLegal.match(/\["[^"]+",\s*"[^"]+"\]/g) || [];
+assert.equal(liens.length, 4, `la colonne Légal a ${liens.length} liens au lieu de quatre`);
+assert.ok(!/bientot\.html/.test(colonneLegal),
+"la colonne Légal est revenue à l'adresse d'attente, alors que ses quatre pages existent");
 });
