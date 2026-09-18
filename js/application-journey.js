@@ -131,6 +131,8 @@ const hasProcessedAdvisorRequest = advisorRequests.some(
 const obtenus = documentsObtained && typeof documentsObtained === "object" ? documentsObtained : {};
 const obtenu = (slug) => obtenus[slug] === true;
 
+const voeu = lireParcours(app) === "preinscription";
+
 const steps = [
 {
 id: "profile",
@@ -138,17 +140,32 @@ label: "Profil complété",
 icon: "user-round",
 done: profileScore >= PROFILE_READY_THRESHOLD,
 href: "profile.html"
-},
-{
+}
+];
+
+// « DOSSIER DE CANDIDATURE » N'EXISTE PAS SUR UN VŒU (lot B2-bis,
+// 2026-09-18). Le lot B2 a retiré ce bloc de la carte d'un vœu — les
+// pièces d'une préinscription vivent à l'étape 4 de la route, au
+// niveau du DOSSIER, pas du vœu. L'étape du parcours qui pointait
+// dessus (`action: "focus-checklist"`) visait donc un bloc absent :
+// le clic ne faisait plus rien, et son état « fait / pas fait » se
+// calculait sur une liste que plus personne ne remplit.
+//
+// On ne la remplace pas par un `done` deviné : l'état des pièces vit
+// dans dossierFrance.pieces, que cette fonction ne reçoit pas, et
+// inventer « pas fait » serait un fait faux. L'étape 4 de la route
+// porte déjà ce suivi, avec la liste exacte du pays.
+if (!voeu) {
+steps.push({
 id: "checklist",
 label: "Dossier de candidature",
 icon: "clipboard-list",
 done: checklistTotal > 0 && checklistDone === checklistTotal,
 action: "focus-checklist"
+});
 }
-];
 
-if (lireParcours(app) === "preinscription") {
+if (voeu) {
 
 steps.push(
 {

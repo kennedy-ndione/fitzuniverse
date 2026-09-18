@@ -1720,7 +1720,10 @@ btn.disabled = false;
 const checklistEl = card.querySelector(".app-checklist");
 
 function focusChecklist() {
+// Une carte de vœu n'a plus de groupes à déplier (lot B2) : ses pièces
+// vivent à l'étape 4 de la route. Rien à ouvrir, rien à casser.
 const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
+if (!checklistGroupsEl) return;
 checklistGroupsEl.hidden = false;
 checklistEl.classList.add("is-open");
 checklistEl.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1774,7 +1777,13 @@ bouton.disabled = false;
 });
 const checklistGroupsEl = checklistEl.querySelector(".checklist-groups");
 
-checklistEl.querySelector('[data-action="toggle-checklist"]').addEventListener("click", () => {
+// LE BOUTON DE REPLI PEUT NE PAS EXISTER (lot B2-bis, 2026-09-18).
+// Sur une carte de vœu, le bloc « Dossier de candidature » a été
+// remplacé par un renvoi vers l'étape 4 : il n'a ni bouton ni groupes.
+// Sans ce `?.`, cette ligne levait un TypeError et la carte du vœu ne
+// s'affichait plus du tout. Trouvé en recette navigateur — les tests
+// lisaient le code, pas l'écran.
+checklistEl.querySelector('[data-action="toggle-checklist"]')?.addEventListener("click", () => {
 checklistGroupsEl.hidden = !checklistGroupsEl.hidden;
 checklistEl.classList.toggle("is-open", !checklistGroupsEl.hidden);
 if (window.lucide) lucide.createIcons();

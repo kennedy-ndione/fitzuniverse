@@ -432,8 +432,14 @@ const options = { profileScore: 9, procedure: FR, aujourdhui: AUJOURDHUI };
 test("candidature préinscription liée à Études en France → les étapes apparaissent, dans l'ordre, entre ressources et la revue conseiller", () => {
 const steps = computeJourneySteps(bordeauxPre, { ...options, advisorUnlocked: true });
 const ids = steps.map((s) => s.id);
-assert.deepEqual(ids.slice(0, 4), ["profile", "checklist", "traductions", "ressources"]);
-assert.deepEqual(ids.slice(4, 4 + FR.etapes.length), FR.etapes.map((e) => e.id));
+// Lot B2-bis (2026-09-18) : « checklist » a quitté le parcours d'un VŒU
+// — le bloc « Dossier de candidature » n'existe plus sur sa carte, ses
+// pièces vivent à l'étape 4 de la route. Les listes attendues ici le
+// portaient ; elles ne le portent plus. Le parcours BOURSES, lui, le
+// garde entier, et les lignes qui le concernent sont intactes.
+assert.deepEqual(ids.slice(0, 3), ["profile", "traductions", "ressources"]);
+// L'indice suit la liste : trois étapes propres, puis la procédure.
+assert.deepEqual(ids.slice(3, 3 + FR.etapes.length), FR.etapes.map((e) => e.id));
 assert.equal(ids[ids.length - 1], "advisor");
 const soumission = steps.find((s) => s.id === "ef_soumission");
 assert.equal(soumission.action, "procedure");
@@ -457,8 +463,8 @@ const bourse = computeJourneySteps({ ...bordeauxPre, track: "bourse" }, options)
 assert.ok(!bourse.some((s) => s.action === "procedure"));
 assert.deepEqual(bourse.map((s) => s.id), ["profile", "checklist", "letter", "readiness"]);
 const sans = computeJourneySteps({ ...bordeauxPre, universityId: "ens-psl", portalUrl: "https://formulaires.ens.psl.eu/" }, { ...options, procedure: null });
-assert.deepEqual(sans.map((s) => s.id), ["profile", "checklist", "traductions", "ressources"]);
-assert.deepEqual(computeJourneySteps(bordeauxPre, { profileScore: 9 }).map((s) => s.id), ["profile", "checklist", "traductions", "ressources"], "sans option procedure : le parcours d'avant");
+assert.deepEqual(sans.map((s) => s.id), ["profile", "traductions", "ressources"]);
+assert.deepEqual(computeJourneySteps(bordeauxPre, { profileScore: 9 }).map((s) => s.id), ["profile", "traductions", "ressources"], "sans option procedure : le parcours d'avant");
 });
 
 test("done = cochée ET preuve présente quand une preuve est attendue", () => {

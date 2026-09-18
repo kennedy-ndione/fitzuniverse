@@ -64,23 +64,43 @@ computeJourneySteps(bourse, { profileScore: 0 })
 // Le parcours préinscription
 // ------------------------------------------------------------------
 
-test("preinscription : [profile, checklist, traductions, ressources], jamais letter ni readiness", () => {
+// RÉÉCRITS EN CONSCIENCE le 2026-09-18 (lot B2-bis). L'étape
+// « checklist » a disparu du parcours d'un VŒU : le lot B2 a retiré le
+// bloc « Dossier de candidature » de sa carte — les pièces d'une
+// préinscription vivent à l'étape 4 de la route, au niveau du DOSSIER.
+// Son `action: "focus-checklist"` visait donc un bloc absent.
+//
+// CE DÉFAUT A ÉTÉ TROUVÉ DANS LE NAVIGATEUR, PAS ICI : la carte du vœu
+// ne s'affichait plus du tout (TypeError sur le bouton de repli
+// manquant). D'où le test suivant, qui interdit une action pointant
+// vers un bloc que ce parcours n'a plus.
+
+test("preinscription : [profile, traductions, ressources], jamais checklist, letter ni readiness", () => {
 const steps = computeJourneySteps(pre, { profileScore: 0 });
-assert.deepEqual(ids(steps), ["profile", "checklist", "traductions", "ressources"]);
+assert.deepEqual(ids(steps), ["profile", "traductions", "ressources"]);
 assert.ok(steps.every((s) => !s.isFitz), "aucune étape Fitz en préinscription");
 assert.ok(steps.every((s) => s.label !== "Lettre de motivation" && s.label !== "Vérifiée par Fitz"));
 });
 
-test("preinscription + advisorUnlocked : advisor en cinquième", () => {
-assert.deepEqual(ids(computeJourneySteps(pre, { profileScore: 0, advisorUnlocked: true })), ["profile", "checklist", "traductions", "ressources", "advisor"]);
+test("preinscription + advisorUnlocked : advisor en dernier", () => {
+assert.deepEqual(ids(computeJourneySteps(pre, { profileScore: 0, advisorUnlocked: true })), ["profile", "traductions", "ressources", "advisor"]);
 });
 
-test("preinscription : profile et checklist se calculent comme en bourse", () => {
+test("preinscription : aucune étape ne pointe vers un bloc que la carte n'a plus", () => {
+// La règle qui aurait évité la carte blanche : sur un vœu, plus
+// personne ne demande d'ouvrir le « Dossier de candidature ».
 const app = { ...pre, checklist: [{ status: "complete" }, { status: "complete" }] };
 const steps = computeJourneySteps(app, { profileScore: PROFILE_READY_THRESHOLD });
-assert.equal(steps[0].done, true);
-assert.equal(steps[1].done, true);
-assert.equal(steps[1].action, "focus-checklist");
+assert.equal(steps[0].done, true, "le profil se calcule comme en bourse");
+assert.ok(!steps.some((s) => s.action === "focus-checklist"), "une étape ouvre encore le dossier d'un vœu");
+assert.ok(!steps.some((s) => s.id === "checklist"), "l'étape « Dossier de candidature » est revenue sur un vœu");
+
+// ET L'ESPACE BOURSES LA GARDE, entière : ce lot ne lui retire rien.
+const bourseSteps = computeJourneySteps({ ...bourse, checklist: [{ status: "complete" }] }, { profileScore: PROFILE_READY_THRESHOLD });
+const checklistStep = bourseSteps.find((s) => s.id === "checklist");
+assert.ok(checklistStep, "l'étape « Dossier de candidature » a disparu des bourses");
+assert.equal(checklistStep.action, "focus-checklist");
+assert.equal(checklistStep.done, true);
 });
 
 test("traductions : done seulement si traductions ET (legalisation OU copies)", () => {

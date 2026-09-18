@@ -316,4 +316,17 @@ test("porte 7 — le dossier d'un vœu renvoie à l'étape 4, il ne la refait pa
   // L'espace bourses garde SON dossier, entier.
   assert.match(code, /data-action="toggle-checklist"/);
   assert.match(code, /Ajouter les exigences de cette bourse/);
+
+  // ET LA CARTE DOIT ENCORE S'AFFICHER (lot B2-bis, 2026-09-18).
+  // Le lot B2 a livré ce renvoi sans garder les deux liaisons qui
+  // cherchaient le bouton de repli et les groupes : sur une carte de
+  // vœu, `querySelector(...)` rendait null et la ligne suivante levait
+  // un TypeError — la carte entière disparaissait. Vu dans le
+  // navigateur, pas ici : ces tests lisent le code, pas l'écran. La
+  // règle gardée est donc celle qui manquait — un balisage devenu
+  // conditionnel se lie avec précaution.
+  assert.match(code, /querySelector\('\[data-action="toggle-checklist"\]'\)\?\.addEventListener/,
+    "la liaison du bouton de repli doit tolérer son absence sur un vœu");
+  assert.match(code, /const checklistGroupsEl = checklistEl\.querySelector\("\.checklist-groups"\);\s*\n\s*if \(!checklistGroupsEl\) return;/,
+    "focusChecklist doit tolérer l'absence de groupes sur un vœu");
 });
