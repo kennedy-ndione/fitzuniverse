@@ -34,10 +34,12 @@
  *   7. la route n'a plus sa copie locale de `formatMontant` ;
  *   8. le texte PARTAGÉ de la page ne parle plus « bourse » à un vœu —
  *      trouvé en recette navigateur, pas à la lecture du code ;
- *   9. et le « dossier » d'un vœu renvoie à l'étape 4 de la route au
- *      lieu de la refaire (lot B2).
+ *   9. le « dossier » d'un vœu renvoie à l'étape 4 de la route au lieu
+ *      de la refaire (lot B2) ;
+ *  10. et les deux pages PARTAGÉES — la bibliothèque de documents, le
+ *      profil — parlent à l'espace où l'on se trouve (lot B3).
  *
- * DOUZE MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
+ * DIX-SEPT MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
  *   — le bouton revient, caché, dans applications.html            → échec
  *   — la phrase de la règle est remplacée                          → échec
  *   — l'état vide redit « ajoutez vos vœux ici »                   → échec
@@ -52,6 +54,11 @@
  *   — le renvoi vers l'étape 4 disparaît de la carte d'un vœu      → échec
  *   — les éléments déjà saisis sur un vœu sont cachés              → échec
  *   — le style du lien vers l'étape 4 est retiré                   → échec
+ *   — le `?.` de la liaison du bouton de repli est retiré           → échec
+ *   — la bibliothèque de documents ne change plus de texte          → échec
+ *   — la phrase servie en préinscription reparle de bourse          → échec
+ *   — la note du profil renvoie de nouveau vers applications.html   → échec
+ *   — l'aide de la nationalité ne parle plus que de bourse          → échec
  *
  * MÉTHODE : les assertions lisent le CODE, pas le fichier brut
  * (`codeSeul`), parce que ces modules racontent en commentaire le défaut
@@ -329,4 +336,46 @@ test("porte 7 — le dossier d'un vœu renvoie à l'étape 4, il ne la refait pa
     "la liaison du bouton de repli doit tolérer son absence sur un vœu");
   assert.match(code, /const checklistGroupsEl = checklistEl\.querySelector\("\.checklist-groups"\);\s*\n\s*if \(!checklistGroupsEl\) return;/,
     "focusChecklist doit tolérer l'absence de groupes sur un vœu");
+});
+
+test("porte 8 — la bibliothèque et le profil parlent à l'espace où l'on se trouve", () => {
+  // SECONDE RÉSERVE DU LOT R13, TRANCHÉE AU LOT B3. Deux pages partagées
+  // renvoyaient tout le monde au « Dossier de candidature » d'une carte
+  // — que le lot B2 a retiré des cartes de vœu — et nommaient « la
+  // bourse visée » à un étudiant qui finance ses études.
+  //
+  // La règle vit à UN SEUL endroit (le script de la page) ; elle a deux
+  // formulations. C'est la forme retenue au lot R13 pour #fitzRegle, et
+  // non deux blocs de balisage qui divergeraient.
+
+  // 1. La bibliothèque de documents.
+  const docsHtml = codeSeul("documents.html");
+  const docsJs = codeSeul("documents.js");
+  assert.match(docsHtml, /id="docsCrosslink"/, "la phrase de renvoi doit être adressable");
+  assert.match(docsJs, /ctx\.espace === "preinscription"/);
+  const i = docsJs.indexOf("crosslink.innerHTML");
+  const phraseDocs = docsJs.slice(i, docsJs.indexOf("\n", i));
+  assert.ok(!/bourse/i.test(phraseDocs), "la phrase servie en préinscription nomme encore une bourse");
+  assert.match(phraseDocs, /espace-preinscription\.html\?etape=pieces/);
+  assert.match(phraseDocs, /poids maximum de chaque fichier/);
+
+  // Le texte des BOURSES reste le défaut du HTML : ce lot ne leur retire
+  // rien, il cesse seulement de le servir à l'autre parcours.
+  assert.match(docsHtml, /Pour le détail propre à une bourse précise/);
+
+  // 2. Le profil.
+  const profHtml = codeSeul("profile.html");
+  const profJs = codeSeul("profile.js");
+  assert.match(profHtml, /id="profileNoteScore"/);
+  assert.match(profJs, /session\.espace === "preinscription"/);
+  const j = profJs.indexOf("noteScore.innerHTML");
+  const phraseProfil = profJs.slice(j, profJs.indexOf("\n", j));
+  assert.ok(!/bourse/i.test(phraseProfil), "la note servie en préinscription nomme encore une bourse");
+  assert.match(phraseProfil, /espace-preinscription\.html/);
+  assert.ok(!/applications\.html/.test(phraseProfil), "la note d'un vœu renvoie encore vers la page des bourses");
+
+  // 3. L'aide de la nationalité est vraie des DEUX côtés, sans second
+  // chemin : une éligibilité se joue aussi sur une procédure.
+  assert.match(profHtml, /c'est elle qui décide de votre éligibilité — à une bourse comme à une procédure d'admission/);
+  assert.ok(!/c'est elle qui ouvre ou ferme une bourse/.test(profHtml));
 });

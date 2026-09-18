@@ -175,7 +175,11 @@ pastille « facultatif », section active au défilement.
 <a href="#sec-objectifs" class="section-nav-item" data-section="sec-objectifs"><span class="section-nav-item-check"><i data-lucide="check"></i></span><span>Objectifs</span></a>
 </div>
 
-<p class="profile-pilote-note">Le compteur ne retient que les sections qui s'appliquent à votre niveau. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
+<!-- Lot B3 (2026-09-18) : la seconde phrase parle d'un score par
+candidature « basé sur les exigences réelles de la bourse visée » — un
+vœu de préinscription n'a ni bourse ni score de ce genre. Texte des
+BOURSES ici, remplacé par profile.js pour la préinscription. -->
+<p class="profile-pilote-note" id="profileNoteScore">Le compteur ne retient que les sections qui s'appliquent à votre niveau. Chacune de vos <a href="applications.html">candidatures suivies</a> a son propre score, basé sur les exigences réelles de la bourse visée.</p>
 
 </nav>
 
@@ -216,7 +220,7 @@ wand sont interdites sur tout le site (décision de Charles,
 
 <div class="input-group">
 <label for="nationality">Nationalité <span class="field-requis">requis</span></label>
-<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="nationality" placeholder="Commencez à écrire : Sénégal, Côte d'Ivoire…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">Votre nationalité, pas votre pays de résidence : c'est elle qui ouvre ou ferme une bourse.</p>
+<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="nationality" placeholder="Commencez à écrire : Sénégal, Côte d'Ivoire…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">Votre nationalité, pas votre pays de résidence : c'est elle qui décide de votre éligibilité — à une bourse comme à une procédure d'admission.</p>
 <small class="field-repris" data-repris="nationality" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 

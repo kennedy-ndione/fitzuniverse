@@ -462,6 +462,17 @@ applyFilters();
 
 bootstrapShell({ feature: "documents" }).then((ctx) => {
 
+// LA BIBLIOTHÈQUE PARLE À L'ESPACE OÙ L'ON SE TROUVE (lot B3, 2026-09-18).
+// Son renvoi menait au « Dossier de candidature » d'une carte — que le
+// lot B2 a retiré des cartes de vœu, et qui nomme des exigences de
+// bourse à quelqu'un qui n'en demande pas. En préinscription, le détail
+// de ses pièces est à l'étape 4 de sa route, avec la liste exacte de
+// son pays.
+const crosslink = document.getElementById("docsCrosslink");
+if (crosslink && ctx.espace === "preinscription") {
+crosslink.innerHTML = 'Cette bibliothèque couvre les documents généralement demandés, tous programmes confondus. La liste exacte de ce que VOTRE dossier réclame — avec le poids maximum de chaque fichier et ce qui doit être traduit — est à l\'étape 4 de votre route. <a href="espace-preinscription.html?etape=pieces">Ouvrir l\'étape 4</a>';
+}
+
 if (ctx.locked) {
 
 document.getElementById("documentsApp").remove();

@@ -1145,6 +1145,15 @@ bootstrapShell().then((session) => {
 
 if (!session) return;
 
+// LE PROFIL PARLE À L'ESPACE OÙ L'ON SE TROUVE (lot B3, 2026-09-18).
+// La note du compteur promettait « un score par candidature, basé sur
+// les exigences réelles de la bourse visée » : un vœu de préinscription
+// n'a ni bourse ni score de ce genre — son avancement, c'est sa route.
+const noteScore = document.getElementById("profileNoteScore");
+if (noteScore && session.espace === "preinscription") {
+noteScore.innerHTML = 'Le compteur ne retient que les sections qui s\'appliquent à votre niveau. L\'avancement de votre dossier, lui, se suit étape par étape dans <a href="espace-preinscription.html">votre route</a>.';
+}
+
 const { user, userData } = session;
 
 const userRef = doc(db, "users", user.uid);
