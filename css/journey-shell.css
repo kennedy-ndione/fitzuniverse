@@ -216,6 +216,19 @@ tout ce qu'il faut. */
 .journey-topbar .topbar-plan-chip{
 white-space:nowrap;
 max-width:min(44vw, 240px);
+/* MESURÉ EN LIGNE après le premier correctif : la pastille héritait
+d'un flex-shrink:0, la rangée d'actions (bascule 219 + cloche 40 +
+pastille 186 px) refusait donc de se comprimer et la page débordait
+toujours de 65 px — l'ellipse ne s'enclenchait jamais puisque rien ne
+rétrécissait. Sans min-width:0, un enfant de flex ne descend jamais
+sous sa largeur de contenu. */
+flex-shrink:1;
+min-width:0;
+}
+
+/* Et la rangée elle-même doit pouvoir rétrécir dans la barre. */
+.journey-topbar .journey-topbar-actions{
+min-width:0;
 }
 
 .journey-topbar .topbar-plan-chip > span{

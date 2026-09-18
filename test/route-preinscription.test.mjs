@@ -791,6 +791,16 @@ test("route 25 — PREMIUM 1 : la bande des étapes est vivante et ne casse pas 
   assert.ok(chip, "la pastille de formule n'a plus de règle dans css/journey-shell.css");
   assert.match(chip[1], /max-width:/,
     "la pastille de formule n'a plus de largeur maximale : à 450px elle repousse la page de 65px hors de l'écran");
+  // ET ELLE DOIT POUVOIR RÉTRÉCIR : mesuré en ligne, un flex-shrink:0
+  // hérité gelait la rangée d'actions et la page débordait toujours de
+  // 65px malgré la largeur maximale. Sans min-width:0, un enfant de
+  // flex ne descend jamais sous sa largeur de contenu.
+  assert.match(chip[1], /flex-shrink:\s*1/,
+    "la pastille ne peut plus rétrécir (flex-shrink) : la rangée d'actions gèlera et la page débordera");
+  assert.match(chip[1], /min-width:\s*0/,
+    "la pastille n'a plus min-width:0 : un enfant de flex ne descend jamais sous sa largeur de contenu");
+  assert.match(shell, /\.journey-topbar \.journey-topbar-actions\{[^}]*min-width:\s*0/,
+    "la rangée d'actions n'a plus min-width:0 : elle refusera de se comprimer dans la barre");
   const chipSpan = /\.journey-topbar \.topbar-plan-chip > span\{([^}]*)\}/.exec(shell);
   assert.ok(chipSpan && /text-overflow:\s*ellipsis/.test(chipSpan[1]),
     "le libellé de la pastille ne se compacte plus en « … » : la largeur maximale coupera le texte net");
