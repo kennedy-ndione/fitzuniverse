@@ -36,7 +36,8 @@
  *   une clé « hobbies » ajoutée à buildUpdatedProfile → test 1 rouge ;
  *   la case « même numéro » retirée de profile.html → test 2 rouge ;
  *   le second sélecteur retiré de .checkbox-row → test 3 rouge ;
- *   `data-palier-champ` retiré de la spécialisation → test 4 rouge.
+ *   `data-palier-champ` retiré de la spécialisation → test 4 rouge ;
+ *   `isFilled(p.universityType)` remis dans la règle du score → test 5 rouge.
  *
  * Fins de ligne : tout fichier lu ici passe par .replace(/\r\n/g,"\n").
  * ============================================================
@@ -158,6 +159,34 @@ test("champs 3 — les cases à cocher de la page gagnent leur mise en page", ()
   // second sélecteur est le défaut qu'on répare.
   assert.match(css, /\.input-group label\{[^}]*display:block/,
     "« .input-group label » ne pose plus display:block : cette garde peut être relue");
+
+});
+
+test("champs 5 — aucune section n'exige une réponse que le catalogue ne peut honorer", () => {
+
+  // LOT R20 (2026-09-18). « Type d'université » (publique / privée / les
+  // deux) était EXIGÉ par la règle de la section « Préférences de
+  // destination » — un étudiant restait sous les 100 % sans y répondre.
+  // Or les 155 universités du catalogue n'ont AUCUN champ de statut :
+  // ni dans assets/data/catalogue.json, ni dans le formulaire de
+  // admin/universities.html. La préférence ne pouvait être honorée par
+  // aucune version du moteur.
+  //
+  // Et la renseigner ne vaudrait pas la peine : public/privé est un
+  // raccourci pour parler du COÛT, et le coût exact est déjà là —
+  // fraisScolarite sur 145 des 155, avec source et date, exoneration
+  // sur 153. Une information grossière à côté d'une information exacte
+  // est une seconde version de la même règle.
+  const score = codeSeul("js/profile-score.js");
+  assert.ok(!/universityType/.test(score),
+    "le score exige encore un type d'université que le catalogue ne connaît pas");
+
+  const page = codeSeul("profile.html") + codeSeul("profile.js");
+  assert.ok(!/universityType/.test(page), "la question du type d'université est revenue");
+
+  // La section garde sa règle, débarrassée de cette exigence.
+  assert.match(score, /Array\.isArray\(p\.preferredCountries\) && p\.preferredCountries\.length > 0,/,
+    "la section « Préférences de destination » ne repose plus sur les pays souhaités");
 
 });
 

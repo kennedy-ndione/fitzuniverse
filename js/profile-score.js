@@ -33,6 +33,7 @@
 */
 
 import { SECTIONS, sectionsPour, lirePalier, estSecondaire, libellePalier } from "./profil-par-niveau.js";
+import { languesParlees } from "./niveaux-langue.js";
 
 function isFilled(value) {
 return String(value || "").trim() !== "";
@@ -62,9 +63,16 @@ export const PROFILE_SECTION_RULES = [
 (p) => isFilled(p.firstName) && isFilled(p.lastName) && isFilled(p.birthDate) && isFilled(p.country || p.originCountry),
 parcoursRempli,
 (p) => isFilled(p.projects) || isFilled(p.thesis) || isFilled(p.publications) || isFilled(p.researchExperience) || isFilled(p.ranking),
-(p) => Array.isArray(p.languages) && p.languages.length > 0,
+// Lot R16 : « Je ne parle pas cette langue » est une réponse
+// enregistrée (level "aucun"), pas une langue. Un profil qui n'aurait
+// que celle-là compterait la section « Langues » comme remplie.
+(p) => languesParlees(p.languages).length > 0,
 (p) => isFilled(p.desiredField) && isFilled(p.desiredDegree),
-(p) => Array.isArray(p.preferredCountries) && p.preferredCountries.length > 0 && isFilled(p.universityType),
+// Lot R20 : `universityType` ne conditionne plus cette section. Il
+// l'EXIGEAIT, alors que les 155 universités du catalogue n'ont aucun
+// champ de statut public/privé : un étudiant restait sous les 100 %
+// pour n'avoir pas répondu à une question qui ne décidait de rien.
+(p) => Array.isArray(p.preferredCountries) && p.preferredCountries.length > 0,
 (p) => isFilled(p.budget) && isFilled(p.hasSponsor) && Array.isArray(p.fundingWanted) && p.fundingWanted.length > 0,
 (p) => Array.isArray(p.documentsAvailable) && p.documentsAvailable.length > 0,
 (p) => isFilled(p.internships) || isFilled(p.workExperience) || isFilled(p.associations) || isFilled(p.volunteering) || isFilled(p.entrepreneurship),

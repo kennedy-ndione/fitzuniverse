@@ -635,14 +635,22 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 </div>
 
 
-<div class="input-group field-full" style="margin-top:18px;">
-<label>Type d'université</label>
-<div class="fitz-choice-group" id="universityTypeGroup" role="radiogroup" aria-label="Type d'université">
-<label class="fitz-choice"><input type="radio" name="universityType" value="publique"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Publique</span></label>
-<label class="fitz-choice"><input type="radio" name="universityType" value="privee"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Privée</span></label>
-<label class="fitz-choice"><input type="radio" name="universityType" value="les_deux"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Les deux</span></label>
-</div>
-</div>
+<!-- LOT R20 (2026-09-18) — « TYPE D'UNIVERSITÉ » EST PARTI.
+La question demandait publique / privée / les deux. Or les 155
+universités du catalogue n'ont AUCUN champ de statut : ni dans
+assets/data/catalogue.json, ni dans le formulaire de
+admin/universities.html. La préférence ne pouvait être honorée par
+aucune version du moteur — l'autre moitié de la comparaison n'existait
+pas. Pire : js/profile-score.js l'EXIGEAIT pour que cette section
+compte comme remplie, donc un étudiant ne pouvait pas atteindre un
+profil complet sans répondre à une question qui ne décidait de rien.
+
+Et renseigner les 155 établissements ne vaudrait pas la peine : le
+statut public/privé est un raccourci pour parler du COÛT, et le coût
+exact est DÉJÀ dans le catalogue — fraisScolarite sur 145 des 155,
+avec sa source et sa date, et exoneration sur 153. Une information
+plus grossière à côté d'une information exacte, c'est la faute des
+lots R5, R6, R7, R13, B2 et R17 : deux endroits pour une seule règle. -->
 
 <div class="profile-section-actions">
 <button type="submit" class="btn-section-save"><i data-lucide="save"></i><span>Enregistrer</span></button>

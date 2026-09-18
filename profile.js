@@ -177,7 +177,7 @@ testLangue: { nature: "", score: "", date: "", prevuLe: "" },
 desiredField: "", specialization: "", desiredDegree: "",
 
 // 6. Préférences de destination
-preferredCountries: [], excludedCountries: [], universityType: "",
+preferredCountries: [], excludedCountries: [],
 
 // 7. Préférences financières
 budget: "", hasSponsor: "", fundingWanted: [],
@@ -1280,11 +1280,6 @@ state.excludedCountries = new Set(profile.excludedCountries || []);
 
 renderCountryChipGroups(profile);
 
-if (profile.universityType) {
-const radio = document.querySelector(`input[name="universityType"][value="${profile.universityType}"]`);
-if (radio) radio.checked = true;
-}
-
 document.getElementById("budget").value = profile.budget || "";
 
 if (profile.hasSponsor) {
@@ -1362,7 +1357,6 @@ desiredField: val("desiredField"), specialization: val("specialization"), desire
 
 preferredCountries: [...state.preferredCountries],
 excludedCountries: [...state.excludedCountries],
-universityType: radioValue("universityType"),
 
 budget: val("budget"), hasSponsor: radioValue("hasSponsor"),
 fundingWanted: checkedValues("fundingWantedGroup"),
