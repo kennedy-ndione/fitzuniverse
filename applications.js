@@ -402,6 +402,21 @@ const checklist = Array.isArray(app.checklist) ? app.checklist : [];
 const { completed, total } = checklistScore(checklist);
 const suggestion = renderSuggestionDossier(app, lecture);
 
+// UN VŒU N'A PAS DE BOURSE (lot R13-bis, 2026-09-18).
+// L'état vide de ce bloc disait « Ajouter les exigences de cette
+// bourse » sur la carte d'un vœu de préinscription — à un étudiant qui
+// finance ses études, sur la page même où il venait chercher ses vœux.
+// Vu en recette navigateur, pas à la lecture du code : renderExigences
+// et renderSuggestionDossier se taisent bien sans bourse, mais cet
+// état vide, lui, était écrit en dur.
+// Ses pièces vivent à l'étape 4 de sa route, avec les tailles
+// maximales et l'état des traductions ; ce bloc-ci n'est que son
+// pense-bête personnel. On ne lui promet donc rien et on ne lui parle
+// pas de bourse — RÉSERVE NOMMÉE : que ce pense-bête refasse, en
+// vocabulaire de bourse, le travail de l'étape 4 est une question de
+// fond, à trancher avec l'espace bourse.
+const voeu = lireParcours(app) === "preinscription";
+
 const groups = Object.keys(CHECKLIST_TYPE_META).map((type) => {
 
 const typeMeta = CHECKLIST_TYPE_META[type];
@@ -425,6 +440,8 @@ return `
 <span><i data-lucide="clipboard-list"></i>Dossier de candidature</span>
 ${total > 0
 ? `<span class="app-checklist-score">${completed}/${total} complété${completed > 1 ? "s" : ""}</span>`
+: voeu
+? `<span class="app-checklist-score is-empty">Rien ajouté pour l'instant</span>`
 // L'état vide disait « Ajouter les exigences de cette bourse » sans
 // jamais dire LESQUELLES. Quand le catalogue les connaît, la
 // suggestion ci-dessous les nomme — l'invite générique n'a plus lieu

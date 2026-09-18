@@ -31,9 +31,11 @@
  *   6. plus aucun lien du site ne porte `?action=new` — le paramètre
  *      n'ouvre plus rien, ni ici ni côté bourses, donc un lien qui le
  *      porte promet un écran qui ne vient jamais ;
- *   7. et la route n'a plus sa copie locale de `formatMontant`.
+ *   7. la route n'a plus sa copie locale de `formatMontant` ;
+ *   8. et le texte PARTAGÉ de la page ne parle plus « bourse » à un
+ *      vœu — trouvé en recette navigateur, pas à la lecture du code.
  *
- * SIX MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
+ * NEUF MUTATIONS VÉRIFIÉES (2026-09-18), chacune fait tomber un test :
  *   — le bouton revient, caché, dans applications.html            → échec
  *   — la phrase de la règle est remplacée                          → échec
  *   — l'état vide redit « ajoutez vos vœux ici »                   → échec
@@ -42,6 +44,9 @@
  *   — le renvoi est déplacé APRÈS la lecture de `shouldOpen`       → échec
  *   — le bouton de l'espace bourses reprend `?action=new`          → échec
  *   — le hub relie de nouveau le formulaire de création            → échec
+ *   — l'intro partagée reparle des « exigences de cette bourse »    → échec
+ *   — la branche du vœu quitte l'état vide du dossier               → échec
+ *   — la bourse est évaluée avant le vœu dans l'état vide           → échec
  *
  * MÉTHODE : les assertions lisent le CODE, pas le fichier brut
  * (`codeSeul`), parce que ces modules racontent en commentaire le défaut
@@ -222,4 +227,43 @@ test("porte 5 — plus aucun lien du site ne porte `?action=new`", () => {
   const bourse = codeSeul("espace-bourse.html");
   assert.match(bourse, /<a href="applications\.html" data-real-href="applications\.html"[^>]*>/);
   assert.ok(!/Suivre une candidature/.test(bourse), "le libellé promet encore une création");
+});
+
+test("porte 6 — la page ne parle plus « bourse » à un vœu", () => {
+  // TROUVÉ EN RECETTE NAVIGATEUR, pas à la lecture du code (2026-09-18).
+  // L'encart du lot R13 indique à un client Dossier France où poser ses
+  // vœux. Juste au-dessus, la page lui disait « les exigences de cette
+  // bourse précise » et « un portail universitaire » — son portail est
+  // Études en France, et il n'a pas de bourse. Et sur la carte de son
+  // vœu, l'état vide du dossier disait « Ajouter les exigences de cette
+  // bourse ». Deux mots faux sur la page où il cherchait sa porte.
+  //
+  // Cette page sert les DEUX espaces : son texte partagé ne peut donc
+  // parler la langue d'un seul.
+  const intro = codeSeul("applications.html");
+  const i = intro.indexOf('class="apps-intro"');
+  assert.notEqual(i, -1, "la section d'intro a disparu");
+  const bloc = intro.slice(i, intro.indexOf("</section>", i));
+  assert.ok(!/bourse/i.test(bloc), "l'intro partagée parle encore de bourse");
+  assert.ok(!/portail universitaire/.test(bloc), "le portail d'un vœu est Études en France, pas un portail d'université");
+
+  // L'état vide de la carte se choisit sur le PARCOURS de la carte, et
+  // la branche du vœu ne nomme aucune bourse.
+  const code = codeSeul("applications.js");
+  assert.match(code, /const voeu = lireParcours\(app\) === "preinscription";/);
+  const j = code.indexOf("app-checklist-toggle");
+  const toggle = code.slice(j, code.indexOf("checklist-groups", j));
+  const brancheVoeu = toggle.slice(toggle.indexOf(": voeu"), toggle.indexOf(": suggestion"));
+  assert.ok(brancheVoeu.length > 0, "la branche du vœu a disparu de l'état vide");
+  assert.ok(!/bourse/i.test(brancheVoeu), "l'état vide d'un vœu nomme encore une bourse");
+
+  // Et la branche des bourses garde SON vocabulaire : ce lot ne lui
+  // retire rien, il cesse seulement de le servir à l'autre parcours.
+  assert.match(toggle, /Ajouter les exigences de cette bourse/);
+  assert.match(toggle, /Fitz connaît les exigences de cette bourse/);
+
+  // Le vœu passe AVANT la suggestion : sans bourse, `suggestion` vaut ""
+  // et l'ordre inverse retomberait sur l'invite « cette bourse ».
+  assert.ok(toggle.indexOf(": voeu") < toggle.indexOf(": suggestion"),
+    "la branche du vœu doit être évaluée avant celle de la bourse");
 });
