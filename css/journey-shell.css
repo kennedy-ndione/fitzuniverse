@@ -205,7 +205,23 @@ height:36px;
 border-radius:10px;
 }
 
+/* LA PASTILLE NE POUSSE PLUS LA PAGE (2026-09-18). Mesuré en ligne à
+450 px de large : « Dossier France + Conseiller » + white-space:nowrap
+sans largeur maximale = 65 px de débordement HORIZONTAL de la page
+entière — la seule cause, prouvée en cachant la pastille (débordement
+retombé à 0). Le libellé reste affiché (décision du 2026-09-02 : une
+pastille muette est un rond sans sens) mais il s'arrête sur une
+ellipse quand la place manque : « Dossier France + Cons… » dit encore
+tout ce qu'il faut. */
 .journey-topbar .topbar-plan-chip{
+white-space:nowrap;
+max-width:min(44vw, 240px);
+}
+
+.journey-topbar .topbar-plan-chip > span{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
 white-space:nowrap;
 }
 

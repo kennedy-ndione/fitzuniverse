@@ -692,11 +692,26 @@ function peindreSuite() {
     </li>`).join("");
 }
 
+// PREMIUM 1 : après chaque peinture, la bande des étapes se recentre
+// d'elle-même sur l'étape choisie (ou courante). Sans ce geste, la bande
+// restait figée à gauche (scrollLeft 0) et l'étudiant devait la faire
+// défiler à la main pour retrouver où il en est.
+function centrerLeFil() {
+  const fil = document.getElementById("rtFil");
+  if (!fil) return;
+  const actif = fil.querySelector(".rt-point.is-choisie") || fil.querySelector(".rt-point.is-courante");
+  if (!actif) return;
+  const gauche = Math.max(0, actif.offsetLeft - (fil.clientWidth - actif.offsetWidth) / 2);
+  const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  fil.scrollTo({ left: gauche, behavior: doux ? "smooth" : "auto" });
+}
+
 function peindre() {
   peindreTete();
   peindreEtape();
   peindreSuite();
   icones();
+  centrerLeFil();
 }
 
 function aller(id, defiler = true) {

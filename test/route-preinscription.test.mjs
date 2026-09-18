@@ -779,3 +779,58 @@ test("route 24 — les deux lignes de note d'une pièce ne sont pas en demi-gras
     "css/base.css connaît maintenant les pièces de la route : la règle a fui hors de sa feuille");
 
 });
+
+test("route 25 — PREMIUM 1 : la bande des étapes est vivante et ne casse pas la page", () => {
+
+  // MESURÉ AU BANC le 2026-09-18, fenêtre de 450px : la page débordait de
+  // 65px, et la seule cause prouvée (masquer l'élément → débord 0) était la
+  // pastille de formule « Dossier France + Conseiller » : nowrap, sans
+  // largeur maximale. La pastille doit donc se compacter, jamais pousser.
+  const shell = lire("css/journey-shell.css");
+  const chip = /\.journey-topbar \.topbar-plan-chip\{([^}]*)\}/.exec(shell);
+  assert.ok(chip, "la pastille de formule n'a plus de règle dans css/journey-shell.css");
+  assert.match(chip[1], /max-width:/,
+    "la pastille de formule n'a plus de largeur maximale : à 450px elle repousse la page de 65px hors de l'écran");
+  const chipSpan = /\.journey-topbar \.topbar-plan-chip > span\{([^}]*)\}/.exec(shell);
+  assert.ok(chipSpan && /text-overflow:\s*ellipsis/.test(chipSpan[1]),
+    "le libellé de la pastille ne se compacte plus en « … » : la largeur maximale coupera le texte net");
+
+  // LA BANDE S'AIMANTE AU DOIGT. Sans aimantation, un défilement tactile
+  // s'arrête entre deux pastilles ; avec `proximity`, il se pose dessus
+  // sans jamais empêcher un défilement libre.
+  const route = lire("css/route.css");
+  assert.match(route, /\.rt-fil\{[^}]*scroll-snap-type:\s*x proximity/,
+    "la bande des étapes n'a plus d'aimantation : le défilement tactile s'arrête entre deux pastilles");
+  assert.match(route, /\.rt-point\{[^}]*scroll-snap-align:\s*center/,
+    "les pastilles n'ont plus de point d'aimantation");
+
+  // L'ÉTAPE COURANTE RESPIRE — un halo ambre lent, jamais pour qui a
+  // demandé moins de mouvement.
+  assert.match(route, /\.rt-point\.is-courante\{[^}]*animation:\s*rt-respiration/,
+    "l'étape courante ne respire plus : le halo qui guide l'œil a disparu");
+  assert.match(route, /@keyframes rt-respiration/, "l'animation rt-respiration n'est plus définie");
+  assert.match(route, /@media \(prefers-reduced-motion: reduce\)\{[^}]*\.rt-point\.is-courante\{[^}]*animation:\s*none/s,
+    "la respiration ignore « réduire les animations » : elle doit se taire pour qui l'a demandé");
+
+  // LE SURVOL NE CONCERNE QUE LES VRAIES SOURIS : sur tactile, un :hover
+  // nu reste collé après le premier appui.
+  assert.match(route, /@media \(hover: hover\)\{[\s\S]*?\.rt-point:hover\{/,
+    "le soulèvement au survol n'est plus réservé aux pointeurs à survol : il collera au doigt sur mobile");
+
+  // LA PROGRESSION SE REMPLIT AVEC LA COURBE PREMIUM, pas un `ease` plat.
+  assert.match(route, /\.rt-barre-remplie\{[^}]*transition:\s*width \.7s var\(--ease-premium\)/,
+    "la barre de progression a reperdu sa courbe expressive");
+
+  // ET LA BANDE SE RECENTRE D'ELLE-MÊME. MESURÉ : scrollLeft restait à 0
+  // quelle que soit l'étape courante ; l'étudiant devait chercher où il en
+  // est. Après chaque peinture, centrerLeFil() recadre l'étape choisie.
+  const js = lire("espace-preinscription.js");
+  assert.match(js, /function centrerLeFil\(\)/, "centrerLeFil() n'existe plus");
+  assert.match(js, /function peindre\(\) \{[\s\S]*?centrerLeFil\(\);[\s\S]*?\}/,
+    "peindre() n'appelle plus centrerLeFil() : la bande restera figée à gauche");
+  assert.match(js, /prefers-reduced-motion/,
+    "le recentrage ne respecte plus « réduire les animations » : il défilera en douceur chez qui a demandé l'inverse");
+  assert.match(js, /is-choisie[\s\S]{0,80}is-courante/,
+    "le recentrage ne vise plus l'étape choisie puis la courante");
+
+});
