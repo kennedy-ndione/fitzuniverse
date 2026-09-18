@@ -181,7 +181,10 @@ assert.ok(/glossaire\.js/.test(composant));
 
 // --- 5. le glossaire ---------------------------------------------------
 test("langage 5 — un seul fichier de définitions, et chaque terme est expliqué à sa première place LISIBLE", () => {
-const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea"];
+// Deux termes ajoutés au lot R23, mesurés sur la route des huit pays :
+// tous deux apparaissent là où le glossaire ATTEINT le texte, et aucun
+// des deux n'y était.
+const attendus = ["apostille", "legalisation-consulaire", "dap", "etudes-en-france", "voeu", "exoneration", "preinscription", "portail", "attestation-de-ressources", "tcf-delf-dalf", "ninea", "espace-campus-france", "entretien-pedagogique"];
 assert.deepEqual(GLOSSAIRE.map((t) => t.id), attendus);
 for (const t of GLOSSAIRE) {
 const ex = typeof t.explication === "function" ? t.explication("x") : t.explication;
@@ -484,5 +487,125 @@ test("langage 12 — un texte présenté comme officiel ne porte jamais nos pare
   // système inventé pour l'occasion.
   assert.match(codeSeul("js/glossaire.js"), /\[data-sans-glossaire\]/,
     "js/glossaire.js ne reconnaît pas data-sans-glossaire");
+
+});
+
+// ======================================================================
+// LOT R23 (2026-09-18) — LES MOTS DE LA CITATION, DITS À CÔTÉ D'ELLE
+// ======================================================================
+//
+// Suite mesurée du lot R21. En mettant la citation officielle de la route
+// hors de portée du glossaire (`data-sans-glossaire`), on a laissé
+// l'étudiant seul devant ses mots les plus opaques. Le balayage de la
+// route des HUIT pays documentés, sur le texte réellement composé, a
+// compté trois termes du glossaire qui n'apparaissent PLUS QUE là :
+//
+//   dap             16 occurrences
+//   preinscription
+//   tcf-delf-dalf
+//
+// La citation reste intacte ; les définitions se posent en dessous.
+//
+// Et deux mots centraux du parcours n'étaient pas au glossaire alors
+// qu'ils apparaissent dans des endroits qu'il ATTEINT : « Espace Campus
+// France » (phrase en clair, titre officiel, mention) et « entretien
+// pédagogique » (titre officiel). Le bureau où l'étudiant ira, et
+// l'épreuve qu'il redoute le plus.
+//
+// Preuves par mutation faites le 2026-09-18 :
+//   motsTechniques retiré du rendu → langage 13 rouge ;
+//   data-sans-glossaire retiré de notre ligne → langage 14 rouge ;
+//   les deux termes neufs retirés du glossaire → langage 15 rouge.
+
+test("langage 13 — les mots techniques d'une citation officielle sont dits à côté d'elle", async () => {
+
+  const { motsTechniques } = await import("../js/glossaire.js");
+  const { construireRoute } = await import("../js/route-preinscription.js");
+  const { trouverProcedure } = await import("../js/procedures/index.js");
+  const { COUCHES } = await import("../js/procedures/residences/index.js");
+
+  // LES HUIT PAYS DOCUMENTÉS, pas un échantillon : c'est la seule façon
+  // de savoir où les mots opaques tombent réellement.
+  const pays = COUCHES.map((c) => c.pays).filter(Boolean);
+  assert.ok(pays.length >= 8, `${pays.length} pays documentés : le balayage ne couvre plus la route`);
+
+  let citationsAvecMots = 0;
+  const vus = new Set();
+
+  for (const p of pays) {
+    const procedure = trouverProcedure({ paysDestination: "France", paysResidence: p });
+    assert.ok(procedure, `aucune procédure pour ${p}`);
+    const route = construireRoute({ procedure, profile: { country: p, nationality: p }, aujourdhui: new Date("2026-09-18") });
+    for (const e of route.etapes) {
+      const consigne = e.officielle && e.officielle.consigne;
+      if (!consigne) continue;
+      for (const m of motsTechniques(consigne)) { vus.add(m.id); citationsAvecMots += 1; }
+    }
+  }
+
+  assert.ok(citationsAvecMots > 0, "aucune citation officielle ne contient de terme du glossaire : le balayage ne mesure plus rien");
+
+  // Les trois termes que le lot R21 avait rendus inatteignables doivent
+  // être retrouvés par ce chemin-là.
+  for (const attendu of ["dap", "tcf-delf-dalf"]) {
+    assert.ok(vus.has(attendu), `« ${attendu} » n'est plus dit nulle part : il n'apparaît que dans la citation`);
+  }
+
+  // Et le rendu pose bien la ligne.
+  const route = codeSeul("espace-preinscription.js");
+  // LE GABARIT, pas la déclaration : `htmlMotsDeLaCitation(e)` est aussi
+  // un morceau de « function htmlMotsDeLaCitation(e) {", et l'assertion
+  // passait donc même après avoir retiré l'appel du rendu (mutation
+  // stérile attrapée le 2026-09-18).
+  assert.match(route, /\$\{htmlMotsDeLaCitation\(e\)\}/, "la ligne des définitions n'est plus rendue sous la citation");
+  assert.match(route, /<p class="rt-officiel-mots"/, "la ligne des définitions a perdu sa classe");
+  assert.match(lire("css/route.css"), /\.rt-officiel-mots\{/, "la ligne des définitions n'a pas de style");
+
+});
+
+test("langage 14 — la ligne des définitions n'est pas définie à son tour", async () => {
+
+  const route = codeSeul("espace-preinscription.js");
+
+  // MESURÉ AU BANC : sans cet attribut, le glossaire annotait notre propre
+  // ligne de définitions, et l'écran affichait « Études en France (la
+  // plateforme en ligne de Campus France) : la plateforme en ligne de
+  // Campus France ». Une ligne qui définit des mots n'a pas à être définie.
+  assert.match(route, /<p class="rt-officiel-mots" data-sans-glossaire>/,
+    "notre ligne de définitions est de nouveau à portée du glossaire : elle se définira elle-même");
+
+  // ON NE DIT PAS DEUX FOIS LE MÊME MOT SUR LE MÊME ÉCRAN : un terme déjà
+  // expliqué dans les phrases de l'étape n'est pas repris sous la citation.
+  assert.match(route, /const dejaDit = new Set\(/,
+    "le filtre des mots déjà dits a disparu : « vœu » serait défini deux fois à l'étape 8");
+
+  // La citation, elle, reste hors de portée (lot R21).
+  assert.match(route, /<p data-sans-glossaire>\$\{ech\(o\.consigne\)\}<\/p>/);
+
+});
+
+test("langage 15 — les deux mots centraux du parcours sont au glossaire", async () => {
+
+  const { GLOSSAIRE, motsTechniques } = await import("../js/glossaire.js");
+
+  for (const id of ["espace-campus-france", "entretien-pedagogique"]) {
+    assert.ok(GLOSSAIRE.some((t) => t.id === id), `« ${id} » a quitté le glossaire`);
+  }
+
+  // Les motifs reconnaissent les formes réellement écrites sur la route —
+  // singulier, pluriel, et la minuscule de « espace Campus France ».
+  for (const forme of ["Espace Campus France", "espace Campus France", "Espaces Campus France",
+                       "entretien pédagogique", "entretiens pédagogiques"]) {
+    const trouves = motsTechniques(`Rendez-vous à votre ${forme} avant la date limite.`).map((m) => m.id);
+    assert.ok(trouves.includes("espace-campus-france") || trouves.includes("entretien-pedagogique"),
+      `« ${forme} » n'est pas reconnu par le glossaire`);
+  }
+
+  // Une explication dit ce que la chose EST, en quelques mots.
+  for (const id of ["espace-campus-france", "entretien-pedagogique"]) {
+    const t = GLOSSAIRE.find((x) => x.id === id);
+    const texte = typeof t.explication === "function" ? t.explication("") : t.explication;
+    assert.ok(texte.length > 20 && texte.length < 90, `l'explication de « ${id} » fait ${texte.length} caractères`);
+  }
 
 });

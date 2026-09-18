@@ -51,6 +51,9 @@ import { formaterDate } from "./js/echeance.js";
 // « 0 F CFA » sur une valeur absente, la locale rendait "".
 import { HORS_TOTAL, formatMontant } from "./js/diagnostic-france.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
+// Lot R23 : les mots techniques de la citation officielle, dits À CÔTÉ
+// d'elle — la citation reste intacte (data-sans-glossaire, lot R21).
+import { motsTechniques } from "./js/glossaire.js";
 import { slotIdLibre } from "./js/application-actions.js";
 import { boutonRecours } from "./js/fitz-recours.js";
 import { guideVisaPour } from "./js/visa-depart.js";
@@ -231,6 +234,50 @@ function htmlFaits(e) {
 }
 
 /**
+ * LES MOTS TECHNIQUES DE LA CITATION, DITS À CÔTÉ D'ELLE (lot R23).
+ *
+ * Conséquence mesurée du lot R21 : en mettant la citation officielle hors
+ * de portée du glossaire, on a laissé l'étudiant seul devant ses mots les
+ * plus opaques. Le balayage de la route des HUIT pays documentés, le
+ * 2026-09-18, a compté trois termes du glossaire qui n'apparaissent PLUS
+ * QUE dans cette citation — « DAP » seize fois, « préinscription » et
+ * « TCF/DELF/DALF ».
+ *
+ * La citation reste donc intacte, et les définitions se posent en dessous.
+ * Elles viennent de js/glossaire.js : une seule table de définitions pour
+ * tout le site, ici comme ailleurs.
+ */
+function htmlMotsDeLaCitation(e) {
+
+const consigne = (e.officielle && e.officielle.consigne) || "";
+if (!consigne) return "";
+
+// ON NE DIT PAS DEUX FOIS LE MÊME MOT SUR LE MÊME ÉCRAN. Les phrases de
+// l'étape — son titre, son « en clair », la mention, le titre officiel —
+// sont, elles, annotées par le glossaire. Mesuré à l'étape 8 : la
+// citation parle de « vœux », et la phrase juste au-dessus commence par
+// « Un vœu, c'est une formation… » ; répéter la définition en dessous
+// serait du bruit.
+const dejaDit = new Set(
+motsTechniques([e.titre, e.enClair, e.officielle && e.officielle.titre, e.officielle && e.officielle.mention]
+.filter(Boolean).join("\n")).map((m) => m.id)
+);
+
+const mots = motsTechniques(consigne).filter((m) => !dejaDit.has(m.id));
+if (!mots.length) return "";
+
+// `data-sans-glossaire` SUR NOTRE PROPRE LIGNE DE DÉFINITIONS. Mesuré au
+// banc : sans lui, le glossaire annotait cette ligne comme une autre, et
+// l'écran affichait « Études en France (la plateforme en ligne de Campus
+// France) : la plateforme en ligne de Campus France ». Une ligne qui
+// définit des mots n'a pas à être définie.
+return `<p class="rt-officiel-mots" data-sans-glossaire>${mots
+.map((m) => `<span><strong>${ech(m.mot)}</strong> : ${ech(m.explication)}</span>`)
+.join("")}</p>`;
+
+}
+
+/**
  * LE TEXTE OFFICIEL NE PORTE PAS NOS PARENTHÈSES (lot R21, 2026-09-18).
  *
  * Depuis que le glossaire tourne dans l'espace étudiant
@@ -249,6 +296,7 @@ function htmlOfficiel(e) {
     <details class="rt-officiel"${e.etat === "courante" ? " open" : ""}>
       <summary><i data-lucide="scroll-text"></i><span>Le texte officiel : « ${ech(o.titre)} »</span></summary>
       <p data-sans-glossaire>${ech(o.consigne)}</p>
+      ${htmlMotsDeLaCitation(e)}
       ${sources.length ? `<p class="rt-source">Vérifié le ${ech(o.verifieLe)} · ${sources.map((s, i) => `<a href="${ech(s)}" target="_blank" rel="noopener noreferrer">${i === 0 ? "la source officielle" : "la page de votre pays"}</a>`).join(" · ")}</p>` : ""}
     </details>`;
 }

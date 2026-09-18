@@ -500,6 +500,27 @@ line-height:1.6;
 color:var(--text-color);
 }
 
+/* LES MOTS TECHNIQUES DE LA CITATION (lot R23, 2026-09-18).
+Posés SOUS le texte officiel, jamais dedans : la citation garde ses mots,
+et les définitions vivent à côté. Une définition par ligne — mises bout à
+bout elles se liraient comme une phrase, ce qu'elles ne sont pas. */
+.rt-officiel-mots{
+display:flex;
+flex-direction:column;
+gap:4px;
+margin:10px 0 0;
+padding-left:12px;
+border-left:2px solid var(--border-color);
+font-size:.8rem;
+line-height:1.45;
+color:var(--text-light);
+}
+
+.rt-officiel-mots strong{
+color:var(--text-color);
+font-weight:700;
+}
+
 .rt-source{
 font-size:.8rem;
 color:var(--text-muted);

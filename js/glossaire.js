@@ -80,7 +80,16 @@ export const GLOSSAIRE = [
 { id: "portail", motif: mot("portails?", "i"), explication: "le site où vous déposez votre candidature" },
 { id: "attestation-de-ressources", motif: mot("attestations? de ressources", "i"), explication: "la preuve que vous pouvez financer vos études" },
 { id: "tcf-delf-dalf", motif: mot("TCF|DELF|DALF"), explication: "un test officiel de niveau de français" },
-{ id: "ninea", motif: mot("NINEA"), explication: "le numéro d'identification des entreprises au Sénégal" }
+{ id: "ninea", motif: mot("NINEA"), explication: "le numéro d'identification des entreprises au Sénégal" },
+// LOT R23 (2026-09-18) — DEUX MOTS MESURÉS SUR LA ROUTE DES HUIT PAYS.
+// Le balayage a compté, dans le texte réellement rendu :
+//   « Espace Campus France »  phrase en clair, titre officiel, mention
+//   « entretien pédagogique » titre officiel
+// Tous deux dans des endroits que le glossaire ATTEINT, et aucun des
+// deux au glossaire. C'est pourtant le bureau où l'étudiant ira, et
+// l'épreuve qu'il redoute le plus de tout le parcours.
+{ id: "espace-campus-france", motif: mot("Espaces? Campus France", "i"), explication: "le bureau de Campus France dans votre pays" },
+{ id: "entretien-pedagogique", motif: mot("entretiens? pédagogiques?", "i"), explication: "un entretien sur votre projet d'études, en français" }
 ];
 
 // Le libellé de l'explication, pour le mot rencontré.
@@ -156,7 +165,9 @@ const place = placeLisible(texte, terme);
 // sans l'être, et il ne le serait plus jamais sur la page.
 if (!place) continue;
 vus.add(terme.id);
-liste.push({ id: terme.id, position: place.position, texte: ` (${explicationDe(terme, place.mot)})` });
+// `mot` est le mot tel qu'il apparaît dans CE texte (lot R23) : il sert
+// à nommer les termes hors d'un texte qu'on ne peut pas annoter.
+liste.push({ id: terme.id, position: place.position, mot: place.mot, texte: ` (${explicationDe(terme, place.mot)})` });
 }
 return liste.sort((a, b) => a.position - b.position);
 }
@@ -197,6 +208,34 @@ export const HORS_CHAMP = "nav, header, footer, a, button, h1, label, option, se
 * à expliquer. Aucun doublon pour autant — une occurrence déjà suivie de
 * son explication est reconnue par ce même compte.
 */
+/**
+ * LES MOTS TECHNIQUES D'UN TEXTE QU'ON NE PEUT PAS ANNOTER (lot R23).
+ *
+ * Le lot R21 a mis la citation officielle de la route hors de portée du
+ * glossaire (data-sans-glossaire) : on ne glisse pas nos parenthèses dans
+ * un texte qu'on présente comme officiel. Juste, mais MESURÉ le même
+ * jour sur la route des huit pays documentés, le résultat est que trois
+ * termes du glossaire n'apparaissent PLUS QUE là :
+ *
+ *   dap             16 occurrences — le mot le plus opaque du parcours
+ *   preinscription
+ *   tcf-delf-dalf
+ *
+ * L'étudiant restait donc seul devant « DAP ». La réponse n'est pas
+ * d'annoter la citation, c'est de poser les définitions À CÔTÉ d'elle :
+ * la citation reste intacte, et les mots sont dits quand même.
+ *
+ * Pur, testable sous Node. Rend [{id, mot, explication}] dans l'ordre du
+ * texte, chaque terme une seule fois.
+ */
+export function motsTechniques(texte) {
+return annotations(String(texte || ""), new Set()).map((a) => ({
+id: a.id,
+mot: a.mot,
+explication: a.texte.replace(/^ \(|\)$/g, "")
+}));
+}
+
 export function expliquerTermes(racine) {
 if (typeof document === "undefined") return 0;
 const doc = racine && racine.ownerDocument ? racine.ownerDocument : document;
