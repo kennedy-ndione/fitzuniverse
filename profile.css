@@ -936,7 +936,17 @@ gap:10px 20px;
 
 }
 
-.checkbox-row{
+/* LE SECOND SÉLECTEUR EST LA RÈGLE (lot R19, 2026-09-18). Mesuré au
+banc d'essai : TOUTES les cases de cette page s'affichaient en
+`display:block` avec un écart RÉEL de 0 px entre la case et son
+libellé — « ☑Bourse complète » — alors que `gap:10px` était bien
+déclaré ici. « .input-group label » (0,1,1) l'emportait sur
+« .checkbox-row » (0,1,0), et posait display:block sur tout label de
+formulaire. Même piège que .fitz-choice (css/base.css) et que l'icône
+posée sur son texte plus bas dans cette feuille : une règle qui perd en
+spécificité ne s'applique à rien, et ne proteste jamais. */
+.checkbox-row,
+.input-group .checkbox-row{
 
 display:flex;
 

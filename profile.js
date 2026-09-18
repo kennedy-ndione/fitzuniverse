@@ -114,9 +114,11 @@ renderChipGroup(document.getElementById("excludedCountriesChips"), excludedOptio
 
 }
 
-const CONTINENT_OPTIONS = [
-"Afrique", "Europe", "Amérique du Nord", "Amérique du Sud", "Asie", "Océanie"
-];
+// LOT R19 (2026-09-18) — CONTINENT_OPTIONS EST PARTI AVEC SON CHAMP.
+// « Continents préférés » n'était lu par RIEN : ni le moteur de
+// recommandation (js/recommend-programs.js lit preferredCountries et
+// excludedCountries), ni la fiche du Control Center, ni les prompts de
+// Fitz. Une question posée pour personne. Voir test/champs-lus.test.mjs.
 
 // Mêmes échelles, mêmes identifiants que la question "average" de
 // js/eligibility-pistes.js (diagnostic gratuit) et que
@@ -175,7 +177,7 @@ testLangue: { nature: "", score: "", date: "", prevuLe: "" },
 desiredField: "", specialization: "", desiredDegree: "",
 
 // 6. Préférences de destination
-preferredCountries: [], excludedCountries: [], preferredContinents: [], universityType: "",
+preferredCountries: [], excludedCountries: [], universityType: "",
 
 // 7. Préférences financières
 budget: "", hasSponsor: "", fundingWanted: [],
@@ -185,7 +187,7 @@ documentsAvailable: [],
 
 // 9. Expériences
 internships: "", workExperience: "", associations: "", volunteering: "",
-entrepreneurship: "", technicalSkills: "", computerSkills: "",
+entrepreneurship: "",
 
 // 10. Objectifs
 whyLeave: "", careerGoals: "", dreams: "",
@@ -211,7 +213,6 @@ const state = {
 languages: [],           // [{code, level, name?}]
 preferredCountries: new Set(),
 excludedCountries: new Set(),
-preferredContinents: new Set(),
 // Le palier choisi (identifiant PALIERS) et, pour un profil d'avant ce
 // lot, le studentStatus hérité qu'on ne perd pas tant qu'aucun palier
 // n'est choisi.
@@ -762,6 +763,13 @@ document.getElementById("currentLevelBlock").hidden = secondaire || (sansPalier 
 // pas à un lycéen ni à un bachelier : le bloc Bac porte leur moyenne.
 document.querySelectorAll('#sec-parcours [data-palier-champ]').forEach((el) => { el.hidden = secondaire; });
 
+// Lot R19 : « Spécialisation » disparaît du PREMIER écran pour un
+// lycéen et un nouveau bachelier. Personne ne la lit hors de la fiche
+// du Control Center, son aide dit déjà « le domaine suffit à Fitz », et
+// à dix-sept ans on n'a pas de spécialité — trois raisons de ne pas la
+// poser là où l'on commence.
+document.querySelectorAll('#sec-depart [data-palier-champ]').forEach((el) => { el.hidden = secondaire; });
+
 // Section 3 : masquée au secondaire, champs par palier.
 const academiques = new Set(champsAcademiques(palier));
 const sections = new Map(sectionsPour(palier).map((s) => [s.id, s.applicabilite]));
@@ -1138,6 +1146,53 @@ el.hidden = !set.has(el.dataset.repris);
 // Hydratation du formulaire depuis Firestore
 // ==========================================================
 
+/**
+* LOT R19 (2026-09-18) — LA CASE RECOPIE, PLUS L'ÉTUDIANT.
+*
+* L'aide sous le champ WhatsApp disait : « Le même numéro que ci-dessus ?
+* Recopiez-le. » Le site demandait à la main ce qu'il pouvait faire
+* lui-même, et pour la plupart des étudiants c'est le même numéro —
+* deux saisies internationales, indicatif compris, pour une seule
+* information.
+*
+* La case cochée MASQUE le champ et le tient à jour : changer d'indicatif
+* ou de numéro dans « Téléphone » met WhatsApp au même. Elle se coche
+* d'elle-même à l'ouverture quand les deux numéros enregistrés sont
+* identiques — sinon un étudiant qui les avait recopiés à la main
+* verrait la case décochée devant deux champs égaux.
+*
+* Ce qui part en base ne change pas : `whatsapp` garde sa valeur E.164,
+* lue sur le champ d'origine comme avant.
+*/
+function brancherWhatsAppMeme(profile) {
+
+const case_ = document.getElementById("whatsappMeme");
+const bloc = document.getElementById("whatsappChamp");
+const tel = champTelephone("phone");
+const wa = champTelephone("whatsapp");
+
+if (!case_ || !bloc || !tel || !wa) return;
+
+const recopier = () => { if (case_.checked) wa.definir(tel.valeur, tel.iso); };
+
+const appliquer = () => {
+bloc.hidden = case_.checked;
+recopier();
+updateCompletion();
+};
+
+case_.addEventListener("change", appliquer);
+tel.elements.national.addEventListener("input", recopier);
+tel.elements.select.addEventListener("change", recopier);
+
+// À l'ouverture : deux numéros identiques et non vides veulent dire
+// que l'étudiant avait déjà recopié.
+const memeNumero = !!(profile && profile.phone && profile.phone === profile.whatsapp);
+case_.checked = memeNumero;
+bloc.hidden = memeNumero;
+
+}
+
 function hydrateForm(profile, currentUser) {
 
 document.getElementById("firstName").value = profile.firstName || "";
@@ -1222,10 +1277,8 @@ document.getElementById("desiredDegree").value = profile.desiredDegree || "";
 
 state.preferredCountries = new Set(profile.preferredCountries || []);
 state.excludedCountries = new Set(profile.excludedCountries || []);
-state.preferredContinents = new Set(profile.preferredContinents || []);
 
 renderCountryChipGroups(profile);
-renderChipGroup(document.getElementById("preferredContinentsChips"), CONTINENT_OPTIONS, state.preferredContinents);
 
 if (profile.universityType) {
 const radio = document.querySelector(`input[name="universityType"][value="${profile.universityType}"]`);
@@ -1256,8 +1309,6 @@ document.getElementById("workExperience").value = profile.workExperience || "";
 document.getElementById("associations").value = profile.associations || "";
 document.getElementById("volunteering").value = profile.volunteering || "";
 document.getElementById("entrepreneurship").value = profile.entrepreneurship || "";
-document.getElementById("technicalSkills").value = profile.technicalSkills || "";
-document.getElementById("computerSkills").value = profile.computerSkills || "";
 
 document.getElementById("whyLeave").value = profile.whyLeave || "";
 document.getElementById("careerGoals").value = profile.careerGoals || "";
@@ -1311,7 +1362,6 @@ desiredField: val("desiredField"), specialization: val("specialization"), desire
 
 preferredCountries: [...state.preferredCountries],
 excludedCountries: [...state.excludedCountries],
-preferredContinents: [...state.preferredContinents],
 universityType: radioValue("universityType"),
 
 budget: val("budget"), hasSponsor: radioValue("hasSponsor"),
@@ -1322,7 +1372,6 @@ documentsAvailable: checkedValues("documentsGroup"),
 internships: val("internships"), workExperience: val("workExperience"),
 associations: val("associations"), volunteering: val("volunteering"),
 entrepreneurship: val("entrepreneurship"),
-technicalSkills: val("technicalSkills"), computerSkills: val("computerSkills"),
 
 whyLeave: val("whyLeave"), careerGoals: val("careerGoals"), dreams: val("dreams"),
 
@@ -1444,6 +1493,8 @@ profile.reprisDuDiagnostic = [...new Set([...dejaRepris, ...repris])];
 monterChampTelephone("phone");
 monterChampTelephone("whatsapp");
 
+brancherWhatsAppMeme(profile);
+
 // Le pays de résidence n'est pas figé : un étudiant qui le corrige
 // après coup doit voir l'indicatif suivre — tant qu'il n'a pas
 // lui-même saisi de numéro (voir suggererPays).
@@ -1500,6 +1551,11 @@ return;
 // validation ne porte que sur la longueur, et accepte plusieurs
 // valeurs quand le pays en admet plusieurs.
 for (const id of ["phone", "whatsapp"]) {
+
+// Lot R19 : le champ WhatsApp masqué par la case « même numéro » ne
+// se valide pas — il porte une copie du téléphone, déjà jugé, et on
+// ne peut pas mettre le curseur dans un champ qu'on ne voit pas.
+if (id === "whatsapp" && document.getElementById("whatsappChamp")?.hidden) continue;
 
 const champ = champTelephone(id);
 

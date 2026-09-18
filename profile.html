@@ -243,7 +243,7 @@ wand sont interdites sur tout le site (décision de Charles,
 <small class="field-repris" data-repris="desiredField" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
-<div class="input-group">
+<div class="input-group" data-palier-champ="specialization">
 <label for="specialization">Spécialisation</label>
 <div class="input-wrap"><input type="text" id="specialization" placeholder="Ex. Cybersécurité, Droit des affaires…" data-exemples="specialisation"></div><p class="field-aide">Si vous ne savez pas encore, laissez vide : le domaine suffit à Fitz.</p>
 </div>
@@ -396,10 +396,18 @@ côté : une question, un vocabulaire, deux portes. -->
 <p class="field-aide">Le pays se choisit à gauche, le numéro s'écrit sans l'indicatif.</p>
 </div>
 
+<!-- LOT R19 (2026-09-18) — LA CASE RECOPIE, PLUS L'ÉTUDIANT. L'aide
+disait « Le même numéro que ci-dessus ? Recopiez-le. » : le site
+demandait à l'étudiant de faire à la main ce qu'il pouvait faire
+lui-même. Pour la plupart, c'est le même numéro. -->
 <div class="input-group">
 <label for="whatsapp">WhatsApp</label>
+<p class="field-hint">C'est par là que l'équipe vous joint le plus vite.</p>
+<label class="checkbox-row" id="whatsappMemeLigne" style="margin-bottom:10px;"><input type="checkbox" id="whatsappMeme"><span>C'est le même numéro que mon téléphone</span></label>
+<div id="whatsappChamp">
 <div class="input-wrap"><input type="tel" id="whatsapp"></div>
-<p class="field-aide">C'est par là que l'équipe vous joint le plus vite. Le même numéro que ci-dessus ? Recopiez-le.</p>
+<p class="field-aide">Le pays se choisit à gauche, le numéro s'écrit sans l'indicatif.</p>
+</div>
 </div>
 
 <div class="input-group">
@@ -626,10 +634,6 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="chip-select" id="excludedCountriesChips" data-store="excludedCountries"></div>
 </div>
 
-<div class="input-group field-full" style="margin-top:18px;">
-<label>Continents préférés</label>
-<div class="chip-select" id="preferredContinentsChips" data-store="preferredContinents"></div>
-</div>
 
 <div class="input-group field-full" style="margin-top:18px;">
 <label>Type d'université</label>
@@ -761,15 +765,6 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 <div class="input-wrap"><textarea id="entrepreneurship" placeholder="Ex. Petite activité de réparation de téléphones, depuis 2024."></textarea></div>
 </div>
 
-<div class="input-group">
-<label for="technicalSkills">Compétences techniques</label>
-<div class="input-wrap"><input type="text" id="technicalSkills" placeholder="Ex. Soudure, topographie, comptabilité, laboratoire…"></div>
-</div>
-
-<div class="input-group">
-<label for="computerSkills">Compétences informatiques</label>
-<div class="input-wrap"><input type="text" id="computerSkills" placeholder="Ex. Word, Excel, Python, Photoshop…"></div>
-</div>
 
 </div>
 
