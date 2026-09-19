@@ -22,6 +22,18 @@
 
 export const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp,image/gif,application/pdf";
 export const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 Mo — limite raisonnable pour un aperçu local en mémoire
+
+/* LE PLAFOND DES PDF, ANNONCÉ AVANT L'ENVOI.
+
+   MIROIR de MAX_OCTETS_DOCUMENT (functions/fitz.js), qui fait foi : le
+   serveur est le seul endroit qu'un navigateur ne peut pas contourner.
+   Celui-ci ne sert qu'à ne pas faire attendre l'étudiant pour rien.
+
+   Vu le 2026-09-19 : un RCCM joint, l'attente de l'envoi, puis le refus.
+   Le fichier était trop lourd depuis le début — autant le dire au moment
+   où il le choisit. Le message NOMME la taille du fichier : « trop
+   lourd » sans chiffre ne dit pas de combien il faut descendre. */
+export const MAX_OCTETS_PDF = 10 * 1024 * 1024;
 export const MAX_ATTACHMENTS_PER_MESSAGE = 4;
 
 function kindOf(file) {
@@ -95,6 +107,14 @@ return;
 }
 
 const isAccepted = ACCEPTED_TYPES.split(",").includes(file.type);
+
+if (isAccepted && file.type === "application/pdf" && file.size > MAX_OCTETS_PDF) {
+rejected.push({
+file,
+reason: `« ${file.name} » pèse ${(file.size / 1024 / 1024).toFixed(1)} Mo. Fitz lit les PDF jusqu'à 10 Mo — envoyez-en une partie, ou une photo de la page qui vous bloque.`
+});
+return;
+}
 
 if (!isAccepted) {
 rejected.push({ file, reason: "Fitz lit les images et les PDF. Pour un document Word ou Excel, enregistrez-le en PDF (Fichier ▸ Enregistrer sous ▸ PDF) puis renvoyez-le." });

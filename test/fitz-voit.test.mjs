@@ -318,3 +318,34 @@ test("pdf 4 — tant que ce n'est pas PROUVÉ, Fitz ne promet pas de lire les PD
     "le prompt promet de lire les PDF avant qu'un appel réel l'ait prouvé");
 
 });
+
+test("pdf 5 — le plafond des PDF est chiffré, et annoncé avant l'envoi", async () => {
+
+  const serveur = readFileSync(path.join(RACINE, "functions/fitz.js"), "utf8").replace(/\r\n/g, "\n");
+  const { MAX_OCTETS_PDF, validateFiles } = await import("../js/ai/attachments.js");
+
+  // RECALIBRÉ sur le premier essai réel : un RCCM scanné refusé par un
+  // plafond de 3 Mo, alors qu'une page de PDF coûte ~1,8 F CFA sur Sonnet.
+  // Le plafond doit laisser passer un document que personne ne trouverait
+  // anormal.
+  const maxServeur = Number(/const MAX_OCTETS_DOCUMENT = (\d+) \* 1024 \* 1024;/.exec(serveur)[1]);
+  assert.ok(maxServeur >= 10, `le plafond des PDF est redescendu à ${maxServeur} Mo : un scan ordinaire sera refusé`);
+
+  // LE MIROIR CLIENT SUIT LE SERVEUR. S'ils divergent, l'étudiant attend
+  // l'envoi pour rien, ou pire : on lui promet un plafond que le serveur
+  // refuse.
+  assert.equal(MAX_OCTETS_PDF, maxServeur * 1024 * 1024,
+    "le plafond annoncé au navigateur ne correspond plus à celui du serveur");
+
+  // Et le refus NOMME la taille : « trop lourd » sans chiffre ne dit pas
+  // de combien il faut descendre.
+  const gros = { name: "RCCM.pdf", type: "application/pdf", size: 12 * 1024 * 1024 };
+  const { rejected } = validateFiles([gros], 0);
+  assert.equal(rejected.length, 1, "un PDF au-dessus du plafond n'est plus arrêté avant l'envoi");
+  assert.match(rejected[0].reason, /12\.0 Mo/, "le refus ne dit plus combien pèse le fichier");
+  assert.match(rejected[0].reason, /10 Mo/, "le refus ne dit plus quel est le plafond");
+
+  // Un PDF ordinaire passe toujours.
+  assert.equal(validateFiles([{ name: "diplome.pdf", type: "application/pdf", size: 2 * 1024 * 1024 }], 0).accepted.length, 1);
+
+});

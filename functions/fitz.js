@@ -198,10 +198,23 @@ const POIDS_PAR_IMAGE = 1;
 // fichier sur un document scanné. ESTIMATION, PAS MESURE : à revoir avec
 // la console Anthropic une fois que de vrais PDF seront passés, comme on
 // l'a fait pour le barème des tâches le 2026-09-19.
+//
+// RECALIBRÉ LE JOUR MÊME, sur le premier essai réel : un RCCM scanné a
+// été refusé par le plafond de 3 Mo. L'arithmétique me donnait tort. Une
+// page de PDF coûte de l'ordre de 1 500 jetons d'entrée ; le chat tourne
+// sur Sonnet (2 $ le million), donc UNE PAGE ≈ 1,8 F CFA. Dix pages, 18 F.
+// Je protégeais contre un risque qui n'existe pas à cette échelle, et le
+// prix était un refus devant un document parfaitement ordinaire.
+//
+// 10 Mo et 8 points : un scan de 10 Mo fait de l'ordre de 15 à 25 pages,
+// soit ~45 F, couvert par les 80 F que valent 8 points. La marge reste
+// du bon côté, et le plafond ne refuse plus un document que personne ne
+// trouverait anormal. L'API accepte bien plus (32 Mo, 100 pages) : c'est
+// NOUS qui bornons, et il faut une raison chiffrée pour le faire.
 const MAX_DOCUMENTS = 2;
-const MAX_OCTETS_DOCUMENT = 3 * 1024 * 1024;
+const MAX_OCTETS_DOCUMENT = 10 * 1024 * 1024;
 const TYPES_DOCUMENT = ["application/pdf"];
-const POIDS_PAR_DOCUMENT = 5;
+const POIDS_PAR_DOCUMENT = 8;
 
 // Le document du site : `actif` (le robinet), `plafondJour` (le plafond
 // global) et le compteur du jour. Hors de config/, donc fermé à tout
