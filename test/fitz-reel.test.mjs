@@ -209,3 +209,125 @@ test("vide 1 — une réponse vide se journalise (sa forme, jamais son contenu) 
   assert.ok(!/bloc\.text|texte\b/.test(bloc), "le journal d'une réponse vide ne doit jamais porter de contenu");
 
 });
+
+
+test("barème 1 — les poids suivent le coût typique, et le plafond borne le cas lourd", async () => {
+
+  // LOT BARÈME (2026-09-19). Les poids du 2026-09-04 étaient des
+  // estimations d'avant tout appel réel. Mesure : 0,74 $US pour 61,7 k
+  // jetons sur les deux jours de recette. Aux tarifs du 2026-09-18, la
+  // traduction (Sonnet) et l'analyse de dossier (Opus) étaient pesées
+  // sur leur cas LOURD alors que les cinq autres tâches l'étaient sur
+  // leur cas typique — l'étudiant ordinaire payait le cas extrême d'un
+  // autre. Ce test tient la règle, pas les chiffres pour eux-mêmes.
+  const fitz = codeSeul("functions/fitz.js");
+
+  const poidsDe = (tache) => {
+    const trouve = new RegExp(`\\b${tache}:\\s*\\{[^}]*poids:\\s*(\\d+)`).exec(fitz);
+    assert.ok(trouve, `la tâche « ${tache} » n'a plus de poids : le plafond ne la voit plus`);
+    return Number(trouve[1]);
+  };
+
+  // Les cinq tâches légères tournent sur Sonnet avec une sortie courte :
+  // 5 à 11 F CFA, donc un point. Elles n'ont jamais bougé.
+  for (const tache of ["chat", "email", "readiness", "diagnostic"]) {
+    assert.equal(poidsDe(tache), 1, `${tache} ne coûte pas un point`);
+  }
+
+  // Les deux corrigées. Tout retour au-dessus signifie qu'on a repesé le
+  // cas lourd une deuxième fois, par-dessus le plafond qui le borne déjà.
+  assert.equal(poidsDe("translate"), 3, "la traduction est repassée au-dessus de son coût typique (~29 F)");
+  assert.equal(poidsDe("check"), 7, "l'analyse de dossier est repassée au-dessus de son coût typique (~69 F)");
+
+  // La lettre reste sur Opus ET garde son poids : elle est à un point de
+  // son coût typique, on ne corrige que ce qui est faux.
+  assert.equal(poidsDe("letter"), 4, "la lettre a changé de poids sans raison mesurée");
+
+  // LA CONSÉQUENCE VENDUE, écrite en clair : un Essentiel (40/jour) doit
+  // pouvoir faire CINQ analyses de dossier dans sa journée. C'est ce
+  // chiffre-là que l'étudiant vit, et il tombe si un poids remonte.
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { PLAFONDS } = require(path.join(RACINE, "functions/lib/fitz-acces.js"));
+  assert.ok(Math.floor(PLAFONDS["essentiel-4"].jour / poidsDe("check")) >= 5,
+    "un Essentiel ne peut plus faire cinq analyses de dossier par jour");
+
+  // LE PLAFOND GRATUIT — la première impression. À 3 points par MOIS, un
+  // visiteur avait droit à un seul diagnostic (deux quand le défaut de
+  // réponse vide en faisait coûter deux), puis lisait un refus. Il lui
+  // en faut deux complets, défaut compris.
+  assert.ok(PLAFONDS.gratuit.mois >= 2 * 2, "le gratuit ne laisse plus deux diagnostics dans le mois");
+  assert.ok(PLAFONDS.gratuit.jour >= 2 * 1, "le gratuit ne laisse plus une reprise le jour même");
+
+});
+
+test("global 1 — un plafond pour TOUT le site, et un robinet qui ne ment pas", async () => {
+
+  // Avant ce lot, tous les plafonds étaient par compte : additionnés, ils
+  // ne bornaient rien. Cent comptes gratuits valent cent fois le plafond
+  // gratuit, et rien ne disait « stop » avant que le crédit ne soit vide.
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { verdictSysteme, PLAFOND_GLOBAL_JOUR } = require(path.join(RACINE, "functions/lib/fitz-acces.js"));
+
+  assert.equal(typeof verdictSysteme, "function", "verdictSysteme a disparu : le site n'a plus de plafond");
+  assert.ok(PLAFOND_GLOBAL_JOUR > 0, "le repli du plafond global ne vaut plus rien");
+
+  // LE ROBINET : actif:false arrête tout le monde, avant tout calcul.
+  assert.deepEqual(verdictSysteme({ systeme: { actif: false }, jourCourant: "2026-09-19", points: 1 }),
+    { ok: false, portee: "robinet" });
+
+  // LE PLAFOND GLOBAL, avec le repli quand le document ne le déclare pas.
+  const auBord = { jour: "2026-09-19", pointsJour: PLAFOND_GLOBAL_JOUR - 1 };
+  assert.equal(verdictSysteme({ systeme: auBord, jourCourant: "2026-09-19", points: 1 }).ok, true);
+  assert.equal(verdictSysteme({ systeme: auBord, jourCourant: "2026-09-19", points: 2 }).ok, false);
+  assert.equal(verdictSysteme({ systeme: auBord, jourCourant: "2026-09-19", points: 2 }).portee, "global");
+
+  // IL SE RÈGLE SANS DÉPLOIEMENT : la valeur du document gagne sur le repli.
+  assert.equal(verdictSysteme({ systeme: { jour: "2026-09-19", pointsJour: 40, plafondJour: 50 }, jourCourant: "2026-09-19", points: 7 }).plafond, 50);
+  assert.equal(verdictSysteme({ systeme: { jour: "2026-09-19", pointsJour: 45, plafondJour: 50 }, jourCourant: "2026-09-19", points: 7 }).ok, false);
+
+  // LE JOUR TOURNE TOUT SEUL : un compteur daté d'hier vaut zéro.
+  assert.equal(verdictSysteme({ systeme: { jour: "2026-09-18", pointsJour: 9999 }, jourCourant: "2026-09-19", points: 7 }).ok, true);
+
+  // UN DOCUMENT ABSENT NE FERME PAS FITZ : le robinet se ferme sur une
+  // décision écrite (actif:false), jamais sur une absence.
+  assert.equal(verdictSysteme({ systeme: {}, jourCourant: "2026-09-19", points: 12 }).ok, true);
+  assert.equal(verdictSysteme().ok, true);
+
+  // ET LE SERVEUR S'EN SERT VRAIMENT, dans la transaction de réservation.
+  const fitz = codeSeul("functions/fitz.js");
+  assert.match(fitz, /const REF_SYSTEME = "systeme\/fitz"/, "le document du site n'est plus nommé");
+  assert.match(fitz, /verdictSysteme\(/, "functions/fitz.js n'appelle plus verdictSysteme");
+
+  // Les deux lectures AVANT la première écriture : une transaction
+  // Firestore ne lit plus rien après avoir écrit.
+  const iLecture = fitz.indexOf("tx.get(refSysteme)");
+  const iEcriture = fitz.indexOf("tx.set(");
+  assert.ok(iLecture !== -1, "le document du site n'est plus lu dans la transaction");
+  assert.ok(iEcriture !== -1 && iLecture < iEcriture, "la lecture du document du site passe après une écriture");
+
+  // Le compteur du site s'écrit dans la MÊME transaction que celui de
+  // l'étudiant : sans ça, deux appels simultanés passent tous les deux.
+  assert.match(fitz, /tx\.set\(\s*refSysteme/, "le compteur du site n'est plus écrit dans la transaction");
+
+  // ET LE REFUS NE MENT PAS. Un plafond du SITE n'est pas un défaut de
+  // formule : le dire avec QUOTA_PLAN afficherait un message de vente à
+  // un étudiant qui a payé et qui n'y peut rien.
+  const iGlobal = fitz.indexOf('reservation.portee === "robinet"');
+  assert.ok(iGlobal !== -1, "le refus du site n'est plus distingué du refus de formule");
+  // La fenêtre s'arrête au refus de formule qui suit : au-delà, on lirait
+  // le QUOTA_PLAN de l'autre branche et l'assertion ne dirait plus rien.
+  const iFormule = fitz.indexOf('logger.info("Plafond Fitz atteint"', iGlobal);
+  assert.ok(iFormule > iGlobal, "le refus du site ne précède plus le refus de formule");
+  const blocGlobal = fitz.slice(iGlobal, iFormule);
+  assert.match(blocGlobal, /QUOTA_FOURNISSEUR/, "le refus du site emprunte encore le code d'un refus de formule");
+  assert.ok(!/QUOTA_PLAN/.test(blocGlobal), "le refus du site porte encore QUOTA_PLAN");
+  assert.match(blocGlobal, /logger\.error/, "un arrêt de facturation doit se voir dans la console, pas se noyer en info");
+
+  // Le code employé doit exister côté client, sinon l'étudiant tombe sur
+  // le message générique de CODES.INCONNU — qui, lui, est réessayable.
+  assert.match(lire("js/ai/ai-errors.js"), /QUOTA_FOURNISSEUR:\s*"QUOTA_FOURNISSEUR"/,
+    "QUOTA_FOURNISSEUR n'existe plus dans le vocabulaire du client");
+
+});

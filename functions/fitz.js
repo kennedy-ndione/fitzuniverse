@@ -109,13 +109,47 @@ const cleAnthropic = defineSecret("ANTHROPIC_API_KEY");
 // compte de test le jour même. Un plafond haut ne coûte rien en soi —
 // seuls les jetons réellement écrits sont facturés ; c'est la longueur
 // des listes, bornée dans js/ai/prompts.js, qui tient la dépense.
+// ------------------------------------------------------------
+// RECALIBRAGE DU 2026-09-19 (lot BARÈME) — MESURÉ, PLUS ESTIMÉ
+// ------------------------------------------------------------
+// Les poids dataient du 2026-09-04, posés avant le moindre appel réel.
+// La console Anthropic donne enfin une mesure : 0,74 $US pour 61,7 k
+// jetons sur les deux jours de recette des 18 et 19 septembre — la
+// campagne complète, les sept tâches, le diagnostic en production.
+//
+// Aux tarifs relevés le 2026-09-18 (Sonnet 5 : 2/10 $ le million ;
+// Opus 5 : 5/25 $), le coût TYPIQUE de chaque tâche est :
+//
+//   diagnostic, chat, e-mail, vérification   5 à 11 F CFA   poids 1  ✔
+//   lettre (Opus)                            ~30 F          poids 4  ✔
+//   traduction (Sonnet)                      ~29 F          poids 7  ✘
+//   analyse de dossier (Opus, 2 captures)    ~69 F          poids 12 ✘
+//
+// Les deux dernières étaient pesées sur leur cas LOURD (entrée au
+// maximum, sortie au maximum), les cinq autres sur leur cas typique.
+// Deux règles dans une même grille : l'étudiant ordinaire payait le cas
+// extrême d'un autre.
+//
+// RÈGLE RETENUE — LE POIDS SUIT LE COÛT TYPIQUE, et c'est le PLAFOND qui
+// borne le cas lourd : c'est son métier, et il le fait déjà. Peser le
+// pire cas aux deux endroits, c'est le facturer deux fois.
+//
+// Ce que ça change pour un Essentiel (40 points/jour) : il passait de
+// TROIS analyses de dossier par jour et plus rien, à CINQ analyses avec
+// cinq points restants pour discuter avec Fitz. La dépense réelle, elle,
+// ne bouge pas d'un franc — seul le compteur mentait.
+//
+// `letter` (4) et `readiness` (1) restent : ils sont à un point de leur
+// coût typique, et la sortie d'Opus est la plus variable des sept. On ne
+// corrige que ce qui est faux.
+// ------------------------------------------------------------
 const TACHES = {
   chat: { modele: "claude-sonnet-5", maxTokens: 2048, poids: 1, structuree: false },
   email: { modele: "claude-sonnet-5", maxTokens: 2048, poids: 1, structuree: false },
   readiness: { modele: "claude-sonnet-5", maxTokens: 4096, poids: 1, structuree: true },
-  translate: { modele: "claude-sonnet-5", maxTokens: 8192, poids: 7, structuree: false },
+  translate: { modele: "claude-sonnet-5", maxTokens: 8192, poids: 3, structuree: false },
   letter: { modele: "claude-opus-5", maxTokens: 4096, poids: 4, structuree: false },
-  check: { modele: "claude-opus-5", maxTokens: 8192, poids: 12, structuree: true },
+  check: { modele: "claude-opus-5", maxTokens: 8192, poids: 7, structuree: true },
 
   // LA SEULE TÂCHE OUVERTE AUX COMPTES GRATUITS.
   //
@@ -149,6 +183,12 @@ const TACHES = {
 // pèse donc réellement, et le plafond doit le voir.
 const POIDS_PAR_IMAGE = 1;
 
+// Le document du site : `actif` (le robinet), `plafondJour` (le plafond
+// global) et le compteur du jour. Hors de config/, donc fermé à tout
+// navigateur par la règle par défaut de firestore.rules — il se change
+// depuis la console Firebase. Voir verdictSysteme() dans lib/fitz-acces.js.
+const REF_SYSTEME = "systeme/fitz";
+
 // Garde-fou de taille du texte. 60 000 caractères laissent la place à
 // un dossier complet tout en plafonnant le coût d'un appel isolé.
 const MAX_PROMPT_CHARS = 60000;
@@ -171,7 +211,7 @@ const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // bourse vendues absentes, et aucune lecture de `planPreinscription`.
 // Elle est désormais dans un module PUR, testé sous Node et comparé à la
 // grille par test/pre-fitz.test.mjs (lot PRÉ-FITZ, 2026-09-10).
-const { formuleActive, formuleDeDerogation, plafondsDe } = require("./lib/fitz-acces");
+const { formuleActive, formuleDeDerogation, plafondsDe, verdictSysteme } = require("./lib/fitz-acces");
 
 // ============================================================
 // COMPTEUR D'USAGE
@@ -199,14 +239,30 @@ function clesPeriode(maintenant) {
  * yeux à chaque message.
  */
 async function reserverPoints(uid, formule, points) {
-  const ref = admin.firestore().doc(`users/${uid}/interne/usageFitz`);
+  const db = admin.firestore();
+  const ref = db.doc(`users/${uid}/interne/usageFitz`);
+  // Le document du SITE : robinet + plafond global + compteur du jour.
+  // Voir verdictSysteme() dans lib/fitz-acces.js pour le pourquoi.
+  const refSysteme = db.doc(REF_SYSTEME);
   const maintenant = new Date();
   const { jour, mois } = clesPeriode(maintenant);
   const plafonds = plafondsDe(formule);
 
-  return admin.firestore().runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+  return db.runTransaction(async (tx) => {
+    // LES DEUX LECTURES D'ABORD : une transaction Firestore n'autorise
+    // plus aucune lecture après la première écriture.
+    const [snap, snapSysteme] = await Promise.all([tx.get(ref), tx.get(refSysteme)]);
     const etat = snap.exists ? snap.data() : {};
+    const systeme = snapSysteme.exists ? snapSysteme.data() : {};
+
+    // LE SITE AVANT LE COMPTE. Un robinet fermé ou un plafond global
+    // atteint arrêtent tout le monde, y compris le propriétaire : c'est
+    // la facture de FitzUniverse qu'ils protègent, pas un droit d'accès.
+    const global = verdictSysteme({ systeme, jourCourant: jour, points });
+
+    if (!global.ok) {
+      return { ok: false, portee: global.portee, plafond: global.plafond };
+    }
 
     const pointsJour = etat.jour === jour ? Number(etat.pointsJour) || 0 : 0;
     const pointsMois = etat.mois === mois ? Number(etat.pointsMois) || 0 : 0;
@@ -228,6 +284,19 @@ async function reserverPoints(uid, formule, points) {
         pointsMois: pointsMois + points,
         dernierAppelLe: maintenant.toISOString(),
       },
+      { merge: true }
+    );
+
+    // Le compteur du site, dans la même transaction : pas une lecture de
+    // plus, et aucune course possible entre deux appels simultanés.
+    //
+    // LIMITE CONNUE, ASSUMÉE : c'est un document unique, et Firestore
+    // tient de l'ordre d'une écriture par seconde sur un document. Tant
+    // que Fitz sert moins d'un appel par seconde, c'est sans effet. Au-delà,
+    // il faudra répartir ce compteur sur N documents — pas avant.
+    tx.set(
+      refSysteme,
+      { jour, pointsJour: global.pointsJour, dernierAppelLe: maintenant.toISOString() },
       { merge: true }
     );
 
@@ -446,6 +515,25 @@ exports.fitzGenerate = onCall(
     //    arrêtée. Réservé AVANT l'appel : voir reserverPoints().
     const points = config.poids + imagesValides.length * POIDS_PAR_IMAGE;
     const reservation = await reserverPoints(uid, formule, points);
+
+    // Le site d'abord — et ces deux refus-là NE SONT PAS des refus de
+    // formule. Le dire avec QUOTA_PLAN afficherait un message de vente à
+    // un étudiant qui a déjà payé et qui n'y peut rien : QUOTA_FOURNISSEUR
+    // existe pour ça et dit la vérité — « le problème est de notre côté,
+    // pas du vôtre ». En logger.error, pas info : ces deux lignes doivent
+    // se voir dans la console, ce sont des événements de facturation.
+    if (!reservation.ok && (reservation.portee === "robinet" || reservation.portee === "global")) {
+      logger.error("Fitz arrêté pour tout le site", {
+        portee: reservation.portee,
+        plafond: reservation.plafond,
+      });
+
+      throw refus(
+        "resource-exhausted",
+        "QUOTA_FOURNISSEUR",
+        "Fitz est très sollicité en ce moment. Réessayez dans quelques minutes."
+      );
+    }
 
     if (!reservation.ok) {
       logger.info("Plafond Fitz atteint", { uid, formule, portee: reservation.portee });
