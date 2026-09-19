@@ -35,7 +35,7 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 const codeSeul = (f) => lire(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
 
 const requis = createRequire(import.meta.url);
-const { texteDePage, estUnPdf, textePdf, echeanceRecurrente, MOTS_RECURRENCE, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
+const { texteDePage, estUnPdf, ressembleAUnContenuDePage, textePdf, echeanceRecurrente, MOTS_RECURRENCE, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
   requis(path.join(RACINE, "functions/lib/verification-bourse.js"));
 
 /* ---------------------------------------------------------------
@@ -668,6 +668,80 @@ test("pdf 2 — un PDF LaTeX sans espaces, et sa césure, restent lisibles", () 
 
   const phrase = texte.split("\n").find((l) => /settembre/.test(l));
   assert.equal(dateCitee("2026-09-07", phrase), true);
+
+});
+
+test("pdf 2 bis — une police embarquée n'est pas du texte", () => {
+
+  /* LE DÉFAUT VU EN PRODUCTION, le 2026-09-19. POSTECH rendait
+     24 022 caractères : la couverture du guide, correcte, puis
+     « GPOSÐÂÍ … GSUB … cmap … glyf … hhea … » — le programme d'une
+     police embarquée, avalé comme du texte. Le tableau des dates,
+     page 2, était noyé dedans et tronqué bien avant par le plafond.
+
+     Le premier tri cherchait « Tj » n'importe où dans le flux. Une
+     police fait des dizaines de milliers d'octets : elle contient
+     cette séquence par hasard. Un tri trop permissif n'écarte pas du
+     vrai, il fait pire — il accepte du faux, et un modèle à qui l'on
+     donne du charabia finit par meubler. */
+
+  // Reconnues aux PREMIERS OCTETS, le seul endroit où elles ne
+  // mentent pas. Chacune porte BT, ET et Tj pour que le test échoue
+  // si la reconnaissance disparaît.
+  const piege = " BT ET Tj TJ";
+  assert.equal(ressembleAUnContenuDePage("\u0000\u0001\u0000\u0000GSUB cmap glyf" + piege), false, "TrueType");
+  assert.equal(ressembleAUnContenuDePage("OTTO CFF " + piege), false, "OpenType");
+  assert.equal(ressembleAUnContenuDePage("\u0089PNG\r\n" + piege), false, "PNG");
+  assert.equal(ressembleAUnContenuDePage("ÿØÿà" + piege), false, "JPEG");
+
+  // BT … ET : la seule structure qu'un flux de contenu porte toujours
+  // dès qu'il écrit une lettre.
+  assert.equal(ressembleAUnContenuDePage("xxxx Tj TJ yyyy"), false,
+    "« Tj » quelque part dans un binaire ne fait pas un texte — c'est exactement le défaut corrigé");
+  assert.equal(ressembleAUnContenuDePage("q BT /F1 12 Tf (bonjour) Tj ET Q"), true);
+
+  // Les deux bornes comptent séparément : un flux qui ouvre du texte
+  // sans le fermer, ou l'inverse, n'est pas un contenu de page.
+  assert.equal(ressembleAUnContenuDePage("q BT /F1 12 Tf (bonjour) Tj Q"), false, "BT sans ET");
+  assert.equal(ressembleAUnContenuDePage("q /F1 12 Tf (bonjour) Tj ET Q"), false, "ET sans BT");
+
+  // Et les documents réels traversent toujours le tri.
+  assert.ok(textePdf(PDF("guide-admission.pdf"), zlib).length > 400,
+    "un tri trop sévère écarterait le vrai texte : c'est l'erreur inverse, et elle coûte autant");
+  assert.ok(textePdf(PDF("bando.pdf"), zlib).length > 250);
+
+  /* LE DOCUMENT COMPLET. police-embarquee.pdf reproduit POSTECH :
+     un flux de contenu légitime, un programme de police portant la
+     séquence « Tj », et un flux CID qui ne rend que « ã¡òÔ… ». Seul
+     le premier doit ressortir. */
+  const lu = textePdf(PDF("police-embarquee.pdf"), zlib);
+
+  assert.match(lu, /Second round: July 6, 2026 ~ September 11, 2026 \(18:00\)/,
+    "le calendrier est le seul texte de ce document, et il doit sortir ENTIER");
+  assert.ok(!/GSUB|glyf|hhea|maxp/.test(lu), "le programme de police ne doit pas entrer");
+  assert.ok(!/ã¡òÔ/.test(lu),
+    "le charabia CID porte des lettres accentuées : compter les lettres le laissait passer, ce sont les ESPACES qui le trahissent");
+
+  // Et la garde travaille dessus comme sur n'importe quelle page.
+  assert.equal(dateCitee("2026-09-11", lu.split("\n").find((l) => /Second round/.test(l))), true);
+
+});
+
+test("pdf 2 ter — les parenthèses imbriquées ne mangent pas la ligne", () => {
+
+  /* Le motif de la première version s'arrêtait à la première
+     parenthèse INTERNE. Or elles sont licites dès qu'elles sont
+     équilibrées, et les calendriers en sont pleins :
+     « (Second round: … September 11, 2026 (18:00)) ». La ligne
+     entière se réduisait à « 18:00 » — la date qu'on cherchait était
+     exactement celle que le motif jetait. Un scanner remplace le
+     motif. */
+
+  const lu = textePdf(PDF("police-embarquee.pdf"), zlib);
+
+  assert.match(lu, /First round: February 24, 2026 ~ April 3, 2026/);
+  assert.ok(!/^18:00$/m.test(lu),
+    "« 18:00 » seul sur sa ligne est la signature du motif qui s'arrêtait trop tôt");
 
 });
 

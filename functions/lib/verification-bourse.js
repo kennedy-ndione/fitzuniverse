@@ -157,42 +157,89 @@ function decoderChainePdf(brut) {
  *  dessin, et n'a rien à faire dans une phrase. */
 function texteDUnFlux(flux) {
 
+  /* UN BALAYAGE, PAS UNE EXPRESSION RÉGULIÈRE.
+
+     La première version découpait au motif /\((?:\\.|[^\\()])*\)/ —
+     qui s'arrête à la première parenthèse INTERNE. Or les
+     parenthèses imbriquées sont licites en PDF dès qu'elles sont
+     équilibrées, et elles sont partout dans les calendriers :
+     « (Second round: July 6, 2026 ~ September 11, 2026 (18:00)) ».
+     La ligne entière se réduisait à « 18:00 ». La date exacte qu'on
+     cherchait était celle que le motif jetait.
+
+     Un scanner de quinze lignes lit ça sans se tromper, et coûte
+     moins cher à relire qu'un motif qu'on n'ose plus toucher. */
+
   let sortie = "";
+  let i = 0;
 
-  // (…)Tj · (…)' · (…)" · [(…)…(…)]TJ — dans tous les cas, ce sont
-  // les parenthèses qui portent les caractères. On les prend dans
-  // l'ordre, en respectant les parenthèses échappées.
-  // LE NOMBRE COMPTE AUTANT QUE LA CHAÎNE. Dans un tableau TJ, un
-  // texte est découpé pour le crénage et les morceaux sont séparés
-  // par des décalages : [(Le) -250 (7) -250 (settembre)] TJ. Certains
-  // moteurs — LaTeX en tête — n'écrivent AUCUN caractère d'espace et
-  // ne laissent que ces nombres. Sans cette règle, la page rendait
-  // « Ledomandedevonoesserepresentateentroleore12:00del7settembre »,
-  // et plus aucune date n'y était lisible.
-  const jetons = flux.match(/\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]+>|-?\d+(?:\.\d+)?|\bT[Jj]\b|\bTD\b|\bTd\b|\bT\*\b|\bET\b/g) || [];
+  while (i < flux.length) {
 
-  for (const jeton of jetons) {
-    if (jeton === "TD" || jeton === "Td" || jeton === "T*" || jeton === "ET") { sortie += "\n"; continue; }
-    if (jeton === "TJ" || jeton === "Tj") { sortie += " "; continue; }
-    if (/^-?\d/.test(jeton)) {
-      // Un décalage marqué vaut une espace ; un crénage fin n'en est
-      // pas une. Le seuil usuel est autour de 200 millièmes de cadratin.
-      if (Number(jeton) <= -200) sortie += " ";
+    const c = flux[i];
+
+    // Chaîne littérale : profondeur des parenthèses, échappements.
+    if (c === "(") {
+      let profondeur = 1;
+      let brut = "";
+      i++;
+      while (i < flux.length && profondeur > 0) {
+        const d = flux[i];
+        if (d === "\\") { brut += d + (flux[i + 1] || ""); i += 2; continue; }
+        if (d === "(") profondeur++;
+        else if (d === ")") { profondeur--; if (profondeur === 0) { i++; break; } }
+        brut += d;
+        i++;
+      }
+      sortie += decoderChainePdf(brut);
       continue;
     }
-    if (jeton[0] === "(") { sortie += decoderChainePdf(jeton.slice(1, -1)); continue; }
-    if (jeton[0] === "<") {
-      // Chaîne hexadécimale. En UTF-16BE (le cas courant quand il y
-      // a des accents), un octet de poids fort nul précède chaque
-      // caractère latin : on le laisse tomber.
-      const hex = jeton.slice(1, -1).replace(/\s+/g, "");
-      let mot = "";
-      for (let i = 0; i + 1 < hex.length; i += 2) {
-        const code = parseInt(hex.slice(i, i + 2), 16);
-        if (code > 0) mot += String.fromCharCode(code);
+
+    // Chaîne hexadécimale. En UTF-16BE (le cas courant quand il y a
+    // des accents), un octet de poids fort nul précède chaque
+    // caractère latin : on le laisse tomber.
+    if (c === "<" && flux[i + 1] !== "<") {
+      const fin = flux.indexOf(">", i);
+      if (fin === -1) break;
+      const hex = flux.slice(i + 1, fin).replace(/\s+/g, "");
+      for (let k = 0; k + 1 < hex.length; k += 2) {
+        const code = parseInt(hex.slice(k, k + 2), 16);
+        if (code > 0) sortie += String.fromCharCode(code);
       }
-      sortie += mot;
+      i = fin + 1;
+      continue;
     }
+
+    // LE NOMBRE COMPTE AUTANT QUE LA CHAÎNE. Dans un tableau TJ, un
+    // texte est découpé pour le crénage et les morceaux sont séparés
+    // par des décalages : [(Le) -250 (7) -250 (settembre)] TJ.
+    // Certains moteurs — LaTeX en tête — n'écrivent AUCUN caractère
+    // d'espace et ne laissent que ces nombres. Sans cette règle, la
+    // page rendait « Ledomandedevonoesserepresentateentroleore12:00 »
+    // et plus aucune date n'y était lisible.
+    if (c === "-" || (c >= "0" && c <= "9")) {
+      let j = i + 1;
+      while (j < flux.length && /[0-9.]/.test(flux[j])) j++;
+      // Un décalage marqué vaut une espace ; un crénage fin n'en est
+      // pas une. Le seuil usuel est autour de 200 millièmes de cadratin.
+      if (Number(flux.slice(i, j)) <= -200) sortie += " ";
+      i = j;
+      continue;
+    }
+
+    // Les opérateurs qui déplacent le curseur séparent les lignes ;
+    // ceux qui dessinent du texte séparent les morceaux.
+    if (c >= "A" && c <= "Z") {
+      let j = i;
+      while (j < flux.length && /[A-Za-z*']/.test(flux[j])) j++;
+      const mot = flux.slice(i, j);
+      if (mot === "TD" || mot === "Td" || mot === "T*" || mot === "ET") sortie += "\n";
+      else if (mot === "TJ" || mot === "Tj") sortie += " ";
+      i = j;
+      continue;
+    }
+
+    i++;
+
   }
 
   return sortie;
@@ -232,6 +279,51 @@ function decoderAscii85(texte) {
   }
 
   return Buffer.from(octets);
+
+}
+
+/* CE QUI EST DU TEXTE, ET CE QUI N'EN EST PAS.
+
+   TROUVÉ LE 2026-09-19, en lisant enfin l'extrait que Fitz rapporte.
+   POSTECH : 24 022 caractères extraits, dont la couverture du guide,
+   correcte — puis « GPOSÐÂÍ … GSUB … cmap … glyf … hhea … ». Un
+   FICHIER DE POLICE embarqué, avalé comme du texte.
+
+   Le premier tri cherchait « Tj » quelque part dans le flux. Un
+   programme de police fait des dizaines de milliers d'octets : il
+   contient cette séquence par hasard, et il passait. Le vrai texte du
+   document — le tableau des dates, page 2 — était noyé dedans et
+   tronqué bien avant par le plafond de caractères.
+
+   C'est le même genre de faute que le tableau des mois : un test trop
+   permissif qui laisse entrer ce qu'il devrait écarter. Ici il ne
+   refusait pas du vrai, il acceptait du faux — et le résultat était
+   pire, parce qu'un modèle à qui l'on donne du charabia finit par
+   meubler. */
+
+/** Les signatures de ce qu'un PDF embarque et qui n'est pas du texte :
+ *  polices et images. Reconnues aux PREMIERS OCTETS, seul endroit où
+ *  elles ne mentent pas. */
+const DEBUTS_NON_TEXTE = [
+  "\x00\x01\x00\x00", "OTTO", "true", "ttcf", "wOFF", "wOF2", // polices
+  "\x80\x01",                                                  // Type1 (PFB)
+  "\x89PNG", "\xff\xd8\xff", "GIF8", "II*\x00", "MM\x00*"     // images
+];
+
+/** Un flux de CONTENU de page dessine du texte entre BT et ET. Un
+ *  programme de police, une image, un profil de couleurs, non. */
+function ressembleAUnContenuDePage(flux) {
+
+  const debut = flux.slice(0, 8);
+  if (DEBUTS_NON_TEXTE.some((sig) => debut.startsWith(sig))) return false;
+
+  // BT … ET, en mots entiers : c'est la seule structure qu'un flux de
+  // contenu porte toujours dès qu'il écrit une lettre, et qu'un
+  // binaire ne porte à peu près jamais dans cet ordre.
+  if (!/(^|[^A-Za-z])BT([^A-Za-z]|$)/.test(flux)) return false;
+  if (!/(^|[^A-Za-z])ET([^A-Za-z]|$)/.test(flux)) return false;
+
+  return true;
 
 }
 
@@ -290,9 +382,28 @@ function textePdf(octets, zlib) {
     }
 
     if (clair === null) continue;
-    if (!/\bTj\b|\bTJ\b/.test(clair)) continue;
+    if (!ressembleAUnContenuDePage(clair)) continue;
 
-    assemble += `${texteDUnFlux(clair)}\n`;
+    const morceau = texteDUnFlux(clair);
+
+    /* DEUXIÈME FILET. Un flux peut franchir le tri ci-dessus et rendre
+       tout de même du charabia : police à encodage CID, texte dessiné
+       par des glyphes sans correspondance lisible. On mesure alors ce
+       qu'on a sous la main — si moins de la moitié des caractères sont
+       lisibles par un humain, ce morceau n'est pas du texte et on ne
+       le verse pas dans le document. */
+    if (morceau.length > 0) {
+
+      /* ON MESURE LES ESPACES, pas les lettres. Une police à encodage
+         CID sans table lisible rend « ã¡òÔã¡òÔã¡òÔ… » : ce sont des
+         lettres latines accentuées pour Unicode, et compter les
+         lettres les laissait entrer. Ce qu'elles n'ont pas, et
+         qu'aucun texte humain ne perd, c'est l'espace entre les mots.
+         Une phrase en porte 12 à 18 % ; ce charabia, zéro. */
+      const espaces = (morceau.match(/\s/g) || []).length;
+      if (morceau.length <= 60 || espaces / morceau.length >= 0.04) assemble += `${morceau}\n`;
+
+    }
 
     // Un guide d'admission de 80 pages n'apporte rien de plus qu'un
     // de 20 : on s'arrête bien avant de peser sur la mémoire.
@@ -747,6 +858,7 @@ module.exports = {
   CONSIGNE_VERIFICATION,
   texteDePage,
   estUnPdf,
+  ressembleAUnContenuDePage,
   textePdf,
   dateCitee,
   MOTS_RECURRENCE,
