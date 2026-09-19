@@ -37,7 +37,7 @@ saveConversation,
 renameConversation,
 deleteConversation
 } from "./js/ai/chat-store.js";
-import { readAttachment, validateFiles, imagesPourLeModele } from "./js/ai/attachments.js";
+import { readAttachment, validateFiles, imagesPourLeModele, documentsPourLeModele } from "./js/ai/attachments.js";
 import { compressImageToTarget } from "./js/compression-image.js";
 import { showToast, copyToClipboard } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
@@ -703,7 +703,10 @@ history: active.messages.filter((m) => m.id !== assistantMessage.id).slice(-8),
 // Sans cette deuxième ligne, une capture d'écran s'affichait à
 // l'étudiant et n'atteignait jamais Fitz.
 attachments: userMessage.attachments || [],
-images: imagesPourLeModele(userMessage.attachments || [])
+images: imagesPourLeModele(userMessage.attachments || []),
+// Les PDF, sur leur canal à eux (lot PDF) : pour l'API ce sont des
+// blocs `document`, pas des blocs `image`.
+documents: documentsPourLeModele(userMessage.attachments || [])
 },
 signal: activeController.signal,
 onToken: (partial) => {

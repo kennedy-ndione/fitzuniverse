@@ -215,3 +215,106 @@ test("voit 7 — une capture de téléphone est allégée avant l'envoi", () => 
     "un fichier non-image passe maintenant par la compression d'image");
 
 });
+
+test("pdf 1 — les PDF partent sur leur propre canal, jamais sous le nom « images »", async () => {
+
+  const { documentsPourLeModele } = await import("../js/ai/attachments.js");
+
+  const donne = documentsPourLeModele([
+    { type: "application/pdf", donnees: "data:application/pdf;base64,JVBERi0=" },
+    { kind: "image", type: "image/png", previewUrl: "data:image/png;base64,AAAA" },
+    { type: "application/pdf", donnees: "data:application/pdf;base64," },
+    { type: "application/msword", donnees: "data:application/msword;base64,XXXX" },
+    null
+  ]);
+
+  // Pour l'API un PDF est un bloc `document`, pas un bloc `image` : les
+  // faire passer sous le nom « images » aurait été un mensonge de plus
+  // dans une chaîne qui en a déjà coûté un aujourd'hui.
+  assert.deepEqual(donne, [{ mediaType: "application/pdf", data: "JVBERi0=" }]);
+
+  // Les deux canaux ne se mélangent pas.
+  assert.deepEqual(
+    imagesPourLeModele([{ type: "application/pdf", donnees: "data:application/pdf;base64,JVBERi0=" }]),
+    []
+  );
+
+  assert.match(codeSeul("ai-chat.js"), /documents:\s*documentsPourLeModele\(/,
+    "ai-chat.js n'envoie plus les PDF");
+  assert.match(codeSeul("js/ai/ai-gateway.js"), /if \(documents\.length\) charge\.documents = documents;/,
+    "la passerelle n'ajoute plus les documents à la charge");
+
+});
+
+test("pdf 2 — le serveur construit un bloc document, et le fait payer", () => {
+
+  const serveur = readFileSync(path.join(RACINE, "functions/fitz.js"), "utf8").replace(/\r\n/g, "\n");
+  const nu = serveur.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
+
+  // LE BON TYPE DE BLOC. Un `image` à la place d'un `document` ferait lire
+  // le PDF comme une suite d'octets illisibles.
+  assert.match(nu, /type: "document",\s*source: \{ type: "base64", media_type: document\.mediaType, data: document\.data \}/,
+    "le serveur n'assemble plus les PDF en bloc document");
+
+  // Des limites À EUX : un PDF porte plusieurs pages, chaque page coûte
+  // comme une image.
+  assert.match(nu, /const MAX_DOCUMENTS = \d+;/, "les PDF n'ont plus de nombre maximum");
+  assert.match(nu, /const MAX_OCTETS_DOCUMENT = \d+ \* 1024 \* 1024;/, "les PDF n'ont plus de taille maximale");
+  assert.match(nu, /const POIDS_PAR_DOCUMENT = \d+;/, "un PDF ne coûte plus rien");
+
+  // ET LE POIDS EST RÉELLEMENT COMPTÉ : sans cette ligne, un PDF de vingt
+  // pages passerait au prix d'un message de chat.
+  assert.match(nu, /documentsValides\.length \* POIDS_PAR_DOCUMENT/,
+    "les PDF ne sont plus comptés dans les points réservés");
+
+  // Un PDF est plus borné qu'une image, parce qu'il porte plusieurs pages.
+  const maxDoc = Number(/const MAX_DOCUMENTS = (\d+);/.exec(nu)[1]);
+  const maxImg = Number(/const MAX_IMAGES = (\d+);/.exec(nu)[1]);
+  assert.ok(maxDoc <= maxImg, "on accepte désormais plus de PDF que d'images par message");
+
+  // Et il est validé AVANT la réservation des points — en cherchant
+  // l'APPEL, pas la définition de la fonction, qui vit plus haut dans le
+  // fichier et rendait cette assertion toujours vraie.
+  const iValide = nu.indexOf("const documentsValides = validerDocuments(documents);");
+  const iPoints = nu.indexOf("documentsValides.length * POIDS_PAR_DOCUMENT");
+  assert.ok(iValide !== -1, "les PDF ne passent plus par validerDocuments avant d'être utilisés");
+  assert.ok(iValide < iPoints, "les PDF sont comptés avant d'être validés");
+
+});
+
+test("pdf 3 — un PDF ne réveille pas le garde de longueur du prompt", async () => {
+
+  // Le défaut du 2026-09-19 serait revenu à l'identique, en pire : un PDF
+  // pèse plus lourd qu'une capture.
+  const base64 = "A".repeat(200000);
+
+  const res = await generate({
+    task: "chat",
+    input: {
+      message: "peux-tu lire mon diplôme ?",
+      profile: {},
+      history: [],
+      attachments: [{ type: "application/pdf", donnees: "data:application/pdf;base64," + base64 }],
+      documents: [{ mediaType: "application/pdf", data: base64 }]
+    },
+    adaptateur: genererViaSimulateur
+  });
+
+  assert.equal(typeof res.text, "string");
+  assert.ok(res.text.length > 0, "un PDF joint bloque de nouveau la génération");
+
+});
+
+test("pdf 4 — tant que ce n'est pas PROUVÉ, Fitz ne promet pas de lire les PDF", () => {
+
+  // CE TEST EST FAIT POUR ÊTRE RETIRÉ, et seulement après un appel réel
+  // réussi sur un vrai PDF. Règle posée avec Charles le 2026-09-19 : on
+  // n'écrit pas dans l'interface une capacité qu'on n'a pas vue marcher.
+  // C'est exactement l'erreur que le lot FITZ-VOIT a corrigée le matin
+  // même — une capacité promise, jamais branchée.
+  const { system } = buildPrompt("chat", { message: "x", profile: {}, history: [] });
+
+  assert.match(system, /Un PDF ou un document joint ne t'arrive pas/,
+    "le prompt promet de lire les PDF avant qu'un appel réel l'ait prouvé");
+
+});

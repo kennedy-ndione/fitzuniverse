@@ -183,6 +183,26 @@ const TACHES = {
 // pèse donc réellement, et le plafond doit le voir.
 const POIDS_PAR_IMAGE = 1;
 
+// UN PDF N'EST PAS UNE IMAGE, NI POUR L'API NI POUR LA FACTURE.
+//
+// Pour l'API c'est un bloc `document`, pas un bloc `image` : un PDF
+// envoyé tel quel est lu PAGE PAR PAGE, mise en page comprise — tampons,
+// colonnes, signatures, et même un scan, là où une extraction de texte ne
+// rend rien. C'est précisément ce qu'il faut pour un diplôme sénégalais,
+// qui est très souvent une photo mise en PDF.
+//
+// Pour la facture, chaque page coûte comme une image. On ne sait pas
+// compter les pages ici sans embarquer un analyseur ; le poids est donc
+// calibré sur « quelques pages » et la taille est bornée plus bas que
+// celle d'une image, parce que le nombre de pages suit le poids du
+// fichier sur un document scanné. ESTIMATION, PAS MESURE : à revoir avec
+// la console Anthropic une fois que de vrais PDF seront passés, comme on
+// l'a fait pour le barème des tâches le 2026-09-19.
+const MAX_DOCUMENTS = 2;
+const MAX_OCTETS_DOCUMENT = 3 * 1024 * 1024;
+const TYPES_DOCUMENT = ["application/pdf"];
+const POIDS_PAR_DOCUMENT = 5;
+
 // Le document du site : `actif` (le robinet), `plafondJour` (le plafond
 // global) et le compteur du jour. Hors de config/, donc fermé à tout
 // navigateur par la règle par défaut de firestore.rules — il se change
@@ -342,7 +362,7 @@ function construireClient() {
  * ensuite — un modèle lit mieux une consigne posée avant les pièces
  * qu'elle commente.
  */
-function construireContenu(user, images) {
+function construireContenu(user, images, documents = []) {
   const blocs = [{ type: "text", text: user }];
 
   for (const image of images) {
@@ -352,7 +372,57 @@ function construireContenu(user, images) {
     });
   }
 
+  // Les documents APRÈS les images, et les deux après la consigne : un
+  // modèle lit mieux une instruction posée avant les pièces qu'elle
+  // commente (même raison que le commentaire d'origine ci-dessus).
+  for (const document of documents) {
+    blocs.push({
+      type: "document",
+      source: { type: "base64", media_type: document.mediaType, data: document.data },
+    });
+  }
+
   return blocs;
+}
+
+/**
+ * Les PDF joints. Même forme que validerImages, limites à part : moins
+ * nombreux et moins lourds, parce qu'un PDF porte plusieurs pages et que
+ * chaque page coûte comme une image.
+ */
+function validerDocuments(documents) {
+  if (!Array.isArray(documents) || documents.length === 0) return [];
+
+  if (documents.length > MAX_DOCUMENTS) {
+    throw refus(
+      "invalid-argument",
+      "ENTREE_TROP_LONGUE",
+      `Envoyez ${MAX_DOCUMENTS} documents au maximum à la fois.`
+    );
+  }
+
+  return documents.map((document) => {
+    const mediaType = String(document?.mediaType || "");
+    const data = String(document?.data || "");
+
+    if (!TYPES_DOCUMENT.includes(mediaType)) {
+      throw refus(
+        "invalid-argument",
+        "CONTENU_REFUSE",
+        "Ce format de document n'est pas accepté. Envoyez un PDF, ou une photo de la page."
+      );
+    }
+
+    if (data.length * 0.75 > MAX_OCTETS_DOCUMENT) {
+      throw refus(
+        "invalid-argument",
+        "ENTREE_TROP_LONGUE",
+        "Ce document est trop lourd. Envoyez-en une partie, ou une photo de la page qui vous bloque."
+      );
+    }
+
+    return { mediaType, data };
+  });
 }
 
 function validerImages(images) {
@@ -442,7 +512,7 @@ exports.fitzGenerate = onCall(
     }
 
     const uid = request.auth.uid;
-    const { task, system, user, images } = request.data || {};
+    const { task, system, user, images, documents } = request.data || {};
 
     // 2. Tâche connue.
     const config = TACHES[task];
@@ -464,6 +534,7 @@ exports.fitzGenerate = onCall(
     }
 
     const imagesValides = validerImages(images);
+    const documentsValides = validerDocuments(documents);
 
     // 3. Formule — le verrouillage côté client (js/app-shell.js) suffit
     //    pour l'ergonomie, pas pour la facturation : rien n'empêche
@@ -513,7 +584,10 @@ exports.fitzGenerate = onCall(
 
     // 4. Plafond d'usage — le seul endroit où la facture peut être
     //    arrêtée. Réservé AVANT l'appel : voir reserverPoints().
-    const points = config.poids + imagesValides.length * POIDS_PAR_IMAGE;
+    const points =
+      config.poids +
+      imagesValides.length * POIDS_PAR_IMAGE +
+      documentsValides.length * POIDS_PAR_DOCUMENT;
     const reservation = await reserverPoints(uid, formule, points);
 
     // Le site d'abord — et ces deux refus-là NE SONT PAS des refus de
@@ -555,7 +629,7 @@ exports.fitzGenerate = onCall(
         model: config.modele,
         max_tokens: config.maxTokens,
         system,
-        messages: [{ role: "user", content: construireContenu(user, imagesValides) }],
+        messages: [{ role: "user", content: construireContenu(user, imagesValides, documentsValides) }],
       });
 
       // Diffusion progressive quand le client la demande : c'est ce qui

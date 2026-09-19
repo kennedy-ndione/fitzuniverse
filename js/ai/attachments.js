@@ -57,13 +57,24 @@ return;
 const kind = kindOf(file);
 const base = { name: file.name, type: file.type, size: file.size, kind, icon: iconFor(kind) };
 
-if (kind !== "image") {
+// UN PDF N'A PAS D'APERÇU, MAIS IL A DES OCTETS.
+//
+// previewUrl sert à la balise <img> de la conversation : un PDF n'en a
+// pas, il s'affiche avec une icône et son nom. Mais depuis le lot PDF,
+// ses octets doivent partir au modèle — on les lit dans `donnees`, un
+// champ distinct, pour qu'aucun code d'affichage ne les prenne jamais
+// pour une image à montrer.
+const lisible = kind === "image" || TYPES_DOCUMENT_MODELE.includes(file.type);
+
+if (!lisible) {
 resolve({ ...base, previewUrl: null });
 return;
 }
 
 const reader = new FileReader();
-reader.onload = () => resolve({ ...base, previewUrl: reader.result });
+reader.onload = () => resolve(kind === "image"
+? { ...base, previewUrl: reader.result }
+: { ...base, previewUrl: null, donnees: reader.result });
 reader.onerror = () => reject(new Error(`Impossible de lire "${file.name}".`));
 reader.readAsDataURL(file);
 
@@ -131,6 +142,34 @@ return { accepted, rejected };
  *
  * PURE : aucun DOM, aucun réseau. Testable sous Node.
  */
+/** Les types de document que le SERVEUR sait transmettre au modèle. */
+export const TYPES_DOCUMENT_MODELE = ["application/pdf"];
+
+/**
+ * LES PDF QUI PARTENT AU MODÈLE (lot PDF, 2026-09-19).
+ *
+ * Canal SÉPARÉ des images, et c'est voulu : pour l'API un PDF est un
+ * bloc `document`, pas un bloc `image`. Les faire passer sous le nom
+ * « images » aurait été un mensonge de plus dans une chaîne qui en a
+ * déjà coûté un aujourd'hui.
+ *
+ * Le serveur les borne à part (2 par message, 3 Mo, 5 points chacun) :
+ * un PDF porte plusieurs pages, et chaque page coûte comme une image.
+ */
+export function documentsPourLeModele(attachments = []) {
+
+  if (!Array.isArray(attachments)) return [];
+
+  return attachments
+    .filter((a) => a && TYPES_DOCUMENT_MODELE.includes(a.type) && typeof a.donnees === "string" && a.donnees.includes(","))
+    .map((a) => ({
+      mediaType: a.type,
+      data: a.donnees.slice(a.donnees.indexOf(",") + 1)
+    }))
+    .filter((doc) => doc.data.length > 0);
+
+}
+
 export function imagesPourLeModele(attachments = []) {
 
   if (!Array.isArray(attachments)) return [];

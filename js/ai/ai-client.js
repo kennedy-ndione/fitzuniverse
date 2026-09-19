@@ -119,7 +119,10 @@ throw new FitzError(CODES.INCONNU, { detail: `tâche inconnue : "${task}"` });
  * endroit que le navigateur ne peut pas contourner. Ce plafond-ci
  * garde ce pour quoi il a été fait : la longueur du PROMPT.
  */
-const CLES_HORS_MESURE = new Set(["images", "attachments"]);
+// `documents` rejoint la liste le jour où les PDF partent au modèle :
+// sans lui, le défaut du 2026-09-19 revenait à l'identique, un PDF
+// pesant encore plus qu'une capture.
+const CLES_HORS_MESURE = new Set(["images", "attachments", "documents"]);
 
 function tailleEntree(valeur, profondeur = 0) {
 

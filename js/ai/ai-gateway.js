@@ -99,6 +99,24 @@ return callablePromise;
 * les valide à nouveau (type, taille, nombre) — ce filtrage-ci évite
 * seulement un aller-retour perdu.
 */
+/**
+ * Les PDF, sur leur propre canal. Même normalisation que les images,
+ * nom distinct : pour l'API un PDF est un bloc `document`, et le serveur
+ * leur applique des limites à eux (2 par message, 3 Mo, 5 points).
+ */
+function normaliserDocuments(documents) {
+
+if (!Array.isArray(documents)) return [];
+
+return documents
+.filter((doc) => doc && typeof doc.data === "string" && doc.data.length)
+.map((doc) => ({
+mediaType: doc.mediaType || doc.type || "application/pdf",
+data: doc.data
+}));
+
+}
+
 function normaliserImages(images) {
 
 if (!Array.isArray(images)) return [];
@@ -203,8 +221,10 @@ throw new FitzError(CODES.INCONNU, { cause, detail: `prompt absent pour "${task}
 
 const charge = { task, system, user };
 const images = normaliserImages(input?.images);
+const documents = normaliserDocuments(input?.documents);
 
 if (images.length) charge.images = images;
+if (documents.length) charge.documents = documents;
 
 const callable = await obtenirCallable();
 const structuree = TACHES_STRUCTUREES.includes(task);
