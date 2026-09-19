@@ -2799,6 +2799,26 @@ color:var(--text-muted);
 
 }
 
+/* ---------- LE NOM DU FICHIER, RENDU À SA LIGNE (2026-09-19) ----------
+   ---------------------------------------------------------------------
+   DÉFAUT SIGNALÉ PAR CHARLES, reproduit en direct sur ai-check.html : le
+   nom du fichier ABSENT, et « 0.64 Mo » coupé en deux lignes tronquées.
+
+   La ligne est un flex à quatre enfants. L'icône et la croix ne
+   rétrécissent pas (flex-shrink:0). `.ai-file-row-info` accepte de
+   rétrécir jusqu'à rien (flex:1 ; min-width:0). Et le <select> n'avait
+   AUCUNE consigne de partage.
+
+   Or un menu déroulant se dimensionne sur son option LA PLUS LONGUE, pas
+   sur celle qu'il affiche : « Justificatif de financement » réclamait sa
+   largeur en permanence, même en affichant « Détection automatique ».
+   Le seul enfant souple encaissait donc la totalité du manque — le nom,
+   en nowrap + ellipsis, tombait à 0 pixel et disparaissait SANS MÊME
+   laisser ses trois points, et la taille se repliait sur deux lignes.
+
+   Même famille que la pastille de formule du lot PREMIUM 1, en miroir :
+   là un enfant refusait de rétrécir faute de min-width:0 ; ici celui qui
+   le peut absorbe tout parce que son voisin ne partage pas. */
 .ai-file-row select{
 
 padding:7px 10px;
@@ -2812,6 +2832,44 @@ background:var(--background);
 color:var(--text-color);
 
 font-size:.78rem;
+
+/* Il partage, et il est borné. Sans max-width, l'option la plus longue
+   dicte la largeur de toute la ligne. */
+flex:0 1 auto;
+
+min-width:0;
+
+max-width:44%;
+
+text-overflow:ellipsis;
+
+}
+
+/* UN PLANCHER POUR LE NOM. min-width:0 le laissait tomber à zéro : une
+   ellipse a besoin d'un peu de place pour exister. Sept caractères, c'est
+   « relev… » — assez pour que l'étudiant sache de quelle pièce on parle. */
+.ai-file-row-info{
+
+min-width:7ch;
+
+}
+
+/* « 0.64 Mo » est une seule information : elle ne se coupe pas en deux. */
+.ai-file-row-info span{
+
+white-space:nowrap;
+
+}
+
+/* Sous 420 px, on ne comprime plus : le menu passe à la ligne. Le nom et
+   sa taille gardent la première, la croix reste à portée de pouce. */
+@media (max-width: 420px){
+
+.ai-file-row{ flex-wrap:wrap; }
+
+.ai-file-row-remove{ order:2; }
+
+.ai-file-row select{ order:3; flex:1 1 100%; max-width:none; }
 
 }
 
