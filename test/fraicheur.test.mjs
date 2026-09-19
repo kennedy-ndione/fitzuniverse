@@ -141,6 +141,47 @@ test("phrase 1 — « vérifiée » se dit, et se distingue de « ouvertes »", 
 
 });
 
+test("phrase 1 bis — une date passée se dit au passé, et se compte en français", () => {
+
+  // VU À L'ÉCRAN le 2026-09-19, sur les bourses ARES (fermées la
+  // veille) : « Date limite vérifiée — il reste -2 jours pour
+  // déposer ». proposable() écarte ces programmes des propositions,
+  // donc la phrase n'apparaissait pas sur le hub — mais la carte
+  // d'acceptation, elle, affiche une candidature DÉJÀ ACCEPTÉE, qui
+  // peut très bien passer sa date pendant que l'étudiant la prépare.
+  // C'est là qu'un étudiant l'aurait lue.
+  assert.equal(libelleFenetre({ certitude: "verifiee", jours: -2, dateConfirmee: true }).etat, "passee");
+  assert.match(libelleFenetre({ certitude: "verifiee", jours: -2, dateConfirmee: true }).texte, /dépassée — c'était il y a 2 jours/);
+  assert.match(libelleFenetre({ certitude: "verifiee", jours: -1, dateConfirmee: true }).texte, /c'était hier/);
+
+  assert.ok(!/-\d/.test(libelleFenetre({ certitude: "verifiee", jours: -47, dateConfirmee: true }).texte),
+    "aucun nombre négatif ne doit atteindre une phrase écrite pour un étudiant");
+
+  // Le jour même : « il reste 0 jours » est faux, et angoissant pour rien.
+  assert.match(libelleFenetre({ certitude: "verifiee", jours: 0, dateConfirmee: true }).texte, /c'est aujourd'hui/);
+
+  // Et l'accord du pluriel, des deux côtés.
+  assert.match(libelleFenetre({ certitude: "verifiee", jours: 1, dateConfirmee: true }).texte, /il reste 1 jour pour/);
+  assert.match(libelleFenetre({ certitude: "lue", jours: 1, dateConfirmee: true }).texte, /Il reste 1 jour pour/);
+
+});
+
+test("fuite 2 — l'admin ne publie plus son adresse dans le catalogue", () => {
+
+  // MÊME DÉFAUT QUE admin/verification.js, MAIS PLUS ANCIEN : posé le
+  // 2026-08-10 pour tracer une modification de portail, il écrivait
+  // `auth.currentUser?.email` dans « universities » — collection en
+  // LECTURE PUBLIQUE. L'adresse s'est retrouvée en clair dans
+  // assets/data/catalogue.json, sur politecnico-di-milano-milan.
+  // Trouvé en relisant l'instantané public après la campagne du 19.
+  const js = lire("admin/firebase-admin.js").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
+
+  assert.ok(!/updatedBy:.*currentUser\?\.email/.test(js),
+    "une adresse e-mail n'a rien à faire dans une collection en lecture publique");
+  assert.match(js, /updatedBy: auth\.currentUser\?\.uid \|\| null/);
+
+});
+
 test("phrase 2 — la carte d'acceptation garde la certitude", () => {
 
   const carte = carteFitz({ universityName: "X", country: "Maroc", certitude: "verifiee", jours: 100, dateConfirmee: true });

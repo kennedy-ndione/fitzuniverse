@@ -887,6 +887,13 @@ return { ok: true, raison: "", dateConfirmee };
 * @param {{dateConfirmee?:boolean, jours?:number|null}} retenue
 * @returns {{etat:string, texte:string}}
 */
+/** Le délai écoulé, en français — jamais un nombre négatif lâché dans
+ *  une phrase écrite pour un étudiant. « hier », « il y a 2 jours ». */
+function depuisQuand(jours) {
+const passes = Math.abs(jours);
+return passes <= 1 ? "hier" : `il y a ${passes} jours`;
+}
+
 export function libelleFenetre(retenue) {
 
 const r = retenue || {};
@@ -898,12 +905,29 @@ const r = retenue || {};
    ce qu'elle disait hier. C'est voulu : on pose la fondation avant les
    données, jamais l'inverse. */
 if (r.certitude === "verifiee" && typeof r.jours === "number") {
+
+// UNE DATE PASSÉE SE DIT AU PASSÉ. Vu à l'écran le 2026-09-19, sur
+// ARES : « Date limite vérifiée — il reste -2 jours pour déposer ».
+// proposable() écarte ces programmes des propositions, donc la phrase
+// n'apparaît pas sur le hub — mais la carte d'acceptation, elle,
+// affiche une candidature ACCEPTÉE qui peut très bien passer sa date
+// pendant que l'étudiant la prépare. C'est là qu'elle se serait vue.
+if (r.jours < 0) {
+return { etat: "passee", texte: `Date limite dépassée — c'était ${depuisQuand(r.jours)}` };
+}
+
+// Le jour même : « il reste 0 jours » est faux et angoissant pour rien.
+if (r.jours === 0) {
+return { etat: "serre", texte: "Date limite vérifiée — c'est aujourd'hui" };
+}
+
 return {
 etat: "verifiee",
 texte: r.jours <= 45
-? `Date limite vérifiée — il reste ${r.jours} jours pour déposer`
+? `Date limite vérifiée — il reste ${r.jours} jour${r.jours > 1 ? "s" : ""} pour déposer`
 : `Date limite vérifiée — ${r.jours} jours pour déposer`
 };
+
 }
 
 if (r.dateConfirmee !== true || typeof r.jours !== "number") {
@@ -918,7 +942,7 @@ texte: "Date limite non confirmée — à vérifier sur le site officiel avant d
 // plancher de proposition est à 30 (voir JOURS_MINIMUM_POUR_DEPOSER) ;
 // entre 30 et 45, on propose, mais on le dit.
 if (r.jours <= 45) {
-return { etat: "serre", texte: `Il reste ${r.jours} jours pour déposer` };
+return { etat: "serre", texte: `Il reste ${r.jours} jour${r.jours > 1 ? "s" : ""} pour déposer` };
 }
 
 return { etat: "ouverte", texte: `Candidatures ouvertes — ${r.jours} jours pour déposer` };

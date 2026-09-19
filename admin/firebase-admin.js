@@ -259,7 +259,18 @@ export async function updateUniversityProfile(universityId, profileData) {
 await updateDoc(doc(db, "universities", universityId), {
 ...profileData,
 updatedAt: serverTimestamp(),
-updatedBy: auth.currentUser?.email || auth.currentUser?.uid || null
+// L'UID, JAMAIS L'ADRESSE (correctif du 2026-09-19).
+// « universities » est en LECTURE PUBLIQUE (firestore.rules :
+// `allow read: if true`). Cette ligne, posée le 2026-08-10 pour la
+// traçabilité, publiait donc l'adresse personnelle de
+// l'administrateur — retrouvée en clair dans
+// assets/data/catalogue.json, sur politecnico-di-milano-milan.
+// L'uid trace exactement aussi bien : admins/{uid} dit qui c'est,
+// et cette collection-là n'est pas publique.
+// Même correctif que admin/verification.js le même jour : le défaut
+// était là depuis six semaines, l'outil de vérification n'a fait que
+// le rendre visible en le rejouant.
+updatedBy: auth.currentUser?.uid || null
 });
 
 }
