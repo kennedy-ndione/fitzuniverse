@@ -201,6 +201,10 @@ function rendreDiagnostic(p) {
       <p class="verif-prose">${d.format === "pdf"
         ? "Ce lien sert un document PDF. Fitz l'a lu, mais un PDF ne porte pas de liens à suivre : s'il ne dit pas la date, il n'y a pas de page suivante."
         : `${d.liensExamines} lien(s) examiné(s) sur la page.${d.candidats.length ? "" : " Aucun ne ressemblait à une page de candidature."}`}</p>
+      ${d.lu ? `
+        <h4>Ce que Fitz a lu (${d.lu.caracteres} caractères)</h4>
+        <p class="verif-prose verif-muet">Si ce texte n'est pas celui du document, l'extraction a échoué — c'est le lien du catalogue qu'il faut changer. S'il est correct mais ne porte pas de date, la page n'en donne pas.</p>
+        <blockquote class="verif-extrait">${ech(d.lu.extrait)}${d.lu.caracteres > 700 ? " […]" : ""}</blockquote>` : ""}
       ${liste("Pistes sur le même site", d.candidats, "")}
       ${liste("Pistes sur un AUTRE site officiel", d.horsDomaine, "Fitz ne les suit pas tout seul : quitter le domaine du catalogue sans surveillance est le seul endroit où il pourrait lire n'importe quoi. Ouvrez-les vous-même.")}
     </div>`;

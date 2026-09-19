@@ -281,6 +281,27 @@ exports.verifierBourse = onCall(
       diagnostic = { url: "", examines: 0, retenus: 0, meilleurs: [], horsDomaine: [], format: "pdf" };
     }
 
+    /* CE QUE FITZ A LU, quand il n'a rien trouvé.
+
+       TROISIÈME FOIS que je dois ouvrir un navigateur pour expliquer
+       un silence — POSTECH, le 2026-09-19 : le diagnostic disait
+       « document PDF », et rien de plus. Il a fallu ouvrir le guide à
+       la main pour découvrir que la date existe, dans un TABLEAU
+       (« Second round · July 6, 2026 ~ September 11, 2026 »), et que
+       les deux tours sont passés.
+
+       Sans cet extrait, un échec ne se distingue pas d'un autre : une
+       extraction ratée, une page sans date et un modèle distrait
+       rendent exactement le même vide. Avec lui, la cause se lit en
+       trois secondes sur l'écran d'admin. C'est la même leçon que le
+       diagnostic des liens, appliquée au texte.
+
+       On n'en montre que le début : de quoi juger si Fitz a lu le bon
+       document et s'il l'a lu correctement. */
+    if (!proposition.deadlineISO && diagnostic) {
+      diagnostic.lu = { caracteres: texte.length, extrait: texte.slice(0, 700) };
+    }
+
     if (!proposition.deadlineISO && lecture.format === "html") {
 
       diagnostic = choisirLien(html, contexte.url);

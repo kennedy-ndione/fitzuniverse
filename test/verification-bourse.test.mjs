@@ -321,6 +321,19 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
   assert.match(js, /if \(estUnPdf\(octets\)\) \{/,
     "supprimer cette reconnaissance rendrait du binaire au modèle");
   assert.match(js, /return \{ format: "pdf", html: "", texte: textePdf\(octets, zlib\) \};/);
+
+  // CE QUE FITZ A LU. Sans cet extrait, une extraction ratée, une
+  // page sans date et un modèle distrait rendent exactement le même
+  // vide — et il faut ouvrir un navigateur pour les distinguer. Ça
+  // m'est arrivé trois fois le 2026-09-19 ; la troisième a suffi.
+  assert.match(js, /diagnostic\.lu = \{ caracteres: texte\.length, extrait: texte\.slice\(0, 700\) \}/);
+  assert.match(js, /if \(!proposition\.deadlineISO && diagnostic\) \{/,
+    "on ne montre l'extrait QUE sur un échec : sur un succès c'est du bruit");
+
+  // Et l'écran doit le rendre, sinon il ne sert à rien.
+  const ecran = codeSeul("admin/verification.js");
+  assert.match(ecran, /Ce que Fitz a lu/);
+  assert.match(ecran, /ech\(d\.lu\.extrait\)/, "échappé : c'est du texte venu d'un site tiers");
   assert.ok(!/estUnPdf\(url\)|\.pdf["']\)|endsWith\(["']\.pdf/.test(js),
     "reconnaître un PDF à son nom de fichier laisserait passer tous ceux qui n'en ont pas");
   // Lot P5c bis : choisirLien() a remplacé lienVersLEcheance() ici,
