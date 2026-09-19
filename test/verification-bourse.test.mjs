@@ -35,7 +35,7 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 const codeSeul = (f) => lire(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
 
 const requis = createRequire(import.meta.url);
-const { texteDePage, dateCitee, lireProposition, lienVersLEcheance, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
+const { texteDePage, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
   requis(path.join(RACINE, "functions/lib/verification-bourse.js"));
 
 /* ---------------------------------------------------------------
@@ -290,11 +290,14 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
 
   assert.match(js, /if \(!proposition\.deadlineISO\) \{/,
     "on ne suit un lien que si la première page n'a rien donné");
-  assert.match(js, /lienVersLEcheance\(html, contexte\.url\)/);
+  // Lot P5c bis : choisirLien() a remplacé lienVersLEcheance() ici,
+  // parce que la Cloud Function a désormais besoin du diagnostic et
+  // plus seulement de l'adresse.
+  assert.match(js, /diagnostic = choisirLien\(html, contexte\.url\)/);
 
   // UN SEUL PAS. Au-delà on ne sait plus quelle page on a lue, et le
   // coût double à chaque cran.
-  assert.equal((js.match(/lienVersLEcheance\(/g) || []).length, 1);
+  assert.equal((js.match(/choisirLien\(/g) || []).length, 1);
 
   // La page réellement lue remonte À DEUX ENDROITS, et les deux
   // comptent : le journal Cloud Functions (pour compter combien de
@@ -326,6 +329,88 @@ test("lien 8 — une page épinglée par l'administrateur prime sur le catalogue
     "c'est une propriété de la BOURSE, pas de chacun de ses programmes");
   assert.ok(!/officialWebsite:/.test(admin),
     "officialWebsite reste la page de présentation qu'on montre à l'étudiant");
+
+});
+
+test("lien 9 — le vocabulaire couvre la langue du site, pas seulement l'anglais", () => {
+
+  // DSU TOSCANA, cas réel du 2026-09-19 : le bon lien s'appelle
+  // « Borsa di studio ». Le vocabulaire d'origine ne portait ni
+  // « borsa » ni « studio » — et une large part de ce catalogue est
+  // faite d'agences régionales italiennes. Cette omission à elle seule
+  // expliquait la moitié des échecs mesurés.
+  const cas = [
+    ["italien",   '<a href="/ente">Ente</a><a href="/borsa">Borsa di studio</a>', "https://dsu.toscana.it/", "https://dsu.toscana.it/borsa"],
+    ["espagnol",  '<a href="/inicio">Inicio</a><a href="/becas">Becas y plazos</a>', "https://x.es/", "https://x.es/becas"],
+    ["allemand",  '<a href="/uber">Über uns</a><a href="/bewerbung">Bewerbung</a>', "https://x.de/", "https://x.de/bewerbung"],
+    ["portugais", '<a href="/sobre">Sobre</a><a href="/bolsas">Bolsas de estudo</a>', "https://x.pt/", "https://x.pt/bolsas"]
+  ];
+
+  for (const [langue, html, base, attendu] of cas) {
+    assert.equal(lienVersLEcheance(html, base), attendu, `le ${langue} doit être reconnu`);
+  }
+
+});
+
+test("diag 1 — quand rien n'est trouvé, l'outil dit ce qu'il a vu", () => {
+
+  // Sans ce diagnostic, comprendre un échec demande d'ouvrir la page à
+  // la main dans un navigateur. Mesuré le 2026-09-19 : une demi-heure
+  // pour trois causes différentes sur quatre bourses.
+  const d = choisirLien('<a href="/a">Accueil</a><a href="/b">Contact</a>', "https://site.org/p");
+
+  assert.equal(d.url, "");
+  assert.equal(d.examines, 2, "le nombre de liens vus est la première chose à savoir");
+  assert.equal(d.retenus, 0);
+  assert.deepEqual(d.meilleurs, []);
+
+});
+
+test("diag 2 — une piste sur un AUTRE site officiel est signalée, jamais suivie", () => {
+
+  // JASSO, cas réel : la date vit sur jasso.go.jp quand le catalogue
+  // pointe vers studyinjapan.go.jp. Deux sites officiels japonais, et
+  // aucun parcours interne ne la trouvera jamais.
+  const d = choisirLien(
+    '<a href="/about">About</a><a href="https://www.jasso.go.jp/en/apply">Please click here for information on how to apply</a>',
+    "https://www.studyinjapan.go.jp/en/planning/"
+  );
+
+  assert.equal(d.url, "", "elle N'EST PAS suivie : quitter le domaine sans surveillance ferait lire n'importe quoi");
+  assert.equal(d.horsDomaine.length, 1, "mais elle est SIGNALÉE — sinon l'administrateur ne la trouvera jamais");
+  assert.match(d.horsDomaine[0].url, /jasso\.go\.jp/);
+  assert.ok(d.horsDomaine[0].score > 0);
+
+});
+
+test("diag 3 — le fragment est retiré, pas rejeté", () => {
+
+  // « /apply#dates » est une bonne piste ; seule l'ancre vers la page
+  // COURANTE ne mène nulle part. La première version rejetait tout
+  // href contenant « # », ce qui jetait les deux.
+  assert.equal(choisirLien('<a href="/apply#dates">Apply</a>', "https://site.org/p").url,
+    "https://site.org/apply");
+
+  assert.equal(choisirLien('<a href="/p#section">How to apply</a>', "https://site.org/p").url, "",
+    "une ancre vers la page qu'on vient de lire ne mène nulle part");
+
+});
+
+test("diag 4 — la Cloud Function rend le diagnostic à l'écran", () => {
+
+  const js = codeSeul("functions/verification.js");
+
+  assert.match(js, /diagnostic = choisirLien\(html, contexte\.url\)/);
+  assert.match(js, /horsDomaine: diagnostic\.horsDomaine/);
+
+  // Et l'écran le montre — un diagnostic que personne ne lit ne sert
+  // à rien, c'est la famille de défauts de la semaine.
+  const admin = codeSeul("admin/verification.js");
+  assert.match(admin, /function rendreDiagnostic\(p\)/);
+  assert.match(admin, /\$\{rendreDiagnostic\(p\)\}/,
+    "LE BOUT QUI MANQUE TOUJOURS : la fonction doit être APPELÉE");
+  assert.match(admin, /Fitz ne les suit pas tout seul/,
+    "l'écran doit dire POURQUOI une piste n'a pas été suivie");
 
 });
 

@@ -184,10 +184,22 @@ function dateCitee(iso, citation) {
  *  langues, et les formes courtes : les sites officiels sont en
  *  anglais bien plus souvent qu'en français. */
 const MOTS_CANDIDATURE = [
+  // Anglais — la langue de la plupart des pages officielles.
   "how to apply", "how-to-apply", "application", "apply", "applications",
-  "deadline", "deadlines", "dates", "calendar", "calendrier",
-  "candidature", "candidater", "postuler", "inscription", "admission", "admissions",
-  "bando", "scadenz", "convocatoria"
+  "deadline", "deadlines", "dates", "calendar", "timeline", "eligibility",
+  "admission", "admissions", "notice", "announcement", "call for",
+  // Français.
+  "candidature", "candidater", "postuler", "inscription", "calendrier",
+  "appel a", "appel à", "bourse", "bourses",
+  // Italien — une large part de ce catalogue est faite d'agences
+  // régionales italiennes (LazioDisco, EDiSU, DSU Toscana, ER-GO,
+  // ARDiS, ADiSU Campania…). L'omission de « borsa » a coûté à elle
+  // seule la moitié des échecs mesurés le 2026-09-19.
+  "bando", "bandi", "scadenz", "borsa", "borse", "studio", "iscrizion",
+  // Espagnol, portugais, allemand.
+  "convocatoria", "beca", "becas", "plazo",
+  "bolsa", "bolsas", "candidatura", "prazo",
+  "bewerbung", "bewerben", "frist", "stipendium", "ausschreibung"
 ];
 
 /** Ce qui ne mène JAMAIS à une échéance, et qu'un score naïf
@@ -196,39 +208,57 @@ const MOTS_CANDIDATURE = [
 const MOTS_A_FUIR = ["login", "signin", "sign-in", "connexion", "privacy", "cookie", "contact", "faq", "login.aspx"];
 
 /**
- * Le lien le plus prometteur de cette page vers l'échéance, ou "".
+ * Le lien le plus prometteur de cette page vers l'échéance — ET DE QUOI
+ * COMPRENDRE SON SILENCE.
  *
- * Même hôte uniquement : suivre un lien vers un autre domaine, c'est
- * sortir du site officiel — et l'officiel est tout ce qui fait la
- * valeur de cette vérification.
+ * POURQUOI IL REND UN DIAGNOSTIC ET PLUS UNE SIMPLE CHAÎNE. Le
+ * 2026-09-19, quatre bourses n'ont rendu aucune date et aucune n'a
+ * suivi de lien. Pour savoir pourquoi, il a fallu ouvrir chaque page
+ * à la main dans un navigateur — une demi-heure pour trois causes
+ * différentes (un domaine voisin, un vocabulaire italien manquant, et
+ * une troisième toujours inexpliquée). Un outil qui ne sait pas dire
+ * ce qu'il a vu fait payer chaque échec en enquête manuelle.
  *
  * @param {string} html
- * @param {string} urlBase - l'adresse de la page lue, pour résoudre
- *   les liens relatifs et rester sur le même hôte
- * @returns {string} une URL absolue, ou "" si rien ne se détache
+ * @param {string} urlBase - la page lue, pour résoudre les liens
+ *   relatifs et reconnaître le domaine officiel
+ * @returns {{url:string, score:number, examines:number, retenus:number,
+ *            meilleurs:Array<{url:string,libelle:string,score:number}>,
+ *            horsDomaine:Array<{url:string,libelle:string,score:number}>}}
+ *   `url` est vide quand rien ne se détache. `horsDomaine` porte les
+ *   pistes d'un AUTRE site officiel : elles ne sont jamais suivies —
+ *   voir la Cloud Function — mais elles sont montrées.
  */
-function lienVersLEcheance(html, urlBase) {
+function choisirLien(html, urlBase) {
+
+  const vide = { url: "", score: 0, examines: 0, retenus: 0, meilleurs: [], horsDomaine: [] };
 
   let base;
-  try { base = new URL(urlBase); } catch { return ""; }
+  try { base = new URL(urlBase); } catch { return vide; }
 
-  const candidats = new Map();
+  const ici = `${base.origin}${base.pathname.replace(/\/+$/, "")}`;
+  const memeSite = new Map();
+  const ailleurs = new Map();
+  let examines = 0;
 
-  const liens = String(html || "").matchAll(/<a\b[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi);
+  for (const lien of String(html || "").matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
 
-  for (const lien of liens) {
+    examines += 1;
 
     let url;
     try { url = new URL(lien[1], base); } catch { continue; }
 
-    if (url.host !== base.host) continue;
     if (!/^https?:$/.test(url.protocol)) continue;
 
-    // La page qu'on vient de lire : y retourner ne rend rien.
-    const ici = `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
-    if (ici === `${base.origin}${base.pathname.replace(/\/+$/, "")}`) continue;
+    // Le fragment est RETIRÉ, pas rejeté : « /apply#dates » est une
+    // bonne piste. C'est seulement l'ancre vers la page courante qui
+    // ne mène nulle part.
+    url.hash = "";
 
-    const libelle = sansAccents(lien[2].replace(/<[^>]+>/g, " "));
+    const cible = `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+    if (cible === ici) continue;
+
+    const libelle = sansAccents(lien[2].replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
     const chemin = sansAccents(url.pathname);
     const texte = `${libelle} ${chemin}`;
 
@@ -239,25 +269,42 @@ function lienVersLEcheance(html, urlBase) {
       const m = sansAccents(mot);
       // Le LIBELLÉ compte double : « How to apply » écrit dans le lien
       // est un signal bien plus fort que le mot « apply » perdu dans
-      // une adresse.
+      // une adresse — beaucoup de sites préfixent tout leur espace
+      // candidat par /apply/.
       if (libelle.includes(m)) score += 2;
       if (chemin.includes(m)) score += 1;
     }
 
     if (!score) continue;
 
+    const ou = url.host === base.host ? memeSite : ailleurs;
     const cle = url.toString();
-    if (!candidats.has(cle) || candidats.get(cle) < score) candidats.set(cle, score);
+    const vu = ou.get(cle);
+    if (!vu || vu.score < score) ou.set(cle, { url: cle, libelle: libelle.slice(0, 80), score });
 
   }
 
-  if (!candidats.size) return "";
-
   // Le meilleur score ; à égalité, l'adresse la plus courte — la page
   // « /apply » bat « /apply/step-3/faq ».
-  return [...candidats.entries()]
-    .sort((a, b) => (b[1] - a[1]) || (a[0].length - b[0].length))[0][0];
+  const classer = (m) => [...m.values()].sort((a, b) => (b.score - a.score) || (a.url.length - b.url.length));
 
+  const retenus = classer(memeSite);
+  const externes = classer(ailleurs);
+
+  return {
+    url: retenus.length ? retenus[0].url : "",
+    score: retenus.length ? retenus[0].score : 0,
+    examines,
+    retenus: retenus.length,
+    meilleurs: retenus.slice(0, 3),
+    horsDomaine: externes.slice(0, 3)
+  };
+
+}
+
+/** L'ancienne signature, conservée : elle ne rend que l'adresse. */
+function lienVersLEcheance(html, urlBase) {
+  return choisirLien(html, urlBase).url;
 }
 
 /**
@@ -329,6 +376,8 @@ const CONSIGNE_VERIFICATION = [
 module.exports = {
   MAX_OCTETS_PAGE,
   MOTS_CANDIDATURE,
+  MOTS_A_FUIR,
+  choisirLien,
   lienVersLEcheance,
   MAX_CARACTERES_TEXTE,
   STATUTS,

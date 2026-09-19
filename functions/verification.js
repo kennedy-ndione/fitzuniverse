@@ -35,7 +35,7 @@ const {
   CONSIGNE_VERIFICATION,
   texteDePage,
   lireProposition,
-  lienVersLEcheance
+  choisirLien
 } = require("./lib/verification-bourse");
 
 if (!admin.apps.length) admin.initializeApp();
@@ -233,6 +233,7 @@ exports.verifierBourse = onCall(
     let proposition = lireProposition(brut);
     let urlLue = contexte.url;
     let chemin = [];
+    let diagnostic = null;
 
     /* UN SEUL PAS DE PLUS, ET SEULEMENT S'IL LE FAUT.
 
@@ -250,7 +251,9 @@ exports.verifierBourse = onCall(
        s'applique à la seconde lecture exactement comme à la première. */
     if (!proposition.deadlineISO) {
 
-      const suivant = lienVersLEcheance(html, contexte.url);
+      diagnostic = choisirLien(html, contexte.url);
+
+      const suivant = diagnostic.url;
 
       if (suivant) {
 
@@ -293,6 +296,8 @@ exports.verifierBourse = onCall(
       date: proposition.deadlineISO || "aucune",
       refus: proposition.refus.length,
       viaLien: urlLue !== contexte.url,
+      liensExamines: diagnostic ? diagnostic.examines : null,
+      pistesHorsDomaine: diagnostic ? diagnostic.horsDomaine.length : null,
       jetons: usage ? usage.input_tokens + usage.output_tokens : null
     });
 
@@ -310,6 +315,23 @@ exports.verifierBourse = onCall(
       viaLien: urlLue !== contexte.url,
       chemin,
       epinglee: contexte.epinglee === true,
+
+      /* LE DIAGNOSTIC, quand rien n'a été trouvé. Sans lui, un échec
+         coûte une enquête au navigateur — mesuré le 2026-09-19 : une
+         demi-heure pour trois causes différentes sur quatre bourses.
+         `horsDomaine` porte les pistes d'un AUTRE site officiel. Elles
+         ne sont JAMAIS suivies automatiquement : sortir du domaine du
+         catalogue sans surveillance est le seul endroit où cet outil
+         pourrait se mettre à lire n'importe quoi. Elles sont montrées
+         à l'administrateur, qui clique s'il le veut. (Cas réel : la
+         date de JASSO vit sur jasso.go.jp quand le catalogue pointe
+         vers studyinjapan.go.jp — deux sites officiels japonais, et
+         aucun parcours interne ne la trouvera jamais.) */
+      diagnostic: diagnostic ? {
+        liensExamines: diagnostic.examines,
+        candidats: diagnostic.meilleurs,
+        horsDomaine: diagnostic.horsDomaine
+      } : null,
       ...proposition,
       lueLe: new Date().toISOString().slice(0, 10)
     };

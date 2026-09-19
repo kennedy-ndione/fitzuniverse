@@ -163,6 +163,41 @@ async function ecrire(proposition, choixStatut, epingler = false) {
 /* ------------------------------------------------------------------
    LE PANNEAU DE DÉCISION
    ------------------------------------------------------------------ */
+/* CE QUE FITZ A VU QUAND IL N'A RIEN TROUVÉ.
+
+   Le 2026-09-19, quatre bourses n'ont rendu aucune date et aucune n'a
+   suivi de lien. Comprendre pourquoi a demandé d'ouvrir chaque page à
+   la main dans un navigateur : une demi-heure, pour trois causes
+   différentes — un domaine voisin, un vocabulaire italien manquant, et
+   une troisième toujours inexpliquée. Un outil qui ne dit pas ce qu'il
+   a vu fait payer chaque échec en enquête.
+
+   LES PISTES HORS DOMAINE NE SONT JAMAIS SUIVIES AUTOMATIQUEMENT, et
+   c'est un choix : sortir du site du catalogue sans surveillance est
+   le seul endroit où cet outil pourrait se mettre à lire n'importe
+   quoi. On les montre, vous cliquez. */
+function rendreDiagnostic(p) {
+
+  const d = p.diagnostic;
+  if (!d || p.deadlineISO) return "";
+
+  const liste = (titre, entrees, note) => !entrees.length ? "" : `
+    <h4>${ech(titre)}</h4>
+    ${note ? `<p class="verif-prose">${ech(note)}</p>` : ""}
+    <ul class="verif-pistes">${entrees.map((e) => `
+      <li><a href="${ech(e.url)}" target="_blank" rel="noopener noreferrer">${ech(e.libelle || e.url)}</a>
+      <span class="verif-muet">${ech(e.url)}</span></li>`).join("")}</ul>`;
+
+  return `
+    <div class="verif-diagnostic">
+      <h4>Aucune date trouvée — ce que Fitz a vu</h4>
+      <p class="verif-prose">${d.liensExamines} lien(s) examiné(s) sur la page.${d.candidats.length ? "" : " Aucun ne ressemblait à une page de candidature."}</p>
+      ${liste("Pistes sur le même site", d.candidats, "")}
+      ${liste("Pistes sur un AUTRE site officiel", d.horsDomaine, "Fitz ne les suit pas tout seul : quitter le domaine du catalogue sans surveillance est le seul endroit où il pourrait lire n'importe quoi. Ouvrez-les vous-même.")}
+    </div>`;
+
+}
+
 function rendrePanneau(p) {
 
   const programmes = programmesParBourse.get(p.scholarshipId) || [];
@@ -195,6 +230,8 @@ function rendrePanneau(p) {
       </div>
 
       ${p.refus && p.refus.length ? `<div class="verif-refus"><h4>Écarté automatiquement</h4><ul>${p.refus.map((r) => `<li>${ech(r)}</li>`).join("")}</ul></div>` : ""}
+
+      ${rendreDiagnostic(p)}
 
       <div class="verif-decision">
         <label>Statut à écrire
