@@ -207,19 +207,71 @@ test("feuille 1 — « vérifiée » se lit en vert, avec le token du projet", (
    3. La fondation ne change rien — aujourd'hui
    --------------------------------------------------------------- */
 
-test("fondation 1 — sans données, le catalogue se comporte exactement comme hier", () => {
+test("fondation 1 — toute date publiée comme vérifiée porte sa preuve", () => {
 
-  // Aucun programme ne porte encore deadlineISO : l'outil d'admin (P5b)
-  // n'existe pas. Si ce test rougit, c'est que le lot a changé ce
-  // qu'il promettait de ne pas changer.
+  // CE TEST A CHANGÉ DE SENS LE 2026-09-19, ET C'EST NORMAL.
+  //
+  // Écrit à P5a, il affirmait `avecISO.length === 0` : la fondation
+  // était posée, aucune donnée ne l'occupait encore. P5b (l'outil
+  // d'admin) puis P5c (la campagne) ont rempli le catalogue — donc
+  // l'assertion d'origine devait rougir. Elle a rougi. La supprimer
+  // aurait laissé un trou : on la remplace par SON INVERSE, qui
+  // protège davantage.
+  //
+  // La règle : le mot « vérifiée » est le plus fort que ce site dise
+  // à un étudiant. Aucun programme n'a le droit de le porter sans
+  // les trois preuves — la date au format ISO, le jour de la
+  // vérification, et la source (une adresse https + la phrase lue).
+  // Une ligne écrite à la main dans Firestore, sans passer par
+  // l'outil, échouera ici.
+
   const avecISO = CATALOGUE.programs.filter((p) => p.deadlineISO);
-  assert.equal(avecISO.length, 0, "le catalogue n'a pas encore été vérifié : c'est P5b et P5c");
+  assert.ok(avecISO.length > 0,
+    "le catalogue a été vérifié à partir du 2026-09-19 : s'il n'en reste rien, l'export a perdu les champs");
 
-  let verifiees = 0;
-  for (const p of CATALOGUE.programs) {
-    if (etatEcheance(p, LE_JOUR).certitude === "verifiee") verifiees++;
+  for (const p of avecISO) {
+    const ou = `${p.scholarshipId} / ${p.universityId}`;
+
+    assert.match(p.deadlineISO, /^\d{4}-\d{2}-\d{2}$/, `${ou} : deadlineISO doit être une date ISO nue`);
+    assert.ok(!isNaN(new Date(`${p.deadlineISO}T00:00:00Z`).getTime()), `${ou} : date ISO impossible`);
+
+    assert.match(String(p.ouverteVerifieeLe || ""), /^\d{4}-\d{2}-\d{2}$/,
+      `${ou} : une date vérifiée sans JOUR de vérification ne peut pas périmer — elle se dirait vérifiée pour toujours`);
+
+    const src = p.sourceVerification || {};
+    assert.match(String(src.url || ""), /^https:\/\//, `${ou} : la source doit être une adresse https`);
+    assert.ok(String(src.citation || "").trim().length > 0, `${ou} : sans la phrase lue, rien n'est vérifiable`);
+    assert.ok(String(src.parUid || "").length > 0, `${ou} : on doit savoir QUI a validé`);
   }
-  assert.equal(verifiees, 0, "aucune date ne peut se dire vérifiée tant que personne n'a vérifié");
+
+  // LA FUITE DU 2026-09-19, GARDÉE FERMÉE PAR LA MESURE.
+  // `programs` est en lecture publique (firestore.rules : allow read:
+  // if true) et descend en clair dans assets/data/catalogue.json.
+  // Deux fois en six semaines, une adresse e-mail d'admin s'y est
+  // retrouvée. Aucun champ de traçabilité ne doit en contenir.
+  for (const p of avecISO) {
+    const trace = JSON.stringify(p.sourceVerification || {});
+    assert.ok(!/[\w.+-]+@[\w-]+\.[\w.]+/.test(trace),
+      `${p.scholarshipId} : une adresse e-mail dans un document en lecture publique`);
+  }
+
+  // Et le moteur doit les VOIR : une preuve que l'export n'a pas
+  // gardé les champs sans que etatEcheance() les lise.
+  // Un COMPTE ne suffirait pas : retirer les trois champs d'un
+  // programme ferait baisser les deux côtés ensemble et le test
+  // resterait vert. On interroge donc chaque programme par son id.
+  for (const p of avecISO) {
+    // On lit au JOUR DU TEST (2026-09-19), pas au jour de la
+    // vérification : interroger le moteur à la date même de la
+    // validation le rendrait forcément frais, et l'assertion ne
+    // dirait plus rien. Ainsi, une vérification qui a vieilli
+    // au-delà de JOURS_VALIDITE_VERIFICATION fait rougir ce test —
+    // c'est le rappel que la campagne est à refaire.
+    const lu = etatEcheance(p, LE_JOUR);
+    assert.equal(lu.certitude, "verifiee",
+      `${p.scholarshipId} / ${p.universityId} : écrit vérifié dans le catalogue, mais le moteur ne le lit pas ainsi (vérification périmée ou champ perdu à l'export)`);
+    assert.equal(lu.verifieLe, p.ouverteVerifieeLe);
+  }
 
 });
 
