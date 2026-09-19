@@ -171,7 +171,7 @@ const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // bourse vendues absentes, et aucune lecture de `planPreinscription`.
 // Elle est désormais dans un module PUR, testé sous Node et comparé à la
 // grille par test/pre-fitz.test.mjs (lot PRÉ-FITZ, 2026-09-10).
-const { formuleActive, plafondsDe } = require("./lib/fitz-acces");
+const { formuleActive, formuleDeDerogation, plafondsDe } = require("./lib/fitz-acces");
 
 // ============================================================
 // COMPTEUR D'USAGE
@@ -409,6 +409,22 @@ exports.fitzGenerate = onCall(
     }
 
     let formule = formuleActive(profil);
+
+    // 3 bis. Dérogations sans formule (lot FITZ-ACCÈS, 2026-09-19) — le
+    //    miroir serveur de js/access-guard.js : le propriétaire
+    //    (admins/{uid} actif) et testerAccess voyaient leurs outils
+    //    OUVERTS par le client puis chaque appel refusé QUOTA_PLAN ici,
+    //    avec un message de vente adressé... au propriétaire. La lecture
+    //    du document admins ne coûte qu'aux comptes SANS formule : pour
+    //    tous les étudiants payants, rien ne change.
+    if (!formule) {
+      let adminActif = false;
+      if (profil?.testerAccess !== true) {
+        const adminSnap = await admin.firestore().doc(`admins/${uid}`).get();
+        adminActif = adminSnap.exists && adminSnap.data().isActive === true;
+      }
+      formule = formuleDeDerogation({ adminActif, testerAccess: profil?.testerAccess === true });
+    }
 
     if (!formule) {
       // Un compte sans formule payante n'a droit qu'aux tâches

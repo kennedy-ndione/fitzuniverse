@@ -141,3 +141,53 @@ test("passerelle 3 — chaque tâche du client a son modèle côté serveur, et 
   }
 
 });
+
+test("accès 1 — FITZ-ACCÈS : le serveur honore les deux contournements que le client accorde", async () => {
+
+  // MÊME FAMILLE que defaut_formules_fitz du 10/09 : un droit accordé
+  // par js/access-guard.js (propriétaire via admins/{uid}, testeur via
+  // users/{uid}.testerAccess) et ignoré par le serveur donne des outils
+  // OUVERTS qui refusent chaque appel avec un message de vente adressé
+  // au propriétaire.
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { formuleDeDerogation, formuleActive, PLAFONDS, plafondsDe } = require(path.join(RACINE, "functions/lib/fitz-acces.js"));
+
+  // La fonction pure : le propriétaire gagne, le testeur suit, sinon rien.
+  assert.equal(formuleDeDerogation({ adminActif: true, testerAccess: true }), "proprietaire");
+  assert.equal(formuleDeDerogation({ adminActif: true }), "proprietaire");
+  assert.equal(formuleDeDerogation({ testerAccess: true }), "testeur");
+  assert.equal(formuleDeDerogation({}), null);
+  assert.equal(formuleDeDerogation(), null);
+
+  // Les dérogations ont un PLAFOND À ELLES : comptes internes, pas
+  // illimités — et jamais le plafond par défaut en silence.
+  assert.ok(PLAFONDS.proprietaire && PLAFONDS.proprietaire.mois >= 400, "le propriétaire n'a plus de plafond nommé");
+  assert.ok(PLAFONDS.testeur && PLAFONDS.testeur.mois >= 300, "le testeur n'a plus de plafond nommé");
+  assert.deepEqual(plafondsDe("proprietaire"), PLAFONDS.proprietaire);
+
+  // Une dérogation n'est pas une formule : formuleActive() ne les rend
+  // jamais d'elle-même (elles ne s'achètent pas).
+  assert.equal(formuleActive({ plan: "proprietaire" }), null);
+  assert.equal(formuleActive({ plan: "testeur" }), null);
+
+  // ET LE SERVEUR S'EN SERT : functions/fitz.js lit admins/{uid}
+  // (uniquement pour un compte sans formule) et testerAccess, puis
+  // passe par formuleDeDerogation — AVANT le refus QUOTA_PLAN.
+  const fitz = codeSeul("functions/fitz.js");
+  assert.match(fitz, /formuleDeDerogation/, "functions/fitz.js n'appelle plus formuleDeDerogation");
+  assert.match(fitz, /admins\/\$\{uid\}/, "functions/fitz.js ne lit plus admins/{uid}");
+  assert.match(fitz, /testerAccess/, "functions/fitz.js ignore testerAccess");
+  const iDerog = fitz.indexOf("formuleDeDerogation(");
+  const iRefus = fitz.indexOf("QUOTA_PLAN");
+  assert.ok(iDerog !== -1 && iRefus !== -1 && iDerog < iRefus,
+    "la dérogation arrive APRÈS le refus : les comptes internes sont encore refusés");
+
+  // LE MIROIR CLIENT EXISTE TOUJOURS : si access-guard perd un des deux
+  // contournements, la contrepartie serveur devient du code mort — et
+  // inversement ce test dit où est l'autre moitié.
+  const garde = lire("js/access-guard.js");
+  assert.match(garde, /doc\(db, "admins", firebaseUser\.uid\)/, "le client ne lit plus admins/{uid}");
+  assert.match(garde, /testerAccess: userData\.testerAccess === true/, "le client ne lit plus testerAccess");
+
+});

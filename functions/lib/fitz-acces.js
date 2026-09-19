@@ -107,6 +107,18 @@ const PLAFONDS = {
   signature: { jour: 90, mois: 500 },
   "dossier-france": { jour: 40, mois: 190 },
   "dossier-france-conseiller": { jour: 70, mois: 380 },
+
+  /* Dérogations SANS formule (lot FITZ-ACCÈS, 2026-09-19) — le miroir
+     serveur des deux contournements que js/access-guard.js accorde déjà :
+     le propriétaire (admins/{uid} actif) reçoit côté client la formule
+     la plus haute de PLAN_ORDER, et testerAccess déverrouille les
+     outils. Sans contrepartie ici, ces comptes voyaient tout OUVERT
+     puis chaque appel refusé QUOTA_PLAN avec un message de vente —
+     même famille de défaut que defaut_formules_fitz du 10/09. Les
+     plafonds restent des plafonds : ce sont des comptes internes, pas
+     des comptes illimités. */
+  proprietaire: { jour: 90, mois: 500 },
+  testeur: { jour: 70, mois: 400 },
 };
 
 const PLAFOND_PAR_DEFAUT = { jour: 40, mois: 190 };
@@ -156,8 +168,21 @@ function formuleActive(userData, maintenant = new Date()) {
   return null;
 }
 
+/**
+ * La formule de DÉROGATION d'un compte sans formule payante, ou null.
+ * Miroir de js/access-guard.js : le propriétaire (document admins/{uid}
+ * avec isActive === true) gagne sur tout ; testerAccess vient ensuite.
+ * PURE : le lecteur Firestore (functions/fitz.js) fournit les deux
+ * booléens, ce module ne lit rien.
+ */
+function formuleDeDerogation({ adminActif, testerAccess } = {}) {
+  if (adminActif === true) return "proprietaire";
+  if (testerAccess === true) return "testeur";
+  return null;
+}
+
 function plafondsDe(formule) {
   return PLAFONDS[formule] || PLAFOND_PAR_DEFAUT;
 }
 
-module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, formuleActive, plafondsDe };
+module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, formuleActive, formuleDeDerogation, plafondsDe };
