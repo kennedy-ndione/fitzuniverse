@@ -48,6 +48,23 @@ import { phraseTestLangue } from "../test-de-langue.js";
 
 const CADRE_PREINSCRIPTION = "L'étudiant prépare une PRÉINSCRIPTION : une admission qu'il finance lui-même, examinée par la commission pédagogique d'un établissement, qui juge la cohérence de son parcours avec la formation demandée — pas un concours d'excellence. Il dépose lui-même son dossier sur le portail officiel. Ne parle jamais de financement par un organisme tiers ni de jury de sélection : parle d'admission, de formation, d'établissement, de pièces et de procédure.";
 
+/**
+ * CE QUE FITZ SAIT FAIRE D'UNE CAPTURE D'ÉCRAN (lot FITZ-VOIT, 2026-09-19).
+ *
+ * Demandé par Charles : « discuter avec Fitz sera ce qui montrera à
+ * l'étudiant le chemin à prendre pour qu'il ne puisse être bloqué nulle
+ * part ». Sa raison compte autant que sa demande : POUR LES BOURSES, DES
+ * PAGES ENTIÈRES NE SONT PAS TRADUITES. Un étudiant sénégalais devant un
+ * portail allemand, turc ou roumain n'est pas seulement perdu dans une
+ * interface — il ne lit pas la page.
+ *
+ * La règle 4 est la plus importante du bloc, et elle n'est pas
+ * négociable : sur un portail officiel, une indication fausse coûte une
+ * année. C'est la même règle que R11 côté vérification — ce qu'on ne peut
+ * pas voir est ABSENT, jamais deviné.
+ */
+const CADRE_CAPTURES = "L'ÉTUDIANT PEUT TE JOINDRE DES IMAGES — capture d'écran, photo d'un document, photo de l'écran de son portail — ET TU LES VOIS VRAIMENT. Sept règles, dans cet ordre. (1) Dès qu'il parle d'un portail, d'un compte à créer, d'un formulaire, d'un bouton, d'une page qu'il ne comprend pas, ou dès qu'il dit être bloqué : DEMANDE-LUI UNE CAPTURE DE SON ÉCRAN avant de répondre. Chaque portail est différent ; décrire un chemin de mémoire, c'est inventer. (2) La page est souvent dans une langue qu'il ne lit pas : traduis-lui ce qui est écrit à l'écran, puis dis où cliquer, en nommant le bouton EXACTEMENT tel qu'il est écrit, avec sa traduction entre parenthèses. (3) UNE SEULE étape à la fois, puis demande la capture suivante — et continue ainsi, écran après écran, jusqu'au dépôt de son dossier. (4) N'INVENTE JAMAIS un bouton, un menu, un champ ou un texte qui n'est pas sur l'image. Si tu ne le vois pas, dis-le et demande une capture de la zone, ou qu'il fasse défiler la page. Sur un portail officiel, une indication fausse coûte une année à un étudiant. (5) S'il ne sait pas faire une capture, explique le geste : Android, bouton marche et volume bas ensemble ; iPhone, bouton latéral et volume haut ; Windows, touche Windows + Maj + S ; Mac, Cmd + Maj + 4. (6) Tu vois les IMAGES. Un PDF ou un document joint ne t'arrive pas : demande-lui une photo ou une capture de la page concernée. Un fichier Word ou Excel, dis-lui de l'enregistrer en PDF puis d'en envoyer une capture. (7) NE TERMINE JAMAIS SUR UNE IMPUISSANCE : donne toujours le geste suivant, même petit. Si une pièce est illisible, dis précisément pourquoi — trop sombre, coupée, floue — et quoi refaire. Si la question te dépasse vraiment, nomme qui contacter et avec quoi. L'étudiant ne doit jamais repartir de cette conversation sans savoir quoi faire dans la minute qui suit.";
+
 // ==========================================================
 // LE LIVRABLE EST LE LIVRABLE — rien autour
 // ==========================================================
@@ -512,8 +529,8 @@ const preinscription = lireParcoursDeSaisie(input) === "preinscription";
 
 return {
 system: preinscription
-? `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa préinscription (établissements, formations, pièces du dossier, procédure du portail, frais et preuve de ressources, entretien pédagogique, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`
-: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment.`,
+? `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa préinscription (établissements, formations, pièces du dossier, procédure du portail, frais et preuve de ressources, entretien pédagogique, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}`
+: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}`,
 user: [
 "Profil de l'étudiant :",
 describeProfile(input.profile, lireParcoursDeSaisie(input)),

@@ -37,7 +37,7 @@ saveConversation,
 renameConversation,
 deleteConversation
 } from "./js/ai/chat-store.js";
-import { readAttachment, validateFiles } from "./js/ai/attachments.js";
+import { readAttachment, validateFiles, imagesPourLeModele } from "./js/ai/attachments.js";
 import { showToast, copyToClipboard } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
@@ -661,11 +661,16 @@ parcours: parcoursChat,
 applications: studentApplications,
 testPrep,
 history: active.messages.filter((m) => m.id !== assistantMessage.id).slice(-8),
-// Point d'extension : les pièces jointes sont déjà transmises à
-// generate() (js/ai/ai-client.js) — aucune analyse réelle n'a
-// lieu aujourd'hui (voir js/ai/attachments.js), mais un futur
-// fournisseur IA les recevra sans qu'il faille retoucher l'UI.
-attachments: userMessage.attachments || []
+// LES PIÈCES JOINTES, ET LA CLÉ QUI COMPTE (lot FITZ-VOIT).
+//
+// `attachments` sert à l'AFFICHAGE dans la conversation — c'est la
+// clé que cette page utilisait seule, et personne en aval ne la lit.
+// `images` est le canal réel : js/ai/ai-gateway.js le normalise et
+// l'ajoute à la charge envoyée à la fonction, qui le passe au modèle.
+// Sans cette deuxième ligne, une capture d'écran s'affichait à
+// l'étudiant et n'atteignait jamais Fitz.
+attachments: userMessage.attachments || [],
+images: imagesPourLeModele(userMessage.attachments || [])
 },
 signal: activeController.signal,
 onToken: (partial) => {

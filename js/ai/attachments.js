@@ -86,7 +86,7 @@ return;
 const isAccepted = ACCEPTED_TYPES.split(",").includes(file.type);
 
 if (!isAccepted) {
-rejected.push({ file, reason: "Format non pris en charge (image ou PDF uniquement)." });
+rejected.push({ file, reason: "Fitz lit les images et les PDF. Pour un document Word ou Excel, enregistrez-le en PDF (Fichier ▸ Enregistrer sous ▸ PDF) puis renvoyez-le." });
 return;
 }
 
@@ -100,6 +100,48 @@ accepted.push(file);
 });
 
 return { accepted, rejected };
+
+}
+
+/**
+ * ============================================================
+ * CE QUI PART VRAIMENT AU MODÈLE (lot FITZ-VOIT, 2026-09-19)
+ * ============================================================
+ *
+ * LE DÉFAUT QUE CETTE FONCTION RÉPARE. Le canal des images était
+ * construit de bout en bout — js/ai/ai-gateway.js normalise
+ * `input.images`, functions/fitz.js les valide, les compte (1 point
+ * chacune) et les assemble dans le message au modèle — et AUCUNE PAGE
+ * ne s'en servait. ai-chat.js envoyait ses pièces sous la clé
+ * `attachments`, que personne ne lit. L'étudiant joignait sa capture,
+ * la voyait s'afficher, l'envoyait : le modèle ne la recevait jamais et
+ * répondait sur un portail qu'il n'avait pas vu.
+ *
+ * DEUX FORMES À NE PAS CONFONDRE. `previewUrl` est une URL de données
+ * (« data:image/png;base64,AAAA… ») faite pour une balise <img>. Le
+ * modèle, lui, attend le base64 NU, sans son préfixe, avec son type à
+ * côté. Envoyer l'URL entière ferait passer « data:image/png;base64, »
+ * pour des octets d'image.
+ *
+ * Les PDF n'ont pas de previewUrl et ne partent pas par ce canal : le
+ * serveur n'accepte aujourd'hui que des images. Ils restent affichés
+ * dans la conversation, et le prompt du chat dit à Fitz de demander une
+ * photo ou une capture de la page concernée — plutôt que de faire
+ * comme s'il l'avait lu.
+ *
+ * PURE : aucun DOM, aucun réseau. Testable sous Node.
+ */
+export function imagesPourLeModele(attachments = []) {
+
+  if (!Array.isArray(attachments)) return [];
+
+  return attachments
+    .filter((a) => a && a.kind === "image" && typeof a.previewUrl === "string" && a.previewUrl.includes(","))
+    .map((a) => ({
+      mediaType: a.type || "image/jpeg",
+      data: a.previewUrl.slice(a.previewUrl.indexOf(",") + 1)
+    }))
+    .filter((image) => image.data.length > 0);
 
 }
 
