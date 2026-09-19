@@ -352,6 +352,28 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
   const ecran = codeSeul("admin/verification.js");
   assert.match(ecran, /Ce que Fitz a lu/);
   assert.match(ecran, /ech\(d\.lu\.extrait\)/, "échappé : c'est du texte venu d'un site tiers");
+
+  /* ÉPINGLER DEPUIS LE DIAGNOSTIC. LazioDisco, 2026-09-19 : Fitz ne
+     trouve aucune date sur l'accueil mais DÉSIGNE la bonne page au
+     meilleur score — et l'écran ne proposait rien, la case d'épinglage
+     n'apparaissant qu'une fois une date trouvée. Le cas qui en avait
+     le plus besoin était le seul qu'on ne pouvait pas épingler. */
+  assert.match(ecran, /class="verif-epingler-piste" data-url=/);
+  assert.match(ecran, /updateDoc\(doc\(db, "scholarships", p\.scholarshipId\), \{ pageEcheance: url \}\)/,
+    "la page s'épingle sur la BOURSE, pas sur les programmes");
+  assert.match(ecran, /const relu = await appelerVerification\(p\.scholarshipId\);/,
+    "épingler sans relire laisserait l'administrateur devant le même écran vide");
+
+  // Rien d'autre n'est écrit par ce bouton : ni date, ni statut.
+  const bloc = ecran.slice(ecran.indexOf("verif-epingler-piste\").forEach"), ecran.indexOf("verifAnnuler"));
+  assert.ok(!/status|deadlineISO/.test(bloc), "épingler une page n'est pas valider une date");
+
+  // Et les pistes HORS DOMAINE n'ont pas ce bouton : sortir du
+  // domaine du catalogue se décide en ouvrant la page.
+  assert.match(ecran, /liste\("Pistes sur le même site", d\.candidats, "", true\)/);
+  assert.match(ecran, /liste\("Pistes sur un AUTRE site officiel", d\.horsDomaine,/);
+  assert.ok(!/d\.horsDomaine, [^)]*, true\)/.test(ecran),
+    "aucun bouton d'épinglage sur une piste hors domaine");
   assert.ok(!/estUnPdf\(url\)|\.pdf["']\)|endsWith\(["']\.pdf/.test(js),
     "reconnaître un PDF à son nom de fichier laisserait passer tous ceux qui n'en ont pas");
   // Lot P5c bis : choisirLien() a remplacé lienVersLEcheance() ici,

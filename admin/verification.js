@@ -188,12 +188,28 @@ function rendreDiagnostic(p) {
   const d = p.diagnostic;
   if (!d || p.deadlineISO) return "";
 
-  const liste = (titre, entrees, note) => !entrees.length ? "" : `
+  /* ÉPINGLER DEPUIS LE DIAGNOSTIC — le bout qui manquait.
+
+     LazioDisco, 2026-09-19 : Fitz ne trouve aucune date sur
+     laziodisco.it, mais il DÉSIGNE la bonne page, « Diritto allo
+     studio — bando 2026/2027 », au meilleur score. Et l'écran ne
+     proposait rien : la case d'épinglage n'apparaissait que quand
+     une date avait déjà été trouvée. Le cas qui a le plus besoin
+     d'être épinglé était précisément celui qu'on ne pouvait pas
+     épingler.
+
+     Chaque piste du MÊME SITE porte donc son bouton : il enregistre
+     la page sur la bourse et relance aussitôt la lecture. Rien
+     d'autre n'est écrit — ni date, ni statut. Les pistes hors
+     domaine n'en ont pas : sortir du domaine du catalogue est une
+     décision qui se prend en ouvrant la page, pas en cliquant. */
+  const liste = (titre, entrees, note, epinglable = false) => !entrees.length ? "" : `
     <h4>${ech(titre)}</h4>
     ${note ? `<p class="verif-prose">${ech(note)}</p>` : ""}
     <ul class="verif-pistes">${entrees.map((e) => `
       <li><a href="${ech(e.url)}" target="_blank" rel="noopener noreferrer">${ech(e.libelle || e.url)}</a>
-      <span class="verif-muet">${ech(e.url)}</span></li>`).join("")}</ul>`;
+      <span class="verif-muet">${ech(e.url)}</span>
+      ${epinglable ? `<button type="button" class="verif-epingler-piste" data-url="${ech(e.url)}">Épingler et relire</button>` : ""}</li>`).join("")}</ul>`;
 
   return `
     <div class="verif-diagnostic">
@@ -205,7 +221,7 @@ function rendreDiagnostic(p) {
         <h4>Ce que Fitz a lu (${d.lu.caracteres} caractères)</h4>
         <p class="verif-prose verif-muet">Si ce texte n'est pas celui du document, l'extraction a échoué — c'est le lien du catalogue qu'il faut changer. S'il est correct mais ne porte pas de date, la page n'en donne pas.</p>
         <blockquote class="verif-extrait">${ech(d.lu.extrait)}${d.lu.caracteres > 700 ? " […]" : ""}</blockquote>` : ""}
-      ${liste("Pistes sur le même site", d.candidats, "")}
+      ${liste("Pistes sur le même site", d.candidats, "", true)}
       ${liste("Pistes sur un AUTRE site officiel", d.horsDomaine, "Fitz ne les suit pas tout seul : quitter le domaine du catalogue sans surveillance est le seul endroit où il pourrait lire n'importe quoi. Ouvrez-les vous-même.")}
     </div>`;
 
@@ -279,6 +295,25 @@ function rendrePanneau(p) {
     const epingler = document.getElementById("verifEpingler")?.checked === true;
     panneau.classList.remove("is-visible");
     await ecrire(p, choix, epingler);
+  });
+
+  panneau.querySelectorAll(".verif-epingler-piste").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const url = btn.dataset.url;
+      btn.disabled = true;
+      btn.textContent = "Lecture…";
+      try {
+        await updateDoc(doc(db, "scholarships", p.scholarshipId), { pageEcheance: url });
+        log(`Page d'échéance épinglée : ${url}`, "ok");
+        const relu = await appelerVerification(p.scholarshipId);
+        log(`Relecture (${relu.deadlineISO || "aucune date"} · ${relu.statut}).`, "ok");
+        rendrePanneau(relu);
+      } catch (erreur) {
+        log(`Échec : ${erreur.message}`, "err");
+        btn.disabled = false;
+        btn.textContent = "Épingler et relire";
+      }
+    });
   });
 
   document.getElementById("verifAnnuler").addEventListener("click", () => {
