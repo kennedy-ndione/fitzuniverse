@@ -90,7 +90,19 @@ async function ecrire(proposition, choixStatut) {
     sourceVerification: {
       url: proposition.url,
       citation: proposition.citation,
-      par: getAuth(app).currentUser?.email || "",
+      // L'IDENTIFIANT DE COMPTE, JAMAIS L'ADRESSE.
+      //
+      // FUITE TROUVÉE À LA PREMIÈRE ÉCRITURE RÉELLE, le 2026-09-19 :
+      // cette ligne écrivait `currentUser.email`. Or firestore.rules
+      // dit `match /programs/{programId} { allow read: if true; }` —
+      // LECTURE PUBLIQUE. L'adresse personnelle de Charles devenait
+      // lisible par n'importe qui, sans compte, et partait en plus
+      // dans assets/data/catalogue.json que sert Hosting.
+      //
+      // J'ai écrit « traçabilité » sans relire les règles de la
+      // collection dans laquelle j'écrivais. L'uid trace aussi bien —
+      // admins/{uid} dit qui c'est, et lui n'est pas public.
+      parUid: getAuth(app).currentUser?.uid || "",
       le: serverTimestamp()
     }
   };

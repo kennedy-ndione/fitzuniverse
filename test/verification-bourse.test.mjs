@@ -291,6 +291,32 @@ test("écran 0 — le catalogue est TRADUIT avant d'entrer dans le radar", () =>
 
 });
 
+test("fuite 1 — rien de personnel n'entre dans une collection publique", () => {
+
+  // FUITE TROUVÉE À LA PREMIÈRE ÉCRITURE RÉELLE, le 2026-09-19.
+  // sourceVerification.par portait `currentUser.email`. Or
+  // firestore.rules dit, pour cette collection :
+  //     match /programs/{programId} { allow read: if true; }
+  // Lecture PUBLIQUE. L'adresse personnelle devenait lisible par
+  // n'importe qui, et partait en plus dans assets/data/catalogue.json
+  // que sert Hosting. J'avais écrit « traçabilité » sans relire les
+  // règles de la collection dans laquelle j'écrivais.
+  const js = codeSeul("admin/verification.js");
+
+  assert.ok(!/currentUser\?\.email/.test(js),
+    "une adresse e-mail n'a rien à faire dans une collection en lecture publique");
+  assert.match(js, /parUid: getAuth\(app\)\.currentUser\?\.uid/,
+    "l'uid trace aussi bien, et admins/{uid} dit qui c'est — lui n'est pas public");
+
+  // Et la règle qui rend ce test nécessaire, pour qu'on la relise si
+  // elle change un jour.
+  const regles = lire("firestore.rules");
+  const bloc = regles.slice(regles.indexOf("match /programs/{programId}"));
+  assert.match(bloc.slice(0, 200), /allow read: if true;/,
+    "si cette collection devenait privée, ce test pourrait se relâcher — pas avant");
+
+});
+
 test("écran 1 — le statut n'est JAMAIS écrit par défaut", () => {
 
   const js = codeSeul("admin/verification.js");
