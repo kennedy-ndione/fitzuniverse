@@ -43,7 +43,7 @@ import { isQuotaReached, PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.j
 // REFUSE et Fitz propose la suivante, sur le même créneau, sans jamais
 // revenir sur une université refusée (users/{uid}.universitesRefusees).
 // Le parcours préinscription (pre-N) reste saisi à la main : hors lot.
-import { retenirOpportunites } from "./js/recommend-programs.js";
+import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js";
 // Lot ACCEPTATION (2026-09-11) : l'étudiant ACCEPTE le choix de Fitz —
 // définitivement. Deux refus par place ; les outils s'ouvrent après
 // l'acceptation ; une formule en vente ne supprime jamais une carte
@@ -1544,6 +1544,45 @@ return `<div class="app-acceptation app-acceptation--proposee" data-etat="propos
 </div>`;
 }
 
+/* LOT P2 (2026-09-19) — ON N'ACCEPTE PAS UN NOM, ON ACCEPTE UN CHOIX.
+
+Cette carte porte le bouton « J'accepte cette université ». Accepter
+est DÉFINITIF et l'étudiant n'a que deux refus par place — or elle ne
+montrait ni le pays, ni la moindre raison. Le pays et la raison sont
+calculés par retenirOpportunites() depuis toujours ; carteFitz() ne les
+écrivait pas (corrigé dans le même lot).
+
+Les cartes écrites AVANT ce lot n'ont pas ces champs : la ligne
+disparaît alors entièrement plutôt que d'afficher un pays vide. */
+function renderFaitsDuChoix(app) {
+
+if (!app || !app.isRecommendation) return "";
+
+const faits = [];
+
+if (app.country) {
+faits.push(`<span class="app-fait app-fait-pays"><i data-lucide="map-pin"></i><span>${escapeHtml(app.country)}</span></span>`);
+}
+
+// La fenêtre de dépôt, dite par le MÊME module que le hub
+// (js/recommend-programs.js) : deux phrases différentes pour la même
+// opportunité, c'est ainsi qu'un étudiant cesse de croire le site.
+// Seulement quand la carte porte de quoi la calculer.
+if (app.dateConfirmee === true || typeof app.jours === "number" || app.dateConfirmee === false) {
+const fenetre = libelleFenetre(app);
+faits.push(`<span class="app-fait app-fait-fenetre is-${fenetre.etat}"><i data-lucide="${fenetre.etat === "a_verifier" ? "help-circle" : "calendar-clock"}"></i><span>${escapeHtml(fenetre.texte)}</span></span>`);
+}
+
+const raison = app.raisonFitz
+? `<p class="app-raison-fitz"><i data-lucide="check"></i><span>${escapeHtml(app.raisonFitz)}</span></p>`
+: "";
+
+if (!faits.length && !raison) return "";
+
+return `${faits.length ? `<div class="app-faits">${faits.join("")}</div>` : ""}${raison}`;
+
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
@@ -1572,6 +1611,7 @@ card.innerHTML = `
 ${app.isRecommendation ? `<span class="app-recommendation-badge">Suggéré par Fitz</span>` : ""}
 <h3>${escapeHtml(app.university)}</h3>
 ${app.scholarship ? `<p class="app-card-scholarship">${escapeHtml(app.scholarship)}</p>` : ""}
+${renderFaitsDuChoix(app)}
 </div>
 <div class="app-card-pills">
 <span class="app-track-pill" data-track="${lireParcours(app)}">${LIBELLES_PARCOURS[lireParcours(app)].court}</span>

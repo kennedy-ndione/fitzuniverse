@@ -85,6 +85,18 @@ export function carteFitz(rec, { portalUrl = "", nextCheckDate = null, reminderF
 return {
 university: rec.universityName || "",
 scholarship: rec.scholarshipTitle || "",
+// LOT P2 (2026-09-19) — CE QUI ÉTAIT CALCULÉ PUIS JETÉ.
+// retenirOpportunites() rend le pays, la raison du choix et l'état de
+// la date depuis toujours. Cette fonction ne les écrivait pas : la
+// carte d'acceptation demandait donc un engagement DÉFINITIF (deux
+// refus par place, pas plus) sur un nom d'établissement seul, sans
+// dire ni où il se trouve ni pourquoi Fitz l'a retenu.
+// Les trois champs sont informatifs : ils ne font pas partie de
+// CHAMPS_IDENTITE et firestore.rules ne les contraint pas.
+country: rec.country || "",
+raisonFitz: (rec.reasons && rec.reasons[0]) || "",
+dateConfirmee: rec.dateConfirmee === true,
+jours: typeof rec.jours === "number" ? rec.jours : null,
 scholarshipId: rec.scholarshipId || null,
 programId: rec.programId || null,
 universityId: rec.universityId || null,

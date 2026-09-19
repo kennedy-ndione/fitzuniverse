@@ -430,6 +430,66 @@ font-size:.8rem;
 color:var(--text-light);
 }
 
+/* LOT P2 (2026-09-19) — LES FAITS DE LA PROPOSITION.
+Le pays et la fenêtre de dépôt, côte à côte sous le nom de
+l'université. Ils étaient calculés depuis toujours et jetés à
+l'affichage : un étudiant ne peut pas choisir entre deux propositions
+s'il ignore où elles sont et combien de temps il lui reste.
+Pas de fond de couleur : ce sont des faits, pas des alertes — sauf
+« date à vérifier », qui appelle vraiment un geste. */
+.jy-opp-faits{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:6px 12px;
+
+margin:0 0 10px;
+
+}
+
+.jy-opp-fait{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+min-width:0;
+
+font-size:.78rem;
+
+line-height:1.4;
+
+color:var(--text-light);
+
+}
+
+/* Icônes nues : aucun conteneur derrière le glyphe (règle du projet). */
+.jy-opp-fait i,
+.jy-opp-fait svg{
+
+width:13px;
+
+height:13px;
+
+flex-shrink:0;
+
+color:var(--amber-700);
+
+}
+
+.jy-opp-fait.is-serre,
+.jy-opp-fait.is-a_verifier{
+
+color:var(--text-color);
+
+font-weight:var(--fw-semibold);
+
+}
+
 .jy-opp-reason{
 display:flex;
 align-items:flex-start;

@@ -17,7 +17,7 @@ import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLock
 // retenirOpportunites : la MEME selection que results.js (le diagnostic
 // gratuit) — cinq filtres, dedoublonnage par bourse et par universite,
 // plafond par pays. Voir chargerOpportunites() plus bas.
-import { retenirOpportunites } from "./js/recommend-programs.js";
+import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
@@ -606,11 +606,29 @@ const lien = "applications.html";
 
 const libelle = "Voir cette proposition";
 
+// LOT P2 (2026-09-19) — LA CARTE DIT OÙ, QUAND ET POURQUOI.
+//
+// Elle portait le titre de la bourse, le nom de l'université et UNE
+// raison. Or chaque retenue transporte depuis toujours son `country`,
+// son `deadline`, ses `jours`, son `echeanceOuverte` et un TABLEAU de
+// raisons : tout était calculé, puis jeté à l'affichage. Un étudiant
+// ne peut pas choisir entre deux propositions s'il ignore dans quel
+// pays elles sont et combien de temps il lui reste.
+const fenetre = libelleFenetre(pick);
+
+// Trois raisons au maximum : au-delà, la carte devient un argumentaire
+// et on ne lit plus rien.
+const raisons = (pick.reasons || []).slice(0, 3);
+
 return `
 <article class="jy-card jy-opp" style="margin-bottom:0;">
 <h3>${ech(pick.scholarshipTitle || "Programme")}</h3>
 <p class="jy-opp-uni">${ech(pick.universityName)}</p>
-${pick.reasons && pick.reasons.length ? `<p class="jy-opp-reason"><i data-lucide="check"></i><span>${ech(pick.reasons[0])}</span></p>` : ""}
+<div class="jy-opp-faits">
+${pick.country ? `<span class="jy-opp-fait jy-opp-pays"><i data-lucide="map-pin"></i><span>${ech(pick.country)}</span></span>` : ""}
+<span class="jy-opp-fait jy-opp-fenetre is-${ech(fenetre.etat)}"><i data-lucide="${fenetre.etat === "a_verifier" ? "help-circle" : "calendar-clock"}"></i><span>${ech(fenetre.texte)}</span></span>
+</div>
+${raisons.map((raison) => `<p class="jy-opp-reason"><i data-lucide="check"></i><span>${ech(raison)}</span></p>`).join("")}
 ${orientation ? `<p class="jy-opp-orientation"><i data-lucide="signpost"></i><span>${ech(orientation)}</span></p>` : ""}
 ${liens.length ? `<div class="jy-portes">${liens.map((l) => `
 <a href="${ech(l.url)}" target="_blank" rel="noopener noreferrer" class="jy-porte jy-porte--${ech(l.cle)}${l.depot ? " jy-porte--depot" : ""}" title="${ech(l.titre)}">

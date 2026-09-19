@@ -197,6 +197,61 @@ réutilisé ailleurs sur le site pour rester immédiatement identifiable.
 libellé en --primary-900, pas en blanc — même règle que --amber-500
 en fond de bouton (2,16:1 en blanc contre 8,24:1 en --primary-900,
 voir la note sur l'échelle ambre dans css/base.css). */
+/* LOT P2 (2026-09-19) — ON N'ACCEPTE PAS UN NOM, ON ACCEPTE UN CHOIX.
+Cette carte porte « J'accepte cette université », un geste définitif
+avec deux refus par place au maximum. Elle ne montrait ni le pays ni
+une seule raison. Ces deux lignes-là sont ce qu'on lit avant de
+cliquer : elles passent donc AVANT les pastilles de statut. */
+.app-faits{
+display:flex;
+flex-wrap:wrap;
+gap:5px 12px;
+margin-top:6px;
+}
+
+.app-fait{
+display:inline-flex;
+align-items:center;
+gap:6px;
+min-width:0;
+font-size:var(--fs-caption);
+line-height:1.4;
+color:var(--text-light);
+}
+
+.app-fait i,
+.app-fait svg{
+width:13px;
+height:13px;
+flex-shrink:0;
+color:var(--amber-700);
+}
+
+.app-fait.is-serre,
+.app-fait.is-a_verifier{
+color:var(--text-color);
+font-weight:600;
+}
+
+.app-raison-fitz{
+display:flex;
+align-items:flex-start;
+gap:6px;
+margin:6px 0 0;
+font-size:var(--fs-small);
+line-height:1.5;
+color:var(--text-color);
+}
+
+.app-raison-fitz i,
+.app-raison-fitz svg{
+width:13px;
+height:13px;
+flex-shrink:0;
+margin-top:3px;
+color:var(--amber-700);
+}
+
 .app-recommendation-badge{
 display:inline-flex;
 align-items:center;

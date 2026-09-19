@@ -767,6 +767,50 @@ return { ok: true, raison: "", dateConfirmee };
 }
 
 /**
+* CE QUE LA CARTE DIT DE LA FENÊTRE DE DÉPÔT — une seule fois, ici.
+*
+* Lot P2 (2026-09-19). Le hub et la carte d'acceptation doivent dire la
+* MÊME chose de la même opportunité. Écrire la phrase des deux côtés,
+* c'est la deuxième copie d'une règle — ce dépôt l'a déjà payée trois
+* fois (le libellé d'échéance, le droit « Mon conseiller », le format
+* de date).
+*
+* Trois états, et pas un de plus :
+*   ouverte     la date est lue, vérifiée, et le délai est confortable
+*   serre       la date est lue, et il reste peu de temps
+*   a_verifier  l'échéance du catalogue est un paragraphe, pas une date
+*
+* Le troisième est le plus important : 259 programmes sur 507 sont dans
+* ce cas. Les présenter comme les autres serait reprendre le défaut que
+* Charles a demandé de corriger. Les taire aussi.
+*
+* @param {{dateConfirmee?:boolean, jours?:number|null}} retenue
+* @returns {{etat:string, texte:string}}
+*/
+export function libelleFenetre(retenue) {
+
+const r = retenue || {};
+
+if (r.dateConfirmee !== true || typeof r.jours !== "number") {
+return {
+etat: "a_verifier",
+texte: "Date limite non confirmée — à vérifier sur le site officiel avant de commencer"
+};
+}
+
+// 45 jours : en dessous, réunir un dossier complet (légalisations,
+// traductions assermentées, relevés) devient un vrai sprint. Le
+// plancher de proposition est à 30 (voir JOURS_MINIMUM_POUR_DEPOSER) ;
+// entre 30 et 45, on propose, mais on le dit.
+if (r.jours <= 45) {
+return { etat: "serre", texte: `Il reste ${r.jours} jours pour déposer` };
+}
+
+return { etat: "ouverte", texte: `Candidatures ouvertes — ${r.jours} jours pour déposer` };
+
+}
+
+/**
 * @returns {{retenues: Array, nombre: number, ouvertes: number, pays: number}}
 */
 export function retenirOpportunites({
