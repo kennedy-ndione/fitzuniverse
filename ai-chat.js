@@ -18,6 +18,10 @@ import { FITZ_UNLOCK_CTA, unlockPlanPhrase } from "./js/fitz-voice.js";
 import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { getSuggestedQuestions } from "./js/ai/simulated-responses.js";
 import { parcoursDOutil } from "./js/parcours.js";
+// Lot FORMULE-FITZ (2026-09-19) : Fitz ne savait rien de la formule de
+// l'étudiant. Il pouvait lui promettre un conseiller qu'il n'a pas, et
+// rédiger dans la conversation la lettre que l'outil verrouillé vend.
+import { lireFormule } from "./js/ai/formule-fitz.js";
 // Lot FITZ-RECOURS : ?bloc=<code> — Fitz ouvre lui-même la conversation
 // avec le diagnostic déjà fait. Même motif que ?prep=, étendu.
 import { lireBlocage, diagnostiquer, echelleDeRecours, messageDeFitz } from "./js/fitz-recours.js";
@@ -175,6 +179,12 @@ return prefixe + (texte.length > 64 ? `${texte.slice(0, 64)}…` : texte);
 function initChat(ctx) {
 
 const { user, profile } = ctx;
+
+// LA FORMULE, LUE UNE FOIS. Aucune règle de droit n'est réécrite ici :
+// lireFormule() s'appuie sur decideVerrou(), la seule autorité du site.
+// Lue une fois au démarrage plutôt qu'à chaque message — une formule ne
+// change pas au milieu d'une conversation, et un achat recharge la page.
+const formuleDeLEtudiant = lireFormule(ctx);
 
 // Candidatures de l'étudiant — chargées une fois, jamais bloquantes :
 // le chat démarre sans elles et les réponses les utilisent dès
@@ -691,6 +701,8 @@ input: {
 message: userMessage.content,
 profile,
 parcours: parcoursChat,
+// Ce que Fitz a le droit de promettre à CET étudiant (lot FORMULE-FITZ).
+formule: formuleDeLEtudiant,
 applications: studentApplications,
 testPrep,
 history: active.messages.filter((m) => m.id !== assistantMessage.id).slice(-8),

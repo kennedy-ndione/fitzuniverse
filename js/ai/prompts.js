@@ -27,6 +27,12 @@ import { chatLanguageName, DEFAULT_CHAT_LANGUAGE } from "./chat-language.js";
 import { lireParcoursDeSaisie } from "../parcours.js";
 import { languesLisibles, libellePalier, lirePalier } from "../profil-par-niveau.js";
 import { phraseTestLangue } from "../test-de-langue.js";
+// Lot FORMULE-FITZ (2026-09-19) : Fitz ne savait RIEN de la formule de
+// l'étudiant à qui il parlait — il pouvait donc lui promettre un
+// conseiller qu'il n'a pas, et rédiger gratuitement la lettre que
+// l'outil verrouillé vend. Le paragraphe est construit dans un module
+// pur, testable en Node (js/ai/formule-fitz.js).
+import { cadreFormule } from "./formule-fitz.js";
 
 // ==========================================================
 // DEUX PARCOURS, DEUX CADRES — jamais mélangés dans une même sortie
@@ -527,10 +533,20 @@ chat(input) {
 
 const preinscription = lireParcoursDeSaisie(input) === "preinscription";
 
+// LE CADRE DE LA FORMULE N'EST AJOUTÉ QU'ICI, et c'est délibéré.
+// Dans un outil (lettre, vérification, traduction, e-mail), la
+// question du droit est déjà tranchée : l'étudiant n'y serait pas
+// entré s'il ne l'avait pas. C'est la CONVERSATION qui n'avait aucune
+// limite — on pouvait y demander la lettre que l'outil vend.
+// Chaîne vide si la formule n'a pas pu être lue : mieux vaut un Fitz
+// muet sur la formule qu'un Fitz qui annonce la mauvaise.
+const formule = cadreFormule(input.formule);
+const limites = formule ? ` ${formule}` : "";
+
 return {
 system: preinscription
-? `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa préinscription (établissements, formations, pièces du dossier, procédure du portail, frais et preuve de ressources, entretien pédagogique, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}`
-: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}`,
+? `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa préinscription (établissements, formations, pièces du dossier, procédure du portail, frais et preuve de ressources, entretien pédagogique, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}${limites}`
+: `${baseSystem(input)} Tu réponds aux questions d'un étudiant sur sa candidature (bourses, universités, documents, entretiens, délais). Réponses claires, si besoin structurées en listes ou courtes sections, jamais plus de 200 mots sauf si la question l'exige vraiment. ${CADRE_CAPTURES}${limites}`,
 user: [
 "Profil de l'étudiant :",
 describeProfile(input.profile, lireParcoursDeSaisie(input)),
