@@ -35,7 +35,7 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 const codeSeul = (f) => lire(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
 
 const requis = createRequire(import.meta.url);
-const { texteDePage, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
+const { texteDePage, estUnPdf, textePdf, echeanceRecurrente, MOTS_RECURRENCE, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
   requis(path.join(RACINE, "functions/lib/verification-bourse.js"));
 
 /* ---------------------------------------------------------------
@@ -305,8 +305,24 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
 
   const js = codeSeul("functions/verification.js");
 
-  assert.match(js, /if \(!proposition\.deadlineISO\) \{/,
-    "on ne suit un lien que si la première page n'a rien donné");
+  assert.match(js, /if \(!proposition\.deadlineISO && lecture\.format === "html"\) \{/,
+    "on ne suit un lien que si la première page n'a rien donné — ET qu'il y a des liens à suivre");
+
+  // LOT PDF : un document PDF n'a pas de page suivante. On ne lance
+  // pas la recherche de lien, et le diagnostic le dit au lieu
+  // d'afficher « 0 lien examiné », que personne ne sait interpréter.
+  assert.match(js, /lecture\.format === "pdf"[\s\S]{0,200}format: "pdf"/,
+    "un PDF doit produire un diagnostic qui se nomme, pas un décompte à zéro");
+
+  // La reconnaissance se fait sur les OCTETS. Ni sur l'extension du
+  // lien — POSTECH en a une, beaucoup n'en ont pas — ni sur le
+  // Content-Type, que certains serveurs annoncent octet-stream pour
+  // tout ce qu'ils servent.
+  assert.match(js, /if \(estUnPdf\(octets\)\) \{/,
+    "supprimer cette reconnaissance rendrait du binaire au modèle");
+  assert.match(js, /return \{ format: "pdf", html: "", texte: textePdf\(octets, zlib\) \};/);
+  assert.ok(!/estUnPdf\(url\)|\.pdf["']\)|endsWith\(["']\.pdf/.test(js),
+    "reconnaître un PDF à son nom de fichier laisserait passer tous ceux qui n'en ont pas");
   // Lot P5c bis : choisirLien() a remplacé lienVersLEcheance() ici,
   // parce que la Cloud Function a désormais besoin du diagnostic et
   // plus seulement de l'adresse.
@@ -566,5 +582,141 @@ test("écran 1 — le statut n'est JAMAIS écrit par défaut", () => {
   // juger sans faire confiance.
   assert.match(js, /verif-citation/);
   assert.match(js, /mot pour mot/);
+
+});
+
+/* ---------------------------------------------------------------
+   6. LIRE UN PDF — parce qu'une bourse sur dix n'a que ça
+   --------------------------------------------------------------- */
+
+/* Deux PDF RÉELS, engendrés au moment du lot par deux moteurs
+   différents (reportlab et pdflatex) et déposés dans test/pdf/. Un
+   PDF fabriqué à la main dans le test ne prouverait que ma propre
+   idée du format ; ceux-ci portent les deux pièges qui ont vraiment
+   cassé la première version :
+
+   - reportlab enrobe ses flux en ASCII85 par-dessus Flate. Sans ce
+     décodage, inflateSync rend Z_DATA_ERROR et le document paraît
+     vide alors que son texte est entier.
+   - pdflatex n'écrit AUCUN caractère d'espace : les mots sont
+     séparés par des décalages de crénage dans les tableaux TJ. Sans
+     la règle du nombre, la page rendait
+     « Ledomandedevonoesserepresentateentroleore12:00del7settembre »
+     et plus aucune date n'y était lisible. */
+
+import zlib from "node:zlib";
+
+const PDF = (nom) => readFileSync(path.join(RACINE, "test", "pdf", nom));
+
+test("pdf 1 — un PDF ASCII85 (reportlab) rend ses phrases", () => {
+
+  const texte = textePdf(PDF("guide-admission.pdf"), zlib);
+
+  assert.match(texte, /Admissions Guide for International Students/);
+  assert.match(texte, /no later than 1 November 2026/,
+    "la phrase doit être lisible d'un bout à l'autre, espaces compris");
+
+  // Et la garde doit pouvoir faire son travail dessus : c'est tout
+  // l'objet de l'exercice.
+  const phrase = texte.split("\n").find((l) => /November/.test(l));
+  assert.equal(dateCitee("2026-11-01", phrase), true);
+  assert.equal(dateCitee("2026-11-02", phrase), false, "la garde reste stricte sur un PDF comme sur une page");
+
+});
+
+test("pdf 2 — un PDF LaTeX sans espaces, et sa césure, restent lisibles", () => {
+
+  const texte = textePdf(PDF("bando.pdf"), zlib);
+
+  assert.match(texte, /entro le ore 12:00 del 7 settembre 2026/,
+    "les mots doivent être séparés : pdflatex ne pose que des décalages de crénage");
+
+  // « set- \n tembre » recollé : sans cela, le mois disparaît et on
+  // refait exactement l'erreur de DSU Toscana, sous une autre forme.
+  assert.ok(!/set-\s*\n/.test(texte), "la césure de fin de ligne doit être recollée");
+
+  const phrase = texte.split("\n").find((l) => /settembre/.test(l));
+  assert.equal(dateCitee("2026-09-07", phrase), true);
+
+});
+
+test("pdf 3 — on reconnaît un PDF à ses octets, pas à son nom", () => {
+
+  assert.equal(estUnPdf(PDF("bando.pdf")), true);
+  assert.equal(estUnPdf(Buffer.from("<html><body>bonjour</body></html>")), false);
+  assert.equal(estUnPdf(Buffer.from("")), false);
+  assert.equal(estUnPdf(null), false);
+
+  // Et surtout : rien ne sort quand on ne sait pas lire. Du binaire
+  // donné au modèle le ferait halluciner une date pour meubler.
+  assert.equal(textePdf(Buffer.from("<html>bonjour</html>"), zlib), "");
+  assert.equal(textePdf(Buffer.from("%PDF-1.4\nrien du tout\n%%EOF"), zlib), "");
+
+  // UN PDF SCANNÉ, le cas réel : la page est une image, et le seul
+  // texte du document est sa numérotation — « - 1 - », « . . . 2 . ».
+  // Rendre ces miettes au modèle serait pire que ne rien rendre : il
+  // meublerait avec une date plausible, et la garde « citée » la
+  // laisserait passer puisqu'il aurait cité ses propres miettes.
+  assert.equal(textePdf(PDF("scanne.pdf"), zlib), "",
+    "moins de 80 lettres, c'est une image de page : on ne rend RIEN");
+
+});
+
+/* ---------------------------------------------------------------
+   7. L'ÉCHÉANCE QUI REVIENT TOUS LES ANS
+   --------------------------------------------------------------- */
+
+const LE_19 = new Date("2026-09-19T12:00:00Z");
+
+test("récurrente 1 — la prochaine occurrence, dans les langues du catalogue", () => {
+
+  // Zeno Karl Schindler, mot pour mot, le 2026-09-19.
+  assert.equal(
+    echeanceRecurrente("Twice a year : May 1st and November 1st of each year, at 23:59 (Swiss time).", LE_19).deadlineISO,
+    "2026-11-01",
+    "parmi DEUX occurrences annoncées, c'est la prochaine qui compte");
+
+  assert.equal(echeanceRecurrente("Applications close on 1 May and 1 November each year.", LE_19).deadlineISO, "2026-11-01");
+  assert.equal(echeanceRecurrente("Il bando scade il 31 ottobre di ogni anno.", LE_19).deadlineISO, "2026-10-31");
+
+  // Toutes passées cette année : c'est l'an prochain.
+  assert.equal(echeanceRecurrente("Le dossier est à déposer avant le 15 janvier, chaque année.", LE_19).deadlineISO, "2027-01-15");
+
+});
+
+test("récurrente 2 — et tout ce qu'elle refuse, car c'est là qu'elle vaut quelque chose", () => {
+
+  // SANS FORMULE DE RÉCURRENCE, il n'y a pas de règle : il y a une
+  // date sans année, et on n'invente pas une année.
+  assert.equal(echeanceRecurrente("Applications close on 1 November.", LE_19), null);
+
+  // AVEC UNE ANNÉE ÉCRITE, ce n'est plus une règle perpétuelle mais
+  // une campagne datée : c'est dateCitee qui doit trancher, pas ici.
+  assert.equal(echeanceRecurrente("Applications close on 1 November 2027, as every year.", LE_19), null);
+
+  // Une récurrence sans jour ni mois ne donne aucune date.
+  assert.equal(echeanceRecurrente("Les candidatures sont ouvertes toute l'année.", LE_19), null);
+  assert.equal(echeanceRecurrente("The call is published annually.", LE_19), null);
+
+  // Une date impossible reste impossible : le 30 février ne doit pas
+  // devenir le 2 mars.
+  assert.equal(echeanceRecurrente("Deadline: 30 February, every year.", LE_19), null);
+
+  assert.equal(echeanceRecurrente("", LE_19), null);
+  assert.equal(echeanceRecurrente("1 November each year", "pas une date"), null);
+
+});
+
+test("récurrente 3 — elle rend la règle et la phrase, jamais la date seule", () => {
+
+  const r = echeanceRecurrente("Twice a year : May 1st and November 1st of each year.", LE_19);
+
+  // L'écran d'admin affiche les deux avant de proposer la case à
+  // cocher. Une date nue, sans ce qui la justifie, serait exactement
+  // ce que cet outil refuse de faire.
+  assert.ok(r.regle.length > 0);
+  assert.match(r.citation, /November 1st of each year/);
+
+  assert.ok(MOTS_RECURRENCE.includes("each year"));
 
 });

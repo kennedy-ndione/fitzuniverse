@@ -107,8 +107,15 @@ async function ecrire(proposition, choixStatut, epingler = false) {
     }
   };
 
-  // La date : seulement si elle a survécu à la garde « citée ».
+  // La date : seulement si elle a survécu à la garde « citée »…
   if (proposition.deadlineISO) champs.deadlineISO = proposition.deadlineISO;
+
+  // …ou si un humain a coché la case de l'échéance récurrente. Jamais
+  // d'office : la case est décochée au chargement, et elle n'existe
+  // que quand la page énonce une règle annuelle sans écrire d'année.
+  else if (proposition.recurrente && document.getElementById("verifRecurrente")?.checked) {
+    champs.deadlineISO = proposition.recurrente.deadlineISO;
+  }
 
   // Le portail : seulement s'il y en a un.
   if (proposition.portail) champs.portailVerifie = proposition.portail;
@@ -191,7 +198,9 @@ function rendreDiagnostic(p) {
   return `
     <div class="verif-diagnostic">
       <h4>Aucune date trouvée — ce que Fitz a vu</h4>
-      <p class="verif-prose">${d.liensExamines} lien(s) examiné(s) sur la page.${d.candidats.length ? "" : " Aucun ne ressemblait à une page de candidature."}</p>
+      <p class="verif-prose">${d.format === "pdf"
+        ? "Ce lien sert un document PDF. Fitz l'a lu, mais un PDF ne porte pas de liens à suivre : s'il ne dit pas la date, il n'y a pas de page suivante."
+        : `${d.liensExamines} lien(s) examiné(s) sur la page.${d.candidats.length ? "" : " Aucun ne ressemblait à une page de candidature."}`}</p>
       ${liste("Pistes sur le même site", d.candidats, "")}
       ${liste("Pistes sur un AUTRE site officiel", d.horsDomaine, "Fitz ne les suit pas tout seul : quitter le domaine du catalogue sans surveillance est le seul endroit où il pourrait lire n'importe quoi. Ouvrez-les vous-même.")}
     </div>`;
@@ -230,6 +239,15 @@ function rendrePanneau(p) {
       </div>
 
       ${p.refus && p.refus.length ? `<div class="verif-refus"><h4>Écarté automatiquement</h4><ul>${p.refus.map((r) => `<li>${ech(r)}</li>`).join("")}</ul></div>` : ""}
+
+      ${p.recurrente ? `
+      <div class="verif-recurrente">
+        <h4>Une échéance qui revient chaque année</h4>
+        <p class="verif-prose">La page n'écrit aucune année — Fitz a donc refusé d'en déduire une date, et c'est la règle. Mais elle énonce une échéance annuelle, et la prochaine est&nbsp;: <strong>${ech(p.recurrente.deadlineISO)}</strong>.</p>
+        <p class="verif-prose verif-muet">${ech(p.recurrente.regle)}</p>
+        <label class="verif-epingle"><input type="checkbox" id="verifRecurrente"> Écrire ${ech(p.recurrente.deadlineISO)} comme date limite</label>
+        <p class="verif-avertissement">Relisez la phrase citée ci-dessus avant de cocher. Vous validez une lecture, pas une mesure.</p>
+      </div>` : ""}
 
       ${rendreDiagnostic(p)}
 

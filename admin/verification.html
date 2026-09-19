@@ -128,6 +128,15 @@ font-size:.86rem; line-height:1.6; color:var(--text-color);
 .verif-pistes a{ color:var(--amber-700); font-weight:600; }
 .verif-muet{ display:block; font-size:.74rem; color:var(--text-muted); word-break:break-all; }
 
+/* L'ÉCHÉANCE RÉCURRENTE — une PROPOSITION, et elle doit en avoir
+   l'air. Ambre, comme tout ce qui attend une décision sur ce site,
+   et jamais le vert d'une date vérifiée : rien n'est encore écrit
+   tant que la case n'est pas cochée. --amber-700 est la seule
+   valeur ambre admise pour du texte (css/base.css). */
+.verif-recurrente{ margin-top:18px; padding:14px 16px; border-radius:10px; background:var(--background-soft); border:1px solid var(--amber-700); }
+.verif-recurrente h4{ margin:0 0 8px; color:var(--amber-700); }
+.verif-recurrente .verif-epingle{ margin-top:10px; }
+
 .verif-refus{ margin-top:14px; }
 .verif-refus ul{ margin:0 0 0 18px; font-size:.82rem; color:var(--danger); }
 

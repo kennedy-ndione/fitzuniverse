@@ -29,12 +29,16 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+const zlib = require("zlib");
 
 const {
   MAX_OCTETS_PAGE,
   CONSIGNE_VERIFICATION,
   texteDePage,
+  estUnPdf,
+  textePdf,
   lireProposition,
+  echeanceRecurrente,
   choisirLien
 } = require("./lib/verification-bourse");
 
@@ -138,10 +142,30 @@ async function telecharger(url) {
   const brut = await reponse.arrayBuffer();
 
   if (brut.byteLength > MAX_OCTETS_PAGE) {
-    throw refus("failed-precondition", "La page officielle est trop lourde pour être lue automatiquement.");
+    throw refus("failed-precondition", "Le document officiel est trop lourd pour être lu automatiquement.");
   }
 
-  return new TextDecoder("utf-8", { fatal: false }).decode(brut);
+  const octets = Buffer.from(brut);
+
+  /* UN PDF N'EST PAS UNE PAGE, et il fallait bien finir par s'en
+     apercevoir. POSTECH, 2026-09-19 : « liensExamines: 0 », aucun
+     texte, aucune citation — parce que le lien du catalogue sert un
+     guide d'admission en PDF. texteDePage() retirait des balises d'un
+     fichier qui n'en a pas.
+
+     On reconnaît le format aux OCTETS (« %PDF »), pas à l'extension
+     ni à l'en-tête annoncé : un lien sans « .pdf » peut très bien en
+     servir un, et certains serveurs annoncent octet-stream pour tout.
+     Un PDF n'a pas de liens à suivre, et on le dit : le diagnostic
+     montrera « document PDF » plutôt qu'un décompte de liens à zéro
+     que personne ne sait interpréter. */
+  if (estUnPdf(octets)) {
+    return { format: "pdf", html: "", texte: textePdf(octets, zlib) };
+  }
+
+  const html = new TextDecoder("utf-8", { fatal: false }).decode(octets);
+
+  return { format: "html", html, texte: texteDePage(html) };
 
 }
 
@@ -222,11 +246,13 @@ exports.verifierBourse = onCall(
 
     const contexte = await lireBourse(scholarshipId);
 
-    const html = await telecharger(contexte.url);
-    const texte = texteDePage(html);
+    const lecture = await telecharger(contexte.url);
+    const { html, texte } = lecture;
 
     if (texte.length < 200) {
-      throw refus("failed-precondition", "La page officielle ne contient presque aucun texte : elle est probablement construite en JavaScript, et doit être lue à la main.");
+      throw refus("failed-precondition", lecture.format === "pdf"
+        ? "Ce document est un PDF dont le texte n'est pas lisible automatiquement — il est probablement scanné. Ouvrez-le et lisez la date à la main."
+        : "La page officielle ne contient presque aucun texte : elle est probablement construite en JavaScript, et doit être lue à la main.");
     }
 
     let { brut, usage } = await interroger(texte, contexte);
@@ -249,7 +275,13 @@ exports.verifierBourse = onCall(
 
        Naviguer n'est pas inventer : la garde « la date doit être citée »
        s'applique à la seconde lecture exactement comme à la première. */
-    if (!proposition.deadlineISO) {
+    // Un PDF ne porte pas de liens à suivre : on ne lance pas la
+    // recherche, et le diagnostic le dit clairement.
+    if (!proposition.deadlineISO && lecture.format === "pdf") {
+      diagnostic = { url: "", examines: 0, retenus: 0, meilleurs: [], horsDomaine: [], format: "pdf" };
+    }
+
+    if (!proposition.deadlineISO && lecture.format === "html") {
 
       diagnostic = choisirLien(html, contexte.url);
 
@@ -261,8 +293,8 @@ exports.verifierBourse = onCall(
 
         try {
 
-          const html2 = await telecharger(suivant);
-          const texte2 = texteDePage(html2);
+          const lecture2 = await telecharger(suivant);
+          const texte2 = lecture2.texte;
 
           if (texte2.length >= 200) {
             const seconde = await interroger(texte2, { ...contexte, url: suivant });
@@ -289,6 +321,22 @@ exports.verifierBourse = onCall(
       }
 
     }
+
+    /* L'ÉCHÉANCE QUI REVIENT TOUS LES ANS — PROPOSÉE, JAMAIS ÉCRITE.
+
+       Zeno Karl Schindler dit « May 1st and November 1st of each
+       year » et rien de plus : la garde refuse, parce qu'il n'y a pas
+       d'année dans la phrase, et elle a raison de refuser. Mais la
+       prochaine occurrence n'est pas douteuse pour autant.
+
+       On la calcule donc à part, et on la rend dans un champ à part.
+       `deadlineISO` reste vide : l'écran d'admin n'a rien à
+       pré-remplir, et aucune écriture ne part sans qu'un humain ait
+       lu la règle et la phrase. C'est la différence entre proposer
+       une lecture et s'autoriser une date. */
+    const recurrente = !proposition.deadlineISO
+      ? echeanceRecurrente(proposition.citation, new Date())
+      : null;
 
     logger.info("Bourse vérifiée", {
       scholarshipId,
@@ -328,10 +376,15 @@ exports.verifierBourse = onCall(
          vers studyinjapan.go.jp — deux sites officiels japonais, et
          aucun parcours interne ne la trouvera jamais.) */
       diagnostic: diagnostic ? {
+        format: diagnostic.format || "html",
         liensExamines: diagnostic.examines,
         candidats: diagnostic.meilleurs,
         horsDomaine: diagnostic.horsDomaine
       } : null,
+
+      // Une proposition, pas un résultat : à valider d'un clic, ou à
+      // ignorer. Voir le commentaire plus haut.
+      recurrente,
       ...proposition,
       lueLe: new Date().toISOString().slice(0, 10)
     };

@@ -89,6 +89,239 @@ function texteDePage(html) {
 
 }
 
+/* ==============================================================
+   LIRE UN PDF
+   ==============================================================
+
+   TROUVÉ LE 2026-09-19, à la relance de la campagne. POSTECH :
+   « liensExamines: 0 », aucun texte, aucune citation. Le lien du
+   catalogue ne pointe pas sur une page mais sur un PDF —
+   « 2026_27_Admissions_guide_for_international_students_GIFT.pdf ».
+   texteDePage() a fait ce qu'on lui demandait : elle a retiré les
+   balises d'un fichier qui n'en a pas, et rendu du binaire.
+
+   Ce n'est pas un cas isolé. Une bonne part des agences publiques —
+   les bandi italiens, les guides d'admission coréens et japonais —
+   publient leur calendrier en PDF et rien d'autre. Aucun
+   élargissement de vocabulaire n'atteindra ces bourses-là.
+
+   POURQUOI PAS UNE DÉPENDANCE. Ajouter pdf-parse à une Cloud
+   Function, c'est un paquet de plus à déployer, à mettre à jour et à
+   auditer, pour un besoin minuscule : on ne rend pas le PDF, on n'en
+   garde pas la mise en page, on cherche UNE phrase contenant UNE
+   date. zlib est dans Node. Soixante lignes suffisent.
+
+   CE QUE ÇA NE SAIT PAS FAIRE, et il faut le dire : les PDF dont le
+   texte est dans des « object streams » compressés globalement, ceux
+   qui encodent leurs polices en CID sans table de correspondance
+   lisible, et les PDF scannés (une image de page, sans texte). Dans
+   ces cas la fonction rend une chaîne vide ou du charabia — et
+   l'outil se comporte alors exactement comme avant : il ne trouve
+   rien, et il le dit. On n'a rien cassé, on a ajouté ce qu'on
+   pouvait.
+   ============================================================== */
+
+/** Reconnaît un PDF à ses octets, pas à son extension : un lien sans
+ *  « .pdf » peut très bien en servir un, et l'inverse aussi. */
+function estUnPdf(octets) {
+  if (!octets || typeof octets.length !== "number" || octets.length < 5) return false;
+  return octets[0] === 0x25 && octets[1] === 0x50 && octets[2] === 0x44 && octets[3] === 0x46; // %PDF
+}
+
+/** Les chaînes littérales d'un flux de contenu PDF portent des
+ *  échappements qui leur sont propres. Sans ce décodage, « \( » sort
+ *  tel quel au milieu des phrases. */
+function decoderChainePdf(brut) {
+  let sortie = "";
+  for (let i = 0; i < brut.length; i++) {
+    const c = brut[i];
+    if (c !== "\\") { sortie += c; continue; }
+    const suivant = brut[++i];
+    if (suivant === undefined) break;
+    if (suivant === "n") sortie += "\n";
+    else if (suivant === "r") sortie += "\n";
+    else if (suivant === "t") sortie += "\t";
+    else if (suivant >= "0" && suivant <= "7") {
+      // Code octal : jusqu'à trois chiffres.
+      let octal = suivant;
+      while (octal.length < 3 && brut[i + 1] >= "0" && brut[i + 1] <= "7") octal += brut[++i];
+      sortie += String.fromCharCode(parseInt(octal, 8));
+    } else sortie += suivant; // \( \) \\ et le reste : le caractère lui-même
+  }
+  return sortie;
+}
+
+/** Extrait le texte visible d'UN flux de contenu déjà décompressé.
+ *  On ne lit que les opérateurs qui DESSINENT du texte : Tj, TJ, '
+ *  et ". Tout le reste — coordonnées, couleurs, chemins — est du
+ *  dessin, et n'a rien à faire dans une phrase. */
+function texteDUnFlux(flux) {
+
+  let sortie = "";
+
+  // (…)Tj · (…)' · (…)" · [(…)…(…)]TJ — dans tous les cas, ce sont
+  // les parenthèses qui portent les caractères. On les prend dans
+  // l'ordre, en respectant les parenthèses échappées.
+  // LE NOMBRE COMPTE AUTANT QUE LA CHAÎNE. Dans un tableau TJ, un
+  // texte est découpé pour le crénage et les morceaux sont séparés
+  // par des décalages : [(Le) -250 (7) -250 (settembre)] TJ. Certains
+  // moteurs — LaTeX en tête — n'écrivent AUCUN caractère d'espace et
+  // ne laissent que ces nombres. Sans cette règle, la page rendait
+  // « Ledomandedevonoesserepresentateentroleore12:00del7settembre »,
+  // et plus aucune date n'y était lisible.
+  const jetons = flux.match(/\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]+>|-?\d+(?:\.\d+)?|\bT[Jj]\b|\bTD\b|\bTd\b|\bT\*\b|\bET\b/g) || [];
+
+  for (const jeton of jetons) {
+    if (jeton === "TD" || jeton === "Td" || jeton === "T*" || jeton === "ET") { sortie += "\n"; continue; }
+    if (jeton === "TJ" || jeton === "Tj") { sortie += " "; continue; }
+    if (/^-?\d/.test(jeton)) {
+      // Un décalage marqué vaut une espace ; un crénage fin n'en est
+      // pas une. Le seuil usuel est autour de 200 millièmes de cadratin.
+      if (Number(jeton) <= -200) sortie += " ";
+      continue;
+    }
+    if (jeton[0] === "(") { sortie += decoderChainePdf(jeton.slice(1, -1)); continue; }
+    if (jeton[0] === "<") {
+      // Chaîne hexadécimale. En UTF-16BE (le cas courant quand il y
+      // a des accents), un octet de poids fort nul précède chaque
+      // caractère latin : on le laisse tomber.
+      const hex = jeton.slice(1, -1).replace(/\s+/g, "");
+      let mot = "";
+      for (let i = 0; i + 1 < hex.length; i += 2) {
+        const code = parseInt(hex.slice(i, i + 2), 16);
+        if (code > 0) mot += String.fromCharCode(code);
+      }
+      sortie += mot;
+    }
+  }
+
+  return sortie;
+
+}
+
+/** ASCII85 tel que le PDF le définit : cinq caractères pour quatre
+ *  octets, « z » pour quatre zéros, « ~> » pour finir. */
+function decoderAscii85(texte) {
+
+  const corps = String(texte).replace(/^<~/, "").replace(/~>[\s\S]*$/, "").replace(/\s+/g, "");
+  const octets = [];
+  let groupe = [];
+
+  for (const c of corps) {
+    if (c === "z" && groupe.length === 0) { octets.push(0, 0, 0, 0); continue; }
+    const v = c.charCodeAt(0) - 33;
+    if (v < 0 || v > 84) continue;
+    groupe.push(v);
+    if (groupe.length === 5) {
+      let n = 0;
+      for (const g of groupe) n = n * 85 + g;
+      octets.push((n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255);
+      groupe = [];
+    }
+  }
+
+  // Groupe incomplet : on complète avec le caractère le plus haut et
+  // on ne garde que les octets réellement écrits.
+  if (groupe.length > 1) {
+    const manquants = 5 - groupe.length;
+    for (let i = 0; i < manquants; i++) groupe.push(84);
+    let n = 0;
+    for (const g of groupe) n = n * 85 + g;
+    const quatre = [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
+    for (let i = 0; i < 4 - manquants; i++) octets.push(quatre[i]);
+  }
+
+  return Buffer.from(octets);
+
+}
+
+/** Le texte d'un PDF, autant qu'on sache le lire. Rend "" quand on ne
+ *  sait pas — jamais du binaire, qui ferait halluciner le modèle. */
+function textePdf(octets, zlib) {
+
+  if (!estUnPdf(octets)) return "";
+
+  const brut = Buffer.from(octets);
+  let assemble = "";
+
+  // On balaie les paires stream / endstream. Chacune est inflatée si
+  // elle le peut ; celles qui échouent (images, polices, chiffrement)
+  // sont ignorées en silence — c'est normal, la plupart des flux d'un
+  // PDF ne sont pas du texte.
+  let depart = 0;
+  for (;;) {
+    const ouverture = brut.indexOf("stream", depart);
+    if (ouverture === -1) break;
+    const fermeture = brut.indexOf("endstream", ouverture);
+    if (fermeture === -1) break;
+
+    // « stream » est suivi de CRLF ou LF, jamais d'autre chose.
+    let debut = ouverture + 6;
+    if (brut[debut] === 0x0d) debut++;
+    if (brut[debut] === 0x0a) debut++;
+
+    const corps = brut.subarray(debut, fermeture);
+    depart = fermeture + 9;
+
+    if (corps.length === 0) continue;
+
+    // ASCII85, POSÉ PAR-DESSUS FLATE. reportlab — et une partie des
+    // générateurs administratifs — enrobent le flux compressé en
+    // ASCII85 avant de l'écrire. Sans ce passage, inflateSync rend
+    // Z_DATA_ERROR et le document entier paraît illisible alors que
+    // son texte est parfaitement là.
+    const corpsUtile = corps.subarray(0, 2).toString("latin1") !== "\x78\x9c" && /~>\s*$/.test(corps.subarray(-8).toString("latin1"))
+      ? decoderAscii85(corps.toString("latin1"))
+      : corps;
+
+    let clair = null;
+    try {
+      clair = zlib.inflateSync(corpsUtile).toString("latin1");
+    } catch {
+      try {
+        clair = zlib.inflateRawSync(corpsUtile).toString("latin1");
+      } catch {
+        // Flux non compressé : certains PDF simples écrivent leur
+        // contenu en clair. On ne le retient que s'il ressemble à du
+        // contenu de page, pour ne pas verser une image dans le texte.
+        const essai = corps.toString("latin1");
+        clair = /\bTj\b|\bTJ\b/.test(essai) ? essai : null;
+      }
+    }
+
+    if (clair === null) continue;
+    if (!/\bTj\b|\bTJ\b/.test(clair)) continue;
+
+    assemble += `${texteDUnFlux(clair)}\n`;
+
+    // Un guide d'admission de 80 pages n'apporte rien de plus qu'un
+    // de 20 : on s'arrête bien avant de peser sur la mémoire.
+    if (assemble.length > MAX_CARACTERES_TEXTE * 3) break;
+  }
+
+  const texte = assemble
+    // Césure de fin de ligne : « set- \n tembre » doit redevenir
+    // « settembre », sans quoi la garde dateCitee ne reconnaîtra
+    // jamais le mois — c'est exactement le refus de DSU Toscana,
+    // sous une autre forme.
+    .replace(/(\p{Ll})-\s*\n\s*(\p{Ll})/gu, "$1$2")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^[ \t]+|[ \t]+$/gm, "")
+    .trim();
+
+  // Un PDF scanné rend quelques caractères de ponctuation et rien
+  // d'autre. Mieux vaut ne rien rendre que donner ça à lire au
+  // modèle : il inventerait une date pour meubler.
+  const lettres = (texte.match(/[A-Za-zÀ-ɏ]/g) || []).length;
+  if (lettres < 80) return "";
+
+  return texte.length > MAX_CARACTERES_TEXTE
+    ? `${texte.slice(0, MAX_CARACTERES_TEXTE)}\n\n[…document tronqué…]`
+    : texte;
+
+}
+
 /** Les mois, en toutes lettres, français et anglais — pour vérifier
  *  qu'une date proposée est bien CITÉE dans la phrase source. */
 /* CINQ LANGUES, ET CE N'EST PAS DU LUXE.
@@ -337,6 +570,116 @@ function lienVersLEcheance(html, urlBase) {
  *          pouvoir expliquer son silence à l'administrateur, sinon
  *          celui-ci croira que la page ne disait rien.
  */
+/* ==============================================================
+   UNE ÉCHÉANCE QUI REVIENT TOUS LES ANS
+   ==============================================================
+
+   TROUVÉ LE 2026-09-19. Zeno Karl Schindler : le modèle a lu et
+   rapporté la phrase juste —
+
+     « Twice a year : May 1st and November 1st of each year,
+       at 23:59 (Swiss time). »
+
+   — et dateCitee() l'a refusée, à raison : il n'y a pas d'année dans
+   cette phrase. Rien à corriger dans la garde. Elle fait exactement
+   son travail.
+
+   Mais la prochaine échéance, elle, n'est pas douteuse : le 19
+   septembre 2026, c'est le 1er novembre 2026. Ce n'est pas une
+   déduction sur ce que la page voulait dire, c'est l'application
+   d'une règle que la page ÉNONCE.
+
+   OÙ PASSE LA LIGNE, ET POURQUOI ELLE NE BOUGE PAS. On aurait pu
+   assouplir dateCitee() pour qu'elle tolère une année absente quand
+   la phrase dit « chaque année ». Ce serait une faute : la garde
+   deviendrait négociable, et c'est précisément sa rigueur qui a
+   valeur de preuve. On ajoute donc une fonction SÉPARÉE, dont le
+   résultat n'est JAMAIS écrit d'office. Il remonte à l'écran d'admin
+   dans un champ à part, avec la règle lue et la phrase source, et
+   c'est un humain qui clique. La machine propose une lecture ; elle
+   ne s'autorise pas une date.
+   ============================================================== */
+
+/** Les tournures qui disent « tous les ans », dans les langues du
+ *  catalogue. Une seule suffit, mais elle doit être là : sans elle,
+ *  « 1 November » n'est qu'une date sans année. */
+const MOTS_RECURRENCE = [
+  "each year", "every year", "annually", "twice a year", "yearly",
+  "chaque annee", "tous les ans", "annuellement", "deux fois par an",
+  "ogni anno", "annualmente", "due volte all'anno",
+  "cada ano", "anualmente", "dos veces al ano",
+  "jedes jahr", "jahrlich", "zweimal im jahr",
+  "todos os anos", "anualmente"
+];
+
+/**
+ * Lit une échéance récurrente dans une phrase, et rend la PROCHAINE
+ * occurrence à partir d'aujourd'hui.
+ *
+ * Rend null dès que le moindre doute existe : pas de formule de
+ * récurrence, pas de jour-et-mois clairement écrits, ou une phrase
+ * qui cite déjà une année (auquel cas ce n'est pas une récurrence,
+ * c'est une date, et c'est dateCitee qui s'en occupe).
+ */
+function echeanceRecurrente(citation, aujourdhui) {
+
+  const texte = sansAccents(citation);
+  if (!texte) return null;
+
+  if (!MOTS_RECURRENCE.some((mot) => texte.includes(sansAccents(mot)))) return null;
+
+  // Une année écrite quelque part dans la phrase : ce n'est plus une
+  // règle perpétuelle, c'est une campagne datée. On laisse la garde
+  // normale faire son travail.
+  if (/(^|[^0-9])(19|20)\d{2}([^0-9]|$)/.test(texte)) return null;
+
+  const jour = aujourdhui instanceof Date ? aujourdhui : new Date(aujourdhui);
+  if (isNaN(jour.getTime())) return null;
+
+  // « 1 November », « November 1st », « 1er novembre », « 1° novembre ».
+  const occurrences = [];
+  for (let i = 0; i < MOIS.length; i++) {
+    for (const nom of MOIS[i]) {
+      const mot = sansAccents(nom).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const avant = new RegExp(`(\\d{1,2})\\s*(?:er|e|eme|st|nd|rd|th|°|º)?\\s+(?:de\\s+|di\\s+|of\\s+)?${mot}([^a-z]|$)`);
+      const apres = new RegExp(`${mot}\\s+(\\d{1,2})\\s*(?:er|e|eme|st|nd|rd|th|°|º)?([^0-9]|$)`);
+      const m = avant.exec(texte) || apres.exec(texte);
+      if (!m) continue;
+      const numJour = Number(m[1]);
+      if (!(numJour >= 1 && numJour <= 31)) continue;
+      occurrences.push({ mois: i + 1, jour: numJour });
+    }
+  }
+
+  if (occurrences.length === 0) return null;
+
+  // La prochaine, parmi toutes celles qu'énonce la phrase : cette
+  // année si elle est encore devant, l'an prochain sinon.
+  let meilleure = null;
+  for (const o of occurrences) {
+    for (const annee of [jour.getUTCFullYear(), jour.getUTCFullYear() + 1]) {
+      const iso = `${annee}-${String(o.mois).padStart(2, "0")}-${String(o.jour).padStart(2, "0")}`;
+      const d = new Date(`${iso}T23:59:59Z`);
+      if (isNaN(d.getTime())) continue;
+      // Le mois doit être celui qu'on a écrit : le 31 février donne
+      // le 2 ou le 3 mars, et ce serait une date inventée.
+      if (d.getUTCMonth() + 1 !== o.mois) continue;
+      if (d.getTime() < jour.getTime()) continue;
+      if (!meilleure || d.getTime() < meilleure.temps) meilleure = { iso, temps: d.getTime() };
+      break;
+    }
+  }
+
+  if (!meilleure) return null;
+
+  return {
+    deadlineISO: meilleure.iso,
+    regle: "la page annonce une échéance qui revient chaque année ; aucune année n'y est écrite",
+    citation: String(citation).trim().slice(0, 600)
+  };
+
+}
+
 function lireProposition(brut) {
 
   const source = brut && typeof brut === "object" ? brut : {};
@@ -403,6 +746,10 @@ module.exports = {
   STATUTS,
   CONSIGNE_VERIFICATION,
   texteDePage,
+  estUnPdf,
+  textePdf,
   dateCitee,
+  MOTS_RECURRENCE,
+  echeanceRecurrente,
   lireProposition
 };
