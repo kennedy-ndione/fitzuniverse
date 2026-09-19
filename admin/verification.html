@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Vérifier une bourse à sa source | FitzUniverse Control Center</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+<style>
+
+body{ background:var(--background-soft); padding:48px 24px 120px; }
+
+.migrate-wrap{ max-width:1180px; margin:0 auto; }
+.migrate-header{ margin-bottom:32px; }
+.migrate-header h1{ color:var(--text-color); font-size:1.6rem; margin-bottom:8px; }
+.migrate-header p{ color:var(--text-light); font-size:.94rem; max-width:74ch; }
+
+.migrate-step{
+background:var(--background); border:1px solid var(--border-color);
+border-radius:16px; padding:24px; margin-bottom:20px;
+}
+
+.migrate-step h2{ color:var(--text-color); font-size:1.05rem; margin-bottom:6px; }
+.migrate-step p{ color:var(--text-light); font-size:.88rem; margin-bottom:16px; max-width:74ch; }
+
+.migrate-step button{
+font-family:var(--font-body); font-weight:700; font-size:.9rem;
+padding:11px 20px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff; transition:var(--transition);
+}
+
+.migrate-step button:disabled{ opacity:.4; cursor:not-allowed; }
+
+.migrate-log{
+margin-top:16px; padding:14px 16px; border-radius:10px;
+background:var(--background-soft); border:1px solid var(--border-color);
+font-family:"SF Mono",ui-monospace,Consolas,monospace; font-size:.78rem;
+color:var(--text-light); max-height:360px; overflow-y:auto; white-space:pre-wrap;
+display:none;
+}
+
+.migrate-log.is-visible{ display:block; }
+.migrate-log .ok{ color:var(--success); }
+.migrate-log .warn{ color:var(--warning); }
+.migrate-log .err{ color:var(--danger); }
+
+.audit-table{ width:100%; border-collapse:collapse; font-size:.82rem; }
+
+.audit-table th{
+text-align:left; padding:8px 10px; color:var(--text-muted);
+font-size:.74rem; text-transform:uppercase; letter-spacing:.08em;
+border-bottom:1px solid var(--border-color); white-space:nowrap;
+}
+
+.audit-table td{
+padding:8px 10px; border-bottom:1px solid var(--border-color);
+color:var(--text-light); vertical-align:middle;
+}
+
+.audit-count{
+font-family:"SF Mono",ui-monospace,Consolas,monospace;
+font-weight:700; text-align:right; width:64px; color:var(--text-color);
+}
+
+.verif-ton-danger{ color:var(--danger); font-weight:600; }
+.verif-ton-warning{ color:var(--warning); font-weight:600; }
+
+/* Une bourse jamais vérifiée est le cas le plus fréquent aujourd'hui
+(156 sur 156) : on la marque discrètement, sinon tout le tableau
+serait teinté et la teinte ne dirait plus rien. */
+.audit-table tr.is-jamais td:nth-child(4){ color:var(--text-muted); font-style:italic; }
+
+.verif-ligne-btn{
+font-family:var(--font-body); font-weight:600; font-size:.78rem;
+padding:6px 12px; border-radius:8px; border:1px solid var(--border-color);
+background:var(--background); color:var(--text-color); cursor:pointer;
+}
+
+.verif-ligne-btn:disabled{ opacity:.45; cursor:progress; }
+
+/* -------- Le panneau de décision -------- */
+
+#verifPanneau{ display:none; }
+#verifPanneau.is-visible{ display:block; }
+
+.verif-fiche{
+margin-top:18px; padding:20px; border-radius:14px;
+background:var(--background); border:2px solid var(--amber-500);
+}
+
+.verif-fiche h3{ color:var(--text-color); font-size:1.05rem; margin:0 0 4px; }
+.verif-fiche h4{ color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:0 0 6px; }
+.verif-fiche p{ font-size:.86rem; color:var(--text-light); margin:0 0 6px; }
+
+.verif-source{ margin-bottom:16px !important; font-size:.8rem !important; word-break:break-all; }
+
+.verif-colonnes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-bottom:18px; }
+
+.verif-prose{ font-size:.8rem !important; line-height:1.55; color:var(--text-muted) !important; }
+
+.verif-citation blockquote{
+margin:0; padding:12px 14px; border-radius:10px;
+background:var(--background-soft); border-left:4px solid var(--amber-500);
+font-size:.86rem; line-height:1.6; color:var(--text-color);
+}
+
+.verif-refus{ margin-top:14px; }
+.verif-refus ul{ margin:0 0 0 18px; font-size:.82rem; color:var(--danger); }
+
+.verif-decision{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin-top:20px; }
+
+.verif-decision label{ display:flex; flex-direction:column; gap:5px; font-size:.78rem; font-weight:600; color:var(--text-muted); }
+
+.verif-decision select{
+font-family:var(--font-body); font-size:.86rem; padding:9px 12px;
+border-radius:9px; border:1px solid var(--border-color); background:var(--background); color:var(--text-color);
+}
+
+.verif-decision button{
+font-family:var(--font-body); font-weight:700; font-size:.88rem;
+padding:10px 18px; border-radius:10px; border:none; cursor:pointer;
+background:var(--gradient-primary); color:#fff;
+}
+
+.verif-decision .verif-secondaire{ background:var(--background-soft); color:var(--text-light); border:1px solid var(--border-color); }
+
+.verif-avertissement{ margin-top:14px !important; font-size:.8rem !important; color:var(--text-muted) !important; }
+
+</style>
+
+</head>
+
+<body>
+
+<!-- L'avertissement dit exactement ce que l'outil fait : il n'écrit
+     rien tout seul. C'est la doctrine posée dans admin/radar.js
+     (« un robot qui réécrirait les dates transformerait "on ne sait
+     pas" en une date affirmée »), et cet écran la respecte en
+     déplaçant le travail pénible — la lecture — sans déplacer la
+     décision. -->
+<div class="migrate-wrap">
+
+<div style="margin-bottom:24px;padding:14px 16px;border-radius:10px;background:rgba(234,163,25,.12);border:1px solid rgba(234,163,25,.4);color:var(--amber-700);font-size:.88rem;font-weight:700;">La machine LIT et PROPOSE. Rien n'est écrit dans le catalogue sans votre clic, et le statut d'une bourse n'est jamais modifié par défaut.</div>
+
+<div class="migrate-header">
+<h1>Vérifier une bourse à sa source</h1>
+<p>Le champ <code>deadline</code> du catalogue n'est pas une date : <strong>470 des 507 valeurs sont des phrases entières</strong>, écrites à la main par un humain qui avait lu la page. C'est précieux, et c'est illisible pour une machine — 26 programmes seulement portent une date qu'un moteur sait comparer à aujourd'hui. Cet outil ouvre la page officielle d'une bourse, en rapporte <strong>la phrase exacte</strong> qui porte la date ou le statut, et vous laisse décider. Une date que la phrase citée ne contient pas est <strong>écartée automatiquement</strong> : le modèle n'a pas le droit d'estimer. L'ordre de travail vient du <a href="radar.html">radar des échéances</a>, qui sait déjà quelles bourses sont les plus risquées et les plus vues.</p>
+</div>
+
+<div class="migrate-step">
+<h2>1. Charger le catalogue et classer</h2>
+<p>Lecture de l'instantané statique (<code>assets/data/catalogue.json</code>), zéro lecture Firestore. Les 60 bourses les plus prioritaires s'affichent.</p>
+<button type="button" id="verifBtn">Charger et classer</button>
+<div class="migrate-log" id="verifLog"></div>
+</div>
+
+<div class="migrate-step">
+<h2>2. Vérifier, puis décider</h2>
+<p>Chaque « Vérifier » ouvre une page officielle et appelle le modèle une fois. Comptez quelques centimes par bourse — et ne relancez pas une bourse déjà vérifiée du jour.</p>
+<div id="verifResult"></div>
+<div id="verifPanneau"></div>
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="verification.js"></script>
+
+</body>
+
+</html>

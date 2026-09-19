@@ -55,3 +55,13 @@ exports.fitzGenerate = require("./fitz").fitzGenerate;
 // où n'importe qui la lisait sans compte et sans payer.
 // ------------------------------------------------------------
 exports.portails = require("./portails").portails;
+
+// ------------------------------------------------------------
+// Vérification d'une bourse à sa source — voir functions/verification.js.
+// verifierBourse : lit la page officielle d'une bourse et RAPPORTE ce
+// qu'elle y a lu (onCall, administrateurs seulement). Elle n'écrit
+// rien : c'est admin/verification.html qui écrit, sur décision humaine.
+// La règle est celle posée dans admin/radar.js — aucun robot ne
+// transforme « on ne sait pas » en une date affirmée.
+// ------------------------------------------------------------
+exports.verifierBourse = require("./verification").verifierBourse;
