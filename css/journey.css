@@ -1000,7 +1000,67 @@ border-style:solid;
 border-color:rgba(190,96,50,.34);
 }
 
-.jy-phase.is-scellee > .jy-phase-voile{ opacity:.82; }
+/* ---------- PREMIUM 5 (2026-09-19) — UNE PHASE SCELLÉE TIENT EN UNE PHRASE
+   ----------------------------------------------------------------------
+   La doctrine était DÉJÀ ÉCRITE, en tête de js/revelation.js :
+
+     entrouverte  c'est la suivante : son titre, ce qui vous y attend,
+                  et ce qui l'ouvrira. Pas son contenu.
+     scellee      c'est plus loin : son titre et UNE SEULE PHRASE.
+
+   Elle n'avait jamais été appliquée : la seule différence entre les deux
+   états était `opacity:.82`. Résultat mesuré le 2026-09-19 sur le compte
+   d'une vraie cliente — QUATRE cartes pleines d'affilée, chacune avec son
+   paragraphe, sa ligne de condition et son bouton « Jeter un œil ». Sur un
+   téléphone, l'étudiante fait défiler quatre écrans de ce qu'elle ne peut
+   PAS encore faire, avec quatre boutons identiques vers des culs-de-sac,
+   pendant que le seul vrai bouton de la page est noyé au milieu.
+
+   ET LA LIGNE DE CONDITION POUVAIT MENTIR. `ouvrePar` nomme ce qui ouvre
+   une phase quand elle est la SUIVANTE. Sur une phase lointaine, cette
+   condition est souvent DÉJÀ REMPLIE : le 19, la phase 03 annonçait
+   « s'ouvre avec votre première candidature suivie » à une étudiante qui
+   en avait douze. La masquer ici n'est pas de la mise en page : c'est
+   retirer de l'écran une phrase fausse. Elle reste, juste, sur la phase
+   entrouverte — la seule dont la condition est le vrai prochain obstacle.
+
+   Rien n'est verrouillé, et rien ne perd le clavier : le bouton n'est pas
+   supprimé, il redevient un lien discret. Une phase scellée s'ouvre
+   toujours d'un clic, comme le dit revelation.js. */
+.jy-phase.is-scellee > .jy-phase-voile{
+opacity:.82;
+padding:13px 16px;
+}
+
+.jy-phase.is-scellee .jy-voile-attend{
+margin:0;
+font-size:.9rem;
+line-height:1.5;
+}
+
+/* La condition, masquée : sur une phase lointaine elle est souvent déjà
+   remplie, donc fausse. Elle reste sur .is-entrouverte. */
+.jy-phase.is-scellee .jy-voile-cle{ display:none; }
+
+/* Le bouton redevient un lien : accessible au clavier, sans le poids d'un
+   bouton qui rivaliserait avec l'action principale de la page. */
+.jy-phase.is-scellee .jy-voile-btn{
+margin-top:8px;
+padding:0;
+border:0;
+border-radius:0;
+background:none;
+font-size:.79rem;
+font-weight:600;
+text-decoration:underline;
+text-underline-offset:3px;
+}
+
+.jy-phase.is-scellee .jy-voile-btn:hover{ border-color:transparent; }
+
+/* Une fois dévoilée à la main, elle reprend sa taille normale. */
+.jy-phase.is-scellee.is-devoilee > .jy-phase-voile{ opacity:1; padding:20px 22px; }
+.jy-phase.is-scellee.is-devoilee .jy-voile-cle{ display:flex; }
 
 /* ---------- LA LIGNE D'UNE PHASE FAITE ---------- */
 .jy-phase-resume{

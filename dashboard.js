@@ -216,10 +216,26 @@ rail.innerHTML = phases.map((phase, idx) => `
 </a>
 `).join("");
 
+// PREMIUM 5 (2026-09-19) — UN COMPTE, PAS UN POURCENTAGE.
+//
+// « Parcours accompli à 17 % » ne se voit jamais bouger : il faut finir
+// une phase ENTIÈRE pour qu'il passe à 33. La route, elle, affiche
+// « 3 étapes faites sur 15 » et « 0 pièce prête sur 9 » — des nombres
+// que l'étudiant regarde avancer, et qu'il a envie de faire avancer.
+// C'est là qu'est l'« addictif » demandé le 18, pas dans le poids d'un
+// bouton. `progressionPct` reste calculé, il sert ailleurs ; ce n'est
+// simplement plus lui qu'on montre.
+// `reduce` et pas `filter` : « révélation 4 » (test/espace-etudiant.test.mjs)
+// interdit TOUT `.filter(` dans renderRail, pour qu'aucune phase ne puisse
+// jamais disparaître du rail. Le garde-fou ne sait pas distinguer un filtre
+// qui compte d'un filtre qui cache — et c'est très bien ainsi : on compte
+// donc sans filtrer, la règle reste entière.
+const faites = phases.reduce((n, phase) => n + (phase.faite ? 1 : 0), 0);
+
 document.getElementById("jyProgressLine").innerHTML =
 progressionPct >= 100
-? `<strong>Parcours accompli à 100 %</strong> — bon voyage, et bonne rentrée !`
-: `Parcours accompli à <strong>${progressionPct} %</strong> — chaque phase s'ouvre sur une avancée réelle, jamais sur un clic.`;
+? `<strong>Parcours accompli</strong> — bon voyage, et bonne rentrée !`
+: `<strong>${faites} phase${faites > 1 ? "s" : ""} faite${faites > 1 ? "s" : ""} sur ${phases.length}</strong> — chaque phase s'ouvre sur une avancée réelle, jamais sur un clic.`;
 
 }
 
