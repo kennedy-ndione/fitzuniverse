@@ -135,7 +135,7 @@ export function cadreFormule(formule) {
   if (fermees.length) parts.push(`Ce qui lui est FERMÉ : ${fermees.join(", ")}.`);
 
   parts.push(
-    "Cinq règles, dans cet ordre.",
+    "Six règles, dans cet ordre.",
 
     "(1) NE PROMETS JAMAIS UN SERVICE FERMÉ. Ne dis pas qu'un conseiller le rappellera, qu'il peut écrire sur WhatsApp ou répondre à l'équipe si ces services ne sont pas dans sa liste OUVERT. Un étudiant qui attend un rappel qui ne viendra jamais, c'est une parole non tenue par FitzUniverse.",
 
@@ -143,9 +143,11 @@ export function cadreFormule(formule) {
 
     "(3) QUAND IL DEMANDE QUELQUE CHOSE DE FERMÉ, dis-le en une phrase, sans détour et sans t'excuser : ce n'est pas dans sa formule, voici ce que ça lui apporterait, et les formules se voient sur la page « Voir les formules ». Une seule fois par conversation. Tu n'es pas un vendeur : tu le dis, puis tu reviens à ce que tu peux faire pour lui tout de suite.",
 
-    "(4) CE QUI LUI EST OUVERT, TU LE SERS ENTIÈREMENT. Ne limite rien de toi-même, ne rationne pas tes réponses, n'invente aucun quota. Un étudiant qui a payé doit sentir qu'il a payé.",
+    "(4) NE RÉCITE JAMAIS LA LISTE DE CE QUI LUI EST OUVERT. Cette liste est là pour TOI, pour savoir ce que tu as le droit de promettre — pas pour être lue à l'étudiant. Nomme seulement ce qui répond à la question posée, en une ou deux choses, et dans tes mots. On te demande un conseiller humain ? Réponds que tu peux relire son dossier et sa lettre toi-même — pas que tu proposes six outils. Une énumération de services au milieu d'une conversation est une brochure, pas une réponse.",
 
-    "(5) N'INVENTE NI PRIX, NI DÉLAI, NI CONTENU DE FORMULE. Tu connais les noms ci-dessus et rien d'autre. Si on te demande combien coûte une formule ou ce qu'elle contient exactement, renvoie à la page des formules plutôt que de citer un chiffre."
+    "(5) CE QUI LUI EST OUVERT, TU LE SERS ENTIÈREMENT. Ne limite rien de toi-même, ne rationne pas tes réponses, n'invente aucun quota. Un étudiant qui a payé doit sentir qu'il a payé.",
+
+    "(6) N'INVENTE NI PRIX, NI DÉLAI, NI CONTENU DE FORMULE. Tu connais les noms ci-dessus et rien d'autre. Si on te demande combien coûte une formule ou ce qu'elle contient exactement, renvoie à la page des formules plutôt que de citer un chiffre."
   );
 
   return parts.join(" ");

@@ -129,6 +129,32 @@ test("formule 6 — les deux règles qui coûtent de l'argent sont écrites", ()
 
 });
 
+test("formule 6 bis — la liste ouverte est pour Fitz, pas pour l'étudiant", () => {
+
+  // MESURÉ EN PRODUCTION le 2026-09-19, sur le compte de Brigitte
+  // (Essentiel). Fitz a refusé le conseiller exactement comme prévu —
+  // puis a enchaîné sur SES SIX OUTILS, énumérés : « questions sur vos
+  // candidatures, vérification de dossier, aide sur votre lettre de
+  // motivation, traduction de documents, e-mails, préparation aux
+  // entretiens ». C'est juste, et c'est une brochure au milieu d'une
+  // conversation. Réglage demandé par Charles le jour même.
+  const cadre = cadreFormule(lireFormule({ planId: "essentiel-4", featureFlags: FLAGS }));
+
+  assert.match(cadre, /NE RÉCITE JAMAIS LA LISTE DE CE QUI LUI EST OUVERT/);
+  assert.match(cadre, /Cette liste est là pour TOI/,
+    "la liste sert à savoir ce qu'il a le droit de promettre, pas à être lue");
+  assert.match(cadre, /ce qui répond à la question posée/);
+  assert.match(cadre, /pas que tu proposes six outils/,
+    "l'exemple concret vaut mieux que la consigne abstraite : c'est le cas réel de Brigitte");
+
+  // Et la règle reste dans le décompte annoncé au modèle — une liste
+  // qui dit « cinq » et en contient six, c'est la première chose qu'un
+  // modèle remarque, et il se met à douter du reste.
+  assert.match(cadre, /Six règles, dans cet ordre\./);
+  assert.match(cadre, /\(6\) N'INVENTE NI PRIX/);
+
+});
+
 test("formule 7 — ce qui est ouvert est servi entièrement, et rien n'est inventé", () => {
 
   const cadre = cadreFormule(lireFormule({ planId: "conseiller-6", featureFlags: FLAGS }));
