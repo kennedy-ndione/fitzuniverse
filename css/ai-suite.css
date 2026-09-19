@@ -2297,6 +2297,29 @@ box-shadow:var(--shadow-sm);
 
 }
 
+/* PREMIUM 4 (2026-09-19) : les commandes des outils Fitz répondent à
+la main comme celles de la route — l'appui se sent (enfoncement quasi
+instantané, .06s), et le clavier voit où il est. Sans :active, un
+bouton paraît mort sous le doigt ; sans :focus-visible, la navigation
+au clavier avance à l'aveugle. */
+.ai-chat-send-btn:active:not(:disabled),
+.ai-chat-stop-btn:active,
+.ai-chat-new-btn:active,
+.ai-chat-attach-btn:active,
+.ai-icon-btn:active:not(:disabled){
+transform:translateY(1px) scale(.97);
+transition-duration:.06s;
+}
+
+.ai-chat-send-btn:focus-visible,
+.ai-chat-stop-btn:focus-visible,
+.ai-chat-new-btn:focus-visible,
+.ai-chat-attach-btn:focus-visible,
+.ai-icon-btn:focus-visible{
+outline:2px solid var(--amber-600);
+outline-offset:2px;
+}
+
 .ai-chat-send-btn i,
 .ai-chat-stop-btn i,
 .ai-chat-send-btn svg,

@@ -91,3 +91,23 @@ const { base, media } = classesParContexte();
 const seules = [...media.keys()].filter((k) => !base.has(k)).sort();
 assert.deepEqual(seules, [...SEULEMENT_MEDIA].sort());
 });
+
+test("icone-btn 4 — PREMIUM 4 : les commandes des outils Fitz répondent à la main", () => {
+
+// MESURÉ le 2026-09-19 : les commandes propres aux outils (envoi du
+// chat, trombone, nouvelle conversation, boutons d'icône) avaient un
+// survol mais AUCUN état d'appui ni d'anneau clavier — alors que les
+// .btn de css/base.css et les .rt-btn de la route les ont. Même main
+// partout.
+const suite = lire("css/ai-suite.css");
+
+const actifs = /\.ai-chat-send-btn:active:not\(:disabled\),\s*\.ai-chat-stop-btn:active,\s*\.ai-chat-new-btn:active,\s*\.ai-chat-attach-btn:active,\s*\.ai-icon-btn:active:not\(:disabled\)\{([^}]*)\}/.exec(suite);
+assert.ok(actifs, "les commandes des outils n'ont plus d'état d'appui commun");
+assert.match(actifs[1], /scale\(\.97\)/, "l'appui ne se sent plus (scale)");
+assert.match(actifs[1], /transition-duration:\s*\.06s/, "l'enfoncement n'est plus quasi instantané");
+
+const focus = /\.ai-chat-send-btn:focus-visible,\s*\.ai-chat-stop-btn:focus-visible,\s*\.ai-chat-new-btn:focus-visible,\s*\.ai-chat-attach-btn:focus-visible,\s*\.ai-icon-btn:focus-visible\{([^}]*)\}/.exec(suite);
+assert.ok(focus, "les commandes des outils n'ont plus d'anneau clavier commun");
+assert.match(focus[1], /outline:\s*2px solid var\(--amber-600\)/, "l'anneau clavier n'est plus l'ambre du site");
+
+});
