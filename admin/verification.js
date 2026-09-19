@@ -252,7 +252,21 @@ bouton.addEventListener("click", async () => {
 
   try {
 
-    catalogue = await chargerCatalogue();
+    // chargerCatalogue() rend des clés FRANÇAISES (programmes /
+    // universites / bourses) ; js/radar.js travaille sur la forme de
+    // l'instantané, en anglais. admin/radar.js traduit déjà ici, avec
+    // le même commentaire — je ne l'avais pas fait, et la page est
+    // tombée sur « catalogue.programs is not iterable » au premier
+    // clic, devant Charles. Lire le voisin qui fait la même chose
+    // AVANT d'écrire : c'est moins cher qu'un déploiement.
+    const brut = await chargerCatalogue();
+
+    catalogue = {
+      genereLe: genereLeCatalogue() || "",
+      programs: brut.programmes,
+      universities: brut.universites,
+      scholarships: brut.bourses
+    };
 
     programmesParBourse = new Map();
     for (const programme of catalogue.programs) {

@@ -243,6 +243,31 @@ test("branchement 1 — la fonction est exportée, et la page existe", () => {
 
 });
 
+test("écran 0 — le catalogue est TRADUIT avant d'entrer dans le radar", () => {
+
+  // DÉFAUT TROUVÉ EN DIRECT, à l'écran, au premier clic :
+  // « catalogue.programs is not iterable ».
+  // chargerCatalogue() rend des clés FRANÇAISES (programmes /
+  // universites / bourses) ; js/radar.js travaille sur la forme de
+  // l'instantané, en anglais. admin/radar.js fait déjà cette
+  // traduction, avec un commentaire qui l'explique — je ne l'avais pas
+  // lu avant d'écrire la page jumelle.
+  const js = codeSeul("admin/verification.js");
+
+  assert.match(js, /programs: brut\.programmes/);
+  assert.match(js, /universities: brut\.universites/);
+  assert.match(js, /scholarships: brut\.bourses/);
+
+  assert.ok(!/await chargerCatalogue\(\);\s*\n\s*programmesParBourse/.test(js),
+    "passer le retour de chargerCatalogue() tel quel au radar rejoue exactement le défaut");
+
+  // Et le même contrat côté voisin, pour que les deux pages ne
+  // divergent pas en silence.
+  const radar = codeSeul("admin/radar.js");
+  assert.match(radar, /programs: c\.programmes/);
+
+});
+
 test("écran 1 — le statut n'est JAMAIS écrit par défaut", () => {
 
   const js = codeSeul("admin/verification.js");
