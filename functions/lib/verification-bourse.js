@@ -93,32 +93,44 @@ function texteDePage(html) {
    LIRE UN PDF
    ==============================================================
 
-   TROUVÉ LE 2026-09-19, à la relance de la campagne. POSTECH :
-   « liensExamines: 0 », aucun texte, aucune citation. Le lien du
-   catalogue ne pointe pas sur une page mais sur un PDF —
-   « 2026_27_Admissions_guide_for_international_students_GIFT.pdf ».
-   texteDePage() a fait ce qu'on lui demandait : elle a retiré les
-   balises d'un fichier qui n'en a pas, et rendu du binaire.
+   TROUVÉ LE 2026-09-19. POSTECH : « liensExamines: 0 », aucun texte,
+   aucune citation. Le lien du catalogue ne pointe pas sur une page
+   mais sur un PDF. texteDePage() a fait ce qu'on lui demandait : elle
+   a retiré les balises d'un fichier qui n'en a pas.
 
-   Ce n'est pas un cas isolé. Une bonne part des agences publiques —
-   les bandi italiens, les guides d'admission coréens et japonais —
-   publient leur calendrier en PDF et rien d'autre. Aucun
-   élargissement de vocabulaire n'atteindra ces bourses-là.
+   Ce n'est pas un cas isolé. Les bandi italiens, les guides
+   d'admission coréens et japonais publient leur calendrier en PDF et
+   rien d'autre. Aucun élargissement de vocabulaire n'atteindra ces
+   bourses-là.
 
-   POURQUOI PAS UNE DÉPENDANCE. Ajouter pdf-parse à une Cloud
-   Function, c'est un paquet de plus à déployer, à mettre à jour et à
-   auditer, pour un besoin minuscule : on ne rend pas le PDF, on n'en
-   garde pas la mise en page, on cherche UNE phrase contenant UNE
-   date. zlib est dans Node. Soixante lignes suffisent.
+   J'AI D'ABORD ÉCRIT CE LECTEUR À LA MAIN, et j'ai eu tort. L'argument
+   paraissait bon : zlib est dans Node, on ne rend pas le document, on
+   cherche une phrase. Soixante lignes ont suffi pour les deux premiers
+   documents d'épreuve. Puis la réalité, en trois manches :
 
-   CE QUE ÇA NE SAIT PAS FAIRE, et il faut le dire : les PDF dont le
-   texte est dans des « object streams » compressés globalement, ceux
-   qui encodent leurs polices en CID sans table de correspondance
-   lisible, et les PDF scannés (une image de page, sans texte). Dans
-   ces cas la fonction rend une chaîne vide ou du charabia — et
-   l'outil se comporte alors exactement comme avant : il ne trouve
-   rien, et il le dit. On n'a rien cassé, on a ajouté ce qu'on
-   pouvait.
+     - reportlab enrobe ses flux en ASCII85 par-dessus Flate ;
+     - pdflatex n'écrit aucun caractère d'espace, seulement des
+       décalages de crénage ;
+     - POSTECH embarque ses polices, et le tri « contient Tj » les
+       avalait comme du texte ;
+     - les parenthèses imbriquées, licites, coupaient les lignes de
+       calendrier en deux ;
+     - et enfin, une fois tout cela corrigé, le texte sortait CHIFFRÉ :
+       « 7KH WLPHOLQH LV EDVHG RQ .RUHDQ » pour « The timeline is based
+       on Korean ». Une police sous-ensemble à encodage propre. Pour la
+       relire il faut sa table /ToUnicode, donc suivre les ressources
+       de la page, donc écrire un analyseur de PDF.
+
+   C'est exactement l'endroit où une bibliothèque gagne son prix. Ce
+   n'était plus « un besoin minuscule », c'était un format. pdfjs, de
+   Mozilla, lit les cinq documents d'épreuve sans se tromper, celui à
+   encodage propre compris. Cent cinquante lignes écrites par moi
+   disparaissent, et c'est une bonne nouvelle.
+
+   CE QU'ON GARDE EN PROPRE, parce que ça ne regarde pas la
+   bibliothèque : la reconnaissance aux octets, le recollage des
+   césures, et les deux gardes qui décident si ce qu'on a lu mérite
+   d'être donné au modèle.
    ============================================================== */
 
 /** Reconnaît un PDF à ses octets, pas à son extension : un lien sans
@@ -128,289 +140,65 @@ function estUnPdf(octets) {
   return octets[0] === 0x25 && octets[1] === 0x50 && octets[2] === 0x44 && octets[3] === 0x46; // %PDF
 }
 
-/** Les chaînes littérales d'un flux de contenu PDF portent des
- *  échappements qui leur sont propres. Sans ce décodage, « \( » sort
- *  tel quel au milieu des phrases. */
-function decoderChainePdf(brut) {
-  let sortie = "";
-  for (let i = 0; i < brut.length; i++) {
-    const c = brut[i];
-    if (c !== "\\") { sortie += c; continue; }
-    const suivant = brut[++i];
-    if (suivant === undefined) break;
-    if (suivant === "n") sortie += "\n";
-    else if (suivant === "r") sortie += "\n";
-    else if (suivant === "t") sortie += "\t";
-    else if (suivant >= "0" && suivant <= "7") {
-      // Code octal : jusqu'à trois chiffres.
-      let octal = suivant;
-      while (octal.length < 3 && brut[i + 1] >= "0" && brut[i + 1] <= "7") octal += brut[++i];
-      sortie += String.fromCharCode(parseInt(octal, 8));
-    } else sortie += suivant; // \( \) \\ et le reste : le caractère lui-même
-  }
-  return sortie;
-}
+/** Au-delà, on ne lit plus : un guide d'admission de 80 pages ne dit
+ *  pas sa date limite plus loin que la vingtième. */
+const MAX_PAGES_PDF = 20;
 
-/** Extrait le texte visible d'UN flux de contenu déjà décompressé.
- *  On ne lit que les opérateurs qui DESSINENT du texte : Tj, TJ, '
- *  et ". Tout le reste — coordonnées, couleurs, chemins — est du
- *  dessin, et n'a rien à faire dans une phrase. */
-function texteDUnFlux(flux) {
+/**
+ * Décide si un texte extrait est de la LANGUE, ou du charabia.
+ *
+ * LE CAS RÉEL, POSTECH, 2026-09-19 : une police sous-ensemble sans
+ * table /ToUnicode ne peut être relue par personne — le meilleur
+ * lecteur du monde rend « Wkh wlpholqh lv edvhg rq ». C'est de
+ * l'ASCII, ce sont des lettres, ça franchit toutes les gardes
+ * naïves — et donné au modèle, ça le fait meubler.
+ *
+ * Ce que ce charabia n'a pas, et qu'aucune langue européenne ne
+ * perd : des VOYELLES en proportion normale. Français, anglais,
+ * italien, espagnol, allemand, portugais tournent tous entre 35 et
+ * 45 %. Le texte décalé de POSTECH : 14 %.
+ */
+function ressembleADuTexte(texte) {
 
-  /* UN BALAYAGE, PAS UNE EXPRESSION RÉGULIÈRE.
+  const lettres = (texte.match(/[A-Za-zÀ-ɏ]/g) || []).length;
 
-     La première version découpait au motif /\((?:\\.|[^\\()])*\)/ —
-     qui s'arrête à la première parenthèse INTERNE. Or les
-     parenthèses imbriquées sont licites en PDF dès qu'elles sont
-     équilibrées, et elles sont partout dans les calendriers :
-     « (Second round: July 6, 2026 ~ September 11, 2026 (18:00)) ».
-     La ligne entière se réduisait à « 18:00 ». La date exacte qu'on
-     cherchait était celle que le motif jetait.
+  // Trop court pour juger : un PDF scanné rend quelques caractères de
+  // numérotation et rien d'autre. Mieux vaut ne rien rendre.
+  if (lettres < 80) return false;
 
-     Un scanner de quinze lignes lit ça sans se tromper, et coûte
-     moins cher à relire qu'un motif qu'on n'ose plus toucher. */
+  const voyelles = (texte.match(/[aeiouyAEIOUYàâäéèêëîïôöùûüÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/g) || []).length;
 
-  let sortie = "";
-  let i = 0;
-
-  while (i < flux.length) {
-
-    const c = flux[i];
-
-    // Chaîne littérale : profondeur des parenthèses, échappements.
-    if (c === "(") {
-      let profondeur = 1;
-      let brut = "";
-      i++;
-      while (i < flux.length && profondeur > 0) {
-        const d = flux[i];
-        if (d === "\\") { brut += d + (flux[i + 1] || ""); i += 2; continue; }
-        if (d === "(") profondeur++;
-        else if (d === ")") { profondeur--; if (profondeur === 0) { i++; break; } }
-        brut += d;
-        i++;
-      }
-      sortie += decoderChainePdf(brut);
-      continue;
-    }
-
-    // Chaîne hexadécimale. En UTF-16BE (le cas courant quand il y a
-    // des accents), un octet de poids fort nul précède chaque
-    // caractère latin : on le laisse tomber.
-    if (c === "<" && flux[i + 1] !== "<") {
-      const fin = flux.indexOf(">", i);
-      if (fin === -1) break;
-      const hex = flux.slice(i + 1, fin).replace(/\s+/g, "");
-      for (let k = 0; k + 1 < hex.length; k += 2) {
-        const code = parseInt(hex.slice(k, k + 2), 16);
-        if (code > 0) sortie += String.fromCharCode(code);
-      }
-      i = fin + 1;
-      continue;
-    }
-
-    // LE NOMBRE COMPTE AUTANT QUE LA CHAÎNE. Dans un tableau TJ, un
-    // texte est découpé pour le crénage et les morceaux sont séparés
-    // par des décalages : [(Le) -250 (7) -250 (settembre)] TJ.
-    // Certains moteurs — LaTeX en tête — n'écrivent AUCUN caractère
-    // d'espace et ne laissent que ces nombres. Sans cette règle, la
-    // page rendait « Ledomandedevonoesserepresentateentroleore12:00 »
-    // et plus aucune date n'y était lisible.
-    if (c === "-" || (c >= "0" && c <= "9")) {
-      let j = i + 1;
-      while (j < flux.length && /[0-9.]/.test(flux[j])) j++;
-      // Un décalage marqué vaut une espace ; un crénage fin n'en est
-      // pas une. Le seuil usuel est autour de 200 millièmes de cadratin.
-      if (Number(flux.slice(i, j)) <= -200) sortie += " ";
-      i = j;
-      continue;
-    }
-
-    // Les opérateurs qui déplacent le curseur séparent les lignes ;
-    // ceux qui dessinent du texte séparent les morceaux.
-    if (c >= "A" && c <= "Z") {
-      let j = i;
-      while (j < flux.length && /[A-Za-z*']/.test(flux[j])) j++;
-      const mot = flux.slice(i, j);
-      if (mot === "TD" || mot === "Td" || mot === "T*" || mot === "ET") sortie += "\n";
-      else if (mot === "TJ" || mot === "Tj") sortie += " ";
-      i = j;
-      continue;
-    }
-
-    i++;
-
-  }
-
-  return sortie;
+  return voyelles / lettres >= 0.25;
 
 }
 
-/** ASCII85 tel que le PDF le définit : cinq caractères pour quatre
- *  octets, « z » pour quatre zéros, « ~> » pour finir. */
-function decoderAscii85(texte) {
-
-  const corps = String(texte).replace(/^<~/, "").replace(/~>[\s\S]*$/, "").replace(/\s+/g, "");
-  const octets = [];
-  let groupe = [];
-
-  for (const c of corps) {
-    if (c === "z" && groupe.length === 0) { octets.push(0, 0, 0, 0); continue; }
-    const v = c.charCodeAt(0) - 33;
-    if (v < 0 || v > 84) continue;
-    groupe.push(v);
-    if (groupe.length === 5) {
-      let n = 0;
-      for (const g of groupe) n = n * 85 + g;
-      octets.push((n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255);
-      groupe = [];
-    }
-  }
-
-  // Groupe incomplet : on complète avec le caractère le plus haut et
-  // on ne garde que les octets réellement écrits.
-  if (groupe.length > 1) {
-    const manquants = 5 - groupe.length;
-    for (let i = 0; i < manquants; i++) groupe.push(84);
-    let n = 0;
-    for (const g of groupe) n = n * 85 + g;
-    const quatre = [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
-    for (let i = 0; i < 4 - manquants; i++) octets.push(quatre[i]);
-  }
-
-  return Buffer.from(octets);
-
-}
-
-/* CE QUI EST DU TEXTE, ET CE QUI N'EN EST PAS.
-
-   TROUVÉ LE 2026-09-19, en lisant enfin l'extrait que Fitz rapporte.
-   POSTECH : 24 022 caractères extraits, dont la couverture du guide,
-   correcte — puis « GPOSÐÂÍ … GSUB … cmap … glyf … hhea … ». Un
-   FICHIER DE POLICE embarqué, avalé comme du texte.
-
-   Le premier tri cherchait « Tj » quelque part dans le flux. Un
-   programme de police fait des dizaines de milliers d'octets : il
-   contient cette séquence par hasard, et il passait. Le vrai texte du
-   document — le tableau des dates, page 2 — était noyé dedans et
-   tronqué bien avant par le plafond de caractères.
-
-   C'est le même genre de faute que le tableau des mois : un test trop
-   permissif qui laisse entrer ce qu'il devrait écarter. Ici il ne
-   refusait pas du vrai, il acceptait du faux — et le résultat était
-   pire, parce qu'un modèle à qui l'on donne du charabia finit par
-   meubler. */
-
-/** Les signatures de ce qu'un PDF embarque et qui n'est pas du texte :
- *  polices et images. Reconnues aux PREMIERS OCTETS, seul endroit où
- *  elles ne mentent pas. */
-const DEBUTS_NON_TEXTE = [
-  "\x00\x01\x00\x00", "OTTO", "true", "ttcf", "wOFF", "wOF2", // polices
-  "\x80\x01",                                                  // Type1 (PFB)
-  "\x89PNG", "\xff\xd8\xff", "GIF8", "II*\x00", "MM\x00*"     // images
-];
-
-/** Un flux de CONTENU de page dessine du texte entre BT et ET. Un
- *  programme de police, une image, un profil de couleurs, non. */
-function ressembleAUnContenuDePage(flux) {
-
-  const debut = flux.slice(0, 8);
-  if (DEBUTS_NON_TEXTE.some((sig) => debut.startsWith(sig))) return false;
-
-  // BT … ET, en mots entiers : c'est la seule structure qu'un flux de
-  // contenu porte toujours dès qu'il écrit une lettre, et qu'un
-  // binaire ne porte à peu près jamais dans cet ordre.
-  if (!/(^|[^A-Za-z])BT([^A-Za-z]|$)/.test(flux)) return false;
-  if (!/(^|[^A-Za-z])ET([^A-Za-z]|$)/.test(flux)) return false;
-
-  return true;
-
-}
-
-/** Le texte d'un PDF, autant qu'on sache le lire. Rend "" quand on ne
- *  sait pas — jamais du binaire, qui ferait halluciner le modèle. */
-function textePdf(octets, zlib) {
+/**
+ * Le texte d'un PDF, autant qu'on sache le lire. Rend "" quand on ne
+ * sait pas — jamais du charabia.
+ *
+ * `lireLePdf` est injecté : le module reste pur et testable sous
+ * Node, et la Cloud Function lui passe pdfjs.
+ */
+async function textePdf(octets, lireLePdf) {
 
   if (!estUnPdf(octets)) return "";
 
-  const brut = Buffer.from(octets);
-  let assemble = "";
+  // Pas de garde sur `lireLePdf` : s'il manque, l'appel échoue et le
+  // filet ci-dessous rend "". Une garde de plus ici serait une ligne
+  // qu'aucune mutation ne peut faire rougir — donc une ligne dont on
+  // ne saurait jamais si elle marche.
 
-  // On balaie les paires stream / endstream. Chacune est inflatée si
-  // elle le peut ; celles qui échouent (images, polices, chiffrement)
-  // sont ignorées en silence — c'est normal, la plupart des flux d'un
-  // PDF ne sont pas du texte.
-  let depart = 0;
-  for (;;) {
-    const ouverture = brut.indexOf("stream", depart);
-    if (ouverture === -1) break;
-    const fermeture = brut.indexOf("endstream", ouverture);
-    if (fermeture === -1) break;
-
-    // « stream » est suivi de CRLF ou LF, jamais d'autre chose.
-    let debut = ouverture + 6;
-    if (brut[debut] === 0x0d) debut++;
-    if (brut[debut] === 0x0a) debut++;
-
-    const corps = brut.subarray(debut, fermeture);
-    depart = fermeture + 9;
-
-    if (corps.length === 0) continue;
-
-    // ASCII85, POSÉ PAR-DESSUS FLATE. reportlab — et une partie des
-    // générateurs administratifs — enrobent le flux compressé en
-    // ASCII85 avant de l'écrire. Sans ce passage, inflateSync rend
-    // Z_DATA_ERROR et le document entier paraît illisible alors que
-    // son texte est parfaitement là.
-    const corpsUtile = corps.subarray(0, 2).toString("latin1") !== "\x78\x9c" && /~>\s*$/.test(corps.subarray(-8).toString("latin1"))
-      ? decoderAscii85(corps.toString("latin1"))
-      : corps;
-
-    let clair = null;
-    try {
-      clair = zlib.inflateSync(corpsUtile).toString("latin1");
-    } catch {
-      try {
-        clair = zlib.inflateRawSync(corpsUtile).toString("latin1");
-      } catch {
-        // Flux non compressé : certains PDF simples écrivent leur
-        // contenu en clair. On ne le retient que s'il ressemble à du
-        // contenu de page, pour ne pas verser une image dans le texte.
-        const essai = corps.toString("latin1");
-        clair = /\bTj\b|\bTJ\b/.test(essai) ? essai : null;
-      }
-    }
-
-    if (clair === null) continue;
-    if (!ressembleAUnContenuDePage(clair)) continue;
-
-    const morceau = texteDUnFlux(clair);
-
-    /* DEUXIÈME FILET. Un flux peut franchir le tri ci-dessus et rendre
-       tout de même du charabia : police à encodage CID, texte dessiné
-       par des glyphes sans correspondance lisible. On mesure alors ce
-       qu'on a sous la main — si moins de la moitié des caractères sont
-       lisibles par un humain, ce morceau n'est pas du texte et on ne
-       le verse pas dans le document. */
-    if (morceau.length > 0) {
-
-      /* ON MESURE LES ESPACES, pas les lettres. Une police à encodage
-         CID sans table lisible rend « ã¡òÔã¡òÔã¡òÔ… » : ce sont des
-         lettres latines accentuées pour Unicode, et compter les
-         lettres les laissait entrer. Ce qu'elles n'ont pas, et
-         qu'aucun texte humain ne perd, c'est l'espace entre les mots.
-         Une phrase en porte 12 à 18 % ; ce charabia, zéro. */
-      const espaces = (morceau.match(/\s/g) || []).length;
-      if (morceau.length <= 60 || espaces / morceau.length >= 0.04) assemble += `${morceau}\n`;
-
-    }
-
-    // Un guide d'admission de 80 pages n'apporte rien de plus qu'un
-    // de 20 : on s'arrête bien avant de peser sur la mémoire.
-    if (assemble.length > MAX_CARACTERES_TEXTE * 3) break;
+  let pages;
+  try {
+    pages = await lireLePdf(octets, MAX_PAGES_PDF);
+  } catch {
+    // Un PDF chiffré, tronqué ou malformé : on ne rend rien, et
+    // l'outil se comporte comme avant — il ne trouve pas, et il le
+    // dit.
+    return "";
   }
 
-  const texte = assemble
+  const texte = (Array.isArray(pages) ? pages.join("\n\n") : String(pages || ""))
     // Césure de fin de ligne : « set- \n tembre » doit redevenir
     // « settembre », sans quoi la garde dateCitee ne reconnaîtra
     // jamais le mois — c'est exactement le refus de DSU Toscana,
@@ -421,17 +209,14 @@ function textePdf(octets, zlib) {
     .replace(/^[ \t]+|[ \t]+$/gm, "")
     .trim();
 
-  // Un PDF scanné rend quelques caractères de ponctuation et rien
-  // d'autre. Mieux vaut ne rien rendre que donner ça à lire au
-  // modèle : il inventerait une date pour meubler.
-  const lettres = (texte.match(/[A-Za-zÀ-ɏ]/g) || []).length;
-  if (lettres < 80) return "";
+  if (!ressembleADuTexte(texte)) return "";
 
   return texte.length > MAX_CARACTERES_TEXTE
     ? `${texte.slice(0, MAX_CARACTERES_TEXTE)}\n\n[…document tronqué…]`
     : texte;
 
 }
+
 
 /** Les mois, en toutes lettres, français et anglais — pour vérifier
  *  qu'une date proposée est bien CITÉE dans la phrase source. */
@@ -858,7 +643,8 @@ module.exports = {
   CONSIGNE_VERIFICATION,
   texteDePage,
   estUnPdf,
-  ressembleAUnContenuDePage,
+  ressembleADuTexte,
+  MAX_PAGES_PDF,
   textePdf,
   dateCitee,
   MOTS_RECURRENCE,

@@ -29,7 +29,6 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
-const zlib = require("zlib");
 
 const {
   MAX_OCTETS_PAGE,
@@ -37,6 +36,7 @@ const {
   texteDePage,
   estUnPdf,
   textePdf,
+  MAX_PAGES_PDF,
   lireProposition,
   echeanceRecurrente,
   choisirLien
@@ -160,12 +160,45 @@ async function telecharger(url) {
      montrera « document PDF » plutôt qu'un décompte de liens à zéro
      que personne ne sait interpréter. */
   if (estUnPdf(octets)) {
-    return { format: "pdf", html: "", texte: textePdf(octets, zlib) };
+    return { format: "pdf", html: "", texte: await textePdf(octets, lirePdf) };
   }
 
   const html = new TextDecoder("utf-8", { fatal: false }).decode(octets);
 
   return { format: "html", html, texte: texteDePage(html) };
+
+}
+
+/* LE LECTEUR DE PDF, injecté dans le module pur.
+
+   pdfjs est chargé À LA DEMANDE : la grande majorité des
+   vérifications lisent une page web, et il serait absurde de payer
+   son chargement à chaque démarrage à froid pour les quelques-unes
+   qui lisent un document.
+
+   `isEvalSupported: false` : on ne laisse pas une bibliothèque
+   évaluer du code venu d'un fichier téléchargé sur un site tiers.
+   `useSystemFonts: false` : on extrait du texte, on ne dessine rien —
+   inutile d'aller chercher des polices. */
+async function lirePdf(octets, maxPages) {
+
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
+  const doc = await pdfjs.getDocument({
+    data: new Uint8Array(octets),
+    isEvalSupported: false,
+    useSystemFonts: false
+  }).promise;
+
+  const pages = [];
+  const combien = Math.min(doc.numPages, maxPages);
+
+  for (let numero = 1; numero <= combien; numero++) {
+    const contenu = await (await doc.getPage(numero)).getTextContent();
+    pages.push(contenu.items.map((i) => i.str + (i.hasEOL ? "\n" : "")).join(""));
+  }
+
+  return pages;
 
 }
 

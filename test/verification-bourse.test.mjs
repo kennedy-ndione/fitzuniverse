@@ -35,7 +35,7 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 const codeSeul = (f) => lire(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
 
 const requis = createRequire(import.meta.url);
-const { texteDePage, estUnPdf, ressembleAUnContenuDePage, textePdf, echeanceRecurrente, MOTS_RECURRENCE, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
+const { texteDePage, estUnPdf, ressembleADuTexte, MAX_PAGES_PDF, textePdf, echeanceRecurrente, MOTS_RECURRENCE, dateCitee, lireProposition, lienVersLEcheance, choisirLien, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
   requis(path.join(RACINE, "functions/lib/verification-bourse.js"));
 
 /* ---------------------------------------------------------------
@@ -320,7 +320,7 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
   // tout ce qu'ils servent.
   assert.match(js, /if \(estUnPdf\(octets\)\) \{/,
     "supprimer cette reconnaissance rendrait du binaire au modèle");
-  assert.match(js, /return \{ format: "pdf", html: "", texte: textePdf\(octets, zlib\) \};/);
+  assert.match(js, /return \{ format: "pdf", html: "", texte: await textePdf\(octets, lirePdf\) \};/);
 
   // CE QUE FITZ A LU. Sans cet extrait, une extraction ratée, une
   // page sans date et un modèle distrait rendent exactement le même
@@ -620,150 +620,125 @@ test("écran 1 — le statut n'est JAMAIS écrit par défaut", () => {
    6. LIRE UN PDF — parce qu'une bourse sur dix n'a que ça
    --------------------------------------------------------------- */
 
-/* Deux PDF RÉELS, engendrés au moment du lot par deux moteurs
-   différents (reportlab et pdflatex) et déposés dans test/pdf/. Un
-   PDF fabriqué à la main dans le test ne prouverait que ma propre
-   idée du format ; ceux-ci portent les deux pièges qui ont vraiment
-   cassé la première version :
+/* CINQ PDF RÉELS dans test/pdf/, engendrés par trois moteurs et
+   portant chacun un piège rencontré en production le 2026-09-19 :
 
-   - reportlab enrobe ses flux en ASCII85 par-dessus Flate. Sans ce
-     décodage, inflateSync rend Z_DATA_ERROR et le document paraît
-     vide alors que son texte est entier.
-   - pdflatex n'écrit AUCUN caractère d'espace : les mots sont
-     séparés par des décalages de crénage dans les tableaux TJ. Sans
-     la règle du nombre, la page rendait
-     « Ledomandedevonoesserepresentateentroleore12:00del7settembre »
-     et plus aucune date n'y était lisible. */
+   guide-admission.pdf  reportlab, flux en ASCII85 par-dessus Flate
+   bando.pdf            pdflatex, aucun espace + une césure
+   encodage-propre.pdf  police sous-ensemble AVEC sa table /ToUnicode
+   sans-table.pdf       la même, SANS la table : illisible pour tous
+   scanne.pdf           une image de page, seul texte : la pagination
+
+   Le lecteur est injecté : le module reste pur, et le test lui passe
+   le même pdfjs que la Cloud Function. */
 
 import zlib from "node:zlib";
 
 const PDF = (nom) => readFileSync(path.join(RACINE, "test", "pdf", nom));
 
-test("pdf 1 — un PDF ASCII85 (reportlab) rend ses phrases", () => {
+async function lirePdf(octets, maxPages) {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(octets), isEvalSupported: false, useSystemFonts: false }).promise;
+  const pages = [];
+  for (let n = 1; n <= Math.min(doc.numPages, maxPages); n++) {
+    const c = await (await doc.getPage(n)).getTextContent();
+    pages.push(c.items.map((i) => i.str + (i.hasEOL ? "\n" : "")).join(""));
+  }
+  return pages;
+}
 
-  const texte = textePdf(PDF("guide-admission.pdf"), zlib);
+test("pdf 1 — trois moteurs, trois documents, leurs phrases entières", async () => {
 
-  assert.match(texte, /Admissions Guide for International Students/);
-  assert.match(texte, /no later than 1 November 2026/,
-    "la phrase doit être lisible d'un bout à l'autre, espaces compris");
+  const guide = await textePdf(PDF("guide-admission.pdf"), lirePdf);
+  assert.match(guide, /no later than 1 November 2026/, "reportlab : flux en ASCII85");
 
-  // Et la garde doit pouvoir faire son travail dessus : c'est tout
-  // l'objet de l'exercice.
-  const phrase = texte.split("\n").find((l) => /November/.test(l));
-  assert.equal(dateCitee("2026-11-01", phrase), true);
-  assert.equal(dateCitee("2026-11-02", phrase), false, "la garde reste stricte sur un PDF comme sur une page");
+  const bando = await textePdf(PDF("bando.pdf"), lirePdf);
+  assert.match(bando, /entro le ore 12:00 del 7 settembre 2026/,
+    "pdflatex : aucun espace écrit, et une césure « set-\\ntembre » à recoller");
+  assert.ok(!/set-\s*\n/.test(bando));
 
-});
-
-test("pdf 2 — un PDF LaTeX sans espaces, et sa césure, restent lisibles", () => {
-
-  const texte = textePdf(PDF("bando.pdf"), zlib);
-
-  assert.match(texte, /entro le ore 12:00 del 7 settembre 2026/,
-    "les mots doivent être séparés : pdflatex ne pose que des décalages de crénage");
-
-  // « set- \n tembre » recollé : sans cela, le mois disparaît et on
-  // refait exactement l'erreur de DSU Toscana, sous une autre forme.
-  assert.ok(!/set-\s*\n/.test(texte), "la césure de fin de ligne doit être recollée");
-
-  const phrase = texte.split("\n").find((l) => /settembre/.test(l));
-  assert.equal(dateCitee("2026-09-07", phrase), true);
+  // La garde travaille dessus comme sur n'importe quelle page.
+  assert.equal(dateCitee("2026-11-01", guide.split("\n").find((l) => /November/.test(l))), true);
+  assert.equal(dateCitee("2026-09-07", bando.split("\n").find((l) => /settembre/.test(l))), true);
+  assert.equal(dateCitee("2026-11-02", guide.split("\n").find((l) => /November/.test(l))), false,
+    "la garde reste stricte sur un PDF comme sur une page");
 
 });
 
-test("pdf 2 bis — une police embarquée n'est pas du texte", () => {
+test("pdf 2 — une police à encodage propre se relit par sa table", async () => {
 
-  /* LE DÉFAUT VU EN PRODUCTION, le 2026-09-19. POSTECH rendait
-     24 022 caractères : la couverture du guide, correcte, puis
-     « GPOSÐÂÍ … GSUB … cmap … glyf … hhea … » — le programme d'une
-     police embarquée, avalé comme du texte. Le tableau des dates,
-     page 2, était noyé dedans et tronqué bien avant par le plafond.
+  /* LE DÉFAUT QUI A FAIT ABANDONNER MON LECTEUR MAISON. POSTECH
+     rendait « 7KH WLPHOLQH LV EDVHG RQ .RUHDQ » — « The timeline is
+     based on Korean », décalé de trois. Une police sous-ensemble
+     numérote ses glyphes comme elle veut ; pour la relire il faut sa
+     table /ToUnicode, donc suivre les ressources de la page, donc
+     écrire un analyseur de PDF. C'est là qu'une bibliothèque gagne
+     son prix. */
 
-     Le premier tri cherchait « Tj » n'importe où dans le flux. Une
-     police fait des dizaines de milliers d'octets : elle contient
-     cette séquence par hasard. Un tri trop permissif n'écarte pas du
-     vrai, il fait pire — il accepte du faux, et un modèle à qui l'on
-     donne du charabia finit par meubler. */
+  const lu = await textePdf(PDF("encodage-propre.pdf"), lirePdf);
 
-  // Reconnues aux PREMIERS OCTETS, le seul endroit où elles ne
-  // mentent pas. Chacune porte BT, ET et Tj pour que le test échoue
-  // si la reconnaissance disparaît.
-  const piege = " BT ET Tj TJ";
-  assert.equal(ressembleAUnContenuDePage("\u0000\u0001\u0000\u0000GSUB cmap glyf" + piege), false, "TrueType");
-  assert.equal(ressembleAUnContenuDePage("OTTO CFF " + piege), false, "OpenType");
-  assert.equal(ressembleAUnContenuDePage("\u0089PNG\r\n" + piege), false, "PNG");
-  assert.equal(ressembleAUnContenuDePage("ÿØÿà" + piege), false, "JPEG");
+  assert.match(lu, /Second round: July 6, 2026/);
+  assert.match(lu, /The timeline is based on Korean Standard Time/);
+  assert.ok(!/Wkh wlpholqh|7KH WLPHOLQH/.test(lu), "le texte décalé ne doit plus apparaître");
 
-  // BT … ET : la seule structure qu'un flux de contenu porte toujours
-  // dès qu'il écrit une lettre.
-  assert.equal(ressembleAUnContenuDePage("xxxx Tj TJ yyyy"), false,
-    "« Tj » quelque part dans un binaire ne fait pas un texte — c'est exactement le défaut corrigé");
-  assert.equal(ressembleAUnContenuDePage("q BT /F1 12 Tf (bonjour) Tj ET Q"), true);
-
-  // Les deux bornes comptent séparément : un flux qui ouvre du texte
-  // sans le fermer, ou l'inverse, n'est pas un contenu de page.
-  assert.equal(ressembleAUnContenuDePage("q BT /F1 12 Tf (bonjour) Tj Q"), false, "BT sans ET");
-  assert.equal(ressembleAUnContenuDePage("q /F1 12 Tf (bonjour) Tj ET Q"), false, "ET sans BT");
-
-  // Et les documents réels traversent toujours le tri.
-  assert.ok(textePdf(PDF("guide-admission.pdf"), zlib).length > 400,
-    "un tri trop sévère écarterait le vrai texte : c'est l'erreur inverse, et elle coûte autant");
-  assert.ok(textePdf(PDF("bando.pdf"), zlib).length > 250);
-
-  /* LE DOCUMENT COMPLET. police-embarquee.pdf reproduit POSTECH :
-     un flux de contenu légitime, un programme de police portant la
-     séquence « Tj », et un flux CID qui ne rend que « ã¡òÔ… ». Seul
-     le premier doit ressortir. */
-  const lu = textePdf(PDF("police-embarquee.pdf"), zlib);
-
-  assert.match(lu, /Second round: July 6, 2026 ~ September 11, 2026 \(18:00\)/,
-    "le calendrier est le seul texte de ce document, et il doit sortir ENTIER");
-  assert.ok(!/GSUB|glyf|hhea|maxp/.test(lu), "le programme de police ne doit pas entrer");
-  assert.ok(!/ã¡òÔ/.test(lu),
-    "le charabia CID porte des lettres accentuées : compter les lettres le laissait passer, ce sont les ESPACES qui le trahissent");
-
-  // Et la garde travaille dessus comme sur n'importe quelle page.
   assert.equal(dateCitee("2026-09-11", lu.split("\n").find((l) => /Second round/.test(l))), true);
 
 });
 
-test("pdf 2 ter — les parenthèses imbriquées ne mangent pas la ligne", () => {
+test("pdf 3 — et sans sa table, on rend RIEN plutôt que du charabia", async () => {
 
-  /* Le motif de la première version s'arrêtait à la première
-     parenthèse INTERNE. Or elles sont licites dès qu'elles sont
-     équilibrées, et les calendriers en sont pleins :
-     « (Second round: … September 11, 2026 (18:00)) ». La ligne
-     entière se réduisait à « 18:00 » — la date qu'on cherchait était
-     exactement celle que le motif jetait. Un scanner remplace le
-     motif. */
+  /* Le même document, privé de sa table : aucun lecteur au monde ne
+     peut le relire. Le charabia qui en sort est de l'ASCII, ce sont
+     des lettres, il franchit toutes les gardes naïves — et donné au
+     modèle, il le fait meubler une date plausible que la garde
+     « citée » laisserait passer, puisqu'il aurait cité ses propres
+     miettes.
 
-  const lu = textePdf(PDF("police-embarquee.pdf"), zlib);
+     Ce qu'il n'a pas, et qu'aucune langue européenne ne perd : des
+     voyelles en proportion normale. 35 à 45 % partout ; 14 % ici. */
 
-  assert.match(lu, /First round: February 24, 2026 ~ April 3, 2026/);
-  assert.ok(!/^18:00$/m.test(lu),
-    "« 18:00 » seul sur sa ligne est la signature du motif qui s'arrêtait trop tôt");
+  assert.equal(await textePdf(PDF("sans-table.pdf"), lirePdf), "",
+    "un document illisible doit rendre une chaîne VIDE");
+
+  assert.equal(ressembleADuTexte("Wkh wlpholqh lv edvhg rq Nruhdq Vwdqgdug Wlph dqg dssolhv wr doo lqwhuqdwlrqdo dssolfdqwv iru wkh judgxdwh"), false);
+
+  // ET LE SEUIL DE LONGUEUR, séparément. Une page scannée rend
+  // quelques mots de pagination, parfaitement français, parfaitement
+  // vocalisés — et qui ne disent rien. Trop court pour juger, c'est
+  // trop court pour être donné à lire.
+  assert.equal(ressembleADuTexte("Bonjour le monde, voici une phrase courte."), false,
+    "moins de 80 lettres : on ne rend rien, même si c'est de la vraie langue");
+
+  // Et les vraies langues du catalogue passent toutes.
+  assert.equal(ressembleADuTexte("Le dossier de candidature doit être déposé avant le quinze janvier deux mille vingt-sept, accompagné des pièces justificatives demandées par le service."), true, "français");
+  assert.equal(ressembleADuTexte("Applications for the international scholarship programme must be submitted before the published deadline together with all supporting documents."), true, "anglais");
+  assert.equal(ressembleADuTexte("Le domande devono essere presentate entro le ore dodici del sette settembre insieme a tutti i documenti richiesti dal bando regionale."), true, "italien");
+  assert.equal(ressembleADuTexte("Die Bewerbung muss vor dem Bewerbungsschluss zusammen mit allen erforderlichen Unterlagen bei der Hochschule eingereicht werden."), true, "allemand");
 
 });
 
-test("pdf 3 — on reconnaît un PDF à ses octets, pas à son nom", () => {
+test("pdf 4 — un PDF scanné, et tout ce qui n'est pas un PDF", async () => {
+
+  // Une image de page : le seul texte du document est sa pagination.
+  assert.equal(await textePdf(PDF("scanne.pdf"), lirePdf), "",
+    "moins de 80 lettres, c'est une image de page : on ne rend RIEN");
 
   assert.equal(estUnPdf(PDF("bando.pdf")), true);
   assert.equal(estUnPdf(Buffer.from("<html><body>bonjour</body></html>")), false);
   assert.equal(estUnPdf(Buffer.from("")), false);
   assert.equal(estUnPdf(null), false);
 
-  // Et surtout : rien ne sort quand on ne sait pas lire. Du binaire
-  // donné au modèle le ferait halluciner une date pour meubler.
-  assert.equal(textePdf(Buffer.from("<html>bonjour</html>"), zlib), "");
-  assert.equal(textePdf(Buffer.from("%PDF-1.4\nrien du tout\n%%EOF"), zlib), "");
+  assert.equal(await textePdf(Buffer.from("<html>bonjour</html>"), lirePdf), "");
 
-  // UN PDF SCANNÉ, le cas réel : la page est une image, et le seul
-  // texte du document est sa numérotation — « - 1 - », « . . . 2 . ».
-  // Rendre ces miettes au modèle serait pire que ne rien rendre : il
-  // meublerait avec une date plausible, et la garde « citée » la
-  // laisserait passer puisqu'il aurait cité ses propres miettes.
-  assert.equal(textePdf(PDF("scanne.pdf"), zlib), "",
-    "moins de 80 lettres, c'est une image de page : on ne rend RIEN");
+  // Un PDF chiffré, tronqué ou malformé ne doit pas faire tomber la
+  // vérification : on ne rend rien, et l'outil se comporte comme
+  // avant — il ne trouve pas, et il le dit.
+  assert.equal(await textePdf(Buffer.from("%PDF-1.4\nrien du tout\n%%EOF"), lirePdf), "");
+
+  // Sans lecteur injecté, pas de lecture : le module reste pur.
+  assert.equal(await textePdf(PDF("bando.pdf"), null), "");
+
+  assert.equal(MAX_PAGES_PDF, 20, "un guide de 80 pages ne dit pas sa date après la vingtième");
 
 });
 
