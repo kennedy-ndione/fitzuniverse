@@ -358,6 +358,13 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
      meilleur score — et l'écran ne proposait rien, la case d'épinglage
      n'apparaissant qu'une fois une date trouvée. Le cas qui en avait
      le plus besoin était le seul qu'on ne pouvait pas épingler. */
+  /* LE PANNEAU S'OUVRE APRÈS LA TABLE, donc soixante lignes plus
+     bas. Sans ce défilement, un clic sur « Vérifier » semble ne rien
+     faire : dix secondes d'attente pour un résultat hors de l'écran,
+     et l'outil paraît cassé. Vu en guidant Charles le 2026-09-19. */
+  assert.match(ecran, /panneau\.scrollIntoView\(/,
+    "le panneau est la réponse à un clic : il doit arriver sous les yeux de qui a cliqué");
+
   assert.match(ecran, /class="verif-epingler-piste" data-url=/);
   assert.match(ecran, /updateDoc\(doc\(db, "scholarships", p\.scholarshipId\), \{ pageEcheance: url \}\)/,
     "la page s'épingle sur la BOURSE, pas sur les programmes");
