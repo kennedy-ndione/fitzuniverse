@@ -34,7 +34,8 @@ const {
   MAX_OCTETS_PAGE,
   CONSIGNE_VERIFICATION,
   texteDePage,
-  lireProposition
+  lireProposition,
+  lienVersLEcheance
 } = require("./lib/verification-bourse");
 
 if (!admin.apps.length) admin.initializeApp();
@@ -63,13 +64,23 @@ async function lireBourse(scholarshipId) {
   if (!snap.exists) throw refus("not-found", "Cette bourse n'existe pas dans le catalogue.");
 
   const bourse = snap.data() || {};
-  const url = String(bourse.officialWebsite || "").trim();
+
+  /* LOT P5c : `pageEcheance` PRIME sur `officialWebsite`.
+     Mesuré sur les dix premières vérifications : le site officiel mène
+     souvent à une page de PRÉSENTATION du programme, qui ne porte
+     aucune date — l'échéance vit une page plus loin. Quand
+     l'administrateur a trouvé la bonne page, il l'épingle ici et la
+     vérification suivante part directement du bon endroit, sans
+     redépenser un aller-retour à la deviner. */
+  const epinglee = String(bourse.pageEcheance || "").trim();
+  const site = String(bourse.officialWebsite || "").trim();
+  const url = /^https?:\/\/\S+$/i.test(epinglee) ? epinglee : site;
 
   if (!/^https?:\/\/\S+$/i.test(url)) {
     throw refus("failed-precondition", "Cette bourse n'a pas de site officiel enregistré : renseignez-le d'abord.");
   }
 
-  return { titre: String(bourse.title || scholarshipId), url };
+  return { titre: String(bourse.title || scholarshipId), url, epinglee: url === epinglee };
 
 }
 
@@ -218,15 +229,70 @@ exports.verifierBourse = onCall(
       throw refus("failed-precondition", "La page officielle ne contient presque aucun texte : elle est probablement construite en JavaScript, et doit être lue à la main.");
     }
 
-    const { brut, usage } = await interroger(texte, contexte);
+    let { brut, usage } = await interroger(texte, contexte);
+    let proposition = lireProposition(brut);
+    let urlLue = contexte.url;
+    let chemin = [];
 
-    const proposition = lireProposition(brut);
+    /* UN SEUL PAS DE PLUS, ET SEULEMENT S'IL LE FAUT.
+
+       Quatre des dix premières bourses vérifiées n'ont rendu aucune
+       date, et trois d'entre elles pointaient vers une page PROFONDE
+       du site officiel : des pages de présentation du programme, pas
+       la page de candidature. L'échéance vit un clic plus loin.
+
+       On suit donc UN lien — celui qui dit « How to apply », « Dates »,
+       « Candidater » — et on relit. Un seul, jamais deux : au-delà on
+       ne sait plus quelle page on a lue, et le coût double à chaque
+       cran. La page réellement lue est rapportée à l'administrateur.
+
+       Naviguer n'est pas inventer : la garde « la date doit être citée »
+       s'applique à la seconde lecture exactement comme à la première. */
+    if (!proposition.deadlineISO) {
+
+      const suivant = lienVersLEcheance(html, contexte.url);
+
+      if (suivant) {
+
+        chemin = [contexte.url, suivant];
+
+        try {
+
+          const html2 = await telecharger(suivant);
+          const texte2 = texteDePage(html2);
+
+          if (texte2.length >= 200) {
+            const seconde = await interroger(texte2, { ...contexte, url: suivant });
+            const p2 = lireProposition(seconde.brut);
+
+            // On ne garde la seconde lecture que si elle APPORTE
+            // quelque chose : une date, ou une citation là où la
+            // première n'en avait aucune. Sinon la première reste —
+            // écraser un résultat par un moins bon serait absurde.
+            if (p2.deadlineISO || (!proposition.citation && p2.citation)) {
+              proposition = p2;
+              urlLue = suivant;
+              usage = seconde.usage || usage;
+            }
+          }
+
+        } catch (erreur) {
+          // Le second lien ne répond pas : ce n'est pas un échec de la
+          // vérification, c'est un lien de moins. On garde la première
+          // lecture et on le dit dans le journal.
+          logger.info("Second lien injoignable", { suivant, message: erreur.message });
+        }
+
+      }
+
+    }
 
     logger.info("Bourse vérifiée", {
       scholarshipId,
       statut: proposition.statut,
       date: proposition.deadlineISO || "aucune",
       refus: proposition.refus.length,
+      viaLien: urlLue !== contexte.url,
       jetons: usage ? usage.input_tokens + usage.output_tokens : null
     });
 
@@ -236,7 +302,14 @@ exports.verifierBourse = onCall(
     return {
       scholarshipId,
       titre: contexte.titre,
-      url: contexte.url,
+      // `url` est la page d'où la réponse vient VRAIMENT — c'est elle
+      // qui sera enregistrée comme source, et elle que l'administrateur
+      // doit pouvoir ouvrir pour juger.
+      url: urlLue,
+      urlDepart: contexte.url,
+      viaLien: urlLue !== contexte.url,
+      chemin,
+      epinglee: contexte.epinglee === true,
       ...proposition,
       lueLe: new Date().toISOString().slice(0, 10)
     };

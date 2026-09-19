@@ -35,7 +35,7 @@ const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, 
 const codeSeul = (f) => lire(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
 
 const requis = createRequire(import.meta.url);
-const { texteDePage, dateCitee, lireProposition, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
+const { texteDePage, dateCitee, lireProposition, lienVersLEcheance, CONSIGNE_VERIFICATION, MAX_CARACTERES_TEXTE } =
   requis(path.join(RACINE, "functions/lib/verification-bourse.js"));
 
 /* ---------------------------------------------------------------
@@ -192,6 +192,140 @@ test("proposition 6 — un portail qui n'est pas une adresse est écarté", () =
   assert.match(p.refus[0], /ce n'est pas une adresse/);
 
   assert.equal(lireProposition({ portail: "https://ok.org/a", citation: "x" }).portail, "https://ok.org/a");
+
+});
+
+/* ---------------------------------------------------------------
+   3 bis. Aller chercher la page qui porte la date (lot P5c)
+   --------------------------------------------------------------- */
+
+test("lien 1 — « How to apply » l'emporte sur « À propos »", () => {
+
+  // MESURÉ sur les dix premières bourses : quatre n'ont rendu aucune
+  // date, et TROIS pointaient vers une page profonde du site officiel
+  // (JASSO à 4 niveaux, Global Korea à 3, POSTECH à 2). Ce n'étaient
+  // pas des accueils mal renseignés : c'étaient des pages de
+  // PRÉSENTATION. L'échéance vit un clic plus loin.
+  const html = `
+    <a href="/en/about">About the programme</a>
+    <a href="/en/how-to-apply">How to apply</a>
+    <a href="/en/news">News</a>`;
+
+  assert.equal(lienVersLEcheance(html, "https://site.org/en/programme"),
+    "https://site.org/en/how-to-apply");
+
+});
+
+test("lien 1 bis — le LIBELLÉ du lien pèse plus que son adresse", () => {
+
+  // « Deadlines and dates » écrit dans le lien est un signal bien plus
+  // sûr que le mot « apply » perdu dans une adresse : beaucoup de
+  // sites mettent /apply/ en préfixe de tout leur espace candidat,
+  // y compris des pages qui ne portent aucune date.
+  // Le cas est construit pour que SEULE la pondération tranche :
+  //   /z            libellé « How to apply » → 2 mots × 2 = 4
+  //   /apply/…      chemin apply + application + dates → 3 × 1 = 3
+  // À poids égal (1 chacun), le second gagnerait avec 3 contre 2.
+  const html = `
+    <a href="/z">How to apply</a>
+    <a href="/apply/application/dates">Informations</a>`;
+
+  assert.equal(lienVersLEcheance(html, "https://site.org/p"), "https://site.org/z",
+    "le mot dans le libellé doit peser plus que le mot dans le chemin");
+
+});
+
+test("lien 2 — on ne quitte jamais le site officiel", () => {
+
+  // L'officiel est TOUT ce qui fait la valeur de cette vérification.
+  const html = `<a href="https://autre-site.org/apply">Apply now</a>`;
+
+  assert.equal(lienVersLEcheance(html, "https://site.org/p"), "",
+    "suivre un lien hors du domaine officiel ferait lire n'importe quoi");
+
+});
+
+test("lien 3 — la page de connexion et les mentions légales sont fuies", () => {
+
+  // Un score naïf choisirait « Login » (le portail de candidature
+  // s'appelle souvent « application login ») et lirait un formulaire
+  // vide.
+  for (const piege of ["/application-login", "/apply/privacy", "/apply/contact"]) {
+    assert.equal(lienVersLEcheance(`<a href="${piege}">Application</a>`, "https://site.org/p"), "",
+      `${piege} ne porte jamais d'échéance`);
+  }
+
+});
+
+test("lien 4 — rien de prometteur, rien de suivi", () => {
+
+  assert.equal(lienVersLEcheance(`<a href="/about">About</a><a href="/news">News</a>`, "https://site.org/p"), "",
+    "suivre un lien au hasard coûterait un appel de modèle pour rien");
+  assert.equal(lienVersLEcheance("", "https://site.org/p"), "");
+  assert.equal(lienVersLEcheance("<a href='/apply'>Apply</a>", "pas une url"), "");
+
+});
+
+test("lien 5 — on ne retourne pas sur la page qu'on vient de lire", () => {
+
+  const html = `<a href="/en/apply">Apply</a><a href="/en/apply/">Apply</a>`;
+
+  assert.equal(lienVersLEcheance(html, "https://site.org/en/apply"), "",
+    "la relire coûterait un second appel pour le même résultat");
+
+});
+
+test("lien 6 — à égalité, la page la plus courte gagne", () => {
+
+  const html = `<a href="/apply/step-3/documents">Candidater</a><a href="/apply">Candidater</a>`;
+
+  assert.equal(lienVersLEcheance(html, "https://site.org/p"), "https://site.org/apply",
+    "« /apply » porte le calendrier, « /apply/step-3/documents » porte une liste de pièces");
+
+});
+
+test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
+
+  const js = codeSeul("functions/verification.js");
+
+  assert.match(js, /if \(!proposition\.deadlineISO\) \{/,
+    "on ne suit un lien que si la première page n'a rien donné");
+  assert.match(js, /lienVersLEcheance\(html, contexte\.url\)/);
+
+  // UN SEUL PAS. Au-delà on ne sait plus quelle page on a lue, et le
+  // coût double à chaque cran.
+  assert.equal((js.match(/lienVersLEcheance\(/g) || []).length, 1);
+
+  // La page réellement lue remonte À DEUX ENDROITS, et les deux
+  // comptent : le journal Cloud Functions (pour compter combien de
+  // vérifications ont eu besoin d'un second saut) ET la réponse
+  // rendue à l'écran (pour que l'administrateur le VOIE avant de
+  // valider). En retirer un seul ne doit pas passer inaperçu.
+  assert.equal((js.match(/viaLien: urlLue !== contexte\.url/g) || []).length, 2,
+    "le journal ET la réponse doivent dire si un lien a été suivi");
+  assert.match(js, /urlDepart: contexte\.url/);
+
+  // Et la seconde lecture ne remplace la première que si elle APPORTE
+  // quelque chose.
+  assert.match(js, /if \(p2\.deadlineISO \|\| \(!proposition\.citation && p2\.citation\)\)/);
+
+});
+
+test("lien 8 — une page épinglée par l'administrateur prime sur le catalogue", () => {
+
+  const js = codeSeul("functions/verification.js");
+
+  assert.match(js, /bourse\.pageEcheance/);
+  assert.match(js, /\/\^https\?:\\\/\\\/\\S\+\$\/i\.test\(epinglee\) \? epinglee : site/,
+    "la page épinglée gagne, mais seulement si c'est une vraie adresse");
+
+  const admin = codeSeul("admin/verification.js");
+  assert.match(admin, /pageEcheance: proposition\.url/,
+    "on épingle la page qui a VRAIMENT porté la date");
+  assert.match(admin, /doc\(db, "scholarships", proposition\.scholarshipId\)/,
+    "c'est une propriété de la BOURSE, pas de chacun de ses programmes");
+  assert.ok(!/officialWebsite:/.test(admin),
+    "officialWebsite reste la page de présentation qu'on montre à l'étudiant");
 
 });
 

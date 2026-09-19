@@ -152,6 +152,114 @@ function dateCitee(iso, citation) {
 
 }
 
+/* ==========================================================
+   LOT P5c (2026-09-19) — ALLER CHERCHER LA PAGE QUI PORTE LA DATE
+   ==========================================================
+   MESURÉ sur les dix premières bourses vérifiées : quatre n'ont rendu
+   AUCUNE date. Trois d'entre elles pointaient pourtant vers une page
+   profonde du site officiel (JASSO à quatre niveaux, Global Korea à
+   trois, POSTECH à deux) — ce n'étaient pas des pages d'accueil mal
+   renseignées, c'étaient des pages de PRÉSENTATION du programme.
+   Elles décrivent la bourse, ses montants, ses conditions, et ne
+   donnent jamais l'échéance : celle-ci vit une page plus loin, sous
+   « How to apply », « Application », « Candidater ».
+
+   Sur les 156 bourses du catalogue, 21 seulement (13 %) pointent vers
+   une racine de site : corriger ces 21 liens ne réglerait donc presque
+   rien. La profondeur du lien ne prédit pas la présence d'une date.
+
+   Ce que fait cette fonction : elle choisit UN lien, sur la même page,
+   qui mène vraisemblablement à l'endroit où l'échéance est écrite. La
+   Cloud Function le suit UNE FOIS, relit, et dit à l'administrateur
+   QUELLE page a finalement fourni la date.
+
+   CE N'EST PAS LE ROBOT QUE admin/radar.js INTERDIT. Naviguer d'un
+   lien n'est pas inventer : la garde « la date doit être citée » reste
+   entière, la page réellement lue est rapportée, et rien n'est écrit
+   sans un clic. C'est exactement ce que fait un humain qui cherche
+   une date : il clique sur « Apply ».
+   ========================================================== */
+
+/** Les mots qui, dans un lien, annoncent la page de candidature. Deux
+ *  langues, et les formes courtes : les sites officiels sont en
+ *  anglais bien plus souvent qu'en français. */
+const MOTS_CANDIDATURE = [
+  "how to apply", "how-to-apply", "application", "apply", "applications",
+  "deadline", "deadlines", "dates", "calendar", "calendrier",
+  "candidature", "candidater", "postuler", "inscription", "admission", "admissions",
+  "bando", "scadenz", "convocatoria"
+];
+
+/** Ce qui ne mène JAMAIS à une échéance, et qu'un score naïf
+ *  choisirait pourtant : la page de connexion du portail, le
+ *  formulaire de contact, les mentions légales. */
+const MOTS_A_FUIR = ["login", "signin", "sign-in", "connexion", "privacy", "cookie", "contact", "faq", "login.aspx"];
+
+/**
+ * Le lien le plus prometteur de cette page vers l'échéance, ou "".
+ *
+ * Même hôte uniquement : suivre un lien vers un autre domaine, c'est
+ * sortir du site officiel — et l'officiel est tout ce qui fait la
+ * valeur de cette vérification.
+ *
+ * @param {string} html
+ * @param {string} urlBase - l'adresse de la page lue, pour résoudre
+ *   les liens relatifs et rester sur le même hôte
+ * @returns {string} une URL absolue, ou "" si rien ne se détache
+ */
+function lienVersLEcheance(html, urlBase) {
+
+  let base;
+  try { base = new URL(urlBase); } catch { return ""; }
+
+  const candidats = new Map();
+
+  const liens = String(html || "").matchAll(/<a\b[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi);
+
+  for (const lien of liens) {
+
+    let url;
+    try { url = new URL(lien[1], base); } catch { continue; }
+
+    if (url.host !== base.host) continue;
+    if (!/^https?:$/.test(url.protocol)) continue;
+
+    // La page qu'on vient de lire : y retourner ne rend rien.
+    const ici = `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+    if (ici === `${base.origin}${base.pathname.replace(/\/+$/, "")}`) continue;
+
+    const libelle = sansAccents(lien[2].replace(/<[^>]+>/g, " "));
+    const chemin = sansAccents(url.pathname);
+    const texte = `${libelle} ${chemin}`;
+
+    if (MOTS_A_FUIR.some((m) => texte.includes(m))) continue;
+
+    let score = 0;
+    for (const mot of MOTS_CANDIDATURE) {
+      const m = sansAccents(mot);
+      // Le LIBELLÉ compte double : « How to apply » écrit dans le lien
+      // est un signal bien plus fort que le mot « apply » perdu dans
+      // une adresse.
+      if (libelle.includes(m)) score += 2;
+      if (chemin.includes(m)) score += 1;
+    }
+
+    if (!score) continue;
+
+    const cle = url.toString();
+    if (!candidats.has(cle) || candidats.get(cle) < score) candidats.set(cle, score);
+
+  }
+
+  if (!candidats.size) return "";
+
+  // Le meilleur score ; à égalité, l'adresse la plus courte — la page
+  // « /apply » bat « /apply/step-3/faq ».
+  return [...candidats.entries()]
+    .sort((a, b) => (b[1] - a[1]) || (a[0].length - b[0].length))[0][0];
+
+}
+
 /**
  * Valide et normalise ce que le modèle a répondu.
  *
@@ -220,6 +328,8 @@ const CONSIGNE_VERIFICATION = [
 
 module.exports = {
   MAX_OCTETS_PAGE,
+  MOTS_CANDIDATURE,
+  lienVersLEcheance,
   MAX_CARACTERES_TEXTE,
   STATUTS,
   CONSIGNE_VERIFICATION,

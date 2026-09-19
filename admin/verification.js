@@ -76,7 +76,7 @@ async function appelerVerification(scholarshipId) {
 /* ------------------------------------------------------------------
    L'ÉCRITURE — le seul endroit de cet écran qui touche au catalogue
    ------------------------------------------------------------------ */
-async function ecrire(proposition, choixStatut) {
+async function ecrire(proposition, choixStatut, epingler = false) {
 
   const programmes = programmesParBourse.get(proposition.scholarshipId) || [];
 
@@ -129,6 +129,23 @@ async function ecrire(proposition, choixStatut) {
     }
   }
 
+  /* LOT P5c : ÉPINGLER LA PAGE QUI A RÉELLEMENT PORTÉ LA DATE.
+     Quand Fitz a dû suivre un lien pour la trouver, l'adresse du
+     catalogue n'est pas la bonne. On l'enregistre sur la BOURSE (pas
+     sur les programmes : c'est une propriété de la bourse), et la
+     vérification suivante partira directement du bon endroit — sans
+     redépenser un aller-retour pour redeviner le même lien.
+     `officialWebsite` n'est PAS touché : il reste la page de
+     présentation, celle qu'on montre à l'étudiant. */
+  if (epingler && proposition.url) {
+    try {
+      await updateDoc(doc(db, "scholarships", proposition.scholarshipId), { pageEcheance: proposition.url });
+      log(`Page d'échéance épinglée : ${proposition.url}`, "ok");
+    } catch (erreur) {
+      log(`Impossible d'épingler la page : ${erreur.message}`, "err");
+    }
+  }
+
   log(`${ecrits} programme(s) mis à jour pour « ${proposition.titre} ».`, "ok");
   if (choixStatut === "Ouverte" || choixStatut === "Fermée") log(`Statut écrit : ${choixStatut}`, "ok");
   log("L'instantané public (assets/data/catalogue.json) doit être régénéré pour que le site le voie.", "warn");
@@ -156,6 +173,8 @@ function rendrePanneau(p) {
 
       <h3>${ech(p.titre)}</h3>
       <p class="verif-source">Page lue : <a href="${ech(p.url)}" target="_blank" rel="noopener noreferrer">${ech(p.url)}</a></p>
+      ${p.viaLien ? `<p class="verif-chemin">La page du catalogue ne portait aucune date. Fitz a suivi un lien depuis <a href="${ech(p.urlDepart)}" target="_blank" rel="noopener noreferrer">${ech(p.urlDepart)}</a> — vérifiez que la page ci-dessus est bien la bonne.</p>` : ""}
+      ${p.epinglee ? `<p class="verif-chemin">Page épinglée : la vérification est partie directement d'ici.</p>` : ""}
 
       <div class="verif-colonnes">
         <div>
@@ -185,6 +204,7 @@ function rendrePanneau(p) {
             <option value="Fermée">Fermée</option>
           </select>
         </label>
+        ${(p.viaLien && p.deadlineISO) ? `<label class="verif-epingle"><input type="checkbox" id="verifEpingler" checked> Épingler cette page comme page d'échéance</label>` : ""}
         <button type="button" id="verifValider">Écrire sur ${programmes.length} programme(s)</button>
         <button type="button" id="verifAnnuler" class="verif-secondaire">Ne rien écrire</button>
       </div>
@@ -197,8 +217,9 @@ function rendrePanneau(p) {
 
   document.getElementById("verifValider").addEventListener("click", async () => {
     const choix = document.getElementById("verifStatut").value;
+    const epingler = document.getElementById("verifEpingler")?.checked === true;
     panneau.classList.remove("is-visible");
-    await ecrire(p, choix);
+    await ecrire(p, choix, epingler);
   });
 
   document.getElementById("verifAnnuler").addEventListener("click", () => {
