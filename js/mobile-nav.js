@@ -262,9 +262,11 @@ const MENU_ITEMS = [
 { href: "account.html", label: "Paramètres", icon: "settings" },
 { href: "messages.html", label: "Messages de l'équipe", icon: "bell", id: "mnavMenuMessages" },
 { href: "test-prep.html", label: "Préparation aux tests", icon: "book-open", espace: "bourse" },
-{ href: "interview-prep.html", label: "Entretien", icon: "mic", espace: "bourse" },
-{ href: "scholarships.html", label: "Catalogue des bourses", icon: "award", espace: "bourse" },
-{ href: "universities.html", label: "Universités", icon: "landmark" }
+{ href: "interview-prep.html", label: "Entretien", icon: "mic", espace: "bourse" }
+// LOT P4 (2026-09-19) : « Catalogue des bourses » et « Universités »
+// retirés du menu de l'ESPACE. Le catalogue reste la vitrine publique
+// (voir PUBLIC_PRIMARY, plus haut, qui n'est pas touché) ; il n'est
+// plus une sortie de l'espace accompagné, où c'est Fitz qui choisit.
 ];
 
 // ENTRÉES SOUMISES À UN DROIT (2026-09-08). Elles ne sont PAS rendues au

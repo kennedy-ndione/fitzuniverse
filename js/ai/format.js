@@ -202,9 +202,16 @@ const OUTILS_FITZ = [
 { motifs: ["préparation aux entretiens", "entretiens"], href: "interview-prep.html", nom: "Préparation aux entretiens" },
 { motifs: ["mes candidatures", "suivi des candidatures"], href: "applications.html", nom: "Mes candidatures" },
 { motifs: ["checklists & documents", "mes documents"], href: "documents.html", nom: "Documents" },
-{ motifs: ["mon profil"], href: "profile.html", nom: "Mon profil" },
-{ motifs: ["universités du catalogue", "universités"], href: "universities.html", nom: "Universités" },
-{ motifs: ["bourses"], href: "scholarships.html", nom: "Bourses" }
+{ motifs: ["mon profil"], href: "profile.html", nom: "Mon profil" }
+// LOT P4 (2026-09-19) — DEUX ENTRÉES RETIRÉES.
+// « universités » et « bourses » transformaient, dans CHAQUE réponse de
+// Fitz, ces deux mots très courants en liens vers le catalogue public.
+// Un étudiant accompagné qui lisait « vos universités » se faisait
+// proposer d'aller choisir lui-même — l'inverse exact de ce que fait
+// FitzUniverse depuis le lot FITZ-CHOISIT, et l'inverse de la décision
+// de Charles du 2026-09-19 (le catalogue quitte l'espace étudiant).
+// Les mots restent en gras dans la réponse ; ils ne sont plus des
+// portes de sortie.
 ];
 
 export function linkifyFitzTools(html) {

@@ -485,16 +485,25 @@ urgence: "normale"
 }
 
 // ---- 6 : rien à finaliser ----
+//
+// LOT P4 (2026-09-19). Ce cas disait « Choisissez votre prochaine
+// candidature » et menait à universities.html — le catalogue, donc le
+// choix libre. Deux choses fausses depuis le lot FITZ-CHOISIT : ce
+// n'est pas l'étudiant qui choisit, et le catalogue a quitté l'espace
+// accompagné (décision de Charles, 2026-09-19).
+// Le geste juste, quand il n'y a rien à finaliser, est de regarder ce
+// que Fitz a retenu — c'est là que se prennent les décisions
+// (accepter, refuser) et c'est le seul écran qui les porte.
 return {
 cle: "explorer",
 etapeId: null,
 applicationId: null,
-titre: "Choisissez votre prochaine candidature",
+titre: opportunitesCount > 0 ? "Fitz a des propositions pour vous" : "Votre dossier est à jour",
 texte: opportunitesCount > 0
-? `${opportunitesCount} opportunité${opportunitesCount > 1 ? "s correspondent" : " correspond"} à votre profil. Votre dossier est prêt : c'est le bon moment pour en ajouter une.`
-: "Votre dossier est à jour. Explorez le catalogue pour repérer les programmes qui vous correspondent.",
-cta: "Explorer les universités",
-href: "universities.html",
+? `${opportunitesCount} opportunité${opportunitesCount > 1 ? "s correspondent" : " correspond"} à votre profil. Ouvrez vos candidatures pour voir ce que Fitz a retenu, et accepter ou demander autre chose.`
+: "Rien ne vous attend pour l'instant. Fitz continue de croiser votre profil avec le catalogue et remplira vos places dès qu'une candidature s'ouvre.",
+cta: opportunitesCount > 0 ? "Voir les propositions de Fitz" : "Ouvrir mes candidatures",
+href: "applications.html",
 action: null,
 urgence: "exploration"
 };
