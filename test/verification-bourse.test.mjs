@@ -326,9 +326,27 @@ test("lien 7 — la Cloud Function ne suit QU'UN pas, et le dit", () => {
   // page sans date et un modèle distrait rendent exactement le même
   // vide — et il faut ouvrir un navigateur pour les distinguer. Ça
   // m'est arrivé trois fois le 2026-09-19 ; la troisième a suffi.
-  assert.match(js, /diagnostic\.lu = \{ caracteres: texte\.length, extrait: texte\.slice\(0, 700\) \}/);
+  assert.match(js, /diagnostic\.lu = \{ caracteres: texteLu\.length, extrait: texteLu\.slice\(0, 700\) \}/);
   assert.match(js, /if \(!proposition\.deadlineISO && diagnostic\) \{/,
     "on ne montre l'extrait QUE sur un échec : sur un succès c'est du bruit");
+
+  // POSÉ APRÈS LES DEUX BRANCHES. Placée avant, l'affectation était
+  // écrasée pour toute page HTML par le « diagnostic = choisirLien »
+  // qui suit — et l'extrait n'existait que pour les PDF.
+  assert.ok(js.indexOf("diagnostic.lu =") > js.indexOf("diagnostic = choisirLien"),
+    "l'extrait doit être posé APRÈS l'affectation du diagnostic HTML, sinon il est écrasé");
+
+  // ET RECOPIÉ DANS LA RÉPONSE. Le retour reconstruit l'objet champ
+  // par champ : un champ posé plus haut et pas recopié ici n'atteint
+  // personne. C'est exactement ce qui s'est passé le 2026-09-19, et
+  // mon test d'alors ne prouvait que l'affectation.
+  assert.match(js, /lu: diagnostic\.lu \|\| null/,
+    "poser un champ sur le diagnostic ne suffit pas : la réponse le reconstruit");
+
+  // Le texte montré est celui de la page D'ARRIVÉE quand un lien a
+  // été suivi : montrer le texte du départ sous l'adresse d'arrivée
+  // ferait chercher la date dans le mauvais document.
+  assert.match(js, /texteLu = texte2;/);
 
   // Et l'écran doit le rendre, sinon il ne sert à rien.
   const ecran = codeSeul("admin/verification.js");

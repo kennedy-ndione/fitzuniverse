@@ -249,6 +249,12 @@ exports.verifierBourse = onCall(
     const lecture = await telecharger(contexte.url);
     const { html, texte } = lecture;
 
+    // Le texte RÉELLEMENT retenu : celui de la page d'arrivée quand un
+    // lien a été suivi. Montrer le texte de la page de départ à côté
+    // de l'adresse de la page d'arrivée serait pire que ne rien
+    // montrer — on chercherait la date dans le mauvais document.
+    let texteLu = texte;
+
     if (texte.length < 200) {
       throw refus("failed-precondition", lecture.format === "pdf"
         ? "Ce document est un PDF dont le texte n'est pas lisible automatiquement — il est probablement scanné. Ouvrez-le et lisez la date à la main."
@@ -298,9 +304,9 @@ exports.verifierBourse = onCall(
 
        On n'en montre que le début : de quoi juger si Fitz a lu le bon
        document et s'il l'a lu correctement. */
-    if (!proposition.deadlineISO && diagnostic) {
-      diagnostic.lu = { caracteres: texte.length, extrait: texte.slice(0, 700) };
-    }
+    // L'AFFECTATION EST PLUS BAS, APRÈS LES DEUX BRANCHES. Posée
+    // ici, elle était écrasée pour toute page HTML par le
+    // `diagnostic = choisirLien(...)` qui suit.
 
     if (!proposition.deadlineISO && lecture.format === "html") {
 
@@ -328,6 +334,7 @@ exports.verifierBourse = onCall(
             if (p2.deadlineISO || (!proposition.citation && p2.citation)) {
               proposition = p2;
               urlLue = suivant;
+              texteLu = texte2;
               usage = seconde.usage || usage;
             }
           }
@@ -355,6 +362,10 @@ exports.verifierBourse = onCall(
        pré-remplir, et aucune écriture ne part sans qu'un humain ait
        lu la règle et la phrase. C'est la différence entre proposer
        une lecture et s'autoriser une date. */
+    if (!proposition.deadlineISO && diagnostic) {
+      diagnostic.lu = { caracteres: texteLu.length, extrait: texteLu.slice(0, 700) };
+    }
+
     const recurrente = !proposition.deadlineISO
       ? echeanceRecurrente(proposition.citation, new Date())
       : null;
@@ -396,11 +407,19 @@ exports.verifierBourse = onCall(
          date de JASSO vit sur jasso.go.jp quand le catalogue pointe
          vers studyinjapan.go.jp — deux sites officiels japonais, et
          aucun parcours interne ne la trouvera jamais.) */
+      /* CE RETOUR RECONSTRUIT L'OBJET CHAMP PAR CHAMP, et c'est
+         voulu : le diagnostic interne porte des choses (scores,
+         compteurs intermédiaires) qui n'ont rien à faire à l'écran.
+         Mais c'est aussi un piège, payé le 2026-09-19 : `lu` était
+         bien posé sur `diagnostic` et n'arrivait nulle part, parce
+         que personne ne le recopiait ici. Un champ ajouté plus haut
+         doit être ajouté ICI AUSSI, sans quoi il n'existe pas. */
       diagnostic: diagnostic ? {
         format: diagnostic.format || "html",
         liensExamines: diagnostic.examines,
         candidats: diagnostic.meilleurs,
-        horsDomaine: diagnostic.horsDomaine
+        horsDomaine: diagnostic.horsDomaine,
+        lu: diagnostic.lu || null
       } : null,
 
       // Une proposition, pas un résultat : à valider d'un clic, ou à
