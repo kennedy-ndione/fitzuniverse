@@ -1887,7 +1887,10 @@ const nombre = bourses.length;
 // Lot ACCEPTATION : quand les N cartes ont toutes reçu une réponse,
 // c'est l'équipe qui décide la suite — la ligne le dit (code `reponses`).
 const reponses = bourses.filter((a) => STATUTS_REPONSE.includes(a.status)).length;
-const ligne = etatChoixFitz({ quota, nombre, profilPret: profilPretPourFitz(profile).pret, reponses });
+// Lot P3 : le verdict ENTIER, pour que la phrase nomme les champs
+// manquants — la même que celle du hub des bourses.
+const verdictProfil = profilPretPourFitz(profile);
+const ligne = etatChoixFitz({ quota, nombre, profilPret: verdictProfil.pret, manquants: verdictProfil.manquants, reponses });
 
 // « J'accepte les N choix de Fitz », dès qu'au moins 2 cartes sont
 // proposées (ni acceptées, ni fermées par l'organisme).

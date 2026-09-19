@@ -369,14 +369,25 @@ return bourse.isActive === false;
 *   aucune    aucune université compatible restante.
 * Singulier quand le quota vaut 1 (Premier Dossier).
 */
-export function etatChoixFitz({ quota, nombre, profilPret, reponses = 0 }) {
+export function etatChoixFitz({ quota, nombre, profilPret, reponses = 0, manquants = [] }) {
 if (!Number.isFinite(quota) || quota <= 0) return null;
 const pluriel = quota > 1;
 if (nombre >= quota && reponses >= quota) {
 return { code: "reponses", texte: "Toutes vos candidatures ont reçu une réponse. L'équipe FitzUniverse vous indiquera la suite ici.", lienProfil: false };
 }
 if (nombre >= quota) return { code: "complet", texte: pluriel ? `Fitz a choisi vos ${quota} universités` : "Fitz a choisi votre université", lienProfil: false };
-if (!profilPret) return { code: "profil", texte: pluriel ? `Complétez votre profil : Fitz choisira vos ${quota} universités dès qu'il vous connaît` : "Complétez votre profil : Fitz choisira votre université dès qu'il vous connaît", lienProfil: true };
+if (!profilPret) {
+// Lot P3 (2026-09-19) : on NOMME ce qui manque, des deux côtés.
+// « Complétez votre profil » envoie l'étudiant chercher lui-même quel
+// champ est vide sur une page qui en compte plusieurs dizaines — et
+// le hub des bourses dit désormais exactement la même chose.
+const quoi = (manquants || []).filter(Boolean);
+const suite = pluriel ? `Fitz choisira vos ${quota} universités dès qu'il vous connaît` : "Fitz choisira votre université dès qu'il vous connaît";
+const texte = quoi.length
+? `Il manque ${quoi.length > 1 ? `${quoi.slice(0, -1).join(", ")} et ${quoi[quoi.length - 1]}` : quoi[0]} : ${suite}`
+: `Complétez votre profil : ${suite}`;
+return { code: "profil", texte, lienProfil: true };
+}
 return { code: "aucune", texte: "Fitz n'a pas trouvé d'autre université compatible pour l'instant", lienProfil: true };
 }
 

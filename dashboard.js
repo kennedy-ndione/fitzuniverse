@@ -18,6 +18,10 @@ import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLock
 // gratuit) — cinq filtres, dedoublonnage par bourse et par universite,
 // plafond par pays. Voir chargerOpportunites() plus bas.
 import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js";
+// Lot P3 (2026-09-19) : LE MÊME garde que seedRecommendedSlots(). Le hub
+// avait le sien, plus faible, et laissait donc voir des propositions à
+// un profil que Fitz refusait de servir.
+import { profilPretPourFitz } from "./js/fitz-choisit.js";
 import { computeJourneySteps } from "./js/application-journey.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
@@ -497,17 +501,56 @@ ligne.querySelector("span").textContent = phrase.texte;
 
 }
 
-function renderOpportunites(opps, profileScore, quotaCtx) {
+/* « votre nationalité, le niveau visé et votre domaine » — et non
+   « votre nationalité, le niveau visé, votre domaine ». La virgule
+   avant le dernier élément se lit comme une liste de formulaire ;
+   le « et » se lit comme une phrase. */
+function listeFrancaise(elements) {
+const liste = (elements || []).filter(Boolean);
+if (liste.length <= 1) return liste[0] || "";
+return `${liste.slice(0, -1).join(", ")} et ${liste[liste.length - 1]}`;
+}
+
+function renderOpportunites(opps, profil, quotaCtx) {
 
 const grid = document.getElementById("jyOpps");
 const sub = document.getElementById("jyOppsSub");
 
 renderLigneQuota(quotaCtx);
 
-if (profileScore < PROFILE_READY_THRESHOLD && !opps.top.length) {
-sub.textContent = "Complétez d'abord votre profil : c'est lui que Fitz croise avec le catalogue pour repérer où votre dossier est compétitif.";
-grid.innerHTML = "";
+/* LOT P3 (2026-09-19) — DEUX PORTES, UNE SEULE QUESTION.
+
+   Ici vivait :
+
+       if (profileScore < PROFILE_READY_THRESHOLD && !opps.top.length)
+
+   Un ET. Le message « complétez d'abord votre profil » n'apparaissait
+   que si le score était bas ET que le catalogue n'avait rien trouvé.
+   Dès qu'une correspondance remontait — ce qui arrive avec un profil
+   très maigre — l'étudiant voyait des propositions et un bouton
+   « Voir cette proposition », profil incomplet.
+
+   Or seedRecommendedSlots() (applications.js) refuse net sans
+   nationalité, niveau visé, domaine et au moins une langue :
+   `if (!profilPretPourFitz(profile).pret) return false;`. Les deux
+   portes ne posaient donc pas la même question — le hub montrait ce
+   que Fitz refusait de retenir.
+
+   Et on NOMME ce qui manque. « Complétez votre profil » envoie
+   l'étudiant chercher lui-même quel champ est vide, sur une page qui
+   en compte plusieurs dizaines. */
+if (!profil.pret) {
+
+const manquants = profil.manquants || [];
+
+sub.textContent = manquants.length
+? `Avant de choisir, Fitz a besoin de ${listeFrancaise(manquants)}. C'est ce qu'il croise avec le catalogue pour repérer où votre dossier est compétitif.`
+: "Complétez d'abord votre profil : c'est lui que Fitz croise avec le catalogue pour repérer où votre dossier est compétitif.";
+
+grid.innerHTML = `<div class="jy-card jy-empty">Votre profil est la seule chose que Fitz ne peut pas deviner — <a href="profile.html">complétez-le</a> et il choisira vos universités.</div>`;
+
 return;
+
 }
 
 // « Fitz A RETENU N », jamais « il n'existe que N » : le chiffre dit le
@@ -1300,7 +1343,7 @@ opportunitesCount: opps.count
 }));
 
 renderProfil(profileScore);
-renderOpportunites(opps, profileScore, {
+renderOpportunites(opps, profilPretPourFitz(profile), {
 espace: ESPACE,
 quota,
 dejaSuivies: applications.length,
