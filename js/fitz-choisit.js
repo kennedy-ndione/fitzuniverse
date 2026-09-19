@@ -168,6 +168,24 @@ if (!app || app.track === "preinscription") return false;
 return typeof app.programId === "string" && app.programId !== "";
 }
 
+/**
+* Une CARTE DE FITZ : toute carte bourse que Fitz a proposée — carte
+* catalogue (programId) OU créneau rempli par Fitz (`isRecommendation`).
+*
+* A4 (campagne du 2026-09-18, décision de Charles le 19) : douze
+* recommandations semées sans programId (retenue sans programme précis)
+* ouvraient TOUS les outils, par l'exception « carte sans programId »
+* pensée pour les cartes anciennes saisies à la main. Or firestore.rules
+* dit déjà qu'une carte bourse naît PROPOSÉE ; c'est le client qui ne le
+* tenait que pour les cartes à programId. Désormais l'acceptation
+* s'applique à tout ce que Fitz propose ; les cartes anciennes (ni
+* programId, ni isRecommendation) gardent leur comportement.
+*/
+export function carteDeFitz(app) {
+if (!app || app.track === "preinscription") return false;
+return carteCatalogue(app) || app.isRecommendation === true;
+}
+
 /** Le nombre de refus consommés sur cette place (une carte ancienne se lit 0). */
 export function refusConsommes(app) {
 const n = app && Number.isInteger(app.refus) ? app.refus : 0;
@@ -189,7 +207,7 @@ return Math.max(0, REFUS_MAX - refusConsommes(app));
 *              sans date (`sansDate`).
 */
 export function etatCarte(app) {
-if (!carteCatalogue(app)) return null;
+if (!carteDeFitz(app)) return null;
 if (app.accepteeLe) return { code: "acceptee", sansDate: false };
 if (STATUTS_DEPOSES.includes(app.status)) return { code: "acceptee", sansDate: true };
 return { code: refusConsommes(app) >= REFUS_MAX ? "finale" : "proposee", sansDate: false };
@@ -224,13 +242,16 @@ return !!e && e.code !== "acceptee";
 
 /**
 * Les outils de Fitz (lettre, e-mail, vérification) sur cette
-* candidature : ouverts pour une préinscription, une carte sans
-* programId, et une carte catalogue ACCEPTÉE. Fermés sur une carte
-* proposée — « Acceptez cette université pour commencer votre dossier ».
+* candidature : ouverts pour une préinscription, une carte ancienne
+* saisie à la main (ni programId, ni isRecommendation), et une carte de
+* Fitz ACCEPTÉE. Fermés sur une carte proposée — « Acceptez cette
+* université pour commencer votre dossier ». (A4, 2026-09-19 : une
+* recommandation de Fitz sans programId n'ouvre plus rien avant
+* l'acceptation.)
 */
 export function outilsOuverts(app) {
 if (!app) return false;
-if (!carteCatalogue(app)) return true;
+if (!carteDeFitz(app)) return true;
 return estAcceptee(app);
 }
 
@@ -283,7 +304,7 @@ return parcours === "preinscription";
 */
 export function statutsAutorises(app, tous) {
 const liste = Array.isArray(tous) ? tous : [];
-if (!carteCatalogue(app)) return liste;
+if (!carteDeFitz(app)) return liste;
 if (!estAcceptee(app)) return liste.filter((s) => !STATUTS_DEPOSES.includes(s));
 if (STATUTS_DEPOSES.includes(app.status)) return liste.filter((s) => STATUTS_DEPOSES.includes(s));
 return liste;

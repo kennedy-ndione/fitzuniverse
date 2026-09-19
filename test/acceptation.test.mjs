@@ -27,7 +27,7 @@ import { createRequire } from "node:module";
 
 import {
 REFUS_MAX, PLACES_SANS_PLAFOND, placesAFitz, FORMULES_BOURSE_EN_VENTE, CHAMPS_CHOIX,
-carteCatalogue, refusConsommes, refusRestants, etatCarte, estAcceptee, peutRefuser, peutAccepter,
+carteCatalogue, carteDeFitz, refusConsommes, refusRestants, etatCarte, estAcceptee, peutRefuser, peutAccepter,
 outilsOuverts, candidaturesPourOutils, modeLibreAutorise, statutsAutorises, peutSupprimer, bourseFermee,
 etatChoixFitz, decompteBourses, cibleApresPaiement, carteFitz, PHRASE_REGLE
 } from "../js/fitz-choisit.js";
@@ -122,7 +122,18 @@ assert.equal(outilsOuverts(proposee()), false);
 assert.equal(outilsOuverts(proposee({ refus: 2 })), false);
 assert.equal(outilsOuverts(acceptee()), true);
 assert.equal(outilsOuverts(proposee({ status: "deposee" })), true, "carte ancienne déposée : acceptée");
-assert.equal(outilsOuverts(ancienne()), true, "sans programId : ouverte");
+assert.equal(outilsOuverts(ancienne()), true, "carte ancienne saisie à la main : ouverte");
+// A4 (campagne du 2026-09-18, tranché le 19) : une recommandation de
+// Fitz SANS programId ne passe plus par l'exception des cartes
+// anciennes — elle est proposée, ses outils attendent l'acceptation.
+assert.equal(outilsOuverts(ancienne({ isRecommendation: true })), false, "recommandation sans programId : fermée avant acceptation");
+assert.equal(outilsOuverts(ancienne({ isRecommendation: true, accepteeLe: "2026-09-19T00:00:00.000Z" })), true, "recommandation sans programId acceptée : ouverte");
+assert.equal(outilsOuverts(ancienne({ isRecommendation: true, status: "deposee" })), true, "recommandation ancienne déjà déposée : acceptée sans date");
+assert.equal(carteDeFitz(ancienne({ isRecommendation: true })), true);
+assert.equal(carteDeFitz(ancienne()), false);
+assert.equal(carteDeFitz(voeu({ isRecommendation: true })), false, "un vœu n'est jamais une carte de Fitz");
+assert.equal(peutAccepter(ancienne({ isRecommendation: true })), true, "l'étudiant doit POUVOIR accepter, sinon la porte est fermée à clé");
+assert.equal(etatCarte(ancienne({ isRecommendation: true })).code, "proposee");
 assert.equal(outilsOuverts(voeu()), true, "préinscription : ouverte");
 assert.equal(outilsOuverts(null), false);
 
