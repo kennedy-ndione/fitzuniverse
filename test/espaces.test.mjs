@@ -279,11 +279,26 @@ assert.ok(!/if \(espace === "preinscription"\) \{[\s\S]{0,160}fitz\.remove\(\)/.
 assert.match(nav, /data-feature="ai_chat" class="mnav-tab mnav-tab--fitz"/);
 assert.match(nav, /lien\.remove\(\)/);
 // Les entrées bourse sont marquées comme telles.
-for (const href of ["test-prep.html", "interview-prep.html", "scholarships.html"]) {
+//
+// LOT P4 (2026-09-19) : « scholarships.html » a quitté cette liste
+// avec l'entrée elle-même. Ce test exigeait qu'elle soit marquée
+// `espace: "bourse"` — c'était la bonne règle tant que le catalogue
+// vivait dans l'espace. Charles a décidé le 19/09 qu'il n'y vit plus :
+// la règle change, le test suit. On ne desserre rien, on garde
+// l'exigence inverse, plus forte, juste en dessous.
+for (const href of ["test-prep.html", "interview-prep.html"]) {
 assert.match(nav, new RegExp(`href: "${href}"[^}]*espace: "bourse"`), `${href} doit être marquée bourse`);
 }
-// profil, compte, messages, universités restent communs.
-for (const href of ["profile.html", "account.html", "messages.html", "universities.html"]) {
+// Et le catalogue n'est plus dans le menu de l'espace, ni marqué ni
+// commun. La vitrine publique (PUBLIC_PRIMARY) le garde — c'est
+// test/catalogue-hors-espace.test.mjs qui tient les deux bords.
+const debutMenu = nav.indexOf("const MENU_ITEMS");
+const menu = nav.slice(debutMenu, nav.indexOf("]", debutMenu));
+for (const href of ["scholarships.html", "universities.html"]) {
+assert.ok(!menu.includes(href), `${href} a quitté l'espace étudiant (lot P4) : le menu ne doit plus y mener`);
+}
+// profil, compte, messages restent communs.
+for (const href of ["profile.html", "account.html", "messages.html"]) {
 assert.ok(!new RegExp(`href: "${href}"[^}]*espace:`).test(nav), `${href} ne doit appartenir à aucun espace`);
 }
 });
