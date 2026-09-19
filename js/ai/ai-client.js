@@ -97,6 +97,30 @@ throw new FitzError(CODES.INCONNU, { detail: `tâche inconnue : "${task}"` });
 * pour le chat, `experiences`/`motivations` pour la lettre), et une
 * liste explicite se serait périmée à la première tâche ajoutée.
 */
+/**
+ * CE QUE CE GARDE NE DOIT PAS COMPTER (lot FITZ-VOIT, 2026-09-19).
+ *
+ * DÉFAUT VU EN PRODUCTION le jour où les captures ont commencé à
+ * partir : « Le texte envoyé est trop long pour être traité en une
+ * fois. Découpez-le en deux parties » — sur une simple capture d'écran
+ * de portail. Message absurde, et refus AVANT même que l'image ne
+ * quitte le navigateur.
+ *
+ * LA CAUSE : ce garde somme la longueur de TOUTES les chaînes de
+ * l'entrée. Il a été écrit pour du texte, à une époque où rien d'autre
+ * n'y passait. Une capture y ajoute son base64 — et DEUX FOIS :
+ * `attachments[].previewUrl` (l'URL de données de l'aperçu) et
+ * `images[].data` (le canal du modèle) portent les mêmes octets.
+ * 120 000 caractères de plafond, c'est ~45 Ko d'image comptés en
+ * double : AUCUNE capture réelle ne pouvait passer.
+ *
+ * Les images ont déjà leurs limites, et ce sont les bonnes : 4 par
+ * message et 4 Mo chacune, vérifiées par functions/fitz.js — le seul
+ * endroit que le navigateur ne peut pas contourner. Ce plafond-ci
+ * garde ce pour quoi il a été fait : la longueur du PROMPT.
+ */
+const CLES_HORS_MESURE = new Set(["images", "attachments"]);
+
 function tailleEntree(valeur, profondeur = 0) {
 
 if (profondeur > 6 || valeur == null) return 0;
@@ -108,7 +132,9 @@ return valeur.reduce((total, element) => total + tailleEntree(element, profondeu
 }
 
 if (typeof valeur === "object") {
-return Object.values(valeur).reduce((total, element) => total + tailleEntree(element, profondeur + 1), 0);
+return Object.entries(valeur)
+.filter(([cle]) => !CLES_HORS_MESURE.has(cle))
+.reduce((total, [, element]) => total + tailleEntree(element, profondeur + 1), 0);
 }
 
 return 0;

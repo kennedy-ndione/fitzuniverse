@@ -38,6 +38,7 @@ renameConversation,
 deleteConversation
 } from "./js/ai/chat-store.js";
 import { readAttachment, validateFiles, imagesPourLeModele } from "./js/ai/attachments.js";
+import { compressImageToTarget } from "./js/compression-image.js";
 import { showToast, copyToClipboard } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
@@ -432,6 +433,38 @@ if (window.lucide) lucide.createIcons();
 
 }
 
+/**
+ * UNE CAPTURE DE TÉLÉPHONE PÈSE TROP POUR ÊTRE ENVOYÉE TELLE QUELLE.
+ *
+ * Un écran de portail photographié fait couramment 1 à 3 Mo. Le serveur
+ * refuse au-delà de 4 Mo, et surtout : le modèle redimensionne de toute
+ * façon l'image de son côté — les octets au-delà ne servent à rien, ils
+ * ne font que ralentir l'envoi sur une connexion sénégalaise et gonfler
+ * la facture.
+ *
+ * On passe donc par la compression qui existe déjà dans le dépôt
+ * (js/compression-image.js, écrite pour l'outil de compression et la
+ * preuve de dépôt) : une seule implémentation, un troisième appelant.
+ * Cible 900 Ko — la qualité ne descend que si elle ne suffit pas, donc
+ * une capture de portail reste lisible, texte des boutons compris.
+ *
+ * Si la compression échoue (format exotique, canvas indisponible), on
+ * envoie le fichier d'origine : mieux vaut une capture lourde qu'aucune.
+ */
+async function allegerSiImage(file) {
+
+if (!file.type.startsWith("image/")) return file;
+if (file.size <= 900 * 1024) return file;
+
+try {
+const blob = await compressImageToTarget(file, 900 * 1024);
+return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+} catch (erreur) {
+return file;
+}
+
+}
+
 async function handleFiles(fileList) {
 
 const { accepted, rejected } = validateFiles(fileList, pendingAttachments.length);
@@ -441,7 +474,7 @@ rejected.forEach((r) => showToast(r.reason));
 for (const file of accepted) {
 
 try {
-const attachment = await readAttachment(file);
+const attachment = await readAttachment(await allegerSiImage(file));
 pendingAttachments.push(attachment);
 } catch (error) {
 showToast(error.message);

@@ -185,12 +185,23 @@ export class FitzError extends Error {
 * @param {Object} [options]
 * @param {unknown} [options.cause] - l'erreur d'origine
 * @param {string} [options.detail] - contexte technique, pour la console
+* @param {string} [options.message] - le message du SERVEUR, quand il en a
+*        nommé un lui-même. Il gagne sur le texte générique.
+*
+*        POURQUOI. Un même code couvre plusieurs situations, et le
+*        serveur sait laquelle : ENTREE_TROP_LONGUE vaut aussi bien
+*        « la demande est trop longue » que « cette capture est trop
+*        lourde » ou « envoyez 4 captures au maximum ». Le texte
+*        générique du client les écrasait toutes en « découpez le texte
+*        en deux parties » — conseil absurde devant une image, vu en
+*        production le 2026-09-19. Même chose pour QUOTA_PLAN, dont le
+*        serveur distingue le volume du JOUR et celui du MOIS.
 */
 constructor(code, options = {}) {
 
 const description = DESCRIPTIONS[code] || DESCRIPTIONS[CODES.INCONNU];
 
-super(description.message);
+super(options.message || description.message);
 
 this.name = "FitzError";
 this.code = DESCRIPTIONS[code] ? code : CODES.INCONNU;

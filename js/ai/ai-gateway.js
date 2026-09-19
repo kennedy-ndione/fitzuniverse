@@ -155,8 +155,15 @@ if (erreur?.name === "AbortError") {
 return new FitzError(CODES.ARRET_DEMANDE, { cause: erreur });
 }
 
+// Le message du serveur n'est repris QUE s'il a nommé le code
+// lui-même (details.fitzCode) : c'est la marque d'une phrase choisie
+// pour ce cas précis. Une erreur seulement traduite d'un code HTTP
+// garde le texte générique du client, qui est meilleur.
+const nomme = Boolean(erreur?.details?.fitzCode);
+
 return new FitzError(codeFitz(erreur), {
 cause: erreur,
+message: nomme ? String(erreur?.message || "") : "",
 detail: String(erreur?.message || "")
 });
 
