@@ -96,7 +96,32 @@ async function telecharger(url) {
   }
 
   if (!reponse.ok) {
-    throw refus("unavailable", `La page officielle a répondu ${reponse.status}. Le lien du catalogue est peut-être mort.`);
+
+    /* LE MESSAGE DOIT DIRE LEQUEL DES DEUX, sinon il envoie chercher la
+       mauvaise chose. Vu au premier essai réel, le 2026-09-19 : la
+       Chinese Government Scholarship — la bourse la plus exposée du
+       catalogue, 360 profils sur 360 — a répondu 412. Le message disait
+       « le lien du catalogue est peut-être mort ». Il ne l'est pas : le
+       site refuse les lecteurs automatiques, et un humain l'ouvre très
+       bien dans son navigateur. Envoyer corriger un lien valide, c'est
+       pire que ne rien dire.
+
+       403 / 412 / 429 : le site nous voit et nous refuse — à lire à la
+       main, le lien est bon.
+       404 / 410 : la page n'existe plus — le lien est à corriger.
+       Le reste : panne du site, à réessayer plus tard. */
+    const code = reponse.status;
+
+    if (code === 403 || code === 412 || code === 429) {
+      throw refus("unavailable", `Ce site refuse les lecteurs automatiques (${code}). Le lien est probablement bon : ouvrez-le vous-même et lisez la date à la main.`);
+    }
+
+    if (code === 404 || code === 410) {
+      throw refus("unavailable", `La page n'existe plus (${code}). C'est le lien du catalogue qu'il faut corriger.`);
+    }
+
+    throw refus("unavailable", `Le site officiel a répondu ${code} — il est probablement en panne. À réessayer plus tard.`);
+
   }
 
   const brut = await reponse.arrayBuffer();

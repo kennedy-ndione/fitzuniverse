@@ -227,6 +227,29 @@ test("fonction 1 — elle est réservée aux administrateurs, et n'écrit RIEN",
 
 });
 
+test("réseau 1 — un site qui nous refuse n'est PAS un lien mort", () => {
+
+  // PREMIER ESSAI RÉEL, 2026-09-19 : la Chinese Government Scholarship
+  // — la bourse la plus exposée du catalogue, 360 profils sur 360 — a
+  // répondu 412. Le message disait « le lien du catalogue est
+  // peut-être mort ». Il ne l'est pas : le site refuse les lecteurs
+  // automatiques, et un humain l'ouvre très bien. Envoyer corriger un
+  // lien valide est pire que ne rien dire.
+  const js = codeSeul("functions/verification.js");
+
+  assert.match(js, /code === 403 \|\| code === 412 \|\| code === 429/);
+  assert.match(js, /refuse les lecteurs automatiques/);
+  assert.match(js, /lisez la date à la main/,
+    "un refus doit dire à l'administrateur ce qu'il lui reste à faire");
+
+  assert.match(js, /code === 404 \|\| code === 410/);
+  assert.match(js, /C'est le lien du catalogue qu'il faut corriger/);
+
+  // L'ancien message, qui confondait les deux, ne doit plus exister.
+  assert.ok(!/Le lien du catalogue est peut-être mort/.test(js));
+
+});
+
 test("branchement 1 — la fonction est exportée, et la page existe", () => {
 
   const index = codeSeul("functions/index.js");
