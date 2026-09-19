@@ -108,8 +108,11 @@ test("voit 3 — Fitz sait guider dans un portail, et ne l'invente pas", () => {
     assert.match(system, /Android/, `${parcours} : le geste de la capture n'est plus expliqué`);
     assert.match(system, /iPhone/, `${parcours} : le geste iPhone a disparu`);
 
-    // (6) Honnêteté sur ce qui n'arrive pas encore au modèle.
-    assert.match(system, /Un PDF ou un document joint ne t'arrive pas/, `${parcours} : Fitz laisse croire qu'il lit les PDF`);
+    // (6) Ce que Fitz reçoit vraiment — la liste a changé le jour où les
+    // PDF ont été PROUVÉS (voir « pdf 4 », qui la tient désormais). Ce qui
+    // est gardé ici, c'est la règle permanente : Fitz ne laisse jamais
+    // croire qu'il reçoit un format qu'il ne reçoit pas.
+    assert.match(system, /Word ou Excel ne t'arrive pas/, `${parcours} : Fitz laisse croire qu'il lit les fichiers Word`);
 
     // (7) « Il ne doit pas laisser l'étudiant confus. »
     assert.match(system, /NE TERMINE JAMAIS SUR UNE IMPUISSANCE/, `${parcours} : Fitz peut de nouveau finir sur un constat d'échec`);
@@ -305,17 +308,49 @@ test("pdf 3 — un PDF ne réveille pas le garde de longueur du prompt", async (
 
 });
 
-test("pdf 4 — tant que ce n'est pas PROUVÉ, Fitz ne promet pas de lire les PDF", () => {
+test("pdf 4 — la promesse est écrite, et seulement parce qu'elle est PROUVÉE", () => {
 
-  // CE TEST EST FAIT POUR ÊTRE RETIRÉ, et seulement après un appel réel
-  // réussi sur un vrai PDF. Règle posée avec Charles le 2026-09-19 : on
+  // CE TEST A REMPLACÉ SON CONTRAIRE. Jusqu'au 2026-09-19 il vérifiait que
+  // Fitz NE promettait PAS de lire les PDF — règle posée avec Charles : on
   // n'écrit pas dans l'interface une capacité qu'on n'a pas vue marcher.
-  // C'est exactement l'erreur que le lot FITZ-VOIT a corrigée le matin
-  // même — une capacité promise, jamais branchée.
-  const { system } = buildPrompt("chat", { message: "x", profile: {}, history: [] });
+  //
+  // LA PREUVE : un RCCM scanné envoyé sur le compte angeliquendour30. Fitz
+  // en a restitué le nom tel qu'il est IMPRIMÉ sur le document (« Charles
+  // Fizgeral Kennedy Ndione », sans le t), l'entreprise, la liste des
+  // activités, et l'enregistrement à Mbour le 10/09/2026. Il n'a pas
+  // deviné : il a lu les caractères de la page.
+  //
+  // Ce test garde maintenant l'autre bord : la promesse est tenue par le
+  // code, et ce qui n'est PAS prouvé n'est toujours pas promis.
+  for (const parcours of ["bourse", "preinscription"]) {
 
-  assert.match(system, /Un PDF ou un document joint ne t'arrive pas/,
-    "le prompt promet de lire les PDF avant qu'un appel réel l'ait prouvé");
+    const { system } = buildPrompt("chat", { message: "x", profile: { parcours }, parcours, history: [] });
+
+    assert.match(system, /tu LIS LES PDF/, `${parcours} : Fitz ne sait plus qu'il lit les PDF`);
+    assert.match(system, /même scannés/, `${parcours} : le cas du scan a disparu — c'est pourtant le plus fréquent ici`);
+
+    // Les limites sont dites au modèle : sans elles, il promet à
+    // l'étudiant un envoi que le serveur refusera.
+    assert.match(system, /Deux PDF au maximum par message, 10 Mo chacun/,
+      `${parcours} : Fitz ne connaît plus les limites qu'il doit annoncer`);
+
+    // ET CE QUI N'EST PAS PROUVÉ N'EST PAS PROMIS : Word et Excel
+    // n'arrivent toujours pas, décision de Charles (aucun extracteur).
+    assert.match(system, /Word ou Excel ne t'arrive pas/,
+      `${parcours} : Fitz laisse croire qu'il lit les fichiers Word`);
+
+    // Dire ce que le document EST avant ce qu'il vaut — la règle que
+    // l'essai réel a fait apparaître : Fitz a d'abord identifié un RCCM,
+    // puis expliqué en quoi ce n'était pas la pièce attendue.
+    assert.match(system, /dis ce qu'il EST avant de dire ce qu'il vaut/,
+      `${parcours} : Fitz peut de nouveau juger un document sans l'avoir identifié`);
+
+  }
+
+  // L'écran d'accueil l'annonce aussi, et avec le mot qui compte.
+  const html = lire("ai-chat.html");
+  assert.match(html, /Un document à faire lire\s*\?/, "l'écran d'accueil ne propose plus les documents");
+  assert.match(html, /même s'il s'agit d'un scan/, "l'écran d'accueil ne dit plus que le scan est lu");
 
 });
 
