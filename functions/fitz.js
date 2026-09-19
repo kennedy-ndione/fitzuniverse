@@ -574,6 +574,20 @@ exports.fitzGenerate = onCall(
       }
 
       if (!texte.trim()) {
+        // VU EN PRODUCTION le 2026-09-19 (tâche diagnostic, premier
+        // appel) : réponse vide, reprise réussie au second appel — et
+        // deux réservations de points pour une lecture. Sans ce journal,
+        // impossible de savoir POURQUOI le modèle n'a rien rendu :
+        // arrêt normal sans bloc texte, plafond de sortie, ou blocs d'un
+        // autre type. On journalise la FORME de la réponse, jamais son
+        // contenu (même règle que le journal des analyses JSON).
+        logger.warn("Réponse vide", {
+          task,
+          uid,
+          stopReason: message.stop_reason,
+          blocs: message.content.map((bloc) => bloc.type),
+          outputTokens: message.usage?.output_tokens,
+        });
         throw refus("internal", "REPONSE_INVALIDE", "Fitz n'a rien renvoyé.");
       }
 

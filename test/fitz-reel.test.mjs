@@ -191,3 +191,21 @@ test("accès 1 — FITZ-ACCÈS : le serveur honore les deux contournements que l
   assert.match(garde, /testerAccess: userData\.testerAccess === true/, "le client ne lit plus testerAccess");
 
 });
+
+test("vide 1 — une réponse vide se journalise (sa forme, jamais son contenu) avant d'être refusée", () => {
+
+  // VU EN PRODUCTION le 2026-09-19 : « Fitz n'a rien renvoyé » sur le
+  // premier appel du diagnostic, reprise réussie au second. Sans
+  // journal de forme, la cause reste inconnue et le point réservé est
+  // perdu en silence.
+  const fitz = codeSeul("functions/fitz.js");
+  const iJournal = fitz.indexOf('logger.warn("Réponse vide"');
+  const iRefus = fitz.indexOf('"Fitz n\'a rien renvoyé."');
+  assert.ok(iJournal !== -1, "la réponse vide n'est plus journalisée");
+  assert.ok(iRefus !== -1 && iJournal < iRefus, "le journal doit précéder le refus");
+  const bloc = fitz.slice(iJournal, iRefus);
+  assert.match(bloc, /stopReason:\s*message\.stop_reason/, "le journal ne dit plus pourquoi le modèle s'est arrêté");
+  assert.match(bloc, /blocs:\s*message\.content\.map\(\(bloc\) => bloc\.type\)/, "le journal ne dit plus quels types de blocs sont arrivés");
+  assert.ok(!/bloc\.text|texte\b/.test(bloc), "le journal d'une réponse vide ne doit jamais porter de contenu");
+
+});
