@@ -1568,7 +1568,9 @@ faits.push(`<span class="app-fait app-fait-pays"><i data-lucide="map-pin"></i><s
 // (js/recommend-programs.js) : deux phrases différentes pour la même
 // opportunité, c'est ainsi qu'un étudiant cesse de croire le site.
 // Seulement quand la carte porte de quoi la calculer.
-if (app.dateConfirmee === true || typeof app.jours === "number" || app.dateConfirmee === false) {
+// Lot P5a : `certitude` suffit désormais à déclencher la ligne — une
+// carte vérifiée doit pouvoir le dire même sans nombre de jours.
+if (app.certitude || app.dateConfirmee === true || typeof app.jours === "number" || app.dateConfirmee === false) {
 const fenetre = libelleFenetre(app);
 faits.push(`<span class="app-fait app-fait-fenetre is-${fenetre.etat}"><i data-lucide="${fenetre.etat === "a_verifier" ? "help-circle" : "calendar-clock"}"></i><span>${escapeHtml(fenetre.texte)}</span></span>`);
 }

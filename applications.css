@@ -227,6 +227,15 @@ flex-shrink:0;
 color:var(--amber-700);
 }
 
+/* Lot P5a : « vérifiée » est le seul état qui se prouve — un humain a
+ouvert la page officielle, il y a moins de trois mois. Il se lit donc
+comme un fait établi, en vert, et non dans l'ambre des choses à
+surveiller. */
+.app-fait.is-verifiee i,
+.app-fait.is-verifiee svg{
+color:var(--success-700);
+}
+
 .app-fait.is-serre,
 .app-fait.is-a_verifier{
 color:var(--text-color);

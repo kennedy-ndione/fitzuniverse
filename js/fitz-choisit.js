@@ -97,6 +97,10 @@ country: rec.country || "",
 raisonFitz: (rec.reasons && rec.reasons[0]) || "",
 dateConfirmee: rec.dateConfirmee === true,
 jours: typeof rec.jours === "number" ? rec.jours : null,
+// Lot P5a : « verifiee » / « lue » / « inconnue ». La carte
+// d'acceptation doit pouvoir dire si la date a été CONTRÔLÉE, pas
+// seulement lue — c'est sur cette date que l'étudiant décide.
+certitude: rec.certitude || "inconnue",
 scholarshipId: rec.scholarshipId || null,
 programId: rec.programId || null,
 universityId: rec.universityId || null,

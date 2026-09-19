@@ -266,13 +266,92 @@ return champs.some((f) => String(f).trim().toLowerCase() === famille.toLowerCase
 * @returns {{ouverte: boolean|null, jours: number|null}} ouverte vaut
 * null quand aucune date exploitable n'existe : inconnu, jamais fermé.
 */
+/** Une vérification tient trois mois. Au-delà, elle redevient une
+ *  lecture : le catalogue ne doit pas se déclarer vérifié pour toujours
+ *  sur un seul passage. */
+export const JOURS_VALIDITE_VERIFICATION = 90;
+
+/** Une date ISO (« 2027-03-15 »), ou null. Jamais une interprétation :
+ *  ce champ est écrit par l'outil d'admin, pas par un étudiant.
+ *
+ *  LES DEUX GARDES SONT NÉCESSAIRES, et j'ai failli en supprimer une.
+ *
+ *  La forme exacte d'abord : `new Date("2027T00:00:00Z")` ne rend PAS
+ *  une date invalide — le parseur indulgent de V8 y lit l'année et
+ *  rend le 1ᵉʳ janvier 2027. Un `deadlineISO` valant « 2027 » aurait
+ *  donc écrasé la date lisible du catalogue par une date inventée.
+ *  Ce n'est pas une hypothèse : la preuve par mutation l'a produit.
+ *
+ *  Puis `isNaN` : sans lui, une date invalide traverse, `jours` vaut
+ *  NaN, `NaN >= 0` vaut false — et le programme, pourtant ouvert,
+ *  disparaît des propositions en silence.
+ *
+ *  La première version de ce commentaire disait le contraire et
+ *  proposait de retirer la garde de forme, parce qu'une première
+ *  mutation ne l'avait pas fait tomber. C'était la mutation qui était
+ *  trop faible : elle ne regardait que la certitude, pas les jours. */
+function lireDateISO(valeur) {
+if (!valeur) return null;
+const texte = String(valeur).trim();
+if (!/^\d{4}-\d{2}-\d{2}/.test(texte)) return null;
+const date = new Date(texte.slice(0, 10) + "T00:00:00Z");
+return isNaN(date.getTime()) ? null : date;
+}
+
+/** La vérification a-t-elle moins de JOURS_VALIDITE_VERIFICATION ?
+ *  Comparaison en JOURS DE CALENDRIER : `aujourdhui` porte une heure,
+ *  la date de vérification non. Sans ramener les deux à minuit, une
+ *  vérification de 90 jours pile basculait ou non selon l'heure à
+ *  laquelle l'étudiant ouvre la page. Vu en écrivant le test. */
+function verificationFraiche(verifieLe, aujourdhui) {
+const date = lireDateISO(verifieLe);
+if (!date) return false;
+const minuit = Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth(), aujourdhui.getUTCDate());
+const age = Math.round((minuit - date.getTime()) / 86400000);
+return age >= 0 && age <= JOURS_VALIDITE_VERIFICATION;
+}
+
 export function etatEcheance(program, aujourdhui = new Date()) {
 
 if (String(program.status || "").toLowerCase().includes("fermé")) {
-return { ouverte: false, jours: null };
+return { ouverte: false, jours: null, certitude: "inconnue", verifieLe: "" };
 }
 
-if (!program.deadline) return { ouverte: null, jours: null };
+/* LOT P5a (2026-09-19) — UNE VRAIE DATE PASSE AVANT UN PARAGRAPHE.
+
+   Le champ `deadline` du catalogue n'est pas une date : c'est de la
+   PROSE. Mesuré sur le catalogue du 2026-09-14 — 470 des 507 valeurs
+   sont des phrases entières (« La page officielle affiche encore la
+   date du 15 mars 2026 pour la promotion 2026-2027. L'appel de la
+   promotion suivante devrait ouvrir à l'automne… »). analyserEcheance()
+   fait de son mieux, et en tire 92 dates : c'est de la lecture, pas
+   une vérification.
+
+   `deadlineISO` est le champ que remplira l'outil d'admin (lot P5b) :
+   une date, en ISO, écrite APRÈS qu'un humain a lu la page officielle.
+   Elle prime sur la prose, et elle seule vaut « vérifiée ».
+
+   Une vérification VIEILLIT. Une date contrôlée il y a un an n'est plus
+   un contrôle : passé JOURS_VALIDITE_VERIFICATION, la date reste lue
+   mais redescend au niveau « lue ». Sans ce garde-fou, le catalogue se
+   déclarerait vérifié pour toujours sur un seul passage. */
+const iso = lireDateISO(program.deadlineISO);
+
+if (iso) {
+
+const jours = Math.round((iso.getTime() - aujourdhui.getTime()) / 86400000);
+const fraiche = verificationFraiche(program.ouverteVerifieeLe, aujourdhui);
+
+return {
+ouverte: jours >= 0,
+jours,
+certitude: fraiche ? "verifiee" : "lue",
+verifieLe: fraiche ? String(program.ouverteVerifieeLe) : ""
+};
+
+}
+
+if (!program.deadline) return { ouverte: null, jours: null, certitude: "inconnue", verifieLe: "" };
 
 // Les échéances du catalogue sont écrites EN FRANÇAIS (« 15 janvier
 // 2027 », « 31 octobre 2026 (rentrée de printemps) »), pas en ISO :
@@ -282,18 +361,20 @@ const echeance = analyserEcheance(String(program.deadline));
 
 // « Candidatures closes » : fermé, sans qu'aucune date ne soit
 // nécessaire.
-if (echeance.etat === "close") return { ouverte: false, jours: null };
+if (echeance.etat === "close") return { ouverte: false, jours: null, certitude: "inconnue", verifieLe: "" };
 
 // Admission au fil de l'eau : ouvert en permanence — le refuser
 // faute de date serait exactement l'erreur inverse de celle qu'on
 // corrige ici.
-if (echeance.etat === "continue") return { ouverte: true, jours: null };
+if (echeance.etat === "continue") return { ouverte: true, jours: null, certitude: "inconnue", verifieLe: "" };
 
 const jours = joursAvant(echeance, aujourdhui);
 
-if (jours === null) return { ouverte: null, jours: null };
+if (jours === null) return { ouverte: null, jours: null, certitude: "inconnue", verifieLe: "" };
 
-return { ouverte: jours >= 0, jours };
+// « lue » : la date vient de la prose du catalogue. C'est mieux que
+// rien, et ce n'est pas une vérification — la carte le dira.
+return { ouverte: jours >= 0, jours, certitude: "lue", verifieLe: "" };
 
 }
 
@@ -810,6 +891,21 @@ export function libelleFenetre(retenue) {
 
 const r = retenue || {};
 
+/* LOT P5a (2026-09-19) — UN QUATRIÈME ÉTAT, LE SEUL QUI SE PROUVE.
+   « vérifiée » veut dire : un humain a ouvert la page officielle, et
+   il y a moins de trois mois. Tant que l'outil d'admin (P5b) n'a rien
+   écrit, aucun programme ne porte cet état et la carte dit exactement
+   ce qu'elle disait hier. C'est voulu : on pose la fondation avant les
+   données, jamais l'inverse. */
+if (r.certitude === "verifiee" && typeof r.jours === "number") {
+return {
+etat: "verifiee",
+texte: r.jours <= 45
+? `Date limite vérifiée — il reste ${r.jours} jours pour déposer`
+: `Date limite vérifiée — ${r.jours} jours pour déposer`
+};
+}
+
 if (r.dateConfirmee !== true || typeof r.jours !== "number") {
 return {
 etat: "a_verifier",
@@ -918,7 +1014,15 @@ score: scoreProgram(program, university, scholarship, p) + (echeance.ouverte ===
 // lue passe derrière une correspondance moyenne dont l'échéance est
 // vérifiée. C'est assumé — l'étudiant a deux refus par place, on ne
 // les lui fait pas dépenser sur une date qu'on ne sait pas.
+// Lot P5a : le rang de certitude affine le tri sans le changer de
+// nature — une date VÉRIFIÉE passe devant une date seulement lue,
+// elle-même devant une date inconnue. C'est la même décision de
+// Charles (« les proposer en dernier »), à un cran de plus.
+const rang = { verifiee: 2, lue: 1, inconnue: 0 };
+const certitudeDe = (c) => rang[c.echeance.certitude] ?? 0;
+
 candidats.sort((a, b) =>
+(certitudeDe(b) - certitudeDe(a)) ||
 (Number(b.dateConfirmee) - Number(a.dateConfirmee)) ||
 (b.score - a.score) ||
 ((a.echeance.jours ?? Number.MAX_SAFE_INTEGER) - (b.echeance.jours ?? Number.MAX_SAFE_INTEGER))
@@ -975,6 +1079,12 @@ echeanceOuverte: c.echeance.ouverte,
 // Sans ce champ, l'affichage devrait redeviner la règle — et une
 // seconde copie d'une règle, ce dépôt l'a déjà payée trois fois.
 dateConfirmee: c.dateConfirmee === true,
+// Lot P5a : « vérifiée » (quelqu'un a lu la page officielle, il y a
+// moins de trois mois), « lue » (extraite de la prose du catalogue),
+// « inconnue ». Deux niveaux ne suffisaient pas : on ne peut pas dire
+// la même chose d'une date contrôlée et d'une date devinée.
+certitude: c.echeance.certitude || "inconnue",
+verifieLe: c.echeance.verifieLe || "",
 score: c.score,
 applicationUrl: c.program.applicationUrl || c.university.applicationPortalUrl || "",
 universityWebsite: c.university.officialWebsite || "",
