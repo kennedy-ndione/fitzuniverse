@@ -13,7 +13,8 @@
  *    anglais B2 recevait 2 opportunités là où le catalogue en porte
  *    10 — alors qu'un Forfait Conseiller a SIX places à remplir.
  *
- * 2. FITZ PROPOSAIT DES BOURSES FERMÉES. Décision de Charles :
+ * 2. UNE BOURSE FERMÉE FERMAIT SES PROGRAMMES — ET PERSONNE NE LE
+ *    VÉRIFIAIT. Décision de Charles :
  *    « je ne veux pas que tu proposes à un étudiant une bourse ou une
  *    université qui est fermée, ou dont la date d'échéance est à moins
  *    de deux semaines… il faut donner du temps à l'étudiant, peut-être
@@ -132,14 +133,24 @@ test("proposable 2 — une échéance passée, un statut fermé, et le temps tro
   assert.equal(proposable({}, null, { ouverte: false, jours: null }).ok, false);
   assert.equal(proposable({}, null, { ouverte: false, jours: null }).raison, "echeance_passee");
 
-  // LE DÉFAUT MESURÉ : 61 programmes ont une échéance future lisible ET
-  // un statut « Fermée ». Le texte d'échéance annonce la campagne
-  // SUIVANTE, non confirmée ; le statut dit la vérité, et il n'était
-  // pas lu du tout.
+  // CORRECTION DU RÉCIT (même jour). La première version de ce
+  // commentaire annonçait « 61 programmes proposés malgré un statut
+  // Fermée ». C'était faux : etatEcheance() teste déjà le statut du
+  // PROGRAMME depuis bien avant ce lot, et ces 61 étaient déjà écartés.
+  // La mesure fautive venait d'un script jetable qui avait réécrit
+  // etatEcheance() sans cette ligne.
+  // Ce contrôle-ci reste, comme FILET : statutDitFerme() teste /ferm/i,
+  // plus large que le includes("fermé") historique. Zéro cas dans le
+  // catalogue d'aujourd'hui.
   assert.equal(proposable({ status: "Fermée — campagne 2026-2027 achevée" }, null, ouvert).ok, false);
+  assert.equal(proposable({ status: "Fermee sans accent" }, null, ouvert).ok, false,
+    "c'est POUR ce cas-là que le filet existe : includes(\"fermé\") le laisserait passer");
   assert.equal(proposable({ status: "Fermée — campagne 2026-2027 achevée" }, null, ouvert).raison, "statut_ferme");
 
-  // Une BOURSE fermée ferme tous ses programmes.
+  // LE VRAI APPORT DE CE CONTRÔLE : une BOURSE fermée ferme tous ses
+  // programmes. etatEcheance() ne connaît que le statut du PROGRAMME ;
+  // celui de la bourse n'était lu nulle part. 13 programmes sur 507 le
+  // sont, remesurés avec les modules du site.
   assert.equal(proposable({}, { status: "Fermée" }, ouvert).ok, false);
   assert.equal(proposable({}, { status: "Fermée" }, ouvert).raison, "bourse_fermee");
 
@@ -262,7 +273,9 @@ test("retenues 4 — la mesure qui a déclenché ce lot : de 2 à dix", () => {
     scholarshipsById: BOURSES
   });
 
-  // Avant : 2, pour une formule qui en accompagne jusqu'à 6.
+  // Avant : 2, pour une formule qui en accompagne jusqu'à 6. Ce
+  // chiffre-là, lui, a été remesuré et tient : il vient du filtre de
+  // langue, pas des filtres de fermeture.
   assert.ok(nombre >= 6,
     `un Forfait Conseiller a six places : le moteur n'en propose que ${nombre}`);
 

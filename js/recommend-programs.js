@@ -699,15 +699,34 @@ return langues.some((l) => langueProgramme.includes(l));
 // qu'il n'a pas encore les documents nécessaires pour faire ses
 // dépôts. »
 //
-// CE QUI SE PASSAIT AVANT, MESURÉ SUR LE CATALOGUE DU 2026-09-14 :
-// le seul filtre était `echeance.ouverte === false`, qui écartait 156
-// programmes sur 507. Sur les 92 programmes dont l'échéance se lit
-// comme une date FUTURE, **61 portaient un statut « Fermée »**.
-// Exemple : `bme-bachelor`, statut « Fermée — campagne 2026-2027
-// achevée », dont le texte d'échéance annonce une date de mars 2027
-// pour la campagne SUIVANTE, non confirmée. Le lecteur d'échéances y
-// voyait 118 jours restants et la proposait. Le champ `status` disait
-// la vérité, et ce moteur ne le lisait pas.
+// CORRECTION DU RÉCIT, 2026-09-19 (même jour, quelques heures après).
+//
+// La première version de ce commentaire affirmait que « 61 programmes
+// portant un statut Fermée étaient proposés ». C'ÉTAIT FAUX, et la
+// faute est instructive : pour mesurer, j'avais réécrit etatEcheance()
+// dans un script jetable en OMETTANT sa première ligne —
+// `if (String(program.status).toLowerCase().includes("fermé"))`, qui
+// existe depuis bien avant ce lot. J'ai donc mesuré ma réécriture, pas
+// ce fichier. Ces 61 programmes étaient déjà écartés.
+//
+// CE QUE proposable() AJOUTE VRAIMENT, remesuré avec les modules du
+// site sur le catalogue du 2026-09-14 : 320 programmes étaient déjà
+// écartés avant ce lot ; il en écarte 24 de plus —
+//   13 parce que la BOURSE porte un statut « Fermée » (jamais lu
+//      jusqu'ici : etatEcheance() ne connaît que le statut du
+//      PROGRAMME) ;
+//   11 parce qu'il reste moins de 30 jours ;
+//    0 sur le statut du programme — ce contrôle-là est redondant
+//      avec etatEcheance() sur les données d'aujourd'hui. Il est
+//      gardé comme filet : statutDitFerme() teste /ferm/i, plus large
+//      que includes("fermé"), et attraperait un « Fermee » sans
+//      accent que la ligne historique laisserait passer. Zéro cas
+//      aujourd'hui ; le jour où il y en aura un, il sera couvert.
+//
+// La leçon est écrite dans le dossier du projet depuis le lot A4 du
+// 18 septembre : « avant de corriger une anomalie de données, RELIRE
+// les données — la correction reste la même, mais le récit devient
+// vrai ». La correction était bonne ; le récit ne l'était pas.
 //
 // LE PLANCHER EST À 30 JOURS, ET NON À 14. Charles a tranché après
 // mesure : le passage de 14 à 30 jours ne coûte que 9 programmes sur
