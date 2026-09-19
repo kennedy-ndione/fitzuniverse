@@ -1248,19 +1248,38 @@ background:var(--background-alt);
 
 }
 
+/* La conversation ouverte porte un filet ambré à gauche — posé en
+ombre intérieure et non en bordure, pour ne décaler aucun texte
+quand on passe d'une conversation à l'autre. */
+.ai-chat-history-item.is-active{
+
+box-shadow:inset 2px 0 0 var(--amber-500);
+
+}
+
+/* Lot CHAT-VIVANT (2026-09-19) — L'APERÇU ÉCRASAIT LE TITRE.
+Le JS pose DEUX travées (.item-title et .item-preview) ; cette règle
+les mettait en RANGÉE, centrées, séparées de 10px, avec une coupure
+par points de suspension sur chacune. Résultat : le titre et le
+dernier message se partageaient la largeur sur une seule ligne, et
+on ne lisait entièrement ni l'un ni l'autre. L'aperçu avait été
+ajouté au JS sans que la feuille ne l'apprenne.
+Colonne : le titre d'abord, l'aperçu dessous, en plus petit. */
 .ai-chat-history-item-select{
 
 flex:1;
 
 display:flex;
 
-align-items:center;
+flex-direction:column;
 
-gap:10px;
+align-items:stretch;
+
+gap:3px;
 
 min-width:0;
 
-padding:10px 10px;
+padding:9px 10px;
 
 border:none;
 
@@ -1273,6 +1292,31 @@ font-size:.85rem;
 text-align:left;
 
 cursor:pointer;
+
+}
+
+.ai-chat-history-item-title,
+.ai-chat-history-item-preview{
+
+display:block;
+
+min-width:0;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+white-space:nowrap;
+
+}
+
+.ai-chat-history-item-preview{
+
+font-size:.74rem;
+
+font-weight:var(--fw-regular);
+
+color:var(--text-muted);
 
 }
 
@@ -1527,6 +1571,152 @@ color:var(--text-light);
 font-size:.88rem;
 
 line-height:1.6;
+
+}
+
+/* ==========================================================
+   LOT CHAT-VIVANT (2026-09-19) — LES DEUX PORTES
+   ==========================================================
+   Elles remplacent deux paragraphes en prose de quatre lignes
+   chacun. Ce ne sont pas des cartes décoratives : chacune écrit sa
+   phrase dans le champ de saisie et ouvre le sélecteur de fichier
+   (voir .ai-capacite dans ai-chat.js). D'où le geste nommé en bas à
+   droite — ce que la carte FAIT, pas ce qu'elle raconte.
+   Plus marquées que .ai-help-card (fond crème, filet ambré au
+   survol) : la hiérarchie de l'écran d'accueil va de la salutation
+   aux deux portes, puis aux suggestions. */
+.ai-capacites{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(252px,1fr));
+
+gap:12px;
+
+width:100%;
+
+}
+
+.ai-capacite{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:10px;
+
+min-width:0;
+
+padding:18px;
+
+border-radius:var(--radius-md);
+
+background:var(--background-soft);
+
+border:1px solid var(--border-color);
+
+text-align:left;
+
+cursor:pointer;
+
+transition:border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+
+}
+
+.ai-capacite:hover{
+
+border-color:var(--amber-500);
+
+transform:translateY(-2px);
+
+box-shadow:var(--shadow-sm);
+
+}
+
+/* Règle « icônes nues » du projet : aucun conteneur derrière le
+glyphe — pas de pastille, pas de rond coloré. */
+.ai-capacite-glyphe i,
+.ai-capacite-glyphe svg{
+
+width:20px;
+
+height:20px;
+
+color:var(--amber-700);
+
+}
+
+.ai-capacite-corps{
+
+display:flex;
+
+flex-direction:column;
+
+gap:5px;
+
+min-width:0;
+
+}
+
+.ai-capacite-titre{
+
+font-family:var(--font-display);
+
+font-size:.98rem;
+
+font-weight:var(--fw-bold);
+
+letter-spacing:-.01em;
+
+color:var(--text-color);
+
+}
+
+.ai-capacite-dit{
+
+font-size:.83rem;
+
+line-height:1.55;
+
+color:var(--text-light);
+
+}
+
+.ai-capacite-geste{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:6px;
+
+margin-top:auto;
+
+font-size:.78rem;
+
+font-weight:var(--fw-semibold);
+
+color:var(--amber-700);
+
+}
+
+.ai-capacite-geste i,
+.ai-capacite-geste svg{
+
+width:14px;
+
+height:14px;
+
+transition:transform var(--transition);
+
+}
+
+.ai-capacite:hover .ai-capacite-geste i,
+.ai-capacite:hover .ai-capacite-geste svg{
+
+transform:translateX(3px);
 
 }
 
@@ -2095,6 +2285,13 @@ border:1px solid var(--border-color);
 
 }
 
+/* Lot CHAT-VIVANT (2026-09-19) — LA PASTILLE DÉBORDAIT.
+Mesurée sur un vrai nom de fichier long : 3 lignes, 360px de large,
+dans une bulle qui n'en fait pas tant. Aucune largeur maximale,
+aucune coupure. Sa jumelle du composer (.ai-attachment-chip-name)
+était protégée depuis toujours — celle du fil, non : le défaut
+n'apparaissait qu'APRÈS l'envoi, c'est-à-dire hors de l'écran où on
+teste. Le nom entier reste accessible par l'attribut title. */
 .ai-msg-attachment-file{
 
 display:inline-flex;
@@ -2102,6 +2299,10 @@ display:inline-flex;
 align-items:center;
 
 gap:6px;
+
+max-width:100%;
+
+min-width:0;
 
 padding:8px 12px;
 
@@ -2114,6 +2315,18 @@ border:1px solid var(--border-color);
 font-size:.8rem;
 
 color:var(--text-light);
+
+}
+
+.ai-msg-attachment-name{
+
+min-width:0;
+
+overflow:hidden;
+
+text-overflow:ellipsis;
+
+white-space:nowrap;
 
 }
 

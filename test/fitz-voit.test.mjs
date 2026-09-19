@@ -129,7 +129,10 @@ test("voit 4 — l'écran d'accueil dit ce que la capture débloque", () => {
   assert.ok(!/Vous pouvez aussi joindre une capture d'écran, une photo ou un PDF\./.test(html),
     "l'annonce est redevenue une possibilité technique en fin de paragraphe");
 
-  assert.match(html, /Bloqué sur un portail\s*\?/, "l'accroche a disparu de l'écran d'accueil");
+  // Lot CHAT-VIVANT (2026-09-19) : ces trois promesses ne vivent plus
+  // dans un paragraphe mais dans une CARTE CLIQUABLE (.ai-capacite).
+  // Le test garde les promesses, pas la balise qui les porte.
+  assert.match(html, /Bloqué sur un portail/, "l'accroche a disparu de l'écran d'accueil");
   assert.match(html, /langue que vous ne lisez pas/, "la promesse de traduction a disparu");
   assert.match(html, /jusqu'au dépôt de votre dossier/, "l'accompagnement jusqu'au dépôt n'est plus annoncé");
 
@@ -349,8 +352,8 @@ test("pdf 4 — la promesse est écrite, et seulement parce qu'elle est PROUVÉE
 
   // L'écran d'accueil l'annonce aussi, et avec le mot qui compte.
   const html = lire("ai-chat.html");
-  assert.match(html, /Un document à faire lire\s*\?/, "l'écran d'accueil ne propose plus les documents");
-  assert.match(html, /même s'il s'agit d'un scan/, "l'écran d'accueil ne dit plus que le scan est lu");
+  assert.match(html, /Un document à faire lire/, "l'écran d'accueil ne propose plus les documents");
+  assert.match(html, /même scanné/, "l'écran d'accueil ne dit plus que le scan est lu");
 
 });
 

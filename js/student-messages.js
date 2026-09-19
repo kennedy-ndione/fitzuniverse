@@ -80,6 +80,9 @@ listEl.innerHTML = "";
 
 if (!messages.length) {
 listEl.innerHTML = `<p class="messages-panel-empty">${emptyHint || `Aucun message pour le moment. L'équipe FitzUniverse vous écrit ici${canReply ? " — et vous pouvez lui répondre" : ""}.`}</p>`;
+// Le fil est rendu en temps réel, APRÈS le lucide.createIcons() de la
+// page : un glyphe posé ici ne serait jamais dessiné sans ce rappel.
+if (window.lucide) lucide.createIcons();
 return;
 }
 
@@ -292,7 +295,18 @@ subscribeThread(uid, (messages) => {
 
 renderThread(thread, messages, {
 canReply,
-emptyHint: "Aucun message pour le moment. Écrivez à l'équipe FitzUniverse ci-dessous — votre conversation restera ici, à un seul endroit."
+// Lot CHAT-VIVANT (2026-09-19) : l'état vide était un paragraphe
+// gris perdu au milieu du cadre. C'est le premier écran que voit un
+// étudiant qui n'a jamais écrit — il doit dire ce qu'on peut
+// demander ICI, et pas à Fitz. Chaîne littérale, écrite dans ce
+// fichier : aucune donnée d'étudiant n'y entre.
+emptyHint: `
+<span class="messages-vide">
+<i data-lucide="messages-square" aria-hidden="true"></i>
+<strong>Votre conversation commence ici</strong>
+<span>Une question sur votre paiement, votre formule, une erreur du site, ou quelque chose que Fitz n'a pas pu régler : écrivez-la ci-dessous. Une personne de l'équipe vous répond, et la réponse restera dans ce fil.</span>
+</span>
+`
 });
 
 // La page ouverte EST la conversation : tout ce qui arrive de

@@ -26,33 +26,13 @@ initShellChrome();
 // Le délai annoncé, à un seul endroit (grille A).
 document.querySelectorAll("[data-delai-reponse]").forEach((el) => { el.textContent = DELAI_REPONSE; });
 
-// Lot FINITIONS-VISUELLES (2026-09-11) : sur téléphone, le bandeau « Vos
-// messages arrivent directement… » se replie en une ligne (dashboard.css)
-// et se déplie en le touchant. Sur ordinateur il reste entier.
-const notice = document.querySelector(".messages-page-notice");
-if (notice) {
-const replie = window.matchMedia("(max-width:720px)");
-const armer = () => {
-if (replie.matches) {
-notice.setAttribute("role", "button");
-notice.setAttribute("tabindex", "0");
-notice.setAttribute("aria-expanded", notice.classList.contains("is-open") ? "true" : "false");
-} else {
-notice.removeAttribute("role");
-notice.removeAttribute("tabindex");
-notice.removeAttribute("aria-expanded");
-}
-};
-const basculer = () => {
-if (!replie.matches) return;
-const ouvert = notice.classList.toggle("is-open");
-notice.setAttribute("aria-expanded", ouvert ? "true" : "false");
-};
-notice.addEventListener("click", basculer);
-notice.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); basculer(); } });
-if (typeof replie.addEventListener === "function") replie.addEventListener("change", armer);
-armer();
-}
+// Lot CHAT-VIVANT (2026-09-19) : le repli/dépli du bandeau
+// « .messages-page-notice » a été retiré ici en même temps que le
+// bandeau lui-même (messages.html). Il existait parce qu'une phrase de
+// trois lignes ne tenait pas sur un cadre plein écran qui ne défile
+// pas : elle écrasait la conversation. Trois faits courts
+// (.messages-faits) tiennent à toutes les largeurs — le correctif
+// disparaît avec le défaut qu'il corrigeait.
 
 bootstrapShell({}).then((ctx) => {
 

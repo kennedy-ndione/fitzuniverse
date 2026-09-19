@@ -2136,19 +2136,9 @@ border-radius:var(--radius-lg) var(--radius-lg) 0 0;
 padding:18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Le bandeau d'information se replie en une ligne sur téléphone ; on
-le déplie en le touchant (js/messages-page.js). */
-.messages-page-notice{ cursor:pointer; }
-
-.messages-page-notice > span{
-display:block;
-min-width:0;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-}
-
-.messages-page-notice.is-open > span{ white-space:normal; }
+/* Lot CHAT-VIVANT (2026-09-19) : le repli/dépli du bandeau est parti
+avec le bandeau (voir .messages-faits). Trois faits courts tiennent
+sur un téléphone sans qu'on ait à les cacher. */
 
 .messages-support-btn span{ display:none; }
 .messages-support-btn{ padding:6px 10px; }
@@ -2221,44 +2211,128 @@ font-size:.8rem;
 color:var(--text-light);
 }
 
-.messages-page-notice{
+/* LOT CHAT-VIVANT (2026-09-19) — TROIS FAITS.
+Remplace .messages-page-notice, un bandeau ambré qui portait une
+phrase de trois lignes. Ici : trois faits courts, en rangée sur
+ordinateur, empilés sur téléphone. Pas de fond de couleur — la liste
+n'est pas un avertissement, c'est le mode d'emploi de la page. */
+.messages-faits{
 
 display:flex;
 
-align-items:flex-start;
+flex-wrap:wrap;
 
-gap:10px;
+gap:8px 18px;
 
-margin:16px 18px 0;
+margin:14px 18px 0;
 
-padding:12px 14px;
+padding:0 0 14px;
 
-border-radius:var(--radius-md);
+list-style:none;
 
-background:rgba(233,163,25,.08);
-
-border:1px solid rgba(233,163,25,.25);
-
-color:var(--text-light);
-
-font-size:.84rem;
-
-line-height:1.55;
+border-bottom:1px solid var(--border-color);
 
 }
 
-.messages-page-notice i,
-.messages-page-notice svg{
+.messages-fait{
 
-width:16px;
+display:flex;
 
-height:16px;
+align-items:center;
+
+gap:7px;
+
+min-width:0;
+
+color:var(--text-light);
+
+font-size:.82rem;
+
+line-height:1.45;
+
+}
+
+.messages-fait strong{
+
+color:var(--text-color);
+
+font-weight:var(--fw-semibold);
+
+}
+
+/* Icônes nues : aucun conteneur derrière le glyphe (règle du projet). */
+.messages-fait i,
+.messages-fait svg{
+
+width:15px;
+
+height:15px;
 
 flex-shrink:0;
 
-margin-top:2px;
+color:var(--amber-700);
+
+}
+
+/* L'état vide du fil (js/student-messages.js) : un objet, pas un
+paragraphe gris — c'est le premier écran d'un étudiant qui n'a
+jamais écrit à l'équipe. */
+.messages-page-thread .messages-panel-empty{
+
+margin:auto;
+
+max-width:420px;
+
+padding:24px 16px;
+
+text-align:center;
+
+}
+
+.messages-vide{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:8px;
+
+}
+
+.messages-vide i,
+.messages-vide svg{
+
+width:26px;
+
+height:26px;
 
 color:var(--amber-700);
+
+}
+
+.messages-vide strong{
+
+font-family:var(--font-display);
+
+font-size:1.02rem;
+
+font-weight:var(--fw-bold);
+
+letter-spacing:-.01em;
+
+color:var(--text-color);
+
+}
+
+.messages-vide > span{
+
+font-size:.84rem;
+
+line-height:1.6;
+
+color:var(--text-light);
 
 }
 
@@ -2291,7 +2365,9 @@ sur la page il garde simplement plus d'air. */
 
 @media(max-width:576px){
 
-.messages-page-notice{ margin:12px 12px 0; font-size:.8rem; }
+.messages-faits{ margin:12px 12px 0; gap:6px 14px; padding-bottom:12px; }
+
+.messages-fait{ font-size:.78rem; }
 
 .messages-page-thread{ padding:14px 12px; height:min(56vh, 460px); }
 
@@ -2396,7 +2472,7 @@ overflow:hidden;
 }
 
 body:has(.messages-page-card) .messages-page-card .ai-panel-header,
-body:has(.messages-page-card) .messages-page-notice,
+body:has(.messages-page-card) .messages-faits,
 body:has(.messages-page-card) #messagesPageComposerHost{
 flex-shrink:0;
 }

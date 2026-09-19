@@ -190,18 +190,35 @@ générique si le JS ne démarre pas. -->
 <h2 id="chatGreeting">Comment puis-je vous aider aujourd'hui ?</h2>
 <p>Je connais votre profil, vos candidatures et le catalogue — posez-moi n'importe quelle question sur votre projet d'études.</p>
 
-<!-- LOT FITZ-VOIT (2026-09-19) — CE QUE LA CAPTURE DÉBLOQUE, PAS CE
-     QU'ELLE PERMET. L'ancienne phrase finissait par « Vous pouvez aussi
-     joindre une capture d'écran, une photo ou un PDF » : une possibilité
-     technique, en fin de paragraphe. Or c'est LA raison d'être de cette
-     page — et la capacité existait sans que personne ne la connaisse. -->
-<p><strong>Bloqué sur un portail ?</strong> Envoyez-moi une photo de l'écran où vous êtes — même si la page est dans une langue que vous ne lisez pas. Je vous traduis ce qui est écrit, je vous dis sur quel bouton appuyer, et je vous accompagne écran après écran jusqu'au dépôt de votre dossier.</p>
+<!-- LOT CHAT-VIVANT (2026-09-19) — DEUX PORTES, PLUS DEUX PARAGRAPHES.
+     Ces deux capacités étaient annoncées ici en prose, en gras, sur
+     quatre lignes chacune : l'étudiant lisait qu'il POUVAIT envoyer une
+     capture, puis devait deviner comment. Le texte disait la capacité ;
+     il ne l'ouvrait pas.
+     Ce sont maintenant deux boutons : chacun écrit la phrase à sa place
+     dans le champ de saisie ET ouvre le sélecteur de fichier. Un geste,
+     pas une lecture. Le texte reste, mais court. -->
+<div class="ai-capacites" id="chatCapacites">
 
-<!-- Les PDF, ajoutés le 2026-09-19 APRÈS un appel réel réussi : le
-     modèle a lu un RCCM scanné et en a restitué le nom, la date et le
-     lieu d'enregistrement. La règle du projet est de n'écrire ici une
-     capacité qu'une fois vue marcher. -->
-<p><strong>Un document à faire lire ?</strong> Joignez-le en PDF — diplôme, relevé de notes, attestation. Je le lis page par page, même s'il s'agit d'un scan, et je vous dis s'il correspond à ce que votre dossier attend.</p>
+<button type="button" class="ai-capacite" id="capacitePortail" data-phrase="Je suis bloqué sur cette page de portail — voici mon écran. Dis-moi ce qui est écrit et sur quel bouton appuyer.">
+<span class="ai-capacite-glyphe"><i data-lucide="scan-line"></i></span>
+<span class="ai-capacite-corps">
+<span class="ai-capacite-titre">Bloqué sur un portail</span>
+<span class="ai-capacite-dit">Même si la page est dans une langue que vous ne lisez pas : je la traduis, je vous dis où cliquer, écran après écran, jusqu'au dépôt de votre dossier.</span>
+</span>
+<span class="ai-capacite-geste">Envoyer mon écran<i data-lucide="arrow-right"></i></span>
+</button>
+
+<button type="button" class="ai-capacite" id="capaciteDocument" data-phrase="Voici un document de mon dossier. Lis-le et dis-moi s'il correspond à ce qui est attendu.">
+<span class="ai-capacite-glyphe"><i data-lucide="file-search"></i></span>
+<span class="ai-capacite-corps">
+<span class="ai-capacite-titre">Un document à faire lire</span>
+<span class="ai-capacite-dit">Diplôme, relevé de notes, attestation — en PDF, même scanné. Je le lis page par page et je le compare à votre dossier.</span>
+</span>
+<span class="ai-capacite-geste">Joindre un PDF<i data-lucide="arrow-right"></i></span>
+</button>
+
+</div>
 
 <!-- Cartes REMPLIES PAR LE JS depuis getSuggestedQuestions(profile)
 (voir renderHelpCards dans ai-chat.js). Les quatre questions

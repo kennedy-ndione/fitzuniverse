@@ -127,12 +127,20 @@ js/support-ticket.js). -->
 
 <div class="ai-panel-body messages-page-body">
 
-<div class="messages-page-notice">
-<i data-lucide="badge-check"></i>
-<!-- Le délai vit dans js/delai-reponse.js (grille A) ; le texte écrit
-ici n'est qu'un repli sans JavaScript. -->
-<span>Vos messages arrivent directement à l'équipe FitzUniverse, en temps réel. Nous vous répondons en général sous <strong data-delai-reponse>48 h ouvrées</strong> — la réponse apparaîtra ici et dans la cloche, où que vous soyez sur le site.</span>
-</div>
+<!-- LOT CHAT-VIVANT (2026-09-19) — TROIS FAITS, PLUS UN PARAGRAPHE.
+     Ce bandeau était une phrase de trois lignes qui disait trois choses
+     à la fois : qui lit, sous quel délai, et où la réponse arrive. Sur
+     téléphone il ne tenait pas : il fallait un repli/dépli en
+     JavaScript (retiré avec ce lot) pour qu'il cesse d'écraser la
+     conversation. Trois faits courts tiennent sans qu'on les replie —
+     et se lisent d'un coup d'œil au lieu de se lire.
+     Le délai reste posé par js/delai-reponse.js (grille A) ; la valeur
+     écrite ici n'est qu'un repli sans JavaScript. -->
+<ul class="messages-faits">
+<li class="messages-fait"><i data-lucide="user-round"></i><span>Une équipe humaine, pas Fitz</span></li>
+<li class="messages-fait"><i data-lucide="clock"></i><span>Réponse sous <strong data-delai-reponse>48 h ouvrées</strong></span></li>
+<li class="messages-fait"><i data-lucide="bell"></i><span>Prévenu dans la cloche, partout sur le site</span></li>
+</ul>
 
 <div class="messages-page-thread" id="messagesPageThread">
 <!-- fil rendu par js/student-messages.js (temps réel) -->

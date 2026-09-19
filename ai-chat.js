@@ -589,7 +589,7 @@ return `
 <div class="ai-msg-attachments">
 ${message.attachments.map((a) => a.previewUrl
 ? `<img src="${a.previewUrl}" alt="${escapeHtml(a.name)}" class="ai-msg-attachment-thumb">`
-: `<span class="ai-msg-attachment-file"><i data-lucide="${a.icon}"></i>${escapeHtml(a.name)}</span>`
+: `<span class="ai-msg-attachment-file" title="${escapeHtml(a.name)}"><i data-lucide="${a.icon}"></i><span class="ai-msg-attachment-name">${escapeHtml(a.name)}</span></span>`
 ).join("")}
 </div>
 `;
@@ -841,11 +841,44 @@ runAssistantReply(userMessage, message);
 
 });
 
-document.querySelectorAll(".ai-help-card").forEach((card) => {
+/* LOT CHAT-VIVANT (2026-09-19) — LES CARTES ÉTAIENT MORTES.
 
-card.addEventListener("click", () => {
-input.value = card.dataset.prompt;
+Ce bloc écoutait `document.querySelectorAll(".ai-help-card")` UNE FOIS,
+au démarrage — c'est-à-dire les deux cartes de repli écrites en dur
+dans ai-chat.html. Quelques lignes plus bas, renderHelpCards() fait
+`helpCardsEl.innerHTML = ""` et reconstruit quatre cartes
+personnalisées : des NŒUDS NEUFS, sans écouteur. Vérifié en ligne dans
+un cadre isolé : quatre cartes affichées, clic → saisie vide, aucun
+envoi. La personnalisation marchait, le clic non.
+
+La délégation sur le conteneur survit à toutes les reconstructions :
+c'est #chatHelpCards qui écoute, et il ne change jamais. */
+helpCardsEl?.addEventListener("click", (event) => {
+
+const card = event.target.closest(".ai-help-card");
+if (!card || !helpCardsEl.contains(card)) return;
+
+input.value = card.dataset.prompt || "";
 form.requestSubmit();
+
+});
+
+/* Les deux cartes de capacité de l'écran d'accueil (portail / document).
+Elles font ce que les deux paragraphes qu'elles remplacent se
+contentaient d'annoncer : elles écrivent la phrase dans le champ de
+saisie ET ouvrent le sélecteur de fichier. Rien n'est envoyé : le
+message part quand l'étudiant a choisi sa capture. */
+document.querySelectorAll(".ai-capacite").forEach((porte) => {
+
+porte.addEventListener("click", () => {
+
+if (isGenerating) return;
+
+input.value = porte.dataset.phrase || "";
+input.dispatchEvent(new Event("input", { bubbles: true }));
+fileInput.click();
+input.focus();
+
 });
 
 });

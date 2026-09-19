@@ -1045,7 +1045,7 @@ padding-bottom:8px;
 }
 
 /* 4. Pendant la frappe, la conversation prend toute la place. */
-html.kb-open .messages-page-notice,
+html.kb-open .messages-faits,
 html.kb-open .ai-chat-main-topbar{
 display:none;
 }
