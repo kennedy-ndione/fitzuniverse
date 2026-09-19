@@ -45,6 +45,7 @@ import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
 import { familleDeDomaine } from "./eligibility-pistes.js";
 import { analyserEcheance, joursAvant } from "./echeance.js";
+import { languesParlees } from "./niveaux-langue.js";
 
 // "bachelier" ajouté (audit 2026-08-22) : un lycéen qui vient d'obtenir
 // son bac vise un programme de 1er cycle, le même "Licence" que
@@ -631,15 +632,137 @@ return picked;
 * rendre une page vide serait faux autant qu'inutile. C'est l'analyse
 * qui lui dira que la langue est son premier chantier.
 */
+/* LE BUG LE PLUS COÛTEUX DU MOTEUR, TROUVÉ LE 2026-09-19.
+
+Cette fonction faisait :
+
+    const langues = profile.languages;   // [{code:"fr",level:"C1"}, …]
+    langues.some((l) => langueProgramme.includes(String(l).toLowerCase()))
+
+`String({code:"fr"})` vaut "[object Object]". Aucun libellé de langue
+du catalogue ne contient cette chaîne : le test était donc FAUX pour
+tout programme déclarant une langue, et pour tout étudiant.
+
+La cause est datée. profile.js écrit des objets {code, level} depuis la
+refonte du profil ; cette fonction avait été écrite pour l'ancienne
+forme — de simples chaînes (« français ») — et n'a jamais suivi. Le
+commentaire de retenirOpportunites() annonce encore « 4 à 12
+opportunités selon le profil, mesuré le 2026-09-05 » : cette mesure est
+antérieure au changement de forme.
+
+MESURÉ sur le catalogue du 2026-09-14, pour un Sénégalais français C1 +
+anglais B2 : 481 programmes sur 507 écartés à tort, dont 161 en anglais
+et 93 en français. Avec ce correctif : 469 compatibles, 12 écartés.
+En bout de chaîne, ce profil passait de 2 opportunités retenues à 10.
+Rien ne plantait, rien n'apparaissait en console — le chiffre était
+simplement faux, et le hub annonçait fièrement « Fitz a retenu 2
+opportunités pour votre profil ».
+
+Les libellés du catalogue sont écrits EN FRANÇAIS (« Anglais »,
+« Français / Anglais selon la formation ») : on compare donc le NOM
+FRANÇAIS de la langue, jamais son code. Les anciens profils, qui
+stockaient des chaînes, continuent de fonctionner — un client existant
+ne perd rien. */
+const NOMS_DE_LANGUE = { fr:"français", en:"anglais", es:"espagnol", pt:"portugais", ar:"arabe", de:"allemand", it:"italien", zh:"chinois", ru:"russe", tr:"turc", ja:"japonais" };
+
+function nomDeLangue(entree) {
+if (typeof entree === "string") return entree.trim().toLowerCase();
+if (!entree || typeof entree !== "object") return "";
+if (entree.code === "autre") return String(entree.name || "").trim().toLowerCase();
+return NOMS_DE_LANGUE[String(entree.code || "").toLowerCase()] || String(entree.name || entree.code || "").trim().toLowerCase();
+}
+
 export function langueCompatible(program, profile) {
 
-const langues = Array.isArray(profile.languages) ? profile.languages.filter(Boolean) : [];
+// languesParlees() et non profile.languages : depuis le lot R16, une
+// langue peut être enregistrée avec le niveau « aucun » (« je ne parle
+// pas cette langue »). La compter ouvrirait des programmes dans une
+// langue que l'étudiant vient d'écrire qu'il ne parle pas.
+const langues = languesParlees(profile.languages).map(nomDeLangue).filter(Boolean);
 
 if (!program.language || !langues.length) return null;
 
 const langueProgramme = String(program.language).toLowerCase();
 
-return langues.some((l) => langueProgramme.includes(String(l).toLowerCase()));
+return langues.some((l) => langueProgramme.includes(l));
+
+}
+
+// ==========================================================
+// LOT PROPOSABLE (2026-09-19) — ON NE PROPOSE QUE CE QU'ON PEUT
+// ENCORE FAIRE
+// ==========================================================
+// Décisions de Charles, le 2026-09-19 : « je ne veux pas que tu
+// proposes à un étudiant une bourse ou bien une université qui est
+// fermée, ou bien dont la date d'échéance est à moins de deux
+// semaines… il faut aussi donner du temps à l'étudiant, peut-être
+// qu'il n'a pas encore les documents nécessaires pour faire ses
+// dépôts. »
+//
+// CE QUI SE PASSAIT AVANT, MESURÉ SUR LE CATALOGUE DU 2026-09-14 :
+// le seul filtre était `echeance.ouverte === false`, qui écartait 156
+// programmes sur 507. Sur les 92 programmes dont l'échéance se lit
+// comme une date FUTURE, **61 portaient un statut « Fermée »**.
+// Exemple : `bme-bachelor`, statut « Fermée — campagne 2026-2027
+// achevée », dont le texte d'échéance annonce une date de mars 2027
+// pour la campagne SUIVANTE, non confirmée. Le lecteur d'échéances y
+// voyait 118 jours restants et la proposait. Le champ `status` disait
+// la vérité, et ce moteur ne le lisait pas.
+//
+// LE PLANCHER EST À 30 JOURS, ET NON À 14. Charles a tranché après
+// mesure : le passage de 14 à 30 jours ne coûte que 9 programmes sur
+// 87, et deux semaines ne couvrent même pas le délai d'un traducteur
+// assermenté — sans parler de la légalisation des diplômes.
+
+/** Le temps minimum laissé à un étudiant pour réunir son dossier. */
+export const JOURS_MINIMUM_POUR_DEPOSER = 30;
+
+/**
+* Le champ `status` du catalogue est écrit à la main, en français, et
+* porte quatorze orthographes (« Fermée », « Fermée — campagne
+* 2026-2027 achevée », « Fermée — bando 2026-2027 achevé »…). On ne
+* teste donc pas l'égalité : on cherche la racine « ferm », qui couvre
+* fermé, fermée, fermées. Un statut absent ne ferme rien — 81
+* programmes n'en ont aucun, les écarter viderait le catalogue.
+*/
+export function statutDitFerme(valeur) {
+return /ferm/i.test(String(valeur || ""));
+}
+
+/**
+* Ce programme peut-il être PROPOSÉ à un étudiant aujourd'hui ?
+*
+* Trois refus, dans cet ordre, et une information.
+*
+* @param {Object} program
+* @param {Object|null} scholarship
+* @param {{ouverte:boolean|null, jours:number|null}} echeance
+* @returns {{ok:boolean, raison:string, dateConfirmee:boolean}}
+*/
+export function proposable(program, scholarship, echeance, { joursMinimum = JOURS_MINIMUM_POUR_DEPOSER } = {}) {
+
+const ech = echeance || { ouverte: null, jours: null };
+
+// La date confirmée : une échéance qu'on a su LIRE et qui est future.
+// Les 156 autres sont proposées, mais en dernier et en le disant
+// (décision de Charles : « les proposer en dernier, date non
+// confirmée »). Les taire serait reprendre le défaut qu'on corrige.
+const dateConfirmee = ech.ouverte === true && ech.jours !== null;
+
+// 1 — l'échéance lue est passée.
+if (ech.ouverte === false) return { ok: false, raison: "echeance_passee", dateConfirmee: false };
+
+// 2 — LE STATUT, QUI N'ÉTAIT PAS LU. Celui du programme comme celui
+// de la bourse : une bourse fermée ferme tous ses programmes.
+if (statutDitFerme(program && program.status)) return { ok: false, raison: "statut_ferme", dateConfirmee };
+if (scholarship && statutDitFerme(scholarship.status)) return { ok: false, raison: "bourse_fermee", dateConfirmee };
+
+// 3 — LE TEMPS DE RÉUNIR SON DOSSIER. Uniquement quand la date est
+// connue : refuser une date qu'on n'a pas su lire reviendrait à
+// inventer une échéance.
+if (dateConfirmee && ech.jours < joursMinimum) return { ok: false, raison: "trop_tard", dateConfirmee };
+
+return { ok: true, raison: "", dateConfirmee };
 
 }
 
@@ -659,7 +782,10 @@ maxParPays = 3,
 // Lot FITZ-CHOISIT (2026-09-11) : les universités qu'un choix de Fitz
 // doit éviter — déjà occupées par un autre créneau, ou REFUSÉES par
 // l'étudiant (users/{uid}.universitesRefusees). Un Set d'identifiants.
-exclureUniversites = null
+exclureUniversites = null,
+// Lot PROPOSABLE : le plancher de jours, paramétrable pour les tests
+// seulement — le produit n'en connaît qu'une valeur.
+joursMinimum = JOURS_MINIMUM_POUR_DEPOSER
 }) {
 
 const p = profile || {};
@@ -698,16 +824,20 @@ if (scholarship && scholarship.isActive === false) continue;
 // 4 — la langue.
 if (langueCompatible(program, p) === false) continue;
 
-// 5 — l'échéance.
+// 5 — l'échéance, le statut, et le temps de réunir son dossier
+// (lot PROPOSABLE : voir proposable() plus haut).
 const echeance = etatEcheance(program, aujourdhui);
 
-if (echeance.ouverte === false) continue;
+const verdict = proposable(program, scholarship, echeance, { joursMinimum });
+
+if (!verdict.ok) continue;
 
 candidats.push({
 program,
 university,
 scholarship,
 echeance,
+dateConfirmee: verdict.dateConfirmee,
 // Le bonus d'échéance ouverte est le plus fort après le cycle :
 // entre deux bourses également pertinentes, celle dont les
 // candidatures sont encore ouvertes est la seule sur laquelle
@@ -719,7 +849,14 @@ score: scoreProgram(program, university, scholarship, p) + (echeance.ouverte ===
 
 // Tri : pertinence, puis échéance la plus proche (les dates inconnues
 // en dernier — on ne les fait pas passer devant une date réelle).
+// Lot PROPOSABLE : LA DATE CONFIRMÉE PASSE AVANT TOUT LE RESTE.
+// C'est la décision de Charles (« les proposer en dernier »), et elle
+// se paie : une correspondance excellente dont la date n'a pas pu être
+// lue passe derrière une correspondance moyenne dont l'échéance est
+// vérifiée. C'est assumé — l'étudiant a deux refus par place, on ne
+// les lui fait pas dépenser sur une date qu'on ne sait pas.
 candidats.sort((a, b) =>
+(Number(b.dateConfirmee) - Number(a.dateConfirmee)) ||
 (b.score - a.score) ||
 ((a.echeance.jours ?? Number.MAX_SAFE_INTEGER) - (b.echeance.jours ?? Number.MAX_SAFE_INTEGER))
 );
@@ -771,6 +908,10 @@ scholarshipTitle: c.scholarship ? c.scholarship.title : "",
 deadline: c.program.deadline || null,
 jours: c.echeance.jours,
 echeanceOuverte: c.echeance.ouverte,
+// Lot PROPOSABLE : la carte doit pouvoir DIRE « date non confirmée ».
+// Sans ce champ, l'affichage devrait redeviner la règle — et une
+// seconde copie d'une règle, ce dépôt l'a déjà payée trois fois.
+dateConfirmee: c.dateConfirmee === true,
 score: c.score,
 applicationUrl: c.program.applicationUrl || c.university.applicationPortalUrl || "",
 universityWebsite: c.university.officialWebsite || "",
