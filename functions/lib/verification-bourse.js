@@ -91,19 +91,39 @@ function texteDePage(html) {
 
 /** Les mois, en toutes lettres, français et anglais — pour vérifier
  *  qu'une date proposée est bien CITÉE dans la phrase source. */
+/* CINQ LANGUES, ET CE N'EST PAS DU LUXE.
+
+   TROUVÉ LE 2026-09-19, quelques minutes après la mise en ligne du
+   diagnostic. DSU Toscana : Fitz a suivi le lien « Borsa di studio »,
+   lu la bonne page, et rapporté la phrase exacte —
+
+     « …fino alle ore 13.00 del 7 settembre 2026… »
+
+   — puis proposé la date 2026-09-07. MA GARDE L'A REJETÉE :
+   « elle n'apparaît pas dans la phrase citée ». Elle y était. Le mois
+   s'écrivait « settembre », et ce tableau ne connaissait que le
+   français et l'anglais.
+
+   La garde marchait trop bien : elle écartait du VRAI. Et comme une
+   large part de ce catalogue est faite d'agences régionales
+   italiennes, elle l'écartait souvent.
+
+   Le tableau du lien avait le même défaut, corrigé une heure plus
+   tôt ; celui-ci était passé inaperçu parce qu'il est plus loin dans
+   la chaîne — on ne l'atteint que si un lien a d'abord été suivi. */
 const MOIS = [
-  ["janvier", "january", "jan"],
-  ["février", "fevrier", "february", "feb"],
-  ["mars", "march", "mar"],
-  ["avril", "april", "apr"],
-  ["mai", "may"],
-  ["juin", "june", "jun"],
-  ["juillet", "july", "jul"],
-  ["août", "aout", "august", "aug"],
-  ["septembre", "september", "sep"],
-  ["octobre", "october", "oct"],
-  ["novembre", "november", "nov"],
-  ["décembre", "decembre", "december", "dec"]
+  ["janvier", "january", "jan", "gennaio", "enero", "januar", "janeiro"],
+  ["février", "fevrier", "february", "feb", "febbraio", "febrero", "februar", "fevereiro"],
+  ["mars", "march", "mar", "marzo", "märz", "marz", "março", "marco"],
+  ["avril", "april", "apr", "aprile", "abril"],
+  ["mai", "may", "maggio", "mayo", "maio"],
+  ["juin", "june", "jun", "giugno", "junio", "juni", "junho"],
+  ["juillet", "july", "jul", "luglio", "julio", "juli", "julho"],
+  ["août", "aout", "august", "aug", "agosto"],
+  ["septembre", "september", "sep", "settembre", "septiembre", "setembro"],
+  ["octobre", "october", "oct", "ottobre", "octubre", "oktober", "outubro"],
+  ["novembre", "november", "nov", "noviembre", "novembro"],
+  ["décembre", "decembre", "december", "dec", "dicembre", "diciembre", "dezember", "dezembro"]
 ];
 
 const sansAccents = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

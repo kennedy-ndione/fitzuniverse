@@ -114,6 +114,23 @@ test("citée 3 — un mois voisin ne passe pas pour le bon", () => {
 
 });
 
+test("citée 4 — le catalogue est mondial, les pages officielles ne le sont pas en français", () => {
+
+  // DSU Toscana, 19 septembre 2026 : le modèle avait lu la bonne date,
+  // « …fino alle ore 13.00 del 7 settembre 2026… », et c'est CETTE garde
+  // qui l'a écartée, parce que son tableau de mois ne parlait que
+  // français et anglais. Une bourse italienne perdue par un tableau trop court.
+  assert.equal(dateCitee("2026-09-07", "a partire dalle ore 12:00 del 20 luglio 2026 e fino alle ore 13.00 del 7 settembre 2026 per gli studenti iscritti"), true, "italien");
+  assert.equal(dateCitee("2026-09-07", "El plazo finaliza el 7 de septiembre de 2026"), true, "espagnol");
+  assert.equal(dateCitee("2026-09-07", "Bewerbungsschluss ist der 7. September 2026"), true, "allemand");
+  assert.equal(dateCitee("2026-09-07", "As candidaturas encerram a 7 de setembro de 2026"), true, "portugais");
+
+  // Et les pièges tiennent toujours, tableau élargi ou non :
+  // « mar » est dans « mardi », « mai » dans « maintenant ».
+  assert.equal(dateCitee("2026-03-15", "Rendez-vous le mardi 15 de 2026"), false, "« mardi » n'est pas « mars »");
+
+});
+
 /* ---------------------------------------------------------------
    3. La proposition — et ce qu'elle refuse, dit à voix haute
    --------------------------------------------------------------- */
