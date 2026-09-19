@@ -886,3 +886,33 @@ test("route 26 — PREMIUM 2 : les gestes ont du poids, des deux côtés", () =>
     "aller() ne rejoue plus l'entrée de l'étape : la navigation redeviendra sèche");
 
 });
+
+test("route 27 — PREMIUM 3 : cocher une pièce fait plaisir, sans rejouer aux peintures", () => {
+
+  const route = lire("css/route.css");
+  const js = lire("espace-preinscription.js");
+
+  // LA PIÈCE INVITE — souris seulement, un :hover nu colle sur tactile.
+  assert.match(route, /@media \(hover: hover\)\{[\s\S]*?\.rt-piece label:hover\{[^}]*border-color:var\(--amber-500\)/,
+    "le survol d'une pièce a quitté @media (hover: hover) ou a disparu");
+  assert.match(route, /\.rt-piece label\{[^}]*transition:[^}]*border-color/s,
+    "les changements d'état d'une pièce claquent de nouveau : la transition a disparu");
+
+  // LA PIÈCE OBTENUE SE VOIT — lavis vert léger en plus du bord.
+  assert.match(route, /\.rt-piece\.is-obtenue label\{[^}]*background:rgba\(47,122,70,\.06\)/s,
+    "la pièce obtenue a perdu son lavis vert");
+
+  // LE POP JOUE AU GESTE, PAS AUX PEINTURES. La classe vient-de-cocher
+  // est posée par le JS au change ; si elle apparaissait dans le HTML
+  // peint, chaque repeinture ferait sauter toutes les pièces obtenues.
+  assert.match(route, /@keyframes rt-coche-pop/, "l'animation rt-coche-pop n'est plus définie");
+  assert.match(route, /\.rt-piece input\.vient-de-cocher\{[^}]*animation:rt-coche-pop/,
+    "la case qui vient d'être cochée ne pop plus");
+  assert.match(route, /@media \(prefers-reduced-motion: reduce\)\{[\s\S]*?\.rt-piece input\.vient-de-cocher\{[^}]*animation:none/,
+    "le pop ignore « réduire les animations »");
+  assert.match(js, /if \(c\.checked\) c\.classList\.add\("vient-de-cocher"\);/,
+    "le JS ne pose plus la classe vient-de-cocher au moment du geste");
+  assert.ok(!/vient-de-cocher/.test(/<ul class="rt-pieces">[\s\S]*?<\/ul>/.exec(js)?.[0] || ""),
+    "vient-de-cocher est écrite dans le HTML peint : le pop rejouera sur toutes les pièces à chaque peinture");
+
+});

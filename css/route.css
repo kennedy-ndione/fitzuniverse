@@ -1033,6 +1033,16 @@ border-radius:12px;
 border:1px solid var(--border-color);
 background:var(--background-light);
 cursor:pointer;
+/* PREMIUM 3 : les changements d'état se fondent au lieu de claquer. */
+transition:border-color .15s ease, background .15s ease;
+}
+
+/* PREMIUM 3 : la pièce INVITE au survol — vraies souris seulement,
+un :hover nu colle au doigt sur tactile. */
+@media (hover: hover){
+.rt-piece label:hover{
+border-color:var(--amber-500);
+}
 }
 
 .rt-piece-corps{
@@ -1092,6 +1102,31 @@ display:none;
 
 .rt-piece.is-obtenue label{
 border-color:rgba(47,122,70,.45);
+/* PREMIUM 3 : un lavis vert très léger — la pièce obtenue se voit
+d'un coup d'œil dans la liste, sans crier. */
+background:rgba(47,122,70,.06);
+}
+
+/* PREMIUM 3 : LA COCHE FAIT PLAISIR. La classe `vient-de-cocher` est
+posée par le JS sur la case QUE L'ON VIENT de cocher, jamais écrite
+dans le HTML peint — donc le pop joue à l'instant du geste et ne
+rejoue PAS quand la liste est repeinte avec ses cases déjà cochées.
+(Une animation sur :checked, elle, aurait rejoué sur toutes les pièces
+obtenues à chaque peinture.) */
+@keyframes rt-coche-pop{
+0%{ transform:scale(1); }
+40%{ transform:scale(1.25); }
+100%{ transform:scale(1); }
+}
+
+.rt-piece input.vient-de-cocher{
+animation:rt-coche-pop .3s var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce){
+.rt-piece input.vient-de-cocher{
+animation:none;
+}
 }
 
 .rt-piece.is-obtenue .rt-piece-nom{

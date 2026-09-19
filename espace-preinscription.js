@@ -972,7 +972,14 @@ function brancherEtape(e) {
   if (voeu) voeu.addEventListener("submit", (ev) => { ev.preventDefault(); ajouterVoeu(voeu); });
 
   section.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => retirerVoeu(b.getAttribute("data-retirer"))));
-  section.querySelectorAll("[data-piece]").forEach((c) => c.addEventListener("change", () => cocherPiece(c.getAttribute("data-piece"), c.checked ? true : null)));
+  section.querySelectorAll("[data-piece]").forEach((c) => c.addEventListener("change", () => {
+    // PREMIUM 3 : le pop joue À L'INSTANT du geste, pendant que
+    // l'enregistrement part au serveur — la classe n'est jamais écrite
+    // dans le HTML peint, donc la repeinture ne le rejoue pas
+    // (voir rt-coche-pop dans css/route.css).
+    if (c.checked) c.classList.add("vient-de-cocher");
+    cocherPiece(c.getAttribute("data-piece"), c.checked ? true : null);
+  }));
   section.querySelectorAll("[data-ecarter]").forEach((b) => b.addEventListener("click", () => cocherPiece(b.getAttribute("data-ecarter"), b.getAttribute("aria-pressed") === "true" ? null : "non-concerne")));
   // La déclaration de langue : les deux radios de la question, et les
   // deux boutons qui la corrigent après coup — un seul geste derrière.
