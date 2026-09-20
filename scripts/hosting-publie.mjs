@@ -181,11 +181,17 @@ js: [".js"]
 };
 
 // Les rares fichiers nommément autorisés en dehors de la règle des
-// extensions. CREDITS.md est le seul .md publié, et il l'est exprès : le
-// pied de page de l'accueil pointe dessus (« Crédits photo »), et c'est
-// l'attribution des photos Unsplash. Tous les autres .md du dépôt sont
-// de la documentation interne, exclue par firebase.json.
-export const FICHIERS_AUTORISES = ["CREDITS.md"];
+// extensions. IL N'Y EN A PLUS AUCUN depuis le lot FINITION
+// (2026-09-20) : CREDITS.md était le seul .md publié — le pied de page
+// y envoyait le visiteur, qui recevait 75 Ko de markdown brut. Il est
+// remplacé par credits.html, une page du site, générée depuis le même
+// markdown par scripts/credits-html.mjs. Le document de travail reste
+// au dépôt ; il ne part plus en ligne.
+//
+// La liste reste là, vide : le jour où l'on voudra publier un fichier
+// hors extensions, il faudra l'écrire ICI, nommément, et ce sera visible
+// en revue.
+export const FICHIERS_AUTORISES = [];
 
 function extension(chemin) {
 const nom = chemin.slice(chemin.lastIndexOf("/") + 1);

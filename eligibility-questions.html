@@ -23,8 +23,18 @@ assombrissement automatique qui casse les contrastes calibrés. -->
 <meta property="og:title" content="Questionnaire | FitzUniverse">
 <meta property="og:description" content="Répondez à quelques questions adaptées à votre niveau d'études pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 <meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/eligibility-questions.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:title" content="Questionnaire | FitzUniverse">
 <meta name="twitter:description" content="Répondez à quelques questions adaptées à votre niveau d'études pour recevoir une analyse personnalisée de votre profil, réalisée par Fitz.">
 
@@ -127,7 +137,7 @@ que d'en inventer un (updateProgress, eligibility-questions.js). -->
 <div class="fitz-avatar"></div>
 <div class="assistant-bubble">
 <div class="assistant-message" id="assistantMessage">
-Bonjour ! Commençons par savoir où vous vivez actuellement.
+Bonjour ! Commençons par savoir où vous vivez actuellement.
 </div>
 <p class="fitz-status" id="fitzHint">Fitz apprend à connaître votre profil…</p>
 </div>
@@ -136,7 +146,7 @@ Bonjour ! Commençons par savoir où vous vivez actuellement.
 <!-- Question -->
 <div class="question-header">
 <span class="question-icon" id="questionIcon"></span>
-<h2 id="question">Dans quel pays vivez-vous actuellement ?</h2>
+<h2 id="question">Dans quel pays vivez-vous actuellement ?</h2>
 </div>
 
 <label for="answer" class="visually-hidden">Votre réponse</label>

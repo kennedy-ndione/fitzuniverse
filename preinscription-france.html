@@ -27,7 +27,7 @@ pays de résidence, la banque, le moment du paiement et les dates de la
 campagne n'y sont PAS : c'est ce que le Diagnostic et le Dossier France
 vendent. Le partage est déclaré fait par fait (`diffusion`) dans les
 données, et faitsPublics() est la seule porte. -->
-<title>Étudier en France : préinscription accompagnée | FitzUniverse</title>
+<title>Étudier en France : préinscription accompagnée | FitzUniverse</title>
 
 <meta name="description" content="Étudier en France depuis l'Afrique de l'Ouest : les ressources exigées pour le visa, les droits d'inscription, le plafond d'exonération et la règle des sept vœux — publiés avec leur source. Accompagnement jusqu'au dépôt de votre dossier Études en France.">
 
@@ -40,12 +40,22 @@ données, et faitsPublics() est la seule porte. -->
 
 <link rel="canonical" href="https://fitzuniverse.com/preinscription-france.html">
 
-<meta property="og:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
+<meta property="og:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
 <meta property="og:description" content="Les ressources exigées, les droits d'inscription et la règle des sept vœux, publiés avec leur source. Accompagnement jusqu'au dépôt de votre dossier Études en France.">
 <meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/preinscription-france.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta name="twitter:title" content="Étudier en France : préinscription accompagnée | FitzUniverse">
 <meta name="twitter:description" content="Les ressources exigées, les droits d'inscription et la règle des sept vœux, publiés avec leur source.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -125,7 +135,17 @@ valeurs littérales : sur cette page sombre, les cartes d'offres
 <img class="uni-hero-bg" src="assets/images/campus-courtyard-800w.jpg" srcset="assets/images/campus-courtyard-400w.jpg 400w, assets/images/campus-courtyard-800w.jpg 800w, assets/images/campus-courtyard-1200w.jpg 1200w" sizes="100vw" width="1600" height="800" fetchpriority="high" decoding="async" alt="">
 </picture>
 <span class="uni-hero-badge"><img id="destDrapeau" src="assets/flags/fr.svg" alt="" width="22" height="16"><span id="destBadge">—</span></span>
-<h1 id="destTitre">—</h1>
+<!-- LOT FINITION (2026-09-20) : le H1 servi était un tiret cadratin —
+rien, pour qui lit la page sans exécuter le script.
+js/preinscription-destination.js écrit « Étudier <pays> » dès le
+chargement, mais le pays NE PEUT PAS être écrit ici : cette page est un
+GABARIT, et la prochaine destination se fabrique en la copiant et en
+changeant `data-destination` sur le <body>. C'est la règle de
+test/preinscriptions-vitrine.test.mjs, et elle passe avant le confort
+d'un titre plus précis. D'où un titre qui décrit la PAGE, pas le pays :
+il tient le temps du chargement, et il reste juste quelle que soit la
+destination. -->
+<h1 id="destTitre">Préinscription accompagnée</h1>
 <p id="destPosition">—</p>
 <p class="dest-langues"><i data-lucide="languages" aria-hidden="true"></i><span id="destLangues">—</span></p>
 </section>
@@ -140,9 +160,9 @@ de remboursement) iront dans les conditions de vente, pas ici. -->
 <div class="container">
 <h2 id="promessesTitre">Ce que nous vous garantissons</h2>
 <ul class="pre-promesses">
-<li><i data-lucide="file-check" aria-hidden="true"></i><span>Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.</span></li>
-<li><i data-lucide="user-round" aria-hidden="true"></i><span><strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.</span></li>
-<li><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique.</span></li>
+<li><i data-lucide="file-check" aria-hidden="true"></i><span>Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.</span></li>
+<li><i data-lucide="user-round" aria-hidden="true"></i><span><strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.</span></li>
+<li><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique.</span></li>
 </ul>
 </div>
 </section>

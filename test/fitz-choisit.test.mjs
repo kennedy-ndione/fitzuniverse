@@ -133,5 +133,5 @@ assert.match(etatChoixFitz({ quota: 4, nombre: 2, profilPret: true }).texte, /Fi
 assert.equal(etatChoixFitz({ quota: Infinity, nombre: 2, profilPret: true }), null, "sans plafond, rien à dire");
 // Lot ACCEPTATION : la règle dit les limites AVANT l'achat — deux refus
 // par place, une acceptation définitive. Un seul littéral.
-assert.equal(PHRASE_REGLE, "Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.");
+assert.equal(PHRASE_REGLE, "Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.");
 });

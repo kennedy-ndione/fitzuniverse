@@ -214,12 +214,12 @@ for (const re of INTERDITS) assert.ok(!re.test(code), `${f} promet ou invente : 
 assert.ok(lire("index.html").includes("Gratuit, sans compte, en cinq minutes."));
 assert.ok(lire("offers.html").includes("Paiement en une fois. Chaque formule met toutes les chances de votre côté."));
 assert.ok(lire("offers.html").includes("Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié."));
-assert.ok(lire("offers.html").includes("Comment FitzUniverse augmente-t-il mes chances ?"));
-assert.ok(lire("offers.html").includes("Les universités et les jurys décident ; notre travail est de vous présenter sous votre meilleur jour."));
+assert.ok(lire("offers.html").includes("Comment FitzUniverse augmente-t-il mes chances ?"));
+assert.ok(lire("offers.html").includes("Les universités et les jurys décident ; notre travail est de vous présenter sous votre meilleur jour."));
 assert.ok(lire("preinscription-france.html").includes("Ce que nous vous garantissons"));
 assert.ok(lire("preinscription-france.html").includes("ce qui fait la différence pour un dossier chez vous"));
 for (const id of ["dossier-france", "dossier-france-conseiller"]) {
-assert.ok(OFFRES[id].highlights.includes("Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"), id);
+assert.ok(OFFRES[id].highlights.includes("Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"), id);
 }
 // Ce qui reste, parce que ce n'est pas un découragement.
 // « il vous dit ce qu'il ne sait pas » A QUITTÉ CETTE GARDE le

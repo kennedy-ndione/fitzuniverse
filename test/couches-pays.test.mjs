@@ -171,9 +171,9 @@ assert.equal(frais.decomposition.reduce((s, l) => s + l.montant, 0), frais.monta
 for (const ligne of frais.decomposition) assert.equal(ligne.devise, frais.devise);
 // Le total ET le détail dans la même phrase, jamais l'un sans l'autre.
 const r = calculerDiagnostic({ ressourcesMensuelles: 900, paysResidence: "Cameroun" });
-assert.match(r.fraisDossier.texte, /101 000 F CFA/);
-assert.match(r.fraisDossier.texte, /85 000 F CFA/);
-assert.match(r.fraisDossier.texte, /16 000 F CFA/);
+assert.match(r.fraisDossier.texte, /101 000 F CFA/);
+assert.match(r.fraisDossier.texte, /85 000 F CFA/);
+assert.match(r.fraisDossier.texte, /16 000 F CFA/);
 assert.equal(r.fraisDossier.decomposition.length, 2);
 });
 
@@ -292,6 +292,6 @@ for (const e of sn.etapes) assert.equal(e.fiabilite, "verifie_source_officielle"
 
 const r = calculerDiagnostic({ ressourcesMensuelles: 900, paysResidence: "Sénégal" });
 assert.equal(r.total.annuelEUR, 10530 + 2902 + 130);
-assert.match(r.fraisDossier.texte, /85 000 F CFA/);
+assert.match(r.fraisDossier.texte, /85 000 F CFA/);
 assert.equal(r.fraisDossier.decomposition, null);
 });

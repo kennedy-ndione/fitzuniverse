@@ -260,7 +260,7 @@ assert.match(ko.verdict, /il manque 77,50 € par mois/);
 });
 
 // paysResidence explicite depuis le lot S0 (2026-09-08) : les frais de dossier Campus France sont ceux de l espace du pays de residence, et ces deux tests verifient le cas senegalais. Sans pays declare, le diagnostic les exclut desormais — c etait tout l objet du correctif.
-test("diagnostic en F CFA, residence Senegal : la parite fixe, et le total annuel", () => {
+test("diagnostic en F CFA, residence Senegal : la parite fixe, et le total annuel", () => {
 const r = calculerDiagnostic({ ressourcesMensuelles: 600000, devise: "XOF", niveau: "licence", paysResidence: "Sénégal" });
 assert.equal(r.ressources.disponibleEUR, 914.69);
 assert.equal(r.ressources.atteint, true);
@@ -291,7 +291,7 @@ assert.equal(r.fraisDossier.montant, dossier.montant);
 assert.equal(r.fraisDossier.source, dossier.source);
 for (const f of [ressources, droits, dossier]) { assert.match(f.source, /^https?:\/\//); assert.match(f.verifieLe, /^\d{4}-\d{2}-\d{2}$/); }
 assert.match(r.droits.texte, /30 %/);
-assert.match(r.fraisDossier.texte, /85 000 F CFA/);
+assert.match(r.fraisDossier.texte, /85 000 F CFA/);
 assert.equal(formatEUR(877.5), "877,50 €");
 // Les faits France portent toujours source + date (test parcourant TOUS les faits).
 for (const f of PAYS.find((p) => p.id === "france").faits) assert.match(f.source, /^https?:\/\//);

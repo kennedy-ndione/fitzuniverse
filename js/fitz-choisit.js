@@ -458,4 +458,4 @@ return CIBLES_APRES_PAIEMENT[planId] || "espace-bourse.html";
 // La phrase de la règle, dite AVANT l'achat (offers, payment) et dans
 // l'espace. Un seul littéral, jamais reformulé. Comme il n'y a jamais de
 // remboursement, elle dit les limites AVANT l'achat (lot ACCEPTATION).
-export const PHRASE_REGLE = "Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.";
+export const PHRASE_REGLE = "Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.";

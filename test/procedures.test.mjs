@@ -88,7 +88,7 @@ assert.ok(FR.etapes.length >= 8);
 // France × Sénégal
 // ------------------------------------------------------------------
 
-test("au moins une étape « paiement » à 85 000 F CFA, sourcée sur la FAQ Campus France Sénégal", () => {
+test("au moins une étape « paiement » à 85 000 F CFA, sourcée sur la FAQ Campus France Sénégal", () => {
 const paiement = FR.etapes.filter((e) => e.type === "paiement");
 assert.ok(paiement.length >= 1);
 assert.ok(paiement.some((e) => e.montant === 85000 && e.devise === "XOF" && /senegal\.campusfrance\.org\/les-questions-frequemment-posees/.test(e.source) && e.fiabilite === "verifie_source_officielle"));

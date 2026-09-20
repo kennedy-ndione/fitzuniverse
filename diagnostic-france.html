@@ -69,14 +69,14 @@ de visa ; aucune promesse de résultat. -->
 <section class="diag-intro">
 <h2>Une réponse chiffrée avant de payer Campus France</h2>
 <p>Vos ressources contre le seuil publié, chaque montant avec sa source et sa date, les points de vigilance de votre pays, votre calendrier en jours, ce qui peut faire baisser le total, et les étapes qui vous restent. De l'arithmétique sur des chiffres publiés — aucune estimation, aucune promesse de résultat.</p>
-<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
+<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
 </section>
 
 <form class="diag-form card" id="diagForm" novalidate>
 <!-- PREMIÈRE question depuis le 2026-09-08, et non la dernière : elle
 décide de ce que les autres réponses veulent dire. Les frais de dossier
 Campus France dépendent de l'espace du pays de résidence ; sans cette
-question, le diagnostic servait les 85 000 F CFA du Sénégal à tout le
+question, le diagnostic servait les 85 000 F CFA du Sénégal à tout le
 monde. Champ libre + <datalist> (js/countries.js), comme partout
 ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <div class="field">
@@ -90,7 +90,7 @@ ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <label for="diagRessources">Ressources disponibles par mois</label>
 <div class="diag-montant">
 <input type="number" class="fitz-num" id="diagRessources" name="ressources" min="0" step="1" inputmode="decimal" required placeholder="Ex. 600 000">
-<select id="diagDevise" name="devise" aria-label="Devise"><option value="XOF">F CFA</option><option value="EUR">€</option></select>
+<select id="diagDevise" name="devise" aria-label="Devise"><option value="XOF">F CFA</option><option value="EUR">€</option></select>
 </div>
 <p class="field-hint">Ce que vous, votre famille ou votre garant pouvez justifier chaque mois, pendant l'année.</p>
 </div>

@@ -321,7 +321,7 @@ const AIGUILLAGE = {
 
 id: "currentLevel",
 icon: "graduation-cap",
-question: "Où en êtes-vous aujourd'hui dans vos études ?",
+question: "Où en êtes-vous aujourd'hui dans vos études ?",
 assistant: "C'est la question qui commande toutes les suivantes : les organismes n'attendent pas la même chose d'un bachelier et d'un titulaire de master. Je vais adapter le reste du diagnostic à votre réponse.",
 type: "cards",
 options: NIVEAUX_ACTUELS
@@ -745,7 +745,7 @@ const TRONC_COMMUN = [
 {
 id: "country",
 icon: "map-pin",
-question: "Dans quel pays vivez-vous actuellement ?",
+question: "Dans quel pays vivez-vous actuellement ?",
 assistant: "Cela m'aide à repérer les programmes accessibles depuis votre région, et les représentations locales qui les instruisent.",
 type: "search",
 suggestions: PAYS_DU_MONDE

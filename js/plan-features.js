@@ -56,7 +56,7 @@
 // offres `deprecated` (voir js/access-guard.js et la convention dans
 // pricing-plans.js). L'ordre suit le prix croissant de la grille
 // commerciale (voir pricing-plans.js) : 0 → 12 000 (déprécié) → 29 000 →
-// 75 000 → 80 000 (déprécié) → 150 000 → 250 000 FCFA (grille du 2026-08-29).
+// 75 000 → 80 000 (déprécié) → 150 000 → 250 000 F CFA (grille du 2026-08-29).
 //
 // `fitzExpress` n'y figure volontairement pas : c'est un pass ponctuel,
 // pas une formule — il ne touche jamais le champ `plan` et son accès est

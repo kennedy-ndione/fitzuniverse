@@ -59,7 +59,7 @@ assert.deepEqual(anomalies, [], `\n  ${anomalies.join("\n  ")}\n`);
 test("le contrôle regarde bien le vrai site, et pas une liste vide", () => {
 // Un garde-fou qui ne verrait plus rien passerait toujours. On exige
 // donc que les pièces maîtresses du site soient DANS la liste.
-for (const attendu of ["index.html", "js/portails.js", "css/base.css", "assets/data/catalogue.json", "admin/dashboard.html", "robots.txt", "CREDITS.md"]) {
+for (const attendu of ["index.html", "js/portails.js", "css/base.css", "assets/data/catalogue.json", "admin/dashboard.html", "robots.txt", "credits.html", "sitemap.xml"]) {
 assert.ok(PUBLIES.includes(attendu), `${attendu} devrait être publié`);
 }
 assert.ok(PUBLIES.length > 1500, `${PUBLIES.length} fichiers publiés : trop peu, le parcours a dû s'arrêter`);
@@ -79,7 +79,15 @@ const interdits = [
 "scripts/data/lot33-portails.mjs",
 "firestore.rules",
 "package.json",
-"Claude outputs/france-maroc.js"
+"Claude outputs/france-maroc.js",
+// LOT FINITION (2026-09-20) : les deux pages qui répondaient en ligne
+// sans plus rien avoir à y faire. bientot.html annonçait que
+// l'entreprise attendait ses documents — publiés depuis le 17
+// septembre, et plus aucun lien du site n'y menait. CREDITS.md était
+// servi en markdown brut au lien « Crédits photo » ; credits.html le
+// remplace.
+"bientot.html",
+"CREDITS.md"
 ];
 const ignore = (chemin) => MOTIFS.some((m) => motifVersRegex(m).test(chemin));
 for (const chemin of interdits) {
@@ -90,7 +98,7 @@ assert.equal(PUBLIES.includes(chemin), false, `${chemin} est dans la liste publi
 
 test("le site, lui, n'est pas exclu par mégarde", () => {
 const ignore = (chemin) => MOTIFS.some((m) => motifVersRegex(m).test(chemin));
-for (const chemin of ["index.html", "js/portails.js", "css/base.css", "assets/data/catalogue.json", "admin/scholarships.js", "CREDITS.md", "robots.txt", "sitemap.xml"]) {
+for (const chemin of ["index.html", "js/portails.js", "css/base.css", "assets/data/catalogue.json", "admin/scholarships.js", "credits.html", "robots.txt", "sitemap.xml"]) {
 assert.equal(ignore(chemin), false, `${chemin} est exclu alors qu'il fait partie du site`);
 }
 });
@@ -148,7 +156,9 @@ assert.deepEqual(intrus(["export.json"]), ["export.json — extension « .json �
 assert.deepEqual(intrus(["outils/x.js"]), ["outils/x.js — le dossier « outils » n'est pas un dossier du site"]);
 assert.deepEqual(intrus(["Dockerfile"]), ["Dockerfile — extension « (aucune) » non autorisée à la racine"]);
 // Et il laisse passer ce qui est légitime.
-assert.deepEqual(intrus(["index.html", "js/a.js", "css/b.css", "assets/img/c.webp", "admin/d.html", "CREDITS.md", "robots.txt"]), []);
+assert.deepEqual(intrus(["index.html", "js/a.js", "css/b.css", "assets/img/c.webp", "admin/d.html", "credits.html", "robots.txt", "sitemap.xml"]), []);
+// Et il refuse maintenant le markdown, qui n'a plus d'exception.
+assert.deepEqual(intrus(["CREDITS.md"]), ["CREDITS.md — extension « .md » non autorisée à la racine"]);
 });
 
 // ------------------------------------------------------------------
@@ -202,17 +212,20 @@ for (const motif of [
 ]) {
 assert.ok(ignore.includes(motif), `hosting.ignore devrait contenir « ${motif} »`);
 }
-// Toute la documentation interne, .md par .md — CREDITS.md excepté :
-// le pied de page de l'accueil pointe dessus, c'est l'attribution des
-// photos Unsplash. Firebase ne sait pas faire d'exception dans un
-// motif (aucune négation), d'où l'énumération.
-for (const doc of ["AI_INTEGRATION.md", "ASSETS.md", "COUT_LECTURE.md", "DESIGN_SYSTEM.md", "PROMPT_JOURNEE.md", "REDACTION.md", "TESTING.md"]) {
+// Toute la documentation interne, .md par .md. CREDITS.md a rejoint
+// la liste au lot FINITION (2026-09-20) : il était publié à dessein
+// tant que le pied de page y envoyait le visiteur, et Hosting le
+// servait en markdown brut. Firebase ne sait pas faire d'exception
+// dans un motif (aucune négation), d'où l'énumération.
+for (const doc of ["AI_INTEGRATION.md", "ASSETS.md", "COUT_LECTURE.md", "CREDITS.md", "DESIGN_SYSTEM.md", "PROMPT_JOURNEE.md", "REDACTION.md", "TESTING.md"]) {
 assert.ok(ignore.includes(doc), `hosting.ignore devrait contenir « ${doc} »`);
 }
-assert.equal(ignore.includes("CREDITS.md"), false, "CREDITS.md est publié à dessein");
+assert.ok(ignore.includes("bientot.html"), "bientot.html ne doit plus partir en ligne");
 // Lot LANGAGE (2026-09-10) : le pied de page est un composant partagé,
 // le lien vit dans js/pied-de-page.js (posé sur toutes les pages publiques).
-assert.ok(lire("js/pied-de-page.js").includes('href="CREDITS.md"'), "et le lien qui le justifie existe toujours");
+// Lot FINITION : il pointe désormais la PAGE, pas le markdown.
+assert.ok(lire("js/pied-de-page.js").includes('href="credits.html"'), "le lien du pied de page mène à la page générée");
+assert.equal(lire("js/pied-de-page.js").includes('href="CREDITS.md"'), false, "et plus au fichier brut");
 });
 
 test("la liste blanche reste étroite : quatre dossiers, et des extensions comptées", () => {
@@ -220,7 +233,10 @@ test("la liste blanche reste étroite : quatre dossiers, et des extensions compt
 // ce test-ci le dit. C'est le seul moyen qu'une liste blanche ne
 // redevienne pas une liste noire par usure.
 assert.deepEqual(DOSSIERS_AUTORISES, ["admin", "assets", "css", "js"]);
-assert.deepEqual(FICHIERS_AUTORISES, ["CREDITS.md"]);
+// Vide depuis le lot FINITION : plus aucun fichier n'échappe à la
+// règle des extensions. Le jour où l'on en voudra un, il faudra
+// l'écrire nommément, et ce test le montrera en revue.
+assert.deepEqual(FICHIERS_AUTORISES, []);
 assert.deepEqual(EXTENSIONS_AUTORISEES[""], [".html", ".js", ".css", ".txt", ".xml"]);
 assert.equal(EXTENSIONS_AUTORISEES[""].includes(".json"), false, "aucun .json à la racine : c'est par là que passent les exports et les sauvegardes");
 assert.equal(EXTENSIONS_AUTORISEES.js.length, 1);

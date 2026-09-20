@@ -29,7 +29,7 @@
 * qu'un étudiant prendrait pour une donnée manquante.
 *
 * Devise stockée telle qu'elle est facturée (EUR pour la France).
-* Aucune conversion FCFA — décision fermée, hors périmètre.
+* Aucune conversion F CFA — décision fermée, hors périmètre.
 *
 * Aucun DOM, aucun Firestore : testable sous Node.
 * ============================================================

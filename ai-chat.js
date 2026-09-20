@@ -650,7 +650,7 @@ if (window.lucide) lucide.createIcons();
 // l'état vide (avatar + titre + texte d'intro + cartes) dépasse la
 // hauteur visible de #chatScroll, ce scrollToBottom(false) défilait
 // quand même jusqu'en bas — masquant l'avatar de Fitz et le titre
-// « Comment puis-je vous aider aujourd'hui ? » dès l'arrivée sur la
+// « Comment puis-je vous aider aujourd'hui ? » dès l'arrivée sur la
 // page, sans qu'aucun message ne le justifie (bug constaté le 2026-08-27
 // lors de la vérification mobile demandée par l'utilisateur).
 if (messages.length > 0) scrollToBottom(false);
@@ -916,7 +916,7 @@ if (greetingEl) {
 const prenom = (profile.firstName || user.displayName || "").trim().split(/\s+/)[0];
 greetingEl.textContent = prenom
 ? `Bonjour ${prenom} — comment puis-je vous aider ?`
-: "Comment puis-je vous aider aujourd'hui ?";
+: "Comment puis-je vous aider aujourd'hui ?";
 }
 
 renderHelpCards();

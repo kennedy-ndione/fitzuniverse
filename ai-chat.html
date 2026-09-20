@@ -156,7 +156,7 @@ géométrie de recherche de l'espace avant ce lot, elle aussi sans état
 de focus. -->
 <div class="ai-chat-history-search fitz-recherche">
 <i data-lucide="search"></i>
-<input type="search" id="chatHistorySearch" placeholder="Rechercher une conversation…">
+<input type="search" id="chatHistorySearch" aria-label="Rechercher une conversation" placeholder="Rechercher une conversation…">
 </div>
 
 <div class="ai-chat-history-list" id="chatHistoryList"></div>
@@ -187,7 +187,7 @@ que la barre du parcours, en grand. -->
 
 <!-- Salutation personnalisée par le JS (prénom du profil) — repli
 générique si le JS ne démarre pas. -->
-<h2 id="chatGreeting">Comment puis-je vous aider aujourd'hui ?</h2>
+<h2 id="chatGreeting">Comment puis-je vous aider aujourd'hui ?</h2>
 <p>Je connais votre profil, vos candidatures et le catalogue — posez-moi n'importe quelle question sur votre projet d'études.</p>
 
 <!-- LOT CHAT-VIVANT (2026-09-19) — DEUX PORTES, PLUS DEUX PARAGRAPHES.
@@ -204,7 +204,7 @@ générique si le JS ne démarre pas. -->
 <span class="ai-capacite-glyphe"><i data-lucide="scan-line"></i></span>
 <span class="ai-capacite-corps">
 <span class="ai-capacite-titre">Bloqué sur un portail</span>
-<span class="ai-capacite-dit">Même si la page est dans une langue que vous ne lisez pas : je la traduis, je vous dis où cliquer, écran après écran, jusqu'au dépôt de votre dossier.</span>
+<span class="ai-capacite-dit">Même si la page est dans une langue que vous ne lisez pas : je la traduis, je vous dis où cliquer, écran après écran, jusqu'au dépôt de votre dossier.</span>
 </span>
 <span class="ai-capacite-geste">Envoyer mon écran<i data-lucide="arrow-right"></i></span>
 </button>
@@ -232,12 +232,12 @@ Le contenu ci-dessous est le repli si le JS ne démarre pas. -->
 
 <button type="button" class="ai-help-card" data-prompt="Quels documents dois-je préparer pour candidater à l'étranger ?">
 <i data-lucide="file-text"></i>
-<span>Quels documents dois-je préparer pour candidater à l'étranger ?</span>
+<span>Quels documents dois-je préparer pour candidater à l'étranger ?</span>
 </button>
 
 <button type="button" class="ai-help-card" data-prompt="Comment structurer une lettre de motivation efficace ?">
 <i data-lucide="pen-line"></i>
-<span>Comment structurer une lettre de motivation efficace ?</span>
+<span>Comment structurer une lettre de motivation efficace ?</span>
 </button>
 
 </div>
@@ -279,6 +279,7 @@ saisie s'arrête à la largeur de lecture du fil (voir
 <textarea
 class="ai-chat-textarea"
 id="chatInput"
+aria-label="Votre message à Fitz"
 rows="1"
 placeholder="Demandez à Fitz…"
 maxlength="4000"></textarea>

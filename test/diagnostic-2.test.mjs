@@ -141,7 +141,7 @@ test("le montant manquant se redit en franc CFA, jamais en dirham ni en franc gu
 // exacte. 77,50 € = 50 837 F.
 const sn = verdictChiffre(diag({ ressourcesMensuelles: 800, paysResidence: "Sénégal" }));
 assert.deepEqual(sn.local, { montant: 50837, devise: "XOF" });
-assert.match(sn.phrase, /\(50 837 F CFA\)/);
+assert.match(sn.phrase, /\(50 837 F CFA\)/);
 
 // PAS DE PARITÉ FIXE : le dirham et le franc guinéen ne se redisent
 // pas. Un « environ » à un taux du jour serait exactement le chiffre

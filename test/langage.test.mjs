@@ -101,7 +101,7 @@ assert.ok(t.length <= 1, `${page} : ${t.length} antithèses — ${t.join(" | ")}
 // retirée en même temps.
 export const INTOUCHABLES = [
 "Vous déposez toujours vous-même",
-"Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite",
+"Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite",
 "Le catalogue est ouvert à tous",
 // Le brief citait « … ne nous appartiennent pas » ; la phrase servie
 // (offers.html) a toujours été celle-ci — c'est elle qui est protégée.

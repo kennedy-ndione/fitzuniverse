@@ -267,7 +267,7 @@ id:"country",
 
 icon:"map-pin",
 
-question:"Dans quel pays vivez-vous actuellement ?",
+question:"Dans quel pays vivez-vous actuellement ?",
 
 assistant:"Pour commencer, dites-moi d'où vous me parlez : cela m'aide à repérer les programmes accessibles depuis votre région.",
 
@@ -301,7 +301,7 @@ id:"currentLevel",
 
 icon:"graduation-cap",
 
-question:"Où en êtes-vous aujourd'hui dans vos études ?",
+question:"Où en êtes-vous aujourd'hui dans vos études ?",
 
 assistant:"Votre situation actuelle, pas celle que vous visez — la prochaine question porte justement sur votre objectif.",
 

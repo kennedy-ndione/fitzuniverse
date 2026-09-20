@@ -209,7 +209,7 @@ wand sont interdites sur tout le site (décision de Charles,
 </div>
 
 <div class="input-group field-full">
-<label id="palierLabel">Où en êtes-vous aujourd'hui dans vos études ?</label>
+<label id="palierLabel">Où en êtes-vous aujourd'hui dans vos études ?</label>
 <div class="palier-grid" id="palierGrid" role="radiogroup" aria-labelledby="palierLabel">
 <!-- les 8 paliers, rendus par profile.js depuis PALIERS -->
 </div>
@@ -220,7 +220,7 @@ wand sont interdites sur tout le site (décision de Charles,
 
 <div class="input-group">
 <label for="nationality">Nationalité <span class="field-requis">requis</span></label>
-<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="nationality" placeholder="Commencez à écrire : Sénégal, Côte d'Ivoire…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">Votre nationalité, pas votre pays de résidence : c'est elle qui décide de votre éligibilité — à une bourse comme à une procédure d'admission.</p>
+<div class="fitz-suggest" data-suggest="pays"><div class="input-wrap"><input type="text" id="nationality" placeholder="Commencez à écrire : Sénégal, Côte d'Ivoire…" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"></div><ul class="fitz-suggest-liste" hidden></ul></div><p class="field-aide">Votre nationalité, pas votre pays de résidence : c'est elle qui décide de votre éligibilité — à une bourse comme à une procédure d'admission.</p>
 <small class="field-repris" data-repris="nationality" hidden>Repris de votre diagnostic — vérifiez</small>
 </div>
 
@@ -245,7 +245,7 @@ wand sont interdites sur tout le site (décision de Charles,
 
 <div class="input-group" data-palier-champ="specialization">
 <label for="specialization">Spécialisation</label>
-<div class="input-wrap"><input type="text" id="specialization" placeholder="Ex. Cybersécurité, Droit des affaires…" data-exemples="specialisation"></div><p class="field-aide">Si vous ne savez pas encore, laissez vide : le domaine suffit à Fitz.</p>
+<div class="input-wrap"><input type="text" id="specialization" placeholder="Ex. Cybersécurité, Droit des affaires…" data-exemples="specialisation"></div><p class="field-aide">Si vous ne savez pas encore, laissez vide : le domaine suffit à Fitz.</p>
 </div>
 
 </div>
@@ -258,7 +258,7 @@ valeur « aucun » sont dans js/niveaux-langue.js ; les lignes sont
 rendues par profile.js. -->
 <div class="input-group field-full" style="margin-top:18px;">
 <label>Langues <span class="field-requis">au moins une</span></label>
-<p class="field-hint">Dites où vous en êtes, avec vos mots. Ce n'est pas un examen : c'est votre ressenti, et vous pourrez le corriger quand vous voudrez.</p>
+<p class="field-hint">Dites où vous en êtes, avec vos mots. Ce n'est pas un examen : c'est votre ressenti, et vous pourrez le corriger quand vous voudrez.</p>
 <div id="languagesList">
 <!-- lignes de langues rendues par profile.js -->
 </div>
@@ -269,7 +269,7 @@ rendues par profile.js. -->
 <p class="langue-ajout-titre">Vous parlez une autre langue&nbsp;?</p>
 <div class="chip-select" id="languageAdders"><!-- pastilles rendues par profile.js --></div>
 <div class="langue-autre" id="otherLanguageRow" hidden>
-<input type="text" id="otherLanguageName" placeholder="Ex. Portugais, Wolof, Bambara…">
+<input type="text" id="otherLanguageName" aria-label="Nom de la langue à ajouter" placeholder="Ex. Portugais, Wolof, Bambara…">
 <button type="button" class="chip" id="addOtherLanguage">Ajouter</button>
 </div>
 <p class="langue-autre-erreur" id="otherLanguageError" hidden></p>
@@ -285,7 +285,7 @@ lorsqu'il a un sens. Le même module traduit la réponse en
 côté : une question, un vocabulaire, deux portes. -->
 <div class="input-group field-full" style="margin-top:18px;">
 <label id="testLangueLabel">Test de langue</label>
-<p class="field-hint">Presque toutes les universités demandent une preuve de votre niveau dans la langue où vous allez étudier. Où en êtes-vous ? Si vous visez un pays anglophone, votre IELTS, TOEFL ou Duolingo se déclare ici aussi.</p>
+<p class="field-hint">Presque toutes les universités demandent une preuve de votre niveau dans la langue où vous allez étudier. Où en êtes-vous ? Si vous visez un pays anglophone, votre IELTS, TOEFL ou Duolingo se déclare ici aussi.</p>
 <div class="choix-cartes" id="testLangueEtatGroup" role="radiogroup" aria-labelledby="testLangueLabel">
 <!-- les quatre états, rendus par profile.js depuis ETATS_TEST_LANGUE -->
 </div>
@@ -295,7 +295,7 @@ côté : une question, un vocabulaire, deux portes. -->
 <div class="conditional-fields" id="testLangueDetails" hidden>
 
 <div class="input-group field-full" style="margin-top:14px;">
-<label for="testLangueNature">Lequel ?</label>
+<label for="testLangueNature">Lequel ?</label>
 <div class="input-wrap">
 <select id="testLangueNature">
 <option value="">Sélectionner</option>
@@ -577,7 +577,7 @@ champs dépendent du palier (champsAcademiques, js/profil-par-niveau.js). -->
 
 <div class="input-group" data-palier-champ="weakSubjects">
 <label for="weakSubjects">Les matières où vous êtes le moins à l'aise</label>
-<div class="input-wrap"><input type="text" id="weakSubjects" placeholder="Ex. Philosophie" data-exemples="matieres"></div><p class="field-aide">Le dire ne vous pénalise pas : Fitz évite d'insister dessus dans vos lettres.</p>
+<div class="input-wrap"><input type="text" id="weakSubjects" placeholder="Ex. Philosophie" data-exemples="matieres"></div><p class="field-aide">Le dire ne vous pénalise pas : Fitz évite d'insister dessus dans vos lettres.</p>
 </div>
 
 </div>
@@ -672,12 +672,12 @@ lots R5, R6, R7, R13, B2 et R17 : deux endroits pour une seule règle. -->
 <div class="field-grid">
 
 <div class="input-group">
-<label for="budget">De combien disposez-vous pour vivre là-bas ?</label>
-<div class="input-wrap"><input type="text" id="budget" placeholder="Ex. 600 000 F CFA par mois, ou 900 € par mois" data-exemples="budget"></div><p class="field-aide">Ce dont vous disposez vraiment, vous, votre famille ou un garant. Un chiffre approximatif suffit.</p>
+<label for="budget">De combien disposez-vous pour vivre là-bas ?</label>
+<div class="input-wrap"><input type="text" id="budget" placeholder="Ex. 600 000 F CFA par mois, ou 900 € par mois" data-exemples="budget"></div><p class="field-aide">Ce dont vous disposez vraiment, vous, votre famille ou un garant. Un chiffre approximatif suffit.</p>
 </div>
 
 <div class="input-group field-full">
-<label>Possédez-vous déjà un sponsor ?</label>
+<label>Possédez-vous déjà un sponsor ?</label>
 <div class="fitz-choice-group" id="hasSponsorGroup" role="radiogroup" aria-label="Garant financier">
 <label class="fitz-choice"><input type="radio" name="hasSponsor" value="oui"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Oui</span></label>
 <label class="fitz-choice"><input type="radio" name="hasSponsor" value="non"><span class="fitz-choice-dot" aria-hidden="true"></span><span>Non</span></label>
@@ -796,17 +796,17 @@ lots R5, R6, R7, R13, B2 et R17 : deux endroits pour une seule règle. -->
 <div class="field-grid">
 
 <div class="input-group field-full">
-<label for="whyLeave">Pourquoi voulez-vous partir ?</label>
+<label for="whyLeave">Pourquoi voulez-vous partir ?</label>
 <div class="input-wrap"><textarea id="whyLeave" placeholder="Ex. La filière que je veux n'existe pas chez moi, et je veux apprendre là où elle se fait le mieux."></textarea></div><p class="field-aide">Trois phrases suffisent, dans vos mots. Fitz s'en sert pour écrire vos lettres — pas pour vous juger.</p>
 </div>
 
 <div class="input-group field-full">
-<label for="careerGoals">Quels sont vos objectifs professionnels ?</label>
+<label for="careerGoals">Quels sont vos objectifs professionnels ?</label>
 <div class="input-wrap"><textarea id="careerGoals" placeholder="Ex. Devenir ingénieur réseau, puis monter ma société de maintenance au Sénégal."></textarea></div>
 </div>
 
 <div class="input-group field-full">
-<label for="dreams">Quels sont vos rêves ?</label>
+<label for="dreams">Quels sont vos rêves ?</label>
 <div class="input-wrap"><textarea id="dreams" placeholder="Ex. Que mes petits frères n'aient pas à partir pour bien étudier."></textarea></div>
 </div>
 

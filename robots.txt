@@ -1,5 +1,14 @@
+# LOT FINITION (2026-09-20) — « Disallow: /admin/ » a été retiré.
+# Deux raisons, dans cet ordre :
+#   1. cette ligne PUBLIAIT le chemin. robots.txt est le premier
+#      fichier que lit quiconque cherche la porte de service.
+#   2. Disallow empêche le robot de LIRE la page — donc de voir sa
+#      balise noindex. Une adresse interdite au parcours peut quand
+#      même apparaître dans les résultats, en adresse nue.
+# Les quatorze pages d'admin portent maintenant toutes
+# « noindex, nofollow ». La vraie barrière, elle, n'a jamais été là :
+# c'est Firebase Auth + admins/{uid} + firestore.rules.
 User-agent: *
 Allow: /
-Disallow: /admin/
 
 Sitemap: https://fitzuniverse.com/sitemap.xml

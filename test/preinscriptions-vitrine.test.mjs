@@ -466,9 +466,9 @@ assert.ok(!html.includes("ce qu'il ne promet pas"));
 assert.ok(!/Jamais jusqu'à l'admission|Aucun taux de réussite/.test(html));
 
 for (const phrase of [
-"Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.",
-"<strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.",
-"<strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique."
+"Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.",
+"<strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.",
+"<strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique."
 ]) {
 assert.ok(html.includes(phrase), `phrase altérée ou absente : « ${phrase.slice(0, 60)}… »`);
 }

@@ -29,7 +29,21 @@ qu'il ne recevra pas. Une promesse faite hors du site est la plus
 coûteuse de toutes : elle est lue avant même la page qui la dément. -->
 <meta property="og:description" content="Conditions, couverture, échéances et critères d'éligibilité pour cette opportunité du catalogue FitzUniverse.">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary">
+<!-- LOT FINITION (2026-09-20) : la fiche était la seule page indexable
+sans og:image. Un partage WhatsApp d'une bourse arrivait donc sans
+vignette, là où le catalogue et la page des offres en avaient une. -->
+<meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/scholarship-details.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -215,7 +229,14 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <span id="country"></span>
 </div>
 
-<h1 id="title"></h1>
+<!-- LOT FINITION (2026-09-20) : ce H1 était VIDE dans le HTML servi.
+details.js le remplit par le nom de l'établissement dès que la fiche
+est chargée, mais tout ce qui lit la page sans exécuter le script —
+moteurs, aperçus de lien, lecteurs d'écran avant le chargement — n'y
+trouvait rien. Le texte posé ici est neutre et dure le temps du
+chargement de l'instantané ; il ne remplace pas le vrai titre, il
+évite l'absence de titre. -->
+<h1 id="title">Fiche du catalogue FitzUniverse</h1>
 
 <p class="details-hero-sub">
 <span id="city"></span> · <span id="level"></span>
@@ -439,7 +460,7 @@ s'il ne reste aucun lien à montrer (voir details.js). -->
 
 <!-- Texte remplacé par details.js quand entryPoint est renseigné (la
 porte d'entrée réelle du parcours) — sinon il reste tel quel. -->
-<p id="portalIntro">Vous voulez avancer par vous-même ?</p>
+<p id="portalIntro">Vous voulez avancer par vous-même ?</p>
 
 <!-- Rempli par details.js quand estEligible === false pour la
 nationalité connue de l'étudiant. Texte seul, boutons et liens
@@ -501,7 +522,7 @@ La phrase ci-dessous parle de l'ACCOMPAGNEMENT qui est payant,
 jamais d'un lien caché. -->
 <p class="portal-trust">
 <i data-lucide="shield-check"></i>
-Lien officiel, en accès libre : les informations de cette fiche restent gratuites. Seul l'accompagnement FitzUniverse est payant.
+Lien officiel, en accès libre : les informations de cette fiche restent gratuites. Seul l'accompagnement FitzUniverse est payant.
 </p>
 
 </div>
@@ -518,7 +539,7 @@ Lien officiel, en accès libre : les informations de cette fiche restent gratuit
 <div class="portal-nudge-icon"></div>
 
 <div class="portal-nudge-copy">
-<strong>De retour du portail ?</strong>
+<strong>De retour du portail ?</strong>
 <p>Fitz peut vous accompagner à chaque étape pour aller encore plus loin.</p>
 </div>
 

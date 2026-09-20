@@ -25,8 +25,18 @@ assombrissement automatique qui casse les contrastes calibrés. -->
 <meta property="og:title" content="Choisissez votre accompagnement | FitzUniverse">
 <meta property="og:description" content="Deux parcours, deux grilles. Bourses : des candidatures accompagnées à fond, avec Fitz ou avec un conseiller. Préinscription en France : un dossier Études en France mené jusqu'au dépôt.">
 <meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/offers.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 
 <!-- Google Fonts — même identité « éditorial chaleureux » que le
 reste du parcours (voir css/offers-redesign.css). Remplace Plus
@@ -116,10 +126,10 @@ dégradé a disparu le 2026-08-22. -->
 
 <!-- Grille A (2026-09-07) : le volume n'est plus l'argument. Le titre
 vaut pour les deux parcours ; chaque grille explique ensuite son unité. -->
-<h1>Jusqu'où voulez-vous être accompagné ?</h1>
+<h1>Jusqu'où voulez-vous être accompagné ?</h1>
 
 <p class="lead">
-Deux parcours, deux grilles. Pour une bourse : des candidatures accompagnées à fond, avec Fitz seul ou avec un conseiller. Pour une préinscription en France : un dossier Études en France mené jusqu'au dépôt. Paiement en une fois. Chaque formule met toutes les chances de votre côté.
+Deux parcours, deux grilles. Pour une bourse : des candidatures accompagnées à fond, avec Fitz seul ou avec un conseiller. Pour une préinscription en France : un dossier Études en France mené jusqu'au dépôt. Paiement en une fois. Chaque formule met toutes les chances de votre côté.
 </p>
 
 </header>
@@ -132,7 +142,7 @@ un état (« déjà acquis »), pas un décor. -->
 
 <i class="free-step-icon" data-lucide="check"></i>
 
-<p><strong>Toujours gratuit</strong> : catalogue, fiches détaillées, critères d'admission, portails officiels et diagnostic de compatibilité. Sans compte, sans engagement.</p>
+<p><strong>Toujours gratuit</strong> : catalogue, fiches détaillées, critères d'admission, portails officiels et diagnostic de compatibilité. Sans compte, sans engagement.</p>
 
 <a href="results.html" class="free-step-link">
 <span>Revoir mon diagnostic</span>
@@ -162,7 +172,7 @@ nombre : la promesse est la profondeur.
 
 <div id="parcoursChoix" class="parcours-choice reveal" hidden>
 <span class="plans-kicker">Deux parcours</span>
-<h2>Pour quel parcours cherchez-vous un accompagnement ?</h2>
+<h2>Pour quel parcours cherchez-vous un accompagnement ?</h2>
 <div class="parcours-choice-actions">
 <a href="offers.html?parcours=bourse" class="parcours-choice-btn" data-parcours-switch="bourse">
 <i data-lucide="award"></i>
@@ -188,12 +198,12 @@ nombre : la promesse est la profondeur.
 <div class="pricing-column-head reveal">
 <span class="plans-kicker">Bourses</span>
 <h2 id="colBoursesTitre">Candidater à des bourses</h2>
-<p>Vous payez une formule, en une fois, sans abonnement. Elle couvre un nombre de candidatures, travaillées <strong>en même temps</strong> et suivies chacune jusqu'à la décision de l'université. Ce qui change entre les deux formules complètes : la présence d'un conseiller humain, et la messagerie avec l'équipe.</p>
+<p>Vous payez une formule, en une fois, sans abonnement. Elle couvre un nombre de candidatures, travaillées <strong>en même temps</strong> et suivies chacune jusqu'à la décision de l'université. Ce qui change entre les deux formules complètes : la présence d'un conseiller humain, et la messagerie avec l'équipe.</p>
 <!-- Lot FITZ-CHOISIT (2026-09-11) : la règle, dite AVANT l'achat — il n'y a
 jamais de remboursement. Même littéral dans la FAQ, payment.html et
 l'espace (js/fitz-choisit.js : PHRASE_REGLE). Lot ACCEPTATION : elle dit
 les limites — deux refus par place, une acceptation définitive. -->
-<p class="pricing-regle-fitz"><strong>Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.</strong></p>
+<p class="pricing-regle-fitz"><strong>Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus.</strong></p>
 </div>
 
 <div id="family-autonome" class="section-heading-plans reveal">
@@ -221,7 +231,7 @@ jamais apparaître comme une colonne des formules complètes. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="fitzExpress"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="fitzExpress"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="fitzExpress"></span>
 <span class="plan-price-term">14 jours</span>
 </div>
@@ -230,7 +240,7 @@ jamais apparaître comme une colonne des formules complètes. -->
 <li><i data-lucide="check"></i><span>Toutes vos questions à Fitz, pendant 14 jours</span></li>
 <li><i data-lucide="check"></i><span>Vos critères et vos procédures expliqués, bourse par bourse</span></li>
 <li><i data-lucide="check"></i><span>Une orientation vers les programmes faits pour votre profil</span></li>
-<li><i data-lucide="check"></i><span>Sans engagement : le Pass s'arrête tout seul au bout de 14 jours</span></li>
+<li><i data-lucide="check"></i><span>Sans engagement : le Pass s'arrête tout seul au bout de 14 jours</span></li>
 </ul>
 
 <button type="button" class="btn btn-secondary plan-cta" data-plan="fitzExpress">
@@ -251,7 +261,7 @@ vers le produit cœur, la candidature de l'étudiant. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="premier-dossier"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="premier-dossier"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="premier-dossier"></span>
 <span class="plan-price-term">1 candidature, sans abonnement</span>
 </div>
@@ -281,7 +291,7 @@ vers le produit cœur, la candidature de l'étudiant. -->
 <div class="section-heading-plans reveal">
 <span class="plans-kicker">Formules complètes</span>
 <h2>Chaque candidature, menée à fond.</h2>
-<p>Le catalogue retient huit à douze opportunités par profil. L'objectif : déposer chacune sans erreur.</p>
+<p>Le catalogue retient huit à douze opportunités par profil. L'objectif : déposer chacune sans erreur.</p>
 </div>
 
 <!-- Les deux formules complètes : RECOMMANDÉ (Essentiel, Fitz seul) et
@@ -299,12 +309,12 @@ bouton papier plein tient 15,6:1 — il ressort sans concurrencer. -->
 <p class="plan-tagline">4 candidatures accompagnées à fond, avec Fitz.</p>
 </div>
 
-<!-- Le FCFA porte le montant, l'équivalent en euros le suit en petit
+<!-- Le F CFA porte le montant, l'équivalent en euros le suit en petit
 (lot PAIEMENT-SÛR, 2026-09-17 — c'était l'inverse depuis le 2026-08-22) :
-PayDunya n'encaisse que des FCFA, le chiffre en gros doit être celui qui
-est débité. Parité fixe 1 € = 655,957 FCFA — voir la note en pied de page. -->
+PayDunya n'encaisse que des F CFA, le chiffre en gros doit être celui qui
+est débité. Parité fixe 1 € = 655,957 F CFA — voir la note en pied de page. -->
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="essentiel-4"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="essentiel-4"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="essentiel-4"></span>
 <!-- Lot ACCEPTATION : plus de durée en mois — le nombre de candidatures
 est juste en dessous (.plan-quota). -->
@@ -322,10 +332,10 @@ c'est la seule justification du prix du Conseiller. -->
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>4 candidatures accompagnées à fond, en même temps</span></li>
 <li><i data-lucide="check"></i><span>Votre lettre de motivation rédigée avec Fitz pour chaque université</span></li>
-<li><i data-lucide="check"></i><span>100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression</span></li>
+<li><i data-lucide="check"></i><span>100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression</span></li>
 <li><i data-lucide="check"></i><span>Discuter avec Fitz au fil de la journée, et l'entraînement aux tests calé sur vos échéances</span></li>
 <li><i data-lucide="check"></i><span>Préparation aux entretiens, et chaque candidature suivie jusqu'à la décision de l'université</span></li>
-<li><i data-lucide="check"></i><span>Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées</span></li>
 </ul>
 
 <button type="button" class="btn btn-accent plan-cta" data-plan="essentiel-4">
@@ -345,7 +355,7 @@ c'est la seule justification du prix du Conseiller. -->
 </div>
 
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="conseiller-6"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="conseiller-6"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="conseiller-6"></span>
 <!-- Lot ACCEPTATION : plus de durée en mois — le nombre de candidatures
 est juste en dessous (.plan-quota). -->
@@ -364,8 +374,8 @@ relit. Liste = `highlights` de pricing-plans.js, mot pour mot. -->
 <ul class="plan-features">
 <li><i data-lucide="check"></i><span>6 candidatures accompagnées à fond, chacune relue par un conseiller</span></li>
 <li><i data-lucide="check"></i><span>Un humain vérifie chaque dossier avant l'envoi</span></li>
-<li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
-<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées</span></li>
 <li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel, Fitz en renfort</span></li>
 <li><i data-lucide="check"></i><span>Chaque candidature suivie jusqu'à la décision de l'université</span></li>
 </ul>
@@ -398,7 +408,7 @@ relit. Liste = `highlights` de pricing-plans.js, mot pour mot. -->
 jamais jusqu'à l'admission » est devenu une promesse tenable et
 positive — on dit ce qu'on FAIT (un dossier complet et vérifié),
 les limites vivront dans les conditions de vente. -->
-<p>Vous payez pour <strong>un dossier Études en France</strong> : jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant : <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié. La messagerie FitzUniverse est comprise dans les trois offres : un dossier bloqué se débloque.</p>
+<p>Vous payez pour <strong>un dossier Études en France</strong> : jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). France uniquement pour l'instant : <a href="preinscriptions.html">voir pourquoi, et ce que ça coûte vraiment</a>. Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié. La messagerie FitzUniverse est comprise dans les trois offres : un dossier bloqué se débloque.</p>
 </div>
 
 <!-- Les trois cartes de la préinscription sur UNE rangée : entrée
@@ -414,16 +424,16 @@ les limites vivront dans les conditions de vente. -->
 <p class="plan-tagline">Une réponse honnête avant de payer Campus France.</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="diagnostic-france"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="diagnostic-france"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="diagnostic-france"></span>
 <span class="plan-price-term">14 jours</span>
 </div>
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année</span></li>
+<li><i data-lucide="check"></i><span>Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année</span></li>
 <li><i data-lucide="check"></i><span>Chaque montant avec sa source officielle et sa date de vérification</span></li>
 <li><i data-lucide="check"></i><span>Les points de vigilance de votre pays, avant qu'ils ne coûtent une année</span></li>
 <li><i data-lucide="check"></i><span>Votre calendrier en jours, et les étapes de votre procédure, en entier</span></li>
-<li><i data-lucide="check"></i><span>Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes</span></li>
+<li><i data-lucide="check"></i><span>Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes</span></li>
 <li><i data-lucide="check"></i><span>Les 10 000 F se déduisent d'un Dossier France acheté dans les 30 jours</span></li>
 </ul>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="diagnostic-france">
@@ -439,7 +449,7 @@ les limites vivront dans les conditions de vente. -->
 <p class="plan-tagline">Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au dépôt.</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="dossier-france"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="dossier-france"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="dossier-france"></span>
 <span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
 <span class="plan-price-note">un dossier complet avant de payer les frais de dossier Campus France, non remboursables</span>
@@ -449,12 +459,12 @@ les limites vivront dans les conditions de vente. -->
 <span>vœux Études en France, dans un seul dossier</span>
 </div>
 <ul class="plan-features">
-<li><i data-lucide="check"></i><span>Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources</span></li>
+<li><i data-lucide="check"></i><span>Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources</span></li>
 <li><i data-lucide="check"></i><span>Le Diagnostic France inclus</span></li>
 <li><i data-lucide="check"></i><span>Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Préparation à l'entretien Campus France</span></li>
 <li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées</span></li>
-<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
+<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
 </ul>
 <button type="button" class="btn btn-accent plan-cta" data-plan="dossier-france">
 <span>Préparer mon dossier France</span>
@@ -469,7 +479,7 @@ les limites vivront dans les conditions de vente. -->
 <p class="plan-tagline">Le même dossier, plus une relecture humaine avant des frais de dossier non remboursables.</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-main"><span class="plan-amount" data-price-of="dossier-france-conseiller"></span><span class="plan-currency">FCFA</span></span>
+<span class="plan-price-main"><span class="plan-amount" data-price-of="dossier-france-conseiller"></span><span class="plan-currency">F CFA</span></span>
 <span class="plan-price-local" data-eur-of="dossier-france-conseiller"></span>
 <span class="plan-price-term">une campagne, jusqu'au 31 juillet</span>
 </div>
@@ -481,7 +491,7 @@ les limites vivront dans les conditions de vente. -->
 <li><i data-lucide="check"></i><span>Tout le contenu de Dossier France</span></li>
 <li><i data-lucide="check"></i><span>Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables</span></li>
 <li><i data-lucide="check"></i><span>Un conseiller joignable pendant toute la campagne</span></li>
-<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
+<li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
 </ul>
 <button type="button" class="btn btn-secondary plan-cta" data-plan="dossier-france-conseiller">
 <span>Préparer mon dossier avec un conseiller</span>
@@ -498,7 +508,7 @@ les limites vivront dans les conditions de vente. -->
 
 <p class="footnote-line">
 <i data-lucide="credit-card"></i>
-<span>Paiement en une fois via Wave, Orange Money ou carte bancaire — l'accompagnement démarre dès la validation. Montants prélevés en FCFA ; l'équivalent en euros est donné à parité fixe (1&nbsp;€ = 655,957&nbsp;FCFA).</span>
+<span>Paiement en une fois via Wave, Orange Money ou carte bancaire — l'accompagnement démarre dès la validation. Montants prélevés en F CFA ; l'équivalent en euros est donné à parité fixe (1&nbsp;€ = 655,957&nbsp;F CFA).</span>
 </p>
 
 <p class="footnote-line">
@@ -524,7 +534,7 @@ Ne pas remettre la négation en tête : ce bloc est lu au moment
 précis où l'on choisit de payer ou non. -->
 <p class="footnote-line footnote-line--strong">
 <i data-lucide="shield-check"></i>
-<span>Ce que nous garantissons : un accompagnement sérieux à chaque étape, et un dossier complet, solide, prêt à être déposé avant l'échéance. La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires.</span>
+<span>Ce que nous garantissons : un accompagnement sérieux à chaque étape, et un dossier complet, solide, prêt à être déposé avant l'échéance. La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires.</span>
 </p>
 
 <!-- Le lien WhatsApp de réassurance est PARTI le 2026-09-20 (décision
@@ -540,22 +550,22 @@ avec l'équipe. Ne pas le remettre. -->
 <h2>Questions fréquentes</h2>
 
 <details class="faq-item">
-<summary><span>Pourquoi viser une bourse, et que couvre-t-elle concrètement ?</span><i data-lucide="chevron-down"></i></summary>
-<p>Pour un étudiant international, une bourse est souvent ce qui rend un projet d'études finançable. Ce qu'elle prend en charge varie d'un programme à l'autre : les frais de scolarité, en partie ou en totalité ; le logement, généralement en résidence universitaire ; l'assurance santé, obligatoire pour obtenir un titre de séjour dans la plupart des pays ; le billet d'avion aller-retour ; et, pour les plus complètes, une allocation mensuelle destinée à couvrir les dépenses courantes. Certaines bourses réunissent tous ces volets, d'autres ne financent que la scolarité : le détail figure sur la fiche de chaque bourse, en accès libre. Un point moins connu mérite d'être signalé : l'attestation de bourse sert aussi de justificatif de ressources dans le dossier de visa, une pièce que beaucoup de candidatures peinent à réunir autrement.</p>
+<summary><span>Pourquoi viser une bourse, et que couvre-t-elle concrètement ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Pour un étudiant international, une bourse est souvent ce qui rend un projet d'études finançable. Ce qu'elle prend en charge varie d'un programme à l'autre : les frais de scolarité, en partie ou en totalité ; le logement, généralement en résidence universitaire ; l'assurance santé, obligatoire pour obtenir un titre de séjour dans la plupart des pays ; le billet d'avion aller-retour ; et, pour les plus complètes, une allocation mensuelle destinée à couvrir les dépenses courantes. Certaines bourses réunissent tous ces volets, d'autres ne financent que la scolarité : le détail figure sur la fiche de chaque bourse, en accès libre. Un point moins connu mérite d'être signalé : l'attestation de bourse sert aussi de justificatif de ressources dans le dossier de visa, une pièce que beaucoup de candidatures peinent à réunir autrement.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Qui choisit les universités où je candidate ?</span><i data-lucide="chevron-down"></i></summary>
-<p>Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus. Plus votre profil est complet, plus les propositions sont justes.</p>
+<summary><span>Qui choisit les universités où je candidate ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Vous ne choisissez pas vos universités : Fitz les choisit parmi celles où votre profil a le plus de chances. Une proposition ne vous convient pas ? Fitz vous en propose une autre, jusqu'à deux fois par place. Une fois acceptée, une université ne se change plus. Plus votre profil est complet, plus les propositions sont justes.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Comment FitzUniverse augmente-t-il mes chances ?</span><i data-lucide="chevron-down"></i></summary>
-<p>Fitz choisit vos universités parmi celles où votre profil a le plus de chances, construit avec vous un dossier complet, rédige vos lettres et vos e-mails, tient vos échéances et vérifie chaque pièce à la source avant le dépôt. Les universités et les jurys décident ; notre travail est de vous présenter sous votre meilleur jour.</p>
+<summary><span>Comment FitzUniverse augmente-t-il mes chances ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Fitz choisit vos universités parmi celles où votre profil a le plus de chances, construit avec vous un dossier complet, rédige vos lettres et vos e-mails, tient vos échéances et vérifie chaque pièce à la source avant le dépôt. Les universités et les jurys décident ; notre travail est de vous présenter sous votre meilleur jour.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Que se passe-t-il après mon choix ?</span><i data-lucide="chevron-down"></i></summary>
+<summary><span>Que se passe-t-il après mon choix ?</span><i data-lucide="chevron-down"></i></summary>
 <p>Vous accédez à une page récapitulative avec le détail de votre offre et vos informations, puis vous réglez via PayDunya (Wave, Orange Money ou carte bancaire). Fitz commence ensuite à travailler avec vous selon le palier choisi.</p>
 </details>
 
@@ -568,28 +578,28 @@ plutôt que découvert après. Les chiffres viennent de
 functions/lib/fitz-acces.js et des poids de functions/fitz.js :
 s'ils changent là-bas, cette réponse change avec eux. -->
 <details class="faq-item">
-<summary><span>Y a-t-il une limite à ce que je peux demander à Fitz ?</span><i data-lucide="chevron-down"></i></summary>
+<summary><span>Y a-t-il une limite à ce que je peux demander à Fitz ?</span><i data-lucide="chevron-down"></i></summary>
 <p>Oui, et nous préférons vous le dire avant plutôt qu'au milieu de votre dossier. Chaque formule ouvre un volume quotidien, remis à zéro chaque nuit. Une question à Fitz, un e-mail ou une vérification comptent pour une unité&nbsp;; une traduction pour trois, une lettre de motivation pour quatre, une analyse complète de dossier pour sept. Avec le Forfait Essentiel, cela laisse une quarantaine de questions, ou cinq analyses de dossier, chaque jour. Ce plafond existe pour qu'un compte partagé ne vide pas le service&nbsp;: en travaillant vos candidatures normalement, vous ne le rencontrez pas. Si cela vous arrivait, écrivez-nous — nous le relevons plutôt que de vous laisser bloqué.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Puis-je changer de palier plus tard ?</span><i data-lucide="chevron-down"></i></summary>
+<summary><span>Puis-je changer de palier plus tard ?</span><i data-lucide="chevron-down"></i></summary>
 <p>Oui. Vous pouvez évoluer vers un accompagnement plus complet dès que vous le souhaitez.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Qu'est-ce qu'une "candidature accompagnée" ?</span><i data-lucide="chevron-down"></i></summary>
-<p>C'est un dossier que Fitz suit de bout en bout : analyse de compatibilité, stratégie, préparation des documents, lettre de motivation, CV, e-mails, traduction et vérification. Le nombre de candidatures dépend de votre formule ; elles avancent toutes en même temps. Les outils de Fitz, eux, sont toujours les mêmes pour tout le monde.</p>
+<summary><span>Qu'est-ce qu'une "candidature accompagnée" ?</span><i data-lucide="chevron-down"></i></summary>
+<p>C'est un dossier que Fitz suit de bout en bout : analyse de compatibilité, stratégie, préparation des documents, lettre de motivation, CV, e-mails, traduction et vérification. Le nombre de candidatures dépend de votre formule ; elles avancent toutes en même temps. Les outils de Fitz, eux, sont toujours les mêmes pour tout le monde.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Comment joindre l'équipe ?</span><i data-lucide="chevron-down"></i></summary>
-<p>La messagerie FitzUniverse (une conversation dans votre espace, réponse généralement sous 48 h ouvrées) est comprise dans le Forfait Conseiller et dans les trois offres préinscription : c'est là que l'échange a une valeur directe, avec la personne qui relit votre dossier ou quand une pièce bloque. Toutes les formules payantes disposent en plus de « Signaler un problème », un service après-vente pour un souci technique, un paiement ou une erreur du site — pas pour une question de dossier.</p>
+<summary><span>Comment joindre l'équipe ?</span><i data-lucide="chevron-down"></i></summary>
+<p>La messagerie FitzUniverse (une conversation dans votre espace, réponse généralement sous 48 h ouvrées) est comprise dans le Forfait Conseiller et dans les trois offres préinscription : c'est là que l'échange a une valeur directe, avec la personne qui relit votre dossier ou quand une pièce bloque. Toutes les formules payantes disposent en plus de « Signaler un problème », un service après-vente pour un souci technique, un paiement ou une erreur du site — pas pour une question de dossier.</p>
 </details>
 
 <details class="faq-item">
-<summary><span>Jusqu'à quand suis-je accompagné ?</span><i data-lucide="chevron-down"></i></summary>
-<p>Les formules bourses n'ont pas de durée : elles couvrent un nombre de candidatures, et chacune est suivie jusqu'à la décision de l'université. Quand toutes vos réponses sont arrivées, l'équipe FitzUniverse vous indique la suite dans votre espace. Le Pass Découverte et le Diagnostic France durent 14 jours ; les Dossiers France suivent la campagne Études en France, jusqu'au 31 juillet.</p>
+<summary><span>Jusqu'à quand suis-je accompagné ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Les formules bourses n'ont pas de durée : elles couvrent un nombre de candidatures, et chacune est suivie jusqu'à la décision de l'université. Quand toutes vos réponses sont arrivées, l'équipe FitzUniverse vous indique la suite dans votre espace. Le Pass Découverte et le Diagnostic France durent 14 jours ; les Dossiers France suivent la campagne Études en France, jusqu'au 31 juillet.</p>
 </details>
 
 </section>

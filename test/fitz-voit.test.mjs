@@ -363,7 +363,7 @@ test("pdf 5 — le plafond des PDF est chiffré, et annoncé avant l'envoi", asy
   const { MAX_OCTETS_PDF, validateFiles } = await import("../js/ai/attachments.js");
 
   // RECALIBRÉ sur le premier essai réel : un RCCM scanné refusé par un
-  // plafond de 3 Mo, alors qu'une page de PDF coûte ~1,8 F CFA sur Sonnet.
+  // plafond de 3 Mo, alors qu'une page de PDF coûte ~1,8 F CFA sur Sonnet.
   // Le plafond doit laisser passer un document que personne ne trouverait
   // anormal.
   const maxServeur = Number(/const MAX_OCTETS_DOCUMENT = (\d+) \* 1024 \* 1024;/.exec(serveur)[1]);

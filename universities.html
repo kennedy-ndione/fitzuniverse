@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 
-<title>Universités : établissements vérifiés et coût des études | FitzUniverse</title>
+<title>Universités : établissements vérifiés et coût des études | FitzUniverse</title>
 
 <meta name="description" content="Le catalogue FitzUniverse : des établissements vérifiés un par un, leurs bourses, leurs critères d'admission et le coût réel d'une année quand il a été vérifié — que vous visiez une bourse ou une admission que vous financez vous-même.">
 
@@ -19,12 +19,22 @@
 
 <link rel="canonical" href="https://fitzuniverse.com/universities.html">
 
-<meta property="og:title" content="Universités : établissements vérifiés et coût des études | FitzUniverse">
+<meta property="og:title" content="Universités : établissements vérifiés et coût des études | FitzUniverse">
 <meta property="og:description" content="Le catalogue FitzUniverse : des établissements vérifiés un par un, leurs bourses, leurs critères d'admission et le coût réel d'une année quand il a été vérifié — que vous visiez une bourse ou une admission que vous financez vous-même.">
 <meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/universities.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Universités : établissements vérifiés et coût des études | FitzUniverse">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta name="twitter:title" content="Universités : établissements vérifiés et coût des études | FitzUniverse">
 <meta name="twitter:description" content="Le catalogue FitzUniverse : des établissements vérifiés un par un, leurs bourses, leurs critères d'admission et le coût réel d'une année quand il a été vérifié — que vous visiez une bourse ou une admission que vous financez vous-même.">
 
 <!-- Même système typographique que index.html depuis le 2026-08-29
@@ -341,7 +351,7 @@ une bourse — deux libellés distincts pour deux comptes distincts, sinon
 
 <div class="uni-scholarship-context" id="scholarshipContext" hidden>
 <i data-lucide="graduation-cap"></i>
-<span>Bourse : <strong id="scholarshipContextName"></strong></span>
+<span>Bourse : <strong id="scholarshipContextName"></strong></span>
 <a href="scholarships.html"><i data-lucide="x"></i><span>Retour aux bourses</span></a>
 </div>
 

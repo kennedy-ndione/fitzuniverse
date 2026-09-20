@@ -14,7 +14,7 @@ et renvoie dedans : aucune liste d'établissements n'est recopiée ici.
 Tout fait, chiffre ou niveau de préparation vient de
 js/pays-preinscription.js ; les effectifs par pays sont calculés depuis
 assets/data/catalogue.json par js/preinscriptions-page.js. -->
-<title>Préinscriptions : partir en finançant ses études | FitzUniverse</title>
+<title>Préinscriptions : partir en finançant ses études | FitzUniverse</title>
 
 <meta name="description" content="Partir en finançant vos études : ce que coûte vraiment une année, les pays où l'admission est accessible, et un accompagnement jusqu'au dépôt de votre dossier — en complément des bourses. Conçu d'abord pour les étudiants africains, ouvert à tous.">
 
@@ -27,12 +27,22 @@ assets/data/catalogue.json par js/preinscriptions-page.js. -->
 
 <link rel="canonical" href="https://fitzuniverse.com/preinscriptions.html">
 
-<meta property="og:title" content="Préinscriptions : partir en finançant ses études | FitzUniverse">
+<meta property="og:title" content="Préinscriptions : partir en finançant ses études | FitzUniverse">
 <meta property="og:description" content="Ce que coûte vraiment une année, les pays où l'admission est accessible, et un accompagnement jusqu'au dépôt de votre dossier — en complément des bourses.">
 <meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/preinscriptions.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
 <meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Préinscriptions : partir en finançant ses études | FitzUniverse">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta name="twitter:title" content="Préinscriptions : partir en finançant ses études | FitzUniverse">
 <meta name="twitter:description" content="Ce que coûte vraiment une année, les pays où l'admission est accessible, et un accompagnement jusqu'au dépôt de votre dossier — en complément des bourses.">
 
 <!-- Même système typographique que index.html et le catalogue :
@@ -115,7 +125,7 @@ pages publiques et dans la feuille mobile (js/mobile-nav.js). -->
 </picture>
 <span class="uni-hero-badge"><i data-lucide="wallet"></i><span>Préinscriptions</span></span>
 <h1 id="title">Partir en <span class="hero-h1-accent">finançant vos études</span></h1>
-<p id="subtitle">Ici, vous n'êtes pas en compétition avec d'autres candidats. Vous devez rendre un dossier complet, qui respecte les règles du pays. Choisissez votre destination : chacune a sa page, ses règles publiées et son accompagnement jusqu'au dépôt — que vous faites vous-même.</p>
+<p id="subtitle">Ici, vous n'êtes pas en compétition avec d'autres candidats. Vous devez rendre un dossier complet, qui respecte les règles du pays. Choisissez votre destination : chacune a sa page, ses règles publiées et son accompagnement jusqu'au dépôt — que vous faites vous-même.</p>
 </section>
 
 <!-- 2. LES DESTINATIONS — rendues par js/preinscriptions-page.js depuis
@@ -136,9 +146,9 @@ Pas de cinquième. -->
 <section class="pre-section" id="comment-ca-marche" aria-labelledby="etapesTitre">
 <div class="container">
 <h2 id="etapesTitre">Comment ça marche, en quatre étapes</h2>
-<p class="pre-lead">Les mêmes étapes que dans votre espace, une fois inscrit : chacune se coche quand elle est réellement faite.</p>
+<p class="pre-lead">Les mêmes étapes que dans votre espace, une fois inscrit : chacune se coche quand elle est réellement faite.</p>
 <ol class="pre-etapes">
-<li><i data-lucide="user-round" aria-hidden="true"></i><div><h3>Profil complété</h3><p>Votre parcours, vos diplômes, votre projet : ce que chaque établissement lira en premier.</p></div></li>
+<li><i data-lucide="user-round" aria-hidden="true"></i><div><h3>Profil complété</h3><p>Votre parcours, vos diplômes, votre projet : ce que chaque établissement lira en premier.</p></div></li>
 <li><i data-lucide="clipboard-list" aria-hidden="true"></i><div><h3>Dossier de candidature</h3><p>Les pièces demandées, rassemblées et vérifiées une par une.</p></div></li>
 <li><i data-lucide="languages" aria-hidden="true"></i><div><h3>Traductions et légalisations</h3><p>Traductions certifiées, copies conformes, apostille ou légalisation consulaire selon le pays qui reçoit.</p></div></li>
 <li><i data-lucide="wallet" aria-hidden="true"></i><div><h3>Preuve de ressources</h3><p>Justificatifs de ressources ou attestation bancaire, au niveau exigé par le visa du pays visé.</p></div></li>
@@ -151,7 +161,7 @@ la plus utile pour qui ne sait pas encore où il veut aller. -->
 <section class="pre-section" aria-labelledby="entreeTitre">
 <div class="container">
 <h2 id="entreeTitre">Par où commencer</h2>
-<p class="pre-lead">Le catalogue est ouvert à tous : regardez ce que coûte une année là où le coût est déjà vérifié, établissement par établissement.</p>
+<p class="pre-lead">Le catalogue est ouvert à tous : regardez ce que coûte une année là où le coût est déjà vérifié, établissement par établissement.</p>
 <div class="pre-entree">
 <a href="universities.html" class="btn btn-accent"><span>Voir les établissements</span><i data-lucide="arrow-right"></i></a>
 <a href="#comment-ca-marche" class="btn btn-link"><span>Comment ça marche</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>

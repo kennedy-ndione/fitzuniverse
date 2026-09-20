@@ -13,8 +13,8 @@
 //
 // Aucun prix n'est exprimé en euros. Le champ `priceEUR` (supprimé le
 // 2026-08-02) n'était plus lu que par payment.js pour afficher un
-// "≈ N €" à côté du montant en FCFA — la grille est désormais 100%
-// FCFA, seule devise réellement utilisée par les étudiants concernés.
+// "≈ N €" à côté du montant en F CFA — la grille est désormais 100%
+// F CFA, seule devise réellement utilisée par les étudiants concernés.
 //
 // ==========================================================
 // STRUCTURE DE L'OFFRE (révisée 2026-08-15)
@@ -172,7 +172,7 @@ highlights: [
 "Toutes vos questions à Fitz, pendant 14 jours",
 "Vos critères et vos procédures expliqués, bourse par bourse",
 "Une orientation vers les programmes faits pour votre profil",
-"Sans engagement : le Pass s'arrête tout seul au bout de 14 jours"
+"Sans engagement : le Pass s'arrête tout seul au bout de 14 jours"
 ]
 },
 
@@ -404,7 +404,7 @@ fitzAccess: "Tous les outils Fitz — jusqu'à 70 questions ou 10 analyses de do
 // du même coup la seule justification du prix de Renforcé.
 highlights: [
 "Vérification humaine de chaque dossier avant l'envoi",
-"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
+"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
 "Échanges directs avec votre conseiller via la messagerie FitzUniverse",
 "L'assistance continue de Fitz en renfort",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
@@ -498,10 +498,10 @@ fitzAccess: "Tous les outils Fitz — jusqu'à 40 questions ou 5 analyses de dos
 highlights: [
 "4 candidatures accompagnées à fond, en même temps",
 "Votre lettre de motivation rédigée avec Fitz pour chaque université",
-"100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression",
+"100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression",
 "Discuter avec Fitz au fil de la journée, et l'entraînement aux tests calé sur vos échéances",
 "Préparation aux entretiens, et chaque candidature suivie jusqu'à la décision de l'université",
-"Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées"
+"Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées"
 ]
 },
 
@@ -525,8 +525,8 @@ fitzAccess: "Tous les outils Fitz — jusqu'à 70 questions ou 10 analyses de do
 highlights: [
 "6 candidatures accompagnées à fond, chacune relue par un conseiller",
 "Un humain vérifie chaque dossier avant l'envoi",
-"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
-"Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées",
+"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
+"Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées",
 "Tout le contenu du Forfait Essentiel, Fitz en renfort",
 "Chaque candidature suivie jusqu'à la décision de l'université"
 ]
@@ -563,11 +563,11 @@ maxPreinscriptions: 0,
 // leviers et les étapes — et la dernière ligne dit ce que devient le
 // prix si l'accompagnement suit.
 highlights: [
-"Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année",
+"Un verdict en une phrase : votre projet tient, ou il manque X € — au mois ou sur l'année",
 "Chaque montant avec sa source officielle et sa date de vérification",
 "Les points de vigilance de votre pays, avant qu'ils ne coûtent une année",
 "Votre calendrier en jours, et les étapes de votre procédure, en entier",
-"Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes",
+"Ce qui peut faire baisser le total : niveau, exonération, université, bourses ouvertes",
 "Les 10 000 F se déduisent d'un Dossier France acheté dans les 30 jours"
 ]
 },
@@ -587,12 +587,12 @@ duration: "une campagne, jusqu'au 31 juillet",
 fitzAccess: "Documents, traductions et légalisations, preuve de ressources, préparation à l'entretien, messagerie FitzUniverse",
 maxPreinscriptions: 7,
 highlights: [
-"Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources",
+"Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources",
 "Le Diagnostic France inclus",
 "Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
 "Préparation à l'entretien Campus France",
 "Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées",
-"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
+"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
 ]
 },
 
@@ -621,7 +621,7 @@ highlights: [
 "Tout le contenu de Dossier France",
 "Une relecture humaine de votre dossier AVANT le paiement des frais de dossier Campus France, non remboursables",
 "Un conseiller joignable pendant toute la campagne",
-"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
+"Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
 ]
 }
 

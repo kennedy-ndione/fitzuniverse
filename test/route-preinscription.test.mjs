@@ -44,7 +44,7 @@ const SENEGAL = trouverProcedure({ paysDestination: "France", paysResidence: "S�
 const GHANA = trouverProcedure({ paysDestination: "France", paysResidence: "Ghana" });
 const AUJOURDHUI = new Date("2026-10-05T12:00:00Z");
 
-const SITUATION = { country: "Sénégal", nationality: "Sénégal", desiredDegree: "Master", desiredField: "Informatique", lastDegree: "Licence 3 Informatique", currentInstitution: "UCAD", situationFrancais: "etudes_en_francais", budget: "600 000 F CFA" };
+const SITUATION = { country: "Sénégal", nationality: "Sénégal", desiredDegree: "Master", desiredField: "Informatique", lastDegree: "Licence 3 Informatique", currentInstitution: "UCAD", situationFrancais: "etudes_en_francais", budget: "600 000 F CFA" };
 
 function voeu(id, extra = {}) {
   return { id, university: `Université ${id}`, formation: "Master Informatique", niveau: "Master 1", status: "a_preparer", track: "preinscription", ...extra };

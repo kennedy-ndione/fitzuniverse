@@ -46,7 +46,7 @@
 export const EXEMPLES = {
   specialisation: ["Cybersécurité", "Développement web", "Finance d'entreprise", "Droit des affaires", "Santé publique", "Énergies renouvelables", "Logistique", "Ressources humaines"],
   diplome: ["Baccalauréat (en cours)", "Baccalauréat (obtenu)", "Licence 1", "Licence 2", "Licence 3", "BTS", "DUT / BUT", "Master"],
-  budget: ["300 000 F CFA", "450 000 F CFA", "600 000 F CFA", "800 000 F CFA", "600 €", "900 €", "1 200 €"],
+  budget: ["300 000 F CFA", "450 000 F CFA", "600 000 F CFA", "800 000 F CFA", "600 €", "900 €", "1 200 €"],
   etablissement: ["Lycée public", "Lycée privé", "Université publique", "Université privée", "École d'ingénieurs", "Institut supérieur"],
   serieBac: ["S1", "S2", "S3", "L1", "L2", "G (gestion)", "F (technique)", "Série C"],
   mention: ["Passable", "Assez bien", "Bien", "Très bien"],

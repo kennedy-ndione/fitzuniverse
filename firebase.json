@@ -44,6 +44,8 @@
       "design-previews/**",
       "**/*.log",
       "etat.txt",
+      "bientot.html",
+      "CREDITS.md",
       "AI_INTEGRATION.md",
       "ASSETS.md",
       "COUT_LECTURE.md",

@@ -56,7 +56,7 @@ assert.ok(html.includes('<link rel="stylesheet" href="css/legal.css">'), `${page
 assert.ok(html.includes('<script src="js/glossaire-seul.js" defer></script>'), `${page} : glossaire`);
 assert.ok(!/<footer\b|pied-de-page\.(js|css)/.test(visible(html)), `${page} : pas de pied de page`);
 assert.ok(html.includes('class="fitz-lockup"'), `${page} : barre de marque`);
-assert.ok(html.includes("Dernière mise à jour :"), `${page} : date de mise à jour`);
+assert.ok(html.includes("Dernière mise à jour :"), `${page} : date de mise à jour`);
 // Les onglets : les quatre pages, et la page courante marquée.
 for (const autre of PAGES_LEGALES) assert.ok(html.includes(`<a href="${autre}"`), `${page} : onglet vers ${autre}`);
 assert.ok(html.includes(`<a href="${page}" aria-current="page">`), `${page} : onglet courant non marqué`);

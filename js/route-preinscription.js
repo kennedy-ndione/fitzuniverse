@@ -153,7 +153,7 @@ export const QUESTIONS_SITUATION = [
   { cle: "lastDegree", libelle: "Votre dernier diplôme (obtenu ou en cours) ?", type: "texte", exemple: "Baccalauréat S2, Licence 3 Économie…", suggestions: "diplome" },
   { cle: "currentInstitution", libelle: "Dans quel établissement ?", type: "texte", exemple: "Lycée, université ou école" },
   { cle: "situationFrancais", libelle: "Et le français ?", type: "choix", options: ["etudes_en_francais", "test_passe", "test_prevu", "aucun"], libelles: { etudes_en_francais: "J'ai fait mes études en français", test_passe: "J'ai passé un test (TCF, DELF, DALF)", test_prevu: "Je vais passer un test", aucun: "Pas encore décidé" } },
-  { cle: "budget", libelle: "De combien disposez-vous par mois pour vivre en France ?", type: "texte", exemple: "Ex. 500 000 F CFA, ou 800 €", suggestions: "budget", aide: "Vous, votre famille ou un garant. Fitz s'en sert à l'étape suivante pour vérifier que le projet tient." }
+  { cle: "budget", libelle: "De combien disposez-vous par mois pour vivre en France ?", type: "texte", exemple: "Ex. 500 000 F CFA, ou 800 €", suggestions: "budget", aide: "Vous, votre famille ou un garant. Fitz s'en sert à l'étape suivante pour vérifier que le projet tient." }
 ];
 
 /** Ce qu'il manque à la situation, en libellés lisibles. */
@@ -576,7 +576,7 @@ export function phraseDeRoute(route, prenom = "") {
  */
 export function defautsDesEnClair(etapes = ETAPES_ROUTE) {
   const defauts = [];
-  const interdits = [/\d/, /F ?CFA/i, /€/, /SUNU/i, /VFS/i, /Dakar/i, /\b(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\b/i];
+  const interdits = [/\d/, /F[ \u00a0]?CFA/i, /€/, /SUNU/i, /VFS/i, /Dakar/i, /\b(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\b/i];
   for (const e of etapes) {
     for (const motif of interdits) {
       if (motif.test(e.enClair)) defauts.push(`${e.id} : « ${e.enClair.slice(0, 60)}… » porte ${motif}`);

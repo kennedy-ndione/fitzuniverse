@@ -378,7 +378,7 @@ applyBtn.addEventListener("click", () => {
 // absent, où ce même clic ne fait qu'afficher une alerte "lien à
 // venir" (voir plus bas) sans jamais quitter l'onglet : sans cette
 // condition, n'importe quel changement d'onglet ultérieur déclenchait
-// à tort "De retour du portail ?" alors qu'aucun portail n'a été
+// à tort "De retour du portail ?" alors qu'aucun portail n'a été
 // ouvert.
 const href = applyBtn.getAttribute("href");
 
@@ -853,6 +853,12 @@ if (canonical) {
 const base = canonical.href.split("?")[0];
 canonical.href = `${base}?id=${encodeURIComponent(id)}`;
 }
+// LOT FINITION (2026-09-20) : og:url a été ajouté au HTML servi, il
+// doit suivre la canonique sinon un partage de fiche annonce la page
+// générique. Même valeur, même instant, même raison.
+const ogUrl = document.querySelector('meta[property="og:url"]');
+if (ogUrl && canonical) ogUrl.setAttribute("content", canonical.href);
+
 const ogTitle = document.querySelector('meta[property="og:title"]');
 if (ogTitle) ogTitle.setAttribute("content", document.title);
 const ogDesc = document.querySelector('meta[property="og:description"]');

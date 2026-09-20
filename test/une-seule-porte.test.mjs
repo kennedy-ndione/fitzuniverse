@@ -204,12 +204,12 @@ test("porte 4 — la route n'a plus sa copie locale de formatMontant", () => {
   // Ce que la version partagée fait de mieux :
   assert.equal(formatMontant(12000, "MAD"), "12 000 Dhs", "le dirham s'écrit « Dhs » au Maroc, pas « MAD »");
   assert.equal(formatMontant(13562.5, "EUR"), "13 562,50 €", "un euro porte deux décimales");
-  assert.equal(formatMontant(85000, "XOF"), "85 000 F CFA");
+  assert.equal(formatMontant(85000, "XOF"), "85 000 F CFA");
 
   // ET LE PIÈGE VÉRIFIÉ AVANT LE REMPLACEMENT : sur une valeur absente,
-  // la fonction partagée rend « 0 F CFA » là où la locale rendait "".
+  // la fonction partagée rend « 0 F CFA » là où la locale rendait "".
   // Les deux appels de la page doivent donc rester gardés.
-  assert.equal(formatMontant(null, "XOF"), "0 F CFA");
+  assert.equal(formatMontant(null, "XOF"), "0 F CFA");
   const appels = [...lire("espace-preinscription.js").matchAll(/formatMontant\(/g)].length;
   assert.equal(appels, 2, `${appels} appels : chaque nouvel appel doit être gardé par un test de type`);
   assert.match(moteur, /typeof o\.montant === "number"\) parts\.push/);

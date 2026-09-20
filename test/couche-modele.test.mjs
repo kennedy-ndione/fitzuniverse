@@ -166,8 +166,8 @@ assert.ok(avec([{ libelle: "a", devise: "XOF" }]).some((d) => /sans montant/.tes
 test("decomposition : le total ET le détail s'affichent ensemble, jamais l'un sans l'autre", () => {
 assert.equal(texteDecomposition({ montant: 5 }), "", "sans décomposition : rien, pas de bloc vide");
 const phrase = texteDecomposition(CAMEROUN);
-assert.match(phrase, /frais Campus France 85 000 F CFA/);
-assert.match(phrase, /frais TLS 16 000 F CFA/);
+assert.match(phrase, /frais Campus France 85 000 F CFA/);
+assert.match(phrase, /frais TLS 16 000 F CFA/);
 });
 
 // ------------------------------------------------------------------
@@ -219,7 +219,7 @@ assert.equal(enEuros(1000, "EUR"), 1000);
 });
 
 test("formatMontant : chaque devise dans la sienne, jamais un symbole inventé", () => {
-assert.equal(formatMontant(85000, "XOF"), "85 000 F CFA");
+assert.equal(formatMontant(85000, "XOF"), "85 000 F CFA");
 assert.equal(formatMontant(1900, "MAD"), "1 900 Dhs");
 assert.equal(formatMontant(2902, "EUR"), "2 902 €");
 assert.equal(formatMontant(1000, "TND"), "1 000 TND", "une devise inconnue s'écrit par son code");
@@ -273,7 +273,7 @@ const r = calculerDiagnostic({ ressourcesMensuelles: 900, paysResidence: "Séné
 assert.equal(r.fraisDossier.montant, 85000);
 assert.equal(r.fraisDossier.additionnable, true);
 assert.equal(r.fraisDossier.decomposition, null);
-assert.match(r.fraisDossier.texte, /85 000 F CFA/);
+assert.match(r.fraisDossier.texte, /85 000 F CFA/);
 assert.equal(r.total.inclutFraisDossier, true);
 assert.deepEqual(r.total.enPlus, []);
 assert.equal(r.total.annuelEUR, 10530 + 2902 + 130);

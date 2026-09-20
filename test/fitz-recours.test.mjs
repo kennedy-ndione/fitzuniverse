@@ -211,7 +211,7 @@ if (etapeRoute && trouvee.kind === "situation") etapeRoute.manquants = situation
 return { route, etapeRoute, applications: [], profileScore: 3, planId: "gratuit", planPreinscriptionId: "dossier-france", featureFlags: flags, aujourdhui: AUJOURDHUI };
 }
 
-const PROFIL_ROUTE = { country: "Sénégal", nationality: "Sénégal", desiredDegree: "Licence", desiredField: "Psychologie", lastDegree: "Baccalauréat S2", currentInstitution: "Lycée de Dakar", situationFrancais: "Langue maternelle", budget: "600 000 F CFA" };
+const PROFIL_ROUTE = { country: "Sénégal", nationality: "Sénégal", desiredDegree: "Licence", desiredField: "Psychologie", lastDegree: "Baccalauréat S2", currentInstitution: "Lycée de Dakar", situationFrancais: "Langue maternelle", budget: "600 000 F CFA" };
 const VOEU_ROUTE = { id: "pre-1", track: "preinscription", university: "Université de Lille", formation: "Licence Psychologie", niveau: "Licence 1", status: "a_preparer", motivation: { faite: false } };
 
 test("bloc=quoi_faire depuis la route répond avec L'ÉTAPE, son geste, son échéance et le texte officiel", () => {
@@ -283,7 +283,7 @@ assert.match(diagnostiquer({ code: "quoi_faire", etape: "ef_visa" }, visaCoche).
 
 // Étape 10 : le montant du pays, en clair, et jamais en dur.
 const paiement = diagnostiquer({ code: "quoi_faire", etape: "ef_paiement" }, contexteRoute("ef_paiement"));
-assert.match(paiement.texte, /85 000 F CFA à prévoir pour cette étape/);
+assert.match(paiement.texte, /85 000 F CFA à prévoir pour cette étape/);
 
 // Une étape FAITE se dit faite, avec sa date — pas un geste à refaire.
 const faite = contexteRoute("ef_compte", { dossier: { etapes: { ef_compte: { faite: true, faitLe: "2026-09-08", preuve: "" } } } });

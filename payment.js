@@ -99,7 +99,7 @@ return amount.toLocaleString("fr-FR");
 }
 
 // Parité FIXE entre l'euro et le franc CFA (XOF), garantie par accord
-// monétaire : 1 € = 655,957 FCFA. Ce n'est pas un taux de marché, il n'y
+// monétaire : 1 € = 655,957 F CFA. Ce n'est pas un taux de marché, il n'y
 // a donc rien à rafraîchir ni aucun appel réseau à faire — la constante
 // est exacte tant que la parité tient.
 const EUR_PER_XOF = 655.957;
@@ -107,38 +107,38 @@ const EUR_PER_XOF = 655.957;
 // L'euro est arrondi à l'unité : personne ne règle 44,21 €, et une
 // décimale donnerait une fausse impression de précision sur un montant
 // qui n'est de toute façon qu'une conversion. Le montant ENGAGEANT
-// reste le FCFA (voir formatPriceHTML).
+// reste le F CFA (voir formatPriceHTML).
 function formatEUR(amountFCFA) {
 
 return Math.round(amountFCFA / EUR_PER_XOF).toLocaleString("fr-FR");
 
 }
 
-// Affichage du prix : le FCFA porte le montant, l'euro le suit en petit
+// Affichage du prix : le F CFA porte le montant, l'euro le suit en petit
 // (lot PAIEMENT-SÛR, 2026-09-17 — c'était l'inverse depuis la demande du
 // 2026-08-22). Cohérent avec offers.html : le chiffre en gros est celui
 // que PayDunya débite.
 //
-// Le FCFA n'est jamais masqué, et c'est délibéré : Wave, Orange Money et
+// Le F CFA n'est jamais masqué, et c'est délibéré : Wave, Orange Money et
 // MTN MoMo sont des rails en francs CFA, c'est donc ce montant-là qui
 // sera réellement débité. Afficher uniquement l'euro sur une page de
 // paiement laisserait croire à un prélèvement en euros — sur l'écran
 // précis où l'utilisateur s'engage, l'ambiguïté ne serait pas
 // acceptable.
 //
-// MTN MoMo est cité ci-dessus comme EXEMPLE de rail en FCFA, pas comme
+// MTN MoMo est cité ci-dessus comme EXEMPLE de rail en F CFA, pas comme
 // moyen de paiement du produit : il n'est proposé nulle part. Les seuls
 // moyens offerts sont les trois clés du sélecteur ci-dessous
 // (initActivation) — wave, orange-money, card. offers.html doit citer
 // cette liste-là et rien d'autre ; test/offers-plans.test.mjs le vérifie.
 function formatPriceHTML(amountFCFA) {
 
-return `<span class="price-main">${formatFCFA(amountFCFA)}<span class="price-currency">FCFA</span></span>`
+return `<span class="price-main">${formatFCFA(amountFCFA)}<span class="price-currency">F CFA</span></span>`
 + `<span class="price-local">soit environ ${formatEUR(amountFCFA)} €</span>`;
 
 }
 
-// Libellé du bouton d'activation. Le FCFA annonce ce qui part du compte,
+// Libellé du bouton d'activation. Le F CFA annonce ce qui part du compte,
 // l'euro suit en repère — les deux sur la même ligne, jamais l'un sans
 // l'autre.
 // LE PRIX RÉELLEMENT DÛ (lot DIAGNOSTIC-2, 2026-09-09) : les 10 000 F
@@ -164,7 +164,7 @@ function activationLabel(plan) {
 
 const montant = TARIF ? TARIF.prix : plan.priceFCFA;
 
-return `Activer mon accompagnement — ${formatFCFA(montant)} FCFA (environ ${formatEUR(montant)} €)`;
+return `Activer mon accompagnement — ${formatFCFA(montant)} F CFA (environ ${formatEUR(montant)} €)`;
 
 }
 
@@ -187,8 +187,8 @@ document.getElementById("summaryOffer").textContent = plan.label;
 document.getElementById("summaryPrice").textContent = TARIF.deduction
 // Le prix barré ET la raison : un montant qui baisse sans explication
 // se lit comme une erreur, et on appelle le support pour la signaler.
-? `${formatFCFA(TARIF.prix)} FCFA débités (environ ${formatEUR(TARIF.prix)} €), au lieu de ${formatFCFA(TARIF.base)} FCFA : ${TARIF.mention}.`
-: `${formatFCFA(TARIF.prix)} FCFA débités (environ ${formatEUR(TARIF.prix)} €)`;
+? `${formatFCFA(TARIF.prix)} F CFA débités (environ ${formatEUR(TARIF.prix)} €), au lieu de ${formatFCFA(TARIF.base)} F CFA : ${TARIF.mention}.`
+: `${formatFCFA(TARIF.prix)} F CFA débités (environ ${formatEUR(TARIF.prix)} €)`;
 // Toutes les offres n'ont pas de durée : Premier Dossier, Signature
 // Focus et Signature achètent un nombre de candidatures, pas une
 // période. La ligne entière est masquée dans ce cas — la page

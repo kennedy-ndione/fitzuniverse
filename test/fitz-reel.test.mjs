@@ -229,7 +229,7 @@ test("barème 1 — les poids suivent le coût typique, et le plafond borne le c
   };
 
   // Les cinq tâches légères tournent sur Sonnet avec une sortie courte :
-  // 5 à 11 F CFA, donc un point. Elles n'ont jamais bougé.
+  // 5 à 11 F CFA, donc un point. Elles n'ont jamais bougé.
   for (const tache of ["chat", "email", "readiness", "diagnostic"]) {
     assert.equal(poidsDe(tache), 1, `${tache} ne coûte pas un point`);
   }

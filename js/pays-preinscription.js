@@ -160,7 +160,7 @@ verifieLe: "2026-09-08"
 // sont les frais de l'espace Campus France du SÉNÉGAL, qui varient d'un
 // pays à l'autre. Rien ne le disait en donnée — seulement le mot
 // « Sénégal » au milieu d'une phrase —, si bien que le Diagnostic France
-// facturait 85 000 F CFA à un acheteur ivoirien ou camerounais. Le champ
+// facturait 85 000 F CFA à un acheteur ivoirien ou camerounais. Le champ
 // rend la restriction lisible par le code, plus seulement par un
 // lecteur humain attentif : js/diagnostic-france.js le compare au pays
 // de résidence déclaré et se tait quand ils diffèrent.
@@ -168,7 +168,7 @@ verifieLe: "2026-09-08"
 cle: "fraisDossier",
 diffusion: "client",
 residence: "Sénégal",
-texte: "Frais de dossier Campus France Sénégal : 85 000 F CFA, non remboursables. « Ne procéder à aucun paiement avant de recevoir cette demande » de paiement ; règlement en agence SUNU BANK.",
+texte: "Frais de dossier Campus France Sénégal : 85 000 F CFA, non remboursables. « Ne procéder à aucun paiement avant de recevoir cette demande » de paiement ; règlement en agence SUNU BANK.",
 montant: 85000, devise: "XOF",
 source: "https://www.senegal.campusfrance.org/les-questions-frequemment-posees",
 verifieLe: "2026-09-07"

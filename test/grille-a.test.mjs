@@ -299,7 +299,10 @@ test("offers.html ne contient plus « par candidature », aucun « illimité »,
 const visible = offersHtml.replace(/<!--[\s\S]*?-->/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 assert.ok(!/par candidature/i.test(visible), "par candidature");
 assert.ok(!/illimit/i.test(visible), "illimité");
-assert.ok(!/\d{1,3}(?: \d{3})+ ?FCFA/.test(visible), "un montant FCFA écrit en dur");
+// Les deux graphies : « 85 000FCFA » d'hier et « 85 000 F CFA »
+// d'aujourd'hui (espace insécable). Sans le second, cette garde ne
+// pouvait plus rien attraper depuis le lot FINITION.
+assert.ok(!/\d{1,3}(?: \d{3})+ ?F[ \u00a0]?CFA/.test(visible), "un montant en francs écrit en dur");
 assert.ok(!/plan-amount"[^>]*>\s*\d/.test(visible), "un montant en euros écrit en dur");
 assert.ok(!/candidatures de plus|au lieu de \d|meilleur prix/i.test(visible), "comparaison fondée sur le nombre");
 assert.ok(!/taux de réussite|admission garantie|bourse garantie/i.test(visible));

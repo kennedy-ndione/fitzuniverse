@@ -93,7 +93,7 @@ return `${PHOTO}
 <div class="footer-links">${COLONNES.map(colonne).join("")}${CONTACT}</div>
 </div>
 <div class="footer-bottom">
-<p>© ${new Date().getFullYear()} FitzUniverse. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
+<p>© ${new Date().getFullYear()} FitzUniverse. Tous droits réservés. — <a href="credits.html">Crédits photo</a></p>
 <nav class="footer-legal" aria-label="Informations légales">
 <a href="mentions-legales.html">Mentions légales</a>
 <a href="cgv.html">Conditions de vente</a>

@@ -321,7 +321,7 @@ if (titre) titre.textContent = voeu ? "Ma lettre pour chaque vœu" : "Votre lett
 const sousTitre = document.querySelector(".ai-page-header-main p");
 if (sousTitre) sousTitre.textContent = voeu
 ? "Choisissez la formation concernée : Fitz propose un brouillon court, propre à cette formation dans cet établissement — que vous recopiez vous-même dans votre compte sur le portail."
-: "Complétez votre projet d'études : Fitz rédige une lettre adaptée à votre profil, dans le style de votre choix.";
+: "Complétez votre projet d'études : Fitz rédige une lettre adaptée à votre profil, dans le style de votre choix.";
 
 const labelProgram = document.querySelector('label[for="fieldProgram"]');
 if (labelProgram) labelProgram.textContent = voeu ? "Formation (une lettre par formation)" : "Programme";

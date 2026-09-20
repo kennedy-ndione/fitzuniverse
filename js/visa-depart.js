@@ -331,7 +331,7 @@ if (!e.variantes || !e.variantes.bourse || !e.variantes.preinscription) defauts.
 // les repères de durée relatifs (« trois mois », « deux semaines ») ;
 // on refuse les montants, les devises et les dates.
 const textes = [e.quand, e.pourquoi, ...(e.actions || []), ...(e.vigilance || []), ...Object.values(e.variantes || {})].join("  ");
-if (/[€$£]|\bEUR\b|\bUSD\b|\bXOF\b|\bCAD\b|\bMAD\b|\bTRY\b|\bTL\b|\blei\b|F CFA/i.test(textes)) defauts.push(`${e.id} : un montant ou une devise dans le socle — il doit vivre dans la procédure du pays`);
+if (/[€$£]|\bEUR\b|\bUSD\b|\bXOF\b|\bCAD\b|\bMAD\b|\bTRY\b|\bTL\b|\blei\b|F CFA/i.test(textes)) defauts.push(`${e.id} : un montant ou une devise dans le socle — il doit vivre dans la procédure du pays`);
 if (/\d{4}-\d{2}-\d{2}|\b\d{1,3}\s?(€|\$|jours|euros)\b/i.test(textes)) defauts.push(`${e.id} : un chiffre de pays dans le socle`);
 }
 

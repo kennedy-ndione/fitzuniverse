@@ -24,7 +24,7 @@ import { coucheDeResidence, deviseAdditionnable } from "./procedures/index.js";
 * PAYS DE RÉSIDENCE — la question qui manquait (2026-09-08).
 *
 * Le diagnostic servait les frais de dossier de l'espace Campus France
-* du SÉNÉGAL (85 000 F CFA) à tout acheteur, où qu'il vive. Un étudiant
+* du SÉNÉGAL (85 000 F CFA) à tout acheteur, où qu'il vive. Un étudiant
 * ivoirien payait pour lire un montant qui n'était pas le sien, dans un
 * produit vendu comme « une réponse chiffrée avant de payer Campus
 * France » — c'est-à-dire exactement là où se tromper coûte le plus.
@@ -62,7 +62,7 @@ export function residenceDocumentee(paysResidence) {
 return !!coucheDeResidence("France", paysResidence);
 }
 
-/** Parité fixe FCFA ↔ euro (la même que payment.js). */
+/** Parité fixe F CFA ↔ euro (la même que payment.js). */
 export const PARITE_EUR_XOF = 655.957;
 
 export const NIVEAUX_DIAGNOSTIC = ["licence", "master"];
@@ -190,7 +190,7 @@ source: fDroits.source, verifieLe: fDroits.verifieLe
 },
 // Pays non documenté : ni montant, ni devise, ni source — les champs
 // sont ABSENTS plutôt que nuls ou à zéro. Un `montant: 0` se serait
-// additionné, formaté, affiché « 0 F CFA » et lu comme « c'est
+// additionné, formaté, affiché « 0 F CFA » et lu comme « c'est
 // gratuit ». Ce qu'on ignore ne prend pas la forme de ce qu'on sait.
 fraisDossier: documente
 ? {
@@ -251,13 +251,13 @@ return formatMontant(n, "XOF");
 // devise absente de cette table s'affiche par son code ISO : « 1 900
 // TND » est laid mais vrai, et c'est toujours mieux qu'un symbole
 // inventé. Le dirham s'écrit « Dhs » au Maroc, pas « MAD ».
-export const LIBELLES_DEVISE = { EUR: "€", XOF: "F CFA", MAD: "Dhs" };
+export const LIBELLES_DEVISE = { EUR: "€", XOF: "F CFA", MAD: "Dhs" };
 
 /**
 * Un montant dans SA devise, sans conversion. C'est la fonction à
 * appeler partout où l'on affiche un montant dont la devise n'est pas
 * connue à l'avance (lot S2-MODÈLE) : formatXOF ne savait dire que des
-* francs, et un dirham passé dedans serait ressorti « 1 900 F CFA ».
+* francs, et un dirham passé dedans serait ressorti « 1 900 F CFA ».
 */
 export function formatMontant(n, devise) {
 const d = String(devise || "").toUpperCase();

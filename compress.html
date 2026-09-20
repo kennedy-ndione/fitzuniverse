@@ -130,7 +130,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <section class="cpr-intro">
 <h2>Réduisez vos documents à la taille exacte demandée</h2>
-<p>Indiquez la taille maximale exigée par le portail universitaire : Fitz compresse votre PDF ou votre image en conservant le meilleur rendu possible, directement dans votre navigateur — vos documents restent uniquement sur votre appareil.</p>
+<p>Indiquez la taille maximale exigée par le portail universitaire : Fitz compresse votre PDF ou votre image en conservant le meilleur rendu possible, directement dans votre navigateur — vos documents restent uniquement sur votre appareil.</p>
 </section>
 
 <div class="cpr-layout">
@@ -156,8 +156,8 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 <div class="cpr-field">
 <span>Taille maximale demandée par le portail</span>
 <div class="cpr-target-row">
-<input type="number" class="fitz-num" id="targetSize" min="10" value="2" step="0.1">
-<select id="targetUnit">
+<input type="number" class="fitz-num" id="targetSize" aria-label="Taille maximale demandée par le portail" min="10" value="2" step="0.1">
+<select id="targetUnit" aria-label="Unité de la taille maximale">
 <option value="MB" selected>Mo</option>
 <option value="KB">Ko</option>
 </select>
@@ -171,7 +171,7 @@ js/app-shell.js tolère son absence (tous ses accès sont gardés). -->
 
 <div class="cpr-note" id="pdfNote" hidden>
 <i data-lucide="info"></i>
-<p>Pour un PDF, chaque page est réencodée en image optimisée : idéal pour un document scanné. Le texte ne sera pas sélectionnable après compression, mais la mise en page et la lisibilité restent parfaitement intactes.</p>
+<p>Pour un PDF, chaque page est réencodée en image optimisée : idéal pour un document scanné. Le texte ne sera pas sélectionnable après compression, mais la mise en page et la lisibilité restent parfaitement intactes.</p>
 </div>
 
 </div>

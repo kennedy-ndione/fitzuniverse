@@ -92,7 +92,7 @@ observer.observe(item);
 
 }
 
-// Grille B (2026-09-07), puis grille A : les prix de la page (FCFA et
+// Grille B (2026-09-07), puis grille A : les prix de la page (F CFA et
 // équivalent en euros) viennent de pricing-plans.js — offers.html ne
 // contient AUCUN montant d'offre écrit en dur. Le « coût par
 // candidature » a disparu avec la grille A : le volume n'est plus
@@ -102,9 +102,9 @@ const formatF = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " 
 
 function initDerivedPrices() {
 
-// Lot PAIEMENT-SÛR (2026-09-17) : le FCFA porte le montant (en gros,
-// l'unité « FCFA » est écrite à côté dans le HTML), l'euro n'est plus
-// qu'un repère en petit. C'est le FCFA que PayDunya débite.
+// Lot PAIEMENT-SÛR (2026-09-17) : le F CFA porte le montant (en gros,
+// l'unité « F CFA » est écrite à côté dans le HTML), l'euro n'est plus
+// qu'un repère en petit. C'est le F CFA que PayDunya débite.
 document.querySelectorAll("[data-price-of]").forEach((el) => {
 const plan = SCHOLARBRIDGE_PLANS[el.dataset.priceOf];
 if (plan) el.textContent = formatF(plan.priceFCFA);

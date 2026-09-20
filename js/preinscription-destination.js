@@ -182,8 +182,8 @@ const grille = window.SCHOLARBRIDGE_PLANS || {};
 return Object.values(grille).filter((o) => o && o.parcours === "preinscription" && o.deprecated !== true);
 }
 
-// Parité fixe FCFA → euro, la même que sur offers.html (offers.js) et
-// payment.html : l'euro porte le montant, le FCFA le surmonte en petit.
+// Parité fixe F CFA → euro, la même que sur offers.html (offers.js) et
+// payment.html : l'euro porte le montant, le F CFA le surmonte en petit.
 const EUR_PER_XOF = 655.957;
 
 /**
@@ -214,7 +214,7 @@ ${badge}
 <p class="plan-tagline">${escapeHtml(offre.tagline)}</p>
 </div>
 <div class="plan-price">
-<span class="plan-price-local pre-offre-prix">${escapeHtml(espacer(offre.priceFCFA))} FCFA</span>
+<span class="plan-price-local pre-offre-prix">${escapeHtml(espacer(offre.priceFCFA))} F CFA</span>
 <span class="plan-price-main"><span class="plan-amount">${Math.round(offre.priceFCFA / EUR_PER_XOF)}</span><span class="plan-currency">€</span></span>
 ${offre.duration ? `<span class="plan-price-term">${escapeHtml(offre.duration)}</span>` : ""}
 </div>

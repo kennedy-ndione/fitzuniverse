@@ -115,7 +115,7 @@ assert.equal(cartes.length, 7);
 for (const bloc of cartes) {
 const id = (bloc.match(/data-price-of="([^"]+)"/) || [])[1];
 assert.ok(id && GRILLE[id], `carte sans formule connue : ${bloc.slice(0, 80)}`);
-assert.ok(bloc.startsWith(`<span class="plan-price-main"><span class="plan-amount" data-price-of="${id}"></span><span class="plan-currency">FCFA</span></span>\n<span class="plan-price-local" data-eur-of="${id}"></span>`), `${id} : le FCFA doit porter le montant`);
+assert.ok(bloc.startsWith(`<span class="plan-price-main"><span class="plan-amount" data-price-of="${id}"></span><span class="plan-currency">F CFA</span></span>\n<span class="plan-price-local" data-eur-of="${id}"></span>`), `${id} : le FCFA doit porter le montant`);
 }
 assert.ok(!/<span class="plan-currency">€<\/span>/.test(html), "un montant principal en euros");
 const js = lire("offers.js");
@@ -125,8 +125,8 @@ assert.match(js, /soit environ \$\{Math\.round\(plan\.priceFCFA \/ EUR_PER_XOF\)
 
 test("paiement-sûr 5 — payment.js : le FCFA en gros, l'euro en petit, et le bouton annonce le FCFA d'abord", () => {
 const js = lire("payment.js");
-assert.match(js, /<span class="price-main">\$\{formatFCFA\(amountFCFA\)\}<span class="price-currency">FCFA<\/span><\/span>/);
+assert.match(js, /<span class="price-main">\$\{formatFCFA\(amountFCFA\)\}<span class="price-currency">F CFA<\/span><\/span>/);
 assert.match(js, /<span class="price-local">soit environ \$\{formatEUR\(amountFCFA\)\} €<\/span>/);
-assert.match(js, /Activer mon accompagnement — \$\{formatFCFA\(montant\)\} FCFA \(environ \$\{formatEUR\(montant\)\} €\)/);
+assert.match(js, /Activer mon accompagnement — \$\{formatFCFA\(montant\)\} F CFA \(environ \$\{formatEUR\(montant\)\} €\)/);
 assert.ok(!/\$\{formatEUR\([^)]*\)\} € — /.test(js), "une ligne qui commence encore par l'euro");
 });

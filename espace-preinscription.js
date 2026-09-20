@@ -48,7 +48,7 @@ import { formaterDate } from "./js/echeance.js";
 // décimales à un euro (« 13 562,50 € » et non « 13 562,5 € »).
 // Les deux appels de cette page sont gardés par `typeof === "number"`,
 // vérifié avant le remplacement : la fonction partagée rendrait
-// « 0 F CFA » sur une valeur absente, la locale rendait "".
+// « 0 F CFA » sur une valeur absente, la locale rendait "".
 import { HORS_TOTAL, formatMontant } from "./js/diagnostic-france.js";
 import { quotaDeLaFormule } from "./js/parcours-quota.js";
 // Lot R23 : les mots techniques de la citation officielle, dits À CÔTÉ

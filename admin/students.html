@@ -5,6 +5,14 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- LOT FINITION (2026-09-20) : ces pages répondent 200 en ligne (le
+Control Center est servi par Hosting, c'est ainsi qu'on y accède depuis
+n'importe quel navigateur). Les DONNÉES sont protégées par
+firestore.rules et admin-auth.js — mais rien n'interdisait à un moteur
+d'indexer la coquille. Sept pages d'admin sur quatorze portaient déjà
+cette ligne ; les sept autres l'ont maintenant. On ne liste PAS /admin/
+dans robots.txt : ce serait publier le chemin. -->
+<meta name="robots" content="noindex, nofollow">
 
 <title>Étudiants | FitzUniverse Control Center</title>
 
