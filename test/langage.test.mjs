@@ -155,8 +155,11 @@ assert.ok(!/<footer\b/.test(visible(lire(page))), `${page} : un pied de page rec
 }
 const composant = lire("js/pied-de-page.js");
 assert.ok(/footer-photo-feature/.test(composant));
-for (const libelle of ["Légal", "Mentions légales", "Conditions de vente", "Confidentialité", "Contact"]) {
-assert.ok(composant.includes(libelle), `colonne Légal : « ${libelle} » manque`);
+// Depuis le 2026-09-20 (décision de Charles), plus de colonne
+// « Légal » en vitrine : une colonne Contact, et les liens légaux en
+// petit dans la ligne du bas. Les libellés, eux, restent tous dus.
+for (const libelle of ["Mentions légales", "Conditions de vente", "Confidentialité", "Contact"]) {
+assert.ok(composant.includes(libelle), `pied de page : « ${libelle} » manque`);
 }
 // LES QUATRE PAGES LÉGALES EXISTENT (constaté le 2026-09-18).
 // L'assertion exigeait ici quatre « bientot.html?page= » — l'adresse
@@ -167,10 +170,10 @@ assert.ok(composant.includes(libelle), `colonne Légal : « ${libelle} » manque
 // disque est le travail de test/liens.test.mjs, qui vérifie chaque href
 // interne du site.
 for (const cible of ["mentions-legales.html", "cgv.html", "confidentialite.html", "contact.html"]) {
-assert.ok(composant.includes(`"${cible}"`), `colonne Légal : le lien vers ${cible} manque`);
+assert.ok(composant.includes(`"${cible}"`), `pied de page : le lien vers ${cible} manque`);
 }
 assert.ok(!/bientot\.html\?page=/.test(composant),
-"la colonne Légal est revenue à l'adresse d'attente, alors que ses quatre pages existent");
+"un lien légal est revenu à l'adresse d'attente, alors que ses quatre pages existent");
 assert.ok(/css\/pied-de-page\.css/.test(composant), "le composant charge sa feuille");
 assert.ok(existsSync(path.join(RACINE, "css/pied-de-page.css")));
 // Le CSS n'est plus dans homepage-sections.css (une seule source).

@@ -155,13 +155,12 @@ line-height:var(--lh-relaxed);
 text-shadow:0 1px 2px rgba(13,10,6,.5);
 }
 
-/* ---- contact direct (e-mail, téléphone) sous la marque ----
-Demandé le 2026-09-20, inspiré du pied de page d'İstanbul Üniversitesi :
-les coordonnées visibles sans ouvrir contact.html. Icônes nues,
-métrique Lucide (24×24, stroke 2, currentColor) — règle d'icônes. */
+/* ---- colonne Contact (e-mail, téléphone, page contact) ----
+Remplace la colonne Légal (2026-09-20), inspirée du pied de page
+d'İstanbul Üniversitesi. Icônes nues, métrique Lucide — règle d'icônes. */
 .footer-contact{
 list-style:none;
-margin:14px 0 0;
+margin:0;
 padding:0;
 display:flex;
 flex-direction:column;
@@ -244,12 +243,38 @@ border-radius:var(--radius-xs);
 
 .footer-bottom{
 display:flex;
-justify-content:center;
+justify-content:space-between;
 align-items:center;
 flex-wrap:wrap;
-gap:16px;
+gap:10px 16px;
 padding-top:14px;
 border-top:1px solid rgba(255,255,255,.22);
+}
+
+/* Les liens légaux, en petit dans la ligne du bas — présents (exigés
+pour le paiement), jamais en vitrine (décision du 2026-09-20). */
+.footer-legal{
+display:flex;
+flex-wrap:wrap;
+gap:4px 18px;
+}
+
+.footer-legal a{
+font-size:.82rem;
+color:rgba(255,255,255,.55);
+text-decoration:none;
+transition:color .22s var(--ease-standard, ease);
+}
+
+.footer-legal a:hover,
+.footer-legal a:focus-visible{
+color:#E9A319;
+}
+
+.footer-legal a:focus-visible{
+outline:2px solid #fff;
+outline-offset:2px;
+border-radius:var(--radius-xs);
 }
 
 .footer-bottom p{
@@ -265,7 +290,7 @@ color:inherit;
 @media (pointer:coarse){
 .footer-links a,
 .footer-contact a,
-.footer-bottom a{
+.footer-legal a{
 display:inline-flex;
 align-items:center;
 min-height:44px;
@@ -313,8 +338,9 @@ text-align:left;
 /* ≤640px (375px inclus) : PAS de photo (160px de décoration sur un
 téléphone, c'est du défilement offert à personne), deux colonnes par
 rangée, espacements courts, la phrase de marque masquée (les colonnes
-portent la navigation). La colonne Légal reste entière : c'est elle
-qui compte pour un prestataire de paiement. */
+portent la navigation). Les liens légaux restent tous présents dans
+la ligne du bas : c'est ce qui compte pour un prestataire de
+paiement. */
 @media(max-width:640px){
 
 .footer{ padding-bottom:14px; }
@@ -348,9 +374,8 @@ align-self:end;
 .footer-brand p{ display:none; }
 
 /* Les coordonnées restent — c'est de la navigation utile, pas de la
-décoration. Compactes, dans la case de la marque (à côté de Légal). */
+décoration. Compactes, dans leur colonne (Contact | la marque). */
 .footer-contact{
-margin-top:8px;
 gap:2px;
 }
 
@@ -372,7 +397,8 @@ Mesures à 375 px, 2026-09-10 : voir test/pied-de-page.test.mjs. */
 @media (pointer:coarse){
 .footer-links a{ min-height:26px; }
 .footer-contact a{ min-height:26px; }
-.footer-bottom a{ display:inline; min-height:0; }
+.footer-legal a{ display:inline-flex; align-items:center; min-height:26px; }
+.footer-bottom p a{ display:inline; min-height:0; }
 }
 
 .footer-bottom{

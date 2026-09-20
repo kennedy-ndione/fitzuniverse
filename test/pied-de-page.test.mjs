@@ -115,20 +115,26 @@ for (const f of readdirSync(path.join(RACINE, "css")).filter((x) => x.endsWith("
 const autre = lire(`css/${f}`).replace(/\/\*[\s\S]*?\*\//g, "");
 assert.ok(!/^\.footer\{/m.test(autre) && !/^\.footer(-photo|-top|-brand|-links|-bottom)\b[^{]*\{/m.test(autre) && !/\.footer-photo-feature/.test(autre), `css/${f} : règle .footer hors composant`);
 }
-// La colonne Légal est entière : quatre liens, jamais repliés.
-//
-// L'ASSERTION PORTE SUR LA RÈGLE, PLUS SUR LE PROVISOIRE (2026-09-18).
-// Elle exigeait quatre « bientot.html?page= » : l'adresse d'attente du
-// temps où ces quatre pages n'existaient pas. Elles existent depuis —
-// mentions-legales.html, cgv.html, confidentialite.html, contact.html —
-// et l'assertion obligeait donc à REVENIR au provisoire pour rester
-// verte. Un test doit pinner la règle, jamais l'échafaudage.
+// LA COLONNE LÉGAL N'EXISTE PLUS (décision de Charles, 2026-09-20,
+// à la manière des grands sites et du pied de page d'İstanbul
+// Üniversitesi) : une colonne Contact la remplace (e-mail, téléphone,
+// page contact), et les liens légaux vivent EN PETIT dans la ligne du
+// bas — présents, jamais en vitrine. Ils restent obligatoires (c'est
+// ce que regarde un prestataire de paiement) : le test les exige, là
+// où ils sont désormais.
 const composant = lire("js/pied-de-page.js");
-const apresLegal = composant.slice(composant.indexOf('titre: "Légal"'));
-assert.ok(apresLegal, "la colonne Légal a disparu du pied de page");
-const colonneLegal = apresLegal.slice(0, apresLegal.indexOf("] }"));
-const liens = colonneLegal.match(/\["[^"]+",\s*"[^"]+"\]/g) || [];
-assert.equal(liens.length, 4, `la colonne Légal a ${liens.length} liens au lieu de quatre`);
-assert.ok(!/bientot\.html/.test(colonneLegal),
-"la colonne Légal est revenue à l'adresse d'attente, alors que ses quatre pages existent");
+assert.ok(!composant.includes('titre: "Légal"'),
+"la colonne Légal est revenue en vitrine, alors qu'elle vit dans la ligne du bas depuis le 2026-09-20");
+const contact = composant.slice(composant.indexOf("footer-contact"));
+assert.ok(composant.includes("footer-contact"), "la colonne Contact a disparu");
+assert.ok(/mailto:contact@fitzuniverse\.com/.test(contact), "colonne Contact : l'e-mail manque");
+assert.ok(/tel:\+221339046678/.test(contact), "colonne Contact : le téléphone manque");
+assert.ok(contact.includes('"contact.html"'), "colonne Contact : le lien vers la page contact manque");
+const bas = composant.slice(composant.indexOf("footer-legal"));
+assert.ok(composant.includes("footer-legal"), "la ligne du bas a perdu ses liens légaux");
+for (const cible of ["mentions-legales.html", "cgv.html", "confidentialite.html"]) {
+assert.ok(bas.includes(`"${cible}"`), `ligne du bas : le lien vers ${cible} manque`);
+}
+assert.ok(!/bientot\.html/.test(composant),
+"un lien légal est revenu à l'adresse d'attente, alors que ses pages existent");
 });

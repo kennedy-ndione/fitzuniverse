@@ -14,16 +14,13 @@
 * variables (--amber-700, --fs-small…) et .fitz-lockup viennent de
 * css/base.css, que toute page charge déjà.
 *
-* Contact direct (e-mail, téléphone) sous la phrase de marque — demandé
-* par Charles le 2026-09-20, inspiré du pied de page d'Istanbul
-* Üniversitesi : l'e-mail et le numéro visibles sans passer par
-* contact.html. Les valeurs sont celles de contact.html — si l'une
-* change, changer les DEUX.
-*
-* Colonne « Légal » : mentions légales, CGV, confidentialité, contact.
-* Les quatre pages existent depuis le lot LÉGAL (2026-09-17, NINEA et
-* RCCM reçus) ; la page « bientôt disponible » n'est plus visée par aucun
-* lien du site.
+* Colonne « Contact » (e-mail, téléphone, page contact) à la place de
+* l'ancienne colonne « Légal » — demandé par Charles le 2026-09-20,
+* inspiré du pied de page d'İstanbul Üniversitesi. Les valeurs sont
+* celles de contact.html — si l'une change, changer les DEUX.
+* Les liens légaux (mentions légales, CGV, confidentialité) restent
+* OBLIGATOIRES (paiement) mais vivent en petit dans la ligne du bas,
+* comme sur les grands sites — jamais en vitrine.
 *
 * Une fois le pied de page posé, le glossaire (js/glossaire.js) explique
 * les termes techniques de la page, à leur première apparition.
@@ -61,14 +58,22 @@ const COLONNES = [
 ["index.html#how-it-works", "Comment ça fonctionne"],
 ["index.html#vision", "Notre vision"],
 ["login.html", "Connexion"]
-] },
-{ titre: "Légal", liens: [
-["mentions-legales.html", "Mentions légales"],
-["cgv.html", "Conditions de vente"],
-["confidentialite.html", "Confidentialité"],
-["contact.html", "Contact"]
 ] }
 ];
+
+// La colonne Contact remplace la colonne Légal (décision de Charles,
+// 2026-09-20, à la manière des grands sites et du pied de page
+// d'İstanbul Üniversitesi) : les coordonnées en colonne, les liens
+// légaux en petit dans la ligne du bas — présents, jamais en vitrine.
+// Icônes nues, métrique Lucide (24×24, stroke 2, currentColor).
+const CONTACT = `<div>
+<p class="footer-col-title">Contact</p>
+<ul class="footer-contact">
+<li><a href="mailto:contact@fitzuniverse.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span>contact@fitzuniverse.com</span></a></li>
+<li><a href="tel:+221339046678"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>+221 33 904 66 78</span></a></li>
+<li><a href="contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg><span>Nous contacter</span></a></li>
+</ul>
+</div>`;
 
 function colonne(c) {
 return `<div>
@@ -84,15 +89,16 @@ return `${PHOTO}
 <div class="footer-brand">
 <a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">${MARK_SVG}<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span></a>
 <p>FitzUniverse accompagne les étudiants africains, vers une bourse ou une admission qu'ils financent eux-mêmes. La plateforme est ouverte à tout étudiant, où qu'il soit.</p>
-<ul class="footer-contact">
-<li><a href="mailto:contact@fitzuniverse.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span>contact@fitzuniverse.com</span></a></li>
-<li><a href="tel:+221339046678"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>+221 33 904 66 78</span></a></li>
-</ul>
 </div>
-<div class="footer-links">${COLONNES.map(colonne).join("")}</div>
+<div class="footer-links">${COLONNES.map(colonne).join("")}${CONTACT}</div>
 </div>
 <div class="footer-bottom">
 <p>© ${new Date().getFullYear()} FitzUniverse. Tous droits réservés. — <a href="CREDITS.md">Crédits photo</a></p>
+<nav class="footer-legal" aria-label="Informations légales">
+<a href="mentions-legales.html">Mentions légales</a>
+<a href="cgv.html">Conditions de vente</a>
+<a href="confidentialite.html">Confidentialité</a>
+</nav>
 </div>
 </div>`;
 }
