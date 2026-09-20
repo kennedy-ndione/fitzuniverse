@@ -289,6 +289,10 @@ function rendrePanneau(p) {
     </div>`;
 
   panneau.classList.add("is-visible");
+  // Le panneau s'ouvre soixante lignes sous la table : sans ce
+  // défilement, le clic sur « Vérifier » semble ne rien faire
+  // (vu en guidant Charles le 2026-09-19).
+  panneau.scrollIntoView({ behavior: "smooth", block: "start" });
 
   document.getElementById("verifValider").addEventListener("click", async () => {
     const choix = document.getElementById("verifStatut").value;

@@ -302,9 +302,23 @@ test("fondation 2 — mais le tri sait déjà quoi faire d'une date vérifiée",
 
   const apres = retenirOpportunites({ profile, programs: semes, universitiesById: uni, scholarshipsById: bo });
 
-  assert.equal(apres.retenues[0].universityId, derniere.universityId,
-    "une date vérifiée doit remonter en tête : c'est la seule sur laquelle l'étudiant peut décider sans risque");
-  assert.equal(apres.retenues[0].certitude, "verifiee");
-  assert.equal(apres.retenues[0].verifieLe, "2026-09-15");
+  // ÉCRIT QUAND LE CATALOGUE ÉTAIT VIDE DE VÉRIFICATIONS, RELU LE
+  // 2026-09-20 : la campagne P5c a rempli 82 programmes, donc la
+  // retenue semée n'est plus la SEULE vérifiée — exiger la première
+  // place lui ferait battre EPFL, vérifiée elle aussi et mieux
+  // notée, ce que le tri refuse à raison (à certitude égale, le
+  // score décide). Ce que le tri promet, et qu'on vérifie : toute
+  // date vérifiée passe devant tout ce qui ne l'est pas.
+  const rangSeme = apres.retenues.findIndex((r) => r.universityId === derniere.universityId);
+  assert.ok(rangSeme >= 0, "la retenue semée doit rester retenue");
+  const semee = apres.retenues[rangSeme];
+  assert.equal(semee.certitude, "verifiee");
+  assert.equal(semee.verifieLe, "2026-09-15");
+  assert.ok(rangSeme < apres.retenues.length - 1,
+    "une date vérifiée doit remonter : elle était dernière, elle ne peut pas le rester");
+  for (const r of apres.retenues.slice(0, rangSeme)) {
+    assert.equal(r.certitude, "verifiee",
+      "une date vérifiée doit passer devant tout ce qui ne l'est pas : c'est la seule sur laquelle l'étudiant peut décider sans risque");
+  }
 
 });

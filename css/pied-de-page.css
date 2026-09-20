@@ -155,6 +155,48 @@ line-height:var(--lh-relaxed);
 text-shadow:0 1px 2px rgba(13,10,6,.5);
 }
 
+/* ---- contact direct (e-mail, téléphone) sous la marque ----
+Demandé le 2026-09-20, inspiré du pied de page d'İstanbul Üniversitesi :
+les coordonnées visibles sans ouvrir contact.html. Icônes nues,
+métrique Lucide (24×24, stroke 2, currentColor) — règle d'icônes. */
+.footer-contact{
+list-style:none;
+margin:14px 0 0;
+padding:0;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.footer-contact a{
+display:inline-flex;
+align-items:center;
+gap:8px;
+font-size:var(--fs-small);
+color:rgba(255,255,255,.85);
+text-decoration:none;
+padding:2px 0;
+transition:color .22s var(--ease-standard, ease);
+}
+
+.footer-contact a:hover,
+.footer-contact a:focus-visible{
+color:#E9A319;
+}
+
+.footer-contact a:focus-visible{
+outline:2px solid #fff;
+outline-offset:2px;
+border-radius:var(--radius-xs);
+}
+
+.footer-contact svg{
+width:15px;
+height:15px;
+flex:none;
+opacity:.85;
+}
+
 .footer-links{
 display:flex;
 gap:48px;
@@ -222,6 +264,7 @@ color:inherit;
 
 @media (pointer:coarse){
 .footer-links a,
+.footer-contact a,
 .footer-bottom a{
 display:inline-flex;
 align-items:center;
@@ -304,6 +347,17 @@ align-self:end;
 
 .footer-brand p{ display:none; }
 
+/* Les coordonnées restent — c'est de la navigation utile, pas de la
+décoration. Compactes, dans la case de la marque (à côté de Légal). */
+.footer-contact{
+margin-top:8px;
+gap:2px;
+}
+
+.footer-contact a{ font-size:.82rem; }
+
+.footer-contact svg{ width:13px; height:13px; }
+
 .footer-links .footer-col-title{ margin-bottom:4px; }
 
 .footer-links a{
@@ -317,6 +371,7 @@ La mention « Crédits photo » reste en ligne (pas de cible de 44px).
 Mesures à 375 px, 2026-09-10 : voir test/pied-de-page.test.mjs. */
 @media (pointer:coarse){
 .footer-links a{ min-height:26px; }
+.footer-contact a{ min-height:26px; }
 .footer-bottom a{ display:inline; min-height:0; }
 }
 

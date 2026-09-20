@@ -314,7 +314,21 @@ return age >= 0 && age <= JOURS_VALIDITE_VERIFICATION;
 export function etatEcheance(program, aujourdhui = new Date()) {
 
 if (String(program.status || "").toLowerCase().includes("fermé")) {
-return { ouverte: false, jours: null, certitude: "inconnue", verifieLe: "" };
+/* Fermée, mais VÉRIFIÉE fermée (campagne P5c, 2026-09-19) : le statut
+   ferme la porte, il ne jette pas la preuve. AIMS Ghana porte une
+   deadlineISO passée ET son jour de vérification — le moteur doit
+   dire « fermée, vérifiée le … », pas « inconnue » : c'est la
+   garantie de fondation 1 (toute date publiée comme vérifiée est
+   LUE comme vérifiée). `ouverte:false` reste : un programme fermé
+   n'est jamais proposé, quelle que soit sa certitude. */
+const isoFerme = lireDateISO(program.deadlineISO);
+const fraicheFerme = isoFerme && verificationFraiche(program.ouverteVerifieeLe, aujourdhui);
+return {
+ouverte: false,
+jours: isoFerme ? Math.round((isoFerme.getTime() - aujourdhui.getTime()) / 86400000) : null,
+certitude: fraicheFerme ? "verifiee" : "inconnue",
+verifieLe: fraicheFerme ? String(program.ouverteVerifieeLe) : ""
+};
 }
 
 /* LOT P5a (2026-09-19) — UNE VRAIE DATE PASSE AVANT UN PARAGRAPHE.
