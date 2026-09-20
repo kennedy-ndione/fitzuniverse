@@ -576,7 +576,53 @@ function echeanceRecurrente(citation, aujourdhui) {
 
 }
 
-function lireProposition(brut) {
+/* ==============================================================
+   LA GARDE DE PLAUSIBILITÉ
+   ==============================================================
+
+   TROUVÉ LE 2026-09-19 AU SOIR. Sapienza : la page d'uniroma1.it est
+   une archive de 2019 et dit, mot pour mot, « The deadline is 1 april
+   2019 at 2.00 p.m. (GMT+1) ». La garde dateCitee() a fait son
+   travail — la date EST citée — et le catalogue a donc affirmé une
+   échéance vieille de sept ans.
+
+   Une date citée n'est pas forcément une échéance : quand elle est
+   loin dans le passé, c'est la signature d'une PAGE PÉRIMÉE. On ne la
+   corrige pas, on ne l'ajuste pas — on la REFUSE, à voix haute, pour
+   que l'administrateur sache que le lien du catalogue pointe sur une
+   archive.
+
+   Pourquoi 18 mois et pas 12 : une campagne annuelle dont la page
+   n'a pas encore été rafraîchie affiche l'échéance de l'an dernier
+   pendant quelques mois — c'est le cas Stipendium Hungaricum
+   (2026-01-15, lu en septembre 2026). Ces dates-là restent écrites :
+   elles ferment la bourse aux étudiants, et c'est la doctrine voulue
+   (« on ne propose pas ce qu'on ne peut pas confirmer ouvert »).
+   Au-delà de 18 mois, plus aucune campagne annuelle n'explique la
+   date : la page est morte.
+
+   LE STATUT N'EST PAS TOUCHÉ. Sapienza dit « closed » : « fermee »
+   reste une lecture juste d'une page, même vieille. Seule la DATE
+   tombe.
+   ============================================================== */
+
+/** Au-delà, une date citée n'est plus une échéance, c'est une archive. */
+const MAX_MOIS_PASSE = 18;
+
+/** Vrai quand la date ISO est à plus de MAX_MOIS_PASSE mois dans le
+ *  passé de `aujourdhui`. Faux sur toute entrée illisible : cette
+ *  garde n'a pas le droit d'écarter une date par accident. */
+function datePerimee(iso, aujourdhui) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return false;
+  const d = new Date(`${iso}T23:59:59Z`);
+  const ref = aujourdhui instanceof Date ? aujourdhui : new Date(aujourdhui || Date.now());
+  if (isNaN(d.getTime()) || isNaN(ref.getTime())) return false;
+  const seuil = new Date(ref.getTime());
+  seuil.setUTCMonth(seuil.getUTCMonth() - MAX_MOIS_PASSE);
+  return d.getTime() < seuil.getTime();
+}
+
+function lireProposition(brut, aujourdhui) {
 
   const source = brut && typeof brut === "object" ? brut : {};
   const refus = [];
@@ -597,6 +643,9 @@ function lireProposition(brut) {
       deadlineISO = "";
     } else if (!dateCitee(deadlineISO, citation)) {
       refus.push(`date « ${deadlineISO} » écartée : elle n'apparaît pas dans la phrase citée`);
+      deadlineISO = "";
+    } else if (datePerimee(deadlineISO, aujourdhui)) {
+      refus.push(`date « ${deadlineISO} » écartée : elle est à plus de ${MAX_MOIS_PASSE} mois dans le passé — ce n'est pas une échéance, c'est une page périmée`);
       deadlineISO = "";
     }
   }
@@ -647,6 +696,8 @@ module.exports = {
   MAX_PAGES_PDF,
   textePdf,
   dateCitee,
+  MAX_MOIS_PASSE,
+  datePerimee,
   MOTS_RECURRENCE,
   echeanceRecurrente,
   lireProposition

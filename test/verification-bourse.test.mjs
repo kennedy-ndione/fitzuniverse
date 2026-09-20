@@ -212,6 +212,58 @@ test("proposition 6 — un portail qui n'est pas une adresse est écarté", () =
 
 });
 
+test("proposition 7 — une date citée mais vieille de sept ans est une page périmée, pas une échéance", () => {
+
+  // LE CAS RÉEL, Sapienza, 2026-09-19 : la page officielle est une
+  // archive de 2019 et cite « The deadline is 1 april 2019 at 2.00
+  // p.m. (GMT+1) ». La date est CITÉE — dateCitee la laisse passer —
+  // mais elle n'est pas PLAUSIBLE.
+  const p = lireProposition({
+    statut: "fermee",
+    deadlineISO: "2019-04-01",
+    citation: "The deadline is 1 april 2019 at 2.00 p.m. (GMT+1)."
+  }, new Date("2026-09-20T00:00:00Z"));
+
+  assert.equal(p.deadlineISO, "", "une date de 2019 ne doit jamais être proposée en 2026");
+  assert.equal(p.refus.length, 1);
+  assert.match(p.refus[0], /page périmée/,
+    "le refus doit être explicite : l'administrateur doit savoir que le lien pointe sur une archive");
+
+  // LE STATUT NE TOMBE PAS AVEC LA DATE. « Fermée » est une lecture
+  // juste de la page de Sapienza — la page le dit — et ce statut a été
+  // correctement écrit le 19. La garde ne le défait pas.
+  assert.equal(p.statut, "fermee");
+
+});
+
+test("proposition 8 — la campagne de l'an dernier reste écrite : 18 mois, pas 12", () => {
+
+  // Stipendium Hungaricum, lu en septembre 2026 : la page affiche
+  // encore le 2026-01-15 de la campagne précédente. Huit mois dans le
+  // passé — la page n'est pas morte, elle attend sa nouvelle campagne.
+  // La date reste, et la bourse cesse d'être proposée : c'est la
+  // conséquence VOULUE de la doctrine du 19.
+  const hier = lireProposition({
+    statut: "inconnu",
+    deadlineISO: "2026-01-15",
+    citation: "Application deadline: 15 January 2026."
+  }, new Date("2026-09-20T00:00:00Z"));
+
+  assert.equal(hier.deadlineISO, "2026-01-15", "huit mois dans le passé n'est pas périmé");
+  assert.equal(hier.refus.length, 0);
+
+  // Juste au-delà du seuil : 19 mois → refusée.
+  const trop = lireProposition({
+    statut: "inconnu",
+    deadlineISO: "2025-02-15",
+    citation: "Application deadline: 15 February 2025."
+  }, new Date("2026-09-20T00:00:00Z"));
+
+  assert.equal(trop.deadlineISO, "");
+  assert.match(trop.refus[0], /page périmée/);
+
+});
+
 /* ---------------------------------------------------------------
    3 bis. Aller chercher la page qui porte la date (lot P5c)
    --------------------------------------------------------------- */
