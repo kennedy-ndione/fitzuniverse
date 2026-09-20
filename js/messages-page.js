@@ -36,6 +36,20 @@ document.querySelectorAll("[data-delai-reponse]").forEach((el) => { el.textConte
 
 bootstrapShell({}).then((ctx) => {
 
+// COMPTE ENTIÈREMENT GRATUIT (2026-09-20) : pas de messagerie du tout
+// — même règle que la cloche dans app-shell.js. Quelqu'un qui tape
+// l'adresse de cette page à la main est reconduit à son espace.
+const compteGratuitSeul =
+(!ctx.planId || ctx.planId === "gratuit") &&
+!ctx.planPreinscriptionId &&
+!ctx.hasFitzExpress &&
+!ctx.testerAccess;
+
+if (compteGratuitSeul) {
+window.location.replace("dashboard.html");
+return;
+}
+
 initMessagesPage(ctx.user.uid, {
 canReply: !isFeatureLocked(ctx.planId, ctx.featureFlags, "student_messaging", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId)
 });

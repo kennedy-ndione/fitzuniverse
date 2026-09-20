@@ -716,11 +716,38 @@ if (seulementLePass) appliquerPassSeul();
 
 if (window.lucide) lucide.createIcons();
 
+// COMPTE ENTIÈREMENT GRATUIT (décision de Charles, 2026-09-20, le jour
+// où l'inscription gratuite est devenue possible) : un compte qui n'a
+// RIEN payé — ni formule bourse, ni offre préinscription, ni Pass, ni
+// accès testeur — n'interagit pas avec l'équipe FitzUniverse. Ni
+// cloche, ni panneau, ni composer verrouillé avec « Voir les
+// formules » : montrer une messagerie fermée à quelqu'un qui vient de
+// s'inscrire est un cadenas déguisé (doctrine du 2026-08-31). La
+// messagerie apparaît avec la première formule. Les formules payantes
+// SANS messagerie, elles, gardent la carte et son renvoi vers les
+// offres — décision de la grille A, inchangée.
+const compteGratuitSeul =
+(!session.planId || session.planId === "gratuit") &&
+!session.planPreinscriptionId &&
+!session.hasFitzExpress &&
+!session.testerAccess;
+
+if (compteGratuitSeul) {
+
+document.getElementById("messagesBellBtn")?.remove();
+document.getElementById("messagesPanel")?.remove();
+// Et l'entrée « Messages de l'équipe » de la feuille « Menu » mobile.
+document.getElementById("mnavMenuMessages")?.closest("li")?.remove();
+
+} else {
+
 // Droit de réponse de la messagerie FitzUniverse : fonctionnalité
-// "student_messaging" (fermée au plan Gratuit — js/plan-features.js).
+// "student_messaging" (js/plan-features.js).
 initMessagesPanel(session.user.uid, {
 canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
+
+}
 
 hideLoader();
 
