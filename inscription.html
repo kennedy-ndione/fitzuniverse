@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+<title>Créer mon compte | FitzUniverse</title>
+
+<meta name="theme-color" content="#211D18">
+
+<meta name="description" content="Créez votre compte FitzUniverse gratuit : conservez votre diagnostic, remplissez votre profil et soyez alerté quand une bourse ouvre ses candidatures.">
+
+<meta name="color-scheme" content="light">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/logo/favicon-48x48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<link rel="canonical" href="https://fitzuniverse.com/inscription.html">
+
+<!-- Google Fonts (identiques à login.html) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Lucide Icons — version figée + defer, comme partout. -->
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<script src="js/icones.js" defer></script>
+
+<!-- Design system Fitz — la même carte encre sur photo que login.html
+(auth.css + login-redesign.css) : l'inscription et la connexion sont
+les deux faces de la même porte, elles se ressemblent trait pour
+trait. -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="css/login-redesign.css">
+
+</head>
+
+<body>
+
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<!-- COMPTE GRATUIT (décision de Charles, 2026-09-20). Jusqu'ici, un
+compte ne naissait qu'au paiement — c'était volontaire, et c'est
+révolu : un étudiant doit pouvoir créer son compte sans rien payer,
+conserver son diagnostic, remplir son profil, et être alerté quand
+une bourse ouvre. La logique de création vit dans js/creer-compte.js
+(module écrit le 2026-09-04, resté sans porte d'entrée jusqu'à cette
+page) ; ici il n'y a que la carte et le branchement. -->
+<main id="main-content" tabindex="-1" class="auth-page">
+
+<img
+class="auth-page-bg"
+src="assets/images/amphitheatre-1920w.jpg"
+srcset="assets/images/amphitheatre-400w.jpg 400w, assets/images/amphitheatre-800w.jpg 800w, assets/images/amphitheatre-1200w.jpg 1200w, assets/images/amphitheatre-1920w.jpg 1920w"
+sizes="100vw"
+fetchpriority="high"
+alt="">
+
+<div class="auth-page-overlay" aria-hidden="true"></div>
+
+<a href="index.html" class="auth-back-link">
+<i data-lucide="arrow-left" aria-hidden="true"></i>
+<span>Accueil</span>
+</a>
+
+<!-- Carte -->
+<div class="auth-card reveal">
+
+<div class="auth-logo-wrap on-dark">
+<svg class="fitz-mark logo-icon" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/><circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/></svg>
+</div>
+
+<h1>Créez votre compte gratuit</h1>
+<p class="auth-card-subtext">Conservez votre diagnostic, remplissez votre profil et soyez alerté quand une bourse ouvre ses candidatures. Gratuit, sans engagement.</p>
+
+<form id="inscriptionForm" class="login-form" novalidate>
+
+<div class="input-group">
+
+<label for="inscriptionNom">Nom complet</label>
+
+<div class="input-wrap">
+<i data-lucide="user" class="input-icon"></i>
+<input
+type="text"
+id="inscriptionNom"
+placeholder="Prénom et nom"
+autocomplete="name"
+required>
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label for="inscriptionEmail">Adresse e-mail</label>
+
+<div class="input-wrap">
+<i data-lucide="mail" class="input-icon"></i>
+<input
+type="email"
+id="inscriptionEmail"
+placeholder="vous@exemple.com"
+autocomplete="email"
+required>
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label for="inscriptionMotDePasse">Mot de passe</label>
+
+<div class="input-wrap has-toggle">
+
+<i data-lucide="lock" class="input-icon"></i>
+
+<input
+type="password"
+id="inscriptionMotDePasse"
+placeholder="8 caractères, une majuscule, un chiffre"
+autocomplete="new-password"
+required>
+
+<button
+type="button"
+id="togglePassword"
+class="password-toggle"
+aria-label="Afficher le mot de passe"
+aria-pressed="false">
+<i data-lucide="eye"></i>
+</button>
+
+</div>
+
+</div>
+
+<div class="auth-options">
+
+<!-- Cochée par défaut, avec un libellé qui dit exactement ce qui
+sera envoyé — c'est la raison d'être du compte gratuit : pouvoir
+prévenir l'étudiant quand une bourse ouvre. Le choix est écrit
+dans users/{uid} (alerteBourses) et restera modifiable. -->
+<label class="remember-me">
+<input type="checkbox" id="inscriptionAlertes" checked>
+<span>M'écrire quand une bourse ouvre ses candidatures</span>
+</label>
+
+</div>
+
+<p class="forgot-note" id="inscriptionErreur" role="alert" hidden></p>
+
+<button type="submit" class="btn-auth-submit" id="inscriptionSubmit">
+Créer mon compte gratuit
+</button>
+
+</form>
+
+<div class="auth-trust">
+<i data-lucide="shield-check"></i>
+<span>Gratuit, sans engagement. Vous pourrez choisir une formule plus tard.</span>
+</div>
+
+<p class="login-link">
+Déjà un compte ?
+<a href="login.html">Connectez-vous</a>
+</p>
+
+</div>
+
+</main>
+
+<script>
+
+// Bascule d'affichage du mot de passe — même composant que login.html.
+const togglePassword = document.getElementById("togglePassword");
+const passwordInput = document.getElementById("inscriptionMotDePasse");
+
+if (togglePassword && passwordInput) {
+
+togglePassword.addEventListener("click", () => {
+
+const isHidden = passwordInput.type === "password";
+
+passwordInput.type = isHidden ? "text" : "password";
+
+togglePassword.innerHTML = `<i data-lucide="${isHidden ? "eye-off" : "eye"}"></i>`;
+if (window.lucide) lucide.createIcons();
+
+togglePassword.setAttribute("aria-pressed", String(isHidden));
+
+togglePassword.setAttribute(
+"aria-label",
+isHidden ? "Masquer le mot de passe" : "Afficher le mot de passe"
+);
+
+});
+
+}
+
+</script>
+
+<script>
+
+// Apparition au chargement + icônes — même rituel décoratif que
+// login.html, aucune logique d'authentification ici.
+(function () {
+
+document.documentElement.classList.add("js-ready");
+
+const revealEls = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+
+const observer = new IntersectionObserver((entries) => {
+
+entries.forEach((entry) => {
+if (entry.isIntersecting) {
+entry.target.classList.add("is-visible");
+observer.unobserve(entry.target);
+}
+});
+
+}, { threshold: 0.1 });
+
+revealEls.forEach((el) => observer.observe(el));
+
+} else {
+
+revealEls.forEach((el) => el.classList.add("is-visible"));
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+if (window.lucide) lucide.createIcons();
+});
+
+})();
+
+</script>
+
+<script type="module" src="inscription.js"></script>
+
+<!-- Comme login.html : pas de pied de page, cette page n'a qu'une
+tâche ; le glossaire reste disponible. -->
+<script src="js/glossaire-seul.js" defer></script>
+</body>
+
+</html>

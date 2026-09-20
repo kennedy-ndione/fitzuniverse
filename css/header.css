@@ -648,3 +648,39 @@ Le bouton rond + panneau déroulant du 2026-09-01 (.header-menu-btn /
 mobile commune à tout le site : css/mobile-nav.css + js/mobile-nav.js
 (bouton animé injecté dans .header-cta-group / .header-actions, feuille
 plein écran). Plus aucune règle ici. */
+
+/* ==========================================================
+   « Créer mon compte » (2026-09-20) — la porte du compte gratuit,
+   visible dès l'en-tête. Pastille BORDÉE en currentColor : elle suit
+   les mêmes bascules de couleur que les .header-link (hero sombre,
+   en-tête défilé), sans figer une teinte qui casserait l'un des deux
+   états. Le plein ambre reste réservé au CTA du diagnostic.
+   ========================================================== */
+
+.header-signup-btn{
+
+border:1.5px solid currentColor;
+
+border-radius:999px;
+
+padding:9px 18px;
+
+font-weight:700;
+
+white-space:nowrap;
+
+}
+
+.header-signup-btn:hover{
+
+background:rgba(255,255,255,.12);
+
+}
+
+@media (max-width:640px){
+
+/* Même règle que Connexion (css/mobile-nav.css) : sous 640px, la
+   feuille du menu porte « Créer un compte » et « Se connecter ». */
+.header-signup-btn{ display:none; }
+
+}

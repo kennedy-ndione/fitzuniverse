@@ -116,6 +116,16 @@ ${sansConnexion ? "" : `<div class="mnav-section">
 <p class="mnav-eyebrow">Votre espace</p>
 <ul class="mnav-list">
 <li>
+<a href="inscription.html" class="mnav-link">
+<span class="mnav-link-icon">${icon("user-plus")}</span>
+<span class="mnav-link-text">
+<span class="mnav-link-title">Créer un compte</span>
+<span class="mnav-link-sub">Gratuit — être alerté quand une bourse ouvre</span>
+</span>
+<span class="mnav-link-arrow">${icon("chevron-right")}</span>
+</a>
+</li>
+<li>
 <a href="login.html" class="mnav-link">
 <span class="mnav-link-icon">${icon("log-in")}</span>
 <span class="mnav-link-text">

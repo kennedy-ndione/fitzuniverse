@@ -1731,3 +1731,26 @@ padding:24px 0;
 }
 
 }
+
+/* « Créez votre compte gratuit » sous les boutons du bloc final
+   (2026-09-20) — une ligne calme sur fond sombre, pas un 3e bouton. */
+
+.cta-signup-note{
+
+margin-top:18px;
+
+font-size:var(--fs-body-sm, .9375rem);
+
+color:rgba(255,255,255,.82);
+
+}
+
+.cta-signup-note a{
+
+color:var(--amber-400, #F2B33D);
+
+text-decoration:underline;
+
+text-underline-offset:3px;
+
+}

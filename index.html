@@ -138,6 +138,14 @@ toutes les pages publiques et dans la feuille mobile (js/mobile-nav.js). -->
 
 <div class="header-cta-group">
 
+<!-- COMPTE GRATUIT (décision de Charles, 2026-09-20) : la création de
+compte quitte le tunnel de paiement et devient visible dès l'accueil.
+Pastille bordée (pas le plein ambre, réservé au CTA du diagnostic) ;
+masquée sous 640px comme Connexion — la feuille du menu porte les deux. -->
+<a href="inscription.html" class="header-link header-signup-btn">
+<span>Créer mon compte</span>
+</a>
+
 <a href="login.html" class="header-link header-link-login" aria-label="Connexion">
 <i data-lucide="log-in"></i>
 <span>Connexion</span>
@@ -1026,6 +1034,13 @@ sont un lien, à côté. -->
 
 <!-- 3 chips verre+icône → 3 mentions texte séparées par des traits
 (refonte 2026-08-22, voir css/homepage-sections.css .cta-trust). -->
+<!-- COMPTE GRATUIT (2026-09-20) : pour celui qui n'est prêt ni à payer
+ni même à faire le diagnostic maintenant — on garde le contact, et on
+l'écrira quand une bourse ouvrira. -->
+<p class="cta-signup-note">
+Vous préférez d'abord regarder ? <a href="inscription.html">Créez votre compte gratuit</a> — nous vous écrirons quand une bourse ouvrira ses candidatures.
+</p>
+
 <div class="cta-trust">
 
 <div>Gratuit pour commencer</div>

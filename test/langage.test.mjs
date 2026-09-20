@@ -43,7 +43,10 @@ const codeSeul = (f) => lire(f)
 export const PAGES_PUBLIQUES = [
 "index.html", "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html",
-"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html"
+"eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html",
+// COMPTE GRATUIT (2026-09-20) : la page d'inscription entre sous les
+// mêmes gardes que login.html, sa jumelle.
+"inscription.html"
 ];
 
 // Le texte VISIBLE d'une page : sans commentaires, scripts, styles, head.
@@ -136,7 +139,7 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = ["scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"];
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html", "inscription.html"];
 
 test("langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire", () => {
 for (const page of PAGES_SANS_PIED) {
@@ -458,7 +461,12 @@ test("langage 10 — le style de l'explication est chargé par TOUTES les pages"
     "deux définitions du même style : la seconde dérivera de la première");
 
   // css/base.css est bien la feuille que tout le monde charge.
-  const pages = readdirSync(RACINE).filter((f) => f.endsWith(".html") && !f.startsWith("_"));
+  // Les fichiers google*.html sont EXCLUS (2026-09-20) : ce sont les
+  // jetons de validation de Google Search Console — une seule ligne de
+  // texte imposée par Google, mot pour mot, qui ne doit JAMAIS être
+  // « corrigée » en vraie page. Ne pas les supprimer non plus : la
+  // propriété Search Console tomberait avec.
+  const pages = readdirSync(RACINE).filter((f) => f.endsWith(".html") && !f.startsWith("_") && !/^google[0-9a-f]+\.html$/.test(f));
   const sans = pages.filter((f) => !lire(f).includes("css/base.css"));
   assert.deepEqual(sans, [], `ces pages ne chargent pas css/base.css : ${sans.join(", ")}`);
 
