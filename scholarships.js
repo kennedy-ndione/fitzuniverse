@@ -277,6 +277,13 @@ const candidature = etatCandidature({
 statut: scholarship.status,
 actif: scholarship.isActive,
 echeances: linkedPrograms.map((p) => p.deadline),
+// LOT ÉCHÉANCES (2026-09-20) : les dates VÉRIFIÉES des mêmes
+// programmes, agrégées comme les proses. Une seule encore à venir
+// laisse la bourse ouverte ; toutes passées la ferment, même si la
+// prose ne porte aucune date lisible. La carte et la fiche disent
+// ainsi la même chose — c'est le défaut décrit juste au-dessus, vu
+// cette fois par l'autre bout.
+echeanceISO: linkedPrograms.map((p) => p.deadlineISO),
 periodeOuverture: scholarship.periodeOuverture,
 verifieLe: scholarship.verifieLe,
 // « pays » ou « etablissement » : quand la date limite n'appartient

@@ -231,6 +231,40 @@ return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
 /**
+* Une date ISO NUE (« 2026-09-18 »), et rien d'autre — lot ÉCHÉANCES
+* (2026-09-20). C'est la forme que l'outil de vérification écrit dans
+* `deadlineISO`, et test/fraicheur.test.mjs l'impose déjà.
+*
+* La construction passe par Date.UTC plutôt que par `new Date(iso)` :
+* le parseur indulgent de V8 accepte « 2027 » ou « 2026-13-45 » et rend
+* une date qui n'est pas celle qu'on croit — le piège que
+* js/recommend-programs.js documente déjà pour ce même champ.
+*
+* Rend la CHAÎNE ISO, pas un objet Date : tout ce fichier représente
+* une date par sa chaîne (voir `analyserEcheance`, dont le champ
+* `date` est un ISO nu), et formaterDate() attend une chaîne.
+*
+* @param {*} valeur
+* @returns {string|null} null si ce n'est pas une date ISO nue et réelle
+*/
+function dateISONue(valeur) {
+
+const brut = String(valeur || "").trim();
+const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(brut);
+if (!m) return null;
+
+const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
+const d = new Date(Date.UTC(annee, mois - 1, jour));
+
+// Le 31 février deviendrait le 3 mars : on refuse ce qui ne se relit
+// pas à l'identique.
+if (d.getUTCFullYear() !== annee || d.getUTCMonth() !== mois - 1 || d.getUTCDate() !== jour) return null;
+
+return brut;
+
+}
+
+/**
 * @param {Object} echeance - sortie d'analyserEcheance()
 * @param {Date} [aujourdhui]
 * @returns {number|null} jours pleins restants, négatif si dépassée
@@ -574,7 +608,7 @@ const RE_STATUT_OUVERT = /^\s*(ouverte|ouvert|en cours|reouverture)/;
 *   detail: string, verifie: string, jours: number|null
 * }}
 */
-export function etatCandidature(entree, aujourdhui = new Date()) {
+function etatSansDateVerifiee(entree, aujourdhui = new Date()) {
 
 const e = entree || {};
 
@@ -735,6 +769,105 @@ etiquette: "Date limite", valeur: "À confirmer",
 detail: phraseSeule(periode) || "Le calendrier de cette bourse n'est pas publié — à confirmer sur le portail officiel.",
 verifie
 };
+
+}
+
+/**
+* ==================================================================
+* LOT ÉCHÉANCES (2026-09-20) — LA DATE VÉRIFIÉE A LE DERNIER MOT,
+* MAIS SEULEMENT POUR FERMER.
+* ==================================================================
+*
+* `deadlineISO` est la date que l'outil de vérification écrit avec sa
+* preuve (source, citation, jour de vérification — voir
+* test/fraicheur.test.mjs). `deadline` est la prose. Jusqu'ici
+* l'affichage ne lisait QUE la prose : quand celle-ci ne portait
+* aucune date lisible (« Non publiée », « Selon votre pays »), le
+* statut saisi en base gagnait. Mesuré sur l'instantané du
+* 2026-09-20 : HUIT fiches annonçaient « Candidatures ouvertes » sur
+* une échéance vérifiée déjà dépassée.
+*
+* CETTE FONCTION NE S'APPLIQUE QU'AUX FICHES QUI DISENT « OUVERTES ».
+* C'est délibéré, et c'est la deuxième version : la première appliquait
+* la règle avant tout le reste, et dégradait 36 fiches Stipendium
+* Hungaricum d'un « pas encore ouvertes — clôture annoncée le 15
+* janvier 2027 », juste et utile, vers un « à confirmer » plus pauvre.
+* Une fiche qui ne promet pas l'ouverture ne trompe personne : on n'y
+* touche pas.
+*
+* Deux cas quand la promesse d'ouverture est contredite :
+*
+*   a. la prose ne promet aucune date plus tardive -> le cycle est
+*      clos, même forme fermée que partout ailleurs ;
+*   b. la prose annonce une date ENCORE À VENIR -> les deux champs se
+*      contredisent. On n'en choisit aucun : promettre l'ouverture
+*      ferait travailler pour rien, annoncer la clôture cacherait
+*      peut-être une porte ouverte. La fiche dit le doute et renvoie au
+*      portail. C'est le cas de la bourse Émile Boutmy, dont la date
+*      vérifiée vient d'une citation portant sur le premier cycle,
+*      pas sur le master.
+*
+* Entrée FACULTATIVE : un appelant qui ne transmet pas `echeanceISO`
+* retrouve le comportement d'avant, à l'identique. Une seule date
+* (fiche de programme) ou plusieurs (carte de catalogue, qui agrège
+* les programmes d'une bourse) — sur un agrégat, une seule échéance
+* vérifiée encore à venir suffit à ne rien fermer.
+*/
+export function etatCandidature(entree, aujourdhui = new Date()) {
+
+const brut = etatSansDateVerifiee(entree, aujourdhui);
+
+// La fiche ne promet pas l'ouverture : rien à corriger.
+if (!brut || brut.ouvert !== true) return brut;
+
+const e = entree || {};
+
+const isos = [].concat(e.echeanceISO || [])
+.map(dateISONue)
+.filter(Boolean)
+.sort();
+
+if (!isos.length) return brut;
+
+// Même minuit UTC que joursAvant() : le jour de l'échéance compte
+// encore, il ne ferme qu'au lendemain.
+const passee = (iso) => minuit(new Date(`${iso}T00:00:00Z`)) < minuit(aujourdhui);
+
+if (!isos.every(passee)) return brut;
+
+const derniereVerifiee = isos[isos.length - 1];
+
+const periode = (e.periodeOuverture || "").trim();
+const verifie = e.verifieLe ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
+const variable = MENTION_VARIABLE[e.echeanceVariable];
+
+// (b) la prose annonce une date encore à venir : on dit le doute.
+const lues = (e.echeances || [])
+.filter((t) => typeof t === "string" && t.trim())
+.map((t) => analyserEcheance(t));
+
+const annoncee = lues
+.filter((ech) => ech.etat === "datee" && ech.date && !passee(ech.date))
+.sort((a, b) => (joursAvant(a, aujourdhui) - joursAvant(b, aujourdhui)))[0];
+
+if (annoncee) {
+return {
+ouvert: null, ton: "inconnue", jours: null,
+badge: "Échéance à confirmer",
+etiquette: "Date annoncée",
+valeur: formaterDate(annoncee.date),
+detail: `La dernière échéance vérifiée à la source (${formaterDate(derniereVerifiee)}) est passée, `
++ "et la date ci-dessus n'a pas encore été confirmée : vérifiez-la sur le portail officiel avant de préparer votre dossier.",
+verifie
+};
+}
+
+// (a) rien de plus tard n'est promis : le cycle est clos.
+return ferme({
+lues,
+closes: [{ etat: "datee", date: derniereVerifiee }],
+periode, verifie, variable
+});
 
 }
 

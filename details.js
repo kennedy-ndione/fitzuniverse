@@ -698,6 +698,12 @@ flag: universityProfile.flag || "",
 level: program.level || "",
 scholarship: scholarshipData.title || "",
 deadline: program.deadline || "",
+// LOT ÉCHÉANCES (2026-09-20) : la date VÉRIFIÉE, à côté de la prose.
+// C'est elle que l'outil d'admin écrit avec sa preuve ; jusqu'ici
+// l'affichage ne lisait que la prose, et une fiche dont la prose ne
+// portait aucune date lisible annonçait « Candidatures ouvertes »
+// sur une échéance vérifiée déjà passée. etatCandidature() tranche.
+deadlineISO: program.deadlineISO || "",
 // PRISE EN CHARGE : le programme gagne, la bourse comble le trou (lot
 // PROGRAMMES, 2026-09-12) — même règle que `description` plus bas.
 // Mesuré ce jour-là : 296 programmes sur 507 n'avaient pas de
@@ -922,6 +928,9 @@ const candidature = etatCandidature({
 statut: [university.status, university.statutBourse],
 actif: university.actifBourse,
 echeances: [university.deadline],
+// La date vérifiée passe avant la prose et avant le statut (règle
+// 1 bis de etatCandidature) : une échéance dépassée est une preuve.
+echeanceISO: university.deadlineISO,
 periodeOuverture: university.periodeOuverture,
 verifieLe: university.verifieLe,
 echeanceVariable: university.echeanceVariable
