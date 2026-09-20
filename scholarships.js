@@ -71,7 +71,19 @@ return (str || "")
 
 const params = new URLSearchParams(window.location.search);
 
-const recherche = params.get("search") || "";
+// `let`, plus `const`, depuis le 2026-09-20 : la recherche est VIVANTE.
+// Avant, la barre était muette à la saisie — elle n'agissait qu'à la
+// touche Entrée, en rechargeant la page. Constaté par Charles sur le
+// site en ligne. Le modèle est universities-page.js, vivant depuis le
+// 2026-09-06 ; cette page ne l'avait jamais rattrapé.
+let recherche = params.get("search") || "";
+
+// La même normalisation que la recherche des universités : un étudiant
+// qui tape « senegal » sans accent doit trouver « Sénégal ».
+const normaliserRecherche = (t) => String(t || "")
+.normalize("NFD")
+.replace(/[̀-ͯ]/g, "")
+.toLowerCase();
 const niveau = params.get("level") || "";
 const paysFiltre = params.get("country") || "";
 
@@ -439,9 +451,9 @@ scholarship.title,
 scholarship.country,
 ...(scholarship.countries || []),
 ...(scholarship.levels || [])
-].join(" ").toLowerCase();
+].join(" ");
 
-return haystack.includes(recherche.toLowerCase());
+return normaliserRecherche(haystack).includes(normaliserRecherche(recherche));
 
 });
 }
@@ -932,20 +944,30 @@ searchInput.value = recherche;
 
 searchClearBtn.hidden = !recherche;
 
+// RECHERCHE VIVANTE (2026-09-20). La page répond À LA SAISIE, comme
+// universities-page.js : un léger délai (200 ms) évite de re-rendre
+// 156 cartes à chaque lettre. `recherche` étant devenue `let`, les
+// navigations (pastilles, filtres pays/niveau) emportent la saisie
+// courante via urlAvecFiltres, exactement comme avant. Entrée ne
+// recharge plus la page : elle n'apportait rien que la saisie ne
+// fasse déjà.
+let attenteRecherche = null;
 searchInput.addEventListener("input", () => {
 searchClearBtn.hidden = !searchInput.value;
+clearTimeout(attenteRecherche);
+attenteRecherche = setTimeout(() => {
+recherche = searchInput.value.trim();
+if (allScholarships.length) applyFilters();
+}, 200);
 });
 
 searchInput.addEventListener("keydown", function (event) {
 
 if (event.key === "Enter") {
-
-navigateWithFilters({
-search: searchInput.value.trim(),
-country: countryFilter ? countryFilter.value : "",
-level: levelFilter ? levelFilter.value : ""
-});
-
+event.preventDefault();
+clearTimeout(attenteRecherche);
+recherche = searchInput.value.trim();
+if (allScholarships.length) applyFilters();
 }
 
 });
@@ -955,13 +977,11 @@ level: levelFilter ? levelFilter.value : ""
 if (searchClearBtn) {
 
 searchClearBtn.addEventListener("click", () => {
-
-navigateWithFilters({
-search: "",
-country: countryFilter ? countryFilter.value : "",
-level: levelFilter ? levelFilter.value : ""
-});
-
+searchInput.value = "";
+searchClearBtn.hidden = true;
+recherche = "";
+if (allScholarships.length) applyFilters();
+searchInput.focus();
 });
 
 }
