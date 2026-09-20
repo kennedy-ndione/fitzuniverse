@@ -65,3 +65,15 @@ exports.portails = require("./portails").portails;
 // transforme « on ne sait pas » en une date affirmée.
 // ------------------------------------------------------------
 exports.verifierBourse = require("./verification").verifierBourse;
+
+// ------------------------------------------------------------
+// E-mails transactionnels (Brevo) — voir functions/emails.js.
+// LOT E-MAILS (2026-09-20), domaine authentifié chez Brevo le même jour.
+// emailBienvenue       : un compte se crée → un mot de bienvenue (Firestore)
+// envoyerAlerteBourse  : geste ADMIN — une bourse ouvre, on prévient
+//                        ceux qui ont coché la case (onCall)
+// desabonnementAlertes : le lien « ne plus m'écrire » des e-mails (onRequest)
+// ------------------------------------------------------------
+exports.emailBienvenue = require("./emails").emailBienvenue;
+exports.envoyerAlerteBourse = require("./emails").envoyerAlerteBourse;
+exports.desabonnementAlertes = require("./emails").desabonnementAlertes;
