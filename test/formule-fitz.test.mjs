@@ -55,7 +55,10 @@ test("formule 1 — un Essentiel a ses outils, pas de conseiller ni de WhatsApp"
 
   assert.ok(f.fermees.includes("Mon conseiller"),
     "LA FUITE D'ORIGINE : rien n'empêchait Fitz de promettre un rappel de conseiller à ce compte.");
-  assert.ok(f.fermees.includes("WhatsApp direct"));
+  // 2026-09-20 : WhatsApp est retiré du site pour toutes les formules
+  // (décision de Charles) — le libellé porte désormais « (retiré) »
+  // et la fonctionnalité reste fermée pour tout le monde.
+  assert.ok(f.fermees.includes("WhatsApp direct (retiré)"));
 
 });
 

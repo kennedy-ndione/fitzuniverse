@@ -225,7 +225,10 @@ test("les deux forfaits : l'union", () => {
 for (const k of ["applications", "ai_letter", "diagnostic_france", "student_messaging"]) assert.equal(verrou("accompagnement", "dossier-france", k), false, k);
 assert.equal(verrou("accompagnement", "dossier-france", "advisor"), true);
 assert.equal(verrou("accompagnement", "dossier-france-conseiller", "advisor"), false);
-assert.equal(verrou("signature", "diagnostic-france", "whatsapp_direct"), false);
+// 2026-09-20 : WhatsApp est retiré du site pour TOUTES les formules,
+// Signature comprise (décision de Charles) — le verrou reste donc
+// fermé même pour l'union la plus large.
+assert.equal(verrou("signature", "diagnostic-france", "whatsapp_direct"), true);
 });
 
 test("Diagnostic seul : la page du diagnostic et la messagerie (grille A), aucun droit de candidature", () => {

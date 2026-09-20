@@ -149,12 +149,12 @@ export const FEATURE_CATALOG = [
 // toutes les formules payantes — RESSERRÉ par la grille A (2026-09-07),
 // voir DEFAULT_FEATURE_CONFIG.student_messaging.
 { key: "student_messaging", label: "Messagerie FitzUniverse", description: "Répondre à l'équipe FitzUniverse depuis la cloche de messages de l'espace étudiant." },
-// WhatsApp direct (2026-09-02) : décision utilisateur — la discussion
-// WhatsApp est STRICTEMENT réservée à la formule Signature. Contrôle
-// tous les liens wa.me d'accompagnement (accueil, offres, conseiller).
-// Seule exception assumée : le bouton d'ACHAT de la formule Signature
-// sur offers.html (canal commercial, visible de tous).
-{ key: "whatsapp_direct", label: "WhatsApp direct", description: "Échanges directs sur WhatsApp avec l'équipe — réservé à Signature." },
+// WhatsApp direct — RETIRÉ le 2026-09-20 (décision de Charles) : plus
+// AUCUN lien WhatsApp sur le site, payant comme gratuit — la messagerie
+// FitzUniverse est le canal d'échange avec l'équipe. La clé reste pour
+// la compatibilité (grilles, contrôles), mais elle n'est plus attachée
+// à aucune formule et aucune page ne la lit plus.
+{ key: "whatsapp_direct", label: "WhatsApp direct (retiré)", description: "Retiré le 2026-09-20 — les échanges avec l'équipe passent par la messagerie FitzUniverse." },
 // Grille B (2026-09-07) : le Diagnostic France — de l'arithmétique sur
 // des seuils publiés, aucune IA. Ouvert par les trois offres
 // préinscription, par aucune formule bourse.
@@ -205,9 +205,9 @@ advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essen
 // trois offres (PREINSCRIPTION_FEATURE_CONFIG). Toute formule payante
 // garde « Signaler un problème » (support_ticket) — voie séparée.
 student_messaging: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-// Grille A : whatsapp_direct n'est attachée à AUCUNE offre en vente —
-// seuls les détenteurs de Signature (dépréciée) la conservent.
-whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: true },
+// Grille A : whatsapp_direct n'est attachée à PLUS AUCUNE formule
+// (retrait complet du 2026-09-20, Signature comprise).
+whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
 diagnostic_france: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
 support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true }
 };

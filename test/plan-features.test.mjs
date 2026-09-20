@@ -166,19 +166,21 @@ assert.equal(flags[key][id], true, `"${key}" doit être inclus dans ${id}`);
 
 });
 
-test("\"whatsapp_direct\" n'est vrai que pour Signature", () => {
+test("\"whatsapp_direct\" n'est vrai pour AUCUNE formule", () => {
 
-// Décision utilisateur du 2026-09-02 : la discussion WhatsApp est
-// réservée à la formule Signature — les autres offres ont la
-// messagerie FitzUniverse (student_messaging). Seule exception, hors
-// de ce fichier : le bouton d'ACHAT de Signature sur offers.html.
+// Décision de Charles du 2026-09-20, qui remplace celle du
+// 2026-09-02 : plus AUCUN lien WhatsApp sur le site, payant comme
+// gratuit — la messagerie FitzUniverse (student_messaging) est le
+// seul canal d'échange avec l'équipe. La clé whatsapp_direct reste
+// pour la compatibilité des grilles, mais ce test garantit qu'elle
+// ne rouvrira jamais silencieusement.
 const flags = resolveFeatureFlags(null);
 
 for (const id of OFFRES_PAYANTES) {
 assert.equal(
 flags.whatsapp_direct[id],
-id === "signature",
-`"whatsapp_direct" pour ${id} devrait être ${id === "signature"}`
+false,
+`"whatsapp_direct" pour ${id} devrait être false — WhatsApp est retiré du site depuis le 2026-09-20`
 );
 }
 

@@ -118,13 +118,15 @@ assert.equal(verrou("essentiel", "student_messaging"), false);
 for (const k of ["applications", "ai_letter", "documents", "interview_prep", "support_ticket"]) assert.equal(verrou("essentiel", k), false, k);
 });
 
-test("un compte `accompagnement` conserve 9 ; un compte `signature` conserve son quota, la messagerie ET whatsapp_direct", () => {
+test("un compte `accompagnement` conserve 9 ; un compte `signature` conserve son quota et la messagerie — mais plus WhatsApp (2026-09-20)", () => {
 assert.equal(OFFRES.accompagnement.maxAccompaniedApplications, 9);
 assert.equal(OFFRES.accompagnement.priceFCFA, 75000);
 assert.equal(verrou("accompagnement", "student_messaging"), false);
 assert.equal(OFFRES.signature.maxAccompaniedApplications, Infinity);
 assert.equal(verrou("signature", "student_messaging"), false);
-assert.equal(verrou("signature", "whatsapp_direct"), false);
+// 2026-09-20 : WhatsApp retiré du site pour toutes les formules,
+// Signature comprise (décision de Charles) — le verrou est fermé.
+assert.equal(verrou("signature", "whatsapp_direct"), true);
 assert.equal(verrou("signature", "advisor"), false);
 assert.equal(verrou("signature-focus", "advisor"), false);
 assert.equal(verrou("signature-focus", "student_messaging"), false);
@@ -145,12 +147,15 @@ for (const id of ["essentiel", "accompagnement", "signature-focus", "signature"]
 // WhatsApp, messagerie, service après-vente
 // ------------------------------------------------------------------
 
-test("aucune offre NON dépréciée ne porte whatsapp_direct ; aucune n'en parle dans sa copie", () => {
+test("AUCUNE offre ne porte whatsapp_direct — Signature comprise (2026-09-20) ; aucune n'en parle dans sa copie", () => {
 for (const o of enVente) {
 assert.equal(flags.whatsapp_direct[o.id] === true, false, o.id);
 assert.ok(!/whatsapp/i.test(JSON.stringify(o)), `${o.id} mentionne WhatsApp`);
 }
-assert.equal(flags.whatsapp_direct.signature, true);
+// 2026-09-20 : retrait complet décidé par Charles — même les
+// détenteurs historiques de Signature n'ont plus le canal WhatsApp,
+// la messagerie FitzUniverse les couvre.
+assert.equal(flags.whatsapp_direct.signature, false);
 });
 
 test("student_messaging : les TROIS offres préinscription et la SEULE offre bourse à 150 000 F ; absente de fitzExpress, premier-dossier et du nouvel Essentiel", () => {

@@ -423,7 +423,7 @@ highlights: [
 "Candidatures illimitées",
 "Points d'étape en visioconférence",
 "Accompagnement jusqu'à la préparation du visa",
-"Des échanges personnalisés (WhatsApp)",
+"Des échanges personnalisés avec l'équipe, dans la messagerie FitzUniverse",
 "L'assistance continue de Fitz tout au long du processus",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]

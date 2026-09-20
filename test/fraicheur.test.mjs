@@ -260,14 +260,22 @@ test("fondation 1 — toute date publiée comme vérifiée porte sa preuve", () 
   // Un COMPTE ne suffirait pas : retirer les trois champs d'un
   // programme ferait baisser les deux côtés ensemble et le test
   // resterait vert. On interroge donc chaque programme par son id.
+  // L'HORLOGE DE CE BALAYAGE (corrigée le 2026-09-20). La première
+  // version lisait au jour figé du 2026-09-19 : dès la campagne du
+  // 20, les vérifications étaient « dans le futur » (âge négatif dans
+  // verificationFraiche) et le moteur répondait « inconnue » — le
+  // test rougissait À CHAQUE nouvelle campagne, pour la mauvaise
+  // raison. On lit donc au jour de la vérification LA PLUS RÉCENTE du
+  // catalogue : aucune campagne future ne casse le test, et une
+  // vérification plus vieille que JOURS_VALIDITE_VERIFICATION par
+  // rapport à la dernière campagne le fait toujours rougir — c'est le
+  // rappel, intact, que la campagne est à refaire.
+  const plusRecente = avecISO.map((p) => String(p.ouverteVerifieeLe)).sort().pop();
+  const JOUR_CATALOGUE = new Date(`${plusRecente}T12:00:00Z`);
+  assert.ok(!isNaN(JOUR_CATALOGUE.getTime()), "la vérification la plus récente n'a pas de date lisible");
+
   for (const p of avecISO) {
-    // On lit au JOUR DU TEST (2026-09-19), pas au jour de la
-    // vérification : interroger le moteur à la date même de la
-    // validation le rendrait forcément frais, et l'assertion ne
-    // dirait plus rien. Ainsi, une vérification qui a vieilli
-    // au-delà de JOURS_VALIDITE_VERIFICATION fait rougir ce test —
-    // c'est le rappel que la campagne est à refaire.
-    const lu = etatEcheance(p, LE_JOUR);
+    const lu = etatEcheance(p, JOUR_CATALOGUE);
     assert.equal(lu.certitude, "verifiee",
       `${p.scholarshipId} / ${p.universityId} : écrit vérifié dans le catalogue, mais le moteur ne le lit pas ainsi (vérification périmée ou champ perdu à l'export)`);
     assert.equal(lu.verifieLe, p.ouverteVerifieeLe);

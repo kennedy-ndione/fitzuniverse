@@ -288,6 +288,15 @@ const catalogue = JSON.parse(lire("assets/data/catalogue.json"));
 const textes = [];
 const pousser = (o) => {
 for (const [k, v] of Object.entries(o || {})) {
+// `sourceVerification` est EXCLU du balayage (2026-09-20) : c'est la
+// trace de provenance écrite par l'outil de vérification — une
+// citation recopiée MOT POUR MOT de la page officielle, que
+// l'interface n'annote jamais (doctrine du lot R23 : « la citation
+// reste intacte, les définitions se posent en dessous »). La page
+// d'ENS PSL contient « (12.00 (midday), Paris time) » : des
+// parenthèses imbriquées écrites par la SOURCE, pas par nous — les
+// réécrire pour calmer ce test serait falsifier une citation.
+if (k === "sourceVerification") continue;
 if (typeof v === "string" && v.length > 40) textes.push([o.id, k, v]);
 else if (v && typeof v === "object" && !Array.isArray(v)) pousser({ ...v, id: o.id });
 }

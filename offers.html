@@ -527,10 +527,10 @@ précis où l'on choisit de payer ou non. -->
 <span>Ce que nous garantissons : un accompagnement sérieux à chaque étape, et un dossier complet, solide, déposé dans les délais. La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires.</span>
 </p>
 
-<a href="https://wa.me/221776981877?text=Bonjour%2C%20j%27ai%20une%20question%20avant%20de%20choisir%20mon%20accompagnement%20Fitz" target="_blank" rel="noopener" class="footnote-line reassurance-item-whatsapp" hidden>
-<i data-lucide="message-circle"></i>
-<span>Une hésitation ? Discutez avec un conseiller Fitz sur WhatsApp</span>
-</a>
+<!-- Le lien WhatsApp de réassurance est PARTI le 2026-09-20 (décision
+de Charles) : plus AUCUN lien WhatsApp sur le site, payant comme gratuit —
+la messagerie FitzUniverse de l'espace étudiant est le canal d'échange
+avec l'équipe. Ne pas le remettre. -->
 
 </div>
 
@@ -597,25 +597,9 @@ neutralisé) et une demande de changement en cours — voir
 js/offers-current-plan.js (2026-09-02). Sans session : inactif. -->
 <script type="module" src="js/offers-current-plan.js"></script>
 
-<!-- Restreint le lien WhatsApp de réassurance aux abonnés SIGNATURE
-uniquement (décision 2026-09-02) — mécanisme fetchFeatureFlags +
-isFeatureLocked, feature "whatsapp_direct" (js/plan-features.js),
-pas une liste de plans en dur. Page volontairement
-publique : jamais de redirection ni de blocage ici, une erreur ou
-l'absence de session laisse simplement le lien caché. -->
-<script type="module">
-import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
-resolveSession().then(async (session) => {
-if (!session || session.disabled) return;
-const featureFlags = await fetchFeatureFlags();
-// "whatsapp_direct" (2026-09-02) : WhatsApp réservé à Signature.
-if (!isFeatureLocked(session.planId, featureFlags, "whatsapp_direct", session.testerAccess, session.hasFitzExpress)) {
-document.querySelector(".reassurance-item-whatsapp")?.removeAttribute("hidden");
-}
-}).catch((error) => {
-console.warn("Vérification de l'accès WhatsApp ignorée sur une page publique :", error);
-});
-</script>
+<!-- Le script qui dévoilait le lien WhatsApp aux abonnés Signature est
+PARTI avec le lien le 2026-09-20 (décision de Charles) : plus aucun
+canal WhatsApp sur le site, la messagerie FitzUniverse suffit. -->
 
 <!-- Plus de pied de page ici (décision de Charles, 2026-09-11) : il ne
 reste que sur l'accueil. Le glossaire (js/glossaire.js) reste :
