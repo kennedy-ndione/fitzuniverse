@@ -1628,3 +1628,106 @@ gap:10px;
 flex:1 1 100%;
 }
 }
+
+/* ==========================================================
+   LA BOÎTE À OUTILS FITZ (index.html, 2026-09-20)
+   Même dessin « au trait » que .problem-list, en deux colonnes :
+   six outils, chacun une icône, un titre, une phrase. La section
+   « preuve » du même jour réutilise .problem-list telle quelle et
+   n'a besoin d'aucune règle ici.
+   ========================================================== */
+
+.outils-grid{
+
+border-top:1px solid var(--border-color);
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+column-gap:56px;
+
+}
+
+.outil-item{
+
+display:grid;
+
+grid-template-columns:32px 1fr;
+
+gap:20px;
+
+align-items:start;
+
+padding:28px 0;
+
+border-bottom:1px solid var(--border-color);
+
+}
+
+.outil-item > i,
+.outil-item > svg{
+
+width:26px;
+height:26px;
+
+margin-top:2px;
+
+color:var(--text-decorative);
+
+flex-shrink:0;
+
+}
+
+.outil-item h3{
+
+font-family:var(--font-display);
+font-size:var(--fs-h4, 1.125rem);
+
+font-weight:var(--fw-bold);
+
+letter-spacing:-.01em;
+
+margin-bottom:6px;
+
+color:var(--text-color);
+
+}
+
+.outil-item p{
+
+font-size:var(--fs-body-sm, .9375rem);
+
+line-height:var(--lh-relaxed);
+
+color:var(--text-light);
+
+max-width:48ch;
+
+}
+
+.outils-footer{
+
+margin-top:36px;
+
+text-align:center;
+
+}
+
+@media(max-width:760px){
+
+.outils-grid{
+
+grid-template-columns:1fr;
+
+column-gap:0;
+
+}
+
+.outil-item{
+
+padding:24px 0;
+
+}
+
+}
