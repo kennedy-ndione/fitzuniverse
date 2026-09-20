@@ -6,8 +6,9 @@
 * réinvente aucun système de messagerie : le fil de messages
 * admin → étudiant existe déjà (js/student-messages.js, cloche du
 * topbar, déjà initialisé par bootstrapShell()) — cette page se
-* contente d'expliquer le service et de donner un contact WhatsApp
-* réel (même numéro que la reassurance de offers.html).
+* contente d'expliquer le service et de renvoyer vers la messagerie
+* FitzUniverse (LOT VOIX du 2026-09-20 : le contact WhatsApp qui
+* figurait ici a été retiré, comme partout ailleurs sur le site).
 *
 * Aucun système de rendez-vous/visioconférence n'existe dans le
 * projet à ce jour : on ne simule pas une fonctionnalité qui n'existe
@@ -18,7 +19,7 @@
 
 import { db } from "./firebase-config.js";
 import { collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { initShellChrome, bootstrapShell, PLAN_LABELS, isFeatureLocked } from "./js/app-shell.js";
+import { initShellChrome, bootstrapShell, PLAN_LABELS } from "./js/app-shell.js";
 import { showToast } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
 
@@ -97,9 +98,10 @@ initAdvisorRequestForm(ctx.user.uid);
 
 // ==========================================================
 // Demande de revue conseiller (users/{uid}/advisorRequests) — canal
-// tracé étudiant -> conseiller, à côté du contact WhatsApp existant
-// (celui-ci reste pour l'urgence, ce formulaire pour une demande
-// qu'on veut retrouver côté admin/student-detail.js). Pré-remplissage
+// tracé étudiant -> conseiller, à côté de la messagerie FitzUniverse
+// (celle-ci pour l'échange au fil de l'eau, ce formulaire pour une
+// demande qu'on veut retrouver côté admin/student-detail.js).
+// Pré-remplissage
 // depuis applications.js (?applicationId=&university=), posé sur le
 // résultat de la vérification finale avant dépôt.
 async function initAdvisorRequestForm(uid) {
@@ -189,16 +191,12 @@ return;
 
 }
 
-// WhatsApp direct : réservé à Signature ("whatsapp_direct",
-// js/plan-features.js). Les autres formules avec conseiller voient
-// l'alternative messagerie FitzUniverse à la place.
-const whatsappLocked = isFeatureLocked(ctx.planId, ctx.featureFlags, "whatsapp_direct", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId);
-
-const whatsappBtn = document.getElementById("advisorWhatsappBtn");
-const whatsappAlt = document.getElementById("advisorWhatsappAlt");
-
-if (whatsappBtn) whatsappBtn.hidden = whatsappLocked;
-if (whatsappAlt) whatsappAlt.hidden = !whatsappLocked;
+// LOT VOIX (2026-09-20) — la bascule WhatsApp est PARTIE avec le lien
+// qu'elle révélait. Elle lisait encore `whatsapp_direct`, détachée de
+// toute formule depuis le 2026-09-20 : pour un compte testeur,
+// `isFeatureLocked` rend false d'emblée et le bouton wa.me
+// réapparaissait. Plus de bouton, plus de bascule : la page affiche à
+// tous la même phrase sur la messagerie FitzUniverse.
 
 initAdvisorPage(ctx);
 

@@ -822,6 +822,33 @@ const brut = (snap) => snap.docs
 .map((d) => ({ id: d.id, ...serialiser(d.data()) }))
 .sort((a, b) => a.id.localeCompare(b.id));
 
+// `parUid` RESTE DANS L'INSTANTANÉ PUBLIC — ERREUR DU LOT VOIX,
+// RATTRAPÉE PAR LA SUITE DE TESTS LE 2026-09-20.
+//
+// L'audit du jour avait relevé l'UID du compte validateur publié 437
+// fois ici et proposé de le purger à la génération, au nom de la
+// doctrine de voix (« ne pas montrer qu'une seule personne est
+// derrière »). La purge a été écrite, l'export l'a appliquée, et
+// `test/fraicheur.test.mjs` (« fondation 1 — toute date publiée comme
+// vérifiée porte sa preuve ») est passé au rouge sur-le-champ :
+//
+//     aims-ghana-masters-mathematical-sciences : on doit savoir QUI a validé
+//
+// Ce test est délibéré, et il a raison. Le mot « vérifiée » est le
+// plus fort que ce site adresse à un étudiant : il n'est accordé
+// qu'aux fiches portant les QUATRE preuves — date ISO, jour de
+// vérification, source (https + phrase lue) et validateur. Retirer le
+// validateur, c'est garder le mot en enlevant une preuve.
+//
+// Et l'UID n'est PAS une identité : c'est précisément la mesure prise
+// après la fuite du 2026-09-19, quand une adresse e-mail d'admin
+// s'était retrouvée deux fois dans ce fichier public. Le test interdit
+// d'ailleurs toute adresse e-mail dans ces champs. Un UID opaque est
+// la bonne réponse — pas un défaut de vitrine.
+//
+// À ne pas refaire : si l'on veut un jour que plusieurs validateurs
+// apparaissent, cela se gagne en faisant valider par plusieurs
+// comptes, pas en effaçant la trace de celui qui a travaillé.
 const instantane = {
 genereLe: exportJson.genereLe,
 programs: brut(programmesSnap),
