@@ -309,22 +309,16 @@ assert.deepEqual(fautifs, [], `${fautifs.length} texte(s) du catalogue produisen
 
 });
 
-// --- 6. le bandeau du questionnaire ---------------------------------------
-test("langage 6 — le questionnaire dit la durée, la gratuité, l'absence de compte et le résultat avant la première question", () => {
+// --- 6. le bandeau du questionnaire — RETIRÉ le 2026-09-20 ------------------
+test("langage 6 — le questionnaire n'a plus de bandeau d'entrée : la question d'abord", () => {
+// Décision de Charles (2026-09-20) : le bandeau (durée, gratuité,
+// résultat) encombrait l'écran de la première question. Ces promesses
+// vivent sur la page d'appel du diagnostic, pas dans le questionnaire.
 const html = lire("eligibility-questions.html");
-const v = visible(html);
-const bandeau = v.indexOf('id="entree"');
-const question = v.indexOf('id="question"');
-assert.ok(bandeau > 0 && bandeau < question, "le bandeau précède la question");
-const t = texteDe(html.slice(html.indexOf('id="entree"'), html.indexOf("</section>")));
-assert.ok(/minutes/.test(t), "la durée");
-assert.ok(/Gratuit/.test(t), "la gratuité");
-assert.ok(/sans compte/.test(t), "sans compte");
-assert.ok(/votre score/.test(t) && /opportunités/.test(t), "le résultat");
-// Le nombre de questions varie selon le niveau : jamais un nombre en dur.
-assert.ok(!/\b1[0-9] questions\b/.test(t), "nombre de questions écrit en dur");
-// Le script le retire après la première réponse.
-assert.ok(/entree\.hidden = parcours\.index > 0/.test(lire("eligibility-questions.js")));
+assert.ok(!/id="entree"/.test(visible(html)), "le bandeau d'entrée est revenu");
+assert.ok(!/entree/.test(lire("eligibility-questions.js")), "le script parle encore du bandeau");
+// Le h1 reste, invisible : une page sans h1 est un recul, pas un ménage.
+assert.ok(/<h1 class="visually-hidden"/.test(visible(html)));
 });
 
 // --- 7. aucun nombre de catalogue écrit sur l'accueil ---------------------

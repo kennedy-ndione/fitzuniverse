@@ -75,10 +75,14 @@ assert.ok(!/pied-de-page/.test(codeSeul(module)), `${module} importe le pied de 
 }
 });
 
-test("pied-de-page 3 — le bandeau d'entrée du questionnaire est toujours là", () => {
+test("pied-de-page 3 — le bandeau d'entrée a été retiré, le h1 invisible reste", () => {
+// Le bandeau (lot LANGAGE) a été RETIRÉ le 2026-09-20 à la demande de
+// Charles. La page garde exactement un <h1>, invisible, pour
+// l'accessibilité et le référencement.
 const html = visible(lire("eligibility-questions.html"));
-assert.ok(/<section class="entree" id="entree"/.test(html));
+assert.ok(!/id="entree"/.test(html), "le bandeau d'entrée est revenu");
 assert.equal((html.match(/<h1\b/g) || []).length, 1);
+assert.ok(/<h1 class="visually-hidden"/.test(html), "le h1 doit rester, invisible");
 });
 
 test("pied-de-page 4 — la classe « en rangée » du body n'existe plus nulle part", () => {

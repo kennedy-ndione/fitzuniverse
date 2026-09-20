@@ -134,11 +134,6 @@ function updateProgress() {
 
 const total = parcours.total();
 
-// Le bandeau d'entrée (durée, gratuité, sans compte, résultat) ne sert
-// qu'avant la première réponse.
-const entree = document.getElementById("entree");
-if (entree) entree.hidden = parcours.index > 0;
-
 // Tant que le niveau d'études n'est pas connu, la longueur du
 // parcours ne l'est pas non plus : on n'affiche pas de total plutôt
 // que d'en inventer un.

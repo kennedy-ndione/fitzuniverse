@@ -59,9 +59,12 @@ const texte = ligne[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 assert.match(texte, /Vous ne savez pas laquelle/, "la question du visiteur");
 assert.match(texte, /gratuit/, "la gratuité");
 assert.match(texte, /minutes/, "la durée");
-// La durée est celle que le questionnaire annonce lui-même.
 assert.match(texte, /cinq minutes/);
-assert.match(lire("eligibility-questions.html"), /cinq minutes/);
+// Le questionnaire n'annonce plus rien lui-même : son bandeau d'entrée
+// a été RETIRÉ le 2026-09-20 (décision de Charles) — la promesse vit
+// ici, sur l'accueil, et seulement ici. Voir langage 6.
+assert.ok(!/id="entree"/.test(lire("eligibility-questions.html")),
+"le bandeau d'entrée est revenu dans le questionnaire");
 // La ligne de preuve dit ce que le site FAIT (lot VITRINE-COMMERCIALE,
 // 2026-09-11) : « Aucune promesse d'admission » a quitté l'accueil.
 assert.ok(html.includes("Gratuit, sans compte, en cinq minutes."));
