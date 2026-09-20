@@ -25,6 +25,10 @@ getBlocagesFrequents
 } from "./firebase-admin.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
+// Lot ADMIN-JOURNÉE (2026-09-20) : les piles de travail du jour, rendues
+// APRÈS le premier affichage (voir l'appel plus bas) — le tableau de
+// bord ne doit pas attendre leurs agrégations pour se montrer.
+import { initJournee } from "./journee.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : le graphique par formule nomme
 // chaque identifiant avec l'étiquette de l'admin et couvre AUSSI le Pass
 // et les offres France (les compteurs analyticsPlanCounters/{planId} sont
@@ -1027,6 +1031,16 @@ hidePageLoader();
 requestAnimationFrame(() => {
 if (pulseChart) pulseChart.resize();
 if (planChart) planChart.resize();
+});
+
+// « Votre journée » se remplit APRÈS le premier affichage : ses
+// agrégations (une par étudiant pour les non-lus) ne doivent jamais
+// retarder les courbes. Son échec est le sien — jamais celui du
+// tableau de bord entier.
+initJournee().catch((erreur) => {
+console.warn("Journée non rendue :", erreur);
+const hote = document.getElementById("journeeGrid");
+if (hote) hote.innerHTML = `<p class="journee-chargement">Les piles du jour n'ont pas pu être comptées — rechargez la page.</p>`;
 });
 
 } catch (error) {

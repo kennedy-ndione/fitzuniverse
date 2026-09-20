@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Paiements | FitzUniverse Control Center</title>
+
+<!-- Lot ADMIN-PAIEMENTS (2026-09-20). Cette page LIT la collection
+`payments`, écrite exclusivement par functions/paiement.js — le
+Control Center n'écrit JAMAIS un paiement (firestore.rules :
+write: if false, même pour le propriétaire). Elle remplace le badge
+« Bientôt » que la barre latérale portait depuis la refonte du
+2026-09-02. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F6F3ED">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<script src="../js/icones.js" defer></script>
+
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="control-center.css">
+
+</head>
+
+<body>
+
+<div id="pageLoader" class="auth-page-loader">
+<div class="loader-spinner"></div>
+</div>
+
+<div class="dashboard-shell">
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<aside class="sidebar" id="sidebar">
+
+<div class="sidebar-top">
+<div class="sidebar-brand">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — administration">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</div>
+</div>
+
+<span class="sidebar-badge"><i data-lucide="shield-check"></i>Control Center</span>
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+
+<span class="sidebar-section-label">Pilotage</span>
+
+<ul>
+<li><a href="dashboard.html" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Tableau de bord</span></a></li>
+<li><a href="messages.html" class="nav-link"><i data-lucide="messages-square"></i><span>Messages</span></a></li>
+<li><a href="students.html" class="nav-link"><i data-lucide="users"></i><span>Étudiants</span></a></li>
+<li><a href="plans.html" class="nav-link"><i data-lucide="sliders-horizontal"></i><span>Formules</span></a></li>
+<!-- Lot ADMIN : réservé au propriétaire. data-super-admin le fait
+     RETIRER du DOM pour un administrateur ordinaire (admin-auth.js). -->
+<li data-super-admin><a href="administrateurs.html" class="nav-link"><i data-lucide="shield-check"></i><span>Administrateurs</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Catalogue</span>
+
+<ul>
+<li><a href="scholarships.html" class="nav-link"><i data-lucide="graduation-cap"></i><span>Bourses</span></a></li>
+<li><a href="universities.html" class="nav-link"><i data-lucide="landmark"></i><span>Universités</span></a></li>
+</ul>
+
+<span class="sidebar-section-label">Système</span>
+
+<ul>
+<li><a href="paiements.html" class="nav-link is-active" aria-current="page"><i data-lucide="wallet"></i><span>Paiements</span></a></li>
+<li><a href="alertes.html" class="nav-link"><i data-lucide="bell"></i><span>Alertes e-mail</span></a></li>
+<li><a href="tools.html" class="nav-link"><i data-lucide="wrench"></i><span>Outils techniques</span></a></li>
+<li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
+</ul>
+
+</nav>
+
+<div class="sidebar-bottom">
+<button type="button" id="logoutBtn" class="sidebar-logout">
+<i data-lucide="log-out"></i>
+<span>Déconnexion</span>
+</button>
+</div>
+
+</aside>
+
+<div class="dashboard-main">
+
+<header class="topbar">
+<button type="button" class="topbar-menu-btn" id="sidebarOpenBtn" aria-label="Ouvrir le menu">
+<i data-lucide="menu"></i>
+</button>
+<div class="topbar-title">
+<h1>Paiements</h1>
+<p>Chaque facture PayDunya, son statut réel, et le compte qu'elle concerne. Écrit par le serveur, jamais d'ici.</p>
+</div>
+</header>
+
+<main class="content" style="display:none;">
+
+<!-- Les trois chiffres qui comptent, avant le tableau. -->
+<div class="outcome-strip">
+
+<div class="outcome-card" style="--outcome-color:var(--success-600);">
+<i data-lucide="banknote"></i>
+<div>
+<div class="outcome-card-value" id="paiementsEncaisse">—</div>
+<div class="outcome-card-label">Encaissé et appliqué</div>
+</div>
+</div>
+
+<div class="outcome-card" style="--outcome-color:var(--warning-600);">
+<i data-lucide="hourglass"></i>
+<div>
+<div class="outcome-card-value" id="paiementsAttente">—</div>
+<div class="outcome-card-label">Factures en attente</div>
+</div>
+</div>
+
+<div class="outcome-card" style="--outcome-color:var(--danger-600);">
+<i data-lucide="alert-triangle"></i>
+<div>
+<div class="outcome-card-value" id="paiementsAnomalies">—</div>
+<div class="outcome-card-label">Anomalies à examiner</div>
+</div>
+</div>
+
+</div>
+
+<div class="page-toolbar">
+
+<div class="topbar-search">
+<i data-lucide="search"></i>
+<input type="text" id="paiementsSearch" placeholder="Rechercher par étudiant, formule ou jeton...">
+</div>
+
+<select id="paiementsStatut" aria-label="Filtrer par statut">
+<option value="">Tous les statuts</option>
+<option value="paye">Payé</option>
+<option value="en-attente">En attente</option>
+<option value="anomalie">Anomalies (montant / mode)</option>
+<option value="autres">Autres (annulé, échoué…)</option>
+</select>
+
+<select id="paiementsMode" aria-label="Filtrer par mode">
+<option value="">Test et production</option>
+<option value="live">Production</option>
+<option value="test">Test</option>
+</select>
+
+</div>
+
+<div class="admin-table-wrap">
+
+<table class="table admin-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Étudiant</th>
+<th>Formule</th>
+<th>Montant</th>
+<th>Méthode</th>
+<th>Mode</th>
+<th>Statut</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="paiementsTableBody"></tbody>
+</table>
+
+</div>
+
+<p class="dash-footnote"><i data-lucide="info"></i><span>Le statut est écrit par PayDunya via le webhook (functions/paiement.js). « Anomalie » signale un montant encaissé inférieur à l'attendu, ou une facture d'un autre mode que le site — dans les deux cas le compte n'a pas été touché et un humain doit trancher.</span></p>
+
+</main>
+
+</div>
+
+</div>
+
+<script type="module" src="admin-auth.js"></script>
+<script type="module" src="paiements.js"></script>
+
+</body>
+
+</html>

@@ -787,6 +787,31 @@ allow delete: if false;
 }
 
 // ------------------------------------------------------------
+// PAIEMENTS, REGISTRE DES ALERTES, REGISTRE DES E-MAILS (lot
+// ADMIN-JOURNÉE, 2026-09-20). Trois collections écrites EXCLUSIVEMENT
+// par les Cloud Functions (functions/paiement.js, functions/emails.js),
+// qui passent par l'Admin SDK et ignorent ces règles. Côté client, la
+// seule chose légitime est la LECTURE par un administrateur : le
+// Control Center affiche les paiements à examiner et le registre des
+// alertes envoyées. `write: if false` dit la doctrine : aucun
+// navigateur — pas même celui du propriétaire — n'écrit un paiement.
+// ------------------------------------------------------------
+match /payments/{token} {
+allow read: if isAdmin();
+allow write: if false;
+}
+
+match /alertesBourses/{cle} {
+allow read: if isAdmin();
+allow write: if false;
+}
+
+match /emailsEnvoyes/{cle} {
+allow read: if isAdmin();
+allow write: if false;
+}
+
+// ------------------------------------------------------------
 // Suivi d'événements (js/analytics.js), fondation du futur
 // Fitz Control Center admin. Écrit directement depuis le
 // client tant qu'aucun Cloud Function n'existe :

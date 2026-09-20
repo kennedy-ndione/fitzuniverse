@@ -84,10 +84,10 @@
 <span class="sidebar-section-label">Système</span>
 
 <ul>
+<li><a href="paiements.html" class="nav-link"><i data-lucide="wallet"></i><span>Paiements</span></a></li>
+<li><a href="alertes.html" class="nav-link"><i data-lucide="bell"></i><span>Alertes e-mail</span></a></li>
 <li><a href="tools.html" class="nav-link"><i data-lucide="wrench"></i><span>Outils techniques</span></a></li>
 <li><span class="nav-link is-soon"><i data-lucide="bot"></i><span>Console Fitz</span><span class="nav-soon-badge">Bientôt</span></span></li>
-<li><span class="nav-link is-soon"><i data-lucide="wallet"></i><span>Paiements</span><span class="nav-soon-badge">Bientôt</span></span></li>
-<li><span class="nav-link is-soon"><i data-lucide="bell"></i><span>Notifications</span><span class="nav-soon-badge">Bientôt</span></span></li>
 </ul>
 
 </nav>
@@ -138,6 +138,23 @@ HERO EXÉCUTIF — identité, briefing, badges, actions rapides
 <a href="tools.html" class="exec-action-btn"><i data-lucide="wrench"></i><span>Outils</span></a>
 </div>
 
+</section>
+
+<!-- ==========================================================
+VOTRE JOURNÉE — ce qui attend un geste (lot ADMIN-JOURNÉE, 2026-09-20).
+Cinq piles de travail réelles, chacune un lien vers le geste exact.
+Rendu par admin/journee.js, indépendant du reste : une pile illisible
+ne prive jamais des autres.
+========================================================== -->
+
+<section class="journee-card reveal-stagger">
+<div class="journee-head">
+<h2>Votre journée</h2>
+<p class="journee-head-sub">Ce qui attend un geste, compté à l'ouverture de la page — une pile vide se dit aussi.</p>
+</div>
+<div class="journee-grid" id="journeeGrid">
+<p class="journee-chargement">Comptage des piles de travail…</p>
+</div>
 </section>
 
 <!-- ==========================================================

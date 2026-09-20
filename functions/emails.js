@@ -230,18 +230,33 @@ exports.envoyerAlerteBourse = onCall(
 
     const bourse = snap.data() || {};
     const titre = String(bourse.title || scholarshipId);
-    const deadlineISO = String(bourse.deadlineISO || "").trim();
+
+    // L'ÉCHÉANCE VIT SUR LES PROGRAMMES, pas sur la bourse (architecture
+    // relationnelle du 2026-07-30 : une bourse × N universités = N
+    // deadlines). Corrigé le 2026-09-20, le soir même : la première
+    // version lisait bourse.deadlineISO, un champ qui n'existe pas —
+    // la fonction aurait refusé TOUTES les bourses. On prend la plus
+    // PROCHE des échéances futures citées de ses programmes.
+    const progs = await admin.firestore().collection("programs")
+      .where("scholarshipId", "==", scholarshipId).get();
+
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const futures = progs.docs
+      .map((d) => String((d.data() || {}).deadlineISO || "").trim())
+      .filter((iso) => /^\d{4}-\d{2}-\d{2}$/.test(iso) && iso > aujourdhui)
+      .sort();
 
     // On n'alerte que sur une échéance FUTURE et CITÉE — la même règle
     // que partout : la machine n'affirme jamais une date qu'elle n'a
     // pas. Pas de date, pas d'alerte.
-    const aujourdhui = new Date().toISOString().slice(0, 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadlineISO) || deadlineISO <= aujourdhui) {
+    if (!futures.length) {
       throw new HttpsError(
         "failed-precondition",
-        "Cette bourse n'a pas d'échéance future enregistrée : vérifiez-la d'abord (admin/verification.html)."
+        "Aucun programme de cette bourse ne porte d'échéance future citée : vérifiez-la d'abord (admin/verification.html)."
       );
     }
+
+    const deadlineISO = futures[0];
 
     // LE REGISTRE. Une alerte = une bourse + une échéance. Le document
     // porte la liste des uid déjà servis : relancer demain reprend où

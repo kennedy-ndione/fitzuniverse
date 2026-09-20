@@ -39,7 +39,11 @@ export const SELECT_COUVERTS = [
 "advisor.html", "ai-check.html", "ai-email.html", "ai-letter.html", "ai-translate.html",
 "applications.html", "compress.html", "diagnostic-france.html", "messages.html", "profile.html",
 "scholarships.html", "universities.html",
-"admin/scholarships.html", "admin/student-detail.html", "admin/students.html", "admin/universities.html", "admin/university.html"
+"admin/scholarships.html", "admin/student-detail.html", "admin/students.html", "admin/universities.html", "admin/university.html",
+// Lot ADMIN-PAIEMENTS (2026-09-20) : les deux filtres de la page des
+// paiements. Habillés comme toutes les pages admin — admin-auth.js
+// charge initFitzSelects(), et paiements.html l'importe.
+"admin/paiements.html"
 ];
 // Aucune exemption aujourd'hui : une page qui en aurait besoin se déclare ici, avec sa raison.
 export const SELECT_EXEMPTES = [];

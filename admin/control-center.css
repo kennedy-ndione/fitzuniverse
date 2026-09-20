@@ -4823,3 +4823,115 @@ line-height:1.55;
    du 2026-09-09, pas la faute de frappe. */
 .admins-defaut{ display:block; margin-top:5px; font-size:12px; font-weight:600; line-height:1.35; color:#8A4B00; }
 .admins-defaut.is-inconnu{ color:#9B1C1C; }
+
+/* ==========================================================
+   VOTRE JOURNÉE (lot ADMIN-JOURNÉE, 2026-09-20) — les piles de
+   travail du jour, en tête du tableau de bord. Même carte que
+   .pulse-card ; chaque tuile porte son ton dans --tuile-ton.
+   ========================================================== */
+
+.journee-card{
+margin:0 0 24px;
+padding:26px 28px;
+border-radius:var(--radius-lg);
+background:var(--background);
+border:1px solid var(--border-color);
+}
+
+.journee-head h2{ font-size:19px; margin:0 0 4px; }
+.journee-head-sub{ margin:0 0 18px; font-size:13.5px; color:var(--text-muted); }
+
+.journee-chargement{ margin:0; font-size:13.5px; color:var(--text-muted); }
+
+.journee-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:14px;
+}
+
+.journee-tuile{
+position:relative;
+display:flex;
+flex-direction:column;
+gap:8px;
+min-width:0;
+padding:16px 16px 14px;
+border-radius:var(--radius-md, 12px);
+border:1px solid var(--border-color);
+background:var(--surface, #FBF9F4);
+}
+
+/* Une pile ACTIVE se voit d'un coup d'œil : liseré du ton de la tuile. */
+.journee-tuile.is-active{ border-left:4px solid var(--tuile-ton); padding-left:13px; }
+
+.journee-tuile.is-erreur{ border-style:dashed; }
+
+.journee-tuile-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+}
+
+.journee-tuile-icone{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+width:34px; height:34px;
+border-radius:10px;
+color:var(--tuile-ton, var(--text-muted));
+background:color-mix(in srgb, var(--tuile-ton, #8A837A) 12%, transparent);
+}
+.journee-tuile-icone svg{ width:18px; height:18px; }
+
+.journee-tuile-compte{
+font-family:var(--font-display, Sora, Inter, sans-serif);
+font-size:26px;
+font-weight:800;
+line-height:1;
+color:var(--text-color);
+}
+.journee-tuile:not(.is-active) .journee-tuile-compte{ color:var(--text-muted); }
+
+.journee-tuile-titre{ margin:0; font-size:14px; font-weight:700; }
+
+.journee-lignes{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
+.journee-lignes li{ font-size:12.5px; line-height:1.45; color:var(--text-muted); min-width:0; }
+.journee-lignes a{ color:inherit; text-decoration:none; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.journee-lignes a:hover{ color:var(--text-color); }
+.journee-lignes strong{ color:var(--text-color); font-weight:600; }
+
+.journee-zero{ margin:0; font-size:12.5px; line-height:1.45; color:var(--text-muted); }
+
+.journee-tuile-action{
+margin-top:auto;
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:12.5px;
+font-weight:700;
+color:var(--amber-700, #8A5A00);
+text-decoration:none;
+}
+.journee-tuile-action:hover{ text-decoration:underline; }
+.journee-tuile-action svg{ width:14px; height:14px; }
+
+@media (max-width:768px){
+.journee-card{ padding:18px 16px; }
+.journee-grid{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width:520px){
+.journee-grid{ grid-template-columns:1fr; }
+}
+
+/* Lot ADMIN-PAIEMENTS / ADMIN-ALERTES (2026-09-20) */
+
+.status-pill.is-attente{ background:rgba(233,163,25,.16); color:var(--amber-700, #8A5A00); }
+
+/* Le bouton d'alerte ARMÉ : premier clic = il annonce ce qu'il va
+   faire ; second clic = envoi. Le rouge dit « ce clic-ci est réel ». */
+.alertes-envoyer.is-arme{
+background:var(--danger-600, #DC2626);
+border-color:var(--danger-600, #DC2626);
+color:#fff;
+}
