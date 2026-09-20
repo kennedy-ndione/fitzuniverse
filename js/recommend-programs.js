@@ -311,6 +311,25 @@ const age = Math.round((minuit - date.getTime()) / 86400000);
 return age >= 0 && age <= JOURS_VALIDITE_VERIFICATION;
 }
 
+/** Combien de JOURS DE CALENDRIER séparent aujourd'hui d'une date ISO.
+ *  Défaut corrigé le 2026-09-20, vu à l'écran sur la fiche Émile
+ *  Boutmy : la même page affichait « il vous reste 70 jours » dans les
+ *  raisons et « Il vous reste 71 jours » dans les informations clés.
+ *  Les deux comptaient juste, mais pas la même chose — `aujourdhui`
+ *  porte une heure (21 h 50), la date d'échéance est à minuit, et la
+ *  soustraction brute rendait 70,09 jours, arrondis à 70. La lecture
+ *  de la prose, elle, passait déjà par joursAvant() de js/echeance.js,
+ *  qui ramène les DEUX bornes à minuit. Ce n'était donc pas un écart
+ *  d'arrondi : c'étaient deux définitions du mot « jour » sur le même
+ *  écran, et seule la fiche portant une deadlineISO VÉRIFIÉE pouvait
+ *  les montrer ensemble — les fiches réparées la veille.
+ *  Une seule définition désormais, celle de js/echeance.js : de minuit
+ *  à minuit, en UTC. */
+function joursDeCalendrier(date, aujourdhui) {
+const minuitAujourdhui = Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth(), aujourdhui.getUTCDate());
+return Math.round((date.getTime() - minuitAujourdhui) / 86400000);
+}
+
 export function etatEcheance(program, aujourdhui = new Date()) {
 
 if (String(program.status || "").toLowerCase().includes("fermé")) {
@@ -325,7 +344,7 @@ const isoFerme = lireDateISO(program.deadlineISO);
 const fraicheFerme = isoFerme && verificationFraiche(program.ouverteVerifieeLe, aujourdhui);
 return {
 ouverte: false,
-jours: isoFerme ? Math.round((isoFerme.getTime() - aujourdhui.getTime()) / 86400000) : null,
+jours: isoFerme ? joursDeCalendrier(isoFerme, aujourdhui) : null,
 certitude: fraicheFerme ? "verifiee" : "inconnue",
 verifieLe: fraicheFerme ? String(program.ouverteVerifieeLe) : ""
 };
@@ -353,7 +372,7 @@ const iso = lireDateISO(program.deadlineISO);
 
 if (iso) {
 
-const jours = Math.round((iso.getTime() - aujourdhui.getTime()) / 86400000);
+const jours = joursDeCalendrier(iso, aujourdhui);
 const fraiche = verificationFraiche(program.ouverteVerifieeLe, aujourdhui);
 
 return {

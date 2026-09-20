@@ -38,6 +38,7 @@ import {
   JOURS_VALIDITE_VERIFICATION
 } from "../js/recommend-programs.js";
 import { carteFitz } from "../js/fitz-choisit.js";
+import { joursAvant } from "../js/echeance.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
@@ -327,6 +328,51 @@ test("fondation 2 — mais le tri sait déjà quoi faire d'une date vérifiée",
   for (const r of apres.retenues.slice(0, rangSeme)) {
     assert.equal(r.certitude, "verifiee",
       "une date vérifiée doit passer devant tout ce qui ne l'est pas : c'est la seule sur laquelle l'étudiant peut décider sans risque");
+  }
+
+});
+
+/* ---------------------------------------------------------------
+   4. Un jour est un jour — la même page ne peut pas en compter deux
+   --------------------------------------------------------------- */
+
+test("jours 1 — l'heure qu'il est ne change pas le nombre de jours restants", () => {
+
+  // VU À L'ÉCRAN le 2026-09-20 à 21 h 50, fiche Bourse Émile Boutmy,
+  // sur une seule et même page :
+  //   « Candidatures ouvertes — il vous reste 70 jours »  (raisons)
+  //   « Il vous reste 71 jours. »                          (infos clés)
+  // Les deux comptaient juste, mais pas la même chose. La colonne de
+  // droite passe par joursAvant() de js/echeance.js, qui ramène les
+  // DEUX bornes à minuit ; etatEcheance() soustrayait l'instant présent
+  // d'une date à minuit, et lisait 70,09 jours — arrondis à 70.
+  // Un seul écran, deux définitions du mot « jour ».
+  const echeance = { deadlineISO: "2026-11-30", ouverteVerifieeLe: "2026-09-20" };
+
+  const matin = etatEcheance(echeance, new Date("2026-09-20T06:00:00Z"));
+  const soir  = etatEcheance(echeance, new Date("2026-09-20T21:50:00Z"));
+  const minuitMoinsUne = etatEcheance(echeance, new Date("2026-09-20T23:59:59Z"));
+
+  assert.equal(matin.jours, 71);
+  assert.equal(soir.jours, 71, "à 21 h 50 comme à 6 h, il reste le même nombre de jours");
+  assert.equal(minuitMoinsUne.jours, 71, "et jusqu'à la dernière seconde de la journée");
+
+});
+
+test("jours 2 — la fiche et ses raisons comptent pareil, le jour même", () => {
+
+  // La garde qui aurait vu le défaut : les deux moteurs, sur la même
+  // donnée, au même instant, doivent rendre le même nombre. Le seul
+  // cas où ils se croisent à l'écran est une fiche portant une
+  // deadlineISO VÉRIFIÉE — c'est-à-dire, ce soir-là, une des fiches
+  // réparées la veille.
+  const tard = new Date("2026-09-20T21:50:00Z");
+
+  for (const iso of ["2026-11-30", "2026-09-21", "2027-03-15", "2026-09-20"]) {
+    const parLeMoteur = etatEcheance({ deadlineISO: iso, ouverteVerifieeLe: "2026-09-20" }, tard).jours;
+    const parLaFiche = joursAvant({ etat: "datee", date: iso }, tard);
+    assert.equal(parLeMoteur, parLaFiche,
+      `${iso} : la carte et la fiche doivent compter le même nombre de jours`);
   }
 
 });
