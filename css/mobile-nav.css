@@ -372,6 +372,12 @@ overflow:hidden;
 @media (max-width:640px){
 .mnav-toggle{ display:inline-flex; }
 
+/* Le bouton « Connexion » de l'en-tête disparaît au profit du menu
+(décision de Charles, 2026-09-20) : la feuille plein écran porte déjà
+l'entrée Connexion, deux boutons côte à côte encombraient la zone du
+hero sur téléphone. Au-dessus de 640px, le bouton reste. */
+.header-link-login{ display:none !important; }
+
 /* L'ancien bouton rond + panneau déroulant de l'accueil sont
 remplacés par ce système (index.html, js/main.js). Garde-fou si un
 balisage ancien subsiste quelque part. */
