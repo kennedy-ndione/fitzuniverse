@@ -157,8 +157,12 @@ text-shadow:0 1px 2px rgba(13,10,6,.5);
 
 /* ---- colonne Contact (e-mail, téléphone, page contact) ----
 Remplace la colonne Légal (2026-09-20), inspirée du pied de page
-d'İstanbul Üniversitesi. Icônes nues, métrique Lucide — règle d'icônes. */
-.footer-contact{
+d'İstanbul Üniversitesi. Icônes nues, métrique Lucide — règle d'icônes.
+SÉLECTEURS PRÉFIXÉS PAR .footer (2026-09-20, constaté en ligne) :
+à spécificité égale, `.footer-links a` (display:inline-block) et
+`.footer-bottom a` (color:inherit) gagnaient selon l'ordre de la
+feuille — icônes collées au texte, liens légaux en blanc plein. */
+.footer .footer-contact{
 list-style:none;
 margin:0;
 padding:0;
@@ -167,7 +171,7 @@ flex-direction:column;
 gap:6px;
 }
 
-.footer-contact a{
+.footer .footer-contact a{
 display:inline-flex;
 align-items:center;
 gap:8px;
@@ -178,18 +182,18 @@ padding:2px 0;
 transition:color .22s var(--ease-standard, ease);
 }
 
-.footer-contact a:hover,
-.footer-contact a:focus-visible{
+.footer .footer-contact a:hover,
+.footer .footer-contact a:focus-visible{
 color:#E9A319;
 }
 
-.footer-contact a:focus-visible{
+.footer .footer-contact a:focus-visible{
 outline:2px solid #fff;
 outline-offset:2px;
 border-radius:var(--radius-xs);
 }
 
-.footer-contact svg{
+.footer .footer-contact svg{
 width:15px;
 height:15px;
 flex:none;
@@ -253,25 +257,25 @@ border-top:1px solid rgba(255,255,255,.22);
 
 /* Les liens légaux, en petit dans la ligne du bas — présents (exigés
 pour le paiement), jamais en vitrine (décision du 2026-09-20). */
-.footer-legal{
+.footer .footer-legal{
 display:flex;
 flex-wrap:wrap;
 gap:4px 18px;
 }
 
-.footer-legal a{
+.footer .footer-legal a{
 font-size:.82rem;
 color:rgba(255,255,255,.55);
 text-decoration:none;
 transition:color .22s var(--ease-standard, ease);
 }
 
-.footer-legal a:hover,
-.footer-legal a:focus-visible{
+.footer .footer-legal a:hover,
+.footer .footer-legal a:focus-visible{
 color:#E9A319;
 }
 
-.footer-legal a:focus-visible{
+.footer .footer-legal a:focus-visible{
 outline:2px solid #fff;
 outline-offset:2px;
 border-radius:var(--radius-xs);
@@ -289,8 +293,8 @@ color:inherit;
 
 @media (pointer:coarse){
 .footer-links a,
-.footer-contact a,
-.footer-legal a{
+.footer .footer-contact a,
+.footer .footer-legal a{
 display:inline-flex;
 align-items:center;
 min-height:44px;
@@ -375,13 +379,13 @@ align-self:end;
 
 /* Les coordonnées restent — c'est de la navigation utile, pas de la
 décoration. Compactes, dans leur colonne (Contact | la marque). */
-.footer-contact{
+.footer .footer-contact{
 gap:2px;
 }
 
-.footer-contact a{ font-size:.82rem; }
+.footer .footer-contact a{ font-size:.82rem; }
 
-.footer-contact svg{ width:13px; height:13px; }
+.footer .footer-contact svg{ width:13px; height:13px; }
 
 .footer-links .footer-col-title{ margin-bottom:4px; }
 
@@ -396,8 +400,8 @@ La mention « Crédits photo » reste en ligne (pas de cible de 44px).
 Mesures à 375 px, 2026-09-10 : voir test/pied-de-page.test.mjs. */
 @media (pointer:coarse){
 .footer-links a{ min-height:26px; }
-.footer-contact a{ min-height:26px; }
-.footer-legal a{ display:inline-flex; align-items:center; min-height:26px; }
+.footer .footer-contact a{ min-height:26px; }
+.footer .footer-legal a{ display:inline-flex; align-items:center; min-height:26px; }
 .footer-bottom p a{ display:inline; min-height:0; }
 }
 
