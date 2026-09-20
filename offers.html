@@ -324,8 +324,8 @@ c'est la seule justification du prix du Conseiller. -->
 <li><i data-lucide="check"></i><span>Votre lettre de motivation rédigée avec Fitz pour chaque université</span></li>
 <li><i data-lucide="check"></i><span>100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression</span></li>
 <li><i data-lucide="check"></i><span>Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests calé sur vos échéances</span></li>
-<li><i data-lucide="check"></i><span>Préparation aux entretiens, 2 révisions par dossier, et chaque candidature suivie jusqu'à la décision de l'université</span></li>
-<li><i data-lucide="check"></i><span>Service après-vente : signaler un problème, réponse sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>Préparation aux entretiens, et chaque candidature suivie jusqu'à la décision de l'université</span></li>
+<li><i data-lucide="check"></i><span>Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées</span></li>
 </ul>
 
 <button type="button" class="btn btn-accent plan-cta" data-plan="essentiel-4">
@@ -365,7 +365,7 @@ relit. Liste = `highlights` de pricing-plans.js, mot pour mot. -->
 <li><i data-lucide="check"></i><span>6 candidatures accompagnées à fond, chacune relue par un conseiller</span></li>
 <li><i data-lucide="check"></i><span>Un humain vérifie chaque dossier avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt</span></li>
-<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées</span></li>
 <li><i data-lucide="check"></i><span>Tout le contenu du Forfait Essentiel, Fitz en renfort</span></li>
 <li><i data-lucide="check"></i><span>Chaque candidature suivie jusqu'à la décision de l'université</span></li>
 </ul>
@@ -453,7 +453,7 @@ les limites vivront dans les conditions de vente. -->
 <li><i data-lucide="check"></i><span>Le Diagnostic France inclus</span></li>
 <li><i data-lucide="check"></i><span>Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi</span></li>
 <li><i data-lucide="check"></i><span>Préparation à l'entretien Campus France</span></li>
-<li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions, réponse sous 48 h ouvrées</span></li>
+<li><i data-lucide="check"></i><span>Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées</span></li>
 <li><i data-lucide="check"></i><span>Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France</span></li>
 </ul>
 <button type="button" class="btn btn-accent plan-cta" data-plan="dossier-france">
@@ -524,7 +524,7 @@ Ne pas remettre la négation en tête : ce bloc est lu au moment
 précis où l'on choisit de payer ou non. -->
 <p class="footnote-line footnote-line--strong">
 <i data-lucide="shield-check"></i>
-<span>Ce que nous garantissons : un accompagnement sérieux à chaque étape, et un dossier complet, solide, déposé dans les délais. La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires.</span>
+<span>Ce que nous garantissons : un accompagnement sérieux à chaque étape, et un dossier complet, solide, prêt à être déposé avant l'échéance. La décision d'admission et la délivrance du visa relèvent, elles, des établissements et des autorités consulaires.</span>
 </p>
 
 <!-- Le lien WhatsApp de réassurance est PARTI le 2026-09-20 (décision
@@ -559,6 +559,19 @@ avec l'équipe. Ne pas le remettre. -->
 <p>Vous accédez à une page récapitulative avec le détail de votre offre et vos informations, puis vous réglez via PayDunya (Wave, Orange Money ou carte bancaire). Fitz commence ensuite à travailler avec vous selon le palier choisi.</p>
 </details>
 
+<!-- LOT PROMESSES (2026-09-20) — LA QUESTION QUI MANQUAIT.
+Les cartes annonçaient « 100% des outils Fitz, sans restriction »
+pendant que le serveur répondait « Vous avez atteint votre volume
+Fitz du jour » (functions/fitz.js, code QUOTA_PLAN). Le volume
+existe, il est large, et il est désormais écrit AVANT le paiement
+plutôt que découvert après. Les chiffres viennent de
+functions/lib/fitz-acces.js et des poids de functions/fitz.js :
+s'ils changent là-bas, cette réponse change avec eux. -->
+<details class="faq-item">
+<summary><span>Y a-t-il une limite à ce que je peux demander à Fitz ?</span><i data-lucide="chevron-down"></i></summary>
+<p>Oui, et nous préférons vous le dire avant plutôt qu'au milieu de votre dossier. Chaque formule ouvre un volume quotidien, remis à zéro chaque nuit. Une question à Fitz, un e-mail ou une vérification comptent pour une unité&nbsp;; une traduction pour trois, une lettre de motivation pour quatre, une analyse complète de dossier pour sept. Avec le Forfait Essentiel, cela laisse une quarantaine de questions, ou cinq analyses de dossier, chaque jour. Ce plafond existe pour qu'un compte partagé ne vide pas le service&nbsp;: en travaillant vos candidatures normalement, vous ne le rencontrez pas. Si cela vous arrivait, écrivez-nous — nous le relevons plutôt que de vous laisser bloqué.</p>
+</details>
+
 <details class="faq-item">
 <summary><span>Puis-je changer de palier plus tard ?</span><i data-lucide="chevron-down"></i></summary>
 <p>Oui. Vous pouvez évoluer vers un accompagnement plus complet dès que vous le souhaitez.</p>
@@ -571,7 +584,7 @@ avec l'équipe. Ne pas le remettre. -->
 
 <details class="faq-item">
 <summary><span>Comment joindre l'équipe ?</span><i data-lucide="chevron-down"></i></summary>
-<p>La messagerie FitzUniverse (une conversation dans votre espace, réponse sous 48 h ouvrées) est comprise dans le Forfait Conseiller et dans les trois offres préinscription : c'est là que l'échange a une valeur directe, avec la personne qui relit votre dossier ou quand une pièce bloque. Toutes les formules payantes disposent en plus de « Signaler un problème », un service après-vente pour un souci technique, un paiement ou une erreur du site — pas pour une question de dossier.</p>
+<p>La messagerie FitzUniverse (une conversation dans votre espace, réponse généralement sous 48 h ouvrées) est comprise dans le Forfait Conseiller et dans les trois offres préinscription : c'est là que l'échange a une valeur directe, avec la personne qui relit votre dossier ou quand une pièce bloque. Toutes les formules payantes disposent en plus de « Signaler un problème », un service après-vente pour un souci technique, un paiement ou une erreur du site — pas pour une question de dossier.</p>
 </details>
 
 <details class="faq-item">

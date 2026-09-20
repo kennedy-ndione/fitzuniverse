@@ -98,6 +98,37 @@
 // `label` change. Un identifiant interne et un nom commercial peuvent
 // donc légitimement diverger ; ne jamais déduire l'un de l'autre.
 
+// ============================================================
+// LOT PROMESSES (2026-09-20) — ON N'ÉCRIT PAS « SANS RESTRICTION »
+// QUAND LE SERVEUR COMPTE.
+//
+// Huit formules annonçaient « 100% des outils Fitz, sans restriction »
+// et trois autres lignes disaient « illimité ». Le serveur, lui,
+// répond « Vous avez atteint votre volume Fitz du jour »
+// (functions/fitz.js, code QUOTA_PLAN). La promesse était écrite dans
+// l'argumentaire de vente et démentie APRÈS paiement : c'est la seule
+// contradiction du site dont un client garde la preuve écrite.
+//
+// Chaque formule annonce donc son volume réel, lu dans
+// functions/lib/fitz-acces.js (PLAFONDS) et converti avec les poids de
+// functions/fitz.js (TACHES) : chat, e-mail, diagnostic et
+// vérification 1 point ; traduction 3 ; lettre 4 ; analyse de dossier 7.
+//
+//   Pass Découverte 40/jour · Premier Dossier 50 · Essentiel 40
+//   Accompagnement et Premium 45 · Conseiller et Signature Focus 70
+//   Signature 90 · Dossier France 40 · Dossier France Conseiller 70
+//
+// SI UN PLAFOND CHANGE DANS functions/lib/fitz-acces.js, CES PHRASES
+// DOIVENT CHANGER AVEC LUI. Un chiffre faux ici coûte plus cher qu'un
+// chiffre absent : il se vérifie.
+//
+// Le mot « illimité » ne revient pas non plus sur les candidatures :
+// `maxAccompaniedApplications: Infinity` est vrai côté code, mais le
+// catalogue n'ouvre que 8 à 12 opportunités par profil (voir la note
+// de Signature) — « autant que votre profil en ouvre » dit la même
+// chose sans promettre ce que les données ne peuvent pas donner.
+// ============================================================
+
 const SCHOLARBRIDGE_PLANS = {
 
 // ==========================================================
@@ -124,7 +155,7 @@ niveau: "entree",
 cta: "Activer mon Pass Découverte",
 priceFCFA: 10000,
 duration: "14 jours",
-fitzAccess: "Questions illimitées, réponses instantanées",
+fitzAccess: "Jusqu'à 40 questions à Fitz par jour, réponses instantanées",
 // La déduction du pass sur une formule complète souscrite sous 30 jours
 // a été supprimée le 2026-08-22 (décision commerciale : elle compliquait
 // le calcul du montant à facturer). Le champ `note` qui la portait est
@@ -191,7 +222,7 @@ cta: "Commencer mon premier dossier",
 priceFCFA: 25000,
 maxAccompaniedApplications: 1,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 50 questions ou 7 analyses de dossier par jour",
 highlights: [
 "Votre première candidature, accompagnée de bout en bout",
 "Votre lettre de motivation et vos e-mails rédigés avec Fitz",
@@ -238,17 +269,17 @@ priceFCFA: 45000,
 duration: "6 mois",
 maxAccompaniedApplications: 5,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 40 questions ou 5 analyses de dossier par jour",
 // Restructurés le 2026-09-02 : chaque ligne correspond à une
 // capacité RÉELLE de l'espace étudiant (parcours, outils, chat +
 // entraînement aux tests, entretiens, suivi, messagerie FitzUniverse).
 highlights: [
 "Jusqu'à 5 candidatures accompagnées de bout en bout",
 "100 % des outils Fitz : lettre, e-mails, vérification, traduction, compression",
-"Discuter avec Fitz : questions illimitées et entraînement aux tests calé sur vos échéances",
+"Discuter avec Fitz au fil de la journée, et l'entraînement aux tests calé sur vos échéances",
 "Préparation aux entretiens et suivi complet des candidatures",
 "Messagerie FitzUniverse : l'équipe vous répond dans votre espace",
-"2 révisions par dossier",
+"Vos textes retravaillés avec Fitz, dans votre volume quotidien",
 "Candidatures en attente suivies jusqu'à la décision de l'université"
 ]
 },
@@ -282,7 +313,7 @@ priceFCFA: 75000,
 duration: "9 mois",
 maxAccompaniedApplications: 9,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 45 questions ou 6 analyses de dossier par jour",
 // "Relecture humaine de la lettre de motivation" retirée le 2026-08-22 :
 // AUCUN humain n'intervient sur Découverte, Standard ni Avancé — ces
 // trois offres sont assurées par Fitz seul. La ligne promettait donc un
@@ -317,16 +348,16 @@ priceFCFA: 80000,
 duration: "6 mois",
 maxAccompaniedApplications: 12,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 45 questions ou 6 analyses de dossier par jour",
 deprecated: true,
 highlights: [
 "Jusqu'à 12 candidatures accompagnées de bout en bout",
 "Tout le contenu du Forfait Ambition",
-"Révisions illimitées",
+"Vos dossiers révisés au fil de la journée",
 "Aide à la préparation du visa",
 // Le délai annoncé est passé à 48 h ouvrées (grille A, 2026-09-07) : il
 // vit dans js/delai-reponse.js, il est le même partout.
-"Réponse prioritaire sous 48 h ouvrées"
+"Réponse généralement sous 48 h ouvrées"
 ]
 },
 
@@ -354,7 +385,7 @@ priceFCFA: 150000,
 duration: "9 mois",
 maxAccompaniedApplications: 12,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 70 questions ou 10 analyses de dossier par jour",
 // Réécrit le 2026-08-22. L'ancienne liste ne justifiait pas l'écart de
 // prix avec Avancé : quota et durée identiques (12 candidatures, 6 mois),
 // prix doublé, et deux puces sur quatre répétaient ce qu'Avancé offre
@@ -395,7 +426,7 @@ label: "Signature",
 // « medal » et non « star » : sparkles / star / wand sont interdites sur
 // tout le site (2026-09-02 ; test/icones.test.mjs). Formule retirée.
 icon: "medal",
-tagline: "Conseiller dédié, candidatures illimitées.",
+tagline: "Conseiller dédié, autant de candidatures que votre profil en ouvre.",
 badge: "Notre formule la plus complète",
 // 199 000 → 250 000 le 2026-08-29 (même décision) : offre rare (20
 // places/promotion, demande via WhatsApp avant paiement), conseiller
@@ -417,10 +448,10 @@ duration: "12 mois",
 // uniquement dans ce fichier.
 maxAccompaniedApplications: Infinity,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 90 questions ou 12 analyses de dossier par jour",
 highlights: [
 "Un conseiller dédié",
-"Candidatures illimitées",
+"Autant de candidatures que votre profil en ouvre",
 "Points d'étape en visioconférence",
 "Accompagnement jusqu'à la préparation du visa",
 "Des échanges personnalisés avec l'équipe, dans la messagerie FitzUniverse",
@@ -463,14 +494,14 @@ priceFCFA: 45000,
 // gardent leur durée.
 maxAccompaniedApplications: 4,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 40 questions ou 5 analyses de dossier par jour",
 highlights: [
 "4 candidatures accompagnées à fond, en même temps",
 "Votre lettre de motivation rédigée avec Fitz pour chaque université",
 "100 % des outils Fitz : e-mails, vérification du dossier, traduction, compression",
-"Discuter avec Fitz autant que nécessaire, et l'entraînement aux tests calé sur vos échéances",
-"Préparation aux entretiens, 2 révisions par dossier, et chaque candidature suivie jusqu'à la décision de l'université",
-"Service après-vente : signaler un problème, réponse sous 48 h ouvrées"
+"Discuter avec Fitz au fil de la journée, et l'entraînement aux tests calé sur vos échéances",
+"Préparation aux entretiens, et chaque candidature suivie jusqu'à la décision de l'université",
+"Service après-vente : signaler un problème, réponse généralement sous 48 h ouvrées"
 ]
 },
 
@@ -490,12 +521,12 @@ priceFCFA: 150000,
 // `duration` retirée (elle valait « 9 mois »).
 maxAccompaniedApplications: 6,
 extendsPendingApplications: true,
-fitzAccess: "100% des outils Fitz, sans restriction",
+fitzAccess: "Tous les outils Fitz — jusqu'à 70 questions ou 10 analyses de dossier par jour",
 highlights: [
 "6 candidatures accompagnées à fond, chacune relue par un conseiller",
 "Un humain vérifie chaque dossier avant l'envoi",
 "Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
-"Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse sous 48 h ouvrées",
+"Messagerie FitzUniverse : échanges directs avec votre conseiller, réponse généralement sous 48 h ouvrées",
 "Tout le contenu du Forfait Essentiel, Fitz en renfort",
 "Chaque candidature suivie jusqu'à la décision de l'université"
 ]
@@ -560,7 +591,7 @@ highlights: [
 "Le Diagnostic France inclus",
 "Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
 "Préparation à l'entretien Campus France",
-"Messagerie FitzUniverse pour vos questions, réponse sous 48 h ouvrées",
+"Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées",
 "Vous gardez la main : un dossier complet et vérifié, que vous déposez vous-même sur Études en France"
 ]
 },
