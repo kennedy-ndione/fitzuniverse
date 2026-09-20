@@ -131,7 +131,57 @@ On ne crée jamais de compte ici. Un collègue s'inscrit normalement sur le site
 
 </div>
 
-</main></main>
+<!-- ==========================================================
+GUIDE DE PASSATION (lot ADMIN-PASSATION, 2026-09-20) — le jour où le
+site grandit, la marche à suivre est ÉCRITE ICI, pas dans la mémoire
+de quelqu'un. Quatre étapes, et ce que chaque niveau peut faire.
+========================================================== -->
+
+<section class="passation-guide">
+
+<h2><i data-lucide="key-round"></i>Déléguer le Control Center, le jour venu</h2>
+
+<div class="passation-etapes">
+
+<div class="passation-etape">
+<span class="passation-num">1</span>
+<div>
+<h3>Le collègue crée son compte, comme un étudiant</h3>
+<p>Sur <strong>fitzuniverse.com/inscription.html</strong>, avec son propre e-mail et son propre mot de passe. Aucun mot de passe ne passe jamais par vous ni par cette page — c'est la garantie qu'on ne peut pas vous le reprocher plus tard.</p>
+</div>
+</div>
+
+<div class="passation-etape">
+<span class="passation-num">2</span>
+<div>
+<h3>Vous le promouvez depuis sa fiche</h3>
+<p>Étudiants → sa fiche → « Promouvoir administrateur ». Il apparaît aussitôt dans le tableau ci-dessus, avec la date et votre nom — la trace de qui a nommé qui ne s'efface jamais.</p>
+</div>
+</div>
+
+<div class="passation-etape">
+<span class="passation-num">3</span>
+<div>
+<h3>Ce qu'il peut faire — et pas</h3>
+<p>Un administrateur ordinaire gère les étudiants, les messages, le catalogue, les vérifications et les alertes. Il ne voit pas cette page, ne nomme personne, ne révoque personne, n'attribue aucune formule et ne touche pas aux paiements autrement qu'en lecture. Ces limites sont dans les règles du serveur, pas seulement dans l'écran : les contourner depuis une console ne marche pas.</p>
+</div>
+</div>
+
+<div class="passation-etape">
+<span class="passation-num">4</span>
+<div>
+<h3>Révoquer se fait d'un clic, sans rien perdre</h3>
+<p>Le bouton « Révoquer » du tableau coupe l'accès immédiatement — le compte étudiant du collègue, lui, continue de vivre. On ne supprime jamais un administrateur : l'historique de qui a eu accès reste lisible pour toujours. Votre propre compte de propriétaire, sans champ de rôle, ne peut être ni révoqué ni imité depuis l'interface.</p>
+</div>
+</div>
+
+</div>
+
+<p class="passation-note"><i data-lucide="info"></i>Si un jour vous transmettez le site entier : le nouveau propriétaire se crée dans la console Firebase (collection <code>admins</code>, document à son uid, <code>isActive:&nbsp;true</code>, sans champ <code>role</code>) — c'est volontairement le seul geste qui ne peut pas se faire depuis cette interface.</p>
+
+</section>
+
+</main>
 
 </div>
 

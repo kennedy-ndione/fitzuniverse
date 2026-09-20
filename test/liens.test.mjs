@@ -33,7 +33,12 @@ return out;
 test("liens — chaque href/src interne des pages existe et est publié", () => {
 const publies = new Set(listerPublies(RACINE).map((p) => p.replace(/\\/g, "/")));
 const morts = [];
-for (const f of pagesServies()) {
+// Lot ADMIN-MÉNAGE (2026-09-20) : les ~70 pages d'outillage historiques
+// (expand-catalog-batch*, diag-*, migrate*, backfill, admin/import-*)
+// restent sur le disque mais ne sont PLUS PUBLIÉES (firebase.json,
+// hosting.ignore). Une page que Hosting ne sert pas ne peut pas avoir
+// de lien mort en production : on ne contrôle que les pages publiées.
+for (const f of pagesServies().filter((f) => publies.has(f.replace(/\\/g, "/")))) {
 const html = lire(f).replace(/<!--[\s\S]*?-->/g, "");
 const dossier = path.dirname(f).replace(/\\/g, "/");
 for (const m of html.matchAll(/\b(?:href|src)="([^"#?]+)(?:[#?][^"]*)?"/g)) {

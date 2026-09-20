@@ -32,6 +32,12 @@ import { chargerAdmin, appliquerRole } from "./admin-role.js";
 // rattrapés par son observateur.
 import { initFitzSelects } from "../js/fitz-select.js";
 initFitzSelects();
+// Lot ADMIN-RECHERCHE (2026-09-20) : la recherche globale (Ctrl+K),
+// branchée ICI pour la même raison que les selects — le seul module
+// commun à toutes les pages admin. Initialisée plus bas, une fois le
+// rôle connu (la page Administrateurs n'est proposée qu'au
+// propriétaire). Coût : zéro tant que la palette n'est pas ouverte.
+import { initRecherche } from "./recherche.js";
 
 onAuthStateChanged(auth, async (user) => {
 
@@ -57,6 +63,8 @@ return;
 // dans un Ctrl+F, et il annoncerait à un collègue une capacité qu'il
 // n'a pas.
 appliquerRole(administrateur.superAdmin);
+
+initRecherche(administrateur.superAdmin);
 
 } catch (error) {
 

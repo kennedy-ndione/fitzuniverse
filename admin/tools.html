@@ -101,7 +101,7 @@
 </button>
 <div class="topbar-title">
 <h1>Outils techniques</h1>
-<p>Audits, exports, migrations et lots historiques — tout l'outillage du catalogue, réuni ici.</p>
+<p>Le radar, la vérification à la source, l'audit et l'export — l'outillage vivant du catalogue. Les pages de lots historiques ne sont plus déployées.</p>
 </div>
 </header>
 
@@ -160,63 +160,27 @@ touche. -->
 </div>
 </div>
 
-<div class="tool-card" style="--tool-color:var(--warning-600);">
-<div class="tool-card-head">
-<i data-lucide="upload"></i>
-<h3>Imports historiques</h3>
-</div>
-<p>Chargements initiaux du catalogue. Conservés pour mémoire — les ajouts passent désormais par les formulaires Bourses/Universités ou par le runner.</p>
-<div class="tool-card-links">
-<a href="import-scholarships.html" class="tool-link"><i data-lucide="graduation-cap"></i>Bourses</a>
-<a href="import-universities.html" class="tool-link"><i data-lucide="landmark"></i>Universités</a>
-</div>
-</div>
-
-<div class="tool-card" style="--tool-color:var(--accent-600);">
-<div class="tool-card-head">
-<i data-lucide="database"></i>
-<h3>Migrations</h3>
-</div>
-<p>Transformations de structure déjà exécutées (modèle relationnel, portails). Ne relancer qu'en connaissance de cause.</p>
-<div class="tool-card-links">
-<a href="migrate.html" class="tool-link"><i data-lucide="arrow-right"></i>Modèle relationnel</a>
-<a href="migrate-portal.html" class="tool-link"><i data-lucide="arrow-right"></i>Portails</a>
-<a href="backfill-portal-data.html" class="tool-link"><i data-lucide="arrow-right"></i>Backfill portails</a>
-</div>
-</div>
-
-<div class="tool-card" style="--tool-color:var(--danger-600);">
-<div class="tool-card-head">
-<i data-lucide="stethoscope"></i>
-<h3>Diagnostics</h3>
-</div>
-<p>Sondes ponctuelles de cohérence, créées au fil des lots pour vérifier un point précis de la base.</p>
-<div class="tool-card-links">
-<a href="diag-scholarships.html" class="tool-link"><i data-lucide="arrow-right"></i>Bourses</a>
-<a href="diag-missing-portal.html" class="tool-link"><i data-lucide="arrow-right"></i>Portails manquants</a>
-<a href="diag-lot12.html" class="tool-link"><i data-lucide="arrow-right"></i>Lot 12</a>
-</div>
-</div>
+<!-- Lot ADMIN-MÉNAGE (2026-09-20) : les cartes « Imports historiques »,
+« Migrations », « Diagnostics » et la liste des lots d'extension sont
+RETIRÉES, et leurs ~70 pages ne sont PLUS DÉPLOYÉES (firebase.json,
+hosting.ignore : admin/expand-catalog-batch*, admin/diag-*,
+admin/migrate*, admin/backfill-portal-data.*, admin/import-*). Le
+runner scripts/lot.mjs les remplace depuis le 2026-08-31, et une page
+morte publiée est de la surface d'attaque. Les fichiers restent dans
+le dépôt, pour mémoire — relisibles en local (Live Server) au besoin. -->
 
 <div class="tool-card" style="--tool-color:var(--text-muted);">
 <div class="tool-card-head">
 <i data-lucide="terminal"></i>
 <h3>Runner de lots (recommandé)</h3>
 </div>
-<p>Depuis le 2026-08-31, les nouveaux lots du catalogue passent par <strong>scripts/lot.mjs</strong> (analyser / ecrire / verifier / export) en ligne de commande — plus fiable et moins coûteux en lectures que les pages ci-dessous.</p>
+<p>Depuis le 2026-08-31, les nouveaux lots du catalogue passent par <strong>scripts/lot.mjs</strong> (analyser / ecrire / verifier / export) en ligne de commande — plus fiable et moins coûteux en lectures que les anciennes pages d'import, qui ne sont plus déployées.</p>
 <div class="tool-card-links">
 <span class="tool-link" style="cursor:default;"><i data-lucide="info"></i>node scripts/lot.mjs</span>
 </div>
 </div>
 
 </div>
-
-<details class="tools-batch-details">
-<summary>Lots d'extension historiques (pages « expand-catalog-batch », déjà exécutés)</summary>
-<div class="tools-batch-list" id="batchList">
-<!-- liens générés par tools.js -->
-</div>
-</details>
 
 </main>
 
