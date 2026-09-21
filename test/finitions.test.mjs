@@ -133,6 +133,10 @@ test("5 bis — la carte recalcule sa fenêtre et affiche la raison, sans rien �
   assert.match(src, /\$\{fermee \? "" : renderPlusProposable\(app, lecture\)\}/);
   const fn = src.slice(src.indexOf("function renderPlusProposable"), src.indexOf("function renderCard("));
   assert.ok(!/updateDoc|setDoc|deleteDoc/.test(fn), "constat seulement");
+  // Vu en ligne après déploiement : le recalcul ajoutait « Date limite non
+  // confirmée » aux cartes anciennes, et sur une candidature close.
+  assert.match(src, /const portaitUneFenetre = !!\(app\.certitude/);
+  assert.match(src, /if \(portaitUneFenetre && !close\) \{/);
 });
 
 test("6 — « Dossier de candidature » ne se valide pas tant qu'une exigence manque", () => {

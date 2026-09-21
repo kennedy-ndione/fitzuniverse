@@ -126,6 +126,6 @@ test("diagnostic : la réflexion par défaut de sonnet-5 est coupée, les lectur
   // Une rédaction coupée au plafond laisse une trace.
   assert.match(fitz, /"Rédaction coupée au plafond"/);
   const client = readFileSync(new URL("../js/ai/diagnostic-fitz.js", import.meta.url), "utf8");
-  assert.match(client, /const VERSION_LECTURE = 2;/);
+  assert.match(client, /const VERSION_LECTURE = [2-9];/);
   assert.match(client, /const signature = `v\$\{VERSION_LECTURE\}-\$\{empreinte\(responses\)\}`;/);
 });

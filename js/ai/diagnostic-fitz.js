@@ -50,7 +50,12 @@ const CLE_SESSION = "fitzDiagnostic";
 // lectures en plein mot, et ces lectures tronquées ont été ENREGISTRÉES
 // sur les comptes. Changer la version les rend caduques : chaque
 // étudiant concerné reçoit, une fois, une lecture complète.
-const VERSION_LECTURE = 2;
+// Passée à 3 le même jour (lot FINITIONS) : les raisons données à Fitz
+// nommaient la famille du catalogue (« votre domaine (Commerce) ») au
+// lieu du domaine de l'étudiant (« Économie »), et Fitz le répétait
+// dans sa lecture. Les lectures écrites avant la correction sont
+// régénérées une fois.
+const VERSION_LECTURE = 3;
 
 /**
 * Empreinte stable des réponses.

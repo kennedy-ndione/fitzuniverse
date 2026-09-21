@@ -1566,6 +1566,14 @@ function renderFaitsDuChoix(app, lecture) {
 
 if (!app || !app.isRecommendation) return "";
 
+// La ligne de fenêtre n'existe que sur les cartes qui portaient de quoi
+// la calculer (lot P2) — jugé sur la carte TELLE QU'ÉCRITE, avant le
+// recalcul ci-dessous. Sans cette garde, le recalcul l'aurait ajoutée
+// aux cartes anciennes (ALU, TDV), en doublon de la ligne d'échéance
+// que la carte affiche déjà plus bas.
+const portaitUneFenetre = !!(app.certitude || app.dateConfirmee === true || typeof app.jours === "number" || app.dateConfirmee === false);
+let close = false;
+
 // LE DÉCOMPTE SE RECALCULE (finitions, 2026-09-21). La carte gardait
 // les jours écrits le jour où Fitz l'avait posée : « 46 jours pour
 // déposer » restait « 46 jours » une semaine plus tard. Quand le
@@ -1573,6 +1581,9 @@ if (!app || !app.isRecommendation) return "";
 // sinon on garde ce que la carte porte.
 if (lecture && lecture.programme) {
 const ech = etatEcheance(lecture.programme);
+// Une candidature close se dit dans la ligne d'échéance de la carte
+// (« Candidatures : Closes ») : « date non confirmée » la contredirait.
+close = ech.ouverte === false;
 app = {
 ...app,
 jours: ech.jours,
@@ -1594,7 +1605,7 @@ faits.push(`<span class="app-fait app-fait-pays"><i data-lucide="map-pin"></i><s
 // Seulement quand la carte porte de quoi la calculer.
 // Lot P5a : `certitude` suffit désormais à déclencher la ligne — une
 // carte vérifiée doit pouvoir le dire même sans nombre de jours.
-if (app.certitude || app.dateConfirmee === true || typeof app.jours === "number" || app.dateConfirmee === false) {
+if (portaitUneFenetre && !close) {
 const fenetre = libelleFenetre(app);
 faits.push(`<span class="app-fait app-fait-fenetre is-${fenetre.etat}"><i data-lucide="${fenetre.etat === "a_verifier" ? "help-circle" : "calendar-clock"}"></i><span>${escapeHtml(fenetre.texte)}</span></span>`);
 }
