@@ -59,7 +59,11 @@ import { boutonRecours } from "./js/fitz-recours.js";
 import { guideVisaPour } from "./js/visa-depart.js";
 import { VISA_ETAPES } from "./js/journey-map.js";
 import { COUNTRY_NAMES } from "./js/countries.js";
-import { chargerUniversites } from "./js/catalog-data.js";
+import { prechargerCatalogue, chargerUniversites } from "./js/catalog-data.js";
+
+// Le catalogue part tout de suite, en parallèle de la connexion (lot
+// NAVIGATION RAPIDE, 2026-09-21) — voir js/catalog-data.js.
+prechargerCatalogue();
 import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,

@@ -62,6 +62,18 @@ function telechargerInstantane() {
   return promesseJson;
 }
 
+/**
+* Lance le téléchargement de l'instantané SANS l'attendre (lot NAVIGATION
+* RAPIDE, 2026-09-21). Mesuré en production : le catalogue ne partait
+* qu'après la connexion et toutes les lectures du compte — le dernier
+* maillon d'une longue file. Les hubs l'appellent dès leur chargement,
+* en parallèle de la connexion : quand ils en ont besoin, il est là.
+* Même promesse que telechargerInstantane() — jamais deux téléchargements.
+*/
+export function prechargerCatalogue() {
+  telechargerInstantane();
+}
+
 const lecteur = creerLecteurAvecInstantane({
   chargerInstantane: telechargerInstantane,
   lireFirestore: async (nom) => {

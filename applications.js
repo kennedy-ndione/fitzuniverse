@@ -68,7 +68,11 @@ import { qualifierEtapes, avertissementsPrematures, LIBELLE_PREREQUIS } from "./
 import { escapeHtml } from "./js/ai/format.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./js/catalog-data.js";
+import { prechargerCatalogue, chargerCatalogue } from "./js/catalog-data.js";
+
+// Le catalogue part tout de suite, en parallèle de la connexion (lot
+// NAVIGATION RAPIDE, 2026-09-21) — voir js/catalog-data.js.
+prechargerCatalogue();
 
 // Passe espace étudiant 1/3 (2026-09-06) : une candidature est RELIÉE à
 // sa fiche du catalogue (clé `scholarshipId` / `programId`, ou

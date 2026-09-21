@@ -45,6 +45,13 @@ import { renderMarkdownLite } from "./format.js";
 const CHAMP = "diagnosticFitz";
 const CLE_SESSION = "fitzDiagnostic";
 
+// Version de la lecture, mêlée à l'empreinte. Passée à 2 le 2026-09-21 :
+// avant cette date, la réflexion par défaut du modèle coupait des
+// lectures en plein mot, et ces lectures tronquées ont été ENREGISTRÉES
+// sur les comptes. Changer la version les rend caduques : chaque
+// étudiant concerné reçoit, une fois, une lecture complète.
+const VERSION_LECTURE = 2;
+
 /**
 * Empreinte stable des réponses.
 *
@@ -303,7 +310,7 @@ export async function afficherAnalyseFitz({ conteneur, responses, result, score,
 
 if (!conteneur) return;
 
-const signature = empreinte(responses);
+const signature = `v${VERSION_LECTURE}-${empreinte(responses)}`;
 const enCache = lireCache(signature);
 
 // Déjà écrite pendant cette visite : on la réaffiche, sans réseau.

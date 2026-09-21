@@ -170,12 +170,29 @@ const TACHES = {
   // serré (voir PLAFONDS.gratuit). Le client l'enregistre ensuite sur
   // le diagnostic de l'étudiant : revenir sur sa page de résultats ne
   // doit JAMAIS relancer une génération.
+  // maxTokens 1024 → 2048 (lot FITZ-DIAGNOSTIC, 2026-09-21) : c'est un
+  // PLAFOND, pas une dépense — seuls les jetons réellement écrits sont
+  // facturés, et la longueur de la lecture est tenue par le prompt. À
+  // 1024, la lecture revenait souvent VIDE au premier appel (4 fois dans
+  // la seule journée du 21) : voir « UN ESSAI DE PLUS » ci-dessous.
+  //
+  // LA VRAIE CAUSE, TROUVÉE LE 21 (lot FITZ-DIAGNOSTIC, 2e passe) :
+  // sur claude-sonnet-5, une requête SANS champ `thinking` réfléchit
+  // par défaut (réflexion adaptative), et `max_tokens` borne la
+  // réflexion ET le texte ensemble. La réflexion mangeait le plafond :
+  // lecture vide (tout parti en réflexion) ou coupée en plein mot
+  // (« un master en Économ », « vos cand »), vu en production. Une
+  // lecture de quelques paragraphes n'a pas besoin de réfléchir avant
+  // d'écrire : la réflexion est coupée ici, ce qui rend aussi la
+  // lecture plus rapide. Doc : platform.claude.com, « What's new in
+  // Claude Sonnet 5 » — `thinking: {type: "disabled"}`.
   diagnostic: {
     modele: "claude-sonnet-5",
-    maxTokens: 1024,
+    maxTokens: 2048,
     poids: 1,
     structuree: false,
     ouvertAuGratuit: true,
+    reflexion: false,
   },
 };
 
@@ -638,25 +655,62 @@ exports.fitzGenerate = onCall(
     const client = construireClient();
 
     try {
-      const flux = client.messages.stream({
-        model: config.modele,
-        max_tokens: config.maxTokens,
-        system,
-        messages: [{ role: "user", content: construireContenu(user, imagesValides, documentsValides) }],
-      });
+      const contenu = construireContenu(user, imagesValides, documentsValides);
 
-      // Diffusion progressive quand le client la demande : c'est ce qui
-      // donne l'effet « Fitz écrit sous vos yeux » que l'interface
-      // simule déjà (toChunks dans js/ai/ai-client.js). Une tâche
-      // structurée n'est jamais diffusée : un JSON à moitié écrit n'est
-      // pas du JSON, l'afficher au fil de l'eau n'aurait aucun sens.
-      if (request.acceptsStreaming && !config.structuree) {
-        flux.on("text", (fragment) => {
-          response.sendChunk({ delta: fragment });
+      const generer = (maxTokens) => {
+        const flux = client.messages.stream({
+          model: config.modele,
+          max_tokens: maxTokens,
+          // Sans ce champ, sonnet-5 réfléchit par défaut et la réflexion
+          // compte dans max_tokens (voir la tâche diagnostic).
+          ...(config.reflexion === false ? { thinking: { type: "disabled" } } : {}),
+          system,
+          messages: [{ role: "user", content: contenu }],
         });
-      }
 
-      const message = await flux.finalMessage();
+        // Diffusion progressive quand le client la demande : c'est ce qui
+        // donne l'effet « Fitz écrit sous vos yeux » que l'interface
+        // simule déjà (toChunks dans js/ai/ai-client.js). Une tâche
+        // structurée n'est jamais diffusée : un JSON à moitié écrit n'est
+        // pas du JSON, l'afficher au fil de l'eau n'aurait aucun sens.
+        if (request.acceptsStreaming && !config.structuree) {
+          flux.on("text", (fragment) => {
+            response.sendChunk({ delta: fragment });
+          });
+        }
+
+        return flux.finalMessage();
+      };
+
+      const texteDe = (m) => m.content
+        .filter((bloc) => bloc.type === "text")
+        .map((bloc) => bloc.text)
+        .join("");
+
+      let message = await generer(config.maxTokens);
+
+      // UN ESSAI DE PLUS, CÔTÉ SERVEUR (lot FITZ-DIAGNOSTIC, 2026-09-21).
+      // Une réponse sans aucun texte arrivait sur le diagnostic : le
+      // navigateur la recevait en erreur, la retentait jusqu'à deux fois
+      // (js/ai/ai-client.js), réservait un point à chaque tour, et
+      // l'étudiant attendait 40 à 60 s devant « Fitz analyse votre
+      // profil… » juste après ses 17 questions. Le second essai se fait
+      // donc ICI : même demande, plafond doublé, SANS nouvelle
+      // réservation de points (l'étudiant a demandé une lecture, il en
+      // paie une). Rien n'a été diffusé au premier essai — il n'y avait
+      // pas de texte — : le client ne voit qu'un flux, un peu plus tard.
+      // Jamais pour une tâche structurée (une coupure s'y dit, voir
+      // REPONSE_TRONQUEE) ni après un refus de sécurité.
+      if (!config.structuree && message.stop_reason !== "refusal" && !texteDe(message).trim()) {
+        logger.warn("Réponse vide — nouvel essai", {
+          task,
+          uid,
+          stopReason: message.stop_reason,
+          blocs: message.content.map((bloc) => bloc.type),
+          outputTokens: message.usage?.output_tokens,
+        });
+        message = await generer(config.maxTokens * 2);
+      }
 
       // Un refus de sécurité arrive en HTTP 200 : sans ce test, on
       // renverrait une réponse vide sans savoir pourquoi.
@@ -669,10 +723,23 @@ exports.fitzGenerate = onCall(
         );
       }
 
-      const texte = message.content
-        .filter((bloc) => bloc.type === "text")
-        .map((bloc) => bloc.text)
-        .join("");
+      const texte = texteDe(message);
+
+      // UNE RÉDACTION COUPÉE SE JOURNALISE (2026-09-21). Pour une tâche
+      // de rédaction, le texte coupé part quand même vers l'étudiant ;
+      // jusqu'ici rien ne le signalait, et la lecture du diagnostic est
+      // restée tronquée des jours sans une ligne de journal.
+      if (!config.structuree && message.stop_reason === "max_tokens") {
+        logger.warn("Rédaction coupée au plafond", {
+          task,
+          uid,
+          modele: config.modele,
+          maxTokens: config.maxTokens,
+          blocs: message.content.map((bloc) => bloc.type),
+          outputTokens: message.usage?.output_tokens,
+          longueur: texte.length,
+        });
+      }
 
       logger.info("Génération Fitz", {
         task,

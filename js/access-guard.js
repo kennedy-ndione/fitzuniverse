@@ -164,6 +164,17 @@ if (localStorage.getItem(LEGACY_USERS_KEY)) {
 localStorage.removeItem(LEGACY_USERS_KEY);
 }
 
+// LES TROIS LECTURES DE DÉPART PARTENT ENSEMBLE (lot NAVIGATION
+// RAPIDE, 2026-09-21). Elles se suivaient : le compte, PUIS la fiche
+// administrateur, PUIS (dans bootstrapShell) la configuration des
+// formules — trois allers-retours à la file vers Firestore à chaque
+// page de l'espace, mesurés en production. Aucune ne dépend des
+// autres : elles partent maintenant au même instant, et chacune garde
+// sa propre gestion d'échec (la fiche admin refusée reste un cas
+// normal, la configuration absente retombe sur les valeurs par défaut).
+lancerLesDrapeaux();
+const adminEnVol = getDoc(doc(db, "admins", firebaseUser.uid)).catch(() => null);
+
 const userRef = doc(db, "users", firebaseUser.uid);
 let userSnap = await getDoc(userRef);
 
@@ -207,17 +218,13 @@ userData.profile || {}
 // autres.
 let planId = resolvePlan(userData);
 
-try {
+// Lancée plus haut, en même temps que le compte. Pas admin, ou lecture
+// refusée : `null`, comportement normal — la formule reste celle
+// résolue depuis users/{uid} ci-dessus.
+const ownerSnap = await adminEnVol;
 
-const ownerSnap = await getDoc(doc(db, "admins", firebaseUser.uid));
-
-if (ownerSnap.exists() && ownerSnap.data().isActive === true) {
+if (ownerSnap && ownerSnap.exists() && ownerSnap.data().isActive === true) {
 planId = OWNER_FREE_PLAN;
-}
-
-} catch (ownerCheckError) {
-// Pas admin, ou lecture refusée : comportement normal, la formule
-// reste celle résolue depuis users/{uid} ci-dessus.
 }
 
 resolve({
@@ -243,7 +250,24 @@ reject(error);
 
 }
 
-export async function fetchFeatureFlags() {
+// La configuration des formules, une fois par page (lot NAVIGATION
+// RAPIDE). resolveSession la lance dès que l'utilisateur est connu —
+// JAMAIS avant : config/{id} n'est lisible que connecté
+// (firestore.rules), et une lecture partie trop tôt retomberait sur les
+// valeurs par défaut. fetchFeatureFlags() reprend la même promesse au
+// lieu de relire.
+let drapeauxEnVol = null;
+
+function lancerLesDrapeaux() {
+if (!drapeauxEnVol) drapeauxEnVol = lireLesDrapeaux();
+return drapeauxEnVol;
+}
+
+export function fetchFeatureFlags() {
+return drapeauxEnVol || lireLesDrapeaux();
+}
+
+async function lireLesDrapeaux() {
 
 let planFeaturesConfig = null;
 

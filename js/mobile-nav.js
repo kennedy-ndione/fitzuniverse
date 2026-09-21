@@ -699,10 +699,47 @@ applySettled();
 // Amorçage
 // ==========================================================
 
+// ==========================================================
+// LA PAGE SUIVANTE PART AVANT LE CLIC (lot NAVIGATION RAPIDE, 2026-09-21)
+// ==========================================================
+// Règles de spéculation (Chrome, Edge, Android) : quand le doigt se pose
+// sur un lien du site — ou que la souris s'y arrête —, le navigateur
+// commence à télécharger la page visée. Au clic, elle est déjà là : un
+// aller-retour réseau de moins, celui qu'on sent le plus sur mobile.
+// « prefetch » seulement, jamais « prerender » : la page n'est PAS
+// exécutée en avance (pas de connexion, pas d'écriture, pas de mesure
+// d'audience comptée deux fois). Les pages qui engagent — paiement,
+// connexion, inscription — sont exclues. Un navigateur qui ne connaît
+// pas la règle l'ignore : rien ne change pour lui.
+function initPrechargementDesPages() {
+if (document.querySelector('script[type="speculationrules"]')) return;
+if (!(window.HTMLScriptElement && typeof HTMLScriptElement.supports === "function" && HTMLScriptElement.supports("speculationrules"))) return;
+const regles = document.createElement("script");
+regles.type = "speculationrules";
+regles.textContent = JSON.stringify({
+prefetch: [{
+source: "document",
+where: {
+and: [
+{ href_matches: "/*" },
+{ not: { href_matches: "/payment.html*" } },
+{ not: { href_matches: "/login.html*" } },
+{ not: { href_matches: "/inscription.html*" } },
+{ not: { href_matches: "/admin/*" } },
+{ not: { selector_matches: "[target=_blank], [download], [rel~=nofollow]" } }
+]
+},
+eagerness: "moderate"
+}]
+});
+document.head.appendChild(regles);
+}
+
 function init() {
 initPublic();
 initShell();
 initViewportHeight();
+initPrechargementDesPages();
 }
 
 if (document.readyState === "loading") {
