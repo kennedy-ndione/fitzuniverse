@@ -738,8 +738,16 @@ const src = sansCommentaires(lire("applications.js"));
 const i = src.indexOf("function renderReadinessItem");
 const bloc = src.slice(i, src.indexOf("function renderReadinessPanel", i));
 
-assert.match(bloc, /\^\(https\?:/,
-"un href venu du modèle est émis sans vérifier son schéma");
+// Lot DÉPART (2026-09-21) : vérifier le SCHÉMA ne suffisait pas — le
+// modèle inventait des chemins internes (/profil, 404). Le href émis
+// est désormais celui que rend la liste fermée de js/liens-fitz.js,
+// jamais la valeur brute du modèle (voir test/lot-depart.test.mjs).
+assert.match(bloc, /const lien = lienFitzSur\(item\.actionHref\);/,
+"un href venu du modèle est émis sans passer par la liste fermée");
+assert.match(bloc, /href="\$\{escapeHtml\(lien\)\}"/,
+"le href émis doit être celui validé, pas item.actionHref");
+assert.ok(!/href="\$\{escapeHtml\(item\.actionHref\)\}"/.test(bloc),
+"la valeur brute du modèle ne doit plus jamais atteindre un href");
 
 });
 

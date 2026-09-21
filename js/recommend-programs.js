@@ -43,7 +43,7 @@
 import { estEligible } from "./eligibility-countries.js";
 import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
-import { familleDeDomaine } from "./eligibility-pistes.js";
+import { familleDeDomaine, pisteDepuisNiveau, PISTES } from "./eligibility-pistes.js";
 import { analyserEcheance, joursAvant } from "./echeance.js";
 import { languesParlees } from "./niveaux-langue.js";
 
@@ -214,6 +214,53 @@ const age = computeAge(profile.birthDate);
 if (age !== null) return respecteLimiteAge(scholarship.ageMax, age, niveau);
 
 if (profile.ageBracket) return respecteLimiteAgeTranche(scholarship.ageMax, profile.ageBracket, niveau);
+
+return null;
+
+}
+
+// LA FENÊTRE DU BAC (lot DÉPART, 2026-09-21).
+//
+// Certaines bourses de licence ne s'adressent qu'aux bacheliers de
+// l'année : Lester B. Pearson exige d'être « en dernière année de
+// secondaire en 2026-2027 ou diplômé au plus tôt en juin 2026 », et
+// refuse quiconque est déjà inscrit dans le supérieur. La fiche le
+// disait en toutes lettres ; le moteur ne le lisait pas, et proposait
+// Pearson à une bachelière de 2022 — avec « c'est votre établissement
+// actuel qui vous présente » à quelqu'un qui n'en a plus depuis quatre
+// ans.
+//
+// Champ de bourse `anneeBacMin` (entier) : l'année de bac la plus
+// ancienne acceptée. true | false | null, même règle des trois valeurs
+// que ageMatch — null (lycéen, année inconnue) n'exclut jamais.
+function fenetreBacMatch(scholarship, profile) {
+
+const min = scholarship && Number(scholarship.anneeBacMin);
+if (!Number.isInteger(min)) return null;
+
+const valides = Object.values(PISTES);
+const palier = valides.includes(profile.palier) ? profile.palier : pisteDepuisNiveau(profile.lastDegree);
+
+if (!palier || palier === PISTES.LYCEE) return null;
+
+// Déjà dans le supérieur : ces bourses le refusent explicitement.
+if (palier !== PISTES.BAC_OBTENU) return false;
+
+const annee = anneeDuBac(profile);
+return annee === null ? null : annee >= min;
+
+}
+
+/** L'année du bac : saisie au profil, sinon déduite du diagnostic. */
+function anneeDuBac(profile, aujourdhui = new Date()) {
+
+const saisie = Number(profile.graduationYear);
+if (Number.isInteger(saisie) && saisie > 1950) return saisie;
+
+const an = aujourdhui.getFullYear();
+if (profile.diplomaWhen === "Cette année") return an;
+if (profile.diplomaWhen === "L'an dernier") return an - 1;
+if (profile.diplomaWhen === "Il y a 2 ans ou plus") return an - 2;
 
 return null;
 
@@ -439,6 +486,12 @@ if (ageMatch(scholarship, profile) === false) {
 return -1;
 }
 
+// La fenêtre du bac (lot DÉPART) : même filtre DUR, même règle — sur
+// false seulement.
+if (fenetreBacMatch(scholarship, profile) === false) {
+return -1;
+}
+
 // Lot FITZ-CHOISIT (2026-09-11) : un pays que l'étudiant a EXCLU
 // (profile.html, « Pays exclus » → excludedCountries) est un filtre
 // DUR, même mécanique : le champ était collecté et jamais lu. Vaut pour
@@ -603,6 +656,8 @@ return reasons;
 * @param {number} count - nombre de recommandations à renvoyer
 * @returns {Array<{universityId, score, universityName, scholarshipTitle, deadline, applicationUrl, universityWebsite, reasons}>}
 */
+export { fenetreBacMatch };
+
 export function recommendPrograms({ profile, programs, universitiesById, scholarshipsById, excludeUniversityIds, count }) {
 
 const exclude = excludeUniversityIds || new Set();

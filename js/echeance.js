@@ -327,7 +327,15 @@ export function formaterDate(iso) {
 
 if (!iso) return "";
 
-const [a, m, j] = iso.split("-").map(Number);
+// Lot DÉPART (2026-09-21) : une fiche portait verifieLe « 6 novembre
+// 2026 » (une date limite tombée dans le mauvais champ) et la carte
+// affichait « Vérifié le undefined undefined NaN ». Une valeur qui n'est
+// pas une date ISO ne se formate pas : elle ne s'affiche pas.
+const iso10 = typeof iso === "string" ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim()) : null;
+if (!iso10) return "";
+
+const [a, m, j] = iso10.slice(1).map(Number);
+if (m < 1 || m > 12 || j < 1 || j > 31) return "";
 const jour = j === 1 ? "1er" : String(j);
 
 return `${jour} ${MOIS_LONGS[m - 1]} ${a}`;
@@ -613,7 +621,7 @@ function etatSansDateVerifiee(entree, aujourdhui = new Date()) {
 const e = entree || {};
 
 const periode = (e.periodeOuverture || "").trim();
-const verifie = e.verifieLe ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
+const verifie = formaterDate(e.verifieLe) ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
 
 // Un statut ou plusieurs — voir l'en-tête. « Fermée » quelque part
 // ferme ; « Ouverte » ne vaut que si personne ne dit le contraire.
@@ -838,7 +846,7 @@ if (!isos.every(passee)) return brut;
 const derniereVerifiee = isos[isos.length - 1];
 
 const periode = (e.periodeOuverture || "").trim();
-const verifie = e.verifieLe ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
+const verifie = formaterDate(e.verifieLe) ? `Vérifié le ${formaterDate(e.verifieLe)}` : "";
 const variable = MENTION_VARIABLE[e.echeanceVariable];
 
 // (b) la prose annonce une date encore à venir : on dit le doute.

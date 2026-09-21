@@ -72,7 +72,7 @@ liens de retour existants. -->
 
 <main class="container" id="main-content" tabindex="-1">
 
-<a href="index.html" class="back-link">
+<a href="index.html" class="back-link" id="resultsBackLink">
 <i data-lucide="arrow-left"></i>
 <span>Retour à l'accueil</span>
 </a>
@@ -114,6 +114,16 @@ annoncée aux lecteurs d'écran plutôt que subie en silence. -->
 </div>
 
 <h1>Votre diagnostic est terminé</h1>
+
+<!-- LOT DÉPART (2026-09-21) — quand un compte connecté a déjà un profil
+qui dit autre chose (niveau visé, domaine, destination), on le lui
+montre ici : son espace suit son PROFIL, pas ce diagnostic. Rempli par
+results.js (conserverLeDiagnostic → ecartsDiagnosticProfil). -->
+<div class="ecart-profil" id="ecartProfil" role="status" hidden>
+<p><strong>Ce diagnostic ne dit pas la même chose que votre profil.</strong> Votre espace suit votre profil : c'est lui qui décide des universités que Fitz vous propose.</p>
+<ul class="ecart-profil-liste" id="ecartProfilListe"></ul>
+<a href="profile.html" class="btn btn-secondary btn-sm"><span>Mettre mon profil à jour</span><i data-lucide="arrow-right"></i></a>
+</div>
 
 <!-- Récit d'ouverture de Fitz — l'icône n'a plus de pastille carrée
 en dégradé derrière elle (retour utilisateur du 2026-08-22 : "des
@@ -335,12 +345,12 @@ C'est exactement ce que Fitz propose : une liste d'opportunités, puis un trava
 <li><i data-lucide="check"></i><span>Vous accompagner jusqu'au dépôt du dossier</span></li>
 </ul>
 
-<a href="offers.html?parcours=bourse" class="btn btn-accent btn-lg">
+<a href="offers.html?parcours=bourse" class="btn btn-accent btn-lg" id="closingCta">
 <span>Construire mon dossier avec Fitz</span>
 <i data-lucide="arrow-right"></i>
 </a>
 
-<p class="closing-note">
+<p class="closing-note" id="closingNote">
 <i data-lucide="shield-check"></i>
 Aucun engagement à cette étape — découvrez simplement comment fonctionne l'accompagnement.
 </p>

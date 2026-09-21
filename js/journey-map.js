@@ -103,7 +103,8 @@ return PHASES_PAR_ESPACE[espace] || PHASES;
 *                    déjà déposée — le dossier a atteint l'état « prêt »
 *  4. depot        : au moins une candidature au statut déposé ou au-delà
 *  5. reponse      : au moins une réponse reçue (issue précisée ou non)
-*  6. depart       : les 6 étapes de la checklist visa sont cochées
+*  6. depart       : une admission enregistrée (statut « admise ») ET
+*                    les 6 étapes de la checklist visa cochées
 *                    (champ `visaChecklist` du document utilisateur —
 *                    depuis le 2026-08-30, la phase est mesurable).
 *
@@ -132,13 +133,22 @@ STATUTS_DEPOSES.includes(app.status) ||
 const aDepose = applications.some((app) => STATUTS_DEPOSES.includes(app.status));
 const aReponse = applications.some((app) => STATUTS_REPONSE.includes(app.status));
 
+// LE DÉPART SUPPOSE UNE ADMISSION (lot DÉPART, 2026-09-21). La phase 06
+// n'était mesurée que sur les six cases du guide visa : un compte sans
+// aucune réponse d'université cochait les six et lisait « vous êtes
+// prêt(e). Bon voyage ! », phase « faite », pendant que la phase 05
+// restait « à venir ». Les cases restent libres (on peut préparer son
+// passeport avant d'être admis) ; c'est leur SENS qui attend une
+// admission enregistrée.
+const aAdmission = applications.some((app) => app.status === "admise");
+
 const faits = {
 profil: profileScore >= PROFILE_READY_THRESHOLD,
 opportunites: aUneCandidature,
 dossiers: dossierPret,
 depot: aDepose,
 reponse: aReponse,
-depart: visaComplete(visaChecklist)
+depart: aAdmission && visaComplete(visaChecklist)
 };
 
 let couranteId = listePhases[listePhases.length - 1].id;

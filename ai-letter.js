@@ -254,6 +254,7 @@ const formation = titreDuVoeu(app);
 // Chine. Le profil ne parle plus que faute de candidature.
 const pays = paysDuVoeu(app);
 if (pays) fieldCountry.value = pays;
+else if (app.universityId) completerPaysDepuisCatalogue(app);
 const degre = degreDuVoeu(app);
 if (degre) fieldLevel.value = degre;
 if (formation) {
@@ -271,6 +272,26 @@ renderContextChips();
 appliquerMode();
 syncBlocage();
 
+}
+
+// LE PAYS D'UNE CANDIDATURE QUI N'EN PORTE PAS (lot DÉPART, 2026-09-21).
+// Une candidature acceptée avant que les cartes de Fitz ne portent
+// `country` n'a pas de pays : le champ gardait alors le premier pays
+// souhaité du profil, et la lettre d'une candidature à ALU (Rwanda)
+// s'ouvrait sur « Pays visé : Chine ». Le pays se lit dans le catalogue,
+// par l'université de la candidature ; en attendant — ou faute de mieux —
+// le champ reste VIDE plutôt que faux.
+function completerPaysDepuisCatalogue(app) {
+fieldCountry.value = "";
+import("./js/catalog-data.js")
+.then(({ documentDuCatalogue }) => documentDuCatalogue("universities", app.universityId))
+.then((universite) => {
+if (universite && universite.country && application === app && !fieldCountry.value) {
+fieldCountry.value = universite.country;
+renderContextChips();
+}
+})
+.catch(() => {});
 }
 
 // Lot ACCEPTATION : pour une candidature bourse, l'université

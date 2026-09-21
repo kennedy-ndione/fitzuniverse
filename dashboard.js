@@ -977,7 +977,7 @@ ${destination.etapes.map((e) => `
 
 }
 
-function initVisaChecklist(uid, initial, rafraichirCarte, guide) {
+function initVisaChecklist(uid, initial, rafraichirCarte, guide, admis = true) {
 
 const etat = {};
 VISA_ETAPES.forEach((id) => { etat[id] = initial && initial[id] === true; });
@@ -1032,7 +1032,12 @@ const restantes = VISA_ETAPES.length - faites;
 // ligne dit maintenant OÙ ON EN EST, et ce qui vient.
 document.getElementById("jyVisaProgress").textContent =
 faites === VISA_ETAPES.length
+? (admis
 ? "Les six démarches sont accomplies — vous êtes prêt(e) au départ. Bon voyage !"
+// Lot DÉPART (2026-09-21) : six cases cochées sans admission ne font
+// pas un départ (etatDesPhases le mesure désormais ainsi). On le dit
+// plutôt que de souhaiter bon voyage à qui n'est attendu nulle part.
+: "Les six démarches sont cochées. Elles compteront pour votre départ dès qu'une admission sera enregistrée dans vos dossiers.")
 : faites === 0
 ? `Six démarches vous séparent du départ. La première est ci-dessous ; les suivantes se découvrent au fur et à mesure.`
 : `${faites} démarche${faites > 1 ? "s" : ""} accomplie${faites > 1 ? "s" : ""} sur ${VISA_ETAPES.length} — il vous en reste ${restantes}.`;
@@ -1367,7 +1372,7 @@ applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, session.pl
 initVisaChecklist(user.uid, visaChecklist, rafraichirCarte, guideVisaPour({
 espace: ESPACE,
 procedure: procedureDeDepart(applications, procedureDe)
-}));
+}), applications.some((app) => app.status === "admise"));
 
 if (window.lucide) lucide.createIcons();
 

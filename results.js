@@ -170,7 +170,12 @@ nationality: responses.nationality || "",
 // bourse dont le plafond `ageMax` est dépassé par la tranche ENTIÈRE
 // (une tranche à cheval sur la limite ne tranche pas : règle des
 // trois valeurs, js/age-limits.js).
-ageBracket: responses.ageBracket || ""
+ageBracket: responses.ageBracket || "",
+// Lot DÉPART (2026-09-21) : le palier et l'ancienneté du diplôme, pour
+// les bourses réservées aux bacheliers de l'année (anneeBacMin,
+// js/recommend-programs.js:fenetreBacMatch).
+palier: responses.piste || "",
+diplomaWhen: responses.diplomaWhen || ""
 };
 
 }
@@ -1128,6 +1133,11 @@ const reference = doc(db, "users", utilisateur.uid);
 const instantane = await getDoc(reference);
 if (!instantane.exists()) return;      // compte non initialisé : ce n'est pas à cette page de le créer
 
+// La page parle au compte qui la lit, AVANT toute écriture : même quand
+// il n'y a rien de neuf à conserver, un client accompagné doit trouver
+// son espace, et un profil qui dit autre chose doit être signalé.
+await adapterAuCompte(instantane.data(), reponses);
+
 const maj = miseAJourDuCompte(instantane.data(), reponses, { serverTimestamp });
 if (!maj) return;                      // rien de neuf : aucune écriture facturée
 
@@ -1140,6 +1150,70 @@ await setDoc(reference, maj, { merge: true });
 // Un diagnostic qui s'affiche vaut mieux qu'un diagnostic qui se
 // sauvegarde : cette chaîne n'interrompt jamais la page.
 console.warn("Le diagnostic n'a pas pu être conservé :", erreur);
+
+}
+
+}
+
+// ==========================================================
+// LA PAGE PARLE AU COMPTE QUI LA LIT (lot DÉPART, 2026-09-21)
+// ==========================================================
+// Constaté sur un compte Essentiel qui refaisait son diagnostic : la
+// page n'offrait que « Retour à l'accueil », « Choisir ma formule » et
+// « Construire mon dossier avec Fitz » → offers.html. Aucun chemin vers
+// son espace, et on lui revendait ce qu'il avait déjà payé. Et quand son
+// profil disait autre chose que ce diagnostic, rien ne le lui disait.
+async function adapterAuCompte(donnees, reponses) {
+
+try {
+
+const { resoudreEspace, HUB_ESPACE } = await import("./js/plan-features.js");
+const espace = resoudreEspace(donnees);
+
+if (espace !== "aucun") {
+
+const hub = HUB_ESPACE[espace] || "dashboard.html";
+document.body.dataset.compteAccompagne = "1";
+
+const retour = document.getElementById("resultsBackLink");
+if (retour) {
+retour.setAttribute("href", hub);
+const libelle = retour.querySelector("span");
+if (libelle) libelle.textContent = "Retour à mon espace";
+}
+
+const cta = document.getElementById("closingCta");
+if (cta) {
+cta.setAttribute("href", hub);
+const libelle = cta.querySelector("span");
+if (libelle) libelle.textContent = "Continuer dans mon espace";
+}
+
+const note = document.getElementById("closingNote");
+if (note) note.hidden = true;
+
+}
+
+const { ecartsDiagnosticProfil } = await import("./js/diagnostic-vers-profil.js");
+const ecarts = ecartsDiagnosticProfil(donnees && donnees.profile, reponses);
+const bloc = document.getElementById("ecartProfil");
+const liste = document.getElementById("ecartProfilListe");
+
+if (bloc && liste && ecarts.length) {
+liste.replaceChildren(...ecarts.map((e) => {
+const li = document.createElement("li");
+const nom = document.createElement("strong");
+nom.textContent = `${e.libelle} : `;
+li.append(nom, `${e.diagnostic} dans ce diagnostic, ${e.profil} dans votre profil.`);
+return li;
+}));
+bloc.hidden = false;
+if (window.lucide) window.lucide.createIcons();
+}
+
+} catch (erreur) {
+
+console.warn("La page n'a pas pu s'adapter au compte :", erreur);
 
 }
 

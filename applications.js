@@ -88,6 +88,7 @@ import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "./js/parcours.js";
 // Lot E1 (2026-09-07) : la preuve de dépôt — une déclaration structurée,
 // jamais une vérification. firestore.rules fait foi.
 import { lirePreuve, preuveValide, libelleDemande, resumePreuve, cheminCapture, TAILLE_MAX_FICHIER, TYPES_FICHIER } from "./js/preuve-depot.js";
+import { lienFitzSur } from "./js/liens-fitz.js";
 import { deposeParUnTiers } from "./js/exigences.js";
 import { STATUTS_DEPOSES } from "./js/journey-map.js";
 import { compressImageToTarget } from "./js/compression-image.js";
@@ -526,11 +527,14 @@ return FITZ_READINESS_PHRASES.deadlineSoon(daysLeft);
 function renderReadinessItem(item) {
 
 // Un href ne se protège pas en échappant : `javascript:…` ne contient
-// aucun caractère à échapper. On n'émet une ancre que pour une
-// destination interne ou http(s) ; tout le reste redevient un bouton.
-if (item.actionHref && /^(https?:\/\/|[\w./?=&#-]+)$/.test(item.actionHref)) {
+// aucun caractère à échapper. Lot DÉPART (2026-09-21) : « avoir l'air
+// d'un chemin » ne suffit plus — le modèle inventait /profil,
+// /candidature/dossier… (404). Seules les pages de js/liens-fitz.js
+// donnent une ancre ; tout le reste redevient un bouton.
+const lien = lienFitzSur(item.actionHref);
+if (lien) {
 return `
-<a href="${escapeHtml(item.actionHref)}" class="ai-checklist-item app-readiness-item">
+<a href="${escapeHtml(lien)}" class="ai-checklist-item app-readiness-item">
 <i data-lucide="arrow-right-circle"></i>
 <span>${escapeHtml(item.text)}</span>
 </a>`;

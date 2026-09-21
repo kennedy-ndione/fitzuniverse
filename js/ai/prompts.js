@@ -25,7 +25,8 @@ import { chatLanguageName, DEFAULT_CHAT_LANGUAGE } from "./chat-language.js";
 // on ne réécrit pas la règle ici. Son défaut est « bourse » : aucun
 // appel existant ne change de comportement.
 import { lireParcoursDeSaisie } from "../parcours.js";
-import { languesLisibles, libellePalier, lirePalier } from "../profil-par-niveau.js";
+import { languesLisibles, libellePalier, lirePalier, estSecondaire } from "../profil-par-niveau.js";
+import { pisteDepuisNiveau } from "../eligibility-pistes.js";
 import { phraseTestLangue } from "../test-de-langue.js";
 // Lot FORMULE-FITZ (2026-09-19) : Fitz ne savait RIEN de la formule de
 // l'étudiant à qui il parlait — il pouvait donc lui promettre un
@@ -33,6 +34,7 @@ import { phraseTestLangue } from "../test-de-langue.js";
 // l'outil verrouillé vend. Le paragraphe est construit dans un module
 // pur, testable en Node (js/ai/formule-fitz.js).
 import { cadreFormule } from "./formule-fitz.js";
+import { PAGES_FITZ } from "../liens-fitz.js";
 
 // ==========================================================
 // DEUX PARCOURS, DEUX CADRES — jamais mélangés dans une même sortie
@@ -237,13 +239,40 @@ const test = phraseTestLangue(profile);
 if (test) parts.push(`Test de langue : ${test}`);
 
 if (profile.city) parts.push(`Ville de résidence : ${profile.city}`);
-if (profile.academicAverage) parts.push(`Moyenne : ${profile.academicAverage} (échelle ${profile.academicAverageScale || "non précisée"})`);
+// LA BONNE MOYENNE, NOMMÉE (lot DÉPART, 2026-09-21). Une seule ligne
+// « Moyenne : 14 » partait vers Fitz, sans dire laquelle : pour une
+// bachelière dont le profil portait bac 12,20 et une moyenne générale
+// 14 (reste d'un ancien palier, masquée à l'écran), la lettre a écrit
+// « baccalauréat avec une moyenne de 14/20 » — un chiffre faux dans une
+// pièce officielle. On envoie la moyenne QUI S'APPLIQUE au palier, avec
+// son nom : celle du bac pour un lycéen ou un bachelier, celle du
+// cursus supérieur sinon. Sans palier connu, les deux, chacune nommée.
+const palierId = lirePalier(profile) || pisteDepuisNiveau(profile.lastDegree || "");
+const echelle = (v) => (v ? ` (sur ${v === "gpa4" ? "4 (GPA)" : v === "letters" ? "lettres A-F" : v === "other" ? "100, autre système" : v})` : "");
+const moyenneBac = profile.bacAverage ? `Moyenne au baccalauréat : ${profile.bacAverage}${echelle(profile.bacAverageScale)}` : "";
+const moyenneSup = profile.academicAverage ? `Moyenne générale du cursus supérieur : ${profile.academicAverage}${echelle(profile.academicAverageScale)}` : "";
+if (palierId && estSecondaire(palierId)) {
+if (moyenneBac) parts.push(moyenneBac);
+} else if (palierId) {
+if (moyenneSup) parts.push(moyenneSup);
+if (moyenneBac) parts.push(moyenneBac);
+} else {
+if (moyenneSup) parts.push(moyenneSup);
+if (moyenneBac) parts.push(moyenneBac);
+}
 if (profile.careerGoals) parts.push(`Objectifs de carrière : ${profile.careerGoals}`);
 if (profile.whyLeave) parts.push(`Motivation à étudier à l'étranger : ${profile.whyLeave}`);
 
 return parts.length ? parts.join("\n") : "Aucune information de profil disponible.";
 
 }
+
+// UNE LETTRE N'EMBELLIT PAS LES FAITS (lot DÉPART, 2026-09-21). Constaté
+// sur une vraie génération : l'étudiante avait écrit « anglais
+// intermédiaire », la lettre disait « niveau avancé ». Une lettre de
+// motivation est une pièce officielle : un chiffre ou un niveau enjolivé
+// se vérifie au premier entretien, et coûte la candidature.
+const FAITS_DE_LA_LETTRE = "Chiffres, niveaux de langue, notes, mentions, diplômes, dates et expériences : reprends-les EXACTEMENT tels qu'ils figurent dans les données, sans jamais les arrondir vers le haut ni les requalifier (« intermédiaire » ne devient pas « avancé », une moyenne ne change pas de diplôme). Si deux données se contredisent, retiens la plus prudente, ou n'en cite aucune. Ce qui n'est pas dans les données n'est pas dans la lettre.";
 
 const BUILDERS = {
 
@@ -277,7 +306,7 @@ describeProfile(input.profile, lireParcoursDeSaisie(input)),
 }
 
 return {
-system: `${baseSystem(input)} Tu rédiges des lettres de motivation universitaires convaincantes, structurées en 4 à 6 paragraphes, sans clichés, ancrées dans le parcours réel de l'étudiant. ${SANS_COMMENTAIRE}`,
+system: `${baseSystem(input)} Tu rédiges des lettres de motivation universitaires convaincantes, structurées en 4 à 6 paragraphes, sans clichés, ancrées dans le parcours réel de l'étudiant. ${FAITS_DE_LA_LETTRE} ${SANS_COMMENTAIRE}`,
 user: [
 `Rédige une lettre de motivation de style "${input.style}" pour :`,
 `Université : ${input.university || "non précisée"}`,
@@ -487,7 +516,7 @@ const checklistLines = (input.checklist || []).length
 const consigneJSON = `Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown (pas de \`\`\`), exactement selon ce schéma :
 {
   "ready": true ou false,
-  "missingItems": [{ "id": "identifiant court sans espace", "text": "phrase complète décrivant ce qu'il reste à faire", "actionLabel": "verbe d'action court, ex. \\"Compléter mon profil\\"", "actionHref": "lien interne relatif si pertinent, sinon null" }, ...] — au plus 8 éléments, liste vide si "ready" est true
+  "missingItems": [{ "id": "identifiant court sans espace", "text": "phrase complète décrivant ce qu'il reste à faire", "actionLabel": "verbe d'action court, ex. \\"Compléter mon profil\\"", "actionHref": "UNE de ces pages si elle aide vraiment, sinon null : ${PAGES_FITZ.join(", ")} (jamais une autre adresse, jamais un chemin inventé)" }, ...] — au plus 8 éléments, liste vide si "ready" est true
 }
 Une seule phrase par élément. N'invente jamais une étape ou un document qui n'a pas été mentionné dans les données ci-dessous.`;
 

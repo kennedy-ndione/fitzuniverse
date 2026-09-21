@@ -272,3 +272,47 @@ return jours >= 0 && jours <= 90 ? paquet.reponses : null;
 return null;
 }
 }
+
+/**
+* CE QUE LE DIAGNOSTIC DIT AUTREMENT QUE LE PROFIL (lot DÉPART, 2026-09-21).
+*
+* fusionnerSansEcraser ne remplit que les cases vides : c'est voulu, un
+* diagnostic refait en cinq minutes ne doit pas effacer un profil
+* construit en une heure. Mais l'écart restait MUET. Constaté le 21 sur
+* un compte réel : diagnostic « Master, Économie, France », profil
+* « Licence, Psychologie, Chine » — les résultats proposaient Sciences Po,
+* l'espace continuait de proposer Toronto, et personne ne disait
+* pourquoi. On ne tranche pas à la place de l'étudiant : on lui montre
+* les trois écarts qui changent les propositions de Fitz, et on
+* l'envoie à son profil s'il veut que son espace suive.
+*
+* Trois champs seulement, ceux qui décident de la sélection : le niveau
+* visé, le domaine, la destination. Une case vide côté profil n'est pas
+* un écart (le diagnostic la remplit déjà).
+*
+* @returns {Array<{champ:string, libelle:string, diagnostic:string, profil:string}>}
+*/
+export function ecartsDiagnosticProfil(profile, reponses) {
+
+const p = profile && typeof profile === "object" ? profile : {};
+const partiel = profilDepuisDiagnostic(reponses);
+const plat = (v) => chaine(v).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const ecarts = [];
+
+if (partiel.desiredDegree && chaine(p.desiredDegree) && plat(partiel.desiredDegree) !== plat(p.desiredDegree)) {
+ecarts.push({ champ: "desiredDegree", libelle: "Niveau visé", diagnostic: partiel.desiredDegree, profil: chaine(p.desiredDegree) });
+}
+
+if (partiel.desiredField && chaine(p.desiredField) && plat(partiel.desiredField) !== plat(p.desiredField)) {
+ecarts.push({ champ: "desiredField", libelle: "Domaine", diagnostic: partiel.desiredField, profil: chaine(p.desiredField) });
+}
+
+const pays = Array.isArray(p.preferredCountries) ? p.preferredCountries.map(chaine).filter(Boolean) : [];
+const destination = Array.isArray(partiel.preferredCountries) ? partiel.preferredCountries[0] : "";
+if (destination && pays.length && !pays.some((x) => plat(x) === plat(destination))) {
+ecarts.push({ champ: "preferredCountries", libelle: "Destination", diagnostic: destination, profil: pays.join(", ") });
+}
+
+return ecarts;
+
+}
