@@ -1059,7 +1059,76 @@ if (window.lucide) lucide.createIcons();
 }
 
 // ==========================================================
+// CONSERVER LE DIAGNOSTIC (2026-09-20)
+// ==========================================================
+//
+// inscription.html promet en titre : « Conservez votre diagnostic ».
+// Jusqu'ici, rien ne le conservait : les réponses vivaient dans le
+// sessionStorage de CET onglet, et le report vers le profil n'avait
+// lieu qu'à la création du compte. Un étudiant qui créait son compte
+// d'abord — l'ordre que l'espace étudiant lui propose lui-même —
+// retrouvait un profil à 0/6.
+//
+// Deux gestes, dans cet ordre, et aucun des deux ne peut faire échouer
+// la page : le diagnostic s'affiche même si la mémoire est refusée et
+// même si Firestore ne répond pas.
+//
+//   1. la mémoire locale, tout de suite, pour tout le monde — y compris
+//      le visiteur qui n'a pas encore de compte, et qui en créera un
+//      demain dans un autre onglet ;
+//   2. l'écriture dans `users/{uid}`, seulement si quelqu'un est
+//      connecté, et seulement s'il y a quelque chose de neuf à écrire
+//      (js/diagnostic-garde.js sait dire non).
+//
+// L'import du SDK est DYNAMIQUE : la page de résultats est publique, et
+// la très grande majorité de ceux qui l'ouvrent ne sont pas connectés.
+// Rien ne justifie de leur faire télécharger Firestore.
+async function conserverLeDiagnostic(reponses) {
+
+try {
+
+const { memoriser, miseAJourDuCompte } = await import("./js/diagnostic-garde.js");
+
+memoriser(reponses);
+
+const { auth, db } = await import("./firebase-config.js");
+const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js");
+
+const utilisateur = await new Promise((resoudre) => {
+const arret = onAuthStateChanged(auth, (u) => { arret(); resoudre(u); });
+});
+
+if (!utilisateur) return;
+
+const { doc, getDoc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js");
+
+const reference = doc(db, "users", utilisateur.uid);
+const instantane = await getDoc(reference);
+if (!instantane.exists()) return;      // compte non initialisé : ce n'est pas à cette page de le créer
+
+const maj = miseAJourDuCompte(instantane.data(), reponses, { serverTimestamp });
+if (!maj) return;                      // rien de neuf : aucune écriture facturée
+
+// `merge` et non un remplacement : ce document porte la formule, les
+// alertes, l'historique de paiement. On n'écrit que les trois clés.
+await setDoc(reference, maj, { merge: true });
+
+} catch (erreur) {
+
+// Un diagnostic qui s'affiche vaut mieux qu'un diagnostic qui se
+// sauvegarde : cette chaîne n'interrompt jamais la page.
+console.warn("Le diagnostic n'a pas pu être conservé :", erreur);
+
+}
+
+}
+
+// ==========================================================
 // DÉMARRAGE — voir l'avertissement près de la lecture du
 // sessionStorage : cet appel doit rester le DERNIER du module.
 // ==========================================================
-if (rawResponses) main(JSON.parse(rawResponses));
+if (rawResponses) {
+const reponses = JSON.parse(rawResponses);
+main(reponses);
+conserverLeDiagnostic(reponses);
+}

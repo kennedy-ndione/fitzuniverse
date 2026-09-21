@@ -57,6 +57,47 @@ if (salutation) salutation.textContent = nom ? `Bonjour ${String(nom).split(" ")
 const accueil = document.getElementById("accueilMinimal");
 if (accueil) accueil.hidden = false;
 
+demasquerLesPhases();
+
 if (window.lucide) lucide.createIcons();
 
+}).catch((erreur) => {
+
+// L'ACCUEIL NE RESTE JAMAIS REPLIÉ SUR UNE ERREUR — même raison que
+// le .catch de dashboard.js : un rendu à moitié fait doit au moins
+// être lisible. Sans cela, une session qui échoue à se résoudre
+// laisse une page qui ne porte qu'un « Bonjour ».
+console.error("L'aiguillage n'a pas abouti :", erreur);
+const accueil = document.getElementById("accueilMinimal");
+if (accueil) accueil.hidden = false;
+demasquerLesPhases();
+
 });
+
+/**
+* LE DÉFAUT DU 2026-09-20, CONSTATÉ SUR UN COMPTE GRATUIT RÉEL.
+*
+* css/journey.css replie tout le contenu des phases tant que le <body>
+* ne porte pas `data-parcours-pret` :
+*
+*   body:not([data-parcours-pret]) .jy-phase > *:not(.jy-phase-head)
+*   { display: none }
+*
+* C'est un garde-fou légitime : il évite que les six phases s'affichent
+* dépliées, puis s'effondrent sous les yeux de l'étudiant pendant les
+* deux allers-retours réseau du hub. Mais l'attribut n'était levé qu'aux
+* deux points de sortie de dashboard.js — c'est-à-dire dans la chaîne du
+* hub ACCOMPAGNÉ. L'accueil minimal, que ce fichier démasque justement
+* pour les comptes SANS accompagnement, ne passait jamais par là.
+*
+* Résultat à l'écran : « Bonjour », puis « 01 Votre compte est prêt » et
+* « 02 Deux accompagnements, deux parcours », deux titres nus. Pas une
+* phrase, pas un bouton, pas une porte — alors que la page promet, juste
+* au-dessus, que « votre prochaine action est juste en dessous ».
+*
+* Le repli est un état TRANSITOIRE : toute branche qui finit de peindre
+* doit le lever, celle-ci comprise.
+*/
+function demasquerLesPhases() {
+document.body.dataset.parcoursPret = "1";
+}

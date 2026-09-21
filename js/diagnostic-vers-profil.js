@@ -221,16 +221,53 @@ return { profil, repris };
 }
 
 /**
-* Les réponses du diagnostic de la session courante, ou null (aucune,
-* illisibles, ou hors navigateur). Ne lève jamais.
+* Les réponses du diagnostic, ou null. Ne lève jamais.
+*
+* DEUX SOURCES, DANS CET ORDRE (corrigé le 2026-09-20) :
+*
+*   1. `sessionStorage.eligibilityResponses` — l'onglet en cours, écrit
+*      par eligibility-questions.js. C'est la source la plus fraîche.
+*   2. la mémoire locale de js/diagnostic-garde.js — les mêmes réponses,
+*      recopiées dans localStorage par la page de résultats.
+*
+* Le repli n'est pas un confort : sans lui, un étudiant qui fait son
+* diagnostic, ferme l'onglet, puis revient créer son compte arrivait sur
+* un profil vide. Le sessionStorage meurt avec l'onglet, et la page
+* d'inscription promet en titre de CONSERVER le diagnostic.
+*
+* L'import est dynamique et enveloppé : ce module doit rester lisible
+* sous Node par test/diagnostic-vers-profil.test.mjs, et la mémoire
+* locale n'existe pas là-bas.
 */
 export function lireReponsesDiagnostic() {
 try {
-if (typeof sessionStorage === "undefined") return null;
+if (typeof sessionStorage !== "undefined") {
 const brut = sessionStorage.getItem("eligibilityResponses");
-if (!brut) return null;
+if (brut) {
 const r = JSON.parse(brut);
-return r && typeof r === "object" ? r : null;
+if (r && typeof r === "object") return r;
+}
+}
+} catch {
+// Stockage refusé : on tente la mémoire locale ci-dessous.
+}
+return lireMemoireLocale();
+}
+
+/** La mémoire locale, sans importer le module quand il n'est pas là. */
+function lireMemoireLocale() {
+try {
+if (typeof localStorage === "undefined") return null;
+const brut = localStorage.getItem("fitz_diagnostic");
+if (!brut) return null;
+const paquet = JSON.parse(brut);
+if (!paquet || typeof paquet.reponses !== "object" || !paquet.reponses) return null;
+const le = new Date(paquet.le).getTime();
+if (!Number.isFinite(le)) return null;
+// Même fenêtre que js/diagnostic-garde.js (JOURS_VALIDITE = 90) :
+// au-delà, ces réponses ne décrivent plus personne.
+const jours = (Date.now() - le) / 86400000;
+return jours >= 0 && jours <= 90 ? paquet.reponses : null;
 } catch {
 return null;
 }
