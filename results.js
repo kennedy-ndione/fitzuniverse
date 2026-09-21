@@ -71,6 +71,7 @@ ETATS_VIDES
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./js/catalog-data.js";
+import { formaterDate } from "./js/echeance.js";
 
 // Lecture personnalisée du diagnostic par Fitz. Appelée APRÈS le rendu,
 // jamais avant : la page doit être lisible tout de suite, l'analyse
@@ -974,9 +975,23 @@ const deadlineEl = card.querySelector(".opportunity-deadline span");
 if (deadlineEl) {
 
 if (scholarship.echeanceOuverte === true && typeof scholarship.jours === "number") {
+// LA DATE, PAS LA PROSE (corrigé le 2026-09-21, vu en production).
+// `deadline` n'est pas une date : c'est la phrase du catalogue. La
+// coller derrière « échéance le » donnait, sur la première carte que
+// lit l'étudiant après son diagnostic :
+//   « Il vous reste 42 jours — échéance le Clôture le 1er novembre
+//     2026 à 23h59 (heure suisse), puis le 1er mai 2027… »
+//   « Il vous reste 71 jours — échéance le Deux comités pour le
+//     master : premier dépôt le 19 octobre 2026… »
+// Deux cartes sur trois. La date est reconstituée depuis `jours`, qui
+// est lui-même un décompte en JOURS DE CALENDRIER, de minuit à minuit
+// UTC (js/echeance.js joursAvant, js/recommend-programs.js
+// joursDeCalendrier) : l'aller-retour est exact par construction, et
+// la carte dit la même date que la fiche. La prose, avec ses comités
+// et ses heures, reste sur la fiche — là où l'on a la place de la lire.
 deadlineEl.textContent = scholarship.jours === 0
 ? "Dernier jour pour candidater"
-: `Il vous reste ${scholarship.jours} jour${scholarship.jours > 1 ? "s" : ""} — échéance le ${scholarship.deadline}`;
+: `Il vous reste ${scholarship.jours} jour${scholarship.jours > 1 ? "s" : ""} — échéance le ${dateDansNJours(scholarship.jours)}`;
 } else {
 deadlineEl.textContent = `Échéance annoncée : ${scholarship.deadline} — à confirmer sur le portail`;
 }
@@ -987,6 +1002,13 @@ wrapper.appendChild(card);
 
 });
 
+}
+
+/** La date du jour UTC + n jours, en toutes lettres (« 30 novembre
+ *  2026 »). Même origine que le décompte : minuit UTC. */
+function dateDansNJours(n, aujourdhui = new Date()) {
+const minuit = Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth(), aujourdhui.getUTCDate());
+return formaterDate(new Date(minuit + n * 86400000).toISOString().slice(0, 10));
 }
 
 // ==========================================================

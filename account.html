@@ -259,14 +259,33 @@ décision reçue ne libère plus de place, la suite est décidée par l'équipe.
 
 <div class="ai-panel-body">
 
+<!-- CORRIGÉ LE 2026-09-21, vu en parcourant un compte gratuit réel.
+Cette section disait « Ces e-mails ne sont pas encore envoyés
+automatiquement » — vrai pour les rappels et les messages, FAUX pour
+les alertes de bourses, branchées la veille (Brevo, envoyerAlerteBourse,
+testées en réel). Et le consentement coché à l'inscription
+(`alerteBourses`, écrit par inscription.js) n'apparaissait NULLE PART :
+l'étudiant ne pouvait ni le vérifier ni le changer, alors que la page de
+désinscription lui promet qu'il pourra « les réactiver depuis votre
+espace ». Deux réglages, donc, et chacun dit exactement ce qu'il fait. -->
 <p class="ai-field-hint" style="margin-bottom:16px;">
-Fitz peut vous prévenir par e-mail des échéances de candidatures à venir, des documents de dossier encore manquants, et des messages de l'équipe FitzUniverse. Ces e-mails ne sont pas encore envoyés automatiquement — ce réglage sera actif dès que ce service sera branché.
+FitzUniverse vous écrit à l'adresse de votre compte, depuis contact@fitzuniverse.com.
 </p>
 
-<label class="account-toggle-row" for="emailNotificationsToggle">
+<label class="account-toggle-row" for="alerteBoursesToggle" id="alertes">
 <span>
-<strong>Recevoir des e-mails de Fitz</strong>
-<span class="ai-field-hint">Rappels de candidatures et messages de l'équipe.</span>
+<strong>M'écrire quand une bourse ouvre ses candidatures</strong>
+<span class="ai-field-hint">Un e-mail quand une bourse du catalogue rouvre, avec sa date limite vérifiée. Chaque alerte porte un lien pour se désabonner en un clic.</span>
+</span>
+<input type="checkbox" id="alerteBoursesToggle">
+</label>
+
+<div id="alerteBoursesStatus" class="ai-field-hint" style="margin-top:8px;"></div>
+
+<label class="account-toggle-row" for="emailNotificationsToggle" style="margin-top:16px;">
+<span>
+<strong>Rappels d'échéances et messages de l'équipe</strong>
+<span class="ai-field-hint">Pas encore envoyés par e-mail : ce réglage s'appliquera dès leur mise en service. En attendant, rappels et messages restent dans votre espace.</span>
 </span>
 <input type="checkbox" id="emailNotificationsToggle">
 </label>

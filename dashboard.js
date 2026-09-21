@@ -1177,8 +1177,10 @@ document.getElementById("accompagnementAlert").hidden = false;
 sessionStorage.removeItem("just_upgraded");
 }
 
+// Le bandeau pousse vers les alertes de bourses (le seul e-mail que
+// FitzUniverse envoie aujourd'hui) : il se tait quand elles sont actives.
 const emailNudge = document.getElementById("emailNudge");
-if (emailNudge) emailNudge.hidden = userData.emailNotifications === true;
+if (emailNudge) emailNudge.hidden = userData.alerteBourses === true;
 
 renderFitzExpressBanner(planId, hasFitzExpress, userData.fitzExpressExpiresAt || null);
 renderUpgradeNudge(planId, testerAccess);

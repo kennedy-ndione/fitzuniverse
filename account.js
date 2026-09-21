@@ -21,7 +21,7 @@ import { showToast } from "./js/ai/toast.js";
 // annulation. deleteField : retirer proprement pendingPlan du document
 // plutôt que d'y laisser un null qui traîne.
 import { db } from "./firebase-config.js";
-import { doc, updateDoc, deleteField, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { doc, updateDoc, deleteField, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 initShellChrome();
 
@@ -175,6 +175,59 @@ showToast("L'annulation n'a pas abouti. Réessayez dans un instant.", { type: "e
 });
 
 }
+
+}
+
+// ==========================================================
+// Alertes d'ouverture de bourses (2026-09-21)
+// ==========================================================
+//
+// Le consentement coché à l'inscription — et celui que la page de
+// désinscription promet de pouvoir « réactiver depuis votre espace ».
+// Mêmes champs, mêmes noms que inscription.js et que la fonction
+// desabonnementAlertes : `alerteBourses` (booléen) et sa date de mise à
+// jour. C'est ce champ, et lui seul, que lit envoyerAlerteBourse
+// (functions/emails.js : .where("alerteBourses", "==", true)).
+
+const alerteToggle = document.getElementById("alerteBoursesToggle");
+const alerteStatus = document.getElementById("alerteBoursesStatus");
+
+if (alerteToggle) {
+
+alerteToggle.checked = ctx.userData.alerteBourses === true;
+
+alerteToggle.addEventListener("change", async () => {
+
+const active = alerteToggle.checked;
+
+alerteToggle.disabled = true;
+
+try {
+
+await updateDoc(doc(db, "users", user.uid), {
+alerteBourses: active,
+alerteBoursesMajLe: serverTimestamp()
+});
+
+alerteStatus.textContent = active
+? "Alertes activées : vous serez prévenu dès qu'une bourse ouvre ses candidatures."
+: "Alertes désactivées : vous ne recevrez plus d'e-mail d'ouverture de bourse.";
+
+showToast(active ? "Alertes de bourses activées." : "Alertes de bourses désactivées.");
+
+} catch (error) {
+
+console.error(error);
+alerteToggle.checked = !active;
+alerteStatus.textContent = "Un souci est survenu — réessayez dans un instant.";
+
+} finally {
+
+alerteToggle.disabled = false;
+
+}
+
+});
 
 }
 
