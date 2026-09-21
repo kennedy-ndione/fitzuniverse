@@ -1,6 +1,7 @@
 /**
  * ============================================================
- * Control Center — les paiements (lot ADMIN-PAIEMENTS, 2026-09-20)
+ * Control Center — les paiements (lot ADMIN-PAIEMENTS, 2026-09-20 ;
+ * passage au direct, lot ADMIN-PAIEMENTS-LIVE, 2026-09-21)
  * ============================================================
  *
  * LECTURE SEULE. La collection `payments` est écrite par
@@ -10,10 +11,20 @@
  * activer une formule ni corriger un montant : ces gestes-là passent
  * par la fiche étudiant (attribution tracée) ou par PayDunya.
  *
- * COÛT : une lecture de `payments` + une de `users` (pour les noms) à
- * l'ouverture. Tri et filtres en mémoire — la collection se compte en
- * dizaines, pas en milliers ; le jour où elle grossit, paginer par
- * creeLe (orderBy + startAfter) sans changer l'écran.
+ * EN DIRECT (2026-09-21) : la page ne fait plus une lecture unique de
+ * `payments` au chargement — elle s'abonne avec onSnapshot. Un
+ * paiement qui arrive (facture créée, webhook qui la marque « payé »)
+ * apparaît ou se met à jour ici sans recharger la page. Charles doit
+ * pouvoir voir « qui vient de payer » à l'instant même. `users`, lui,
+ * reste lu une seule fois : les comptes se créent bien moins souvent
+ * que les paiements, et si un uid manque encore à l'affichage, la
+ * ligne retombe sur l'identifiant tronqué (comportement déjà existant).
+ *
+ * COÛT : un abonnement temps réel à `payments` (facturé comme une
+ * lecture par document reçu, initiale ou modifiée) + une lecture de
+ * `users` à l'ouverture. Tri et filtres en mémoire — la collection se
+ * compte en dizaines, pas en milliers ; le jour où elle grossit,
+ * paginer par creeLe (orderBy + startAfter) sans changer l'écran.
  * ============================================================
  */
 
@@ -21,7 +32,7 @@ import { db } from "../firebase-config.js";
 
 import {
 collection,
-getDocs
+onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import { getAllUsers } from "./firebase-admin.js";
@@ -77,6 +88,27 @@ return nomsParUid.get(uid) || null;
 // ==========================================================
 // Rendu
 // ==========================================================
+
+function afficherDerniereMiseAJour() {
+
+const titre = document.querySelector(".topbar-title");
+if (!titre) return;
+
+let badge = document.getElementById("paiementsLiveBadge");
+if (!badge) {
+badge = document.createElement("span");
+badge.id = "paiementsLiveBadge";
+badge.className = "status-pill is-active";
+badge.style.marginLeft = "10px";
+badge.style.verticalAlign = "middle";
+const h1 = titre.querySelector("h1");
+if (h1) h1.appendChild(badge); else titre.appendChild(badge);
+}
+
+const heure = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+badge.textContent = `● En direct — mis à jour ${heure}`;
+
+}
 
 function renderChiffres() {
 
@@ -157,39 +189,7 @@ const el = document.getElementById(id);
 el.addEventListener(el.tagName === "INPUT" ? "input" : "change", renderTable);
 });
 
-(async () => {
-
-try {
-
-// admin-auth.js garde la porte ; ici on attend simplement que la
-// session soit résolue via la même promesse mémorisée.
-const { chargerAdmin } = await import("./admin-role.js");
-const administrateur = await chargerAdmin();
-if (!administrateur) return; // admin-auth.js redirige déjà
-
-const [snapshot, users] = await Promise.all([
-getDocs(collection(db, "payments")),
-getAllUsers()
-]);
-
-nomsParUid = new Map(users.map((u) => [u.uid, u.name || u.email || null]));
-
-paiements = snapshot.docs
-.map((d) => ({ id: d.id, ...(d.data() || {}) }))
-.sort((a, b) => {
-const ta = a.creeLe && a.creeLe.toMillis ? a.creeLe.toMillis() : 0;
-const tb = b.creeLe && b.creeLe.toMillis ? b.creeLe.toMillis() : 0;
-return tb - ta;
-});
-
-renderChiffres();
-renderTable();
-
-if (window.lucide) lucide.createIcons();
-
-hidePageLoader();
-
-} catch (erreur) {
+function afficherErreurChargement(erreur) {
 
 console.error("Paiements illisibles :", erreur);
 
@@ -206,6 +206,53 @@ content.innerHTML = `
 
 const pageLoader = document.getElementById("pageLoader");
 if (pageLoader) pageLoader.style.display = "none";
+
+}
+
+let premierInstantane = true;
+
+(async () => {
+
+try {
+
+// admin-auth.js garde la porte ; ici on attend simplement que la
+// session soit résolue via la même promesse mémorisée.
+const { chargerAdmin } = await import("./admin-role.js");
+const administrateur = await chargerAdmin();
+if (!administrateur) return; // admin-auth.js redirige déjà
+
+const users = await getAllUsers();
+nomsParUid = new Map(users.map((u) => [u.uid, u.name || u.email || null]));
+
+// EN DIRECT : ce callback se déclenche à l'ouverture (premier
+// instantané), puis à chaque création ou changement de statut d'une
+// facture PayDunya — sans que quiconque recharge la page.
+onSnapshot(collection(db, "payments"), (snapshot) => {
+
+paiements = snapshot.docs
+.map((d) => ({ id: d.id, ...(d.data() || {}) }))
+.sort((a, b) => {
+const ta = a.creeLe && a.creeLe.toMillis ? a.creeLe.toMillis() : 0;
+const tb = b.creeLe && b.creeLe.toMillis ? b.creeLe.toMillis() : 0;
+return tb - ta;
+});
+
+renderChiffres();
+renderTable();
+afficherDerniereMiseAJour();
+
+if (window.lucide) lucide.createIcons();
+
+if (premierInstantane) {
+hidePageLoader();
+premierInstantane = false;
+}
+
+}, (erreur) => afficherErreurChargement(erreur));
+
+} catch (erreur) {
+
+afficherErreurChargement(erreur);
 
 }
 
