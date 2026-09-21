@@ -202,8 +202,12 @@ assert.deepEqual(documentUtilisateurParDefaut({ uid: "u", name: "n", email: "e",
 assert.equal(lireReponsesDiagnostic(), null);
 });
 
-test("diagnostic-vers-profil 6 — forme : payment.js et js/creer-compte.js passent par le module partagé", () => {
-for (const f of ["payment.js", "js/creer-compte.js"]) {
+test("diagnostic-vers-profil 6 — forme : js/creer-compte.js, SEUL créateur de compte, passe par le module partagé", () => {
+// COMPTE D'ABORD (2026-09-21) : payment.js ne crée plus de compte (voir
+// test/compte-d-abord.test.mjs). Il ne reste qu'un créateur, qui porte
+// les réponses du diagnostic dans le compte neuf.
+assert.doesNotMatch(fs.readFileSync(path.join(RACINE, "payment.js"), "utf8"), /documentUtilisateurParDefaut|createUserWithEmailAndPassword/, "payment.js ne doit plus créer de compte");
+for (const f of ["js/creer-compte.js"]) {
 const src = fs.readFileSync(path.join(RACINE, f), "utf8");
 assert.match(src, /import \{ documentUtilisateurParDefaut \} from "\.\/(js\/)?compte-par-defaut\.js"/, f);
 assert.match(src, /reponsesDiagnostic: lireReponsesDiagnostic\(\)/, f);

@@ -15,6 +15,15 @@ getAuthErrorMessage
 } from "./auth-ui.js";
 
 import { trackEvent } from "./js/analytics.js";
+import { retourSur, avecRetour } from "./js/retour-apres-compte.js";
+
+// COMPTE D'ABORD (2026-09-21) : un visiteur envoyé ici par sa formule
+// (payment.html) y retourne une fois connecté ; le lien vers
+// l'inscription emporte le même retour. Voir js/retour-apres-compte.js.
+const RETOUR = retourSur(window.location.search);
+if (RETOUR) {
+document.querySelectorAll('a[href="inscription.html"]').forEach((a) => a.setAttribute("href", avecRetour("inscription.html", RETOUR)));
+}
 
 // ======================
 // Éléments du formulaire
@@ -82,7 +91,7 @@ trackEvent("login");
 // Redirection après connexion réussie. On garde le bouton
 // désactivé jusqu'au changement de page pour éviter tout
 // double clic pendant la navigation.
-window.location.href = "dashboard.html";
+window.location.href = RETOUR || "dashboard.html";
 
 } catch (error) {
 

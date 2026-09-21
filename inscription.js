@@ -22,6 +22,16 @@
 
 import { creerCompteGratuit } from "./js/creer-compte.js";
 import { trackEvent } from "./js/analytics.js";
+import { retourSur, avecRetour } from "./js/retour-apres-compte.js";
+
+// COMPTE D'ABORD (2026-09-21) : un visiteur qui vient d'une formule
+// (payment.html) y retourne une fois son compte créé — voir
+// js/retour-apres-compte.js. Le lien « Connectez-vous » emporte le même
+// retour, pour qui découvre ici qu'il avait déjà un compte.
+const RETOUR = retourSur(window.location.search);
+if (RETOUR) {
+document.querySelectorAll('a[href="login.html"]').forEach((a) => a.setAttribute("href", avecRetour("login.html", RETOUR)));
+}
 
 const form = document.getElementById("inscriptionForm");
 const nomInput = document.getElementById("inscriptionNom");
@@ -127,7 +137,7 @@ trackEvent("compte_gratuit_cree", { alertes: alertesInput ? alertesInput.checked
 // L'aiguillage existant : dashboard.html mène au choix
 // bourse / préinscription, exactement ce que doit voir un compte
 // qui n'a encore rien payé.
-window.location.replace("dashboard.html");
+window.location.replace(RETOUR || "dashboard.html");
 
 } catch (error) {
 

@@ -215,124 +215,38 @@ les formules du parcours bourses (payment.js masque la ligne sinon). -->
 
 </section>
 
-<!-- Compte — seule étape de création de compte du site : elle
-n'existe qu'ici, accolée au paiement, plutôt que sur une page
-d'inscription indépendante. hidden par défaut : dévoilée par
-payment.js uniquement si aucune session n'est trouvée (un
-utilisateur déjà connecté qui change de formule n'a pas besoin de
-recréer un compte). -->
-<section class="section reveal" id="accountSection" hidden>
+<!-- COMPTE D'ABORD (2026-09-21, décision de Charles). Cette page ne
+crée plus de compte : le formulaire nom / e-mail / mot de passe qui
+vivait ici faisait doublon avec inscription.html depuis que le compte
+est gratuit. Un visiteur voit deux portes qui le RAMÈNENT sur cette
+formule (js/retour-apres-compte.js) ; le moyen de paiement et le
+bouton n'apparaissent qu'une fois connecté. hidden par défaut :
+payment.js (initCompteRequis) le montre au seul visiteur. -->
+<section class="section reveal compte-requis" id="compteRequis" hidden>
 
 <div class="section-heading">
-<i data-lucide="user-plus"></i>
+<i data-lucide="user-round"></i>
 <h2>Votre compte</h2>
 </div>
 
-<p class="section-subtext">Ces informations créent votre compte FitzUniverse, avec cette formule déjà associée.</p>
+<p class="section-subtext">Cette formule s'active sur votre compte FitzUniverse. Il se crée gratuitement, en une minute, et garde votre diagnostic — vous revenez ensuite ici, sur la même formule, pour régler.</p>
 
-<form id="accountForm" class="signup-form">
-
-<div class="input-group">
-
-<label for="accountName">Nom complet</label>
-
-<div class="input-wrap">
-<i data-lucide="user" class="input-icon"></i>
-<input
-type="text"
-id="accountName"
-placeholder="Nom et prénom"
-autocomplete="name"
-required>
+<div class="compte-requis-actions">
+<a href="inscription.html" class="btn btn-accent" id="compteRequisInscription">
+<span>Créer mon compte gratuit</span>
+<i data-lucide="arrow-right"></i>
+</a>
+<a href="login.html" class="btn btn-secondary" id="compteRequisConnexion">
+<span>J'ai déjà un compte</span>
+</a>
 </div>
-
-</div>
-
-<div class="input-group">
-
-<label for="accountEmail">Adresse e-mail</label>
-
-<div class="input-wrap">
-<i data-lucide="mail" class="input-icon"></i>
-<input
-type="email"
-id="accountEmail"
-placeholder="vous@exemple.com"
-autocomplete="email"
-required>
-</div>
-
-</div>
-
-<div class="password-grid">
-
-<div class="input-group">
-
-<label for="accountPassword">Mot de passe</label>
-
-<div class="input-wrap has-toggle">
-
-<i data-lucide="lock" class="input-icon"></i>
-
-<input
-type="password"
-id="accountPassword"
-placeholder="Créer un mot de passe"
-autocomplete="new-password"
-required>
-
-<button
-type="button"
-id="toggleAccountPassword"
-class="password-toggle"
-aria-label="Afficher le mot de passe"
-aria-pressed="false">
-<i data-lucide="eye"></i>
-</button>
-
-</div>
-
-</div>
-
-<div class="input-group">
-
-<label for="accountConfirmPassword">Confirmer</label>
-
-<div class="input-wrap">
-<i data-lucide="lock" class="input-icon"></i>
-<input
-type="password"
-id="accountConfirmPassword"
-placeholder="Répéter le mot de passe"
-autocomplete="new-password"
-required>
-</div>
-
-</div>
-
-</div>
-
-<p class="input-hint">
-<i data-lucide="shield-check"></i>
-<span>Un mot de passe solide : 8 caractères minimum, une majuscule et un chiffre.</span>
-</p>
-
-<label class="terms-row">
-<input type="checkbox" id="accountTerms" required>
-<span>J'accepte les Conditions d'utilisation.</span>
-</label>
-
-</form>
-
-<p class="login-link">
-Vous avez déjà un compte ?
-<a href="login.html">Connectez-vous</a>, puis revenez choisir votre formule.
-</p>
 
 </section>
 
-<!-- Moyen de paiement -->
-<section class="section reveal">
+<!-- Moyen de paiement — réservé à un compte connecté : hidden tant que
+la session n'est pas résolue, montré par initCompteRequis (payment.js).
+Pas de clignotement du paiement sous les yeux d'un visiteur. -->
+<section class="section reveal" id="paiementSection" hidden>
 
 <div class="section-heading">
 <i data-lucide="wallet"></i>
@@ -492,8 +406,8 @@ fait qu'on le reconnaît. -->
 
 </div>
 
-<!-- Activation -->
-<div class="activation reveal">
+<!-- Activation — réservée à un compte connecté, même règle. -->
+<div class="activation reveal" id="activationBloc" hidden>
 
 <button type="button" id="activateButton" class="btn btn-accent btn-lg activation-cta" disabled>
 <i data-lucide="lock"></i>

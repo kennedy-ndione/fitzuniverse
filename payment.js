@@ -7,34 +7,33 @@
 // le paiement passe par la Cloud Function creerPaiement (europe-west1),
 // seule détentrice des clés — voir functions/paiement.js.
 //
-// Compte : cette page est désormais le SEUL endroit du site où un
-// compte peut être créé (signup.html a été retiré — voir le commit
-// dédié). Un visiteur anonyme voit donc un formulaire de compte en
-// plus du récapitulatif ; un visiteur déjà connecté (qui change de
-// formule) ne le voit pas. resolveSession() ne redirige jamais ici,
-// contrairement à requireAuth() utilisé ailleurs sur le site :
-// l'absence de session est un état normal sur cette page (visiteur
-// pas encore client), pas une erreur d'accès.
+// COMPTE D'ABORD (lot du 2026-09-21, décision de Charles). Cette page
+// ne crée PLUS de compte. Elle était, jusqu'au 2026-09-20, le seul
+// endroit du site où l'on pouvait en ouvrir un — d'où un formulaire
+// nom / e-mail / mot de passe collé au récapitulatif du prix. Depuis
+// que le compte est gratuit (inscription.html), ce formulaire faisait
+// doublon, mélangeait deux décisions (« je m'inscris » et « je paie »)
+// sur le même écran, et gardait sa propre copie des règles de mot de
+// passe.
 //
-// Le compte est créé (Auth + Firestore) juste avant le départ vers
-// PayDunya — voir ensureAccount()/initActivation() plus bas. Cette
-// page n'écrit JAMAIS le champ `plan`, seulement `pendingPlan` (une
-// intention, à titre informatif pour le suivi admin). L'accès payant
-// est ouvert par le webhook, côté serveur, après vérification du
-// paiement — et firestore.rules interdit de toute façon à un compte
+// Désormais : on paie depuis un compte ouvert. Un visiteur voit le
+// récapitulatif de sa formule, puis deux portes — créer son compte
+// gratuit, ou se connecter — qui le ramènent ICI, sur la même formule
+// (js/retour-apres-compte.js). Le moyen de paiement et le bouton
+// n'apparaissent qu'une fois connecté. resolveSession() ne redirige
+// jamais : l'absence de session reste un état normal de cette page.
+//
+// Cette page n'écrit JAMAIS le champ `plan`, seulement `pendingPlan`
+// (une intention, à titre informatif pour le suivi admin). L'accès
+// payant est ouvert par le webhook, côté serveur, après vérification
+// du paiement — et firestore.rules interdit de toute façon à un compte
 // d'écrire son propre `plan`.
 
-import { app, auth, db } from "./firebase-config.js";
+import { app, db } from "./firebase-config.js";
 import { resolveSession } from "./js/access-guard.js";
-import { documentUtilisateurParDefaut } from "./js/compte-par-defaut.js";
-import { lireReponsesDiagnostic } from "./js/diagnostic-vers-profil.js";
-import {
-createUserWithEmailAndPassword,
-updateProfile
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { avecRetour } from "./js/retour-apres-compte.js";
 import {
 doc,
-setDoc,
 updateDoc,
 onSnapshot,
 serverTimestamp
@@ -48,11 +47,6 @@ httpsCallable
 // (voir functions/paiement.js). Cibler la mauvaise région donne un
 // "not-found" qui ressemble à s'y méprendre à un bug de code.
 const functions = getFunctions(app, "europe-west1");
-import {
-showFormError,
-clearFormError,
-getAuthErrorMessage
-} from "./auth-ui.js";
 import { trackEvent } from "./js/analytics.js";
 import { PHRASE_REGLE, cibleApresPaiement } from "./js/fitz-choisit.js";
 
@@ -303,133 +297,38 @@ label.textContent = activationLabel(plan);
 
 }
 
-// Affiche le formulaire de compte uniquement pour un visiteur anonyme
-// — un utilisateur déjà connecté change simplement de formule.
-function initAccountSection(session) {
+// COMPTE D'ABORD (2026-09-21) — voir l'en-tête. Un visiteur voit deux
+// portes qui le ramènent sur CETTE formule ; le moyen de paiement et le
+// bouton d'activation n'existent pour lui qu'une fois connecté. Un
+// compte connecté ne voit que le paiement.
+function initCompteRequis(session, planId) {
 
-const section = document.getElementById("accountSection");
+const bloc = document.getElementById("compteRequis");
+const paiement = document.getElementById("paiementSection");
+const activation = document.getElementById("activationBloc");
 
-if (!section) return;
+if (bloc) bloc.hidden = !!session;
+if (paiement) paiement.hidden = !session;
+if (activation) activation.hidden = !session;
 
-section.hidden = !!session;
+if (session || !bloc) return;
 
-}
-
-// Lot PROFIL-PAR-NIVEAU (2026-09-11) : le document par défaut vit dans
-// js/compte-par-defaut.js, partagé avec js/creer-compte.js (la dette
-// « deux copies à tenir à l'identique » est soldée). Les réponses du
-// diagnostic gratuit, quand elles sont là, pré-remplissent le profil —
-// pour le Pass Découverte, c'est la seule façon que Fitz connaisse
-// l'étudiant dans le chat, puisque ce pass n'ouvre jamais profile.html.
-function buildDefaultUserDoc(uid, name, email, planId) {
-return documentUtilisateurParDefaut({
-uid,
-name,
-email,
-// Intention, pas un accès : voir ensureAccount() ci-dessous.
-planId,
-reponsesDiagnostic: lireReponsesDiagnostic(),
-serverTimestamp
-});
-}
-
-// Valide le formulaire de compte (mêmes règles que l'ancien
-// signup.js) et affiche l'erreur correspondante dans #accountForm.
-// Retourne null si invalide, {name,email,password} sinon.
-function readAccountFields() {
-
-const form = document.getElementById("accountForm");
-const nameInput = document.getElementById("accountName");
-const emailInput = document.getElementById("accountEmail");
-const passwordInput = document.getElementById("accountPassword");
-const confirmPasswordInput = document.getElementById("accountConfirmPassword");
-const termsInput = document.getElementById("accountTerms");
-
-const name = nameInput.value.trim();
-const email = emailInput.value.trim().toLowerCase();
-const password = passwordInput.value;
-const confirmPassword = confirmPasswordInput.value;
-
-if (!name || !email || !password || !confirmPassword) {
-showFormError(form, "Merci de remplir tous les champs pour continuer.");
-return null;
-}
-
-if (name.length < 2) {
-showFormError(form, "Merci d'indiquer votre nom complet.");
-nameInput.focus();
-return null;
-}
-
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-showFormError(form, "Vérifiez le format de votre adresse e-mail.");
-emailInput.focus();
-return null;
-}
-
-if (password.length < 8) {
-showFormError(form, "Votre mot de passe a besoin d'au moins 8 caractères.");
-passwordInput.focus();
-return null;
-}
-
-if (!/[A-Z]/.test(password)) {
-showFormError(form, "Votre mot de passe a besoin d'au moins une majuscule.");
-passwordInput.focus();
-return null;
-}
-
-if (!/[0-9]/.test(password)) {
-showFormError(form, "Votre mot de passe a besoin d'au moins un chiffre.");
-passwordInput.focus();
-return null;
-}
-
-if (password !== confirmPassword) {
-showFormError(form, "Vérifiez que les deux mots de passe soient identiques.");
-confirmPasswordInput.focus();
-return null;
-}
-
-if (termsInput && !termsInput.checked) {
-showFormError(form, "Merci d'accepter les conditions d'utilisation pour continuer.");
-return null;
-}
-
-clearFormError(form);
-
-return { name, email, password };
+const retour = `payment.html?plan=${planId}`;
+const inscription = document.getElementById("compteRequisInscription");
+const connexion = document.getElementById("compteRequisConnexion");
+if (inscription) inscription.setAttribute("href", avecRetour("inscription.html", retour));
+if (connexion) connexion.setAttribute("href", avecRetour("login.html", retour));
 
 }
 
-// Crée le compte (visiteur anonyme) ou associe l'intention de formule
-// au compte existant (déjà connecté). Ne pose JAMAIS `plan` lui-même,
-// à la création comme à la mise à jour : seul un backend de confiance
-// ou un administrateur (voir firestore.rules) peut activer une
-// formule payante — voir le commentaire ACTIVATION plus bas.
-async function ensureAccount(session, plan, fields) {
-
-if (session) {
+// L'intention d'achat, pour le suivi admin — jamais la formule elle-même
+// (firestore.rules réserve `plan` au serveur).
+async function marquerIntention(session, plan) {
 
 await updateDoc(doc(db, "users", session.user.uid), {
 pendingPlan: plan.id,
 pendingPlanRequestedAt: serverTimestamp()
 });
-
-return session.user.uid;
-
-}
-
-const credential = await createUserWithEmailAndPassword(auth, fields.email, fields.password);
-
-await updateProfile(credential.user, { displayName: fields.name });
-
-await setDoc(
-doc(db, "users", credential.user.uid),
-buildDefaultUserDoc(credential.user.uid, fields.name, fields.email, plan.id)
-);
-
-return credential.user.uid;
 
 }
 
@@ -541,52 +440,36 @@ wave: "Wave",
 card: "carte bancaire"
 };
 
+// Compte d'abord (2026-09-21) : sans session, le bouton n'existe pas à
+// l'écran (initCompteRequis) — et il ne se branche pas non plus.
+if (!session) return;
+
 button.addEventListener("click", async () => {
 
 const method = document.querySelector('input[name="paymentMethod"]:checked');
 
 if (!method) return;
 
-const isNewAccount = !session;
-let fields = null;
-
-if (isNewAccount) {
-
-fields = readAccountFields();
-
-if (!fields) return;
-
-}
-
 button.disabled = true;
 button.classList.add("is-loading");
 label.textContent = "Activation en cours...";
 
-let uid;
-
+// L'intention n'est qu'un repère de suivi : son échec ne bloque pas le
+// paiement, c'est le serveur (creerPaiement) qui décide.
 try {
-
-uid = await ensureAccount(session, plan, fields);
-
+await marquerIntention(session, plan);
 } catch (error) {
-
-console.error(error);
-showFormError(document.getElementById("accountForm"), getAuthErrorMessage(error));
-button.classList.remove("is-loading");
-button.disabled = false;
-label.textContent = activationLabel(plan);
-return;
-
+console.warn("Intention d'achat non enregistrée :", error);
 }
 
-trackEvent(isNewAccount ? "signup" : "payment_attempted", { plan: plan.id, method: method.value, uid });
+const uid = session.user.uid;
 
-// `just_created` est posé maintenant : le compte EXISTE réellement à
-// cet instant. `just_upgraded`, en revanche, ne sera posé qu'après la
-// confirmation du paiement (voir attendreActivation) — l'écrire ici
-// ferait dire au tableau de bord « votre accompagnement est activé »
-// à quelqu'un qui aurait abandonné devant l'écran de paiement.
-if (isNewAccount) sessionStorage.setItem("just_created", "true");
+trackEvent("payment_attempted", { plan: plan.id, method: method.value, uid });
+
+// `just_upgraded` ne sera posé qu'après la confirmation du paiement
+// (voir attendreActivation) — l'écrire ici ferait dire au tableau de
+// bord « votre accompagnement est activé » à quelqu'un qui aurait
+// abandonné devant l'écran de paiement.
 
 // sessionStorage survit à l'aller-retour vers PayDunya (même onglet,
 // même origine) : c'est ce qui permet de retrouver la formule au
@@ -741,7 +624,7 @@ return;
 const plan = SCHOLARBRIDGE_PLANS[planId];
 const etatPaiement = new URLSearchParams(window.location.search).get("paiement");
 
-initAccountSection(session);
+initCompteRequis(session, planId);
 renderPlan(plan, session);
 initFitzRotator();
 initPaymentMethods(plan);
