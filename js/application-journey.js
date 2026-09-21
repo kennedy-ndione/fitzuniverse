@@ -114,9 +114,10 @@ saisie
 * @param {Object} [options.documentsObtained={}] - users/{uid}.documentsObtained, map { slug: true }
 * @param {Object|null} [options.procedure=null] - la procédure de portail (js/procedures/index.js, trouverProcedure) — préinscription seulement
 * @param {Date} [options.aujourdhui] - pour dater les jalons de campagne
+* @param {number} [options.exigencesManquantes=0] - pièces que le catalogue exige pour cette bourse et qui ne sont pas encore dans le dossier
 * @returns {Array<{id:string,label:string,icon:string,done:boolean,href?:string,action?:string,isFitz?:boolean,prerequis?:string[],procedure?:Object}>}
 */
-export function computeJourneySteps(app, { profileScore = 0, advisorUnlocked = false, advisorRequests = [], documentsObtained = {}, procedure = null, aujourdhui = new Date() } = {}) {
+export function computeJourneySteps(app, { profileScore = 0, advisorUnlocked = false, advisorRequests = [], documentsObtained = {}, procedure = null, aujourdhui = new Date(), exigencesManquantes = 0 } = {}) {
 
 const checklist = Array.isArray(app.checklist) ? app.checklist : [];
 const checklistTotal = checklist.length;
@@ -160,7 +161,11 @@ steps.push({
 id: "checklist",
 label: "Dossier de candidature",
 icon: "clipboard-list",
-done: checklistTotal > 0 && checklistDone === checklistTotal,
+// Finitions (2026-09-21) : « Dossier de candidature » passait au vert
+// avec UNE seule pièce cochée, même quand la bourse en exige trois.
+// Quand le catalogue connaît les exigences, elles doivent toutes être
+// dans le dossier avant que l'étape se valide.
+done: checklistTotal > 0 && checklistDone === checklistTotal && !(exigencesManquantes > 0),
 action: "focus-checklist"
 });
 }

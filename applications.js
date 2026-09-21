@@ -43,7 +43,7 @@ import { isQuotaReached, PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.j
 // REFUSE et Fitz propose la suivante, sur le même créneau, sans jamais
 // revenir sur une université refusée (users/{uid}.universitesRefusees).
 // Le parcours préinscription (pre-N) reste saisi à la main : hors lot.
-import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js";
+import { retenirOpportunites, libelleFenetre, etatEcheance, pourquoiPlusProposable, remplacementSansRefus } from "./js/recommend-programs.js";
 // Lot ACCEPTATION (2026-09-11) : l'étudiant ACCEPTE le choix de Fitz —
 // définitivement. Deux refus par place ; les outils s'ouvrent après
 // l'acceptation ; une formule en vente ne supprime jamais une carte
@@ -1562,9 +1562,25 @@ calculés par retenirOpportunites() depuis toujours ; carteFitz() ne les
 
 Les cartes écrites AVANT ce lot n'ont pas ces champs : la ligne
 disparaît alors entièrement plutôt que d'afficher un pays vide. */
-function renderFaitsDuChoix(app) {
+function renderFaitsDuChoix(app, lecture) {
 
 if (!app || !app.isRecommendation) return "";
+
+// LE DÉCOMPTE SE RECALCULE (finitions, 2026-09-21). La carte gardait
+// les jours écrits le jour où Fitz l'avait posée : « 46 jours pour
+// déposer » restait « 46 jours » une semaine plus tard. Quand le
+// catalogue est là, la fenêtre est relue sur le programme, aujourd'hui ;
+// sinon on garde ce que la carte porte.
+if (lecture && lecture.programme) {
+const ech = etatEcheance(lecture.programme);
+app = {
+...app,
+jours: ech.jours,
+certitude: ech.certitude || app.certitude,
+dateConfirmee: ech.ouverte === true && ech.jours !== null,
+porte: ech.porte || null
+};
+}
 
 const faits = [];
 
@@ -1593,10 +1609,48 @@ return `${faits.length ? `<div class="app-faits">${faits.join("")}</div>` : ""}$
 
 }
 
+// UNE CARTE DÉJÀ POSÉE SE REVÉRIFIE (finitions, 2026-09-21). Fitz
+// filtre ce qu'il propose, mais ne relisait jamais ce qu'il avait déjà
+// proposé : Pearson restait prête à être acceptée chez une bachelière
+// de 2022, que la bourse exclut. La raison est dite ici, avec les mots
+// de pourquoiPlusProposable() (js/recommend-programs.js) — le même
+// module que celui qui choisit. Constat seulement : aucune écriture.
+function renderPlusProposable(app, lecture) {
+if (!carteCatalogue(app) || !lecture || !lecture.programme) return "";
+if (STATUTS_DEPOSES.includes(app.status)) return "";
+const universite = catalogueIndex && lecture.programme.universityId ? catalogueIndex.uniParId.get(lecture.programme.universityId) : null;
+const raison = pourquoiPlusProposable({ program: lecture.programme, university: universite || {}, scholarship: lecture.bourse || null, profile: profile || {} });
+if (!raison) return "";
+const acceptee = !!app.accepteeLe;
+// L'erreur vient de Fitz quand la bourse a une fenêtre du bac que le
+// profil ne remplit pas : le remplacement est alors GRATUIT, et
+// firestore.rules l'autorise (exceptionFenetreBac). Le bouton n'existe
+// que si le serveur acceptera l'écriture (miroir exact).
+const gratuit = remplacementSansRefus(lecture.bourse, profile);
+const suite = gratuit
+? "Fitz vous en propose une autre : ce remplacement n'utilise aucun de vos refus."
+: acceptee
+? "Écrivez à l'équipe depuis la messagerie : elle vous dira comment poursuivre."
+: "Ne l'acceptez pas : demandez à Fitz une autre université.";
+return `<div class="app-plus-proposable" role="status">
+<i data-lucide="alert-triangle"></i>
+<div>
+<p><strong>${acceptee ? "Vérifiez votre admissibilité avant d'aller plus loin" : "Fitz ne vous proposerait plus cette université"}</strong> : ${escapeHtml(raison)}. ${suite}</p>
+${gratuit ? `<button type="button" class="btn btn-secondary btn-sm app-remplacer-btn"><i data-lucide="refresh-cw"></i><span>Voir la remplaçante</span></button>` : ""}
+</div>
+</div>`;
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
-const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained, procedure: procedurePour(app) });
+// Finitions (2026-09-21) : les pièces que le catalogue exige et qui ne
+// sont pas encore dans le dossier empêchent l'étape « Dossier » de
+// passer au vert (js/application-journey.js).
+const exigencesManquantes = lecture && lecture.lie && lecture.bourse
+? elementsAAjouter(lireExigences(lecture.bourse), app.checklist).length
+: 0;
+const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained, procedure: procedurePour(app), exigencesManquantes });
 
 const card = document.createElement("article");
 card.className = "card app-card" + (urgency.urgent ? " app-card-urgent" : "");
@@ -1621,7 +1675,7 @@ card.innerHTML = `
 ${app.isRecommendation ? `<span class="app-recommendation-badge">Suggéré par Fitz</span>` : ""}
 <h3>${escapeHtml(app.university)}</h3>
 ${app.scholarship ? `<p class="app-card-scholarship">${escapeHtml(app.scholarship)}</p>` : ""}
-${renderFaitsDuChoix(app)}
+${renderFaitsDuChoix(app, lecture)}
 </div>
 <div class="app-card-pills">
 <span class="app-track-pill" data-track="${lireParcours(app)}">${LIBELLES_PARCOURS[lireParcours(app)].court}</span>
@@ -1645,6 +1699,8 @@ ${renderDivergence(app, lecture)}
 ${renderExigences(lecture)}
 
 ${app.notes ? `<p class="app-card-notes">${escapeHtml(app.notes)}</p>` : ""}
+
+${fermee ? "" : renderPlusProposable(app, lecture)}
 
 ${renderAcceptation(app, fermee)}
 
@@ -1690,7 +1746,7 @@ ${peutSupprimer(app, planId) ? `<button type="button" class="btn btn-ghost btn-s
 `;
 
 card.querySelector(".app-accept-btn")?.addEventListener("click", () => accepter(app));
-card.querySelector(".app-remplacer-btn")?.addEventListener("click", () => remplacerFermee(app));
+card.querySelector(".app-remplacer-btn")?.addEventListener("click", () => remplacerFermee(app, fermee ? "bourse_fermee" : "fenetre_bac"));
 card.querySelector(".app-checkin-btn").addEventListener("click", () => checkIn(app));
 card.querySelector(".app-ics-btn").addEventListener("click", () => downloadICS(app));
 card.querySelector(".app-edit-btn").addEventListener("click", () => openModal(app));
@@ -2201,7 +2257,7 @@ if (button) { button.disabled = false; button.querySelector("span").textContent 
 // ou fiche retirée) sur une carte NON DÉPOSÉE. La remplaçante arrive à
 // l'état « proposée » : accepteeLe retiré, refus inchangé, rien dans
 // universitesRefusees — l'étudiant n'a rien refusé.
-async function remplacerFermee(app) {
+async function remplacerFermee(app, motif = "bourse_fermee") {
 
 const button = document.querySelector(`[data-app-id="${app.id}"] .app-remplacer-btn`);
 if (button) { button.disabled = true; button.querySelector("span").textContent = "Fitz cherche…"; }
@@ -2222,7 +2278,7 @@ accepteeLe: deleteField(),
 updatedAt: serverTimestamp()
 });
 
-trackEvent("application_bourse_fermee_remplacee", { programme: app.programId || "" });
+trackEvent(motif === "fenetre_bac" ? "application_hors_fenetre_remplacee" : "application_bourse_fermee_remplacee", { programme: app.programId || "" });
 
 showToast(`Fitz vous propose ${alternative.universityName}.`, { type: "success" });
 

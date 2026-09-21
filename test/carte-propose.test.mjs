@@ -155,14 +155,14 @@ test("acceptation 1 — on n'accepte plus un nom seul", () => {
 
   const js = codeSeul("applications.js");
 
-  assert.match(js, /function renderFaitsDuChoix\(app\)/);
-  assert.match(js, /\$\{renderFaitsDuChoix\(app\)\}/,
+  assert.match(js, /function renderFaitsDuChoix\(app, lecture\)/);
+  assert.match(js, /\$\{renderFaitsDuChoix\(app, lecture\)\}/,
     "LE BOUT QUI MANQUE TOUJOURS : la fonction doit être APPELÉE par la carte");
 
   // La même phrase que le hub, par le même module : deux phrases
   // différentes pour la même opportunité, et l'étudiant cesse de
   // croire le site.
-  assert.match(js, /import \{ retenirOpportunites, libelleFenetre \}/);
+  assert.match(js, /import \{ retenirOpportunites, libelleFenetre[,} ]/);
 
   assert.match(js, /app-raison-fitz/, "pourquoi Fitz a choisi celle-là");
   assert.match(js, /app-fait-pays/, "et dans quel pays elle se trouve");

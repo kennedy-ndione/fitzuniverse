@@ -152,6 +152,13 @@ languages: [
 ...(responses.english && responses.english !== "Débutant" ? ["Anglais"] : []),
 ...(responses.french && responses.french !== "Débutant" ? ["Français"] : [])
 ],
+// Finitions (2026-09-21) : le niveau déclaré, pour que les raisons ne
+// disent « une langue que vous maîtrisez » qu'à partir de « Bon niveau »
+// (js/recommend-programs.js, niveauDEtudes).
+niveauxDeLangue: {
+anglais: responses.english || "",
+français: responses.french || ""
+},
 // desiredField/fundingGoal (audit 2026-08-22) : scoreProgram() ne
 // lisait jusqu'ici ni le domaine d'études ni la préférence de
 // financement — deux réponses collectées par le test mais silencieuses
@@ -232,6 +239,7 @@ country: pick.country || "",
 deadline: pick.deadline,
 jours: pick.jours,
 echeanceOuverte: pick.echeanceOuverte,
+porte: pick.porte || null,
 // resolveCityImage() plutôt que le fichier d'origine : la vignette
 // de 44 px chargeait sinon l'image pleine taille (jusqu'à 2,6 Mo).
 photo: resolveCityImage(university.image),
@@ -963,7 +971,7 @@ card.innerHTML = `
 <span class="opportunity-country"><img class="opportunity-flag" src="assets/flags/${scholarship.flag}" alt="" onerror="this.onerror=null;this.src='assets/flags/default.svg'"><span></span></span>
 </div>
 </div>
-${scholarship.deadline ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
+${scholarship.deadline || typeof scholarship.jours === "number" ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
 <p class="opportunity-reasons-label">Pourquoi cette opportunité vous correspond :</p>
 <ul class="opportunity-reasons">${reasonsHtml}</ul>
 `;
@@ -979,7 +987,14 @@ const deadlineEl = card.querySelector(".opportunity-deadline span");
 
 if (deadlineEl) {
 
-if (scholarship.echeanceOuverte === true && typeof scholarship.jours === "number") {
+if (scholarship.echeanceOuverte === true && scholarship.porte && typeof scholarship.porte.jours === "number") {
+// Finitions (2026-09-21) : une étape obligatoire tombe AVANT la date
+// limite (Pearson : la nomination par le lycée). C'est elle qu'on
+// annonce — « 46 jours » était vrai pour le dépôt, faux pour le geste
+// qui décide de tout.
+const n = scholarship.porte.jours;
+deadlineEl.textContent = `Première étape : ${scholarship.porte.quoi}, au plus tard le ${dateDansNJours(n)} — ${n === 0 ? "c'est aujourd'hui" : `il vous reste ${n} jour${n > 1 ? "s" : ""}`}`;
+} else if (scholarship.echeanceOuverte === true && typeof scholarship.jours === "number") {
 // LA DATE, PAS LA PROSE (corrigé le 2026-09-21, vu en production).
 // `deadline` n'est pas une date : c'est la phrase du catalogue. La
 // coller derrière « échéance le » donnait, sur la première carte que
@@ -998,7 +1013,12 @@ deadlineEl.textContent = scholarship.jours === 0
 ? "Dernier jour pour candidater"
 : `Il vous reste ${scholarship.jours} jour${scholarship.jours > 1 ? "s" : ""} — échéance le ${dateDansNJours(scholarship.jours)}`;
 } else {
-deadlineEl.textContent = `Échéance annoncée : ${scholarship.deadline} — à confirmer sur le portail`;
+// Finitions (2026-09-21) : la carte UNIL n'avait AUCUNE ligne — sa
+// fiche porte une date ISO mais pas de phrase `deadline`, et la ligne
+// n'était écrite que depuis la phrase.
+deadlineEl.textContent = scholarship.deadline
+? `Échéance annoncée : ${scholarship.deadline} — à confirmer sur le portail`
+: "Échéance à confirmer sur le portail officiel";
 }
 
 }

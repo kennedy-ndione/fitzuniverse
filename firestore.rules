@@ -547,11 +547,44 @@ aProgramme(resource.data) &&
 get(/databases/$(database)/documents/scholarships/$(resource.data.scholarshipId)).data.get('isActive', true) == false)));
 }
 
+// FINITIONS (2026-09-21) — LA FENÊTRE DU BAC. Une carte non déposée
+// dont la bourse porte `anneeBacMin`, pour un compte dont le profil dit
+// « déjà dans le supérieur » ou « bac obtenu avant cette année » : Fitz
+// l'a proposée avant de savoir lire cette règle. La remplacer ne coûte
+// pas de refus (miroir client : remplacementSansRefus,
+// js/recommend-programs.js). Utilisée SEULEMENT en dernière branche
+// d'un OU : si une lecture échouait ici, rien de ce qui était permis
+// avant ne serait refusé.
+function exceptionFenetreBac() {
+let bourseId = resource.data.get('scholarshipId', null);
+let compte = /databases/$(database)/documents/users/$(request.auth.uid);
+return !estStatutDepose(resource.data.get('status', '')) &&
+aProgramme(resource.data) &&
+bourseId is string &&
+exists(/databases/$(database)/documents/scholarships/$(bourseId)) &&
+exists(compte) &&
+horsFenetreDuBac(get(/databases/$(database)/documents/scholarships/$(bourseId)).data.get('anneeBacMin', null), get(compte).data.get('profile', null));
+}
+
+// Sans opérateur ternaire (mal supporté par certains émulateurs) :
+// chaque lecture est gardée par un && qui la précède.
+function horsFenetreDuBac(min, profil) {
+return min is number && profil is map &&
+(profil.get('palier', '') in ['licence_en_cours', 'licence_obtenue', 'master_en_cours', 'master_obtenu', 'doctorat_en_cours', 'doctorat_obtenu'] ||
+(profil.get('palier', '') == 'bac_obtenu' && anneeAvant(profil.get('graduationYear', ''), min)));
+}
+
+function anneeAvant(annee, min) {
+return (annee is int && annee < min) ||
+(annee is string && annee.matches('^[0-9]{4}$') && int(annee) < min);
+}
+
 function accepteeLeOk() {
 return (!accepteeAvant() && !accepteeApres()) ||
 (!accepteeAvant() && accepteeApres() && request.resource.data.accepteeLe == request.time) ||
 (accepteeAvant() && accepteeApres() && request.resource.data.accepteeLe == resource.data.accepteeLe) ||
-(accepteeAvant() && !accepteeApres() && choixChange() && exceptionCatalogue());
+(accepteeAvant() && !accepteeApres() && choixChange() && exceptionCatalogue()) ||
+(accepteeAvant() && !accepteeApres() && choixChange() && exceptionFenetreBac());
 }
 
 function depotOk() {
@@ -566,7 +599,8 @@ function choixOk() {
 return !choixChange() ||
 (exceptionCatalogue() && refusApres() == refusAvant()) ||
 (!accepteeAvant() && !exceptionCatalogue() && refusApres() <= 2 &&
-(refusApres() == refusAvant() + 1 || (!aProgramme(resource.data) && refusApres() == refusAvant())));
+(refusApres() == refusAvant() + 1 || (!aProgramme(resource.data) && refusApres() == refusAvant()))) ||
+(exceptionFenetreBac() && refusApres() == refusAvant());
 }
 
 function refusStable() {

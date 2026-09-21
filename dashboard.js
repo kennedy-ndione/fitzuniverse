@@ -23,6 +23,7 @@ import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js"
 // un profil que Fitz refusait de servir.
 import { profilPretPourFitz } from "./js/fitz-choisit.js";
 import { computeJourneySteps } from "./js/application-journey.js";
+import { lireExigences, elementsAAjouter } from "./js/exigences.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage.
@@ -1276,11 +1277,20 @@ paysResidence: (profile && (profile.originCountry || profile.country)) || ""
 });
 };
 
-applications = applications.map((app) => ({
+applications = applications.map((app) => {
+const echeance = opps.index ? etatDeLaCandidature(app, opps.index) : null;
+// Finitions (2026-09-21) : même règle que la carte (applications.js) —
+// l'étape « Dossier » ne se valide pas tant qu'une pièce exigée par la
+// bourse manque au dossier.
+const exigencesManquantes = echeance && echeance.lie && echeance.bourse
+? elementsAAjouter(lireExigences(echeance.bourse), app.checklist).length
+: 0;
+return {
 ...app,
-etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {}, procedure: procedureDe(app) }),
-echeance: opps.index ? etatDeLaCandidature(app, opps.index) : null
-}));
+etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {}, procedure: procedureDe(app), exigencesManquantes }),
+echeance
+};
+});
 
 // ---- La carte du voyage ----
 const visaChecklist = userData.visaChecklist || {};

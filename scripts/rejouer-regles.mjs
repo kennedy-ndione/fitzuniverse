@@ -369,6 +369,31 @@ attendre("même remplacement sur une carte DÉPOSÉE : refusé", await patchAvec
 attendre("un refus (refus 0→1) vers une carte proposée dont la bourse est fermée n'est pas un refus : refusé", await (async () => { await admin.doc(`users/${UID_ACC}/applications/slot-4`).set({ ...IDENTITE_FERMEE, status: "a_preparer", track: "bourse", refus: 0 }); return patchCommeEtudiant(UID_ACC, C(4), { ...IDENTITE_2, refus: 1 }); })(), 403);
 attendre("(témoin) la remplaçante, refus inchangé : acceptée", await patchCommeEtudiant(UID_ACC, C(4), { ...IDENTITE_2, refus: 0 }), 200);
 
+console.log("Finitions (2026-09-21) — la fenêtre du bac, remplacement sans refus :");
+const BOURSE_BAC = `rejeu-bourse-bac-${T}`;
+const PROG_BAC = `rejeu-prog-bac-${T}`;
+await admin.doc(`scholarships/${BOURSE_BAC}`).set({ title: "Bourse des bacheliers", isActive: true, anneeBacMin: 2026 });
+await admin.doc(`programs/${PROG_BAC}`).set({ universityId: UNI, scholarshipId: BOURSE_BAC, level: "Licence" });
+const IDENTITE_BAC = { university: "Université de test", scholarship: "Bourse des bacheliers", scholarshipId: BOURSE_BAC, programId: PROG_BAC, universityId: UNI };
+const UID_BAC = `rejeu-fenetre-bac-${T}`;
+const B = (n) => `users/${UID_BAC}/applications/slot-${n}`;
+await admin.doc(`users/${UID_BAC}`).set({ uid: UID_BAC, name: "Bachelière 2022", plan: "conseiller-6", profile: { palier: "bac_obtenu", graduationYear: "2022" } });
+await admin.doc(B(1)).set({ ...IDENTITE_BAC, status: "a_preparer", track: "bourse", refus: 0 });
+attendre("bac 2022, bourse anneeBacMin 2026 : remplacer sans refus (refus 0→0) : accepté", await patchCommeEtudiant(UID_BAC, B(1), { ...IDENTITE_2, status: "a_preparer", checklist: [], refus: 0 }), 200);
+await admin.doc(B(2)).set({ ...IDENTITE_BAC, status: "a_preparer", track: "bourse", refus: 0 });
+await admin.doc(`users/${UID_BAC}`).set({ uid: UID_BAC, name: "Bachelière 2026", plan: "conseiller-6", profile: { palier: "bac_obtenu", graduationYear: "2026" } });
+attendre("bac 2026 (dans la fenêtre) : remplacer sans refus : refusé", await patchCommeEtudiant(UID_BAC, B(2), { ...IDENTITE_2, refus: 0 }), 403);
+attendre("(témoin) bac 2026 : un refus normal 0→1 passe toujours", await patchCommeEtudiant(UID_BAC, B(2), { ...IDENTITE_2, status: "a_preparer", checklist: [], refus: 1 }), 200);
+await admin.doc(`users/${UID_BAC}`).set({ uid: UID_BAC, name: "Étudiante en licence", plan: "conseiller-6", profile: { palier: "licence_en_cours" } });
+await admin.doc(B(3)).set({ ...IDENTITE_BAC, status: "deposee", track: "bourse", refus: 0, accepteeLe: new Date(), preuveDepot: preuve });
+attendre("carte DÉPOSÉE hors fenêtre : remplacer sans refus : refusé", await patchAvecHeureServeur(UID_BAC, B(3), { ...IDENTITE_2, refus: 0 }, [], ["accepteeLe"]), 403);
+await admin.doc(B(4)).set({ ...IDENTITE, status: "a_preparer", track: "bourse", refus: 0 });
+attendre("bourse SANS anneeBacMin : remplacer sans refus : refusé", await patchCommeEtudiant(UID_BAC, B(4), { ...IDENTITE_2, refus: 0 }), 403);
+for (const n of [1, 2, 3, 4]) await admin.doc(B(n)).delete();
+await admin.doc(`users/${UID_BAC}`).delete();
+await admin.doc(`programs/${PROG_BAC}`).delete();
+await admin.doc(`scholarships/${BOURSE_BAC}`).delete();
+
 console.log("La suppression :");
 attendre("essentiel-4 : supprimer une carte catalogue proposée (slot-4) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(4)), 403);
 attendre("essentiel-4 : supprimer une carte catalogue acceptée « admise » (slot-2) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(2)), 403);

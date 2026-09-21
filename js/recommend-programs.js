@@ -44,7 +44,7 @@ import { estEligible } from "./eligibility-countries.js";
 import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
 import { familleDeDomaine, pisteDepuisNiveau, PISTES } from "./eligibility-pistes.js";
-import { analyserEcheance, joursAvant } from "./echeance.js";
+import { analyserEcheance, joursAvant, formaterDate } from "./echeance.js";
 import { languesParlees } from "./niveaux-langue.js";
 
 // "bachelier" ajouté (audit 2026-08-22) : un lycéen qui vient d'obtenir
@@ -191,6 +191,38 @@ if (!program.language || !languages.length) return "";
 const match = languages.find((lang) => String(program.language).toLowerCase().includes(String(lang).toLowerCase()));
 
 return match || "";
+
+}
+
+/**
+* L'étudiant peut-il ÉTUDIER dans cette langue ? true | false | null.
+*
+* Deux formes de profil, comme partout dans ce fichier :
+*  - le diagnostic (results.js) passe `niveauxDeLangue`, les réponses
+*    telles quelles : « Intermédiaire », « Bon niveau », « Courant… » ;
+*  - le profil connecté écrit des objets {code, level} (échelle A1-C2).
+* Le seuil est celui de js/niveaux-langue.js : B2, « je pourrais
+* étudier dans cette langue ». null quand on ne sait pas — on garde
+* alors la formule d'avant, sans rien retirer à personne.
+*/
+function niveauDEtudes(profile, langue) {
+
+const nom = String(langue || "").trim().toLowerCase();
+if (!nom) return null;
+
+const reponses = profile && profile.niveauxDeLangue;
+if (reponses && typeof reponses === "object") {
+const niveau = String(reponses[nom] || "").trim().toLowerCase();
+if (niveau) return !(niveau.startsWith("débutant") || niveau.startsWith("intermédiaire"));
+}
+
+const entree = (Array.isArray(profile && profile.languages) ? profile.languages : [])
+.find((l) => l && typeof l === "object" && nomDeLangue(l) === nom);
+const code = entree ? String(entree.level || "").toUpperCase() : "";
+if (["A1", "A2", "B1"].includes(code)) return false;
+if (["B2", "C1", "C2"].includes(code)) return true;
+
+return null;
 
 }
 
@@ -377,7 +409,54 @@ const minuitAujourdhui = Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTC
 return Math.round((date.getTime() - minuitAujourdhui) / 86400000);
 }
 
+/**
+* LES PORTES AVANT LA DATE LIMITE (finitions, 2026-09-21).
+*
+* Certaines bourses ont une date limite… et une ou plusieurs étapes
+* OBLIGATOIRES bien avant. Pearson : dépôt le 6 novembre, mais
+* nomination par le lycée avant le 9 octobre, puis admission OUAC avant
+* le 16 octobre. La carte annonçait « 46 jours pour déposer » à qui
+* n'en avait que 18 pour la seule étape qui ne se rattrape pas.
+*
+* Champ de programme `portesAvant` : [{ dateISO: "2026-10-09",
+* quoi: "la nomination par votre lycée" }], écrit par un lot de
+* données après lecture de la source. Une porte PASSÉE ferme la
+* candidature comme une date limite passée ; la prochaine porte future
+* devient le décompte qui compte (proposable(), libelleFenetre()).
+*/
+function lirePortes(program, aujourdhui) {
+const brutes = Array.isArray(program && program.portesAvant) ? program.portesAvant : [];
+return brutes
+.map((p) => {
+const d = p && lireDateISO(p.dateISO);
+return d && p.quoi ? { dateISO: String(p.dateISO).slice(0, 10), quoi: String(p.quoi), jours: joursDeCalendrier(d, aujourdhui) } : null;
+})
+.filter(Boolean)
+.sort((a, b) => a.jours - b.jours);
+}
+
 export function etatEcheance(program, aujourdhui = new Date()) {
+
+const base = etatEcheanceSeule(program, aujourdhui);
+
+if (base.ouverte !== true) return base;
+
+const portes = lirePortes(program, aujourdhui);
+if (!portes.length) return base;
+
+// Une porte obligatoire est passée : la candidature est close pour ce
+// cycle, même si la date limite finale est encore loin.
+const manquee = portes.find((p) => p.jours < 0);
+if (manquee) return { ...base, ouverte: false, porteManquee: manquee };
+
+const prochaine = portes[0];
+if (base.jours === null || prochaine.jours < base.jours) return { ...base, porte: prochaine };
+
+return base;
+
+}
+
+function etatEcheanceSeule(program, aujourdhui = new Date()) {
 
 if (String(program.status || "").toLowerCase().includes("fermé")) {
 /* Fermée, mais VÉRIFIÉE fermée (campagne P5c, 2026-09-19) : le statut
@@ -618,11 +697,25 @@ reasons.push(`Situé ${auPays(university.country)}, votre destination souhaitée
 
 const lang = languageMatch(program, profile);
 if (lang) {
-reasons.push(`Enseigné en ${String(program.language).toLowerCase().includes("angl") ? "anglais" : String(program.language).toLowerCase().includes("fran") ? "français" : program.language} — une langue que vous maîtrisez`);
+// LE MOT SUIT LE NIVEAU (finitions, 2026-09-21). « Une langue que vous
+// maîtrisez » s'affichait pour un anglais déclaré « Intermédiaire » :
+// l'étudiant lisait une flatterie que ses propres réponses
+// contredisaient. On ne dit « maîtrisez » qu'à partir du niveau
+// d'études (« Bon niveau », « Courant », B2 et au-delà).
+const nomLangue = String(program.language).toLowerCase().includes("angl") ? "anglais" : String(program.language).toLowerCase().includes("fran") ? "français" : program.language;
+reasons.push(niveauDEtudes(profile, lang) === false
+? `Enseigné en ${nomLangue} — une langue que vous pratiquez déjà (le niveau exigé reste à atteindre)`
+: `Enseigné en ${nomLangue} — une langue que vous maîtrisez`);
 }
 
 if (domaineCorrespond(university, profile) === true) {
-reasons.push(`Établissement actif dans votre domaine (${familleDeDomaine(profile.desiredField)})`);
+// LE DOMAINE DE L'ÉTUDIANT, PAS LA FAMILLE DU CATALOGUE (finitions,
+// 2026-09-21). La comparaison passe par la famille (« Commerce »
+// regroupe économie, gestion, finance…), mais la phrase affichait la
+// famille : un étudiant qui avait écrit « Économie » lisait « votre
+// domaine (Commerce) ». On lui rend ses propres mots.
+const domaine = String(profile.desiredField || "").trim() || familleDeDomaine(profile.desiredField);
+reasons.push(`Établissement actif dans votre domaine (${domaine})`);
 }
 
 // L'échéance RÉELLE prime sur le statut affiché : un programme marqué
@@ -631,7 +724,9 @@ reasons.push(`Établissement actif dans votre domaine (${familleDeDomaine(profil
 // futures).
 const echeance = etatEcheance(program);
 
-if (echeance.ouverte === true) {
+if (echeance.ouverte === true && echeance.porte) {
+reasons.push(`Candidatures ouvertes — première étape (${echeance.porte.quoi}) dans ${echeance.porte.jours} jour${echeance.porte.jours > 1 ? "s" : ""}`);
+} else if (echeance.ouverte === true) {
 reasons.push(echeance.jours !== null && echeance.jours <= 400
 ? `Candidatures ouvertes — il vous reste ${echeance.jours} jours`
 : `Candidatures ouvertes (échéance : ${program.deadline})`);
@@ -905,6 +1000,16 @@ return langues.some((l) => langueProgramme.includes(l));
 /** Le temps minimum laissé à un étudiant pour réunir son dossier. */
 export const JOURS_MINIMUM_POUR_DEPOSER = 30;
 
+// LE PLANCHER D'UNE PORTE (finitions, 2026-09-21) : 14 jours, pas 30.
+// Les 30 jours servent à RÉUNIR UN DOSSIER (légalisations, traductions,
+// relevés) — c'est la date limite finale qui les mesure. Une porte
+// avant elle est un geste court : demander la nomination à son lycée,
+// remplir le formulaire d'admission. Deux semaines, c'est le seuil que
+// Charles avait posé au départ (« pas à moins de deux semaines »).
+// Lui appliquer 30 jours retirait Pearson à des lycéens qui avaient
+// encore 18 jours pour se faire nommer — et 46 pour le dossier.
+export const JOURS_MINIMUM_POUR_UNE_PORTE = 14;
+
 /**
 * Le champ `status` du catalogue est écrit à la main, en français, et
 * porte quatorze orthographes (« Fermée », « Fermée — campagne
@@ -950,6 +1055,12 @@ if (scholarship && statutDitFerme(scholarship.status)) return { ok: false, raiso
 // inventer une échéance.
 if (dateConfirmee && ech.jours < joursMinimum) return { ok: false, raison: "trop_tard", dateConfirmee };
 
+// Une porte obligatoire avant la date limite (etatEcheance) a son
+// propre plancher, plus court : voir JOURS_MINIMUM_POUR_UNE_PORTE.
+if (ech.porte && typeof ech.porte.jours === "number" && ech.porte.jours < JOURS_MINIMUM_POUR_UNE_PORTE) {
+return { ok: false, raison: "trop_tard", dateConfirmee };
+}
+
 return { ok: true, raison: "", dateConfirmee };
 
 }
@@ -985,6 +1096,17 @@ return passes <= 1 ? "hier" : `il y a ${passes} jours`;
 export function libelleFenetre(retenue) {
 
 const r = retenue || {};
+
+// La première porte obligatoire passe avant la date limite : c'est elle
+// que l'étudiant doit voir en premier (etatEcheance, lirePortes).
+if (r.porte && typeof r.porte.jours === "number" && r.porte.jours >= 0) {
+const n = r.porte.jours;
+const quand = n === 0 ? "c'est aujourd'hui" : `il reste ${n} jour${n > 1 ? "s" : ""}`;
+return {
+etat: n <= 45 ? "serre" : "ouverte",
+texte: `Première étape : ${r.porte.quoi}, au plus tard le ${formaterDate(r.porte.dateISO)} — ${quand}`
+};
+}
 
 /* LOT P5a (2026-09-19) — UN QUATRIÈME ÉTAT, LE SEUL QUI SE PROUVE.
    « vérifiée » veut dire : un humain a ouvert la page officielle, et
@@ -1197,6 +1319,9 @@ dateConfirmee: c.dateConfirmee === true,
 // la même chose d'une date contrôlée et d'une date devinée.
 certitude: c.echeance.certitude || "inconnue",
 verifieLe: c.echeance.verifieLe || "",
+// Finitions (2026-09-21) : la première étape obligatoire, quand elle
+// tombe avant la date limite (etatEcheance, lirePortes).
+porte: c.echeance.porte || null,
 score: c.score,
 applicationUrl: c.program.applicationUrl || c.university.applicationPortalUrl || "",
 universityWebsite: c.university.officialWebsite || "",
@@ -1216,4 +1341,91 @@ ouvertes: retenues.filter((r) => r.echeanceOuverte === true).length,
 pays: new Set(retenues.map((r) => r.country).filter(Boolean)).size
 };
 
+}
+
+/**
+* UNE PROPOSITION DÉJÀ POSÉE SE REVÉRIFIE (finitions, 2026-09-21).
+*
+* Fitz filtre ce qu'il PROPOSE ; il ne relisait jamais ce qu'il avait
+* DÉJÀ proposé. Le lot DÉPART a appris au moteur la fenêtre du bac —
+* mais la carte Pearson posée plus tôt chez une bachelière de 2022 est
+* restée là, prête à être acceptée. Cette fonction rejoue les filtres
+* durs sur UNE carte : nationalité, âge, fenêtre du bac, cycle visé,
+* date limite ou étape obligatoire passée, bourse ou programme fermé.
+*
+* Elle ne rejoue PAS le plancher de 30 jours : une carte posée peut
+* très bien être en cours de préparation, le délai se dit sur la carte
+* (libelleFenetre), il ne la disqualifie pas.
+*
+* @returns {string} "" si la carte tient toujours ; sinon la raison,
+* écrite pour l'étudiant (« votre bac date de 2022… »).
+*/
+export function pourquoiPlusProposable({ program, university = {}, scholarship = null, profile = {}, aujourdhui = new Date() } = {}) {
+
+if (!program) return "";
+
+const p = profile || {};
+
+if (scholarship && estEligible(scholarship.eligibility, p.nationality) === false) {
+return "cette bourse n'est pas ouverte à votre nationalité";
+}
+
+if (ageMatch(scholarship, p) === false) {
+return "votre âge dépasse la limite fixée par cette bourse";
+}
+
+if (fenetreBacMatch(scholarship, p) === false) {
+const min = Number(scholarship && scholarship.anneeBacMin);
+return `elle est réservée aux élèves de terminale et aux bacheliers de ${min} ou après`;
+}
+
+const cible = studentTargetLevel(p);
+if (cible && program.level && normalizeLevel(program.level) !== cible) {
+return `ce programme est de niveau ${program.level}, et vous visez désormais un autre cycle`;
+}
+
+const echeance = etatEcheance(program, aujourdhui);
+
+if (echeance.porteManquee) {
+return `l'étape obligatoire « ${echeance.porteManquee.quoi} » était à faire au plus tard le ${formaterDate(echeance.porteManquee.dateISO)}`;
+}
+
+if (echeance.ouverte === false) return "sa date limite est passée pour ce cycle";
+
+if (statutDitFerme(program.status) || (scholarship && statutDitFerme(scholarship.status))) {
+return "les candidatures de ce cycle sont closes";
+}
+
+return "";
+
+}
+
+/**
+* LE REMPLACEMENT SANS REFUS (finitions, 2026-09-21).
+*
+* Quand une carte déjà posée sort de la fenêtre du bac, l'erreur vient
+* de Fitz (la règle n'existait pas quand il l'a proposée), pas de
+* l'étudiant : la remplacer ne doit pas lui coûter un de ses deux refus.
+* firestore.rules l'autorise (exceptionFenetreBac) sur des données que
+* les règles savent lire — le champ `anneeBacMin` de la bourse, et
+* `profile.palier` / `profile.graduationYear` du compte.
+*
+* Cette fonction est le MIROIR EXACT de la règle : le bouton gratuit
+* n'apparaît que si le serveur acceptera l'écriture. Plus étroite que
+* fenetreBacMatch (qui sait aussi déduire le palier du dernier diplôme) :
+* ce que la règle ne peut pas lire, on ne le promet pas.
+*/
+const PALIERS_DU_SUPERIEUR = ["licence_en_cours", "licence_obtenue", "master_en_cours", "master_obtenu", "doctorat_en_cours", "doctorat_obtenu"];
+
+export function remplacementSansRefus(scholarship, profile) {
+const min = scholarship ? scholarship.anneeBacMin : null;
+if (typeof min !== "number" || !Number.isFinite(min)) return false;
+const p = profile && typeof profile === "object" ? profile : null;
+if (!p) return false;
+const palier = typeof p.palier === "string" ? p.palier : "";
+if (PALIERS_DU_SUPERIEUR.includes(palier)) return true;
+if (palier !== "bac_obtenu") return false;
+const annee = typeof p.graduationYear === "number" ? p.graduationYear
+: (typeof p.graduationYear === "string" && /^[0-9]{4}$/.test(p.graduationYear) ? Number(p.graduationYear) : null);
+return annee !== null && annee < min;
 }
