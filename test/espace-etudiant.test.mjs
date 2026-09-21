@@ -378,7 +378,10 @@ test("révélation 10 — une phase repliée rappelle POURQUOI elle l'est", () =
 // « Terminé ✓ » tout seul fait rouvrir la phase pour vérifier.
 const ctx = { profileScore: 8, candidatures: 4, deposees: 2, reponses: 1, visaFaites: 6, visaTotal: 6 };
 
-assert.match(resumeDePhase("profil", ctx), /8\/10/);
+// Un pourcentage, jamais « X/10 » (2026-09-21) : la page du profil
+// compte des sections, l'espace dit la même mesure en pourcentage.
+assert.match(resumeDePhase("profil", ctx), /80\u00a0%/);
+assert.ok(!/\/10/.test(resumeDePhase("profil", ctx)), "« /10 » est revenu dans le résumé de la phase profil");
 assert.match(resumeDePhase("opportunites", ctx), /4 candidatures/);
 assert.match(resumeDePhase("depot", ctx), /2 dossiers/);
 assert.match(resumeDePhase("reponse", ctx), /1 réponse\b/);

@@ -26,7 +26,7 @@ import { renderMarkdownLite } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
-import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
+import { calculateAiScore, PROFILE_READY_THRESHOLD, libellePourcentProfil } from "./js/profile-score.js";
 
 // Contexte candidature — même patron que ai-letter.js (voir la note
 // dans ce fichier) : première réplication du lien vers une candidature
@@ -88,7 +88,7 @@ return;
 }
 
 bloc.querySelector("span").textContent =
-`Votre profil est à ${score}/10. Fitz s'appuie dessus pour donner à votre e-mail de quoi vous distinguer : avec un profil incomplet, il restera poli mais interchangeable. Vous pouvez continuer, mais le compléter d'abord change tout.`;
+`Votre profil est complet à ${libellePourcentProfil(score)}. Fitz s'appuie dessus pour donner à votre e-mail de quoi vous distinguer : avec un profil incomplet, il restera poli mais interchangeable. Vous pouvez continuer, mais le compléter d'abord change tout.`;
 
 bloc.hidden = false;
 

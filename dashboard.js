@@ -12,7 +12,7 @@
 
 import { db } from "./firebase-config.js";
 import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
+import { calculateAiScore, PROFILE_READY_THRESHOLD, pourcentProfil, libellePourcentProfil } from "./js/profile-score.js";
 import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLocked, applyFeatureLocks } from "./js/app-shell.js";
 // retenirOpportunites : la MEME selection que results.js (le diagnostic
 // gratuit) — cinq filtres, dedoublonnage par bourse et par universite,
@@ -450,12 +450,12 @@ return revelees;
 // ==========================================================
 function renderProfil(score) {
 
-document.getElementById("jyProfileScore").textContent = score;
+document.getElementById("jyProfileScore").textContent = pourcentProfil(score);
 
 document.getElementById("jyProfileCopy").textContent =
 score >= PROFILE_READY_THRESHOLD
 ? "Votre profil est assez complet pour que Fitz travaille avec précision. Tenez-le à jour : chaque détail nourrit vos lettres et vos recommandations."
-: `Votre profil est à ${score}/10. Sous ${PROFILE_READY_THRESHOLD}/10, les lettres et vérifications de Fitz restent génériques — complétez-le avant de produire quoi que ce soit.`;
+: `Votre profil est complet à ${libellePourcentProfil(score)}. Sous ${libellePourcentProfil(PROFILE_READY_THRESHOLD)}, les lettres et vérifications de Fitz restent génériques — complétez-le avant de produire quoi que ce soit.`;
 
 const cta = document.getElementById("jyProfileCta");
 if (score >= PROFILE_READY_THRESHOLD) {

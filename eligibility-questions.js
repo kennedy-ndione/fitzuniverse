@@ -59,6 +59,50 @@ const cardsContainer = document.getElementById("cardsContainer");
 const sliderContainer = document.getElementById("sliderContainer");
 const sliderInput = document.getElementById("sliderInput");
 const sliderValue = document.getElementById("sliderValue");
+const sliderInvite = document.getElementById("sliderInvite");
+
+// ==========================================================
+// UN CURSEUR NE RÉPOND PAS À LA PLACE DE L'ÉTUDIANT (lot SCHÉMAS,
+// 2026-09-21).
+// ==========================================================
+// Un <input type="range"> a TOUJOURS une valeur : on posait le pouce au
+// milieu (10/20, 50/100, 2/4) et « Continuer » l'enregistrait tel quel.
+// Un étudiant pressé passait la question et le diagnostic travaillait
+// sur une moyenne que personne n'avait donnée — alors que les lettres,
+// elles, attendaient déjà un clic (« sans clic, on ne fabrique pas de
+// valeur par défaut »). Même règle pour les chiffres désormais : tant
+// que le curseur n'a pas été touché, la valeur affichée est « — » et
+// Continuer demande une réponse. Toucher le pouce sans le déplacer
+// suffit : une moyenne de 10/20 pile doit pouvoir se confirmer.
+let curseurTouche = false;
+
+function poserCurseur(valeur, connue) {
+sliderInput.value = valeur;
+curseurTouche = connue;
+sliderValue.textContent = connue ? sliderInput.value : "—";
+sliderContainer.classList.toggle("is-vierge", !connue);
+sliderContainer.classList.remove("is-demande");
+if (sliderInvite) {
+sliderInvite.hidden = connue;
+sliderInvite.textContent = "Faites glisser le curseur jusqu'à votre moyenne.";
+}
+}
+
+function marquerCurseurTouche() {
+curseurTouche = true;
+sliderValue.textContent = sliderInput.value;
+sliderContainer.classList.remove("is-vierge", "is-demande");
+if (sliderInvite) sliderInvite.hidden = true;
+}
+
+function demanderCurseur() {
+sliderContainer.classList.add("is-demande");
+if (sliderInvite) {
+sliderInvite.hidden = false;
+sliderInvite.textContent = "Placez le curseur sur votre moyenne pour continuer — si elle tombe au milieu, touchez-le simplement.";
+}
+sliderInput.focus();
+}
 
 const scaleSelector = document.getElementById("scaleSelector");
 const lettersContainer = document.getElementById("lettersContainer");
@@ -306,10 +350,9 @@ sliderInput.max = scale.max;
 sliderInput.step = scale.step;
 
 const numericExisting = parseFloat(existingAnswer);
-const value = !isNaN(numericExisting) ? numericExisting : (scale.min + scale.max) / 2;
+const connue = !isNaN(numericExisting);
 
-sliderInput.value = value;
-sliderValue.textContent = value;
+poserCurseur(connue ? numericExisting : (scale.min + scale.max) / 2, connue);
 
 sliderInput.setAttribute("aria-label", `Votre moyenne générale ${scale.label}`);
 
@@ -375,8 +418,8 @@ sliderContainer.style.display = "block";
 sliderInput.min = question.min;
 sliderInput.max = question.max;
 sliderInput.step = question.step;
-sliderInput.value = existingAnswer || (question.min + question.max) / 2;
-sliderValue.textContent = sliderInput.value;
+const connue = existingAnswer !== undefined && existingAnswer !== null && existingAnswer !== "";
+poserCurseur(connue ? existingAnswer : (question.min + question.max) / 2, connue);
 
 }
 
@@ -416,11 +459,13 @@ const scale = currentScaleFor(question);
 if (scale.kind === "letters") {
 if (!parcours.reponses[question.id]) return;
 } else {
+if (!curseurTouche) { demanderCurseur(); return; }
 parcours.enregistrer(question.id, sliderInput.value);
 }
 
 } else {
 
+if (!curseurTouche) { demanderCurseur(); return; }
 parcours.enregistrer(question.id, sliderInput.value);
 
 }
@@ -476,8 +521,14 @@ window.location.href = returnTo && isSafeReturnTo(returnTo) ? returnTo : "result
 nextButton.addEventListener("click", validerEtAvancer);
 backButton.addEventListener("click", goBack);
 
-sliderInput.addEventListener("input", () => {
-sliderValue.textContent = sliderInput.value;
+sliderInput.addEventListener("input", marquerCurseurTouche);
+sliderInput.addEventListener("change", marquerCurseurTouche);
+// Toucher le pouce sans le déplacer ne déclenche aucun « input » : c'est
+// pourtant une réponse (la moyenne tombe au milieu). Au clavier, une
+// flèche déplace déjà la valeur ; Entrée ou Espace la confirment.
+sliderInput.addEventListener("pointerdown", marquerCurseurTouche);
+sliderInput.addEventListener("keydown", (event) => {
+if (event.key === "Enter" || event.key === " ") marquerCurseurTouche();
 });
 
 answerInput.addEventListener("keydown", (event) => {

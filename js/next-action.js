@@ -49,7 +49,7 @@
 * ============================================================
 */
 
-import { PROFILE_READY_THRESHOLD } from "./profile-score.js";
+import { PROFILE_READY_THRESHOLD, libellePourcentProfil } from "./profile-score.js";
 
 /**
 * Prérequis de chaque étape du parcours.
@@ -440,7 +440,7 @@ cle: "profile",
 etapeId: "profile",
 applicationId: null,
 titre: "Complétez votre profil avant d'aller plus loin",
-texte: `Votre profil est à ${profileScore}/10. C'est lui que Fitz lit pour écrire vos lettres et vérifier vos dossiers : tout ce que vous produirez avant de l'avoir complété sera à refaire.`,
+texte: `Votre profil est complet à ${libellePourcentProfil(profileScore)}. C'est lui que Fitz lit pour écrire vos lettres et vérifier vos dossiers : tout ce que vous produirez avant de l'avoir complété sera à refaire.`,
 cta: "Compléter mon profil",
 href: "profile.html",
 action: null,
@@ -475,7 +475,7 @@ cle: "profile",
 etapeId: "profile",
 applicationId: null,
 titre: "Complétez votre profil",
-texte: `Votre profil est à ${profileScore}/10. C'est à partir de lui que Fitz identifie les opportunités qui vous correspondent vraiment.`,
+texte: `Votre profil est complet à ${libellePourcentProfil(profileScore)}. C'est à partir de lui que Fitz identifie les opportunités qui vous correspondent vraiment.`,
 cta: "Compléter mon profil",
 href: "profile.html",
 action: null,

@@ -86,6 +86,34 @@ parcoursRempli,
 // contradictoires sur le même profil.
 export const PROFILE_READY_THRESHOLD = 7;
 
+/**
+* CE QUE L'ÉTUDIANT LIT — UN POURCENTAGE, JAMAIS « X/10 » (2026-09-21).
+*
+* Vu en production sur un compte réel : profile.html disait « 3/6
+* sections complétées », et l'espace, au même instant, « Votre profil est
+* à 5/10 ». C'était la MÊME mesure (3/6 = 5/10 = 50 %) sur deux échelles,
+* et l'étudiant lisait deux chiffres pour une seule chose. Le commentaire
+* d'en-tête de ce fichier l'écrivait déjà pour la fiche admin : on dit le
+* vrai dénominateur, « jamais 8/10 ».
+*
+* Le score interne reste sur 10 — tous les seuils (PROFILE_READY_THRESHOLD,
+* les phases, les outils Fitz) continuent de comparer à 7 sans changer.
+* Seul l'AFFICHAGE passe par ici : « complet à 50 % », avec l'espace
+* insécable du reste du site. La page du profil, elle, garde son compte
+* de sections — c'est là qu'on agit, section par section — et les deux
+* disent désormais la même chose : 3 sections sur 6, c'est 50 %.
+*/
+export function pourcentProfil(score) {
+const n = Number(score);
+if (!Number.isFinite(n)) return 0;
+return Math.round(Math.max(0, Math.min(10, n)) * 10);
+}
+
+/** « 50 % » — le nombre et son signe, insécables. */
+export function libellePourcentProfil(score) {
+return `${pourcentProfil(score)} %`;
+}
+
 function sectionRemplie(index, profile) {
 try {
 return !!PROFILE_SECTION_RULES[index](profile || {});

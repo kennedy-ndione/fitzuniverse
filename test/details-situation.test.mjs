@@ -142,8 +142,20 @@ test("la section « situation » est masquée par défaut dans le HTML — invis
 assert.match(htmlRendu(sourceHtml), /id="situationSection"[^>]*hidden/, "situationSection n'est pas hidden par défaut");
 });
 
-test("le rendu de la situation n'est appelé que pour un abonné", () => {
-assert.match(sourceDetails, /if \(isPaidUser && session\) \{\s*await rendreSituation/);
+// RÈGLE CHANGÉE LE 2026-09-21, et le test avec elle. Ce test exigeait
+// que le bloc entier soit réservé aux abonnés. Il se sépare désormais en
+// une LECTURE, gratuite pour tout compte connecté (verdicts, raisons —
+// de l'information sur la bourse, calculée sans IA), et des ACTIONS,
+// réservées aux abonnés. Ce qu'on ne desserre pas : un visiteur ne voit
+// rien, et un compte sans formule ne lit AUCUNE mention de refus.
+test("la situation se lit pour tout compte connecté ; les actions restent aux abonnés", () => {
+assert.match(sourceDetails, /if \(session\) \{\s*await rendreSituation\(\{[\s\S]{0,160}actions: isPaidUser\s*\}\);/,
+"la situation doit être rendue pour une session, avec les actions conditionnées à l'abonnement");
+assert.match(sourceDetails, /if \(actions\) await brancherActionsSituation\(/,
+"les actions ne doivent être branchées que pour un abonné");
+// Le paramètre vaut `true` par défaut : un appelant qui l'oublie ne
+// retire rien à un abonné.
+assert.match(sourceDetails, /async function rendreSituation\(\{[^}]*actions = true \}\)/);
 });
 
 test("le bloc des portails porte un id, pour pouvoir être masqué entièrement", () => {

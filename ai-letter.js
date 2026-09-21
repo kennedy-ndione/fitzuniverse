@@ -20,7 +20,7 @@ import { renderMarkdownLite, wordCount } from "./js/ai/format.js";
 import { saveGeneratedDocument } from "./js/ai/chat-store.js";
 import { showToast, copyToClipboard, downloadTextFile } from "./js/ai/toast.js";
 import { trackEvent } from "./js/analytics.js";
-import { calculateAiScore, PROFILE_READY_THRESHOLD } from "./js/profile-score.js";
+import { calculateAiScore, PROFILE_READY_THRESHOLD, libellePourcentProfil } from "./js/profile-score.js";
 // Lot PRÉ-FITZ : le parcours décide de la FORME de la lettre — une lettre
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
@@ -98,7 +98,7 @@ return;
 }
 
 bloc.querySelector("span").textContent =
-`Votre profil est à ${score}/10. Fitz y puise la matière de votre lettre : avec un profil incomplet, elle restera générique — et une lettre générique est ce qui écarte une candidature. Vous pouvez continuer, mais la compléter d'abord change tout.`;
+`Votre profil est complet à ${libellePourcentProfil(score)}. Fitz y puise la matière de votre lettre : avec un profil incomplet, elle restera générique — et une lettre générique est ce qui écarte une candidature. Vous pouvez continuer, mais la compléter d'abord change tout.`;
 
 bloc.hidden = false;
 

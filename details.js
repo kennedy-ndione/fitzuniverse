@@ -446,10 +446,27 @@ document.title = `${titre} | FitzUniverse`;
 // « Votre situation face à cette bourse » — assemblage.
 //
 // Ne calcule rien lui-même : il appelle les modules existants et pose
-// leurs réponses dans le DOM. Toute erreur est absorbée — ce bloc est
-// un bonus d'abonné, il ne doit jamais empêcher la fiche de s'afficher.
+// leurs réponses dans le DOM. Toute erreur est absorbée — ce bloc ne
+// doit jamais empêcher la fiche de s'afficher.
+//
+// DEUX PARTS, DEUX RÈGLES (2026-09-21). Ce bloc était réservé aux
+// abonnés en entier. Or il porte deux choses de nature différente :
+//
+//   - une LECTURE (verdicts nationalité et âge, raisons de
+//     correspondance) : calculée sur le catalogue et le profil, sans
+//     IA, sans coût. C'est de l'information sur la bourse, et la fiche
+//     le promet : « les informations de cette fiche restent gratuites ».
+//     C'est aussi LA raison de créer un compte et de remplir son
+//     profil — le compte gratuit en a désormais le bénéfice ;
+//   - des ACTIONS (« Ajouter à mon parcours », « Rédiger ma lettre ») :
+//     de l'accompagnement, donc payant.
+//
+// `actions` sépare les deux. Pour un compte sans formule, les actions
+// ne sont même pas branchées : aucun bouton, et surtout AUCUNE phrase
+// « n'est pas inclus dans votre formule » — doctrine du 2026-08-31, on
+// ne montre pas une porte fermée.
 // ===============================
-async function rendreSituation({ session, university, program, universityProfile, scholarshipData }) {
+async function rendreSituation({ session, university, program, universityProfile, scholarshipData, actions = true }) {
 
 const section = document.getElementById("situationSection");
 if (!section) return;
@@ -509,8 +526,8 @@ listEl.appendChild(li);
 reasonsEl.hidden = false;
 }
 
-// --- Actions : parcours et lettre.
-await brancherActionsSituation({ session, university });
+// --- Actions : parcours et lettre — pour un abonné seulement.
+if (actions) await brancherActionsSituation({ session, university });
 
 section.hidden = false;
 
@@ -1080,16 +1097,19 @@ if (window.lucide) lucide.createIcons();
 
 // ===============================
 // « Votre situation face à cette bourse » — rendu.
-// N'est appelé QUE pour un abonné : pour un visiteur, la section reste
-// `hidden` telle qu'elle est écrite dans le HTML, donc rien n'existe.
+// Pour tout compte CONNECTÉ : la lecture est gratuite, les actions sont
+// réservées aux abonnés (voir rendreSituation). Pour un visiteur, la
+// section reste `hidden` telle qu'elle est écrite dans le HTML : sans
+// profil, il n'y a pas de situation à lire.
 // ===============================
-if (isPaidUser && session) {
+if (session) {
 await rendreSituation({
 session,
 university,
 program,
 universityProfile,
-scholarshipData
+scholarshipData,
+actions: isPaidUser
 });
 }
 

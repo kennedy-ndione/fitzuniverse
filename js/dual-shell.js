@@ -123,6 +123,14 @@ const key = el.dataset.feature;
 const flags = featureFlags[key];
 if (!flags) return;
 const locked = isFeatureLocked(session.planId, featureFlags, key, session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
+// La navigation de l'espace (barre du bas, feuille « Menu ») suit la
+// même règle qu'à l'intérieur de l'espace (lot SCHÉMAS, 2026-09-21) :
+// Candidatures, Documents, Entretien quittent la barre d'un compte qui
+// ne les a pas. L'onglet Fitz garde son cadenas, dessiné pour ça.
+if (locked && el.closest("#mnavTabbar, #mnavMenuGrid") && !el.classList.contains("mnav-tab--fitz")) {
+el.remove();
+return;
+}
 const link = el.matches("a") ? el : el.querySelector("a[data-real-href]");
 el.classList.toggle("is-locked", locked);
 if (!link) return;

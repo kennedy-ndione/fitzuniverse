@@ -255,9 +255,18 @@ whenLucideReady(() => refreshIcons(sheet));
 // qu'un aiguillage.
 const TABS = [
 { href: "dashboard.html", label: "Parcours", icon: "route", hub: true },
-{ href: "applications.html", label: "Candidatures", icon: "folder-open" },
-{ href: "documents.html", label: "Documents", icon: "file-text" }
+{ href: "applications.html", label: "Candidatures", icon: "folder-open", feature: "applications" },
+{ href: "documents.html", label: "Documents", icon: "file-text", feature: "documents" }
 ];
+
+// LOT SCHÉMAS (2026-09-21) : Candidatures et Documents portent désormais
+// leur droit, comme l'onglet Fitz depuis toujours. Un compte gratuit
+// touchait « Candidatures » et tombait sur une page de formules : la
+// barre du bas lui promettait deux outils qu'il n'a pas. Même contrat
+// que les tuiles du hub (espace-bourse.html, data-feature="applications"
+// et "documents") : applyFeatureLocks retire l'onglet, sans cadenas.
+// La barre d'un compte gratuit se lit alors « Parcours · Menu » — ce
+// qu'il a, rien de plus.
 
 const HUB_PAR_ESPACE = { bourse: "espace-bourse.html", preinscription: "espace-preinscription.html" };
 
@@ -272,7 +281,7 @@ const MENU_ITEMS = [
 { href: "account.html", label: "Paramètres", icon: "settings" },
 { href: "messages.html", label: "Messages de l'équipe", icon: "bell", id: "mnavMenuMessages" },
 { href: "test-prep.html", label: "Préparation aux tests", icon: "book-open", espace: "bourse" },
-{ href: "interview-prep.html", label: "Entretien", icon: "mic", espace: "bourse" }
+{ href: "interview-prep.html", label: "Entretien", icon: "mic", espace: "bourse", feature: "interview_prep" }
 // LOT P4 (2026-09-19) : « Catalogue des bourses » et « Universités »
 // retirés du menu de l'ESPACE. Le catalogue reste la vitrine publique
 // (voir PUBLIC_PRIMARY, plus haut, qui n'est pas touché) ; il n'est
@@ -293,9 +302,16 @@ const MENU_FEATURE_ITEMS = [
 { href: "diagnostic-france.html", label: "Diagnostic France", icon: "calculator", id: "mnavMenuDiagnosticFrance", feature: "diagnostic_france" }
 ];
 
+// Une entrée qui porte un droit (feature) suit le contrat de
+// applyFeatureLocks : data-real-href + data-feature sur le lien lui-même.
+// Verrouillée, elle quitte la feuille ; ouverte, elle garde son adresse.
+function attributsDroit(item) {
+return item.feature ? ` data-real-href="${item.href}" data-feature="${item.feature}"` : "";
+}
+
 function renderMenuItem(m) {
 return `
-<a href="${m.href}" class="mnav-menu-item"${m.id ? ` id="${m.id}"` : ""}${isCurrent(m.href) ? ' aria-current="page"' : ""}>
+<a href="${m.href}"${attributsDroit(m)} class="mnav-menu-item"${m.id ? ` id="${m.id}"` : ""}${isCurrent(m.href) ? ' aria-current="page"' : ""}>
 ${icon(m.icon)}<span>${m.label}</span>
 </a>`;
 }
@@ -408,7 +424,7 @@ bar.className = "mnav-tabbar";
 bar.setAttribute("aria-label", "Navigation de l'espace");
 
 const tabs = TABS.map((t) => `
-<a href="${t.href}" class="mnav-tab"${isCurrent(t.href) ? ' aria-current="page"' : ""}>
+<a href="${t.href}"${attributsDroit(t)} class="mnav-tab"${isCurrent(t.href) ? ' aria-current="page"' : ""}>
 ${icon(t.icon)}<span>${t.label}</span>
 </a>`).join("");
 

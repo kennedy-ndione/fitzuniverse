@@ -713,6 +713,39 @@ accent-color:var(--primary-color);
 
 }
 
+/* Curseur pas encore touché (lot SCHÉMAS, 2026-09-21) : la valeur
+affichée est « — » et le pouce s'efface à moitié — il attend une
+réponse, il n'en propose pas. */
+.slider-container.is-vierge input[type="range"]{
+
+opacity:.55;
+
+}
+
+.slider-container.is-vierge output{
+
+color:var(--text-muted);
+
+}
+
+.slider-invite{
+
+margin:14px 0 0;
+
+font-size:.92rem;
+
+color:var(--text-light);
+
+}
+
+.slider-container.is-demande .slider-invite{
+
+color:var(--primary-color);
+
+font-weight:600;
+
+}
+
 /* ==========================================================
 NAVIGATION
 ========================================================== */

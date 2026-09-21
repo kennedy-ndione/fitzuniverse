@@ -42,6 +42,7 @@
 * ============================================================
 */
 
+import { libellePourcentProfil } from "./profile-score.js";
 import { motDeLaPlace } from "./parcours-quota.js";
 
 export const ETATS = ["faite", "ouverte", "entrouverte", "scellee"];
@@ -170,7 +171,7 @@ const place = (n) => `${n} ${motDeLaPlace(espace, n > 1)}`;
 
 switch (id) {
 case "profil":
-return `Profil à ${profileScore}/10 — Fitz travaille avec précision.`;
+return `Profil complet à ${libellePourcentProfil(profileScore)} — Fitz travaille avec précision.`;
 case "opportunites":
 return candidatures > 0
 ? `${place(candidatures)} en cours de suivi.`
