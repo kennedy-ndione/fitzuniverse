@@ -151,7 +151,7 @@ assert.match(htmlRendu(sourceHtml), /id="situationSection"[^>]*hidden/, "situati
 test("la situation se lit pour tout compte connecté ; les actions restent aux abonnés", () => {
 assert.match(sourceDetails, /if \(session\) \{\s*await rendreSituation\(\{[\s\S]{0,160}actions: isPaidUser\s*\}\);/,
 "la situation doit être rendue pour une session, avec les actions conditionnées à l'abonnement");
-assert.match(sourceDetails, /if \(actions\) await brancherActionsSituation\(/,
+assert.match(sourceDetails, /if \(actions\) \{\s*await brancherActionsSituation\(/,
 "les actions ne doivent être branchées que pour un abonné");
 // Le paramètre vaut `true` par défaut : un appelant qui l'oublie ne
 // retire rien à un abonné.

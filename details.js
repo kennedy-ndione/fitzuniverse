@@ -527,7 +527,15 @@ reasonsEl.hidden = false;
 }
 
 // --- Actions : parcours et lettre — pour un abonné seulement.
-if (actions) await brancherActionsSituation({ session, university });
+// « Voir les pièces du dossier » mène à documents.html, un outil
+// d'abonné : pour un compte sans formule, le lien part avec les autres
+// actions — sinon la lecture gratuite se terminerait sur un mur.
+if (actions) {
+await brancherActionsSituation({ session, university });
+} else {
+const docs = document.getElementById("documentsBtn");
+if (docs) docs.remove();
+}
 
 section.hidden = false;
 

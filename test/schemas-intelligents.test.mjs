@@ -151,3 +151,14 @@ test("C — sur les pages catalogue aussi, la barre retire ce que le compte n'a 
   const js = sansCommentaires(lire("js/dual-shell.js"));
   assert.match(js, /if \(locked && el\.closest\("#mnavTabbar, #mnavMenuGrid"\) && !el\.classList\.contains\("mnav-tab--fitz"\)\) \{\s*el\.remove\(\);\s*return;\s*\}/);
 });
+
+test("B — un compte gratuit lit sa situation sans finir sur un mur : « Voir les pièces du dossier » part avec les actions", () => {
+  const js = sansCommentaires(lire("details.js"));
+  assert.match(js, /if \(actions\) \{\s*await brancherActionsSituation\(\{ session, university \}\);\s*\} else \{\s*const docs = document\.getElementById\("documentsBtn"\);\s*if \(docs\) docs\.remove\(\);\s*\}/);
+});
+
+test("C — l'accueil d'un compte sans accompagnement ne promet pas candidatures, documents et Fitz", () => {
+  const html = lire("dashboard.html");
+  const bonjour = html.slice(html.indexOf('<header class="jy-hello">'), html.indexOf("</header>", html.indexOf('<header class="jy-hello">')));
+  assert.ok(!/candidatures|documents|Fitz/.test(bonjour), "dashboard.html n'est servi qu'aux comptes sans accompagnement (les autres sont aiguillés vers leur hub)");
+});
