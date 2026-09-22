@@ -280,3 +280,52 @@ test("retenues 4 — la mesure qui a déclenché ce lot : de 2 à dix", () => {
     `un Forfait Conseiller a six places : le moteur n'en propose que ${nombre}`);
 
 });
+
+test("retenues 5 — une piste sous le seuil n'arrête pas la liste (lot 67)", () => {
+
+  // Le tri range par CERTITUDE avant le score : une piste vérifiée mais
+  // moyenne peut passer devant une piste meilleure. Le 2026-09-22, la
+  // vérification de Friedrich-Ebert (score 5, seuil 6) a fait tomber le
+  // profil de référence de 12 propositions à 5, parce que la boucle
+  // faisait `break` au lieu de `continue`. Sur le VRAI catalogue : on
+  // liste toutes les pistes sans seuil, puis on exige que chaque piste
+  // au-dessus du seuil reste proposée, même rangée derrière une piste
+  // vérifiée qui, elle, est sous le seuil. Remettre `break` fait tomber
+  // ce test (mutation vérifiée le 2026-09-22).
+
+  const tous = retenirOpportunites({
+    profile: SENEGALAIS, programs: CATALOGUE.programs,
+    universitiesById: UNIVERSITES, scholarshipsById: BOURSES,
+    min: 999, max: 999, marge: 999
+  }).retenues;
+
+  const top = Math.max(...tous.map((r) => r.score));
+  const seuil = top - 3;
+  const pertinentes = tous.filter((r) => r.score >= seuil);
+  const sousLeSeuil = tous.filter((r) => r.score < seuil && r.certitude === "verifiee");
+
+  // Sans une piste vérifiée sous le seuil, le défaut ne peut pas se
+  // montrer : le test le dit au lieu de passer en silence.
+  if (!sousLeSeuil.length) {
+    assert.ok(pertinentes.length >= 6, "catalogue trop pauvre pour exercer le cas");
+    return;
+  }
+
+  const { retenues } = retenirOpportunites({
+    profile: SENEGALAIS, programs: CATALOGUE.programs,
+    universitiesById: UNIVERSITES, scholarshipsById: BOURSES
+  });
+
+  const ids = new Set(retenues.map((r) => r.programId));
+  const attendues = pertinentes.slice(0, 12);
+
+  assert.equal(retenues.length, attendues.length,
+    `${attendues.length} pistes au-dessus du seuil, ${retenues.length} proposées`);
+  for (const r of attendues) {
+    assert.ok(ids.has(r.programId), `« ${r.programId} » (score ${r.score}) a disparu derrière une piste sous le seuil`);
+  }
+  for (const r of sousLeSeuil) {
+    assert.ok(!ids.has(r.programId), `« ${r.programId} » est sous le seuil et ne doit pas être proposée`);
+  }
+
+});

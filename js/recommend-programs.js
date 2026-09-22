@@ -1276,7 +1276,17 @@ if (retenues.length >= max) break;
 // Le seuil de pertinence ne s'applique qu'une fois le minimum
 // atteint : mieux vaut cinq pistes dont deux moyennes qu'une page
 // qui n'en propose qu'une.
-if (c.score < seuil && retenues.length >= min) break;
+//
+// `continue` et JAMAIS `break` (lot 67, 2026-09-22). Le tri ci-dessus
+// range d'abord par CERTITUDE, pas par score : une piste vérifiée mais
+// moyenne peut précéder une piste bien meilleure dont la date n'est
+// que lue ou inconnue. Avec `break`, la première piste sous le seuil
+// arrêtait la liste entière. Mesuré le jour où la fiche Friedrich-Ebert
+// a été vérifiée (score 5, seuil 6) : le profil sénégalais de
+// référence est passé de 12 propositions à 5, IHEID, Al Akhawayn,
+// Beihang, Trieste, Berkeley et KAIST disparaissant derrière elle.
+// Vérifier une fiche ne doit jamais en cacher d'autres.
+if (c.score < seuil && retenues.length >= min) continue;
 
 // idDe() et non `.id` : voir son en-tete — la forme des documents
 // depend de l'appelant, et la clef qui s'effondrait ne retenait qu'une
