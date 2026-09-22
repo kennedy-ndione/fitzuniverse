@@ -56,13 +56,21 @@ assert.deepEqual(fuitesDePortail(publique), []);
 test("tout le reste du catalogue est intact, et js/catalog-snapshot.js le lit sans modification", () => {
 const valide = validerInstantane(publique);
 assert.ok(valide, "l'instantané amputé doit rester un instantané valide");
-assert.equal(valide.universities.length, 155);
-assert.equal(valide.scholarships.length, 156);
+// LES COMPTES SE DÉDUISENT, ILS NE SE PHOTOGRAPHIENT PAS (lot 68,
+// 2026-09-22). Ce test disait « 156 bourses » en dur : il a rougi le
+// jour où le lot 68 a CRÉÉ la bourse régionale DSU du Politecnico — même
+// faute que le « 147 » corrigé plus bas, au même fichier. Ce qu'il veut
+// dire : l'amputation des portails n'a retiré AUCUN document, et le
+// catalogue ne s'est pas effondré. Un plancher garde l'effondrement.
+assert.equal(valide.universities.length, publique.universities.length);
+assert.equal(valide.scholarships.length, publique.scholarships.length);
+assert.ok(publique.universities.length >= 155, `${publique.universities.length} universités — le catalogue a perdu des fiches`);
+assert.ok(publique.scholarships.length >= 156, `${publique.scholarships.length} bourses — le catalogue a perdu des fiches`);
 assert.ok(valide.programs.length > 300);
 // officialWebsite est une SOURCE, pas un privilège : il reste public,
-// sur les universités comme sur les bourses.
-assert.equal(publique.universities.filter((u) => u.officialWebsite).length, 155);
-assert.equal(publique.scholarships.filter((s) => s.officialWebsite).length, 156);
+// sur les universités comme sur les bourses — sur TOUTES.
+assert.equal(publique.universities.filter((u) => u.officialWebsite).length, publique.universities.length);
+assert.equal(publique.scholarships.filter((s) => s.officialWebsite).length, publique.scholarships.length);
 // Les champs qui font vivre le catalogue sont là.
 const bordeaux = publique.universities.find((u) => u.id === "universite-de-bordeaux-bordeaux");
 assert.ok(bordeaux && bordeaux.name && bordeaux.country === "France" && bordeaux.city);
