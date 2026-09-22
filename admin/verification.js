@@ -85,6 +85,16 @@ async function ecrire(proposition, choixStatut, epingler = false) {
     return;
   }
 
+  // PAS DE PHRASE, PAS DE PREUVE (lot 72, 2026-09-22). Les campagnes
+  // du 19 et du 20 septembre ont laissé 165 programmes avec une
+  // sourceVerification à citation VIDE : « vérifiée le… » affiché,
+  // sans rien qui le prouve. Le panneau disait déjà « Ne validez
+  // rien » ; désormais l'écriture le refuse aussi.
+  if (!String(proposition.citation || "").trim()) {
+    log(`« ${proposition.titre} » : rien écrit — aucune phrase source. Lisez la page et passez par un lot.`, "warn");
+    return;
+  }
+
   const champs = {
     ouverteVerifieeLe: proposition.lueLe,
     sourceVerification: {
@@ -280,7 +290,7 @@ function rendrePanneau(p) {
           </select>
         </label>
         ${(p.viaLien && p.deadlineISO) ? `<label class="verif-epingle"><input type="checkbox" id="verifEpingler" checked> Épingler cette page comme page d'échéance</label>` : ""}
-        <button type="button" id="verifValider">Écrire sur ${programmes.length} programme(s)</button>
+        <button type="button" id="verifValider"${p.citation ? "" : " disabled"}>${p.citation ? `Écrire sur ${programmes.length} programme(s)` : "Rien à écrire sans phrase source"}</button>
         <button type="button" id="verifAnnuler" class="verif-secondaire">Ne rien écrire</button>
       </div>
 

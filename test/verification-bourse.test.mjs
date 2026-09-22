@@ -881,3 +881,21 @@ test("récurrente 3 — elle rend la règle et la phrase, jamais la date seule",
   assert.ok(MOTS_RECURRENCE.includes("each year"));
 
 });
+
+test("écran 2 — pas de phrase source, pas d'écriture (lot 72)", () => {
+
+  // 165 programmes portent une sourceVerification à citation vide,
+  // écrite par les campagnes du 19 et du 20 septembre. L'écran disait
+  // « Ne validez rien » mais laissait valider.
+  const js = codeSeul("admin/verification.js");
+
+  assert.match(js, /if \(!String\(proposition\.citation \|\| ""\)\.trim\(\)\) \{/,
+    "ecrire() refuse une proposition sans phrase source");
+  const garde = js.indexOf('String(proposition.citation || "").trim()');
+  const ecriture = js.indexOf("updateDoc(doc(db, \"programs\"");
+  assert.ok(garde > 0 && garde < ecriture, "la garde passe AVANT toute écriture");
+
+  assert.match(js, /id="verifValider"\$\{p\.citation \? "" : " disabled"\}/,
+    "et le bouton est désactivé : on ne propose pas un geste qui sera refusé");
+
+});

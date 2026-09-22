@@ -99,6 +99,78 @@ return !Number.isInteger(valeur) || valeur < 1 || valeur > 99;
 }
 
 /**
+* GARDE DES DATES DE LECTURE (2026-09-22, lot 72)
+* ------------------------------------------------
+* `verifieLe` (bourse) et `ouverteVerifieeLe` (programme) disent QUAND
+* quelqu'un a lu la source. Ce sont des dates de LECTURE : elles ne
+* peuvent être que passées, et au format AAAA-MM-JJ que lisent
+* js/echeance.js et le radar.
+*
+* POURQUOI CETTE GARDE EXISTE. Le lot 40 a écrit « 6 novembre 2026 »
+* dans un `verifieLe` : une date en toutes lettres, ET dans le futur.
+* Rien ne l'a arrêté — le champ n'était qu'une chaîne. Une date de
+* lecture future fait croire qu'une fiche a été relue alors qu'elle ne
+* l'a pas été ; une date en toutes lettres échappe au tri du radar.
+*
+* Même famille pour `sourceVerification` : une preuve sans phrase
+* source n'est pas une preuve. 165 programmes en portent une à
+* citation vide (campagnes du 19 et du 20 septembre) ; aucun lot n'a
+* le droit d'en ajouter. Le vider (null) reste permis.
+*
+* Tolérance d'un jour sur le futur : un lot préparé le soir porte
+* l'heure de sa préparation et s'exécute parfois après minuit UTC.
+*/
+const RE_JOUR_ISO = /^\d{4}-\d{2}-\d{2}$/;
+const UN_JOUR_MS = 24 * 3600 * 1000;
+
+function jourIsoValide(valeur) {
+if (typeof valeur !== "string" || !RE_JOUR_ISO.test(valeur)) return false;
+const d = new Date(`${valeur}T00:00:00Z`);
+return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === valeur;
+}
+
+export function refusDatesDeLecture(ou, champs, aujourdhui = new Date()) {
+
+const erreurs = [];
+const ref = aujourdhui instanceof Date ? aujourdhui : new Date(aujourdhui);
+const limite = ref.getTime() + UN_JOUR_MS;
+
+for (const cle of ["verifieLe", "ouverteVerifieeLe"]) {
+if (!(cle in champs)) continue;
+const v = champs[cle];
+if (v === null || v === "") continue; // vider reste permis
+if (!jourIsoValide(v)) {
+erreurs.push(`${ou} : ${cle} = ${JSON.stringify(v)} — date de lecture au format AAAA-MM-JJ attendue.`);
+} else if (new Date(`${v}T00:00:00Z`).getTime() > limite) {
+erreurs.push(`${ou} : ${cle} = ${v} est dans le futur — une date de LECTURE ne peut être que passée.`);
+}
+}
+
+if ("sourceVerification" in champs && champs.sourceVerification !== null) {
+const sv = champs.sourceVerification;
+if (!sv || typeof sv !== "object" || Array.isArray(sv)) {
+erreurs.push(`${ou} : sourceVerification doit être un objet {url, citation, le, parUid}, ou null pour le vider.`);
+} else {
+if (typeof sv.url !== "string" || !/^https?:\/\/\S+$/i.test(sv.url)) {
+erreurs.push(`${ou} : sourceVerification.url absente ou qui n'est pas une adresse.`);
+}
+if (typeof sv.citation !== "string" || !sv.citation.trim()) {
+erreurs.push(`${ou} : sourceVerification sans citation — une preuve sans phrase source n'est pas une preuve.`);
+}
+const le = new Date(sv.le);
+if (!sv.le || isNaN(le.getTime())) {
+erreurs.push(`${ou} : sourceVerification.le illisible — date ISO attendue.`);
+} else if (le.getTime() > limite) {
+erreurs.push(`${ou} : sourceVerification.le = ${sv.le} est dans le futur.`);
+}
+}
+}
+
+return erreurs;
+
+}
+
+/**
 * PATCHES — mises à jour PARTIELLES de documents EXISTANTS (2026-08-31).
 * Les trois autres formes du runner ne savent que CRÉER ; un patch
 * corrige un champ précis d'un document déjà en base, sans jamais
@@ -126,7 +198,7 @@ return !Number.isInteger(valeur) || valeur < 1 || valeur > 99;
 * lot n'en a besoin ; le jour où l'un en aura besoin, c'est ici et dans
 * l'étape `ecrire` de scripts/lot.mjs qu'il faut l'implémenter.
 */
-export function validerPatches(PATCHES = []) {
+export function validerPatches(PATCHES = [], aujourdhui = new Date()) {
 
 const erreurs = [];
 const vus = new Set();
@@ -162,6 +234,9 @@ erreurs.push(`Patch ${ou} : "champs" absent ou vide — un patch qui n'écrit ri
 continue;
 }
 
+// Garde des dates de lecture et de la preuve (lot 72).
+erreurs.push(...refusDatesDeLecture(`Patch ${ou}`, champs, aujourdhui));
+
 // Garde du portail : un patch est le vecteur le plus direct pour
 // reposer une URL au niveau programme.
 if (p.collection === "programs") {
@@ -196,7 +271,7 @@ return erreurs;
 * programmes, patches, attendus } — `erreurs` non vide = lot bloqué.
 * Un lot peut porter PATCHES seul, ou en plus des trois autres formes.
 */
-export function validerLot({ UNIVERSITIES = [], SCHOLARSHIPS = [], LINKS = [], PATCHES = [] }) {
+export function validerLot({ UNIVERSITIES = [], SCHOLARSHIPS = [], LINKS = [], PATCHES = [] }, aujourdhui = new Date()) {
 
 const erreurs = [];
 const avertissements = [];
@@ -252,6 +327,9 @@ erreurs.push(`Bourse "${s.id}" : ageMax.${c} = ${JSON.stringify(a[c])} — entie
 }
 }
 }
+
+// Date de lecture : même garde que pour un patch (lot 72).
+erreurs.push(...refusDatesDeLecture(`Bourse "${s.id}"`, d, aujourdhui));
 
 // Niveaux : vocabulaire fermé quand ils existent.
 const niveaux = Array.isArray(d.levels) ? d.levels : [];
@@ -388,7 +466,7 @@ motif: lien.motif || ""
 // --- Orphelines : nommées, pas « corrigées ».
 const orphelines = SCHOLARSHIPS.filter((s) => !liees.has(s.id)).map((s) => s.id);
 
-erreurs.push(...validerPatches(PATCHES));
+erreurs.push(...validerPatches(PATCHES, aujourdhui));
 
 return {
 erreurs,

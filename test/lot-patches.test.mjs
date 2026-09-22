@@ -18,7 +18,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { validerPatches, validerLot, refusPortailProgramme, boursesSansProgramme, COLLECTIONS_PATCHABLES } from "../scripts/lot-validate.mjs";
+import { validerPatches, validerLot, refusPortailProgramme, boursesSansProgramme, COLLECTIONS_PATCHABLES, refusDatesDeLecture } from "../scripts/lot-validate.mjs";
 import * as lot33 from "../scripts/data/lot33-portails.mjs";
 
 function patchMinimal(surcharges = {}) {
@@ -335,4 +335,52 @@ test("LINKS.niveaux sur une bourse DÉJÀ EN BASE : la restriction voyage jusqu'
   assert.deepEqual(r.erreurs, []);
   assert.equal(r.liensExternes.length, 1);
   assert.deepEqual(r.liensExternes[0].niveaux, ["Master", "Doctorat"]);
+});
+
+// ============================================================
+// Garde des dates de lecture et de la preuve (lot 72, 2026-09-22)
+// ============================================================
+
+const LE_22 = new Date("2026-09-22T21:00:00Z");
+
+test("dates de lecture 1 — une date en toutes lettres est refusée (le défaut du lot 40)", () => {
+const erreurs = validerPatches([patchMinimal({ collection: "scholarships", champs: { verifieLe: "6 novembre 2026" } })], LE_22);
+assert.ok(erreurs.some((e) => e.includes("AAAA-MM-JJ")), erreurs.join(" | "));
+});
+
+test("dates de lecture 2 — une date de lecture future est refusée, la veille et le jour même passent", () => {
+const futur = validerPatches([patchMinimal({ collection: "scholarships", champs: { verifieLe: "2026-11-06" } })], LE_22);
+assert.ok(futur.some((e) => e.includes("futur")), futur.join(" | "));
+for (const v of ["2026-09-21", "2026-09-22"]) {
+assert.deepEqual(validerPatches([patchMinimal({ collection: "programs", champs: { ouverteVerifieeLe: v } })], LE_22), [], v);
+}
+// Un jour impossible n'est pas une date.
+assert.ok(refusDatesDeLecture("x", { verifieLe: "2026-02-30" }, LE_22).length);
+});
+
+test("dates de lecture 3 — vider reste permis", () => {
+for (const v of ["", null]) {
+assert.deepEqual(refusDatesDeLecture("x", { verifieLe: v, sourceVerification: null }, LE_22), [], JSON.stringify(v));
+}
+});
+
+test("preuve 1 — une sourceVerification sans citation est refusée", () => {
+const sv = { url: "https://exemple.test/appel.pdf", citation: "   ", le: "2026-09-22T20:00:00.000Z", parUid: "u" };
+const erreurs = validerPatches([patchMinimal({ collection: "programs", champs: { sourceVerification: sv } })], LE_22);
+assert.ok(erreurs.some((e) => e.includes("sans citation")), erreurs.join(" | "));
+const bonne = { ...sv, citation: "within h. 11:59 pm CEST of Monday 3 August 2026" };
+assert.deepEqual(validerPatches([patchMinimal({ collection: "programs", champs: { sourceVerification: bonne } })], LE_22), []);
+});
+
+test("preuve 2 — url qui n'est pas une adresse, ou lecture datée du futur : refusées", () => {
+const base = { url: "https://exemple.test", citation: "phrase", le: "2026-09-22T20:00:00.000Z", parUid: "u" };
+assert.ok(refusDatesDeLecture("x", { sourceVerification: { ...base, url: "voir le site" } }, LE_22).some((e) => e.includes("adresse")));
+assert.ok(refusDatesDeLecture("x", { sourceVerification: { ...base, le: "2026-10-30T00:00:00.000Z" } }, LE_22).some((e) => e.includes("futur")));
+// La tolérance d'un jour : un lot préparé le soir, exécuté après minuit.
+assert.deepEqual(refusDatesDeLecture("x", { sourceVerification: { ...base, le: "2026-09-22T22:30:00.000Z" } }, LE_22), []);
+});
+
+test("dates de lecture 4 — la garde vaut aussi pour une bourse créée par un lot", () => {
+const lot = { SCHOLARSHIPS: [{ id: "b1", data: { title: "B", country: "Italie", verifieLe: "22/09/2026" } }] };
+assert.ok(validerLot(lot, LE_22).erreurs.some((e) => e.includes("AAAA-MM-JJ")));
 });
