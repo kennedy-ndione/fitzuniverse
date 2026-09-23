@@ -66,8 +66,9 @@ const passe = (jours = 1) => new Date(Date.now() - jours * JOUR).toISOString();
 // 1. LES MIROIRS
 // ------------------------------------------------------------------
 
-test("les six destinations, dans le même ordre partout", () => {
-assert.deepEqual(DESTINATIONS_ACCOMPAGNEES, ["roumanie", "turquie", "maroc", "italie", "allemagne", "canada"]);
+// La Chine et la Malaisie ont rejoint les six le soir du 2026-09-23.
+test("les destinations accompagnées, dans le même ordre partout", () => {
+assert.deepEqual(DESTINATIONS_ACCOMPAGNEES, ["roumanie", "turquie", "maroc", "italie", "allemagne", "canada", "chine", "malaisie"]);
 assert.deepEqual(DESTINATIONS_VENDUES, ["france", ...DESTINATIONS_ACCOMPAGNEES]);
 assert.deepEqual(Object.keys(DESTINATIONS), DESTINATIONS_ACCOMPAGNEES);
 assert.deepEqual(Object.keys(DIAGNOSTICS), DESTINATIONS_ACCOMPAGNEES);
@@ -201,7 +202,7 @@ assert.equal(route.etapes.find((x) => x.id === d.etapeReponses).kind, "reponses"
 const iMotiv = route.etapes.findIndex((x) => x.kind === "motivations");
 if (d.motivations) {
 assert.ok(iMotiv > 2, `${id} : pas d'étape motivations`);
-assert.equal(route.etapes[iMotiv + 1].depot, true, `${id} : les lettres ne précèdent pas le dépôt`);
+assert.ok(route.etapes[iMotiv + 1].depot === true || (d.motivationsAvant || []).includes(route.etapes[iMotiv + 1].id), `${id} : les lettres ne précèdent pas le dépôt (ni la pièce qui en dépend)`);
 assert.ok(!route.etapes.slice(0, iMotiv).some((x) => x.depot), `${id} : un dépôt avant les lettres`);
 } else {
 assert.equal(iMotiv, -1, `${id} : des lettres de motivation qui ne sont pas demandées`);
@@ -251,8 +252,8 @@ route = construireRoutePays({ ...base, voeux: [...voeux, { ...voeux[0], id: "pre
 assert.equal(route.avertissementsVoeux.length, 1);
 });
 
-test("Turquie et Maroc : la voie choisie retire les étapes des autres voies", () => {
-for (const id of ["turquie", "maroc"]) {
+test("Turquie, Maroc et Chine : la voie choisie retire les étapes des autres voies", () => {
+for (const id of ["turquie", "maroc", "chine"]) {
 const d = destination(id);
 const procedure = procedureDe(id);
 const toutes = construireRoutePays({ id, procedure });
@@ -281,13 +282,25 @@ route.etapes.forEach((e, i) => assert.equal(e.numero, i + 1));
 // Les lettres suivent la voie : avant SON dépôt.
 if (d.motivations) {
 const i = route.etapes.findIndex((x) => x.kind === "motivations");
-assert.equal(route.etapes[i + 1].depot, true, `${id}/${o.id} : les lettres ne précèdent pas le dépôt de la voie`);
+// … ou avant la pièce qui en dépend (Chine : le projet d'études de la
+// bourse se coche APRÈS avoir écrit les lettres, pas avant).
+const suivante = route.etapes[i + 1];
+assert.ok(suivante.depot === true || (d.motivationsAvant || []).includes(suivante.id), `${id}/${o.id} : les lettres ne précèdent pas le dépôt de la voie`);
+const iDepot = route.etapes.findIndex((x) => x.depot);
+assert.ok(i < iDepot, `${id}/${o.id} : les lettres viennent après le dépôt`);
 }
 // La voie choisie vient juste après le choix, dans l'ordre officiel
 // (les lettres de motivation, glissées avant le dépôt, mises à part).
 const iChoix = route.etapes.findIndex((e) => e.kind === "voie");
 const siennes = route.etapes.slice(iChoix + 1).filter((e) => e.kind !== "motivations").slice(0, o.etapes.length).map((e) => e.id);
 assert.deepEqual(siennes, procedure.etapes.filter((e) => o.etapes.includes(e.id)).map((e) => e.id), `${id}/${o.id} : la voie ne suit pas le choix`);
+// Chine, voie bourse : les lettres avant les pièces (le projet d'études).
+if (id === "chine" && o.id === "bourse") {
+const ids = route.etapes.map((e) => e.id);
+assert.equal(ids[ids.indexOf("motivations") + 1], "cn_bourse_pieces");
+// L'étape « type B » se déclare « ne me concerne pas » (type A) : ce n'est pas un dépôt.
+assert.equal(route.etapes.find((e) => e.id === "cn_bourse_universite").ignorable, true);
+}
 // Et chaque voie a de quoi noter ses réponses.
 assert.ok(route.etapes.some((e) => e.kind === "reponses"), `${id}/${o.id} : aucune étape de réponse`);
 }
@@ -321,6 +334,16 @@ test("le verdict ne compare que ce qui se compare sans taux", () => {
 // Maroc et Turquie : aucun seuil publié.
 assert.equal(calculerDiagnosticPays("maroc", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
 assert.equal(calculerDiagnosticPays("turquie", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
+// Chine et Malaisie non plus : le visa X1 et le Student Pass ne chiffrent
+// aucune ressource (pièces officielles lues le 2026-09-23).
+assert.equal(calculerDiagnosticPays("chine", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
+assert.equal(calculerDiagnosticPays("malaisie", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
+// Un frais en F CFA SEUL dans sa famille reste en F CFA dans le total :
+// la Chine affichait « auxquels s'ajoutent 33 € » pour 21 500 F CFA payés
+// au centre de visas de Dakar.
+const totalChine = calculerDiagnosticPays("chine", { ressourcesMensuelles: 0 }).totalTexte;
+assert.ok(totalChine.includes("auxquels s'ajoutent 21\u00a0500\u00a0F\u00a0CFA"), totalChine);
+assert.ok(!totalChine.includes("€"), totalChine);
 // Italie et Allemagne : un seuil en euros, comparable au F CFA (parité fixe).
 for (const id of ["italie", "allemagne"]) {
 assert.equal(calculerDiagnosticPays(id, { ressourcesMensuelles: 1e9, devise: "XOF" }).verdict.etat, "atteint");

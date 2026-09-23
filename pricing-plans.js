@@ -763,7 +763,9 @@ turquie: { nom: "Turquie", dans: "en Turquie", pour: "pour la Turquie", portail:
 maroc: { nom: "Maroc", dans: "au Maroc", pour: "pour le Maroc", portail: "le service national de votre pays (voie AMCI) ou le site de l'université privée", voeux: 7 },
 italie: { nom: "Italie", dans: "en Italie", pour: "pour l'Italie", portail: "Universitaly", voeux: 1 },
 allemagne: { nom: "Allemagne", dans: "en Allemagne", pour: "pour l'Allemagne", portail: "uni-assist ou le site de l'université", voeux: 7 },
-canada: { nom: "Canada", dans: "au Canada", pour: "pour le Canada", portail: "le site de chaque université, puis votre compte IRCC", voeux: 7 }
+canada: { nom: "Canada", dans: "au Canada", pour: "pour le Canada", portail: "le site de chaque université, puis votre compte IRCC", voeux: 7 },
+chine: { nom: "Chine", dans: "en Chine", pour: "pour la Chine", portail: "le site de chaque université, ou le système de bourses du CSC", voeux: 7 },
+malaisie: { nom: "Malaisie", dans: "en Malaisie", pour: "pour la Malaisie", portail: "le site de chaque université, puis la plateforme EMGS pour le visa", voeux: 7 }
 };
 
 window.SCHOLARBRIDGE_DESTINATIONS = DESTINATIONS_OFFRE;

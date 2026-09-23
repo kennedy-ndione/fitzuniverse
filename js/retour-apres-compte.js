@@ -30,7 +30,7 @@
 * ============================================================
 */
 
-export const DESTINATIONS_RETOUR = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada"];
+export const DESTINATIONS_RETOUR = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada", "chine", "malaisie"];
 
 const RETOUR_VALIDE = new RegExp(`^payment\\.html\\?plan=[A-Za-z0-9_-]{1,40}(?:&destination=(?:${DESTINATIONS_RETOUR.join("|")}))?$`);
 

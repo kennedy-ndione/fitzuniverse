@@ -27,16 +27,18 @@ for (const p of PROCEDURE) assert.ok(typeof LIBELLES_PROCEDURE[p] === "string" &
 assert.deepEqual(Object.keys(LIBELLES_PROCEDURE).sort(), [...PROCEDURE].sort());
 });
 
-test("exactement 7 pays, dans l'ordre validé ; ni États-Unis ni USA", () => {
+// Neuf depuis le 2026-09-23 au soir : la Chine (8) et la Malaisie (9),
+// ajoutées à la demande de Charles, après les sept pays validés.
+test("exactement 9 pays, dans l'ordre validé ; ni États-Unis ni USA", () => {
 const noms = lirePays().map((p) => p.nom);
-assert.deepEqual(noms, ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
-assert.equal(PAYS.length, 7);
+assert.deepEqual(noms, ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada", "Chine", "Malaisie"]);
+assert.equal(PAYS.length, 9);
 for (const p of PAYS) {
 assert.ok(!/etats-unis|usa|united-states/i.test(p.id), `id interdit : ${p.id}`);
 assert.ok(!/États-Unis|Etats-Unis|USA/.test(p.nom), `nom interdit : ${p.nom}`);
 }
-assert.deepEqual([...new Set(PAYS.map((p) => p.ordre))].length, 7, "ordres uniques");
-assert.deepEqual([...new Set(PAYS.map((p) => p.id))].length, 7, "ids uniques");
+assert.deepEqual([...new Set(PAYS.map((p) => p.ordre))].length, 9, "ordres uniques");
+assert.deepEqual([...new Set(PAYS.map((p) => p.id))].length, 9, "ids uniques");
 });
 
 test("chaque pays a un nom présent dans le catalogue et un code de drapeau existant", () => {
@@ -102,7 +104,10 @@ assert.notEqual(pays.procedure, "a_venir", `${pays.nom} : plus aucun pays ne doi
 // un espace par pays avec ses frais et son calendrier. Huit pays l'ont ;
 // les autres lisent la procédure sans les montants locaux.
 assert.equal(PAYS.find((p) => p.nom === "France").procedure, "en_cours");
-assert.equal(PAYS.filter((p) => p.procedure === "documentee").length, 6);
+// Huit depuis le 2026-09-23 : la Chine et la Malaisie n'ont aucune étape
+// « a_confirmer » (l'avis de l'ambassade de Chine au Sénégal et la
+// grille de caution EMGS ont été relus le jour même).
+assert.equal(PAYS.filter((p) => p.procedure === "documentee").length, 8);
 });
 
 test("aucun agrégateur ne source un fait de pays, et chaque pays a un portail officiel", () => {
@@ -164,7 +169,10 @@ Turquie: { etablissements: 6, coutsVerifies: 3 },
 Maroc: { etablissements: 5, coutsVerifies: 1 },
 Italie: { etablissements: 16, coutsVerifies: 9 },
 Allemagne: { etablissements: 3, coutsVerifies: 2 },
-Canada: { etablissements: 3, coutsVerifies: 3 }
+Canada: { etablissements: 3, coutsVerifies: 3 },
+// Relevé du 2026-09-23 au soir, à l'ouverture des deux pays.
+Chine: { etablissements: 16, coutsVerifies: 16 },
+Malaisie: { etablissements: 2, coutsVerifies: 2 }
 };
 assert.deepEqual(Object.keys(PLANCHERS).sort(), PAYS.map((p) => p.nom).sort(), "un plancher par pays, ni plus ni moins");
 

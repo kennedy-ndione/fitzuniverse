@@ -1,12 +1,14 @@
 /**
 * ============================================================
-* FitzUniverse — les SIX DESTINATIONS accompagnées comme la France
+* FitzUniverse — les DESTINATIONS accompagnées comme la France
 * (2026-09-23, décision de Charles : « finir les pays restants comme on
-* l'a fait avec la France », les six le même jour)
+* l'a fait avec la France », les six le même jour ; puis, le soir même,
+* « ajouter la Chine et la Malaisie », au même prix)
 * ============================================================
 *
 * Module PUR : aucun DOM, aucun Firestore. Il porte, pour la Roumanie,
-* la Turquie, le Maroc, l'Italie, l'Allemagne et le Canada, tout ce que
+* la Turquie, le Maroc, l'Italie, l'Allemagne, le Canada, la Chine et la
+* Malaisie, tout ce que
 * la route, le diagnostic et la vitrine ont besoin de savoir en plus de
 * la procédure officielle (js/procedures/<pays>.js) :
 *
@@ -37,7 +39,7 @@
 */
 
 /** L'ordre des destinations, celui de js/pays-preinscription.js (France exclue). */
-export const DESTINATIONS_ACCOMPAGNEES = ["roumanie", "turquie", "maroc", "italie", "allemagne", "canada"];
+export const DESTINATIONS_ACCOMPAGNEES = ["roumanie", "turquie", "maroc", "italie", "allemagne", "canada", "chine", "malaisie"];
 
 /** Toutes les destinations vendues, France comprise. */
 export const DESTINATIONS_VENDUES = ["france", ...DESTINATIONS_ACCOMPAGNEES];
@@ -49,7 +51,9 @@ turquie: "pre-tr",
 maroc: "pre-ma",
 italie: "pre-it",
 allemagne: "pre-de",
-canada: "pre-ca"
+canada: "pre-ca",
+chine: "pre-cn",
+malaisie: "pre-my"
 };
 
 /**
@@ -66,7 +70,9 @@ turquie: { libelle: "Et la langue des cours (turc ou anglais) ?", etudes: "J'ai 
 maroc: { libelle: "Et le français ?", etudes: "J'ai fait mes études en français", test: "J'ai passé un test de français (TCF, DELF…)" },
 italie: { libelle: "Et la langue des cours (italien ou anglais) ?", etudes: "J'ai fait mes études en anglais", test: "J'ai passé un test d'italien ou d'anglais (CELI, CILS, IELTS…)" },
 allemagne: { libelle: "Et l'allemand ou l'anglais ?", etudes: "J'ai fait mes études en anglais", test: "J'ai passé un test (TestDaF, DSH, Goethe, IELTS, TOEFL…)" },
-canada: { libelle: "Et la langue des cours (français ou anglais) ?", etudes: "J'ai fait mes études en français ou en anglais", test: "J'ai passé un test (TCF, TEF, IELTS, TOEFL…)" }
+canada: { libelle: "Et la langue des cours (français ou anglais) ?", etudes: "J'ai fait mes études en français ou en anglais", test: "J'ai passé un test (TCF, TEF, IELTS, TOEFL…)" },
+chine: { libelle: "Et la langue des cours (chinois ou anglais) ?", etudes: "J'ai fait mes études en anglais", test: "J'ai passé un test de chinois ou d'anglais (HSK, IELTS, TOEFL…)" },
+malaisie: { libelle: "Et la langue des cours (anglais ou malais) ?", etudes: "J'ai fait mes études en anglais", test: "J'ai passé un test d'anglais (IELTS, TOEFL, MUET…)" }
 };
 
 export function questionLangue(id) {
@@ -101,8 +107,11 @@ libelles: { etudes_dans_la_langue: l.etudes, test_passe: l.test, test_prevu: "Je
 *   etapeReponses   l'étape où l'on note, vœu par vœu, la réponse reçue
 *   motivations     vrai si une lettre de motivation est à écrire par vœu
 *                   (faux au Maroc : le formulaire AMCI n'en demande pas)
+*   motivationsAvant (facultatif) des étapes AVANT lesquelles poser les
+*                   lettres, quand une pièce en dépend avant le dépôt
+*                   (Chine : le projet d'études de la bourse)
 *   devise          la devise de la plupart des montants du pays
-*   voies           (Turquie, Maroc) les PORTES du pays : une étape de la
+*   voies           (Turquie, Maroc, Chine) les PORTES du pays : une étape de la
 *                   procédure où l'étudiant choisit sa voie, et les étapes
 *                   propres à chaque voie. Une fois la voie choisie, les
 *                   étapes des autres voies sortent de sa route — il n'a
@@ -199,6 +208,43 @@ etapesDepot: ["ca_candidature"],
 etapeReponses: "ca_lettre_acceptation",
 motivations: true,
 devise: "CAD"
+},
+
+chine: {
+id: "chine", nom: "Chine", code: "cn",
+plafondVoeux: 7,
+plafondOfficiel: {
+texte: "Bourse du gouvernement chinois : trois universités au plus dans la demande (ambassade de Chine au Sénégal, 2026-2027). En autofinancement, chaque université fixe ses règles : deux programmes au plus à Tsinghua.",
+source: "https://sn.china-embassy.gov.cn/fra/sgdt/202510/t20251028_11742627.htm",
+verifieLe: "2026-09-23"
+},
+niveaux: ["Année préparatoire de chinois", "Licence", "Master", "Doctorat"],
+etapesDepot: ["cn_bourse_soumission", "cn_uni_candidature"],
+etapeReponses: "cn_admission",
+motivations: true,
+// Le projet d'études est une PIÈCE de la bourse : les lettres s'écrivent
+// avant de la cocher, pas après.
+motivationsAvant: ["cn_bourse_pieces"],
+devise: "CNY",
+voies: {
+etape: "cn_choix_voie",
+question: "Quelle voie choisissez-vous ?",
+options: [
+{ id: "bourse", libelle: "La bourse du gouvernement chinois", aide: "Candidature en ligne au CSC, par l'ambassade de Chine (type A) ou par une université (type B).", etapes: ["cn_bourse_type", "cn_bourse_compte", "cn_bourse_pieces", "cn_bourse_soumission", "cn_bourse_universite", "cn_bourse_entretien", "cn_bourse_resultat"] },
+{ id: "autofinancement", libelle: "L'autofinancement", aide: "Vous candidatez vous-même sur le site de chaque université, et vous payez vos études.", etapes: ["cn_uni_choix", "cn_uni_candidature", "cn_uni_frais"] }
+]
+}
+},
+
+malaisie: {
+id: "malaisie", nom: "Malaisie", code: "my",
+plafondVoeux: 7,
+plafondOfficiel: null,
+niveaux: ["Foundation", "Diploma", "Licence (Bachelor)", "Master", "Doctorat"],
+etapesDepot: ["my_candidature"],
+etapeReponses: "my_offre",
+motivations: true,
+devise: "MYR"
 }
 
 };
@@ -422,6 +468,81 @@ absences: [
 "L'examen médical : IRCC ne publie aucun tarif, on paie le médecin désigné sur place.",
 "Les frais de service du point de collecte biométrique : payés au prestataire, jamais publiés par IRCC."
 ]
+},
+
+chine: {
+ressources: null,
+ressourcesAbsence: {
+texte: "La Chine ne chiffre aucun seuil de ressources pour le visa d'études X1 : les pièces officielles sont le passeport, le formulaire, la photo, l'avis d'admission et le formulaire JW201 ou JW202, sans montant minimum. Aucun verdict « seuil atteint » n'est donc possible — seulement le coût de l'année.",
+source: "https://french.beijing.gov.cn/studyinginbeijing/visaapplications/202306/t20230626_3146191.html",
+verifieLe: "2026-09-23"
+},
+droits: {
+texte: "Chaque université fixe ses droits. Licence : 26 000 CNY par an en lettres à Sun Yat-sen (2026) et en économie, droit ou gestion à Tsinghua ; 33 800 CNY en sciences et ingénierie à Sun Yat-sen ; jusqu'à 70 000 CNY en médecine clinique à Tsinghua. Master : 30 000 à 55 000 CNY à Sun Yat-sen (2026), 28 000 à 33 000 CNY pour un master classique à Tsinghua (2027). Les boursiers du gouvernement chinois ne paient pas de droits.",
+min: 26000, max: 70000, devise: "CNY",
+source: "https://international.join-tsinghua.edu.cn/Admission1/Fees.htm",
+verifieLe: "2026-09-23"
+},
+frais: [
+{ cle: "dossier", texte: "Frais de dossier de chaque université, non remboursables : 800 CNY à Tsinghua, 400 CNY à Sun Yat-sen. Non couverts par la bourse.", montant: 800, devise: "CNY", compte: false, source: "https://yz.tsinghua.edu.cn/en/Costs/Application_Fee.htm", verifieLe: "2026-09-23" },
+{ cle: "csca", texte: "Licence seulement : examen CSCA, 450 CNY pour une matière, 700 CNY pour plusieurs.", montant: 700, devise: "CNY", compte: false, source: "https://edu.sh.gov.cn/study_en_news/20251114/d4ca5e9d388546f4adc0f356d3354d59.html", verifieLe: "2026-09-23" },
+{ cle: "centreVisas", texte: "Visa X1 : gratuit pour les ressortissants sénégalais ; seuls les frais de service du centre de visas chinois sont dus, 21 500 F CFA en service standard (5 jours). L'express (3 jours) coûte plus cher.", montant: 21500, devise: "XOF", compte: true, source: "https://www.visaforchina.cn/DKR3_FR/qianzhengyewu/jichuzhishi/feiyongbiaozhunjishixian", verifieLe: "2026-09-23" },
+{ cle: "sejour", texte: "Permis de résidence : 400 CNY jusqu'à un an, 800 CNY de un à trois ans, 1 000 CNY de trois à cinq ans.", montant: 400, devise: "CNY", compte: true, source: "https://s.nia.gov.cn/mps/bszy/wgrcrjEn/e-sqwgrjlzj/202201/index.html", verifieLe: "2026-09-23" },
+{ cle: "assurance", texte: "Assurance étudiante obligatoire : 800 CNY par an à Sun Yat-sen et à Tsinghua. Comprise dans la bourse du gouvernement chinois.", montant: 800, devise: "CNY", periode: "an", compte: true, source: "https://iso.sysu.edu.cn/en/application/guide/1420575.htm", verifieLe: "2026-09-23" }
+],
+calendrier: {
+texte: "Rentrée de septembre 2027 : Tsinghua a ouvert ses candidatures en master et doctorat à la mi-septembre 2026, jusqu'en février 2027 selon les départements, avec une première date limite à la mi-décembre 2026 pour les candidats à la bourse du gouvernement chinois. Aucun calendrier 2027-2028 du CSC ni de l'ambassade de Chine au Sénégal n'est encore publié. Repères 2026-2027 : la bourse fermait le 15 février 2026 à l'ambassade de Chine au Sénégal (résultats annoncés pour juillet), le 31 décembre 2025 à Zhejiang et le 15 février 2026 à Sun Yat-sen.",
+source: "https://yz.tsinghua.edu.cn/en/info/1035/1583.htm",
+verifieLe: "2026-09-23"
+},
+absences: [
+"Les montants actuels de l'allocation de licence de la bourse du gouvernement chinois : seul un barème de 2022 (Sun Yat-sen) les chiffre ; les sites du CSC refusent la lecture automatique.",
+"Le coût de l'examen médical (Foreigner Physical Examination Form) au Sénégal, et de sa vérification à l'arrivée en Chine : aucun montant officiel publié.",
+"La liste de pièces du visa X1 propre au centre de visas de Dakar : générée en JavaScript, illisible ; la liste utilisée vient du consulat de Chine à Saint-Denis et du gouvernement de Pékin."
+]
+},
+
+malaisie: {
+ressources: null,
+ressourcesAbsence: {
+texte: "Pour le Student Pass, EMGS ne demande aucune preuve de ressources chiffrée : la liste officielle des pièces d'une nouvelle demande (photo, passeport, lettre d'offre, déclaration de santé, diplômes, certificat d'anglais, caution personnelle) ne comporte ni relevé bancaire ni seuil. Le budget de vie sur place n'est donc fixé par aucun texte officiel.",
+source: "https://visa.educationmalaysia.gov.my/guidelines/required-documents",
+verifieLe: "2026-09-23"
+},
+droits: {
+texte: "UKM, licence en programme international (UKMi), première année : de 21 570 RM (sciences sociales) à 25 120 RM (informatique), barèmes 2024-2025. L'UM publie, elle, des totaux par programme pour la durée minimale d'études (session 2025-2026) : licence de 60 900 RM à 673 200 RM (médecine), master en cours de 24 800 RM à 98 600 RM. Tous ces montants sont en ringgit (MYR), pas en dollars.",
+min: 21570, max: 25120, devise: "MYR",
+source: "https://shape.ukm.my/storage/lampiran/struktur_yuran/FTSM/pra/strukturyuran_FTSM_UKMi_pra_F_int.pdf",
+verifieLe: "2026-09-23"
+},
+frais: [
+{ cle: "emgs", texte: "Frais de traitement EMGS, nouvelle demande de Student Pass de plus de six mois : 1 600 RM plus 8 % de taxe de service, soit 1 728 RM au calculateur EMGS.", montant: 1728, devise: "MYR", compte: true, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf", verifieLe: "2026-09-23" },
+{ cle: "eval", texte: "eVAL (lettre électronique d'approbation de visa) : 150 RM plus la taxe de service de 8 %, soit 162 RM.", montant: 162, devise: "MYR", compte: true, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf", verifieLe: "2026-09-23" },
+{ cle: "vignette", texte: "Vignette du Student Pass : 60 RM, à la première demande puis à chaque renouvellement.", montant: 60, devise: "MYR", compte: true, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf", verifieLe: "2026-09-23" },
+{ cle: "ikad", texte: "i-Kad, la carte d'étudiant étranger : 50 RM.", montant: 50, devise: "MYR", compte: true, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf", verifieLe: "2026-09-23" },
+{ cle: "medical", texte: "Visite médicale à l'arrivée : 340 RM (université publique de la péninsule).", montant: 340, devise: "MYR", compte: true, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf", verifieLe: "2026-09-23" },
+{ cle: "assurance", texte: "Assurance santé obligatoire, plans EMGS 2026 pour douze mois : de 498 RM à 644 RM.", montant: 498, devise: "MYR", periode: "an", compte: true, source: "https://visa.educationmalaysia.gov.my/guidelines/insurance-new-2026", verifieLe: "2026-09-23" },
+{ cle: "visa", texte: "Visa pour un Sénégalais : 20 RM, tarif de l'Immigration pour les pays non listés.", montant: 20, devise: "MYR", compte: true, source: "https://www.imi.gov.my/index.php/en/main-services/visa/visa-fees/", verifieLe: "2026-09-23" },
+{ cle: "caution", texte: "Caution personnelle, rendue en fin d'études : 1 500 RM pour les pays que la grille EMGS ne nomme pas, dont le Sénégal. Faites confirmer le montant par l'établissement.", montant: 1500, devise: "MYR", compte: false, source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Personal-Bond-Requirementsv1.2.pdf", verifieLe: "2026-09-23" },
+{ cle: "forfaitUm", texte: "Universiti Malaya : sa grille du 10 juillet 2026 affiche 5 451 RM pour un visa d'un an (Sénégal), sans détailler ce qu'ils couvrent. Demandez à l'UM s'ils incluent les frais EMGS ci-dessus.", montant: 5451, devise: "MYR", compte: false, source: "https://study.um.edu.my/doc/VISA%20SERVICES/International%20Student%20Processing%20Fees%20by%20Country%20-%20Updated%2010%20July%202026%202026.pdf", verifieLe: "2026-09-23" },
+{ cle: "dossierUm", texte: "Frais de candidature Universiti Malaya : 500 RM par candidature, non remboursables (page mise à jour le 8 septembre 2026).", montant: 500, devise: "MYR", compte: false, source: "https://study.um.edu.my/how-to-apply", verifieLe: "2026-09-23" },
+{ cle: "dossierUkm", texte: "Frais de candidature UKM : 100 RM (ou 30 USD), non remboursables.", montant: 100, devise: "MYR", compte: false, source: "https://join.ukm.my/", verifieLe: "2026-09-23" }
+],
+calendrier: {
+texte: "L'UM a publié ses dates pour la rentrée de mars 2027 (semestre II, session 2026-2027) : candidatures du 7 septembre 2026 au 30 janvier 2027, en licence comme en master ; pour le Term I de juin 2027 (masters cliniques) : du 20 juillet 2026 au 31 janvier 2027. La rentrée d'octobre 2027 n'est pas encore publiée. L'UKM demande de candidater au moins deux mois avant la date d'inscription.",
+source: "https://study.um.edu.my/how-to-apply",
+verifieLe: "2026-09-23"
+},
+absences: [
+"Les frais de service du portail eVISA de l'Immigration pour le visa à entrée unique : portail inaccessible le 2026-09-23, aucun montant trouvé.",
+"La page de l'ambassade de Malaisie à Dakar : inaccessible ; on ne sait pas si elle délivre encore le visa à entrée unique, l'Immigration disant « exclusivement eVISA ».",
+"La liste MQA des diplômes d'entrée reconnus (décembre 2025) : PDF non ouvrable ; le traitement du baccalauréat sénégalais est à confirmer auprès de l'université (https://www.mqa.gov.my/new/nilai_taraf.cfm).",
+"La liste des pays à risque de fièvre jaune tenue par le ministère malaisien de la Santé : site inaccessible.",
+"Les droits de scolarité 2026-2027 : l'UM publie ceux de 2025-2026, l'UKM ses barèmes 2024-2025 ; aucun barème plus récent trouvé.",
+"La rentrée d'octobre 2027 : ni l'UM ni l'UKM n'ont publié de dates de candidature.",
+"Ce que couvrent les 5 451 RM de la grille « visa » de l'UM : non détaillé par l'université.",
+"Si le droit de visa facturé avec les frais EMGS (20 RM au calculateur) et celui du visa à entrée unique demandé sur eVISA (20 RM au barème de l'Immigration) sont un seul paiement ou deux : les pages lues ne le disent pas. Le total n'en compte qu'un."
+]
 }
 
 };
@@ -538,6 +659,47 @@ ca_biometrie: { titre: "Donner vos empreintes et votre photo", enClair: "Après 
 ca_medical: { titre: "Passer la visite médicale, si demandée", enClair: "Pour un long séjour, une visite médicale est souvent exigée, selon les pays où vous avez vécu. Elle se fait uniquement chez un médecin agréé par le Canada, jamais chez votre médecin habituel. Vous la payez sur place, sans remboursement en cas de refus ; faites-la avant de déposer." },
 ca_lettre_introduction: { titre: "Recevoir votre lettre d'introduction et votre visa", enClair: "Si votre demande est acceptée, vous recevez une lettre d'introduction : ce n'est pas encore le permis. Selon votre nationalité, un visa est collé dans votre passeport ou une autorisation électronique y est liée. Voyagez avec ce même passeport, jamais un autre, même valide." },
 ca_arrivee: { titre: "Arriver au Canada et recevoir votre permis", enClair: "Votre permis d'études vous est remis à l'arrivée, par l'agent de la frontière. Gardez sur vous, pas en soute, votre passeport, la lettre d'introduction, l'acceptation et vos preuves de fonds. Vous ne pouvez pas travailler avant le vrai début de vos cours." },
+},
+
+// chine — textes écrits le 2026-09-23 depuis js/procedures/chine.js
+chine: {
+cn_langue: { titre: "Prouver mon niveau de chinois ou d'anglais", enClair: "Pour une formation enseignée en chinois, il faut un bon niveau au test officiel HSK. Pour une formation en anglais, un test comme l'IELTS ou le TOEFL est demandé. Chaque université fixe son niveau minimum : lisez-le avant de payer un test." },
+cn_csca: { titre: "Licence : passer l'examen d'entrée CSCA", enClair: "Pour entrer en licence, les universités chinoises participantes exigent désormais l'examen CSCA, avec ou sans bourse. Il a lieu plusieurs fois par an : chinois, mathématiques ou sciences, selon la formation. Inscrivez-vous tôt sur son site officiel. En master ou en doctorat, il ne vous concerne pas." },
+cn_sante_casier: { titre: "Faire mon examen médical et mon casier judiciaire", enClair: "Faites remplir le formulaire médical officiel pour étrangers par un médecin, avec les analyses demandées, puis faites-le signer et tamponner. Demandez aussi un extrait de casier judiciaire. Les deux doivent dater de moins de six mois au dépôt : faites-les peu avant de candidater, et gardez les originaux pour l'arrivée." },
+cn_choix_voie: { titre: "Choisir entre la bourse chinoise et l'autofinancement", enClair: "La bourse du gouvernement chinois se demande en ligne, soit par l'ambassade de Chine, soit par une université. En autofinancement, vous postulez vous-même sur le site de chaque université et vous payez vos études. Les bourses ferment tôt : décidez dès la rentrée qui précède." },
+cn_bourse_type: { titre: "Bourse : choisir le type A ou le type B", enClair: "Le type A passe par l'ambassade de Chine de votre pays, qui présélectionne les candidats. Le type B passe directement par une université chinoise, avec son propre numéro. Vérifiez l'âge maximum et les conditions de l'année avant de commencer." },
+cn_bourse_compte: { titre: "Bourse : créer mon compte sur le site officiel", enClair: "La candidature se fait en ligne, sur le système officiel des bourses du gouvernement chinois. Vous y indiquez un numéro d'agence : celui de l'ambassade pour le type A, celui de l'université pour le type B. Recopiez-le depuis l'annonce officielle de l'année, jamais depuis un site privé." },
+cn_bourse_pieces: { titre: "Bourse : envoyer mes pièces en ligne", enClair: "Préparez votre passeport, vos diplômes et relevés, un projet d'études, des lettres de recommandation et un justificatif de langue. Ajoutez le formulaire médical et le casier judiciaire, récents, et en licence votre score à l'examen CSCA. Avant l'envoi, il faut aussi l'accord de principe d'au moins une des universités choisies." },
+cn_bourse_soumission: { titre: "Bourse : soumettre avant la date limite", enClair: "Soumettez votre dossier en ligne avant la date limite de l'ambassade ou de l'université : elles ne sont pas toutes les mêmes. Dans certains pays, un dossier papier se remet en même temps au ministère : lisez l'avis de l'ambassade. Gardez une capture de la soumission." },
+cn_bourse_universite: { titre: "Bourse de type B : candidater aussi à l'université", enClair: "Si vous passez par une université, l'envoi au conseil chinois des bourses ne suffit pas : candidatez aussi sur le site de cette université. Ses frais de dossier ne sont jamais remboursés, même par la bourse. Si vous passez par l'ambassade, cette étape ne vous concerne pas." },
+cn_bourse_entretien: { titre: "Bourse : l'évaluation de mon dossier", enClair: "Votre dossier est d'abord évalué dans votre pays ou par l'université, parfois avec un entretien. La décision finale revient ensuite au conseil chinois des bourses, qui peut encore refuser. Restez joignable et surveillez vos messages." },
+cn_bourse_resultat: { titre: "Bourse : le résultat et ce qu'elle couvre", enClair: "Une bourse complète couvre les frais d'études, le logement ou une aide au logement, une allocation mensuelle et l'assurance maladie. Il existe aussi des bourses partielles. Rien n'est versé avant votre arrivée en Chine : lisez bien votre lettre." },
+cn_uni_choix: { titre: "Autofinancement : connaître les règles de chaque université", enClair: "Chaque université a son site de candidature, ses dates et ses conditions, parfois différentes d'une faculté à l'autre. Pour chacun de vos vœux, notez la langue des cours, le niveau demandé, le prix par an et la date limite. Certaines limitent le nombre de programmes choisis : lisez leurs règles avant de postuler." },
+cn_uni_candidature: { titre: "Autofinancement : postuler sur le site de chaque université", enClair: "Créez un compte sur le site officiel de chaque université, puis déposez-y un dossier complet : passeport, diplômes, relevés, tests de langue et pièces demandées. Un dossier incomplet n'est pas étudié. Un entretien suit souvent l'examen du dossier." },
+cn_uni_frais: { titre: "Autofinancement : payer les frais de dossier", enClair: "Chaque université fait payer sa candidature, en ligne, au moment de l'envoi. Ces frais ne sont jamais remboursés, même en cas de refus. Un dossier non payé n'est pas étudié : gardez chaque reçu." },
+cn_admission: { titre: "Recevoir mon avis d'admission et mon formulaire de visa", enClair: "L'université vous envoie votre avis d'admission avec un formulaire officiel de demande de visa d'études. Le boursier reçoit un modèle, l'étudiant autofinancé un autre. Gardez les originaux : ils servent pour le visa, puis à l'arrivée en Chine." },
+cn_visa: { titre: "Demander mon visa d'études", enClair: "Déposez votre demande au centre de visas chinois de votre pays, sur rendez-vous. Apportez passeport, formulaire, photo, avis d'admission et formulaire de visa d'études, en original et en copie. Pour les Sénégalais, le visa est gratuit : seuls les frais de service du centre sont dus." },
+cn_arrivee: { titre: "Me déclarer et m'inscrire à l'arrivée", enClair: "Dès l'arrivée, déclarez votre logement à la police dans le délai très court prévu par la loi. Inscrivez-vous ensuite à l'université avec vos diplômes originaux. Faites aussi vérifier votre examen médical au centre de santé des voyageurs de la ville." },
+cn_permis_sejour: { titre: "Demander mon permis de résidence", enClair: "Votre visa d'études ne suffit pas : demandez un permis de résidence à la police des étrangers dans le mois qui suit votre arrivée. Apportez passeport, formulaire, photo, attestation de l'université et avis d'admission. Le prix dépend de la durée du permis." },
+cn_assurance: { titre: "Payer mon assurance étudiante", enClair: "Les universités chinoises exigent une assurance étudiante, payée chaque année. Elle couvre les accidents et l'hospitalisation. Pour les boursiers, l'assurance est comprise dans la bourse." },
+},
+
+// malaisie — textes écrits le 2026-09-23 depuis js/procedures/malaisie.js
+malaisie: {
+my_etablissement: { titre: "Vérifier que mes établissements sont reconnus", enClair: "Pour chaque vœu, vérifiez que l'université est publique, ou un établissement privé enregistré par le ministère malaisien. Cherchez aussi la formation dans le registre national des programmes accrédités. Regardez la langue des cours : certaines licences se font en malais." },
+my_langue: { titre: "Prouver mon niveau d'anglais", enClair: "La plupart des cours sont en anglais, et un certificat d'anglais est demandé pour le visa étudiant. Joignez-le dès la demande : sans lui, le visa ne couvre pas toute la durée de vos études. Chaque université fixe son score minimum." },
+my_candidature: { titre: "Candidater auprès de chaque université", enClair: "Il n'y a pas de portail commun : vous candidatez sur le site de chaque université. Chacune fixe ses dates et ses frais de dossier, qui ne sont pas remboursés. Notez le numéro de candidature qu'elle vous donne." },
+my_offre: { titre: "Recevoir ma lettre d'offre", enClair: "Si l'université vous admet, elle vous envoie une lettre d'offre par courriel. Acceptez-la selon ses consignes : sans elle, aucune demande de visa n'est possible. Gardez le fichier original, sans le modifier." },
+my_emgs_dossier: { titre: "Préparer ma demande de visa étudiant", enClair: "La demande se fait en ligne auprès d'EMGS, souvent par votre université, pendant que vous êtes encore dans votre pays. Il faut un passeport valable longtemps, une photo sur fond blanc, vos diplômes traduits en anglais et une déclaration de santé. Écrivez votre nom exactement comme sur le passeport." },
+my_caution: { titre: "Verser la caution de l'immigration", enClair: "L'université signe une caution pour vous auprès de l'immigration, et vous lui en versez le montant. Il vous est rendu à la fin de vos études si vous avez respecté les règles. Faites confirmer le montant par votre université." },
+my_emgs_paiement: { titre: "Payer les frais du visa étudiant", enClair: "Payez les frais d'EMGS avec la demande : traitement, lettre d'approbation, vignette, carte d'étudiant et visite médicale. Ils ne sont pas remboursés. Certaines universités encaissent elles-mêmes ces frais avec les leurs : gardez chaque reçu." },
+my_assurance: { titre: "Prendre l'assurance santé obligatoire", enClair: "Tout étudiant étranger doit être assuré pour la santé pendant son séjour. Choisissez un plan agréé avec votre demande, ou passez par votre université pour une autre assurance. Si elle expire avant votre visa, prolongez-la." },
+my_eval: { titre: "Recevoir mon eVAL, la lettre d'approbation", enClair: "EMGS étudie votre dossier, puis l'immigration délivre l'eVAL, une lettre électronique qui approuve votre visa. Vous ne pouvez pas entrer en Malaisie avant de l'avoir reçue. Elle n'est valable que quelques mois : organisez votre voyage à temps." },
+my_visa: { titre: "Demander mon visa d'entrée", enClair: "Pour plusieurs nationalités, dont les Sénégalais, l'eVAL ne suffit pas : il faut aussi un visa d'entrée unique. Demandez-le en ligne sur le portail officiel de l'immigration, après l'eVAL et avant de partir. Voyager sans lui peut bloquer votre visa étudiant." },
+my_arrivee: { titre: "Arriver en Malaisie", enClair: "À l'aéroport, présentez-vous au comptoir d'accueil des étudiants d'EMGS avant l'immigration. Gardez sur vous passeport, eVAL, visa et lettre d'offre, pas en soute. Emportez aussi votre carnet de vaccination contre la fièvre jaune." },
+my_medical: { titre: "Passer la visite médicale à l'arrivée", enClair: "Dans les tout premiers jours après l'arrivée, passez la visite médicale dans une clinique agréée par EMGS. Sans elle, votre visa étudiant ne peut pas être collé dans le passeport. Le délai est très court : prenez rendez-vous dès votre arrivée." },
+my_inscription: { titre: "M'enregistrer à l'université", enClair: "Présentez-vous au bureau des étudiants internationaux de votre université avec passeport, visa et lettre d'acceptation. Suivez ses consignes pour l'inscription et le paiement des frais d'études. Gardez tous vos reçus." },
+my_student_pass: { titre: "Faire coller mon visa étudiant", enClair: "Après la visite médicale, votre université dépose votre passeport à l'immigration pour y coller le visa étudiant, et vous recevez une carte d'étudiant étranger. S'il ne couvre pas tout votre cursus, renouvelez-le plusieurs mois avant qu'il n'expire. Et ne travaillez jamais sans autorisation." },
 },
 };
 

@@ -21,10 +21,11 @@
 *    libellé vient de LIBELLES_PROCEDURE, jamais d'une phrase locale.
 *
 * L'ORDRE DES PAYS EST VALIDÉ (0. décisions prises) : France, Roumanie,
-* Turquie, Maroc, Italie, Allemagne, Canada. Les États-Unis n'y sont
-* pas (restrictions de visa de janvier 2026, postes consulaires
-* africains fermés). La France est « en plein », les six autres sont
-* nommés et présentés comme les prochains.
+* Turquie, Maroc, Italie, Allemagne, Canada — puis la Chine et la
+* Malaisie, ajoutées le 2026-09-23 à la demande de Charles. Les
+* États-Unis n'y sont pas (restrictions de visa de janvier 2026, postes
+* consulaires africains fermés). Depuis le 2026-09-23, les neuf sont
+* ouverts à la vente, au même prix que la France.
 *
 * Aucun DOM, aucun Firestore : testable sous Node.
 * ============================================================
@@ -551,6 +552,117 @@ verifieLe: "2026-09-13"
 ],
 positionnement: "Master et doctorat en établissement public uniquement — c'est aussi l'un des profils dispensés de lettre d'attestation provinciale depuis 2026.",
 avertissement: "Ce n'est pas une destination « pas cher et facile » : les frais sont élevés, la preuve de fonds est le premier motif de refus, et le Volet direct pour les études n'existe plus depuis le 8 novembre 2024."
+},
+
+{
+id: "chine",
+nom: "Chine",
+ordre: 8,
+code: "cn",
+langue: ["chinois", "anglais"],
+portail: { nom: "Campus China", url: "https://www.campuschina.org/" },
+procedure: "documentee",
+accompagnement: "ouvert",
+// Ajoutée le 2026-09-23 (demande de Charles). Faits lus le jour même sur les
+// pages officielles : universités Sun Yat-sen et Tsinghua, ambassade de
+// Chine au Sénégal, centre de visas chinois de Dakar, Administration
+// nationale de l'immigration.
+faits: [
+{
+cle: "bourse",
+diffusion: "public",
+texte: "Bourse du gouvernement chinois : candidature en ligne sur le système du China Scholarship Council, en type A (par l'ambassade de Chine du pays d'origine) ou en type B (directement par une université chinoise). Elle couvre scolarité, logement, allocation mensuelle et assurance maladie ; les dates limites tombent le plus souvent entre décembre et février.",
+source: "https://iso.sysu.edu.cn/en/application/scholarship/1417807.htm",
+verifieLe: "2026-09-23"
+},
+{
+cle: "csca",
+diffusion: "public",
+texte: "Depuis 2026, l'examen CSCA, organisé par le China Scholarship Council, est exigé pour entrer en licence dans les universités participantes, bourse ou autofinancement : cinq sessions par an, 450 CNY pour une matière, 700 CNY pour plusieurs.",
+montant: 450, devise: "CNY",
+source: "https://edu.sh.gov.cn/study_en_news/20251114/d4ca5e9d388546f4adc0f356d3354d59.html",
+verifieLe: "2026-09-23"
+},
+{
+cle: "visa",
+diffusion: "public",
+texte: "Visa d'études X1 (plus de 180 jours) : droits de visa gratuits pour les ressortissants sénégalais ; seuls les frais de service du centre de visas chinois sont dus. Pièces clés : avis d'admission et formulaire JW201 ou JW202, en original et en copie.",
+source: "https://www.visaforchina.cn/DKR3_FR/qianzhengyewu/jichuzhishi/feiyongbiaozhunjishixian",
+verifieLe: "2026-09-23"
+},
+{
+cle: "sejour",
+diffusion: "client",
+texte: "Permis de résidence : à demander dans les 30 jours suivant l'entrée, au service des entrées et sorties de la sécurité publique. 400 CNY jusqu'à un an, 800 CNY de un à trois ans, 1 000 CNY de trois à cinq ans ; décision sous 15 jours ouvrables.",
+montant: 400, devise: "CNY",
+source: "https://s.nia.gov.cn/mps/bszy/wgrcrjEn/e-sqwgrjlzj/202201/index.html",
+verifieLe: "2026-09-23"
+},
+{
+cle: "droits",
+diffusion: "client",
+texte: "Chaque université fixe ses droits. Licence : 26 000 CNY par an en lettres à Sun Yat-sen (2026) et en économie, droit ou gestion à Tsinghua, jusqu'à 70 000 CNY en médecine clinique à Tsinghua. Master classique à Tsinghua (2027) : de 28 000 à 33 000 CNY par an.",
+montant: 26000, devise: "CNY",
+source: "https://international.join-tsinghua.edu.cn/Admission1/Fees.htm",
+verifieLe: "2026-09-23"
+}
+],
+positionnement: "Pour l'étudiant prêt à étudier en chinois, ou qui vise un master en anglais, avec à la clé une bourse complète du gouvernement chinois. Le piège est le calendrier : examen CSCA obligatoire en licence, pré-admission d'une université à obtenir avant de candidater à la bourse, et dépôts clos dès l'hiver."
+},
+
+{
+id: "malaisie",
+nom: "Malaisie",
+ordre: 9,
+code: "my",
+langue: ["anglais", "malais"],
+portail: { nom: "EMGS", url: "https://visa.educationmalaysia.gov.my/" },
+procedure: "documentee",
+accompagnement: "ouvert",
+// Ajoutée le 2026-09-23 (demande de Charles). Faits lus le jour même sur
+// EMGS (Education Malaysia Global Services), l'Immigration malaisienne et
+// l'Universiti Malaya.
+faits: [
+{
+cle: "sev",
+diffusion: "public",
+texte: "Le Sénégal figure sur la liste EMGS des pays dont les étudiants doivent obtenir un visa à entrée unique (SEV) AVANT d'entrer en Malaisie, en plus de l'eVAL. Après l'eVAL, il se demande exclusivement sur le portail eVISA de l'Immigration ; le droit de visa est de 20 RM pour les pays non listés au barème, dont le Sénégal.",
+montant: 20, devise: "MYR",
+source: "https://visa.educationmalaysia.gov.my/guidelines/sev-required-countries",
+verifieLe: "2026-09-23"
+},
+{
+cle: "fraisEmgs",
+diffusion: "public",
+texte: "Barème EMGS du 23 juin 2026, université publique : 1 600 RM de traitement pour une nouvelle demande de plus de six mois, plus 150 RM d'eVAL, tous deux soumis à 8 % de taxe de service ; 60 RM de vignette du Student Pass, 50 RM d'i-Kad, 340 RM de visite médicale. Les frais de traitement ne sont pas remboursables.",
+montant: 1600, devise: "MYR",
+source: "https://visa.educationmalaysia.gov.my/media/cms_upload/Schedule_fees_-_v1.8_2_.pdf",
+verifieLe: "2026-09-23"
+},
+{
+cle: "medical",
+diffusion: "public",
+texte: "Visite médicale obligatoire dans une clinique agréée par EMGS, dans les 7 jours ouvrables suivant l'arrivée : sans elle, EMGS ne peut pas lancer l'apposition du Student Pass.",
+source: "https://visa.educationmalaysia.gov.my/guidelines/medical-screening",
+verifieLe: "2026-09-23"
+},
+{
+cle: "passeport",
+diffusion: "public",
+texte: "Le passeport doit être valable au moins 18 mois au moment de la demande de Student Pass, et la demande doit être déposée depuis l'étranger, jamais depuis la Malaisie.",
+source: "https://www.imi.gov.my/index.php/en/main-services/pass/student-pass/",
+verifieLe: "2026-09-23"
+},
+{
+cle: "calendrierUm",
+diffusion: "client",
+texte: "Universiti Malaya, rentrée de mars 2027 (semestre II, session 2026-2027) : candidatures du 7 septembre 2026 au 30 janvier 2027, en licence comme en master ; 500 RM de frais par candidature (page mise à jour le 8 septembre 2026).",
+montant: 500, devise: "MYR",
+source: "https://study.um.edu.my/how-to-apply",
+verifieLe: "2026-09-23"
+}
+],
+positionnement: "Pour l'étudiant à l'aise en anglais qui vise une licence ou un master dans une université publique reconnue, comme l'UM ou l'UKM. Le piège : l'eVAL ne suffit pas au Sénégalais, qui doit aussi obtenir un visa à entrée unique avant de partir, puis passer la visite médicale dans les sept jours ouvrables qui suivent l'arrivée."
 }
 
 ];

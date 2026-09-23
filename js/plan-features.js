@@ -560,12 +560,13 @@ return d ? d.plan : "";
 /**
 * Le nom de chaque destination vendue, pour les libellés (« Dossier
 * Italie »). MIROIR de js/destinations-preinscription.js — gardé ici pour
-* ne pas charger les faits des six pays sur chaque page du site ;
+* ne pas charger les faits des pays sur chaque page du site ;
 * test/destinations-preinscription.test.mjs compare les deux.
 */
 export const NOMS_DESTINATIONS_PREINSCRIPTION = {
 france: "France", roumanie: "Roumanie", turquie: "Turquie", maroc: "Maroc",
-italie: "Italie", allemagne: "Allemagne", canada: "Canada"
+italie: "Italie", allemagne: "Allemagne", canada: "Canada",
+chine: "Chine", malaisie: "Malaisie"
 };
 
 /**

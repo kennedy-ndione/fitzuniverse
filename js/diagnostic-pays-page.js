@@ -26,7 +26,7 @@ import { trouverProcedure } from "./procedures/index.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
-import { auPays } from "./pays-grammaire.js";
+import { auPays, avecArticle } from "./pays-grammaire.js";
 
 initShellChrome();
 
@@ -156,7 +156,11 @@ select.value = seuil && !["EUR", "XOF"].includes(seuil.devise) ? seuil.devise : 
 if (seuil && !["EUR", "XOF"].includes(seuil.devise)) {
 document.getElementById("diagDeviseAide").textContent = `Le seuil ${auPays(DEST.nom)} est fixé en ${libelleDevise(seuil.devise)} : indiquez vos ressources dans cette devise pour une comparaison exacte. Nous n'utilisons aucun taux de change.`;
 } else if (!seuil) {
-document.getElementById("diagDeviseAide").textContent = `${DEST.nom === "Maroc" ? "Le Maroc" : "La Turquie"} ne chiffre aucun seuil : vos ressources ne décident d'aucun verdict ici, mais le coût de l'année vous est donné en entier.`;
+// « Le Maroc », « La Chine »… : l'article vient de la grammaire des pays,
+// jamais d'une alternative écrite pour deux pays (elle disait « La Turquie »
+// pour la Chine et la Malaisie).
+const sujet = avecArticle(DEST.nom);
+document.getElementById("diagDeviseAide").textContent = `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ne chiffre aucun seuil : vos ressources ne décident d'aucun verdict ici, mais le coût de l'année vous est donné en entier.`;
 }
 
 if (faits.variante) {

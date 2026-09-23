@@ -95,7 +95,8 @@ assert.ok(ACCOMPAGNEMENT.includes(p.accompagnement), `${p.nom} : accompagnement 
 // (js/diagnostic-pays.js), leur page et leur achat par pays
 // (functions/lib/achat.js). Refermer un pays = le repasser « a_venir »
 // ICI et dans les données, en même temps.
-assert.deepEqual(destinationsOuvertes().map((p) => p.nom), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
+// Et le soir même, la Chine et la Malaisie, au même prix.
+assert.deepEqual(destinationsOuvertes().map((p) => p.nom), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada", "Chine", "Malaisie"]);
 assert.deepEqual(destinationsAVenir().map((p) => p.nom), []);
 
 // `accompagnement` ne se DÉDUIT pas de `procedure` : la France est

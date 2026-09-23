@@ -54,12 +54,13 @@
  */
 
 /** Les destinations vendues. MIROIR de DESTINATIONS_VENDUES (js/destinations-preinscription.js). */
-const DESTINATIONS_VENDUES = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada"];
+const DESTINATIONS_VENDUES = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada", "chine", "malaisie"];
 
 /** Le nom de chaque destination, pour les libellés de facture. */
 const NOMS_DESTINATION = {
   france: "France", roumanie: "Roumanie", turquie: "Turquie", maroc: "Maroc",
   italie: "Italie", allemagne: "Allemagne", canada: "Canada",
+  chine: "Chine", malaisie: "Malaisie",
 };
 
 /** Durée d'un dossier hors France, en mois. */

@@ -76,6 +76,8 @@ export const PAGES = [
 ["preinscription-italie.html", 0.8, "preinscription-italie.html"],
 ["preinscription-allemagne.html", 0.8, "preinscription-allemagne.html"],
 ["preinscription-canada.html", 0.8, "preinscription-canada.html"],
+["preinscription-chine.html", 0.8, "preinscription-chine.html"],
+["preinscription-malaisie.html", 0.8, "preinscription-malaisie.html"],
 ["eligibility-test.html", 0.8, "eligibility-test.html"],
 ["eligibility-questions.html", 0.7, "eligibility-questions.html"],
 ["offers.html", 0.7, "offers.html"],

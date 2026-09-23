@@ -609,9 +609,10 @@ assert.ok(apps.includes("(résidence : ${escapeHtml(residence)})"), "il nomme la
 // Lot S3 (2026-09-13) — les six destinations manquantes
 // ------------------------------------------------------------------
 
-test("les sept pays de la page Préinscriptions ont un tronc, et chaque tronc est valide", () => {
-assert.equal(TRONCS.length, 7);
-assert.deepEqual(TRONCS.map((t) => t.paysDestination), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
+// Neuf depuis le 2026-09-23 au soir : la Chine et la Malaisie ont leur tronc.
+test("les pays de la page Préinscriptions ont un tronc, et chaque tronc est valide", () => {
+assert.equal(TRONCS.length, 9);
+assert.deepEqual(TRONCS.map((t) => t.paysDestination), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada", "Chine", "Malaisie"]);
 for (const tronc of TRONCS) {
 assert.deepEqual(defautsDeProcedure(tronc), [], tronc.id);
 assert.ok(tronc.etapes.length >= 8, `${tronc.id} : ${tronc.etapes.length} étapes, c'est trop peu pour accompagner`);

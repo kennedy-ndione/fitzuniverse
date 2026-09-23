@@ -199,10 +199,11 @@ return planPreOf(uid) == 'dossier-france-conseiller' || conseillerPays(uid);
 }
 
 // ------------------------------------------------------------
-// SIX DESTINATIONS DE PLUS (2026-09-23). Même grille que la France, mais
+// LES AUTRES DESTINATIONS (2026-09-23 : six, puis la Chine et la
+// Malaisie le soir même). Même grille que la France, mais
 // un dossier PAR PAYS : users/{uid}.preinscriptionsPays.<pays> =
 // { plan, expiresAt }, écrit par le webhook seul (champsFormule). Les
-// règles ne savent pas boucler sur une carte : les six pays sont écrits
+// règles ne savent pas boucler sur une carte : les pays sont écrits
 // un par un, et un test compare cette liste à DESTINATIONS_ACCOMPAGNEES
 // (js/destinations-preinscription.js). L'expiration reste vérifiée côté
 // client, comme pour planPreinscription.
@@ -217,19 +218,22 @@ return planPays(uid, pays) in ['dossier-france', 'dossier-france-conseiller'];
 
 function aUnDossierPays(uid) {
 return isDossierPays(uid, 'roumanie') || isDossierPays(uid, 'turquie') || isDossierPays(uid, 'maroc') ||
-isDossierPays(uid, 'italie') || isDossierPays(uid, 'allemagne') || isDossierPays(uid, 'canada');
+isDossierPays(uid, 'italie') || isDossierPays(uid, 'allemagne') || isDossierPays(uid, 'canada') ||
+isDossierPays(uid, 'chine') || isDossierPays(uid, 'malaisie');
 }
 
 function conseillerPays(uid) {
 return planPays(uid, 'roumanie') == 'dossier-france-conseiller' || planPays(uid, 'turquie') == 'dossier-france-conseiller' ||
 planPays(uid, 'maroc') == 'dossier-france-conseiller' || planPays(uid, 'italie') == 'dossier-france-conseiller' ||
-planPays(uid, 'allemagne') == 'dossier-france-conseiller' || planPays(uid, 'canada') == 'dossier-france-conseiller';
+planPays(uid, 'allemagne') == 'dossier-france-conseiller' || planPays(uid, 'canada') == 'dossier-france-conseiller' ||
+planPays(uid, 'chine') == 'dossier-france-conseiller' || planPays(uid, 'malaisie') == 'dossier-france-conseiller';
 }
 
 function diagnosticPays(uid) {
 return planPays(uid, 'roumanie') == 'diagnostic-france' || planPays(uid, 'turquie') == 'diagnostic-france' ||
 planPays(uid, 'maroc') == 'diagnostic-france' || planPays(uid, 'italie') == 'diagnostic-france' ||
-planPays(uid, 'allemagne') == 'diagnostic-france' || planPays(uid, 'canada') == 'diagnostic-france';
+planPays(uid, 'allemagne') == 'diagnostic-france' || planPays(uid, 'canada') == 'diagnostic-france' ||
+planPays(uid, 'chine') == 'diagnostic-france' || planPays(uid, 'malaisie') == 'diagnostic-france';
 }
 
 // Les vœux d'un pays s'appellent "pre-<code>-N" : un espace d'identifiants
@@ -248,7 +252,9 @@ motifPays(uid, 'turquie', 'pre-tr-([1-9]|1[0-2])') + ')|(' +
 motifPays(uid, 'maroc', 'pre-ma-[1-7]') + ')|(' +
 motifPays(uid, 'italie', 'pre-it-1') + ')|(' +
 motifPays(uid, 'allemagne', 'pre-de-[1-7]') + ')|(' +
-motifPays(uid, 'canada', 'pre-ca-[1-7]') + ')';
+motifPays(uid, 'canada', 'pre-ca-[1-7]') + ')|(' +
+motifPays(uid, 'chine', 'pre-cn-[1-7]') + ')|(' +
+motifPays(uid, 'malaisie', 'pre-my-[1-7]') + ')';
 }
 
 // Grille A : les TROIS offres préinscription ouvrent la messagerie

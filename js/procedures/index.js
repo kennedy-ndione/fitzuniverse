@@ -49,14 +49,17 @@ import { PROCEDURE_MAROC } from "./maroc.js";
 import { PROCEDURE_ITALIE } from "./italie.js";
 import { PROCEDURE_ALLEMAGNE } from "./allemagne.js";
 import { PROCEDURE_CANADA } from "./canada.js";
+import { PROCEDURE_CHINE } from "./chine.js";
+import { PROCEDURE_MALAISIE } from "./malaisie.js";
 import { COUCHES } from "./residences/index.js";
 import { FIABILITE, TYPES_ETAPE, TYPES_PREUVE } from "./vocabulaire.js";
 import { findCountry } from "../countries.js";
 
 /**
-* Les troncs connus : une DESTINATION chacun. L'ordre est celui des sept
+* Les troncs connus : une DESTINATION chacun. L'ordre est celui des neuf
 * pays de js/pays-preinscription.js — la France d'abord, parce qu'elle
-* est la seule à avoir des couches de résidence, puis les six du lot S3.
+* est la seule à avoir des couches de résidence, puis les six du lot S3,
+* puis la Chine et la Malaisie (2026-09-23, même forme, sans couche).
 */
 export const TRONCS = [
 PROCEDURE_FRANCE,
@@ -65,7 +68,9 @@ PROCEDURE_TURQUIE,
 PROCEDURE_MAROC,
 PROCEDURE_ITALIE,
 PROCEDURE_ALLEMAGNE,
-PROCEDURE_CANADA
+PROCEDURE_CANADA,
+PROCEDURE_CHINE,
+PROCEDURE_MALAISIE
 ];
 
 /**

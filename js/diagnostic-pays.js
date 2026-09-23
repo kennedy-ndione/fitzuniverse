@@ -3,8 +3,9 @@
 * Diagnostic <pays> — de l'arithmétique, aucune IA (2026-09-23)
 * ============================================================
 *
-* Le Diagnostic des six destinations ouvertes le 23 septembre :
-* Roumanie, Turquie, Maroc, Italie, Allemagne, Canada. Même promesse que
+* Le Diagnostic des destinations ouvertes le 23 septembre : Roumanie,
+* Turquie, Maroc, Italie, Allemagne, Canada, puis Chine et Malaisie
+* (même soir). Même promesse que
 * le Diagnostic France : vos ressources contre le seuil publié, le coût
 * de l'année chiffre par chiffre, chaque montant avec sa source et sa
 * date. Les faits viennent de js/destinations-preinscription.js
@@ -19,8 +20,8 @@
 *    Un seuil en dollars canadiens, en lei ou en livres turques se
 *    compare à des ressources déclarées DANS CETTE DEVISE ; sinon la
 *    page le demande, au lieu d'inventer un taux qui vieillit tout seul.
-* 3. CE QU'ON NE SAIT PAS SE DIT. Le Maroc et la Turquie ne chiffrent
-*    aucun seuil de ressources : pas de verdict « atteint », mais la
+* 3. CE QU'ON NE SAIT PAS SE DIT. Le Maroc, la Turquie, la Chine et la
+*    Malaisie ne chiffrent aucun seuil de ressources : pas de verdict « atteint », mais la
 *    phrase officielle qui l'explique, et le coût de l'année.
 *
 * Module pur : aucun DOM, aucun Firestore. La page diagnostic-pays.html
@@ -44,7 +45,9 @@ CAD: `$${NBSP}CA`,
 USD: "USD",
 TRY: "TL",
 RON: "lei",
-MAD: "MAD"
+MAD: "MAD",
+CNY: "CNY",
+MYR: "RM"
 };
 
 /** Les devises proposées à la saisie : F CFA, euro, et celle du seuil du pays. */
@@ -176,19 +179,27 @@ verifieLe: f.verifieLe
 
 // ---- 3. Le total de la première année, par devise additionnable ----
 const totaux = {};
+// Le F CFA se range avec l'euro (parité fixe). Mais quand AUCUNE ligne de
+// cette famille n'est en euros — la Chine : les frais du centre de visas
+// de Dakar, seuls —, le total reste en F CFA : « 21 500 F CFA » est ce
+// que l'étudiant paiera, « 33 € » serait une conversion qu'il n'a pas
+// demandée.
 const ajouter = (dev, min, max) => {
 const fam = famille(dev);
-const k = totaux[fam] || (totaux[fam] = { devise: fam, min: 0, max: 0 });
+const k = totaux[fam] || (totaux[fam] = { devise: fam, min: 0, max: 0, minXof: 0, maxXof: 0, horsXof: false });
 const cmin = convertir(min, dev, fam);
 const cmax = convertir(max, dev, fam);
 k.min += cmin; k.max += cmax;
+if (dev === "XOF") { k.minXof += min; k.maxXof += max; } else k.horsXof = true;
 };
 for (const l of lignes) {
 if (!l.compte) continue;
 if (l.cle === "droits") ajouter(l.devise, l.min, l.max);
 else ajouter(l.devise, l.montant, l.montant);
 }
-const listeTotaux = Object.values(totaux).map((t) => ({ devise: t.devise, min: Math.round(t.min), max: Math.round(t.max) }));
+const listeTotaux = Object.values(totaux).map((t) => (t.devise === "EUR" && !t.horsXof)
+? { devise: "XOF", min: Math.round(t.minXof), max: Math.round(t.maxXof) }
+: { devise: t.devise, min: Math.round(t.min), max: Math.round(t.max) });
 
 const morceaux = listeTotaux.map((t) => t.min === t.max
 ? formatMontant(t.min, t.devise)

@@ -1,6 +1,6 @@
 /**
 * ============================================================
-* js/route-destination.js — LA ROUTE des six autres destinations
+* js/route-destination.js — LA ROUTE des autres destinations
 * (2026-09-23, « finir les pays restants comme on l'a fait avec la France »)
 * ============================================================
 *
@@ -28,9 +28,9 @@
 *      avant le premier dépôt.
 *   n. Le départ            — le guide des six démarches (js/visa-depart.js)
 *
-* CE QUI NE CONCERNE PAS TOUT LE MONDE. Deux pays ont plusieurs portes :
-* la Turquie (la bourse, ou l'autofinancement) et le Maroc (l'AMCI, ou
-* l'UM6P, ou Al Akhawayn). L'étape où la procédure fait choisir devient
+* CE QUI NE CONCERNE PAS TOUT LE MONDE. Trois pays ont plusieurs portes :
+* la Turquie et la Chine (la bourse, ou l'autofinancement) et le Maroc
+* (l'AMCI, ou l'UM6P, ou Al Akhawayn). L'étape où la procédure fait choisir devient
 * un CHOIX DE VOIE (kind « voie ») ; la voie choisie, les étapes des
 * autres voies sortent de la route. Et toute étape de procédure peut
 * encore être déclarée « ne me concerne pas » : elle compte alors comme
@@ -155,6 +155,9 @@ enClair: d.plafondVoeux === 1
 ];
 
 const depots = new Set(d.etapesDepot || []);
+// Les lettres se posent avant le premier dépôt, ou plus tôt quand une
+// pièce en dépend (Chine : le projet d'études, pièce de la bourse).
+const avantLettres = new Set(d.motivationsAvant || []);
 let motivationsPosees = !d.motivations;
 
 // LA VOIE (Turquie, Maroc). Choisie, elle écarte les étapes propres aux
@@ -194,7 +197,7 @@ const dernierDepot = reponsePropre ? [...etapesProcedure].reverse().find((e) => 
 
 for (const e of etapesProcedure) {
 // Les lettres de motivation, vœu par vœu, juste avant le premier dépôt.
-if (!motivationsPosees && depots.has(e.id)) {
+if (!motivationsPosees && (depots.has(e.id) || avantLettres.has(e.id))) {
 defs.push({ id: "motivations", kind: "motivations", icone: "pen-line", titre: "Écrire vos lettres de motivation",
 enClair: "Chaque établissement veut savoir pourquoi cette formation, pourquoi chez lui, et ce que vous en ferez. Fitz écrit un premier jet avec vous, vœu par vœu. Puis vous le relisez et le déposez." });
 motivationsPosees = true;
