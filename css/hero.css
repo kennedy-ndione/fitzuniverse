@@ -1559,3 +1559,111 @@ transform:translateY(0);
 }
 
 }
+
+/* ==========================================================
+LA LIGNE DU DIAGNOSTIC RESPIRE (2026-09-23, demande de Charles)
+==========================================================
+Charles : « fais en sorte que ce bouton respire et soit vivant pour
+inciter le visiteur à le cliquer ». La doctrine du lot PORTES-COULEUR
+tient toujours : c'est une LIGNE qui secourt l'indécis, jamais une
+troisième porte — pas de fond ambre plein, rien qui concurrence
+« Trouver une bourse » et « Partir en me finançant ». Elle devient
+seulement vivante :
+- une gélule translucide au liseré ambre, qui se lit comme cliquable ;
+- un point ambre qui RESPIRE (un halo qui s'ouvre et s'efface), comme
+  un voyant « en direct » ;
+- la flèche qui pousse vers la droite, une fois par respiration ;
+- « Le diagnostic gratuit » souligné d'ambre.
+Tout mouvement passe par transform/opacity (compositeur, aucun flou),
+s'arrête au survol (la main du visiteur prend le relais) et disparaît
+pour qui a demandé moins d'animations. */
+
+.hero-diag{
+position:relative;
+padding:6px 16px 6px 12px;
+border:1px solid rgba(242,182,64,.5);
+border-radius:999px;
+background:rgba(20,16,13,.38);
+}
+
+.hero-diag strong{
+text-decoration-color:#F2B640;
+}
+
+.hero-diag-pouls{
+position:relative;
+flex:none;
+width:10px;
+height:10px;
+border-radius:50%;
+background:#F2B640;
+}
+
+.hero-diag-pouls::after{
+content:"";
+position:absolute;
+inset:0;
+border-radius:50%;
+background:#F2B640;
+opacity:0;
+}
+
+.hero-diag:hover,
+.hero-diag:focus-visible{
+border-color:#F2B640;
+background:rgba(20,16,13,.55);
+}
+
+@media (prefers-reduced-motion: no-preference){
+
+.hero-diag-pouls::after{
+animation:hero-diag-respire 2.4s cubic-bezier(.2,.6,.3,1) infinite;
+}
+
+.hero-diag-pouls{
+animation:hero-diag-battement 2.4s ease-in-out infinite;
+}
+
+.hero-diag svg{
+animation:hero-diag-pousse 2.4s ease-in-out infinite;
+}
+
+/* La main du visiteur prend le relais : plus d'animation au survol,
+   la flèche avance d'elle-même (règle :hover plus haut). */
+.hero-diag:hover .hero-diag-pouls,
+.hero-diag:hover .hero-diag-pouls::after,
+.hero-diag:hover svg,
+.hero-diag:focus-visible .hero-diag-pouls,
+.hero-diag:focus-visible .hero-diag-pouls::after,
+.hero-diag:focus-visible svg{
+animation:none;
+}
+
+}
+
+@keyframes hero-diag-respire{
+0%{ transform:scale(1); opacity:.6; }
+70%, 100%{ transform:scale(2.8); opacity:0; }
+}
+
+@keyframes hero-diag-battement{
+0%, 100%{ transform:scale(1); }
+12%{ transform:scale(1.18); }
+24%{ transform:scale(1); }
+}
+
+@keyframes hero-diag-pousse{
+0%, 50%, 100%{ transform:translateX(0); }
+65%{ transform:translateX(5px); }
+80%{ transform:translateX(0); }
+}
+
+/* Téléphone : la gélule prend la largeur des portes empilées. */
+@media(max-width:640px){
+
+.hero-diag{
+padding:8px 16px 8px 14px;
+border-radius:14px;
+}
+
+}
