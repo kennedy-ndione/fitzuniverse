@@ -91,6 +91,34 @@ const OFFRES_PREINSCRIPTION = ["diagnostic-france", "dossier-france", "dossier-f
  * ⚠️ CE SONT DES ESTIMATIONS, PAS DES MESURES. Un plafond trop bas atteint
  * par un étudiant sérieux est un incident commercial : il se relève, il
  * ne se défend pas.
+ *
+ * RELEVÉ DES PLAFONDS MENSUELS DES FORMULES VENDUES (2026-09-23, décision
+ * de Charles). Le lot BARÈME (19/09) les avait laissés « à rouvrir le jour
+ * où le paiement s'ouvre » ; il est ouvert depuis le 21/09. Deux constats :
+ *
+ * 1. LA PROMESSE. offers.html (FAQ « Y a-t-il une limite… ») et les cartes
+ *    d'offres annoncent un volume QUOTIDIEN, « remis à zéro chaque nuit »,
+ *    et « en travaillant vos candidatures normalement, vous ne le
+ *    rencontrez pas ». Le plafond MENSUEL n'est annoncé nulle part. À 190,
+ *    un Essentiel qui use ses 40 points du jour était coupé au 5e jour du
+ *    mois : la page disait vrai sur le jour et faux sur le mois.
+ * 2. LE BESOIN. Un mois de pointe mesuré sur le barème réel : par
+ *    candidature ≈ 3 lettres (12) + 2 analyses avec pièces (~60) + e-mails
+ *    et traductions (~10) ≈ 80 points ; 4 candidatures ≈ 330, plus ~3
+ *    questions par jour au chat (≈ 90) → ~420 points. 190 coupait donc un
+ *    étudiant sérieux en pleine campagne.
+ *
+ * LE COÛT, au prix mesuré du point (7 à 10 F CFA, lot BARÈME) : un mois
+ * entier AU PLAFOND coûte au plus ~4 500 F pour Essentiel (10 % du prix
+ * payé) — et l'usage réel reste très en dessous. La règle des « 25 % du
+ * revenu mensuel » calculée sur une durée théorique de 6 à 10 mois ne
+ * tenait plus : les formules n'ont plus de durée (lot ACCEPTATION), et
+ * l'usage se concentre sur deux ou trois mois de pointe. Le plafond
+ * QUOTIDIEN, lui, ne change pas : il est annoncé, et c'est lui qui arrête
+ * un compte partagé en quelques heures.
+ *
+ * PLAFOND_PAR_DEFAUT (formule inconnue) reste à 40/190 : une formule que
+ * le serveur ne connaît pas n'a pas à hériter du relèvement.
  */
 const PLAFONDS = {
   /* Compte gratuit : la tâche `diagnostic` UNIQUEMENT.
@@ -115,17 +143,17 @@ const PLAFONDS = {
      GLOBAL du jour existe désormais (voir functions/fitz.js). */
   gratuit: { jour: 4, mois: 6 },
 
-  fitzExpress: { jour: 40, mois: 250 },
+  fitzExpress: { jour: 40, mois: 300 },
   "premier-dossier": { jour: 50, mois: 300 },
-  "essentiel-4": { jour: 40, mois: 190 },
+  "essentiel-4": { jour: 40, mois: 450 },
   essentiel: { jour: 40, mois: 190 },
   accompagnement: { jour: 45, mois: 210 },
   premium: { jour: 45, mois: 210 },
-  "conseiller-6": { jour: 70, mois: 400 },
+  "conseiller-6": { jour: 70, mois: 650 },
   "signature-focus": { jour: 70, mois: 400 },
   signature: { jour: 90, mois: 500 },
-  "dossier-france": { jour: 40, mois: 190 },
-  "dossier-france-conseiller": { jour: 70, mois: 380 },
+  "dossier-france": { jour: 40, mois: 400 },
+  "dossier-france-conseiller": { jour: 70, mois: 650 },
 
   /* Dérogations SANS formule (lot FITZ-ACCÈS, 2026-09-19) — le miroir
      serveur des deux contournements que js/access-guard.js accorde déjà :

@@ -132,3 +132,26 @@ assert.match(src, /fitz-select-group/);
 assert.match(src, /querySelectorAll\('\[role="option"\]'\)/, "les titres ne se parcourent pas au clavier");
 assert.match(lire("css/fitz-select.css"), /\.fitz-select-group\{/);
 });
+
+// ============================================================
+// 7. LE PASS DÉCOUVERTE DANS « GESTION DES FORMULES » (2026-09-23)
+// ============================================================
+// Charles : « je ne vois pas la formule Découverte » dans l'admin. Elle
+// y a sa colonne, EN LECTURE SEULE : ses droits viennent de DROITS_PASS,
+// que decideVerrou() applique — pas de config/planFeatures. Une case
+// modifiable laisserait l'admin croire qu'il ouvre un outil qui reste
+// fermé pour l'étudiant.
+test("formules-admin 7 — le Pass Découverte a sa colonne, grisée, et elle dit ce que le code accorde", async () => {
+  const plans = lire("admin/plans.js");
+  assert.match(plans, /formulesAdmin\(\{ pass: true, avecGratuit: false \}\)/, "la grille doit inclure le Pass");
+  assert.match(plans, /planId === PASS_ID \?/, "la colonne du Pass doit avoir son propre rendu");
+  assert.match(plans, /<input type="checkbox" disabled/, "la colonne du Pass doit être en lecture seule");
+  assert.match(plans, /DROITS_PASS\.includes\(key\)/, "la colonne du Pass doit lire DROITS_PASS");
+  assert.match(plans, /input\[type="checkbox"\]\[data-plan\]/, "seules les cases modifiables écrivent");
+  const { DROITS_PASS, decideVerrou } = await import("../js/plan-features.js");
+  assert.deepEqual(DROITS_PASS, ["ai_chat", "support_ticket"], "le Pass n'ouvre que le chat et le service après-vente");
+  for (const featureKey of ["ai_chat", "support_ticket", "ai_letter", "applications"]) {
+    const ferme = decideVerrou({ planId: "gratuit", featureFlags: { [featureKey]: { gratuit: false } }, featureKey, hasFitzExpress: true });
+    assert.equal(ferme, !DROITS_PASS.includes(featureKey), `${featureKey} : ce que l'admin affiche doit être ce que decideVerrou applique`);
+  }
+});

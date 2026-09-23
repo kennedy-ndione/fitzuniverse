@@ -580,11 +580,23 @@ assert.ok(PLAFONDS[id], `${id} sans plafond`);
 assert.ok(!FORMULES_AVEC_FITZ.includes("diagnostic-france"));
 assert.ok(!FORMULES_AVEC_FITZ.includes("gratuit"));
 
-// Le calibrage : ~25 % de la recette mensuelle, 1 point ≈ 10 F.
-assert.deepEqual(PLAFONDS["essentiel-4"], { jour: 40, mois: 190 });
-assert.deepEqual(PLAFONDS["conseiller-6"], { jour: 70, mois: 400 });
-assert.deepEqual(PLAFONDS["dossier-france"], { jour: 40, mois: 190 });
-assert.deepEqual(PLAFONDS["dossier-france-conseiller"], { jour: 70, mois: 380 });
+// Le calibrage. Le quotidien est celui qu'annoncent offers.html et
+// pricing-plans.js (« jusqu'à 40 questions… par jour »). Le mensuel a été
+// RELEVÉ le 2026-09-23 (décision de Charles) : à 190, un Essentiel qui
+// usait ses 40 points du jour était coupé au 5e jour du mois, alors que
+// la FAQ promet qu'un usage normal ne rencontre jamais la limite. Voir le
+// commentaire au-dessus de PLAFONDS dans functions/lib/fitz-acces.js.
+assert.deepEqual(PLAFONDS["essentiel-4"], { jour: 40, mois: 450 });
+assert.deepEqual(PLAFONDS["conseiller-6"], { jour: 70, mois: 650 });
+assert.deepEqual(PLAFONDS["dossier-france"], { jour: 40, mois: 400 });
+assert.deepEqual(PLAFONDS["dossier-france-conseiller"], { jour: 70, mois: 650 });
+assert.deepEqual(PLAFONDS.fitzExpress, { jour: 40, mois: 300 });
+// La garde du relèvement : aucune formule VENDUE ne coupe au mois avant
+// dix jours pleins d'usage au plafond du jour (190 coupait au 5e).
+for (const id of ["essentiel-4", "conseiller-6", "dossier-france", "dossier-france-conseiller"]) {
+assert.ok(PLAFONDS[id].mois >= 9 * PLAFONDS[id].jour, `${id} : le plafond du mois coupe avant dix jours d'usage plein`);
+}
+// Une formule inconnue n'hérite PAS du relèvement.
 assert.deepEqual(plafondsDe("formule-inconnue"), { jour: 40, mois: 190 });
 });
 

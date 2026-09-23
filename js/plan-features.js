@@ -264,12 +264,22 @@ support_ticket: { "diagnostic-france": true, "dossier-france": true, "dossier-fr
 * que l'offre préinscription ne l'ouvre pas non plus. js/access-guard.js
 * (isFeatureLocked) délègue ici.
 */
+/**
+* CE QUE LE PASS DÉCOUVERTE OUVRE, en un seul endroit (2026-09-23).
+* « Discuter avec Fitz » (décision 6 de Charles, lot ACCEPTATION) et
+* « Signaler un problème » (grille A : toute formule payante a droit au
+* service après-vente). Rien d'autre. Lu par decideVerrou() ci-dessous
+* ET par admin/plans.js, qui affiche la colonne du Pass en lecture
+* seule : l'admin voit exactement ce que le code accorde, sans pouvoir
+* le contredire depuis une case à cocher.
+*/
+export const DROITS_PASS = ["ai_chat", "support_ticket"];
+
 export function decideVerrou({ planId, planPreinscriptionId = "", featureFlags, featureKey, testerAccess = false, hasFitzExpress = false }) {
 if (testerAccess) return false;
-if (hasFitzExpress && featureKey === "ai_chat") return false;
 // Grille A : le Pass Découverte est une formule payante — il a droit au
-// service après-vente, et à rien d'autre de plus.
-if (hasFitzExpress && featureKey === "support_ticket") return false;
+// chat et au service après-vente, et à rien d'autre de plus.
+if (hasFitzExpress && DROITS_PASS.includes(featureKey)) return false;
 const flags = featureFlags && featureFlags[featureKey];
 if (!flags) return false;
 if (flags[planId] !== false) return false;

@@ -18,21 +18,30 @@ PLAN_ORDER,
 PLAN_LABELS,
 PLAN_PREINSCRIPTION_ORDER,
 PLAN_PREINSCRIPTION_LABELS,
-resolveFeatureFlags
+resolveFeatureFlags,
+DROITS_PASS
 } from "../js/plan-features.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : un seul nommage pour l'admin.
-import { formulesAdmin, etiquetteAdmin, TITRE_EN_VENTE, TITRE_RETIREES } from "../js/formules-admin.js";
+import { formulesAdmin, etiquetteAdmin, TITRE_EN_VENTE, TITRE_RETIREES, PASS_ID } from "../js/formules-admin.js";
 
 initSidebarToggle();
 
 // Les colonnes, dans l'ordre de l'admin : Gratuit, puis les offres en
-// vente (bourses puis France — le Pass Découverte n'est pas une formule
-// et n'a pas de colonne), puis les formules retirées sous leur titre.
+// vente (le Pass Découverte, les bourses, puis la France), puis les
+// formules retirées sous leur titre.
+//
+// LE PASS DÉCOUVERTE A SA COLONNE depuis le 2026-09-23 (demande de
+// Charles : « je ne vois pas la formule Découverte »). Elle est EN
+// LECTURE SEULE : ses droits ne viennent pas de config/planFeatures mais
+// de DROITS_PASS (js/plan-features.js), que decideVerrou() applique. Une
+// case modifiable ici n'aurait rien changé pour l'étudiant — l'admin
+// aurait cru ouvrir un outil qui restait fermé. La colonne montre donc
+// la vérité du code, grisée, et n'écrit jamais rien.
 const GROUPES = (() => {
-const { enVente, retirees } = formulesAdmin({ pass: false, avecGratuit: false });
+const { enVente, retirees } = formulesAdmin({ pass: true, avecGratuit: false });
 return [
 { titre: "", ids: ["gratuit"] },
 { titre: TITRE_EN_VENTE, ids: enVente },
@@ -102,7 +111,14 @@ row.innerHTML = `
 <div>${label}</div>
 <div class="plans-feature-description">${description}</div>
 </td>
-${COLONNES.map((planId) => `
+${COLONNES.map((planId) => planId === PASS_ID ? `
+<td>
+<label class="plan-toggle is-fige" title="Fixé par le code : le Pass Découverte ouvre uniquement « Discuter avec Fitz » et « Signaler un problème ».">
+<input type="checkbox" disabled aria-label="${label} — Pass Découverte (fixé, non modifiable)" ${DROITS_PASS.includes(key) ? "checked" : ""}>
+<span class="plan-toggle-track"><span class="plan-toggle-thumb"></span></span>
+</label>
+</td>
+` : `
 <td>
 <label class="plan-toggle">
 <input type="checkbox" data-key="${key}" data-plan="${planId}" ${featureFlags[key][planId] ? "checked" : ""}>
@@ -116,7 +132,9 @@ tbody.appendChild(row);
 
 });
 
-tbody.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+// Seules les cases modifiables (data-plan) écrivent : la colonne du Pass
+// est désactivée et ne porte ni data-key ni data-plan.
+tbody.querySelectorAll('input[type="checkbox"][data-plan]').forEach((input) => {
 
 input.addEventListener("change", () => {
 
