@@ -1632,7 +1632,8 @@ flex:1 1 100%;
 /* ==========================================================
    LA BOÎTE À OUTILS FITZ (index.html, 2026-09-20)
    Même dessin « au trait » que .problem-list, en deux colonnes :
-   six outils, chacun une icône, un titre, une phrase. La section
+   huit rubriques (six outils jusqu'au 2026-09-23), chacune une icône,
+   un titre, une phrase. La section
    « preuve » du même jour réutilise .problem-list telle quelle et
    n'a besoin d'aucune règle ici.
    ========================================================== */
@@ -1706,6 +1707,24 @@ max-width:48ch;
 
 }
 
+/* La ligne « à vos frais, en France » sous la grille (2026-09-23) :
+   une phrase calme, pas un 3e bloc. */
+.outils-note{
+
+margin:28px auto 0;
+
+max-width:62ch;
+
+text-align:center;
+
+font-size:var(--fs-body-sm, .9375rem);
+
+line-height:var(--lh-relaxed);
+
+color:var(--text-light);
+
+}
+
 .outils-footer{
 
 margin-top:36px;
@@ -1752,5 +1771,143 @@ color:var(--amber-400, #F2B33D);
 text-decoration:underline;
 
 text-underline-offset:3px;
+
+}
+
+
+/* ==========================================================
+   ACCUEIL BREF (2026-09-23) — demande de Charles : « beaucoup de gens
+   n'aiment pas lire ». Du constat (#why-us) au bloc final, chaque
+   section ne garde que l'essentiel. Ces règles rendent les listes
+   COURTES et LARGES au bureau (on lit d'un coup d'œil, en ligne),
+   et SERRÉES sur téléphone (moins de défilement). Modificateurs
+   posés sur les listes de l'accueil seulement : .problem-list et
+   .outils-grid gardent leur dessin partout ailleurs.
+   ========================================================== */
+
+/* Règles de BASE des deux modificateurs (hors @media) : test
+   icone-btn 3 fige la liste des classes qui n'existent QUE dans un
+   @media. Ces deux-là n'en font pas partie : elles servent à toutes
+   les largeurs, leurs titres y sont un peu plus serrés. */
+.problem-list--trois .problem-item h3{
+
+margin-bottom:6px;
+
+}
+
+.outils-grid--compact .outil-item h3{
+
+margin-bottom:4px;
+
+}
+
+/* Le constat : trois colonnes au bureau, icône au-dessus. */
+@media(min-width:900px){
+
+.problem-list--trois{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+column-gap:48px;
+
+}
+
+.problem-list--trois .problem-item{
+
+grid-template-columns:1fr;
+
+gap:14px;
+
+padding:32px 0;
+
+}
+
+}
+
+@media(max-width:640px){
+
+.problem-list--trois .problem-item{
+
+padding:18px 0;
+
+}
+
+}
+
+.why-us .section-header{
+
+margin-bottom:40px;
+
+}
+
+.why-us .why-us-bridge{
+
+margin-top:40px;
+
+}
+
+/* La promesse sur les dates, en une ligne sous l'intro. */
+.savoir-faire-preuve{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:10px;
+
+font-size:var(--fs-body-sm, .9375rem);
+
+color:var(--text-light);
+
+}
+
+.savoir-faire-preuve > i,
+.savoir-faire-preuve > svg{
+
+width:18px;
+height:18px;
+
+margin-top:3px;
+
+flex-shrink:0;
+
+color:var(--amber-700, #B45309);
+
+}
+
+/* Les rubriques de l'espace : quatre colonnes au bureau. */
+@media(min-width:1024px){
+
+.outils-grid--compact{
+
+grid-template-columns:repeat(4,1fr);
+
+column-gap:36px;
+
+}
+
+.outils-grid--compact .outil-item{
+
+grid-template-columns:1fr;
+
+gap:12px;
+
+padding:26px 0;
+
+}
+
+}
+
+@media(max-width:760px){
+
+.outils-grid--compact .outil-item{
+
+gap:14px;
+
+padding:16px 0;
+
+}
 
 }

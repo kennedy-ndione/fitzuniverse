@@ -462,6 +462,14 @@ icônes qui les portaient — un vrai changement de structure, pas
 seulement d'habillage.
 =========================================== -->
 
+<!-- ACCUEIL BREF (2026-09-23, demande de Charles : « beaucoup de gens
+n'aiment pas lire » ; de cette section jusqu'au bloc final, ne garder
+que l'essentiel, photos comprises). Ici : le constat en trois phrases
+courtes, côte à côte au bureau (.problem-list--trois). Le long
+paragraphe « des milliers d'étudiants… » est parti : les trois constats
+le disent déjà. La phrase de liaison ne dit plus « en particulier pour
+les étudiants africains » : doctrine PORTÉE MONDIALE (2026-09-04), et
+le hero dit déjà « Né en Afrique. Ouvert au monde ». -->
 <section id="why-us" class="why-us section">
 
 <div class="container">
@@ -471,64 +479,41 @@ seulement d'habillage.
 <span class="kicker"><i data-lucide="circle-alert" aria-hidden="true"></i>Pourquoi tant d'étudiants abandonnent ?</span>
 
 <h2>
-Les opportunités existent.
-Le plus dur est de trouver celles qui sont <em>réellement</em> faites pour vous.
+Les bourses existent. Le plus dur, c'est de trouver <em>les vôtres</em>.
 </h2>
-
-<p>
-Chaque année, des milliers d'étudiants passent des semaines à chercher sur Internet,
-ouvrent des dizaines de sites et finissent par abandonner sans savoir quelles
-opportunités correspondent réellement à leur profil.
-</p>
 
 </div>
 
-<div class="problem-list">
+<div class="problem-list problem-list--trois">
 
 <article class="problem-item reveal">
 <i data-lucide="search" aria-hidden="true"></i>
 <div>
 <h3>Vous cherchez partout</h3>
-<p>
-Des centaines de sites proposent des milliers de bourses et d'établissements, mais personne ne vous
-dit lesquels correspondent réellement à votre parcours, ni ce qu'une année vous
-coûterait vraiment.
-</p>
+<p>Des centaines de sites, et personne pour vous dire lesquels vous concernent.</p>
 </div>
 </article>
 
 <article class="problem-item reveal">
 <i data-lucide="hourglass" aria-hidden="true"></i>
 <div>
-<h3>Vous perdez un temps précieux</h3>
-<p>
-Des heures de recherche sont souvent consacrées à des programmes auxquels vous
-n'êtes même pas éligible.
-</p>
+<h3>Vous perdez du temps</h3>
+<p>Des heures passées sur des programmes auxquels vous n'avez même pas droit.</p>
 </div>
 </article>
 
 <article class="problem-item reveal">
-<i data-lucide="target" aria-hidden="true"></i>
+<i data-lucide="calendar-x" aria-hidden="true"></i>
 <div>
-<h3>Vous passez à côté d'opportunités</h3>
-<p>
-Pendant que vous cherchez au hasard, certaines candidatures ferment sans que
-vous ayez eu le temps de les découvrir.
-</p>
+<h3>Les dates passent</h3>
+<p>Des candidatures ferment avant même que vous les découvriez.</p>
 </div>
 </article>
 
 </div>
 
-<!-- La 2e phrase ("Fitz analyse votre profil pour ne vous montrer
-que ce qui compte") répétait mot pour mot la description du héros.
-Reformulée le 2026-08-13 (audit) pour porter aussi le positionnement
-"étudiants africains" jusqu'ici cantonné au hero/vision/footer — sans
-répéter tel quel la phrase du hero, en l'ancrant plutôt dans le
-problème que cette section vient de poser. -->
 <p class="why-us-bridge reveal">
-<strong>FitzUniverse a été conçu pour résoudre exactement ces trois problèmes — en particulier pour les étudiants africains, qui les rencontrent le plus durement.</strong>
+<strong>FitzUniverse règle ces trois problèmes avec vous.</strong>
 </p>
 
 </div>
@@ -562,7 +547,7 @@ Voyez Fitz analyser un profil, en direct.
 </h2>
 
 <p>
-Aucune inscription nécessaire pour voir comment ça marche : cliquez pour lancer votre propre diagnostic gratuit.
+Sans inscription : cliquez, et lancez votre propre diagnostic gratuit.
 </p>
 
 </div>
@@ -623,17 +608,38 @@ nombres répétaient les compteurs du hero. Le bas de page est devenu un
 appel à l'action (voir .cta-box plus bas). -->
 
 <!-- ==========================================
-NOTRE FAÇON DE TRAVAILLER — 2026-09-20, deuxième passe le même jour.
-Les deux sections ajoutées le matin (« preuve » et « boîte à outils »)
-cassaient le rythme de la page (retour de Charles) : elles fusionnent
-ici en UNE section, placée après la démo de Fitz — le visiteur vient
-de le voir travailler, on lui dit maintenant sur quoi et avec quelles
-garanties. Le motif intro+photo est celui de « Comment ça fonctionne »
-(.how-it-works-intro / .how-it-works-photo, classes autonomes) ; la
-photo est reading-room (salle de lecture : on vérifie aux sources),
-jamais utilisée ailleurs sur cette page. « La preuve, pas la
-promesse » est la SEULE tournure en balance de la page (langage 2) :
-ne pas la répéter dans le kicker ni ailleurs.
+CE QUE VOTRE ESPACE FAIT POUR VOUS — réécrite le 2026-09-23 (demande de
+Charles : un français plus simple, et une section qui montre VRAIMENT
+ce que fait l'espace étudiant, préparation aux tests comprise).
+Historique : née le 2026-09-20 de la fusion « preuve » + « boîte à
+outils », placée après la démo de Fitz. Le motif intro+photo reste
+celui de « Comment ça fonctionne » ; la photo reading-room aussi.
+Chaque phrase est tenue par le code, relu le 2026-09-23 :
+- universités choisies par Fitz, une autre proposée si refus
+  (doctrine FITZ-CHOISIT, offers.html) ;
+- prochaine action + e-mail d'ouverture des bourses (espace-bourse.html) ;
+- tests de langue : test-prep.js + js/test-prep-data.js (le test que
+  la candidature demande, format, score habituel, plan calé sur
+  l'échéance, et la fiche dit quand une bourse n'en exige pas) ;
+- vérification : ai-check compare les pièces déclarées aux pièces
+  attendues (il ne lit pas encore leur contenu) → « ce qui manque » ;
+- compression : compress.html ; e-mails + relance : ai-email ;
+- entretien : interview-prep (questions, checklist, entraînement) ;
+- visa et départ : js/visa-depart.js (pièces, consulat, assurance,
+  logement, départ).
+La TRADUCTION n'est plus annoncée ici : l'ancienne phrase « pièces
+traduites, prêtes à joindre » contredisait ai-translate.html, qui dit
+lui-même ne pas produire de traduction déposable (traducteur
+assermenté exigé).
+Pas de « portail » ni de « préinscription » en clair : le glossaire
+les annoterait (il produisait « portails (le site où…) de dépôt »).
+Les sigles de tests sont DANS une parenthèse : le glossaire n'y pose
+rien. Aucune tournure en balance ici (langage 2), aucun chiffre du
+catalogue (langage 7), aucun tiret long.
+ACCUEIL BREF (même jour, 2e passe) : un titre et une ligne par
+rubrique, quatre colonnes au bureau (.outils-grid--compact) ; la
+promesse sur les dates tient en une ligne (.savoir-faire-preuve) ; le
+Forfait Conseiller est détaillé sur offers.html, plus ici.
 =========================================== -->
 
 <section id="savoir-faire" class="savoir-faire section">
@@ -644,19 +650,20 @@ ne pas la répéter dans le kicker ni ailleurs.
 
 <div class="section-header reveal">
 
-<span class="kicker"><i data-lucide="shield-check" aria-hidden="true"></i>Notre façon de travailler</span>
+<span class="kicker"><i data-lucide="compass" aria-hidden="true"></i>Votre espace étudiant</span>
 
 <h2>
-La preuve, <em>pas la promesse</em>.
+Ce que votre espace <em>fait pour vous</em>.
 </h2>
 
 <p>
-Une échéance fausse peut coûter une année. Alors chaque date vérifiée
-du catalogue montre sa source : la phrase de la page officielle,
-recopiée mot pour mot, le lien pour la relire vous-même, et le jour où
-nous l'avons lue. Quand une page ne dit rien, la fiche ne dit rien non
-plus — vous décidez toujours sur du sûr. Le <a href="scholarships.html">catalogue est en accès
-libre</a> : vérifiez-nous.
+Il vous dit quoi faire, dans quel ordre et avant quelle date. Fitz fait
+le travail avec vous, à toute heure.
+</p>
+
+<p class="savoir-faire-preuve">
+<i data-lucide="shield-check" aria-hidden="true"></i>
+<span>Chaque date vient de la page officielle, avec son lien. <a href="scholarships.html">Le catalogue est gratuit</a> : vérifiez-nous.</span>
 </p>
 
 </div>
@@ -676,34 +683,45 @@ loading="lazy" decoding="async">
 
 </div>
 
-<p class="outils-lead reveal">
-Et quand vous passez à l'action, Fitz travaille avec vous — six outils,
-chacun au moment précis où votre dossier en a besoin :
-</p>
+<div class="outils-grid outils-grid--compact">
 
-<div class="outils-grid">
+<article class="outil-item reveal">
+<i data-lucide="target" aria-hidden="true"></i>
+<div>
+<h3>Les universités pour vous</h3>
+<p>Fitz retient celles où vous avez le plus de chances.</p>
+</div>
+</article>
+
+<article class="outil-item reveal">
+<i data-lucide="bell-ring" aria-hidden="true"></i>
+<div>
+<h3>Aucune date oubliée</h3>
+<p>La prochaine étape toujours affichée, un e-mail à chaque ouverture.</p>
+</div>
+</article>
+
+<article class="outil-item reveal">
+<i data-lucide="book-open-check" aria-hidden="true"></i>
+<div>
+<h3>Tests de langue</h3>
+<p>Le test exigé (IELTS, TOEFL, TCF…), le score visé, votre plan de révision.</p>
+</div>
+</article>
 
 <article class="outil-item reveal">
 <i data-lucide="pen-line" aria-hidden="true"></i>
 <div>
 <h3>Lettre de motivation</h3>
-<p>Construite à partir de votre profil et du programme visé, puis relue avec vous.</p>
+<p>Un premier jet écrit avec Fitz, que vous ajustez.</p>
 </div>
 </article>
 
 <article class="outil-item reveal">
 <i data-lucide="file-check-2" aria-hidden="true"></i>
 <div>
-<h3>Vérification du dossier</h3>
-<p>Avant le dépôt, Fitz passe vos pièces en revue et signale ce qui manque.</p>
-</div>
-</article>
-
-<article class="outil-item reveal">
-<i data-lucide="languages" aria-hidden="true"></i>
-<div>
-<h3>Traduction de documents</h3>
-<p>Vos pièces traduites dans la langue exigée par l'établissement, prêtes à joindre.</p>
+<h3>Dossier complet</h3>
+<p>Ce qui manque, signalé avant l'envoi. Vos fichiers au bon poids.</p>
 </div>
 </article>
 
@@ -711,27 +729,31 @@ chacun au moment précis où votre dossier en a besoin :
 <i data-lucide="mail" aria-hidden="true"></i>
 <div>
 <h3>E-mails officiels</h3>
-<p>Le bon ton pour écrire à une université ou à un bailleur — et la relance quand la réponse tarde.</p>
+<p>Le bon message aux universités, et la relance.</p>
 </div>
 </article>
 
 <article class="outil-item reveal">
 <i data-lucide="mic" aria-hidden="true"></i>
 <div>
-<h3>Préparation d'entretien</h3>
-<p>Les questions probables selon la bourse visée, et un entraînement pour y répondre.</p>
+<h3>Entretiens</h3>
+<p>Les questions probables, et l'entraînement avec Fitz.</p>
 </div>
 </article>
 
 <article class="outil-item reveal">
-<i data-lucide="file-archive" aria-hidden="true"></i>
+<i data-lucide="plane" aria-hidden="true"></i>
 <div>
-<h3>Compression des pièces</h3>
-<p>Vos documents au format et au poids exigés par les portails de dépôt.</p>
+<h3>Visa et départ</h3>
+<p>Chaque démarche à cocher, jusqu'à l'avion.</p>
 </div>
 </article>
 
 </div>
+
+<p class="outils-note reveal">
+En France à vos frais ? Votre espace suit la procédure Campus France jusqu'au dépôt.
+</p>
 
 <div class="outils-footer reveal">
 <a href="offers.html" class="btn btn-primary btn-lg">Découvrir l'accompagnement<span class="steps-cta-arrow" aria-hidden="true">→</span></a>
@@ -758,11 +780,11 @@ choix est au-dessus de la balise <img>, pas ici. -->
 <span class="kicker"><i data-lucide="route" aria-hidden="true"></i>Comment ça fonctionne</span>
 
 <h2>
-Trouver, préparer, suivre — jusqu'au dépôt de votre dossier.
+Trouver, préparer, suivre.
 </h2>
 
 <p>
-Trois étapes, et Fitz à vos côtés sur chacune.
+Trois étapes, Fitz à vos côtés sur chacune.
 </p>
 
 </div>
@@ -836,9 +858,7 @@ chiffres de toute la page d'accueil). Voir le commentaire au-dessus de
 <i data-lucide="search" aria-hidden="true"></i>
 <h3>Trouver</h3>
 <p>
-Répondez à quelques questions sur votre parcours. Fitz identifie les bourses
-et les universités réellement compatibles avec votre profil, critères
-d'admission inclus. Aucune liste générique.
+Quelques questions, et Fitz vous montre les bourses faites pour votre profil.
 </p>
 </div>
 
@@ -846,10 +866,7 @@ d'admission inclus. Aucune liste générique.
 <i data-lucide="clipboard-check" aria-hidden="true"></i>
 <h3>Préparer</h3>
 <p>
-CV relu, lettre de motivation retravaillée, dossier vérifié avant l'envoi. Pour
-une préinscription, la liste des traductions, légalisations et preuves de
-ressources à réunir. Pour toute question précise sur une université ou un
-critère, Fitz vous répond directement.
+Lettre, pièces, e-mails : votre dossier se monte avec Fitz et se vérifie avant l'envoi.
 </p>
 </div>
 
@@ -857,8 +874,7 @@ critère, Fitz vous répond directement.
 <i data-lucide="list-checks" aria-hidden="true"></i>
 <h3>Suivre</h3>
 <p>
-Chaque candidature avance par étapes claires, de la préparation jusqu'à la
-réponse de l'université, avec toutes vos échéances au même endroit.
+Chaque candidature suivie jusqu'à la réponse, toutes vos dates au même endroit.
 </p>
 </div>
 
@@ -920,8 +936,11 @@ Là où vous êtes né ne devrait pas décider de votre <em>avenir</em>.
 <!-- Les deux paragraphes d'origine disaient la même chose : le premier
 reprenait le constat déjà posé par la section "Le problème" plus haut,
 le second énonçait la mission. Fusionnés sur la mission seule. -->
+<!-- ACCUEIL BREF (2026-09-23) : la mission en deux phrases. « pensée
+pour les étudiants africains » est parti avec cette passe : doctrine
+PORTÉE MONDIALE, le hero porte déjà « Né en Afrique. Ouvert au monde ». -->
 <p>
-Des milliers d'étudiants talentueux ont tout pour réussir à l'international : il leur manque les bonnes informations et un accompagnement pour bâtir une candidature solide. FitzUniverse existe pour réduire cet écart, avec une plateforme pensée pour les étudiants africains.
+Le talent est partout. L'information et l'accompagnement, beaucoup moins : FitzUniverse existe pour réduire cet écart.
 </p>
 
 </div>
@@ -982,7 +1001,7 @@ règle "icônes rares et fonctionnelles" de la refonte 2026-08-22. -->
 <h3>Une mission, un étudiant à la fois.</h3>
 
 <p>
-Chaque étudiant accompagné représente une nouvelle opportunité saisie, une candidature déposée et un avenir qui s'ouvre au-delà des frontières.
+Chaque dossier déposé ouvre un avenir au-delà des frontières.
 </p>
 
 </div>
@@ -1032,7 +1051,7 @@ Votre projet d'études commence aujourd'hui.
 </h2>
 
 <p>
-Cinq minutes suffisent à Fitz pour situer votre profil et les opportunités faites pour vous. Le reste, on le construit ensemble, jusqu'au dépôt.
+Cinq minutes suffisent à Fitz pour situer votre profil. Le reste, nous le construisons ensemble.
 </p>
 
 <ol class="cta-steps">
@@ -1064,7 +1083,7 @@ sont un lien, à côté. -->
 ni même à faire le diagnostic maintenant — on garde le contact, et on
 l'écrira quand une bourse ouvrira. -->
 <p class="cta-signup-note">
-Vous préférez d'abord regarder ? <a href="inscription.html">Créez votre compte gratuit</a> — nous vous écrirons quand une bourse ouvrira ses candidatures.
+Pas encore prêt ? <a href="inscription.html">Créez votre compte gratuit</a> : nous vous écrirons quand une bourse ouvrira.
 </p>
 
 <div class="cta-trust">
