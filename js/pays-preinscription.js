@@ -192,7 +192,7 @@ code: "ro",
 langue: ["français", "anglais", "allemand", "roumain"],
 portail: { nom: "Study in Romania", url: "https://studyinromania.gov.ro" },
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : le fait d'avant venait de etudier-en-roumanie.com,
 // un agrégateur — interdit par la doctrine du dépôt, et faux sur un point :
 // il présentait la lettre d'acceptation comme une approbation ministérielle
@@ -211,9 +211,11 @@ verifieLe: "2026-09-13"
 {
 cle: "droits",
 diffusion: "public",
-texte: "Frais de scolarité pour les non-UE : d'environ 400 € à près de 9 000 € par an selon le domaine, publiés programme par programme par chaque université. Le plancher légal en devises est fixé par l'Ordonnance du Gouvernement n° 22/2009 ; ses montants ne sont pas reproduits sur la page du ministère.",
-source: "https://studyinromania.gov.ro/faq-costs",
-verifieLe: "2026-09-13"
+texte: "Frais de scolarité pour les non-UE : d'environ 2 000 € à près de 9 000 € par an selon l'université et le domaine — de 1 980 € à 8 550 € à l'université Babeș-Bolyai de Cluj en 2026-2027. Chaque université les publie programme par programme, au-dessus d'un plancher légal (Ordonnance du Gouvernement n° 22/2009).",
+// Corrigé le 2026-09-23 : la borne basse « d'environ 400 € » de la FAQ
+// du ministère ne correspond à aucune grille hors UE lue ce jour-là.
+source: "https://www.ubbcluj.ro/ro/taxe/files/2026-2027/Regulament-privind-taxe-de-admitere_scolarizare_finalizare-a-studiilor-2026-2027.pdf",
+verifieLe: "2026-09-23"
 },
 {
 cle: "visa",
@@ -249,7 +251,7 @@ code: "tr",
 langue: ["turc", "anglais"],
 portail: { nom: "Study in Türkiye (YÖK)", url: "https://studyinturkiye.gov.tr/" },
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : le fait d'avant venait de study-abroad.org, un
 // agrégateur. Les fourchettes de frais qu'il donnait ne sont publiées par
 // aucune source officielle — aucun barème national n'existe, chaque
@@ -268,10 +270,10 @@ verifieLe: "2026-09-13"
 {
 cle: "bourseMontant",
 diffusion: "public",
-texte: "La bourse d'État couvre le placement en université, les frais de scolarité, une année de cours de turc, l'hébergement, l'assurance maladie et le billet d'avion. Allocation mensuelle : 4 500 TL en licence, 6 500 TL en master, 9 000 TL en doctorat.",
-montant: 4500, devise: "TRY",
+texte: "La bourse d'État couvre le placement en université, les frais de scolarité, une année de cours de turc, l'hébergement, l'assurance maladie et le billet d'avion. Allocation mensuelle : 6 500 TL en licence, 9 500 TL en master, 13 000 TL en doctorat.",
+montant: 6500, devise: "TRY",
 source: "https://turkiyeburslari.gov.tr/fulltimeprograms",
-verifieLe: "2026-09-13"
+verifieLe: "2026-09-23"
 },
 {
 cle: "denklik",
@@ -307,7 +309,7 @@ code: "ma",
 langue: ["français", "arabe"],
 portail: { nom: "AMCI — Agence Marocaine de Coopération Internationale", url: "https://www.amci.ma/" },
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : ce pays n'avait AUCUN fait — sa carte publique
 // était donc une promesse sans une seule ligne vérifiable. Les cinq faits
 // ci-dessous ont été lus le 2026-09-13 sur fr.diplomatie.ma, consulat.ma,
@@ -344,10 +346,13 @@ verifieLe: "2026-09-13"
 {
 cle: "voiePrivee",
 diffusion: "public",
-texte: "Deux établissements admettent en direct, sans passer par l'AMCI : l'UM6P, dont chaque programme affiche sa propre date de clôture, et Al Akhawayn, qui publie un coût total estimé de 77 790 MAD par an — scolarité 50 400, logement 5 880, restauration 8 500, inscription 5 100, et frais annexes.",
+texte: "Deux établissements admettent en direct, sans passer par l'AMCI : l'UM6P, dont chaque programme affiche sa propre date de clôture, et Al Akhawayn, qui publie un coût total estimé de 77 790 MAD — scolarité 50 400, logement 5 880, restauration 8 500, inscription 5 100, et frais annexes — sans dire s'il vaut pour un semestre ou pour l'année : sa scolarité se facture au crédit, 3 360 MAD le crédit.",
+// Corrigé le 2026-09-23 : « par an » n'est pas écrit sur la page
+// d'Al Akhawayn, et la scolarité de 50 400 MAD vaut exactement quinze
+// crédits, la charge d'UN semestre.
 montant: 77790, devise: "MAD",
-source: "https://aui.ma/admission-aid/internationals",
-verifieLe: "2026-09-13"
+source: "https://aui.ma/admission-aid/international/tuition-and-fees",
+verifieLe: "2026-09-23"
 }
 ],
 positionnement: "Proche, francophone, souvent sans visa : mais dans le public, la porte d'entrée est diplomatique et se ferme le 31 juillet. Pour candidater soi-même, il faut viser le privé — UM6P ou Al Akhawayn."
@@ -366,7 +371,7 @@ portail: { nom: "Universitaly", url: "https://www.universitaly.it/it/studenti-st
 // ministère interdit l'accès automatisé. Les treize étapes sont
 // désormais vérifiées sur la source, et quatre erreurs ont été corrigées.
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : le fait d'avant venait de study-abroad.org, un
 // agrégateur, et le catalogue porte désormais onze coûts italiens
 // réellement vérifiés. Les faits ci-dessous ont été lus le 2026-09-13 sur
@@ -403,9 +408,9 @@ verifieLe: "2026-09-13"
 {
 cle: "calendrier",
 diffusion: "public",
-texte: "Année académique 2026/2027 : la demande de visa doit être déposée au plus tard le 30 novembre 2026 pour les cursus ordinaires — Laurea, Laurea Magistrale, diplômes académiques de 1er et 2e niveau. Pour les masters, doctorats et Foundation Courses, pas de date butoir ministérielle, mais jamais après le début des cours.",
-source: "https://ambulaanbaatar.esteri.it/wp-content/uploads/2026/07/Checklist-Visto-studio-immatricolazione-2026-2027_Luglio26.pdf",
-verifieLe: "2026-09-13"
+texte: "La demande de visa doit être déposée au plus tard le 31 octobre 2027 pour l'année 2027-2028 (le 30 novembre 2026 pour 2026-2027), pour les cursus ordinaires — Laurea, Laurea Magistrale, cycle unique, diplômes académiques de 1er et 2e niveau. Pour les masters, doctorats et Foundation Courses, pas de date butoir ministérielle, mais jamais après le début des cours.",
+source: "https://www.universitaly.it/it/studenti-stranieri",
+verifieLe: "2026-09-23"
 },
 {
 cle: "ressources",
@@ -425,12 +430,12 @@ verifieLe: "2026-09-13"
 {
 cle: "immatriculation",
 diffusion: "public",
-texte: "À compter du 31 janvier de l'année académique, tout candidat en Laurea qui n'apparaît pas immatriculé sur Universitaly voit son visa d'entrée révoqué, avec signalement simultané à la Questura. L'immatriculation n'est donc pas une formalité de fin de parcours.",
+texte: "À compter du 31 janvier de l'année académique, tout candidat en Laurea, Laurea Magistrale, cycle unique ou diplôme académique de 1er et 2e niveau qui n'apparaît pas immatriculé sur Universitaly voit son visa d'entrée révoqué, avec signalement simultané à la Questura. L'immatriculation n'est donc pas une formalité de fin de parcours.",
 source: "https://www.universitaly.it/it/studenti-stranieri",
 verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales DSU déjà listées. La procédure est entièrement publique et gratuite, mais elle tient à deux dates et à un quota — le 30 novembre pour le visa, le 31 janvier pour l'immatriculation, et 120 % de places validables seulement."
+positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales DSU déjà listées. La procédure est entièrement publique et gratuite, mais elle tient à deux dates et à un quota — la date limite du visa (31 octobre 2027 pour la rentrée 2027-2028), le 31 janvier pour l'immatriculation, et 120 % de places validables seulement."
 },
 
 {
@@ -441,7 +446,7 @@ code: "de",
 langue: ["allemand", "anglais"],
 portail: { nom: "uni-assist", url: "https://my.uni-assist.de/" },
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : le montant du compte bloqué était juste, mais sa
 // source était mygermanuniversity.com, un agrégateur — pour un chiffre que
 // le portail consulaire fédéral publie lui-même. Il est désormais sourcé
@@ -487,7 +492,7 @@ source: "https://www.uni-bonn.de/en/studying/application-admission-and-enrollmen
 verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Réputée gratuite à étudier — les universités publiques ne prélèvent pas de frais de scolarité, seulement une contribution sociale par semestre — et chère à entrer : le compte bloqué se constitue avant le visa, dans une banque européenne."
+positionnement: "Réputée gratuite à étudier — la plupart des universités publiques ne prélèvent qu'une contribution par semestre, sauf pour les étudiants hors UE dans le Bade-Wurtemberg et à la TU Munich — et chère à entrer : le compte bloqué se constitue avant le visa, dans une banque européenne."
 },
 
 {
@@ -498,7 +503,7 @@ code: "ca",
 langue: ["anglais", "français"],
 portail: { nom: "Compte IRCC", url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/ircc-accounts.html" },
 procedure: "documentee",
-accompagnement: "a_venir",
+accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : le fait d'avant était juste mais sourcé sur
 // visahq.news, un agrégateur — pour une règle qu'IRCC publie lui-même.
 // Il est désormais sourcé sur canada.ca, et quatre faits l'accompagnent,
@@ -532,8 +537,8 @@ cle: "frais",
 diffusion: "public",
 texte: "Frais fédéraux : 150 $ CA pour le permis d'études, plus 85 $ CA de biométrie par demandeur, plafonnés à 170 $ CA pour une famille déposant en même temps. L'AVE ou le visa de résident temporaire est délivré automatiquement avec le permis, sans frais supplémentaires.",
 montant: 150, devise: "CAD",
-source: "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/apply.html",
-verifieLe: "2026-09-13"
+source: "https://ircc.canada.ca/english/information/fees/fees.asp",
+verifieLe: "2026-09-23"
 },
 {
 cle: "caq",
@@ -544,7 +549,7 @@ source: "https://www.quebec.ca/en/education/study-quebec/temporary-selection-stu
 verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Master et doctorat en établissement public uniquement — c'est aussi le seul profil dispensé de lettre d'attestation provinciale depuis 2026.",
+positionnement: "Master et doctorat en établissement public uniquement — c'est aussi l'un des profils dispensés de lettre d'attestation provinciale depuis 2026.",
 avertissement: "Ce n'est pas une destination « pas cher et facile » : les frais sont élevés, la preuve de fonds est le premier motif de refus, et le Volet direct pour les études n'existe plus depuis le 8 novembre 2024."
 }
 

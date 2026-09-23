@@ -68,6 +68,7 @@ export function lireFormule(ctx = {}) {
   const {
     planId = "",
     planPreinscriptionId = "",
+    planPreinscriptionLabel = "",
     featureFlags,
     testerAccess = false,
     hasFitzExpress = false
@@ -79,8 +80,11 @@ export function lireFormule(ctx = {}) {
   // Conseiller » s'entendrait dire qu'il est au plan Gratuit.
   const noms = [];
   if (planId && PLAN_LABELS[planId]) noms.push(PLAN_LABELS[planId]);
-  if (planPreinscriptionId && PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId]) {
-    noms.push(PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId]);
+  // Le libellé au nom du PAYS de l'offre quand la coquille le donne
+  // (« Dossier Italie ») : Fitz ne dit pas « Dossier France » à un
+  // étudiant qui part en Italie.
+  if (planPreinscriptionId && (planPreinscriptionLabel || PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId])) {
+    noms.push(planPreinscriptionLabel || PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId]);
   }
 
   const ouvertes = [];

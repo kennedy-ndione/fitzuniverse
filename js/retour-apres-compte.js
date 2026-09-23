@@ -19,10 +19,20 @@
 * identifiant de formule — jamais une autre page, jamais une URL
 * absolue, jamais un chemin « //hote ». Tout le reste est ignoré, et la
 * page suit son chemin habituel.
+*
+* LA DESTINATION D'UN DOSSIER (2026-09-23). Un Dossier Italie s'achète
+* sur `payment.html?plan=dossier-france&destination=italie` : le pays
+* fait partie de l'achat, il doit survivre à la création du compte. Il
+* est accepté, mais pris dans la liste FERMÉE des destinations vendues
+* (miroir de DESTINATIONS_VENDUES, js/destinations-preinscription.js —
+* test/destinations-preinscription.test.mjs compare les deux) ; aucun
+* autre paramètre.
 * ============================================================
 */
 
-const RETOUR_VALIDE = /^payment\.html\?plan=[A-Za-z0-9_-]{1,40}$/;
+export const DESTINATIONS_RETOUR = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada"];
+
+const RETOUR_VALIDE = new RegExp(`^payment\\.html\\?plan=[A-Za-z0-9_-]{1,40}(?:&destination=(?:${DESTINATIONS_RETOUR.join("|")}))?$`);
 
 /** La destination de retour, si elle est sûre ; sinon "". */
 export function retourSur(search) {

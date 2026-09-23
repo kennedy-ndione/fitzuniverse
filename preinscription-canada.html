@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+<!-- LA PAGE DE LA DESTINATION « Canada » (2026-09-23).
+
+Copie de preinscription-france.html, LA PAGE MODÈLE (lire son en-tête) :
+seuls changent `data-destination` sur <body>, le titre, la description,
+les adresses et le drapeau. Tout le contenu — le nom, les langues, les
+règles sourcées, la procédure, les prix — est rendu depuis
+js/pays-preinscription.js par js/preinscription-destination.js. -->
+<title>Étudier au Canada : préinscription accompagnée | FitzUniverse</title>
+
+<meta name="description" content="Étudier au Canada depuis l'Afrique de l'Ouest : la candidature à l'établissement, le permis d'études, les ressources exigées et, au Québec, le CAQ — publiés avec leur source. Accompagnement jusqu'au départ.">
+
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+
+<link rel="canonical" href="https://fitzuniverse.com/preinscription-canada.html">
+
+<meta property="og:title" content="Étudier au Canada : préinscription accompagnée | FitzUniverse">
+<meta property="og:description" content="Les règles et les chiffres qui décident, publiés avec leur source. Un accompagnement étape par étape, jusqu'au départ.">
+<meta property="og:type" content="website">
+<!-- LOT FINITION (2026-09-20) — og:url, og:site_name et og:locale
+manquaient sur les 14 pages indexables. Sans og:url, un partage qui
+traîne un ?utm_… ou un ?fbclid fait de chaque copie une page
+différente aux yeux des réseaux ; sans og:locale, la langue du site
+est devinée. og:url reprend exactement la canonique — une seule
+adresse fait autorité, ici comme pour Google. -->
+<meta property="og:url" content="https://fitzuniverse.com/preinscription-canada.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta name="twitter:title" content="Étudier au Canada : préinscription accompagnée | FitzUniverse">
+<meta name="twitter:description" content="Les règles et les chiffres qui décident, publiés avec leur source.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<script src="js/icones.js" defer></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="css/catalog.css">
+<link rel="stylesheet" href="css/catalog-typography.css">
+<link rel="stylesheet" href="css/catalog-redesign.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<link rel="stylesheet" href="css/preinscriptions.css">
+<!-- La carte de formule, un seul composant pour tout le site (lot
+VITRINE-COMMERCIALE, 2026-09-11). Après css/preinscriptions.css et en
+valeurs littérales : sur cette page sombre, les cartes d'offres
+étaient transparentes, avec des boutons fantômes. -->
+<link rel="stylesheet" href="css/formule.css">
+<style>[hidden]{display:none !important;}</style>
+
+<script src="pricing-plans.js"></script>
+<script src="js/mobile-nav.js" defer></script>
+<link rel="stylesheet" href="css/vivant.css">
+<!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
+<link rel="modulepreload" href="firebase-config.js">
+<link rel="modulepreload" href="js/admin-access.js">
+<link rel="modulepreload" href="js/ai/format.js">
+<link rel="modulepreload" href="js/catalog-cache.js">
+<link rel="modulepreload" href="js/catalog-data.js">
+<link rel="modulepreload" href="js/catalog-snapshot.js">
+<link rel="modulepreload" href="js/countries.js">
+<link rel="modulepreload" href="js/echeance.js">
+<link rel="modulepreload" href="js/frais.js">
+<link rel="modulepreload" href="js/pays-grammaire.js">
+<link rel="modulepreload" href="js/pays-preinscription.js">
+<link rel="modulepreload" href="js/preinscription-destination.js">
+<link rel="modulepreload" href="js/procedures/allemagne.js">
+<link rel="modulepreload" href="js/procedures/canada.js">
+<link rel="modulepreload" href="js/procedures/france.js">
+<link rel="modulepreload" href="js/procedures/index.js">
+<link rel="modulepreload" href="js/procedures/italie.js">
+<link rel="modulepreload" href="js/procedures/maroc.js">
+<link rel="modulepreload" href="js/procedures/residences/france-benin.js">
+<link rel="modulepreload" href="js/procedures/residences/france-burkina-faso.js">
+<link rel="modulepreload" href="js/procedures/residences/france-cameroun.js">
+<link rel="modulepreload" href="js/procedures/residences/france-cote-divoire.js">
+<link rel="modulepreload" href="js/procedures/residences/france-guinee.js">
+<link rel="modulepreload" href="js/procedures/residences/france-maroc.js">
+<link rel="modulepreload" href="js/procedures/residences/france-senegal.js">
+<link rel="modulepreload" href="js/procedures/residences/france-togo.js">
+<link rel="modulepreload" href="js/procedures/residences/index.js">
+<link rel="modulepreload" href="js/procedures/roumanie.js">
+<link rel="modulepreload" href="js/procedures/turquie.js">
+<link rel="modulepreload" href="js/procedures/vocabulaire.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
+<!-- précharge:fin -->
+</head>
+
+<!-- L'UNIQUE endroit où cette page nomme sa destination. -->
+<body class="catalog-dark" data-destination="canada">
+
+<a href="#pageMain" class="skip-link">Aller au contenu</a>
+
+<header class="header" id="publicHeader">
+
+<div class="container header-container">
+
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+
+<div class="header-actions">
+
+<a href="preinscriptions.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Destinations</span>
+</a>
+
+<a href="scholarships.html" class="header-link"><span>Bourses</span></a>
+<a href="preinscriptions.html" class="header-link" aria-current="page"><span>Préinscriptions</span></a>
+<a href="universities.html" class="header-link"><span>Universités</span></a>
+<a href="login.html" class="header-link header-link-login" aria-label="Connexion"><i data-lucide="log-in"></i><span>Connexion</span></a>
+
+</div>
+
+</div>
+
+</header>
+
+<main id="pageMain">
+<div id="destApp">
+
+<!-- a) LE HERO DE LA DESTINATION -->
+<section class="catalog-hero uni-hero">
+<picture class="uni-hero-picture" aria-hidden="true">
+<source type="image/avif" srcset="assets/images/campus-courtyard-400w.avif 400w, assets/images/campus-courtyard-800w.avif 800w, assets/images/campus-courtyard-1200w.avif 1200w" sizes="100vw">
+<source type="image/webp" srcset="assets/images/campus-courtyard-400w.webp 400w, assets/images/campus-courtyard-800w.webp 800w, assets/images/campus-courtyard-1200w.webp 1200w" sizes="100vw">
+<img class="uni-hero-bg" src="assets/images/campus-courtyard-800w.jpg" srcset="assets/images/campus-courtyard-400w.jpg 400w, assets/images/campus-courtyard-800w.jpg 800w, assets/images/campus-courtyard-1200w.jpg 1200w" sizes="100vw" width="1600" height="800" fetchpriority="high" decoding="async" alt="">
+</picture>
+<span class="uni-hero-badge"><img id="destDrapeau" src="assets/flags/ca.svg" alt="" width="22" height="16"><span id="destBadge">—</span></span>
+<!-- LOT FINITION (2026-09-20) : le H1 servi était un tiret cadratin —
+rien, pour qui lit la page sans exécuter le script.
+js/preinscription-destination.js écrit « Étudier <pays> » dès le
+chargement, mais le pays NE PEUT PAS être écrit ici : cette page est un
+GABARIT, et la prochaine destination se fabrique en la copiant et en
+changeant `data-destination` sur le <body>. C'est la règle de
+test/preinscriptions-vitrine.test.mjs, et elle passe avant le confort
+d'un titre plus précis. D'où un titre qui décrit la PAGE, pas le pays :
+il tient le temps du chargement, et il reste juste quelle que soit la
+destination. -->
+<h1 id="destTitre">Préinscription accompagnée</h1>
+<p id="destPosition">—</p>
+<p class="dest-langues"><i data-lucide="languages" aria-hidden="true"></i><span id="destLangues">—</span></p>
+</section>
+
+<!-- b) CE QUE NOUS VOUS GARANTISSONS (lot VITRINE-COMMERCIALE, 2026-09-11).
+Trois engagements POSITIFS, à la place de « ce que ça promet et ce que
+ça ne promet pas » : on dit ce que FitzUniverse fait et garantit — un
+dossier complet et conforme, la main qui reste la vôtre, chaque règle
+vérifiée à la source et datée. Les limites (aucun résultat garanti, pas
+de remboursement) iront dans les conditions de vente, pas ici. -->
+<section class="pre-section" aria-labelledby="promessesTitre">
+<div class="container">
+<h2 id="promessesTitre">Ce que nous vous garantissons</h2>
+<ul class="pre-promesses">
+<li><i data-lucide="file-check" aria-hidden="true"></i><span>Un dossier <strong>complet et conforme</strong>, vérifié avant l'envoi : pièces, traductions, légalisations et preuve de ressources, jusqu'au dépôt.</span></li>
+<li><i data-lucide="user-round" aria-hidden="true"></i><span><strong>Vous gardez la main</strong> : vous déposez vous-même, sur le portail officiel du pays ou de l'établissement, sans intermédiaire.</span></li>
+<li><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Chaque règle vérifiée à la source officielle</strong>, avec sa date : ce que vous lisez ici est ce que l'administration applique.</span></li>
+</ul>
+</div>
+</section>
+
+<!-- c) LES RÈGLES PUBLIQUES, avec leur source et leur date. Rendues
+depuis les faits marqués `diffusion: "public"`. -->
+<section class="pre-section" id="regles" aria-labelledby="reglesTitre">
+<div class="container">
+<h2 id="reglesTitre">Les règles, publiées avec leur source</h2>
+<p class="pre-lead">Ce sont les textes officiels, lus à la source. Nous les affichons en entier, gratuitement, avec la date à laquelle nous les avons lus. C'est ce qui vous permet de vérifier tout le reste.</p>
+<ul class="pre-faits" id="destRegles"></ul>
+</div>
+</section>
+
+<!-- d) D'OÙ VOUS CANDIDATEZ. Les pays de résidence sont NOMMÉS, lus
+depuis le registre des couches ; aucun détail n'est donné. -->
+<section class="pre-section" id="destSectionResidences" aria-labelledby="residencesTitre" hidden>
+<div class="container">
+<h2 id="residencesTitre">D'où vous candidatez change tout</h2>
+<p class="pre-lead" id="destResidencesIntro">—</p>
+<p class="dest-residences-phrase" id="destResidencesPhrase">—</p>
+<ul class="dest-residences" id="destResidencesListe"></ul>
+<p class="pre-lead"><strong><span id="destResidencesNombre">—</span> pays vérifiés.</strong> Le détail de votre pays — combien, où, quand, et ce qui fait la différence pour un dossier chez vous — fait partie de l'accompagnement.</p>
+</div>
+</section>
+
+<!-- e) LA PROCÉDURE : le NOMBRE d'étapes, jamais leur contenu. -->
+<section class="pre-section" id="destSectionProcedure" aria-labelledby="procedureTitre" hidden>
+<div class="container">
+<h2 id="procedureTitre" class="dest-procedure-titre"><span id="destProcedureTitre">—</span></h2>
+<p class="pre-lead" id="destProcedurePhrase">—</p>
+<p class="dest-procedure-client" id="destProcedureClient">—</p>
+</div>
+</section>
+
+<!-- Le catalogue, public et le reste : ce que nous avons déjà vérifié. -->
+<section class="pre-section" id="destSectionCatalogue" aria-labelledby="catalogueTitre" hidden>
+<div class="container">
+<h2 id="catalogueTitre">Ce que nous avons déjà vérifié</h2>
+<p class="pre-lead" id="destCatalogue">—</p>
+<a class="btn btn-secondary" id="destCatalogueLien" href="universities.html"><span>Voir les établissements</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+</div>
+</section>
+
+<!-- f) LE PRIX ET LES DEUX OFFRES. Le lien porte `destination` : le pays
+voyage jusqu'à la caisse. -->
+<section class="pre-section" id="offres" aria-labelledby="offresTitre">
+<div class="container">
+<h2 id="offresTitre">Ce que coûte l'accompagnement</h2>
+<p class="pre-lead">Trois formules, un paiement unique, aucune mensualité. Vous déposez toujours vous-même.</p>
+<ul class="pre-offres" id="destOffres"></ul>
+<p class="pre-lead dest-deduction" id="destDeduction"></p>
+</div>
+</section>
+
+</div>
+</main>
+
+<script src="js/header-scroll.js"></script>
+<script type="module" src="js/preinscription-destination.js"></script>
+<script type="module" src="js/admin-access.js"></script>
+<script src="js/vivant.js" defer></script>
+<!-- Plus de pied de page ici (décision de Charles, 2026-09-11) : il ne
+reste que sur l'accueil. Le glossaire (js/glossaire.js) reste :
+js/glossaire-seul.js le lance sans le pied de page. -->
+<!-- Le lien de retour restitue la position de défilement (lot R2,
+2026-09-17) : ces quatre pages portaient un `.back-link` sans charger
+son script — or ce sont les plus longues du site, et c'est exactement
+le cas que le module cite (revenir d'une fiche au milieu d'une liste de
+156 bourses, et retrouver sa place). Voir js/back-link.js. -->
+<script src="js/back-link.js"></script>
+<script src="js/glossaire-seul.js" defer></script>
+</body>
+</html>

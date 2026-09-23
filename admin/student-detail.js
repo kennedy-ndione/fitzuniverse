@@ -36,7 +36,7 @@ import { calculateAiScore, bilanProfil } from "../js/profile-score.js";
 import { libellePalier, lirePalier, languesLisibles } from "../js/profil-par-niveau.js";
 import { phraseTestLangue } from "../js/test-de-langue.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
-import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER, droitsPreinscription, libelleOffrePreinscription } from "../js/plan-features.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : les étiquettes de l'admin, un
 // seul nommage (« Essentiel · 4 candidatures » ≠ « Essentiel (ancienne)
 // · 5 candidatures »), et les groupes « En vente » / « Retirées ».
@@ -242,7 +242,7 @@ const planPreKey = resolvePlanPreinscription(userData);
 
 document.getElementById("detailPills").innerHTML = `
 <span class="status-pill plan-${planKey}">${planLabel}</span>
-${planPreKey ? `<span class="status-pill plan-signature-focus">${PLAN_PREINSCRIPTION_LABELS[planPreKey]}</span>` : ""}
+${planPreKey ? droitsPreinscription(userData).map((o) => `<span class="status-pill plan-signature-focus">${libelleOffrePreinscription(o.plan, o.destination)}</span>`).join("") : ""}
 <span class="status-pill ${disabled ? "is-disabled" : "is-active"}">${disabled ? "Suspendu" : "Actif"}</span>
 ${userData.testerAccess === true ? `<span class="status-pill plan-premium">Accès test complet</span>` : ""}
 `;
@@ -504,9 +504,20 @@ planPreExpiryStatus.textContent = finie
 }
 
 const planPreStatus = document.getElementById("planPreinscriptionStatus");
+// LES SIX AUTRES DESTINATIONS (2026-09-23) : une ligne par pays acheté,
+// expirée comprise — users/{uid}.preinscriptionsPays.<pays>, écrit par
+// le webhook seul. Dite APRÈS la ligne France, jamais à sa place.
+const lignesPays = Object.entries((userData.preinscriptionsPays && typeof userData.preinscriptionsPays === "object") ? userData.preinscriptionsPays : {})
+.map(([pays, e]) => {
+const nom = libelleOffrePreinscription(e && e.plan, pays) || `${(e && e.plan) || "offre inconnue"} (${pays})`;
+const fin = e && e.expiresAt;
+const t = fin ? new Date(fin).getTime() : NaN;
+return !fin ? `${nom} — aucune échéance enregistrée.`
+: (t < Date.now() ? `${nom} — expirée le ${formatISODate(fin)}.` : `${nom} — active jusqu'au ${formatISODate(fin)}.`);
+});
 if (planPreStatus) {
 if (!userData.planPreinscription) {
-planPreStatus.textContent = "Aucune offre préinscription.";
+planPreStatus.textContent = lignesPays.length ? lignesPays.join(" ") : "Aucune offre préinscription.";
 } else {
 const expPre = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt).getTime() : NaN;
 const nomPre = PLAN_PREINSCRIPTION_LABELS[userData.planPreinscription] || userData.planPreinscription;
@@ -515,6 +526,7 @@ planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
 : (expPre < Date.now()
 ? `${nomPre} — expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)}.`
 : `${nomPre} — active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)}.`);
+if (lignesPays.length) planPreStatus.textContent += ` ${lignesPays.join(" ")}`;
 }
 }
 

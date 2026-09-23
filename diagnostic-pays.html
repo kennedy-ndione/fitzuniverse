@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<!-- Diagnostic <pays> (2026-09-23) — la même page que le Diagnostic
+France, pour les six destinations ouvertes le 23 septembre : Roumanie,
+Turquie, Maroc, Italie, Allemagne, Canada. Le pays vient de ?d=<id>.
+Ouverte par une offre préinscription DE CE PAYS (Diagnostic, Dossier ou
+Dossier + Conseiller), lue dans users/{uid}.preinscriptionsPays.<id>.
+De l'ARITHMÉTIQUE, aucune IA : chaque chiffre vient d'un fait sourcé et
+daté de js/destinations-preinscription.js, via js/diagnostic-pays.js.
+Le verdict parle de seuils publiés, jamais de visa. -->
+<title>Diagnostic | FitzUniverse</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<meta name="description" content="Vos ressources contre le seuil publié, les droits d'inscription et les frais fixes de l'année, chaque montant avec sa source : une réponse chiffrée avant d'engager des frais.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<script src="js/icones.js" defer></script>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app-shell.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/ai-suite.css">
+<link rel="stylesheet" href="css/app-typography.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<link rel="stylesheet" href="css/diagnostic-france.css">
+<style>[hidden]{display:none !important;}</style>
+<script src="pricing-plans.js"></script>
+<script src="js/mobile-nav.js" defer></script>
+<!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
+<link rel="modulepreload" href="firebase-config.js">
+<link rel="modulepreload" href="js/access-guard.js">
+<link rel="modulepreload" href="js/admin-access.js">
+<link rel="modulepreload" href="js/ai/format.js">
+<link rel="modulepreload" href="js/analytics.js">
+<link rel="modulepreload" href="js/app-shell.js">
+<link rel="modulepreload" href="js/countries.js">
+<link rel="modulepreload" href="js/delai-reponse.js">
+<link rel="modulepreload" href="js/destinations-preinscription.js">
+<link rel="modulepreload" href="js/diagnostic-france.js">
+<link rel="modulepreload" href="js/diagnostic-pays-page.js">
+<link rel="modulepreload" href="js/diagnostic-pays.js">
+<link rel="modulepreload" href="js/documents-slugs.js">
+<link rel="modulepreload" href="js/echeance.js">
+<link rel="modulepreload" href="js/eligibility-pistes.js">
+<link rel="modulepreload" href="js/exigences.js">
+<link rel="modulepreload" href="js/fitz-recours.js">
+<link rel="modulepreload" href="js/fitz-select.js">
+<link rel="modulepreload" href="js/frais.js">
+<link rel="modulepreload" href="js/nationalites.js">
+<link rel="modulepreload" href="js/next-action.js">
+<link rel="modulepreload" href="js/niveaux-langue.js">
+<link rel="modulepreload" href="js/parcours.js">
+<link rel="modulepreload" href="js/pays-grammaire.js">
+<link rel="modulepreload" href="js/pays-preinscription.js">
+<link rel="modulepreload" href="js/plan-features.js">
+<link rel="modulepreload" href="js/portails.js">
+<link rel="modulepreload" href="js/presence-etat.js">
+<link rel="modulepreload" href="js/presence.js">
+<link rel="modulepreload" href="js/preuve-depot.js">
+<link rel="modulepreload" href="js/procedures/allemagne.js">
+<link rel="modulepreload" href="js/procedures/canada.js">
+<link rel="modulepreload" href="js/procedures/france.js">
+<link rel="modulepreload" href="js/procedures/index.js">
+<link rel="modulepreload" href="js/procedures/italie.js">
+<link rel="modulepreload" href="js/procedures/maroc.js">
+<link rel="modulepreload" href="js/procedures/residences/france-benin.js">
+<link rel="modulepreload" href="js/procedures/residences/france-burkina-faso.js">
+<link rel="modulepreload" href="js/procedures/residences/france-cameroun.js">
+<link rel="modulepreload" href="js/procedures/residences/france-cote-divoire.js">
+<link rel="modulepreload" href="js/procedures/residences/france-guinee.js">
+<link rel="modulepreload" href="js/procedures/residences/france-maroc.js">
+<link rel="modulepreload" href="js/procedures/residences/france-senegal.js">
+<link rel="modulepreload" href="js/procedures/residences/france-togo.js">
+<link rel="modulepreload" href="js/procedures/residences/index.js">
+<link rel="modulepreload" href="js/procedures/roumanie.js">
+<link rel="modulepreload" href="js/procedures/turquie.js">
+<link rel="modulepreload" href="js/procedures/vocabulaire.js">
+<link rel="modulepreload" href="js/profil-par-niveau.js">
+<link rel="modulepreload" href="js/profile-score.js">
+<link rel="modulepreload" href="js/student-messages.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
+<!-- précharge:fin -->
+</head>
+<body>
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+<div id="pageLoader" class="auth-page-loader"><div class="loader-spinner"></div></div>
+<div class="dashboard-shell">
+<div class="dashboard-main">
+<header class="journey-topbar">
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
+</a>
+<div class="journey-context">
+<a href="espace-preinscription.html" class="back-link" id="diagRetour"><i data-lucide="arrow-left"></i><span>Mon dossier</span></a>
+<h1 id="diagTitre">Diagnostic</h1>
+</div>
+<div class="journey-topbar-actions">
+<div class="messages-bell-wrap">
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false"><i data-lucide="bell"></i><span class="messages-bell-dot" id="messagesBellDot" hidden></span></button>
+<div class="messages-panel" id="messagesPanel" hidden><div class="messages-panel-header">Messages de l'équipe</div><div class="messages-panel-list" id="messagesPanelList"></div></div>
+</div>
+<a href="offers.html" class="topbar-plan-chip"><span id="topbarPlanLabel">—</span></a>
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil"><i data-lucide="user-round"></i></a>
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres"><i data-lucide="settings"></i></a>
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion"><i data-lucide="log-out"></i></button>
+</div>
+</header>
+
+<main id="main-content" tabindex="-1" class="content" style="display:none;">
+<div id="lockedState" hidden></div>
+<div id="diagnosticApp" class="reveal">
+
+<section class="diag-intro">
+<h2 id="diagIntroTitre">Une réponse chiffrée avant d'engager des frais</h2>
+<p>Vos ressources contre le seuil publié, le coût de la première année chiffre par chiffre, chaque montant avec sa source et sa date, le calendrier publié et les étapes de la procédure. De l'arithmétique sur des chiffres publiés — aucune estimation, aucun taux de change inventé, aucune promesse de résultat.</p>
+<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
+</section>
+
+<form class="diag-form card" id="diagForm" novalidate>
+<div class="field">
+<label for="diagRessources">Ressources disponibles par mois</label>
+<div class="diag-montant">
+<input type="number" class="fitz-num" id="diagRessources" name="ressources" min="0" step="1" inputmode="decimal" required placeholder="Ex. 600 000">
+<!-- Les devises proposées : F CFA, euro, et celle du seuil du pays
+(dollar canadien, lei) — remplies par js/diagnostic-pays-page.js. -->
+<select id="diagDevise" name="devise" aria-label="Devise"></select>
+</div>
+<p class="field-hint" id="diagDeviseAide">Ce que vous, votre famille ou votre garant pouvez justifier chaque mois, pendant l'année.</p>
+</div>
+<div class="field" id="diagVarianteChamp" hidden>
+<label class="diag-check"><input type="checkbox" id="diagVariante" name="variante"> <span id="diagVarianteLibelle"></span></label>
+</div>
+<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Calculer</span></button>
+</form>
+
+<section class="diag-resultat" id="diagResultat" hidden aria-live="polite">
+
+<p class="diag-verdict" id="diagVerdict"></p>
+
+<section class="diag-section" id="diagSectionLignes">
+<h3>Le détail, chiffre par chiffre</h3>
+<ul class="diag-blocs" id="diagBlocs"></ul>
+<p class="diag-total" id="diagTotal"></p>
+<p class="diag-note" id="diagHorsTotal"></p>
+</section>
+
+<section class="diag-section" id="diagSectionCalendrier">
+<h3>Le calendrier publié</h3>
+<p class="diag-section-intro" id="diagCalendrier"></p>
+<p class="diag-source-ligne" id="diagCalendrierSource"></p>
+</section>
+
+<section class="diag-section diag-section--vigilance" id="diagSectionAbsences" hidden>
+<h3>Ce que nous n'avons pas trouvé</h3>
+<ul class="diag-vigilance" id="diagAbsences"></ul>
+</section>
+
+<section class="diag-section" id="diagSectionEtapes">
+<h3>Ce qu'il vous reste à faire</h3>
+<p class="diag-section-intro" id="diagEtapesIntro"></p>
+<ol class="diag-etapes" id="diagEtapes"></ol>
+</section>
+
+<section class="diag-section diag-section--offre" id="diagSectionOffre" hidden>
+<p class="diag-offre-preambule" id="diagOffrePreambule"></p>
+<ul class="diag-offres" id="diagOffres"></ul>
+</section>
+
+<p class="diag-note">Ce diagnostic compare vos chiffres à des seuils publiés. La décision de visa et d'admission appartient aux autorités consulaires et à l'établissement.</p>
+<p class="diag-sauvegarde" id="diagSauvegarde" hidden></p>
+
+</section>
+
+</div>
+</main>
+</div>
+</div>
+
+<script src="js/back-link.js"></script>
+<script type="module" src="js/diagnostic-pays-page.js"></script>
+<script type="module" src="js/admin-access.js"></script>
+</body>
+</html>

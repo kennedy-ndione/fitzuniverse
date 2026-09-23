@@ -479,7 +479,8 @@ assert.equal(refusAchat({ planId: "inconnue", user: {}, maintenant }), null);
 
 // creerPaiement l'appelle AVANT la facture, avec le nombre de cartes bourses.
 const paiement = lire("functions/paiement.js");
-assert.match(paiement, /const refus = refusAchat\(\{ planId, user: profil, nombreCartesBourse \}\);/);
+// 2026-09-23 : la destination voyage avec l'achat (un dossier par pays).
+assert.match(paiement, /const refus = refusAchat\(\{ planId, user: profil, nombreCartesBourse, destination \}\);/);
 assert.ok(paiement.indexOf("refusAchat({") < paiement.indexOf("checkout-invoice/create"), "le refus arrive avant que le moindre franc ne bouge");
 assert.match(paiement, /track !== "preinscription"\)\.length/);
 assert.ok(!paiement.includes("Vous détenez déjà le Forfait Premier Dossier, et il n'expire pas"), "l'ancien message, qui ne parlait que de Premier Dossier, a disparu");

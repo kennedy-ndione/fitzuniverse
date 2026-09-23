@@ -26,6 +26,7 @@ import { generate, messageErreurFitz, estArret } from "./js/ai/ai-client.js";
 import { DOCUMENT_TYPES, computeApplicationReport } from "./js/ai/simulated-responses.js";
 import { fusionnerRapport } from "./js/ai/fusion-rapport.js";
 import { parcoursDOutil, titreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
+import { destinationDeLAdresse } from "./js/plan-features.js";
 // Lot ACCEPTATION (2026-09-11) : la vérification exige, en bourses, une
 // candidature ACCEPTÉE — elle ne tourne plus « sans candidature ».
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -481,7 +482,32 @@ const parcoursCheck = parcoursDOutil({ espace: ctx.espace, application });
 let piecesRoute = [];
 let traductionRoute = null;
 
-if (parcoursCheck === "preinscription") {
+// HORS FRANCE (2026-09-23) : le pays du vœu, sinon celui de la route
+// (`?d=`). Ses pièces sont celles de SA procédure, cochées dans SON
+// dossier (dossiersPays.<pays>) — jamais la liste Études en France.
+const destinationCheck = (application && application.destination && application.destination !== "france")
+? String(application.destination)
+: destinationDeLAdresse(window.location.search);
+
+if (parcoursCheck === "preinscription" && destinationCheck) {
+try {
+const [routePays, procedures, destinations] = await Promise.all([
+import("./js/route-destination.js"),
+import("./js/procedures/index.js"),
+import("./js/destinations-preinscription.js")
+]);
+const config = destinations.destination(destinationCheck);
+const procedure = config ? procedures.trouverProcedure({ paysDestination: config.nom }) : null;
+const dossier = (ctx.userData && ctx.userData.dossiersPays && ctx.userData.dossiersPays[destinationCheck]) || {};
+piecesRoute = procedure ? routePays.piecesDuDossierPays({ id: destinationCheck, procedure, dossier }) : [];
+// La règle de traduction de la route France (« en français ») ne vaut pas ici.
+traductionRoute = null;
+} catch (error) {
+console.warn("Contrôle sans la liste des pièces :", error);
+piecesRoute = [];
+traductionRoute = null;
+}
+} else if (parcoursCheck === "preinscription") {
 try {
 const [route, procedures] = await Promise.all([
 import("./js/route-preinscription.js"),

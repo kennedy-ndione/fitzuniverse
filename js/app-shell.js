@@ -57,7 +57,7 @@ HUB_ESPACE
 // seul endroit — voir advisorOuvert() et la note qui l'accompagne.
 // passSeul / PASS_LABEL (lot ACCEPTATION, partie 4) : le Pass Découverte
 // seul ne mène qu'au chat — une seule définition, pure.
-import { advisorOuvert, ESPACE_OUTILS, passSeul, PASS_LABEL } from "./plan-features.js";
+import { advisorOuvert, ESPACE_OUTILS, passSeul, PASS_LABEL, resolvePlanPreinscriptionFrance } from "./plan-features.js";
 // Lot FITZ-RECOURS : à la place d'un outil verrouillé, « Bloqué ?
 // Demandez à Fitz » — le diagnostic (quelle formule l'ouvre) est
 // calculé, donc gratuit ; la conversation, elle, reste réservée.
@@ -681,7 +681,7 @@ if (planBadge) planBadge.textContent = libelleFormule;
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) {
 topbarPlanLabel.textContent = courant === "preinscription"
-? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || libelleFormule)
+? (session.planPreinscriptionLabel || PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || libelleFormule)
 : libelleFormule;
 }
 
@@ -706,7 +706,10 @@ if (window.FitzMobileNav.appliquerEspace) window.FitzMobileNav.appliquerEspace(c
 // Diagnostic France : l'entrée n'entre dans le menu QUE si le droit
 // est ouvert — c'est ici, une fois la session résolue, qu'on le sait.
 // Voir MENU_FEATURE_ITEMS dans js/mobile-nav.js.
-if (!isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
+// Depuis le 2026-09-23 : et seulement avec une offre FRANCE — une offre
+// d'un autre pays ouvre le verrou, pas la page (js/diagnostic-france-page.js).
+if (!isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId) &&
+(session.testerAccess || resolvePlanPreinscriptionFrance(session.userData || {}))) {
 window.FitzMobileNav.ouvrirEntree("diagnostic_france");
 }
 }
@@ -744,6 +747,7 @@ featureFlags,
 testerAccess: session.testerAccess,
 hasFitzExpress: session.hasFitzExpress,
 planPreinscriptionId: session.planPreinscriptionId || "",
+planPreinscriptionLabel: session.planPreinscriptionLabel || "",
 // L'espace auquel le compte a DROIT, et celui où il SE TROUVE : les
 // deux diffèrent pour un client « les-deux », et les pages en ont
 // besoin (portée des candidatures, vocabulaire, quotas).

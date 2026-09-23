@@ -173,7 +173,8 @@ assert.ok(!("PAYS_DESTINATION" in ROUTE), "la route exporte encore un second nom
 // Le vœu PORTE sa destination — sinon aucune page d'outil ne peut la
 // connaître sans importer les 300 Ko de js/procedures.
 const moteur = lire("espace-preinscription.js");
-assert.match(moteur, /country: PAYS_PREINSCRIPTION,/, "la création d'un vœu n'écrit plus sa destination");
+// 2026-09-23 : hors France, le vœu porte le nom de SON pays.
+assert.match(moteur, /country: estFrance\(\) \? PAYS_PREINSCRIPTION : etat\.config\.nom,/, "la création d'un vœu n'écrit plus sa destination");
 assert.match(moteur, /applications", v\.id\), \{ country: PAYS_PREINSCRIPTION \}/, "le rattrapage des vœux d'avant le lot a disparu");
 
 // SANS CANDIDATURE, C'EST L'ESPACE QUI DIT LA DESTINATION. Vu en ligne
@@ -278,10 +279,13 @@ test("un outil ouvert depuis une étape qui concerne un vœu porte ce vœu — e
 const moteur = lire("espace-preinscription.js");
 assert.match(moteur, /function voeuDeLOutil\(e\) \{/, "le moteur ne sait plus quel vœu une étape concerne");
 const corps = moteur.slice(moteur.indexOf("function voeuDeLOutil"), moteur.indexOf("function hrefOutil"));
-assert.match(corps, /e\.id !== "ef_confirmation"/, "l'étape visée n'est plus nommée");
+// 2026-09-23 : hors France, toute étape qui porte « Écrire à l'établissement ».
+assert.match(corps, /e\.id === "ef_confirmation"/, "l'étape visée n'est plus nommée");
 assert.match(corps, /admis\.length === 1/, "une seule admission, sinon rien — un « >= 1 » choisirait à la place de l'étudiant");
 assert.match(corps, /!admis\.length && etat\.voeux\.length === 1/, "le repli sur l'unique vœu du dossier a disparu");
-assert.match(moteur, /return v \? `\$\{o\.href\}\?applicationId=\$\{encodeURIComponent\(v\.id\)\}` : o\.href;/, "l'identifiant du vœu n'est plus passé (ou n'est plus encodé)");
+assert.match(moteur, /const href = v \? `\$\{o\.href\}\?applicationId=\$\{encodeURIComponent\(v\.id\)\}` : o\.href;/, "l'identifiant du vœu n'est plus passé (ou n'est plus encodé)");
+// Hors France, l'outil apprend le pays de la route (2026-09-23).
+assert.match(moteur, /return avecDestination\(href\);/);
 
 // Les DEUX rendus d'outil passent par là : le principal et les autres.
 for (const rendu of ["htmlOutils", "htmlOutilPrincipal"]) {

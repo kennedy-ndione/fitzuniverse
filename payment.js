@@ -68,6 +68,41 @@ const plan = SCHOLARBRIDGE_PLANS[planId];
 return !!plan && plan.deprecated !== true;
 }
 
+// LA DESTINATION DE L'ACHAT (2026-09-23). Une offre préinscription se
+// vend pour un pays : ?destination=italie. Absente ou inconnue : la
+// France, comme avant. Le serveur la revérifie (functions/paiement.js).
+//
+// LA VALEUR GARDÉE NE VAUT QUE POUR L'OFFRE GARDÉE. sessionStorage garde
+// le dernier achat parti vers PayDunya ; elle ne sert qu'au RETOUR, quand
+// l'adresse ne porte pas le plan. Une adresse qui nomme un plan sans pays
+// (« payment.html?plan=dossier-france », le lien du hub) veut dire la
+// France — sinon un achat italien abandonné ferait payer un Dossier
+// Italie à qui clique ensuite « Dossier France ».
+function destinationConnue(d) {
+const connues = typeof SCHOLARBRIDGE_DESTINATIONS !== "undefined" ? SCHOLARBRIDGE_DESTINATIONS : {};
+return !!d && Object.prototype.hasOwnProperty.call(connues, d);
+}
+
+function getRequestedDestination() {
+
+const params = new URLSearchParams(window.location.search);
+const fromUrl = String(params.get("destination") || "").toLowerCase();
+
+if (destinationConnue(fromUrl)) return fromUrl;
+if (params.get("plan")) return "france";
+
+try {
+
+const stored = JSON.parse(sessionStorage.getItem("scholarbridgeCheckout") || "null");
+
+if (stored && destinationConnue(stored.destination) && stored.plan === getRequestedPlanId()) return stored.destination;
+
+} catch (e) {}
+
+return "france";
+
+}
+
 function getRequestedPlanId() {
 
 const fromUrl = new URLSearchParams(window.location.search).get("plan");
@@ -149,7 +184,7 @@ let TARIF = null;
 
 function tarifDe(plan, session) {
 const calcul = typeof window.prixAvecDeduction === "function"
-? window.prixAvecDeduction(plan.id, (session && session.userData) || {})
+? window.prixAvecDeduction(plan.id, (session && session.userData) || {}, new Date(), plan.destination || "france")
 : null;
 return calcul || { prix: plan.priceFCFA, base: plan.priceFCFA, deduction: 0, mention: "" };
 }
@@ -310,7 +345,7 @@ label.textContent = activationLabel(plan);
 // portes qui le ramènent sur CETTE formule ; le moyen de paiement et le
 // bouton d'activation n'existent pour lui qu'une fois connecté. Un
 // compte connecté ne voit que le paiement.
-function initCompteRequis(session, planId) {
+function initCompteRequis(session, planId, destination = "france") {
 
 const bloc = document.getElementById("compteRequis");
 const paiement = document.getElementById("paiementSection");
@@ -322,7 +357,7 @@ if (activation) activation.hidden = !session;
 
 if (session || !bloc) return;
 
-const retour = `payment.html?plan=${planId}`;
+const retour = `payment.html?plan=${planId}${destination !== "france" ? `&destination=${destination}` : ""}`;
 const inscription = document.getElementById("compteRequisInscription");
 const connexion = document.getElementById("compteRequisConnexion");
 if (inscription) inscription.setAttribute("href", avecRetour("inscription.html", retour));
@@ -432,7 +467,12 @@ return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cel
 // propositions à accepter). « Prêt » se lit avec profilPretPourFitz, la
 // même fonction que le remplissage. Le repli des formules dépréciées :
 // l'espace bourse, jamais l'aiguillage.
-function resolvePostActivationTarget(planId, profile) {
+function resolvePostActivationTarget(planId, profile, destination = "france") {
+// Hors France (2026-09-23) : le diagnostic du pays, ou la route du pays.
+if (destination && destination !== "france") {
+if (planId === "diagnostic-france") return `diagnostic-pays.html?d=${encodeURIComponent(destination)}`;
+if (planId === "dossier-france" || planId === "dossier-france-conseiller") return `espace-preinscription.html?d=${encodeURIComponent(destination)}&action=new`;
+}
 return cibleApresPaiement(planId, profile || {});
 }
 
@@ -483,13 +523,13 @@ trackEvent("payment_attempted", { plan: plan.id, method: method.value, uid });
 // sessionStorage survit à l'aller-retour vers PayDunya (même onglet,
 // même origine) : c'est ce qui permet de retrouver la formule au
 // retour, même si l'URL était tronquée en route.
-sessionStorage.setItem("scholarbridgeCheckout", JSON.stringify({ plan: plan.id }));
+sessionStorage.setItem("scholarbridgeCheckout", JSON.stringify({ plan: plan.id, destination: plan.destination || "france" }));
 
 let facture;
 
 try {
 
-facture = await creerPaiement({ planId: plan.id, method: method.value });
+facture = await creerPaiement({ planId: plan.id, method: method.value, destination: plan.destination || "france" });
 
 } catch (error) {
 
@@ -593,7 +633,7 @@ resultText.textContent = `Paiement confirmé — ${plan.label} est activé. Redi
 const profil = Object.assign({}, (session.profile || {}), data.profile || {});
 
 setTimeout(() => {
-window.location.href = resolvePostActivationTarget(plan.id, profil);
+window.location.href = resolvePostActivationTarget(plan.id, profil, plan.destination || "france");
 }, 1600);
 
 }, (error) => {
@@ -630,10 +670,13 @@ return;
 
 }
 
-const plan = SCHOLARBRIDGE_PLANS[planId];
+const destination = getRequestedDestination();
+// La formule telle qu'elle se vend pour ce pays : même prix, textes du
+// pays (« Dossier Italie »). La France reçoit l'objet d'origine.
+const plan = typeof offrePourDestination === "function" ? offrePourDestination(planId, destination) : SCHOLARBRIDGE_PLANS[planId];
 const etatPaiement = new URLSearchParams(window.location.search).get("paiement");
 
-initCompteRequis(session, planId);
+initCompteRequis(session, planId, destination);
 renderPlan(plan, session);
 initFitzRotator();
 initPaymentMethods(plan);

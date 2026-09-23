@@ -45,13 +45,14 @@ test("compte d'abord 2 — payment.js ne crée plus de compte, et ne paie que po
   assert.match(init, /bloc\.hidden = !!session;/);
   assert.match(init, /paiement\.hidden = !session;/);
   assert.match(init, /activation\.hidden = !session;/);
-  assert.match(init, /const retour = `payment\.html\?plan=\$\{planId\}`;/);
+  // 2026-09-23 : le pays d'un dossier survit au détour par le compte.
+  assert.ok(init.includes('const retour = `payment.html?plan=${planId}${destination !== "france" ? `&destination=${destination}` : ""}`;'));
   assert.match(init, /avecRetour\("inscription\.html", retour\)/);
   assert.match(init, /avecRetour\("login\.html", retour\)/);
   const activation = js.slice(js.indexOf("function initActivation"), js.indexOf("function attendreActivation"));
   assert.ok(activation.indexOf("if (!session) return;") > -1 && activation.indexOf("if (!session) return;") < activation.indexOf("button.addEventListener"), "le bouton ne se branche pas sans session");
   assert.match(activation, /const uid = session\.user\.uid;/);
-  assert.match(js, /initCompteRequis\(session, planId\);/);
+  assert.match(js, /initCompteRequis\(session, planId, destination\);/);
 });
 
 test("compte d'abord 3 — le retour n'accepte QUE la page de paiement avec une formule", () => {
@@ -61,6 +62,11 @@ test("compte d'abord 3 — le retour n'accepte QUE la page de paiement avec une 
     assert.equal(retourSur(piege), "", piege);
   }
   assert.equal(avecRetour("login.html", "payment.html?plan=essentiel"), "login.html?retour=payment.html%3Fplan%3Dessentiel");
+  // La destination d'un dossier (2026-09-23) : acceptée, dans la liste fermée seulement.
+  assert.equal(retourSur("?retour=payment.html%3Fplan%3Ddossier-france%26destination%3Ditalie"), "payment.html?plan=dossier-france&destination=italie");
+  for (const piege of ["?retour=payment.html%3Fplan%3Ddossier-france%26destination%3Datlantide", "?retour=payment.html%3Fplan%3Ddossier-france%26destination%3Ditalie%26x%3D1", "?retour=payment.html%3Fdestination%3Ditalie"]) {
+    assert.equal(retourSur(piege), "", piege);
+  }
   assert.equal(avecRetour("login.html", ""), "login.html");
 });
 

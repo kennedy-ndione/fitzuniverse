@@ -986,6 +986,8 @@ for (const [id, u] of universitiesById) m.set(String(u.name || "").trim().toLowe
 return m;
 }
 
+let LIBELLE_PREINSCRIPTION = "";
+
 function initApplicationsPage(uid, planId, profile, featureFlags, testerAccess, hasFitzExpress, documentsObtained = {}, planPreinscriptionId = "") {
 
 const profileScore = calculateAiScore(profile);
@@ -1015,7 +1017,7 @@ function candidaturesDuParcours(track, liste) {
 return (liste || []).filter((a) => (lireParcours(a) === "preinscription") === estPreinscription(track));
 }
 function nomFormulePour(track) {
-return estPreinscription(track) ? (PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId] || "Dossier France") : PLAN_LABELS[planId];
+return estPreinscription(track) ? (LIBELLE_PREINSCRIPTION || PLAN_PREINSCRIPTION_LABELS[planPreinscriptionId] || "Dossier France") : PLAN_LABELS[planId];
 }
 
 let advisorRequests = [];
@@ -2942,6 +2944,8 @@ return;
 
 universitesRefusees = Array.isArray(ctx.userData?.universitesRefusees) ? ctx.userData.universitesRefusees.filter((x) => typeof x === "string") : [];
 
+// Le libellé au nom du pays de l'offre (« Dossier Italie »), 2026-09-23.
+LIBELLE_PREINSCRIPTION = ctx.planPreinscriptionLabel || "";
 initApplicationsPage(ctx.user.uid, ctx.planId, ctx.profile, ctx.featureFlags, ctx.testerAccess, ctx.hasFitzExpress, ctx.userData?.documentsObtained || {}, ctx.planPreinscriptionId || "");
 
 });

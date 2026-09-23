@@ -31,7 +31,9 @@ assert.match(js, /markTeamMessagesRead\(uid, messages\);\s*retirerAlerte\(\);/);
 test("alerte 2 — la cloche porte un COMPTEUR, l'onglet affiche (N), et l'extrait passe par textContent", () => {
 const js = lire("js/student-messages.js");
 assert.match(js, /bellDot\.textContent = n > 9 \? "9\+" : String\(n\);/);
-assert.match(js, /document\.title = n \? `\(\$\{n\}\) \$\{TITRE_ORIGINAL\}` : TITRE_ORIGINAL;/);
+// 2026-09-23 : le titre se relit à chaque mise à jour (la page peut l'avoir changé).
+assert.match(js, /const titre = titreSansCompteur\(\);\s*document\.title = n \? `\(\$\{n\}\) \$\{titre\}` : titre;/);
+assert.match(js, /const COMPTEUR_DU_TITRE = \/\^\\\(\\d\+\\\+\?\\\) \/;/);
 // Le texte du message vient de l'admin : jamais d'innerHTML avec lui.
 assert.match(js, /querySelector\("\.messages-alerte-extrait"\)\.textContent = /);
 assert.ok(!/innerHTML[^;]*dernier\.text/.test(js), "le texte du message ne passe jamais par innerHTML");

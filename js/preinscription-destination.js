@@ -27,7 +27,7 @@
 // ============================================================
 import { chargerCatalogue } from "./catalog-data.js";
 import { lirePays, etatDunPays, estOuverte, faitsPublics, defautsDeDestination } from "./pays-preinscription.js";
-import { trouverProcedure, residencesDocumentees } from "./procedures/index.js";
+import { trouverProcedure, residencesDocumentees, residenceRequise } from "./procedures/index.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
 import { auPays, avecArticle } from "./pays-grammaire.js";
@@ -147,12 +147,21 @@ return;
 if (section) section.hidden = false;
 
 poser("destProcedureTitre", `La procédure ${procedure.portail.nom} compte ${procedure.etapes.length} étapes`);
-poser("destProcedurePhrase", `Elles sont les mêmes pour tout candidat, d'où qu'il parte, et nous les avons lues une par une sur les pages officielles. Ce qui change d'un pays de résidence à l'autre — les frais, la banque, le moment du paiement, les dates — est vérifié pays par pays.`);
+// Deux cas, jamais confondus (2026-09-23). La France a un espace Campus
+// France PAR PAYS de résidence : ce qui change d'un pays à l'autre y est
+// vérifié pays par pays. Les six autres destinations ont une procédure
+// NATIONALE, la même depuis tout pays (residenceRequise: false) : dire
+// « vérifié pays par pays » y serait une promesse inventée.
+poser("destProcedurePhrase", residenceRequise(procedure)
+? `Elles sont les mêmes pour tout candidat, d'où qu'il parte, et nous les avons lues une par une sur les pages officielles. Ce qui change d'un pays de résidence à l'autre — les frais, la banque, le moment du paiement, les dates — est vérifié pays par pays.`
+: `Elles sont les mêmes pour tout candidat, d'où qu'il parte, et nous les avons lues une par une sur les pages officielles, avec leur source et leur date.`);
 // « Avec le Dossier France » nommait l'offre française dans un module
 // qui doit servir toutes les destinations. Les formules sont nommées
 // juste en dessous, avec leurs prix : la phrase n'a pas besoin de les
 // répéter, et elle reste vraie le jour où la Roumanie aura les siennes.
-poser("destProcedureClient", `Avec l'accompagnement, vous recevez la liste complète de ces ${procedure.etapes.length} étapes, les pièces exigées à chacune, les dates de VOTRE campagne et les pièges propres à votre pays de résidence.`);
+poser("destProcedureClient", residenceRequise(procedure)
+? `Avec l'accompagnement, vous recevez la liste complète de ces ${procedure.etapes.length} étapes, les pièces exigées à chacune, les dates de VOTRE campagne et les pièges propres à votre pays de résidence.`
+: `Avec l'accompagnement, vous suivez ces ${procedure.etapes.length} étapes une à une dans votre espace, chacune expliquée en français simple, avec les pièces exigées, le coût de l'année et les pièges à éviter.`);
 
 }
 
@@ -177,9 +186,35 @@ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 * de pricing-plans.js, dans l'ordre de la grille, sans les offres
 * retirées de la vente.
 */
-function offresPreinscription() {
+/**
+* Vrai si la destination a SES textes d'offre (« Dossier Italie ») dans
+* pricing-plans.js (SCHOLARBRIDGE_DESTINATIONS, 2026-09-23). La grille de
+* référence, elle, n'y figure pas : ses offres sont celles de la grille.
+* Une DONNÉE décide, jamais un nom de pays écrit ici.
+*/
+function aSesOffres(pays) {
+return !!(pays && window.SCHOLARBRIDGE_DESTINATIONS && window.SCHOLARBRIDGE_DESTINATIONS[pays.id]);
+}
+
+function offresPreinscription(pays) {
 const grille = window.SCHOLARBRIDGE_PLANS || {};
-return Object.values(grille).filter((o) => o && o.parcours === "preinscription" && o.deprecated !== true);
+const offres = Object.values(grille).filter((o) => o && o.parcours === "preinscription" && o.deprecated !== true);
+// La même offre, aux textes du pays, au même prix — offrePourDestination.
+if (aSesOffres(pays) && typeof window.offrePourDestination === "function") {
+return offres.map((o) => window.offrePourDestination(o.id, pays.id) || o);
+}
+return offres;
+}
+
+/**
+* Où mène le bouton d'une carte. La grille de référence garde son
+* chemin (offers.html, qui compare les trois offres) ; une destination
+* qui a ses offres va droit au paiement, la destination dans l'adresse —
+* c'est elle que le serveur lit pour ouvrir le bon dossier.
+*/
+function lienOffre(offre, pays) {
+if (!aSesOffres(pays)) return `offers.html?parcours=preinscription&destination=${pays.id}`;
+return `payment.html?plan=${offre.id}&destination=${pays.id}`;
 }
 
 // Parité fixe F CFA → euro, la même que sur offers.html (offers.js) et
@@ -203,7 +238,9 @@ const badge = niveau === "recommande"
 ? `<span class="plan-badge plan-badge--human"><i data-lucide="user-check" aria-hidden="true"></i>${escapeHtml(offre.badge || "Accompagnement humain")}</span>`
 : "";
 
-const quota = offre.maxPreinscriptions
+const quota = offre.maxPreinscriptions === 1
+? `<div class="plan-quota"><strong>1 cours</strong><span>la règle du pays : un seul choix</span></div>`
+: offre.maxPreinscriptions
 ? `<div class="plan-quota"><strong>Jusqu'à ${offre.maxPreinscriptions}</strong><span>vœux, dans un seul dossier</span></div>`
 : "";
 
@@ -222,14 +259,14 @@ ${quota}
 <ul class="plan-features">
 ${(offre.highlights || []).map((h) => `<li><i data-lucide="check" aria-hidden="true"></i><span>${escapeHtml(h)}</span></li>`).join("")}
 </ul>
-<a class="btn ${niveau === "recommande" ? "btn-accent" : "btn-secondary"} plan-cta" href="offers.html?parcours=preinscription&amp;destination=${escapeHtml(pays.id)}"><span>${escapeHtml(offre.cta || `Choisir ${offre.label}`)}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+<a class="btn ${niveau === "recommande" ? "btn-accent" : "btn-secondary"} plan-cta" href="${escapeHtml(lienOffre(offre, pays))}"><span>${escapeHtml(offre.cta || `Choisir ${offre.label}`)}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
 </li>`;
 
 }
 
 function renderOffres(pays) {
 
-const offres = offresPreinscription();
+const offres = offresPreinscription(pays);
 
 poserHtml("destOffres", offres.map((offre) => carteFormule(offre, pays)).join(""));
 
@@ -239,8 +276,12 @@ poserHtml("destOffres", offres.map((offre) => carteFormule(offre, pays)).join(""
 // sont NOMMÉES depuis la grille — jamais recopiées ici.
 const deduction = window.SCHOLARBRIDGE_DEDUCTION;
 const grille = window.SCHOLARBRIDGE_PLANS || {};
-const concernees = deduction ? deduction.plans.map((id) => grille[id] && grille[id].label).filter(Boolean) : [];
-const declencheur = deduction ? (grille[deduction.offre] && grille[deduction.offre].label) : "";
+const libelle = (id) => {
+const o = aSesOffres(pays) && typeof window.offrePourDestination === "function" ? window.offrePourDestination(id, pays.id) : grille[id];
+return o && o.label;
+};
+const concernees = deduction ? deduction.plans.map(libelle).filter(Boolean) : [];
+const declencheur = deduction ? libelle(deduction.offre) : "";
 
 poser("destDeduction", deduction && concernees.length && declencheur
 ? `Si vous commencez par le ${declencheur}, ses ${espacer(deduction.montant)} F sont déduits ${concernees.length > 1 ? "de l'une des formules suivantes" : "de la formule"} — ${enumerer(concernees)} — achetée dans les ${deduction.jours} jours.`

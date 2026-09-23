@@ -18,6 +18,7 @@ import { EMAIL_TYPES, typesEmailPour } from "./js/ai/simulated-responses.js";
 // Lot PRÉ-FITZ : le parcours filtre les types (« Demander une bourse »
 // n'a pas de sens en préinscription) et voyage avec la demande.
 import { parcoursDOutil, titreDuVoeu, paysDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
+import { paysDeLAdresse } from "./js/plan-features.js";
 // Lot ACCEPTATION (2026-09-11) : l'e-mail exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -208,6 +209,9 @@ fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.prefe
 // L'ordre compte — le vœu, quand il y en a un, repasse après et gagne
 // (`applyApplicationContext` → `paysDuVoeu`).
 if (parcoursDOutil({ espace: ctx.espace }) === "preinscription") fieldCountry.value = PAYS_PREINSCRIPTION;
+// Ouvert depuis la route d'un autre pays (`?d=italie`, 2026-09-23) :
+// c'est ce pays que l'espace dit, pas la France.
+if (parcoursDOutil({ espace: ctx.espace }) === "preinscription" && paysDeLAdresse(window.location.search)) fieldCountry.value = paysDeLAdresse(window.location.search);
 
 // La cible (université, programme/bourse, pays) vient de la
 // candidature sélectionnée — c'est elle qui sait à qui l'on écrit.

@@ -778,7 +778,8 @@ const paiement = lire("functions/paiement.js");
 
 // Le navigateur n'envoie qu'un identifiant : le montant est recalculé
 // ici, depuis le document users/{uid} lu au serveur.
-assert.match(paiement, /const tarif = prixAvecDeduction\(planId, profil\);/);
+// 2026-09-23 : la déduction se lit dans le pays de l'achat.
+assert.match(paiement, /const tarif = prixAvecDeduction\(planId, profil, new Date\(\), destination\);/);
 assert.match(paiement, /const montant = tarif\.prix;/);
 assert.match(paiement, /total_amount: montant,/);
 assert.match(paiement, /unit_price: String\(montant\)/);

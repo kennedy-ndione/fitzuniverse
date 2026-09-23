@@ -508,7 +508,12 @@ return jours <= 1 ? "moins d'1 jour restant" : `${jours} jours restants`;
 
 // Grille B (2026-09-07) : le second forfait, PRÉINSCRIPTION. Même règle
 // que resolvePlan : hors vocabulaire ou expiré = aucune offre ("").
-export function resolvePlanPreinscription(userData) {
+/**
+* L'offre préinscription FRANCE du compte (`planPreinscription`), ou "".
+* C'est l'ancienne resolvePlanPreinscription, mot pour mot : la route
+* France, son quota de vœux et la déduction de son diagnostic la lisent.
+*/
+export function resolvePlanPreinscriptionFrance(userData) {
 
 const raw = String((userData && userData.planPreinscription) || "").toLowerCase();
 
@@ -520,6 +525,113 @@ if (expiry && !isNaN(expiry) && expiry.getTime() < Date.now()) return "";
 
 return raw;
 
+}
+
+/**
+* LES DOSSIERS PAR PAYS (2026-09-23). Chaque destination vendue a son
+* entrée, écrite par le webhook seul : France dans `planPreinscription`,
+* les six autres dans `preinscriptionsPays.<pays>` = { plan, expiresAt }.
+* Rend les dossiers ACTIFS, France d'abord, puis dans l'ordre de la carte.
+*
+* @returns {Array<{destination:string, plan:string, expiresAt:string|null}>}
+*/
+export function droitsPreinscription(userData, maintenant = Date.now()) {
+const droits = [];
+const france = resolvePlanPreinscriptionFrance(userData);
+if (france) droits.push({ destination: "france", plan: france, expiresAt: (userData && userData.planPreinscriptionExpiresAt) || null });
+const carte = userData && userData.preinscriptionsPays && typeof userData.preinscriptionsPays === "object" ? userData.preinscriptionsPays : {};
+for (const [destination, entree] of Object.entries(carte)) {
+const plan = String((entree && entree.plan) || "").toLowerCase();
+if (!PLAN_PREINSCRIPTION_ORDER.includes(plan)) continue;
+const fin = entree.expiresAt ? new Date(entree.expiresAt) : null;
+// Toujours daté : une entrée sans échéance n'est pas un achat appliqué.
+if (!fin || isNaN(fin) || fin.getTime() < maintenant) continue;
+droits.push({ destination, plan, expiresAt: entree.expiresAt });
+}
+return droits;
+}
+
+/** L'offre active d'un compte pour UNE destination, ou "". */
+export function planPreinscriptionPour(userData, destination) {
+const d = droitsPreinscription(userData).find((x) => x.destination === destination);
+return d ? d.plan : "";
+}
+
+/**
+* Le nom de chaque destination vendue, pour les libellés (« Dossier
+* Italie »). MIROIR de js/destinations-preinscription.js — gardé ici pour
+* ne pas charger les faits des six pays sur chaque page du site ;
+* test/destinations-preinscription.test.mjs compare les deux.
+*/
+export const NOMS_DESTINATIONS_PREINSCRIPTION = {
+france: "France", roumanie: "Roumanie", turquie: "Turquie", maroc: "Maroc",
+italie: "Italie", allemagne: "Allemagne", canada: "Canada"
+};
+
+/**
+* La destination qu'un outil Fitz reçoit de la route (`?d=italie`), hors
+* France : l'id, ou "". La route d'un pays ajoute ce paramètre à chaque
+* outil qu'elle ouvre ; sans lui, l'outil garde la France, comme avant.
+*/
+export function destinationDeLAdresse(search) {
+let d = "";
+try {
+d = String(new URLSearchParams(search || "").get("d") || "").trim().toLowerCase();
+} catch {
+return "";
+}
+return d !== "france" && Object.prototype.hasOwnProperty.call(NOMS_DESTINATIONS_PREINSCRIPTION, d) ? d : "";
+}
+
+/** Le nom du pays de `?d=` (« Italie »), ou "". */
+export function paysDeLAdresse(search) {
+const d = destinationDeLAdresse(search);
+return d ? NOMS_DESTINATIONS_PREINSCRIPTION[d] : "";
+}
+
+/** « Dossier Italie », « Diagnostic Maroc » : le libellé d'une offre, au nom de SON pays. */
+export function libelleOffrePreinscription(plan, destination = "france") {
+const base = PLAN_PREINSCRIPTION_LABELS[plan];
+if (!base) return "";
+const nom = Object.prototype.hasOwnProperty.call(NOMS_DESTINATIONS_PREINSCRIPTION, destination) ? NOMS_DESTINATIONS_PREINSCRIPTION[destination] : "";
+return nom && destination !== "france" ? base.replace("France", nom) : base;
+}
+
+/**
+* L'offre la plus haute du compte ET son pays — la France d'abord à
+* égalité. Sert au libellé : un Dossier Italie ne s'affiche pas
+* « Dossier France » dans la barre haute.
+* @returns {{destination:string, plan:string, expiresAt:string|null}|null}
+*/
+export function offrePreinscriptionActive(userData, maintenant = Date.now()) {
+let meilleure = null;
+for (const d of droitsPreinscription(userData, maintenant)) {
+if (!meilleure || PLAN_PREINSCRIPTION_ORDER.indexOf(d.plan) > PLAN_PREINSCRIPTION_ORDER.indexOf(meilleure.plan)) meilleure = d;
+}
+return meilleure;
+}
+
+/** Le libellé de l'offre préinscription du compte, ou "". */
+export function libellePreinscriptionDuCompte(userData) {
+const o = offrePreinscriptionActive(userData);
+return o ? libelleOffrePreinscription(o.plan, o.destination) : "";
+}
+
+/**
+* L'offre préinscription qui compte pour les DROITS du compte (outils,
+* messagerie, conseiller, espace) : la plus haute de tous ses pays. Un
+* Dossier Italie ouvre les mêmes outils qu'un Dossier France.
+*
+* Avant le 2026-09-23, cette fonction ne lisait que la France ; elle
+* reste la seule que lisent la session (js/access-guard.js), les
+* verrous et l'aiguillage — ils n'ont donc rien eu à apprendre.
+*/
+export function resolvePlanPreinscription(userData) {
+let meilleure = "";
+for (const d of droitsPreinscription(userData)) {
+if (PLAN_PREINSCRIPTION_ORDER.indexOf(d.plan) > PLAN_PREINSCRIPTION_ORDER.indexOf(meilleure)) meilleure = d.plan;
+}
+return meilleure;
 }
 
 // Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER

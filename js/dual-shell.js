@@ -22,7 +22,7 @@
 */
 
 import { resolveSession, fetchFeatureFlags, isFeatureLocked, PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, resoudreEspace } from "./access-guard.js";
-import { advisorOuvert } from "./plan-features.js";
+import { advisorOuvert, resolvePlanPreinscriptionFrance } from "./plan-features.js";
 import { initShellChrome, unlockingPlans, espaceCourant } from "./app-shell.js";
 import { initMessagesPanel } from "./student-messages.js";
 import { demarrerPresence } from "./presence.js";
@@ -100,7 +100,7 @@ const espace = espaceCourant(espaceUtilisateur);
 const topbarPlanLabel = document.getElementById("topbarPlanLabel");
 if (topbarPlanLabel) {
 topbarPlanLabel.textContent = espace === "preinscription"
-? (PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || PLAN_LABELS[session.planId])
+? (session.planPreinscriptionLabel || PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || PLAN_LABELS[session.planId])
 : PLAN_LABELS[session.planId];
 }
 document.body.dataset.espace = espace || "aucun";
@@ -113,7 +113,8 @@ window.FitzMobileNav.setUser((session.profile && session.profile.name) || sessio
 // Même règle que js/app-shell.js : l'entrée Diagnostic France n'entre
 // dans le menu que si le droit est ouvert. Les pages à double
 // présentation ont le même menu, elles ont donc le même besoin.
-if (featureFlags && !isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)) {
+if (featureFlags && !isFeatureLocked(session.planId, featureFlags, "diagnostic_france", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId) &&
+(session.testerAccess || resolvePlanPreinscriptionFrance(session.userData || {}))) {
 window.FitzMobileNav.ouvrirEntree("diagnostic_france");
 }
 }

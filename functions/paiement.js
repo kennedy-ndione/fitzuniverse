@@ -70,7 +70,7 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat } = require("./lib/achat");
+const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -93,7 +93,7 @@ exports.creerPaiement = onCall(
     }
 
     const uid = request.auth.uid;
-    const { planId, method } = request.data || {};
+    const { planId, method, destination: destinationDemandee } = request.data || {};
 
     // 2. Le prix. Le navigateur envoie un IDENTIFIANT, jamais un
     //    montant. Sans cette ligne, une console de développeur suffit
@@ -113,6 +113,16 @@ exports.creerPaiement = onCall(
         "Cette formule n'est plus en vente. Les formules actuelles sont sur la page des offres."
       );
     }
+
+    // 2 ter. LA DESTINATION (2026-09-23). Une offre préinscription se
+    //    vend pour un pays : la France par défaut, ou l'une des six
+    //    destinations ouvertes le 23 septembre. Une destination inconnue
+    //    est refusée ici, avant la facture ; une offre bourse l'ignore.
+    if (offre.parcours === "preinscription" && !destinationVendue(destinationDemandee)) {
+      throw new HttpsError("invalid-argument", "Cette destination n'est pas encore accompagnée.");
+    }
+    const destination = offre.parcours === "preinscription" ? destinationNormalisee(destinationDemandee) : "france";
+    const libelle = libelleOffre(planId, destination) || offre.label;
 
     // 3. Le compte. On lit le nom et l'e-mail depuis Firestore plutôt
     //    que depuis la requête : la facture PayDunya doit porter
@@ -142,7 +152,7 @@ exports.creerPaiement = onCall(
       nombreCartesBourse = cartes.docs.filter((d) => (d.data() || {}).track !== "preinscription").length;
     }
 
-    const refus = refusAchat({ planId, user: profil, nombreCartesBourse });
+    const refus = refusAchat({ planId, user: profil, nombreCartesBourse, destination });
     if (refus) {
       logger.info("Achat refusé avant facturation", { uid, planId, code: refus.code });
       throw new HttpsError("failed-precondition", refus.message);
@@ -153,7 +163,7 @@ exports.creerPaiement = onCall(
     //    "rang-inferieur") — jusqu'ici il le découvrait APRÈS le
     //    paiement, sans remboursement possible. La même décision est
     //    rejouée ici, à blanc, avant que le moindre franc ne bouge.
-    const aBlanc = calculerMiseAJour({ planId, user: profil, supprimer: null });
+    const aBlanc = calculerMiseAJour({ planId, user: profil, supprimer: null, destination });
     if (aBlanc.statut === "rang-inferieur") {
       throw new HttpsError(
         "failed-precondition",
@@ -167,14 +177,14 @@ exports.creerPaiement = onCall(
     //    users/{uid} lu au serveur : le navigateur n envoie qu un
     //    identifiant de formule, et un prix affiché faux resterait une
     //    erreur d affichage, jamais une remise obtenue.
-    const tarif = prixAvecDeduction(planId, profil);
+    const tarif = prixAvecDeduction(planId, profil, new Date(), destination);
     const montant = tarif.prix;
 
     const facture = {
       invoice: {
         items: {
           item_0: {
-            name: tarif.deduction ? offre.label + " (" + tarif.mention + ")" : offre.label,
+            name: tarif.deduction ? libelle + " (" + tarif.mention + ")" : libelle,
             quantity: 1,
             unit_price: String(montant),
             total_price: String(montant),
@@ -182,7 +192,7 @@ exports.creerPaiement = onCall(
           },
         },
         total_amount: montant,
-        description: `FitzUniverse — ${offre.label}`,
+        description: `FitzUniverse — ${libelle}`,
       },
       store: {
         name: "FitzUniverse",
@@ -195,11 +205,12 @@ exports.creerPaiement = onCall(
       custom_data: {
         uid,
         planId,
+        destination,
         method: method || "non-precise",
       },
       actions: {
-        return_url: `${SITE}/payment.html?paiement=ok&plan=${encodeURIComponent(planId)}`,
-        cancel_url: `${SITE}/payment.html?paiement=annule&plan=${encodeURIComponent(planId)}`,
+        return_url: `${SITE}/payment.html?paiement=ok&plan=${encodeURIComponent(planId)}${destination !== "france" ? `&destination=${encodeURIComponent(destination)}` : ""}`,
+        cancel_url: `${SITE}/payment.html?paiement=annule&plan=${encodeURIComponent(planId)}${destination !== "france" ? `&destination=${encodeURIComponent(destination)}` : ""}`,
         callback_url:
           "https://europe-west1-scholarbridge-e0d84.cloudfunctions.net/paydunyaWebhook",
       },
@@ -271,7 +282,10 @@ exports.creerPaiement = onCall(
     await admin.firestore().doc(`payments/${reponse.token}`).set({
       uid,
       planId,
-      label: offre.label,
+      // La destination du forfait préinscription ("france" par défaut) :
+      // c'est elle que le webhook relit pour savoir quel dossier ouvrir.
+      destination,
+      label: libelle,
       montantAttendu: montant,
       montantCatalogue: tarif.base,
       deduction: tarif.deduction,
@@ -390,6 +404,8 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
       user,
       maintenant: new Date(),
       supprimer: admin.firestore.FieldValue.delete(),
+      // Absente sur les factures d'avant le 2026-09-23 : "france".
+      destination: p.destination || "france",
     });
 
     if (decision.statut === "rang-inferieur") {

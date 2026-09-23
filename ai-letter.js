@@ -25,6 +25,7 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD, libellePourcentProfil } from
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
 import { parcoursDOutil, titreDuVoeu, paysDuVoeu, degreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
+import { paysDeLAdresse } from "./js/plan-features.js";
 // Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -223,6 +224,9 @@ fieldCountry.value = (Array.isArray(profile.preferredCountries) && profile.prefe
 // L'ordre compte — le vœu, quand il y en a un, repasse après et gagne
 // (`applyApplicationContext` → `paysDuVoeu`).
 if (parcoursDOutil({ espace: ctx.espace }) === "preinscription") fieldCountry.value = PAYS_PREINSCRIPTION;
+// Ouvert depuis la route d'un autre pays (`?d=italie`, 2026-09-23) :
+// c'est ce pays que l'espace dit, pas la France.
+if (parcoursDOutil({ espace: ctx.espace }) === "preinscription" && paysDeLAdresse(window.location.search)) fieldCountry.value = paysDeLAdresse(window.location.search);
 fieldProgram.value = profile.desiredField || "";
 if (profile.desiredDegree) fieldLevel.value = profile.desiredDegree;
 fieldExperiences.value = describedExperiences(profile);

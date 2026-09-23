@@ -66,7 +66,10 @@ test("retour 2 — les trois notes : l'étape écrite par la route, le hub par l
   // a) LA ROUTE ÉCRIT L'ÉTAPE, à chaque peinture.
   const moteur = lire("espace-preinscription.js");
   assert.match(moteur, /sessionStorage\.setItem\("fitz_retour", JSON\.stringify\(\{/);
-  assert.match(moteur, /href: `espace-preinscription\.html\?etape=\$\{encodeURIComponent\(e\.id\)\}`/);
+  // 2026-09-23 : l'adresse de l'étape porte aussi la destination (?d=).
+  assert.match(moteur, /href: adresseRoute\(e\.id\),/);
+  assert.match(moteur, /if \(etape\) p\.set\("etape", etape\);/);
+  assert.match(moteur, /return `espace-preinscription\.html\$\{q \? `\?\$\{q\}` : ""\}`;/);
   assert.match(moteur, /court: `Étape \$\{e\.numero\}`/, "le libellé court du lien vient de la note");
   const peinture = moteur.indexOf("memoriserRetour(e);");
   assert.ok(peinture > 0 && peinture > moteur.indexOf("function peindreEtape"), "la note s'écrit à la peinture de l'étape");

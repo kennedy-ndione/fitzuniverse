@@ -212,6 +212,22 @@ function formuleActive(userData, maintenant = new Date()) {
     return pre;
   }
 
+  // 2 bis. Un dossier d'une AUTRE destination (2026-09-23) :
+  //    users/{uid}.preinscriptionsPays.<pays> = { plan, expiresAt }, écrit
+  //    par le webhook (functions/lib/achat.js). Mêmes offres, mêmes
+  //    plafonds que la France. Le plus haut rang actif l'emporte : un
+  //    compte avec un Diagnostic Maroc et un Dossier Italie a le plafond
+  //    du dossier.
+  const pays = userData.preinscriptionsPays && typeof userData.preinscriptionsPays === "object" ? userData.preinscriptionsPays : {};
+  let meilleure = null;
+  for (const entree of Object.values(pays)) {
+    const plan = String((entree && entree.plan) || "").toLowerCase();
+    if (!FORMULES_AVEC_FITZ.includes(plan) || !OFFRES_PREINSCRIPTION.includes(plan)) continue;
+    if (expire(entree.expiresAt, maintenant)) continue;
+    if (!meilleure || OFFRES_PREINSCRIPTION.indexOf(plan) > OFFRES_PREINSCRIPTION.indexOf(meilleure)) meilleure = plan;
+  }
+  if (meilleure) return meilleure;
+
   // 3. Le Pass Fitz Express, sans formule. Testé APRÈS les formules :
   //    quelqu'un qui a les deux doit avoir le plafond de sa formule.
   if (userData.fitzExpressExpiresAt && !expire(userData.fitzExpressExpiresAt, maintenant)) {

@@ -36,6 +36,7 @@ import { COUNTRY_NAMES } from "./countries.js";
 import { initFitzCombobox } from "./fitz-combobox.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
+import { resolvePlanPreinscriptionFrance } from "./plan-features.js";
 
 initShellChrome();
 
@@ -249,7 +250,13 @@ bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" }).then(
 
 if (!ctx) return;
 
-if (ctx.locked) {
+// UNE OFFRE FRANCE, PAS UNE OFFRE D'UN AUTRE PAYS (2026-09-23). Le verrou
+// `diagnostic_france` lit la meilleure offre préinscription du compte,
+// tous pays confondus : un Diagnostic Maroc l'ouvrirait. Cette page est
+// un produit France ; elle exige l'offre France (ou l'accès test), comme
+// diagnostic-pays.html exige l'offre de SON pays.
+const offreFrance = ctx.testerAccess === true || !!resolvePlanPreinscriptionFrance(ctx.userData || {});
+if (ctx.locked || !offreFrance) {
 document.getElementById("diagnosticApp").remove();
 renderLockedState(document.getElementById("lockedState"));
 return;

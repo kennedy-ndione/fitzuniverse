@@ -232,7 +232,13 @@ return composer;
 // s'affiche jamais : la page ouverte EST la conversation.
 
 const CLE_ALERTE_RANGEE = "fitzAlerteMessageRangee";
-const TITRE_ORIGINAL = typeof document !== "undefined" ? document.title : "";
+// Le titre de l'onglet se relit à CHAQUE mise à jour, sans son compteur
+// (2026-09-23). Le figer au chargement du module écrasait le titre que la
+// page pose ensuite — « Ma route vers l'Italie » redevenait « … la France ».
+const COMPTEUR_DU_TITRE = /^\(\d+\+?\) /;
+function titreSansCompteur() {
+return typeof document !== "undefined" ? document.title.replace(COMPTEUR_DU_TITRE, "") : "";
+}
 
 const ICONE_CLOCHE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>`;
 
@@ -319,7 +325,8 @@ bellDot.classList.toggle("is-compteur", n > 0);
 bellBtn.setAttribute("aria-label", n ? `Messages — ${n} non lu${n > 1 ? "s" : ""}` : "Messages");
 
 // 3. L'onglet du navigateur.
-document.title = n ? `(${n}) ${TITRE_ORIGINAL}` : TITRE_ORIGINAL;
+const titre = titreSansCompteur();
+document.title = n ? `(${n}) ${titre}` : titre;
 
 if (!n) {
 retirerAlerte();

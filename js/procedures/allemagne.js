@@ -183,7 +183,7 @@ verifieLe: VERIFIE
 id: "de_zulassung",
 type: "reponse",
 titre: "Recevoir l'évaluation puis la lettre d'admission",
-consigne: "Suivez l'état de votre dossier dans My assist. uni-assist traite les candidatures dans leur ordre d'arrivée et annonce un résultat d'évaluation en 4 à 6 semaines en règle générale, à compter de la réception du formulaire ; au 7 septembre 2026, le délai affiché pour la région « Afrique, Moyen-Orient et Iran » est de 4 à 5 semaines, comme pour toutes les autres régions, avec des cas plus longs. Retenez ceci : uni-assist N'ADMET PAS. C'est l'université qui décide et qui envoie le Zulassungsbescheid, la lettre d'admission, où figure le délai d'immatriculation à respecter sous peine de perdre votre place. C'est cette lettre qui conditionne votre visa.",
+consigne: "Suivez l'état de votre dossier dans My assist. uni-assist traite les candidatures dans leur ordre d'arrivée et annonce un résultat d'évaluation en 4 à 6 semaines en règle générale, à compter de la réception du formulaire ; le délai affiché par région change d'une quinzaine à l'autre (1 à 2 semaines pour « Afrique, Moyen-Orient et Iran » au 21 septembre 2026, avec des cas plus longs) : lisez-le sur la page d'uni-assist au moment de déposer. Retenez ceci : uni-assist N'ADMET PAS. C'est l'université qui décide et qui envoie le Zulassungsbescheid, la lettre d'admission, où figure le délai d'immatriculation à respecter sous peine de perdre votre place. C'est cette lettre qui conditionne votre visa.",
 prerequis: ["de_paiement"],
 preuve: "numero_dossier",
 pieces: [

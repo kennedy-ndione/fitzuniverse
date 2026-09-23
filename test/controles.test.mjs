@@ -46,7 +46,11 @@ export const SELECT_COUVERTS = [
 "admin/paiements.html",
 // MESSAGE GROUPÉ (2026-09-23) : le choix des destinataires. Habillé
 // comme toute page admin — admin/messages.html charge admin-auth.js.
-"admin/messages.html"
+"admin/messages.html",
+// SIX DESTINATIONS (2026-09-23) : la devise du Diagnostic <pays>, habillée
+// comme celle du Diagnostic France — js/app-shell.js charge fitz-select,
+// dont l'observateur suit les options posées après l'amorçage.
+"diagnostic-pays.html"
 ];
 // Aucune exemption aujourd'hui : une page qui en aurait besoin se déclare ici, avec sa raison.
 export const SELECT_EXEMPTES = [];

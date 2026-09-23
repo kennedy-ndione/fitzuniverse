@@ -332,7 +332,8 @@ test("preinscriptions.html mène à ?parcours=preinscription ; le contexte bours
 // on s'adresse vend dans le vide.
 assert.ok(!lire("preinscriptions.html").includes("offers.html?parcours"), "le hub n'a plus de lien d'achat direct");
 assert.ok(lire("preinscription-france.html").includes("preinscription-destination.js"), "c'est la page de destination qui vend");
-assert.ok(lire("js/preinscription-destination.js").includes("offers.html?parcours=preinscription&amp;destination="));
+// L'adresse est composée par lienOffre(), puis échappée à l'écriture du href (2026-09-23).
+assert.ok(lire("js/preinscription-destination.js").includes("offers.html?parcours=preinscription&destination="));
 assert.ok(!lire("preinscriptions.html").includes("offers.html#preinscriptions"));
 assert.ok(lire("js/diagnostic-france-page.js").includes("offers.html?parcours=preinscription"));
 assert.ok(lire("results.html").includes('href="offers.html?parcours=bourse"'));

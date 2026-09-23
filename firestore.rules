@@ -87,7 +87,7 @@ estSuperAdminDoc(get(/databases/$(database)/documents/admins/$(request.auth.uid)
 // Seul un superAdmin les pose à la main, et toute pose laisse une trace
 // (`attributionManuelle`, écrite dans la même requête).
 function champsFormule() {
-return ["plan", "planExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt", "fitzExpressExpiresAt", "attributionManuelle"];
+return ["plan", "planExpiresAt", "planPreinscription", "planPreinscriptionExpiresAt", "preinscriptionsPays", "fitzExpressExpiresAt", "attributionManuelle"];
 }
 
 // Ce qu'un administrateur ORDINAIRE peut changer sur un compte : de la
@@ -195,13 +195,66 @@ return planPreOf(uid) in ['dossier-france', 'dossier-france-conseiller'];
 }
 
 function isDossierConseiller(uid) {
-return planPreOf(uid) == 'dossier-france-conseiller';
+return planPreOf(uid) == 'dossier-france-conseiller' || conseillerPays(uid);
+}
+
+// ------------------------------------------------------------
+// SIX DESTINATIONS DE PLUS (2026-09-23). Même grille que la France, mais
+// un dossier PAR PAYS : users/{uid}.preinscriptionsPays.<pays> =
+// { plan, expiresAt }, écrit par le webhook seul (champsFormule). Les
+// règles ne savent pas boucler sur une carte : les six pays sont écrits
+// un par un, et un test compare cette liste à DESTINATIONS_ACCOMPAGNEES
+// (js/destinations-preinscription.js). L'expiration reste vérifiée côté
+// client, comme pour planPreinscription.
+// ------------------------------------------------------------
+function planPays(uid, pays) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('preinscriptionsPays', {}).get(pays, {}).get('plan', '');
+}
+
+function isDossierPays(uid, pays) {
+return planPays(uid, pays) in ['dossier-france', 'dossier-france-conseiller'];
+}
+
+function aUnDossierPays(uid) {
+return isDossierPays(uid, 'roumanie') || isDossierPays(uid, 'turquie') || isDossierPays(uid, 'maroc') ||
+isDossierPays(uid, 'italie') || isDossierPays(uid, 'allemagne') || isDossierPays(uid, 'canada');
+}
+
+function conseillerPays(uid) {
+return planPays(uid, 'roumanie') == 'dossier-france-conseiller' || planPays(uid, 'turquie') == 'dossier-france-conseiller' ||
+planPays(uid, 'maroc') == 'dossier-france-conseiller' || planPays(uid, 'italie') == 'dossier-france-conseiller' ||
+planPays(uid, 'allemagne') == 'dossier-france-conseiller' || planPays(uid, 'canada') == 'dossier-france-conseiller';
+}
+
+function diagnosticPays(uid) {
+return planPays(uid, 'roumanie') == 'diagnostic-france' || planPays(uid, 'turquie') == 'diagnostic-france' ||
+planPays(uid, 'maroc') == 'diagnostic-france' || planPays(uid, 'italie') == 'diagnostic-france' ||
+planPays(uid, 'allemagne') == 'diagnostic-france' || planPays(uid, 'canada') == 'diagnostic-france';
+}
+
+// Les vœux d'un pays s'appellent "pre-<code>-N" : un espace d'identifiants
+// distinct de celui de la France ("pre-N") et des autres pays. Le plafond
+// suit le pays : un seul cours en Italie (Universitaly), douze préférences
+// en Turquie (Türkiye Bursları), sept ailleurs — miroir de plafondVoeux.
+// "__aucun__" ne peut jamais être un identifiant de document (réservé par
+// Firestore) : un pays non acheté n'ouvre donc aucun créneau.
+function motifPays(uid, pays, motif) {
+return (isTester(uid) || isDossierPays(uid, pays)) ? motif : '__aucun__';
+}
+
+function preSlotPatternPays(uid) {
+return '(' + motifPays(uid, 'roumanie', 'pre-ro-[1-7]') + ')|(' +
+motifPays(uid, 'turquie', 'pre-tr-([1-9]|1[0-2])') + ')|(' +
+motifPays(uid, 'maroc', 'pre-ma-[1-7]') + ')|(' +
+motifPays(uid, 'italie', 'pre-it-1') + ')|(' +
+motifPays(uid, 'allemagne', 'pre-de-[1-7]') + ')|(' +
+motifPays(uid, 'canada', 'pre-ca-[1-7]') + ')';
 }
 
 // Grille A : les TROIS offres préinscription ouvrent la messagerie
 // (Diagnostic France compris) et le service après-vente.
 function hasPreinscription(uid) {
-return planPreOf(uid) in ['diagnostic-france', 'dossier-france', 'dossier-france-conseiller'];
+return planPreOf(uid) in ['diagnostic-france', 'dossier-france', 'dossier-france-conseiller'] || aUnDossierPays(uid) || diagnosticPays(uid);
 }
 
 // Quota PRÉINSCRIPTION : les 7 vœux d'un dossier Études en France —
@@ -649,7 +702,7 @@ allow read: if isOwner(uid) || isAdmin();
 // « bourse » par défaut — règle des trois valeurs de js/parcours.js) :
 // une préinscription vit sur "pre-N", une bourse sur "slot-N".
 allow create: if isOwner(uid) && (
-(request.resource.data.get('track', 'bourse') == 'preinscription' && applicationId.matches(preSlotPattern(uid))) ||
+(request.resource.data.get('track', 'bourse') == 'preinscription' && (applicationId.matches(preSlotPattern(uid)) || applicationId.matches(preSlotPatternPays(uid)))) ||
 (request.resource.data.get('track', 'bourse') != 'preinscription' && applicationId.matches(slotPattern(uid)))
 ) && depotJustifie(uid, applicationId, true)
 // FITZ-CHOISIT : une bourse naît du catalogue, jamais du clavier.

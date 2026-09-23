@@ -513,7 +513,10 @@ const js = lire("payment.js");
 assert.ok(!js.includes("const POST_ACTIVATION_TARGETS"), "la table a déménagé dans js/fitz-choisit.js (cibleApresPaiement)");
 assert.match(js, /import \{[^}]*cibleApresPaiement[^}]*\} from "\.\/js\/fitz-choisit\.js"/);
 assert.match(js, /return cibleApresPaiement\(planId, profile \|\| \{\}\)/);
-assert.match(js, /resolvePostActivationTarget\(plan\.id, profil\)/, "la cible se décide avec le profil tel que le serveur le connaît");
+assert.match(js, /resolvePostActivationTarget\(plan\.id, profil, plan\.destination \|\| "france"\)/, "la cible se décide avec le profil tel que le serveur le connaît — et le pays de l'achat (2026-09-23)");
+// Hors France : le diagnostic du pays, ou la route du pays.
+assert.ok(js.includes("`diagnostic-pays.html?d=${encodeURIComponent(destination)}`"));
+assert.ok(js.includes("`espace-preinscription.html?d=${encodeURIComponent(destination)}&action=new`"));
 assert.ok(!js.includes("track=preinscription"), "le paramètre ?track= a disparu avec le sélecteur");
 
 const PRET = { nationality: "Sénégal", desiredDegree: "Master", desiredField: "Informatique", languages: ["français"] };

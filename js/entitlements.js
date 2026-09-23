@@ -72,7 +72,7 @@ plan: session.planId,
 planLabel: PLAN_LABELS[session.planId],
 // Grille B : le second forfait et son quota — les droits sont l'UNION.
 planPreinscription: session.planPreinscriptionId || "",
-planPreinscriptionLabel: PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "",
+planPreinscriptionLabel: session.planPreinscriptionLabel || PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "",
 planPreinscriptionExpiresAt: (session.userData && session.userData.planPreinscriptionExpiresAt) || null,
 maxPreinscriptions: planPreData ? planPreData.maxPreinscriptions : 0,
 isFitzExpressActive: !!session.hasFitzExpress,

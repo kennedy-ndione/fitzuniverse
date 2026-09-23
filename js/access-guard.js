@@ -43,7 +43,8 @@ PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS,
 resolveFeatureFlags, decideVerrou,
 resolvePlan, resolvePlanPreinscription, hasFitzExpressAccess,
 nextPlanId, unlockingPlans,
-ESPACES, HUB_ESPACE, resoudreEspace, espaceAutorise
+ESPACES, HUB_ESPACE, resoudreEspace, espaceAutorise,
+libellePreinscriptionDuCompte
 } from "./plan-features.js";
 
 export {
@@ -235,7 +236,10 @@ planId,
 disabled: userData.disabled === true,
 testerAccess: userData.testerAccess === true,
 hasFitzExpress: hasFitzExpressAccess(userData),
-planPreinscriptionId: resolvePlanPreinscription(userData)
+planPreinscriptionId: resolvePlanPreinscription(userData),
+// « Dossier Italie », et non « Dossier France », pour un dossier italien
+// (2026-09-23) : le libellé porte le pays de l'offre.
+planPreinscriptionLabel: libellePreinscriptionDuCompte(userData)
 });
 
 } catch (error) {

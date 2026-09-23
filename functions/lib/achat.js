@@ -30,8 +30,72 @@
  * (maxPreinscriptions = 7) y sont dupliqués volontairement, comme dans
  * firestore.rules. test/grille-b.test.mjs échoue si l'un des trois
  * diverge.
+ *
+ * SIX DESTINATIONS DE PLUS (2026-09-23, décision de Charles)
+ * ---------------------------------------------------------
+ * La Roumanie, la Turquie, le Maroc, l'Italie, l'Allemagne et le Canada
+ * se vendent avec LA MÊME GRILLE que la France (10 000 / 75 000 /
+ * 150 000 F) et les MÊMES identifiants d'offre. Ce qui change, c'est la
+ * DESTINATION, envoyée par le navigateur avec l'identifiant d'offre et
+ * vérifiée ici contre DESTINATIONS_VENDUES :
+ *
+ *   destination "france" (ou absente) → `planPreinscription`, comme
+ *     avant : RIEN ne change pour la France, ni les champs, ni la
+ *     campagne du 31 juillet, ni la déduction.
+ *   toute autre destination → `preinscriptionsPays.<destination>` =
+ *     { plan, expiresAt, diagnosticPayeLe? }. Un compte peut détenir un
+ *     dossier par pays : acheter l'Italie ne touche jamais au dossier
+ *     France, ni l'inverse.
+ *
+ * Durée hors France : les procédures de ces pays n'ont pas de campagne
+ * unique à date fixe (chaque université a la sienne) — un dossier vaut
+ * DOUZE MOIS à compter de l'achat ; le diagnostic, quatorze jours.
  * ============================================================
  */
+
+/** Les destinations vendues. MIROIR de DESTINATIONS_VENDUES (js/destinations-preinscription.js). */
+const DESTINATIONS_VENDUES = ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada"];
+
+/** Le nom de chaque destination, pour les libellés de facture. */
+const NOMS_DESTINATION = {
+  france: "France", roumanie: "Roumanie", turquie: "Turquie", maroc: "Maroc",
+  italie: "Italie", allemagne: "Allemagne", canada: "Canada",
+};
+
+/** Durée d'un dossier hors France, en mois. */
+const DUREE_DOSSIER_PAYS_MOIS = 12;
+
+/** "france" pour une destination absente ou inconnue du forfait préinscription. */
+function destinationNormalisee(destination) {
+  const d = String(destination || "").toLowerCase();
+  return DESTINATIONS_VENDUES.includes(d) ? d : "france";
+}
+
+/** Vrai si la destination demandée est vendue (absente = France). */
+function destinationVendue(destination) {
+  return destination === undefined || destination === null || destination === "" ||
+    DESTINATIONS_VENDUES.includes(String(destination).toLowerCase());
+}
+
+/**
+ * Le libellé d'une offre pour une destination : « Dossier Italie »,
+ * « Diagnostic Maroc », « Dossier Canada + Conseiller ». Inchangé pour
+ * la France et pour toute offre bourse.
+ */
+function libelleOffre(planId, destination) {
+  const offre = GRILLE[planId];
+  if (!offre) return "";
+  const d = destinationNormalisee(destination);
+  if (offre.parcours !== "preinscription" || d === "france") return offre.label;
+  return offre.label.replace("France", NOMS_DESTINATION[d]);
+}
+
+/** L'entrée d'un pays dans users/{uid}.preinscriptionsPays, ou {}. */
+function entreePays(user, destination) {
+  const carte = user && user.preinscriptionsPays;
+  const e = carte && typeof carte === "object" ? carte[destination] : null;
+  return e && typeof e === "object" ? e : {};
+}
 
 /**
  * `dureeMois: null` = achat unique sans échéance — les TROIS formules
@@ -143,7 +207,10 @@ const DEDUCTION_DIAGNOSTIC = {
  *      sans lui, ils perdraient une déduction qu'ils ont achetée. Il
  *      s'éteint tout seul, puisque tout nouvel achat pose le champ.
  */
-function diagnosticPayeLe(user = {}) {
+function diagnosticPayeLe(user = {}, destination = "france") {
+  const d = destinationNormalisee(destination);
+  if (d !== "france") return dateValide(entreePays(user, d).diagnosticPayeLe);
+
   const explicite = dateValide(user.diagnosticPayeLe);
   if (explicite) return explicite;
 
@@ -162,7 +229,7 @@ function diagnosticPayeLe(user = {}) {
  * @returns {{prix:number, base:number, deduction:number, mention:string}|null}
  *          null pour une formule inconnue.
  */
-function prixAvecDeduction(planId, user = {}, maintenant = new Date()) {
+function prixAvecDeduction(planId, user = {}, maintenant = new Date(), destination = "france") {
   const offre = GRILLE[planId];
   if (!offre) return null;
 
@@ -171,7 +238,9 @@ function prixAvecDeduction(planId, user = {}, maintenant = new Date()) {
 
   if (!DEDUCTION_DIAGNOSTIC.plans.includes(planId)) return rien;
 
-  const paye = diagnosticPayeLe(user);
+  // Le diagnostic se déduit du dossier DU MÊME PAYS : un Diagnostic Maroc
+  // ne fait pas une remise sur un Dossier Italie.
+  const paye = diagnosticPayeLe(user, destination);
   if (!paye) return rien;
 
   const jours = Math.floor((maintenant.getTime() - paye.getTime()) / 86400000);
@@ -242,7 +311,7 @@ function ajouterMois(depart, mois) {
  * @returns {{ statut: "applique"|"rang-inferieur"|"formule-inconnue",
  *             misAJour?: Object, planActuel?: string }}
  */
-function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprimer }) {
+function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprimer, destination = "france" }) {
   const offre = GRILLE[planId];
   if (!offre) return { statut: "formule-inconnue" };
 
@@ -269,6 +338,41 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
     const restant = dateValide(user.fitzExpressExpiresAt);
     const depart = restant && restant > maintenant ? restant : maintenant;
     misAJour.fitzExpressExpiresAt = ajouterJours(depart, offre.dureeJours).toISOString();
+    return { statut: "applique", misAJour };
+  }
+
+  // --- Grille B hors France : un dossier PAR PAYS (2026-09-23) ---
+  // `preinscriptionsPays.<pays>`, jamais `planPreinscription` : le dossier
+  // France et celui d'un autre pays vivent côte à côte. Le webhook écrit
+  // en `set(..., { merge: true })`, qui fusionne les cartes : les autres
+  // pays du compte ne sont pas touchés.
+  const dest = destinationNormalisee(destination);
+  if (offre.parcours === "preinscription" && dest !== "france") {
+    const entree = entreePays(user, dest);
+    const actuel = String(entree.plan || "");
+    const expiration = dateValide(entree.expiresAt);
+    const encoreActif = !!actuel && !!expiration && expiration > maintenant;
+
+    const rangActuel = encoreActif ? RANG_PREINSCRIPTION[actuel] ?? 0 : 0;
+    const rangAchete = RANG_PREINSCRIPTION[planId] ?? 0;
+
+    if (rangAchete < rangActuel) {
+      return { statut: "rang-inferieur", misAJour, planActuel: actuel };
+    }
+
+    let echeance;
+    if (offre.campagne) {
+      echeance = ajouterMois(maintenant, DUREE_DOSSIER_PAYS_MOIS);
+    } else {
+      const depart = encoreActif && actuel === planId ? expiration : maintenant;
+      echeance = ajouterJours(depart, offre.dureeJours);
+    }
+    if (encoreActif && expiration > echeance) echeance = expiration;
+
+    const nouvelle = { plan: planId, expiresAt: echeance.toISOString() };
+    if (planId === DEDUCTION_DIAGNOSTIC.offre) nouvelle.diagnosticPayeLe = maintenant.toISOString();
+
+    misAJour.preinscriptionsPays = { [dest]: nouvelle };
     return { statut: "applique", misAJour };
   }
 
@@ -398,7 +502,7 @@ function dateLongue(d) {
  * @param {Date}   [p.maintenant]
  * @returns {{ code: string, message: string }|null} null = rien ne s'oppose à la vente
  */
-function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = new Date() }) {
+function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = new Date(), destination = "france" }) {
   const offre = GRILLE[planId];
   if (!offre) return null;
 
@@ -407,6 +511,23 @@ function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = ne
     const active = formuleActive(user, maintenant);
     if (active && active !== "fitzExpress") {
       return { code: "pass-inclus", message: "Votre formule comprend déjà Discuter avec Fitz." };
+    }
+    return null;
+  }
+
+  // 4 bis. Le même dossier pour le même pays hors France, encore actif.
+  const dest = destinationNormalisee(destination);
+  if (offre.parcours === "preinscription" && dest !== "france") {
+    const entree = entreePays(user, dest);
+    const expiration = dateValide(entree.expiresAt);
+    if (offre.campagne && String(entree.plan || "") === planId && expiration && expiration > maintenant) {
+      const label = libelleOffre(planId, dest);
+      const suivante = PREINSCRIPTION_SUIVANTE[planId] ? libelleOffre(PREINSCRIPTION_SUIVANTE[planId], dest) : null;
+      return {
+        code: "meme-dossier",
+        message: `Vous détenez déjà le ${label} : il reste actif jusqu'au ${dateLongue(expiration)}. ` +
+          (suivante ? `Pour un conseiller à vos côtés, passez au ${suivante}.` : "Il n'y a rien de plus à acheter pour ce pays."),
+      };
     }
     return null;
   }
@@ -454,4 +575,4 @@ function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = ne
   return null;
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat };
+module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, DESTINATIONS_VENDUES, DUREE_DOSSIER_PAYS_MOIS, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre };

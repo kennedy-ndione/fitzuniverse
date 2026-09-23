@@ -302,7 +302,10 @@ test("route 11 — LA LANGUE DES PIÈCES : une question, deux réponses, aucune 
   //    documents — on y renvoie.
   const moteur = lire("espace-preinscription.js");
   assert.match(moteur, /function htmlTraduction\(e\) \{/);
-  assert.match(moteur, /"dossierFrance\.traductions": valeur/, "la déclaration doit vivre au niveau du dossier");
+  // 2026-09-23 : le champ du dossier dépend de la destination ; pour la
+  // France, c'est toujours dossierFrance.
+  assert.match(moteur, /\[`\$\{champDossier\(\)\}\.traductions`\]: valeur/, "la déclaration doit vivre au niveau du dossier");
+  assert.match(moteur, /return estFrance\(\) \? "dossierFrance" : `dossiersPays\.\$\{etat\.destination\}`;/);
   assert.match(moteur, /documents\.html\?categorie=administratif/, "la fiche « Traductions certifiées » n'est plus atteignable depuis l'étape");
   assert.match(moteur, /traducteur assermenté/);
   for (const recopie of ["1 à 3 semaines", "numéro d'agrément"]) {
@@ -331,11 +334,12 @@ test("route 10 — la page : une seule étape à l'écran, pas de rail ni de rad
   }
   // Le moteur : chaque geste écrit au bon endroit.
   const moteur = lire("espace-preinscription.js");
-  assert.match(moteur, /"dossierFrance\.pieces": pieces/, "les pièces s'écrivent sur le dossier");
-  assert.match(moteur, /\[`dossierFrance\.etapes\.\$\{e\.id\}`\]/, "les étapes s'écrivent sur le dossier");
-  assert.match(moteur, /portalUrl: PORTAIL_ETUDES_EN_FRANCE/, "un vœu porte toujours le portail Études en France");
+  assert.match(moteur, /\[`\$\{champDossier\(\)\}\.pieces`\]: pieces/, "les pièces s'écrivent sur le dossier");
+  assert.match(moteur, /\[`\$\{champDossier\(\)\}\.etapes\.\$\{e\.id\}`\]/, "les étapes s'écrivent sur le dossier");
+  assert.match(moteur, /portalUrl: estFrance\(\) \? PORTAIL_ETUDES_EN_FRANCE :/, "un vœu France porte toujours le portail Études en France");
   assert.match(moteur, /track: "preinscription"/);
-  assert.match(moteur, /slotIdLibre\(etat\.voeux, quota, "pre"\)/, "les créneaux pre-N de la formule");
+  // 2026-09-23 : pre-N pour la France, pre-<code>-N ailleurs (PREFIXES_VOEU).
+  assert.match(moteur, /slotIdLibre\(etat\.voeux, quota, estFrance\(\) \? "pre" : PREFIXES_VOEU\[etat\.destination\]\)/, "les créneaux pre-N de la formule");
   assert.match(moteur, /preuveDepot: \{ mode: "numero", numeroDossier: numero, deposeLe: jour, declareLe: jour \}/, "le numéro de dossier vaut preuve de dépôt sur chaque vœu");
   assert.ok(!/<select\b/.test(moteur), "aucun menu déroulant du système : les choix passent par .fitz-choice");
   assert.ok(moteur.includes('class="fitz-choice"'));

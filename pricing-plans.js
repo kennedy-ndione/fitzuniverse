@@ -640,14 +640,15 @@ window.SCHOLARBRIDGE_PLANS = SCHOLARBRIDGE_PLANS;
 
 // Construit l'objet transmis à payment.html (URL + sessionStorage) et,
 // plus tard, à la passerelle PayDunya. Ne déclenche aucun paiement ici.
-function buildCheckoutPayload(planId) {
+function buildCheckoutPayload(planId, destination) {
 
-const plan = SCHOLARBRIDGE_PLANS[planId];
+const plan = typeof offrePourDestination === "function" ? offrePourDestination(planId, destination) : SCHOLARBRIDGE_PLANS[planId];
 
 if (!plan) return null;
 
 return {
 plan: plan.id,
+destination: plan.destination || "france",
 label: plan.label,
 priceFCFA: plan.priceFCFA,
 currency: "XOF",
@@ -686,9 +687,17 @@ dureeDiagnosticJours: 14
 
 window.SCHOLARBRIDGE_DEDUCTION = DEDUCTION_DIAGNOSTIC;
 
-function dateDeDiagnostic(user) {
+function dateDeDiagnostic(user, destination) {
 
 const u = user || {};
+
+// Hors France (2026-09-23) : la date du diagnostic DU MÊME PAYS, posée
+// par le webhook dans preinscriptionsPays.<pays>.diagnosticPayeLe.
+if (destination && destination !== "france") {
+const entree = u.preinscriptionsPays && u.preinscriptionsPays[destination];
+const d = entree && entree.diagnosticPayeLe ? new Date(entree.diagnosticPayeLe) : null;
+return d && !isNaN(d.getTime()) ? d : null;
+}
 
 const explicite = u.diagnosticPayeLe ? new Date(u.diagnosticPayeLe) : null;
 if (explicite && !isNaN(explicite.getTime())) return explicite;
@@ -710,7 +719,7 @@ return new Date(expiration.getTime() - duree * 86400000);
 * Le prix à AFFICHER pour une formule, déduction faite.
 * @returns {{prix:number, base:number, deduction:number, mention:string}|null}
 */
-function prixAvecDeduction(planId, user, maintenant) {
+function prixAvecDeduction(planId, user, maintenant, destination) {
 
 const plan = SCHOLARBRIDGE_PLANS[planId];
 if (!plan) return null;
@@ -720,7 +729,7 @@ const rien = { prix: base, base, deduction: 0, mention: "" };
 
 if (!DEDUCTION_DIAGNOSTIC.plans.includes(planId)) return rien;
 
-const paye = dateDeDiagnostic(user);
+const paye = dateDeDiagnostic(user, destination);
 if (!paye) return rien;
 
 const jours = Math.floor(((maintenant || new Date()).getTime() - paye.getTime()) / 86400000);
@@ -731,3 +740,95 @@ return { prix: base - DEDUCTION_DIAGNOSTIC.montant, base, deduction: DEDUCTION_D
 }
 
 window.prixAvecDeduction = prixAvecDeduction;
+
+// ==========================================================
+// LES SIX AUTRES DESTINATIONS (2026-09-23, décision de Charles)
+// ==========================================================
+//
+// La même grille que la France — 10 000 / 75 000 / 150 000 F — et les
+// MÊMES identifiants d'offre. La destination voyage avec l'achat
+// (payment.html?plan=dossier-france&destination=italie) jusqu'au
+// serveur, qui la vérifie et ouvre users/{uid}.preinscriptionsPays.<pays>.
+//
+// Ce tableau ne dit que ce qu'une CARTE d'offre doit dire autrement :
+// le nom du pays, la bonne préposition, le portail où l'étudiant déposera
+// lui-même, et le nombre de vœux suivis. MIROIR de
+// js/destinations-preinscription.js (plafondVoeux) et des motifs de
+// firestore.rules (pre-<code>-N) : test/destinations-preinscription.test.mjs
+// échoue si l'un diverge.
+
+const DESTINATIONS_OFFRE = {
+roumanie: { nom: "Roumanie", dans: "en Roumanie", pour: "pour la Roumanie", portail: "le portail de votre université", voeux: 7 },
+turquie: { nom: "Turquie", dans: "en Turquie", pour: "pour la Turquie", portail: "Türkiye Bursları ou le site de chaque université", voeux: 12 },
+maroc: { nom: "Maroc", dans: "au Maroc", pour: "pour le Maroc", portail: "le service national de votre pays (voie AMCI) ou le site de l'université privée", voeux: 7 },
+italie: { nom: "Italie", dans: "en Italie", pour: "pour l'Italie", portail: "Universitaly", voeux: 1 },
+allemagne: { nom: "Allemagne", dans: "en Allemagne", pour: "pour l'Allemagne", portail: "uni-assist ou le site de l'université", voeux: 7 },
+canada: { nom: "Canada", dans: "au Canada", pour: "pour le Canada", portail: "le site de chaque université, puis votre compte IRCC", voeux: 7 }
+};
+
+window.SCHOLARBRIDGE_DESTINATIONS = DESTINATIONS_OFFRE;
+
+/**
+* L'offre préinscription telle qu'elle se vend POUR UNE DESTINATION.
+* La France (ou une destination absente) rend l'offre telle quelle ; une
+* autre destination rend une COPIE aux textes du pays, au même prix.
+* Jamais de mutation de SCHOLARBRIDGE_PLANS.
+*/
+function offrePourDestination(planId, destination) {
+
+const plan = SCHOLARBRIDGE_PLANS[planId];
+if (!plan) return null;
+const d = Object.prototype.hasOwnProperty.call(DESTINATIONS_OFFRE, destination) ? DESTINATIONS_OFFRE[destination] : null;
+if (plan.parcours !== "preinscription" || !d) return plan;
+
+const unVoeu = d.voeux === 1;
+const voeux = unVoeu ? "Votre cours suivi" : `Jusqu'à ${d.voeux} vœux suivis`;
+
+if (planId === "diagnostic-france") {
+return Object.assign({}, plan, {
+destination: destination,
+label: `Diagnostic ${d.nom}`,
+tagline: `Une réponse honnête avant d'engager des frais ${d.dans}.`,
+cta: `Faire mon Diagnostic ${d.nom}`,
+fitzAccess: "Aucun outil Fitz : de l'arithmétique sur des montants publiés, avec leurs sources",
+highlights: [
+"Un verdict en une phrase : vos ressources face au seuil exigé pour le visa, quand le pays en fixe un",
+"Chaque montant avec sa source officielle et sa date de vérification",
+`Le coût de l'année ${d.dans} : droits d'inscription, frais de dossier, visa, titre de séjour`,
+"Le calendrier publié et les étapes de la procédure, en entier",
+`Les 10 000 F se déduisent d'un Dossier ${d.nom} acheté dans les 30 jours`
+]
+});
+}
+
+const conseiller = planId === "dossier-france-conseiller";
+return Object.assign({}, plan, {
+destination: destination,
+label: conseiller ? `Dossier ${d.nom} + Conseiller` : `Dossier ${d.nom}`,
+tagline: conseiller
+? "Le même dossier, plus une relecture humaine avant de déposer ou de payer des frais non remboursables."
+: `Votre dossier ${d.pour}, accompagné étape par étape, du premier papier au départ.`,
+cta: conseiller ? "Préparer mon dossier avec un conseiller" : `Préparer mon dossier ${d.nom}`,
+duration: "12 mois",
+maxPreinscriptions: d.voeux,
+fitzAccess: conseiller
+? `Tout le Dossier ${d.nom}, plus la relecture de votre conseiller`
+: "Documents, traductions, lettres et e-mails avec Fitz, vérification avant dépôt, préparation aux entretiens, messagerie FitzUniverse",
+highlights: conseiller ? [
+`Tout le contenu du Dossier ${d.nom}`,
+"Une relecture humaine de votre dossier AVANT le dépôt et avant tout frais non remboursable",
+"Un conseiller joignable pendant les douze mois de votre accompagnement",
+`Vous gardez la main : vous déposez vous-même sur ${d.portail}`
+] : [
+unVoeu ? `${voeux} de la préinscription au départ — ${d.dans}, la règle est d'un seul cours` : `${voeux}, de la première pièce au visa`,
+`Le Diagnostic ${d.nom} inclus`,
+"La procédure officielle expliquée étape par étape, en français simple, avec ses sources",
+"Vos lettres et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
+"Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées",
+`Vous gardez la main : vous déposez vous-même sur ${d.portail}`
+]
+});
+
+}
+
+window.offrePourDestination = offrePourDestination;

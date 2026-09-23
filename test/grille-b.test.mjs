@@ -181,7 +181,8 @@ assert.match(bloc, /\(isAdmin\(\) && request\.resource\.data\.diff\(resource\.da
 
 // Le superAdmin : les deux grilles.
 assert.match(bloc, /isSuperAdmin\(\) && request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasOnly\(champsFormule\(\)/);
-assert.ok(/request\.resource\.data\.get\('track', 'bourse'\) == 'preinscription' && applicationId\.matches\(preSlotPattern\(uid\)\)/.test(regles));
+// 2026-09-23 : les créneaux des six autres pays s'ajoutent (preSlotPatternPays).
+assert.ok(/request\.resource\.data\.get\('track', 'bourse'\) == 'preinscription' && \(applicationId\.matches\(preSlotPattern\(uid\)\) \|\| applicationId\.matches\(preSlotPatternPays\(uid\)\)\)/.test(regles));
 assert.ok(/isOwner\(uid\) &&\s*!compteSuspendu\(uid\) &&/.test(regles), "messagerie ouverte à tout compte, préinscription comprise (2026-09-23)");
 assert.ok(motifRegle("hasPreinscription").includes("['diagnostic-france', 'dossier-france', 'dossier-france-conseiller']"));
 assert.ok(/isSignaturePlan\(uid\) \|\| isDossierConseiller\(uid\) \|\| isTester\(uid\)/.test(regles), "conseiller ouvert à Dossier France + Conseiller");

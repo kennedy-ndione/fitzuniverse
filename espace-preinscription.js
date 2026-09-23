@@ -25,6 +25,16 @@
  *  users/{uid}/applications/pre-N    un vœu : university, formation, niveau,
  *                                    status, motivation:{faite,faitLe}, preuveDepot
  *
+ * SIX DESTINATIONS DE PLUS (2026-09-23)
+ * -------------------------------------
+ *  La même page sert la Roumanie, la Turquie, le Maroc, l'Italie,
+ *  l'Allemagne et le Canada : l'adresse porte ?d=<pays>. La route vient
+ *  alors de js/route-destination.js (même forme d'objet), les états de
+ *  users/{uid}.dossiersPays.<pays>, le diagnostic de
+ *  users/{uid}.diagnosticsPays.<pays>, et les vœux s'appellent
+ *  pre-<code>-N (champ `destination`). Sans ?d, la France si le compte
+ *  l'a, sinon le premier pays acheté. La France ne change pas.
+ *
  * LES RÈGLES FIRESTORE NE CHANGENT PAS : l'étudiant peut écrire tout
  * champ de son document sauf ceux de la formule ; un vœu naît sur un
  * créneau pre-N (quota de la formule) ; un statut déposé exige une
@@ -64,7 +74,11 @@ import { prechargerCatalogue, chargerUniversites } from "./js/catalog-data.js";
 // Le catalogue part tout de suite, en parallèle de la connexion (lot
 // NAVIGATION RAPIDE, 2026-09-21) — voir js/catalog-data.js.
 prechargerCatalogue();
-import { PLAN_PREINSCRIPTION_LABELS } from "./js/plan-features.js";
+import { PLAN_PREINSCRIPTION_LABELS, droitsPreinscription, planPreinscriptionPour, resolvePlanPreinscriptionFrance } from "./js/plan-features.js";
+import { construireRoutePays, questionsSituationPays } from "./js/route-destination.js";
+import { destination as configDestination, PREFIXES_VOEU } from "./js/destinations-preinscription.js";
+import { HORS_TOTAL_PAYS } from "./js/diagnostic-pays.js";
+import { auPays, avecArticle } from "./js/pays-grammaire.js";
 import {
   construireRoute, phraseDeRoute, QUESTIONS_SITUATION, NIVEAUX_VOEU, REPONSES_VOEU,
   PLAFOND_VOEUX, PORTAIL_ETUDES_EN_FRANCE, TOTAL_ETAPES, DECLARATIONS_TRADUCTION, LIBELLES_TRADUCTION,
@@ -130,25 +144,74 @@ const etat = {
   route: null,
   choisie: null,          // l'id de l'étape affichée
   quota: null,
-  universites: null,      // les universités françaises du catalogue, pour la liste d'aide
-  conseiller: false
+  universites: null,      // les universités du pays, pour la liste d'aide
+  conseiller: false,
+  destination: "france",  // ?d=<pays> ; « france » par défaut
+  config: null,           // js/destinations-preinscription.js, hors France
+  droits: []              // droitsPreinscription() : les dossiers actifs du compte
 };
 
 function refUser() {
   return doc(db, "users", etat.session.user.uid);
 }
 
+function estFrance() {
+  return etat.destination === "france";
+}
+
+function nomDestination() {
+  return estFrance() ? "France" : etat.config.nom;
+}
+
+/** Le champ du document qui porte les états de la route. */
+function champDossier() {
+  return estFrance() ? "dossierFrance" : `dossiersPays.${etat.destination}`;
+}
+
+function questionsSituation() {
+  return estFrance() ? QUESTIONS_SITUATION : questionsSituationPays(etat.destination);
+}
+
+function plafondVoeux() {
+  return estFrance() ? PLAFOND_VOEUX : etat.config.plafondVoeux;
+}
+
+/** L'adresse de la route, à une étape — la destination d'abord. */
+function adresseRoute(etape = "") {
+  const p = new URLSearchParams();
+  if (!estFrance()) p.set("d", etat.destination);
+  if (etape) p.set("etape", etape);
+  const q = p.toString();
+  return `espace-preinscription.html${q ? `?${q}` : ""}`;
+}
+
 function recomposer() {
-  const residence = (etat.profile && (etat.profile.country || etat.profile.originCountry)) || "";
-  etat.procedure = trouverProcedure({ paysDestination: "France", portailUrl: PORTAIL_ETUDES_EN_FRANCE, paysResidence: residence });
-  etat.route = construireRoute({
-    procedure: etat.procedure,
-    profile: etat.profile,
-    diagnostic: etat.userData.diagnosticFrance || null,
-    voeux: etat.voeux,
-    dossier: etat.dossier,
-    visaChecklist: etat.userData.visaChecklist || {}
-  });
+  if (estFrance()) {
+    const residence = (etat.profile && (etat.profile.country || etat.profile.originCountry)) || "";
+    etat.procedure = trouverProcedure({ paysDestination: "France", portailUrl: PORTAIL_ETUDES_EN_FRANCE, paysResidence: residence });
+    etat.route = construireRoute({
+      procedure: etat.procedure,
+      profile: etat.profile,
+      diagnostic: etat.userData.diagnosticFrance || null,
+      voeux: etat.voeux,
+      dossier: etat.dossier,
+      visaChecklist: etat.userData.visaChecklist || {}
+    });
+  } else {
+    etat.procedure = trouverProcedure({ paysDestination: etat.config.nom });
+    etat.route = construireRoutePays({
+      id: etat.destination,
+      procedure: etat.procedure,
+      profile: etat.profile,
+      diagnostic: (etat.userData.diagnosticsPays && etat.userData.diagnosticsPays[etat.destination]) || null,
+      voeux: etat.voeux,
+      dossier: etat.dossier,
+      // Le départ d'un pays est le sien : ses démarches vivent dans son
+      // dossier, pas dans la liste France (users/{uid}.visaChecklist).
+      visaChecklist: (etat.dossier && etat.dossier.visaChecklist) || {}
+    });
+  }
+  if (!etat.route) return;
   if (!etat.choisie || !etat.route.etapes.some((e) => e.id === etat.choisie)) {
     etat.choisie = etat.route.courante ? etat.route.courante.id : etat.route.etapes[etat.route.etapes.length - 1].id;
   }
@@ -191,7 +254,21 @@ function peindreTete() {
       </span></li>
     </ul>` : "";
 
+  // LES DOSSIERS DU COMPTE (2026-09-23). Un étudiant qui a acheté deux
+  // destinations passe de l'une à l'autre ici ; avec une seule, rien.
+  const nav = document.getElementById("rtDestinations");
+  if (nav) {
+    const liste = etat.droits.some((x) => x.destination === etat.destination) ? etat.droits : [...etat.droits, { destination: etat.destination }];
+    nav.hidden = liste.length < 2;
+    nav.innerHTML = liste.length < 2 ? "" : liste.map((x) => {
+      const nom = x.destination === "france" ? "France" : ((configDestination(x.destination) || {}).nom || x.destination);
+      const actif = x.destination === etat.destination;
+      return `<a class="rt-destination${actif ? " is-active" : ""}" href="espace-preinscription.html?d=${ech(encodeURIComponent(x.destination))}"${actif ? ` aria-current="page"` : ""}>${ech(nom)}</a>`;
+    }).join("");
+  }
+
   const fil = document.getElementById("rtFil");
+  fil.setAttribute("aria-label", `Les ${etat.route.total} étapes de votre route`);
   fil.innerHTML = etat.route.etapes.map((e) => `
     <button type="button" class="rt-point is-${e.etat}${e.id === etat.choisie ? " is-choisie" : ""}" data-etape="${ech(e.id)}" title="${ech(`${e.numero}. ${e.titre}`)}" aria-label="${ech(`Étape ${e.numero} : ${e.titre}`)}" aria-current="${e.id === etat.choisie ? "step" : "false"}">
       <span class="rt-point-num">${e.faite ? `<i data-lucide="check"></i>` : e.numero}</span>
@@ -199,6 +276,8 @@ function peindreTete() {
 
   const barre = document.getElementById("rtBarre");
   barre.style.setProperty("--rt-pct", `${etat.route.pourcentage}%`);
+  barre.setAttribute("aria-valuemax", String(etat.route.total));
+  barre.setAttribute("aria-valuenow", String(etat.route.faites));
   document.getElementById("rtBarreTexte").textContent = etat.route.faites
     ? `${etat.route.faites} étape${etat.route.faites > 1 ? "s" : ""} faite${etat.route.faites > 1 ? "s" : ""} sur ${etat.route.total}`
     : `${etat.route.total} étapes, dans l'ordre`;
@@ -323,7 +402,10 @@ function htmlOfficiel(e) {
  * est fait pour ça.
  */
 function voeuDeLOutil(e) {
-  if (e.id !== "ef_confirmation") return null;
+  // Hors France, la même règle vaut pour toute étape qui porte l'outil
+  // « Écrire à l'établissement » (les étapes de confirmation).
+  const confirmation = e.id === "ef_confirmation" || (!estFrance() && e.outils.some((o) => o.feature === "ai_email"));
+  if (!confirmation) return null;
   const admis = etat.voeux.filter((v) => v.status === "admise");
   if (admis.length === 1) return admis[0];
   if (!admis.length && etat.voeux.length === 1) return etat.voeux[0];
@@ -332,7 +414,19 @@ function voeuDeLOutil(e) {
 
 function hrefOutil(e, o) {
   const v = voeuDeLOutil(e);
-  return v ? `${o.href}?applicationId=${encodeURIComponent(v.id)}` : o.href;
+  const href = v ? `${o.href}?applicationId=${encodeURIComponent(v.id)}` : o.href;
+  return avecDestination(href);
+}
+
+/**
+ * HORS FRANCE, L'OUTIL APPREND LE PAYS (2026-09-23). Sans vœu, un outil
+ * ouvert depuis l'espace préinscription suppose la France ; `?d=italie`
+ * lui dit la route d'où il vient (js/plan-features.js,
+ * destinationDeLAdresse). Un vœu, quand il est passé, garde le dernier mot.
+ */
+function avecDestination(href) {
+  if (estFrance() || /[?&]d=/.test(href)) return href;
+  return `${href}${href.includes("?") ? "&" : "?"}d=${encodeURIComponent(etat.destination)}`;
 }
 
 function htmlOutils(e) {
@@ -354,17 +448,22 @@ function htmlOutilPrincipal(e) {
 
 function htmlPortail(e) {
   if (e.kind !== "procedure" && e.kind !== "motivations" && e.kind !== "reponses" && e.kind !== "visa") return "";
+  // L'étape de réponse ajoutée à une voie directe (UM6P, Al Akhawayn) n'a
+  // pas de portail : celui du pays (l'AMCI) n'est pas le sien.
+  if (e.id === "reponse_etablissement") return "";
   const p = etat.route.portail;
   return `<a href="${ech(p.url)}" target="_blank" rel="noopener noreferrer" class="rt-btn rt-btn--portail"><i data-lucide="external-link"></i><span>Ouvrir ${ech(p.nom)}</span></a>`;
 }
 
 /** Le geste : la preuve si elle est requise, et « C'est fait ». */
 function htmlGeste(e) {
-  if (["situation", "diagnostic", "voeux", "pieces", "motivations", "reponses"].includes(e.kind)) return "";
+  if (["situation", "diagnostic", "voeux", "pieces", "motivations", "reponses", "depart", "voie"].includes(e.kind)) return "";
+  // Une étape déclarée « ne me concerne pas » n'attend plus de geste.
+  if (e.nonConcerne) return "";
   const preuve = e.preuve.requise ? `
     <label class="rt-preuve">
       <span>${ech(e.preuve.libelle.charAt(0).toUpperCase() + e.preuve.libelle.slice(1))}</span>
-      <input type="text" id="rtPreuve" maxlength="64" value="${ech(e.preuve.valeur)}" placeholder="${ech(e.id === "ef_soumission" ? "Le numéro que le portail vous a donné" : "La référence, pour la retrouver plus tard")}" autocomplete="off">
+      <input type="text" id="rtPreuve" maxlength="64" value="${ech(e.preuve.valeur)}" placeholder="${ech(e.id === "ef_soumission" ? "Le numéro que le portail vous a donné" : e.depot ? "Le numéro ou la référence de votre dépôt" : "La référence, pour la retrouver plus tard")}" autocomplete="off">
     </label>` : "";
   const libelleBouton = e.kind === "visa"
     ? (e.cochee ? "Visa demandé — annuler" : "J'ai déposé ma demande de visa")
@@ -376,6 +475,34 @@ function htmlGeste(e) {
         <i data-lucide="${e.cochee ? "check-circle-2" : "circle"}"></i><span>${ech(libelleBouton)}</span>
       </button>
       ${e.cochee && e.faitLe ? `<span class="rt-faitle">le ${ech(dateLongue(e.faitLe))}</span>` : ""}
+    </div>`;
+}
+
+/**
+ * DEUX PORTES, UNE SEULE EST LA SIENNE (2026-09-23).
+ * La Turquie (la bourse, ou l'autofinancement) et le Maroc (l'AMCI,
+ * l'UM6P ou Al Akhawayn) ont plusieurs procédures dans une : chaque
+ * étape de la procédure officielle peut donc être déclarée « ne me
+ * concerne pas ». Elle compte alors comme réglée. La route France n'a
+ * pas ce bouton (ses étapes n'ont pas `ignorable`).
+ */
+function htmlIgnorer(e) {
+  if (!e.ignorable) return "";
+  return `
+    <div class="rt-ignorer">
+      ${e.nonConcerne ? `<p class="rt-mention"><i data-lucide="info"></i><span>Vous avez indiqué que cette étape ne vous concerne pas : elle compte comme réglée.</span></p>` : ""}
+      <button type="button" class="rt-lien-discret" id="rtIgnorer" aria-pressed="${e.nonConcerne ? "true" : "false"}">${e.nonConcerne ? "Finalement, elle me concerne" : "Cette étape ne me concerne pas"}</button>
+    </div>`;
+}
+
+/** Ce qu'il faut apporter à une étape qui n'est pas une liste à cocher. */
+function htmlAApporter(e) {
+  const pieces = (e.officielle && e.officielle.pieces) || [];
+  if (!pieces.length || e.nonConcerne) return "";
+  return `
+    <div class="rt-a-apporter">
+      <p class="rt-sous-titre">Ce qu'il faut avoir sous la main</p>
+      <ul class="rt-pieces-liste">${pieces.map((p) => `<li><strong>${ech(p.nom)}</strong>${p.aide ? `<span>${ech(p.aide)}</span>` : ""}</li>`).join("")}</ul>
     </div>`;
 }
 
@@ -414,7 +541,7 @@ function htmlSituation(e) {
   };
   return `
     <form class="rt-form" id="rtSituation" novalidate>
-      ${QUESTIONS_SITUATION.map((q, i) => `
+      ${questionsSituation().map((q, i) => `
         <div class="rt-q">
           <label class="rt-q-libelle"><span class="rt-q-num">${i + 1}</span>${ech(q.libelle)}</label>
           ${champ(q)}
@@ -432,13 +559,17 @@ function htmlDiagnostic(e) {
   // Les champs sont ceux qu'écrit js/diagnostic-france-page.js :
   // `calculeLe` (et non « enregistreLe »), `totalAnnuelEUR`, `verdict`,
   // `etatVerdict`. Un nom inventé ici afficherait un bloc muet.
-  const d = etat.userData.diagnosticFrance;
+  // Hors France : users/{uid}.diagnosticsPays.<pays>, écrit par
+  // js/diagnostic-pays-page.js — `totalTexte` porte déjà la phrase.
+  const d = estFrance() ? etat.userData.diagnosticFrance : (etat.userData.diagnosticsPays && etat.userData.diagnosticsPays[etat.destination]);
   if (e.faite && d) {
-    const total = typeof d.totalAnnuelEUR === "number" ? `${formatMontant(Math.round(d.totalAnnuelEUR), "EUR")} pour l'année` : "";
+    const total = estFrance()
+      ? (typeof d.totalAnnuelEUR === "number" ? `${formatMontant(Math.round(d.totalAnnuelEUR), "EUR")} pour l'année` : "")
+      : String(d.totalTexte || "");
     return `
       <div class="rt-verdict is-${ech(d.etatVerdict || "")}">
         <p class="rt-verdict-phrase">${ech(d.verdict || "Diagnostic enregistré.")}</p>
-        ${total ? `<p class="rt-verdict-chiffre">${ech(total)}</p><p class="rt-verdict-hors">${ech(HORS_TOTAL)}</p>` : ""}
+        ${total ? `<p class="rt-verdict-chiffre">${ech(total)}</p><p class="rt-verdict-hors">${ech(estFrance() ? HORS_TOTAL : HORS_TOTAL_PAYS)}</p>` : ""}
         ${d.calculeLe ? `<p class="rt-verdict-date">Fait le ${ech(dateLongue(String(d.calculeLe).slice(0, 10)))}. Vos ressources ont changé ? Refaites-le, sans rien repayer.</p>` : ""}
       </div>
       <div class="rt-geste">${htmlOutilPrincipal(e).replace("Faire mon diagnostic avec Fitz", "Refaire mon diagnostic")}</div>`;
@@ -450,31 +581,38 @@ function htmlDiagnostic(e) {
 function htmlVoeux(e) {
   // Le Diagnostic France seul n'a aucune place de vœu (maxPreinscriptions
   // = 0) : on le dit, avec la porte vers la formule qui en a.
+  const plafond = plafondVoeux();
+  const nom = nomDestination();
+  const unSeul = plafond === 1;
   if (etat.quota === 0) {
-    return `<p class="rt-vide">Votre formule actuelle comprend le diagnostic, pas le suivi des vœux. Le Dossier France vous accompagne sur les ${PLAFOND_VOEUX} vœux, de la première pièce au visa.</p>
-      <div class="rt-geste"><a href="offers.html" class="rt-btn rt-btn--fait"><i data-lucide="arrow-right"></i><span>Voir le Dossier France</span></a></div>`;
+    return `<p class="rt-vide">Votre formule actuelle comprend le diagnostic, pas le suivi des vœux. Le Dossier ${ech(nom)} vous accompagne ${unSeul ? "sur votre cours" : `sur les ${plafond} vœux`}, de la première pièce au départ.</p>
+      <div class="rt-geste"><a href="${estFrance() ? "offers.html" : `payment.html?plan=dossier-france&amp;destination=${ech(etat.destination)}`}" class="rt-btn rt-btn--fait"><i data-lucide="arrow-right"></i><span>Voir le Dossier ${ech(nom)}</span></a></div>`;
   }
-  const quota = Number.isFinite(etat.quota) ? Math.min(etat.quota, PLAFOND_VOEUX) : PLAFOND_VOEUX;
+  const quota = Number.isFinite(etat.quota) ? Math.min(etat.quota, plafond) : plafond;
   const reste = Math.max(0, quota - etat.voeux.length);
   const liste = etat.voeux.length ? `
     <ol class="rt-voeux">${etat.voeux.map((v) => `
       <li class="rt-voeu">
         <div class="rt-voeu-texte"><strong>${ech(v.university)}</strong><span>${ech([v.formation, v.niveau].filter(Boolean).join(" · "))}</span></div>
         <button type="button" class="rt-voeu-retirer" data-retirer="${ech(v.id)}" aria-label="Retirer ce vœu"><i data-lucide="x"></i></button>
-      </li>`).join("")}</ol>` : `<p class="rt-vide">Aucun vœu pour l'instant. Le premier se pose ci-dessous.</p>`;
+      </li>`).join("")}</ol>` : `<p class="rt-vide">${unSeul ? "Aucun cours pour l'instant. Il se pose ci-dessous." : "Aucun vœu pour l'instant. Le premier se pose ci-dessous."}</p>`;
   const avert = etat.route.avertissementsVoeux.length ? `<ul class="rt-avert">${etat.route.avertissementsVoeux.map((a) => `<li><i data-lucide="alert-triangle"></i><span>${ech(a)}</span></li>`).join("")}</ul>` : "";
   const form = reste > 0 ? `
     <form class="rt-form rt-form--voeu" id="rtVoeu" novalidate>
-      <p class="rt-form-titre">Ajouter un vœu <span class="rt-quota">${etat.voeux.length} sur ${quota}</span></p>
-      <div class="rt-q"><span class="rt-q-libelle">L'établissement</span>${htmlSuggest("university", "", "Commencez à écrire : Université de Lille, IUT de Rennes…", "unis")}<p class="rt-q-aide">Les établissements français du catalogue vous sont proposés en tapant. Un autre établissement ? Écrivez son nom.</p></div>
+      <p class="rt-form-titre">${unSeul ? "Votre cours" : "Ajouter un vœu"} <span class="rt-quota">${etat.voeux.length} sur ${quota}</span></p>
+      <div class="rt-q"><span class="rt-q-libelle">L'établissement</span>${htmlSuggest("university", "", estFrance() ? "Commencez à écrire : Université de Lille, IUT de Rennes…" : "Commencez à écrire le nom de l'établissement", "unis")}<p class="rt-q-aide">${estFrance() ? "Les établissements français du catalogue vous sont proposés en tapant." : `Le catalogue vous propose les établissements ${ech(auPays(nom))} en tapant.`} Un autre établissement ? Écrivez son nom.</p></div>
       <div class="rt-q"><span class="rt-q-libelle">La formation</span>${htmlSuggest("formation", "", "Licence Informatique, Master Droit des affaires…", "formation")}</div>
       <div class="rt-q"><span class="rt-q-libelle">Le niveau d'entrée</span>
-        <div class="fitz-choice-group" role="radiogroup" aria-label="Le niveau d'entrée">${NIVEAUX_VOEU.map((n) => `
+        <div class="fitz-choice-group" role="radiogroup" aria-label="Le niveau d'entrée">${(estFrance() ? NIVEAUX_VOEU : etat.config.niveaux).map((n) => `
           <label class="fitz-choice"><input type="radio" name="niveau" value="${ech(n)}"><span class="fitz-choice-dot" aria-hidden="true"></span><span>${ech(n)}</span></label>`).join("")}</div>
       </div>
-      <div class="rt-geste"><button type="submit" class="rt-btn rt-btn--fait"><i data-lucide="plus"></i><span>Ajouter ce vœu</span></button></div>
-    </form>` : `<p class="rt-quota-plein">Vos ${quota} vœux sont posés. Pour en changer un, retirez-le d'abord.</p>`;
-  return `${liste}${avert}${form}`;
+      <div class="rt-geste"><button type="submit" class="rt-btn rt-btn--fait"><i data-lucide="plus"></i><span>${unSeul ? "Enregistrer ce cours" : "Ajouter ce vœu"}</span></button></div>
+    </form>` : `<p class="rt-quota-plein">${unSeul ? "Votre cours est posé. Pour en changer, retirez-le d'abord." : `Vos ${quota} vœux sont posés. Pour en changer un, retirez-le d'abord.`}</p>`;
+  // LE PLAFOND OFFICIEL, AVEC SA SOURCE (Italie : un seul cours ; Türkiye
+  // Bursları : douze préférences). Ailleurs, sept : notre accompagnement.
+  const officiel = !estFrance() && etat.config.plafondOfficiel ? `
+    <p class="rt-mention" data-sans-glossaire><i data-lucide="info"></i><span>${ech(etat.config.plafondOfficiel.texte)} <span class="rt-source">Vérifié le ${ech(formaterDate(etat.config.plafondOfficiel.verifieLe))} · <a href="${ech(etat.config.plafondOfficiel.source)}" target="_blank" rel="noopener noreferrer">la source officielle</a></span></span></p>` : "";
+  return `${liste}${avert}${form}${officiel}`;
 }
 
 /**
@@ -516,7 +654,7 @@ function htmlPieces(e) {
           <span class="rt-piece-corps">
             <span class="rt-piece-nom">${ech(p.nom)}</span>
             ${p.aide ? `<span class="rt-piece-aide">${ech(p.aide)}</span>` : ""}
-            <span class="rt-piece-meta">${p.tailleMax ? `${ech(p.tailleMax)} maximum` : ""}${p.traduction ? " · à traduire si ce n'est pas en français" : ""}</span>
+            <span class="rt-piece-meta">${p.tailleMax ? `${ech(p.tailleMax)} maximum` : ""}${p.traduction ? (estFrance() ? " · à traduire si ce n'est pas en français" : " · traduction officielle à prévoir") : ""}${p.legalisation ? " · légalisation à prévoir" : ""}</span>
           </span>
         </label>
         ${p.obtenue ? "" : `<button type="button" class="rt-piece-ecarter" data-ecarter="${ech(p.slug)}" aria-pressed="${p.ecartee ? "true" : "false"}">${p.ecartee ? "Finalement, ça me concerne" : "Ne me concerne pas"}</button>`}
@@ -637,8 +775,47 @@ function htmlVisa(e) {
     </div>`;
 }
 
+// ---- Hors France, Turquie et Maroc : le choix de la voie ----
+function htmlVoie(e) {
+  const v = e.voie;
+  const choix = v.options.find((o) => o.id === v.choisie);
+  return `
+    <div class="fitz-choice-group rt-voie" role="radiogroup" aria-label="${ech(v.question)}">${v.options.map((o) => `
+      <label class="fitz-choice"><input type="radio" name="voie" value="${ech(o.id)}" data-voie="${ech(o.id)}"${v.choisie === o.id ? " checked" : ""}><span class="fitz-choice-dot" aria-hidden="true"></span><span class="rt-voie-texte"><strong>${ech(o.libelle)}</strong>${o.aide ? `<span>${ech(o.aide)}</span>` : ""}</span></label>`).join("")}
+    </div>
+    <p class="rt-q-aide">${choix
+      ? `Votre route suit la voie « ${ech(choix.libelle)} » : les étapes des autres voies en sont retirées. Vous pouvez en changer ici à tout moment.`
+      : "Votre choix retire de votre route les étapes des autres voies. Vous pourrez en changer ici à tout moment."}</p>`;
+}
+
+// ---- Dernière étape hors France : les démarches du départ ----
+function htmlDepart(e) {
+  const guide = guideVisaPour({ espace: "preinscription", procedure: etat.procedure });
+  const faits = e.visa.etat;
+  return `
+    <p class="rt-sous-titre">Les démarches du départ — ${e.visa.faites} sur ${e.visa.total}</p>
+    <div class="jy-guide" id="jyVisaGuide">
+      <ol class="rt-demarches">${guide.etapes.map((d, i) => `
+        <li class="rt-demarche${faits[d.id] ? " is-faite" : ""}">
+          <button type="button" class="rt-coche${faits[d.id] ? " is-fait" : ""}" data-visa="${ech(d.id)}" aria-pressed="${!!faits[d.id]}"><i data-lucide="${faits[d.id] ? "check-circle-2" : "circle"}"></i><span>${i + 1}. ${ech(d.titre)}</span></button>
+          <details class="rt-demarche-plus">
+            <summary>Quand, pourquoi, et ce qui fait échouer</summary>
+            <p><strong>Quand :</strong> ${ech(d.quand)}</p>
+            <p>${ech(d.pourquoi)}</p>
+            <p>${ech(d.variante)}</p>
+            <p class="rt-demarche-soustitre">À faire, dans cet ordre</p>
+            <ul>${d.actions.map((a) => `<li>${ech(a)}</li>`).join("")}</ul>
+            <p class="rt-demarche-soustitre">Ce qui fait échouer</p>
+            <ul>${d.vigilance.map((v) => `<li>${ech(v)}</li>`).join("")}</ul>
+          </details>
+        </li>`).join("")}</ol>
+    </div>`;
+}
+
 function htmlCorps(e) {
   switch (e.kind) {
+    case "depart": return htmlDepart(e);
+    case "voie": return htmlVoie(e);
     case "situation": return htmlSituation(e);
     case "diagnostic": return htmlDiagnostic(e);
     case "voeux": return htmlVoeux(e);
@@ -658,14 +835,16 @@ function peindreEtape() {
   section.className = `rt-etape is-${e.etat}`;
   section.innerHTML = `
     <div class="rt-etape-head">
-      <span class="rt-num">Étape ${e.numero} sur ${TOTAL_ETAPES}</span>
+      <span class="rt-num">Étape ${e.numero} sur ${etat.route.total}</span>
       <span class="rt-pill is-${e.etat}">${pill}</span>
     </div>
     <h2 class="rt-titre"><i data-lucide="${ech(e.icone)}"></i><span>${ech(e.titre)}</span></h2>
     <p class="rt-clair">${ech(e.enClair)}</p>
     ${htmlEcheance(e)}
     ${htmlFaits(e)}
+    ${htmlAApporter(e)}
     ${htmlCorps(e)}
+    ${htmlIgnorer(e)}
     ${e.kind === "motivations" || e.kind === "reponses" ? `<div class="rt-actions">${htmlPortail(e)}</div>` : ""}
     ${htmlOutils(e)}
     ${htmlOfficiel(e)}
@@ -675,7 +854,7 @@ function peindreEtape() {
     </div>
     <div class="rt-nav">
       ${e.numero > 1 ? `<button type="button" class="rt-nav-btn" data-aller="${ech(etat.route.etapes[e.numero - 2].id)}"><i data-lucide="arrow-left"></i><span>Étape ${e.numero - 1}</span></button>` : "<span></span>"}
-      ${e.numero < TOTAL_ETAPES ? `<button type="button" class="rt-nav-btn" data-aller="${ech(etat.route.etapes[e.numero].id)}"><span>Étape ${e.numero + 1}</span><i data-lucide="arrow-right"></i></button>` : ""}
+      ${e.numero < etat.route.total ? `<button type="button" class="rt-nav-btn" data-aller="${ech(etat.route.etapes[e.numero].id)}"><span>Étape ${e.numero + 1}</span><i data-lucide="arrow-right"></i></button>` : ""}
     </div>`;
 
   const s = etat.session;
@@ -749,7 +928,7 @@ function aller(id, defiler = true) {
 function memoriserRetour(e) {
   try {
     sessionStorage.setItem("fitz_retour", JSON.stringify({
-      href: `espace-preinscription.html?etape=${encodeURIComponent(e.id)}`,
+      href: adresseRoute(e.id),
       court: `Étape ${e.numero}`,
       libelle: `Étape ${e.numero} · ${e.titre}`,
       espace: "preinscription"
@@ -762,7 +941,7 @@ function memoriserRetour(e) {
 // ==========================================================
 async function enregistrerSituation(form) {
   const maj = {};
-  for (const q of QUESTIONS_SITUATION) {
+  for (const q of questionsSituation()) {
     const el = form.elements[q.cle];
     const val = el ? (el instanceof RadioNodeList ? el.value : el.value) : "";
     maj[q.cle] = String(val || "").trim();
@@ -798,17 +977,20 @@ async function ajouterVoeu(form) {
   const formation = form.elements.formation.value.trim();
   const niveau = form.elements.niveau ? form.elements.niveau.value : "";
   if (!university || !formation || !niveau) { toast("L'établissement, la formation et le niveau : les trois sont nécessaires.", "error"); return; }
-  const quota = Number.isFinite(etat.quota) ? Math.min(etat.quota, PLAFOND_VOEUX) : PLAFOND_VOEUX;
-  const slotId = slotIdLibre(etat.voeux, quota, "pre");
-  if (!slotId) { toast(`Vos ${quota} vœux sont déjà posés.`, "error"); return; }
+  const plafond = plafondVoeux();
+  const quota = Number.isFinite(etat.quota) ? Math.min(etat.quota, plafond) : plafond;
+  // Un espace d'identifiants par pays : pre-N (France), pre-it-N, pre-tr-N…
+  // — le même que celui des règles (preSlotPattern, preSlotPatternPays).
+  const slotId = slotIdLibre(etat.voeux, quota, estFrance() ? "pre" : PREFIXES_VOEU[etat.destination]);
+  if (!slotId) { toast(quota === 1 ? "Votre cours est déjà posé." : `Vos ${quota} vœux sont déjà posés.`, "error"); return; }
   const payload = {
     university, formation, niveau,
     scholarship: "",
     // LE VŒU PORTE SA DESTINATION (lot R4, 2026-09-17). Sans elle, les
     // trois outils préremplissaient « Pays visé » avec le premier pays
     // souhaité du profil : un vœu à Lille partait pour la Chine.
-    country: PAYS_PREINSCRIPTION,
-    portalUrl: PORTAIL_ETUDES_EN_FRANCE,
+    country: estFrance() ? PAYS_PREINSCRIPTION : etat.config.nom,
+    portalUrl: estFrance() ? PORTAIL_ETUDES_EN_FRANCE : ((etat.route && etat.route.portail && etat.route.portail.url) || ""),
     status: "a_preparer",
     track: "preinscription",
     deadline: null,
@@ -817,6 +999,9 @@ async function ajouterVoeu(form) {
     motivation: { faite: false },
     createdAt: serverTimestamp()
   };
+  // Hors France, le vœu porte son pays : c'est ce champ qui le range dans
+  // la bonne route. Les vœux France n'en ont pas (ceux d'avant non plus).
+  if (!estFrance()) payload.destination = etat.destination;
   try {
     await setDoc(doc(db, "users", etat.session.user.uid, "applications", slotId), payload);
     etat.voeux.push({ id: slotId, ...payload });
@@ -848,7 +1033,7 @@ async function cocherPiece(slug, valeur) {
   const pieces = { ...((etat.dossier && etat.dossier.pieces) || {}) };
   if (valeur) pieces[slug] = valeur; else delete pieces[slug];
   try {
-    await updateDoc(refUser(), { "dossierFrance.pieces": pieces });
+    await updateDoc(refUser(), { [`${champDossier()}.pieces`]: pieces });
     etat.dossier = { ...(etat.dossier || {}), pieces };
     recomposer();
     peindre();
@@ -870,12 +1055,13 @@ async function basculerFait(e) {
   const etapes = { ...((etat.dossier && etat.dossier.etapes) || {}) };
   etapes[e.id] = { faite, faitLe: faite ? aujourdhuiISO() : null, preuve };
   try {
-    await updateDoc(refUser(), { [`dossierFrance.etapes.${e.id}`]: etapes[e.id] });
+    await updateDoc(refUser(), { [`${champDossier()}.etapes.${e.id}`]: etapes[e.id] });
     etat.dossier = { ...(etat.dossier || {}), etapes };
     // Le numéro de dossier vaut pour tous les vœux : un seul dossier les
     // porte. On le déclare sur chacun, pour que le suivi (et l'admin)
     // sache qu'ils sont déposés.
-    if (e.id === "ef_soumission" && faite) await declarerDepot(preuve);
+    // Hors France, l'étape de dépôt du pays (e.depot) joue le même rôle.
+    if ((e.id === "ef_soumission" || e.depot) && faite) await declarerDepot(preuve);
     toast(faite ? "Étape faite." : "Étape rouverte.");
     recomposer();
     if (faite) etat.choisie = prochaineApres(e.id);
@@ -909,7 +1095,7 @@ async function declarerDepot(numero) {
 async function declarerTraduction(valeur) {
   if (!DECLARATIONS_TRADUCTION.includes(valeur)) return;
   try {
-    await updateDoc(refUser(), { "dossierFrance.traductions": valeur });
+    await updateDoc(refUser(), { [`${champDossier()}.traductions`]: valeur });
     etat.dossier = { ...(etat.dossier || {}), traductions: valeur };
     toast(valeur === "francais" ? "Noté : aucune traduction à faire." : "Noté : une traduction assermentée à prévoir.");
     recomposer();
@@ -917,6 +1103,41 @@ async function declarerTraduction(valeur) {
   } catch (error) {
     console.error("Déclaration de langue non enregistrée :", error);
     toast("Votre réponse n'a pas pu être enregistrée. Réessayez.", "error");
+  }
+}
+
+/** Le choix de la voie (Turquie, Maroc) : un champ du dossier du pays. */
+async function choisirVoie(id) {
+  try {
+    await updateDoc(refUser(), { [`${champDossier()}.voie`]: id });
+    etat.dossier = { ...(etat.dossier || {}), voie: id };
+    toast("Votre voie est enregistrée : la route s'y est réglée.");
+    const ici = etat.choisie;
+    recomposer();
+    etat.choisie = prochaineApres(ici);
+    peindre();
+  } catch (error) {
+    console.error("Voie non enregistrée :", error);
+    toast("Votre choix n'a pas pu être enregistré. Réessayez.", "error");
+  }
+}
+
+/** « Cette étape ne me concerne pas », et son contraire. */
+async function ignorerEtape(e) {
+  const ignorer = !e.nonConcerne;
+  const etapes = { ...((etat.dossier && etat.dossier.etapes) || {}) };
+  const avant = etapes[e.id] && typeof etapes[e.id] === "object" ? etapes[e.id] : { faite: false, faitLe: null, preuve: "" };
+  etapes[e.id] = { faite: !!avant.faite, faitLe: avant.faitLe || null, preuve: String(avant.preuve || ""), nonConcerne: ignorer };
+  try {
+    await updateDoc(refUser(), { [`${champDossier()}.etapes.${e.id}`]: etapes[e.id] });
+    etat.dossier = { ...(etat.dossier || {}), etapes };
+    toast(ignorer ? "Noté : cette étape ne vous concerne pas." : "Noté : cette étape vous concerne.");
+    recomposer();
+    if (ignorer) etat.choisie = prochaineApres(e.id);
+    peindre();
+  } catch (error) {
+    console.error("Étape non enregistrée :", error);
+    toast("L'étape n'a pas pu être enregistrée. Réessayez.", "error");
   }
 }
 
@@ -945,18 +1166,28 @@ async function noterReponse(id, status) {
     peindre();
   } catch (error) {
     console.error("Réponse non enregistrée :", error);
-    toast("La réponse n'a pas pu être enregistrée. Déclarez d'abord votre numéro de dossier (étape 9).", "error");
+    const depot = estFrance() ? null : etat.route.etapes.find((x) => x.depot && !x.nonConcerne);
+    toast(estFrance()
+      ? "La réponse n'a pas pu être enregistrée. Déclarez d'abord votre numéro de dossier (étape 9)."
+      : `La réponse n'a pas pu être enregistrée. Déclarez d'abord votre dépôt${depot ? ` (étape ${depot.numero})` : ""}.`, "error");
     peindre();
   }
 }
 
 async function cocherVisa(id, fait) {
+  // France : users/{uid}.visaChecklist (inchangé). Ailleurs : le dossier du pays.
+  const source = estFrance() ? etat.userData.visaChecklist : (etat.dossier && etat.dossier.visaChecklist);
   const visa = {};
-  VISA_ETAPES.forEach((k) => { visa[k] = !!(etat.userData.visaChecklist && etat.userData.visaChecklist[k] === true); });
+  VISA_ETAPES.forEach((k) => { visa[k] = !!(source && source[k] === true); });
   visa[id] = fait;
   try {
-    await updateDoc(refUser(), { visaChecklist: visa });
-    etat.userData.visaChecklist = visa;
+    if (estFrance()) {
+      await updateDoc(refUser(), { visaChecklist: visa });
+      etat.userData.visaChecklist = visa;
+    } else {
+      await updateDoc(refUser(), { [`${champDossier()}.visaChecklist`]: visa });
+      etat.dossier = { ...(etat.dossier || {}), visaChecklist: visa };
+    }
     recomposer();
     peindre();
   } catch (error) {
@@ -995,8 +1226,40 @@ function brancherEtape(e) {
 
   const fait = section.querySelector("#rtFait");
   if (fait) fait.addEventListener("click", () => basculerFait(e));
+  section.querySelectorAll("input[data-voie]").forEach((r) => r.addEventListener("change", () => { if (r.checked) choisirVoie(r.getAttribute("data-voie")); }));
+  const ignorer = section.querySelector("#rtIgnorer");
+  if (ignorer) ignorer.addEventListener("click", () => ignorerEtape(e));
   const preuve = section.querySelector("#rtPreuve");
   if (preuve) preuve.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); basculerFait(e); } });
+}
+
+/**
+ * UN PAYS QUI N'EST PAS ENCORE OUVERT (2026-09-23). L'adresse porte
+ * ?d=italie, le compte n'a rien acheté pour l'Italie : on le dit, avec
+ * la porte vers l'offre du pays et vers les dossiers qu'il a déjà.
+ */
+function peindreSansDossier() {
+  const nom = estFrance() ? "France" : (etat.config ? etat.config.nom : "");
+  if (nom) document.title = `Ma route vers ${avecArticle(nom)} | FitzUniverse`;
+  document.getElementById("welcomeMessage").textContent = "Bonjour";
+  document.getElementById("rtLigne").textContent = nom
+    ? `Votre dossier ${nom} n'est pas encore ouvert.`
+    : "Cette route n'est pas disponible.";
+  ["rtFil", "rtBarre"].forEach((id) => { const el = document.getElementById(id); if (el) el.hidden = true; });
+  const suite = document.querySelector(".rt-suite-bloc");
+  if (suite) suite.hidden = true;
+  const autres = etat.droits.filter((x) => x.destination !== etat.destination);
+  const section = document.getElementById("rtEtape");
+  section.className = "rt-etape is-courante";
+  section.innerHTML = `
+    <h2 class="rt-titre"><i data-lucide="lock"></i><span>${nom ? `La route ${ech(auPays(nom))}` : "Route indisponible"}</span></h2>
+    <p class="rt-clair">${nom ? `Elle s'ouvre avec une offre de ce pays : Diagnostic ${ech(nom)}, Dossier ${ech(nom)} ou Dossier ${ech(nom)} + Conseiller. Chaque pays a son dossier, avec sa propre procédure.` : "Choisissez une destination."}</p>
+    <div class="rt-actions">
+      ${nom ? `<a href="preinscription-${ech(etat.destination)}.html" class="rt-btn rt-btn--fait"><i data-lucide="arrow-right"></i><span>Voir les offres ${ech(auPays(nom))}</span></a>` : `<a href="offers.html?parcours=preinscription" class="rt-btn rt-btn--fait"><i data-lucide="arrow-right"></i><span>Voir les offres</span></a>`}
+      ${autres.map((x) => `<a href="espace-preinscription.html?d=${ech(encodeURIComponent(x.destination))}" class="rt-btn rt-btn--portail"><i data-lucide="route"></i><span>Ma route ${ech(auPays(x.destination === "france" ? "France" : (configDestination(x.destination) || {}).nom || x.destination))}</span></a>`).join("")}
+    </div>`;
+  document.body.dataset.routePrete = "1";
+  icones();
 }
 
 // ==========================================================
@@ -1016,7 +1279,28 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
   etat.session = session;
   etat.userData = session.userData || {};
   etat.profile = session.profile || {};
-  etat.dossier = etat.userData.dossierFrance || {};
+
+  // LA DESTINATION (2026-09-23). ?d=<pays> ; sinon la France si le compte
+  // l'a, sinon le premier pays acheté ; sinon la France, comme avant.
+  const params = new URLSearchParams(window.location.search);
+  etat.droits = droitsPreinscription(etat.userData);
+  const demandee = String(params.get("d") || "").trim().toLowerCase();
+  const connue = (id) => id === "france" || !!configDestination(id);
+  etat.destination = connue(demandee) ? demandee
+    : etat.droits.some((x) => x.destination === "france") ? "france"
+    : (etat.droits[0] ? etat.droits[0].destination : "france");
+  etat.config = estFrance() ? null : configDestination(etat.destination);
+
+  // Un pays qui n'est pas acheté ne s'ouvre pas (l'accès test, si) — la
+  // France comprise : un Dossier Italie ouvre l'espace, pas la route France.
+  const planPays = estFrance() ? resolvePlanPreinscriptionFrance(etat.userData) : planPreinscriptionPour(etat.userData, etat.destination);
+  if (!planPays && !session.testerAccess) {
+    peindreSansDossier();
+    return;
+  }
+
+  etat.dossier = (estFrance() ? etat.userData.dossierFrance : (etat.userData.dossiersPays && etat.userData.dossiersPays[etat.destination])) || {};
+  document.title = `Ma route vers ${avecArticle(nomDestination())} | FitzUniverse`;
 
   if (sessionStorage.getItem("just_upgraded")) {
     toast(`Votre accompagnement ${sessionStorage.getItem("just_upgraded")} est activé. La route commence ici.`);
@@ -1026,19 +1310,40 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
 
   etat.conseiller = !isFeatureLocked(session.planId, session.featureFlags, "advisor", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId);
 
-  etat.quota = session.testerAccess ? null : quotaDeLaFormule({
-    espace: "preinscription",
-    planId: session.planId,
-    planPreinscriptionId: session.planPreinscriptionId || "",
-    plans: typeof SCHOLARBRIDGE_PLANS !== "undefined" ? SCHOLARBRIDGE_PLANS : null
-  });
+  // LE QUOTA EST CELUI DE LA DESTINATION. France : l'offre France seule
+  // (resolvePlanPreinscriptionFrance) — la session porte désormais la
+  // meilleure offre de TOUS les pays, et un Dossier Italie n'ouvre pas de
+  // vœu pre-N. Ailleurs : le plafond du pays, ou zéro pour un Diagnostic.
+  etat.quota = session.testerAccess ? null : estFrance()
+    ? quotaDeLaFormule({
+      espace: "preinscription",
+      planId: session.planId,
+      planPreinscriptionId: planPays,
+      plans: typeof SCHOLARBRIDGE_PLANS !== "undefined" ? SCHOLARBRIDGE_PLANS : null
+    })
+    : (planPays === "diagnostic-france" ? 0 : etat.config.plafondVoeux);
 
   const formule = document.getElementById("rtFormule");
-  if (formule) formule.textContent = PLAN_PREINSCRIPTION_LABELS[session.planPreinscriptionId] || "";
+  if (formule) {
+    const offre = !estFrance() && planPays && typeof window.offrePourDestination === "function" ? window.offrePourDestination(planPays, etat.destination) : null;
+    formule.textContent = offre ? offre.label : estFrance() ? (PLAN_PREINSCRIPTION_LABELS[planPays] || "") : "";
+    // La pastille de la barre haute dit l'offre de CETTE route : un compte
+    // qui a un Dossier France et un Dossier Italie lit « Dossier Italie »
+    // sur la route italienne.
+    const pastille = document.getElementById("topbarPlanLabel");
+    if (pastille && formule.textContent) pastille.textContent = formule.textContent;
+  }
 
   try {
     const snap = await getDocs(collection(db, "users", session.user.uid, "applications"));
-    etat.voeux = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((app) => lireParcours(app) === "preinscription");
+    // Les vœux de CETTE destination : sans champ `destination` (ou
+    // « france ») pour la France, le champ exact ailleurs.
+    etat.voeux = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      .filter((app) => lireParcours(app) === "preinscription")
+      .filter((app) => estFrance()
+        ? (!app.destination || app.destination === "france")
+        // Le champ ET l'identifiant : un vœu d'un pays vit sur pre-<code>-N.
+        : (app.destination === etat.destination && String(app.id).startsWith(`${PREFIXES_VOEU[etat.destination]}-`)));
   } catch (error) {
     console.error("Impossible de charger les vœux :", error);
   }
@@ -1047,7 +1352,7 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
   // reçoivent leur destination à la première visite. Une écriture par
   // vœu, une seule fois dans la vie du dossier, et jamais bloquante :
   // un échec laisse l'outil retomber sur le profil, comme avant.
-  for (const v of etat.voeux) {
+  for (const v of estFrance() ? etat.voeux : []) {
     if (String(v.country || "").trim()) continue;
     try {
       await updateDoc(doc(db, "users", session.user.uid, "applications", v.id), { country: PAYS_PREINSCRIPTION });
@@ -1057,11 +1362,16 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
     }
   }
 
-  const params = new URLSearchParams(window.location.search);
   recomposer();
+  if (!etat.route) {
+    console.error("Aucune procédure pour la destination :", etat.destination);
+    peindreSansDossier();
+    return;
+  }
   if (params.get("action") === "new") etat.choisie = "voeux";
   else if (params.get("etape") && etat.route.etapes.some((e) => e.id === params.get("etape"))) etat.choisie = params.get("etape");
-  if (params.has("action") || params.has("etape")) history.replaceState(null, "", window.location.pathname);
+  // On nettoie ?etape et ?action ; la destination reste dans l'adresse.
+  if (params.has("action") || params.has("etape")) history.replaceState(null, "", params.has("d") ? `${window.location.pathname}?d=${encodeURIComponent(etat.destination)}` : window.location.pathname);
 
   document.body.dataset.routePrete = "1";
   peindre();
@@ -1070,8 +1380,9 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
   // peinture : le catalogue ne retient jamais la route.
   try {
     const unis = await chargerUniversites();
+    const pays = nomDestination().toLowerCase();
     etat.universites = unis
-      .filter((u) => /^france$/i.test(String(u.country || "").trim()))
+      .filter((u) => String(u.country || "").trim().toLowerCase() === pays)
       .map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, "fr"));
     // Le champ lit la source à chaque frappe : rien à re-peindre.
   } catch (error) {

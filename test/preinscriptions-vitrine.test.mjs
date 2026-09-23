@@ -89,10 +89,14 @@ for (const p of PAYS) {
 assert.ok(ACCOMPAGNEMENT.includes(p.accompagnement), `${p.nom} : accompagnement « ${p.accompagnement} » hors vocabulaire`);
 }
 
-// Aujourd'hui : la France seule. Les six autres sont nommées, pas
-// vendues. Changer ce test en conscience, pas par accident.
-assert.deepEqual(destinationsOuvertes().map((p) => p.nom), ["France"]);
-assert.deepEqual(destinationsAVenir().map((p) => p.nom), ["Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
+// CHANGÉ EN CONSCIENCE LE 2026-09-23 : les sept destinations sont
+// vendues. Jusqu'à ce jour, la France seule ; les six autres ont reçu
+// leur route (js/route-destination.js), leur diagnostic
+// (js/diagnostic-pays.js), leur page et leur achat par pays
+// (functions/lib/achat.js). Refermer un pays = le repasser « a_venir »
+// ICI et dans les données, en même temps.
+assert.deepEqual(destinationsOuvertes().map((p) => p.nom), ["France", "Roumanie", "Turquie", "Maroc", "Italie", "Allemagne", "Canada"]);
+assert.deepEqual(destinationsAVenir().map((p) => p.nom), []);
 
 // `accompagnement` ne se DÉDUIT pas de `procedure` : la France est
 // vendue alors que sa fiche pays dit encore « en_cours » (c'est un
@@ -364,9 +368,11 @@ test("basculer un pays de « a_venir » à « ouvert » suffit à lui donner son
 // documentaire. On simule la bascule sur un objet — sans toucher aux
 // données réelles — et on vérifie que la seule fonction qui décide,
 // estOuverte(), suit.
+// (Depuis le 2026-09-23 la Roumanie est ouverte : on simule donc les
+// DEUX sens de la bascule, sur des copies.)
 const roumanie = PAYS.find((p) => p.id === "roumanie");
 
-assert.equal(estOuverte(roumanie), false);
+assert.equal(estOuverte({ ...roumanie, accompagnement: "a_venir" }), false);
 assert.equal(estOuverte({ ...roumanie, accompagnement: "ouvert" }), true);
 
 // Et que le hub ne consulte RIEN d'autre pour trancher : ni la
@@ -479,10 +485,14 @@ test("le lien d'achat porte destination=france", () => {
 
 const dest = lire(DEST_JS);
 
-// LE PAYS VOYAGE JUSQU'À LA CAISSE. Une seule destination existe
-// aujourd'hui — le paramètre se pose maintenant pour que la deuxième
-// n'oblige pas à refaire la chaîne.
-assert.ok(dest.includes("offers.html?parcours=preinscription&amp;destination=${escapeHtml(pays.id)}"), "le lien doit porter la destination, calculée");
+// LE PAYS VOYAGE JUSQU'À LA CAISSE. Depuis le 2026-09-23, sept
+// destinations : la France garde son chemin (offers.html compare les
+// trois offres), les six autres vont droit au paiement — la destination
+// dans l'adresse, calculée, jamais écrite en dur.
+assert.ok(dest.includes("offers.html?parcours=preinscription&destination=${pays.id}"), "le lien de la grille de référence doit porter la destination, calculée");
+assert.ok(dest.includes("window.SCHOLARBRIDGE_DESTINATIONS[pays.id]"), "une donnée décide qu'une destination a ses offres");
+assert.ok(dest.includes("payment.html?plan=${offre.id}&destination=${pays.id}"), "le lien d'une autre destination doit porter l'offre et le pays");
+assert.ok(dest.includes("href=\"${escapeHtml(lienOffre(offre, pays))}\""), "le bouton de la carte doit passer par lienOffre");
 assert.ok(!dest.includes("destination=france"), "la destination ne s'écrit pas en dur");
 
 // Les trois offres préinscription, dans l'ordre de la grille.
