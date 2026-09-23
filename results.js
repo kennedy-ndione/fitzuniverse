@@ -288,8 +288,8 @@ universites: catalogue.universites.length
 // LA RÉFLEXION DE FITZ
 // ==========================================================
 //
-// Six étapes, affichées à mesure qu'elles se terminent VRAIMENT, avec
-// les vrais nombres du calcul. Douze à dix-huit secondes au total.
+// Cinq étapes, affichées à mesure qu'elles se terminent VRAIMENT, avec
+// les vrais nombres du calcul. Sept secondes environ au total.
 //
 // Pourquoi un plancher de temps, alors que le calcul est quasi
 // instantané ? Parce qu'un diagnostic qui apparaît en 300 ms après
@@ -304,8 +304,25 @@ universites: catalogue.universites.length
 // Choix de Charles le 2026-09-05 : 12–18 s plutôt que les 20–30 s
 // envisagées d'abord — au-delà de vingt secondes, on perd des gens sur
 // un téléphone et une connexion lente.
+//
+// RÉDUIT À 6–8 s le 2026-09-23, à la demande de Charles, avec la page
+// de résultats en pyramide inversée : l'étudiant vient chercher SA
+// liste, et quinze secondes d'attente, c'est le moment où un lecteur
+// pressé ferme l'onglet. On garde la preuve (chaque étape affiche un
+// vrai nombre) mais on la montre vite : cinq étapes au lieu de six
+// (nationalité, âge et cycle en une seule), 1,1 à 1,7 s chacune — le
+// temps de lire une ligne. Le chiffre qui compte, « N opportunités
+// retenues », reste le plus longtemps à l'écran.
+// Total des paliers : 1100 + 1400 + 1300 + 1700 + 1300 = 6,8 s.
+// test/resultats-lecture.test.mjs le vérifie (entre 6 et 8 s).
 
-const PALIER_MS = { court: 2200, moyen: 2600, long: 3000 };
+const PALIER_MS = {
+lecture: 1100,
+parcours: 1400,
+verification: 1300,
+retenues: 1700,
+analyse: 1300
+};
 
 function attendre(ms) {
 return new Promise((resolve) => setTimeout(resolve, ms));
@@ -384,18 +401,15 @@ journal.poser(`Lecture de vos ${nbReponses} réponses`);
 
 // Le catalogue est chargé PENDANT ce premier palier : le temps
 // d'attente sert à quelque chose au lieu d'être ajouté au reste.
-const [catalogue] = await Promise.all([travail, attendre(PALIER_MS.court)]);
+const [catalogue] = await Promise.all([travail, attendre(PALIER_MS.lecture)]);
 
 const m = journal.mesures;
 
 journal.poser(`Parcours de ${m.bourses || catalogue.tailleCatalogue.bourses} bourses et ${m.programmes || catalogue.tailleCatalogue.programmes} programmes`);
-await attendre(PALIER_MS.long);
+await attendre(PALIER_MS.parcours);
 
-journal.poser("Vérification de votre éligibilité par nationalité");
-await attendre(PALIER_MS.moyen);
-
-journal.poser("Contrôle des limites d'âge et du cycle que vous visez");
-await attendre(PALIER_MS.court);
+journal.poser("Vérification de votre nationalité, de votre âge et du cycle visé");
+await attendre(PALIER_MS.verification);
 
 const ouvertes = catalogue.echeancesOuvertes;
 
@@ -404,10 +418,10 @@ ouvertes > 0
 ? `${catalogue.nombreRetenu} opportunités retenues, dont ${ouvertes} aux candidatures encore ouvertes`
 : `${catalogue.nombreRetenu} opportunités retenues dans ${catalogue.paysCouverts} pays`
 );
-await attendre(PALIER_MS.long);
+await attendre(PALIER_MS.retenues);
 
 journal.poser(`Analyse approfondie des ${Math.min(OPPORTUNITES_DETAILLEES, catalogue.nombreRetenu)} dossiers les plus proches`);
-await attendre(PALIER_MS.moyen);
+await attendre(PALIER_MS.analyse);
 
 journal.terminer();
 
@@ -977,22 +991,39 @@ legende.textContent = affichees > 1
 ? "De la plus pertinente à la moins pertinente. Touchez une carte pour ouvrir la fiche complète."
 : "Touchez la carte pour ouvrir la fiche complète.";
 
-// Les autres retenues : annoncées, avec leur nombre, sous les cartes.
+// LES AUTRES RETENUES, NOMMÉES (décision de Charles, 2026-09-23).
+// Avant : « + 9 autres opportunités… » sans un seul nom — une promesse,
+// pas une réponse. Maintenant : leur NOM, leur université, leur pays et
+// leur échéance, chacune menant à sa fiche. Rien de plus : ni « Pourquoi
+// vous », ni analyse, ni stratégie — c'est le travail de
+// l'accompagnement. Ces noms sont publics dans le catalogue : les taire
+// ne protégeait rien, les montrer prouve que la liste existe. Aucun
+// cadenas, aucun flou (doctrine du 2026-08-31).
 const suite = document.getElementById("opportunitesSuite");
 if (suite) {
-const reste = retenu - affichees;
-if (reste > 0) {
-suite.innerHTML = `<p><strong></strong> <span></span></p><a href="offers.html?parcours=bourse" class="btn btn-secondary" id="opportunitesSuiteLien"><span>Les découvrir avec Fitz</span><i data-lucide="arrow-right"></i></a>`;
-suite.querySelector("strong").textContent = `+ ${reste} autre${reste > 1 ? "s" : ""} opportunité${reste > 1 ? "s" : ""}`;
-suite.querySelector("span").textContent = `retenue${reste > 1 ? "s" : ""} pour vous : Fitz vous les présente dans votre plan d'accompagnement.`;
+const autres = (result.toutesRetenues || []).slice(affichees);
+if (autres.length) {
+const n = autres.length;
+suite.innerHTML = `
+<p class="opportunites-suite-titre"><strong></strong> <span></span></p>
+<ul class="autres-opportunites"></ul>
+<div class="opportunites-suite-pied">
+<p class="opportunites-suite-note" id="opportunitesSuiteNote"></p>
+<a href="offers.html?parcours=bourse" class="btn btn-secondary" id="opportunitesSuiteLien"><span>Préparer mes dossiers avec Fitz</span><i data-lucide="arrow-right"></i></a>
+</div>`;
+suite.querySelector(".opportunites-suite-titre strong").textContent = `Et ${n} autre${n > 1 ? "s" : ""} opportunité${n > 1 ? "s" : ""}`;
+suite.querySelector(".opportunites-suite-titre span").textContent = `retenue${n > 1 ? "s" : ""} pour vous`;
+suite.querySelector(".autres-opportunites").replaceChildren(...autres.map(ligneAutreOpportunite));
+suite.querySelector(".opportunites-suite-note").textContent = NOTE_SUITE.gratuit;
 // Un compte accompagné les a déjà dans son espace. adapterAuCompte()
 // peut passer avant OU après ce rendu : il pose data-hub-espace, lu ici,
 // et corrige aussi le lien s'il arrive après.
 const hub = document.body.dataset.hubEspace;
 if (hub) {
-const lienSuite = suite.querySelector("a");
+const lienSuite = suite.querySelector("#opportunitesSuiteLien");
 lienSuite.setAttribute("href", hub);
 lienSuite.querySelector("span").textContent = "Les voir dans mon espace";
+suite.querySelector(".opportunites-suite-note").textContent = NOTE_SUITE.accompagne;
 }
 suite.hidden = false;
 } else {
@@ -1000,6 +1031,85 @@ suite.hidden = true;
 }
 }
 
+}
+
+const NOTE_SUITE = {
+gratuit: "Pourquoi chacune vous correspond, et comment monter chaque dossier : Fitz vous le détaille dans votre plan d'accompagnement.",
+accompagne: "Fitz les suit déjà dans votre espace, avec vos démarches pour chacune."
+};
+
+/**
+* Une ligne de la liste des autres opportunités : le nom, l'université
+* et le pays, l'échéance en jours. Pas de raison, pas d'analyse.
+*/
+function ligneAutreOpportunite(o) {
+
+const li = document.createElement("li");
+li.className = "autre-opportunite";
+
+const conteneur = document.createElement(o.programId ? "a" : "div");
+conteneur.className = "autre-opportunite-lien";
+if (o.programId) conteneur.href = `scholarship-details.html?id=${encodeURIComponent(o.programId)}`;
+
+const drapeau = document.createElement("img");
+drapeau.className = "autre-opportunite-drapeau";
+drapeau.src = `assets/flags/${o.flag || "default.svg"}`;
+drapeau.alt = "";
+drapeau.width = 22;
+drapeau.height = 16;
+drapeau.loading = "lazy";
+drapeau.onerror = () => { drapeau.onerror = null; drapeau.src = "assets/flags/default.svg"; };
+
+const texte = document.createElement("span");
+texte.className = "autre-opportunite-texte";
+const nom = document.createElement("strong");
+nom.textContent = o.name;
+const lieu = document.createElement("span");
+// Le PAYS d'abord : c'est la question que l'étudiant se pose, et sur
+// un téléphone la fin de la ligne est coupée.
+lieu.textContent = [o.country, o.university].filter(Boolean).join(" · ");
+texte.append(nom, lieu);
+
+const e = echeanceCourte(o);
+const echeance = document.createElement("span");
+echeance.className = `autre-opportunite-echeance${e.urgente ? " is-urgente" : ""}`;
+echeance.textContent = e.texte;
+echeance.setAttribute("aria-label", e.lu);
+echeance.title = e.lu;
+
+conteneur.append(drapeau, texte, echeance);
+li.appendChild(conteneur);
+return li;
+
+}
+
+/**
+* L'échéance en un mot, pour une ligne de liste : « 16 jours », en rouge
+* sous 30 jours. Même règle que les cartes : quand une étape obligatoire
+* tombe avant la date limite (la nomination Pearson), c'est elle qui
+* compte. Sans date exploitable, on dit POURQUOI plutôt qu'un « à
+* confirmer » partout : mesuré le 2026-09-23, 7 lignes sur 9 n'avaient
+* pas de date, et la plupart n'en ont PAS par nature (candidature au fil
+* de l'eau, bourse attribuée avec l'admission, date propre à chaque
+* université). La fiche l'explique en entier.
+*/
+const SANS_DATE_FIXE = /aucune date|pas de date|ne donne aucune date|n'est publi[ée]e|pas de candidature s[ée]par[ée]e|d[ée]pend de l'universit[ée]|fil de l'eau/i;
+
+function echeanceCourte(o) {
+if (o.echeanceOuverte === true) {
+const etape = o.porte && typeof o.porte.jours === "number";
+const n = etape ? o.porte.jours : o.jours;
+if (typeof n === "number") {
+if (n === 0) return { texte: "Aujourd'hui", urgente: true, lu: etape ? "Première étape : c'est aujourd'hui" : "Dernier jour pour candidater" };
+const jours = `${n} jour${n > 1 ? "s" : ""}`;
+return { texte: jours, urgente: n <= 30, lu: etape ? `Première étape dans ${jours}` : `Il vous reste ${jours} pour candidater` };
+}
+return { texte: "Ouverte", urgente: false, lu: "Candidatures ouvertes, sans date limite fixe" };
+}
+if (SANS_DATE_FIXE.test(o.deadline || "")) {
+return { texte: "Sans date fixe", urgente: false, lu: "Pas de date limite unique : la fiche explique quand candidater" };
+}
+return { texte: "À confirmer", urgente: false, lu: "Échéance à confirmer sur le portail officiel" };
 }
 
 function renderOpportunities() {
@@ -1407,6 +1517,8 @@ suite.setAttribute("href", hub);
 const texte = suite.querySelector("span");
 if (texte) texte.textContent = "Les voir dans mon espace";
 }
+const noteSuite = document.getElementById("opportunitesSuiteNote");
+if (noteSuite) noteSuite.textContent = NOTE_SUITE.accompagne;
 
 }
 

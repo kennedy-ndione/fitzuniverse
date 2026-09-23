@@ -73,9 +73,13 @@ déclarés dans eligibility-questions.css. -->
 <link rel="modulepreload" href="js/catalog-cache.js">
 <link rel="modulepreload" href="js/catalog-data.js">
 <link rel="modulepreload" href="js/catalog-snapshot.js">
+<link rel="modulepreload" href="js/countries.js">
+<link rel="modulepreload" href="js/eligibility-countries.js">
 <link rel="modulepreload" href="js/eligibility-parcours.js">
 <link rel="modulepreload" href="js/eligibility-pistes.js">
 <link rel="modulepreload" href="js/nationalites.js">
+<link rel="modulepreload" href="js/pays-grammaire.js">
+<link rel="modulepreload" href="js/reponse-pays.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
@@ -167,7 +171,12 @@ Bonjour ! Commençons par savoir où vous vivez actuellement.
 
 <!-- Réponse texte / recherche -->
 <div id="textContainer">
-<input type="text" id="answer" autocomplete="off" placeholder="Commencez à taper..." aria-label="Votre réponse">
+<input type="text" id="answer" autocomplete="off" placeholder="Commencez à taper..." aria-label="Votre réponse" aria-describedby="answerInvite">
+<!-- Pays hors liste (2026-09-23) : la consigne, posée par
+eligibility-questions.js (js/reponse-pays.js). Dans le flux, sous le
+champ : la liste des suggestions (position:absolute, 100 % + 8 px du
+conteneur) s'ouvre donc SOUS elle, sans la recouvrir. -->
+<p class="answer-invite" id="answerInvite" role="alert" hidden></p>
 <div id="suggestions" class="suggestions" role="listbox"></div>
 </div>
 

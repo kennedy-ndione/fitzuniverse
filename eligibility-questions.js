@@ -40,6 +40,8 @@ definirSuggestionsDestination
 
 import { ParcoursEligibilite } from "./js/eligibility-parcours.js";
 
+import { QUESTIONS_PAYS, reponseDeListe, consigneHorsListe } from "./js/reponse-pays.js";
+
 const parcours = new ParcoursEligibilite();
 
 const questionIcon = document.getElementById("questionIcon");
@@ -53,6 +55,31 @@ const progressBar = document.getElementById("progressBar");
 const textContainer = document.getElementById("textContainer");
 const answerInput = document.getElementById("answer");
 const suggestionsBox = document.getElementById("suggestions");
+const answerInvite = document.getElementById("answerInvite");
+
+// ==========================================================
+// LES PAYS SE CHOISISSENT DANS LA LISTE (2026-09-23, décision de
+// Charles). « Informatique » passait comme pays de résidence. Pour les
+// trois questions pays, la saisie est ramenée à l'entrée exacte de la
+// liste (js/reponse-pays.js) ; sinon, on arrête l'étudiant avec une
+// consigne qui reprend ce qu'il a tapé. Les autres champs à suggestions
+// (domaine, filière) restent libres : une spécialité peut ne pas y être.
+// ==========================================================
+function montrerConsigne(texte) {
+if (!answerInvite) return;
+answerInvite.textContent = texte;
+answerInvite.hidden = false;
+answerInput.classList.add("is-hors-liste");
+answerInput.setAttribute("aria-invalid", "true");
+}
+
+function effacerConsigne() {
+if (!answerInvite || answerInvite.hidden) return;
+answerInvite.hidden = true;
+answerInvite.textContent = "";
+answerInput.classList.remove("is-hors-liste");
+answerInput.removeAttribute("aria-invalid");
+}
 
 const cardsContainer = document.getElementById("cardsContainer");
 
@@ -398,6 +425,7 @@ if (question.type === "search") {
 
 textContainer.style.display = "block";
 answerInput.value = existingAnswer || "";
+effacerConsigne();
 answerInput.focus();
 
 } else if (question.type === "cards") {
@@ -446,7 +474,25 @@ answerInput.focus();
 return;
 }
 
-parcours.enregistrer(question.id, value);
+let reponse = value;
+
+if (QUESTIONS_PAYS.includes(question.id)) {
+reponse = reponseDeListe(question.id, value, resoudre(question.suggestions, parcours.reponses) || []);
+if (!reponse) {
+// Les pays proches de la saisie (« Congo » → les deux Congo) : la
+// liste s'ouvre sous la consigne, l'étudiant n'a plus qu'à toucher.
+// (L'événement efface toute consigne : on la pose APRÈS.)
+answerInput.dispatchEvent(new Event("input"));
+montrerConsigne(consigneHorsListe(question.id, value, { proposes: suggestionsBox.childElementCount }));
+answerInput.focus();
+return;
+}
+// « senegal » devient « Sénégal » à l'écran, comme il sera enregistré.
+answerInput.value = reponse;
+}
+
+effacerConsigne();
+parcours.enregistrer(question.id, reponse);
 
 } else if (question.type === "slider") {
 
@@ -567,6 +613,8 @@ const question = parcours.courante();
 
 if (!question || question.type !== "search") return;
 
+effacerConsigne();
+
 const suggestions = resoudre(question.suggestions, parcours.reponses) || [];
 
 if (!suggestions.length) return;
@@ -617,6 +665,7 @@ item.textContent = match;
 
 item.addEventListener("click", () => {
 answerInput.value = match;
+effacerConsigne();
 suggestionsBox.style.display = "none";
 suggestionsBox.innerHTML = "";
 });

@@ -399,6 +399,39 @@ box-shadow:0 0 0 4px rgba(233,163,25,.16);
 
 }
 
+/* Pays hors liste (2026-09-23) : la consigne sous le champ, et le champ
+en rouge tant que la saisie n'est pas corrigée. La variante :focus est
+nécessaire : input#answer:focus (juste au-dessus, et dans
+css/eligibility-questions-redesign.css) a la même spécificité. */
+.answer-invite{
+
+margin:10px 2px 0;
+
+font-size:.92rem;
+
+font-weight:600;
+
+line-height:1.5;
+
+color:var(--danger-700, #B91C1C);
+
+}
+
+.answer-invite[hidden]{
+
+display:none;
+
+}
+
+input#answer.is-hors-liste,
+input#answer.is-hors-liste:focus{
+
+border-color:var(--danger-600, #DC2626);
+
+box-shadow:0 0 0 4px rgba(220,38,38,.12);
+
+}
+
 .suggestions{
 
 position:absolute;

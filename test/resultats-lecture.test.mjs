@@ -73,3 +73,30 @@ for (const c of ["verdict-chiffres", "opportunites-suite", "improvement-free", "
 assert.match(css, new RegExp(`\\.${c}\\[hidden\\]`), `${c} : display l'emporterait sur hidden`);
 }
 });
+
+test("lecture 6 — la réflexion de Fitz dure 6 à 8 secondes, pas 12 à 18", () => {
+const js = lire("results.js");
+const bloc = js.match(/const PALIER_MS = \{([^}]*)\};/);
+assert.ok(bloc, "PALIER_MS introuvable");
+const paliers = [...bloc[1].matchAll(/(\w+):\s*(\d+)/g)].map((m) => [m[1], Number(m[2])]);
+const total = paliers.reduce((s, [, ms]) => s + ms, 0);
+assert.ok(total >= 6000 && total <= 8000, `total ${total} ms`);
+// Chaque palier est utilisé, et chacun laisse le temps de lire une ligne.
+for (const [nom, ms] of paliers) {
+assert.ok(ms >= 1000, `${nom} : ${ms} ms, trop court pour être lu`);
+assert.match(js, new RegExp(`attendre\\(PALIER_MS\\.${nom}\\)`), nom);
+}
+});
+
+test("lecture 7 — les autres opportunités sont NOMMÉES (nom, lieu, échéance), sans analyse ni cadenas", () => {
+const js = lire("results.js");
+assert.match(js, /const autres = \(result\.toutesRetenues \|\| \[\]\)\.slice\(affichees\);/);
+assert.match(js, /replaceChildren\(\.\.\.autres\.map\(ligneAutreOpportunite\)\)/);
+const ligne = js.slice(js.indexOf("function ligneAutreOpportunite"), js.indexOf("function echeanceCourte"));
+assert.ok(ligne.length > 100, "ligneAutreOpportunite introuvable");
+assert.match(ligne, /scholarship-details\.html\?id=\$\{encodeURIComponent\(o\.programId\)\}/);
+assert.ok(!/reasons|Pourquoi/.test(ligne), "une ligne ne porte pas d'analyse");
+assert.ok(!/lock|cadenas|blur/i.test(ligne), "aucun cadenas, aucun flou");
+assert.match(js, /urgente: n <= 30/);
+assert.match(lire("results.css"), /\.autre-opportunite-echeance\.is-urgente\{/);
+});
