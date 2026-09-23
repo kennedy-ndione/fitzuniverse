@@ -148,7 +148,33 @@ annoncée aux lecteurs d'écran plutôt que subie en silence. -->
 
 <div id="resultsContent" hidden>
 
-<!-- Badge -->
+<!-- ==========================================================
+LA PAGE DE RÉSULTATS SE LIT EN PYRAMIDE INVERSÉE (2026-09-23)
+==========================================================
+Demande de Charles : « le récit est long alors que l'étudiant veut
+juste savoir les bourses, universités et pays qui lui sont
+compatibles […] beaucoup d'utilisateurs n'aiment pas lire ». Mesuré
+avant la refonte : 8 écrans sur téléphone, et les bourses n'arrivaient
+qu'au 5e. La page répond maintenant dans l'ordre où l'étudiant se pose
+les questions, et chaque étage se lit en quelques secondes :
+
+  1. LA RÉPONSE (un écran) — combien de bourses, d'universités, de
+     pays ; le score en une pastille.
+  2. LE CONCRET — ses 3 meilleures opportunités, chacune avec son
+     échéance et UNE raison visible (les autres repliées).
+  3. OÙ POSTULER — les pays, en pastilles.
+  4. L'AVIS DE FITZ — quatre cartes courtes (en bref, atout, frein,
+     par où commencer), puis LA priorité.
+  5. LE DÉTAIL, POUR QUI VEUT — score, décomposition, points forts et
+     axes à renforcer, dans un bloc replié.
+  6. LA SUITE — une phrase et un bouton.
+
+Le récit d'ouverture (quatre phrases génériques) est parti : il
+retardait la réponse sans rien apprendre à l'étudiant. -->
+
+<!-- 1. LA RÉPONSE -->
+<section class="verdict" id="verdict">
+
 <div class="fitz-badge-row">
 <div class="fitz-avatar" aria-hidden="true"></div>
 <div class="ai-badge">
@@ -156,7 +182,21 @@ annoncée aux lecteurs d'écran plutôt que subie en silence. -->
 </div>
 </div>
 
-<h1>Votre diagnostic est terminé</h1>
+<p class="verdict-surtitre">Votre diagnostic est terminé</p>
+<h1 id="verdictTitre">Vos opportunités</h1>
+<p class="verdict-sous" id="verdictSous"></p>
+
+<ul class="verdict-chiffres" id="verdictChiffres"></ul>
+
+<div class="verdict-actions">
+<a href="#opportunites" class="btn btn-accent" id="verdictVoir">
+<span>Voir mes meilleures opportunités</span>
+<i data-lucide="arrow-down"></i>
+</a>
+<a href="#scoreDetail" class="verdict-score" id="verdictScore"></a>
+</div>
+
+</section>
 
 <!-- LOT DÉPART (2026-09-21) — quand un compte connecté a déjà un profil
 qui dit autre chose (niveau visé, domaine, destination), on le lui
@@ -168,66 +208,63 @@ results.js (conserverLeDiagnostic → ecartsDiagnosticProfil). -->
 <a href="profile.html" class="btn btn-secondary btn-sm"><span>Mettre mon profil à jour</span><i data-lucide="arrow-right"></i></a>
 </div>
 
-<!-- Récit d'ouverture de Fitz — l'icône n'a plus de pastille carrée
-en dégradé derrière elle (retour utilisateur du 2026-08-22 : "des
-icônes comme celui en bleu ne sont pas modernes", même décision que
-sur les cartes de la page d'accueil). Icône nue, colorée à la
-couleur de Fitz, alignée sur la première ligne du texte.
-
-La marque elle-même a ensuite remplacé l'étincelle (sparkles), jugée
-datée — c'est le cliché visuel de l'IA depuis 2023, et il servait
-encore de glyphe Fitz à 59 endroits du site. Ici seulement, à la
-demande : ces ondes ne sont donc PAS un changement de marque, juste
-la signature du bloc où Fitz s'exprime. Les autres pages gardent
-sparkles pour l'instant.
-
-SVG intégré plutôt qu'un <i data-lucide> comme partout ailleurs, pour
-une raison précise : un nom d'icône erroné ou absent du jeu Lucide ne
-lève aucune erreur, il n'affiche simplement rien — et l'environnement
-qui a produit ce changement ne pouvait pas joindre le CDN pour le
-vérifier. Tracé en dur, le glyphe est certain de s'afficher, y compris
-si unpkg est lent ou injoignable. Il suit la métrique Lucide (24×24,
-stroke-width 2, bouts arrondis) pour rester homogène avec les icônes
-voisines, et currentColor le laisse piloté par la couleur CSS. -->
-<div class="narrative-card fitz-surface" id="narrativeIntro">
-
-<svg class="assistant-avatar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
-<path d="M3 10.5v3"/>
-<path d="M8 6v12"/>
-<path d="M13 3.5v17"/>
-<path d="M18 7.5v9"/>
-<path d="M22.5 10.5v3"/>
-</svg>
-
-<div class="narrative-text" id="narrativeText"></div>
+<!-- 2. LE CONCRET -->
+<section class="section reveal" id="opportunites">
+<div class="section-heading">
+<i data-lucide="compass"></i>
+<h2 id="opportunitesTitre">Vos meilleures opportunités</h2>
 </div>
+<p class="section-subtext" id="opportunitiesSubtext">Classées de la plus pertinente à la moins pertinente.</p>
+<div id="scholarships" class="opportunity-list"></div>
+<div class="opportunites-suite" id="opportunitesSuite" hidden></div>
+</section>
 
-<!-- Score — l'anneau est un SVG depuis le 2026-08-22 (avant : un
-conic-gradient CSS). Trois raisons : le conic-gradient ne sait pas
-arrondir l'extrémité de l'arc (bord net, peu premium), il ne peut
-pas porter un dégradé le long du tracé, et il était figé sur
---primary-color donc toujours bleu quel que soit le score. Le SVG
-règle les trois : linecap arrondi, dégradé à deux arrêts pilotés
-par le palier, et animation de remplissage via stroke-dashoffset.
+<!-- 3. OÙ POSTULER -->
+<section class="section section-tint reveal" id="pays">
+<div class="section-heading">
+<i data-lucide="globe-2"></i>
+<h2>Les pays où postuler</h2>
+</div>
+<ul class="pill-list" id="countries"></ul>
+</section>
 
-r=52 → circonférence 2π×52 ≈ 326.73, valeur reprise telle quelle
-dans stroke-dasharray/stroke-dashoffset (results.css). Changer r
-oblige à recalculer ces deux valeurs.
+<!-- 4. L'AVIS DE FITZ — lecture écrite par Fitz (js/ai/diagnostic-fitz.js),
+en quatre cartes courtes. Si elle échoue, le bloc disparaît et la
+priorité ci-dessous suffit. -->
+<section class="section reveal" id="avisFitz">
+<div class="section-heading">
+<i data-lucide="brain"></i>
+<h2>L'avis de Fitz sur votre dossier</h2>
+</div>
+<div class="fitz-analysis" id="fitzAnalysis"></div>
+<div class="improvement-free" id="improvementFree"></div>
+</section>
 
-La couleur vient de la classe is-<ton> posée sur .score-section par
-results.js, d'après scoreTier() (js/fitz-voice.js) — jamais décidée
-ici ni dans la feuille de style, pour que le libellé du palier et sa
-couleur ne puissent pas se contredire. -->
-<section class="score-section reveal" id="scoreSection">
+<!-- 5. LE DÉTAIL, POUR QUI VEUT — replié par défaut. Rien n'est
+supprimé : le score, sa décomposition, les points forts et les axes à
+renforcer sont là, un clic plus loin. -->
+<details class="score-detail reveal" id="scoreDetail">
+
+<summary class="score-detail-resume">
+<span class="score-detail-titre">Le détail de votre score</span>
+<span class="score-detail-indice" id="scoreDetailIndice">Comment Fitz a calculé votre profil</span>
+<i data-lucide="chevron-down" aria-hidden="true"></i>
+</summary>
+
+<div class="score-detail-corps">
+
+<!-- Score — l'anneau est un SVG depuis le 2026-08-22 (dégradé et bout
+arrondi ; r=52 → circonférence 326.73, reprise dans results.css). La
+couleur vient de la classe is-<ton> posée sur .score-section par
+results.js, d'après scoreTier() (js/fitz-voice.js). -->
+<section class="score-section" id="scoreSection">
 
 <div class="score-ring" id="scoreRing">
 
 <svg class="score-ring-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
 <defs>
-<!-- Les deux arrêts sont colorés depuis results.css, PAS ici :
-var() n'est pas résolu dans un attribut de présentation SVG
-(stop-color="var(...)" reste littéral et l'arrêt tombe en noir),
-uniquement dans une propriété CSS. D'où les classes. -->
+<!-- Les deux arrêts sont colorés depuis results.css : var() n'est pas
+résolu dans un attribut de présentation SVG. -->
 <linearGradient id="scoreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
 <stop class="score-ring-stop-1" offset="0%"></stop>
 <stop class="score-ring-stop-2" offset="100%"></stop>
@@ -249,39 +286,24 @@ uniquement dans une propriété CSS. D'où les classes. -->
 <p id="profileMessage"></p>
 <p class="score-note">
 <i data-lucide="info"></i>
-Ce score est un point de départ pour comprendre votre profil. Il ne décide de rien. L'analyse ci-dessous explique ce qui le compose.
+Ce score est un point de départ pour comprendre votre profil. Il ne décide de rien.
 </p>
 </div>
 
 </section>
 
-<!-- Décomposition du score -->
-<section class="section reveal">
-<div class="section-heading">
-<i data-lucide="list-tree"></i>
-<h2>Ce qui compose votre score de compatibilité</h2>
-</div>
-<p class="section-subtext">Chaque catégorie ci-dessous est calculée à partir de vos réponses — c'est cette décomposition qui explique le chiffre affiché plus haut.</p>
-
+<div class="score-detail-bloc">
+<h3>Ce qui compose votre score</h3>
 <div class="score-breakdown" id="scoreBreakdown"></div>
+</div>
 
-<div class="improvement-free" id="improvementFree"></div>
-
-<!-- LOT S3 (2026-09-08) : le cadenas et le mot « verrouillées » sont
-partis. Cette page est PUBLIQUE, et la doctrine posée le 2026-08-31
-(voir le bloc du portail dans scholarship-details.html) vaut partout :
-un visiteur ne voit aucun cadenas, aucune mention qu'un contenu lui
-est refusé, aucun aperçu grisé — on ne montre pas une porte fermée.
-Deux régimes coexistaient sans raison ; c'est celui-ci qui cède.
-
-La carte reste, elle ne DÉCRIT plus un manque mais une offre : ce que
-l'accompagnement fait des autres axes du score. C'est exactement le
-rôle que la doctrine laisse à la carte « Choisir ma formule ». -->
+<!-- LOT S3 (2026-09-08) : aucune porte fermée sur une page publique ;
+la carte décrit ce que l'accompagnement COUVRE. -->
 <div class="reco-locked" id="recoLocked" hidden>
 <i class="reco-locked-icon" data-lucide="compass"></i>
 <div class="reco-locked-copy">
 <strong id="recoLockedCount"></strong>
-<p>L'accompagnement reprend chaque catégorie de votre score et vous donne la piste qui va avec, dans l'ordre où elles pèsent sur votre dossier.</p>
+<p>L'accompagnement reprend chaque catégorie de votre score et vous donne la piste qui va avec.</p>
 </div>
 <a href="offers.html?parcours=bourse" class="btn btn-secondary">
 <span>Choisir ma formule</span>
@@ -289,103 +311,46 @@ rôle que la doctrine laisse à la carte « Choisir ma formule ». -->
 </a>
 </div>
 
-</section>
-
-<!-- Ce que Fitz a compris du profil -->
-<section class="section section-tint reveal">
-<div class="section-heading">
-<i data-lucide="brain"></i>
-<h2>Ce que Fitz a compris de votre profil</h2>
-</div>
-<p class="section-subtext">Le niveau et le potentiel ci-dessus s'expliquent par ces éléments de votre parcours.</p>
-
-<!-- Lecture personnalisée écrite par Fitz (js/ai/diagnostic-fitz.js).
-     Placée ICI et pas ailleurs : après le score et sa décomposition,
-     pour que « ce qui vous freine » ait un contexte chiffré — et avant
-     les destinations et les opportunités, pour que « par où commencer »
-     débouche sur ce que l'étudiant va lire juste après. La section
-     promettait déjà « ce que Fitz a compris » ; elle le tient enfin. -->
-<div class="fitz-analysis" id="fitzAnalysis"></div>
-
+<div class="score-detail-colonnes">
 <div class="analysis-card strengths-card">
 <div class="analysis-heading">
 <i data-lucide="check-circle"></i>
-<h2>Ce qui joue en votre faveur</h2>
+<h3>Ce qui joue en votre faveur</h3>
 </div>
 <ul id="strengths"></ul>
 </div>
 
-</section>
-
-<!-- Destinations -->
-<section class="section reveal">
-<div class="section-heading">
-<i data-lucide="globe-2"></i>
-<h2>Destinations où votre profil semble compétitif</h2>
-</div>
-<ul class="pill-list" id="countries"></ul>
-</section>
-
-<!-- Opportunités -->
-<section class="section section-tint reveal">
-<div class="section-heading">
-<i data-lucide="compass"></i>
-<h2>Opportunités correspondant actuellement à votre profil</h2>
-</div>
-<p class="section-subtext" id="opportunitiesSubtext">Chaque opportunité ci-dessous est reliée à des éléments précis de vos réponses.</p>
-<div id="scholarships" class="opportunity-list"></div>
-</section>
-
-<!-- Ce qui limite actuellement les chances -->
-<section class="section reveal">
-<div class="section-heading">
-<i data-lucide="alert-triangle"></i>
-<h2>Ce qui limite actuellement vos chances</h2>
-</div>
-<p class="section-subtext">Ce sont les points que Fitz recommande de renforcer avant de candidater.</p>
-
 <div class="analysis-card weaknesses-card">
 <div class="analysis-heading">
 <i data-lucide="trending-up"></i>
-<h2>Axes à renforcer</h2>
+<h3>Ce qui limite vos chances</h3>
 </div>
 <ul id="weaknesses"></ul>
 </div>
-
-</section>
-
-<!-- Recommandations -->
-<section class="section section-tint reveal">
-<div class="section-heading">
-<i data-lucide="lightbulb"></i>
-<h2>Prochaines étapes suggérées</h2>
 </div>
-<ul id="recommendations"></ul>
-</section>
 
-<!-- Transition vers l'accompagnement -->
+<div class="score-detail-bloc">
+<h3>Prochaines étapes suggérées</h3>
+<ul id="recommendations"></ul>
+</div>
+
+</div>
+
+</details>
+
+<!-- 6. LA SUITE — une phrase, trois gestes, un bouton. -->
 <section class="closing-card reveal">
 
 <i class="closing-icon" data-lucide="shield-check"></i>
 
-<h2>De l'opportunité identifiée à la candidature qui se démarque</h2>
+<h2>De la liste au dossier déposé</h2>
 
-<p>
-Ce qui fait vraiment la différence face à des programmes recherchés, c'est la qualité du dossier : la cohérence du projet, la lettre de motivation, la mise en valeur de votre parcours.
-</p>
-
-<p>
-C'est exactement ce que Fitz propose : une liste d'opportunités, puis un travail avec vous sur votre dossier.
-</p>
+<p>Ce qui départage les candidats, c'est la qualité du dossier. Fitz le construit avec vous, étape par étape.</p>
 
 <ul class="closing-checklist">
-<li><i data-lucide="check"></i><span>Construire un plan d'action personnalisé</span></li>
-<li><i data-lucide="check"></i><span>Améliorer votre lettre de motivation</span></li>
-<li><i data-lucide="check"></i><span>Corriger et renforcer votre CV</span></li>
-<li><i data-lucide="check"></i><span>Préparer les documents attendus</span></li>
-<li><i data-lucide="check"></i><span>Organiser les échéances de candidature</span></li>
-<li><i data-lucide="check"></i><span>Répondre à vos questions à chaque étape</span></li>
-<li><i data-lucide="check"></i><span>Vous accompagner jusqu'au dépôt du dossier</span></li>
+<li><i data-lucide="check"></i><span>Votre lettre de motivation, bourse par bourse</span></li>
+<li><i data-lucide="check"></i><span>Vos documents vérifiés avant l'envoi</span></li>
+<li><i data-lucide="check"></i><span>Vos échéances suivies jusqu'au dépôt</span></li>
 </ul>
 
 <a href="offers.html?parcours=bourse" class="btn btn-accent btn-lg" id="closingCta">
@@ -395,7 +360,7 @@ C'est exactement ce que Fitz propose : une liste d'opportunités, puis un trava
 
 <p class="closing-note" id="closingNote">
 <i data-lucide="shield-check"></i>
-Aucun engagement à cette étape — découvrez simplement comment fonctionne l'accompagnement.
+Aucun engagement à cette étape.
 </p>
 
 </section>

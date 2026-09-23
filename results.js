@@ -63,8 +63,6 @@ import { resolveCityImage } from "./js/scholarship-image.js";
 import {
 scoreTier,
 toneForValue,
-RECIT,
-MOTIVATION_NARRATIVE,
 IMPROVEMENT_TIPS,
 ETATS_VIDES
 } from "./js/fitz-voice.js";
@@ -234,6 +232,11 @@ const university = universitiesById.get(pick.universityId) || {};
 
 return {
 name: pick.scholarshipTitle || `Programme à ${pick.universityName}`,
+// Refonte 2026-09-23 : la carte mène à la fiche (scholarship-details
+// prend l'identifiant du PROGRAMME), et le verdict compte à part les
+// opportunités qui portent une vraie bourse.
+programId: pick.programId || "",
+boursee: !!pick.scholarshipTitle,
 university: pick.universityName,
 country: pick.country || "",
 deadline: pick.deadline,
@@ -490,51 +493,71 @@ setLoading(false);
 function render(responses, result, score) {
 
 // ==========================================================
-// RÉCIT D'OUVERTURE — Fitz présente son diagnostic
+// LA RÉPONSE — ce que l'étudiant est venu chercher (2026-09-23)
 // ==========================================================
+//
+// Remplace le récit d'ouverture (quatre phrases génériques : « Votre
+// parcours présente déjà plusieurs éléments favorables »…). Charles :
+// l'étudiant « veut juste savoir les bourses, universités et pays qui
+// lui sont compatibles ». Il le lit donc en premier, en chiffres, et
+// en un seul écran.
+function renderVerdict() {
 
-// Assemble le récit à partir des fabriques de RECIT (fitz-voice.js) :
-// l'ordre des phrases et les conditions d'affichage restent ici (c'est
-// de la logique de rendu), leur formulation vient du champ lexical.
-function buildNarrative() {
+const toutes = result.toutesRetenues || [];
+const n = toutes.length;
+const bourses = toutes.filter((o) => o.boursee).length;
+const universites = new Set(toutes.map((o) => o.university).filter(Boolean)).size;
+const pays = (result.eligibleCountries || []).length;
+const ouvertes = result.echeancesOuvertes || 0;
+const pluriel = (k, mot, mots) => `${k} ${k > 1 ? mots : mot}`;
 
-const sentences = [];
+const titre = document.getElementById("verdictTitre");
+const sous = document.getElementById("verdictSous");
+const chiffres = document.getElementById("verdictChiffres");
+const voir = document.getElementById("verdictVoir");
 
-sentences.push(RECIT.ouverture(result.totalCompatible, responses.studyCategory));
-
-sentences.push(RECIT.atouts(result.strengths.length > 0));
-
-// Uniquement s'il y a réellement des axes à renforcer — voir le
-// commentaire sur RECIT.progression.
-if (result.weaknesses.length) {
-sentences.push(RECIT.progression);
+if (!n) {
+titre.textContent = "Aucune opportunité ne correspond encore à votre profil";
+sous.textContent = "Ce n'est pas une impasse : Fitz vous dit plus bas ce qui élargirait l'éventail.";
+chiffres.hidden = true;
+if (voir) {
+voir.setAttribute("href", "#avisFitz");
+voir.querySelector("span").textContent = "Voir ce qui bloque";
+}
+return;
 }
 
-const destinations = RECIT.destinations(result.eligibleCountries.length);
+titre.textContent = `${pluriel(n, "opportunité correspond", "opportunités correspondent")} à votre profil`;
 
-if (destinations) sentences.push(destinations);
+const domaine = valeurAffichable(responses.studyCategory);
+const cycle = valeurAffichable(resolveTargetLevel(responses));
+const contexte = [domaine, cycle ? `niveau ${cycle}` : ""].filter(Boolean).join(", ");
+sous.textContent = [
+contexte ? `${contexte.charAt(0).toUpperCase()}${contexte.slice(1)}.` : "",
+ouvertes ? `${pluriel(ouvertes, "a ses candidatures ouvertes", "ont leurs candidatures ouvertes")} aujourd'hui.` : "Candidatures à surveiller : les dates sont sur chaque fiche."
+].filter(Boolean).join(" ");
 
-if (MOTIVATION_NARRATIVE[responses.motivation]) {
-sentences.push(MOTIVATION_NARRATIVE[responses.motivation]);
+const tuiles = [
+{ nombre: bourses, libelle: bourses > 1 ? "bourses" : "bourse", icone: "award" },
+{ nombre: universites, libelle: universites > 1 ? "universités" : "université", icone: "landmark" },
+{ nombre: pays, libelle: "pays", icone: "globe-2" }
+];
+
+chiffres.replaceChildren(...tuiles.map((t) => {
+const li = document.createElement("li");
+li.className = "verdict-chiffre";
+li.innerHTML = `<i data-lucide="${t.icone}" aria-hidden="true"></i><strong></strong><span></span>`;
+li.querySelector("strong").textContent = String(t.nombre);
+li.querySelector("span").textContent = t.libelle;
+return li;
+}));
+
 }
 
-return sentences;
-
-}
-
-function renderNarrative() {
-
-const container = document.getElementById("narrativeText");
-container.innerHTML = "";
-
-buildNarrative().forEach((sentence) => {
-
-const p = document.createElement("p");
-p.textContent = sentence;
-container.appendChild(p);
-
-});
-
+/** « Je ne sais pas encore » n'est pas une valeur à afficher. */
+function valeurAffichable(v) {
+const t = String(v || "").trim();
+return !t || t.toLowerCase().startsWith("je ne sais pas") ? "" : t;
 }
 
 // ==========================================================
@@ -553,6 +576,18 @@ const tier = scoreTier(score);
 document.getElementById("score").textContent = score;
 document.getElementById("profileMessage").textContent = tier.message;
 document.getElementById("scoreTier").textContent = tier.label;
+
+// La pastille du verdict et le titre du bloc replié disent le score en
+// une ligne : le détail n'est ouvert que par qui le demande.
+const indice = document.getElementById("scoreDetailIndice");
+if (indice) indice.textContent = `${score}/100 · ${tier.label}`;
+const pastille = document.getElementById("verdictScore");
+if (pastille) {
+pastille.innerHTML = `<strong></strong><span></span><i data-lucide="chevron-down" aria-hidden="true"></i>`;
+pastille.querySelector("strong").textContent = `${score}/100`;
+pastille.querySelector("span").textContent = tier.label;
+applyTone(pastille, tier.tone);
+}
 
 // Le ton est posé sur la SECTION, pas sur l'anneau : la pastille du
 // palier et le chiffre, qui vivent dans la colonne de droite, lisent
@@ -792,7 +827,7 @@ applyTone(freeContainer, toneForValue(weakest.value));
 freeContainer.innerHTML = `
 <i class="improvement-free-icon" data-lucide="${weakest.icon}"></i>
 <div class="improvement-free-copy">
-<strong>Point à améliorer en priorité : ${weakest.label} (${weakest.value}%)</strong>
+<strong>Votre priorité : ${weakest.label} (${weakest.value} %)</strong>
 <p>${weakest.conseil || IMPROVEMENT_TIPS[weakest.label] || ""}</p>
 </div>
 `;
@@ -865,12 +900,28 @@ return;
 
 }
 
+// Refonte 2026-09-23 : chaque pays dit COMBIEN d'opportunités il
+// porte — « Canada 2 » oriente d'un coup d'œil, une liste de noms non.
+const parPays = new Map();
+(result.toutesRetenues || []).forEach((o) => {
+if (o.country) parPays.set(o.country, (parPays.get(o.country) || 0) + 1);
+});
+
 result.eligibleCountries.forEach((country) => {
 
 const li = document.createElement("li");
 li.className = "country-pill";
 li.innerHTML = `<i data-lucide="map-pin"></i><span></span>`;
 li.querySelector("span").textContent = country;
+
+const nombre = parPays.get(country);
+if (nombre) {
+const compte = document.createElement("span");
+compte.className = "country-pill-compte";
+compte.textContent = String(nombre);
+compte.setAttribute("aria-label", `${nombre} opportunité${nombre > 1 ? "s" : ""}`);
+li.appendChild(compte);
+}
 
 list.appendChild(li);
 
@@ -912,19 +963,37 @@ legende.textContent = "Aucune opportunité du catalogue ne correspond encore à 
 return;
 }
 
-const phrases = [];
+// Refonte 2026-09-23 : une ligne. Les chiffres sont déjà dans le
+// verdict, en haut de page ; ici, on dit seulement comment lire.
+const titre = document.getElementById("opportunitesTitre");
+if (titre) titre.textContent = affichees > 1 ? `Vos ${affichees} meilleures opportunités` : "Votre meilleure opportunité";
 
-phrases.push(`Fitz a retenu ${retenu} opportunité${retenu > 1 ? "s" : ""} pour votre profil${ouvertes > 0 ? `, dont ${ouvertes} aux candidatures encore ouvertes` : ""}.`);
+legende.textContent = affichees > 1
+? "De la plus pertinente à la moins pertinente. Touchez une carte pour ouvrir la fiche complète."
+: "Touchez la carte pour ouvrir la fiche complète.";
 
-phrases.push(affichees > 1
-? `Voici les ${affichees} qu'il a analysées en profondeur, de la plus pertinente à la moins pertinente.`
-: "Voici celle qu'il a analysée en profondeur.");
-
-if (retenu > affichees) {
-phrases.push(`Les ${retenu - affichees} autres font partie de votre plan d'accompagnement.`);
+// Les autres retenues : annoncées, avec leur nombre, sous les cartes.
+const suite = document.getElementById("opportunitesSuite");
+if (suite) {
+const reste = retenu - affichees;
+if (reste > 0) {
+suite.innerHTML = `<p><strong></strong> <span></span></p><a href="offers.html?parcours=bourse" class="btn btn-secondary" id="opportunitesSuiteLien"><span>Les découvrir avec Fitz</span><i data-lucide="arrow-right"></i></a>`;
+suite.querySelector("strong").textContent = `+ ${reste} autre${reste > 1 ? "s" : ""} opportunité${reste > 1 ? "s" : ""}`;
+suite.querySelector("span").textContent = `retenue${reste > 1 ? "s" : ""} pour vous : Fitz vous les présente dans votre plan d'accompagnement.`;
+// Un compte accompagné les a déjà dans son espace. adapterAuCompte()
+// peut passer avant OU après ce rendu : il pose data-hub-espace, lu ici,
+// et corrige aussi le lien s'il arrive après.
+const hub = document.body.dataset.hubEspace;
+if (hub) {
+const lienSuite = suite.querySelector("a");
+lienSuite.setAttribute("href", hub);
+lienSuite.querySelector("span").textContent = "Les voir dans mon espace";
 }
-
-legende.textContent = phrases.join(" ");
+suite.hidden = false;
+} else {
+suite.hidden = true;
+}
+}
 
 }
 
@@ -949,9 +1018,12 @@ result.scholarshipDetails.forEach((scholarship) => {
 const card = document.createElement("article");
 card.className = "opportunity-card";
 
-const reasonsHtml = scholarship.reasons
-.map((reason) => `<li><i data-lucide="check"></i><span>${reason}</span></li>`)
-.join("");
+// Refonte 2026-09-23 : UNE raison visible, les autres repliées. Une
+// carte se lit en trois secondes : quoi, jusqu'à quand, pourquoi vous.
+// La raison MONTRÉE est la plus parlante, pas la première venue : le
+// domaine et le financement disent « c'est pour vous » ; le cycle est
+// attendu, et « candidatures ouvertes » répète la ligne d'échéance.
+const [premiereRaison, ...autresRaisons] = trierRaisons(scholarship.reasons || []);
 
 // university/deadline : n'existaient pas tant que les opportunités
 // venaient des 4 pays codés en dur — le catalogue réel (via
@@ -972,9 +1044,23 @@ card.innerHTML = `
 </div>
 </div>
 ${scholarship.deadline || typeof scholarship.jours === "number" ? `<p class="opportunity-deadline"><i data-lucide="calendar-clock"></i><span></span></p>` : ""}
-<p class="opportunity-reasons-label">Pourquoi cette opportunité vous correspond :</p>
-<ul class="opportunity-reasons">${reasonsHtml}</ul>
+${premiereRaison ? `<p class="opportunity-pourquoi"><i data-lucide="check"></i><span><strong>Pourquoi vous :</strong> <span class="opportunity-pourquoi-texte"></span></span></p>` : ""}
+${autresRaisons.length ? `<details class="opportunity-plus"><summary>${autresRaisons.length} autre${autresRaisons.length > 1 ? "s" : ""} raison${autresRaisons.length > 1 ? "s" : ""}</summary><ul class="opportunity-reasons"></ul></details>` : ""}
+${scholarship.programId ? `<a class="opportunity-lien" href="scholarship-details.html?id=${encodeURIComponent(scholarship.programId)}"><span>Voir la fiche</span><i data-lucide="arrow-right"></i></a>` : ""}
 `;
+
+const texteRaison = card.querySelector(".opportunity-pourquoi-texte");
+if (texteRaison) texteRaison.textContent = premiereRaison;
+const listeRaisons = card.querySelector(".opportunity-plus ul");
+if (listeRaisons) {
+autresRaisons.forEach((raison) => {
+const li = document.createElement("li");
+li.innerHTML = `<i data-lucide="check"></i><span></span>`;
+li.querySelector("span").textContent = raison;
+listeRaisons.appendChild(li);
+});
+}
+
 
 card.querySelector("h3").textContent = scholarship.name;
 card.querySelector(".opportunity-country span").textContent = subtitleParts.join(" — ");
@@ -1023,10 +1109,46 @@ deadlineEl.textContent = scholarship.deadline
 
 }
 
+// Moins d'un mois : la ligne d'échéance passe en alerte.
+const joursRestants = scholarship.echeanceOuverte === true
+? (scholarship.porte && typeof scholarship.porte.jours === "number" ? scholarship.porte.jours : scholarship.jours)
+: null;
+if (typeof joursRestants === "number" && joursRestants <= 30) {
+card.querySelector(".opportunity-deadline")?.classList.add("is-urgente");
+}
+
+// La carte entière mène à la fiche (le lien « Voir la fiche » reste le
+// vrai lien, pour le clavier et les lecteurs d'écran).
+const lien = card.querySelector(".opportunity-lien");
+if (lien) {
+card.classList.add("is-cliquable");
+card.addEventListener("click", (evenement) => {
+if (evenement.target.closest("a, summary, details")) return;
+window.location.href = lien.href;
+});
+}
+
 wrapper.appendChild(card);
 
 });
 
+}
+
+/** Les raisons d'une carte, de la plus parlante à la plus attendue. */
+function trierRaisons(raisons) {
+const poids = (r) => {
+const t = String(r).toLowerCase();
+if (/domaine/.test(t)) return 5;
+if (/financement|recherchez/.test(t)) return 4;
+if (/nationalit/.test(t)) return 3;
+if (/enseign|langue/.test(t)) return 2;
+if (/cycle/.test(t)) return 1;
+if (/candidatures ouvertes/.test(t)) return 0;
+return 2;
+};
+return raisons.map((r, i) => ({ r, i, p: poids(r) }))
+.sort((a, b) => (b.p - a.p) || (a.i - b.i))
+.map(({ r }) => r);
 }
 
 /** La date du jour UTC + n jours, en toutes lettres (« 30 novembre
@@ -1034,6 +1156,41 @@ wrapper.appendChild(card);
 function dateDansNJours(n, aujourdhui = new Date()) {
 const minuit = Date.UTC(aujourdhui.getUTCFullYear(), aujourdhui.getUTCMonth(), aujourdhui.getUTCDate());
 return formaterDate(new Date(minuit + n * 86400000).toISOString().slice(0, 10));
+}
+
+// ==========================================================
+// LE DÉTAIL REPLIÉ (2026-09-23)
+// ==========================================================
+// Le score et sa décomposition vivent dans un <details> fermé : leurs
+// animations de remplissage auraient lieu à l'abri des regards. On
+// les rejoue donc à l'ouverture. La pastille du verdict ouvre le bloc
+// avant d'y descendre.
+function brancherDetailDuScore() {
+
+const detail = document.getElementById("scoreDetail");
+if (!detail) return;
+
+const rejouer = () => {
+const ring = document.getElementById("scoreRing");
+const barres = [...detail.querySelectorAll(".score-breakdown-bar span")];
+const largeurs = barres.map((b) => b.style.width);
+if (ring) ring.style.setProperty("--score-percent", 0);
+barres.forEach((b) => { b.style.width = "0"; });
+requestAnimationFrame(() => {
+requestAnimationFrame(() => {
+if (ring) ring.style.setProperty("--score-percent", score);
+barres.forEach((b, i) => { b.style.width = largeurs[i]; });
+});
+});
+};
+
+detail.addEventListener("toggle", () => { if (detail.open) rejouer(); });
+
+const pastille = document.getElementById("verdictScore");
+if (pastille) {
+pastille.addEventListener("click", () => { detail.open = true; });
+}
+
 }
 
 // ==========================================================
@@ -1072,9 +1229,10 @@ items.forEach((item) => observer.observe(item));
 // RENDU
 // ==========================================================
 
-renderNarrative();
+renderVerdict();
 renderScore();
 renderScoreBreakdown();
+brancherDetailDuScore();
 
 fillList("strengths", result.strengths, ETATS_VIDES.strengths, "check-circle");
 fillList("weaknesses", result.weaknesses, ETATS_VIDES.weaknesses, "arrow-up-circle");
@@ -1194,6 +1352,7 @@ if (espace !== "aucun") {
 
 const hub = HUB_ESPACE[espace] || "dashboard.html";
 document.body.dataset.compteAccompagne = "1";
+document.body.dataset.hubEspace = hub;
 
 const retour = document.getElementById("resultsBackLink");
 if (retour) {
@@ -1211,6 +1370,14 @@ if (libelle) libelle.textContent = "Continuer dans mon espace";
 
 const note = document.getElementById("closingNote");
 if (note) note.hidden = true;
+
+// Les autres opportunités sont déjà dans son espace.
+const suite = document.getElementById("opportunitesSuiteLien");
+if (suite) {
+suite.setAttribute("href", hub);
+const texte = suite.querySelector("span");
+if (texte) texte.textContent = "Les voir dans mon espace";
+}
 
 }
 

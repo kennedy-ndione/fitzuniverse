@@ -55,7 +55,12 @@ const CLE_SESSION = "fitzDiagnostic";
 // lieu du domaine de l'étudiant (« Économie »), et Fitz le répétait
 // dans sa lecture. Les lectures écrites avant la correction sont
 // régénérées une fois.
-const VERSION_LECTURE = 3;
+// Passée à 4 le 2026-09-23 (refonte de la page de résultats, demande de
+// Charles) : la lecture passe de quatre longues sections (500 à 650
+// mots) à quatre cartes courtes (120 à 170 mots) — « En bref », « Votre
+// atout », « Votre frein », « Par où commencer ». Les lectures longues
+// déjà enregistrées sont régénérées une fois dans le nouveau format.
+const VERSION_LECTURE = 4;
 
 /**
 * Empreinte stable des réponses.
@@ -229,16 +234,59 @@ return conteneur.querySelector("#fitzAnalysisBody");
 
 }
 
+// Les quatre sections deviennent quatre CARTES (2026-09-23) : chaque
+// titre ### ouvre une carte, et tout ce qui suit jusqu'au titre
+// suivant y entre. Un lecteur pressé lit les titres ; un lecteur
+// curieux lit tout. Sans titre reconnu (ancienne lecture, réponse
+// inattendue), le texte reste d'un seul bloc — rien ne se perd.
+const ICONES_SECTIONS = {
+"en bref": "sparkle",
+"votre atout": "trending-up",
+"votre frein": "alert-triangle",
+"par où commencer": "flag"
+};
+
+function enCartes(html) {
+const gabarit = document.createElement("div");
+gabarit.innerHTML = html;
+if (!gabarit.querySelector("h3")) return html;
+const grille = document.createElement("div");
+grille.className = "fitz-points";
+let carte = null;
+[...gabarit.childNodes].forEach((noeud) => {
+if (noeud.nodeName === "H3") {
+carte = document.createElement("div");
+const cle = noeud.textContent.trim().toLowerCase();
+const slug = cle.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+carte.className = `fitz-point fitz-point--${slug || "autre"}`;
+const icone = ICONES_SECTIONS[cle];
+if (icone) {
+const i = document.createElement("i");
+i.setAttribute("data-lucide", icone);
+i.setAttribute("aria-hidden", "true");
+noeud.prepend(i);
+}
+carte.appendChild(noeud);
+grille.appendChild(carte);
+} else if (carte) {
+carte.appendChild(noeud);
+} else if (noeud.textContent.trim()) {
+// Texte avant le premier titre : il ouvre une carte sans titre.
+carte = document.createElement("div");
+carte.className = "fitz-point";
+carte.appendChild(noeud);
+grille.appendChild(carte);
+}
+});
+return grille.outerHTML;
+}
+
 function termine(conteneur, texte) {
 
 etat(
 conteneur,
 "is-ready",
-`<div class="fitz-analysis-head">
-<i data-lucide="brain"></i>
-<h3>L'analyse de Fitz</h3>
-</div>
-<div class="fitz-analysis-body">${renderMarkdownLite(texte)}</div>`
+`<div class="fitz-analysis-body">${enCartes(renderMarkdownLite(texte))}</div>`
 );
 
 }

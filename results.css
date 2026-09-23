@@ -2020,3 +2020,350 @@ max-width:100%;
    est retirée à l'affichage — main() peut la démasquer après coup, la
    règle CSS tient quel que soit l'ordre. */
 body[data-compte-accompagne] #recoLocked { display: none !important; }
+
+/* ==========================================================
+REFONTE DE LECTURE (2026-09-23) — pyramide inversée
+==========================================================
+Voir le commentaire en tête de #resultsContent (results.html). Tout
+ce bloc sert une seule idée : la réponse d'abord, en chiffres ; le
+concret ensuite ; le détail replié pour qui le demande. */
+
+/* ---------- 1. La réponse ---------- */
+.verdict{
+text-align:center;
+padding:8px 0 28px;
+}
+
+.verdict-surtitre{
+margin:0 0 6px;
+font-size:.78rem;
+font-weight:800;
+letter-spacing:.08em;
+text-transform:uppercase;
+color:var(--amber-600, #BE6032);
+}
+
+.verdict h1{
+margin:0 auto 10px;
+max-width:22ch;
+line-height:1.15;
+}
+
+.verdict-sous{
+margin:0 auto 22px;
+max-width:46ch;
+font-size:1rem;
+line-height:1.55;
+color:var(--text-light);
+}
+
+.verdict-chiffres{
+display:grid;
+grid-template-columns:repeat(3, minmax(0, 1fr));
+gap:12px;
+max-width:560px;
+margin:0 auto 24px;
+padding:0;
+list-style:none;
+}
+
+.verdict-chiffre{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:2px;
+padding:16px 10px 14px;
+border:1px solid var(--border-color);
+border-radius:16px;
+background:var(--background);
+box-shadow:0 10px 24px -18px rgba(33,29,24,.35);
+}
+
+.verdict-chiffre i,
+.verdict-chiffre svg{
+width:18px;
+height:18px;
+color:var(--amber-600, #BE6032);
+margin-bottom:4px;
+}
+
+.verdict-chiffre strong{
+font-family:var(--font-affirmation, serif);
+font-size:clamp(1.9rem, 6vw, 2.4rem);
+font-weight:800;
+line-height:1;
+color:var(--text-color);
+}
+
+.verdict-chiffre span{
+font-size:.84rem;
+font-weight:600;
+color:var(--text-light);
+}
+
+.verdict-actions{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+justify-content:center;
+gap:12px;
+}
+
+.verdict-score{
+display:inline-flex;
+align-items:center;
+gap:8px;
+min-height:44px;
+padding:0 14px;
+border-radius:999px;
+border:1px solid color-mix(in srgb, var(--tone-text) 30%, transparent);
+background:color-mix(in srgb, var(--tone-text) 8%, transparent);
+color:var(--tone-text);
+font-size:.88rem;
+text-decoration:none;
+}
+
+.verdict-score:empty{ display:none; }
+
+.verdict-score strong{ font-weight:800; }
+
+.verdict-score i,
+.verdict-score svg{ width:15px; height:15px; }
+
+/* ---------- 2. Les cartes : quoi, jusqu'à quand, pourquoi vous ---------- */
+.opportunity-card.is-cliquable{ cursor:pointer; }
+
+.opportunity-deadline.is-urgente{
+color:var(--danger-700, #B91C1C);
+font-weight:700;
+}
+
+.opportunity-pourquoi{
+display:flex;
+align-items:flex-start;
+gap:8px;
+margin:10px 0 0;
+font-size:.9rem;
+line-height:1.5;
+color:var(--text-color);
+}
+
+.opportunity-pourquoi i,
+.opportunity-pourquoi svg{
+flex:none;
+width:16px;
+height:16px;
+margin-top:3px;
+color:var(--success-600, #16A34A);
+}
+
+.opportunity-plus{
+margin-top:6px;
+font-size:.86rem;
+}
+
+.opportunity-plus summary{
+cursor:pointer;
+width:max-content;
+padding:4px 0;
+font-weight:700;
+color:var(--amber-700, #8F3E22);
+}
+
+.opportunity-plus .opportunity-reasons{
+margin-top:6px;
+}
+
+.opportunity-lien{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin-top:12px;
+font-size:.9rem;
+font-weight:700;
+color:var(--amber-700, #8F3E22);
+text-decoration:none;
+}
+
+.opportunity-lien i,
+.opportunity-lien svg{ width:16px; height:16px; }
+
+.opportunites-suite{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-top:16px;
+padding:16px 18px;
+border:1px dashed var(--border-color);
+border-radius:16px;
+}
+
+.opportunites-suite p{
+margin:0;
+font-size:.92rem;
+line-height:1.5;
+color:var(--text-light);
+}
+
+.opportunites-suite strong{ color:var(--text-color); }
+
+/* ---------- 3. Les pays, avec leur nombre ---------- */
+/* Des pastilles, pas des cartes : les règles génériques des listes de
+   section (padding 14px, marge 10px) doublaient leur hauteur, et dix
+   pays prenaient deux écrans de téléphone. */
+#pays .pill-list{ gap:8px; margin:0; padding:0; }
+
+#pays .country-pill{
+margin:0;
+padding:7px 12px 7px 10px;
+font-size:.9rem;
+}
+
+.country-pill-compte{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:20px;
+height:20px;
+margin-left:2px;
+padding:0 6px;
+border-radius:999px;
+background:var(--amber-600, #BE6032);
+color:#FDF9EF;
+font-size:.72rem;
+font-weight:800;
+}
+
+/* ---------- 4. L'avis de Fitz : quatre cartes courtes ---------- */
+.fitz-points{
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:12px;
+}
+
+.fitz-point{
+padding:16px 18px;
+border:1px solid var(--border-color);
+border-radius:16px;
+background:var(--background);
+}
+
+.fitz-point h3{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 6px;
+font-size:.8rem;
+font-weight:800;
+letter-spacing:.06em;
+text-transform:uppercase;
+color:var(--amber-700, #8F3E22);
+}
+
+.fitz-point h3 i,
+.fitz-point h3 svg{ width:16px; height:16px; }
+
+.fitz-point p{
+margin:0;
+font-size:.95rem;
+line-height:1.55;
+color:var(--text-color);
+}
+
+.fitz-point p + p{ margin-top:6px; }
+
+.fitz-point--votre-frein{ border-color:color-mix(in srgb, var(--warning-600, #D97706) 35%, var(--border-color)); }
+.fitz-point--votre-frein h3{ color:var(--warning-700, #B45309); }
+.fitz-point--par-ou-commencer{ border-left:4px solid var(--amber-600, #BE6032); }
+
+#avisFitz .improvement-free{ margin-top:14px; }
+
+/* ---------- 5. Le détail, replié ---------- */
+.score-detail{
+margin:28px 0;
+border:1px solid var(--border-color);
+border-radius:18px;
+background:var(--background);
+overflow:hidden;
+}
+
+.score-detail-resume{
+display:grid;
+grid-template-columns:1fr auto;
+align-items:center;
+gap:2px 12px;
+padding:18px 20px;
+cursor:pointer;
+list-style:none;
+}
+
+.score-detail-resume::-webkit-details-marker{ display:none; }
+
+.score-detail-titre{
+font-size:1.02rem;
+font-weight:800;
+color:var(--text-color);
+}
+
+.score-detail-indice{
+grid-column:1;
+font-size:.86rem;
+color:var(--text-light);
+}
+
+.score-detail-resume i,
+.score-detail-resume svg{
+grid-column:2;
+grid-row:1 / 3;
+width:20px;
+height:20px;
+color:var(--text-light);
+transition:transform .2s ease;
+}
+
+.score-detail[open] .score-detail-resume i,
+.score-detail[open] .score-detail-resume svg{ transform:rotate(180deg); }
+
+.score-detail-corps{
+display:flex;
+flex-direction:column;
+gap:22px;
+padding:4px 20px 22px;
+border-top:1px solid var(--border-color);
+}
+
+.score-detail-corps .score-section{ margin:18px 0 0; }
+
+.score-detail-bloc h3{
+margin:0 0 12px;
+font-size:1rem;
+font-weight:800;
+color:var(--text-color);
+}
+
+.score-detail-colonnes{
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:14px;
+}
+
+.score-detail-colonnes .analysis-card{ margin:0; }
+
+.score-detail-colonnes .analysis-heading h3{
+margin:0;
+font-size:1rem;
+}
+
+@media(max-width:640px){
+
+.verdict-chiffres{ gap:8px; }
+.verdict-chiffre{ padding:14px 6px 12px; }
+.verdict-actions .btn{ width:100%; justify-content:center; }
+.fitz-points,
+.score-detail-colonnes{ grid-template-columns:1fr; }
+.score-detail-resume{ padding:16px; }
+.score-detail-corps{ padding:4px 16px 18px; }
+
+}
