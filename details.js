@@ -247,7 +247,7 @@ const libelle = libelleLimiteAge(ageMax);
 if (!libelle) return null;
 
 if (!birthDate) {
-return { ton: "invitation", texte: `Cette bourse fixe une limite d'âge (${libelle}) — renseignez votre date de naissance pour savoir où vous en êtes.`, lien: "profile.html" };
+return { ton: "invitation", texte: `Cette bourse fixe une limite d'âge (${libelle}). Renseignez votre date de naissance pour savoir où vous en êtes.`, lien: "profile.html" };
 }
 
 const verdict = respecteLimiteAge(ageMax, computeAge(birthDate), niveau);
@@ -688,7 +688,7 @@ return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 const program = await lireDocument("programs", id);
 
 if (!program) {
-afficherErreur("Cette opportunité n'est plus disponible", "Ce programme a peut-être été retiré ou mis à jour récemment — le reste du catalogue vous attend.");
+afficherErreur("Cette opportunité n'est plus disponible", "Ce programme a peut-être été retiré ou mis à jour récemment. Le reste du catalogue vous attend.");
 return;
 }
 

@@ -682,3 +682,14 @@ background:var(--warning-50);
 }
 .details-exigence--voie strong{color:var(--amber-700);}
 .details-exigence--voie p{color:var(--text-color);}
+
+/* « Conditions à connaître », UNE IDÉE PAR LIGNE (lot 74, 2026-09-22).
+Le texte `generalCriteria` a été réécrit une condition par ligne,
+séparées par un retour à la ligne. Il est injecté en textContent (texte
+libre saisi en admin, jamais d'innerHTML) : pre-line rend ces retours à
+la ligne visibles, sans rien interpréter d'autre. Sans cette règle, les
+huit ou dix conditions d'une bourse se lisaient d'un seul bloc. */
+#generalCriteria{
+white-space:pre-line;
+line-height:1.75;
+}

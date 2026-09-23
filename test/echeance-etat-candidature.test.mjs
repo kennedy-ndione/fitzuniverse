@@ -171,7 +171,9 @@ test("periodeOuverture, quand elle existe, remplace « non annoncée »", () => 
 
   const sans = etatCandidature({ statut: "Fermée" }, LE_JOUR);
 
-  assert.match(sans.detail, /Prochaine ouverture non annoncée/);
+  // Reformulé au lot 74 (2026-09-22) : plus de tiret long dans les
+  // phrases que lit l'étudiant.
+  assert.match(sans.detail, /La prochaine ouverture n'est pas encore annoncée\. Surveillez le portail officiel\./);
 
 });
 
@@ -452,6 +454,7 @@ test("PONCTUATION — sans période, le texte de repli reste celui d'avant", () 
 
   const r = etatCandidature({ statut: "Ouverte" }, LE_JOUR);
 
-  assert.match(r.detail, /Aucune date limite publiée à ce jour/);
+  // Reformulé au lot 74 (2026-09-22), même sens, sans tiret long.
+  assert.match(r.detail, /Aucune date limite n'est publiée pour l'instant\./);
 
 });

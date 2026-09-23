@@ -1065,7 +1065,17 @@ font-weight:var(--fw-semibold);
 
 color:var(--text-light);
 
-white-space:nowrap;
+/* Lot 74 (2026-09-22) : une puce ne coupe plus jamais son texte. Elle
+reste sur une ligne quand elle le peut (niveau, langue, pays), et passe
+à la ligne quand la carte est plus étroite que son libellé — mesuré en
+rendu : 6 puces d'université sortaient de la carte à 375 px. */
+white-space:normal;
+
+max-width:100%;
+
+overflow-wrap:anywhere;
+
+line-height:1.35;
 
 }
 
@@ -1117,30 +1127,19 @@ color:var(--amber-700);
 .scholarship-card-chip.is-funding i,
 .scholarship-card-chip.is-funding svg{ color:var(--amber-700); }
 
-/* La puce financement porte du texte LIBRE (montants à plusieurs
-paliers, mentions entre parenthèses) qui peut dépasser de loin la
-largeur de la carte — mesuré 1 495px dans une carte de 308px sur
-téléphone (passe mobile du 2026-09-01) : en nowrap hérité de la règle
-commune, le texte était simplement coupé au bord. Elle passe donc en
-multi-lignes, BORNÉES à 3 (line-clamp) : certains montants italiens
-font un paragraphe entier (paliers fuori sede/pendolare/in sede +
-revalorisation ISTAT + majorations), et 6 lignes d'ambre avalaient la
-carte — l'intégralité reste lisible sur la fiche de la bourse. Les
-autres puces (niveau, pays) restent courtes et en nowrap.
--webkit-box remplace inline-flex (nécessaire au clamp) : le gap ne
-s'applique plus, l'écart icône-texte passe par un margin-right. */
+/* La puce financement portait du texte LIBRE (montants à plusieurs
+paliers, mentions entre parenthèses) : mesuré 1 495px dans une carte de
+308px sur téléphone (passe mobile du 2026-09-01), puis bornée à 3 lignes
+par un line-clamp qui coupait 115 puces sur 157 (rendu du 2026-09-22).
+Depuis le lot 74, elle n'affiche plus que la PREMIÈRE PHRASE du
+financement (premierePhrase(), js/scholarship-filters.js) : 70
+caractères au plus, écrite pour se comprendre seule. Plus de clamp :
+elle s'affiche en entier, sur deux lignes au besoin, et le texte
+complet reste sur la fiche de la bourse. */
 .catalog-chip.is-funding,
 .scholarship-card-chip.is-funding{
 
-display:-webkit-box;
-
--webkit-line-clamp:3;
-
--webkit-box-orient:vertical;
-
-overflow:hidden;
-
-white-space:normal;
+align-items:flex-start;
 
 line-height:1.45;
 
@@ -1151,9 +1150,7 @@ line-height:1.45;
 .scholarship-card-chip.is-funding i,
 .scholarship-card-chip.is-funding svg{
 
-margin-right:6px;
-
-vertical-align:-2px;
+margin-top:2px;
 
 }
 

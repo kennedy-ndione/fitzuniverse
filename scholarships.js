@@ -18,7 +18,8 @@ import {
 estFinancementIntegral,
 meilleurRangQS,
 libelleFunder,
-correspondTypeBourse
+correspondTypeBourse,
+premierePhrase
 } from "./js/scholarship-filters.js";
 
 import { resolveScholarshipImage } from "./js/scholarship-image.js";
@@ -564,6 +565,12 @@ const countryIconHtml = scholarship.flag
 // encore sans programme lié) plutôt qu'afficher "0 université".
 const partners = scholarship.partnerCount || 0;
 
+// PUCE FINANCEMENT (lot 74, 2026-09-22) : la première phrase du
+// `funding`, en entier — voir premierePhrase() dans
+// js/scholarship-filters.js. Plus de « financé » accolé : la phrase
+// se suffit (« Bourse complète », « 1 000 € par mois… »), et plus de
+// line-clamp : rien n'est coupé, ni sur téléphone ni sur ordinateur.
+//
 // Uniquement une description saisie en base (voir buildDescription) :
 // la phrase générée automatiquement qui vivait ici répétait le pays,
 // le financement et les niveaux affichés juste en dessous.
@@ -583,7 +590,7 @@ const partnersHtml = partners > 0
 // dans css/base.css et ne se redéfinit ni ne se détourne.
 const typeBourse = libelleFunder(scholarship.funder);
 const funderHtml = typeBourse
-? `<p class="scholarship-card-funder">${typeBourse}${scholarship.funderName ? ` — ${scholarship.funderName}` : ""}</p>`
+? `<p class="scholarship-card-funder">${typeBourse}${scholarship.funderName ? ` · ${scholarship.funderName}` : ""}</p>`
 : "";
 
 // La ligne pays (drapeau + nom du pays) a été retirée le 2026-08-22 :
@@ -618,7 +625,7 @@ ${description ? `<p class="scholarship-card-desc">${description}</p>` : ""}
 ${partnersHtml}
 
 <div class="scholarship-card-meta">
-${scholarship.funding ? `<span class="scholarship-card-chip is-funding"><i data-lucide="coins"></i>${scholarship.funding} financé</span>` : ""}
+${scholarship.funding ? `<span class="scholarship-card-chip is-funding"><i data-lucide="coins"></i><span>${premierePhrase(scholarship.funding)}</span></span>` : ""}
 ${levelChips}
 </div>
 

@@ -14,7 +14,7 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
 import { BANDES, LIBELLES_BANDES, LIBELLE_SANS_PRIX, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
-import { formaterDate } from "./js/echeance.js";
+import { formaterDate, etatCarteUniversite } from "./js/echeance.js";
 // Recherche insensible aux accents et à la casse (clôture, 2026-09-07) :
 // « ecole » doit trouver « École polytechnique », « koc » « Koç ». Même
 // normalisation que le rapprochement de candidature — un seul module.
@@ -34,9 +34,7 @@ import { normaliserTitre } from "./js/candidature-catalogue.js";
 
 const LEVEL_ORDER = ["Licence", "Master", "Doctorat"];
 
-function statusClass(status) {
-return String(status || "").toLowerCase().includes("ouvert") ? "is-open" : "";
-}
+
 
 function slugify(str) {
 
@@ -89,7 +87,7 @@ const scholarshipLabel = university.scholarshipTitles.length
 const { frais, exoneration, niveau, replie } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "", replie: false };
 
 const costChip = frais.etat === "verifie"
-? `<span class="uni-card-chip is-cost" title="${niveau} — ${frais.fraiche ? "vérifié le" : "à recouper, vérifié le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}</span>`
+? `<span class="uni-card-chip is-cost" title="${niveau} : ${frais.fraiche ? "montant vérifié le" : "montant à revérifier, dernière vérification le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}</span>`
 : `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLE_SANS_PRIX}</span>`;
 
 const exonerationChip = exoneration.politique !== "inconnue"
@@ -104,11 +102,18 @@ const exonerationChip = exoneration.politique !== "inconnue"
 // Voir resolveCityImage() dans js/scholarship-image.js.
 const cityPhoto = resolveCityImage(university.image);
 
+// L'état des candidatures, calculé (lot 74) — voir etatCarteUniversite()
+// dans js/echeance.js. Le badge de la photo dit l'état, le pied de
+// carte dit la date : deux textes courts, jamais un paragraphe brut.
+const candidature = university.candidature || null;
+
 card.innerHTML = `
 <div class="uni-card-media uni-card-media--variant-${university.photoVariant || 0}">
 <img src="${cityPhoto.src}" srcset="${cityPhoto.srcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 360px" width="800" height="533" alt="${university.city || university.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${cityPhoto.fallbackOriginal}'">
-${university.ranking ? `<span class="uni-card-rank"><i data-lucide="trophy"></i>${university.ranking}</span>` : ""}
-${university.status ? `<span class="uni-card-status ${statusClass(university.status)}">${university.status}</span>` : ""}
+${university.ranking || candidature ? `<div class="uni-card-badges">
+${university.ranking ? `<span class="uni-card-rank"><i data-lucide="trophy"></i><span>${university.ranking}</span></span>` : ""}
+${candidature ? `<span class="uni-card-status ${candidature.ouvert === true ? "is-open" : ""}" title="${candidature.badge}. ${candidature.detail || ""}">${candidature.court}</span>` : ""}
+</div>` : ""}
 <div class="uni-card-location">
 ${university.flag ? `<img src="assets/flags/${university.flag}" alt="" width="20" height="15" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/flags/default.svg'">` : ""}
 <span>${[university.city, university.country].filter(Boolean).join(", ")}</span>
@@ -124,7 +129,7 @@ ${costChip}
 ${exonerationChip}
 </div>
 <div class="uni-card-footer">
-${university.deadline ? `<span class="uni-card-deadline"><i data-lucide="clock"></i>${university.deadline}</span>` : `<span></span>`}
+${candidature ? `<span class="uni-card-deadline"><i data-lucide="clock"></i><span>${candidature.pied}</span></span>` : `<span></span>`}
 <span class="uni-card-cta">Voir les détails<i data-lucide="arrow-right"></i></span>
 </div>
 </div>
@@ -304,17 +309,29 @@ const scholarshipTitles = [...new Set(
 programsForUniversity.map((p) => (allScholarshipsById.get(p.scholarshipId) || {}).title).filter(Boolean)
 )];
 
-const deadlines = programsForUniversity.map((p) => p.deadline).filter(Boolean).sort();
 const languages = [...new Set(programsForUniversity.map((p) => p.language).filter(Boolean))];
-const statuses = programsForUniversity.map((p) => p.status).filter(Boolean);
+
+// Une entrée par programme, exactement celles de sa fiche (details.js) :
+// les deux statuts, la date vérifiée, la période de la bourse.
+const candidature = etatCarteUniversite(programsForUniversity.map((p) => {
+const bourse = allScholarshipsById.get(p.scholarshipId) || {};
+return {
+statut: [p.status, bourse.status],
+actif: bourse.isActive,
+echeances: [p.deadline],
+echeanceISO: p.deadlineISO,
+periodeOuverture: p.periodeOuverture || bourse.periodeOuverture,
+verifieLe: bourse.verifieLe,
+echeanceVariable: bourse.echeanceVariable
+};
+}));
 
 return {
 ...university,
 levels,
 scholarshipTitles,
-deadline: deadlines[0] || "",
+candidature,
 language: languages[0] || "",
-status: statuses.find((s) => String(s).toLowerCase().includes("ouvert")) || statuses[0] || "",
 primaryProgramId: programsForUniversity[0] ? programsForUniversity[0].firestoreId : university.firestoreId,
 photoVariant,
 cout

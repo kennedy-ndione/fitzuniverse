@@ -148,3 +148,31 @@ if (!filtre) return true;
 return funder === filtre;
 
 }
+
+/**
+* Première phrase du financement (lot 74, 2026-09-22)
+* ---------------------------------------------------
+* La puce ambrée de la carte affichait `${funding} financé` : pensée
+* pour des valeurs courtes (« 100 % »), elle recevait en réalité des
+* paragraphes entiers, coupés à 3 lignes par un line-clamp. L'étudiant
+* lisait « … » au milieu d'un montant.
+*
+* Depuis le lot 74, chaque `funding` COMMENCE par une phrase qui se
+* comprend seule et tient en 70 caractères (« Bourse complète. »,
+* « 1 000 € par mois, versés en lei roumains. »). La carte affiche
+* cette phrase-là, en entier, sans point final ; la fiche garde le
+* texte complet. Le découpage est le même que celui du contrôle de
+* rédaction : fin de phrase = « . », « ! » ou « ? » suivi d'un espace
+* (ou de la fin du texte). Un texte d'une seule phrase ressort entier.
+*
+* Pas de lookbehind (?<=…) ici : SyntaxError sur Safari avant iOS 16.4,
+* et c'est le module entier qui tomberait (test « flou 3 »). Le
+* lookahead (?=…), lui, est lu partout.
+*/
+export function premierePhrase(texte) {
+const t = String(texte || "").trim();
+if (!t) return "";
+const m = t.match(/^[\s\S]*?[.!?](?=\s|$)/);
+const premiere = (m ? m[0] : t).trim();
+return premiere.replace(/\.$/, "");
+}

@@ -253,8 +253,12 @@ margin-top:-4px;
 générée automatiquement qui occupait cette place répétait le pays,
 le financement et les niveaux affichés juste en dessous (voir
 buildDescription dans scholarships.js).
-line-clamp à 3 lignes : une description longue ne doit pas faire
-d'une carte le double de la hauteur de ses voisines dans la grille. */
+PLUS DE LINE-CLAMP (lot 74, 2026-09-22) : le clamp à 3 lignes coupait
+146 descriptions sur 157 au milieu d'une phrase (mesuré en rendu,
+375 px et 1 280 px). Les descriptions ont été réécrites pour tenir en
+150 caractères, une ou deux phrases : elles s'affichent désormais en
+entier, et la hauteur des cartes reste comparable d'une carte à
+l'autre sans rien cacher. */
 .scholarship-card-desc{
 
 font-size:.88rem;
@@ -263,12 +267,7 @@ line-height:1.6;
 
 color:var(--text-light);
 
-display:-webkit-box;
--webkit-line-clamp:3;
-line-clamp:3;
--webkit-box-orient:vertical;
-
-overflow:hidden;
+overflow-wrap:break-word;
 
 }
 

@@ -224,8 +224,14 @@ background:linear-gradient(to top, rgba(7,10,22,.80) 0%, rgba(7,10,22,.24) 46%, 
 
 }
 
-/* ---- Classement, en haut à gauche ---- */
-.uni-card-rank{
+/* ---- Badges de la photo : classement à gauche, état à droite ----
+LOT 74 (2026-09-22). Les deux badges étaient positionnés chacun en
+absolu, l'un contre le bord gauche, l'autre contre le bord droit, sans
+largeur maximale : mesuré en rendu, 93 cartes sur 155 à 375 px (89 à
+1 280 px) avaient le statut écrit PAR-DESSUS le classement. Ils
+partagent désormais une rangée flexible : chacun garde sa place, passe
+à la ligne s'il le faut, et aucun ne peut plus recouvrir l'autre. */
+.uni-card-badges{
 
 position:absolute;
 
@@ -233,9 +239,32 @@ top:12px;
 
 left:12px;
 
+right:12px;
+
 z-index:2;
 
 display:flex;
+
+flex-wrap:wrap;
+
+align-items:flex-start;
+
+justify-content:space-between;
+
+gap:6px;
+
+}
+
+/* ---- Classement ---- */
+.uni-card-rank{
+
+display:flex;
+
+min-width:0;
+
+max-width:100%;
+
+line-height:1.3;
 
 align-items:center;
 
@@ -276,18 +305,18 @@ color:var(--amber-500);
 
 }
 
-/* ---- Statut, en haut à droite ---- */
+/* ---- État des candidatures (calculé, voir etatCarteUniversite) ---- */
 .uni-card-status{
 
-position:absolute;
-
-top:12px;
-
-right:12px;
-
-z-index:2;
+margin-left:auto;
 
 display:flex;
+
+min-width:0;
+
+max-width:100%;
+
+line-height:1.3;
 
 align-items:center;
 
@@ -415,16 +444,13 @@ color:var(--text-color);
 }
 
 /* Bourses rattachées à cet établissement. C'est la raison pour
-laquelle il est dans ce catalogue : mis en ambre, sur deux lignes
-au maximum, plutôt qu'en gris au milieu du reste. */
+laquelle il est dans ce catalogue : mis en ambre plutôt qu'en gris au
+milieu du reste. Plus de line-clamp (lot 74, 2026-09-22) : il coupait
+la liste des bourses sur 46 cartes, et c'est précisément la bourse
+cachée derrière « … » que l'étudiant venait chercher. */
 .uni-card-scholarship{
 
-display:-webkit-box;
--webkit-line-clamp:2;
-line-clamp:2;
--webkit-box-orient:vertical;
-
-overflow:hidden;
+overflow-wrap:break-word;
 
 font-size:.82rem;
 
@@ -456,17 +482,21 @@ border-top:1px solid var(--border-color);
 
 display:flex;
 
+flex-wrap:wrap;
+
 align-items:center;
 
 justify-content:space-between;
 
-gap:10px;
+gap:8px 10px;
 
 }
 
 .uni-card-deadline{
 
 display:flex;
+
+min-width:0;
 
 align-items:center;
 

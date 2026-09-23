@@ -262,7 +262,12 @@ return sortie + texte.slice(curseur);
 }
 
 // Ce qu'on ne traverse pas dans une page.
-export const HORS_CHAMP = "nav, header, footer, a, button, h1, label, option, select, textarea, input, script, style, noscript, code, pre, [data-sans-glossaire], .glossaire-def, .mnav-sheet, .mnav-tabbar, .fitz-badge, .kicker";
+// PUCES ET BADGES DE CARTE HORS CHAMP (lot 74, 2026-09-22). Une puce est un
+// libellé court, dessiné pour tenir sur une ligne : « Exonération possible,
+// places limitées » devenait « Exonération (une réduction de ce que vous
+// payez) possible… » et sortait de la carte (capture de Charles, page des
+// universités, Hongrie). Le mot reste expliqué à sa prochaine place lisible.
+export const HORS_CHAMP = "nav, header, footer, a, button, h1, label, option, select, textarea, input, script, style, noscript, code, pre, [data-sans-glossaire], .glossaire-def, .mnav-sheet, .mnav-tabbar, .fitz-badge, .kicker, .uni-card-chip, .scholarship-card-chip, .catalog-chip, .uni-card-rank, .uni-card-status, .scholarship-card-status";
 
 /**
 * Annote les nœuds de texte d'une page dans l'ordre de lecture.

@@ -712,7 +712,7 @@ ouvert: true, ton: "ouverte", jours: null,
 badge: "Candidatures ouvertes",
 etiquette: "Date limite",
 valeur: e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement",
-detail: `La date limite dépend ${MENTION_VARIABLE[e.echeanceVariable]}${periode ? ` — ${phrase(periode)}` : ""}.${exemple}`,
+detail: `La date limite dépend ${MENTION_VARIABLE[e.echeanceVariable]}.${periode ? ` Période habituelle : ${phrase(periode)}.` : ""}${exemple}`,
 verifie
 };
 
@@ -764,8 +764,8 @@ badge: "Candidatures ouvertes",
 etiquette: "Date limite",
 valeur: variable ? (e.echeanceVariable === "pays" ? "Selon votre pays" : "Selon l'établissement") : "Non publiée",
 detail: variable
-? `La date limite dépend ${variable}${periode ? ` — ${phrase(periode)}` : ""}. À lire sur le portail officiel avant toute démarche.`
-: (phraseSeule(periode) || "Aucune date limite publiée à ce jour — à confirmer sur le portail officiel."),
+? `La date limite dépend ${variable}.${periode ? ` Période habituelle : ${phrase(periode)}.` : ""} Vérifiez-la sur le portail officiel avant toute démarche.`
+: (phraseSeule(periode) || "Aucune date limite n'est publiée pour l'instant. Vérifiez sur le portail officiel."),
 verifie
 };
 }
@@ -774,7 +774,7 @@ return {
 ouvert: null, ton: "inconnue", jours: null,
 badge: "Calendrier à confirmer",
 etiquette: "Date limite", valeur: "À confirmer",
-detail: phraseSeule(periode) || "Le calendrier de cette bourse n'est pas publié — à confirmer sur le portail officiel.",
+detail: phraseSeule(periode) || "Le calendrier de cette bourse n'est pas encore publié. Vérifiez sur le portail officiel.",
 verifie
 };
 
@@ -880,6 +880,59 @@ periode, verifie, variable
 }
 
 /**
+* L'ÉTAT D'UNE CARTE D'UNIVERSITÉ (lot 74, 2026-09-22)
+* ----------------------------------------------------
+* La carte d'une université réunit PLUSIEURS programmes, souvent de
+* bourses différentes. Elle affichait jusqu'ici :
+*   - en badge sur la photo, le premier `status` brut qui CONTENAIT
+*     « ouvert » : « Fermée — ouverture annoncée prochainement » passait
+*     donc pour ouvert, pastille verte comprise ;
+*   - en pied de carte, le premier `deadline` par ordre ALPHABÉTIQUE,
+*     c'est-à-dire un paragraphe entier choisi au hasard de sa
+*     première lettre.
+* Mesuré en rendu à 375 px : 93 badges de statut chevauchaient le
+* badge de classement.
+*
+* Chaque programme passe désormais par etatCandidature(), avec les
+* mêmes entrées que sa fiche (details.js), et la carte retient le
+* MEILLEUR état pour l'étudiant : ouvert d'abord (la date la plus
+* proche en tête), puis à confirmer, pas encore ouvert, clos. Le
+* badge de la photo dit l'état en un ou deux mots (`court`), le pied
+* de carte dit la date (`pied`) : deux textes courts, calculés, qui ne
+* peuvent plus se contredire. L'explication complète (`detail`) reste
+* en infobulle et sur la fiche.
+*
+* @param {Object[]} entrees  une entrée etatCandidature() par programme
+* @returns {null|Object} l'état retenu, plus `court` (badge) et `pied`
+*/
+const RANG_TON_CARTE = { ouverte: 0, inconnue: 1, attente: 2, close: 3 };
+const COURT_TON_CARTE = { ouverte: "Ouverte", inconnue: "À confirmer", attente: "À venir", close: "Fermée" };
+
+export function etatCarteUniversite(entrees, aujourdhui = new Date()) {
+
+const etats = [].concat(entrees || [])
+.map((e) => etatCandidature(e, aujourdhui))
+.filter(Boolean);
+
+if (!etats.length) return null;
+
+const rang = (e) => (e.ton in RANG_TON_CARTE ? RANG_TON_CARTE[e.ton] : 4);
+const jours = (e) => (typeof e.jours === "number" ? e.jours : Infinity);
+
+etats.sort((a, b) => (rang(a) - rang(b)) || (jours(a) - jours(b)));
+
+const e = etats[0];
+const valeur = String(e.valeur || "");
+
+let pied = e.badge;
+if (/\d{4}$/.test(valeur)) pied = `${e.etiquette} : ${valeur}`;
+else if (e.ton === "ouverte" && e.etiquette === "Date limite" && valeur) pied = `Date limite : ${valeur.charAt(0).toLowerCase()}${valeur.slice(1)}`;
+
+return { ...e, court: COURT_TON_CARTE[e.ton] || e.badge, pied };
+
+}
+
+/**
 * La période rendue SEULE — elle EST la phrase, alors elle doit se
 * terminer comme une phrase.
 *
@@ -913,7 +966,7 @@ const mention = variable ? ` La date limite dépend ${variable}.` : "";
 // limite dépend … » se lisait d'une traite.
 const suite = (periode
 ? `Réouverture attendue : ${phrase(periode)}.`
-: "Prochaine ouverture non annoncée — à surveiller sur le portail officiel.") + mention;
+: "La prochaine ouverture n'est pas encore annoncée. Surveillez le portail officiel.") + mention;
 
 if (derniere) {
 return {
