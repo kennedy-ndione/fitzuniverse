@@ -154,19 +154,31 @@ assert.equal(lu.get("Université de Rennes").politique, "systematique");
 
 // LE REPLI. Un niveau replié n'est jamais classé, quel que soit le
 // montant — mais il s'affiche quand même, avec « à partir de ».
-for (const nom of ["Sorbonne Université", "Université Paris Cité", "École polytechnique", "École normale supérieure — PSL"]) {
+for (const nom of ["Sorbonne Université", "École polytechnique", "École normale supérieure — PSL"]) {
 assert.equal(lu.get(nom).replie, true, nom);
 assert.equal(lu.get(nom).bande, "inconnu", nom);
 assert.match(lu.get(nom).puce, /^à partir de /, `${nom} : ${lu.get(nom).puce}`);
 }
 assert.equal(lu.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
-assert.equal(lu.get("Université Paris Cité").puce, "à partir de 398 €/an · doctorat");
 
-// L'ESSEC ne publie aucun montant : non classée ET sans prix, ce qui
-// n'est pas la même chose qu'un repli.
-assert.equal(lu.get("ESSEC Business School").bande, "inconnu");
+// Paris Cité (lot 75, 2026-09-23) : elle n'est plus repliée sur le
+// doctorat. Le moratoire 2026-2027 exonère D'OFFICE les étudiants hors
+// Union européenne, qui paient les droits nationaux : 178 € en licence.
+// « gratuit » est donc permis ici, parce que l'exonération est
+// systématique : c'est exactement la règle ci-dessus.
+assert.equal(lu.get("Université Paris Cité").replie, false);
+assert.equal(lu.get("Université Paris Cité").bande, "gratuit");
+assert.equal(lu.get("Université Paris Cité").politique, "systematique");
+assert.match(lu.get("Université Paris Cité").puce, /^178 €\/an/);
+
+// L'ESSEC (lot 75) : 27 300 € par an en Master in Management pour un
+// étudiant hors UE, le tarif plein, et une bourse au mérite qu'il faut
+// obtenir (exonération « possible, places limitées »). Master, son
+// niveau le plus bas : non repliée, classée « élevé ».
+assert.equal(lu.get("ESSEC Business School").bande, "eleve");
 assert.equal(lu.get("ESSEC Business School").replie, false);
-assert.equal(lu.get("ESSEC Business School").puce, "Frais non vérifiés");
+assert.equal(lu.get("ESSEC Business School").politique, "possible_plafonnee");
+assert.match(lu.get("ESSEC Business School").puce, /^27 300 €\/an/);
 });
 
 test("SEUIL_GRATUIT / SEUIL_ABORDABLE dérivent de SEUILS_PAR_DEVISE.EUR (source unique)", () => {
@@ -449,18 +461,22 @@ assert.deepEqual(ORDRE_NIVEAUX, ["Licence", "Master", "Doctorat"]);
 * la liste des fiches REPLIÉES, celles où le niveau affiché n'est pas
 * celui demandé. L'ENS-PSL y est entrée au lot 57 et c'est juste — elle
 * ne délivre pas de licence, un profil licence voit donc son master.
+*
+* Lot 75 (2026-09-23) : 26 sur 26. L'ESSEC a son prix (27 300 € en
+* master) et le plancher monte à 26. Paris Cité sort des repliées :
+* sa licence (178 €) et son master (255 €) sont enfin vérifiés.
 */
-test("rejeu sur les 26 universités françaises de l'instantané : au moins 25 affichent un montant", () => {
+test("rejeu sur les 26 universités françaises de l'instantané : au moins 26 affichent un montant", () => {
 const catalogue = JSON.parse(fs.readFileSync(path.join(RACINE, "assets/data/catalogue.json"), "utf8"));
 const francaises = catalogue.universities.filter((u) => u.country === "France");
 assert.equal(francaises.length, 26);
 const niveauxDe = (u) => [...new Set(catalogue.programs.filter((p) => p.universityId === u.id).map((p) => p.level).filter(Boolean))];
 const affichees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).frais.etat === "verifie");
-// Plancher relevé le 2026-09-13 après le lot 57. Ne jamais le baisser.
-assert.ok(affichees.length >= 25, `${affichees.length} universités françaises affichent un montant, plancher 25 — des prix ont été effacés`);
+// Plancher relevé le 2026-09-23 après le lot 75 (25 au lot 57). Ne jamais le baisser.
+assert.ok(affichees.length >= 26, `${affichees.length} universités françaises affichent un montant, plancher 26 — des prix ont été effacés`);
 assert.ok(affichees.length <= francaises.length, "plus d'affichées que d'établissements");
 const repliees = francaises.filter((u) => premierNiveauVerifie(u, niveauxDe(u)).replie).map((u) => u.name).sort();
-assert.deepEqual(repliees, ["Sorbonne Université", "Université Paris Cité", "École normale supérieure — PSL", "École polytechnique"].sort());
+assert.deepEqual(repliees, ["Sorbonne Université", "École normale supérieure — PSL", "École polytechnique"].sort());
 });
 
 // ------------------------------------------------------------------
