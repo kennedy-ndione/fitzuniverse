@@ -2028,6 +2028,14 @@ Voir le commentaire en tête de #resultsContent (results.html). Tout
 ce bloc sert une seule idée : la réponse d'abord, en chiffres ; le
 concret ensuite ; le détail replié pour qui le demande. */
 
+/* Les blocs de la refonte qui se masquent par l'attribut hidden : leur
+   display (flex/grid) l'emporterait sinon sur la règle du navigateur
+   (même piège que .results-loading, plus haut). */
+.verdict-chiffres[hidden],
+.opportunites-suite[hidden],
+.improvement-free[hidden],
+.reco-locked[hidden]{ display:none; }
+
 /* ---------- 1. La réponse ---------- */
 .verdict{
 text-align:center;

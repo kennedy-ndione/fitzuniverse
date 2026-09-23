@@ -62,3 +62,14 @@ assert.match(fitz, /const VERSION_LECTURE = 4;/, "les longues lectures déjà en
 assert.match(fitz, /function enCartes\(html\)/);
 assert.match(lire("results.css"), /\.fitz-points\{/);
 });
+
+test("lecture 5 — pas de doublon : la priorité se retire quand Fitz en parle déjà, et hidden masque vraiment", () => {
+const js = lire("results.js");
+assert.match(js, /freeContainer\.dataset\.axe = weakest\.label;/);
+assert.match(js, /\.then\(eviterLeDoublon\)\.catch\(\(\) => \{\}\);/);
+assert.match(js, /function eviterLeDoublon\(\)/);
+const css = lire("results.css");
+for (const c of ["verdict-chiffres", "opportunites-suite", "improvement-free", "reco-locked"]) {
+assert.match(css, new RegExp(`\\.${c}\\[hidden\\]`), `${c} : display l'emporterait sur hidden`);
+}
+});

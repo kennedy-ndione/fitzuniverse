@@ -823,6 +823,11 @@ const [weakest, ...rest] = sorted;
 // couleur que sa ligne dans la décomposition juste au-dessus, ce qui
 // fait le lien entre les deux sans avoir à l'expliquer.
 applyTone(freeContainer, toneForValue(weakest.value));
+// Lu par le rendu de l'avis de Fitz : si Fitz parle déjà de cet axe
+// dans « Votre frein », cette carte ferait doublon (vu en production le
+// 2026-09-23 : « Votre frein : aucune certification de langue » suivi
+// de « Votre priorité : Certification de langue »).
+freeContainer.dataset.axe = weakest.label;
 
 freeContainer.innerHTML = `
 <i class="improvement-free-icon" data-lucide="${weakest.icon}"></i>
@@ -1159,6 +1164,30 @@ return formaterDate(new Date(minuit + n * 86400000).toISOString().slice(0, 10));
 }
 
 // ==========================================================
+// PAS DE DOUBLON ENTRE FITZ ET LA PRIORITÉ (2026-09-23)
+// ==========================================================
+// Quand l'avis de Fitz est affiché et que sa carte « Votre frein » nomme
+// déjà l'axe le plus faible, la carte « Votre priorité » se retire :
+// l'étudiant ne lit pas deux fois la même chose. Si Fitz a échoué, ou
+// parle d'autre chose, la priorité reste — elle ne dépend de personne.
+function eviterLeDoublon() {
+
+const avis = document.getElementById("fitzAnalysis");
+const priorite = document.getElementById("improvementFree");
+if (!avis || !priorite || avis.hidden || !avis.classList.contains("is-ready")) return;
+
+const axe = (priorite.dataset.axe || "").toLowerCase();
+const frein = avis.querySelector(".fitz-point--votre-frein");
+const texte = (frein ? frein.textContent : avis.textContent).toLowerCase();
+
+// « Certification de langue » est reconnu dans « aucune certification
+// de langue » : on cherche les mots de l'axe, dans l'ordre.
+const mots = axe.split(/\s+/).filter((m) => m.length > 2);
+if (mots.length && mots.every((m) => texte.includes(m))) priorite.hidden = true;
+
+}
+
+// ==========================================================
 // LE DÉTAIL REPLIÉ (2026-09-23)
 // ==========================================================
 // Le score et sa décomposition vivent dans un <details> fermé : leurs
@@ -1255,7 +1284,7 @@ score,
 // pouvoir dire « votre 66 % en niveau académique » et non « votre
 // moyenne », sinon l'étudiant ne reconnaît pas sa propre page.
 breakdown: decomposition()
-});
+}).then(eviterLeDoublon).catch(() => {});
 
 initReveal();
 
