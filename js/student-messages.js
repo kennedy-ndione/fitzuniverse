@@ -210,6 +210,146 @@ return composer;
 }
 
 // ==========================================================
+// L'ALERTE « NOUVEAU MESSAGE » (2026-09-23, demande de Charles)
+// ==========================================================
+//
+// Constaté en vrai : une étudiante a reçu un message de l'équipe et ne
+// savait pas où le trouver. Le seul signal était un point rouge de 8 px
+// sur la cloche. Désormais, trois signaux, sur TOUTES les pages de
+// l'espace (initMessagesPanel tourne partout) :
+//
+//  1. une carte « Nouveau message de l'équipe FitzUniverse » avec
+//     l'extrait du message et un bouton « Lire le message » — à
+//     l'ouverture de la page s'il y a du non-lu, et en direct quand un
+//     message arrive ;
+//  2. la cloche porte le NOMBRE de messages non lus (plus un simple
+//     point) et s'agite à l'arrivée d'un message ;
+//  3. l'onglet du navigateur affiche « (1) » devant le titre.
+//
+// « Plus tard » range la carte pour ce message-là seulement (mémoire de
+// l'onglet) : un message plus récent la fait revenir, et la cloche garde
+// son compteur tant que rien n'est lu. Sur messages.html, la carte ne
+// s'affiche jamais : la page ouverte EST la conversation.
+
+const CLE_ALERTE_RANGEE = "fitzAlerteMessageRangee";
+const TITRE_ORIGINAL = typeof document !== "undefined" ? document.title : "";
+
+const ICONE_CLOCHE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>`;
+
+const ICONE_FERMER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+
+function surLaPageMessages() {
+return /\/messages\.html$/.test(window.location.pathname);
+}
+
+function lireRangee() {
+try { return sessionStorage.getItem(CLE_ALERTE_RANGEE) || ""; } catch { return ""; }
+}
+
+function ranger(id) {
+try { sessionStorage.setItem(CLE_ALERTE_RANGEE, id); } catch { /* onglet privé : la carte reviendra, rien de grave */ }
+}
+
+function extrait(texte, max = 110) {
+const t = String(texte || "").replace(/\s+/g, " ").trim();
+return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
+}
+
+function retirerAlerte() {
+document.querySelector(".messages-alerte")?.remove();
+}
+
+function montrerAlerte(nonLus) {
+
+const dernier = nonLus[nonLus.length - 1];
+
+let carte = document.querySelector(".messages-alerte");
+
+if (!carte) {
+carte = document.createElement("div");
+carte.className = "messages-alerte";
+carte.setAttribute("role", "status");
+carte.setAttribute("aria-live", "polite");
+carte.innerHTML = `
+<span class="messages-alerte-icone">${ICONE_CLOCHE}</span>
+<div class="messages-alerte-texte">
+<strong></strong>
+<span class="messages-alerte-extrait"></span>
+</div>
+<div class="messages-alerte-actions">
+<a href="messages.html" class="messages-alerte-lire">Lire le message</a>
+<button type="button" class="messages-alerte-plus-tard">Plus tard</button>
+</div>
+<button type="button" class="messages-alerte-fermer" aria-label="Fermer l'alerte">${ICONE_FERMER}</button>
+`;
+const rangerLaCarte = () => {
+ranger(carte.dataset.messageId || "");
+retirerAlerte();
+};
+carte.querySelector(".messages-alerte-plus-tard").addEventListener("click", rangerLaCarte);
+carte.querySelector(".messages-alerte-fermer").addEventListener("click", rangerLaCarte);
+document.body.appendChild(carte);
+}
+
+carte.dataset.messageId = dernier.id;
+carte.querySelector("strong").textContent = nonLus.length > 1
+? `${nonLus.length} nouveaux messages de l'équipe FitzUniverse`
+: "Nouveau message de l'équipe FitzUniverse";
+carte.querySelector(".messages-alerte-extrait").textContent = `« ${extrait(dernier.text)} »`;
+carte.querySelector(".messages-alerte-lire").textContent = nonLus.length > 1 ? "Lire les messages" : "Lire le message";
+
+}
+
+/**
+* Les trois signaux, recalculés à chaque changement du fil.
+* @param {Array} messages      le fil complet
+* @param {Object} ui           { bellBtn, bellDot, panelOuvert:boolean }
+* @param {string|null} idPrecedent  le dernier non-lu connu avant ce changement
+* @returns {string|null}       le dernier non-lu connu après
+*/
+function signalerNonLus(messages, { bellBtn, bellDot, panelOuvert }, idPrecedent) {
+
+const nonLus = messages.filter((m) => !m.read && m.fromStudent !== true);
+const n = nonLus.length;
+
+// 2. La cloche : un compteur, lisible, plutôt qu'un point.
+bellDot.hidden = n === 0;
+bellDot.textContent = n > 9 ? "9+" : String(n);
+bellDot.classList.toggle("is-compteur", n > 0);
+bellBtn.setAttribute("aria-label", n ? `Messages — ${n} non lu${n > 1 ? "s" : ""}` : "Messages");
+
+// 3. L'onglet du navigateur.
+document.title = n ? `(${n}) ${TITRE_ORIGINAL}` : TITRE_ORIGINAL;
+
+if (!n) {
+retirerAlerte();
+return null;
+}
+
+const dernier = nonLus[n - 1];
+
+// Un message VRAIMENT nouveau depuis l'ouverture de la page : la
+// cloche s'agite (une fois, et jamais pour qui a demandé moins de
+// mouvement — voir css/journey-shell.css).
+if (idPrecedent !== null && dernier.id !== idPrecedent) {
+bellBtn.classList.remove("is-sonne");
+void bellBtn.offsetWidth;
+bellBtn.classList.add("is-sonne");
+}
+
+// 1. La carte — sauf sur la page Messages, panneau ouvert, ou carte
+// rangée pour ce message précis.
+if (!surLaPageMessages() && !panelOuvert && lireRangee() !== dernier.id) {
+montrerAlerte(nonLus);
+} else if (panelOuvert) {
+retirerAlerte();
+}
+
+return dernier.id;
+
+}
+
+// ==========================================================
 // Surface 1 — la cloche du topbar (toutes les pages de l'espace)
 // ==========================================================
 
@@ -236,17 +376,20 @@ panel.appendChild(buildComposer(uid, { canReply, compact: true }));
 
 let messages = [];
 
-function updateDot() {
-const unreadCount = messages.filter((m) => !m.read && m.fromStudent !== true).length;
-bellDot.hidden = unreadCount === 0;
-}
+// null = premier passage (pas d'agitation de la cloche à l'ouverture de
+// la page : la carte suffit), puis l'id du dernier non-lu connu.
+let dernierNonLu = null;
+let premierPassage = true;
 
 subscribeThread(uid, (nextMessages) => {
 
 messages = nextMessages;
 
 renderThread(list, messages, { canReply });
-updateDot();
+
+const suivant = signalerNonLus(messages, { bellBtn, bellDot, panelOuvert: !panel.hidden }, premierPassage ? null : (dernierNonLu || ""));
+dernierNonLu = suivant;
+premierPassage = false;
 
 // Panneau déjà ouvert quand un message arrive : lu immédiatement.
 if (!panel.hidden) markTeamMessagesRead(uid, messages);
@@ -263,6 +406,7 @@ bellBtn.setAttribute("aria-expanded", String(!isOpen));
 if (!isOpen) {
 list.scrollTop = list.scrollHeight;
 markTeamMessagesRead(uid, messages);
+retirerAlerte();
 }
 
 });

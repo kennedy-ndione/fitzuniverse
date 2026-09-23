@@ -255,6 +255,16 @@ row.querySelector(".msg-bubble-author").textContent = fromStudent ? firstName : 
 row.querySelector("p").textContent = message.text;
 row.querySelector(".msg-bubble-date").textContent = formatWhen(message.createdAt);
 
+// « LU » (2026-09-23) : l'admin sait si l'étudiant a ouvert le message
+// de l'équipe — le champ read passe à true quand il ouvre la cloche ou
+// la page Messages (js/student-messages.js).
+if (!fromStudent) {
+const lu = document.createElement("span");
+lu.className = `msg-bubble-lu${message.read ? " is-lu" : ""}`;
+lu.textContent = message.read ? "Lu" : "Pas encore lu";
+row.querySelector(".msg-bubble-date").append(" · ", lu);
+}
+
 scroll.appendChild(row);
 
 });
