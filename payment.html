@@ -8,7 +8,7 @@
 
 <title>Activer mon accompagnement | FitzUniverse</title>
 
-<meta name="description" content="Récapitulatif et activation de votre accompagnement FitzUniverse — paiement sécurisé via PayDunya (Wave, Orange Money, carte bancaire).">
+<meta name="description" content="Récapitulatif et activation de votre accompagnement FitzUniverse — paiement sécurisé via PayDunya, par Orange Money ; Wave et carte bancaire très bientôt.">
 
 <meta name="theme-color" content="#211D18">
 <!-- Pas de mode sombre : le design "papier chaud" est clair par choix.
@@ -289,12 +289,34 @@ disponible). Pour remplacer par un logo officiel : coller le SVG fourni
 à l'intérieur du <span class="payment-method-logo"> correspondant — la
 taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 -->
+<!-- ============================================================
+MOYENS DE PAIEMENT « BIENTÔT » (2026-09-23, décision de Charles)
+Test du 23/09 : la page PayDunya n'affiche que Max it (Orange Money)
+tant que le compte PayDunya est « en cours de validation », alors que
+l'application autorise CARD + ORANGE MONEY SENEGAL + WAVE SENEGAL.
+Pour ne pas promettre à l'étudiant un moyen qu'il ne trouvera pas,
+Wave et la carte sont affichés « Bientôt disponible », désactivés, et
+Orange Money est présélectionné.
+
+POUR ROUVRIR (quand PayDunya aura validé le compte et que la page
+PayDunya montrera Wave et la carte) : sur les deux <label> marqués
+is-bientot, retirer la classe is-bientot, l'attribut disabled de
+l'<input> et la ligne .payment-method-bientot ; retirer `checked` de
+l'Orange Money ; retirer .payment-methods-note ; remettre la meta
+description, et les deux phrases d'offers.html (marquées PAIEMENT
+BIENTÔT). Aucune autre ligne ne dépend de cet état.
+============================================================ -->
+<p class="payment-methods-note">
+<i data-lucide="info" aria-hidden="true"></i>
+<span>Pour l'instant, le paiement se fait par <strong>Orange Money</strong> (application Max it). Wave et la carte bancaire arrivent très bientôt.</span>
+</p>
+
 <fieldset class="payment-methods">
 
 <legend class="visually-hidden">Choisissez votre moyen de paiement</legend>
 
-<label class="payment-method method-wave reveal">
-<input type="radio" name="paymentMethod" value="wave">
+<label class="payment-method method-wave is-bientot reveal">
+<input type="radio" name="paymentMethod" value="wave" disabled>
 <span class="payment-method-card payment-method-card-official">
 
 <span class="payment-method-logo payment-method-logo-official" aria-hidden="true">
@@ -304,6 +326,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 <span class="payment-method-copy">
 <strong>Wave</strong>
 <small>Paiement mobile instantané</small>
+<small class="payment-method-bientot">Bientôt disponible</small>
 </span>
 
 <span class="payment-method-check"><i data-lucide="check"></i></span>
@@ -312,7 +335,7 @@ taille (var(--logo-size)) et le cadre arrondi s'adaptent automatiquement.
 </label>
 
 <label class="payment-method method-orange reveal">
-<input type="radio" name="paymentMethod" value="orange-money">
+<input type="radio" name="paymentMethod" value="orange-money" checked>
 <span class="payment-method-card payment-method-card-official">
 
 <span class="payment-method-logo payment-method-logo-official" aria-hidden="true">
@@ -353,8 +376,8 @@ La classe .payment-method-card-official est ajoutée pour la même
 raison que sur les deux autres : mise en colonne, coche en haut à
 droite. Elle règle au passage le titre « Carte bancaire » qui
 passait à la ligne au milieu du mot, faute de largeur. -->
-<label class="payment-method method-card reveal">
-<input type="radio" name="paymentMethod" value="card">
+<label class="payment-method method-card is-bientot reveal">
+<input type="radio" name="paymentMethod" value="card" disabled>
 <span class="payment-method-card payment-method-card-official">
 
 <span class="payment-method-logo payment-method-logo-official payment-method-logo-schemes" aria-hidden="true">
@@ -385,6 +408,7 @@ fait qu'on le reconnaît. -->
 <span class="payment-method-copy">
 <strong>Carte bancaire</strong>
 <small>Visa, Mastercard et cartes internationales</small>
+<small class="payment-method-bientot">Bientôt disponible</small>
 </span>
 
 <span class="payment-method-check"><i data-lucide="check"></i></span>

@@ -295,6 +295,15 @@ label.textContent = activationLabel(plan);
 
 });
 
+// PAIEMENT BIENTÔT (2026-09-23) : Orange Money est présélectionné dans
+// payment.html (seul moyen que PayDunya ouvre tant que le compte n'est
+// pas validé). Un choix déjà coché à l'ouverture active le bouton tout
+// de suite, sans attendre un clic qui ne changerait rien.
+if (document.querySelector('input[name="paymentMethod"]:checked:not(:disabled)')) {
+button.disabled = false;
+label.textContent = activationLabel(plan);
+}
+
 }
 
 // COMPTE D'ABORD (2026-09-21) — voir l'en-tête. Un visiteur voit deux
