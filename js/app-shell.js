@@ -29,6 +29,7 @@ signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 import { initMessagesPanel } from "./student-messages.js";
+import { demarrerPresence } from "./presence.js";
 
 // Menus déroulants habillés (bouton + liste aux couleurs du site, le
 // select natif reste fonctionnel) — voir l'en-tête de fitz-select.js.
@@ -727,6 +728,10 @@ if (window.lucide) lucide.createIcons();
 initMessagesPanel(session.user.uid, {
 canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
+
+// « En ligne » (2026-09-23) : la pastille verte de la barre haute et le
+// battement que le Control Center écoute (js/presence.js).
+demarrerPresence(session.user.uid);
 
 hideLoader();
 

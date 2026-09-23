@@ -12,6 +12,7 @@ getDoc
 
 import { getAllUsers } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
+import { ecouterPresence, pastillePresence } from "./presence-admin.js";
 import { passSeul, resolvePlanPreinscription, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
@@ -21,6 +22,11 @@ import { PASS_ID, etiquetteAdmin, etiquettesDuCompte, optionsFormules } from "..
 initSidebarToggle();
 
 let allUsers = [];
+
+// « En ligne » (2026-09-23) : l'état de présence de chaque étudiant,
+// rafraîchi en temps réel par admin/presence-admin.js. Tant que la
+// première lecture n'est pas arrivée, personne n'est « en ligne ».
+let etatDe = () => ({ enLigne: false, libelle: "…", vuLe: 0 });
 
 // Le filtre « Toutes les formules » : les 7 offres en vente d'abord (Pass
 // Découverte, bourses, France), puis les retirées sous leur titre de
@@ -103,6 +109,8 @@ function matchesStatus(user, statusFilter) {
 
 if (!statusFilter) return true;
 
+if (statusFilter === "online") return etatDe(user.uid).enLigne;
+
 const isDisabled = user.disabled === true;
 
 return statusFilter === "disabled" ? isDisabled : !isDisabled;
@@ -119,12 +127,17 @@ const filtered = allUsers.filter((user) =>
 matchesSearch(user, term) &&
 matchesPlan(user, planFilter) &&
 matchesStatus(user, statusFilter)
-);
+)
+// Les étudiants en ligne d'abord, puis du plus récemment vu au plus
+// ancien ; ceux qu'on n'a jamais vus gardent l'ordre d'inscription.
+.map((user, i) => ({ user, i, etat: etatDe(user.uid) }))
+.sort((a, b) => (b.etat.enLigne - a.etat.enLigne) || (b.etat.vuLe - a.etat.vuLe) || (a.i - b.i))
+.map(({ user }) => user);
 
 const tbody = document.getElementById("studentsTableBody");
 
 if (!filtered.length) {
-tbody.innerHTML = `<tr><td colspan="6"><div class="admin-table-empty">Aucun étudiant ne correspond à ces critères.</div></td></tr>`;
+tbody.innerHTML = `<tr><td colspan="7"><div class="admin-table-empty">Aucun étudiant ne correspond à ces critères.</div></td></tr>`;
 return;
 }
 
@@ -134,6 +147,7 @@ tbody.innerHTML = filtered.map((user) => `
 <td>${user.email || "-"}</td>
 <td>${planPill(user)}</td>
 <td>${statusPill(user.disabled === true)}</td>
+<td>${pastillePresence(etatDe(user.uid))}</td>
 <td>${formatDate(user.createdAt)}</td>
 <td><a class="table-link-btn" href="student-detail.html?uid=${user.uid}">Voir la fiche</a></td>
 </tr>
@@ -168,6 +182,19 @@ return;
 allUsers = await getAllUsers();
 
 renderTable();
+
+// Temps réel : chaque battement d'étudiant (et un réveil toutes les
+// 30 s) redessine le tableau et le compteur « N en ligne ».
+ecouterPresence((etat, enLigne) => {
+etatDe = etat;
+const compteur = document.getElementById("presenceCount");
+if (compteur) {
+compteur.hidden = false;
+compteur.classList.toggle("is-vide", enLigne === 0);
+compteur.querySelector("strong").textContent = String(enLigne);
+}
+renderTable();
+});
 
 if (window.lucide) lucide.createIcons();
 

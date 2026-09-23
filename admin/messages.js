@@ -37,7 +37,9 @@ orderBy,
 onSnapshot,
 limit,
 updateDoc,
-serverTimestamp
+serverTimestamp,
+writeBatch,
+Timestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import {
@@ -53,6 +55,8 @@ import { PLAN_LABELS } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 import { trackEvent } from "../js/analytics.js";
+import { ecouterPresence, pastillePresence } from "./presence-admin.js";
+import { SEGMENTS, MODELES, destinataires, personnaliser, nomAffiche } from "../js/destinataires.js";
 
 initSidebarToggle();
 
@@ -62,6 +66,10 @@ let activeUid = null;
 
 // Désabonnement de l'écoute du fil actif (une seule écoute à la fois).
 let threadUnsubscribe = null;
+
+// « En ligne » (2026-09-23) : l'état de présence de chaque étudiant,
+// tenu à jour par admin/presence-admin.js (temps réel + réveil 30 s).
+let etatDe = () => ({ enLigne: false, libelle: "", vuLe: 0 });
 
 // ==========================================================
 // Aides
@@ -168,7 +176,13 @@ item.innerHTML = `
 <span class="msg-conv-unread" hidden></span>
 `;
 
-item.querySelector(".msg-conv-avatar").textContent = initials(name);
+const avatar = item.querySelector(".msg-conv-avatar");
+avatar.textContent = initials(name);
+const presence = etatDe(user.uid);
+if (presence.enLigne) {
+avatar.classList.add("is-en-ligne");
+avatar.title = `${name} est en ligne`;
+}
 item.querySelector("strong").textContent = name;
 item.querySelector("time").textContent = latest ? formatWhen(latest.createdAt) : "";
 
@@ -264,6 +278,7 @@ const name = studentName(conv.user);
 const planId = resolvePlan(conv.user);
 
 document.getElementById("threadPlaceholder").hidden = true;
+document.getElementById("groupeView").hidden = true;
 document.getElementById("threadView").hidden = false;
 
 document.getElementById("threadAvatar").textContent = initials(name);
@@ -271,6 +286,7 @@ document.getElementById("threadName").textContent = name;
 document.getElementById("threadMeta").textContent =
 `${conv.user.email || ""} · Formule ${PLAN_LABELS[planId] || planId}`;
 document.getElementById("threadProfileLink").href = `student-detail.html?uid=${uid}`;
+peindrePresenceDuFil();
 
 renderConversationList(document.getElementById("convSearchInput").value);
 
@@ -316,6 +332,209 @@ console.error("Écoute du fil impossible :", error);
 });
 
 if (window.lucide) lucide.createIcons();
+
+}
+
+// ==========================================================
+// « En ligne » dans le fil ouvert (2026-09-23)
+// ==========================================================
+
+function peindrePresenceDuFil() {
+const hote = document.getElementById("threadPresence");
+if (!hote) return;
+hote.innerHTML = activeUid ? pastillePresence(etatDe(activeUid)) : "";
+}
+
+// ==========================================================
+// MESSAGE GROUPÉ (2026-09-23)
+// ==========================================================
+// Un message, plusieurs destinataires choisis par segment
+// (js/destinataires.js). Chacun le reçoit dans SA conversation, avec
+// la même forme qu'un message individuel (sendMessageToUser) — texte
+// personnalisé par {prénom}. Envoi par lots de 400 (writeBatch).
+// Deux clics : le premier montre combien d'étudiants vont le recevoir,
+// le second envoie. Rien ne part sur un seul clic distrait.
+
+let confirmationArmee = false;
+
+function listeDuGroupe() {
+const segment = document.getElementById("groupeSegment").value;
+return destinataires(conversations.map((c) => c.user), segment, { enLigne: (uid) => etatDe(uid).enLigne });
+}
+
+function desarmer() {
+confirmationArmee = false;
+const bouton = document.getElementById("groupeEnvoyer");
+bouton.classList.remove("is-confirmation");
+}
+
+function majGroupe() {
+
+const liste = listeDuGroupe();
+const texte = document.getElementById("groupeTexte").value.trim();
+const compte = document.getElementById("groupeCompte");
+const noms = document.getElementById("groupeNoms");
+const apercu = document.getElementById("groupeApercu");
+const bouton = document.getElementById("groupeEnvoyer");
+
+compte.textContent = liste.length
+? `${liste.length} étudiant${liste.length > 1 ? "s" : ""} recevr${liste.length > 1 ? "ont" : "a"} ce message.`
+: "Aucun étudiant ne correspond à ce groupe pour l'instant.";
+
+const montres = liste.slice(0, 12);
+noms.innerHTML = montres.map((u) => `<span class="msg-groupe-nom">${escapeHtml(nomAffiche(u))}</span>`).join("") +
+(liste.length > montres.length ? `<span class="msg-groupe-nom is-reste">et ${liste.length - montres.length} autre${liste.length - montres.length > 1 ? "s" : ""}</span>` : "");
+
+if (texte && liste.length) {
+apercu.hidden = false;
+apercu.innerHTML = `<strong>Ce que lira ${escapeHtml(nomAffiche(liste[0]))}&nbsp;:</strong> ${escapeHtml(personnaliser(texte, liste[0]))}`;
+} else {
+apercu.hidden = true;
+}
+
+bouton.disabled = !texte || !liste.length;
+bouton.querySelector("span").textContent = confirmationArmee
+? `Confirmer l'envoi à ${liste.length} étudiant${liste.length > 1 ? "s" : ""}`
+: `Envoyer à ${liste.length} étudiant${liste.length > 1 ? "s" : ""}`;
+
+}
+
+function ouvrirGroupe() {
+
+if (threadUnsubscribe) {
+threadUnsubscribe();
+threadUnsubscribe = null;
+}
+activeUid = null;
+renderConversationList(document.getElementById("convSearchInput").value);
+
+document.getElementById("threadPlaceholder").hidden = true;
+document.getElementById("threadView").hidden = true;
+document.getElementById("groupeView").hidden = false;
+document.getElementById("groupeEtat").textContent = "";
+desarmer();
+majGroupe();
+// Sur téléphone, le panneau s'ouvre SOUS la liste : on l'amène à l'écran.
+if (window.matchMedia("(max-width: 900px)").matches) {
+document.getElementById("groupeView").scrollIntoView({ block: "start", behavior: "smooth" });
+} else {
+document.getElementById("groupeTexte").focus();
+}
+
+}
+
+function fermerGroupe() {
+document.getElementById("groupeView").hidden = true;
+document.getElementById("threadPlaceholder").hidden = false;
+desarmer();
+}
+
+async function envoyerGroupe() {
+
+const bouton = document.getElementById("groupeEnvoyer");
+const etat = document.getElementById("groupeEtat");
+const zone = document.getElementById("groupeTexte");
+const texte = zone.value.trim();
+const liste = listeDuGroupe();
+
+if (!texte || !liste.length || bouton.disabled) return;
+
+if (!confirmationArmee) {
+confirmationArmee = true;
+bouton.classList.add("is-confirmation");
+majGroupe();
+return;
+}
+
+bouton.disabled = true;
+etat.textContent = "Envoi en cours…";
+
+let envoyes = 0;
+
+try {
+
+for (let i = 0; i < liste.length; i += 400) {
+
+const lot = liste.slice(i, i + 400);
+const batch = writeBatch(db);
+
+lot.forEach((user) => {
+// Même forme que sendMessageToUser (admin/firebase-admin.js).
+batch.set(doc(collection(db, "users", user.uid, "messages")), {
+fromAdminUid: currentAdmin.uid,
+fromAdminEmail: currentAdmin.email,
+text: personnaliser(texte, user),
+createdAt: serverTimestamp(),
+read: false
+});
+});
+
+await batch.commit();
+envoyes += lot.length;
+
+// La liste des conversations suit sans recharger la page.
+const maintenant = Timestamp.now();
+lot.forEach((user) => {
+const conv = conversations.find((c) => c.user.uid === user.uid);
+if (conv) conv.latest = { text: personnaliser(texte, user), createdAt: maintenant, fromStudent: false };
+});
+
+}
+
+trackEvent("admin_message_groupe", { destinataires: envoyes });
+
+etat.textContent = `Envoyé à ${envoyes} étudiant${envoyes > 1 ? "s" : ""}.`;
+zone.value = "";
+
+} catch (error) {
+
+console.error("Envoi groupé interrompu :", error);
+etat.textContent = envoyes
+? `Envoi interrompu : ${envoyes} étudiant${envoyes > 1 ? "s ont" : " a"} reçu le message, pas les autres. Vérifiez votre connexion avant de renvoyer.`
+: "Le message n'est pas parti. Vérifiez votre connexion, puis réessayez.";
+
+} finally {
+
+conversations.sort((a, b) => {
+const ta = a.latest && a.latest.createdAt ? a.latest.createdAt.toMillis() : 0;
+const tb = b.latest && b.latest.createdAt ? b.latest.createdAt.toMillis() : 0;
+if (ta !== tb) return tb - ta;
+return studentName(a.user).localeCompare(studentName(b.user), "fr");
+});
+renderConversationList(document.getElementById("convSearchInput").value);
+desarmer();
+majGroupe();
+
+}
+
+}
+
+function initGroupe() {
+
+const segment = document.getElementById("groupeSegment");
+segment.innerHTML = SEGMENTS.map((s) => `<option value="${s.id}">${escapeHtml(s.libelle)}</option>`).join("");
+
+const modeles = document.getElementById("groupeModeles");
+modeles.innerHTML = `<span>Modèles&nbsp;:</span>` + MODELES.map((m) => `<button type="button" class="table-link-btn" data-modele="${m.id}">${escapeHtml(m.libelle)}</button>`).join("");
+
+modeles.addEventListener("click", (event) => {
+const bouton = event.target.closest("[data-modele]");
+if (!bouton) return;
+const modele = MODELES.find((m) => m.id === bouton.dataset.modele);
+if (!modele) return;
+document.getElementById("groupeTexte").value = modele.texte;
+// Le modèle choisit aussi le groupe qui lui correspond.
+if (modele.id === "profil") segment.value = "profil-incomplet";
+if (modele.id === "diagnostic") segment.value = "sans-diagnostic";
+desarmer();
+majGroupe();
+});
+
+segment.addEventListener("change", () => { desarmer(); majGroupe(); });
+document.getElementById("groupeTexte").addEventListener("input", () => { desarmer(); majGroupe(); });
+document.getElementById("groupeOpenBtn").addEventListener("click", ouvrirGroupe);
+document.getElementById("groupeCloseBtn").addEventListener("click", fermerGroupe);
+document.getElementById("groupeEnvoyer").addEventListener("click", envoyerGroupe);
 
 }
 
@@ -467,6 +686,16 @@ renderConversationList();
 updateNavBadge();
 initComposer();
 initSupportTickets();
+initGroupe();
+
+// « En ligne » en temps réel : pastille verte sur l'avatar, état du
+// fil ouvert, et le groupe « En ligne maintenant » du message groupé.
+ecouterPresence((etat) => {
+etatDe = etat;
+renderConversationList(document.getElementById("convSearchInput").value);
+peindrePresenceDuFil();
+if (!document.getElementById("groupeView").hidden) majGroupe();
+});
 
 const searchInput = document.getElementById("convSearchInput");
 searchInput.addEventListener("input", () => renderConversationList(searchInput.value));

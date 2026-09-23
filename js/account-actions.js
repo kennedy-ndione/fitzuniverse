@@ -122,6 +122,11 @@ await batch.commit();
 
 }
 
+// 1 bis. La présence « En ligne » (presence/{uid}, 2026-09-23) — une
+// trace d'activité : elle part avec le compte. Un échec ici ne doit
+// pas bloquer la suppression.
+await deleteDoc(doc(db, "presence", uid)).catch(() => {});
+
 // 2. Document utilisateur principal (profil, préférences...).
 await deleteDoc(doc(db, "users", uid));
 

@@ -903,6 +903,7 @@ porte_preinscription: "Accueil : « Partir en me finançant »",
 porte_diagnostic: "Accueil : diagnostic gratuit",
 espace_gratuit_diagnostic: "Espace gratuit : diagnostic",
 espace_gratuit_offre: "Espace gratuit : offre ouverte",
+admin_message_groupe: "Message groupé envoyé",
 visit: "Entrée sur le site"
 };
 

@@ -111,6 +111,15 @@
 
 <aside class="msg-list-pane">
 
+<!-- MESSAGE GROUPÉ (2026-09-23) : un même message, envoyé d'un coup à
+tout un groupe d'étudiants (profil incomplet, diagnostic pas fait,
+comptes gratuits…). Chacun le reçoit dans SA conversation, signé
+FitzUniverse. Le panneau s'ouvre à la place du fil (#groupeView). -->
+<button type="button" class="msg-groupe-btn" id="groupeOpenBtn">
+<i data-lucide="megaphone"></i>
+<span>Message groupé</span>
+</button>
+
 <div class="msg-list-search">
 <i data-lucide="search"></i>
 <input type="text" id="convSearchInput" placeholder="Rechercher un étudiant...">
@@ -148,6 +157,7 @@ au-dessus des conversations. Masqué tant qu'il n'y en a aucun. -->
 <div class="msg-thread-headtext">
 <strong id="threadName">—</strong>
 <span id="threadMeta">—</span>
+<span id="threadPresence"></span>
 </div>
 <a href="#" class="table-link-btn" id="threadProfileLink"><i data-lucide="user-round"></i><span>Fiche</span></a>
 </div>
@@ -163,6 +173,34 @@ au-dessus des conversations. Masqué tant qu'il n'y en a aucun. -->
 
 <p class="msg-thread-signnote"><i data-lucide="badge-check"></i><span>Envoyé en tant que <strong>FitzUniverse</strong> — l'étudiant ne voit jamais votre adresse personnelle.</span></p>
 
+</div>
+
+<div class="msg-groupe" id="groupeView" hidden>
+<div class="msg-groupe-head">
+<h2><i data-lucide="megaphone"></i><span>Message groupé</span></h2>
+<button type="button" class="msg-groupe-close" id="groupeCloseBtn" aria-label="Fermer le message groupé"><i data-lucide="x"></i></button>
+</div>
+<p class="msg-groupe-lead">Chaque étudiant le reçoit dans <strong>sa</strong> conversation, signé FitzUniverse, comme un message individuel&nbsp;: il ne voit pas les autres destinataires. Écrivez <code>{prénom}</code> pour que chacun lise son prénom.</p>
+
+<label class="msg-groupe-field">
+<span>Destinataires</span>
+<select id="groupeSegment"></select>
+</label>
+<p class="msg-groupe-compte" id="groupeCompte" role="status"></p>
+<div class="msg-groupe-noms" id="groupeNoms"></div>
+
+<div class="msg-groupe-modeles" id="groupeModeles"></div>
+
+<label class="msg-groupe-field">
+<span>Message</span>
+<textarea id="groupeTexte" rows="6" maxlength="2000" placeholder="Bonjour {prénom}, …"></textarea>
+</label>
+<p class="msg-groupe-apercu" id="groupeApercu" hidden></p>
+
+<div class="msg-groupe-actions">
+<button type="button" class="msg-groupe-envoyer" id="groupeEnvoyer" disabled><i data-lucide="send"></i><span>Envoyer</span></button>
+<span class="msg-groupe-etat" id="groupeEtat" role="status"></span>
+</div>
 </div>
 
 </section>

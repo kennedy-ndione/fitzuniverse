@@ -5171,3 +5171,325 @@ color:var(--text-light);
 grid-template-columns:repeat(2,1fr);
 }
 }
+
+/* ==========================================================
+   « EN LIGNE » ET MESSAGE GROUPÉ (2026-09-23)
+   ==========================================================
+   La présence des étudiants (admin/presence-admin.js) : une
+   pastille verte « En ligne », sinon « Vu il y a… » en gris —
+   dans la liste des étudiants, sur l'avatar des conversations
+   et dans l'en-tête du fil. Puis le panneau du message groupé,
+   qui s'ouvre à la place du fil. */
+
+.presence-admin{
+display:inline-flex;
+align-items:center;
+gap:6px;
+color:var(--text-muted);
+font-size:.78rem;
+font-weight:600;
+white-space:nowrap;
+}
+
+.presence-admin-dot{
+flex-shrink:0;
+width:8px;
+height:8px;
+border-radius:50%;
+background:#C9C3B9;
+}
+
+.presence-admin.is-en-ligne{
+color:#1E6B3A;
+font-weight:700;
+}
+
+.presence-admin.is-en-ligne .presence-admin-dot{
+background:#22A155;
+box-shadow:0 0 0 3px rgba(34,161,85,.18);
+}
+
+.presence-compteur{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin:0;
+padding:7px 12px;
+border-radius:var(--radius-full);
+border:1px solid rgba(34,161,85,.3);
+background:rgba(34,161,85,.08);
+color:#1E6B3A;
+font-size:.82rem;
+font-weight:700;
+white-space:nowrap;
+}
+
+.presence-compteur .presence-admin-dot{
+background:#22A155;
+}
+
+.presence-compteur.is-vide{
+border-color:var(--border-color);
+background:var(--background-soft);
+color:var(--text-muted);
+}
+
+.presence-compteur.is-vide .presence-admin-dot{
+background:#C9C3B9;
+}
+
+.msg-conv-avatar{
+position:relative;
+}
+
+.msg-conv-avatar.is-en-ligne::after{
+content:"";
+position:absolute;
+right:-1px;
+bottom:-1px;
+width:11px;
+height:11px;
+border-radius:50%;
+background:#22A155;
+border:2px solid var(--background);
+}
+
+.msg-thread-headtext .presence-admin{
+margin-top:2px;
+font-size:.74rem;
+overflow:visible;
+}
+
+/* ---- Message groupé ---- */
+
+.msg-groupe-btn{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+margin:14px 14px 0;
+padding:10px 14px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-full);
+background:var(--background);
+color:var(--text-color);
+font-family:"Inter",sans-serif;
+font-size:.85rem;
+font-weight:700;
+cursor:pointer;
+transition:var(--transition);
+}
+
+.msg-groupe-btn:hover{
+border-color:var(--amber-500);
+background:var(--background-light);
+}
+
+.msg-groupe-btn i,
+.msg-groupe-btn svg{
+width:16px;
+height:16px;
+}
+
+.msg-groupe{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:14px;
+min-height:0;
+padding:18px 22px 22px;
+overflow-y:auto;
+}
+
+.msg-groupe-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+}
+
+.msg-groupe-head h2{
+display:flex;
+align-items:center;
+gap:10px;
+margin:0;
+font-size:1.05rem;
+font-weight:800;
+color:var(--text-color);
+}
+
+.msg-groupe-head h2 i,
+.msg-groupe-head h2 svg{
+width:18px;
+height:18px;
+color:var(--amber-500);
+}
+
+.msg-groupe-close{
+display:flex;
+align-items:center;
+justify-content:center;
+width:36px;
+height:36px;
+border:1px solid var(--border-color);
+border-radius:10px;
+background:var(--background);
+color:var(--text-color);
+cursor:pointer;
+}
+
+.msg-groupe-close i,
+.msg-groupe-close svg{
+width:16px;
+height:16px;
+}
+
+.msg-groupe-lead{
+margin:0;
+color:var(--text-light);
+font-size:.86rem;
+line-height:1.6;
+}
+
+.msg-groupe-lead code{
+padding:1px 6px;
+border-radius:6px;
+background:var(--background-soft);
+font-size:.82rem;
+}
+
+.msg-groupe-field{
+display:flex;
+flex-direction:column;
+gap:6px;
+font-size:.8rem;
+font-weight:700;
+color:var(--text-color);
+}
+
+.msg-groupe-field select,
+.msg-groupe-field textarea{
+width:100%;
+padding:10px 12px;
+border-radius:var(--radius-md);
+border:1px solid var(--border-color);
+background:var(--background);
+color:var(--text-color);
+font-family:"Inter",sans-serif;
+font-size:.9rem;
+font-weight:400;
+line-height:1.5;
+}
+
+.msg-groupe-field textarea{
+resize:vertical;
+min-height:120px;
+}
+
+.msg-groupe-field select:focus,
+.msg-groupe-field textarea:focus{
+outline:none;
+border-color:var(--amber-500);
+box-shadow:0 0 0 3px rgba(233,163,25,.16);
+}
+
+.msg-groupe-compte{
+margin:0;
+font-size:.85rem;
+font-weight:700;
+color:var(--text-color);
+}
+
+.msg-groupe-noms{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
+.msg-groupe-nom{
+padding:4px 10px;
+border-radius:var(--radius-full);
+background:var(--background-soft);
+color:var(--text-light);
+font-size:.76rem;
+font-weight:600;
+}
+
+.msg-groupe-nom.is-reste{
+background:transparent;
+border:1px dashed var(--border-color);
+}
+
+.msg-groupe-modeles{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px;
+font-size:.8rem;
+color:var(--text-muted);
+}
+
+.msg-groupe-apercu{
+margin:0;
+padding:12px 14px;
+border-left:3px solid var(--amber-500);
+border-radius:var(--radius-md);
+background:var(--background-soft);
+color:var(--text-color);
+font-size:.85rem;
+line-height:1.6;
+white-space:pre-wrap;
+}
+
+.msg-groupe-actions{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:12px;
+}
+
+.msg-groupe-envoyer{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:11px 18px;
+border:none;
+border-radius:var(--radius-full);
+background:var(--gradient-primary);
+color:#fff;
+font-family:"Inter",sans-serif;
+font-size:.88rem;
+font-weight:700;
+cursor:pointer;
+}
+
+.msg-groupe-envoyer i,
+.msg-groupe-envoyer svg{
+width:16px;
+height:16px;
+}
+
+.msg-groupe-envoyer:disabled{
+opacity:.45;
+cursor:not-allowed;
+}
+
+.msg-groupe-envoyer.is-confirmation{
+background:#B45309;
+box-shadow:0 0 0 3px rgba(180,83,9,.18);
+}
+
+.msg-groupe-etat{
+font-size:.84rem;
+font-weight:600;
+color:var(--text-light);
+}
+
+/* LE FIL PERDAIT 220 px (constaté le 2026-09-23 en montant le message
+   groupé) : .msg-thread-pane est un <section>, et css/base.css donne
+   à TOUTE section padding:110px 0 (piège connu, voir le correctif des
+   pages publiques). Le fil de conversation commençait donc 110 px sous
+   le haut du cadre et finissait 110 px au-dessus du bas. */
+.msg-thread-pane{
+padding:0;
+}

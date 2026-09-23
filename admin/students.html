@@ -129,7 +129,12 @@ disparition (lot FINITIONS-VISUELLES, 2026-09-11). -->
 <option value="">Tous les statuts</option>
 <option value="active">Actif</option>
 <option value="disabled">Suspendu</option>
+<option value="online">En ligne maintenant</option>
 </select>
+
+<!-- « En ligne » (2026-09-23) : le compteur temps réel, rempli par
+students.js (admin/presence-admin.js). -->
+<p class="presence-compteur" id="presenceCount" hidden><span class="presence-admin-dot" aria-hidden="true"></span><strong>0</strong> <span>en ligne</span></p>
 
 </div>
 
@@ -142,6 +147,7 @@ disparition (lot FINITIONS-VISUELLES, 2026-09-11). -->
 <th>E-mail</th>
 <th>Formule</th>
 <th>Statut</th>
+<th>Présence</th>
 <th>Inscrit le</th>
 <th></th>
 </tr>

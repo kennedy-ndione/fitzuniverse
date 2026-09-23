@@ -43,7 +43,10 @@ export const SELECT_COUVERTS = [
 // Lot ADMIN-PAIEMENTS (2026-09-20) : les deux filtres de la page des
 // paiements. Habillés comme toutes les pages admin — admin-auth.js
 // charge initFitzSelects(), et paiements.html l'importe.
-"admin/paiements.html"
+"admin/paiements.html",
+// MESSAGE GROUPÉ (2026-09-23) : le choix des destinataires. Habillé
+// comme toute page admin — admin/messages.html charge admin-auth.js.
+"admin/messages.html"
 ];
 // Aucune exemption aujourd'hui : une page qui en aurait besoin se déclare ici, avec sa raison.
 export const SELECT_EXEMPTES = [];

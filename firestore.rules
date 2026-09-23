@@ -345,6 +345,28 @@ allow delete: if isOwner(uid);
 }
 
 // ------------------------------------------------------------
+// PRÉSENCE « EN LIGNE » (2026-09-23, demande de Charles) — un
+// document par étudiant, presence/{uid}, écrit par js/presence.js
+// (un battement toutes les 45 s tant qu'une page de l'espace est
+// affichée) et lu en temps réel par le Control Center.
+// - Écriture : le propriétaire seul, deux clés exactement, et vuLe
+//   DOIT être l'heure du serveur (request.time) : personne ne peut se
+//   dater dans le futur pour paraître en ligne.
+// - Lecture : le propriétaire et l'administrateur — jamais un autre
+//   étudiant (la présence d'autrui ne regarde personne).
+// - Suppression : le propriétaire (suppression de compte,
+//   js/account-actions.js).
+// ------------------------------------------------------------
+match /presence/{uid} {
+allow read: if isOwner(uid) || isAdmin();
+allow create, update: if isOwner(uid) &&
+request.resource.data.keys().hasOnly(["enLigne", "vuLe"]) &&
+request.resource.data.enLigne is bool &&
+request.resource.data.vuLe == request.time;
+allow delete: if isOwner(uid);
+}
+
+// ------------------------------------------------------------
 // Demandes de revue conseiller (Signature / Signature Focus) —
 // contrepartie étudiant -> admin de users/{uid}/messages ci-dessus
 // (qui va admin -> étudiant), donc les mêmes règles mais inversées.

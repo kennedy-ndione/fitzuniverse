@@ -105,6 +105,9 @@ advisor_request_sent: { counters: ["totals", "byDay"] },
 // Message envoyé par un administrateur à un étudiant depuis le
 // Control Center (interaction directe admin → étudiant).
 admin_message_sent: { counters: ["totals", "byDay"] },
+// Message GROUPÉ du Control Center (2026-09-23) : un événement par
+// envoi, quel que soit le nombre de destinataires (payload.destinataires).
+admin_message_groupe: { counters: ["totals", "byDay"] },
 file_compressed: { counters: ["totals", "byDay"] },
 
 payment_attempted: { counters: ["totals", "byDay", "byPlan"] },

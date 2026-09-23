@@ -25,6 +25,7 @@ import { resolveSession, fetchFeatureFlags, isFeatureLocked, PLAN_LABELS, PLAN_P
 import { advisorOuvert } from "./plan-features.js";
 import { initShellChrome, unlockingPlans, espaceCourant } from "./app-shell.js";
 import { initMessagesPanel } from "./student-messages.js";
+import { demarrerPresence } from "./presence.js";
 
 function loadStylesheet(href) {
 return new Promise((resolve, reject) => {
@@ -169,6 +170,9 @@ advisorNav.hidden = !hasAdvisor;
 initMessagesPanel(session.user.uid, {
 canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
+
+// « En ligne » (2026-09-23) — même appel que js/app-shell.js.
+demarrerPresence(session.user.uid);
 
 if (window.lucide) lucide.createIcons();
 

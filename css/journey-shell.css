@@ -452,3 +452,59 @@ l'étudiant voit exactement ce qui le débloquerait. */
 .fitz-recours-diagnostic h3{ margin:0 0 8px; font-size:var(--fs-h4); }
 .fitz-recours-diagnostic p{ margin:0 0 8px; }
 .fitz-recours-diagnostic ul{ margin:8px 0 0; padding-left:18px; }
+
+
+/* ---------- « En ligne » (2026-09-23) ----------
+   La pastille de js/presence.js, à gauche de la cloche. Vert
+   --journey-done (#2F7A46 : contraste AA sur le papier), texte
+   insécable et jamais comprimé ; c'est la pastille de formule, à
+   côté, qui cède sa place (ellipse, voir plus haut). Hors ligne :
+   gris, point creux. */
+.presence-pill{
+display:inline-flex;
+align-items:center;
+gap:6px;
+flex-shrink:0;
+padding:4px 10px 4px 8px;
+border:1px solid rgba(47,122,70,.28);
+border-radius:999px;
+background:rgba(47,122,70,.08);
+color:var(--journey-done);
+font-size:.74rem;
+font-weight:700;
+line-height:1.2;
+white-space:nowrap;
+}
+
+.presence-dot{
+width:8px;
+height:8px;
+border-radius:50%;
+background:var(--journey-done);
+box-shadow:0 0 0 3px rgba(47,122,70,.18);
+}
+
+.presence-pill.is-hors-ligne{
+border-color:var(--border-color);
+background:var(--background-light);
+color:var(--text-light);
+}
+
+.presence-pill.is-hors-ligne .presence-dot{
+background:transparent;
+border:2px solid currentColor;
+width:6px;
+height:6px;
+box-shadow:none;
+}
+
+@media (prefers-reduced-motion: no-preference){
+.presence-pill:not(.is-hors-ligne) .presence-dot{
+animation:presence-pouls 2.4s ease-in-out infinite;
+}
+}
+
+@keyframes presence-pouls{
+0%, 100%{ box-shadow:0 0 0 3px rgba(47,122,70,.18); }
+50%{ box-shadow:0 0 0 5px rgba(47,122,70,.06); }
+}
