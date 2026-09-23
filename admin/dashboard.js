@@ -7,7 +7,12 @@ signOut
 
 import {
 doc,
-getDoc
+getDoc,
+getDocs,
+collection,
+query,
+orderBy,
+limit
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 import {
@@ -36,8 +41,21 @@ import { initJournee } from "./journee.js";
 import { tousLesIdentifiants, etiquetteAdmin } from "../js/formules-admin.js";
 import { PLAN_LABELS } from "../js/plan-features.js";
 import { hidePageLoader } from "../js/app-shell.js";
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : l'état de Fitz se lit dans la
+// constante que le site lui-même utilise, jamais dans une étiquette
+// écrite à la main qui vieillit sans que personne ne le voie.
+import { MODE as MODE_FITZ } from "../js/ai/ai-config.js";
 
 initSidebarToggle();
+
+// ==========================================================
+// CE QUE L'ADMIN DOIT SAVOIR DU PAIEMENT (lot ADMIN-SAIT-TOUT,
+// 2026-09-23). Les moyens RÉELLEMENT proposés à l'étudiant, tels que
+// payment.html les affiche. Quand PayDunya ouvrira Wave et la carte
+// (voir le commentaire « MOYENS DE PAIEMENT BIENTÔT » de payment.html),
+// mettre cette ligne à jour EN MÊME TEMPS que la page de paiement.
+// ==========================================================
+const MOYENS_DE_PAIEMENT_OUVERTS = "Orange Money (Wave et carte : à la validation du compte PayDunya)";
 
 // ==========================================================
 // Palette des graphiques — REFONTE CLAIRE 2026-09-02 : plus aucun
@@ -52,12 +70,22 @@ const CHART_GRID = "rgba(26,23,20,.07)";
 // Les cinq séries de la pulsation. `fields` liste les compteurs
 // quotidiens (analyticsDailyCounters) additionnés pour chaque jour.
 const PULSE_SERIES = [
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : des PERSONNES, une fois par jour
+// et par navigateur (js/analytics.js, compterVisiteurDuJour). C'est la
+// série principale ; « Entrées » compte les sessions (une personne
+// peut en faire plusieurs dans la journée).
+{
+key: "visiteurs",
+label: "Visiteurs",
+color: "#E9A319",
+fields: ["visiteurs"],
+fill: true
+},
 {
 key: "entrees",
-label: "Entrées",
-color: "#E9A319",
-fields: ["visit", "signup", "login"],
-fill: true
+label: "Entrées (sessions)",
+color: "#C9860B",
+fields: ["visit", "signup", "login"]
 },
 {
 key: "sorties",
@@ -209,8 +237,8 @@ const badges = [
 { icon: "refresh-cw", text: "Synchronisé à l'instant" },
 { icon: "database", text: "Firestore", dot: "is-online" },
 { icon: "bar-chart-3", text: "Analytics", dot: "is-online" },
-{ icon: "bot", text: "Fitz", dot: "is-pending" },
-{ icon: "wallet", text: "PayDunya", dot: "is-pending" }
+{ icon: "bot", text: "Fitz", dot: MODE_FITZ === "passerelle" ? "is-online" : "is-pending" },
+{ icon: "wallet", text: "PayDunya", dot: "is-online" }
 ];
 
 const container = document.getElementById("execStatusBadges");
@@ -278,6 +306,7 @@ const wave = Math.sin((dayIndex + seed) / 3.1) + Math.sin((dayIndex + seed * 2) 
 const trend = dayIndex / totalDays;
 
 const base = {
+visiteurs: 18 + trend * 22,
 entrees: 26 + trend * 30,
 sorties: 9 + trend * 9,
 interactions: 15 + trend * 22,
@@ -427,6 +456,7 @@ btn.classList.add("is-active");
 pulseState.days = parseInt(btn.dataset.days, 10);
 renderPulseChart();
 renderChemins(pulseState.totals);
+renderVisiteurs();
 
 });
 
@@ -575,7 +605,7 @@ container.appendChild(row);
 });
 }
 
-function renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals }) {
+function renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals, paiementsResume }) {
 
 const grid = document.getElementById("statsGrid");
 grid.innerHTML = "";
@@ -585,7 +615,9 @@ const fitzActions = (totals.letter_generated || 0) + (totals.email_generated || 
 
 const cards = [
 
-{ icon: "users", label: "Étudiants inscrits", value: userStats.total, size: "featured", delta: weekDelta(["signup"]) },
+// « signup » n'est plus émis depuis la page d'inscription gratuite
+// (2026-09-20) : les comptes neufs arrivent en compte_gratuit_cree.
+{ icon: "users", label: "Étudiants inscrits", value: userStats.total, size: "featured", delta: weekDelta(["signup", "compte_gratuit_cree"]) },
 { icon: "user-plus", label: "Nouveaux aujourd'hui", value: userStats.newToday, size: "accent" },
 { icon: "landmark", label: "Universités au catalogue", value: universitiesCount },
 { icon: "graduation-cap", label: "Bourses au catalogue", value: scholarshipsCount },
@@ -599,10 +631,13 @@ const cards = [
 { icon: "send", label: "Messages admin → étudiants", value: totals.admin_message_sent },
 { icon: "credit-card", label: "Tentatives de paiement", value: totals.payment_attempted, size: "wide" },
 
-{
-icon: "wallet", label: "Revenus réels", pending: true,
-pendingNote: "S'activera automatiquement dès que le paiement PayDunya réel sera branché (voir feuille de route Phase 1)."
-}
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : le paiement réel est branché
+// depuis le 21/09. La carte lit `payments` (écrite par le serveur) et
+// ne compte que la PRODUCTION : les factures de test ne sont pas de
+// l'argent. Même règle « payé ET appliqué » que admin/paiements.js.
+paiementsResume
+? { icon: "wallet", label: `Revenus encaissés (${formatNumber(paiementsResume.nbPayes)} paiement${paiementsResume.nbPayes > 1 ? "s" : ""})`, value: paiementsResume.encaisse, size: "wide", delta: paiementsResume.semaine > 0 ? { dir: "up", text: `+${formatNumber(paiementsResume.semaine)} F sur 7 jours` } : { dir: "flat", text: "aucun encaissement sur 7 jours" } }
+: { icon: "wallet", label: "Revenus encaissés", pending: true, pendingNote: "Les paiements n'ont pas pu être lus — voir la page Paiements." }
 
 ];
 
@@ -622,6 +657,8 @@ function renderAiObservations({ userStats, totals }) {
 const el = document.getElementById("aiObservationText");
 
 const weekIn = sumLastDays(["visit", "signup", "login"], 7);
+const visiteursJour = sumLastDays(["visiteurs"], 1);
+const top = actionsLesPlusFrequentes(7)[0];
 const weekAdmitted = sumLastDays(["application_admitted"], 7);
 const weekRejected = sumLastDays(["application_rejected"], 7);
 
@@ -632,8 +669,16 @@ el.textContent = "Fitz n'a pas encore d'étudiant inscrit. Les statistiques comm
 return;
 }
 
+if (visiteursJour > 0) {
+fragments.push(`${formatNumber(visiteursJour)} visiteur${visiteursJour > 1 ? "s" : ""} aujourd'hui`);
+}
+
 if (userStats.newToday > 0) {
 fragments.push(`${userStats.newToday} nouvel${userStats.newToday > 1 ? "les" : ""} inscription${userStats.newToday > 1 ? "s" : ""} aujourd'hui`);
+}
+
+if (top) {
+fragments.push(`action la plus fréquente sur 7 jours : ${top.libelle.toLowerCase()} (${formatNumber(top.total)})`);
 }
 
 if (weekIn > 0) {
@@ -735,8 +780,12 @@ legend: { position: "bottom", labels: { color: "#57514A", boxWidth: 12 } }
 function renderFunnel({ userStats, totals }) {
 
 const steps = [
-{ label: "Entrées enregistrées (visites, connexions)", value: (totals.visit || 0) + (totals.login || 0) + (totals.signup || 0), icon: "footprints" },
+// Visiteurs : une personne comptée une fois par jour de visite, depuis
+// le lot ADMIN-SAIT-TOUT (2026-09-23) — avant, seules les entrées.
+{ label: "Visiteurs (depuis le 23/09, une fois par jour)", value: totals.visiteurs || 0, icon: "footprints" },
+{ label: "Entrées enregistrées (sessions, connexions)", value: (totals.visit || 0) + (totals.login || 0) + (totals.signup || 0), icon: "footprints" },
 { label: "Étudiants inscrits", value: userStats.total },
+{ label: "Paiements réussis", value: totals.payment_completed || 0 },
 { label: "Candidatures suivies", value: totals.application_added || 0 },
 { label: "Admissions signalées", value: totals.application_admitted || 0 }
 ];
@@ -837,8 +886,122 @@ application_waitlisted: "Mise en liste d'attente signalée",
 advisor_request_sent: "Demande de revue par un conseiller",
 admin_message_sent: "Message envoyé à un étudiant",
 file_compressed: "Fichier compressé",
-payment_attempted: "Tentative de paiement"
+payment_attempted: "Tentative de paiement",
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : les événements que le site émettait
+// sans que l'admin sache les nommer.
+payment_completed: "Paiement réussi",
+compte_gratuit_cree: "Compte gratuit créé",
+procedure_etape: "Étape de procédure cochée",
+application_deposee_declaree: "Dépôt de candidature déclaré",
+application_acceptee: "Université proposée acceptée",
+application_deadline_reprise: "Date limite reprise d'une fiche",
+application_hors_fenetre_remplacee: "Université hors délai remplacée",
+application_bourse_fermee_remplacee: "Bourse fermée remplacée",
+interview_prep_checklist_toggled: "Préparation d'entretien cochée",
+porte_bourse: "Accueil : « Trouver une bourse »",
+porte_preinscription: "Accueil : « Partir en me finançant »",
+porte_diagnostic: "Accueil : diagnostic gratuit",
+visit: "Entrée sur le site"
 };
+
+// ==========================================================
+// VISITEURS ET ACTIONS (lot ADMIN-SAIT-TOUT, 2026-09-23) — tout est
+// lu dans l'historique quotidien déjà chargé : 0 lecture de plus.
+// ==========================================================
+
+// Ce qui n'est pas une « action » : le passage lui-même.
+const PAS_UNE_ACTION = new Set(["visit", "visiteurs", "visiteurs_nouveaux", "login", "logout", "signup"]);
+
+function actionsLesPlusFrequentes(nDays) {
+const sommes = {};
+buildLastDays(nDays).forEach((jour) => {
+const c = pulseState.history[jour];
+if (!c) return;
+Object.entries(c).forEach(([type, n]) => {
+if (PAS_UNE_ACTION.has(type) || !Number.isFinite(n)) return;
+sommes[type] = (sommes[type] || 0) + n;
+});
+});
+return Object.entries(sommes)
+.filter(([, n]) => n > 0)
+.sort((a, b) => b[1] - a[1])
+.map(([type, total]) => ({ type, total, libelle: EVENT_LABELS[type] || type }));
+}
+
+function renderVisiteurs() {
+const valeur = (champ, jours) => sumLastDays([champ], jours);
+const hier = (() => {
+const d = new Date(); d.setDate(d.getDate() - 1);
+const c = pulseState.history[d.toISOString().slice(0, 10)] || {};
+return c.visiteurs || 0;
+})();
+const chiffres = [
+{ id: "visiteursAujourdhui", v: valeur("visiteurs", 1) },
+{ id: "visiteursHier", v: hier },
+{ id: "visiteurs7", v: valeur("visiteurs", 7) },
+{ id: "visiteursNouveaux7", v: valeur("visiteurs_nouveaux", 7) }
+];
+chiffres.forEach(({ id, v }) => {
+const el = document.getElementById(id);
+if (el) el.textContent = formatNumber(v);
+});
+
+const liste = document.getElementById("actionsFrequentes");
+if (!liste) return;
+const actions = actionsLesPlusFrequentes(pulseState.days).slice(0, 8);
+const titre = document.getElementById("actionsPeriode");
+if (titre) titre.textContent = `${pulseState.days} derniers jours`;
+if (!actions.length) {
+liste.innerHTML = `<p class="top-list-empty">Aucune action enregistrée sur cette période.</p>`;
+return;
+}
+liste.innerHTML = "";
+actions.forEach((a, i) => {
+const row = document.createElement("div");
+row.className = "top-list-row";
+row.innerHTML = `<span class="top-list-rank"></span><span class="top-list-label"></span><span class="top-list-count"></span>`;
+row.querySelector(".top-list-rank").textContent = i + 1;
+row.querySelector(".top-list-label").textContent = a.libelle;
+row.querySelector(".top-list-count").textContent = formatNumber(a.total);
+liste.appendChild(row);
+});
+}
+
+// ==========================================================
+// PAIEMENTS — résumé pour la carte « Revenus » et l'infrastructure.
+// Lecture de `payments` (écrite par le serveur, lisible par l'admin) :
+// la collection se compte en dizaines.
+// ==========================================================
+
+async function lireResumePaiements() {
+const snap = await getDocs(collection(db, "payments"));
+const semaine = Date.now() - 7 * 86400000;
+const resume = { encaisse: 0, nbPayes: 0, semaine: 0, enAttente: 0, dernierPaye: null, production: 0 };
+snap.forEach((d) => {
+const p = d.data();
+if (p.mode === "live") resume.production += 1;
+if (p.mode !== "live") return;
+if (p.statut === "en-attente") resume.enAttente += 1;
+if (p.statut !== "paye" || p.applique === false) return;
+const montant = Number.isFinite(p.montantEncaisse) ? p.montantEncaisse : (p.montantAttendu || 0);
+resume.encaisse += montant;
+resume.nbPayes += 1;
+// traiteLe : posé par le webhook quand il applique le paiement.
+const quand = p.traiteLe && typeof p.traiteLe.toDate === "function" ? p.traiteLe.toDate()
+: (p.creeLe && typeof p.creeLe.toDate === "function" ? p.creeLe.toDate() : null);
+if (quand && quand.getTime() >= semaine) resume.semaine += montant;
+if (quand && (!resume.dernierPaye || quand > resume.dernierPaye)) resume.dernierPaye = quand;
+});
+return resume;
+}
+
+// Le dernier e-mail parti (bienvenue ou alerte), pour la ligne Brevo.
+async function lireDernierEmail() {
+const snap = await getDocs(query(collection(db, "emailsEnvoyes"), orderBy("envoyeLe", "desc"), limit(1)));
+if (snap.empty) return null;
+const d = snap.docs[0].data();
+return d.envoyeLe && typeof d.envoyeLe.toDate === "function" ? { quand: d.envoyeLe.toDate(), echec: !!d.echec } : null;
+}
 
 function relativeTime(date) {
 
@@ -918,16 +1081,38 @@ container.appendChild(row);
 // déjà répondu avec succès).
 // ==========================================================
 
-function renderInfraGrid() {
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : ces états étaient écrits à la main
+// le 2026-09-02 et n'avaient plus bougé — « Fitz : En attente » alors
+// que Fitz répond pour de vrai depuis le 18/09, « PayDunya : En
+// attente » alors que le paiement est en production depuis le 21/09,
+// « Storage : non utilisé » alors qu'il reçoit les preuves de dépôt et
+// les captures. Chaque ligne est désormais DÉDUITE d'un fait lu.
+function renderInfraGrid({ paiementsResume, dernierEmail } = {}) {
+
+const dateCourte = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + " à " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+const paydunya = paiementsResume
+? {
+status: "is-online",
+label: paiementsResume.dernierPaye
+? `Production · ${MOYENS_DE_PAIEMENT_OUVERTS} · dernier paiement le ${dateCourte(paiementsResume.dernierPaye)}`
+: `Production · ${MOYENS_DE_PAIEMENT_OUVERTS} · aucun paiement réel pour l'instant`
+}
+: { status: "is-pending", label: "Paiements illisibles — voir la page Paiements" };
+
+const brevo = dernierEmail
+? { status: dernierEmail.echec ? "is-pending" : "is-online", label: `${dernierEmail.echec ? "Dernier envoi en échec" : "Actif"} · dernier e-mail le ${dateCourte(dernierEmail.quand)}` }
+: { status: "is-online", label: "Actif · aucun e-mail envoyé pour l'instant" };
 
 const services = [
 { icon: "flame", name: "Firebase", status: "is-online", label: "Actif" },
 { icon: "database", name: "Firestore", status: "is-online", label: "Actif" },
-{ icon: "hard-drive", name: "Storage", status: "is-pending", label: "Configuré, non utilisé" },
+{ icon: "hard-drive", name: "Storage", status: "is-online", label: "Actif · preuves de dépôt et captures" },
 { icon: "key-round", name: "Authentication", status: "is-online", label: "Actif" },
-{ icon: "bar-chart-3", name: "Analytics", status: "is-online", label: "Actif" },
-{ icon: "bot", name: "Fitz", status: "is-pending", label: "En attente" },
-{ icon: "wallet", name: "PayDunya", status: "is-pending", label: "En attente" }
+{ icon: "bar-chart-3", name: "Analytics", status: "is-online", label: "Actif · visiteurs comptés depuis le 23/09" },
+{ icon: "bot", name: "Fitz", ...(MODE_FITZ === "passerelle" ? { status: "is-online", label: "Réel · API Anthropic" } : { status: "is-pending", label: "Mode simulé" }) },
+{ icon: "wallet", name: "PayDunya", ...paydunya },
+{ icon: "mail", name: "E-mails (Brevo)", ...brevo }
 ];
 
 const container = document.getElementById("infraGrid");
@@ -998,15 +1183,23 @@ pulseState.history = history;
 const todayKey = new Date().toISOString().slice(0, 10);
 pulseState.history[todayKey] = { ...(history[todayKey] || {}), ...todayCounters };
 
+// Paiements et dernier e-mail : lus à part, sans jamais bloquer le
+// tableau de bord (null si la lecture échoue).
+const [paiementsResume, dernierEmail] = await Promise.all([
+lireResumePaiements().catch((e) => { console.warn("Paiements non lus :", e); return null; }),
+lireDernierEmail().catch((e) => { console.warn("Dernier e-mail non lu :", e); return null; })
+]);
+
 renderExecHero({ adminData, firebaseUser: user, universitiesCount, scholarshipsCount, userStats });
 renderStatusBadges();
 renderOutcomeStrip(totals);
-renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals });
+renderStatsGrid({ userStats, universitiesCount, scholarshipsCount, totals, paiementsResume });
+renderVisiteurs();
 renderAiObservations({ userStats, totals });
 renderFunnel({ userStats, totals });
 renderActivityTimeline(recentEvents);
 renderChemins(totals);
-renderInfraGrid();
+renderInfraGrid({ paiementsResume, dernierEmail });
 
 renderSerieChips();
 initPulseControls();

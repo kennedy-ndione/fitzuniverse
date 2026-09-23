@@ -5130,3 +5130,44 @@ color:var(--text-muted);
 .passation-guide{ padding:18px 16px; }
 .passation-etapes{ grid-template-columns:1fr; }
 }
+
+/* ==========================================================
+   VISITEURS DU SITE (lot ADMIN-SAIT-TOUT, 2026-09-23) — quatre
+   chiffres côte à côte, deux par deux sur téléphone.
+   ========================================================== */
+
+.visiteurs-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+margin-bottom:14px;
+}
+
+.visiteurs-chiffre{
+display:flex;
+flex-direction:column;
+gap:4px;
+padding:14px 12px;
+border-radius:var(--radius-md, 12px);
+background:var(--background-light, #F6F2EA);
+border:1px solid var(--border-color);
+}
+
+.visiteurs-valeur{
+font-family:var(--font-display);
+font-size:1.6rem;
+font-weight:800;
+line-height:1.1;
+color:var(--text-color);
+}
+
+.visiteurs-libelle{
+font-size:.8rem;
+color:var(--text-light);
+}
+
+@media(max-width:640px){
+.visiteurs-grid{
+grid-template-columns:repeat(2,1fr);
+}
+}

@@ -158,6 +158,37 @@ ne prive jamais des autres.
 </section>
 
 <!-- ==========================================================
+VISITEURS ET ACTIONS (lot ADMIN-SAIT-TOUT, 2026-09-23) — demande de
+Charles : le nombre de PERSONNES qui visitent le site chaque jour (pas
+les entrées), et ce qu'elles font le plus. Rendu par dashboard.js
+(renderVisiteurs), depuis l'historique quotidien déjà chargé : 0
+lecture de plus. Comment on compte : voir compterVisiteurDuJour dans
+js/analytics.js.
+========================================================== -->
+
+<div class="panels-grid panels-grid--even reveal-stagger">
+
+<div class="panel-card">
+<h2>Visiteurs du site</h2>
+<p class="panel-card-subtext">Des personnes, pas des entrées : chaque navigateur compte une fois par jour, quel que soit le nombre de pages ou de retours. Votre propre navigateur n'est pas compté.</p>
+<div class="visiteurs-grid">
+<div class="visiteurs-chiffre"><span class="visiteurs-valeur" id="visiteursAujourdhui">—</span><span class="visiteurs-libelle">Aujourd'hui</span></div>
+<div class="visiteurs-chiffre"><span class="visiteurs-valeur" id="visiteursHier">—</span><span class="visiteurs-libelle">Hier</span></div>
+<div class="visiteurs-chiffre"><span class="visiteurs-valeur" id="visiteurs7">—</span><span class="visiteurs-libelle">Sur 7 jours</span></div>
+<div class="visiteurs-chiffre"><span class="visiteurs-valeur" id="visiteursNouveaux7">—</span><span class="visiteurs-libelle">Nouveaux sur 7 jours</span></div>
+</div>
+<p class="dash-footnote"><i data-lucide="info"></i><span>Comptés depuis le 23 septembre 2026. Sur 7 jours, une personne venue trois jours compte trois fois ; une personne sur deux appareils compte deux fois.</span></p>
+</div>
+
+<div class="panel-card">
+<h2>Actions les plus fréquentes</h2>
+<p class="panel-card-subtext">Ce que les visiteurs et les étudiants font le plus sur le site — <span id="actionsPeriode">30 derniers jours</span> (suit la période de la pulsation).</p>
+<div class="top-list" id="actionsFrequentes"><p class="top-list-empty">Chargement…</p></div>
+</div>
+
+</div>
+
+<!-- ==========================================================
 PULSATION DU SITE — la grande courbe évolutive
 ========================================================== -->
 
@@ -167,7 +198,7 @@ PULSATION DU SITE — la grande courbe évolutive
 
 <div>
 <h2>La pulsation de FitzUniverse</h2>
-<p class="pulse-head-sub">Entrées, sorties, interactions étudiantes, admissions et refus — jour par jour, à partir des compteurs réels écrits par le site.</p>
+<p class="pulse-head-sub">Visiteurs, entrées, sorties, interactions étudiantes, admissions et refus — jour par jour, à partir des compteurs réels écrits par le site.</p>
 </div>
 
 <div class="pulse-controls">

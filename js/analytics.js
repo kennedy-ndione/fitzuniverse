@@ -115,7 +115,23 @@ payment_attempted: { counters: ["totals", "byDay", "byPlan"] },
 // sera tranchée en novembre.
 porte_bourse: { counters: ["totals", "byDay"] },
 porte_preinscription: { counters: ["totals", "byDay"] },
-porte_diagnostic: { counters: ["totals", "byDay"] }
+porte_diagnostic: { counters: ["totals", "byDay"] },
+
+// Lot ADMIN-SAIT-TOUT (2026-09-23) : ces neuf types étaient déjà émis
+// par le site (payment.js, inscription.js, applications.js,
+// interview-prep.js) mais absents d'ici — le journal brut les
+// recevait, AUCUN compteur ne bougeait, et le Control Center ne les
+// voyait donc ni dans ses courbes ni dans ses « actions les plus
+// fréquentes ». Même défaut que ceux régularisés le 2026-09-02.
+payment_completed: { counters: ["totals", "byDay"] },
+compte_gratuit_cree: { counters: ["totals", "byDay"] },
+procedure_etape: { counters: ["totals", "byDay"] },
+application_deposee_declaree: { counters: ["totals", "byDay"] },
+application_acceptee: { counters: ["totals", "byDay"] },
+application_deadline_reprise: { counters: ["totals", "byDay"] },
+application_hors_fenetre_remplacee: { counters: ["totals", "byDay"] },
+application_bourse_fermee_remplacee: { counters: ["totals", "byDay"] },
+interview_prep_checklist_toggled: { counters: ["totals", "byDay"] }
 
 };
 
@@ -229,9 +245,74 @@ console.warn(`[analytics] échec du suivi de l'événement "${eventType}":`, err
 // Comme trackEvent, ne doit jamais faire échouer l'appelant.
 // ==========================================================
 
-export function trackVisitOnce() {
+// ==========================================================
+// VISITEURS DU JOUR — des PERSONNES, pas des entrées (lot
+// ADMIN-SAIT-TOUT, 2026-09-23, demande de Charles).
+//
+// « visit » compte une entrée par ONGLET (sessionStorage) : la même
+// personne qui revient trois fois dans la journée, ou ouvre deux
+// onglets, compte trois ou deux fois. Ici, chaque NAVIGATEUR n'est
+// compté qu'une fois par jour : localStorage garde la date du dernier
+// jour compté. Un navigateur qui n'était jamais venu compte aussi dans
+// « visiteurs_nouveaux ».
+//
+// VIE PRIVÉE : aucun identifiant n'est créé ni envoyé. Le navigateur
+// garde deux dates (premier passage, dernier jour compté) ; le serveur
+// ne reçoit qu'un +1 sur le compteur du jour. On ne peut donc jamais
+// relier un visiteur à une personne.
+//
+// LIMITES, dites à l'admin : une personne sur deux appareils compte
+// deux fois ; la navigation privée compte à chaque session ; sur 7
+// jours, la somme compte une personne une fois PAR JOUR de visite.
+//
+// L'ÉQUIPE NE COMPTE PAS : les pages de l'admin posent fitzEquipe=1
+// (admin/sidebar-toggle.js), et ce navigateur n'est plus jamais
+// compté — Charles qui vérifie son site ne gonfle pas ses chiffres.
+//
+// COÛT : deux écritures par visiteur et par jour (compteur du jour et
+// total), aucune lecture.
+// ==========================================================
+
+function compterVisiteurDuJour() {
 
 try {
+
+if (window.location.pathname.startsWith("/admin/")) return;
+if (localStorage.getItem("fitzEquipe") === "1") return;
+
+const jour = todayKey();
+
+if (localStorage.getItem("fitzVisiteurJour") === jour) return;
+
+const nouveau = !localStorage.getItem("fitzPremierPassage");
+
+if (nouveau) localStorage.setItem("fitzPremierPassage", jour);
+localStorage.setItem("fitzVisiteurJour", jour);
+
+const champs = { visiteurs: increment(1) };
+if (nouveau) champs.visiteurs_nouveaux = increment(1);
+
+setDoc(doc(db, "analyticsDailyCounters", jour), champs, { merge: true }).catch(() => {});
+setDoc(doc(db, "analyticsCounters", "totals"), champs, { merge: true }).catch(() => {});
+
+} catch (error) {
+
+// localStorage indisponible : ce visiteur n'est pas compté, rien
+// d'autre ne change.
+console.warn("[analytics] visiteur non compté :", error);
+
+}
+
+}
+
+export function trackVisitOnce() {
+
+compterVisiteurDuJour();
+
+try {
+
+if (window.location.pathname.startsWith("/admin/")) return;
+if (localStorage.getItem("fitzEquipe") === "1") return;
 
 if (sessionStorage.getItem("fitzVisitTracked") === "1") return;
 

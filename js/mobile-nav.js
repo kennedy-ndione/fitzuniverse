@@ -750,4 +750,29 @@ init();
 
 window.FitzMobileNav = { initShell, initPublic, setUser, ouvrirEntree, appliquerEspace, appliquerPassSeul };
 
+// VISITEURS (lot ADMIN-SAIT-TOUT, 2026-09-23). Seuls l'accueil et
+// l'espace étudiant comptaient les visites : un étudiant arrivé de
+// Google sur une fiche de bourse, qui lit et repart, n'existait pour
+// personne. Ce script étant chargé par TOUTES les pages publiques, il
+// charge le module de suivi — après coup, quand le navigateur est
+// libre, pour ne jamais ralentir l'affichage. Les pages tunnel ne le
+// chargent pas : on y arrive toujours depuis une page déjà comptée.
+const SCRIPT_NAV = document.currentScript && document.currentScript.src;
+
+function suivreLaVisite() {
+try {
+if (!SCRIPT_NAV || location.pathname.startsWith("/admin/")) return;
+const lancer = () => import(new URL("analytics.js", SCRIPT_NAV).href)
+.then((m) => m.trackVisitOnce())
+.catch(() => {});
+if ("requestIdleCallback" in window) requestIdleCallback(lancer, { timeout: 4000 });
+else setTimeout(lancer, 2500);
+} catch (e) {
+// Le suivi ne doit jamais toucher à la navigation.
+}
+}
+
+if (document.readyState === "complete") suivreLaVisite();
+else window.addEventListener("load", suivreLaVisite, { once: true });
+
 })();

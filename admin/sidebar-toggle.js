@@ -11,6 +11,16 @@
 * ============================================================
 */
 
+// L'ÉQUIPE NE COMPTE PAS DANS LES VISITEURS (lot ADMIN-SAIT-TOUT,
+// 2026-09-23) : tout navigateur qui ouvre une page de l'admin est
+// marqué, et js/analytics.js ne le compte plus jamais comme visiteur
+// du site. Chaque page de l'admin importe ce module.
+try {
+localStorage.setItem("fitzEquipe", "1");
+} catch (e) {
+// localStorage indisponible : rien à marquer.
+}
+
 export function initSidebarToggle() {
 
 const openBtn = document.getElementById("sidebarOpenBtn");
