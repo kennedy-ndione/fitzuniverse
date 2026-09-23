@@ -345,6 +345,27 @@ assert.ok(html.includes("offers.html?parcours=bourse") && html.includes("offers.
 assert.ok(!html.includes('id="jyRail"'), "l'aiguillage n'est pas un hub");
 });
 
+// ESPACE GRATUIT (2026-09-23, demande de Charles) : un compte gratuit sait
+// quoi faire sans perdre de temps — le diagnostic d'abord, droit aux
+// questions ; le profil et l'équipe, à qui il peut désormais écrire ;
+// puis les offres en vente, avec leur prix, lues dans pricing-plans.js.
+test("l'accueil d'un compte gratuit : diagnostic en premier, équipe joignable, offres visibles", () => {
+const html = lire("dashboard.html");
+const js = lire("js/aiguillage.js");
+const accueil = html.slice(html.indexOf('id="accueilMinimal"'), html.indexOf("</main>"));
+const iDiag = accueil.indexOf('id="accueilDiagBtn"');
+const iOffres = accueil.indexOf('id="accueilOffresListe"');
+const iCompte = accueil.indexOf('href="profile.html"');
+assert.ok(iDiag > 0 && iDiag < iCompte && iCompte < iOffres, "l'ordre : diagnostic, compte, offres");
+assert.match(accueil, /<a href="eligibility-questions\.html" class="jy-btn jy-btn--primary" id="accueilDiagBtn">/, "le bouton mène droit aux questions");
+assert.ok(accueil.includes('href="messages.html"'), "écrire à l'équipe");
+assert.ok(html.includes('src="pricing-plans.js"'), "les offres viennent de pricing-plans.js");
+assert.match(js, /!p\.deprecated/, "seules les offres en vente");
+assert.match(js, /payment\.html\?plan=\$\{encodeURIComponent\(p\.id\)\}/, "une offre mène au paiement");
+assert.match(js, /sessionStorage\.setItem\("eligibilityResponses"/, "« Revoir mes résultats » recharge le diagnostic");
+assert.ok(!/\d{2}\s?000/.test(js.replace(/\/\/.*$/gm, "")), "aucun prix recopié dans aiguillage.js");
+});
+
 test("les deux hubs partagent la coquille et pas le vocabulaire", () => {
 const bourse = lire("espace-bourse.html");
 const pre = lire("espace-preinscription.html");

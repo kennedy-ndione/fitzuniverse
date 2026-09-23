@@ -169,8 +169,9 @@ assert.ok(!/Essentiel ou Essentiel/.test(d.texte), "pas deux fois le même libel
 assert.match(d.lien, /^offers\.html\?parcours=bourse#/);
 
 const echelle = echelleDeRecours(session);
-// Le compte gratuit n'a NI messagerie, NI conseiller, NI ticket : l'échelle
-// est vide, et messageDeFitz le dit plutôt que de montrer une porte fermée.
+// Le compte gratuit n'a NI conseiller, NI ticket — mais, depuis le
+// 2026-09-23, il a la messagerie : l'échelle ne propose que des portes
+// ouvertes, jamais une porte fermée.
 for (const m of echelle) assert.equal(decideVerrou({ planId: "gratuit", featureFlags: flags, featureKey: m.feature }), false, `${m.id} est fermé au gratuit`);
 const message = messageDeFitz(d, echelle);
 assert.match(message, /Voir /);
@@ -187,9 +188,10 @@ assert.deepEqual(e.map((m) => m.id), ["messagerie", "signalement"]);
 assert.match(e[0].detail, new RegExp(DELAI_REPONSE));
 assert.deepEqual(echelleDeRecours({ planId: "conseiller-6", featureFlags: flags }).map((m) => m.id), ["messagerie", "conseiller", "signalement"]);
 assert.deepEqual(echelleDeRecours({ planId: "gratuit", planPreinscriptionId: "dossier-france-conseiller", featureFlags: flags }).map((m) => m.id), ["messagerie", "conseiller", "signalement"]);
-assert.deepEqual(echelleDeRecours({ planId: "gratuit", featureFlags: flags }), []);
-// Le Pass Découverte : le ticket, rien d'autre.
-assert.deepEqual(echelleDeRecours({ planId: "gratuit", hasFitzExpress: true, featureFlags: flags }).map((m) => m.id), ["signalement"]);
+// MESSAGERIE POUR TOUS (2026-09-23) : le compte gratuit peut écrire à
+// l'équipe ; le Pass Découverte aussi, en plus de son ticket.
+assert.deepEqual(echelleDeRecours({ planId: "gratuit", featureFlags: flags }).map((m) => m.id), ["messagerie"]);
+assert.deepEqual(echelleDeRecours({ planId: "gratuit", hasFitzExpress: true, featureFlags: flags }).map((m) => m.id), ["messagerie", "signalement"]);
 // L'ordre est imposé : messagerie, conseiller, signalement.
 for (const m of echelleDeRecours({ planId: "conseiller-6", featureFlags: flags })) assert.ok(m.href && m.label && m.detail);
 });

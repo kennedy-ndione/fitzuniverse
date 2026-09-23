@@ -155,3 +155,15 @@ test("formules-admin 7 — le Pass Découverte a sa colonne, grisée, et elle di
     assert.equal(ferme, !DROITS_PASS.includes(featureKey), `${featureKey} : ce que l'admin affiche doit être ce que decideVerrou applique`);
   }
 });
+
+// MESSAGERIE POUR TOUS (2026-09-23) : la ligne d'un droit universel est
+// cochée et grisée dans TOUTES les colonnes — l'admin ne peut pas couper
+// un étudiant de l'équipe, et ne doit pas croire qu'il le peut.
+test("formules-admin 8 — la messagerie, droit de tout compte, est une ligne figée dans l'admin", async () => {
+  const plans = lire("admin/plans.js");
+  assert.match(plans, /DROITS_UNIVERSELS\.includes\(key\)/, "la grille doit reconnaître les droits universels");
+  assert.match(plans, /<input type="checkbox" disabled checked aria-label="\$\{label\} — ouvert à tous les comptes/, "ligne cochée et désactivée");
+  const { DROITS_UNIVERSELS, decideVerrou } = await import("../js/plan-features.js");
+  assert.deepEqual(DROITS_UNIVERSELS, ["student_messaging"]);
+  assert.equal(decideVerrou({ planId: "gratuit", featureFlags: { student_messaging: { gratuit: false } }, featureKey: "student_messaging" }), false);
+});

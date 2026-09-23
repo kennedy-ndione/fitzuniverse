@@ -158,15 +158,17 @@ assert.ok(!/whatsapp/i.test(JSON.stringify(o)), `${o.id} mentionne WhatsApp`);
 assert.equal(flags.whatsapp_direct.signature, false);
 });
 
-test("student_messaging : les TROIS offres préinscription et la SEULE offre bourse à 150 000 F ; absente de fitzExpress, premier-dossier et du nouvel Essentiel", () => {
-for (const id of PLAN_PREINSCRIPTION_ORDER) assert.equal(PREINSCRIPTION_FEATURE_CONFIG.student_messaging[id], true, id);
-for (const id of PLAN_PREINSCRIPTION_ORDER) assert.equal(decideVerrou({ planId: "gratuit", planPreinscriptionId: id, featureFlags: flags, featureKey: "student_messaging" }), false, id);
-const boursesVendues = enVente.filter((o) => o.parcours === "bourse" && flags.student_messaging[o.id] === true).map((o) => o.id);
-assert.deepEqual(boursesVendues, ["conseiller-6"]);
-assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
-assert.equal(verrou("premier-dossier", "student_messaging"), true);
-assert.equal(verrou("essentiel-4", "student_messaging"), true);
-assert.equal(verrou("gratuit", "student_messaging", { hasFitzExpress: true }), true, "fitzExpress");
+// MESSAGERIE POUR TOUS (2026-09-23, décision de Charles) : ce test
+// exigeait la messagerie réservée au Conseiller côté bourses. Il exige
+// désormais l'inverse — TOUT compte peut écrire à l'équipe, gratuit et
+// Pass compris — et que config/planFeatures ne puisse pas la refermer.
+test("student_messaging : ouverte à TOUS les comptes — gratuit, Pass, chaque formule, chaque offre France — et impossible à refermer depuis l'admin", () => {
+for (const id of [...PLAN_ORDER, ...PLAN_PREINSCRIPTION_ORDER]) assert.equal(decideVerrou({ planId: PLAN_ORDER.includes(id) ? id : "gratuit", planPreinscriptionId: PLAN_ORDER.includes(id) ? "" : id, featureFlags: flags, featureKey: "student_messaging" }), false, id);
+assert.equal(verrou("gratuit", "student_messaging"), false, "gratuit");
+assert.equal(verrou("gratuit", "student_messaging", { hasFitzExpress: true }), false, "Pass Découverte");
+const fermeeParLAdmin = { student_messaging: Object.fromEntries(PLAN_ORDER.map((id) => [id, false])) };
+for (const id of PLAN_ORDER) assert.equal(decideVerrou({ planId: id, featureFlags: fermeeParLAdmin, featureKey: "student_messaging" }), false, `${id} : une case décochée ne coupe pas de l'équipe`);
+assert.equal(decideVerrou({ planId: "gratuit", featureFlags: null, featureKey: "student_messaging" }), false, "même sans config/planFeatures lisible");
 });
 
 test("support_ticket : accessible à toute formule payante (Pass compris), à aucune gratuite", () => {
@@ -174,15 +176,20 @@ for (const id of PLAN_ORDER.filter((p) => p !== "gratuit")) assert.equal(verrou(
 for (const id of PLAN_PREINSCRIPTION_ORDER) assert.equal(decideVerrou({ planId: "gratuit", planPreinscriptionId: id, featureFlags: flags, featureKey: "support_ticket" }), false, id);
 assert.equal(verrou("gratuit", "support_ticket", { hasFitzExpress: true }), false, "le Pass Découverte a le service après-vente");
 assert.equal(verrou("gratuit", "support_ticket"), true);
-assert.equal(verrou("gratuit", "student_messaging", { hasFitzExpress: true }), true, "et rien de plus");
+assert.equal(verrou("gratuit", "ai_letter", { hasFitzExpress: true }), true, "et rien de plus (la messagerie, elle, est à tous)");
 assert.ok(FEATURE_CATALOG.some((f) => f.key === "support_ticket"));
 });
 
-test("firestore.rules : messagerie resserrée (anciennes formules conservées), supportTickets ouvert au payant, nouveaux quotas ajoutés", () => {
+test("firestore.rules : messagerie ouverte à tout compte non suspendu, supportTickets ouvert au payant, nouveaux quotas ajoutés", () => {
 const bloc = (nom) => { const m = regles.match(new RegExp(`function ${nom}\\(uid\\) \\{([\\s\\S]*?)\\n\\}`)); assert.ok(m, nom); return m[1]; };
-const messagerie = bloc("isMessagingPlan");
-for (const id of ["essentiel", "accompagnement", "premium", "signature-focus", "signature", "conseiller-6"]) assert.ok(messagerie.includes(`'${id}'`), `isMessagingPlan : ${id}`);
-assert.ok(!messagerie.includes("'essentiel-4'") && !messagerie.includes("'premier-dossier'"));
+// MESSAGERIE POUR TOUS (2026-09-23) : plus aucune condition de formule.
+assert.ok(!/function isMessagingPlan\(/.test(regles), "isMessagingPlan a été retirée");
+const messages = regles.slice(regles.indexOf("match /users/{uid}/messages/{messageId}"), regles.indexOf("match /users/{uid}/advisorRequests/"));
+assert.ok(/isOwner\(uid\) &&\s*!compteSuspendu\(uid\) &&/.test(messages), "le propriétaire non suspendu peut écrire");
+assert.ok(!/isPaidPlan|hasPreinscription|isMessagingPlan|planOf/.test(messages.replace(/\/\/.*$/gm, "")), "aucune condition de formule");
+assert.ok(/request\.resource\.data\.text\.size\(\) <= 8000/.test(messages), "texte borné");
+assert.ok(/request\.resource\.data\.fromStudent == true/.test(messages) && /request\.resource\.data\.read == false/.test(messages), "forme imposée");
+assert.ok(bloc("compteSuspendu").includes("get('disabled', false) == true"));
 const payant = bloc("isPaidPlan");
 for (const id of ["essentiel-4", "conseiller-6", ...ANCIENS, "premier-dossier"]) assert.ok(payant.includes(`'${id}'`), `isPaidPlan : ${id}`);
 assert.ok(bloc("isSignaturePlan").includes("'conseiller-6'"));

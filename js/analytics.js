@@ -131,7 +131,13 @@ application_acceptee: { counters: ["totals", "byDay"] },
 application_deadline_reprise: { counters: ["totals", "byDay"] },
 application_hors_fenetre_remplacee: { counters: ["totals", "byDay"] },
 application_bourse_fermee_remplacee: { counters: ["totals", "byDay"] },
-interview_prep_checklist_toggled: { counters: ["totals", "byDay"] }
+interview_prep_checklist_toggled: { counters: ["totals", "byDay"] },
+
+// Espace d'un compte gratuit (2026-09-23) : le bouton du diagnostic et
+// les offres montrées dans l'accueil (js/aiguillage.js). Ce sont les
+// deux nombres qui diront si l'espace gratuit fait avancer.
+espace_gratuit_diagnostic: { counters: ["totals", "byDay"] },
+espace_gratuit_offre: { counters: ["totals", "byDay"] }
 
 };
 

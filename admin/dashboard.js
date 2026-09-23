@@ -901,6 +901,8 @@ interview_prep_checklist_toggled: "Préparation d'entretien cochée",
 porte_bourse: "Accueil : « Trouver une bourse »",
 porte_preinscription: "Accueil : « Partir en me finançant »",
 porte_diagnostic: "Accueil : diagnostic gratuit",
+espace_gratuit_diagnostic: "Espace gratuit : diagnostic",
+espace_gratuit_offre: "Espace gratuit : offre ouverte",
 visit: "Entrée sur le site"
 };
 

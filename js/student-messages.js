@@ -19,7 +19,8 @@
 *
 * Signature : les messages de l'équipe sont toujours affichés
 * « FitzUniverse ». Droit de réponse : fonctionnalité
-* "student_messaging" (js/plan-features.js — fermée au plan Gratuit).
+* "student_messaging" (js/plan-features.js) — OUVERTE À TOUS LES COMPTES,
+* gratuits compris, depuis le 2026-09-23 (DROITS_UNIVERSELS).
 * Forme des réponses imposée par firestore.rules
 * ({ text, fromStudent:true, createdAt, read:false }).
 * ============================================================
@@ -139,9 +140,10 @@ if (!canReply) {
 
 const locked = document.createElement("div");
 locked.className = "messages-composer-locked";
-// Grille A : la messagerie est comprise dans le Forfait Conseiller et
-// dans les offres préinscription — pas dans toute formule payante.
-locked.innerHTML = `<span>Répondre ici est compris dans le Forfait Conseiller et dans les offres préinscription.</span><a href="offers.html">Voir les formules</a>`;
+// Depuis le 2026-09-23, tout compte peut écrire à l'équipe : cette
+// branche ne sert plus qu'en repli (droits non résolus). Elle ne vend
+// donc plus rien — elle dit quoi faire.
+locked.innerHTML = `<span>La réponse n'est pas disponible pour l'instant. Rechargez la page pour écrire à l'équipe.</span>`;
 return locked;
 
 }

@@ -147,8 +147,8 @@ export const FEATURE_CATALOG = [
 // messages reçus (cloche) ; ce drapeau contrôle le droit de RÉPONDRE.
 // Décision utilisateur du 2026-09-02 : fermé au plan Gratuit, ouvert à
 // toutes les formules payantes — RESSERRÉ par la grille A (2026-09-07),
-// voir DEFAULT_FEATURE_CONFIG.student_messaging.
-{ key: "student_messaging", label: "Messagerie FitzUniverse", description: "Répondre à l'équipe FitzUniverse depuis la cloche de messages de l'espace étudiant." },
+// puis OUVERT À TOUS LES COMPTES le 2026-09-23 (DROITS_UNIVERSELS).
+{ key: "student_messaging", label: "Messagerie FitzUniverse", description: "Écrire à l'équipe FitzUniverse et lui répondre — ouverte à tous les comptes, gratuits compris, depuis le 2026-09-23." },
 // WhatsApp direct — RETIRÉ le 2026-09-20 (décision de Charles) : plus
 // AUCUN lien WhatsApp sur le site, payant comme gratuit — la messagerie
 // FitzUniverse est le canal d'échange avec l'équipe. La clé reste pour
@@ -195,6 +195,9 @@ interview_prep: { gratuit: false, "premier-dossier": true, "essentiel-4": true, 
 // à un conseiller humain, vrai uniquement pour les offres "human" de
 // pricing-plans.js. Voir la note en tête de fichier.
 advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": true, "signature-focus": true, signature: true },
+// MESSAGERIE — OUVERTE À TOUS LES COMPTES depuis le 2026-09-23
+// (DROITS_UNIVERSELS, plus bas : decideVerrou l'ouvre avant même de lire
+// cette ligne, qui n'est plus qu'un reflet pour l'admin). Historique :
 // MESSAGERIE (grille A, 2026-09-07) — deux règles selon le parcours.
 // Côté bourses, réservée au Forfait Conseiller (conseiller-6) : une
 // bourse se décide par un jury, l'échange n'a pas la valeur directe
@@ -204,7 +207,7 @@ advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essen
 // signature-focus/signature la CONSERVENT. Côté préinscription : les
 // trois offres (PREINSCRIPTION_FEATURE_CONFIG). Toute formule payante
 // garde « Signaler un problème » (support_ticket) — voie séparée.
-student_messaging: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+student_messaging: { gratuit: true, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
 // Grille A : whatsapp_direct n'est attachée à PLUS AUCUNE formule
 // (retrait complet du 2026-09-20, Signature comprise).
 whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
@@ -275,8 +278,30 @@ support_ticket: { "diagnostic-france": true, "dossier-france": true, "dossier-fr
 */
 export const DROITS_PASS = ["ai_chat", "support_ticket"];
 
+/**
+* CE QUE TOUT COMPTE OUVRE, payant comme gratuit (2026-09-23).
+*
+* Décision de Charles : « que tous les comptes ou tous les inscrits
+* (payants comme gratuits) aient la possibilité de parler désormais à
+* l'équipe FitzUniverse ». La messagerie est le seul canal par lequel
+* l'équipe peut dire à un inscrit ce qu'il doit faire (« complétez votre
+* profil ») sans passer par l'e-mail. Elle cesse donc d'être un droit de
+* formule : c'est un droit de COMPTE.
+*
+* Fixé par le code, comme DROITS_PASS : config/planFeatures ne peut pas
+* le refermer (une ancienne case décochée dans le Control Center ne doit
+* pas couper un étudiant de l'équipe), et admin/plans.js affiche la
+* ligne cochée et grisée partout. Côté serveur, firestore.rules
+* (users/{uid}/messages) n'exige plus que d'être le propriétaire du fil.
+*
+* Ce qui reste propre au Conseiller : le conseiller dédié (advisor) et
+* la relecture de chaque dossier — pas le droit de parler à l'équipe.
+*/
+export const DROITS_UNIVERSELS = ["student_messaging"];
+
 export function decideVerrou({ planId, planPreinscriptionId = "", featureFlags, featureKey, testerAccess = false, hasFitzExpress = false }) {
 if (testerAccess) return false;
+if (DROITS_UNIVERSELS.includes(featureKey)) return false;
 // Grille A : le Pass Découverte est une formule payante — il a droit au
 // chat et au service après-vente, et à rien d'autre de plus.
 if (hasFitzExpress && DROITS_PASS.includes(featureKey)) return false;

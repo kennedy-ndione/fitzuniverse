@@ -162,9 +162,12 @@ advisorNav.hidden = !hasAdvisor;
 }
 
 // Droit de réponse de la messagerie FitzUniverse — même règle que
-// js/app-shell.js (fonctionnalité "student_messaging").
+// js/app-shell.js (fonctionnalité "student_messaging"). Depuis le
+// 2026-09-23 ce droit est UNIVERSEL (DROITS_UNIVERSELS) : il ne dépend
+// plus de la lecture de config/planFeatures, d'où l'absence du garde
+// `!!featureFlags` qui fermait la réponse quand cette lecture échouait.
 initMessagesPanel(session.user.uid, {
-canReply: !!featureFlags && !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
+canReply: !isFeatureLocked(session.planId, featureFlags, "student_messaging", session.testerAccess, session.hasFitzExpress, session.planPreinscriptionId)
 });
 
 if (window.lucide) lucide.createIcons();

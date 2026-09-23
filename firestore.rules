@@ -133,14 +133,15 @@ function isSignaturePlan(uid) {
 return planOf(uid) in ['signature-focus', 'conseiller-6', 'signature'];
 }
 
-// MESSAGERIE (grille A) — le droit de RÉPONDRE côté bourses. Réservée
-// au Forfait Conseiller (conseiller-6) pour les offres en vente ;
-// essentiel, accompagnement, premium, signature-focus et signature la
-// CONSERVENT (règle d'or : aucun détenteur ne perd un droit acquis).
-// premier-dossier et essentiel-4 en sont exclus ; ils ont le service
-// après-vente (supportTickets, plus bas).
-function isMessagingPlan(uid) {
-return planOf(uid) in ['essentiel', 'accompagnement', 'premium', 'signature-focus', 'conseiller-6', 'signature'];
+// MESSAGERIE : isMessagingPlan() a été RETIRÉE le 2026-09-23. Écrire à
+// l'équipe n'est plus un droit de formule mais un droit de compte —
+// voir la règle du fil de messages plus bas, et DROITS_UNIVERSELS
+// (js/plan-features.js).
+
+// Un compte suspendu par l'administrateur (champ "disabled", qu'il est
+// seul à pouvoir écrire) ne peut plus écrire à l'équipe.
+function compteSuspendu(uid) {
+return get(/databases/$(database)/documents/users/$(uid)).data.get('disabled', false) == true;
 }
 
 // Un Pass Découverte a existé sur ce compte. Les règles ne savent pas
@@ -320,14 +321,19 @@ match /users/{uid}/messages/{messageId} {
 // plan Gratuit — désormais aussi ICI (isPaidPlan/isTester), plus
 // seulement côté client : un compte gratuit ne peut plus écrire
 // dans le fil depuis la console développeur.
-// GRILLE A (2026-09-07) : resserré — isMessagingPlan (côté bourses,
-// Conseiller + détenteurs des anciennes formules) ou une offre
-// préinscription (les trois). Voir js/plan-features.js.
+// GRILLE A (2026-09-07) : resserré au Conseiller et aux offres
+// préinscription. MESSAGERIE POUR TOUS (2026-09-23, décision de
+// Charles) : tout compte, payant comme gratuit, peut écrire dans SON
+// fil — la forme reste imposée, le texte est borné (8 000 : large marge
+// au-dessus des 2 000 caractères du champ de saisie, js/student-messages.js,
+// quelle que soit la façon dont size() compte les accents), et un compte
+// suspendu ne peut plus écrire.
 allow create: if isAdmin() ||
 (isOwner(uid) &&
-(isMessagingPlan(uid) || hasPreinscription(uid) || isTester(uid)) &&
+!compteSuspendu(uid) &&
 request.resource.data.keys().hasOnly(["text", "fromStudent", "createdAt", "read"]) &&
 request.resource.data.text is string && request.resource.data.text != "" &&
+request.resource.data.text.size() <= 8000 &&
 request.resource.data.fromStudent == true &&
 request.resource.data.read == false);
 allow read: if isOwner(uid) || isAdmin();

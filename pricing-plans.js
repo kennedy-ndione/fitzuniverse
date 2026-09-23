@@ -465,9 +465,10 @@ highlights: [
 // Quatre offres en vente côté bourses : fitzExpress, premier-dossier,
 // et ces deux-ci. La promesse est la PROFONDEUR (« 4 candidatures
 // accompagnées à fond »), jamais le volume ni un prix par candidature.
-// La messagerie FitzUniverse est réservée, côté bourses, au Forfait
-// Conseiller : une bourse se décide par un jury, l'échange n'y a pas
-// la valeur directe qu'il a en préinscription. Toute formule payante
+// La messagerie FitzUniverse était réservée, côté bourses, au Forfait
+// Conseiller ; elle est OUVERTE À TOUS LES COMPTES depuis le 2026-09-23
+// (DROITS_UNIVERSELS, js/plan-features.js). Ce qui reste propre au
+// Conseiller : le conseiller dédié et la relecture. Toute formule payante
 // garde une voie de service après-vente séparée (« Signaler un
 // problème », support_ticket). Aucune offre en vente ne porte WhatsApp.
 // ==========================================================

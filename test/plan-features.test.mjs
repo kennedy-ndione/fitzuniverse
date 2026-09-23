@@ -33,6 +33,7 @@ PLAN_LABELS,
 DEFAULT_FEATURE_CONFIG,
 FEATURE_CATALOG,
 resolveFeatureFlags,
+DROITS_UNIVERSELS,
 isQuotaReached,
 isUnlimitedQuota
 } from "../js/plan-features.js";
@@ -127,8 +128,13 @@ test("le tiers gratuit ne débloque aucune fonctionnalité payante", () => {
 
 const flags = resolveFeatureFlags(null);
 
+// Seule exception : les DROITS_UNIVERSELS (la messagerie avec l'équipe,
+// ouverte à tous les comptes le 2026-09-23) — un droit de compte, pas
+// une fonctionnalité payante.
+assert.deepEqual(DROITS_UNIVERSELS, ["student_messaging"], "un nouveau droit universel se décide, il ne s'ajoute pas en passant");
+
 for (const { key } of FEATURE_CATALOG) {
-assert.equal(flags[key].gratuit, false, `"${key}" ne doit pas être inclus dans le gratuit`);
+assert.equal(flags[key].gratuit, DROITS_UNIVERSELS.includes(key), `"${key}" : gratuit`);
 }
 
 });

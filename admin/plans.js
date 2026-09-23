@@ -19,7 +19,8 @@ PLAN_LABELS,
 PLAN_PREINSCRIPTION_ORDER,
 PLAN_PREINSCRIPTION_LABELS,
 resolveFeatureFlags,
-DROITS_PASS
+DROITS_PASS,
+DROITS_UNIVERSELS
 } from "../js/plan-features.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
@@ -105,6 +106,30 @@ tbody.innerHTML = "";
 FEATURE_CATALOG.forEach(({ key, label, description }) => {
 
 const row = document.createElement("tr");
+
+// MESSAGERIE POUR TOUS (2026-09-23) : une fonctionnalité de
+// DROITS_UNIVERSELS est ouverte à tout compte par le code. Sa ligne est
+// cochée et grisée dans TOUTES les colonnes : une case modifiable
+// laisserait croire qu'on peut couper un étudiant de l'équipe.
+if (DROITS_UNIVERSELS.includes(key)) {
+row.classList.add("is-universel");
+row.innerHTML = `
+<td class="is-name">
+<div>${label}</div>
+<div class="plans-feature-description">${description}</div>
+</td>
+${COLONNES.map(() => `
+<td>
+<label class="plan-toggle is-fige" title="Ouvert à tous les comptes, gratuits compris — fixé par le code.">
+<input type="checkbox" disabled checked aria-label="${label} — ouvert à tous les comptes (fixé, non modifiable)">
+<span class="plan-toggle-track"><span class="plan-toggle-thumb"></span></span>
+</label>
+</td>
+`).join("")}
+`;
+tbody.appendChild(row);
+return;
+}
 
 row.innerHTML = `
 <td class="is-name">

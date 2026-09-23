@@ -7,11 +7,9 @@
 * (moteur partagé avec la cloche) ; ce fichier ne fait que monter la
 * coquille de l'espace et brancher la surface « page ».
 *
-* Accessible à TOUTES les formules (chacun lit ses messages) ; le
-* droit de RÉPONDRE suit la fonctionnalité "student_messaging"
-* (grille A : côté bourses, le Forfait Conseiller et les détenteurs des
-* anciennes formules ; côté préinscription, les trois offres — voir
-* js/plan-features.js). Toute formule payante a en plus « Signaler un
+* Accessible à TOUS les comptes, gratuits compris ; le droit d'ÉCRIRE
+* suit la fonctionnalité "student_messaging", universelle depuis le
+* 2026-09-23 (DROITS_UNIVERSELS, js/plan-features.js). Toute formule payante a en plus « Signaler un
 * problème » (support_ticket, js/support-ticket.js).
 * ============================================================
 */
@@ -36,20 +34,8 @@ document.querySelectorAll("[data-delai-reponse]").forEach((el) => { el.textConte
 
 bootstrapShell({}).then((ctx) => {
 
-// COMPTE ENTIÈREMENT GRATUIT (2026-09-20) : pas de messagerie du tout
-// — même règle que la cloche dans app-shell.js. Quelqu'un qui tape
-// l'adresse de cette page à la main est reconduit à son espace.
-const compteGratuitSeul =
-(!ctx.planId || ctx.planId === "gratuit") &&
-!ctx.planPreinscriptionId &&
-!ctx.hasFitzExpress &&
-!ctx.testerAccess;
-
-if (compteGratuitSeul) {
-window.location.replace("dashboard.html");
-return;
-}
-
+// MESSAGERIE POUR TOUS (2026-09-23) : un compte gratuit n'est plus
+// reconduit à son espace — il lit ses messages ET écrit à l'équipe.
 initMessagesPage(ctx.user.uid, {
 canReply: !isFeatureLocked(ctx.planId, ctx.featureFlags, "student_messaging", ctx.testerAccess, ctx.hasFitzExpress, ctx.planPreinscriptionId)
 });

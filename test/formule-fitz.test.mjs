@@ -66,7 +66,9 @@ test("formule 2 — le Gratuit n'a rien, et le cadre le dit sans détour", () =>
 
   const f = lireFormule({ planId: "gratuit", featureFlags: FLAGS });
 
-  assert.equal(f.ouvertes.length, 0, "aucun outil n'est ouvert au plan Gratuit");
+  // Depuis le 2026-09-23, la messagerie avec l'équipe est ouverte à tous :
+  // c'est la SEULE chose ouverte au Gratuit, et aucun outil Fitz.
+  assert.deepEqual(f.ouvertes, ["Messagerie FitzUniverse"], "aucun outil n'est ouvert au plan Gratuit — seulement l'équipe");
   assert.ok(f.fermees.includes("Questions à Fitz"));
 
 });

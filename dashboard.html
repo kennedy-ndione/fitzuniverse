@@ -54,6 +54,8 @@ journey.css (le parcours) les surclassent — ordre significatif. -->
 <link rel="modulepreload" href="js/countries.js">
 <link rel="modulepreload" href="js/delai-reponse.js">
 <link rel="modulepreload" href="js/diagnostic-france.js">
+<link rel="modulepreload" href="js/diagnostic-garde.js">
+<link rel="modulepreload" href="js/diagnostic-vers-profil.js">
 <link rel="modulepreload" href="js/documents-slugs.js">
 <link rel="modulepreload" href="js/echeance.js">
 <link rel="modulepreload" href="js/eligibility-pistes.js">
@@ -177,40 +179,66 @@ js/student-messages.js les pilotent sans modification.
 
 <header class="jy-hello">
 <h1 id="welcomeMessage">Bonjour</h1>
-<p>Votre profil, vos paramètres et le catalogue sont ici. Votre prochaine action est juste en dessous.</p>
+<p>Votre prochaine action est juste en dessous.</p>
 </header>
 
 <!-- L'ACCUEIL MINIMAL : rendu UNIQUEMENT pour un compte sans
 accompagnement actif (js/aiguillage.js le démasque). Les autres sont
-redirigés vers leur hub avant même de le voir. Il porte le strict
-nécessaire — le profil, le compte — et les DEUX portes, parce qu'à
-ce stade personne ne sait laquelle est la bonne, pas même nous. -->
+redirigés vers leur hub avant même de le voir.
+
+REFONTE DU 2026-09-23 (demande de Charles) : un compte gratuit doit
+savoir QUOI FAIRE sans perdre de temps. Trois blocs, dans l'ordre où
+il faut les faire :
+  01  le diagnostic gratuit — LA première action (le bouton devient
+      « Revoir mes résultats » quand il est déjà fait) ;
+  02  le compte : le profil, l'équipe (messagerie ouverte à tous
+      depuis le même jour), le catalogue, les paramètres ;
+  03  les propositions d'accompagnement, avec leur prix, rendues par
+      js/aiguillage.js depuis pricing-plans.js (les offres en vente
+      seulement) — les deux liens « Comparer » restent le repli. Elles
+      viennent en dernier : sur téléphone, sept cartes repousseraient
+      « Compléter mon profil » à trois écrans de distance. -->
 <div id="accueilMinimal" hidden>
 
-<section class="jy-phase">
+<section class="jy-phase jy-phase--depart" id="accueilDiagnostic">
 <div class="jy-phase-head">
 <span class="jy-phase-num">01</span>
-<h2>Votre compte est prêt</h2>
+<h2 id="accueilDiagTitre">Commencez par le diagnostic gratuit</h2>
 </div>
-<p class="jy-phase-sub">Vous n'avez pas encore d'accompagnement actif. Votre profil et vos paramètres restent accessibles, et le catalogue est en accès libre : critères, échéances datées et sites officiels, sans rien payer.</p>
+<p class="jy-phase-sub" id="accueilDiagTexte">Cinq minutes, sans rien payer. Il vous dit quelles bourses et quels pays sont à votre portée, et ce qu'il faut faire ensuite. Vos réponses remplissent aussi votre profil.</p>
 <div class="jy-phase-actions">
-<a href="profile.html" class="jy-btn jy-btn--primary"><i data-lucide="user-round"></i><span>Compléter mon profil</span></a>
-<a href="account.html" class="jy-btn"><i data-lucide="settings"></i><span>Mes paramètres</span></a>
-<a href="scholarships.html" class="jy-btn"><i data-lucide="award"></i><span>Le catalogue</span></a>
+<a href="eligibility-questions.html" class="jy-btn jy-btn--primary" id="accueilDiagBtn"><i data-lucide="compass"></i><span>Faire mon diagnostic gratuit</span></a>
+<a href="eligibility-questions.html" class="jy-btn" id="accueilDiagRefaire" hidden><i data-lucide="rotate-ccw"></i><span>Le refaire</span></a>
 </div>
 </section>
 
 <section class="jy-phase">
 <div class="jy-phase-head">
 <span class="jy-phase-num">02</span>
-<h2>Deux accompagnements, deux parcours</h2>
+<h2>Votre compte est prêt</h2>
 </div>
-<p class="jy-phase-sub">Ils ne se ressemblent pas, et on ne vous demandera jamais de choisir les deux.</p>
+<p class="jy-phase-sub">Votre profil, vos paramètres et le catalogue en accès libre. Une question ? L'équipe FitzUniverse vous répond dans votre espace.</p>
 <div class="jy-phase-actions">
-<a href="offers.html?parcours=bourse" class="jy-btn jy-btn--primary"><i data-lucide="award"></i><span>Je vise une bourse</span></a>
-<a href="offers.html?parcours=preinscription" class="jy-btn jy-btn--primary"><i data-lucide="landmark"></i><span>Je finance mes études</span></a>
+<a href="profile.html" class="jy-btn jy-btn--primary"><i data-lucide="user-round"></i><span>Compléter mon profil</span></a>
+<a href="messages.html" class="jy-btn"><i data-lucide="messages-square"></i><span>Écrire à l'équipe</span></a>
+<a href="scholarships.html" class="jy-btn"><i data-lucide="award"></i><span>Le catalogue</span></a>
+<a href="account.html" class="jy-btn"><i data-lucide="settings"></i><span>Mes paramètres</span></a>
 </div>
 </section>
+
+<section class="jy-phase" id="accueilOffres">
+<div class="jy-phase-head">
+<span class="jy-phase-num">03</span>
+<h2>Nos propositions d'accompagnement</h2>
+</div>
+<p class="jy-phase-sub">Un paiement unique, sans abonnement. Deux parcours distincts : on ne vous demandera jamais de choisir les deux.</p>
+<div id="accueilOffresListe"></div>
+<div class="jy-phase-actions">
+<a href="offers.html?parcours=bourse" class="jy-btn"><i data-lucide="award"></i><span>Comparer les offres bourses</span></a>
+<a href="offers.html?parcours=preinscription" class="jy-btn"><i data-lucide="landmark"></i><span>Comparer les offres France</span></a>
+</div>
+</section>
+
 
 </div>
 

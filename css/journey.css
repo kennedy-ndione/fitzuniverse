@@ -1394,3 +1394,94 @@ background:var(--background);
 box-shadow:inset 2px 0 0 var(--amber-600);
 font-weight:700;
 }
+
+/* ---------- Accueil d'un compte gratuit (2026-09-23) ----------
+   dashboard.html, #accueilMinimal. Le bloc 01 (diagnostic) est la
+   première action : un filet ambré le distingue sans ajouter de carte.
+   Le bloc 02 liste les offres en vente, rendues par js/aiguillage.js
+   depuis pricing-plans.js — chaque carte est un lien entier vers
+   payment.html. */
+.jy-phase--depart{
+border-top:2px solid var(--amber-600);
+}
+
+.jy-offres-groupe{
+margin-bottom:18px;
+}
+
+.jy-offres-titre{
+margin:0 0 10px;
+font-size:.78rem;
+font-weight:800;
+letter-spacing:.06em;
+text-transform:uppercase;
+color:var(--text-light);
+}
+
+.jy-offres{
+display:grid;
+grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+gap:12px;
+}
+
+.jy-offre{
+display:flex;
+flex-direction:column;
+gap:6px;
+padding:16px 18px;
+border:1px solid var(--border-color);
+border-radius:14px;
+background:var(--background);
+color:var(--journey-ink);
+text-decoration:none;
+transition:var(--transition);
+}
+
+.jy-offre:hover{ border-color:var(--amber-600); }
+
+.jy-offre:focus-visible{
+outline:2px solid var(--amber-600);
+outline-offset:2px;
+}
+
+.jy-offre.is-recommandee{
+border-color:rgba(190,96,50,.55);
+box-shadow:inset 0 2px 0 var(--amber-600);
+}
+
+.jy-offre-nom{
+font-family:var(--font-affirmation);
+font-size:1.05rem;
+font-weight:700;
+}
+
+.jy-offre-prix{
+font-size:.82rem;
+color:var(--text-light);
+}
+
+.jy-offre-prix strong{
+font-size:1.1rem;
+font-weight:800;
+color:var(--journey-ink);
+}
+
+.jy-offre-texte{
+flex:1;
+font-size:.84rem;
+line-height:1.5;
+color:var(--text-color);
+}
+
+.jy-offre-cta{
+display:inline-flex;
+align-items:center;
+gap:6px;
+margin-top:4px;
+font-size:.84rem;
+font-weight:700;
+color:var(--amber-700);
+}
+
+.jy-offre-cta i,
+.jy-offre-cta svg{ width:14px; height:14px; }
