@@ -319,7 +319,7 @@ return;
 
 if (section) section.hidden = false;
 
-poser("destCatalogue", `${etat.etablissements} établissement${etat.etablissements > 1 ? "s" : ""} de cette destination sont au catalogue${etat.coutsVerifies ? `, dont ${etat.coutsVerifies} dont nous avons vérifié le coût d'une année, à la source et à la date indiquée` : ""}.`);
+poser("destCatalogue", `${etat.etablissements} établissement${etat.etablissements > 1 ? "s" : ""} de cette destination ${etat.etablissements > 1 ? "sont" : "est"} au catalogue${etat.coutsVerifies ? (etat.coutsVerifies === etat.etablissements && etat.etablissements > 1 ? `, tous avec le coût d'une année vérifié à la source, à la date indiquée` : `, dont ${etat.coutsVerifies} avec le coût d'une année vérifié à la source, à la date indiquée`) : ""}.`);
 
 const lien = document.getElementById("destCatalogueLien");
 if (lien) lien.setAttribute("href", `universities.html?country=${encodeURIComponent(pays.nom)}`);

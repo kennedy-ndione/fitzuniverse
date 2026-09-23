@@ -703,7 +703,7 @@ etape.etat === "prematuree" ? "is-premature" : ""
 ].filter(Boolean).join(" ");
 
 const infobulle = etape.etat === "prematuree"
-? `${etape.label} — à faire après ${etape.bloquePar.map((id) => LIBELLE_PREREQUIS[id] || id).join(" et ")}`
+? `${etape.label} — à faire après ${(etape.bloqueParLibelles || etape.bloquePar.map((id) => LIBELLE_PREREQUIS[id] || id)).join(" et ")}`
 : etape.label;
 
 return `<a href="${etape.href || "applications.html"}" class="${classes}" title="${infobulle}">

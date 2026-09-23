@@ -194,7 +194,7 @@ const morceaux = listeTotaux.map((t) => t.min === t.max
 ? formatMontant(t.min, t.devise)
 : `de ${formatMontant(t.min, t.devise)} à ${formatMontant(t.max, t.devise)}`);
 const totalTexte = morceaux.length
-? `Pour la première année ${dans}${seuil ? ", ressources exigées comprises" : ", hors frais de vie (aucun seuil publié)"} : ${morceaux.join(", plus ")}.`
+? `Pour la première année ${dans}${seuil ? ", ressources exigées comprises" : ", hors frais de vie (aucun seuil publié)"} : ${morceaux.join(", auxquels s'ajoutent ")}.`
 : "";
 
 return {

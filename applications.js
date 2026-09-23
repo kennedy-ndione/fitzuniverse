@@ -612,7 +612,7 @@ step.isFitz ? "is-fitz" : ""
 ].filter(Boolean).join(" ");
 
 const infobulle = step.etat === "prematuree"
-? `${step.label} — à faire après ${step.bloquePar.map((id) => LIBELLE_PREREQUIS[id] || id).join(" et ")}`
+? `${step.label} — à faire après ${(step.bloqueParLibelles || step.bloquePar.map((id) => LIBELLE_PREREQUIS[id] || id)).join(" et ")}`
 : step.label;
 
 return `
