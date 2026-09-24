@@ -14,7 +14,6 @@ Ajoutée le 2026-09-01 comme bannière de `scholarships.html`, en remplacement d
 - **Déclinaisons** : générées localement avec `sharp` (JPEG q92 mozjpeg, WebP q92, AVIF q62) par `scripts/add-hero-bourses-photo.mjs`, à partir d'un recadrage 2:1 de la source 2400×1603.
 - **Contrôles faits avant de la retenir** (le fichier a été REGARDÉ, y compris au zoom) : aucun blason, aucune enseigne, aucun texte lisible — les vitraux sont géométriques, et les petits motifs des baies hautes sont des marques d'imprimeurs, hors recadrage. L'établissement (University of Washington) **n'est pas au catalogue** : les deux seules universités américaines en base sont Stanford et Berkeley.
 
-
 ### `campus-courtyard.jpg` (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`, en JPEG + WebP + AVIF)
 
 Ajoutée le 2026-09-01 comme bannière de `universities.html`, en remplacement de `university-hall.jpg` (voir l'entrée suivante : sa provenance n'a pas pu être établie, et elle servait déjà de hero à la page d'accueil).
@@ -529,57 +528,189 @@ Trente photos ajoutées (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`) pour l
 
 Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditées ici par choix, pour garder la traçabilité de toutes les sources du projet.
 
-**Réserve à lever** : les noms de photographes ne figurent pas ci-dessous, contrairement aux lots 14 à 17. Les identifiants ont été relevés depuis les pages de recherche Unsplash, qui n'exposent que l'identifiant CDN ; retrouver l'auteur demande d'ouvrir la fiche de chaque photo une par une. L'attribution n'étant pas obligatoire sous cette licence, c'est une dette de traçabilité, pas une dette légale.
+**Réserve levée le 2026-09-24** : les photographes et les pages manquaient à ce lot. Ils ont été retrouvés par la recherche du site Unsplash, en retenant seulement le résultat dont l'identifiant CDN est EXACTEMENT celui du fichier.
 
-### Italie
+### `adisu-puglia.jpg` — les trulli d'Alberobello, Italie
 
-- `adisu-puglia.jpg` — les trulli d'Alberobello (identifiant CDN `photo-1609948368716-254e2501d243`)
-- `aliseo-liguria.jpg` — Manarola, Cinque Terre (identifiant CDN `photo-1516483638261-f4dbaf036963`)
-- `ardis-friuli-venezia-giulia.jpg` — le front de mer de Trieste (identifiant CDN `photo-1623878991610-7416bc4e8c6f`)
-- `dsu-lombardia-milano-statale.jpg` — la cour de Brera et sa statue de Napoléon, Milan (identifiant CDN `photo-1739826084732-1436a8908f20`)
-- `edisu-pavia.jpg` — le Ponte Coperto sur le Tessin, Pavie (identifiant CDN `photo-1679098284781-1a211e7636a2`)
-- `ergo-emilia-romagna.jpg` — le campanile de Parme (identifiant CDN `photo-1749680195704-f504f55054f9`)
-- `invest-your-talent-italy.jpg` — Vérone et l'Adige (identifiant CDN `photo-1681477443350-45cfe74916e3`)
-- `scuola-normale-superiore-phd.jpg` — la tour Guinigi, Lucques (identifiant CDN `photo-1747593467598-9cf0a9e46f02`)
+- **Photographe** : reisetopia ([@reisetopia](https://unsplash.com/@reisetopia))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/T0H3DS-0BiA` (identifiant CDN `photo-1609948368716-254e2501d243`)
 
-### Allemagne
+### `aliseo-liguria.jpg` — Manarola, Cinque Terre, Italie
 
-- `daad-epos.jpg` — les tours de Francfort (identifiant CDN `photo-1626447637943-4c9d412fa8cf`)
-- `daad-helmut-schmidt-programme.jpg` — l'Elbphilharmonie, Hambourg (identifiant CDN `photo-1553547274-0df401ae03c9`)
-- `friedrich-ebert-stiftung.jpg` — Heidelberg, son pont et le Neckar (identifiant CDN `photo-1632660609710-ca2ee0c3425b`)
-- `heinrich-boell-stiftung.jpg` — la cathedrale de Cologne (identifiant CDN `photo-1608322460360-009ddc765b99`)
-- `konrad-adenauer-stiftung.jpg` — Bonn (identifiant CDN `photo-1715281762727-daf602648ea4`)
-- `rosa-luxemburg-stiftung.jpg` — Leipzig et son beffroi (identifiant CDN `photo-1694098141071-8e1322860773`)
+- **Photographe** : Jack Ward ([@jackward](https://unsplash.com/@jackward))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/rknrvCrfS1k` (identifiant CDN `photo-1516483638261-f4dbaf036963`)
 
-### Japon
+### `ardis-friuli-venezia-giulia.jpg` — le front de mer de Trieste, Italie
 
-- `abe-initiative-jica.jpg` — Yokohama de nuit (identifiant CDN `photo-1587474064565-922e1178ec8f`)
-- `honjo-international-scholarship.jpg` — une pagode de Kyoto (identifiant CDN `photo-1578469645742-46cae010e5d4`)
-- `jasso-monbukagakusho-honors.jpg` — le chateau d'Osaka (identifiant CDN `photo-1575489129683-4f7d23379975`)
-- `jica-sdgs-global-leader.jpg` — le mont Fuji (identifiant CDN `photo-1526481280693-3bfa7568e0f3`)
-- `rotary-yoneyama-overseas.jpg` — les daims de Nara (identifiant CDN `photo-1550303435-1703d8811aaa`)
+- **Photographe** : Arno Senoner ([@arnosenoner](https://unsplash.com/@arnosenoner))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/DVsizqdN0Ls` (identifiant CDN `photo-1623878991610-7416bc4e8c6f`)
 
-### Suisse
+### `dsu-lombardia-milano-statale.jpg` — la cour de Brera et sa statue de Napoléon, Milan, Italie
 
-- `iheid-scholarships.jpg` — le Palais des Nations, Geneve (identifiant CDN `photo-1679589164488-ca6dc6746af9`)
-- `unifr-research-scholarships.jpg` — la vieille ville de Fribourg et la Sarine (identifiant CDN `photo-1609770264759-fd0f26b0de92`)
-- `unige-excellence-master-fellowships.jpg` — le Jet d'eau de Geneve (identifiant CDN `photo-1633022326182-1b36700bc49a`)
-- `unil-master-grants.jpg` — la cathedrale de Lausanne (identifiant CDN `photo-1584469728290-46e7760c2d78`)
-- `zeno-karl-schindler-master-thesis.jpg` — Berne et les ponts de l'Aar (identifiant CDN `photo-1664459937096-d395cd77f8b8`)
+- **Photographe** : Alex varela ([@alexvarelo](https://unsplash.com/@alexvarelo))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/qTJOc8lDRg0` (identifiant CDN `photo-1739826084732-1436a8908f20`)
 
-### Turquie
+### `edisu-pavia.jpg` — le Ponte Coperto sur le Tessin, Pavie, Italie
 
-- `diyanet-tdv-international.jpg` — une mosquee ottomane (identifiant CDN `photo-1466442929976-97f336a657be`)
-- `tubitak-2216-research-fellowship.jpg` — Anitkabir, Ankara (identifiant CDN `photo-1650802315195-f58a8663c9be`)
-- `turkiye-burslari-research.jpg` — les montgolfieres de Cappadoce (identifiant CDN `photo-1604156789095-3348604c0f43`)
-- `turkiye-burslari-success.jpg` — la tour de l'Horloge d'Izmir (identifiant CDN `photo-1701428588034-5893b2512a68`)
-- `ytb-isdb-joint-scholarship.jpg` — le dome turquoise du mausolee de Mevlana, Konya (identifiant CDN `photo-1698852785755-8fa52e11479a`)
+- **Photographe** : emanuele piantadosi ([@samuelep90](https://unsplash.com/@samuelep90))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/EvPrXb36xwc` (identifiant CDN `photo-1679098284781-1a211e7636a2`)
 
-### Corée du Sud
+### `ergo-emilia-romagna.jpg` — le campanile de Parme, Italie
 
-- `koica-ciat-scholarship.jpg` — le village de Gamcheon, Busan (identifiant CDN `photo-1672671187899-a10f547341f1`)
+- **Photographe** : Dima DallAcqua ([@dimadallacqua](https://unsplash.com/@dimadallacqua))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/mXZce6MiExM` (identifiant CDN `photo-1749680195704-f504f55054f9`)
 
-### Substitutions assumées
+### `invest-your-talent-italy.jpg` — Vérone et l'Adige, Italie
+
+- **Photographe** : Joshua Kettle ([@joshuakettle](https://unsplash.com/@joshuakettle))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/J3aCPmA1adM` (identifiant CDN `photo-1681477443350-45cfe74916e3`)
+
+### `scuola-normale-superiore-phd.jpg` — la tour Guinigi, Lucques, Italie
+
+- **Photographe** : Tom Podmore ([@tompodmore86](https://unsplash.com/@tompodmore86))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/PFQxF5re1_Q` (identifiant CDN `photo-1747593467598-9cf0a9e46f02`)
+
+### `daad-epos.jpg` — les tours de Francfort, Allemagne
+
+- **Photographe** : Matthias Münning ([@muenningmedia](https://unsplash.com/@muenningmedia))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/1xMO86Kejmg` (identifiant CDN `photo-1626447637943-4c9d412fa8cf`)
+
+### `daad-helmut-schmidt-programme.jpg` — l'Elbphilharmonie, Hambourg, Allemagne
+
+- **Photographe** : Jonas Tebbe ([@jonastebbe](https://unsplash.com/@jonastebbe))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/j22K61_1peg` (identifiant CDN `photo-1553547274-0df401ae03c9`)
+
+### `friedrich-ebert-stiftung.jpg` — Heidelberg, son pont et le Neckar, Allemagne
+
+- **Photographe** : Khaled Ali ([@khkar](https://unsplash.com/@khkar))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/YOQyzHQOzRw` (identifiant CDN `photo-1632660609710-ca2ee0c3425b`)
+
+### `heinrich-boell-stiftung.jpg` — la cathedrale de Cologne, Allemagne
+
+- **Photographe** : Andreas Weilguny ([@aweilguny](https://unsplash.com/@aweilguny))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/dvNhfTLVWYs` (identifiant CDN `photo-1608322460360-009ddc765b99`)
+
+### `konrad-adenauer-stiftung.jpg` — Bonn, Allemagne
+
+- **Photographe** : Martti Salmi ([@marttisalmi](https://unsplash.com/@marttisalmi))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/IzWWLp_Q2Rc` (identifiant CDN `photo-1715281762727-daf602648ea4`)
+
+### `rosa-luxemburg-stiftung.jpg` — Leipzig et son beffroi, Allemagne
+
+- **Photographe** : Siegfried Poepperl ([@siegfriedpoepperl](https://unsplash.com/@siegfriedpoepperl))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/wTM38ZnMqjk` (identifiant CDN `photo-1694098141071-8e1322860773`)
+
+### `abe-initiative-jica.jpg` — Yokohama de nuit, Japon
+
+- **Photographe** : Roberto Jr Saldana ([@roberto_j_saldana](https://unsplash.com/@roberto_j_saldana))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6abEDi5YszQ` (identifiant CDN `photo-1587474064565-922e1178ec8f`)
+
+### `honjo-international-scholarship.jpg` — une pagode de Kyoto, Japon
+
+- **Photographe** : Cosmin Georgian ([@cosmingeorgian](https://unsplash.com/@cosmingeorgian))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/gd3ysFyrsTQ` (identifiant CDN `photo-1578469645742-46cae010e5d4`)
+
+### `jasso-monbukagakusho-honors.jpg` — le chateau d'Osaka, Japon
+
+- **Photographe** : Fahrul Azmi ([@fahrulazmi](https://unsplash.com/@fahrulazmi))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/chTe2CU58L0` (identifiant CDN `photo-1575489129683-4f7d23379975`)
+
+### `jica-sdgs-global-leader.jpg` — le mont Fuji, Japon
+
+- **Photographe** : David Edelstein ([@jlhopes](https://unsplash.com/@jlhopes))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/N4DbvTUDikw` (identifiant CDN `photo-1526481280693-3bfa7568e0f3`)
+
+### `rotary-yoneyama-overseas.jpg` — les daims de Nara, Japon
+
+- **Photographe** : Timo Volz ([@magict1911](https://unsplash.com/@magict1911))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/tEOhkLuqmUI` (identifiant CDN `photo-1550303435-1703d8811aaa`)
+
+### `iheid-scholarships.jpg` — le Palais des Nations, Geneve, Suisse
+
+- **Photographe** : Salya T ([@salyastone](https://unsplash.com/@salyastone))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/VJ6uNHuEnqk` (identifiant CDN `photo-1679589164488-ca6dc6746af9`)
+
+### `unifr-research-scholarships.jpg` — la vieille ville de Fribourg et la Sarine, Suisse
+
+- **Photographe** : Patrick Robert Doyle ([@teapowered](https://unsplash.com/@teapowered))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/j6CsdJ7LIcc` (identifiant CDN `photo-1609770264759-fd0f26b0de92`)
+
+### `unige-excellence-master-fellowships.jpg` — le Jet d'eau de Geneve, Suisse
+
+- **Photographe** : Devam Jhabak ([@devam](https://unsplash.com/@devam))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/PZMNQ7ZlkAw` (identifiant CDN `photo-1633022326182-1b36700bc49a`)
+
+### `unil-master-grants.jpg` — la cathedrale de Lausanne, Suisse
+
+- **Photographe** : katia cuervo ([@studio_drom](https://unsplash.com/@studio_drom))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/gVvF0YAFL9U` (identifiant CDN `photo-1584469728290-46e7760c2d78`)
+
+### `zeno-karl-schindler-master-thesis.jpg` — Berne et les ponts de l'Aar, Suisse
+
+- **Photographe** : Tobias Reich ([@electerious](https://unsplash.com/@electerious))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/HaSP_2rSh_Y` (identifiant CDN `photo-1664459937096-d395cd77f8b8`)
+
+### `diyanet-tdv-international.jpg` — une mosquee ottomane, Turquie
+
+- **Photographe** : Daniel Burka ([@dburka](https://unsplash.com/@dburka))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/oR9ZisoF_NE` (identifiant CDN `photo-1466442929976-97f336a657be`)
+
+### `tubitak-2216-research-fellowship.jpg` — Anitkabir, Ankara, Turquie
+
+- **Photographe** : Thomas George ([@staticxg7](https://unsplash.com/@staticxg7))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/YFZwrwyLBzU` (identifiant CDN `photo-1650802315195-f58a8663c9be`)
+
+### `turkiye-burslari-research.jpg` — les montgolfieres de Cappadoce, Turquie
+
+- **Photographe** : Timur Garifov ([@timgarifov](https://unsplash.com/@timgarifov))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/p2RbLnqWPVY` (identifiant CDN `photo-1604156789095-3348604c0f43`)
+
+### `turkiye-burslari-success.jpg` — la tour de l'Horloge d'Izmir, Turquie
+
+- **Photographe** : Mehmet Korkmaz ([@thewood_man](https://unsplash.com/@thewood_man))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/4T9AXWrh8q8` (identifiant CDN `photo-1701428588034-5893b2512a68`)
+
+### `ytb-isdb-joint-scholarship.jpg` — le dome turquoise du mausolee de Mevlana, Konya, Turquie
+
+- **Photographe** : Hamza Şamil Yavuz ([@hmzsamil](https://unsplash.com/@hmzsamil))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Y9eVFEELqio` (identifiant CDN `photo-1698852785755-8fa52e11479a`)
+
+### `koica-ciat-scholarship.jpg` — le village de Gamcheon, Busan, Corée du Sud
+
+- **Photographe** : Luke Ow ([@luke_ow](https://unsplash.com/@luke_ow))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/mLKkqlqFiZ4` (identifiant CDN `photo-1672671187899-a10f547341f1`)
+
+#### Substitutions assumées
 
 - **`scuola-normale-superiore-phd`** reçoit **Lucques**, et non Pise. La
   Scuola Normale Superiore est pisane, mais Pise est déjà prise deux fois
@@ -598,53 +729,128 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 Dix-neuf photos ajoutées (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`) pour les bourses qui partageaient la photo de leur université liée avec une autre bourse du même pays. Voir `admin/expand-catalog-batch26.js` et `scripts/add-lot26-scholarship-photos.ps1`.
 
-Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Comme au lot 25, les noms de photographes ne figurent pas (même réserve de traçabilité) : les pages de recherche n'exposent que l'identifiant CDN.
+Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Photographes et pages retrouvés le 2026-09-24 comme au lot 25, par l'identifiant CDN exact. Deux restent introuvables par la recherche du site : `reach-oxford-scholarship.jpg` et `hse-into-olympiad.jpg`, dits comme tels ci-dessous.
 
 **Correctif lot 27 (2026-08-30)** : trois des dix-neuf identifiants de ce lot reprenaient une photo déjà utilisée ailleurs dans le dépôt (`hse-into-olympiad` ← la Saint-Basile d'`open-doors-scholarship.jpg`, `jads-japan-africa-dream` ← la Shibuya de `waseda.jpg`, `fao-hungarian-government-scholarship` ← le Parlement hongrois de `corvinus.jpg`) — le lot recréait, dans trois pays, exactement le défaut qu'il devait supprimer. Les trois fichiers ont été réécrits avec des photos inédites (`scripts/add-lot27-photo-fixes.ps1`) ; le champ `image` en base n'a pas changé — même nom de fichier — donc aucun lot Firestore n'accompagne ce correctif. Les trois entrées ci-dessous sont celles du lot 27.
 
 **Pourquoi le contrôle du lot 26 ne l'avait pas vu, et le garde-fou à reprendre dans tout futur lot de photos** : le script du lot 26 comparait les tailles des fichiers *du lot* entre eux — deux fichiers de noms différents portant la même photo sont invisibles à ce test dès lors que l'un des deux vient d'un lot antérieur. Le contrôle mesurait un indice (le nom de fichier) et non la chose (l'identifiant de la photo). `scripts/add-lot27-photo-fixes.ps1` ajoute le contrôle qui manquait : avant tout téléchargement, chaque identifiant CDN est cherché dans CE fichier, où toutes les photos du dépôt sont créditées avec le leur ; une occurrence sur une autre bourse arrête le script sans rien écrire. C'est le seul garde-fou qui attrape ce défaut.
 
-### Royaume-Uni
+### `clarendon-fund-scholarships.jpg` — les toits gothiques d'Oxford vus d'en haut, Royaume-Uni
 
-- `clarendon-fund-scholarships.jpg` — les toits gothiques d'Oxford vus d'en haut (identifiant CDN `photo-1472121779802-43c68a9f405f`)
-- `reach-oxford-scholarship.jpg` — une facade de college d'Oxford (identifiant CDN `photo-1568792923760-d70635a89fdc`)
-- `rhodes-scholarships-west-africa.jpg` — un quadrangle d'Oxford et sa pelouse (identifiant CDN `photo-1642612460433-a5d935c08d73`)
-- `weidenfeld-hoffmann-scholarships.jpg` — la pierre blonde d'Oxford sous un ciel bleu (identifiant CDN `photo-1612563958093-2c3bcfbd8760`)
-- `commonwealth-masters-scholarships.jpg` — Big Ben et le Parlement au couchant (identifiant CDN `photo-1745016176874-cd3ed3f5bfc6`)
-- `commonwealth-phd-scholarships.jpg` — le London Eye (identifiant CDN `photo-1546533658-8f1f550b9a4e`)
-- `commonwealth-shared-scholarships.jpg` — un pont sur la Tamise (identifiant CDN `photo-1560709889-eec6771309ff`)
-- `imperial-presidents-phd-scholarships.jpg` — une cabine telephonique rouge devant un batiment londonien (identifiant CDN `photo-1619447093155-3d646f597c91`)
+- **Photographe** : Sidharth Bhatia ([@sidharthbhatia](https://unsplash.com/@sidharthbhatia))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/_QstzxTWnXY` (identifiant CDN `photo-1472121779802-43c68a9f405f`)
 
-### Russie
+### `reach-oxford-scholarship.jpg` — une facade de college d'Oxford, Royaume-Uni
 
-- `spbu-open-olympiad.jpg` — les fontaines de Peterhof, Saint-Petersbourg (identifiant CDN `photo-1610197361600-33a3a5073cad`)
-- `hse-into-olympiad.jpg` — une station ornée du métro de Moscou (identifiant CDN `photo-1741171469811-553adc364411`, lot 27)
-- `hse-merit-scholarships.jpg` — un batiment moscovite reflete dans l'eau (identifiant CDN `photo-1561117937-45681fb935ad`)
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : identifiant CDN `photo-1568792923760-d70635a89fdc` sur Unsplash. La page de la photo et son auteur n'ont pas été retrouvés par la recherche du site le 2026-09-24.
 
-### Roumanie
+### `rhodes-scholarships-west-africa.jpg` — un quadrangle d'Oxford et sa pelouse, Royaume-Uni
 
-- `auf-eugen-ionescu.jpg` — la statue equestre de Matthias Corvin, Cluj-Napoca (identifiant CDN `photo-1678736680989-195226823176`)
-- `auf-petrache-poenaru.jpg` — le palais de la Culture et son horloge, Iasi (identifiant CDN `photo-1710877669376-7633d6f64678`)
-- `bourse-george-darie.jpg` — les maisons colorees du centre de Cluj-Napoca (identifiant CDN `photo-1583751636643-94790958040a`)
+- **Photographe** : Ray Harrington ([@raymondo600](https://unsplash.com/@raymondo600))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ZacBgK8SJd8` (identifiant CDN `photo-1642612460433-a5d935c08d73`)
 
-### Japon
+### `weidenfeld-hoffmann-scholarships.jpg` — la pierre blonde d'Oxford sous un ciel bleu, Royaume-Uni
 
-- `jads-japan-africa-dream.jpg` — un torii rouge sur un chemin forestier (identifiant CDN `photo-1601823984263-b87b59798b70`, lot 27)
-- `jj-wbgsp.jpg` — Tokyo vue du ciel (identifiant CDN `photo-1573456373835-579c408de263`)
+- **Photographe** : Ben Seymour ([@benseymour](https://unsplash.com/@benseymour))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/nqBUTBsDQNM` (identifiant CDN `photo-1612563958093-2c3bcfbd8760`)
 
-### Corée du Sud
+### `commonwealth-masters-scholarships.jpg` — Big Ben et le Parlement au couchant, Royaume-Uni
 
-- `snu-glo-harmony-scholarship.jpg` — un pavillon de palais seoulien (identifiant CDN `photo-1448523183439-d2ac62aca997`)
+- **Photographe** : Muuw ([@muuw_5272](https://unsplash.com/@muuw_5272))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/4cGMhhONVn8` (identifiant CDN `photo-1745016176874-cd3ed3f5bfc6`)
 
-### Hongrie
+### `commonwealth-phd-scholarships.jpg` — le London Eye, Royaume-Uni
 
-- `fao-hungarian-government-scholarship.jpg` — champs et lac vus du ciel, région du Balaton (identifiant CDN `photo-1725801719382-1e9db44b0066`, lot 27)
+- **Photographe** : Xavier Coiffic ([@xaviercoiffic](https://unsplash.com/@xaviercoiffic))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Yh6kKxGyf_A` (identifiant CDN `photo-1546533658-8f1f550b9a4e`)
 
-### Suisse
+### `commonwealth-shared-scholarships.jpg` — un pont sur la Tamise, Royaume-Uni
 
-- `epfl-edic-doctoral.jpg` — le campus de l'EPFL et les Alpes (identifiant CDN `photo-1699470762437-bd145c9042ee`)
+- **Photographe** : Gregoire Jeanneau ([@gregjeanneau](https://unsplash.com/@gregjeanneau))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/kZF170iTgv8` (identifiant CDN `photo-1560709889-eec6771309ff`)
 
-### Bourses qui conservent leur image partagée
+### `imperial-presidents-phd-scholarships.jpg` — une cabine telephonique rouge devant un batiment londonien, Royaume-Uni
+
+- **Photographe** : Stefan K ([@stefankst](https://unsplash.com/@stefankst))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/BDopH1gn4VU` (identifiant CDN `photo-1619447093155-3d646f597c91`)
+
+### `spbu-open-olympiad.jpg` — les fontaines de Peterhof, Saint-Petersbourg, Russie
+
+- **Photographe** : Dimitry B ([@dimitry_b](https://unsplash.com/@dimitry_b))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/pX43I7JF3kI` (identifiant CDN `photo-1610197361600-33a3a5073cad`)
+
+### `hse-into-olympiad.jpg` — une station ornée du métro de Moscou, Russie
+
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : identifiant CDN `photo-1741171469811-553adc364411` sur Unsplash. La page de la photo et son auteur n'ont pas été retrouvés par la recherche du site le 2026-09-24.
+- **Remplacement** : photo posée par le correctif du lot 27 (2026-08-30).
+
+### `hse-merit-scholarships.jpg` — un batiment moscovite reflete dans l'eau, Russie
+
+- **Photographe** : Nikita Tikhomirov ([@niki_mir](https://unsplash.com/@niki_mir))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/H56Byq5KoBE` (identifiant CDN `photo-1561117937-45681fb935ad`)
+
+### `auf-eugen-ionescu.jpg` — la statue equestre de Matthias Corvin, Cluj-Napoca, Roumanie
+
+- **Photographe** : Biro Zoltan ([@zoltanbiro1988](https://unsplash.com/@zoltanbiro1988))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Pt1a4mFBOOA` (identifiant CDN `photo-1678736680989-195226823176`)
+
+### `auf-petrache-poenaru.jpg` — le palais de la Culture et son horloge, Iasi, Roumanie
+
+- **Photographe** : Andrew Movia ([@movia](https://unsplash.com/@movia))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Q4H12FybRHs` (identifiant CDN `photo-1710877669376-7633d6f64678`)
+
+### `bourse-george-darie.jpg` — les maisons colorees du centre de Cluj-Napoca, Roumanie
+
+- **Photographe** : Tamas Pap ([@tamasp](https://unsplash.com/@tamasp))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/LC54UhNn95M` (identifiant CDN `photo-1583751636643-94790958040a`)
+
+### `jads-japan-africa-dream.jpg` — un torii rouge sur un chemin forestier, Japon
+
+- **Photographe** : Syuhei Inoue ([@_______life_](https://unsplash.com/@_______life_))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/kaoHI0iHJPM` (identifiant CDN `photo-1601823984263-b87b59798b70`)
+- **Remplacement** : photo posée par le correctif du lot 27 (2026-08-30).
+
+### `jj-wbgsp.jpg` — Tokyo vue du ciel, Japon
+
+- **Photographe** : Denys Nevozhai ([@dnevozhai](https://unsplash.com/@dnevozhai))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6ULy3pxuxL8` (identifiant CDN `photo-1573456373835-579c408de263`)
+
+### `snu-glo-harmony-scholarship.jpg` — un pavillon de palais seoulien, Corée du Sud
+
+- **Photographe** : Brady Bellini ([@brady_bellini](https://unsplash.com/@brady_bellini))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/t5dGNNQVwg8` (identifiant CDN `photo-1448523183439-d2ac62aca997`)
+
+### `fao-hungarian-government-scholarship.jpg` — champs et lac vus du ciel, région du Balaton, Hongrie
+
+- **Photographe** : Balint Miko ([@balint_miko](https://unsplash.com/@balint_miko))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/QaqcmGOr6kE` (identifiant CDN `photo-1725801719382-1e9db44b0066`)
+- **Remplacement** : photo posée par le correctif du lot 27 (2026-08-30).
+
+### `epfl-edic-doctoral.jpg` — le campus de l'EPFL et les Alpes, Suisse
+
+- **Photographe** : T Fang ([@tqfang](https://unsplash.com/@tqfang))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/V2jajmreOA4` (identifiant CDN `photo-1699470762437-bd145c9042ee`)
+
+#### Bourses qui conservent leur image partagée
 
 Une par groupe, pour éviter un téléchargement inutile : `mastercard-foundation-afox-oxford` garde `oxford.jpg`, `great-scholarships` garde `london.jpg`, `quota-gouvernement-russe` garde `moscow.jpg`, `politehnica-excellence-scholarship` garde `politehnica-bucuresti.jpg`, `utokyo-fellowship` garde `tokyo.jpg`, `snu-global-scholarship` garde `snu-seoul.jpg`, `ud-international-scholarship` garde `debrecen.jpg`, `epfl-master-excellence-fellowships` garde `lausanne.jpg`.
 
@@ -658,9 +864,12 @@ Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comm
 
 ---
 
-## Drapeaux (`assets/flags/`) — lot 31 (2026-08-30)
+## Drapeaux du Rwanda, du Ghana, du Kenya et de l'Égypte (`assets/flags/`, lot 31, 2026-08-30)
 
 `rw.svg` (Rwanda), `gh.svg` (Ghana), `ke.svg` (Kenya) et `eg.svg` (Egypte) proviennent du projet **flag-icons** (Panayiotis Lipiridis), recuperes via jsDelivr (`flag-icons@7.5.0`, dossier `flags/4x3/`).
+
+- **Contenu** : drapeaux du projet flag-icons, de Panayiotis Lipiridis
+- **Source** : https://github.com/lipis/flag-icons
 
 - **Licence** : [MIT](https://github.com/lipis/flag-icons/blob/main/LICENSE) — usage commercial autorise.
 - **Optimisation** : attribut `id` retire et indentation supprimee, dessin inchange. Le bouclier massai du Kenya et l'aigle de Saladin egyptien sont les traces officiels du projet source, volontairement non redessines — c'est pourquoi `eg.svg` (8,5 Ko) depasse la taille des drapeaux a bandes simples, comme `us.svg` (9,3 Ko) avant lui.
@@ -671,26 +880,85 @@ Lausanne et Jeddah ne passent pas non plus par `generate-city-srcset.mjs` : comm
 
 Treize photos DISTINCTES (quatre universites a Kigali, deux a Nairobi : chacune la sienne), chaque image regardee avant d'etre retenue et chaque identifiant verifie absent de ce fichier avant telechargement. References plafonnees a 2000px puis declinees en 400/800/1200/1600w (JPEG q92 mozjpeg + WebP + AVIF) par `scripts/add-lot31-photos.mjs` — jamais la taille d'origine servie. Les bourses du lot n'ont pas de photo propre (cascade : photo de l'universite rattachee), sauf Al-Azhar, orpheline volontaire.
 
-### Unsplash ([Unsplash License](https://unsplash.com/license))
+### `university-of-rwanda-kigali.jpg` — la skyline du centre de Kigali au couchant
 
-- `university-of-rwanda-kigali.jpg` — la skyline du centre de Kigali au couchant. Photographe : Jean Claude Akarikumutima (identifiant CDN `photo-1687986261123-b17f08f2796c`, page `b-HnOOPRfTI`)
-- `aims-kigali.jpg` — panorama des collines habitees de Kigali. Photographe : Protais Benjamin MUGENZI (identifiant CDN `photo-1708772565599-2c4e4b3ed9db`, page `K15V22xU1zs`)
-- `aims-accra.jpg` — la Black Star Gate (« Freedom and Justice »), place de l'Independance, Accra. Photographe : Ifeoluwa B. (identifiant CDN `photo-1630386226447-af0a955c1009`, page `-CgUhaShACE`)
-- `usiu-nairobi.jpg` — les tours du quartier de Westlands, Nairobi, dans la lumiere doree. Photographe : Amani Nation (identifiant CDN `photo-1611348524140-53c9a25263d6`, page `LTh5pGyvKAM`)
-- `icipe-nairobi.jpg` — girafe massai devant la skyline de Nairobi (parc national de Nairobi). Photographe : Grace Nandi (identifiant CDN `photo-1634662101368-fa8021773862`, page `7XA8SJ5ODq4`)
-- `auc-cairo.jpg` — felouque sur le Nil, la tour du Caire et la skyline, en paysage. Photographe : Alex Kotomanov (identifiant CDN `photo-1720400995876-506098f4c238`, page `987Ds8mF3JM`)
-- `senghor-alexandrie.jpg` — la citadelle de Qaitbay, Alexandrie. Photographe : Juan Nino (identifiant CDN `photo-1633624646814-3a61ed3e2847`, page `rdvqTZLaE-k`)
-- `al-azhar-cairo.jpg` (dossier `assets/images/scholarships/`) — les minarets et le dome de la mosquee Al-Azhar au-dessus des toits, Le Caire, en paysage. Photographe : Yousef Salhamoud (identifiant CDN `photo-1646763143121-1bbf5aaf2f2d`, page `1INRvy-Qg5s`)
+- **Photographe** : Jean Claude Akarikumutima
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/b-HnOOPRfTI` (identifiant CDN `photo-1687986261123-b17f08f2796c`)
 
-### Wikimedia Commons (licences CC a attribution obligatoire, a conserver tant que ces fichiers sont utilises)
+### `aims-kigali.jpg` — panorama des collines habitees de Kigali
+
+- **Photographe** : Protais Benjamin MUGENZI
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/K15V22xU1zs` (identifiant CDN `photo-1708772565599-2c4e4b3ed9db`)
+
+### `aims-accra.jpg` — la Black Star Gate (« Freedom and Justice »), place de l'Independance, Accra
+
+- **Photographe** : Ifeoluwa B.
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/-CgUhaShACE` (identifiant CDN `photo-1630386226447-af0a955c1009`)
+
+### `usiu-nairobi.jpg` — les tours du quartier de Westlands, Nairobi, dans la lumiere doree
+
+- **Photographe** : Amani Nation
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/LTh5pGyvKAM` (identifiant CDN `photo-1611348524140-53c9a25263d6`)
+
+### `icipe-nairobi.jpg` — girafe massai devant la skyline de Nairobi (parc national de Nairobi)
+
+- **Photographe** : Grace Nandi
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/7XA8SJ5ODq4` (identifiant CDN `photo-1634662101368-fa8021773862`)
+
+### `auc-cairo.jpg` — felouque sur le Nil, la tour du Caire et la skyline, en paysage
+
+- **Photographe** : Alex Kotomanov
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/987Ds8mF3JM` (identifiant CDN `photo-1720400995876-506098f4c238`)
+
+### `senghor-alexandrie.jpg` — la citadelle de Qaitbay, Alexandrie
+
+- **Photographe** : Juan Nino
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/rdvqTZLaE-k` (identifiant CDN `photo-1633624646814-3a61ed3e2847`)
+
+### `al-azhar-cairo.jpg` — les minarets et le dome de la mosquee Al-Azhar au-dessus des toits, Le Caire, en paysage
+
+- **Photographe** : Yousef Salhamoud
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/1INRvy-Qg5s` (identifiant CDN `photo-1646763143121-1bbf5aaf2f2d`)
 
 Revision du 2026-08-31, apres relecture : quatre photos remplacees. `cmu-africa-kigali` (feu d'artifice, format carre), `auc-cairo` et `al-azhar-cairo` (formats portrait, sujets coupes par le cadre 2:1 des cartes) et `alu-kigali` (meme scene de colline que `aims-kigali` — fichiers distincts n'est pas images distinctes). Les anciennes variantes ont ete supprimees ; regle appliquee aux 13 : ratio vise 3:2 ou plus large, refus sous 1,3.
 
-- `cmu-africa-kigali.jpg` — le dome du Kigali Convention Centre en vue aerienne de jour, quartier mitoyen du campus CMU-Africa. Auteur : Emmanuel Kwizera (Emmanuelkwizera), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:An aerial of Kigali Convention Center on June 19, 2019. Photo by Emmanuel Kwizera.jpg](https://commons.wikimedia.org/wiki/File:An_aerial_of_Kigali_Convention_Center_on_June_19,_2019._Photo_by_Emmanuel_Kwizera.jpg)
-- `alu-kigali.jpg` — Kigali de nuit sous la lune, skyline eclairee. Auteur : Adrien K, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/deed.en). Source : [File:Kigali2018.jpg](https://commons.wikimedia.org/wiki/File:Kigali2018.jpg)
-- `ashesi-berekuso.jpg` — la cour Archer Cornfield du campus d'Ashesi University, Berekuso, a l'heure bleue. Auteur : Gwumah, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Ashesi's Archer Cornfield Courtyard.jpg](https://commons.wikimedia.org/wiki/File:Ashesi%27s_Archer_Cornfield_Courtyard.jpg)
-- `knust-kumasi.jpg` — allee commercante arboree du campus de KNUST, Kumasi. Auteur : Jude Hammond, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Knust campus- Commercial area.jpg](https://commons.wikimedia.org/wiki/File:Knust_campus-_Commercial_area.jpg)
-- `jkuat-juja.jpg` — le batiment PAUSTI (Block B) sur le campus de la JKUAT, Juja — le sujet exact de la bourse de l'Universite panafricaine. Auteur : Gedankenstuecke, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:JKUAT - PAUSTI.jpg](https://commons.wikimedia.org/wiki/File:JKUAT_-_PAUSTI.jpg)
+### `cmu-africa-kigali.jpg` — le dome du Kigali Convention Centre en vue aerienne de jour, quartier mitoyen du campus CMU-Africa
+
+- **Auteur** : Emmanuel Kwizera (Emmanuelkwizera)
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:An aerial of Kigali Convention Center on June 19, 2019. Photo by Emmanuel Kwizera.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:An_aerial_of_Kigali_Convention_Center_on_June_19,_2019._Photo_by_Emmanuel_Kwizera.jpg)
+
+### `alu-kigali.jpg` — Kigali de nuit sous la lune, skyline eclairee
+
+- **Auteur** : Adrien K
+- **Licence** : [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Kigali2018.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kigali2018.jpg)
+
+### `ashesi-berekuso.jpg` — la cour Archer Cornfield du campus d'Ashesi University, Berekuso, a l'heure bleue
+
+- **Auteur** : Gwumah
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Ashesi's Archer Cornfield Courtyard.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ashesi%27s_Archer_Cornfield_Courtyard.jpg)
+
+### `knust-kumasi.jpg` — allee commercante arboree du campus de KNUST, Kumasi
+
+- **Auteur** : Jude Hammond
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Knust campus- Commercial area.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Knust_campus-_Commercial_area.jpg)
+
+### `jkuat-juja.jpg` — le batiment PAUSTI (Block B) sur le campus de la JKUAT, Juja — le sujet exact de la bourse de l'Universite panafricaine
+
+- **Auteur** : Gedankenstuecke
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:JKUAT - PAUSTI.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:JKUAT_-_PAUSTI.jpg)
 
 ---
 
@@ -707,19 +975,71 @@ QUATRE VILLES ETAIENT DEJA OCCUPEES, et c'est le point de vigilance de ce lot �
 
 La garde anti-doublon a ecarte trois candidates deja utilisees, dont le front de mer de Trieste, qui sert deja a `ardis-friuli-venezia-giulia.jpg`.
 
-### Unsplash ([Unsplash License](https://unsplash.com/license))
+### `unimi-milan.jpg` — le canal des Navigli a la tombee du jour, Milan
 
-- `unimi-milan.jpg` — le canal des Navigli a la tombee du jour, Milan. Photographe : Daniel Kirby (identifiant CDN `photo-1668784290849-aa5acd24edcd`, page `smCqxgrMeNY`)
-- `pavia.jpg` — le Ponte Coperto sur le Tessin au coucher du soleil, Pavie. Photographe : Isaac Maffeis (identifiant CDN `photo-1751098663661-da1b55e7e91f`, page `ZlhTV3OgAG0`)
-- `genes.jpg` — les toits de la vieille ville de Genes et le port au fond. Photographe : Ollie Tulett (identifiant CDN `photo-1693067038040-044640fad0f7`, page `7Xz2eY-Frg4`)
-- `bari.jpg` — le Teatro Margherita sur le vieux port de Bari, barques bleues au premier plan. Photographe : Maria Bobrova (identifiant CDN `photo-1564863756233-e90e6d2f264b`, page `wNxEJbExriM`)
-- `trieste.jpg` — le Canal Grande de Trieste au crepuscule. Photographe : Alain ROUILLER (identifiant CDN `photo-1718553124786-473af4238076`, page `DeLPPZ4VgNY`)
-- `scuola-normale-pise.jpg` — les quais de l'Arno a Pise, lumiere du soir. Photographe : alexey turenkov (identifiant CDN `photo-1540685889031-268df9f16803`, page `nYxfMY49PHg`)
-- `iheid-geneve.jpg` — le jet d'eau de Geneve vu du lac, le Saleve en arriere-plan. Photographe : Meizhi Lang (identifiant CDN `photo-1667758682790-c58fa23dc76f`, page `kk1ZpooGZqk`)
-- `fribourg.jpg` — la tour de la cathedrale et l'horloge de l'hotel de ville, vieille ville de Fribourg. Photographe : Artan (identifiant CDN `photo-1782564173527-0f435c646e72`, page `IZtimgrQlHY`)
-- `unige-geneve.jpg` — le pont du Mont-Blanc et le Rhone vus d'en haut, Geneve. Photographe : Xavier von Erlach (identifiant CDN `photo-1584200463394-bba4b2117e4d`, page `yEsQzAhDKQs`)
-- `unil-lausanne.jpg` — le chateau d'Ouchy au bord du Leman, Lausanne. Photographe : Alin Andersen (identifiant CDN `photo-1657557494887-59caee68dae8`, page `2JyQzpydsV8`)
-- `saint-petersbourg.jpg` — le palais d'Hiver et la Neva gelee, Saint-Petersbourg. Photographe : Evgenii Zolotarev (identifiant CDN `photo-1691583224443-1fefd0afaa51`, page `pj01T3IV_pM`)
+- **Photographe** : Daniel Kirby
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/smCqxgrMeNY` (identifiant CDN `photo-1668784290849-aa5acd24edcd`)
+
+### `pavia.jpg` — le Ponte Coperto sur le Tessin au coucher du soleil, Pavie
+
+- **Photographe** : Isaac Maffeis
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ZlhTV3OgAG0` (identifiant CDN `photo-1751098663661-da1b55e7e91f`)
+
+### `genes.jpg` — les toits de la vieille ville de Genes et le port au fond
+
+- **Photographe** : Ollie Tulett
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/7Xz2eY-Frg4` (identifiant CDN `photo-1693067038040-044640fad0f7`)
+
+### `bari.jpg` — le Teatro Margherita sur le vieux port de Bari, barques bleues au premier plan
+
+- **Photographe** : Maria Bobrova
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/wNxEJbExriM` (identifiant CDN `photo-1564863756233-e90e6d2f264b`)
+
+### `trieste.jpg` — le Canal Grande de Trieste au crepuscule
+
+- **Photographe** : Alain ROUILLER
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/DeLPPZ4VgNY` (identifiant CDN `photo-1718553124786-473af4238076`)
+
+### `scuola-normale-pise.jpg` — les quais de l'Arno a Pise, lumiere du soir
+
+- **Photographe** : alexey turenkov
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/nYxfMY49PHg` (identifiant CDN `photo-1540685889031-268df9f16803`)
+
+### `iheid-geneve.jpg` — le jet d'eau de Geneve vu du lac, le Saleve en arriere-plan
+
+- **Photographe** : Meizhi Lang
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/kk1ZpooGZqk` (identifiant CDN `photo-1667758682790-c58fa23dc76f`)
+
+### `fribourg.jpg` — la tour de la cathedrale et l'horloge de l'hotel de ville, vieille ville de Fribourg
+
+- **Photographe** : Artan
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/IZtimgrQlHY` (identifiant CDN `photo-1782564173527-0f435c646e72`)
+
+### `unige-geneve.jpg` — le pont du Mont-Blanc et le Rhone vus d'en haut, Geneve
+
+- **Photographe** : Xavier von Erlach
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/yEsQzAhDKQs` (identifiant CDN `photo-1584200463394-bba4b2117e4d`)
+
+### `unil-lausanne.jpg` — le chateau d'Ouchy au bord du Leman, Lausanne
+
+- **Photographe** : Alin Andersen
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/2JyQzpydsV8` (identifiant CDN `photo-1657557494887-59caee68dae8`)
+
+### `saint-petersbourg.jpg` — le palais d'Hiver et la Neva gelee, Saint-Petersbourg
+
+- **Photographe** : Evgenii Zolotarev
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/pj01T3IV_pM` (identifiant CDN `photo-1691583224443-1fefd0afaa51`)
 
 ---
 
@@ -729,7 +1049,11 @@ La garde anti-doublon a ecarte trois candidates deja utilisees, dont le front de
 
 Remplacee par une vraie vue de Milan, distincte a l'oeil des deux autres images milanaises du catalogue (le Duomo pour Bocconi, les Navigli de nuit pour l'Universita degli Studi au lot 32) : une troisieme scene, donc.
 
-- `milan.jpg` — le Castello Sforzesco et la fontaine de la piazza Castello, Milan. Photographe : Maria Cappelli, [Unsplash License](https://unsplash.com/license) (identifiant CDN `photo-1602059201105-276c01c1b657`, page `XsXqM4HmYxc`)
+### `milan.jpg` — le Castello Sforzesco et la fontaine de la piazza Castello, Milan
+
+- **Photographe** : Maria Cappelli
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/XsXqM4HmYxc` (identifiant CDN `photo-1602059201105-276c01c1b657`)
 
 Verifiees a la meme occasion, et CORRECTES : `bocconi.jpg` (le Duomo), `pisa.jpg` (la Piazza dei Miracoli et sa tour), `lausanne.jpg` (ville en terrasses au-dessus du Leman, Alpes de Savoie en face).
 
@@ -745,13 +1069,35 @@ INCIDENT du premier passage : la candidate initiale pour l'ENS (place du Pantheo
 
 PARIS ETAIT DEJA OCCUPEE DEUX FOIS (`paris.jpg` pour Sciences Po, `sorbonne.jpg`) : les deux parisiennes du lot prennent des sujets distincts, le Pantheon (l'ENS est rue d'Ulm, juste derriere) et les tours de la BnF (face au campus des Grands Moulins de Paris Cite).
 
-### Unsplash ([Unsplash License](https://unsplash.com/license))
+### `paris-saclay-gif.jpg` — les batiments Gustave-Eiffel et Francis-Bouygues de CentraleSupelec sur le campus de Paris-Saclay, Gif-sur-Yvette
 
-- `paris-saclay-gif.jpg` — les batiments Gustave-Eiffel et Francis-Bouygues de CentraleSupelec sur le campus de Paris-Saclay, Gif-sur-Yvette. Photographe : Philippe Gras (identifiant CDN `photo-1617182926345-205718965035`, page `WIHa4vSUKow`)
-- `ens-ulm-paris.jpg` — la facade et le dome du Pantheon sous un ciel de nuages, Paris. Photographe : Kreshen (identifiant CDN `photo-1565200380227-ede88b62b5a0`, page `pF7MZSCYsN4`)
-- `lyon.jpg` — Lyon en vue aerienne : la Saone, le Vieux-Lyon et la colline de Fourviere. Photographe : Willian Justen de Vasconcellos (identifiant CDN `photo-1682249301492-c117bddca579`, page `Q8W2RhZgO6U`)
-- `grenoble.jpg` — les « bulles » du telepherique de la Bastille au-dessus de la ville, montagnes enneigees au fond, Grenoble. Photographe : Fabe collage (identifiant CDN `photo-1580920950500-597f23bd6f72`, page `diqJhQtHHNk`)
-- `paris-cite-bnf.jpg` — les quatre tours de la BnF Francois-Mitterrand vues du pont de Bercy, en noir et blanc. Photographe : FELIXFELIX FELIX (identifiant CDN `photo-1768913124310-d53597c80ea3`, page `nNqG3PewSGc`)
+- **Photographe** : Philippe Gras
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/WIHa4vSUKow` (identifiant CDN `photo-1617182926345-205718965035`)
+
+### `ens-ulm-paris.jpg` — la facade et le dome du Pantheon sous un ciel de nuages, Paris
+
+- **Photographe** : Kreshen
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/pF7MZSCYsN4` (identifiant CDN `photo-1565200380227-ede88b62b5a0`)
+
+### `lyon.jpg` — Lyon en vue aerienne : la Saone, le Vieux-Lyon et la colline de Fourviere
+
+- **Photographe** : Willian Justen de Vasconcellos
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Q8W2RhZgO6U` (identifiant CDN `photo-1682249301492-c117bddca579`)
+
+### `grenoble.jpg` — les « bulles » du telepherique de la Bastille au-dessus de la ville, montagnes enneigees au fond, Grenoble
+
+- **Photographe** : Fabe collage
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/diqJhQtHHNk` (identifiant CDN `photo-1580920950500-597f23bd6f72`)
+
+### `paris-cite-bnf.jpg` — les quatre tours de la BnF Francois-Mitterrand vues du pont de Bercy, en noir et blanc
+
+- **Photographe** : FELIXFELIX FELIX
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/nNqG3PewSGc` (identifiant CDN `photo-1768913124310-d53597c80ea3`)
 
 ---
 
@@ -761,21 +1107,66 @@ Rattrapage de la regle du catalogue : chaque bourse porte SA photo (un monument 
 
 `bourse-emile-boutmy.jpg` est REMPLACEE (elle montrait la pyramide du Louvre, comme `paris.jpg` de Sciences Po : meme monument, deux fichiers) — l'entree precedente de ce fichier pour cette image est caduque.
 
-### Unsplash ([Unsplash License](https://unsplash.com/license)) — dossier `assets/images/scholarships/`, JPEG 2000 + 400/800/1200/1600w
+### `bourse-emile-boutmy.jpg` — le musee d'Orsay vu de la Seine au couchant, Paris
 
-- `bourse-emile-boutmy.jpg` — le musee d'Orsay vu de la Seine au couchant, Paris. Photographe : T (@t0nn) (identifiant CDN `photo-1764929316321-a920a59306df`, page `pYVT_YWvj3Y`)
-- `ens-psl-selection-internationale.jpg` — la facade du palais du Luxembourg et son jardin, Paris. Photographe : Mikael Padeiro (identifiant CDN `photo-1778397277715-5587af2a38a7`, page `s7oVdTjjKhs`)
-- `smarts-up-universite-paris-cite.jpg` — la facade de Notre-Dame de Paris sous un ciel charge. Photographe : Marcel Strauß (identifiant CDN `photo-1574870310056-79c4b3c7d449`, page `t9yW6tegIRU`)
-- `france-excellence-major.jpg` — l'Arc de Triomphe en contre-plongee, ciel bleu, Paris. Photographe : ian kelsall (identifiant CDN `photo-1595540089942-545def48cf3e`, page `KX5ZQkluQ9U`)
-- `programme-bourses-france-senegal.jpg` — les pylones dores du pont Alexandre-III et la verriere du Grand Palais, Paris. Photographe : Sinisa Lekovic (identifiant CDN `photo-1747464362908-8bc10e50ca3f`, page `arPLE2yYHRU`)
-- `polytechnique-concours-international-fui.jpg` — le dome dore des Invalides au-dessus des toits, Paris. Photographe : Mikael Padeiro (identifiant CDN `photo-1773671334580-5b61c34a7b56`, page `-1v5OV58dm0`)
-- `ens-lyon-ampere-scholarships.jpg` — la basilique de Fourviere sur sa colline boisee, Lyon. Photographe : Salya T (identifiant CDN `photo-1677389931416-9832636048ff`, page `zNnpb7NjPBs`)
-- `uga-idex-master-scholarships.jpg` — les facades colorees des quais de l'Isere, Grenoble. Photographe : Christian Attard (identifiant CDN `photo-1720717374256-cb67e1dae73b`, page `mKCXxdlAl1A`)
-- `paris-saclay-international-masters-scholarship.jpg` — la cour de Marbre du chateau de Versailles. Photographe : Louis Paulin (identifiant CDN `photo-1667752920461-a5ea0883f438`, page `FUxXFfgbyOU`)
+- **Photographe** : T (@t0nn)
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/pYVT_YWvj3Y` (identifiant CDN `photo-1764929316321-a920a59306df`)
 
-### Wikimedia Commons (licence CC a attribution obligatoire, a conserver tant que ce fichier est utilise) — dossier `assets/images/cities/`
+### `ens-psl-selection-internationale.jpg` — la facade du palais du Luxembourg et son jardin, Paris
 
-- `polytechnique-palaiseau.jpg` (+ 400/800/1200/1600w en JPEG, WebP et AVIF) — le campus de l'Ecole polytechnique vu du lac, Palaiseau. Auteur : David Monniaux, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en). Source : [File:Ecole Polytechnique France seen from lake DSC03389.JPG](https://commons.wikimedia.org/wiki/File:Ecole_Polytechnique_France_seen_from_lake_DSC03389.JPG). Original 2592x1944 (ratio 1,33), redimensionne a 2000px.
+- **Photographe** : Mikael Padeiro
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/s7oVdTjjKhs` (identifiant CDN `photo-1778397277715-5587af2a38a7`)
+
+### `smarts-up-universite-paris-cite.jpg` — la facade de Notre-Dame de Paris sous un ciel charge
+
+- **Photographe** : Marcel Strauß
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/t9yW6tegIRU` (identifiant CDN `photo-1574870310056-79c4b3c7d449`)
+
+### `france-excellence-major.jpg` — l'Arc de Triomphe en contre-plongee, ciel bleu, Paris
+
+- **Photographe** : ian kelsall
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/KX5ZQkluQ9U` (identifiant CDN `photo-1595540089942-545def48cf3e`)
+
+### `programme-bourses-france-senegal.jpg` — les pylones dores du pont Alexandre-III et la verriere du Grand Palais, Paris
+
+- **Photographe** : Sinisa Lekovic
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/arPLE2yYHRU` (identifiant CDN `photo-1747464362908-8bc10e50ca3f`)
+
+### `polytechnique-concours-international-fui.jpg` — le dome dore des Invalides au-dessus des toits, Paris
+
+- **Photographe** : Mikael Padeiro
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/-1v5OV58dm0` (identifiant CDN `photo-1773671334580-5b61c34a7b56`)
+
+### `ens-lyon-ampere-scholarships.jpg` — la basilique de Fourviere sur sa colline boisee, Lyon
+
+- **Photographe** : Salya T
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/zNnpb7NjPBs` (identifiant CDN `photo-1677389931416-9832636048ff`)
+
+### `uga-idex-master-scholarships.jpg` — les facades colorees des quais de l'Isere, Grenoble
+
+- **Photographe** : Christian Attard
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/mKCXxdlAl1A` (identifiant CDN `photo-1720717374256-cb67e1dae73b`)
+
+### `paris-saclay-international-masters-scholarship.jpg` — la cour de Marbre du chateau de Versailles
+
+- **Photographe** : Louis Paulin
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/FUxXFfgbyOU` (identifiant CDN `photo-1667752920461-a5ea0883f438`)
+
+### `polytechnique-palaiseau.jpg` (+ 400/800/1200/1600w en JPEG, WebP et AVIF) — le campus de l'Ecole polytechnique vu du lac, Palaiseau
+
+- **Auteur** : David Monniaux
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Ecole Polytechnique France seen from lake DSC03389.JPG — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ecole_Polytechnique_France_seen_from_lake_DSC03389.JPG)
+- **Déclinaisons** : Original 2592x1944 (ratio 1,33), redimensionne a 2000px.
 
 ---
 
@@ -783,35 +1174,126 @@ Rattrapage de la regle du catalogue : chaque bourse porte SA photo (un monument 
 
 Dix-huit etablissements, dix-huit photos de ville, aucune image partagee. Sujets choisis pour ne doubler aucun sujet deja en place (Paris : Louvre, Sorbonne, Pantheon, BnF, tour Eiffel, Orsay, Luxembourg, Notre-Dame, Arc de Triomphe, pont Alexandre-III, Invalides ; Lyon : vue aerienne, Fourviere ; Grenoble ; Versailles ; Gif). Produites par `scripts/add-lot36-photos.mjs` (reference 2000px + 400/800/1200/1600w en JPEG q92 mozjpeg, WebP et AVIF), chaque image regardee apres telechargement (planche des dix-huit), ratios 1,46 a 1,78.
 
-### Unsplash ([Unsplash License](https://unsplash.com/license))
+### `strasbourg.jpg` — maisons a colombages de la Petite France au bord de l'Ill, Strasbourg
 
-- `strasbourg.jpg` — maisons a colombages de la Petite France au bord de l'Ill, Strasbourg. Photographe : Lucile Noiriel (identifiant CDN `photo-1596036986070-e84592a19917`, page `Cq4BqP4IYN4`)
-- `marseille.jpg` — le Vieux-Port et ses mats, Marseille. Photographe : Sebastien Devocelle (identifiant CDN `photo-1759244569310-0c4fa51434ff`, page `qetNTyxJRcs`)
-- `toulouse.jpg` — la facade du Capitole sur sa place, Toulouse. Photographe : Korng Sok (identifiant CDN `photo-1650707199496-b02442055332`, page `vNyGKzCUfAU`)
-- `bordeaux.jpg` — la place de la Bourse reflechie dans le miroir d'eau, Bordeaux. Photographe : Wojciech Rzepka (identifiant CDN `photo-1698608216843-67ae1151b2b8`, page `ZtrpZX8ZGx8`)
-- `lille.jpg` — la Vieille Bourse et le beffroi de la chambre de commerce, Grand-Place de Lille. Photographe : Martin Robac (identifiant CDN `photo-1764671708519-447591cd8179`, page `riAzFTGPCGc`)
-- `montpellier.jpg` — la place de la Comedie et son opera, Montpellier. Photographe : Hector J. Rivas (identifiant CDN `photo-1666886677737-2cd1f108e080`, page `2DxcRRxedUQ`)
-- `nantes.jpg` — le Grand Elephant des Machines de l'ile, Nantes. Photographe : Pascal Bernardon (identifiant CDN `photo-1676283898167-addc4238bee8`, page `LxJ5FHD495Y`)
-- `rennes.jpg` — la place du Parlement de Bretagne, Rennes. Photographe : Thanh Ly (identifiant CDN `photo-1724516042952-63ee061f6980`, page `t3LUVgkXnCg`)
-- `nancy.jpg` — la place Stanislas et ses grilles dorees, Nancy. Photographe : Gerard GRIFFAY (identifiant CDN `photo-1614891202431-e4ba6b3d9edb`, page `s2bAvgNZ6vI`)
-- `nice.jpg` — la baie des Anges et la promenade des Anglais vues de la colline du Chateau, Nice. Photographe : Pierre Goiffon (identifiant CDN `photo-1784840232787-74d27de8557c`, page `aCkb4PPolGI`)
-- `lyon-tete-d-or.jpg` (Universite Claude Bernard Lyon 1) — allee de platanes du parc de la Tete d'Or en automne, Lyon. Photographe : Thomas K (identifiant CDN `photo-1761144459402-80182d476772`, page `uvCaQjAPx60`)
-- `lyon-bellecour.jpg` (INSA Lyon) — la place Bellecour, la statue de Louis XIV et Fourviere a l'horizon, Lyon. Photographe : Tuan P. (identifiant CDN `photo-1775359226314-d74827afffcb`, page `3v_bZOM_XTs`)
-- `paris-sacre-coeur.jpg` (Paris 1 Pantheon-Sorbonne) — la basilique du Sacre-Coeur entre les arbres, Montmartre. Photographe : DAVID TAPIA SAN MARTIN (identifiant CDN `photo-1561370665-7e266065fce1`, page `NgiEm-SbXZg`)
-- `paris-fondation-louis-vuitton.jpg` (Dauphine-PSL) — les voiles de verre de la Fondation Louis Vuitton, bois de Boulogne. Photographe : Louis Colbee (identifiant CDN `photo-1597041151430-e11bed3c1973`, page `N_2OP0Ul7us`)
-- `paris-pont-neuf.jpg` (Mines Paris-PSL) — le Pont-Neuf et la pointe de l'ile de la Cite au couchant, Paris. Photographe : Bastien Nvs (identifiant CDN `photo-1624209060513-2b1b76ed0caa`, page `SkgPTTk_eXE`)
+- **Photographe** : Lucile Noiriel
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Cq4BqP4IYN4` (identifiant CDN `photo-1596036986070-e84592a19917`)
 
-### Wikimedia Commons (licences CC a attribution obligatoire, a conserver tant que ces fichiers sont utilises)
+### `marseille.jpg` — le Vieux-Port et ses mats, Marseille
 
-- `hec-jouy-en-josas.jpg` — le chateau du campus HEC Paris, facade sud, Jouy-en-Josas. Auteur : DXR, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Chateau, HEC Paris, Jouy-en-Josas, South view 20160501 1.jpg](https://commons.wikimedia.org/wiki/File:Chateau,_HEC_Paris,_Jouy-en-Josas,_South_view_20160501_1.jpg). Original 7184x4908 (ratio 1,46), redimensionne a 2000px.
-- `essec-cergy.jpg` — le batiment principal du campus ESSEC, Cergy. Auteur : Rdavout (attribution presumee d'apres la mention de copyright du fichier, aucun auteur lisible par machine), [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/deed.en). Source : [File:ESSEC campus cergy.jpg](https://commons.wikimedia.org/wiki/File:ESSEC_campus_cergy.jpg). Original 2560x1704 (ratio 1,50), redimensionne a 2000px.
-- `saint-denis-basilique.jpg` (Sorbonne Paris Nord) — l'abbaye de Saint-Denis, son jardin a la francaise et le transept sud de la basilique, Saint-Denis. Auteur : MOSSOT, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en). Source : [File:Saint-Denis - Basilique Saint-Denis et l'abbaye -2.JPG](https://commons.wikimedia.org/wiki/File:Saint-Denis_-_Basilique_Saint-Denis_et_l%27abbaye_-2.JPG). Original 4896x3672 (ratio 1,33), redimensionne a 2000px. Remplace `saint-denis-stade-de-france.jpg` (interieur du stade, refuse le 2026-09-03) — les fichiers `saint-denis-stade-de-france*` ne sont plus references : a supprimer du depot.
+- **Photographe** : Sebastien Devocelle
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/qetNTyxJRcs` (identifiant CDN `photo-1759244569310-0c4fa51434ff`)
+
+### `toulouse.jpg` — la facade du Capitole sur sa place, Toulouse
+
+- **Photographe** : Korng Sok
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/vNyGKzCUfAU` (identifiant CDN `photo-1650707199496-b02442055332`)
+
+### `bordeaux.jpg` — la place de la Bourse reflechie dans le miroir d'eau, Bordeaux
+
+- **Photographe** : Wojciech Rzepka
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ZtrpZX8ZGx8` (identifiant CDN `photo-1698608216843-67ae1151b2b8`)
+
+### `lille.jpg` — la Vieille Bourse et le beffroi de la chambre de commerce, Grand-Place de Lille
+
+- **Photographe** : Martin Robac
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/riAzFTGPCGc` (identifiant CDN `photo-1764671708519-447591cd8179`)
+
+### `montpellier.jpg` — la place de la Comedie et son opera, Montpellier
+
+- **Photographe** : Hector J. Rivas
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/2DxcRRxedUQ` (identifiant CDN `photo-1666886677737-2cd1f108e080`)
+
+### `nantes.jpg` — le Grand Elephant des Machines de l'ile, Nantes
+
+- **Photographe** : Pascal Bernardon
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/LxJ5FHD495Y` (identifiant CDN `photo-1676283898167-addc4238bee8`)
+
+### `rennes.jpg` — la place du Parlement de Bretagne, Rennes
+
+- **Photographe** : Thanh Ly
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/t3LUVgkXnCg` (identifiant CDN `photo-1724516042952-63ee061f6980`)
+
+### `nancy.jpg` — la place Stanislas et ses grilles dorees, Nancy
+
+- **Photographe** : Gerard GRIFFAY
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/s2bAvgNZ6vI` (identifiant CDN `photo-1614891202431-e4ba6b3d9edb`)
+
+### `nice.jpg` — la baie des Anges et la promenade des Anglais vues de la colline du Chateau, Nice
+
+- **Photographe** : Pierre Goiffon
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/aCkb4PPolGI` (identifiant CDN `photo-1784840232787-74d27de8557c`)
+
+### `lyon-tete-d-or.jpg` (Universite Claude Bernard Lyon 1) — allee de platanes du parc de la Tete d'Or en automne, Lyon
+
+- **Photographe** : Thomas K
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/uvCaQjAPx60` (identifiant CDN `photo-1761144459402-80182d476772`)
+
+### `lyon-bellecour.jpg` (INSA Lyon) — la place Bellecour, la statue de Louis XIV et Fourviere a l'horizon, Lyon
+
+- **Photographe** : Tuan P.
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/3v_bZOM_XTs` (identifiant CDN `photo-1775359226314-d74827afffcb`)
+
+### `paris-sacre-coeur.jpg` (Paris 1 Pantheon-Sorbonne) — la basilique du Sacre-Coeur entre les arbres, Montmartre
+
+- **Photographe** : DAVID TAPIA SAN MARTIN
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/NgiEm-SbXZg` (identifiant CDN `photo-1561370665-7e266065fce1`)
+
+### `paris-fondation-louis-vuitton.jpg` (Dauphine-PSL) — les voiles de verre de la Fondation Louis Vuitton, bois de Boulogne
+
+- **Photographe** : Louis Colbee
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/N_2OP0Ul7us` (identifiant CDN `photo-1597041151430-e11bed3c1973`)
+
+### `paris-pont-neuf.jpg` (Mines Paris-PSL) — le Pont-Neuf et la pointe de l'ile de la Cite au couchant, Paris
+
+- **Photographe** : Bastien Nvs
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/SkgPTTk_eXE` (identifiant CDN `photo-1624209060513-2b1b76ed0caa`)
+
+### `hec-jouy-en-josas.jpg` — le chateau du campus HEC Paris, facade sud, Jouy-en-Josas
+
+- **Auteur** : DXR
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Chateau, HEC Paris, Jouy-en-Josas, South view 20160501 1.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Chateau,_HEC_Paris,_Jouy-en-Josas,_South_view_20160501_1.jpg)
+- **Déclinaisons** : Original 7184x4908 (ratio 1,46), redimensionne a 2000px.
+
+### `essec-cergy.jpg` — le batiment principal du campus ESSEC, Cergy
+
+- **Auteur** : Rdavout (attribution presumee d'apres la mention de copyright du fichier, aucun auteur lisible par machine)
+- **Licence** : [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:ESSEC campus cergy.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ESSEC_campus_cergy.jpg)
+- **Déclinaisons** : Original 2560x1704 (ratio 1,50), redimensionne a 2000px.
+
+### `saint-denis-basilique.jpg` (Sorbonne Paris Nord) — l'abbaye de Saint-Denis, son jardin a la francaise et le transept sud de la basilique, Saint-Denis
+
+- **Auteur** : MOSSOT
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Saint-Denis - Basilique Saint-Denis et l'abbaye -2.JPG — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Saint-Denis_-_Basilique_Saint-Denis_et_l%27abbaye_-2.JPG)
+- **Déclinaisons** : Original 4896x3672 (ratio 1,33), redimensionne a 2000px. Remplace `saint-denis-stade-de-france.jpg` (interieur du stade, refuse le 2026-09-03) — les fichiers `saint-denis-stade-de-france*` ne sont plus references : a supprimer du depot.
 
 ---
 
-## Drapeaux (`assets/flags/`) — lot 37 (2026-09-03)
+## Drapeaux de la Tunisie et de l'Algérie (`assets/flags/`, lot 37, 2026-09-03)
 
 `tn.svg` (Tunisie) et `dz.svg` (Algerie) proviennent du projet **flag-icons** (Panayiotis Lipiridis), tarball npm `flag-icons@7.5.0`, dossier `flags/4x3/`. Licence [MIT](https://github.com/lipis/flag-icons/blob/main/LICENSE). Attribut `id` retire et indentation supprimee, dessin inchange (meme traitement que rw/gh/ke/eg au lot 31).
+
+- **Contenu** : drapeaux du projet flag-icons, de Panayiotis Lipiridis
+- **Licence** : [MIT](https://github.com/lipis/flag-icons/blob/main/LICENSE) — usage commercial autorisé.
+- **Source** : https://github.com/lipis/flag-icons
 
 ---
 
@@ -819,23 +1301,78 @@ Dix-huit etablissements, dix-huit photos de ville, aucune image partagee. Sujets
 
 Regle du catalogue appliquee des le lot : une photo de ville par universite (`assets/images/cities/`, JPEG + WebP + AVIF), un monument par bourse (`assets/images/scholarships/`, JPEG seul), aucune image partagee. Produites par `scripts/add-lot37-photos.mjs` (listes de candidats Unsplash puis Commons, garde de ratio 1,3), chaque image regardee apres telechargement. Deux candidates Unsplash ECARTEES apres examen : Tlemcen `FlRrOkGxAck` (mur de maison anonyme) et Oran `vEob3rMRUcQ` (cour a arcades non identifiable) ; trois fichiers Commons de Tlemcen ecartes par la garde de ratio (portraits).
 
-### Unsplash ([Unsplash License](https://unsplash.com/license))
+### `tunis.jpg` — facade pavoisee de Bab Bhar, centre de Tunis
 
-- `tunis.jpg` — facade pavoisee de Bab Bhar, centre de Tunis. Photographe : Hammami Ghazi (identifiant CDN `photo-1674764186749-ad9beea35e85`, page `6XuI9V3C51I`)
-- `carthage.jpg` (Universite de Carthage) — les ruines romaines de Carthage face a la mer. Photographe : Martin Casagrand (identifiant CDN `photo-1728361328876-74e396d3defc`, page `5jaj-mU6VW0`)
-- `sousse.jpg` — la medina et le ribat de Sousse en vue aerienne. Photographe : Amal Bourkhis (identifiant CDN `photo-1624921768886-5d12e2cdc584`, page `V87fJdumBY0`)
-- `sfax.jpg` — les toits de la medina de Sfax. Photographe : Taha Loukil (identifiant CDN `photo-1594424015009-59bef65fa9ec`, page `WFhrK6g1DKA`)
-- `alger-baie.jpg` (USTHB) — la baie d'Alger vue des hauteurs. Photographe : Sid Ahmed SAOUD (identifiant CDN `photo-1652614706616-a49396a2ee29`, page `RCsOlTBX5Tw`)
-- `alger-centre.jpg` (Universite d'Alger 1) — place et escaliers d'Alger-Centre. Photographe : Ondrej Bocek (identifiant CDN `photo-1751788109158-a46f8fbacc08`, page `YcJjjAv1TA0`)
-- `constantine.jpg` — pont suspendu et gorges du Rhummel, Constantine. Photographe : zenad nabil (identifiant CDN `photo-1664403775784-8a0b32536a0c`, page `fvqCkzsWv-4`)
-- `oran.jpg` — Oran, son port et le clocher de Santa Cruz. Photographe : Brahim Abderrahman (identifiant CDN `photo-1653815129496-445487ae0479`, page `jGlnjl6fHhQ`)
-- `bourses-cooperation-tunisie.jpg` (dossier `scholarships/`) — Sidi Bou Said, blanc et bleu au-dessus de la mer. Photographe : Noelle Guirola (identifiant CDN `photo-1607869861980-da5f9b8b4969`, page `5NqUXa6pZDM`)
-- `bourses-cooperation-algerie.jpg` (dossier `scholarships/`) — le Maqam Echahid (memorial du Martyr), Alger. Photographe : Halima Bouchouicha (identifiant CDN `photo-1658996403259-5a2dd3efc6fa`, page `ESkI6T_Ef5A`)
-- `pan-african-university-pauwes.jpg` (dossier `scholarships/`) — le minaret de Mansourah, Tlemcen. Photographe : Halima Bouchouicha (identifiant CDN `photo-1669097564242-3c6c75aea9a0`, page `ysL_MNXjJ_4`)
+- **Photographe** : Hammami Ghazi
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6XuI9V3C51I` (identifiant CDN `photo-1674764186749-ad9beea35e85`)
 
-### Wikimedia Commons (licence CC a attribution obligatoire, a conserver tant que ce fichier est utilise)
+### `carthage.jpg` (Universite de Carthage) — les ruines romaines de Carthage face a la mer
 
-- `tlemcen.jpg` (Universite Abou Bekr Belkaid) — la muraille crenelee de Mansourah, Tlemcen. Auteur : Sambott27, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en). Source : [File:Muraille de mansourah,Tlemcen..jpg](https://commons.wikimedia.org/wiki/File:Muraille_de_mansourah,Tlemcen..jpg). Original 3615x1930 (ratio 1,87), redimensionne a 2000px.
+- **Photographe** : Martin Casagrand
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/5jaj-mU6VW0` (identifiant CDN `photo-1728361328876-74e396d3defc`)
+
+### `sousse.jpg` — la medina et le ribat de Sousse en vue aerienne
+
+- **Photographe** : Amal Bourkhis
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/V87fJdumBY0` (identifiant CDN `photo-1624921768886-5d12e2cdc584`)
+
+### `sfax.jpg` — les toits de la medina de Sfax
+
+- **Photographe** : Taha Loukil
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/WFhrK6g1DKA` (identifiant CDN `photo-1594424015009-59bef65fa9ec`)
+
+### `alger-baie.jpg` (USTHB) — la baie d'Alger vue des hauteurs
+
+- **Photographe** : Sid Ahmed SAOUD
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/RCsOlTBX5Tw` (identifiant CDN `photo-1652614706616-a49396a2ee29`)
+
+### `alger-centre.jpg` (Universite d'Alger 1) — place et escaliers d'Alger-Centre
+
+- **Photographe** : Ondrej Bocek
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/YcJjjAv1TA0` (identifiant CDN `photo-1751788109158-a46f8fbacc08`)
+
+### `constantine.jpg` — pont suspendu et gorges du Rhummel, Constantine
+
+- **Photographe** : zenad nabil
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/fvqCkzsWv-4` (identifiant CDN `photo-1664403775784-8a0b32536a0c`)
+
+### `oran.jpg` — Oran, son port et le clocher de Santa Cruz
+
+- **Photographe** : Brahim Abderrahman
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/jGlnjl6fHhQ` (identifiant CDN `photo-1653815129496-445487ae0479`)
+
+### `bourses-cooperation-tunisie.jpg` — Sidi Bou Said, blanc et bleu au-dessus de la mer
+
+- **Photographe** : Noelle Guirola
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/5NqUXa6pZDM` (identifiant CDN `photo-1607869861980-da5f9b8b4969`)
+
+### `bourses-cooperation-algerie.jpg` — le Maqam Echahid (memorial du Martyr), Alger
+
+- **Photographe** : Halima Bouchouicha
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ESkI6T_Ef5A` (identifiant CDN `photo-1658996403259-5a2dd3efc6fa`)
+
+### `pan-african-university-pauwes.jpg` — le minaret de Mansourah, Tlemcen
+
+- **Photographe** : Halima Bouchouicha
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ysL_MNXjJ_4` (identifiant CDN `photo-1669097564242-3c6c75aea9a0`)
+
+### `tlemcen.jpg` (Universite Abou Bekr Belkaid) — la muraille crenelee de Mansourah, Tlemcen
+
+- **Auteur** : Sambott27
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Muraille de mansourah,Tlemcen..jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Muraille_de_mansourah,Tlemcen..jpg)
+- **Déclinaisons** : Original 3615x1930 (ratio 1,87), redimensionne a 2000px.
 
 ## Lot 76-77 — Maroc et Canada (2026-09-24) : 31 photos de ville
 
@@ -1026,3 +1563,168 @@ Une photo par ville (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons 
 - **Photographe** : Photostore HK
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/NdTG0o-uZ5M` (identifiant CDN `photo-1573452996379-d0e623356520`)
+
+## Photos de ville les plus anciennes : crédits retrouvés le 2026-09-24
+
+Quarante et une photos de ville du catalogue, posées avant le lot 11, n'avaient AUCUNE entrée dans ce fichier. Aucune métadonnée dans les fichiers (seulement des profils de couleur), aucun historique lisible : leur source a été recherchée image par image sur Unsplash, le 2026-09-24. Méthode : pour chaque ville, les résultats de la recherche du site sont comparés au fichier par une empreinte visuelle (hachage de différences 8x8, puis 16x16) et par le rapport largeur/hauteur de l'original. Une photo n'est retenue que si les deux empreintes coïncident à quelques bits près, là où deux images sans rapport diffèrent de la moitié des bits. Vingt-trois sont retrouvées ci-dessous ; les autres sont listées plus bas, sans crédit inventé.
+
+### `ankara.jpg` (Bilkent University) — la citadelle d'Ankara et son drapeau
+
+- **Photographe** : Cengiz Özarpat ([@cengizozarpat](https://unsplash.com/@cengizozarpat))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ozW-I1FsDxc` (identifiant CDN `photo-1728113278031-30d24597673d`)
+
+### `berlin.jpg` (Humboldt-Universität zu Berlin) — une rue de Berlin et son tramway
+
+- **Photographe** : Birk Enwald ([@birkenwald](https://unsplash.com/@birkenwald))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Uyc-eSjCVF8` (identifiant CDN `photo-1657709890753-e389c0700265`)
+
+### `bologna.jpg` (Università di Bologna) — les toits de Bologne vus d'en haut
+
+- **Photographe** : Felix M. Dorn ([@allaperto](https://unsplash.com/@allaperto))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/9ndxwqoZNj4` (identifiant CDN `photo-1558477280-b16731651f21`)
+
+### `brussels.jpg` (Université Libre de Bruxelles) — les façades de la Grand-Place, Bruxelles
+
+- **Photographe** : Alex Vasey ([@alexrvasey](https://unsplash.com/@alexrvasey))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/v5j_fxYUwaI` (identifiant CDN `photo-1572886071978-7c60b5b3e506`)
+
+### `daejeon.jpg` (KAIST) — la tour Hanbit du parc de l'Expo, Daejeon
+
+- **Photographe** : Juwhan Yu ([@yoofan](https://unsplash.com/@yoofan))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/8AaYqXalJqs` (identifiant CDN `photo-1663038509302-a20dc8a24ad8`)
+
+### `edinburgh.jpg` (University of Edinburgh) — le monument Dugald Stewart sur Calton Hill, Édimbourg
+
+- **Photographe** : Julia Solonina ([@julie_soul](https://unsplash.com/@julie_soul))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/NSFoU92bD_Y` (identifiant CDN `photo-1571044880241-95d4c9aa06f5`)
+
+### `ghent.jpg` (Ghent University) — les tours de Gand
+
+- **Photographe** : Christian Lue ([@christianlue](https://unsplash.com/@christianlue))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/k1E6994P3t8` (identifiant CDN `photo-1606755767976-498efc6c5a4e`)
+
+### `guangzhou.jpg` (Sun Yat-sen University) — les tours de Guangzhou
+
+- **Photographe** : Loeng Lig ([@loenglig](https://unsplash.com/@loenglig))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/v5TwMWDaHDI` (identifiant CDN `photo-1583996829982-823143cc975a`)
+
+### `gyor.jpg` (Széchenyi István University) — l'hôtel de ville de Győr
+
+- **Photographe** : Aleksei Tertychnyi ([@pinelab](https://unsplash.com/@pinelab))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/T-959bcmKL4` (identifiant CDN `photo-1694357463215-90f275631997`)
+
+### `hamburg.jpg` (Universität Hamburg) — un clocher de Hambourg vu par une fenêtre
+
+- **Photographe** : Julia Solonina ([@julie_soul](https://unsplash.com/@julie_soul))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/LACHGS9fKmc` (identifiant CDN `photo-1552325476-5df397d5b547`)
+
+### `hangzhou.jpg` (Zhejiang University) — le lac de l'Ouest et les tours de Hangzhou
+
+- **Photographe** : 一只猫的橘 ([@seelean](https://unsplash.com/@seelean))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/bF2WOPepves` (identifiant CDN `photo-1696162605544-9ff69aef6c35`)
+
+### `hannover.jpg` (Leibniz Universität Hannover) — le Welfenschloss, bâtiment principal de l'université, Hanovre
+
+- **Photographe** : Lu Moreno ([@lumrn](https://unsplash.com/@lumrn))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Ny2mrBjwROI` (identifiant CDN `photo-1662555500038-3d9ed651fc06`)
+
+### `harbin.jpg` (Harbin Institute of Technology) — le parc de glace et de neige de Harbin
+
+- **Photographe** : lin zhaohai ([@haydenlllam](https://unsplash.com/@haydenlllam))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/HjnrjKUUhlY` (identifiant CDN `photo-1716308352490-271359910f14`)
+
+### `koc-istanbul.jpg` (Koç University) — la forteresse de Rumeli Hisarı sur le Bosphore, Istanbul
+
+- **Photographe** : Seval Torun ([@sevaltorun](https://unsplash.com/@sevaltorun))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/hlyhoh9aZFk` (identifiant CDN `photo-1713124725466-7f23dca6d725`)
+
+### `liege.jpg` (Université de Liège) — la tour des Finances, Liège
+
+- **Photographe** : Henri Viatour ([@henriskk](https://unsplash.com/@henriskk))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/of2gRDyEBwA` (identifiant CDN `photo-1631553071797-19d0bdefe519`)
+
+### `miskolc.jpg` (University of Miskolc) — le palais de Lillafüred dans la brume, Miskolc
+
+- **Photographe** : Ádám Berkecz ([@aberkecz](https://unsplash.com/@aberkecz))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/c_275koBV-4` (identifiant CDN `photo-1579988936083-16d8215bb12e`)
+
+### `padova.jpg` (Università di Padova) — le Prato della Valle, Padoue
+
+- **Photographe** : Clovis Wood ([@clo_wd](https://unsplash.com/@clo_wd))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Jxgo97_mWPg` (identifiant CDN `photo-1652987363943-5c7a2e6e18ae`)
+
+### `pecs.jpg` (University of Pécs) — la cathédrale de Pécs et ses quatre tours
+
+- **Photographe** : Anna Spoljar ([@annaspoljar](https://unsplash.com/@annaspoljar))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/gcdL8avuyaY` (identifiant CDN `photo-1661975782597-6fc5aafce028`)
+
+### `sabanci-istanbul.jpg` (Sabancı University) — le Bosphore et la mosquée de Çamlıca, Istanbul
+
+- **Photographe** : Dmitry Fomin ([@dafomin](https://unsplash.com/@dafomin))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/TSMVU9lQXp4` (identifiant CDN `photo-1787159757933-f42553258cb2`)
+
+### `tianjin.jpg` (Tianjin University) — les tours de Tianjin au crépuscule
+
+- **Photographe** : Julius Carmine ([@juliuscarmine](https://unsplash.com/@juliuscarmine))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/o_fSNj4IAMI` (identifiant CDN `photo-1706498133899-f1cf5a6af53e`)
+
+### `turin.jpg` (Politecnico di Torino) — la Mole Antonelliana et les Alpes, Turin
+
+- **Photographe** : Fabio Fistarol ([@fabiofistarol](https://unsplash.com/@fabiofistarol))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/VjA_PSSsOHI` (identifiant CDN `photo-1610651219730-6b580d616e72`)
+
+### `vancouver.jpg` (University of British Columbia) — Coal Harbour et les tours de Vancouver dans l'eau
+
+- **Photographe** : Mike Benna ([@mbenna](https://unsplash.com/@mbenna))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/WHHY-iBp3aI` (identifiant CDN `photo-1559511260-66a654ae982a`)
+
+### `xiamen.jpg` (Xiamen University) — les tours de Xiamen et la mer
+
+- **Photographe** : Woo Winter ([@yunyingwin](https://unsplash.com/@yunyingwin))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/T_e8pMv8vsQ` (identifiant CDN `photo-1683967494331-bd98da74fc50`)
+
+### Provenance non établie : seize photos de ville
+
+La provenance de ces photos n'a pas pu être établie : le 2026-09-24, aucune correspondance n'a été trouvée dans les résultats de la recherche Unsplash pour leur ville. Elles ne portent donc aucun crédit, plutôt qu'un crédit inventé. Toute personne qui reconnaît son travail peut nous écrire : le crédit sera ajouté, ou la photo retirée. Fichiers concernés : `capetown.jpg` (University of Cape Town), `chengdu.jpg` (Sichuan University), `gothenburg.jpg` (University of Gothenburg), `hefei.jpg` (University of Science and Technology of China), `johannesburg.jpg` (Wits), `karts-seoul.jpg` (K-Arts), `krakow.jpg` (Jagiellonian University), `leuven.jpg` (KU Leuven), `lisbon.jpg` (ULisboa), `marrakech.jpg` (Cadi Ayyad), `namur.jpg` (UNamur), `pohang.jpg` (POSTECH), `porto.jpg` (U.Porto), `stockholm.jpg` (KTH), `warsaw.jpg` (University of Warsaw), `wuhan.jpg` (Wuhan University).
+
+Deux réserves de SUJET, notées au même contrôle : `porto.jpg` ne montre qu'un immeuble vu depuis un parking, sans rien qui dise Porto ; `wuhan.jpg` montre deux pagodes jumelles au bord d'un lac, que rien ne rattache avec certitude à Wuhan. Deux autres fichiers montraient une AUTRE ville et ont été remplacés par le lot 80, crédité plus bas : `godollo.jpg` (Esztergom) et `szeged.jpg` (Budapest).
+
+## Lot 80 : deux photos de ville remplacées (2026-09-24)
+
+`godollo.jpg` montrait Esztergom et `szeged.jpg` montrait Budapest. Les deux fichiers sont réécrits sous le même nom par `scripts/add-lot80-photos.mjs`, puis regardés avant d'être crédités.
+
+### `godollo.jpg` (Hungarian University of Agriculture and Life Sciences) — le palais royal de Gödöllő, vu de sa cour arrière
+
+- **Photographe** : Linda Gerbec ([@lsgerbec](https://unsplash.com/@lsgerbec))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/J8z_McvlZEQ` (identifiant CDN `photo-1660987286221-6e74fd13d731`)
+
+### `szeged.jpg` (University of Szeged) — l'église votive et la place du Dôme, Szeged
+
+- **Auteur** : Pasztilla aka Attila Terbócs
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Szeged, Dóm tér 2021 01.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Szeged,_D%C3%B3m_t%C3%A9r_2021_01.jpg)
+- **Déclinaisons** : original 2400x1600 (ratio 1,50), redimensionné à 2000px.

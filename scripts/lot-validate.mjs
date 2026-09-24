@@ -400,6 +400,12 @@ const niveauxDuLien = restriction ? niveaux.filter((n) => restriction.includes(n
 
 // Universités retenues pour un lien externe, après la garde pays.
 const universitesValidees = [];
+// Universités DÉJÀ EN BASE (2026-09-24, CGRS D → établissements
+// canadiens) : un lien vers une bourse elle-même en base peut viser
+// des établissements qui ne sont pas dans le lot. Leur existence et
+// leur pays ne se lisent qu'en base : `analyser` les contrôle, avec
+// la même garde pays stricte, et bloque sinon.
+const universitesEnBase = [];
 
 // Second vecteur de la garde du portail : un lien de création qui
 // poserait `applicationUrl` sur les programmes qu'il engendre. Le
@@ -415,6 +421,29 @@ for (const uid of universityIds) {
 
 const uni = UNIVERSITIES.find((u) => u.id === uid);
 if (!uni) {
+// Seul un lien vers une bourse DÉJÀ EN BASE peut viser une
+// université hors lot : une bourse créée par le lot n'a de sens
+// qu'avec les établissements que le lot connaît.
+if (externe && typeof uid === "string" && uid) {
+// Un identifiant de document, jamais un chemin (« a/b » viserait
+// une sous-collection), et un pays DÉCLARÉ : la garde pays se fait
+// en base, elle n'a de sens que si le lien dit où il va.
+if (!/^[a-z0-9-]+$/.test(uid)) {
+erreurs.push(`Lien "${lien.scholarshipId}" : identifiant d'université invalide "${uid}".`);
+continue;
+}
+if (!lien.pays) {
+erreurs.push(`Lien "${lien.scholarshipId}" : "pays" obligatoire pour viser une université déjà en base ("${uid}").`);
+continue;
+}
+if (universitesEnBase.includes(uid)) {
+erreurs.push(`Lien "${lien.scholarshipId}" : université "${uid}" en double.`);
+continue;
+}
+universitesEnBase.push(uid);
+universitesValidees.push(uid);
+continue;
+}
 erreurs.push(`Lien "${lien.scholarshipId}" : université hors lot "${uid}".`);
 continue;
 }
@@ -457,6 +486,8 @@ language: lien.language || "",
 // Les niveaux de la bourse se lisent en base : la RESTRICTION, elle,
 // est déclarée par le lot et doit voyager jusqu'à `analyser`.
 niveaux: restriction,
+pays: lien.pays || "",
+universitesEnBase,
 motif: lien.motif || ""
 });
 }

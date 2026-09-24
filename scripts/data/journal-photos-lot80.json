@@ -1,0 +1,23 @@
+[
+  {
+    "base": "godollo",
+    "source": "Unsplash",
+    "sujet": "le palais royal de Gödöllő, vu de sa cour arrière",
+    "auteur": "Linda Gerbec",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/J8z_McvlZEQ",
+    "cdn": "photo-1660987286221-6e74fd13d731",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "szeged",
+    "source": "Wikimedia Commons",
+    "sujet": "l'église votive et la place du Dôme, Szeged",
+    "auteur": "Pasztilla aka Attila Terbócs",
+    "licence": "CC BY-SA 4.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Szeged%2C_D%C3%B3m_t%C3%A9r_2021_01.jpg",
+    "fichier": "Szeged, Dóm tér 2021 01.jpg",
+    "original": "2400x1600",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  }
+]

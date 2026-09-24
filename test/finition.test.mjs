@@ -74,6 +74,20 @@ assert.equal(entrees, attendu.sections.length,
 assert.equal(lignes, attendu.sections.reduce((n, s) => n + s.puces.length, 0),
 "le nombre de lignes d'attribution ne correspond plus — relancer le générateur");
 
+// Aucun titre vide (2026-09-24 : « Drapeaux — lot 31 » perdait tout
+// son titre au tri du vocabulaire de chantier).
+assert.equal((page.match(/<h[23]>\s*<\/h[23]>/g) || []).length, 0, "credits.html publie un titre vide");
+
+// Toute photo sous licence Commons (CC BY, CC BY-SA) doit monter sur
+// la page avec son auteur : l'attribution y est OBLIGATOIRE. Avant le
+// 2026-09-24, les lots 31 à 37 écrivaient leurs crédits en lignes
+// plates que le générateur ne lisait pas.
+const commons = (lire("CREDITS.md").match(/commons\.wikimedia\.org\/wiki\/File:[^)\s]+/g) || []);
+assert.ok(commons.length >= 10, "les crédits Commons ne sont plus trouvés dans CREDITS.md");
+for (const lien of new Set(commons)) {
+assert.ok(page.includes(lien.replace(/&/g, "&amp;")), `credits.html ne crédite pas ${lien}`);
+}
+
 // Et la page reste une PAGE : titre, canonique, retour à l'accueil.
 assert.match(page, /<link rel="canonical" href="https:\/\/fitzuniverse\.com\/credits\.html">/);
 assert.match(page, /<h1>Crédits photo<\/h1>/);

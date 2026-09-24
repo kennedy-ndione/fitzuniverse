@@ -17,6 +17,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { validerPatches, validerLot, refusPortailProgramme, boursesSansProgramme, COLLECTIONS_PATCHABLES, refusDatesDeLecture } from "../scripts/lot-validate.mjs";
 import * as lot33 from "../scripts/data/lot33-portails.mjs";
@@ -335,6 +336,38 @@ test("LINKS.niveaux sur une bourse DÉJÀ EN BASE : la restriction voyage jusqu'
   assert.deepEqual(r.erreurs, []);
   assert.equal(r.liensExternes.length, 1);
   assert.deepEqual(r.liensExternes[0].niveaux, ["Master", "Doctorat"]);
+});
+
+test("LINKS vers une bourse DÉJÀ EN BASE : des universités DÉJÀ EN BASE peuvent être visées, contrôlées à analyser", () => {
+  const r = validerLot({
+    LINKS: [{ scholarshipId: "deja-en-base", pays: "Canada", universityIds: ["mcgill", "laval"], niveaux: ["Doctorat"] }]
+  });
+  assert.deepEqual(r.erreurs, []);
+  assert.equal(r.liensExternes.length, 1);
+  assert.deepEqual(r.liensExternes[0].universitesEnBase, ["mcgill", "laval"]);
+  assert.equal(r.liensExternes[0].pays, "Canada");
+  // analyser relit chaque université hors lot, et bloque si elle manque
+  // ou si son pays diffère du lien.
+  const runner = readFileSync(new URL("../scripts/lot.mjs", import.meta.url), "utf8");
+  assert.match(runner, /for \(const uid of lien\.universitesEnBase \|\| \[\]\)/);
+  assert.match(runner, /garde pays — "\$\{uid\}" est en/);
+});
+
+test("LINKS vers une bourse CRÉÉE par le lot : une université hors lot reste refusée", () => {
+  const r = validerLot({
+    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Canada", levels: ["Doctorat"] } }],
+    LINKS: [{ scholarshipId: "s1", pays: "Canada", universityIds: ["hors-lot"] }]
+  });
+  assert.ok(r.erreurs.some((e) => /université hors lot "hors-lot"/.test(e)));
+});
+
+test("LINKS vers des universités DÉJÀ EN BASE : pays obligatoire, identifiant propre, pas de doublon", () => {
+  const sansPays = validerLot({ LINKS: [{ scholarshipId: "deja-en-base", universityIds: ["mcgill"] }] });
+  assert.ok(sansPays.erreurs.some((e) => /"pays" obligatoire/.test(e)));
+  const chemin = validerLot({ LINKS: [{ scholarshipId: "deja-en-base", pays: "Canada", universityIds: ["universities/x"] }] });
+  assert.ok(chemin.erreurs.some((e) => /identifiant d'université invalide/.test(e)));
+  const double = validerLot({ LINKS: [{ scholarshipId: "deja-en-base", pays: "Canada", universityIds: ["mcgill", "mcgill"] }] });
+  assert.ok(double.erreurs.some((e) => /en double/.test(e)));
 });
 
 // ============================================================

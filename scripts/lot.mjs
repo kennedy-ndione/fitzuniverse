@@ -214,9 +214,15 @@ return { donnees, empreinte, chemin };
 // corrigé le 2026-09-24 après un faux positif sur les 14 universités
 // du lot 76 (Maroc).
 function serialiserStable(valeur) {
+// Une Date (ou tout objet qui sait se sérialiser) passe par son toJSON,
+// comme avec JSON.stringify : sans cela, deux dates différentes
+// donneraient toutes deux "{}".
+if (valeur && typeof valeur.toJSON === "function") return serialiserStable(valeur.toJSON());
 if (Array.isArray(valeur)) return `[${valeur.map(serialiserStable).join(",")}]`;
 if (valeur && typeof valeur === "object") {
-const cles = Object.keys(valeur).sort();
+// Une clé à `undefined` n'existe pas une fois écrite en base : on
+// l'ignore, comme JSON.stringify, pour ne pas créer de faux écart.
+const cles = Object.keys(valeur).filter((c) => valeur[c] !== undefined).sort();
 return `{${cles.map((c) => `${JSON.stringify(c)}:${serialiserStable(valeur[c])}`).join(",")}}`;
 }
 return JSON.stringify(valeur);
@@ -363,6 +369,27 @@ bloquant = true;
 continue;
 }
 
+// Universités hors lot : elles doivent exister en base, dans le pays
+// annoncé par le lien (garde pays stricte, comme pour celles du lot).
+let universiteManquante = false;
+for (const uid of lien.universitesEnBase || []) {
+const snapU = await db.collection("universities").doc(uid).get();
+if (!snapU.exists) {
+err(`ERREUR : université "${uid}" absente de la base et absente du lot — rien à lier.`);
+universiteManquante = true;
+continue;
+}
+const paysBase = snapU.data().country || "";
+if (!paysBase || paysBase !== (lien.pays || "")) {
+err(`ERREUR : garde pays — "${uid}" est en "${paysBase || "?"}" mais le lien "${lien.scholarshipId}" annonce "${lien.pays || "?"}".`);
+universiteManquante = true;
+}
+}
+if (universiteManquante) {
+bloquant = true;
+continue;
+}
+
 for (const uid of lien.universityIds) {
 for (const niveau of niveaux) {
 const programme = {
@@ -437,7 +464,7 @@ continue;
 }
 
 const changements = Object.keys(patch.champs).filter(
-(cle) => JSON.stringify(enBase[cle]) !== JSON.stringify(patch.champs[cle])
+(cle) => serialiserStable(enBase[cle]) !== serialiserStable(patch.champs[cle])
 );
 
 if (!changements.length) {

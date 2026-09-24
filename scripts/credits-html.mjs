@@ -95,7 +95,16 @@ function titrePublic(brut) {
 // visiteur comment le site est fabriqué, pas d'où vient la photo.
 const sansChemin = brut.replace(/\s*—\s*`[^`]*`\s*$/, "");
 const sansParenthese = sansChemin.replace(/\s*\([^)]*\)\s*$/, "").trim();
-return enrichir(sansParenthese || sansChemin.trim() || brut.trim());
+// Un numéro de lot dans un titre (« Drapeaux — lot 31 ») faisait
+// tomber TOUT le titre au tri des phrases : la page publiait un <h2>
+// vide (constaté le 2026-09-24). On retire la mention, pas le titre.
+const sansLot = (sansParenthese || sansChemin.trim() || brut.trim())
+.replace(/\s*[,—–]?\s*\blots?\s*\d+(?:[-–]\d+)?\b\s*[,:]?/gi, " ")
+.replace(/\s{2,}/g, " ")
+.trim();
+const titre = enrichir(sansLot);
+if (!titre.replace(/<[^>]*>/g, "").trim()) throw new Error(`Titre de crédit vide après nettoyage : « ${brut} »`);
+return titre;
 }
 
 export function convertir(markdown) {
