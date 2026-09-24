@@ -123,7 +123,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-abdelmalek-essaadi-tetouan</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-abou-bekr-belkaid-tlemcen</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-alger-1-benyoucef-benkhedda-alger</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=universite-cadi-ayyad-marrakech</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=universite-cadi-ayyad-marrakech</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-chouaib-doukkali-el-jadida</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-claude-bernard-lyon-1-villeurbanne</loc><lastmod>2026-09-07</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-constantine-1-freres-mentouri-constantine</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
@@ -156,7 +156,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-du-quebec-en-outaouais-gatineau</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-euromed-de-fes</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-grenoble-alpes-grenoble</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=universite-hassan-ii-casablanca</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=universite-hassan-ii-casablanca</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-hassan-premier-settat</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-ibn-tofail-kenitra</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-ibn-zohr-agadir</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
@@ -165,7 +165,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-laval-quebec</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-libre-de-bruxelles-bruxelles</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-mohammed-premier-oujda</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=universite-mohammed-v-rabat</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=universite-mohammed-v-rabat</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-mohammed-vi-des-sciences-et-de-la-sante-casablanca</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-mohammed-vi-polytechnique-benguerir</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-moulay-ismail-meknes</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>

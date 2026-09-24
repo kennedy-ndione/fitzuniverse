@@ -168,7 +168,9 @@ Roumanie: { etablissements: 2, coutsVerifies: 0 },
 Turquie: { etablissements: 6, coutsVerifies: 3 },
 // Relevé du 2026-09-24, lots 76 et 77 : 14 établissements marocains
 // et 17 canadiens de plus, tous les canadiens avec leurs frais.
-Maroc: { etablissements: 19, coutsVerifies: 5 },
+// Lot 82 (même jour) : les 13 publics marocains passent à 0 DH (place
+// gratuite par l'AMCI). Seule l'UIC reste sans prix.
+Maroc: { etablissements: 19, coutsVerifies: 18 },
 Italie: { etablissements: 16, coutsVerifies: 9 },
 Allemagne: { etablissements: 3, coutsVerifies: 2 },
 Canada: { etablissements: 20, coutsVerifies: 20 },
