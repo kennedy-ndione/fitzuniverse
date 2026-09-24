@@ -94,6 +94,18 @@ assert.ok(bordeaux && bordeaux.name && bordeaux.country === "France" && bordeaux
 // que c'est un fait vérifié à la source et non un trou (elles portent
 // `voieAdmission` à la place — js/voie-admission.js).
 const VOIE_AU_LIEU_DUN_PORTAIL = [
+// Lot 76 (2026-09-24) : les dix établissements publics marocains
+// ajoutés, tous par la voie diplomatique (AMCI), aucun dépôt direct.
+"institut-agronomique-veterinaire-hassan-ii-rabat",
+"universite-abdelmalek-essaadi-tetouan",
+"universite-chouaib-doukkali-el-jadida",
+"universite-hassan-premier-settat",
+"universite-ibn-tofail-kenitra",
+"universite-ibn-zohr-agadir",
+"universite-mohammed-premier-oujda",
+"universite-moulay-ismail-meknes",
+"universite-sidi-mohamed-ben-abdellah-fes",
+"universite-sultan-moulay-slimane-beni-mellal",
 "universite-cadi-ayyad-marrakech",
 "universite-de-carthage-tunis",
 "universite-de-sfax-sfax",

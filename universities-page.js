@@ -20,6 +20,10 @@ import { formaterDate, etatCarteUniversite } from "./js/echeance.js";
 // normalisation que le rapprochement de candidature — un seul module.
 import { normaliserTitre } from "./js/candidature-catalogue.js";
 
+// La fiche d'établissement (lot 76-77, 2026-09-24) — voir l'en-tête de
+// js/fiche-universite.js. Une seule fonction écrit son adresse.
+import { adresseFiche } from "./js/fiche-adresse.js";
+
 // Page publique, en accès libre — voir la note dans universities.css.
 // Aucun garde d'authentification ici, volontairement : le catalogue est
 // une information publique, jamais verrouillée derrière un compte ou
@@ -33,6 +37,16 @@ import { normaliserTitre } from "./js/candidature-catalogue.js";
 // université), jamais via un champ texte sur le profil.
 
 const LEVEL_ORDER = ["Licence", "Master", "Doctorat"];
+
+// Lot 76-77 (2026-09-24) : une université SANS programme — les
+// établissements ajoutés pour la préinscription — ne sortait d'aucun
+// filtre de niveau et n'affichait aucun niveau, puisque les niveaux se
+// lisaient sur ses programmes. Ses frais VÉRIFIÉS, niveau par niveau,
+// disent aussi quels cycles elle ouvre. Réservé aux universités sans
+// programme : les autres gardent exactement leur comportement.
+function niveauxDesFrais(university) {
+return LEVEL_ORDER.filter((n) => lireFrais(university, n).etat === "verifie");
+}
 
 
 
@@ -142,7 +156,15 @@ country: university.country,
 university: university.name
 });
 
-window.location.href = `scholarship-details.html?id=${university.primaryProgramId}`;
+// Lot 76-77 (2026-09-24) : la carte mène à la FICHE DE L'ÉTABLISSEMENT,
+// qui liste TOUS ses programmes. Avant, elle menait au premier programme
+// trouvé (les autres restaient invisibles) et, pour une université sans
+// programme, à « Cette opportunité n'est plus disponible ». Seule
+// exception : la page ouverte depuis une bourse (?scholarshipId=…), où
+// l'étudiant cherche CE programme-là.
+window.location.href = scholarshipIdFilter && university.primaryProgramId
+? `scholarship-details.html?id=${university.primaryProgramId}`
+: adresseFiche(university.firestoreId);
 
 }
 
@@ -300,8 +322,10 @@ exoneration: lireExoneration(university)
 // enrichie plutôt que dupliquée.
 function buildCardModel(university, programsForUniversity, photoVariant) {
 
-const levels = [...new Set(programsForUniversity.map((p) => p.level).filter(Boolean))]
-.sort((a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b));
+const levels = programsForUniversity.length
+? [...new Set(programsForUniversity.map((p) => p.level).filter(Boolean))]
+.sort((a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b))
+: niveauxDesFrais(university);
 
 const cout = coutPour(university, levels);
 
@@ -332,7 +356,7 @@ levels,
 scholarshipTitles,
 candidature,
 language: languages[0] || "",
-primaryProgramId: programsForUniversity[0] ? programsForUniversity[0].firestoreId : university.firestoreId,
+primaryProgramId: programsForUniversity[0] ? programsForUniversity[0].firestoreId : "",
 photoVariant,
 cout
 };
@@ -364,7 +388,9 @@ const programsForUniversity = allPrograms.filter((p) => p.universityId === unive
 const universityLevels = programsForUniversity.map((p) => p.level);
 
 return (
-(!level || universityLevels.includes(level)) &&
+// « Licence / Master / Doctorat » : le niveau des trois programmes AMCI
+// d'origine, écrit en un seul champ — il ne sortait d'aucun filtre.
+(!level || universityLevels.some((l) => String(l || "").split(" / ").includes(level)) || (!programsForUniversity.length && niveauxDesFrais(university).includes(level))) &&
 (!cost || coutPour(university, universityLevels.filter(Boolean)).bande === cost) &&
 (!search ||
 normaliserTitre(university.name || "").includes(search) ||

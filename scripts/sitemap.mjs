@@ -129,6 +129,29 @@ priority: close ? 0.4 : (p.ouverteVerifieeLe ? 0.6 : 0.5)
 
 }
 
+/** Les fiches d'ÉTABLISSEMENT (universite.html, lot 76-77, 2026-09-24) :
+ *  une par université du catalogue. `lastmod` : la plus récente des
+ *  dates de LECTURE portées par la fiche (frais, exonération, démarche) ;
+ *  à défaut, la date de l'instantané. Priorité 0,6 : c'est la page où
+ *  mène chaque carte de universities.html. */
+export function fichesEtablissements(catalogue) {
+
+const jourInstantane = jourISO(catalogue.genereLe);
+
+return (catalogue.universities || [])
+.map((u) => {
+const lues = [u.fraisScolarite && u.fraisScolarite.verifieLe, u.exoneration && u.exoneration.verifieLe, u.admission && u.admission.verifieLe]
+.map(jourISO).filter(Boolean).sort();
+return {
+url: `${SITE}/universite.html?id=${encodeURIComponent(u.id)}`,
+lastmod: lues[lues.length - 1] || jourInstantane,
+priority: 0.6
+};
+})
+.sort((a, b) => a.url.localeCompare(b.url));
+
+}
+
 export function construire(catalogue, racine = RACINE) {
 
 const lignes = [];
@@ -138,6 +161,7 @@ const lastmod = dateDuDernierCommit(fichier, racine);
 lignes.push({ url: `${SITE}/${chemin}`, lastmod, priority: priorite });
 }
 
+lignes.push(...fichesEtablissements(catalogue));
 lignes.push(...fichesDuCatalogue(catalogue));
 
 const xml = lignes.map(({ url, lastmod, priority }) =>
@@ -162,5 +186,6 @@ const xml = construire(catalogue);
 writeFileSync(join(RACINE, "sitemap.xml"), xml, "utf8");
 const total = (xml.match(/<url>/g) || []).length;
 const dates = (xml.match(/<lastmod>/g) || []).length;
-console.log(`sitemap.xml — ${total} adresses (${PAGES.length} pages + ${total - PAGES.length} fiches), ${dates} avec une date`);
+const etablissements = fichesEtablissements(catalogue).length;
+console.log(`sitemap.xml — ${total} adresses (${PAGES.length} pages + ${etablissements} établissements + ${total - PAGES.length - etablissements} fiches), ${dates} avec une date`);
 }

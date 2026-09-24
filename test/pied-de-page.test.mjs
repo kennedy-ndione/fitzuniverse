@@ -33,7 +33,9 @@ export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = [
 "scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html"
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html",
+// Lot 76-77 (2026-09-24) : la fiche d'établissement.
+"universite.html"
 ];
 
 const codeSeul = (f) => lire(f)

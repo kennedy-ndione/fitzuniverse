@@ -35,7 +35,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import { convertir } from "../scripts/credits-html.mjs";
-import { PAGES, fichesDuCatalogue } from "../scripts/sitemap.mjs";
+import { PAGES, fichesDuCatalogue, fichesEtablissements } from "../scripts/sitemap.mjs";
 import { listerPublies } from "../scripts/hosting-publie.mjs";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -138,13 +138,21 @@ assert.match(m[1], /^\d{4}-\d{2}-\d{2}$/);
 assert.ok(m[1] <= aujourdhui, `lastmod dans le futur : ${m[1]}`);
 }
 
-// scholarship-details.html est indexable, mais elle n'entre PAS dans
-// le sitemap comme page : elle y entre 507 fois, une par fiche. C'est
-// la seule exception, et elle est nommée ici pour qu'une page neuve
-// oubliée ne puisse pas se cacher derrière elle.
-assert.equal(PAGES.length, INDEXABLES.length - 1,
+// Les fiches d'établissement (lot 76-77) : une adresse par université,
+// et aucune université sans la sienne — c'est là que mène chaque carte.
+const etablissements = adresses.filter((u) => u.includes("universite.html?id="));
+assert.equal(etablissements.length, fichesEtablissements(catalogue).length);
+assert.equal(etablissements.length, (catalogue.universities || []).length,
+"chaque université du catalogue doit avoir l'adresse de sa fiche");
+
+// scholarship-details.html et universite.html sont indexables, mais
+// elles n'entrent PAS dans le sitemap comme pages : elles y entrent une
+// fois par fiche. Ce sont les deux seules exceptions, nommées ici pour
+// qu'une page neuve oubliée ne puisse pas se cacher derrière elles.
+assert.equal(PAGES.length, INDEXABLES.length - 2,
 "scripts/sitemap.mjs ne connaît pas le même nombre de pages indexables que le dépôt");
 assert.ok(INDEXABLES.includes("scholarship-details.html"));
+assert.ok(INDEXABLES.includes("universite.html"));
 
 });
 
@@ -171,9 +179,11 @@ assert.match(html, /<meta property="og:image"/, `${page} : og:image`);
 
 // La fiche est paramétrée : sa canonique et son og:url sont réécrits
 // au chargement, et doivent l'être ENSEMBLE.
-const details = lire("details.js");
-assert.ok(details.includes('meta[property="og:url"]'), "details.js doit mettre og:url à jour");
-assert.ok(details.includes("ogUrl.setAttribute(\"content\", canonical.href)"));
+for (const script of ["details.js", "universite-page.js"]) {
+const source = lire(script);
+assert.ok(source.includes('meta[property="og:url"]'), `${script} doit mettre og:url à jour`);
+assert.ok(source.includes("ogUrl.setAttribute(\"content\", canonical.href)"), script);
+}
 
 });
 

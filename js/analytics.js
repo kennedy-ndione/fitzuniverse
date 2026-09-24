@@ -140,7 +140,13 @@ interview_prep_checklist_toggled: { counters: ["totals", "byDay"] },
 // les offres montrées dans l'accueil (js/aiguillage.js). Ce sont les
 // deux nombres qui diront si l'espace gratuit fait avancer.
 espace_gratuit_diagnostic: { counters: ["totals", "byDay"] },
-espace_gratuit_offre: { counters: ["totals", "byDay"] }
+espace_gratuit_offre: { counters: ["totals", "byDay"] },
+
+// Fiche d'établissement (universite.html, lot 76-77, 2026-09-24) : la
+// vue de la fiche et le clic vers le site officiel. Déclarés le jour
+// même où ils sont émis — le défaut régularisé deux fois ne revient pas.
+university_profile_viewed: { counters: ["totals", "byDay"], dimensions: ["country", "university"] },
+university_site_opened: { counters: ["totals", "byDay"], dimensions: ["country", "university"] }
 
 };
 

@@ -206,24 +206,33 @@ return { donnees, empreinte, chemin };
 
 }
 
-function memesChamps(attendu, enBase) {
-return JSON.stringify(attendu) === JSON.stringify(trierCommeAttendu(attendu, enBase));
+// Sérialise en triant les clés à CHAQUE niveau d'imbrication (pas
+// seulement au premier) : un objet Firestore relu (admission,
+// exoneration, fraisScolarite…) ne rend pas ses clés dans l'ordre où
+// le lot les a écrites, et une comparaison par JSON.stringify brut
+// signalait alors un écart alors que les valeurs étaient identiques —
+// corrigé le 2026-09-24 après un faux positif sur les 14 universités
+// du lot 76 (Maroc).
+function serialiserStable(valeur) {
+if (Array.isArray(valeur)) return `[${valeur.map(serialiserStable).join(",")}]`;
+if (valeur && typeof valeur === "object") {
+const cles = Object.keys(valeur).sort();
+return `{${cles.map((c) => `${JSON.stringify(c)}:${serialiserStable(valeur[c])}`).join(",")}}`;
+}
+return JSON.stringify(valeur);
 }
 
-// Reprojette le document en base sur les clés du lot, dans le même
-// ordre, pour une comparaison champ par champ stable.
-function trierCommeAttendu(attendu, enBase) {
-const sortie = {};
-for (const cle of Object.keys(attendu)) sortie[cle] = enBase ? enBase[cle] : undefined;
-return sortie;
+function memesChamps(attendu, enBase) {
+return diffChamps(attendu, enBase).length === 0;
 }
 
 function diffChamps(attendu, enBase) {
 const lignes = [];
 for (const cle of Object.keys(attendu)) {
-const a = JSON.stringify(attendu[cle]);
-const b = JSON.stringify(enBase ? enBase[cle] : undefined);
-if (a !== b) lignes.push(`      ${cle} : lot=${a} / base=${b}`);
+const valeurBase = enBase ? enBase[cle] : undefined;
+if (serialiserStable(attendu[cle]) !== serialiserStable(valeurBase)) {
+lignes.push(`      ${cle} : lot=${JSON.stringify(attendu[cle])} / base=${JSON.stringify(valeurBase)}`);
+}
 }
 return lignes;
 }

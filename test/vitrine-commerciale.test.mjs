@@ -172,7 +172,7 @@ assert.ok(!/^\s*\.btn-(primary|secondary|accent|link)\s*[,{]/m.test(css) && !/\.
 });
 
 test("vitrine 4b — au plus un bouton principal par section, dans le HTML statique", () => {
-const pages = ["index.html", "offers.html", "preinscriptions.html", "preinscription-france.html", "scholarships.html", "universities.html", "scholarship-details.html", "results.html", "payment.html", "diagnostic-france.html"];
+const pages = ["index.html", "offers.html", "preinscriptions.html", "preinscription-france.html", "scholarships.html", "universities.html", "scholarship-details.html", "universite.html", "results.html", "payment.html", "diagnostic-france.html"];
 for (const page of pages) {
 const html = visible(lire(page));
 const sections = html.split(/<section\b/);
@@ -196,7 +196,7 @@ const DECOURAGENT = [/\bjamais jusqu'à l'admission/i, /aucune promesse/i, /\bne
 // payant à ce jour). « Des milliers d'étudiants passent des semaines à
 // chercher » parle du monde, pas de nous : ce n'est pas visé.
 const INTERDITS = [/admission garantie/i, /bourse (assurée|garantie)/i, /100 ?% de réussite/i, /taux de réussite de \d/i, /le plus choisi/i, /nous font confiance/i, /\d+ étudiants accompagnés/i, /étudiants accompagnés l'année/i, /déjà accompagné/i];
-const PUBLIQUES = ["index.html", "offers.html", "preinscriptions.html", "preinscription-france.html", "scholarships.html", "universities.html", "scholarship-details.html", "results.html", "eligibility-test.html", "eligibility-questions.html", "login.html", "payment.html"];
+const PUBLIQUES = ["index.html", "offers.html", "preinscriptions.html", "preinscription-france.html", "scholarships.html", "universities.html", "scholarship-details.html", "universite.html", "results.html", "eligibility-test.html", "eligibility-questions.html", "login.html", "payment.html"];
 
 test("vitrine 5 — aucune phrase qui décourage, aucune promesse de résultat, dans le texte visible", () => {
 for (const page of PUBLIQUES) {

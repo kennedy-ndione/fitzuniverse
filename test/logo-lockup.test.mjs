@@ -139,6 +139,8 @@ const ATTENDU = {
 "scholarships.html": 2,
 "universities.html": 2,
 "scholarship-details.html": 2,
+// Lot 76-77 : la fiche d'établissement a le même double en-tête.
+"universite.html": 2,
 "account.html": 1, "advisor.html": 1, "ai-chat.html": 1, "ai-check.html": 1,
 "ai-email.html": 1, "ai-letter.html": 1, "ai-translate.html": 1, "applications.html": 1,
 "compress.html": 1, "dashboard.html": 1, "documents.html": 1, "interview-prep.html": 1,

@@ -46,7 +46,9 @@ export const PAGES_PUBLIQUES = [
 "eligibility-test.html", "eligibility-questions.html", "results.html", "login.html", "bientot.html",
 // COMPTE GRATUIT (2026-09-20) : la page d'inscription entre sous les
 // mêmes gardes que login.html, sa jumelle.
-"inscription.html"
+"inscription.html",
+// Lot 76-77 (2026-09-24) : la fiche d'établissement.
+"universite.html"
 ];
 
 // Le texte VISIBLE d'une page : sans commentaires, scripts, styles, head.
@@ -139,7 +141,7 @@ assert.ok(servis.includes("aucun intermédiaire ne peut le faciliter"), "avertis
 export const PAGES_AVEC_PIED = ["index.html"];
 export const PAGES_SANS_PIED = ["scholarships.html", "universities.html", "scholarship-details.html",
 "preinscriptions.html", "preinscription-france.html", "offers.html", "bientot.html",
-"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html", "inscription.html"];
+"eligibility-questions.html", "eligibility-test.html", "results.html", "login.html", "inscription.html", "universite.html"];
 
 test("langage 4 — le pied de page partagé sur l'accueil, et sur lui seul ; aucune page ne le recopie, aucune ne perd le glossaire", () => {
 for (const page of PAGES_SANS_PIED) {

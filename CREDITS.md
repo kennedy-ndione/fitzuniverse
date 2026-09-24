@@ -836,3 +836,193 @@ Regle du catalogue appliquee des le lot : une photo de ville par universite (`as
 ### Wikimedia Commons (licence CC a attribution obligatoire, a conserver tant que ce fichier est utilise)
 
 - `tlemcen.jpg` (Universite Abou Bekr Belkaid) — la muraille crenelee de Mansourah, Tlemcen. Auteur : Sambott27, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en). Source : [File:Muraille de mansourah,Tlemcen..jpg](https://commons.wikimedia.org/wiki/File:Muraille_de_mansourah,Tlemcen..jpg). Original 3615x1930 (ratio 1,87), redimensionne a 2000px.
+
+## Lot 76-77 — Maroc et Canada (2026-09-24) : 31 photos de ville
+
+Une photo par ville (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot76-photos.mjs`. Chaque image regardée après téléchargement. Deux fichiers proviennent de Wikimedia Commons (licence CC à attribution obligatoire) ; les vingt-neuf autres, d'Unsplash.
+
+### `fes-medina-vue-d-en-haut.jpg` — les toits de la médina de Fès vus d'en haut
+
+- **Photographe** : Selina Bubendorfer
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/e-6LEkIUvAw` (identifiant CDN `photo-1585213303814-2ca9c6bcb400`)
+
+### `fes-tanneries-chouara.jpg` — les cuves de teinture des tanneries de Fès
+
+- **Photographe** : Nichika Sakurai
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ZQaEb6kbMhk` (identifiant CDN `photo-1767936925033-9a5b59925613`)
+
+### `kenitra-avenue-mohammed-v.jpg` — l'avenue Mohammed-V, centre de Kénitra
+
+- **Photographe** : Katantuk
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en)
+- **Source** : [File:Kenitra Avenue Mohamed V.JPG — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kenitra_Avenue_Mohamed_V.JPG)
+
+### `oujda-bab-el-gharbi.jpg` — la place Bab el Gharbi, Oujda
+
+- **Photographe** : Iznassen
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en)
+- **Source** : [File:Oujda. place de bab al gharbi.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Oujda._place_de_bab_al_gharbi.jpg)
+
+### `tetouan-ville-blanche.jpg` — maisons blanches et coupole, Tétouan
+
+- **Photographe** : Maddie Leopardo
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/egd0IU4wVy0` (identifiant CDN `photo-1579894461465-e8cdbe670cd1`)
+
+### `agadir-plage-et-baie.jpg` — la plage d'Agadir et sa colline
+
+- **Photographe** : SnapSaga
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/7MzuWztc8kY` (identifiant CDN `photo-1710092538995-4af0c11a3f3c`)
+
+### `el-jadida-theatre-mohamed-afifi.jpg` — le théâtre Mohamed Afifi, El Jadida
+
+- **Photographe** : AYOUB OUAZIZI
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/hOUO9K73kjw` (identifiant CDN `photo-1652336019253-249003bf441f`)
+
+### `meknes-remparts.jpg` — les remparts de Meknès
+
+- **Photographe** : Tomasz Anusiewicz
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/EK4gB5I6HWU` (identifiant CDN `photo-1706793989006-f0238c69f4a2`)
+
+### `settat-monument-du-cheval.jpg` — le monument du cheval, Settat
+
+- **Photographe** : oussama laabidate
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/e6OvVi1vzkI` (identifiant CDN `photo-1704129656777-91194f1ddf40`)
+
+### `beni-mellal-vue-des-hauteurs.jpg` — Béni Mellal vue d'une colline
+
+- **Photographe** : Oussama Abouchatir
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/e-z4GQpC43k` (identifiant CDN `photo-1652720187538-b1894af2dc35`)
+
+### `rabat-kasbah-des-oudayas.jpg` — la plage de Rabat au pied de la kasbah des Oudayas
+
+- **Photographe** : Sheila C
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/rOlf7H5kALM` (identifiant CDN `photo-1758441011898-4e0e93c1942f`)
+
+### `rabat-sale-marina-du-bouregreg.jpg` — la marina du Bouregreg, côté Salé
+
+- **Photographe** : Souhail BIDA
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Y-yQ5pEoP6o` (identifiant CDN `photo-1634324708844-7dd4b01b9191`)
+
+### `casablanca-centre-ville-vu-d-en-haut.jpg` — les toits et immeubles de Casablanca
+
+- **Photographe** : Barry Talley
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/hr31kfHe0Ao` (identifiant CDN `photo-1693532088390-d278b7cefed0`)
+
+### `casablanca-quartier-des-habous.jpg` — une rue du quartier des Habous, Casablanca
+
+- **Photographe** : Thales Botelho de Sousa
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/9JwZJD2-eew` (identifiant CDN `photo-1710211653847-d9a1657b0044`)
+
+### `quebec-chateau-frontenac.jpg` — le Château Frontenac, Québec
+
+- **Photographe** : Robert Macleod
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/w3xwKSSsFh4` (identifiant CDN `photo-1691516094855-809c50352aad`)
+
+### `montreal-oratoire-saint-joseph.jpg` — l'oratoire Saint-Joseph, Montréal
+
+- **Photographe** : Ahmed Neji
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/vmff7d4g578` (identifiant CDN `photo-1592927857753-74e95148e02e`)
+
+### `montreal-quartier-des-spectacles.jpg` — le Quartier des spectacles, Montréal
+
+- **Photographe** : Dmitri M
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/GItUM-nHVpw` (identifiant CDN `photo-1713274843857-84ac856d8471`)
+
+### `montreal-pont-jacques-cartier.jpg` — le pont Jacques-Cartier, Montréal
+
+- **Photographe** : Pascal Bernardon
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ni1ZCLFrcoY` (identifiant CDN `photo-1573492614524-e526f7f14b92`)
+
+### `montreal-stade-olympique.jpg` — la tour du Stade olympique, Montréal
+
+- **Photographe** : Jonathan Gagnon
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/X2OWQ3_pijc` (identifiant CDN `photo-1741924831592-64c4c907122d`)
+
+### `montreal-canal-de-lachine.jpg` — le canal de Lachine et le marché Atwater, Montréal
+
+- **Photographe** : Pascal Bernardon
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/gu3jDlYzh4E` (identifiant CDN `photo-1699719506497-e941ad8f9701`)
+
+### `montreal-habitat-67.jpg` — Habitat 67, Montréal
+
+- **Photographe** : philippe collard
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/gSF2C2cuI34` (identifiant CDN `photo-1576443730831-02377debbff3`)
+
+### `sherbrooke-vue-panoramique.jpg` — Sherbrooke dans sa vallée
+
+- **Photographe** : Adrien (add_rien_20)
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/BWImWnGf40M` (identifiant CDN `photo-1652152026826-f7ceb8618422`)
+
+### `trois-rivieres-pont-laviolette.jpg` — le pont Laviolette, Trois-Rivières
+
+- **Photographe** : Patrice S Dorsainville
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/sUZ8XIruxnw` (identifiant CDN `photo-1778693640973-9b44990875dd`)
+
+### `saguenay-chicoutimi-riviere-saguenay.jpg` — Chicoutimi reflété dans la rivière Saguenay
+
+- **Photographe** : Andre Ouellet
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/0FMvE6nO34o` (identifiant CDN `photo-1607122997098-5315d01e15b3`)
+
+### `rimouski-parc-du-bic.jpg` — le parc du Bic au bord du Saint-Laurent, Rimouski
+
+- **Photographe** : Eric Parenteau
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/THhNS4SRJxI` (identifiant CDN `photo-1731780029485-a1ed06d4f732`)
+
+### `gatineau-musee-canadien-histoire.jpg` — le Musée canadien de l'histoire, Gatineau
+
+- **Photographe** : snap shoot (s_napshoot)
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/tscxlKO4so0` (identifiant CDN `photo-1687710413165-090b41377237`)
+
+### `ottawa-canal-rideau.jpg` — le canal Rideau gelé, Ottawa
+
+- **Photographe** : Caio Fernandes
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/mlLoSetZABg` (identifiant CDN `photo-1727529802175-318920001940`)
+
+### `moncton-centre-ville.jpg` — le centre-ville de Moncton et sa tour de l'horloge
+
+- **Photographe** : Dat Tran
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/rw9I-b2o6bQ` (identifiant CDN `photo-1716668295838-a56cff6c641b`)
+
+### `winnipeg-la-fourche-riviere-rouge.jpg` — la rivière Rouge et le centre de Winnipeg
+
+- **Photographe** : Cohen Berg
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/uzp3jisBY7Y` (identifiant CDN `photo-1764276128259-15b02d37c3d8`)
+
+### `edmonton-vallee-saskatchewan-nord.jpg` — la vallée de la Saskatchewan Nord et Edmonton
+
+- **Photographe** : Derek Otway
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/PrmS75_I2QI` (identifiant CDN `photo-1656638706997-11ec84e134d9`) — photo très panoramique (ratio 2,76) : plus de ciel sur les bords qu'une photo de ville habituelle du catalogue, à surveiller au premier regard sur la carte.
+
+### `toronto-hotel-de-ville-nathan-phillips.jpg` — le Nathan Phillips Square et l'hôtel de ville, Toronto
+
+- **Photographe** : Photostore HK
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/NdTG0o-uZ5M` (identifiant CDN `photo-1573452996379-d0e623356520`)

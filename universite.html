@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+<title>Fiche de l'établissement | FitzUniverse</title>
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/logo/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png">
+<meta name="description" content="Statut, langue d'enseignement, coût vérifié par niveau, exonérations et démarche de candidature d'un établissement du catalogue FitzUniverse.">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+
+<!-- Canonical et Open Graph : valeurs génériques, réécrites par
+universite-page.js avec l'identifiant de l'établissement (même
+mécanique que la fiche programme, details.js). -->
+<link rel="canonical" href="https://fitzuniverse.com/universite.html">
+<meta property="og:title" content="Fiche de l'établissement | FitzUniverse">
+<meta property="og:description" content="Coût vérifié, exonérations et démarche de candidature d'un établissement du catalogue FitzUniverse.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+<meta property="og:url" content="https://fitzuniverse.com/universite.html">
+<meta property="og:site_name" content="FitzUniverse">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fitzuniverse.com/assets/images/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Même identité que la fiche programme (scholarship-details.html) :
+cette page est l'écran qui suit un clic sur une carte d'établissement. -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/lucide@1.31.0" defer></script>
+<script src="js/icones.js" defer></script>
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="scholarship-details.css">
+<link rel="stylesheet" href="css/catalog-typography.css">
+<link rel="stylesheet" href="css/details-redesign.css">
+<link rel="stylesheet" href="css/journey-shell.css">
+<link rel="stylesheet" href="css/mobile-nav.css">
+<style>[hidden]{display:none !important;}</style>
+
+<script src="js/mobile-nav.js" defer></script>
+<link rel="stylesheet" href="css/vivant.css">
+<link rel="stylesheet" href="css/fiche-universite.css">
+<!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
+<link rel="modulepreload" href="firebase-config.js">
+<link rel="modulepreload" href="js/access-guard.js">
+<link rel="modulepreload" href="js/analytics.js">
+<link rel="modulepreload" href="js/catalog-cache.js">
+<link rel="modulepreload" href="js/catalog-data.js">
+<link rel="modulepreload" href="js/catalog-snapshot.js">
+<link rel="modulepreload" href="js/countries.js">
+<link rel="modulepreload" href="js/echeance.js">
+<link rel="modulepreload" href="js/fiche-adresse.js">
+<link rel="modulepreload" href="js/fiche-universite.js">
+<link rel="modulepreload" href="js/frais.js">
+<link rel="modulepreload" href="js/pays-grammaire.js">
+<link rel="modulepreload" href="js/pays-preinscription.js">
+<link rel="modulepreload" href="js/plan-features.js">
+<link rel="modulepreload" href="js/portails.js">
+<link rel="modulepreload" href="js/scholarship-image.js">
+<link rel="modulepreload" href="js/voie-admission.js">
+<link rel="modulepreload" href="universite-page.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
+<!-- précharge:fin -->
+</head>
+
+<body>
+
+<a href="#ficheMain" class="skip-link">Aller au contenu</a>
+
+<header class="header" id="publicHeader">
+
+<div class="container header-container">
+
+<a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+
+<div class="header-actions">
+
+<a href="universities.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour aux universités</span>
+</a>
+
+</div>
+
+</div>
+
+</header>
+
+<div class="dashboard-shell" id="authShellRoot" hidden>
+
+
+<div class="dashboard-main" id="dashboardMainContent">
+
+<header class="journey-topbar">
+
+<a href="dashboard.html" class="fitz-lockup" aria-label="FitzUniverse — mon parcours">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+
+<div class="journey-context">
+<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+
+<!-- h2, pas h1 : le titre de la page est le nom de l'établissement (#titre). -->
+<h2 class="journey-context-titre">Fiche de l'établissement</h2>
+</div>
+
+<div class="journey-topbar-actions">
+
+<div class="messages-bell-wrap">
+
+<button type="button" class="messages-bell-btn" id="messagesBellBtn" aria-label="Messages" aria-expanded="false">
+<i data-lucide="bell"></i>
+<span class="messages-bell-dot" id="messagesBellDot" hidden></span>
+</button>
+
+<div class="messages-panel" id="messagesPanel" hidden>
+<div class="messages-panel-header">Messages de l'équipe</div>
+<div class="messages-panel-list" id="messagesPanelList"></div>
+</div>
+
+</div>
+
+<a href="offers.html" class="topbar-plan-chip">
+<span id="topbarPlanLabel">Essentiel</span>
+</a>
+
+<a href="profile.html" class="journey-top-icon journey-top-icon--secondary" title="Mon profil" aria-label="Mon profil">
+<i data-lucide="user-round"></i>
+</a>
+
+<a href="account.html" class="journey-top-icon journey-top-icon--secondary" title="Paramètres" aria-label="Paramètres">
+<i data-lucide="settings"></i>
+</a>
+
+<button type="button" id="logoutBtn" class="journey-top-icon" title="Déconnexion" aria-label="Déconnexion">
+<i data-lucide="log-out"></i>
+</button>
+
+</div>
+
+</header>
+
+<!-- <main id="ficheMain"> est déplacé ici par js/dual-shell.js -->
+
+</div>
+
+</div>
+
+<main id="ficheMain" tabindex="-1" hidden>
+
+<section class="details-hero">
+
+<img id="ficheImage" class="details-hero-bg" alt="">
+
+<div class="details-hero-overlay"></div>
+
+<div class="container details-hero-inner">
+
+<a href="universities.html" class="back-link">
+<i data-lucide="arrow-left"></i>
+<span>Retour aux universités</span>
+</a>
+
+<div class="details-hero-badge">
+<img id="ficheDrapeau" width="20" height="15" decoding="async" alt="" hidden>
+<span id="fichePays"></span>
+</div>
+
+<!-- Le texte posé ici dure le temps du chargement de l'instantané :
+tout ce qui lit la page sans exécuter le script y trouve un titre. -->
+<h1 id="ficheTitre">Fiche d'établissement du catalogue FitzUniverse</h1>
+
+<p class="details-hero-sub" id="ficheLieu"></p>
+
+<p class="details-hero-scholarship" id="ficheClassement" hidden></p>
+
+</div>
+
+</section>
+
+<div class="container details-body">
+
+<div class="details-main">
+
+<section class="details-section">
+<h2>En bref</h2>
+<p id="ficheDescription"></p>
+<!-- Une case par fait RENSEIGNÉ (statut, langue, domaines, repère,
+numéro EED) : un champ absent ne produit pas de case vide. -->
+<div class="details-info-grid fiche-en-bref" id="ficheEnBref"></div>
+</section>
+
+<section class="details-section" id="ficheCouts">
+<h2>Ce que coûtent les études</h2>
+<ul class="fiche-couts" id="ficheCoutsLignes"></ul>
+<p class="fiche-couts-aide">Droits de scolarité annuels d'un étudiant international, tels que l'établissement les publie, avec la date de vérification.</p>
+<details class="fiche-note" id="ficheCoutsNote" hidden>
+<summary>Ce que comprend ce montant</summary>
+<p id="ficheCoutsNoteTexte"></p>
+<p class="fiche-source" id="ficheCoutsSource"></p>
+</details>
+<div class="fiche-bloc" id="ficheCoutIndicatif" hidden>
+<h3>Frais indicatifs</h3>
+<p id="ficheCoutIndicatifTexte"></p>
+</div>
+<div class="fiche-bloc" id="ficheExoneration" hidden>
+<h3 id="ficheExonerationLibelle"></h3>
+<p id="ficheExonerationDetail"></p>
+<p class="fiche-source" id="ficheExonerationSource"></p>
+</div>
+</section>
+
+<section class="details-section" id="ficheCandidature" hidden>
+<h2>Comment candidater</h2>
+<!-- La voie d'admission (ambassade et AMCI, procédure nationale…)
+ne s'affiche que s'il n'y a pas de portail : js/voie-admission.js. -->
+<div class="fiche-voie" id="ficheVoie" hidden>
+<h3 id="ficheVoieLibelle"></h3>
+<p id="ficheVoieTexte"></p>
+</div>
+<dl class="fiche-etapes" id="ficheEtapes"></dl>
+<div class="fiche-sources" id="ficheSources" hidden>
+<h3>Sources officielles</h3>
+<p class="fiche-source" id="ficheSourcesDate"></p>
+<ul id="ficheSourcesListe"></ul>
+</div>
+</section>
+
+<section class="details-section" id="ficheProgrammes" hidden>
+<h2>Bourses rattachées à cet établissement</h2>
+<ul class="fiche-programmes" id="ficheProgrammesListe"></ul>
+</section>
+
+</div>
+
+<aside class="details-sidebar">
+
+<!-- data-sans-glossaire : le titre de la carte est un appel, pas un
+texte à expliquer (« préinscription » s'y annotait en gris sur fond sombre). -->
+<div class="cta-card cta-card-primary" data-sans-glossaire>
+<span class="cta-card-badge"><i data-lucide="award"></i>Recommandé</span>
+<h3 id="ficheCtaTitre">Être accompagné par Fitz</h3>
+<p id="ficheCtaTexte">Diagnostic personnalisé, checklists, assistance étape par étape, préparation des documents.</p>
+<a href="offers.html" id="ficheCta" class="btn btn-accent btn-lg">
+<span id="ficheCtaLibelle">Choisir ma formule</span>
+<i data-lucide="arrow-right"></i>
+</a>
+</div>
+
+<!-- Même règle que la fiche programme : un visiteur ne voit que le site
+officiel ; le portail de candidature n'apparaît qu'à un abonné, et
+seulement s'il existe. Aucun cadenas, aucune porte annoncée. -->
+<div class="cta-card-secondary" id="fichePortails" hidden>
+<p>Vous voulez avancer par vous-même ?</p>
+<a id="ficheSite" href="#" target="_blank" rel="noopener noreferrer" class="portal-link" hidden>
+<span>Accéder au site de l'établissement</span>
+<i data-lucide="external-link"></i>
+</a>
+<a id="fichePortail" href="#" target="_blank" rel="noopener noreferrer" class="portal-link" hidden>
+<span>Accéder au portail de candidature</span>
+<i data-lucide="external-link"></i>
+</a>
+<p class="portal-trust">
+<i data-lucide="shield-check"></i>
+Lien officiel, en accès libre : les informations de cette fiche restent gratuites. Seul l'accompagnement FitzUniverse est payant.
+</p>
+</div>
+
+</aside>
+
+</div>
+
+</main>
+
+<script src="js/header-scroll.js"></script>
+<script src="js/back-link.js"></script>
+<script type="module" src="universite-page.js"></script>
+<script type="module">
+import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
+applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "ficheMain" });
+</script>
+
+<!-- Moteur de la couche « vivant » : script CLASSIQUE, jamais module
+(voir scholarship-details.html). -->
+<script src="js/vivant.js" defer></script>
+
+<!-- Pas de pied de page : il ne reste que sur l'accueil. Le glossaire,
+lui, reste — js/glossaire-seul.js le lance sans le pied de page. -->
+<script src="js/glossaire-seul.js" defer></script>
+
+</body>
+
+</html>

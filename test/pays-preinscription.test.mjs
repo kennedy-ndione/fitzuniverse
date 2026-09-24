@@ -166,10 +166,12 @@ const PLANCHERS = {
 France: { etablissements: 26, coutsVerifies: 15 },
 Roumanie: { etablissements: 2, coutsVerifies: 0 },
 Turquie: { etablissements: 6, coutsVerifies: 3 },
-Maroc: { etablissements: 5, coutsVerifies: 1 },
+// Relevé du 2026-09-24, lots 76 et 77 : 14 établissements marocains
+// et 17 canadiens de plus, tous les canadiens avec leurs frais.
+Maroc: { etablissements: 19, coutsVerifies: 5 },
 Italie: { etablissements: 16, coutsVerifies: 9 },
 Allemagne: { etablissements: 3, coutsVerifies: 2 },
-Canada: { etablissements: 3, coutsVerifies: 3 },
+Canada: { etablissements: 20, coutsVerifies: 20 },
 // Relevé du 2026-09-23 au soir, à l'ouverture des deux pays.
 Chine: { etablissements: 16, coutsVerifies: 16 },
 Malaisie: { etablissements: 2, coutsVerifies: 2 }

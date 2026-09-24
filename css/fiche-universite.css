@@ -1,0 +1,149 @@
+/* ==========================================================
+FICHE D'ÉTABLISSEMENT (universite.html, lot 76-77, 2026-09-24)
+
+La page reprend la grammaire de la fiche programme — hero, sections
+.details-section, grille .details-info-item, colonne .details-sidebar —
+chargée juste avant par scholarship-details.css et
+css/details-redesign.css. Ce fichier n'ajoute que ce qui lui est
+propre : la liste des coûts, les blocs de texte long (démarche,
+exonération), les sources et la liste des programmes.
+
+Aucune règle ne coupe un texte (ni line-clamp, ni ellipse, ni nowrap) :
+tout ce qui est affiché ici vient d'une source et se lit en entier.
+========================================================== */
+
+/* « En bref » : la valeur peut être une phrase (statut juridique) — elle
+passe à la ligne, le libellé reste au-dessus. */
+.fiche-en-bref{ margin-top:18px; }
+.fiche-en-bref .details-info-item strong{ display:block; line-height:1.5; font-weight:600; }
+.fiche-en-bref .details-info-item.is-long{ grid-column:1 / -1; }
+.fiche-en-bref .details-info-item.is-long strong{ font-weight:500; }
+.fiche-en-bref .details-info-item small{ display:block; margin-top:4px; font-size:var(--fs-caption); color:var(--text-muted); line-height:1.45; }
+
+/* Le coût, niveau par niveau. */
+.fiche-couts{
+list-style:none;
+margin:0;
+padding:0;
+display:grid;
+gap:10px;
+}
+
+.fiche-couts li{
+display:flex;
+flex-wrap:wrap;
+align-items:baseline;
+justify-content:space-between;
+gap:4px 16px;
+padding:14px 17px;
+background:var(--background);
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+}
+
+.fiche-couts li > span{ font-size:var(--fs-small); color:var(--text-muted); }
+.fiche-couts-valeur{ text-align:right; }
+.fiche-couts li strong{ display:block; font-size:var(--fs-body); color:var(--text-color); font-weight:700; }
+.fiche-couts li small{ display:block; font-size:var(--fs-caption); color:var(--text-muted); }
+.fiche-couts li.is-inconnu strong{ color:var(--text-muted); font-weight:600; }
+
+.fiche-couts-aide{
+margin-top:10px;
+font-size:var(--fs-caption);
+color:var(--text-muted);
+line-height:1.5;
+}
+
+/* Le détail d'un montant : replié par défaut, ouvert d'un geste. Un
+<details> natif se lit au clavier et au lecteur d'écran sans script. */
+.fiche-note{
+margin-top:14px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+padding:12px 16px;
+background:var(--background);
+}
+
+.fiche-note summary{
+cursor:pointer;
+font-weight:600;
+font-size:var(--fs-small);
+color:var(--text-color);
+}
+
+.fiche-note[open] summary{ margin-bottom:8px; }
+
+.fiche-note p,
+.fiche-bloc p,
+.fiche-voie p,
+.fiche-etapes dd{
+font-size:var(--fs-small);
+line-height:var(--lh-relaxed);
+color:var(--text-light);
+}
+
+.fiche-bloc,
+.fiche-voie{
+margin-top:18px;
+padding:16px 18px;
+border-left:3px solid var(--amber-500);
+background:var(--background);
+border-radius:0 var(--radius-md) var(--radius-md) 0;
+}
+
+.fiche-bloc h3,
+.fiche-voie h3,
+.fiche-sources h3{
+font-size:var(--fs-body);
+font-weight:700;
+color:var(--text-color);
+margin-bottom:6px;
+}
+
+.fiche-source{
+margin-top:8px;
+font-size:var(--fs-caption) !important;
+color:var(--text-muted) !important;
+}
+
+.fiche-source a,
+.fiche-sources a{
+color:inherit;
+text-decoration:underline;
+text-underline-offset:2px;
+overflow-wrap:anywhere;
+}
+
+/* La démarche, en paires libellé / texte. */
+.fiche-etapes{ margin:18px 0 0; display:grid; gap:14px; }
+.fiche-etapes dt{ font-weight:700; font-size:var(--fs-small); color:var(--text-color); }
+.fiche-etapes dd{ margin:4px 0 0; }
+
+.fiche-sources{ margin-top:22px; }
+.fiche-sources ul{ margin:8px 0 0; padding-left:18px; display:grid; gap:4px; }
+.fiche-sources li{ font-size:var(--fs-caption); color:var(--text-muted); }
+
+/* Les bourses de l'établissement : chaque ligne mène à sa fiche. */
+.fiche-programmes{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+
+.fiche-programmes a{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+justify-content:space-between;
+gap:6px 14px;
+padding:14px 17px;
+border:1px solid var(--border-color);
+border-radius:var(--radius-md);
+background:var(--background);
+color:var(--text-color);
+text-decoration:none;
+transition:border-color var(--transition);
+}
+
+.fiche-programmes a:hover,
+.fiche-programmes a:focus-visible{ border-color:var(--amber-500); }
+
+.fiche-programmes strong{ font-size:var(--fs-small); font-weight:700; }
+.fiche-programmes span{ font-size:var(--fs-caption); color:var(--text-muted); }
+.fiche-programmes .is-open{ color:var(--success-color, #2f7d4f); font-weight:700; }
