@@ -314,7 +314,8 @@ accompagnement: "ouvert",
 // Lot S3 (2026-09-13) : ce pays n'avait AUCUN fait — sa carte publique
 // était donc une promesse sans une seule ligne vérifiable. Les cinq faits
 // ci-dessous ont été lus le 2026-09-13 sur fr.diplomatie.ma, consulat.ma,
-// uca.ma, um5.ac.ma et aui.ma.
+// uca.ma, um5.ac.ma et aui.ma ; le sixième (gratuité) le 2026-09-24 sur
+// enssup.gov.ma.
 faits: [
 {
 cle: "porteEntree",
@@ -322,6 +323,15 @@ diffusion: "public",
 texte: "Pour toute université publique, il n'existe aucune candidature directe : le dossier part de l'autorité compétente du pays d'origine et passe par la voie diplomatique jusqu'à l'AMCI. L'Université Cadi Ayyad l'écrit — « Tout dossier non transmis par l'AMCI ne sera pas pris en considération ».",
 source: "https://www.uca.ma/fr/page/agence-marocaine-de-la-cooperation-internationale-amci",
 verifieLe: "2026-09-13"
+},
+// Lot 82 (2026-09-24) : la gratuité, dite en clair. C'est l'information
+// la plus favorable du pays, et la carte n'en disait rien.
+{
+cle: "droits",
+diffusion: "public",
+texte: "Dans une université publique, la place d'un étudiant étranger admis par l'AMCI est gratuite : le ministère de l'Enseignement supérieur parle de « places pédagogiques à titre gracieux ». Ce qui est limité, c'est la bourse de subsistance, attribuée par quotas avec votre pays. Les établissements privés, eux, sont payants.",
+source: "https://www.enssup.gov.ma/en/la-mobilite-etudiante",
+verifieLe: "2026-09-24"
 },
 {
 cle: "calendrier",

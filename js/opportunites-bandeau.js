@@ -44,6 +44,10 @@ import { resolveScholarshipImage, sourcesModernes } from "./scholarship-image.js
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
 
+// Les « révélations » (2026-09-24) : une voie que les agences ne disent
+// pas, prouvée par le catalogue. Voir l'en-tête de js/revelations.js.
+import { lireRevelation } from "./revelations.js";
+
 /**
 * Nombre de cartes retenues. Au-delà, la piste devient si longue
 * qu'une carte donnée ne repasse qu'après plusieurs minutes — le
@@ -75,7 +79,7 @@ const catalogue = await chargerCatalogue();
 const bourses = new Map(catalogue.bourses.map((b) => [b.id, b]));
 const universites = new Map(catalogue.universites.map((u) => [u.id, u]));
 
-return { programmes: catalogue.programmes, bourses, universites };
+return { programmes: catalogue.programmes, bourses, universites, listeUniversites: catalogue.universites };
 
 }
 
@@ -301,6 +305,69 @@ return dates.length ? dates.sort()[0] : null;
 
 }
 
+/**
+* Le bloc « révélation », sous la frise. Construit élément par élément
+* (textContent partout) : aucun texte n'est interprété comme du HTML.
+*
+* Il n'a PAS le décompte ni le titre de la frise, à dessein : ce n'est
+* ni une bourse ni une candidature ouverte. Voir js/revelations.js.
+*/
+function construireRevelation(r) {
+
+const el = (balise, classe, texte) => {
+const n = document.createElement(balise);
+if (classe) n.className = classe;
+if (texte) n.textContent = texte;
+return n;
+};
+
+const bloc = el("aside", "revelation");
+bloc.setAttribute("aria-labelledby", "revelationTitre");
+
+const chiffre = el("div", "revelation-chiffre");
+chiffre.append(el("b", "", r.chiffre), el("span", "", r.chiffreLegende));
+
+const corps = el("div", "revelation-corps");
+
+const haut = el("div", "revelation-haut");
+haut.append(el("span", "revelation-kicker", "Révélé par FitzUniverse"));
+if (r.drapeau) {
+const img = el("img", "revelation-flag");
+img.src = `assets/flags/${r.drapeau}`;
+img.alt = "";
+img.addEventListener("error", () => { img.remove(); }, { once: true });
+haut.append(img);
+}
+haut.append(el("span", "revelation-pays", r.pays));
+if (r.verifieLe) haut.append(el("span", "revelation-verif", `Vérifié le ${formaterDate(r.verifieLe)}`));
+
+const titre = el("h3", "", r.titre);
+titre.id = "revelationTitre";
+
+// Une seule ligne d'actions, en liens texte : le seul BOUTON du bloc
+// reste « Voir les N échéances à venir ». Deux boutons pleins côte à
+// côte se disputeraient le regard.
+const actions = el("p", "revelation-actions");
+const cta = el("a", "revelation-cta", r.lien.texte);
+cta.href = r.lien.href;
+const cat = el("a", "revelation-lien", r.lienCatalogue.texte);
+cat.href = r.lienCatalogue.href;
+const lienSource = el("a", "revelation-source", "Source");
+lienSource.href = r.source.url;
+lienSource.target = "_blank";
+lienSource.rel = "noopener";
+lienSource.title = r.verifieLe
+? `${r.source.nom}, vérifié le ${formaterDate(r.verifieLe)}`
+: r.source.nom;
+actions.append(cta, cat, lienSource);
+
+corps.append(haut, titre, el("p", "revelation-texte", r.texte), actions);
+bloc.append(chiffre, corps);
+
+return bloc;
+
+}
+
 /* ------------------------------------------------------------------
 * Montage
 * ------------------------------------------------------------------ */
@@ -421,6 +488,16 @@ bouton.setAttribute("aria-pressed", String(figee));
 bouton.textContent = figee ? "Reprendre le défilement" : "Arrêter le défilement";
 });
 
+}
+
+// La révélation, sous la frise et avant le pied. Une erreur ici ne
+// doit jamais emporter la frise : elle est isolée.
+try {
+const revelation = lireRevelation(catalogue.listeUniversites, aujourdhui);
+const pied = section.querySelector(".opportunites-foot");
+if (revelation && pied) pied.before(construireRevelation(revelation));
+} catch (error) {
+console.error("[bandeau] révélation ignorée :", error);
 }
 
 section.hidden = false;
