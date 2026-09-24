@@ -1862,3 +1862,115 @@ Seize fichiers restaient sans source après cette recherche. Ils ont été rempl
 - **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
 - **Source** : [File:Szeged, Dóm tér 2021 01.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Szeged,_D%C3%B3m_t%C3%A9r_2021_01.jpg)
 - **Déclinaisons** : original 2400x1600 (ratio 1,50), redimensionné à 2000px.
+
+## Lot 84 — Roumanie (2026-09-24) : 18 photos de ville
+
+Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot84-photos.mjs`. Candidates regardées avant le choix ; une photo provient de Wikimedia Commons (licence CC à attribution obligatoire), les dix-sept autres d'Unsplash.
+
+### `cluj-napoca-theatre-national.jpg` — le Théâtre national de Cluj-Napoca
+
+- **Photographe** : Lucut Razvan
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/1Sm2b6K85ZE` (identifiant CDN `photo-1622569061848-8be92da6fde2`)
+
+### `cluj-napoca-vue-sur-les-toits.jpg` — les toits de Cluj-Napoca sous un ciel nuageux
+
+- **Photographe** : Tamas Pap
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/LC54UhNn95M` (identifiant CDN `photo-1583751636643-94790958040a`)
+
+### `cluj-napoca-reflets-au-bord-de-l-eau.jpg` — des immeubles de Cluj-Napoca reflétés dans l'eau
+
+- **Photographe** : Sinziana Susa
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/SzWrRCo7_0E` (identifiant CDN `photo-1514489793613-577418d65ae1`)
+
+### `iasi-ensemble-palas-de-nuit.jpg` — le quartier Palas de Iași, de nuit
+
+- **Photographe** : Tudor Baciu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6mTQUk3RHjo` (identifiant CDN `photo-1570771696100-83d4df94f09b`)
+
+### `iasi-vue-nocturne-des-collines.jpg` — Iași au crépuscule, vue des collines
+
+- **Photographe** : Tudor Baciu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/sXkVCq3MzX4` (identifiant CDN `photo-1553960346-80863a247704`)
+
+### `iasi-tramway-du-centre.jpg` — un tramway sur un boulevard de Iași
+
+- **Photographe** : David Stroia
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/MCWeK5YtC3c` (identifiant CDN `photo-1784393222467-24d393535366`)
+
+### `timisoara-immeubles-du-centre.jpg` — immeubles du début du XXe siècle au centre de Timișoara
+
+- **Photographe** : Bogdan Vlad
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/vF3cl3QsnTM` (identifiant CDN `photo-1687696162212-73aed15d7e6b`)
+
+### `timisoara-cathedrale-metropolitaine.jpg` — la cathédrale métropolitaine de Timișoara, de nuit
+
+- **Photographe** : Cristian Coaja
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/2GfqKcZZGpo` (identifiant CDN `photo-1693074893993-aeb2339d00c3`)
+
+### `timisoara-piata-unirii.jpg` — la place de l'Union, Timișoara
+
+- **Photographe** : Bogdan Vlad
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/4cajbfV-QqM` (identifiant CDN `photo-1687696162729-a75f9ddc004d`)
+
+### `bucarest-athenee-roumain.jpg` — l'Athénée roumain, Bucarest
+
+- **Photographe** : Aidan Joyce
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/lwqOS1Lkyhc` (identifiant CDN `photo-1586808538936-5b921bbe92d9`)
+
+### `bucarest-palais-du-parlement.jpg` — le palais du Parlement, Bucarest
+
+- **Photographe** : Winston Tjia
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/2D9qjPHazVk` (identifiant CDN `photo-1730120257566-9f4b7f37f20d`)
+
+### `craiova-parc-nicolae-romanescu.jpg` — le parc Nicolae-Romanescu, Craiova
+
+- **Photographe** : Cimpueru Filip
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/O_CmbSd84Io` (identifiant CDN `photo-1644920367938-ed407e658794`)
+
+### `craiova-place-mihai-viteazul.jpg` — la place Mihai-Viteazul et le palais administratif, Craiova
+
+- **Photographe** : Emilian1
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Plaza Craiova.JPG — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Plaza_Craiova.JPG)
+
+### `brasov-vieille-ville-et-eglise-noire.jpg` — la vieille ville de Brașov et l'Église noire
+
+- **Photographe** : Daniela Turcanu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/v_0Nj6vdq4o` (identifiant CDN `photo-1636288087131-7e912d7d37cf`)
+
+### `sibiu-grande-place.jpg` — la Grande Place de Sibiu
+
+- **Photographe** : Alisa Anton
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/pkUsKFmAQIM` (identifiant CDN `photo-1456491882918-2bc1929963f6`)
+
+### `constanta-casino.jpg` — le casino de Constanța
+
+- **Photographe** : Ruxandra Gogea
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Cjyv6Lcc6Ac` (identifiant CDN `photo-1582122149104-548d9ead3ff1`)
+
+### `targu-mures-citadelle.jpg` — la citadelle de Târgu Mureș en automne
+
+- **Photographe** : M. X.
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/UxOaJoyjI4s` (identifiant CDN `photo-1635182508069-73a718391c42`)
+
+### `galati-promenade-du-danube.jpg` — Galați et la promenade du Danube, vue du ciel
+
+- **Photographe** : Paladuta Stefan
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/8HuFkoTQItQ` (identifiant CDN `photo-1664912879009-fcf1fb932009`)

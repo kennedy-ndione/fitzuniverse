@@ -164,7 +164,10 @@ test("etatDunPays : planchers par pays, cohérence, et accord des deux formes de
 // Relevé du 2026-09-13, après le lot 54. Ce sont des minimums.
 const PLANCHERS = {
 France: { etablissements: 26, coutsVerifies: 15 },
-Roumanie: { etablissements: 2, coutsVerifies: 0 },
+// Relevé du 2026-09-24, lot 84 : 18 établissements roumains de plus,
+// tous avec leurs frais 2026-2027 ; les deux de Bucarest avaient déjà
+// les leurs, relevés le 2026-09-13.
+Roumanie: { etablissements: 20, coutsVerifies: 20 },
 Turquie: { etablissements: 6, coutsVerifies: 3 },
 // Relevé du 2026-09-24, lots 76 et 77 : 14 établissements marocains
 // et 17 canadiens de plus, tous les canadiens avec leurs frais.
