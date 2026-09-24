@@ -315,7 +315,7 @@ accompagnement: "ouvert",
 // était donc une promesse sans une seule ligne vérifiable. Les cinq faits
 // ci-dessous ont été lus le 2026-09-13 sur fr.diplomatie.ma, consulat.ma,
 // uca.ma, um5.ac.ma et aui.ma ; le sixième (gratuité) le 2026-09-24 sur
-// enssup.gov.ma.
+// la copie archivée d'enssup.gov.ma (le site ne répond pas depuis Dakar).
 faits: [
 {
 cle: "porteEntree",
@@ -330,7 +330,7 @@ verifieLe: "2026-09-13"
 cle: "droits",
 diffusion: "public",
 texte: "Dans une université publique, la place d'un étudiant étranger admis par l'AMCI est gratuite : le ministère de l'Enseignement supérieur parle de « places pédagogiques à titre gracieux ». Ce qui est limité, c'est la bourse de subsistance, attribuée par quotas avec votre pays. Les établissements privés, eux, sont payants.",
-source: "https://www.enssup.gov.ma/en/la-mobilite-etudiante",
+source: "https://web.archive.org/web/20250317151356/https://www.enssup.gov.ma/en/la-mobilite-etudiante",
 verifieLe: "2026-09-24"
 },
 {

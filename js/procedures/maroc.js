@@ -50,7 +50,7 @@ UM5: "https://www.um5.ac.ma/um5/inscription-des-etudiants-internationaux",
 UCA_AMCI: "https://www.uca.ma/fr/page/agence-marocaine-de-la-cooperation-internationale-amci",
 UCA_SEJOUR: "https://www.uca.ma/fr/page/maroc-pays-daccueil",
 UH1: "https://www.uh1.ac.ma/vie-estudiantine/vie-pratique/etudiants-etrangers/",
-ENSSUP: "https://www.enssup.gov.ma/en/la-mobilite-etudiante",
+ENSSUP: "https://web.archive.org/web/20250317151356/https://www.enssup.gov.ma/en/la-mobilite-etudiante",
 UM6P: "https://um6p.ma/en/enrollment/admissions",
 AUI: "https://aui.ma/admission-aid/internationals"
 };

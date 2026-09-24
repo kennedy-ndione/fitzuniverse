@@ -355,7 +355,7 @@ verifieLe: "2026-09-23"
 droits: {
 texte: "Université publique, par l'AMCI : la place est offerte à titre gracieux. Voie privée, sans AMCI : à l'UM6P, de 65 000 à 110 000 MAD par an selon l'école (chiffres 2025-2026, inscription comprise).",
 min: 0, max: 110000, devise: "MAD",
-source: "https://www.enssup.gov.ma/en/la-mobilite-etudiante",
+source: "https://web.archive.org/web/20250317151356/https://www.enssup.gov.ma/en/la-mobilite-etudiante",
 verifieLe: "2026-09-23"
 },
 frais: [

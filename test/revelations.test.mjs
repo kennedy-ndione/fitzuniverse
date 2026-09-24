@@ -24,7 +24,7 @@ id,
 country: "Maroc",
 flag: "ma.svg",
 fraisScolarite: {
-source: "https://www.enssup.gov.ma/en/la-mobilite-etudiante",
+source: "https://web.archive.org/web/20250317151356/https://www.enssup.gov.ma/en/la-mobilite-etudiante",
 verifieLe: "2026-09-24",
 licence: { montant: 0, devise: "MAD", periode: "an" }
 },
@@ -44,7 +44,8 @@ assert.equal(r.lienCatalogue.texte, "Voir les 5");
 assert.ok(r.texte.length <= 160, "une phrase, pas un paragraphe");
 assert.equal(r.drapeau, "ma.svg");
 assert.equal(r.verifieLe, "2026-09-24");
-assert.match(r.source.url, /^https:\/\/www\.enssup\.gov\.ma\//);
+// Copie archivée : enssup.gov.ma ne répond pas depuis Dakar (lot 83).
+assert.match(r.source.url, /^https:\/\/web\.archive\.org\/web\/\d{14}\/https:\/\/www\.enssup\.gov\.ma\//);
 });
 
 test("sous le minimum, aucune révélation", () => {

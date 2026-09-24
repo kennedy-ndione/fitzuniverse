@@ -63,8 +63,8 @@ texte: (n) =>
 lien: { href: "preinscription-maroc.html", texte: "Comment en profiter" },
 lienCatalogue: { href: "universities.html?country=Maroc&cost=gratuit", texte: (n) => `Voir les ${n}` },
 source: {
-nom: "ministère marocain de l'Enseignement supérieur",
-url: "https://www.enssup.gov.ma/en/la-mobilite-etudiante"
+nom: "ministère marocain de l'Enseignement supérieur (copie archivée : le site du ministère ne répond pas depuis l'Afrique de l'Ouest)",
+url: "https://web.archive.org/web/20250317151356/https://www.enssup.gov.ma/en/la-mobilite-etudiante"
 },
 minimum: 5,
 critere: (uni, aujourdhui) => {
