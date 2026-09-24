@@ -729,7 +729,7 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 Dix-neuf photos ajoutées (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`) pour les bourses qui partageaient la photo de leur université liée avec une autre bourse du même pays. Voir `admin/expand-catalog-batch26.js` et `scripts/add-lot26-scholarship-photos.ps1`.
 
-Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Photographes et pages retrouvés le 2026-09-24 comme au lot 25, par l'identifiant CDN exact. Deux restent introuvables par la recherche du site : `reach-oxford-scholarship.jpg` et `hse-into-olympiad.jpg`, dits comme tels ci-dessous.
+Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Photographes et pages retrouvés le 2026-09-24 comme au lot 25, par l'identifiant CDN exact. Les deux dernières, `reach-oxford-scholarship.jpg` et `hse-into-olympiad.jpg`, ont été retrouvées le même soir par des recherches plus larges (« college », « subway station russia »).
 
 **Correctif lot 27 (2026-08-30)** : trois des dix-neuf identifiants de ce lot reprenaient une photo déjà utilisée ailleurs dans le dépôt (`hse-into-olympiad` ← la Saint-Basile d'`open-doors-scholarship.jpg`, `jads-japan-africa-dream` ← la Shibuya de `waseda.jpg`, `fao-hungarian-government-scholarship` ← le Parlement hongrois de `corvinus.jpg`) — le lot recréait, dans trois pays, exactement le défaut qu'il devait supprimer. Les trois fichiers ont été réécrits avec des photos inédites (`scripts/add-lot27-photo-fixes.ps1`) ; le champ `image` en base n'a pas changé — même nom de fichier — donc aucun lot Firestore n'accompagne ce correctif. Les trois entrées ci-dessous sont celles du lot 27.
 
@@ -743,8 +743,9 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 ### `reach-oxford-scholarship.jpg` — une facade de college d'Oxford, Royaume-Uni
 
+- **Photographe** : Darya Tryfanava ([@darya_tryfanava](https://unsplash.com/@darya_tryfanava))
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
-- **Source** : identifiant CDN `photo-1568792923760-d70635a89fdc` sur Unsplash. La page de la photo et son auteur n'ont pas été retrouvés par la recherche du site le 2026-09-24.
+- **Source** : `https://unsplash.com/photos/d55fhArDES0` (identifiant CDN `photo-1568792923760-d70635a89fdc`)
 
 ### `rhodes-scholarships-west-africa.jpg` — un quadrangle d'Oxford et sa pelouse, Royaume-Uni
 
@@ -790,8 +791,9 @@ Toutes en [Unsplash License](https://unsplash.com/license) — usage commercial 
 
 ### `hse-into-olympiad.jpg` — une station ornée du métro de Moscou, Russie
 
+- **Photographe** : M IVANOVSKI ([@mw](https://unsplash.com/@mw))
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
-- **Source** : identifiant CDN `photo-1741171469811-553adc364411` sur Unsplash. La page de la photo et son auteur n'ont pas été retrouvés par la recherche du site le 2026-09-24.
+- **Source** : `https://unsplash.com/photos/jdFxOrCS4ac` (identifiant CDN `photo-1741171469811-553adc364411`)
 - **Remplacement** : photo posée par le correctif du lot 27 (2026-08-30).
 
 ### `hse-merit-scholarships.jpg` — un batiment moscovite reflete dans l'eau, Russie
