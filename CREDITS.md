@@ -1566,7 +1566,7 @@ Une photo par ville (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons 
 
 ## Photos de ville les plus anciennes : crédits retrouvés le 2026-09-24
 
-Quarante et une photos de ville du catalogue, posées avant le lot 11, n'avaient AUCUNE entrée dans ce fichier. Aucune métadonnée dans les fichiers (seulement des profils de couleur), aucun historique lisible : leur source a été recherchée image par image sur Unsplash, le 2026-09-24. Méthode : pour chaque ville, les résultats de la recherche du site sont comparés au fichier par une empreinte visuelle (hachage de différences 8x8, puis 16x16) et par le rapport largeur/hauteur de l'original. Une photo n'est retenue que si les deux empreintes coïncident à quelques bits près, là où deux images sans rapport diffèrent de la moitié des bits. Vingt-trois sont retrouvées ci-dessous ; les autres sont listées plus bas, sans crédit inventé.
+Quarante et une photos de ville du catalogue, posées avant le lot 11, n'avaient AUCUNE entrée dans ce fichier. Aucune métadonnée dans les fichiers (seulement des profils de couleur), aucun historique lisible : leur source a été recherchée image par image sur Unsplash, le 2026-09-24. Méthode : pour chaque ville, les résultats de la recherche du site sont comparés au fichier par une empreinte visuelle (hachage de différences 8x8, puis 16x16) et par le rapport largeur/hauteur de l'original. Une photo n'est retenue que si les deux empreintes coïncident à quelques bits près, là où deux images sans rapport diffèrent de la moitié des bits. Vingt-trois sont retrouvées ci-dessous. Les seize autres n'ont pas été retrouvées : plutôt qu'un crédit inventé, elles ont été remplacées par des photos sourcées, créditées plus bas.
 
 ### `ankara.jpg` (Bilkent University) — la citadelle d'Ankara et son drapeau
 
@@ -1706,11 +1706,105 @@ Quarante et une photos de ville du catalogue, posées avant le lot 11, n'avaient
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/T_e8pMv8vsQ` (identifiant CDN `photo-1683967494331-bd98da74fc50`)
 
-### Provenance non établie : seize photos de ville
+### Seize photos sans source, remplacées le 2026-09-24 (lot 81)
 
-La provenance de ces photos n'a pas pu être établie : le 2026-09-24, aucune correspondance n'a été trouvée dans les résultats de la recherche Unsplash pour leur ville. Elles ne portent donc aucun crédit, plutôt qu'un crédit inventé. Toute personne qui reconnaît son travail peut nous écrire : le crédit sera ajouté, ou la photo retirée. Fichiers concernés : `capetown.jpg` (University of Cape Town), `chengdu.jpg` (Sichuan University), `gothenburg.jpg` (University of Gothenburg), `hefei.jpg` (University of Science and Technology of China), `johannesburg.jpg` (Wits), `karts-seoul.jpg` (K-Arts), `krakow.jpg` (Jagiellonian University), `leuven.jpg` (KU Leuven), `lisbon.jpg` (ULisboa), `marrakech.jpg` (Cadi Ayyad), `namur.jpg` (UNamur), `pohang.jpg` (POSTECH), `porto.jpg` (U.Porto), `stockholm.jpg` (KTH), `warsaw.jpg` (University of Warsaw), `wuhan.jpg` (Wuhan University).
+Seize fichiers restaient sans source après cette recherche. Ils ont été remplacés, sous le même nom, par des photos dont la fiche Unsplash donne l'auteur et le lieu, chacune regardée avant et après téléchargement par `scripts/add-lot81-photos.mjs`. Deux d'entre elles avaient en plus un sujet faible : `porto.jpg` (un immeuble vu d'un parking) et `wuhan.jpg` (des pagodes jumelles qu'on ne pouvait pas rattacher à Wuhan). Deux autres fichiers montraient une AUTRE ville et ont été remplacés par le lot 80, crédité plus bas : `godollo.jpg` (Esztergom) et `szeged.jpg` (Budapest).
 
-Deux réserves de SUJET, notées au même contrôle : `porto.jpg` ne montre qu'un immeuble vu depuis un parking, sans rien qui dise Porto ; `wuhan.jpg` montre deux pagodes jumelles au bord d'un lac, que rien ne rattache avec certitude à Wuhan. Deux autres fichiers montraient une AUTRE ville et ont été remplacés par le lot 80, crédité plus bas : `godollo.jpg` (Esztergom) et `szeged.jpg` (Budapest).
+### `capetown.jpg` (University of Cape Town) — Le Cap, la montagne de la Table et le stade vus du ciel
+
+- **Photographe** : Tobias Reich
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/1GgWbP74phY` (identifiant CDN `photo-1580060839134-75a5edca2e99`)
+
+### `chengdu.jpg` (Sichuan University) — le pont Anshun et les tours de Chengdu
+
+- **Photographe** : pengfei Jin
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/NumSJRpNUc8` (identifiant CDN `photo-1725076021478-173130f22f06`)
+
+### `gothenburg.jpg` (University of Gothenburg) — le Stora Hamnkanalen et ses façades, Göteborg
+
+- **Photographe** : Hans Ott
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/TqeGF4M-Jqk` (identifiant CDN `photo-1662067164467-4a3f303f4824`)
+
+### `hefei.jpg` (University of Science and Technology of China) — les tours de Hefei
+
+- **Photographe** : Francisco Kemeny
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/imYKxcVODCc` (identifiant CDN `photo-1597006419785-f77591f53d75`)
+
+### `johannesburg.jpg` (University of the Witwatersrand) — les tours du centre de Johannesburg
+
+- **Photographe** : Simon Hurry
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/_h-L45TSmGM` (identifiant CDN `photo-1636706519609-988babca3dd5`)
+
+### `karts-seoul.jpg` (K-Arts) — une ruelle de maisons traditionnelles à Anguk, Séoul
+
+- **Photographe** : Elliot Gouy
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/cv3rLk4aNvc` (identifiant CDN `photo-1703825864792-5880081beaaf`)
+
+### `krakow.jpg` (Jagiellonian University) — la place du Marché et la halle aux draps, Cracovie
+
+- **Photographe** : Tomasz Zielonka
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Uuhv9tA9eOI` (identifiant CDN `photo-1699791915109-c227726d2457`)
+
+### `leuven.jpg` (KU Leuven) — l'hôtel de ville de Louvain
+
+- **Photographe** : Winston Tjia
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/YXnXW6qTqgg` (identifiant CDN `photo-1684698769392-c6404a6427cb`)
+
+### `lisbon.jpg` (University of Lisbon) — la place du Commerce, Lisbonne
+
+- **Photographe** : Claudio Schwarz
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/K3XGEoZgA0s` (identifiant CDN `photo-1548707309-dcebeab9ea9b`)
+
+### `marrakech.jpg` (Université Cadi Ayyad) — la place Jemaa el-Fna, Marrakech
+
+- **Photographe** : CALIN STAN
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/7a_PHX91su8` (identifiant CDN `photo-1587974928442-77dc3e0dba72`)
+
+### `namur.jpg` (Université de Namur) — Namur vue d'en haut
+
+- **Photographe** : Alex Vasey
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/f5Y3y1d_lic` (identifiant CDN `photo-1604413287507-b74b4e05cbad`)
+
+### `pohang.jpg` (POSTECH) — la main de bronze de Homigot sortant de la mer, Pohang
+
+- **Photographe** : Drew Bae
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/GW6t6MKqbiM` (identifiant CDN `photo-1634805249588-48152bc9f729`)
+
+### `porto.jpg` (University of Porto) — le pont Dom-Luís-Ier et les barques du Douro, Porto
+
+- **Photographe** : Nick Karvounis
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6ckFibuzLAU` (identifiant CDN `photo-1555881400-89d5a9c86668`)
+
+### `stockholm.jpg` (KTH Royal Institute of Technology) — Riddarholmen et ses reflets, Stockholm
+
+- **Photographe** : Ana Bórquez
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/uF4PfwZPOR8` (identifiant CDN `photo-1588653818221-2651ec1a6423`)
+
+### `warsaw.jpg` (University of Warsaw) — la place du Château et la colonne de Sigismond, Varsovie
+
+- **Photographe** : Lāsma Artmane
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/p6gxHYb43v0` (identifiant CDN `photo-1577133192629-5140c5371590`)
+
+### `wuhan.jpg` (Wuhan University) — la tour de la Grue jaune, Wuhan
+
+- **Photographe** : Bo Zhang
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/C2z6-TWsooU` (identifiant CDN `photo-1682082286090-0c8651b52004`)
 
 ## Lot 80 : deux photos de ville remplacées (2026-09-24)
 
