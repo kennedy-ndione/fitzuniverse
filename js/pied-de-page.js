@@ -82,13 +82,20 @@ return `<div>
 </div>`;
 }
 
+// Phrase de marque (choisie par Charles le 2026-09-24) : elle reprend le
+// surtitre du hero (« Né en Afrique. Ouvert au monde ») et le vocabulaire
+// du site (bourse ou préinscription). Elle remplace « accompagne les
+// étudiants africains, vers une bourse ou une admission qu'ils financent
+// eux-mêmes. La plateforme est ouverte à tout étudiant, où qu'il soit » :
+// virgule fautive, « admission » au lieu de « préinscription », et deux
+// phrases qui se contredisaient (« africains » puis « tout étudiant »).
 function markup() {
 return `${PHOTO}
 <div class="container">
 <div class="footer-top">
 <div class="footer-brand">
 <a href="index.html" class="fitz-lockup" aria-label="FitzUniverse — accueil">${MARK_SVG}<span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span></a>
-<p>FitzUniverse accompagne les étudiants africains, vers une bourse ou une admission qu'ils financent eux-mêmes. La plateforme est ouverte à tout étudiant, où qu'il soit.</p>
+<p>Né en Afrique, ouvert au monde&nbsp;: FitzUniverse accompagne chaque étudiant vers une bourse ou une préinscription à l'étranger, jusqu'au jour du départ.</p>
 </div>
 <div class="footer-links">${COLONNES.map(colonne).join("")}${CONTACT}</div>
 </div>
