@@ -1667,3 +1667,29 @@ border-radius:14px;
 }
 
 }
+
+/* ==========================================================
+LOT A — VITESSE SUR TÉLÉPHONE (2026-09-24)
+Le texte du hero s'affiche dès le premier rendu.
+
+Mesuré par PageSpeed (téléphone, 4G lente) : le h1 est le plus grand
+élément du premier écran, et il apparaissait à 7,5 s. La cause :
+`.reveal` (css/animations.css) le met à opacité 0 dès que js/main.js
+pose `js-ready`, puis attend que ce même script ajoute `is-visible`
+pour le faire apparaître en 0,7 s. Sur un réseau lent, le visiteur
+regardait une photo sans titre. PageSpeed chiffrait ce seul délai
+d'affichage à 1,3 s.
+
+Le hero n'attend donc plus aucun script : titre, sous-titre, portes,
+diagnostic, preuve et chiffres sont visibles d'emblée. Les classes
+`reveal hero-stagger` restent dans le HTML (des tests et
+css/animations.css les citent) : c'est ici qu'elles sont neutralisées,
+pour le hero seulement. Le reste de la page garde sa révélation au
+défilement. La photo garde sa dérive, et la ligne du diagnostic son
+pouls.
+========================================================== */
+html.js-ready .hero .reveal{
+opacity:1;
+transform:none;
+transition:none;
+}

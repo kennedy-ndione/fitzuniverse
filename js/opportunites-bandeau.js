@@ -39,7 +39,7 @@ opportunitesOuvertes,
 etatCandidature
 } from "./echeance.js";
 
-import { resolveScholarshipImage } from "./scholarship-image.js";
+import { resolveScholarshipImage, sourcesModernes } from "./scholarship-image.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
@@ -236,10 +236,23 @@ const drapeau = opp.drapeau
         onerror="this.onerror=null;this.src='assets/flags/default.svg'">`
 : "";
 
+// Lot A « vitesse sur téléphone » (2026-09-24) : AVIF puis WebP quand
+// la photo a ses jumeaux (voir sourcesModernes), le JPEG en dernier
+// recours. PageSpeed : 855 Kio évitables sur 970 dans ce bandeau.
+const tailles = "(max-width:640px) 268px, 306px";
+const modernes = opp.imageSrcset ? sourcesModernes(opp.image) : null;
+const sources = modernes
+? `<source type="image/avif" srcset="${modernes.avif}" sizes="${tailles}">
+<source type="image/webp" srcset="${modernes.webp}" sizes="${tailles}">`
+: "";
+
 a.innerHTML = `
 <div class="opportunite-media">
-<img src="${opp.image}"${opp.imageSrcset ? ` srcset="${opp.imageSrcset}" sizes="(max-width:640px) 268px, 306px"` : ""}
+<picture>
+${sources}
+<img src="${opp.image}"${opp.imageSrcset ? ` srcset="${opp.imageSrcset}" sizes="${tailles}"` : ""}
      alt="" loading="lazy">
+</picture>
 </div>
 <div class="opportunite-body">
 <div class="opportunite-haut">

@@ -96,9 +96,6 @@ reste et n'utilise donc aucun !important hors mouvement réduit.
 Voir css/vivant.css. -->
 <link rel="stylesheet" href="css/vivant.css">
 <!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
-<link rel="modulepreload" href="firebase-config.js">
-<link rel="modulepreload" href="js/admin-access.js">
-<link rel="modulepreload" href="js/analytics.js">
 <link rel="modulepreload" href="js/catalog-cache.js">
 <link rel="modulepreload" href="js/catalog-data.js">
 <link rel="modulepreload" href="js/catalog-snapshot.js">
@@ -106,10 +103,6 @@ Voir css/vivant.css. -->
 <link rel="modulepreload" href="js/homepage-teaser.js">
 <link rel="modulepreload" href="js/opportunites-bandeau.js">
 <link rel="modulepreload" href="js/scholarship-image.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
 <!-- précharge:fin -->
 </head>
 
@@ -1170,21 +1163,85 @@ une lecture Firestore (config/planFeatures) faite au chargement de
 l'accueil par tout visiteur déjà connecté — juste avant de le rediriger
 vers dashboard.html, où le même lien lui est de toute façon proposé.
 Ne reste donc ici que la redirection. -->
-<script type="module">
-import { resolveSession } from "./js/access-guard.js";
-resolveSession().then((session) => {
-if (session && !session.disabled) {
-window.location.replace("dashboard.html");
-}
-}).catch((error) => {
-console.warn("Vérification de session ignorée sur une page publique :", error);
-});
-</script>
-
-<!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
+<!-- LOT A « VITESSE SUR TÉLÉPHONE » (2026-09-24) — Firebase ne se
+télécharge plus pour vérifier une session qui n'existe pas.
+Vérifier la session (js/access-guard.js) et afficher la pastille admin
+(js/admin-access.js) demandaient les SDK Firebase, environ 200 Kio, à
+CHAQUE visiteur, dès l'arrivée, en concurrence avec le titre et la
+photo du hero. Or la plupart des visiteurs de l'accueil ne se sont
+jamais connectés.
+Une session Firebase laisse une trace dans le navigateur : la clé
+« firebase:authUser:… » dans IndexedDB (base firebaseLocalStorageDb),
+localStorage ou sessionStorage. On la cherche d'abord, sans Firebase :
+- trace trouvée → exactement le comportement d'avant (redirection vers
+  dashboard.html, pastille admin) ;
+- aucune trace → rien n'est chargé ;
+- impossible de savoir (stockage bloqué, base au format inattendu,
+  IndexedDB muet plus de 1,5 s) → comportement d'avant, par prudence.
+La base n'est JAMAIS créée par cette lecture : si elle n'existe pas, la
+création est annulée (onupgradeneeded → abort).
+Pastille « Control Center » : rendue UNIQUEMENT pour un compte
 administrateur actif (voir js/admin-access.js) — invisible et
 inexistante pour tout autre visiteur. -->
-<script type="module" src="js/admin-access.js"></script>
+<script type="module">
+const CLE_SESSION = "firebase:authUser:";
+
+function sessionMemorisee() {
+  return new Promise((conclure) => {
+    let fini = false;
+    const reponse = (valeur) => { if (!fini) { fini = true; conclure(valeur); } };
+    setTimeout(() => reponse(true), 1500);
+    try {
+      const cles = [...Object.keys(localStorage), ...Object.keys(sessionStorage)];
+      if (cles.some((cle) => cle.startsWith(CLE_SESSION))) return reponse(true);
+    } catch (erreur) {
+      return reponse(true);
+    }
+    let demande;
+    try {
+      demande = indexedDB.open("firebaseLocalStorageDb");
+    } catch (erreur) {
+      return reponse(true);
+    }
+    demande.onupgradeneeded = () => demande.transaction.abort();
+    demande.onerror = () => reponse(!(demande.error && demande.error.name === "AbortError"));
+    demande.onblocked = () => reponse(true);
+    demande.onsuccess = () => {
+      const base = demande.result;
+      try {
+        if (!base.objectStoreNames.contains("firebaseLocalStorage")) {
+          base.close();
+          return reponse(true);
+        }
+        const lecture = base.transaction("firebaseLocalStorage", "readonly")
+          .objectStore("firebaseLocalStorage").getAllKeys();
+        lecture.onsuccess = () => {
+          base.close();
+          reponse(lecture.result.some((cle) => String(cle).startsWith(CLE_SESSION)));
+        };
+        lecture.onerror = () => { base.close(); reponse(true); };
+      } catch (erreur) {
+        base.close();
+        reponse(true);
+      }
+    };
+  });
+}
+
+if (await sessionMemorisee()) {
+  import("./js/access-guard.js")
+    .then(({ resolveSession }) => resolveSession())
+    .then((session) => {
+      if (session && !session.disabled) {
+        window.location.replace("dashboard.html");
+      }
+    })
+    .catch((error) => {
+      console.warn("Vérification de session ignorée sur une page publique :", error);
+    });
+  import("./js/admin-access.js").catch(() => {});
+}
+</script>
 
 <!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,
 volontairement : comme js/catalog-watchdog.js, il doit survivre à

@@ -192,3 +192,31 @@ fallbackOriginal: `assets/images/cities/${cityImage}`
 };
 
 }
+
+/**
+ * Les jumeaux AVIF et WebP d'une photo du catalogue, prêts à poser dans
+ * les <source> d'un <picture> (lot A « vitesse sur téléphone »,
+ * 2026-09-24). Mesuré par PageSpeed : les photos du bandeau de l'accueil
+ * pesaient 970 Kio sur téléphone, dont 855 évitables en format moderne.
+ *
+ * Seulement pour assets/images/scholarships/ et assets/images/cities/ :
+ * dans ces deux dossiers, chaque « -400w.jpg » et « -800w.jpg » a ses
+ * jumeaux (scripts/formats-modernes.mjs les crée, et
+ * test/vitesse-accueil.test.mjs vérifie qu'aucun ne manque). Ailleurs
+ * (les replis hero-bg*), on renvoie null : un <source> qui pointe vers un
+ * fichier absent casse l'image, le navigateur ne retombe pas sur le JPEG.
+ *
+ * @param {string} image la variante JPEG servie en `src` (ex. « …-800w.jpg »)
+ * @returns {{avif: string, webp: string}|null} deux srcset (400w et 800w)
+ */
+export function sourcesModernes(image) {
+
+const m = /^(assets\/images\/(?:scholarships|cities)\/[^/]+)-\d+w\.jpg$/.exec(image || "");
+
+if (!m) return null;
+
+const jeu = (format) => [400, 800].map((w) => `${m[1]}-${w}w.${format} ${w}w`).join(", ");
+
+return { avif: jeu("avif"), webp: jeu("webp") };
+
+}

@@ -29,14 +29,38 @@
  */
 
 
+// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
+import { chargerCatalogue } from "./catalog-data.js";
+
 // Entrée du site pour le Control Center (2026-09-02) : une visite par
 // session de navigateur, signalée depuis la page d'accueil — le point
 // d'entrée public principal (l'espace connecté a la sienne via
 // js/app-shell.js, même garde sessionStorage, jamais de doublon).
-import { trackVisitOnce, trackEvent } from "./analytics.js";
-
-// Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./catalog-data.js";
+//
+// Module de suivi CHARGÉ À LA DEMANDE depuis le lot A « vitesse sur téléphone »
+// (2026-09-24). js/analytics.js importe Firebase (environ 200 Kio) :
+// en import statique, il était téléchargé en même temps que le titre
+// et la photo du hero, et leur disputait un réseau lent. Il part
+// désormais une fois la page affichée (événement load, puis temps
+// libre du navigateur) — bien avant qu'un visiteur ait lu le hero et
+// cliqué sur une porte. Même promesse pour tous les appels : un seul
+// téléchargement.
+let analytique = null;
+function chargerAnalytique() {
+if (!analytique) analytique = import("./analytics.js");
+return analytique;
+}
+function trackEvent(type) {
+return chargerAnalytique().then((m) => m.trackEvent(type));
+}
+function apresAffichage(tache) {
+const lancer = () => {
+if ("requestIdleCallback" in window) requestIdleCallback(tache, { timeout: 3000 });
+else setTimeout(tache, 1);
+};
+if (document.readyState === "complete") lancer();
+else window.addEventListener("load", lancer, { once: true });
+}
 
 // Lot LANGAGE (2026-09-10) : la bande « le catalogue en chiffres »
 // compte aussi les pays de départ documentés à la source officielle —
@@ -221,7 +245,9 @@ document.querySelector(".hero-stats")?.remove();
 }
 
 chargerChiffres();
-trackVisitOnce();
+apresAffichage(() => {
+chargerAnalytique().then((m) => m.trackVisitOnce()).catch(() => {});
+});
 
 // Les trois chemins de l'accueil (lot PORTES-COULEUR) : un compteur par
 // clic, rien d'autre. L'écriture part AVANT la navigation, qui attend

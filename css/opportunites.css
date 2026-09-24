@@ -201,6 +201,15 @@ height:100%;
 object-fit:cover;
 }
 
+/* Lot A « vitesse sur téléphone » (2026-09-24) : l'image vit désormais
+dans un <picture> (AVIF, puis WebP, puis JPEG). Un <picture> est en
+ligne par défaut : sans cette règle, le « height:100% » de l'image ne
+s'appuierait plus sur le cadre de 118 px. */
+.opportunite-media picture{
+display:block;
+height:100%;
+}
+
 .opportunite-body{
 padding:17px 18px 16px;
 display:flex;

@@ -85,7 +85,12 @@ assert.equal((html.match(/data-chemin="porte_bourse"/g) || []).length, 1);
 assert.equal((html.match(/data-chemin="porte_preinscription"/g) || []).length, 1);
 assert.equal((html.match(/data-chemin="porte_diagnostic"/g) || []).length, 1);
 const teaser = lire("js/homepage-teaser.js");
-assert.match(teaser, /import \{ trackVisitOnce, trackEvent \} from "\.\/analytics\.js"/);
+// Lot A « vitesse sur téléphone » (2026-09-24) : analytics.js (et
+// Firebase avec lui) n'est plus importé au chargement, mais à la
+// demande, une fois la page affichée. Les clics restent comptés, par
+// la même fonction trackEvent. Voir test/vitesse-accueil.test.mjs.
+assert.ok(!/import \{[^}]*\} from "\.\/analytics\.js"/.test(teaser), "analytics.js est redevenu un import statique");
+assert.match(teaser, /import\("\.\/analytics\.js"\)/);
 assert.match(teaser, /querySelectorAll\("\[data-chemin\]"\)/);
 assert.match(teaser, /trackEvent\(lien\.dataset\.chemin\)/);
 // Aucune donnée personnelle : l'événement ne porte que son type.

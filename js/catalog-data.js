@@ -37,9 +37,13 @@
  * ============================================================
  */
 
-import { db } from "../firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
+// Firebase n'est PLUS importé ici au chargement (lot A « vitesse sur
+// téléphone », 2026-09-24). L'instantané statique sert le catalogue dans
+// le cas normal : Firestore n'est que le repli. L'importer d'office
+// faisait télécharger les quatre SDK Firebase (environ 200 Kio) à toute
+// page qui montre le catalogue, accueil compris, avant même d'en avoir
+// besoin. Ils ne sont désormais chargés que si le repli sert vraiment
+// (voir lireFirestore ci-dessous).
 import { creerCacheCatalogue } from "./catalog-cache.js";
 import { creerLecteurAvecInstantane, documentDeLInstantane, validerInstantane } from "./catalog-snapshot.js";
 
@@ -77,6 +81,10 @@ export function prechargerCatalogue() {
 const lecteur = creerLecteurAvecInstantane({
   chargerInstantane: telechargerInstantane,
   lireFirestore: async (nom) => {
+    const [{ db }, { collection, getDocs }] = await Promise.all([
+      import("../firebase-config.js"),
+      import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js")
+    ]);
     const snap = await getDocs(collection(db, nom));
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   }
