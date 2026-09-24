@@ -126,16 +126,17 @@ const GRILLE = {
   // ACCEPTATION : sans échéance, comme Premier Dossier.
   "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: null, parcours: "bourse", quota: 4 },
   "conseiller-6": { label: "Forfait Conseiller", prix: 150000, dureeMois: null, parcours: "bourse", quota: 6 },
-  // DÉPRÉCIÉES (grille A) : `deprecated: true` = creerPaiement REFUSE
-  // l'achat (une offre retirée de la vente ne se paie pas, même en
-  // forgeant la requête), mais le webhook HONORE encore un paiement
-  // créé avant le retrait — retirer l'entrée aurait laissé un étudiant
-  // payé sans activation. Mêmes prix qu'à l'époque.
-  essentiel: { label: "Forfait Essentiel", prix: 45000, dureeMois: 6, parcours: "bourse", deprecated: true, quota: 5 },
-  accompagnement: { label: "Forfait Ambition", prix: 75000, dureeMois: 9, parcours: "bourse", deprecated: true, quota: 9 },
-  "signature-focus": { label: "Forfait Conseiller", prix: 150000, dureeMois: 9, parcours: "bourse", deprecated: true, quota: 12 },
-  signature: { label: "Signature", prix: 250000, dureeMois: 12, parcours: "bourse", deprecated: true, quota: Infinity },
-  // Grille B — préinscription (France uniquement). Prix décidés, ne pas rouvrir.
+  // LES ANCIENNES FORMULES (essentiel, accompagnement, signature-focus,
+  // signature) ONT ÉTÉ SUPPRIMÉES LE 2026-09-24 (décision de Charles) :
+  // aucun compte ne les portait, aucun paiement ne les nommait. Un
+  // `deprecated: true` reste possible pour une future sortie de vente —
+  // creerPaiement refuse alors l'achat, le webhook honore encore un
+  // paiement créé avant.
+  // Grille B — préinscription. Les MÊMES trois offres, aux mêmes prix,
+  // dans les neuf pays (décision de Charles, 2026-09-24 : « gardons P1
+  // pour tous les 9 pays ») ; les identifiants gardent leur « -france »
+  // historique, c'est la destination de l'achat qui dit le pays.
+  // Prix décidés, ne pas rouvrir.
   "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription" },
   "dossier-france": { label: "Dossier France", prix: 75000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
   "dossier-france-conseiller": { label: "Dossier France + Conseiller", prix: 150000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
@@ -143,19 +144,11 @@ const GRILLE = {
 
 // Miroir de PLAN_ORDER (js/plan-features.js). Sert uniquement à ne
 // jamais RÉTROGRADER un client.
-// Grille A : `essentiel-4` se range SOUS `essentiel` (5) et
-// `conseiller-6` SOUS `signature-focus` (12) — un client d'une ancienne
-// formule encore active ne peut pas être rétrogradé par un achat.
 const RANG = {
   gratuit: 0,
   "premier-dossier": 1,
   "essentiel-4": 2,
-  essentiel: 3,
-  accompagnement: 4,
-  premium: 5,
-  "conseiller-6": 6,
-  "signature-focus": 7,
-  signature: 8,
+  "conseiller-6": 3,
 };
 
 /**
@@ -458,8 +451,7 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
 //      une.
 //   2. UNE FORMULE QUI N'OUVRIRAIT AUCUNE PLACE (bourses seulement) —
 //      quand le quota acheté est inférieur ou égal au nombre de cartes
-//      bourses déjà présentes : un détenteur d'`accompagnement`
-//      (9 cartes) qui prend conseiller-6, un conseiller-6 terminé qui
+//      bourses déjà présentes : un conseiller-6 terminé (6 cartes) qui
 //      prend essentiel-4. Monter reste possible quand de nouvelles places
 //      s'ouvrent (essentiel-4 → conseiller-6 : slot-5 et slot-6).
 //   3. LE PASS DÉCOUVERTE À UN COMPTE QUI A DÉJÀ LE CHAT — toute formule

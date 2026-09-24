@@ -39,6 +39,9 @@ import { getAllUsers } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
 import { initLogout } from "./deconnexion.js";
+// Les neuf pays des préinscriptions (2026-09-24).
+import { PAYS_ADMIN, nomDuPays } from "../js/formules-admin.js";
+import { PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 
 initSidebarToggle();
 initLogout();
@@ -80,6 +83,23 @@ const s = statutDe(p);
 const applique = p.statut === "paye" && p.applique === false ? ` <span class="status-pill is-disabled">non appliqué</span>` : "";
 return `<span class="status-pill ${s.classe}">${echapper(s.libelle)}</span>${applique}`;
 }
+
+// Le parcours d'un paiement : « bourse », ou le PAYS d'une préinscription.
+// Les paiements préinscription d'avant le 2026-09-23 ne portent pas de
+// destination : c'était toujours la France.
+function paysDuPaiement(p) {
+if (!PLAN_PREINSCRIPTION_ORDER.includes(p.planId)) return "bourse";
+const d = String(p.destination || "france");
+return PAYS_ADMIN.includes(d) ? d : "france";
+}
+
+function construireFiltrePays() {
+const sel = document.getElementById("paiementsPays");
+if (!sel || sel.options.length) return;
+sel.innerHTML = `<option value="">Tous les parcours</option><option value="bourse">Bourses</option><optgroup label="Préinscriptions">${PAYS_ADMIN.map((pays) => `<option value="${pays}">${nomDuPays(pays)}</option>`).join("")}</optgroup>`;
+}
+
+construireFiltrePays();
 
 function nomEtudiant(uid) {
 return nomsParUid.get(uid) || null;
@@ -128,6 +148,7 @@ function renderTable() {
 const terme = document.getElementById("paiementsSearch").value.trim().toLowerCase();
 const filtreStatut = document.getElementById("paiementsStatut").value;
 const filtreMode = document.getElementById("paiementsMode").value;
+const filtrePays = document.getElementById("paiementsPays")?.value || "";
 
 const lignes = paiements.filter((p) => {
 
@@ -139,10 +160,11 @@ if (["paye", "en-attente"].includes(filtreStatut) && p.statut !== filtreStatut) 
 }
 
 if (filtreMode && p.mode !== filtreMode) return false;
+if (filtrePays && paysDuPaiement(p) !== filtrePays) return false;
 
 if (terme) {
 const nom = nomEtudiant(p.uid) || "";
-const botte = `${nom} ${p.label || ""} ${p.planId || ""} ${p.id || ""} ${p.uid || ""}`.toLowerCase();
+const botte = `${nom} ${p.label || ""} ${p.planId || ""} ${nomDuPays(paysDuPaiement(p))} ${p.id || ""} ${p.uid || ""}`.toLowerCase();
 if (!botte.includes(terme)) return false;
 }
 
@@ -184,7 +206,7 @@ return `
 // Chargement
 // ==========================================================
 
-["paiementsSearch", "paiementsStatut", "paiementsMode"].forEach((id) => {
+["paiementsSearch", "paiementsStatut", "paiementsMode", "paiementsPays"].forEach((id) => {
 const el = document.getElementById(id);
 el.addEventListener(el.tagName === "INPUT" ? "input" : "change", renderTable);
 });

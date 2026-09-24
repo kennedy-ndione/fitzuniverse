@@ -35,7 +35,9 @@ FEATURE_CATALOG,
 resolveFeatureFlags,
 DROITS_UNIVERSELS,
 isQuotaReached,
-isUnlimitedQuota
+isUnlimitedQuota,
+nextPlanId,
+unlockingPlans
 } from "../js/plan-features.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -58,17 +60,19 @@ const OFFRES_PAYANTES = PLAN_ORDER.filter((id) => id !== "gratuit");
 // 1. Décision de quota
 // ============================================================
 
-test("Standard (essentiel) : les 5 premières candidatures passent, la 6e est bloquée", () => {
+// Jusqu'au 2026-09-24 : « Standard (essentiel) », 5 candidatures —
+// formule supprimée. Son successeur en vente est essentiel-4.
+test("Essentiel : les 4 premières candidatures passent, la 5e est bloquée", () => {
 
-const quota = OFFRES.essentiel.maxAccompaniedApplications;
+const quota = OFFRES["essentiel-4"].maxAccompaniedApplications;
 
-assert.equal(quota, 5, "la grille 2026-08-15 doit accorder 5 candidatures à Standard");
+assert.equal(quota, 4, "la grille A doit accorder 4 candidatures à Essentiel");
 
 // `currentCount` = nombre de candidatures DÉJÀ enregistrées.
 assert.equal(isQuotaReached(quota, 0), false, "1re candidature");
-assert.equal(isQuotaReached(quota, 4), false, "5e candidature");
-assert.equal(isQuotaReached(quota, 5), true, "6e candidature : doit être bloquée");
-assert.equal(isQuotaReached(quota, 6), true, "au-delà : reste bloquée");
+assert.equal(isQuotaReached(quota, 3), false, "4e candidature");
+assert.equal(isQuotaReached(quota, 4), true, "5e candidature : doit être bloquée");
+assert.equal(isQuotaReached(quota, 5), true, "au-delà : reste bloquée");
 
 });
 
@@ -97,11 +101,15 @@ assert.equal(isQuotaReached(quota, quota), true, `${id} : la suivante doit être
 
 });
 
-test("Signature : illimité, ne bloque jamais", () => {
+// Jusqu'au 2026-09-24 : « Signature : illimité ». Signature est
+// supprimée et AUCUNE formule en vente n'est illimitée ; la convention
+// reste (Infinity, jamais null ni undefined) et reste testée.
+test("un quota illimité (Infinity) ne bloque jamais — aucune formule en vente ne l'est", () => {
 
-const quota = OFFRES.signature.maxAccompaniedApplications;
+for (const [id, offre] of Object.entries(OFFRES)) assert.notEqual(offre.maxAccompaniedApplications, Infinity, `${id} : illimité`);
 
-assert.equal(quota, Infinity, "la convention illimitée est Infinity, pas null ni undefined");
+const quota = Infinity;
+
 assert.equal(isUnlimitedQuota(quota), true);
 
 for (const nb of [0, 1, 12, 5000]) {
@@ -253,27 +261,33 @@ assert.equal(nextPlanIdReproduit("gratuit"), "premier-dossier", "l'upsell d'un c
 
 });
 
-test("premium est déprécié : la formule suivante après Ambition est le Conseiller en vente (conseiller-6)", () => {
+// Jusqu'au 2026-09-24 : « premium est déprécié… ». Les anciennes
+// formules sont supprimées : l'échelle de l'upsell est celle des trois
+// formules en vente, et un ancien identifiant n'y mène plus nulle part.
+test("l'échelle de l'upsell : Premier Dossier → Essentiel → Conseiller, puis rien", () => {
 
-assert.equal(OFFRES.premium.deprecated, true, "cette assertion doit être mise à jour si premium redevient vendable");
-// Grille A : signature-focus est dépréciée à son tour — l'upsell saute
-// premium ET signature-focus pour tomber sur conseiller-6.
-assert.equal(nextPlanIdReproduit("accompagnement"), "conseiller-6", "premium et signature-focus (dépréciés) doivent être sautés par l'upsell");
-assert.equal(nextPlanIdReproduit("essentiel"), "conseiller-6", "un client Essentiel (5) ne doit jamais se voir proposer essentiel-4 (une marche plus basse)");
 assert.equal(nextPlanIdReproduit("premier-dossier"), "essentiel-4");
+assert.equal(nextPlanIdReproduit("essentiel-4"), "conseiller-6");
+assert.equal(nextPlanIdReproduit("conseiller-6"), null, "le Conseiller est la dernière marche");
+for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
+assert.equal(nextPlanIdReproduit(ancien), null, `${ancien} : supprimé, hors de l'échelle`);
+}
 
 });
 
-test("une offre dépréciée reste résolvable par identifiant (compte existant)", () => {
+test("les anciennes formules sont SUPPRIMÉES (2026-09-24) ; une future offre dépréciée resterait résolvable", () => {
 
-// C'est tout le sens de la convention `deprecated` : ne jamais
-// supprimer l'entrée, seulement l'exclure des surfaces de vente.
-// Liste dérivée de la grille, plus codée en dur : le 2026-09-01,
-// premier-dossier a quitté les dépréciées et cette boucle aurait
-// continué de le tester sous un nom devenu faux.
+// La convention `deprecated` demeure : une formule qui sortira un jour
+// de la vente EN LAISSANT DES CLIENTS garde son entrée, exclue des
+// surfaces de vente. Les anciennes formules, elles, n'avaient plus aucun
+// client (base relue le 2026-09-24) : Charles a décidé de les supprimer.
+for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
+assert.equal(OFFRES[ancien], undefined, `${ancien} : encore dans SCHOLARBRIDGE_PLANS`);
+}
+
 const depreciees = Object.keys(OFFRES).filter((id) => OFFRES[id].deprecated === true);
 
-assert.ok(depreciees.length > 0, "au moins une offre dépréciée doit exister pour que cette garde ait un sens");
+assert.deepEqual(depreciees, [], "aucune offre dépréciée aujourd'hui");
 
 for (const id of depreciees) {
 assert.ok(OFFRES[id], `${id} doit rester dans SCHOLARBRIDGE_PLANS malgré deprecated:true`);
@@ -308,13 +322,14 @@ Object.keys(DEFAULT_FEATURE_CONFIG[key]).sort(),
 // 4. Règles de libellé et de devise
 // ============================================================
 
-// « Signature » partout depuis le 2026-08-30 (distinction FitzUniverse/
-// Fitz, DESIGN_SYSTEM.md) : seul forfait avec conseiller humain, il ne
-// porte le nom ni de l'assistant ni de l'ancienne marque.
-test("Signature : le même libellé court en interface et dans la grille", () => {
+// Jusqu'au 2026-09-24 : « Signature : le même libellé ». Signature est
+// supprimée ; la règle vaut pour chaque formule en vente : le libellé
+// court de l'interface est le nom de la grille, sans « Forfait ».
+test("chaque formule en vente : le libellé court de l'interface est celui de la grille, sans « Forfait »", () => {
 
-assert.equal(PLAN_LABELS.signature, "Signature");
-assert.equal(OFFRES.signature.label, "Signature");
+for (const id of OFFRES_PAYANTES) {
+assert.equal(OFFRES[id].label, `Forfait ${PLAN_LABELS[id]}`, id);
+}
 
 });
 
@@ -341,5 +356,25 @@ test("pricing-plans.js expose bien la grille sur window", () => {
 
 // C'est ce dont dépendent applications.js et admin/student-detail.js.
 assert.equal(typeof fenetre.SCHOLARBRIDGE_PLANS, "object");
+
+});
+
+// Relecture du 2026-09-24 : plus aucune offre n'est dépréciée, donc plus
+// rien n'exerçait le filtre `deprecated` de nextPlanId/unlockingPlans.
+// La convention reste la voie d'une future sortie de vente AVEC clients :
+// elle est prouvée ici sur une grille fictive, sans toucher la vraie.
+test("la convention `deprecated` reste vivante : une offre fictive retirée est sautée par l'upsell et le déverrouillage", () => {
+
+const avant = globalThis.SCHOLARBRIDGE_PLANS;
+try {
+globalThis.SCHOLARBRIDGE_PLANS = { ...OFFRES, "essentiel-4": { ...OFFRES["essentiel-4"], deprecated: true } };
+assert.equal(nextPlanId("premier-dossier"), "conseiller-6", "une offre dépréciée n'est jamais la marche suivante");
+const flags = { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true };
+assert.deepEqual(unlockingPlans("gratuit", flags), ["premier-dossier", "conseiller-6"], "ni une cible de déverrouillage");
+globalThis.SCHOLARBRIDGE_PLANS = OFFRES;
+assert.equal(nextPlanId("premier-dossier"), "essentiel-4", "la vraie grille, elle, n'en déprécie aucune");
+} finally {
+if (avant === undefined) delete globalThis.SCHOLARBRIDGE_PLANS; else globalThis.SCHOLARBRIDGE_PLANS = avant;
+}
 
 });

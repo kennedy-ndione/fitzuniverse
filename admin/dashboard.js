@@ -26,7 +26,8 @@ getRecentEvents,
 getPlanBreakdown,
 getTopCountries,
 getTopUniversities,
-getBlocagesFrequents
+getBlocagesFrequents,
+getAllUsers
 } from "./firebase-admin.js";
 
 import { initSidebarToggle } from "./sidebar-toggle.js";
@@ -38,8 +39,8 @@ import { initJournee } from "./journee.js";
 // chaque identifiant avec l'étiquette de l'admin et couvre AUSSI le Pass
 // et les offres France (les compteurs analyticsPlanCounters/{planId} sont
 // écrits pour tout `plan` d'un payment_attempted, France comprise).
-import { tousLesIdentifiants, etiquetteAdmin } from "../js/formules-admin.js";
-import { PLAN_LABELS } from "../js/plan-features.js";
+import { tousLesIdentifiants, etiquetteColonne, PAYS_ADMIN, nomDuPays } from "../js/formules-admin.js";
+import { PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, droitsPreinscription } from "../js/plan-features.js";
 import { hidePageLoader } from "../js/app-shell.js";
 // Lot ADMIN-SAIT-TOUT (2026-09-23) : l'état de Fitz se lit dans la
 // constante que le site lui-même utilise, jamais dans une étiquette
@@ -750,7 +751,9 @@ if (!ctx || !window.Chart) return;
 planChart = new Chart(ctx, {
 type: "doughnut",
 data: {
-labels: planIds.map((id) => etiquetteAdmin(id)),
+// Une offre préinscription compte ses tentatives dans les neuf pays :
+// « Dossier · 9 pays » (le détail par pays est dans la carte dédiée).
+labels: planIds.map((id) => etiquetteColonne(id)),
 datasets: [{
 data: planIds.map((id) => breakdown[id] || 0),
 // Refonte claire 2026-09-02 : la palette bleu/violet de l'admin
@@ -976,10 +979,40 @@ liste.appendChild(row);
 // la collection se compte en dizaines.
 // ==========================================================
 
+// ==========================================================
+// LES NEUF PAYS DES PRÉINSCRIPTIONS (2026-09-24)
+// ==========================================================
+function renderPreinscriptionsParPays(users, resume) {
+const tbody = document.getElementById("paysPreinscriptionsBody");
+if (!tbody) return;
+const actives = {};
+for (const u of users || []) {
+for (const o of droitsPreinscription(u)) {
+const c = actives[o.destination] || (actives[o.destination] = {});
+c[o.plan] = (c[o.plan] || 0) + 1;
+}
+}
+const francs = (n) => `${new Intl.NumberFormat("fr-FR").format(n || 0)} F`;
+const parPays = (resume && resume.parPays) || {};
+tbody.innerHTML = PAYS_ADMIN.map((pays) => {
+const a = actives[pays] || {};
+const p = parPays[pays] || { nb: 0, encaisse: 0 };
+const n = (x) => x ? String(x) : `<span class="radar-muet">0</span>`;
+return `<tr>
+<td class="is-name">${nomDuPays(pays)}</td>
+<td class="is-nombre">${n(a["diagnostic-france"])}</td>
+<td class="is-nombre">${n(a["dossier-france"])}</td>
+<td class="is-nombre">${n(a["dossier-france-conseiller"])}</td>
+<td class="is-nombre">${n(p.nb)}</td>
+<td class="is-nombre">${p.encaisse ? francs(p.encaisse) : `<span class="radar-muet">—</span>`}</td>
+</tr>`;
+}).join("");
+}
+
 async function lireResumePaiements() {
 const snap = await getDocs(collection(db, "payments"));
 const semaine = Date.now() - 7 * 86400000;
-const resume = { encaisse: 0, nbPayes: 0, semaine: 0, enAttente: 0, dernierPaye: null, production: 0 };
+const resume = { encaisse: 0, nbPayes: 0, semaine: 0, enAttente: 0, dernierPaye: null, production: 0, parPays: {} };
 snap.forEach((d) => {
 const p = d.data();
 if (p.mode === "live") resume.production += 1;
@@ -989,6 +1022,14 @@ if (p.statut !== "paye" || p.applique === false) return;
 const montant = Number.isFinite(p.montantEncaisse) ? p.montantEncaisse : (p.montantAttendu || 0);
 resume.encaisse += montant;
 resume.nbPayes += 1;
+// Les neuf pays (2026-09-24) : une préinscription d'avant le 23/09 ne
+// porte pas de destination — c'était la France.
+if (PLAN_PREINSCRIPTION_ORDER.includes(p.planId)) {
+const pays = PAYS_ADMIN.includes(p.destination) ? p.destination : "france";
+const c = resume.parPays[pays] || (resume.parPays[pays] = { nb: 0, encaisse: 0 });
+c.nb += 1;
+c.encaisse += montant;
+}
 // traiteLe : posé par le webhook quand il applique le paiement.
 const quand = p.traiteLe && typeof p.traiteLe.toDate === "function" ? p.traiteLe.toDate()
 : (p.creeLe && typeof p.creeLe.toDate === "function" ? p.creeLe.toDate() : null);
@@ -1211,6 +1252,12 @@ renderPulseFootnote();
 
 await Promise.all([
 renderPlanChart(),
+getAllUsers().then((users) => renderPreinscriptionsParPays(users, paiementsResume)).catch((error) => {
+console.warn("Préinscriptions par pays non lues :", error);
+// Jamais « Chargement… » pour toujours : la carte dit qu'elle n'a pas pu lire.
+const tbody = document.getElementById("paysPreinscriptionsBody");
+if (tbody) tbody.innerHTML = `<tr><td colspan="6"><div class="admin-table-empty">Les comptes n'ont pas pu être lus. Rechargez la page.</div></td></tr>`;
+}),
 getBlocagesFrequents().then(renderBlocages).catch((error) => { console.warn("Blocages non lus :", error); }),
 getTopCountries(6).then((items) => renderTopList("topCountriesList", items)),
 getTopUniversities(6).then((items) => renderTopList("topUniversitiesList", items))

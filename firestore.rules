@@ -122,15 +122,15 @@ function isTester(uid) {
 return get(/databases/$(database)/documents/users/$(uid)).data.get('testerAccess', false) == true;
 }
 
-// GRILLE A (2026-09-07) : `essentiel-4` et `conseiller-6` AJOUTÉS ;
-// aucun ancien identifiant retiré — ce sont les valeurs de `plan` des
-// comptes existants, et leurs droits d'origine sont conservés.
+// Les formules bourses EN VENTE, et elles seules : les anciennes
+// (essentiel, accompagnement, premium, signature-focus, signature) ont
+// été supprimées le 2026-09-24 — aucun compte ne les portait.
 function isPaidPlan(uid) {
-return planOf(uid) in ['premier-dossier', 'essentiel', 'essentiel-4', 'accompagnement', 'premium', 'signature-focus', 'conseiller-6', 'signature'];
+return planOf(uid) in ['premier-dossier', 'essentiel-4', 'conseiller-6'];
 }
 
 function isSignaturePlan(uid) {
-return planOf(uid) in ['signature-focus', 'conseiller-6', 'signature'];
+return planOf(uid) == 'conseiller-6';
 }
 
 // MESSAGERIE : isMessagingPlan() a été RETIRÉE le 2026-09-23. Écrire à
@@ -154,27 +154,20 @@ return get(/databases/$(database)/documents/users/$(uid)).data.get('fitzExpressE
 
 // Quota de candidatures SIMULTANÉES par formule, exprimé en MOTIF
 // D'IDENTIFIANT autorisé — miroir de maxAccompaniedApplications
-// (pricing-plans.js) : premier-dossier 1, essentiel-4 4, essentiel 5,
-// conseiller-6 6, accompagnement 9, premium/signature-focus 12, signature illimitée
-// (999 créneaux — fini pour rester exprimable, inatteignable en
-// pratique), gratuit 0. Un motif plutôt qu'un nombre : matches() est
+// (pricing-plans.js) : premier-dossier 1, essentiel-4 4, conseiller-6 6,
+// gratuit 0 ; un compte testeur, 999 créneaux (fini pour rester
+// exprimable, inatteignable en pratique). Un motif plutôt qu'un nombre : matches() est
 // la construction la plus sûre du langage des règles, sans conversion
 // de chaîne. La chaîne vide pour "gratuit" ne matche aucun id réel
 // (un id de document n'est jamais vide) : création impossible.
 // get() est mis en cache par requête : les appels répétés à planOf()
 // ne coûtent qu'UNE lecture.
-// Grille A (2026-09-07) : essentiel-4 → 4 créneaux, conseiller-6 → 6.
-// Les anciens motifs sont conservés tels quels.
+// Les motifs des anciennes formules sont partis avec elles (2026-09-24).
 function slotPattern(uid) {
 return isTester(uid) ? 'slot-([1-9][0-9]{0,2})' :
-(planOf(uid) == 'signature' ? 'slot-([1-9][0-9]{0,2})' :
-(planOf(uid) == 'signature-focus' ? 'slot-([1-9]|1[0-2])' :
-(planOf(uid) == 'premium' ? 'slot-([1-9]|1[0-2])' :
-(planOf(uid) == 'accompagnement' ? 'slot-[1-9]' :
 (planOf(uid) == 'conseiller-6' ? 'slot-[1-6]' :
-(planOf(uid) == 'essentiel' ? 'slot-[1-5]' :
 (planOf(uid) == 'essentiel-4' ? 'slot-[1-4]' :
-(planOf(uid) == 'premier-dossier' ? 'slot-1' : ''))))))));
+(planOf(uid) == 'premier-dossier' ? 'slot-1' : '')));
 }
 
 // ------------------------------------------------------------
@@ -287,7 +280,7 @@ return (isTester(uid) || isDossierFrance(uid)) ? 'pre-[1-7]' : '';
 // tout son document SAUF ces champs. Avant ce correctif, isOwner(uid)
 // autorisait une écriture sans restriction de champ : un étudiant
 // connecté pouvait s'auto-attribuer n'importe quelle formule (y compris
-// "premium") directement depuis la console développeur, sans jamais
+// "conseiller-6") directement depuis la console développeur, sans jamais
 // passer par l'interface ni par un paiement. affectedKeys() garantit
 // qu'aucune écriture (admin ou propriétaire) ne peut toucher un champ
 // hors de son périmètre autorisé.
@@ -426,7 +419,7 @@ allow delete: if isOwner(uid);
 }
 
 // ------------------------------------------------------------
-// Demandes de revue conseiller (Signature / Signature Focus) —
+// Demandes de revue conseiller (Forfait Conseiller, Dossier + Conseiller) —
 // contrepartie étudiant -> admin de users/{uid}/messages ci-dessus
 // (qui va admin -> étudiant), donc les mêmes règles mais inversées.
 // L'étudiant crée sa demande (texte + candidature concernée
@@ -438,9 +431,11 @@ allow delete: if isOwner(uid);
 // la suppression de compte, account.html).
 // ------------------------------------------------------------
 match /users/{uid}/advisorRequests/{requestId} {
-// AUDIT SÉCURITÉ 2026-09-02 : le conseiller est une exclusivité
-// Signature/Signature Focus (flag "advisor", js/plan-features.js) —
-// désormais aussi côté serveur (isSignaturePlan/isTester).
+// AUDIT SÉCURITÉ 2026-09-02 : le conseiller est une exclusivité des
+// formules qui le vendent (flag "advisor", js/plan-features.js) —
+// aussi côté serveur : conseiller-6 (isSignaturePlan, nom historique),
+// Dossier + Conseiller dans l'un des neuf pays (isDossierConseiller),
+// et l'accès test.
 allow create: if isOwner(uid) &&
 (isSignaturePlan(uid) || isDossierConseiller(uid) || isTester(uid)) &&
 request.resource.data.keys().hasOnly(["text", "applicationId", "university", "status", "createdAt"]) &&
@@ -719,8 +714,10 @@ allow create: if isOwner(uid) && (
 request.resource.data.get('refus', 0) == 0 &&
 !estStatutDepose(request.resource.data.get('status', ''))));
 // ACCEPTATION : une formule EN VENTE ne supprime jamais une carte
-// catalogue (l'historique du dossier) ; une formule retirée de la vente
-// supprime une carte acceptée dans un statut de réponse, et elle seule.
+// catalogue (l'historique du dossier) ; un compte SANS formule en vente
+// (formule terminée par l'admin, ou ancienne formule supprimée le
+// 2026-09-24) supprime une carte acceptée dans un statut de réponse, et
+// elle seule.
 // Vœux pre-N et cartes sans programId : inchangé.
 allow delete: if isOwner(uid) && (
 !estBourse(resource.data) ||

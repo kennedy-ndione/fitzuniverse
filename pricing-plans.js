@@ -17,116 +17,59 @@
 // F CFA, seule devise réellement utilisée par les étudiants concernés.
 //
 // ==========================================================
-// STRUCTURE DE L'OFFRE (révisée 2026-08-15)
+// LES FORMULES EN VENTE — ET SEULEMENT ELLES (2026-09-24)
 // ==========================================================
-// Deux familles, distinguées par `type` :
+// Deux familles, et rien d'autre dans cet objet :
 //
-//  - "pass" / "plan"  → AUTONOME. Découverte (pass ponctuel, sans
-//    abonnement) puis Standard / Avancé (abonnements, 100% outils Fitz).
-//    Standard et Avancé se différencient par le nombre de candidatures
-//    accompagnées (`maxAccompaniedApplications`), la durée et le niveau
-//    de service humain (relecture, prépa entretien, alertes).
+//  - BOURSES (`parcours: "bourse"`, champ `plan` du compte) :
+//      fitzExpress      Pass Découverte, 10 000 F, 14 jours — le chat
+//                       avec Fitz seul ; ce n'est pas une formule (il
+//                       ne touche jamais `plan`) ;
+//      premier-dossier  Forfait Premier Dossier, 25 000 F, 1 candidature ;
+//      essentiel-4      Forfait Essentiel, 45 000 F, 4 candidatures ;
+//      conseiller-6     Forfait Conseiller, 150 000 F, 6 candidatures,
+//                       chacune relue par un conseiller.
 //
-//  - "human"          → ACCOMPAGNÉ. Renforcé et Signature : un
-//    conseiller réel, Fitz venant en renfort plutôt que seul.
+//  - PRÉINSCRIPTIONS (`parcours: "preinscription"`) : Diagnostic
+//    (10 000 F), Dossier (75 000 F), Dossier + Conseiller (150 000 F),
+//    les MÊMES trois offres et les mêmes prix pour les neuf pays
+//    (décision de Charles, 2026-09-24). La France s'écrit dans
+//    `planPreinscription`, les huit autres dans `preinscriptionsPays`.
 //
-// CHANGEMENT DE POSITIONNEMENT (2026-08-02, toujours valable) : Avancé
-// ajoute de vrais services humains par rapport à Standard (relecture,
-// prépa entretien) — la règle "seule différence = le quota" est
-// abandonnée depuis cette date. Les OUTILS FITZ, eux, restent inclus à
-// 100% dans toutes les offres payantes (y compris les offres
-// dépréciées, tant qu'un compte existant les détient) — aucun outil
-// n'est réservé à une offre supérieure. C'est pourquoi
-// js/plan-features.js (qui ne pilote que les outils Fitz) reste
-// inchangé par la grille du 2026-08-15 ci-dessous.
+// LES ANCIENNES FORMULES ONT ÉTÉ SUPPRIMÉES LE 2026-09-24 (décision de
+// Charles : « éradiquer toutes les anciennes formules du site qui ne sont
+// plus utilisées »). `essentiel`, `accompagnement` (Ambition), `premium`,
+// `signature-focus` et `signature` n'existent plus nulle part : ni ici, ni
+// dans js/plan-features.js, ni dans functions/lib/achat.js, ni dans
+// firestore.rules. Vérifié en base le jour même : aucun des 25 comptes ne
+// les portait, aucun paiement ne les nommait. Un identifiant inconnu
+// retombe sur « gratuit » (resolvePlan) : c'est le filet, pas un cas
+// prévu.
 //
-// ==========================================================
-// CONVENTION "deprecated" (introduite 2026-08-15)
-// ==========================================================
-// `deprecated: true` sur une offre signifie : retirée de la VENTE
-// PUBLIQUE (grille de offers.html, tout futur tableau comparatif,
-// suggestions d'upsell côté dashboard — voir nextPlanId()/
-// unlockingPlans() dans js/access-guard.js, qui l'excluent désormais),
-// mais JAMAIS supprimée de cet objet. Un compte existant déjà sur cette
-// offre continue de fonctionner exactement comme avant : quota, accès
-// aux outils Fitz, résolution par identifiant (admin, applications.js,
-// dashboard.js) — tout code qui lit SCHOLARBRIDGE_PLANS[planId] par
-// identifiant plutôt que d'en parcourir toutes les clés n'a rien à
-// changer. Supprimer une entrée casserait ces comptes ; forcer une
-// migration vers une autre offre supposerait une équivalence qui
-// n'existe pas toujours (ex. `premier-dossier` était un achat unique
-// sans durée, `essentiel`/Standard est un abonnement).
-// `premium` est dépréciée depuis la grille du 2026-08-15 (remplacée
-// par Avancé, dont le quota est désormais identique — 12
-// candidatures). `premier-dossier` l'a été aussi ce jour-là, puis a
-// été RESSUSCITÉE le 2026-08-29 — voir le commentaire sur son entrée.
-//
-// GRILLE A (2026-09-07) — LA PROFONDEUR REMPLACE LE COMPTAGE.
-// Mesuré sur l'export réel : 156 bourses, 72 ouvertes, 27 déposées par
-// un tiers, 60 déposables soi-même et non exclues pour le Sénégal
-// (Licence 30, Master 42, Doctorat 28) ; le harnais retient 8 à 12
-// opportunités par profil réel. Au-dessus de 9, un quota ne
-// différencie plus rien, et « illimité » est faux par construction.
-// D'où : `essentiel` (5) → `essentiel-4` (4, 6 mois, 45 000 F) ;
-// `signature-focus` (12) → `conseiller-6` (6, 9 mois, 150 000 F) ;
-// `accompagnement` (Ambition, 9) et `signature` (illimité) sortent de
-// la vente. RÈGLE D'OR : aucun objet existant n'a été modifié (prix,
-// quota, durée, fonctionnalités) — un client Essentiel garde ses 5
-// candidatures et sa messagerie ; les anciens identifiants restent
-// dans firestore.rules avec leurs droits d'origine. Les NOUVEAUX
-// identifiants portent le quota dans leur nom : un nouveau quota sera
-// un nouvel identifiant, jamais une modification.
+// La règle qui reste : un NOUVEAU quota est un NOUVEL identifiant
+// (`essentiel-4`, `conseiller-6`), jamais la modification d'un identifiant
+// détenu par des comptes.
 //
 // Le diagnostic d'éligibilité bourses RESTE GRATUIT (décision explicite,
 // grille A) : seule porte d'entrée gratuite du site, démonstration
 // personnalisée que le catalogue fonctionne. Ne jamais le rattacher à
 // une offre, Pass Découverte compris.
 //
-// ==========================================================
-// IDENTIFIANTS — ne pas renommer à la légère
-// ==========================================================
-// `fitzExpress` et `accompagnement` gardent leur identifiant historique
-// alors que la grille commerciale les nomme "Découverte" et "Avancé".
-// Ce n'est pas un oubli : `accompagnement` est l'une des valeurs de
-// PLAN_ORDER (js/plan-features.js), la clé du document Firestore
-// `config/planFeatures`, ET la valeur écrite dans `users/{uid}.plan`
-// des comptes existants. Le renommer demanderait une migration de
-// données, pas seulement une mise à jour des points d'appel.
-// Depuis la grille du 2026-08-15, `signature-focus` porte lui aussi un
-// nom commercial ("Renforcé") différent de son identifiant interne — même
-// raisonnement : il reste la clé PLAN_ORDER/Firestore d'origine, seul
-// `label` change. Un identifiant interne et un nom commercial peuvent
-// donc légitimement diverger ; ne jamais déduire l'un de l'autre.
-
 // ============================================================
 // LOT PROMESSES (2026-09-20) — ON N'ÉCRIT PAS « SANS RESTRICTION »
 // QUAND LE SERVEUR COMPTE.
 //
-// Huit formules annonçaient « 100% des outils Fitz, sans restriction »
-// et trois autres lignes disaient « illimité ». Le serveur, lui,
-// répond « Vous avez atteint votre volume Fitz du jour »
-// (functions/fitz.js, code QUOTA_PLAN). La promesse était écrite dans
-// l'argumentaire de vente et démentie APRÈS paiement : c'est la seule
-// contradiction du site dont un client garde la preuve écrite.
-//
-// Chaque formule annonce donc son volume réel, lu dans
+// Chaque formule annonce son volume Fitz réel, lu dans
 // functions/lib/fitz-acces.js (PLAFONDS) et converti avec les poids de
 // functions/fitz.js (TACHES) : chat, e-mail, diagnostic et
 // vérification 1 point ; traduction 3 ; lettre 4 ; analyse de dossier 7.
 //
 //   Pass Découverte 40/jour · Premier Dossier 50 · Essentiel 40
-//   Accompagnement et Premium 45 · Conseiller et Signature Focus 70
-//   Signature 90 · Dossier France 40 · Dossier France Conseiller 70
+//   Conseiller 70 · Dossier 40 · Dossier + Conseiller 70
 //
 // SI UN PLAFOND CHANGE DANS functions/lib/fitz-acces.js, CES PHRASES
 // DOIVENT CHANGER AVEC LUI. Un chiffre faux ici coûte plus cher qu'un
 // chiffre absent : il se vérifie.
-//
-// Le mot « illimité » ne revient pas non plus sur les candidatures :
-// `maxAccompaniedApplications: Infinity` est vrai côté code, mais le
-// catalogue n'ouvre que 8 à 12 opportunités par profil (voir la note
-// de Signature) — « autant que votre profil en ouvre » dit la même
-// chose sans promettre ce que les données ne peuvent pas donner.
 // ============================================================
 
 const SCHOLARBRIDGE_PLANS = {
@@ -233,234 +176,6 @@ highlights: [
 },
 
 // ==========================================================
-// AUTONOME — Standard / Avancé
-// Durées et quotas propres à chaque offre : ne plus supposer une durée
-// commune. Échelle du 2026-08-29, calée sur le rythme réel d'une
-// campagne de bourses (fenêtres ouvertes 8-12 mois avant la rentrée,
-// cycle complet en 6-9 mois) : Standard 6 mois (une vraie saison),
-// Avancé et Renforcé 9 mois (12 dossiers chevauchent souvent deux
-// fenêtres ; durées IDENTIQUES pour que l'écart de prix reste
-// uniquement l'humain), Signature 12 mois. La durée n'achète que la
-// fenêtre d'ouverture de NOUVEAUX dossiers — les candidatures déposées
-// restent suivies jusqu'à la décision (extendsPendingApplications).
-// ==========================================================
-
-// DÉPRÉCIÉE (grille A, 2026-09-07) : remplacée par `essentiel-4`
-// (même prix, même durée, quota 4 — la profondeur plutôt que le
-// comptage). Honorée telle quelle pour qui la détient : 5 candidatures
-// ET la messagerie FitzUniverse restent acquises (firestore.rules,
-// js/plan-features.js). Ne rien modifier ici.
-essentiel: {
-id: "essentiel",
-parcours: "bourse",
-type: "plan",
-deprecated: true,
-label: "Forfait Essentiel",
-icon: "compass",
-tagline: "Jusqu'à 5 candidatures accompagnées de bout en bout, avec Fitz.",
-badge: "Jusqu'à 5 candidatures",
-// 29 000 → 45 000 le 2026-08-29 (décision utilisateur, voir le chantier
-// grille) : à 29 000 F, 5 candidatures coûtaient à peine 2× l'unité
-// (Premier Dossier, alors 15 000 F) — le volume écrasait la valeur du
-// travail. À 45 000 F : 9 000 F/candidature, 1,67× moins cher que
-// l'unité — l'upgrade reste évident sans devenir insultant. (Depuis le
-// 2026-09-11, l'unité vaut 25 000 F : l'écart n'a fait que se creuser.)
-priceFCFA: 45000,
-duration: "6 mois",
-maxAccompaniedApplications: 5,
-extendsPendingApplications: true,
-fitzAccess: "Tous les outils Fitz — jusqu'à 40 questions ou 5 analyses de dossier par jour",
-// Restructurés le 2026-09-02 : chaque ligne correspond à une
-// capacité RÉELLE de l'espace étudiant (parcours, outils, chat +
-// entraînement aux tests, entretiens, suivi, messagerie FitzUniverse).
-highlights: [
-"Jusqu'à 5 candidatures accompagnées de bout en bout",
-"100 % des outils Fitz : lettre, e-mails, vérification, traduction, compression",
-"Discuter avec Fitz au fil de la journée, et l'entraînement aux tests calé sur vos échéances",
-"Préparation aux entretiens et suivi complet des candidatures",
-"Messagerie FitzUniverse : l'équipe vous répond dans votre espace",
-"Vos textes retravaillés avec Fitz, dans votre volume quotidien",
-"Candidatures en attente suivies jusqu'à la décision de l'université"
-]
-},
-
-// DÉPRÉCIÉE (grille A, 2026-09-07) : retirée de la vente parce que son
-// quota de 9 dépasse ce qu'un étudiant peut réellement viser — le
-// catalogue retient 8 à 12 opportunités par profil, toutes bourses
-// confondues, et une candidature ne se mène pas à fond à ce rythme.
-// Honorée telle quelle pour qui la détient (9 candidatures, messagerie).
-accompagnement: {
-id: "accompagnement",
-parcours: "bourse",
-type: "plan",
-deprecated: true,
-label: "Forfait Ambition",
-// "rocket" depuis le 2026-08-29 : sparkles est le cliché visuel de
-// l'IA — banni du design system (voir DESIGN_SYSTEM.md, règle
-// "Icônes") ; la fusée dit ce que la formule vend : aller plus loin.
-icon: "rocket",
-tagline: "Jusqu'à 9 candidatures accompagnées de bout en bout, avec Fitz.",
-badge: "Le plus populaire",
-// 75 000 F / 9 candidatures (décision utilisateur du 2026-08-29,
-// arrêtée après deux allers-retours le même jour : 75 000/12 puis
-// 80 000/9) : ~8 300 F/candidature, et 10 000 F sous les 85 000 F de
-// frais de dossier Campus France pour une seule destination — l'ancre
-// de marché affichée sur offers.html garde une marge nette. Ne jamais
-// dépasser ce seuil sans retirer l'encadré. Le Forfait Conseiller
-// (150 000 F, 12 candidatures) vaut exactement 2× Ambition ET ajoute
-// 3 candidatures : la marche vend l'humain et le volume.
-priceFCFA: 75000,
-duration: "9 mois",
-maxAccompaniedApplications: 9,
-extendsPendingApplications: true,
-fitzAccess: "Tous les outils Fitz — jusqu'à 45 questions ou 6 analyses de dossier par jour",
-// "Relecture humaine de la lettre de motivation" retirée le 2026-08-22 :
-// AUCUN humain n'intervient sur Découverte, Standard ni Avancé — ces
-// trois offres sont assurées par Fitz seul. La ligne promettait donc un
-// service qui n'était pas rendu.
-//
-// Elle n'est pas remplacée par un équivalent Fitz : Essentiel inclut
-// déjà tous les outils. Ce qui distingue RÉELLEMENT Ambition, c'est le
-// volume et la durée — les anciennes lignes « Préparation à
-// l'entretien » et « Alertes » (disponibles dès Essentiel) laissaient
-// croire le contraire et ont été retirées le 2026-09-02.
-highlights: [
-"Jusqu'à 9 candidatures accompagnées de bout en bout",
-"Tout le contenu du Forfait Essentiel",
-"4 candidatures et 3 mois d'accompagnement de plus qu'Essentiel",
-"Le meilleur prix par candidature des formules autonomes (≈ 8 300 F)",
-"Candidatures en attente suivies jusqu'à la décision de l'université"
-]
-},
-
-// DÉPRÉCIÉE (grille 2026-08-15, voir la convention en tête de fichier).
-// Son quota (12 candidatures) correspond aujourd'hui à celui du Forfait
-// Conseiller — Ambition est repassée à 9 candidatures le 2026-08-29.
-premium: {
-id: "premium",
-parcours: "bourse",
-type: "plan",
-label: "Premium",
-icon: "crown",
-tagline: "Jusqu'à 12 candidatures accompagnées de bout en bout, avec Fitz.",
-badge: "Jusqu'à 12 candidatures",
-priceFCFA: 80000,
-duration: "6 mois",
-maxAccompaniedApplications: 12,
-extendsPendingApplications: true,
-fitzAccess: "Tous les outils Fitz — jusqu'à 45 questions ou 6 analyses de dossier par jour",
-deprecated: true,
-highlights: [
-"Jusqu'à 12 candidatures accompagnées de bout en bout",
-"Tout le contenu du Forfait Ambition",
-"Vos dossiers révisés au fil de la journée",
-"Aide à la préparation du visa",
-// Le délai annoncé est passé à 48 h ouvrées (grille A, 2026-09-07) : il
-// vit dans js/delai-reponse.js, il est le même partout.
-"Réponse généralement sous 48 h ouvrées"
-]
-},
-
-// ==========================================================
-// ACCOMPAGNÉ — Renforcé / Signature
-// Un conseiller réel, Fitz venant en renfort — et non l'inverse.
-// ==========================================================
-
-// DÉPRÉCIÉE (grille A, 2026-09-07) : remplacée par `conseiller-6`
-// (même prix, même durée, quota 6). Honorée telle quelle pour qui la
-// détient : 12 candidatures, conseiller, messagerie.
-"signature-focus": {
-id: "signature-focus",
-parcours: "bourse",
-type: "human",
-deprecated: true,
-label: "Forfait Conseiller",
-icon: "user-check",
-tagline: "Un conseiller humain vérifie chaque dossier avant l'envoi, sur 12 candidatures.",
-badge: "Accompagnement humain",
-// 120 000 → 150 000 le 2026-08-29 (même décision) : exactement 2×
-// Avancé — tout l'écart achète l'humain, la marche se lit d'un coup
-// d'œil. Paiement en une fois (décision du 2026-08-29 : aucun fractionné).
-priceFCFA: 150000,
-duration: "9 mois",
-maxAccompaniedApplications: 12,
-extendsPendingApplications: true,
-fitzAccess: "Tous les outils Fitz — jusqu'à 70 questions ou 10 analyses de dossier par jour",
-// Réécrit le 2026-08-22. L'ancienne liste ne justifiait pas l'écart de
-// prix avec Avancé : quota et durée identiques (12 candidatures, 6 mois),
-// prix doublé, et deux puces sur quatre répétaient ce qu'Avancé offre
-// déjà. Tout l'écart tient à l'humain — la liste dit donc désormais ce
-// qu'il fait, concrètement.
-//
-// La marche par rapport à Avancé est nette et facile à défendre :
-// Découverte, Standard et Avancé sont assurées par Fitz SEUL — aucun
-// humain n'y intervient. Renforcé est le premier palier où un conseiller
-// entre en jeu. Tout l'écart de prix achète donc exactement une chose,
-// l'humain — et, depuis le passage d'Ambition à 9 candidatures
-// (2026-08-29), 3 candidatures accompagnées de plus (12 contre 9).
-//
-// Ne jamais réintroduire de mention d'intervention humaine sur les trois
-// offres du dessous : ce serait une promesse non tenue, et ça effacerait
-// du même coup la seule justification du prix de Renforcé.
-highlights: [
-"Vérification humaine de chaque dossier avant l'envoi",
-"Demandes de revue tracées : faites relire lettre ou dossier avant chaque dépôt",
-"Échanges directs avec votre conseiller via la messagerie FitzUniverse",
-"L'assistance continue de Fitz en renfort",
-"Candidatures en attente suivies jusqu'à la décision de l'université"
-]
-},
-
-// DÉPRÉCIÉE (grille A, 2026-09-07) : retirée de la vente parce que
-// « illimité » est faux — le plafond réel est de 8 à 12 opportunités
-// par profil, et une promesse qu'aucun catalogue ne peut tenir n'a pas
-// sa place sur une grille. Honorée telle quelle pour qui la détient :
-// quota Infinity, conseiller dédié, messagerie ET WhatsApp direct
-// (whatsapp_direct n'est plus attachée à aucune offre en vente).
-signature: {
-id: "signature",
-parcours: "bourse",
-type: "human",
-deprecated: true,
-label: "Signature",
-// « medal » et non « star » : sparkles / star / wand sont interdites sur
-// tout le site (2026-09-02 ; test/icones.test.mjs). Formule retirée.
-icon: "medal",
-tagline: "Conseiller dédié, autant de candidatures que votre profil en ouvre.",
-badge: "Notre formule la plus complète",
-// 199 000 → 250 000 le 2026-08-29 (même décision) : offre rare (20
-// places/promotion, demande via WhatsApp avant paiement), conseiller
-// dédié 12 mois — et toujours sous les ~310 000 F de la seule
-// attestation bancaire Studely. Paiement en une fois (aucun fractionné).
-priceFCFA: 250000,
-duration: "12 mois",
-// CONVENTION "ILLIMITÉ" (arrêtée 2026-08-02) : `Infinity`, jamais une
-// valeur absente ni `null`. Les deux lecteurs du champ
-// (applications.js, admin/student-detail.js) le testent par sa
-// véracité — `undefined`/`null` y sont donc indiscernables de
-// "aucune candidature incluse", ce qui faisait afficher "formule
-// Gratuit" à un client Signature. `Infinity` est truthy, et
-// `applications.length >= Infinity` est toujours faux : le plafond ne
-// se déclenche jamais sans qu'aucun cas particulier soit nécessaire
-// dans la vérification de quota. Seul l'affichage doit le traduire en
-// "illimité". Ne jamais écrire cette valeur telle quelle dans
-// Firestore ou un JSON (Infinity n'est pas sérialisable) — elle vit
-// uniquement dans ce fichier.
-maxAccompaniedApplications: Infinity,
-extendsPendingApplications: true,
-fitzAccess: "Tous les outils Fitz — jusqu'à 90 questions ou 12 analyses de dossier par jour",
-highlights: [
-"Un conseiller dédié",
-"Autant de candidatures que votre profil en ouvre",
-"Points d'étape en visioconférence",
-"Accompagnement jusqu'à la préparation du visa",
-"Des échanges personnalisés avec l'équipe, dans la messagerie FitzUniverse",
-"L'assistance continue de Fitz tout au long du processus",
-"Candidatures en attente suivies jusqu'à la décision de l'université"
-]
-},
-
-// ==========================================================
 // GRILLE A (2026-09-07) — LES DEUX OFFRES BOURSES RÉVISÉES.
 // Quatre offres en vente côté bourses : fitzExpress, premier-dossier,
 // et ces deux-ci. La promesse est la PROFONDEUR (« 4 candidatures
@@ -489,10 +204,8 @@ priceFCFA: 45000,
 // chacune suivie jusqu'à la décision de l'université ; la suite, c'est
 // l'équipe qui la décide. `duration` retirée (elle valait « 6 mois »).
 // Exception assumée à la règle « un objet existant ne se modifie pas » :
-// aucun client payant ne détient cette formule (le paiement réel n'est
-// pas ouvert, le KYC PayDunya est en attente), et le changement ne
-// retire rien — il enlève une limite. Les formules retirées de la vente
-// gardent leur durée.
+// aucun client payant ne détenait cette formule, et le changement ne
+// retire rien — il enlève une limite.
 maxAccompaniedApplications: 4,
 extendsPendingApplications: true,
 fitzAccess: "Tous les outils Fitz — jusqu'à 40 questions ou 5 analyses de dossier par jour",
@@ -535,9 +248,11 @@ highlights: [
 
 // ==========================================================
 // GRILLE B — PRÉINSCRIPTIONS (2026-09-07). Un SECOND forfait, qui
-// coexiste avec le forfait bourse : `users.planPreinscription`, écrit
-// par le webhook seul, jamais `plan`. Trois offres décidées, ne pas
-// rouvrir. France uniquement. Paiement en une fois, jamais de
+// coexiste avec le forfait bourse : `users.planPreinscription` (France)
+// et `users.preinscriptionsPays` (les huit autres pays, depuis le
+// 2026-09-23), écrits par le webhook seul, jamais `plan`. Trois offres
+// décidées, ne pas rouvrir ; les mêmes, au même prix, dans les neuf pays
+// (voir DESTINATIONS_OFFRE plus bas). Paiement en une fois, jamais de
 // remboursement, jamais de mensualité. `maxPreinscriptions` = les 7
 // vœux d'un dossier Études en France — dupliqué dans firestore.rules
 // (pre-[1-7]) et functions/lib/achat.js, test/grille-b.test.mjs
@@ -742,7 +457,7 @@ return { prix: base - DEDUCTION_DIAGNOSTIC.montant, base, deduction: DEDUCTION_D
 window.prixAvecDeduction = prixAvecDeduction;
 
 // ==========================================================
-// LES SIX AUTRES DESTINATIONS (2026-09-23, décision de Charles)
+// LES HUIT AUTRES DESTINATIONS (2026-09-23, décision de Charles)
 // ==========================================================
 //
 // La même grille que la France — 10 000 / 75 000 / 150 000 F — et les

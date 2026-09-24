@@ -38,9 +38,9 @@ import { phraseTestLangue } from "../js/test-de-langue.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { PLAN_LABELS, PLAN_PREINSCRIPTION_LABELS, PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER, droitsPreinscription, libelleOffrePreinscription } from "../js/plan-features.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : les étiquettes de l'admin, un
-// seul nommage (« Essentiel · 4 candidatures » ≠ « Essentiel (ancienne)
-// · 5 candidatures »), et les groupes « En vente » / « Retirées ».
-import { optionsFormules } from "../js/formules-admin.js";
+// seul nommage. Les neuf pays (2026-09-24) : chaque offre préinscription
+// se lit et se pose au nom de SON pays.
+import { optionsFormules, optionsPays, optionsOffresPays, etiquetteOffrePays, nomDuPays, PAYS_ADMIN } from "../js/formules-admin.js";
 // Lot ADMIN : le rôle décide de ce qui est RENDU, le bandeau dit ce qui
 // s est passé, et firebase-admin porte les écritures tracées.
 import { chargerAdmin, appliquerRole } from "./admin-role.js";
@@ -242,9 +242,9 @@ const planPreKey = resolvePlanPreinscription(userData);
 
 document.getElementById("detailPills").innerHTML = `
 <span class="status-pill plan-${planKey}">${planLabel}</span>
-${planPreKey ? droitsPreinscription(userData).map((o) => `<span class="status-pill plan-signature-focus">${libelleOffrePreinscription(o.plan, o.destination)}</span>`).join("") : ""}
+${planPreKey ? droitsPreinscription(userData).map((o) => `<span class="status-pill plan-${o.plan}">${libelleOffrePreinscription(o.plan, o.destination)}</span>`).join("") : ""}
 <span class="status-pill ${disabled ? "is-disabled" : "is-active"}">${disabled ? "Suspendu" : "Actif"}</span>
-${userData.testerAccess === true ? `<span class="status-pill plan-premium">Accès test complet</span>` : ""}
+${userData.testerAccess === true ? `<span class="status-pill is-testeur">Accès test complet</span>` : ""}
 `;
 
 }
@@ -344,8 +344,9 @@ list.appendChild(row);
 // met à jour. Elles viennent maintenant de PLAN_ORDER et de
 // PLAN_PREINSCRIPTION_ORDER, avec leurs libellés d'interface.
 //
-// Les dépréciées restent proposées, dans leur propre groupe : des
-// comptes bien réels les portent, et il faut pouvoir les leur rendre.
+// Une formule retirée de la vente (il n'y en a aucune depuis le
+// 2026-09-24) serait proposée dans son propre groupe : des comptes la
+// porteraient, et il faudrait pouvoir la leur rendre.
 function construireSelecteurs() {
 
 const selPlan = document.getElementById("planSelect");
@@ -358,12 +359,84 @@ if (selPlan && !selPlan.options.length) {
 selPlan.innerHTML = optionsFormules({ vide: "Sans formule", pass: false, preinscription: false });
 }
 
+// Les neuf pays (2026-09-24) : d'abord le pays, puis ses trois offres,
+// à son nom (« Dossier Chine · 7 vœux »). Les options de l'offre sont
+// reconstruites à chaque changement de pays (remplirOffresDuPays).
+const selPays = document.getElementById("paysOffreSelect");
+
+if (selPays && !selPays.options.length) {
+selPays.innerHTML = optionsPays({ vide: null });
+selPays.value = "france";
+}
+
 const selPre = document.getElementById("planPreinscriptionSelect");
 
 if (selPre && !selPre.options.length) {
-selPre.innerHTML = optionsFormules({ vide: "Sans offre", pass: false, bourse: false });
+selPre.innerHTML = optionsOffresPays(selPays ? selPays.value : "france");
 }
 
+}
+
+// L'offre d'un pays sur le compte, TELLE QU'ÉCRITE (expirée comprise) :
+// la France dans planPreinscription, les autres dans preinscriptionsPays.
+function entreeDuPays(userData, pays) {
+if (pays === "france") return { plan: (userData && userData.planPreinscription) || "", expiresAt: (userData && userData.planPreinscriptionExpiresAt) || "" };
+const carte = userData && userData.preinscriptionsPays && typeof userData.preinscriptionsPays === "object" ? userData.preinscriptionsPays : {};
+const e = carte[pays] && typeof carte[pays] === "object" ? carte[pays] : {};
+return { plan: e.plan || "", expiresAt: e.expiresAt || "" };
+}
+
+// L'échéance proposée quand l'admin choisit une offre sans date : les
+// mêmes durées que l'achat (functions/lib/achat.js) — 14 jours pour un
+// Diagnostic, la fin de campagne (31 juillet) pour un Dossier France,
+// 12 mois pour un Dossier ailleurs. Une proposition, jamais imposée.
+function echeanceProposee(plan, pays, maintenant = new Date()) {
+const iso = (d) => d.toISOString().slice(0, 10);
+if (plan === "diagnostic-france") return iso(new Date(maintenant.getTime() + 14 * 86400000));
+if (pays === "france") {
+const an = maintenant.getMonth() > 6 ? maintenant.getFullYear() + 1 : maintenant.getFullYear();
+return `${an}-07-31`;
+}
+const d = new Date(maintenant);
+d.setFullYear(d.getFullYear() + 1);
+return iso(d);
+}
+
+// Le pays choisi : son offre et son échéance actuelles dans les champs.
+function remplirOffresDuPays(userData) {
+const selPays = document.getElementById("paysOffreSelect");
+const selPre = document.getElementById("planPreinscriptionSelect");
+const date = document.getElementById("planPreinscriptionExpiryInput");
+if (!selPays || !selPre) return;
+const pays = selPays.value || "france";
+const e = entreeDuPays(userData, pays);
+selPre.innerHTML = optionsOffresPays(pays);
+selPre.value = e.plan;
+if (date) date.value = e.expiresAt ? String(e.expiresAt).slice(0, 10) : "";
+}
+
+// La liste des offres du compte, pays par pays, expirées comprises.
+function renderOffresParPays(userData) {
+const liste = document.getElementById("planPreinscriptionStatus");
+if (!liste) return;
+const lignes = PAYS_ADMIN.map((pays) => ({ pays, ...entreeDuPays(userData, pays) })).filter((e) => e.plan);
+if (!lignes.length) {
+liste.innerHTML = "<li>Aucune offre préinscription, dans aucun pays.</li>";
+return;
+}
+liste.innerHTML = lignes.map(({ pays, plan, expiresAt }) => {
+const nom = etiquetteOffrePays(plan, pays) || `${plan} (${nomDuPays(pays) || pays})`;
+const t = expiresAt ? new Date(expiresAt).getTime() : NaN;
+const etat = !expiresAt
+? (pays === "france" ? "aucune échéance enregistrée" : "aucune échéance : n'ouvre rien")
+: (t < Date.now() ? `expirée le ${formatISODate(expiresAt)}` : `active jusqu'au ${formatISODate(expiresAt)}`);
+const finie = !expiresAt ? pays !== "france" : t < Date.now();
+return `<li><span>${escapeHtmlLocal(nom)}</span><span class="detail-pays-etat${finie ? " is-finie" : ""}">${escapeHtmlLocal(etat)}</span></li>`;
+}).join("");
+}
+
+function escapeHtmlLocal(s) {
+return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 function renderAttributionManuelle(userData) {
@@ -381,7 +454,10 @@ return;
 
 const quoi = [
 trace.plan ? (PLAN_LABELS[trace.plan] || trace.plan) : null,
-trace.planPreinscription ? (PLAN_PREINSCRIPTION_LABELS[trace.planPreinscription] || trace.planPreinscription) : null
+trace.planPreinscription ? (PLAN_PREINSCRIPTION_LABELS[trace.planPreinscription] || trace.planPreinscription) : null,
+trace.pays && trace.pays.destination
+? (trace.pays.plan ? (libelleOffrePreinscription(trace.pays.plan, trace.pays.destination) || trace.pays.plan) : `offre retirée (${nomDuPays(trace.pays.destination) || trace.pays.destination})`)
+: null
 ].filter(Boolean).join(" et ") || "aucune formule";
 
 el.innerHTML = `<i data-lucide="hand-coins" aria-hidden="true"></i><span><strong>Formule posée à la main le ${formatISODate(trace.le)} — aucun paiement associé.</strong> ${quoi}. Un vrai achat effacera cette mention.</span>`;
@@ -479,56 +555,11 @@ const fitzExpressStatus = document.getElementById("fitzExpressStatus");
 
 if (fitzExpressInput) fitzExpressInput.value = userData.fitzExpressExpiresAt || "";
 
-// Grille B : le forfait préinscription et son échéance. MODIFIABLE
-// depuis le lot ADMIN (2026-09-09) — la mention « écrit par le
-// paiement, non modifiable ici » qui terminait cette phrase n'est plus
-// vraie, et la laisser aurait été pire qu'un champ manquant.
-const planPreSelect = document.getElementById("planPreinscriptionSelect");
-if (planPreSelect) planPreSelect.value = userData.planPreinscription || "";
-
-const planPreExpiryInput = document.getElementById("planPreinscriptionExpiryInput");
-if (planPreExpiryInput) planPreExpiryInput.value = userData.planPreinscriptionExpiresAt || "";
-
-const planPreExpiryStatus = document.getElementById("planPreinscriptionExpiryStatus");
-if (planPreExpiryStatus) {
-if (!userData.planPreinscription) {
-planPreExpiryStatus.textContent = "Aucune offre préinscription — l'expiration ne s'applique pas.";
-} else if (!userData.planPreinscriptionExpiresAt) {
-planPreExpiryStatus.textContent = "Aucune date d'expiration enregistrée.";
-} else {
-const finie = new Date(userData.planPreinscriptionExpiresAt).getTime() < Date.now();
-planPreExpiryStatus.textContent = finie
-? `Offre expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)} — l'étudiant perd l'espace préinscription.`
-: `Offre active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)}.`;
-}
-}
-
-const planPreStatus = document.getElementById("planPreinscriptionStatus");
-// LES SIX AUTRES DESTINATIONS (2026-09-23) : une ligne par pays acheté,
-// expirée comprise — users/{uid}.preinscriptionsPays.<pays>, écrit par
-// le webhook seul. Dite APRÈS la ligne France, jamais à sa place.
-const lignesPays = Object.entries((userData.preinscriptionsPays && typeof userData.preinscriptionsPays === "object") ? userData.preinscriptionsPays : {})
-.map(([pays, e]) => {
-const nom = libelleOffrePreinscription(e && e.plan, pays) || `${(e && e.plan) || "offre inconnue"} (${pays})`;
-const fin = e && e.expiresAt;
-const t = fin ? new Date(fin).getTime() : NaN;
-return !fin ? `${nom} — aucune échéance enregistrée.`
-: (t < Date.now() ? `${nom} — expirée le ${formatISODate(fin)}.` : `${nom} — active jusqu'au ${formatISODate(fin)}.`);
-});
-if (planPreStatus) {
-if (!userData.planPreinscription) {
-planPreStatus.textContent = lignesPays.length ? lignesPays.join(" ") : "Aucune offre préinscription.";
-} else {
-const expPre = userData.planPreinscriptionExpiresAt ? new Date(userData.planPreinscriptionExpiresAt).getTime() : NaN;
-const nomPre = PLAN_PREINSCRIPTION_LABELS[userData.planPreinscription] || userData.planPreinscription;
-planPreStatus.textContent = !userData.planPreinscriptionExpiresAt
-? `${nomPre} — aucune échéance enregistrée.`
-: (expPre < Date.now()
-? `${nomPre} — expirée le ${formatISODate(userData.planPreinscriptionExpiresAt)}.`
-: `${nomPre} — active jusqu'au ${formatISODate(userData.planPreinscriptionExpiresAt)}.`);
-if (lignesPays.length) planPreStatus.textContent += ` ${lignesPays.join(" ")}`;
-}
-}
+// Grille B : les offres préinscription, PAYS PAR PAYS (2026-09-24).
+// MODIFIABLES depuis le lot ADMIN (2026-09-09) pour la France, et pour
+// les huit autres pays depuis le 2026-09-24.
+renderOffresParPays(userData);
+remplirOffresDuPays(userData);
 
 // La trace d'une attribution posée à la main. Elle se lit EN TÊTE de
 // fiche, avant tout le reste, parce qu'elle change la lecture de tout
@@ -1186,15 +1217,49 @@ const value = valeurDe("planExpiryInput") || null;
 enregistrerFormule({ planExpiresAt: value }, value ? `l'expiration au ${formatISODate(value)}` : "l'expiration effacée");
 });
 
-document.getElementById("savePlanPreinscriptionBtn")?.addEventListener("click", () => {
-const value = valeurDe("planPreinscriptionSelect");
-const libelle = value ? (PLAN_PREINSCRIPTION_LABELS[value] || value) : "Sans offre préinscription";
-enregistrerFormule({ planPreinscription: value || null }, libelle);
+// LES NEUF PAYS (2026-09-24) : un seul bouton, pour le pays choisi.
+// L'offre ET son échéance partent ensemble — la France dans
+// planPreinscription, les huit autres dans preinscriptionsPays.<pays>.
+document.getElementById("paysOffreSelect")?.addEventListener("change", () => remplirOffresDuPays(currentUserData));
+
+// Une date ne vaut que pour l'offre qu'elle accompagnait : choisir une
+// AUTRE offre que celle du compte (Diagnostic → Dossier), ou reposer une
+// offre dont la date est passée, repropose la durée de l'achat. Sans
+// cela, un Dossier posé sur un Diagnostic gardait ses 14 jours, et une
+// offre reposée sur une entrée expirée naissait déjà expirée.
+document.getElementById("planPreinscriptionSelect")?.addEventListener("change", () => {
+const plan = valeurDe("planPreinscriptionSelect");
+const pays = valeurDe("paysOffreSelect") || "france";
+const date = document.getElementById("planPreinscriptionExpiryInput");
+if (!plan || !date) return;
+const enPlace = entreeDuPays(currentUserData, pays);
+const passee = !!date.value && new Date(`${date.value}T23:59:59.000Z`).getTime() < Date.now();
+if (!date.value || plan !== enPlace.plan || passee) date.value = echeanceProposee(plan, pays);
 });
 
-document.getElementById("savePlanPreinscriptionExpiryBtn")?.addEventListener("click", () => {
-const value = valeurDe("planPreinscriptionExpiryInput") || null;
-enregistrerFormule({ planPreinscriptionExpiresAt: value }, value ? `l'expiration préinscription au ${formatISODate(value)}` : "l'expiration préinscription effacée");
+document.getElementById("savePlanPreinscriptionBtn")?.addEventListener("click", () => {
+const pays = valeurDe("paysOffreSelect") || "france";
+const plan = valeurDe("planPreinscriptionSelect");
+const echeance = valeurDe("planPreinscriptionExpiryInput") || null;
+const nomPays = nomDuPays(pays) || pays;
+// France comprise : une offre sans date passait pour « active » côté
+// étudiant, mais le serveur de Fitz (functions/lib/fitz-acces.js) la
+// tient pour terminée — l'étudiant voyait des outils qui lui refusaient
+// tout. Chaque offre part donc avec sa date.
+if (plan && !echeance) {
+echec(`Choisissez une échéance pour ${nomPays} : une offre sans date n'ouvre rien.`);
+return;
+}
+const libelle = plan ? (libelleOffrePreinscription(plan, pays) || plan) : `le retrait de l'offre ${nomPays}`;
+// « Active jusqu'au 12 avril » doit ouvrir le 12 avril ENTIER : la date
+// part en fin de journée (UTC, l'heure de Dakar), comme l'échéance de
+// campagne que pose le webhook (functions/lib/achat.js). Une date nue
+// (« 2027-04-12 ») fermait l'offre à minuit, au début du jour affiché.
+const finDeJour = echeance ? `${echeance}T23:59:59.000Z` : null;
+const champs = pays === "france"
+? { planPreinscription: plan || null, planPreinscriptionExpiresAt: plan ? finDeJour : null }
+: { pays: { destination: pays, plan: plan || null, expiresAt: plan ? finDeJour : null } };
+enregistrerFormule(champs, libelle);
 });
 
 // ==========================================================

@@ -7,23 +7,22 @@
 * Module PUR (aucun DOM, aucun Firebase) : la seule source des
 * étiquettes que le Control Center affiche pour une formule.
 *
-* POURQUOI : PLAN_LABELS (js/plan-features.js) donne aux étudiants le
-* nom commercial — et ce nom est le MÊME pour l'ancienne et la nouvelle
-* formule (`essentiel` et `essentiel-4` = « Essentiel », `signature-focus`
-* et `conseiller-6` = « Conseiller »). Dans la fiche étudiant, Charles
-* voyait deux « Conseiller » et deux « Essentiel » sans pouvoir dire
-* laquelle est en vente ; le filtre de la liste, écrit en dur, proposait
-* encore « Avancé » (disparu en août) et ignorait Premier Dossier,
-* Conseiller, le Pass Découverte et les trois offres France.
+* POURQUOI : le filtre de la liste, écrit en dur, proposait encore des
+* formules disparues et ignorait le Pass Découverte et les offres
+* préinscription. Tout part désormais d'ici.
 *
 * RÈGLES :
 *  - chaque identifiant reçoit le nom du site PLUS ce qui le distingue
-*    (« Essentiel · 4 candidatures ») ; une formule retirée le dit
-*    (« Essentiel (ancienne) · 5 candidatures ») ;
+*    (« Essentiel · 4 candidatures ») ;
 *  - aucune étiquette n'est identique à une autre (test) ;
-*  - l'ordre : les offres EN VENTE d'abord, puis les RETIRÉES sous un
-*    titre de groupe visible (TITRE_RETIREES) ;
+*  - l'ordre : Pass, bourses, préinscription ;
 *  - les IDENTIFIANTS ne changent pas, ni les noms montrés aux étudiants.
+*
+* LES ANCIENNES FORMULES ONT ÉTÉ SUPPRIMÉES LE 2026-09-24 (essentiel,
+* accompagnement, premium, signature-focus, signature) : aucun compte ne
+* les portait. RETIREES reste, VIDE, pour le jour où une formule sortira
+* de la vente en laissant des clients derrière elle : elle y sera listée
+* avec son « (ancienne) », sous TITRE_RETIREES.
 *
 * Les distinctifs (quotas, durées) sont recopiés depuis pricing-plans.js
 * (maxAccompaniedApplications, duration, maxPreinscriptions) — un script
@@ -33,7 +32,8 @@
 * ============================================================
 */
 
-import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS, PASS_LABEL } from "./plan-features.js";
+import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, PLAN_PREINSCRIPTION_LABELS, PASS_LABEL, NOMS_DESTINATIONS_PREINSCRIPTION, libelleOffrePreinscription } from "./plan-features.js";
+import { destination } from "./destinations-preinscription.js";
 
 /** L'identifiant du Pass Découverte (champ fitzExpressExpiresAt, compteur analytics `fitzExpress`). */
 export const PASS_ID = "fitzExpress";
@@ -43,8 +43,8 @@ export const TITRE_EN_VENTE = "En vente";
 export const TITRE_RETIREES = "Retirées de la vente — anciens comptes";
 
 // Les formules bourse retirées de la vente (deprecated:true dans
-// pricing-plans.js — vérifié par le test).
-export const RETIREES = ["essentiel", "accompagnement", "premium", "signature-focus", "signature"];
+// pricing-plans.js — vérifié par le test). Aucune depuis le 2026-09-24.
+export const RETIREES = [];
 
 // Ce qui distingue chaque formule, dans l'ordre de PLAN_ORDER /
 // PLAN_PREINSCRIPTION_ORDER, plus le Pass.
@@ -55,13 +55,7 @@ const DISTINCTIF = {
 "conseiller-6": "6 candidatures",
 "diagnostic-france": "14 jours",
 "dossier-france": "7 vœux",
-"dossier-france-conseiller": "7 vœux",
-// Retirées : le nom garde son « (ancienne) », le distinctif reste court.
-essentiel: "5 candidatures",
-accompagnement: "9",
-premium: "12",
-"signature-focus": "12",
-signature: "illimitée"
+"dossier-france-conseiller": "7 vœux"
 };
 
 /** Le nom du site pour un identifiant (formule bourse, offre France ou Pass). */
@@ -133,17 +127,86 @@ if (retirees.length) html += `<optgroup label="${echapper(TITRE_RETIREES)}">${re
 return html;
 }
 
+// ==========================================================
+// LES NEUF PAYS DANS L'ADMIN (2026-09-24, décision de Charles : « relier
+// tout cela à mon espace admin »)
+// ==========================================================
+//
+// Les trois offres préinscription se vendent dans NEUF pays, sous les
+// mêmes identifiants (diagnostic-france, dossier-france,
+// dossier-france-conseiller) : c'est le PAYS, porté par l'achat, qui
+// dit à quoi l'offre s'applique (users/{uid}.planPreinscription pour la
+// France, users/{uid}.preinscriptionsPays.<pays> pour les huit autres).
+// L'admin doit donc lire « Dossier Chine », jamais « Dossier France »
+// pour un étudiant qui a acheté la Chine.
+
+/** Les pays vendus, France d'abord, dans l'ordre de la carte des préinscriptions. */
+export const PAYS_ADMIN = Object.keys(NOMS_DESTINATIONS_PREINSCRIPTION);
+
+/** Le nom d'un pays vendu (« Chine »), ou "". */
+export function nomDuPays(pays) {
+return Object.prototype.hasOwnProperty.call(NOMS_DESTINATIONS_PREINSCRIPTION, pays) ? NOMS_DESTINATIONS_PREINSCRIPTION[pays] : "";
+}
+
+/** Le nombre de vœux suivis par un Dossier du pays : 7, sauf l'Italie (1) et la Turquie (12). */
+export function voeuxDuPays(pays) {
+if (pays === "france") return 7;
+const d = destination(pays);
+return d ? d.plafondVoeux : 7;
+}
+
 /**
-* Ce qu'un COMPTE porte, en étiquettes : la formule bourse ET l'offre
-* France quand il a les deux, le Pass seul quand il n'a que lui.
-* `resolu` = { planId, planPreinscriptionId, passSeul } (voir
-* js/plan-features.js : resolvePlan, resolvePlanPreinscription, passSeul).
+* L'étiquette d'une offre DANS SON PAYS : « Dossier Chine · 7 vœux »,
+* « Dossier Italie · 1 cours », « Diagnostic Turquie · 14 jours ».
 */
-export function etiquettesDuCompte({ planId = "gratuit", planPreinscriptionId = "", passSeul = false } = {}) {
+export function etiquetteOffrePays(plan, pays = "france") {
+const nom = libelleOffrePreinscription(plan, pays);
+if (!nom) return "";
+if (plan === "diagnostic-france") return `${nom} · 14 jours`;
+const n = voeuxDuPays(pays);
+return `${nom} · ${n === 1 ? "1 cours" : `${n} vœux`}`;
+}
+
+/**
+* L'étiquette d'une COLONNE de la grille des outils (admin/plans.html) :
+* une offre préinscription y vaut pour les neuf pays à la fois —
+* « Dossier · 9 pays ». Les autres identifiants gardent leur étiquette.
+*/
+export function etiquetteColonne(id) {
+if (PLAN_PREINSCRIPTION_ORDER.includes(id)) return `${PLAN_PREINSCRIPTION_LABELS[id].replace(" France", "")} · ${PAYS_ADMIN.length} pays`;
+return etiquetteAdmin(id);
+}
+
+/** Les options d'un <select> de pays : une option vide (libellé donné, ou aucune si `vide` est null), puis les neuf pays. */
+export function optionsPays({ vide = "" } = {}) {
+const tete = vide !== null ? `<option value="">${echapper(vide)}</option>` : "";
+return tete + PAYS_ADMIN.map((p) => `<option value="${echapper(p)}">${echapper(nomDuPays(p))}</option>`).join("");
+}
+
+/** Les options des trois offres, au nom du pays choisi (« Dossier Chine · 7 vœux »). */
+export function optionsOffresPays(pays = "france", { vide = "Sans offre" } = {}) {
+const tete = vide !== null ? `<option value="">${echapper(vide)}</option>` : "";
+return tete + PLAN_PREINSCRIPTION_ORDER.map((id) => `<option value="${echapper(id)}">${echapper(etiquetteOffrePays(id, pays))}</option>`).join("");
+}
+
+/**
+* Ce qu'un COMPTE porte, en étiquettes : la formule bourse ET chaque offre
+* préinscription active, au nom de SON pays ; le Pass seul quand il n'a
+* que lui.
+* `resolu` = { planId, planPreinscriptionId, passSeul, offresPays } (voir
+* js/plan-features.js : resolvePlan, resolvePlanPreinscription, passSeul,
+* droitsPreinscription). Sans `offresPays`, l'offre préinscription est
+* lue comme une offre France (ancien appel).
+*/
+export function etiquettesDuCompte({ planId = "gratuit", planPreinscriptionId = "", passSeul = false, offresPays = null } = {}) {
 if (passSeul) return [{ id: PASS_ID, etiquette: etiquetteAdmin(PASS_ID) }];
 const out = [];
 if (planId && planId !== "gratuit") out.push({ id: planId, etiquette: etiquetteAdmin(planId) });
-if (planPreinscriptionId) out.push({ id: planPreinscriptionId, etiquette: etiquetteAdmin(planPreinscriptionId) });
+if (Array.isArray(offresPays)) {
+for (const o of offresPays) out.push({ id: o.plan, pays: o.destination, etiquette: etiquetteOffrePays(o.plan, o.destination) });
+} else if (planPreinscriptionId) {
+out.push({ id: planPreinscriptionId, pays: "france", etiquette: etiquetteAdmin(planPreinscriptionId) });
+}
 if (!out.length) out.push({ id: "gratuit", etiquette: etiquetteAdmin("gratuit") });
 return out;
 }

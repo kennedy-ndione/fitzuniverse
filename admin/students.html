@@ -119,11 +119,14 @@ dans robots.txt : ce serait publier le chemin. -->
 <input type="text" id="searchInput" placeholder="Rechercher par nom ou e-mail...">
 </div>
 
-<!-- Les options viennent de js/formules-admin.js (students.js) : les 7
-offres en vente, puis les formules retirées sous leur titre de groupe.
-Plus rien d'écrit en dur — « Avancé » a vécu ici un mois après sa
-disparition (lot FINITIONS-VISUELLES, 2026-09-11). -->
+<!-- Les options viennent de js/formules-admin.js (students.js) : le Pass,
+les formules bourses, puis les trois offres préinscription. Plus rien
+d'écrit en dur — « Avancé » a vécu ici un mois après sa disparition (lot
+FINITIONS-VISUELLES, 2026-09-11). -->
 <select id="planFilter" aria-label="Filtrer par formule"></select>
+<!-- Les neuf pays des préinscriptions (2026-09-24) : rempli par students.js
+depuis js/formules-admin.js (PAYS_ADMIN). -->
+<select id="paysFilter" aria-label="Filtrer par pays de préinscription"></select>
 
 <select id="statusFilter">
 <option value="">Tous les statuts</option>

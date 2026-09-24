@@ -153,10 +153,11 @@ assert.ok(/\blireParcours\b/.test(ligneParcours), "lireParcours doit être impor
 assert.ok(/\bLIBELLES as LIBELLES_PARCOURS\b/.test(ligneParcours), "les libellés de parcours doivent venir du même module");
 assert.ok(!/LIBELLES_PARCOURS\s*=\s*\{/.test(src), "les libellés de parcours sont recopiés dans le fichier");
 // Le bloc « offre préinscription » a sa propre section, plus celle du Pass.
+// 2026-09-24 : une seule section pour les neuf pays.
 const html = lire("admin/student-detail.html");
 const avant = html.slice(0, html.indexOf('id="planPreinscriptionStatus"'));
 const derniereSection = avant.lastIndexOf("<h3>");
-assert.match(avant.slice(derniereSection, derniereSection + 60), /<h3>Offre préinscription<\/h3>/, "le bloc n'est plus niché sous « Pass Fitz Express »");
+assert.match(avant.slice(derniereSection, derniereSection + 60), /<h3>Préinscriptions, pays par pays<\/h3>/, "le bloc n'est plus niché sous « Pass Fitz Express »");
 });
 
 // ------------------------------------------------------------------
@@ -292,8 +293,8 @@ test("advisorOuvert : vrai pour conseiller-6 ET pour dossier-france-conseiller",
 
 // Grille A — la formule à 150 000 F qui était oubliée.
 assert.equal(advisorOuvert({ planId: "conseiller-6", featureFlags: FLAGS }), true);
-assert.equal(advisorOuvert({ planId: "signature-focus", featureFlags: FLAGS }), true);
-assert.equal(advisorOuvert({ planId: "signature", featureFlags: FLAGS }), true);
+// Les anciennes formules (supprimées le 2026-09-24) n'ouvrent plus rien.
+for (const ancien of ["signature-focus", "signature"]) assert.equal(advisorOuvert({ planId: ancien, featureFlags: FLAGS }), false, ancien);
 
 // Grille B — le forfait préinscription avec conseiller, quelle que soit
 // la formule bourse (« gratuit » compris : c'est l'union des deux).
@@ -307,7 +308,7 @@ assert.equal(advisorOuvert({ planId: "gratuit", planPreinscriptionId: "dossier-f
 
 // Accès test : ouvert. Aucun drapeau : fermé, jamais ouvert par défaut.
 assert.equal(advisorOuvert({ planId: "gratuit", featureFlags: FLAGS, testerAccess: true }), true);
-assert.equal(advisorOuvert({ planId: "signature", featureFlags: {} }), false);
+assert.equal(advisorOuvert({ planId: "conseiller-6", featureFlags: {} }), false);
 assert.equal(advisorOuvert(), false);
 // Une formule inconnue reste fermée : le `=== true` est délibéré.
 assert.equal(advisorOuvert({ planId: "formule-inventee", featureFlags: FLAGS }), false);

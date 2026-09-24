@@ -238,7 +238,14 @@ assert.equal(droitAuxPortails({}, MAINTENANT).autorise, false);
 assert.equal(droitAuxPortails({ plan: "gratuit" }, MAINTENANT).autorise, false);
 // L'expiration est LE point déjà oublié une fois côté client : un
 // forfait terminé doit se comporter comme un compte gratuit.
-assert.equal(droitAuxPortails({ plan: "accompagnement", planExpiresAt: HIER }, MAINTENANT).autorise, false);
+assert.equal(droitAuxPortails({ plan: "essentiel-4", planExpiresAt: HIER }, MAINTENANT).autorise, false);
+assert.equal(droitAuxPortails({ preinscriptionsPays: { chine: { plan: "dossier-france", expiresAt: HIER } } }, MAINTENANT).autorise, false, "un dossier de pays expiré non plus");
+// Hors France, une offre SANS échéance n'ouvre rien (miroir de droitsPreinscription).
+assert.equal(droitAuxPortails({ preinscriptionsPays: { chine: { plan: "dossier-france" } } }, MAINTENANT).autorise, false);
+// Les anciennes formules sont supprimées (2026-09-24) : hors vocabulaire.
+for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
+assert.equal(droitAuxPortails({ plan: ancien }, MAINTENANT).autorise, false, `${ancien} : supprimée, n'ouvre plus rien`);
+}
 assert.equal(droitAuxPortails({ planPreinscription: "dossier-france", planPreinscriptionExpiresAt: HIER }, MAINTENANT).autorise, false);
 assert.equal(droitAuxPortails({ fitzExpressExpiresAt: HIER }, MAINTENANT).autorise, false);
 // Une valeur hors vocabulaire n'ouvre rien, même en forgeant le document.
@@ -246,19 +253,25 @@ assert.equal(droitAuxPortails({ plan: "administrateur" }, MAINTENANT).autorise, 
 assert.equal(droitAuxPortails({ testerAccess: "oui" }, MAINTENANT).autorise, false, "seul le booléen true compte");
 });
 
-test("droitAuxPortails ACCEPTE : plan bourse, plan préinscription, testerAccess, Fitz Express", () => {
+test("droitAuxPortails ACCEPTE : plan bourse, plan préinscription (France ou autre pays), testerAccess, Fitz Express", () => {
 assert.equal(droitAuxPortails({ plan: "essentiel-4", planExpiresAt: DEMAIN }, MAINTENANT).motif, "plan");
 // Sans date d'expiration : une formule sans échéance reste active (le
 // webhook en pose toujours une, mais un compte ancien peut ne pas en
 // avoir — on ne lui retire pas son accès pour ça).
-assert.equal(droitAuxPortails({ plan: "signature" }, MAINTENANT).autorise, true);
+assert.equal(droitAuxPortails({ plan: "conseiller-6" }, MAINTENANT).autorise, true);
 assert.equal(droitAuxPortails({ plan: "premier-dossier" }, MAINTENANT).autorise, true, "la formule la plus basse donne aussi les portails");
 assert.equal(droitAuxPortails({ planPreinscription: "dossier-france", planPreinscriptionExpiresAt: DEMAIN }, MAINTENANT).motif, "planPreinscription");
 assert.equal(droitAuxPortails({ planPreinscription: "diagnostic-france" }, MAINTENANT).autorise, true);
+// Les huit autres pays (2026-09-24) : un Dossier Chine payé ouvre les
+// portails comme un Dossier France — ce module ne lisait que la France.
+const chine = droitAuxPortails({ preinscriptionsPays: { chine: { plan: "dossier-france", expiresAt: DEMAIN } } }, MAINTENANT);
+assert.equal(chine.motif, "preinscriptionPays");
+assert.equal(chine.pays, "chine");
+assert.equal(droitAuxPortails({ preinscriptionsPays: { maroc: { plan: "diagnostic-france", expiresAt: HIER }, turquie: { plan: "dossier-france-conseiller", expiresAt: DEMAIN } } }, MAINTENANT).planPreinscription, "dossier-france-conseiller");
 assert.equal(droitAuxPortails({ testerAccess: true }, MAINTENANT).motif, "testerAccess");
 assert.equal(droitAuxPortails({ fitzExpressExpiresAt: DEMAIN }, MAINTENANT).motif, "fitzExpress");
 // Un Timestamp Firestore (objet à .toDate()) est lu comme une date.
-assert.equal(droitAuxPortails({ plan: "essentiel", planExpiresAt: { toDate: () => new Date(DEMAIN) } }, MAINTENANT).autorise, true);
+assert.equal(droitAuxPortails({ plan: "essentiel-4", planExpiresAt: { toDate: () => new Date(DEMAIN) } }, MAINTENANT).autorise, true);
 });
 
 test("les listes de formules du serveur sont le MIROIR de celles du site", () => {

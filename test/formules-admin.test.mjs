@@ -24,7 +24,7 @@ import path from "node:path";
 import vm from "node:vm";
 
 import { PLAN_ORDER, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
-import { PASS_ID, RETIREES, TITRE_RETIREES, TITRE_EN_VENTE, etiquetteAdmin, formulesAdmin, tousLesIdentifiants, optionsFormules, etiquettesDuCompte, estRetiree } from "../js/formules-admin.js";
+import { PASS_ID, RETIREES, TITRE_RETIREES, TITRE_EN_VENTE, etiquetteAdmin, formulesAdmin, tousLesIdentifiants, optionsFormules, etiquettesDuCompte, estRetiree, PAYS_ADMIN, nomDuPays, voeuxDuPays, etiquetteOffrePays, etiquetteColonne, optionsPays, optionsOffresPays } from "../js/formules-admin.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
@@ -45,11 +45,8 @@ const ATTENDUES = {
 "diagnostic-france": "Diagnostic France · 14 jours",
 "dossier-france": "Dossier France · 7 vœux",
 "dossier-france-conseiller": "Dossier France + Conseiller · 7 vœux",
-essentiel: "Essentiel (ancienne) · 5 candidatures",
-accompagnement: "Ambition (ancienne) · 9",
-premium: "Premium (ancienne) · 12",
-"signature-focus": "Conseiller (ancienne) · 12",
-signature: "Signature (ancienne) · illimitée",
+// Les anciennes formules (essentiel, accompagnement, premium,
+// signature-focus, signature) ont été supprimées le 2026-09-24.
 gratuit: "Gratuit"
 };
 
@@ -86,19 +83,25 @@ assert.match(etiquetteAdmin(PASS_ID), new RegExp(`· ${plans.fitzExpress.duratio
 for (const id of RETIREES) assert.ok(estRetiree(id) && /\(ancienne\)/.test(etiquetteAdmin(id)));
 });
 
-test("formules-admin 4 — en vente d'abord (7), retirées ensuite, sous leur titre ; le balisage porte les deux groupes", () => {
+test("formules-admin 4 — les 7 formules en vente, sous leur titre ; aucune retirée depuis le 2026-09-24, donc aucun groupe vide", () => {
 const { enVente, retirees } = formulesAdmin();
 assert.equal(enVente.length, 7);
 assert.deepEqual(enVente, [PASS_ID, "premier-dossier", "essentiel-4", "conseiller-6", ...PLAN_PREINSCRIPTION_ORDER]);
-assert.deepEqual(retirees, PLAN_ORDER.filter((id) => RETIREES.includes(id)));
+// Les anciennes formules sont SUPPRIMÉES (décision de Charles,
+// 2026-09-24) : plus aucune retirée, et plus d'identifiant ancien nulle part.
+assert.deepEqual(RETIREES, []);
+assert.deepEqual(retirees, []);
+for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
+assert.ok(!tousLesIdentifiants().includes(ancien), `${ancien} : encore nommée dans l'admin`);
+}
 const html = optionsFormules({ vide: "Toutes les formules", avecGratuit: true });
 assert.match(html, /^<option value="">Toutes les formules<\/option><option value="gratuit">Gratuit<\/option><optgroup label="En vente">/);
-assert.ok(html.indexOf(`<optgroup label="${TITRE_EN_VENTE}">`) < html.indexOf(`<optgroup label="${TITRE_RETIREES}`));
-assert.match(html, /Retirées de la vente — anciens comptes/);
-assert.equal((html.match(/<option /g) || []).length, 1 + 1 + 7 + 5);
+assert.ok(html.includes(`<optgroup label="${TITRE_EN_VENTE}">`));
+assert.ok(!html.includes(TITRE_RETIREES), "pas de groupe « Retirées » vide");
+assert.equal((html.match(/<option /g) || []).length, 1 + 1 + 7);
 // La fiche : bourse seule, France seule.
 const bourse = optionsFormules({ vide: "Sans formule", pass: false, preinscription: false });
-assert.ok(!bourse.includes("fitzExpress") && !bourse.includes("dossier-france") && bourse.includes("essentiel-4") && bourse.includes(TITRE_RETIREES));
+assert.ok(!bourse.includes("fitzExpress") && !bourse.includes("dossier-france") && bourse.includes("essentiel-4") && !bourse.includes(TITRE_RETIREES));
 const france = optionsFormules({ vide: "Sans offre", pass: false, bourse: false });
 assert.ok(!france.includes("essentiel") && france.includes("dossier-france-conseiller") && !france.includes(TITRE_RETIREES));
 // Le compte : bourse ET France ; Pass seul ; rien.
@@ -120,8 +123,10 @@ assert.match(lire(f), /from "\.\.\/js\/formules-admin\.js"/, `${f} : n'importe p
 assert.match(lire("admin/students.js"), /optionsFormules\(/);
 assert.match(lire("admin/students.js"), /etiquettesDuCompte\(/, "la colonne Formule montre bourse ET France");
 assert.match(lire("admin/student-detail.js"), /optionsFormules\(\{ vide: "Sans formule", pass: false, preinscription: false \}\)/);
-assert.match(lire("admin/plans.js"), /etiquetteAdmin\(/);
-assert.match(lire("admin/dashboard.js"), /labels: planIds\.map\(\(id\) => etiquetteAdmin\(id\)\)/);
+// 2026-09-24 : une colonne préinscription vaut pour les neuf pays
+// (« Dossier · 9 pays »), jamais « Dossier France ».
+assert.match(lire("admin/plans.js"), /etiquetteColonne\(/);
+assert.match(lire("admin/dashboard.js"), /labels: planIds\.map\(\(id\) => etiquetteColonne\(id\)\)/);
 assert.ok(!/Object\.keys\(PLAN_LABELS\)/.test(lire("admin/dashboard.js")), "le graphique ignorait les offres France");
 });
 
@@ -166,4 +171,46 @@ test("formules-admin 8 — la messagerie, droit de tout compte, est une ligne fi
   const { DROITS_UNIVERSELS, decideVerrou } = await import("../js/plan-features.js");
   assert.deepEqual(DROITS_UNIVERSELS, ["student_messaging"]);
   assert.equal(decideVerrou({ planId: "gratuit", featureFlags: { student_messaging: { gratuit: false } }, featureKey: "student_messaging" }), false);
+});
+
+// LES NEUF PAYS DANS L'ADMIN (2026-09-24, décision de Charles : « relier
+// tout cela à mon espace admin »). Les trois offres préinscription
+// portent les mêmes identifiants dans les neuf pays : l'admin doit lire
+// le pays, jamais « France » pour un étudiant qui a acheté la Chine.
+test("formules-admin 9 — les neuf pays : noms, vœux, étiquettes au nom du pays, sélecteurs", () => {
+assert.deepEqual(PAYS_ADMIN, ["france", "roumanie", "turquie", "maroc", "italie", "allemagne", "canada", "chine", "malaisie"]);
+assert.equal(nomDuPays("chine"), "Chine");
+assert.equal(nomDuPays("constructor"), "", "un nom hors liste ne sort jamais d'un prototype");
+// Les plafonds de vœux sont ceux des routes (Italie : un cours ; Turquie : douze).
+assert.equal(voeuxDuPays("france"), 7);
+assert.equal(voeuxDuPays("italie"), 1);
+assert.equal(voeuxDuPays("turquie"), 12);
+assert.equal(voeuxDuPays("chine"), 7);
+assert.equal(etiquetteOffrePays("dossier-france", "chine"), "Dossier Chine · 7 vœux");
+assert.equal(etiquetteOffrePays("dossier-france-conseiller", "italie"), "Dossier Italie + Conseiller · 1 cours");
+assert.equal(etiquetteOffrePays("diagnostic-france", "turquie"), "Diagnostic Turquie · 14 jours");
+assert.equal(etiquetteOffrePays("dossier-france", "france"), ATTENDUES["dossier-france"], "la France garde son étiquette");
+// Une colonne de la grille des outils vaut pour les neuf pays.
+assert.equal(etiquetteColonne("dossier-france"), "Dossier · 9 pays");
+assert.equal(etiquetteColonne("diagnostic-france"), "Diagnostic · 9 pays");
+assert.equal(etiquetteColonne("dossier-france-conseiller"), "Dossier + Conseiller · 9 pays");
+assert.equal(etiquetteColonne("essentiel-4"), ATTENDUES["essentiel-4"]);
+// Les sélecteurs de la fiche.
+assert.equal((optionsPays({ vide: null }).match(/<option /g) || []).length, 9);
+const chine = optionsOffresPays("chine");
+assert.match(chine, /^<option value="">Sans offre<\/option>/);
+assert.ok(chine.includes(">Dossier Chine · 7 vœux<") && !chine.includes("France"));
+// Le compte : chaque offre au nom de SON pays, à côté de la formule bourse.
+const etiquettes = etiquettesDuCompte({ planId: "essentiel-4", offresPays: [{ plan: "dossier-france", destination: "france" }, { plan: "diagnostic-france", destination: "malaisie" }] }).map((x) => x.etiquette);
+assert.deepEqual(etiquettes, ["Essentiel · 4 candidatures", "Dossier France · 7 vœux", "Diagnostic Malaisie · 14 jours"]);
+});
+
+// Relecture du 2026-09-24 : le groupe « Retirées » de la grille des
+// outils restait affiché VIDE (colspan="0", qu'un navigateur lit comme
+// 1) — la grille annonçait encore des formules supprimées.
+test("formules-admin 10 — la grille des outils n'affiche aucun groupe vide", () => {
+const plans = lire("admin/plans.js");
+const groupes = plans.slice(plans.indexOf("const GROUPES = "), plans.indexOf("const COLONNES = "));
+assert.match(groupes, /\]\.filter\(\(g\) => g\.ids\.length\);/, "les groupes sans colonne doivent être retirés");
+assert.match(plans, /colspan="\$\{g\.ids\.length\}"/);
 });

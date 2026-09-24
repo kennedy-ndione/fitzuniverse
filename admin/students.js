@@ -13,11 +13,11 @@ getDoc
 import { getAllUsers } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { ecouterPresence, pastillePresence } from "./presence-admin.js";
-import { passSeul, resolvePlanPreinscription, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
+import { passSeul, resolvePlanPreinscription, droitsPreinscription, PLAN_PREINSCRIPTION_ORDER } from "../js/plan-features.js";
 import { resolvePlan } from "../js/access-guard.js";
 import { hidePageLoader } from "../js/app-shell.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : un seul nommage pour l'admin.
-import { PASS_ID, etiquetteAdmin, etiquettesDuCompte, optionsFormules } from "../js/formules-admin.js";
+import { PASS_ID, etiquetteAdmin, etiquettesDuCompte, optionsFormules, optionsPays } from "../js/formules-admin.js";
 
 initSidebarToggle();
 
@@ -34,18 +34,25 @@ let etatDe = () => ({ enLigne: false, libelle: "…", vuLe: 0 });
 // Pass, jamais écrit en dur.
 function construireFiltre() {
 const sel = document.getElementById("planFilter");
-if (!sel || sel.options.length) return;
-sel.innerHTML = optionsFormules({ vide: "Toutes les formules", avecGratuit: true });
+if (sel && !sel.options.length) sel.innerHTML = optionsFormules({ vide: "Toutes les formules", avecGratuit: true });
+// Le pays (2026-09-24) : un étudiant qui a acheté la Chine n'est pas un
+// client « France ». Seul, le filtre garde les comptes qui ont une offre
+// ACTIVE dans ce pays ; avec une offre choisie, cette offre-là dans ce
+// pays.
+const pays = document.getElementById("paysFilter");
+if (pays && !pays.options.length) pays.innerHTML = optionsPays({ vide: "Tous les pays" });
 }
 
 construireFiltre();
 
-// Ce qu'un compte porte : formule bourse, offre France, ou Pass seul.
+// Ce qu'un compte porte : formule bourse, offres préinscription PAR PAYS,
+// ou Pass seul.
 function resoudre(user) {
 return {
 planId: resolvePlan(user),
 planPreinscriptionId: resolvePlanPreinscription(user),
-passSeul: passSeul(user)
+passSeul: passSeul(user),
+offresPays: droitsPreinscription(user)
 };
 }
 
@@ -57,9 +64,10 @@ return timestamp.toDate().toLocaleDateString("fr-FR");
 
 }
 
-// La colonne « Formule » : la formule bourse ET l'offre France quand le
-// compte a les deux ; « Pass Découverte » quand il n'a que lui (lot
-// ACCEPTATION, partie 4), jamais « Gratuit » dans ce cas.
+// La colonne « Formule » : la formule bourse ET chaque offre
+// préinscription, au nom de son pays (« Dossier Chine · 7 vœux ») ;
+// « Pass Découverte » quand il n'a que lui (lot ACCEPTATION, partie 4),
+// jamais « Gratuit » dans ce cas.
 function planPill(user) {
 
 return etiquettesDuCompte(resoudre(user))
@@ -86,17 +94,25 @@ return haystack.includes(term);
 
 }
 
-function matchesPlan(user, planFilter) {
-
-if (!planFilter) return true;
+function matchesPlan(user, planFilter, paysFilter = "") {
 
 const r = resoudre(user);
+
+// Le pays d'abord : une offre ACTIVE dans ce pays (celle qu'on filtre, si
+// c'est une offre préinscription).
+if (paysFilter) {
+const offre = PLAN_PREINSCRIPTION_ORDER.includes(planFilter) ? planFilter : "";
+if (!r.offresPays.some((o) => o.destination === paysFilter && (!offre || o.plan === offre))) return false;
+if (offre) return true;
+}
+
+if (!planFilter) return true;
 
 // « Pass Découverte seul » : le Pass actif et rien d'autre.
 if (planFilter === PASS_ID) return r.passSeul;
 
-// Une offre France se lit sur planPreinscription, jamais sur plan.
-if (PLAN_PREINSCRIPTION_ORDER.includes(planFilter)) return r.planPreinscriptionId === planFilter;
+// Une offre préinscription, dans n'importe lequel des neuf pays.
+if (PLAN_PREINSCRIPTION_ORDER.includes(planFilter)) return r.offresPays.some((o) => o.plan === planFilter);
 
 // « Gratuit » = aucune formule bourse, aucune offre France, pas le Pass.
 if (planFilter === "gratuit") return r.planId === "gratuit" && !r.planPreinscriptionId && !r.passSeul;
@@ -121,11 +137,12 @@ function renderTable() {
 
 const term = document.getElementById("searchInput").value.trim().toLowerCase();
 const planFilter = document.getElementById("planFilter").value;
+const paysFilter = document.getElementById("paysFilter")?.value || "";
 const statusFilter = document.getElementById("statusFilter").value;
 
 const filtered = allUsers.filter((user) =>
 matchesSearch(user, term) &&
-matchesPlan(user, planFilter) &&
+matchesPlan(user, planFilter, paysFilter) &&
 matchesStatus(user, statusFilter)
 )
 // Les étudiants en ligne d'abord, puis du plus récemment vu au plus
@@ -157,6 +174,7 @@ tbody.innerHTML = filtered.map((user) => `
 
 document.getElementById("searchInput").addEventListener("input", renderTable);
 document.getElementById("planFilter").addEventListener("change", renderTable);
+document.getElementById("paysFilter")?.addEventListener("change", renderTable);
 document.getElementById("statusFilter").addEventListener("change", renderTable);
 
 const pageLoader = document.getElementById("pageLoader");

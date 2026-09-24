@@ -26,7 +26,7 @@ DROITS_UNIVERSELS
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
 // Lot FINITIONS-VISUELLES (2026-09-11) : un seul nommage pour l'admin.
-import { formulesAdmin, etiquetteAdmin, TITRE_EN_VENTE, TITRE_RETIREES, PASS_ID } from "../js/formules-admin.js";
+import { formulesAdmin, etiquetteColonne, TITRE_EN_VENTE, TITRE_RETIREES, PASS_ID, PAYS_ADMIN, nomDuPays, voeuxDuPays } from "../js/formules-admin.js";
 
 initSidebarToggle();
 
@@ -43,11 +43,14 @@ initSidebarToggle();
 // la vérité du code, grisée, et n'écrit jamais rien.
 const GROUPES = (() => {
 const { enVente, retirees } = formulesAdmin({ pass: true, avecGratuit: false });
+// Un groupe VIDE n'a pas de colonne : sans ce filtre, le titre
+// « Retirées de la vente » restait affiché (colspan="0" vaut 1 pour le
+// navigateur) alors qu'aucune formule n'est retirée depuis le 2026-09-24.
 return [
 { titre: "", ids: ["gratuit"] },
 { titre: TITRE_EN_VENTE, ids: enVente },
 { titre: TITRE_RETIREES, ids: retirees }
-];
+].filter((g) => g.ids.length);
 })();
 const COLONNES = GROUPES.flatMap((g) => g.ids);
 
@@ -82,7 +85,8 @@ COLONNES.forEach((planId) => {
 
 const th = document.createElement("th");
 th.setAttribute("scope", "col");
-th.textContent = etiquetteAdmin(planId);
+// Une offre préinscription vaut pour les neuf pays : « Dossier · 9 pays ».
+th.textContent = etiquetteColonne(planId);
 head.appendChild(th);
 
 });
@@ -91,7 +95,7 @@ head.appendChild(th);
 // dur dans plans.html — « Avancé » y a survécu un mois).
 const legende = document.querySelector(".plans-legend");
 if (legende) {
-legende.innerHTML = GROUPES.filter((g) => g.ids.length && g.titre).map((g) => `<div class="plans-legend-group"><span class="plans-legend-title">${g.titre}</span>${g.ids.map((id) => `<span class="plans-legend-item"><span class="status-pill plan-${id}">${etiquetteAdmin(id)}</span></span>`).join("")}</div>`).join("");
+legende.innerHTML = GROUPES.filter((g) => g.ids.length && g.titre).map((g) => `<div class="plans-legend-group"><span class="plans-legend-title">${g.titre}</span>${g.ids.map((id) => `<span class="plans-legend-item"><span class="status-pill plan-${id}">${etiquetteColonne(id)}</span></span>`).join("")}</div>`).join("");
 }
 
 }
@@ -172,6 +176,33 @@ featureFlags[input.dataset.key][input.dataset.plan] = input.checked;
 }
 
 // ==========================================================
+// LES NEUF PAYS (2026-09-24) — ce qui se vend, pays par pays
+// ==========================================================
+function francs(n) {
+return Number.isFinite(n) ? `${new Intl.NumberFormat("fr-FR").format(n)} F` : "—";
+}
+
+function renderPays() {
+const tbody = document.getElementById("plansPaysBody");
+if (!tbody) return;
+const plans = window.SCHOLARBRIDGE_PLANS || {};
+const offre = (planId, pays) => (typeof window.offrePourDestination === "function" ? window.offrePourDestination(planId, pays) : null) || plans[planId] || {};
+tbody.innerHTML = PAYS_ADMIN.map((pays) => {
+const v = voeuxDuPays(pays);
+const dossier = offre("dossier-france", pays);
+return `<tr>
+<td class="is-name">${nomDuPays(pays)}</td>
+<td class="is-nombre">${francs(offre("diagnostic-france", pays).priceFCFA)}</td>
+<td class="is-nombre">${francs(dossier.priceFCFA)}</td>
+<td class="is-nombre">${francs(offre("dossier-france-conseiller", pays).priceFCFA)}</td>
+<td>${v === 1 ? "1 cours" : `${v} vœux`}</td>
+<td>${pays === "france" ? "jusqu'au 31 juillet" : (dossier.duration || "12 mois")}</td>
+<td><a class="table-link-btn" href="../preinscription-${pays}.html" target="_blank" rel="noopener" aria-label="Voir la page publique ${nomDuPays(pays)}">Voir</a></td>
+</tr>`;
+}).join("");
+}
+
+// ==========================================================
 // Chargement principal
 // ==========================================================
 
@@ -206,6 +237,7 @@ console.warn("Impossible de lire la configuration des formules, utilisation des 
 featureFlags = resolveFeatureFlags(rawConfig);
 
 renderTable();
+renderPays();
 
 if (window.lucide) lucide.createIcons();
 
@@ -241,7 +273,16 @@ button.disabled = true;
 
 try {
 
-await savePlanFeatureConfig(featureFlags);
+// On n'enregistre QUE les colonnes de la grille (2026-09-24) : les
+// cases des anciennes formules, supprimées du site, qui dormaient
+// encore dans config/planFeatures, disparaissent au premier
+// enregistrement.
+const colonnes = new Set(COLONNES.filter((id) => id !== PASS_ID));
+const propre = {};
+for (const [cle, parFormule] of Object.entries(featureFlags)) {
+propre[cle] = Object.fromEntries(Object.entries(parFormule || {}).filter(([id]) => colonnes.has(id)));
+}
+await savePlanFeatureConfig(propre);
 
 note.textContent = "Enregistré — les étudiants verront ces changements dès leur prochain chargement du tableau de bord.";
 

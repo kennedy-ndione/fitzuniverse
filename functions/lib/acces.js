@@ -28,17 +28,14 @@
  */
 
 // MIROIR de PLAN_ORDER (js/plan-features.js), moins "gratuit" : les
-// formules qui DONNENT droit. Les identifiants dépréciés restent —
-// ils sont la valeur de `plan` de comptes bien réels, qui ont payé.
+// formules qui DONNENT droit. Les anciennes formules (essentiel,
+// accompagnement, premium, signature-focus, signature) ont été
+// SUPPRIMÉES le 2026-09-24 (décision de Charles) : aucun compte ne les
+// portait, aucun paiement ne les nommait.
 const PLANS_PAYANTS = [
   "premier-dossier",
   "essentiel-4",
-  "essentiel",
-  "accompagnement",
-  "premium",
   "conseiller-6",
-  "signature-focus",
-  "signature",
 ];
 
 // MIROIR de PLAN_PREINSCRIPTION_ORDER (js/plan-features.js).
@@ -85,6 +82,27 @@ function planPreinscription(user, maintenant) {
 }
 
 /**
+ * LES HUIT AUTRES PAYS (2026-09-23, relus le 2026-09-24) : un dossier
+ * hors France vit dans users/{uid}.preinscriptionsPays.<pays> =
+ * { plan, expiresAt }. Jusqu'ici ce module ne lisait que la France : un
+ * étudiant qui avait payé un Dossier Chine se voyait refuser les
+ * portails. MIROIR de droitsPreinscription (js/plan-features.js) : une
+ * entrée hors France SANS échéance n'ouvre rien.
+ * Rend { pays, plan } de la plus haute offre active, ou null.
+ */
+function offrePays(user, maintenant) {
+  const carte = user && user.preinscriptionsPays && typeof user.preinscriptionsPays === "object" ? user.preinscriptionsPays : {};
+  let meilleure = null;
+  for (const [pays, entree] of Object.entries(carte)) {
+    const plan = String((entree && entree.plan) || "").toLowerCase();
+    if (!PLANS_PREINSCRIPTION.includes(plan)) continue;
+    if (!encoreValide(entree.expiresAt, maintenant)) continue;
+    if (!meilleure || PLANS_PREINSCRIPTION.indexOf(plan) > PLANS_PREINSCRIPTION.indexOf(meilleure.plan)) meilleure = { pays, plan };
+  }
+  return meilleure;
+}
+
+/**
  * Le droit d'accès à la donnée payante, et POURQUOI — la raison sert
  * aux journaux et au message rendu au client, jamais à décider deux
  * fois.
@@ -108,6 +126,8 @@ function droitAuxPortails(user, maintenant = new Date()) {
 
   if (bourse) return { autorise: true, motif: "plan", plan: bourse, planPreinscription: preinscription };
   if (preinscription) return { autorise: true, motif: "planPreinscription", plan: "", planPreinscription: preinscription };
+  const pays = offrePays(u, maintenant);
+  if (pays) return { autorise: true, motif: "preinscriptionPays", plan: "", planPreinscription: pays.plan, pays: pays.pays };
 
   // Le Pass Fitz Express n'est pas une formule et ne débloque, dans
   // l'espace étudiant, que le chat. Il donne quand même les portails :

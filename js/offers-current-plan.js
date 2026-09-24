@@ -21,7 +21,7 @@ qu'offers-context.js : ne pas convertir toute la page en module.
 import { db, auth } from "../firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { resolvePlan, hasFitzExpressAccess, resolvePlanPreinscription, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
+import { PLAN_ORDER, resolvePlan, hasFitzExpressAccess, resolvePlanPreinscription, fetchFeatureFlags, isFeatureLocked } from "./access-guard.js";
 
 function marquerCarte(planId, mode) {
 
@@ -49,8 +49,7 @@ card.prepend(badge);
 card.classList.add(mode === "pending" ? "plan-card--pending" : "plan-card--current");
 }
 
-// Le CTA devient un état, plus une action — <button> comme <a>
-// (Signature est un lien WhatsApp).
+// Le CTA devient un état, plus une action — <button> comme <a>.
 const label = cta.querySelector("span");
 if (label) label.textContent = l.cta;
 cta.querySelector("i, svg")?.remove();
@@ -79,12 +78,12 @@ const userData = snap.data();
 let planId = resolvePlan(userData);
 
 // Même résolution que bootstrapShell (js/access-guard.js) : un compte
-// administrateur actif a la formule maison (Signature) sans champ
-// `plan` — sa carte doit être marquée comme partout ailleurs dans
+// administrateur actif a la formule la plus haute de PLAN_ORDER sans
+// champ `plan` — sa carte doit être marquée comme partout ailleurs dans
 // l'espace. Échec de lecture = pas admin, comportement normal.
 try {
 const adminSnap = await getDoc(doc(db, "admins", user.uid));
-if (adminSnap.exists() && adminSnap.data().isActive === true) planId = "signature";
+if (adminSnap.exists() && adminSnap.data().isActive === true) planId = PLAN_ORDER[PLAN_ORDER.length - 1];
 } catch { /* pas admin */ }
 
 if (planId !== "gratuit") marquerCarte(planId, "current");

@@ -16,22 +16,20 @@
 * offres payantes donnent un accès à 100% des outils Fitz — aucun outil
 * n'est réservé à une offre supérieure. DEFAULT_FEATURE_CONFIG reflète
 * cette règle : chaque fonctionnalité est vraie à l'identique pour les
-* six offres payantes.
+* offres payantes.
 *
-* Attention à ne pas confondre deux choses : la règle ci-dessus (accès
-* aux OUTILS) reste vraie, mais la règle "la seule différence entre les
-* formules est le quota de candidatures" a été abandonnée le 2026-08-02
-* — Avancé et Premium ajoutent désormais de vrais services humains
-* (relecture, prépa entretien, aide visa, réponse prioritaire). Ces
-* services ne sont pas pilotables ici : ce fichier ne modélise que les
-* outils Fitz. Voir pricing-plans.js pour la grille complète.
+* Ce qui distingue les formules entre elles — le nombre de candidatures,
+* la relecture par un conseiller — n'est pas pilotable ici : ce fichier
+* ne modélise que les outils Fitz. Voir pricing-plans.js pour la grille
+* complète.
 *
 * EXCEPTION "advisor" (ajoutée 2026-08-07, refonte du dashboard par
 * formule) : ce n'est pas un outil Fitz, mais l'accès à la messagerie
 * avec un conseiller humain (advisor.html) suit exactement le même
 * mécanisme booléen par formule que les 8 outils ci-dessous — inutile
 * d'inventer un système parallèle pour une seule fonctionnalité de
-* plus. Vrai seulement pour signature-focus/signature.
+* plus. Vrai seulement pour conseiller-6 (et, côté préinscription, pour
+* le Dossier + Conseiller).
 *
 * "gratuit" (ajouté 2026-07-30, audit d'harmonisation) : palier réel
 * pour tout compte sans abonnement payant actif — 0 outil Fitz, 0
@@ -52,41 +50,30 @@
 // L'ORDRE COMPTE : ce tableau est une échelle croissante, pas une simple
 // liste. nextPlanId() renvoie l'élément suivant pour proposer la montée
 // en gamme, et unlockingPlans() prend le premier élément débloquant une
-// fonctionnalité comme cible d'upsell — les deux excluent désormais les
-// offres `deprecated` (voir js/access-guard.js et la convention dans
-// pricing-plans.js). L'ordre suit le prix croissant de la grille
-// commerciale (voir pricing-plans.js) : 0 → 12 000 (déprécié) → 29 000 →
-// 75 000 → 80 000 (déprécié) → 150 000 → 250 000 F CFA (grille du 2026-08-29).
+// fonctionnalité comme cible d'upsell. L'ordre suit le prix : 0 →
+// 25 000 → 45 000 → 150 000 F CFA. Le serveur (RANG, functions/lib/
+// achat.js) en porte le miroir et ne rétrograde jamais un compte.
 //
 // `fitzExpress` n'y figure volontairement pas : c'est un pass ponctuel,
 // pas une formule — il ne touche jamais le champ `plan` et son accès est
 // résolu séparément par hasFitzExpressAccess() (js/access-guard.js).
 //
-// GRILLE A (2026-09-07) : `essentiel-4` et `conseiller-6` remplacent
-// `essentiel` et `signature-focus` à la vente ; `accompagnement` et
-// `signature` sont retirées. Chaque nouvelle offre se place JUSTE AVANT
-// l'ancienne qu'elle remplace (même prix, quota plus bas) : l'upsell
-// d'un ancien client ne lui propose ainsi jamais une marche plus basse,
-// et le serveur (RANG, functions/lib/achat.js — miroir de cet ordre) ne
-// rétrograde jamais un compte. Les anciens identifiants RESTENT : ils
-// sont la valeur de `plan` des comptes existants.
+// LES ANCIENNES FORMULES ONT ÉTÉ SUPPRIMÉES LE 2026-09-24 (essentiel,
+// accompagnement, premium, signature-focus, signature — voir
+// pricing-plans.js). Un `plan` qui n'est pas dans cette liste retombe sur
+// "gratuit" (resolvePlan).
 export const PLAN_ORDER = [
 "gratuit",
 "premier-dossier",
 "essentiel-4",
-"essentiel",
-"accompagnement",
-"premium",
-"conseiller-6",
-"signature-focus",
-"signature"
+"conseiller-6"
 ];
 
 // LIBELLÉS D'INTERFACE (règle arrêtée 2026-08-02).
 // PLAN_LABELS est la source pour tout ce qui est INTERFACE : badges,
 // tableaux, panneau d'administration, messages de quota, upsell du
-// tableau de bord. Les noms y sont courts pour tenir dans une colonne
-// ou une pastille — d'où "Signature", sans le nom de l'assistant devant.
+// tableau de bord. Les noms y sont courts, sans le préfixe « Forfait »,
+// pour tenir dans une colonne ou une pastille.
 //
 // Les noms longs de marque vivent dans SCHOLARBRIDGE_PLANS[...].label
 // (pricing-plans.js) et sont réservés aux surfaces MARKETING : page
@@ -95,26 +82,11 @@ export const PLAN_ORDER = [
 // En cas de doute : si l'utilisateur est en train d'utiliser le
 // produit, c'est PLAN_LABELS ; s'il est en train de le choisir ou de
 // l'acheter, c'est le label de pricing-plans.js.
-// essentiel/"signature-focus" renommés "Standard"/"Renforcé" par la grille
-// 2026-08-15 (pricing-plans.js) — mis à jour ici aussi pour qu'un même
-// compte ne voie jamais deux noms différents pour sa propre formule
-// (badge sidebar, panneau admin) selon la page. `premium`/"premier-dossier"
-// gardent leur nom historique : dépréciées, jamais renommées.
-// Renommage du 2026-08-29 (série « Forfait » de pricing-plans.js) :
-// Standard→Essentiel, Avancé→Ambition, Renforcé→Conseiller — sans le
-// préfixe « Forfait » ici, même logique que "Signature" sans "Fitz".
 export const PLAN_LABELS = {
 gratuit: "Gratuit",
 "premier-dossier": "Premier Dossier",
-// Grille A : le nom commercial est conservé — c'est l'identifiant qui
-// change (voir pricing-plans.js, « ne jamais renommer un identifiant »).
 "essentiel-4": "Essentiel",
-essentiel: "Essentiel",
-accompagnement: "Ambition",
-premium: "Premium",
-"conseiller-6": "Conseiller",
-"signature-focus": "Conseiller",
-signature: "Signature"
+"conseiller-6": "Conseiller"
 };
 
 // ==========================================================
@@ -174,27 +146,24 @@ export const FEATURE_CATALOG = [
 // Ce qui distingue les offres entre elles est le nombre de candidatures
 // accompagnées et le niveau de service humain (voir pricing-plans.js),
 // jamais l'accès aux outils listés ci-dessous.
-// Grille A (2026-09-07) : `essentiel-4` et `conseiller-6` ajoutées sur
-// chaque ligne ; les anciens identifiants gardent EXACTEMENT leurs
-// valeurs (règle d'or : un client existant ne perd rien).
 export const DEFAULT_FEATURE_CONFIG = {
-applications: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-documents: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-ai_chat: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-ai_letter: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-ai_check: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-ai_email: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-ai_translate: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
-compress: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+applications: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+documents: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+ai_chat: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+ai_letter: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+ai_check: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+ai_email: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+ai_translate: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
+compress: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
 // Décision validée le 2026-08-10 : même palier que le reste du lot
 // "dossier de candidature enrichi" (Essentiel+, pas de palier dédié
 // malgré le "Premium en préparation" affiché jusqu'ici sur le
 // placeholder dashboard — copie mise à jour en conséquence).
-interview_prep: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+interview_prep: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
 // Seule fonctionnalité de ce fichier qui N'EST PAS un outil Fitz — accès
 // à un conseiller humain, vrai uniquement pour les offres "human" de
 // pricing-plans.js. Voir la note en tête de fichier.
-advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": true, "signature-focus": true, signature: true },
+advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, "conseiller-6": true },
 // MESSAGERIE — OUVERTE À TOUS LES COMPTES depuis le 2026-09-23
 // (DROITS_UNIVERSELS, plus bas : decideVerrou l'ouvre avant même de lire
 // cette ligne, qui n'est plus qu'un reflet pour l'admin). Historique :
@@ -203,16 +172,15 @@ advisor: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essen
 // bourse se décide par un jury, l'échange n'a pas la valeur directe
 // qu'il a en préinscription (une pièce mal formatée se répare). Retirée
 // des offres mises en vente par ce lot (essentiel-4) et de
-// premier-dossier ; les DÉTENTEURS d'essentiel/accompagnement/premium/
-// signature-focus/signature la CONSERVENT. Côté préinscription : les
-// trois offres (PREINSCRIPTION_FEATURE_CONFIG). Toute formule payante
+// premier-dossier. Côté préinscription : les trois offres
+// (PREINSCRIPTION_FEATURE_CONFIG). Toute formule payante
 // garde « Signaler un problème » (support_ticket) — voie séparée.
-student_messaging: { gratuit: true, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true },
+student_messaging: { gratuit: true, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true },
 // Grille A : whatsapp_direct n'est attachée à PLUS AUCUNE formule
-// (retrait complet du 2026-09-20, Signature comprise).
-whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
-diagnostic_france: { gratuit: false, "premier-dossier": false, "essentiel-4": false, essentiel: false, accompagnement: false, premium: false, "conseiller-6": false, "signature-focus": false, signature: false },
-support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, essentiel: true, accompagnement: true, premium: true, "conseiller-6": true, "signature-focus": true, signature: true }
+// (retrait complet du 2026-09-20).
+whatsapp_direct: { gratuit: false, "premier-dossier": false, "essentiel-4": false, "conseiller-6": false },
+diagnostic_france: { gratuit: false, "premier-dossier": false, "essentiel-4": false, "conseiller-6": false },
+support_ticket: { gratuit: false, "premier-dossier": true, "essentiel-4": true, "conseiller-6": true }
 };
 
 // Les DROITS DES OFFRES PRÉINSCRIPTION (grille B). Fusionnés dans les
@@ -349,7 +317,7 @@ return flags[planId] === true || (!!planPreinscriptionId && flags[planPreinscrip
 // sans écrire dans Firestore — voir test/plan-features.test.mjs.
 //
 // Trois cas, dans cet ordre :
-//   - Infinity            → illimité (Signature), ne bloque jamais
+//   - Infinity            → illimité (aucune formule en vente ne l'est), ne bloque jamais
 //   - nombre fini > 0     → plafond réel de l'offre
 //   - null / undefined / 0 → aucune offre active : ne bloque pas ICI,
 //     c'est requireFeature() qui interdit l'accès à la page en amont.
@@ -389,13 +357,11 @@ return merged;
 // FORMULES RÉSOLUES, ET ESPACE (déplacé de js/access-guard.js, S4)
 // ==========================================================
 
-// Un abonnement expiré doit se comporter exactement comme l'absence
-// d'abonnement — les deux cas retombent aujourd'hui sur "essentiel"
-// (voir la note historique ci-dessous). Ce n'est PAS un nouveau choix :
-// c'est le même comportement déjà en place, appliqué en plus au cas de
-// l'expiration pour rester cohérent. planExpiresAt est une chaîne ISO
-// (ex. "2026-09-15"), écrite par le futur backend de paiement — aucun
-// compte n'en a aujourd'hui, ce contrôle est donc actuellement inerte.
+// Un abonnement expiré se comporte exactement comme l'absence
+// d'abonnement : les deux cas retombent sur "gratuit" (voir la note
+// ci-dessous). planExpiresAt est une chaîne ISO (ex. "2026-09-15").
+// Les formules bourses en vente n'ont plus de durée (lot ACCEPTATION) :
+// c'est l'admin qui y met fin en posant une date.
 function isPlanExpired(userData) {
 
 if (!userData || !userData.planExpiresAt) return false;
@@ -530,7 +496,7 @@ return raw;
 /**
 * LES DOSSIERS PAR PAYS (2026-09-23). Chaque destination vendue a son
 * entrée, écrite par le webhook seul : France dans `planPreinscription`,
-* les six autres dans `preinscriptionsPays.<pays>` = { plan, expiresAt }.
+* les huit autres dans `preinscriptionsPays.<pays>` = { plan, expiresAt }.
 * Rend les dossiers ACTIFS, France d'abord, puis dans l'ordre de la carte.
 *
 * @returns {Array<{destination:string, plan:string, expiresAt:string|null}>}
@@ -635,9 +601,9 @@ if (PLAN_PREINSCRIPTION_ORDER.indexOf(d.plan) > PLAN_PREINSCRIPTION_ORDER.indexO
 return meilleure;
 }
 
-// Une offre `deprecated: true` (pricing-plans.js) reste dans PLAN_ORDER
-// pour que les comptes qui la détiennent déjà continuent de fonctionner,
-// mais ne doit plus jamais être SUGGÉRÉE à l'achat — ni comme prochain
+// Une offre `deprecated: true` (pricing-plans.js) — aucune aujourd'hui,
+// depuis la suppression des anciennes formules le 2026-09-24 — ne doit
+// jamais être SUGGÉRÉE à l'achat — ni comme prochain
 // palier (nextPlanId, panneau coach du tableau de bord), ni comme cible
 // de déverrouillage d'une fonctionnalité (unlockingPlans, CTA "Choisir
 // ma formule" un peu partout). `window.SCHOLARBRIDGE_PLANS` peut être

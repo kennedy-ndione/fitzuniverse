@@ -140,6 +140,7 @@ assert.ok(!html.includes(`value="${id}"`), `« ${id} » est écrit en dur dans l
 
 assert.match(html, /<select id="planSelect"[^>]*><\/select>/, "le sélecteur bourse doit être vide dans le HTML");
 assert.match(html, /<select id="planPreinscriptionSelect"[^>]*><\/select>/, "le sélecteur préinscription doit être vide dans le HTML");
+assert.match(html, /<select id="paysOffreSelect"[^>]*><\/select>/, "le sélecteur de pays doit être vide dans le HTML");
 
 // Lot FINITIONS-VISUELLES (2026-09-11) : les deux groupes viennent du
 // module pur js/formules-admin.js (lui-même construit sur PLAN_ORDER et
@@ -148,7 +149,10 @@ assert.match(html, /<select id="planPreinscriptionSelect"[^>]*><\/select>/, "le 
 // ≠ « Essentiel (ancienne) · 5 candidatures »).
 const js = lire("admin/student-detail.js");
 assert.match(js, /optionsFormules\(\{ vide: "Sans formule", pass: false, preinscription: false \}\)/, "le sélecteur bourse vient du module");
-assert.match(js, /optionsFormules\(\{ vide: "Sans offre", pass: false, bourse: false \}\)/, "le sélecteur préinscription vient du module");
+// 2026-09-24 : l'offre préinscription se pose PAYS PAR PAYS. Les pays et
+// les trois offres, au nom du pays choisi, viennent du module.
+assert.match(js, /optionsPays\(\{ vide: null \}\)/, "le sélecteur de pays vient du module");
+assert.match(js, /optionsOffresPays\(/, "le sélecteur préinscription vient du module, au nom du pays");
 const module_ = lire("js/formules-admin.js");
 assert.match(module_, /PLAN_ORDER\.filter\(\(id\) => id !== "gratuit" && !estRetiree\(id\)\)/, "le groupe « En vente » vient de PLAN_ORDER");
 assert.match(module_, /PLAN_ORDER\.filter\(\(id\) => id !== "gratuit" && estRetiree\(id\)\)/, "le groupe « Retirées » aussi");
@@ -169,9 +173,11 @@ const htmlVisible = html.replace(/<!--[\s\S]*?-->/g, " ");
 const jsVisible = js.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|\s)\/\/.*$/gm, "$1");
 assert.ok(!htmlVisible.includes("aucune modification manuelle depuis cette fiche"));
 assert.ok(!jsVisible.includes("non modifiable ici"));
-// Et les deux boutons existent.
-assert.match(html, /id="savePlanPreinscriptionBtn"/);
-assert.match(html, /id="savePlanPreinscriptionExpiryBtn"/);
+// Et le bouton existe. 2026-09-24 : UN seul bouton, qui enregistre
+// l'offre ET son échéance pour le pays choisi (une offre hors France
+// sans échéance n'ouvre rien : les deux doivent partir ensemble).
+assert.match(html, /id="savePlanPreinscriptionBtn"[^>]*>Enregistrer pour ce pays</);
+assert.ok(!html.includes('id="savePlanPreinscriptionExpiryBtn"'), "l'ancien bouton « échéance seule » est parti");
 });
 
 test("sélecteurs, dates et promotion sont RETIRÉS du DOM pour un admin ordinaire", () => {
@@ -179,7 +185,7 @@ test("sélecteurs, dates et promotion sont RETIRÉS du DOM pour un admin ordinai
 const html = lire("admin/student-detail.html");
 
 // Chaque bloc réservé porte le marqueur…
-for (const bloc of ['id="planSelect"', 'id="planExpiryInput"', 'id="planPreinscriptionSelect"', 'id="planPreinscriptionExpiryInput"', 'id="promoteAdminBtn"']) {
+for (const bloc of ['id="planSelect"', 'id="planExpiryInput"', 'id="paysOffreSelect"', 'id="planPreinscriptionSelect"', 'id="planPreinscriptionExpiryInput"', 'id="promoteAdminBtn"']) {
 const i = html.indexOf(bloc);
 assert.notEqual(i, -1, `${bloc} absent de la fiche`);
 const avant = html.slice(Math.max(0, i - 400), i);
@@ -241,7 +247,8 @@ assert.equal(decision.misAJour.attributionManuelle, SUPPRIMER, `${planId} : la m
 // associé » devient fausse.
 const inferieur = calculerMiseAJour({
 planId: "essentiel-4",
-user: { plan: "signature", planExpiresAt: "2027-06-01T00:00:00.000Z" },
+// conseiller-6 est sans échéance : il reste actif, donc de rang supérieur.
+user: { plan: "conseiller-6" },
 maintenant: new Date("2026-09-09T12:00:00Z"),
 supprimer: SUPPRIMER
 });
@@ -358,4 +365,22 @@ assert.match(admin, /import \{ ROLE_ADMIN \} from "\.\.\/js\/roles-admin\.js";/)
 // On ne supprime jamais : la fonction n'existe pas.
 assert.ok(!/deleteDoc\(doc\(db, "admins"/.test(admin), "un administrateur se désactive, il ne se supprime pas");
 assert.match(admin, /export async function changerActivationAdmin\(uid, actif\)/);
+});
+
+// Relecture du 2026-09-24 : les pièges de saisie de la fiche, pays par pays.
+test("fiche, pays par pays : chaque offre part avec une date de fin de journée, reproposée quand l'offre change", () => {
+const js = lire("admin/student-detail.js");
+// 1. France comprise : une offre sans date passait pour active chez
+//    l'étudiant et pour terminée chez Fitz (functions/lib/fitz-acces.js).
+assert.match(js, /if \(plan && !echeance\) \{/, "une offre sans échéance doit être refusée, dans tous les pays");
+assert.ok(!/pays !== "france" && plan && !echeance/.test(js), "l'exception France est partie");
+// 2. « Active jusqu'au 12 avril » ouvre le 12 avril entier.
+assert.match(js, /const finDeJour = echeance \? `\$\{echeance\}T23:59:59\.000Z` : null;/);
+// 3. Une date ne vaut que pour son offre : changer d'offre, ou reposer une
+//    offre expirée, repropose la durée de l'achat.
+assert.match(js, /if \(!date\.value \|\| plan !== enPlace\.plan \|\| passee\) date\.value = echeanceProposee\(plan, pays\);/);
+// 4. Le module d'écriture refuse aussi une offre France sans date.
+const admin = lire("admin/firebase-admin.js");
+assert.match(admin, /if \(formules\.planPreinscription && !formules\.planPreinscriptionExpiresAt\) throw new Error/);
+assert.match(admin, /if \(formules\.pays\.plan && !formules\.pays\.expiresAt\) throw new Error/);
 });

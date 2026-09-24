@@ -30,7 +30,10 @@ const PROJECT_ID = "scholarbridge-e0d84";
 const TEST_USER = {
 email: "test.essentiel@scholarbridge.local",
 password: "TestEssentiel123!",
-plan: "essentiel" // quota attendu : 3 candidatures accompagnées (voir js/plan-features.js)
+// Forfait Essentiel EN VENTE : quota 4 (pricing-plans.js). L'ancien
+// identifiant « essentiel » a été supprimé le 2026-09-24 — un compte qui
+// le porterait serait lu comme gratuit.
+plan: "essentiel-4"
 };
 
 // Compte admin de test — nécessaire pour tester admin/*.html (l'accès

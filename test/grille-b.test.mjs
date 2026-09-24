@@ -76,7 +76,7 @@ test("`parcours` sur TOUTES les offres, bourse ou préinscription", () => {
 for (const [id, o] of Object.entries(OFFRES)) {
 assert.ok(["bourse", "preinscription"].includes(o.parcours), `${id} : parcours « ${o.parcours} »`);
 }
-assert.equal(OFFRES.accompagnement.parcours, "bourse");
+assert.equal(OFFRES["essentiel-4"].parcours, "bourse");
 assert.equal(OFFRES.fitzExpress.parcours, "bourse");
 });
 
@@ -93,14 +93,17 @@ for (const mot of [/mensualit/i, /par mois/i, /fractionn/i, /coupon/i]) assert.o
 
 test("les prix et quotas des offres BOURSE n'ont pas bougé", () => {
 // 15 000 → 25 000 F le 2026-09-11 (lot VITRINE-COMMERCIALE) : le seul
-// prix de la grille qui ait bougé ce jour-là.
+// prix de la grille qui ait bougé ce jour-là. Les anciennes formules
+// (Essentiel 5, Ambition, Conseiller 12, Signature) sont supprimées
+// depuis le 2026-09-24 : ce sont les trois formules EN VENTE qui sont
+// gardées ici.
+assert.equal(OFFRES.fitzExpress.priceFCFA, 10000);
 assert.equal(OFFRES["premier-dossier"].priceFCFA, 25000);
-assert.equal(OFFRES.essentiel.priceFCFA, 45000);
-assert.equal(OFFRES.accompagnement.priceFCFA, 75000);
-assert.equal(OFFRES["signature-focus"].priceFCFA, 150000);
-assert.equal(OFFRES.signature.priceFCFA, 250000);
-assert.equal(OFFRES.essentiel.maxAccompaniedApplications, 5);
-assert.equal(OFFRES.accompagnement.maxAccompaniedApplications, 9);
+assert.equal(OFFRES["essentiel-4"].priceFCFA, 45000);
+assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
+assert.equal(OFFRES["premier-dossier"].maxAccompaniedApplications, 1);
+assert.equal(OFFRES["essentiel-4"].maxAccompaniedApplications, 4);
+assert.equal(OFFRES["conseiller-6"].maxAccompaniedApplications, 6);
 });
 
 // ------------------------------------------------------------------
@@ -131,18 +134,19 @@ return m[1];
 
 test("firestore.rules : les quotas des règles sont le miroir des quotas de pricing-plans.js", () => {
 const slot = motifRegle("slotPattern");
-const attendu = {
-"premier-dossier": "slot-1", essentiel: "slot-[1-5]", accompagnement: "slot-[1-9]",
-premium: "slot-([1-9]|1[0-2])", "signature-focus": "slot-([1-9]|1[0-2])", signature: "slot-([1-9][0-9]{0,2})"
-};
+// 2026-09-24 : les trois formules EN VENTE, et elles seules (les
+// anciennes sont supprimées des règles).
+const attendu = { "premier-dossier": "slot-1", "essentiel-4": "slot-[1-4]", "conseiller-6": "slot-[1-6]" };
 for (const [id, motif] of Object.entries(attendu)) {
 assert.ok(slot.includes(`planOf(uid) == '${id}' ? '${motif}'`), `slotPattern : ${id} → ${motif}`);
 }
-// Le motif borne bien au quota annoncé.
+assert.equal((slot.match(/planOf\(uid\) == '/g) || []).length, Object.keys(attendu).length, "aucune autre formule n'ouvre de créneau");
+// Le motif borne bien au quota annoncé par pricing-plans.js.
 const borne = (motif, n) => new RegExp(`^${motif}$`).test(`slot-${n}`);
-assert.ok(borne(attendu.essentiel, 5) && !borne(attendu.essentiel, 6));
-assert.ok(borne(attendu.accompagnement, 9) && !borne(attendu.accompagnement, 10));
-assert.ok(borne(attendu["signature-focus"], 12) && !borne(attendu["signature-focus"], 13));
+for (const [id, motif] of Object.entries(attendu)) {
+const q = OFFRES[id].maxAccompaniedApplications;
+assert.ok(borne(motif, q) && !borne(motif, q + 1), `${id} : le motif ${motif} doit borner à ${q}`);
+}
 
 const pre = motifRegle("preSlotPattern");
 assert.ok(pre.includes("'pre-[1-7]'"), "preSlotPattern : pre-[1-7]");
@@ -203,11 +207,13 @@ for (const id of PRE) assert.equal(typeof flags[key][id], "boolean", `drapeau r�
 }
 });
 
-test("Ambition seul : ses droits d'avant, et pas le diagnostic France", () => {
-assert.equal(verrou("accompagnement", "", "applications"), false);
-assert.equal(verrou("accompagnement", "", "ai_letter"), false);
-assert.equal(verrou("accompagnement", "", "advisor"), true);
-assert.equal(verrou("accompagnement", "", "diagnostic_france"), true);
+// Jusqu'au 2026-09-24 : « Ambition seul ». Ambition est supprimée ; la
+// formule bourse du milieu en vente, Essentiel, tient le même rôle.
+test("Essentiel seul : ses droits, et pas le diagnostic France", () => {
+assert.equal(verrou("essentiel-4", "", "applications"), false);
+assert.equal(verrou("essentiel-4", "", "ai_letter"), false);
+assert.equal(verrou("essentiel-4", "", "advisor"), true);
+assert.equal(verrou("essentiel-4", "", "diagnostic_france"), true);
 });
 
 test("Dossier France seul : candidatures, documents, entretiens, messagerie, diagnostic — PAS advisor — et, depuis le lot PRÉ-FITZ, les cinq outils Fitz", () => {
@@ -223,13 +229,13 @@ assert.equal(verrou("gratuit", "dossier-france-conseiller", "ai_letter"), false)
 });
 
 test("les deux forfaits : l'union", () => {
-for (const k of ["applications", "ai_letter", "diagnostic_france", "student_messaging"]) assert.equal(verrou("accompagnement", "dossier-france", k), false, k);
-assert.equal(verrou("accompagnement", "dossier-france", "advisor"), true);
-assert.equal(verrou("accompagnement", "dossier-france-conseiller", "advisor"), false);
-// 2026-09-20 : WhatsApp est retiré du site pour TOUTES les formules,
-// Signature comprise (décision de Charles) — le verrou reste donc
-// fermé même pour l'union la plus large.
-assert.equal(verrou("signature", "diagnostic-france", "whatsapp_direct"), true);
+for (const k of ["applications", "ai_letter", "diagnostic_france", "student_messaging"]) assert.equal(verrou("essentiel-4", "dossier-france", k), false, k);
+assert.equal(verrou("essentiel-4", "dossier-france", "advisor"), true);
+assert.equal(verrou("essentiel-4", "dossier-france-conseiller", "advisor"), false);
+// 2026-09-20 : WhatsApp est retiré du site pour TOUTES les formules
+// (décision de Charles) — le verrou reste donc fermé même pour l'union
+// la plus large.
+assert.equal(verrou("conseiller-6", "dossier-france-conseiller", "whatsapp_direct"), true);
 });
 
 test("Diagnostic seul : la page du diagnostic et la messagerie (grille A), aucun droit de candidature", () => {

@@ -76,7 +76,7 @@ import { oublierPortails } from "./portails.js";
 // après le bootstrap et doivent pouvoir re-appliquer les verrous.
 export { PLAN_ORDER, PLAN_LABELS, nextPlanId, unlockingPlans, isFeatureLocked, applyFeatureLocks, ESPACE_OUTILS };
 
-// "Mon conseiller" (Signature Focus / Signature) est masqué entièrement
+// "Mon conseiller" (Conseiller, Dossier + Conseiller) est masqué entièrement
 // plutôt que grisé-avec-CTA comme les autres [data-feature] — voir la
 // même logique/le même raisonnement dans dashboard.js
 // (applyAdvisorVisibility). Les deux copies existent parce que

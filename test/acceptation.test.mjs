@@ -410,7 +410,7 @@ assert.match(profil, /if \(POUR_FITZ && profilPretPourFitz\(updatedProfile\)\.pr
 assert.match(lire("profile.html"), /id="fitzProfilBandeau"/);
 });
 
-test("acceptation 18 — dureeMois null pour essentiel-4 et conseiller-6 ; planExpiresAt effacé à l'activation ; les retirées gardent leurs mois", () => {
+test("acceptation 18 — dureeMois null pour essentiel-4 et conseiller-6 ; planExpiresAt effacé à l'activation ; les anciennes formules ne sont plus dans la GRILLE", () => {
 const SUPPRIMER = Symbol("delete");
 for (const id of ["premier-dossier", "essentiel-4", "conseiller-6"]) {
 assert.equal(GRILLE[id].dureeMois, null, id);
@@ -419,19 +419,20 @@ assert.equal(r.statut, "applique");
 assert.equal(r.misAJour.plan, id);
 assert.equal(r.misAJour.planExpiresAt, SUPPRIMER, `${id} : planExpiresAt effacé`);
 }
-// Un compte qui portait une échéance (essentiel, retirée) et monte : l'échéance est effacée aussi.
+// Un compte qui portait une échéance (une ancienne formule, supprimée le
+// 2026-09-24) et monte : l'échéance est effacée aussi.
 const monte = calculerMiseAJour({ planId: "conseiller-6", user: { plan: "essentiel", planExpiresAt: "2027-01-01T00:00:00.000Z" }, maintenant: new Date("2026-09-11T10:00:00Z"), supprimer: SUPPRIMER });
 assert.equal(monte.statut, "applique");
 assert.equal(monte.misAJour.planExpiresAt, SUPPRIMER);
-assert.equal(GRILLE.essentiel.dureeMois, 6);
-assert.equal(GRILLE.accompagnement.dureeMois, 9);
-assert.equal(GRILLE["signature-focus"].dureeMois, 9);
-assert.equal(GRILLE.signature.dureeMois, 12);
+// 2026-09-24 (décision de Charles) : les anciennes formules sont
+// supprimées de la GRILLE, et non plus seulement retirées de la vente.
+for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
+assert.equal(GRILLE[ancien], undefined, `${ancien} : supprimée de la GRILLE`);
+}
 // Les quotas miroir de pricing-plans.js.
 assert.equal(GRILLE["premier-dossier"].quota, 1);
 assert.equal(GRILLE["essentiel-4"].quota, 4);
 assert.equal(GRILLE["conseiller-6"].quota, 6);
-assert.equal(GRILLE.accompagnement.quota, 9);
 });
 
 test("acceptation 19 — les trois refus d'achat : même formule (active ou terminée), aucune place, Pass à un compte qui a le chat", () => {

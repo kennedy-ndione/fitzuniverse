@@ -216,21 +216,22 @@ qui diverge d'un paiement — existait déjà mot pour mot sur la
 grille bourse, écrite librement depuis cette même fiche. Les deux
 grilles sont désormais logées à la même enseigne : réservées au
 propriétaire, et tracées. -->
+<!-- LES NEUF PAYS (2026-09-24, « relier tout cela à mon espace admin ») :
+une ligne par pays où le compte a une offre, puis UN geste — le pays,
+l'offre à son nom, l'échéance — qui pose ou retire l'offre de ce pays.
+La France s'écrit dans planPreinscription, les huit autres dans
+preinscriptionsPays.<pays> (admin/firebase-admin.js). Les deux sections
+« Offre » et « Expiration » de la France seule sont fondues ici. -->
 <div class="detail-section">
-<h3>Offre préinscription</h3>
-<p class="detail-field-value" id="planPreinscriptionStatus" style="margin-bottom:14px;">—</p>
-<div class="detail-actions-row" data-super-admin>
+<h3>Préinscriptions, pays par pays</h3>
+<ul class="detail-pays-liste" id="planPreinscriptionStatus"><li>—</li></ul>
+<div class="detail-actions-row detail-actions-pays" data-super-admin>
+<select id="paysOffreSelect" aria-label="Pays de l'offre"></select>
 <select id="planPreinscriptionSelect" aria-label="Offre préinscription"></select>
-<button type="button" class="btn-detail-action" id="savePlanPreinscriptionBtn">Enregistrer l'offre</button>
+<input type="date" class="fitz-date" id="planPreinscriptionExpiryInput" aria-label="Échéance de l'offre">
+<button type="button" class="btn-detail-action" id="savePlanPreinscriptionBtn">Enregistrer pour ce pays</button>
 </div>
-</div>
-<div class="detail-section">
-<h3>Expiration de l'offre préinscription</h3>
-<p class="detail-field-value" id="planPreinscriptionExpiryStatus" style="margin-bottom:14px;">—</p>
-<div class="detail-actions-row" data-super-admin>
-<input type="date" class="fitz-date" id="planPreinscriptionExpiryInput">
-<button type="button" class="btn-detail-action" id="savePlanPreinscriptionExpiryBtn">Enregistrer la date</button>
-</div>
+<p class="detail-field-hint" id="paysOffreAide" data-super-admin>Choisissez le pays : son offre et son échéance actuelles s'affichent. « Sans offre » retire l'offre de ce pays. Chaque offre exige une échéance : la date proposée suit la durée de l'achat (14 jours pour un Diagnostic, le 31 juillet pour un Dossier France, 12 mois ailleurs).</p>
 </div>
 <div class="detail-section">
 <h3>Candidatures accompagnées</h3>

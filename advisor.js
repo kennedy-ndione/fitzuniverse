@@ -2,7 +2,8 @@
 * ============================================================
 * FitzUniverse — Mon conseiller (advisor.js)
 * ============================================================
-* Page d'accompagnement humain (Signature Focus / Signature). Ne
+* Page d'accompagnement humain : le Forfait Conseiller (bourses) et le
+* Dossier + Conseiller (préinscription, dans les neuf pays). Ne
 * réinvente aucun système de messagerie : le fil de messages
 * admin → étudiant existe déjà (js/student-messages.js, cloche du
 * topbar, déjà initialisé par bootstrapShell()) — cette page se
@@ -25,10 +26,9 @@ import { trackEvent } from "./js/analytics.js";
 
 initShellChrome();
 
-const ADVISOR_INTRO = {
-"signature-focus": "Un conseiller humain suit vos candidatures aux côtés de Fitz. Les messages qu'il vous envoie apparaissent dans la cloche de notifications en haut de cette page.",
-signature: "Votre conseiller dédié suit l'ensemble de vos candidatures aux côtés de Fitz, avec des points d'étape réguliers. Les messages qu'il vous envoie apparaissent dans la cloche de notifications en haut de cette page."
-};
+// Une seule phrase d'accueil : les deux formules qui ouvrent cette page
+// (Conseiller, et Dossier + Conseiller) donnent le même conseiller.
+const ADVISOR_INTRO = "Un conseiller humain suit votre dossier aux côtés de Fitz. Les messages qu'il vous envoie apparaissent dans la cloche de notifications en haut de cette page.";
 
 // Ce que le conseiller humain apporte RÉELLEMENT, tel que le code le
 // permet aujourd'hui — pas une promesse commerciale. Chaque ligne
@@ -55,7 +55,7 @@ container.innerHTML = `
 <div class="ai-locked-hero">
 <div class="ai-locked-icon"><i data-lucide="lock"></i></div>
 <h2>Un conseiller humain à vos côtés</h2>
-<p>L'accompagnement par un conseiller est disponible avec les formules <strong>${PLAN_LABELS["signature-focus"]}</strong> et <strong>${PLAN_LABELS.signature}</strong>.</p>
+<p>L'accompagnement par un conseiller est disponible avec le <strong>Forfait ${PLAN_LABELS["conseiller-6"]}</strong> pour les bourses, et avec le <strong>Dossier + Conseiller</strong> pour une préinscription, dans chacun des neuf pays.</p>
 
 <ul class="advisor-value">
 ${CE_QUE_FAIT_LE_CONSEILLER.map((ligne) => `<li>${ligne}</li>`).join("")}
@@ -84,7 +84,7 @@ function initAdvisorPage(ctx) {
 
 const introEl = document.getElementById("advisorIntroText");
 
-if (introEl) introEl.textContent = ADVISOR_INTRO[ctx.planId] || ADVISOR_INTRO["signature-focus"];
+if (introEl) introEl.textContent = ADVISOR_INTRO;
 
 const sectionLabel = document.getElementById("advisorSectionLabel");
 const sectionNav = document.getElementById("advisorSectionNav");

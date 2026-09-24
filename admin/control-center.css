@@ -1126,13 +1126,15 @@ color:var(--danger);
 }
 
 .status-pill.plan-gratuit{ background:var(--background-alt); color:var(--text-muted); }
-.status-pill.plan-essentiel{ background:var(--background-light); color:var(--text-light); }
-.status-pill.plan-accompagnement{ background:rgba(233,163,25,.16); color:var(--amber-700); }
-.status-pill.plan-premium{ background:var(--gradient-primary); color:#fff; }
 .status-pill.plan-none{ background:var(--background-light); color:var(--text-muted); }
+/* L'accès test complet (testerAccess) — il empruntait la classe d'une
+formule supprimée le 2026-09-24. */
+.status-pill.is-testeur{ background:var(--gradient-primary); color:#fff; }
 
-/* Lot FINITIONS-VISUELLES (2026-09-11) : les offres EN VENTE en ambre,
-le Pass et les offres France distingués, les retirées en gris. */
+/* Lot FINITIONS-VISUELLES (2026-09-11) : les formules bourses en ambre,
+le Pass et les offres préinscription distingués. Une formule retirée de
+la vente, s'il y en a un jour, prend .is-retiree (gris). Les anciennes
+formules ont été supprimées le 2026-09-24. */
 .status-pill.plan-premier-dossier,
 .status-pill.plan-essentiel-4,
 .status-pill.plan-conseiller-6{ background:rgba(233,163,25,.16); color:var(--amber-700); }
@@ -1140,8 +1142,7 @@ le Pass et les offres France distingués, les retirées en gris. */
 .status-pill.plan-dossier-france,
 .status-pill.plan-dossier-france-conseiller{ background:rgba(33,29,24,.08); color:var(--text-color); }
 .status-pill.plan-fitzExpress{ background:rgba(233,163,25,.10); color:var(--amber-700); border:1px dashed rgba(233,163,25,.5); }
-.status-pill.plan-signature-focus,
-.status-pill.plan-signature{ background:var(--background-light); color:var(--text-light); }
+.status-pill.is-retiree{ background:var(--background-light); color:var(--text-light); }
 
 /* Page « Formules » : rangée de titres de groupe et légende par groupe. */
 .plans-group-row th.plans-group-title{
@@ -5503,3 +5504,32 @@ color:var(--text-muted);
 .msg-bubble-lu.is-lu{
 color:#1E6B3A;
 }
+
+/* ==========================================================
+LES NEUF PAYS DES PRÉINSCRIPTIONS DANS L'ADMIN (2026-09-24)
+Fiche étudiant : une ligne par pays où le compte a une offre, puis le
+geste qui la pose ou la retire. Formules : la carte des neuf pays.
+Tableau de bord : les offres actives et les paiements, par pays.
+========================================================== */
+.detail-pays-liste{
+list-style:none;
+margin:0 0 14px;
+padding:0;
+display:grid;
+gap:6px;
+font-size:.9rem;
+font-weight:600;
+color:var(--text-color);
+}
+.detail-pays-liste li{ display:flex; flex-wrap:wrap; gap:6px 10px; align-items:baseline; }
+.detail-pays-liste .detail-pays-etat{ font-weight:500; color:var(--text-muted); }
+.detail-pays-liste .detail-pays-etat.is-finie{ color:var(--danger); }
+.detail-field-hint{ margin:10px 0 0; font-size:.8rem; color:var(--text-muted); }
+.plans-pays{ margin:28px 0 8px; }
+.plans-pays h2{ font-size:1.05rem; margin:0 0 6px; }
+.plans-pays .text-small{ color:var(--text-muted); margin:0 0 14px; }
+.pays-table td{ white-space:nowrap; }
+.pays-table th{ white-space:normal; vertical-align:bottom; }
+.pays-table td.is-nombre, .pays-table th.is-nombre{ text-align:right; font-variant-numeric:tabular-nums; }
+.pays-table .radar-muet{ color:var(--text-muted); font-weight:500; }
+.panel-card--pays{ margin-bottom:32px; }

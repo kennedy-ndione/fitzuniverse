@@ -232,13 +232,15 @@ function preparer() {
     uid: UID,
     name: "Harnais",
     email: "harnais@fitz.local",
-    // Formule « accompagnement » : suivi des candidatures ouvert, quota 9
-    // (« essentiel » plafonnait à 5, et le lot A ajoute un sixième témoin
-    // puis ENREGISTRE une candidature via le formulaire — le quota doit
-    // laisser la place). Fitz voudra donc pré-remplir des créneaux
-    // (setDoc consignés, pas exécutés) ; c'est le comportement normal,
-    // on ne le bride pas.
-    plan: "accompagnement",
+    // Forfait Conseiller : suivi des candidatures ouvert, quota 6. Le
+    // harnais pose CINQ cartes bourse (slot-1 à slot-5 ; slot-6 est une
+    // préinscription, hors quota bourse) puis ENREGISTRE une candidature
+    // via le formulaire : la sixième place doit rester libre. Jusqu'au
+    // 2026-09-24 c'était « accompagnement » (quota 9), formule supprimée
+    // depuis — un compte qui la porterait serait lu comme gratuit. Fitz
+    // voudra donc pré-remplir des créneaux (setDoc consignés, pas
+    // exécutés) ; c'est le comportement normal, on ne le bride pas.
+    plan: "conseiller-6",
     planExpiresAt: dansNJours(90),
     // Grille B (2026-09-07) : le second forfait. Sans lui, l'enregistrement
     // d'une préinscription hors catalogue est refusé (garde-fou client,

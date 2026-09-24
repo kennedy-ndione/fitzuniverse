@@ -73,7 +73,11 @@ test("quota 1 — chaque formule en vente rend SON nombre, et le bon champ", () 
 assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "premier-dossier", plans: PLANS }), 1);
 assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "essentiel-4", plans: PLANS }), 4);
 assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "conseiller-6", plans: PLANS }), 6);
-assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "signature", plans: PLANS }), Infinity);
+// Les anciennes formules sont supprimées de la grille (2026-09-24) : un
+// identifiant inconnu rend null, jamais un quota. Infinity reste lu tel
+// quel si une formule future le déclare.
+assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "signature", plans: PLANS }), null);
+assert.equal(quotaDeLaFormule({ espace: "bourse", planId: "x", plans: { x: { maxAccompaniedApplications: Infinity } } }), Infinity);
 
 // Préinscription : maxPreinscriptions. 7 n'est pas une décision
 // commerciale, c'est le plafond de vœux d'Études en France.

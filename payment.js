@@ -59,10 +59,9 @@ const FITZ_MESSAGES = [
 
 // Une offre `deprecated: true` (pricing-plans.js) n'est plus vendue —
 // jamais publiquement (retirée de offers.html), jamais via une URL
-// devinée ou un lien ancien encore partagé (?plan=premium). Un compte
-// qui la détient déjà n'initie pas de nouvel achat via cette page : sa
-// formule est déjà active, résolue ailleurs par identifiant
-// (dashboard.js, admin/student-detail.js), jamais ici.
+// devinée ou un lien ancien encore partagé. Aucune offre ne l'est
+// aujourd'hui : les anciennes formules ont été SUPPRIMÉES le 2026-09-24,
+// et un lien vers l'une d'elles (?plan=premium) ne trouve plus rien.
 function isSellablePlan(planId) {
 const plan = SCHOLARBRIDGE_PLANS[planId];
 return !!plan && plan.deprecated !== true;
@@ -218,10 +217,9 @@ document.getElementById("summaryPrice").textContent = TARIF.deduction
 // se lit comme une erreur, et on appelle le support pour la signaler.
 ? `${formatFCFA(TARIF.prix)} F CFA débités (environ ${formatEUR(TARIF.prix)} €), au lieu de ${formatFCFA(TARIF.base)} F CFA : ${TARIF.mention}.`
 : `${formatFCFA(TARIF.prix)} F CFA débités (environ ${formatEUR(TARIF.prix)} €)`;
-// Toutes les offres n'ont pas de durée : Premier Dossier, Signature
-// Focus et Signature achètent un nombre de candidatures, pas une
-// période. La ligne entière est masquée dans ce cas — la page
-// affichait "undefined" pour Signature, qui n'a jamais eu ce champ.
+// Toutes les offres n'ont pas de durée : les formules bourses achètent
+// un nombre de candidatures, pas une période. La ligne entière est
+// masquée dans ce cas — la page affichait "undefined" sinon.
 // display:none plutôt que l'attribut [hidden] : une règle [hidden]
 // d'une feuille externe s'est déjà révélée ignorée sur ce projet.
 const durationEl = document.getElementById("summaryDuration");
@@ -407,7 +405,7 @@ pendingPlanRequestedAt: serverTimestamp()
 // Le navigateur envoie un IDENTIFIANT d'offre, jamais un montant : le
 // serveur relit le prix dans sa propre grille (GRILLE, functions/
 // paiement.js). C'est la raison d'être de tout ce détour — sans lui,
-// une console de développeur suffirait à acheter Signature à 100 F.
+// une console de développeur suffirait à acheter une formule à 100 F.
 const creerPaiement = httpsCallable(functions, "creerPaiement");
 
 // Messages français pour les refus que le backend sait produire. Un
@@ -445,8 +443,7 @@ return "Le paiement n'a pas pu être lancé. Réessayez, ou écrivez-nous si cel
 }
 
 // Où atterrit l'étudiant une fois l'activation confirmée. dashboard.html
-// reste la cible par défaut (comportement inchangé pour Essentiel/Avancé/
-// Premium/Signature Focus/Signature) — Pass Express et Premier Dossier
+// reste la cible par défaut — Pass Découverte et Premier Dossier
 // ont un premier geste évident et unique, on l'ouvre directement plutôt
 // que de faire remonter le pas depuis le tableau de bord (audit du
 // 2026-08-10, chantier "accès par formule"). "?action=new" est lu par

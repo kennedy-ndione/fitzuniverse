@@ -12,6 +12,13 @@
 * offre en vente, le délai à un seul endroit, la cohérence des quatre
 * endroits du prix, le refus serveur d'un id déprécié, le routage
 * d'offers.html, et les en-têtes des pages catalogue.
+*
+* 2026-09-24 (décision de Charles) : les anciennes formules sont
+* SUPPRIMÉES, et plus seulement retirées de la vente — aucun compte ne les
+* portait, aucun paiement ne les nommait. Les tests « un ancien compte
+* garde ses droits » deviennent des tests d'ABSENCE : aucun ancien
+* identifiant ne subsiste, et un compte qui en porterait encore un est
+* lu comme gratuit.
 * ============================================================
 */
 
@@ -23,7 +30,7 @@ import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import vm from "node:vm";
 
-import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, DEFAULT_FEATURE_CONFIG, PREINSCRIPTION_FEATURE_CONFIG, FEATURE_CATALOG, resolveFeatureFlags, decideVerrou } from "../js/plan-features.js";
+import { PLAN_ORDER, PLAN_LABELS, PLAN_PREINSCRIPTION_ORDER, DEFAULT_FEATURE_CONFIG, PREINSCRIPTION_FEATURE_CONFIG, FEATURE_CATALOG, resolveFeatureFlags, decideVerrou, resolvePlan } from "../js/plan-features.js";
 import { resoudreVueOffres, urlDuParcours } from "../js/offres-parcours.js";
 import { DELAI_REPONSE, DELAI_REPONSE_HEURES } from "../js/delai-reponse.js";
 
@@ -88,12 +95,13 @@ for (const o of enVente) {
 assert.notEqual(o.maxAccompaniedApplications, Infinity, o.id);
 assert.notEqual(o.maxPreinscriptions, Infinity, o.id);
 }
-assert.equal(OFFRES.signature.maxAccompaniedApplications, Infinity, "Signature (dépréciée) garde sa convention pour ses détenteurs");
+for (const o of Object.values(OFFRES)) assert.notEqual(o.maxAccompaniedApplications, Infinity, `${o.id} : plus aucune offre illimitée, même ancienne`);
 });
 
-test("Ambition, Signature, essentiel et signature-focus sont dépréciées — premium l'était déjà", () => {
-for (const id of ANCIENS) assert.equal(OFFRES[id].deprecated, true, id);
+test("Ambition, Signature, essentiel, signature-focus et premium sont SUPPRIMÉES de pricing-plans.js ; plus aucune offre dépréciée", () => {
+for (const id of ANCIENS) assert.equal(OFFRES[id], undefined, id);
 for (const id of BOURSES_EN_VENTE) assert.notEqual(OFFRES[id].deprecated, true, id);
+assert.deepEqual(Object.values(OFFRES).filter((o) => o.deprecated === true).map((o) => o.id), []);
 });
 
 test("les offres préinscription du lot B sont intactes : mêmes ids, mêmes prix, mêmes quotas", () => {
@@ -110,37 +118,33 @@ for (const id of PLAN_PREINSCRIPTION_ORDER) assert.notEqual(OFFRES[id].deprecate
 // NON-RÉGRESSION — les tests qui comptent
 // ------------------------------------------------------------------
 
-test("un compte `essentiel` conserve un quota de 5 ET la messagerie", () => {
-assert.equal(OFFRES.essentiel.maxAccompaniedApplications, 5);
-assert.equal(OFFRES.essentiel.priceFCFA, 45000);
-assert.equal(OFFRES.essentiel.duration, "6 mois");
-assert.equal(verrou("essentiel", "student_messaging"), false);
-for (const k of ["applications", "ai_letter", "documents", "interview_prep", "support_ticket"]) assert.equal(verrou("essentiel", k), false, k);
-});
-
-test("un compte `accompagnement` conserve 9 ; un compte `signature` conserve son quota et la messagerie — mais plus WhatsApp (2026-09-20)", () => {
-assert.equal(OFFRES.accompagnement.maxAccompaniedApplications, 9);
-assert.equal(OFFRES.accompagnement.priceFCFA, 75000);
-assert.equal(verrou("accompagnement", "student_messaging"), false);
-assert.equal(OFFRES.signature.maxAccompaniedApplications, Infinity);
-assert.equal(verrou("signature", "student_messaging"), false);
-// 2026-09-20 : WhatsApp retiré du site pour toutes les formules,
-// Signature comprise (décision de Charles) — le verrou est fermé.
-assert.equal(verrou("signature", "whatsapp_direct"), true);
-assert.equal(verrou("signature", "advisor"), false);
-assert.equal(verrou("signature-focus", "advisor"), false);
-assert.equal(verrou("signature-focus", "student_messaging"), false);
-assert.equal(OFFRES["signature-focus"].maxAccompaniedApplications, 12);
-});
-
-test("aucun ancien identifiant n'a disparu : PLAN_ORDER, PLAN_LABELS, chaque drapeau, la GRILLE serveur, les règles", () => {
+// Jusqu'au 2026-09-24, deux tests exigeaient qu'un compte `essentiel`,
+// `accompagnement` ou `signature` garde son quota et ses outils. Aucun
+// compte ne portait plus ces formules (base relue le 2026-09-24) : elles
+// sont supprimées, et un compte qui en porterait encore une est lu comme
+// GRATUIT — resolvePlan ne connaît que PLAN_ORDER. Les règles, elles,
+// ne lui ouvrent plus aucun créneau (test « firestore.rules » plus bas).
+test("un compte qui porterait encore une ancienne formule est lu comme gratuit : aucun outil payant, la messagerie seule (droit de tous)", () => {
 for (const id of ANCIENS) {
-assert.ok(PLAN_ORDER.includes(id), `${id} absent de PLAN_ORDER`);
-assert.ok(PLAN_LABELS[id], `${id} sans libellé`);
-for (const { key } of FEATURE_CATALOG) assert.equal(typeof DEFAULT_FEATURE_CONFIG[key][id], "boolean", `${key}/${id}`);
-assert.ok(regles.includes(`'${id}'`), `${id} absent de firestore.rules`);
+assert.equal(resolvePlan({ plan: id }), "gratuit", id);
+const lu = resolvePlan({ plan: id });
+for (const k of ["applications", "ai_letter", "documents", "interview_prep", "support_ticket", "advisor", "whatsapp_direct"]) assert.equal(verrou(lu, k), true, `${id} / ${k}`);
+assert.equal(verrou(lu, "student_messaging"), false, `${id} : la messagerie est à tous`);
 }
-for (const id of ["essentiel", "accompagnement", "signature-focus", "signature"]) assert.equal(GRILLE[id] && GRILLE[id].deprecated, true, `${id} : GRILLE serveur`);
+});
+
+test("aucun ancien identifiant ne subsiste : PLAN_ORDER, PLAN_LABELS, chaque drapeau, la GRILLE serveur, RANG, les règles", () => {
+for (const id of ANCIENS) {
+assert.ok(!PLAN_ORDER.includes(id), `${id} encore dans PLAN_ORDER`);
+assert.equal(PLAN_LABELS[id], undefined, `${id} a encore un libellé`);
+for (const { key } of FEATURE_CATALOG) assert.equal(DEFAULT_FEATURE_CONFIG[key][id], undefined, `${key}/${id}`);
+assert.ok(!regles.includes(`'${id}'`), `${id} encore dans firestore.rules`);
+assert.equal(GRILLE[id], undefined, `${id} : GRILLE serveur`);
+assert.equal(RANG[id], undefined, `${id} : RANG`);
+}
+// Le serveur Fitz non plus : ni chat, ni plafond pour un ancien id.
+const fitzAcces = lire("functions/lib/fitz-acces.js").replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+for (const id of ANCIENS) assert.ok(!fitzAcces.includes(`"${id}"`) && !fitzAcces.includes(`'${id}'`), `${id} encore dans functions/lib/fitz-acces.js`);
 });
 
 // ------------------------------------------------------------------
@@ -152,10 +156,9 @@ for (const o of enVente) {
 assert.equal(flags.whatsapp_direct[o.id] === true, false, o.id);
 assert.ok(!/whatsapp/i.test(JSON.stringify(o)), `${o.id} mentionne WhatsApp`);
 }
-// 2026-09-20 : retrait complet décidé par Charles — même les
-// détenteurs historiques de Signature n'ont plus le canal WhatsApp,
-// la messagerie FitzUniverse les couvre.
-assert.equal(flags.whatsapp_direct.signature, false);
+// 2026-09-20 : retrait complet décidé par Charles — la messagerie
+// FitzUniverse couvre tout le monde. Aucune colonne n'ouvre WhatsApp.
+for (const [id, ouvert] of Object.entries(flags.whatsapp_direct)) assert.equal(ouvert, false, id);
 });
 
 // MESSAGERIE POUR TOUS (2026-09-23, décision de Charles) : ce test
@@ -191,13 +194,14 @@ assert.ok(/request\.resource\.data\.text\.size\(\) <= 8000/.test(messages), "tex
 assert.ok(/request\.resource\.data\.fromStudent == true/.test(messages) && /request\.resource\.data\.read == false/.test(messages), "forme imposée");
 assert.ok(bloc("compteSuspendu").includes("get('disabled', false) == true"));
 const payant = bloc("isPaidPlan");
-for (const id of ["essentiel-4", "conseiller-6", ...ANCIENS, "premier-dossier"]) assert.ok(payant.includes(`'${id}'`), `isPaidPlan : ${id}`);
+for (const id of ["essentiel-4", "conseiller-6", "premier-dossier"]) assert.ok(payant.includes(`'${id}'`), `isPaidPlan : ${id}`);
+for (const id of ANCIENS) assert.ok(!payant.includes(`'${id}'`), `isPaidPlan : ${id} (supprimée) ne paie plus`);
 assert.ok(bloc("isSignaturePlan").includes("'conseiller-6'"));
 const slot = bloc("slotPattern");
 assert.ok(slot.includes(`planOf(uid) == 'essentiel-4' ? 'slot-[1-4]'`));
 assert.ok(slot.includes(`planOf(uid) == 'conseiller-6' ? 'slot-[1-6]'`));
-assert.ok(slot.includes(`planOf(uid) == 'essentiel' ? 'slot-[1-5]'`), "l'ancien Essentiel garde ses 5 créneaux");
-assert.ok(slot.includes(`planOf(uid) == 'signature' ? 'slot-([1-9][0-9]{0,2})'`));
+assert.ok(slot.includes(`planOf(uid) == 'premier-dossier' ? 'slot-1'`));
+for (const id of ANCIENS) assert.ok(!slot.includes(`'${id}'`), `slotPattern : ${id} (supprimée) n'ouvre plus de créneau`);
 assert.ok(/^slot-\[1-4\]$/.test("slot-[1-4]") && /^slot-[1-4]$/.test("slot-4") && !/^slot-[1-4]$/.test("slot-5"));
 assert.ok(/^slot-[1-6]$/.test("slot-6") && !/^slot-[1-6]$/.test("slot-7"));
 const tickets = regles.slice(regles.indexOf("match /supportTickets/{ticketId}"), regles.indexOf("match /scholarships/"));
@@ -237,21 +241,18 @@ assert.ok(PLAN_ORDER.includes(id));
 assert.equal(typeof RANG[id], "number");
 }
 // Lot ACCEPTATION : sans échéance, comme Premier Dossier (le webhook
-// efface planExpiresAt à l'activation). Les formules retirées gardent
-// leurs mois.
+// efface planExpiresAt à l'activation).
 assert.equal(GRILLE["essentiel-4"].dureeMois, null);
 assert.equal(GRILLE["conseiller-6"].dureeMois, null);
-assert.equal(GRILLE.essentiel.dureeMois, 6);
-assert.equal(GRILLE.accompagnement.dureeMois, 9);
-// RANG est le miroir de PLAN_ORDER.
+// RANG est le miroir EXACT de PLAN_ORDER (2026-09-24 : les anciennes
+// formules en sont sorties toutes les deux).
+assert.deepEqual(Object.keys(RANG), PLAN_ORDER);
 for (const id of PLAN_ORDER) assert.equal(RANG[id], PLAN_ORDER.indexOf(id), `RANG[${id}]`);
-assert.ok(RANG["essentiel-4"] < RANG.essentiel && RANG["conseiller-6"] < RANG["signature-focus"], "une nouvelle offre se range sous l'ancienne qu'elle remplace");
 });
 
-test("le serveur refuse un achat sur un id déprécié, accepte les nouveaux, et n'écrit jamais un forfait déprécié depuis un achat", () => {
-for (const id of ["essentiel", "accompagnement", "signature", "signature-focus"]) assert.equal(estEnVente(id), false, id);
+test("le serveur refuse un achat sur un ancien id, accepte ceux en vente, et n'écrit jamais un ancien forfait depuis un paiement", () => {
+for (const id of ANCIENS) assert.equal(estEnVente(id), false, id);
 for (const id of BOURSES_EN_VENTE) assert.equal(estEnVente(id), true, id);
-assert.equal(estEnVente("premium"), false);
 assert.equal(estEnVente("inconnue"), false);
 assert.ok(lire("functions/paiement.js").includes("estEnVente(planId)"), "creerPaiement vérifie estEnVente avant de créer la facture");
 const SUPPRIMER = Symbol("delete");
@@ -261,13 +262,17 @@ assert.equal(r.misAJour.plan, "essentiel-4");
 // Lot ACCEPTATION : plus de durée en mois — l'échéance est EFFACÉE à
 // l'activation (elle valait « 2027-03-07 », six mois plus tard).
 assert.equal(r.misAJour.planExpiresAt, SUPPRIMER);
-// Un client Essentiel (5) encore actif ne peut pas être rétrogradé vers essentiel-4.
-const bas = calculerMiseAJour({ planId: "essentiel-4", user: { plan: "essentiel", planExpiresAt: "2027-01-01T00:00:00.000Z" }, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
+// Un client Conseiller ne peut pas être rétrogradé vers essentiel-4.
+const bas = calculerMiseAJour({ planId: "essentiel-4", user: { plan: "conseiller-6" }, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
 assert.equal(bas.statut, "rang-inferieur");
-// Le webhook honore encore un paiement Ambition créé avant le retrait.
-const enVol = calculerMiseAJour({ planId: "accompagnement", user: {}, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
-assert.equal(enVol.statut, "applique");
-assert.equal(enVol.misAJour.plan, "accompagnement");
+// Un paiement qui nommerait une ancienne formule n'écrit RIEN : aucun
+// paiement en base ne les nommait le 2026-09-24, et le webhook ne doit
+// jamais ressusciter une formule supprimée.
+for (const id of ANCIENS) {
+const enVol = calculerMiseAJour({ planId: id, user: {}, maintenant: new Date("2026-09-07T12:00:00Z"), supprimer: null });
+assert.equal(enVol.statut, "formule-inconnue", id);
+assert.ok(!enVol.misAJour || !("plan" in enVol.misAJour), id);
+}
 });
 
 // ------------------------------------------------------------------
@@ -277,7 +282,9 @@ assert.equal(enVol.misAJour.plan, "accompagnement");
 test("routage : ?parcours=, #<id> (grille du parcours de la formule), alias, ancre inconnue → le choix", () => {
 assert.deepEqual(resoudreVueOffres({ search: "?parcours=bourse" }, OFFRES), { parcours: "bourse", cible: null });
 assert.deepEqual(resoudreVueOffres({ search: "?parcours=preinscription" }, OFFRES), { parcours: "preinscription", cible: null });
-assert.deepEqual(resoudreVueOffres({ hash: "#essentiel" }, OFFRES), { parcours: "bourse", cible: "essentiel" });
+assert.deepEqual(resoudreVueOffres({ hash: "#essentiel-4" }, OFFRES), { parcours: "bourse", cible: "essentiel-4" });
+// Une ancre d'ancienne formule ne vise plus rien : le visiteur arrive sur le choix.
+assert.deepEqual(resoudreVueOffres({ hash: "#essentiel" }, OFFRES), { parcours: null, cible: null });
 assert.deepEqual(resoudreVueOffres({ hash: "#conseiller-6" }, OFFRES), { parcours: "bourse", cible: "conseiller-6" });
 assert.deepEqual(resoudreVueOffres({ hash: "#dossier-france" }, OFFRES), { parcours: "preinscription", cible: "dossier-france" });
 assert.deepEqual(resoudreVueOffres({ hash: "#preinscriptions" }, OFFRES), { parcours: "preinscription", cible: null });

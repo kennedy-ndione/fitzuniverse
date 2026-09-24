@@ -35,8 +35,10 @@
  * "gratuit" et le Diagnostic France — un pass de diagnostic, pas un
  * accompagnement, qui n'ouvre aucun outil (js/plan-features.js).
  *
- * Les identifiants dépréciés restent : ce sont les valeurs de `plan` de
- * comptes bien réels, qui ont payé.
+ * Les anciennes formules (essentiel, accompagnement, premium,
+ * signature-focus, signature) ont été supprimées le 2026-09-24 : aucun
+ * compte ne les portait. Une formule que ce fichier ne connaît pas n'a
+ * pas droit à Fitz.
  *
  * Portée volontairement limitée : ce contrôle répond à « ce compte
  * a-t-il droit à Fitz », pas à « a-t-il droit à CET outil ». Le détail
@@ -48,12 +50,6 @@ const FORMULES_AVEC_FITZ = [
   "premier-dossier",
   "essentiel-4",
   "conseiller-6",
-  // Grille bourse — dépréciées, détenues.
-  "essentiel",
-  "accompagnement",
-  "premium",
-  "signature-focus",
-  "signature",
   // Grille préinscription — les deux Dossiers France (lot PRÉ-FITZ).
   "dossier-france",
   "dossier-france-conseiller",
@@ -146,12 +142,7 @@ const PLAFONDS = {
   fitzExpress: { jour: 40, mois: 300 },
   "premier-dossier": { jour: 50, mois: 300 },
   "essentiel-4": { jour: 40, mois: 450 },
-  essentiel: { jour: 40, mois: 190 },
-  accompagnement: { jour: 45, mois: 210 },
-  premium: { jour: 45, mois: 210 },
   "conseiller-6": { jour: 70, mois: 650 },
-  "signature-focus": { jour: 70, mois: 400 },
-  signature: { jour: 90, mois: 500 },
   "dossier-france": { jour: 40, mois: 400 },
   "dossier-france-conseiller": { jour: 70, mois: 650 },
 

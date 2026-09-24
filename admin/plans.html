@@ -138,6 +138,32 @@ l'en-tête et le corps du tableau. -->
 
 </div>
 
+<!-- LES NEUF PAYS (2026-09-24, « relier tout cela à mon espace admin ») :
+les trois colonnes préinscription de la grille valent pour les neuf pays.
+Cette carte dit, pays par pays, ce qui se vend : prix (lus dans
+pricing-plans.js), vœux suivis, durée, page publique. Rendue par
+plans.js. -->
+<section class="plans-pays" aria-labelledby="plansPaysTitre">
+<h2 id="plansPaysTitre">Préinscriptions : les neuf pays</h2>
+<p class="text-small">Les colonnes Diagnostic, Dossier et Dossier + Conseiller de la grille ci-dessus valent pour les neuf pays à la fois : un outil se règle une fois, pour tous. Les prix sont les mêmes partout. Pour poser ou retirer l'offre d'un pays à un étudiant, passez par sa fiche.</p>
+<div class="admin-table-wrap">
+<table class="table admin-table pays-table">
+<thead>
+<tr>
+<th scope="col">Pays</th>
+<th scope="col" class="is-nombre">Diagnostic</th>
+<th scope="col" class="is-nombre">Dossier</th>
+<th scope="col" class="is-nombre">Dossier + Conseiller</th>
+<th scope="col">Vœux suivis</th>
+<th scope="col">Durée du Dossier</th>
+<th scope="col">Page</th>
+</tr>
+</thead>
+<tbody id="plansPaysBody"></tbody>
+</table>
+</div>
+</section>
+
 <div class="profile-save-bar" style="position:sticky;">
 <span class="profile-save-note" id="plansSaveNote">Les changements s'appliquent au prochain chargement du tableau de bord de chaque étudiant.</span>
 <button type="button" class="btn-profile-save" id="savePlansBtn">
@@ -152,6 +178,9 @@ l'en-tête et le corps du tableau. -->
 
 </div>
 
+<!-- Les prix des offres (carte des neuf pays) : la même source que les
+pages publiques. -->
+<script src="../pricing-plans.js"></script>
 <script type="module" src="admin-auth.js"></script>
 <script type="module" src="plans.js"></script>
 

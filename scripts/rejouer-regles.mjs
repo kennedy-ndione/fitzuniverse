@@ -116,13 +116,15 @@ function attendre(nom, obtenu, attendu) {
 }
 
 const T = Date.now();
-const UID_BOURSE = `rejeu-ambition-${T}`;
+const UID_BOURSE = `rejeu-bourse-${T}`;
 const UID_DOSSIER = `rejeu-dossier-${T}`;
 const UID_LES_DEUX = `rejeu-les-deux-${T}`;
 const UID_DIAG = `rejeu-diagnostic-${T}`;
 // Grille A (2026-09-07).
 const UID_ESS4 = `rejeu-essentiel4-${T}`;
 const UID_CONS6 = `rejeu-conseiller6-${T}`;
+// Anciennes formules, SUPPRIMÉES le 2026-09-24 : un compte qui en porterait
+// encore une n'a plus aucun droit de formule.
 const UID_ESS_ANCIEN = `rejeu-essentiel-ancien-${T}`;
 const UID_PREMIER = `rejeu-premier-dossier-${T}`;
 const UID_GRATUIT = `rejeu-gratuit-${T}`;
@@ -130,9 +132,9 @@ const UID_PASS = `rejeu-pass-${T}`;
 const UID_SIGNATURE = `rejeu-signature-${T}`;
 const dans = (jours) => new Date(Date.now() + jours * 86400000).toISOString();
 
-await admin.doc(`users/${UID_BOURSE}`).set({ uid: UID_BOURSE, name: "Ambition seul", plan: "accompagnement", planExpiresAt: dans(200) });
+await admin.doc(`users/${UID_BOURSE}`).set({ uid: UID_BOURSE, name: "Essentiel seul", plan: "essentiel-4" });
 await admin.doc(`users/${UID_DOSSIER}`).set({ uid: UID_DOSSIER, name: "Dossier France seul", planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dans(200) });
-await admin.doc(`users/${UID_LES_DEUX}`).set({ uid: UID_LES_DEUX, name: "Les deux", plan: "accompagnement", planExpiresAt: dans(200), planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dans(200) });
+await admin.doc(`users/${UID_LES_DEUX}`).set({ uid: UID_LES_DEUX, name: "Les deux", plan: "essentiel-4", planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dans(200) });
 await admin.doc(`users/${UID_DIAG}`).set({ uid: UID_DIAG, name: "Diagnostic seul", planPreinscription: "diagnostic-france", planPreinscriptionExpiresAt: dans(10) });
 await admin.doc(`users/${UID_ESS4}`).set({ uid: UID_ESS4, name: "Essentiel 4", plan: "essentiel-4", planExpiresAt: dans(180) });
 await admin.doc(`users/${UID_CONS6}`).set({ uid: UID_CONS6, name: "Conseiller 6", plan: "conseiller-6", planExpiresAt: dans(270) });
@@ -185,7 +187,7 @@ attendre("la 8e préinscription (pre-8) est refusée", await creerCommeEtudiant(
 attendre("une bourse (slot-1) est refusée sur un compte Dossier France seul", await creerCommeEtudiant(UID_DOSSIER, `users/${UID_DOSSIER}/applications/slot-1`, candidature("bourse")), 403);
 attendre("une préinscription sur un id slot-N est refusée", await creerCommeEtudiant(UID_DOSSIER, `users/${UID_DOSSIER}/applications/slot-2`, candidature("preinscription")), 403);
 
-console.log("Ambition seul :");
+console.log("Essentiel seul :");
 attendre("une bourse slot-1 est acceptée", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-1`, candidature("bourse")), 200);
 attendre("une préinscription pre-1 est refusée sur un compte bourse seul", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/pre-1`, candidature("preinscription")), 403);
 attendre("une préinscription déguisée en slot-2 est refusée", await creerCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}/applications/slot-2`, candidature("preinscription")), 403);
@@ -213,7 +215,8 @@ console.log("\n=== Grille A — les paliers bourses révisés ===");
 console.log("Essentiel (essentiel-4) :");
 for (let n = 1; n <= 4; n++) attendre(`bourse slot-${n} acceptée`, await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/applications/slot-${n}`, candidature("bourse")), 200);
 attendre("la 5e (slot-5) est refusée", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/applications/slot-5`, candidature("bourse")), 403);
-attendre("messagerie REFUSÉE (réservée au Conseiller côté bourses)", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/messages/m1`, message), 403);
+// La messagerie est ouverte à TOUS les comptes depuis le 2026-09-23.
+attendre("messagerie acceptée (ouverte à tous depuis le 2026-09-23)", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/messages/m1`, message), 200);
 attendre("demande conseiller refusée", await creerCommeEtudiant(UID_ESS4, `users/${UID_ESS4}/advisorRequests/r1`, revue), 403);
 attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_ESS4, `supportTickets/t-${UID_ESS4}`, signalement(UID_ESS4)), 200);
 attendre("un signalement déguisé (status traite) est refusé", await creerCommeEtudiant(UID_ESS4, `supportTickets/t2-${UID_ESS4}`, { ...signalement(UID_ESS4), status: "traite" }), 403);
@@ -226,25 +229,21 @@ attendre("messagerie acceptée", await creerCommeEtudiant(UID_CONS6, `users/${UI
 attendre("demande conseiller acceptée", await creerCommeEtudiant(UID_CONS6, `users/${UID_CONS6}/advisorRequests/r1`, revue), 200);
 attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_CONS6, `supportTickets/t-${UID_CONS6}`, signalement(UID_CONS6)), 200);
 
-console.log("NON-RÉGRESSION — un ancien Essentiel (5) ne perd rien :");
-for (let n = 1; n <= 5; n++) attendre(`bourse slot-${n} acceptée`, await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-${n}`, candidature("bourse")), 200);
-attendre("la 6e (slot-6) est refusée, comme avant", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-6`, candidature("bourse")), 403);
-attendre("messagerie CONSERVÉE", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/messages/m1`, message), 200);
-attendre("« Signaler un problème » accepté", await creerCommeEtudiant(UID_ESS_ANCIEN, `supportTickets/t-${UID_ESS_ANCIEN}`, signalement(UID_ESS_ANCIEN)), 200);
-
-console.log("NON-RÉGRESSION — Signature (ancienne) :");
-attendre("bourse slot-13 acceptée (aucun plafond)", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/applications/slot-13`, candidature("bourse")), 200);
-attendre("messagerie conservée", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/messages/m1`, message), 200);
-attendre("demande conseiller conservée", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/advisorRequests/r1`, revue), 200);
+console.log("ANCIENNES FORMULES (supprimées le 2026-09-24) — elles n'ouvrent plus rien :");
+attendre("ancien Essentiel : slot-1 refusé", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-1`, candidature("bourse")), 403);
+attendre("ancien Essentiel : messagerie acceptée (droit du compte, pas de la formule)", await creerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/messages/m1`, message), 200);
+attendre("ancien Essentiel : « Signaler un problème » refusé", await creerCommeEtudiant(UID_ESS_ANCIEN, `supportTickets/t-${UID_ESS_ANCIEN}`, signalement(UID_ESS_ANCIEN)), 403);
+attendre("ancienne Signature : slot-1 refusé", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/applications/slot-1`, candidature("bourse")), 403);
+attendre("ancienne Signature : demande conseiller refusée", await creerCommeEtudiant(UID_SIGNATURE, `users/${UID_SIGNATURE}/advisorRequests/r1`, revue), 403);
 
 console.log("Premier Dossier, Pass Découverte, Gratuit :");
 attendre("Premier Dossier : slot-1 accepté", await creerCommeEtudiant(UID_PREMIER, `users/${UID_PREMIER}/applications/slot-1`, candidature("bourse")), 200);
-attendre("Premier Dossier : messagerie refusée", await creerCommeEtudiant(UID_PREMIER, `users/${UID_PREMIER}/messages/m1`, message), 403);
+attendre("Premier Dossier : messagerie acceptée (ouverte à tous)", await creerCommeEtudiant(UID_PREMIER, `users/${UID_PREMIER}/messages/m1`, message), 200);
 attendre("Premier Dossier : « Signaler un problème » accepté", await creerCommeEtudiant(UID_PREMIER, `supportTickets/t-${UID_PREMIER}`, signalement(UID_PREMIER)), 200);
 attendre("Pass Découverte : « Signaler un problème » accepté", await creerCommeEtudiant(UID_PASS, `supportTickets/t-${UID_PASS}`, signalement(UID_PASS)), 200);
-attendre("Pass Découverte : messagerie refusée", await creerCommeEtudiant(UID_PASS, `users/${UID_PASS}/messages/m1`, message), 403);
+attendre("Pass Découverte : messagerie acceptée (ouverte à tous)", await creerCommeEtudiant(UID_PASS, `users/${UID_PASS}/messages/m1`, message), 200);
 attendre("Gratuit : « Signaler un problème » REFUSÉ", await creerCommeEtudiant(UID_GRATUIT, `supportTickets/t-${UID_GRATUIT}`, signalement(UID_GRATUIT)), 403);
-attendre("Gratuit : messagerie refusée", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/messages/m1`, message), 403);
+attendre("Gratuit : messagerie acceptée (ouverte à tous)", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/messages/m1`, message), 200);
 attendre("Gratuit : aucune candidature", await creerCommeEtudiant(UID_GRATUIT, `users/${UID_GRATUIT}/applications/slot-1`, candidature("bourse")), 403);
 attendre("Diagnostic seul : « Signaler un problème » accepté", await creerCommeEtudiant(UID_DIAG, `supportTickets/t-${UID_DIAG}`, signalement(UID_DIAG)), 200);
 
@@ -307,10 +306,10 @@ attendre("renommer l'université d'un vœu pre-N : accepté (hors lot)", await p
 attendre("l'étudiant mémorise un refus (users.universitesRefusees) : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI] }), 200);
 
 console.log("\n=== ACCEPTATION — l'étudiant accepte le choix de Fitz (firestore.rules) ===");
-// Le compte : essentiel-4 (en vente), déjà semé plus haut (UID_ESS4, 4 cartes
-// proposées slot-1..4). Et un compte essentiel (retiré de la vente).
+// Les comptes : essentiel-4 (UID_ESS4, 4 cartes slot-1..4) et conseiller-6
+// (UID_CONS6, 6 cartes slot-1..6), semés plus haut.
 const A = (n) => `users/${UID_ESS4}/applications/slot-${n}`;
-const R = (n) => `users/${UID_ESS_ANCIEN}/applications/slot-${n}`;
+const R = (n) => `users/${UID_CONS6}/applications/slot-${n}`;
 const preuve = { mode: "numero", numeroDossier: "ACC-1", deposeLe: "2026-09-07" };
 
 console.log("Le parcours et la clé ne bougent pas :");
@@ -397,9 +396,17 @@ await admin.doc(`scholarships/${BOURSE_BAC}`).delete();
 console.log("La suppression :");
 attendre("essentiel-4 : supprimer une carte catalogue proposée (slot-4) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(4)), 403);
 attendre("essentiel-4 : supprimer une carte catalogue acceptée « admise » (slot-2) : refusé", await supprimerCommeEtudiant(UID_ESS4, A(2)), 403);
-attendre("essentiel (retirée) : supprimer une carte acceptée « à préparer » : refusé", await (async () => { await accepterCommeEtudiant(UID_ESS_ANCIEN, R(1)); return supprimerCommeEtudiant(UID_ESS_ANCIEN, R(1)); })(), 403);
-attendre("essentiel (retirée) : supprimer une carte acceptée « refusee » : accepté", await (async () => { await accepterCommeEtudiant(UID_ESS_ANCIEN, R(2), { status: "refusee", preuveDepot: preuve }); return supprimerCommeEtudiant(UID_ESS_ANCIEN, R(2)); })(), 200);
-attendre("essentiel (retirée) : supprimer une carte proposée : refusé", await supprimerCommeEtudiant(UID_ESS_ANCIEN, R(3)), 403);
+// L'acceptation est VÉRIFIÉE avant chaque suppression : un 403 de
+// suppression ne prouve rien si la carte n'a jamais été acceptée.
+attendre("conseiller-6 : accepter une carte « à préparer » : accepté", await accepterCommeEtudiant(UID_CONS6, R(1)), 200);
+attendre("conseiller-6 : supprimer une carte acceptée « à préparer » : refusé", await supprimerCommeEtudiant(UID_CONS6, R(1)), 403);
+attendre("conseiller-6 : accepter une carte avec sa réponse « refusee » : accepté", await accepterCommeEtudiant(UID_CONS6, R(2), { status: "refusee", preuveDepot: preuve }), 200);
+attendre("conseiller-6 : supprimer une carte acceptée « refusee » : refusé (formule en vente)", await supprimerCommeEtudiant(UID_CONS6, R(2)), 403);
+// Un compte SANS formule en vente (ici, une ancienne formule supprimée) garde
+// le droit de retirer une carte acceptée qui a reçu sa réponse.
+await admin.doc(`users/${UID_ESS_ANCIEN}/applications/slot-2`).set({ ...IDENTITE, status: "refusee", track: "bourse", refus: 0, accepteeLe: new Date(), preuveDepot: preuve });
+attendre("compte sans formule en vente : supprimer une carte acceptée « refusee » : accepté", await supprimerCommeEtudiant(UID_ESS_ANCIEN, `users/${UID_ESS_ANCIEN}/applications/slot-2`), 200);
+attendre("conseiller-6 : supprimer une carte proposée : refusé", await supprimerCommeEtudiant(UID_CONS6, R(3)), 403);
 
 console.log("La liste des refus ne peut que grandir :");
 attendre("allonger universitesRefusees : accepté", await patchCommeEtudiant(UID_FC, `users/${UID_FC}`, { universitesRefusees: [UNI, AUTRE_UNI] }), 200);
@@ -416,6 +423,40 @@ console.log("Les deux champs sont hors de portée de l'étudiant :");
 attendre("planPreinscription refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscription: "dossier-france" }), 403);
 attendre("planPreinscriptionExpiresAt refusé à l'étudiant", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { planPreinscriptionExpiresAt: dans(400) }), 403);
 attendre("plan refusé à l'étudiant (inchangé)", await patchCommeEtudiant(UID_BOURSE, `users/${UID_BOURSE}`, { plan: "signature" }), 403);
+
+// LES NEUF PAYS DANS L'ADMIN (2026-09-24) : ce que la fiche étudiant
+// écrit (admin/firebase-admin.js, attribuerFormuleManuellement, branche
+// `pays`) — un champ imbriqué preinscriptionsPays.<pays> et la trace,
+// dans UNE écriture. Le superAdmin passe ; l'admin ordinaire et
+// l'étudiant, jamais.
+console.log("L'admin pose une offre pays par pays :");
+const UID_PROPRIO = `rejeu-proprio-${T}`;
+const UID_ADMIN_ORD = `rejeu-admin-ordinaire-${T}`;
+// La valeur du rôle vient de son module, jamais écrite en dur
+// (test/roles-admin.test.mjs).
+const { ROLE_ADMIN } = await import("../js/roles-admin.js");
+await admin.doc(`admins/${UID_PROPRIO}`).set({ isActive: true, email: "proprio@rejeu.test" });
+await admin.doc(`admins/${UID_ADMIN_ORD}`).set({ isActive: true, role: ROLE_ADMIN, email: "admin@rejeu.test" });
+async function patchMasque(uid, chemin, champs, masque) {
+  const q = masque.map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join("&");
+  const r = await fetch(`${BASE}/${chemin}?${q}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton(uid)}` },
+    body: JSON.stringify({ fields: Object.fromEntries(Object.entries(champs).map(([k, v]) => [k, versValeur(v)])) })
+  });
+  return r.status;
+}
+const offreChine = { preinscriptionsPays: { chine: { plan: "dossier-france-conseiller", expiresAt: dans(300) } }, attributionManuelle: { plan: null, planPreinscription: null, pays: { destination: "chine", plan: "dossier-france-conseiller" }, par: UID_PROPRIO, le: "2026-09-24" } };
+const MASQUE_CHINE = ["preinscriptionsPays.chine", "attributionManuelle"];
+attendre("superAdmin : poser Dossier Chine + Conseiller (et sa trace) : accepté", await patchMasque(UID_PROPRIO, `users/${UID_GRATUIT}`, offreChine, MASQUE_CHINE), 200);
+const pose = (await admin.doc(`users/${UID_GRATUIT}`).get()).data();
+attendre("superAdmin : l'offre Chine est bien écrite dans preinscriptionsPays.chine", pose.preinscriptionsPays && pose.preinscriptionsPays.chine && pose.preinscriptionsPays.chine.plan, "dossier-france-conseiller");
+attendre("superAdmin : retirer l'offre Chine (champ effacé) : accepté", await patchMasque(UID_PROPRIO, `users/${UID_GRATUIT}`, { attributionManuelle: offreChine.attributionManuelle }, MASQUE_CHINE), 200);
+attendre("superAdmin : l'offre Chine a bien disparu", ((await admin.doc(`users/${UID_GRATUIT}`).get()).data().preinscriptionsPays || {}).chine, undefined);
+attendre("admin ordinaire : poser Dossier Chine : refusé", await patchMasque(UID_ADMIN_ORD, `users/${UID_GRATUIT}`, offreChine, MASQUE_CHINE), 403);
+attendre("étudiant : s'offrir Dossier Chine : refusé", await patchMasque(UID_GRATUIT, `users/${UID_GRATUIT}`, { preinscriptionsPays: offreChine.preinscriptionsPays }, ["preinscriptionsPays.chine"]), 403);
+await admin.doc(`admins/${UID_PROPRIO}`).delete();
+await admin.doc(`admins/${UID_ADMIN_ORD}`).delete();
 
 // Nettoyage.
 for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `programs/${PROG_FERME}`, `programs/${PROG_3}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `universities/${UNI_3}`, `scholarships/${BOURSE}`, `scholarships/${BOURSE_FERMEE}`]) await admin.doc(d).delete();

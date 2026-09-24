@@ -21,13 +21,17 @@ where,
 orderBy,
 limit,
 Timestamp,
-serverTimestamp
+serverTimestamp,
+deleteField
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 // Une seule orthographe de rôle, déclarée dans js/roles-admin.js. Un
 // test échoue si une chaîne de rôle est écrite en dur ailleurs — la
 // panne du 2026-09-09 est née de deux graphies pour la même idée.
 import { ROLE_ADMIN } from "../js/roles-admin.js";
+// Les pays vendus (2026-09-24) : la liste fermée des chemins
+// preinscriptionsPays.<pays> que l'attribution manuelle peut écrire.
+import { NOMS_DESTINATIONS_PREINSCRIPTION } from "../js/plan-features.js";
 
 // ============================================
 // UNIVERSITÉS
@@ -932,9 +936,18 @@ updatedAt: serverTimestamp()
 // Une seule écriture, pas deux : si les règles refusent, RIEN n'est
 // posé — ni la formule, ni la trace.
 
+// LES HUIT AUTRES PAYS (2026-09-24). Une offre préinscription hors
+// France vit dans users/{uid}.preinscriptionsPays.<pays> = { plan,
+// expiresAt } — le même champ que le webhook écrit, déjà dans la liste
+// blanche des règles (champsFormule). `formules.pays` = { destination,
+// plan, expiresAt } la pose ; `plan` vide la retire (deleteField). Le
+// pays vient d'une liste FERMÉE (PAYS_HORS_FRANCE, tirée des pays
+// vendus) : jamais un chemin de champ construit avec une valeur libre.
+const PAYS_HORS_FRANCE = Object.keys(NOMS_DESTINATIONS_PREINSCRIPTION).filter((p) => p !== "france");
+
 /**
 * @param {string} uid
-* @param {{plan?:string|null, planExpiresAt?:string|null, planPreinscription?:string|null, planPreinscriptionExpiresAt?:string|null}} formules
+* @param {{plan?:string|null, planExpiresAt?:string|null, planPreinscription?:string|null, planPreinscriptionExpiresAt?:string|null, pays?:{destination:string, plan:string|null, expiresAt:string|null}}} formules
 * @param {string} parUid uid de l'administrateur qui attribue
 */
 export async function attribuerFormuleManuellement(uid, formules, parUid) {
@@ -948,9 +961,25 @@ for (const champ of ["plan", "planExpiresAt", "planPreinscription", "planPreinsc
 if (formules[champ] !== undefined) patch[champ] = formules[champ] || null;
 }
 
+// Une offre préinscription sans échéance n'ouvre rien côté serveur
+// (functions/lib/fitz-acces.js) : refusée ici aussi, pour la France.
+if (formules.planPreinscription && !formules.planPreinscriptionExpiresAt) throw new Error("Une offre préinscription exige une échéance : sans date, elle n'ouvre rien.");
+
+let pays = null;
+if (formules.pays) {
+const destination = String(formules.pays.destination || "");
+if (!PAYS_HORS_FRANCE.includes(destination)) throw new Error(`Pays inconnu : « ${destination} ».`);
+if (formules.pays.plan && !formules.pays.expiresAt) throw new Error("Une offre hors France exige une échéance : sans date, elle n'ouvre rien.");
+patch[`preinscriptionsPays.${destination}`] = formules.pays.plan
+? { plan: formules.pays.plan, expiresAt: formules.pays.expiresAt }
+: deleteField();
+pays = { destination, plan: formules.pays.plan || null };
+}
+
 patch.attributionManuelle = {
 plan: formules.plan !== undefined ? (formules.plan || null) : null,
 planPreinscription: formules.planPreinscription !== undefined ? (formules.planPreinscription || null) : null,
+pays,
 par: parUid,
 le: new Date().toISOString().slice(0, 10)
 };

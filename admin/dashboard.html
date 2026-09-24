@@ -335,6 +335,33 @@ sera tranchée en novembre. -->
 </div>
 
 <!-- ==========================================================
+LES NEUF PAYS DES PRÉINSCRIPTIONS (2026-09-24)
+Les offres ACTIVES aujourd'hui (lues sur les comptes : planPreinscription
+et preinscriptionsPays), et les paiements réussis en production (lus sur
+`payments`, par destination). Rendu par dashboard.js.
+========================================================== -->
+
+<div class="panel-card panel-card--pays">
+<h2>Préinscriptions par pays</h2>
+<p class="panel-card-subtext">Offres actives aujourd'hui sur les comptes, pays par pays, et paiements réussis en production. Une offre posée à la main compte comme active.</p>
+<div class="admin-table-wrap">
+<table class="table admin-table pays-table">
+<thead>
+<tr>
+<th scope="col">Pays</th>
+<th scope="col" class="is-nombre">Diagnostic</th>
+<th scope="col" class="is-nombre">Dossier</th>
+<th scope="col" class="is-nombre">Dossier + Conseiller</th>
+<th scope="col" class="is-nombre">Paiements réussis</th>
+<th scope="col" class="is-nombre">Encaissé</th>
+</tr>
+</thead>
+<tbody id="paysPreinscriptionsBody"><tr><td colspan="6"><div class="admin-table-empty">Chargement…</div></td></tr></tbody>
+</table>
+</div>
+</div>
+
+<!-- ==========================================================
 TOPS
 ========================================================== -->
 
