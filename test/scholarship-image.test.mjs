@@ -20,6 +20,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -121,6 +122,18 @@ assert.equal(r2.image, r.image);
 // Et le fichier choisi vient bien de la liste des génériques.
 const bases = GENERIC_FALLBACK_IMAGES.map((f) => f.replace(/\.jpe?g$/i, ""));
 assert.ok(bases.some((b) => r.image === `assets/images/${b}-800w.jpg`));
+});
+
+test("étage 4 : chaque fond générique existe et est crédité (2026-09-24)", () => {
+const credits = readFileSync(new URL("../CREDITS.md", import.meta.url), "utf8");
+assert.ok(GENERIC_FALLBACK_IMAGES.length >= 3);
+for (const f of GENERIC_FALLBACK_IMAGES) {
+// hero-bg.jpg (disparu du disque) et hero-bg2.jpg (source introuvable)
+// ne doivent plus revenir : un fond générique sans crédit n'a pas sa place.
+assert.match(credits, new RegExp("### `" + f.replace(/[.]/g, "\\.") + "`"), `${f} n'est pas crédité dans CREDITS.md`);
+}
+assert.ok(!GENERIC_FALLBACK_IMAGES.includes("hero-bg.jpg"));
+assert.ok(!GENERIC_FALLBACK_IMAGES.includes("hero-bg2.jpg"));
 });
 
 test("étage 4 : plus jamais atteint pour le Royaume-Uni ni la Russie (le défaut corrigé)", () => {

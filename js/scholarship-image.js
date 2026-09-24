@@ -66,7 +66,12 @@ export const COUNTRY_FALLBACK_IMAGE = {
 "Russie": "moscow.jpg"
 };
 
-export const GENERIC_FALLBACK_IMAGES = ["hero-bg.jpg", "hero-bg2.jpg", "hero-bg3.jpg", "hero-bg4.jpg", "hero-bg5.jpg"];
+// Seules les photos dont l'auteur et la source sont connus (CREDITS.md,
+// 2026-09-24) : hero-bg3 et hero-bg5 (Pexels, RDNE Stock project) et
+// hero-bg4 (Unsplash, RUT MIIT). « hero-bg.jpg » n'existait plus sur le
+// disque (une carte tombée dessus affichait une image cassée) et la
+// source de hero-bg2.jpg n'a pas pu être retrouvée : les deux sortent.
+export const GENERIC_FALLBACK_IMAGES = ["hero-bg3.jpg", "hero-bg4.jpg", "hero-bg5.jpg"];
 
 export function hashCode(str) {
 let hash = 0;

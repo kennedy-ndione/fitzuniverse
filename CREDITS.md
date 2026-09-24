@@ -24,13 +24,13 @@ Ajoutée le 2026-09-01 comme bannière de `universities.html`, en remplacement d
 - **Déclinaisons** : générées localement avec `sharp` (JPEG q92 mozjpeg, WebP q92, AVIF q62) par `scripts/add-hero-catalog-photos.mjs`, à partir d'un recadrage 2:1 de la source 2400×1616.
 - **Contrôles faits avant de la retenir** (le fichier a été REGARDÉ, y compris au zoom sur l'arcade centrale) : aucune plaque, aucun blason, aucune enseigne, aucun drapeau, aucune ligne d'horizon urbaine. Ce n'est **pas un établissement d'enseignement** — aucune université du catalogue ne peut donc sembler cautionner FitzUniverse. Palette pierre grise et ciel bleu, **froide**, choisie pour trancher d'un coup d'œil avec la salle de lecture chaude de `scholarships.html`.
 
-### `university-hall.jpg` — provenance NON ÉTABLIE
+### `university-hall.jpg` — retirée du site, provenance NON ÉTABLIE
 
-Photo du hero de la page d'accueil (`index.html`), et bannière de `universities.html` jusqu'au 2026-09-01.
+N'est plus affichée nulle part : bannière de `universities.html` jusqu'au 2026-09-01, puis retirée du haut de l'accueil lors de sa refonte (2026-09-08). Le fichier n'est plus dans le dossier des images publiées.
 
 - **Licence** : **inconnue.** Recherchée le 2026-09-01 sans résultat : aucune entrée d'origine dans ce fichier, aucun auteur en EXIF/IPTC (le XMP ne porte que la signature de pipeline « Go XMP SDK », compatible avec un passage par Unsplash mais qui ne prouve rien), message de commit muet (`16b22a7`, 2026-08-14), et une recherche par comparaison perceptuelle sur les résultats Unsplash correspondants n'a produit aucune correspondance (meilleur écart 36/255, très au-dessus d'un seuil d'identité).
 - **Contenu** : bâtiment collégial de style gothique anglais, sur pelouse. Aucun blason, aucune enseigne, aucun texte identifiant sur ce cadrage — mais l'architecture reste assez distinctive pour qu'un visiteur connaissant ce campus le reconnaisse.
-- **Ce qu'il reste à faire** : retrouver la source, ou remplacer le fichier sur la page d'accueil comme cela a été fait sur `universities.html`. Entrée volontairement conservée ici, vide de crédit : **un trou documenté vaut mieux qu'une attribution inventée**, et mieux qu'un silence qui ferait reposer la question à zéro à la prochaine passe.
+- **Ce qu'il reste à faire** : rien, la photo n'étant plus publiée. Entrée volontairement conservée ici, vide de crédit : **un trou documenté vaut mieux qu'une attribution inventée**, et mieux qu'un silence qui ferait reposer la question à zéro à la prochaine passe.
 
 ### `student-preparing.jpg` (déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`)
 
@@ -39,6 +39,44 @@ Ajoutée le 2026-08-28 pour la section « Comment ça fonctionne » de la page d
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/6e319464b810` (identifiant CDN `photo-1622295023825-6e319464b810`)
 - **Déclinaisons** : téléchargées directement aux largeurs voulues depuis le CDN Unsplash (`?w=…&q=80&fm=jpg`), et non générées localement — le projet n'embarque pas `sharp`. C'est aussi pourquoi ce fichier n'a pas de variantes `avif`/`webp`, contrairement aux photos plus anciennes.
+
+### `hero-bg3.jpg` — diplômés lançant leurs toques devant un bâtiment blanc (photo du haut de l'accueil)
+
+Source retrouvée le 2026-09-24 par empreinte visuelle et par les dimensions exactes de l'original (5040x3360). Sert aussi de fond générique aux cartes sans photo propre.
+
+- **Photographe** : RDNE Stock project ([@rdne](https://www.pexels.com/@rdne/))
+- **Licence** : [Licence Pexels](https://www.pexels.com/license/) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://www.pexels.com/photo/people-wearing-graduation-gowns-tossing-their-graduation-caps-in-the-air-7713548/`
+
+### `hero-bg5.jpg` — diplômés en toge posant sur la pelouse, même bâtiment blanc (fond générique)
+
+Même série et même photographe que la photo du haut de l'accueil ; dimensions exactes de l'original (6720x4480).
+
+- **Photographe** : RDNE Stock project ([@rdne](https://www.pexels.com/@rdne/))
+- **Licence** : [Licence Pexels](https://www.pexels.com/license/) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://www.pexels.com/photo/people-wearing-graduation-gowns-7713171/`
+
+### `hero-bg4.jpg` — diplômés en toge devant la façade d'une université (pied de page, fond générique)
+
+- **Photographe** : RUT MIIT ([@rutmiit](https://unsplash.com/@rutmiit))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/YIdkWynJdSk` (identifiant CDN `photo-1627556704243-5f0771d90783`)
+
+### `amphitheatre.jpg` — un amphithéâtre vide, rangées de sièges en bois (accueil, connexion, inscription)
+
+- **Photographe** : Nathan Dumlao ([@nate_dumlao](https://unsplash.com/@nate_dumlao))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ewGMqs2tmJI` (identifiant CDN `photo-1519452575417-564c1401ecc0`)
+
+### `graduation.jpg` — des toques de diplômés vues d'en haut (page des offres, espace étudiant)
+
+- **Photographe** : Joshua Hoehne ([@joshua_hoehne](https://unsplash.com/@joshua_hoehne))
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/iggWDxHTAUQ` (identifiant CDN `photo-1590012314607-cda9d9b699ae`)
+
+### `og-image.jpg` — l'image de partage sur les réseaux sociaux
+
+- **Contenu** : visuel réalisé pour FitzUniverse (logo, titre et fond uni), sans photographie.
 
 ## Amsterdam (`amsterdam.jpg` et déclinaisons `-400w`/`-800w`/`-1200w`)
 
