@@ -1,0 +1,193 @@
+[
+  {
+    "base": "munich-frauenkirche",
+    "source": "Unsplash",
+    "sujet": "les deux tours de la Frauenkirche au-dessus des toits de Munich",
+    "auteur": "Daniel Schmidt",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/6lwB0GejTDY",
+    "cdn": "photo-1692726781304-fa1d2f1cc4c5",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "munich-marienplatz",
+    "source": "Unsplash",
+    "sujet": "le nouvel hôtel de ville sur la Marienplatz, Munich",
+    "auteur": "Anastasiya Dalenka",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/H-7zZBodgpM",
+    "cdn": "photo-1649609766229-a6c0811161a5",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "heidelberg-chateau",
+    "source": "Unsplash",
+    "sujet": "le château de Heidelberg au coucher du soleil",
+    "auteur": "Eli Omen",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/E-Igyj-W7ck",
+    "cdn": "photo-1748198162816-93dd425137f6",
+    "dimensions": "2000x1122 (ratio 1.78)"
+  },
+  {
+    "base": "karlsruhe-chateau",
+    "source": "Unsplash",
+    "sujet": "le château de Karlsruhe et ses pelouses",
+    "auteur": "Marc Rentschler",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/y05Z-XD0Frs",
+    "cdn": "photo-1744761402617-d34192e39434",
+    "dimensions": "2000x1376 (ratio 1.45)"
+  },
+  {
+    "base": "stuttgart-schlossplatz",
+    "source": "Unsplash",
+    "sujet": "la Schlossplatz et le Nouveau Château, Stuttgart",
+    "auteur": "Margo Evardson",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/bvwiunL3iyI",
+    "cdn": "photo-1778574744503-9c7772f3b9b1",
+    "dimensions": "2000x1328 (ratio 1.51)"
+  },
+  {
+    "base": "fribourg-en-brisgau-cathedrale",
+    "source": "Unsplash",
+    "sujet": "Fribourg-en-Brisgau et la flèche de sa cathédrale",
+    "auteur": "David Hertle",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/4RAyNOpulFk",
+    "cdn": "photo-1639910269924-e6229de33e95",
+    "dimensions": "2000x1334 (ratio 1.50)"
+  },
+  {
+    "base": "aix-la-chapelle-hotel-de-ville",
+    "source": "Unsplash",
+    "sujet": "l'hôtel de ville d'Aix-la-Chapelle pendant le marché de Noël",
+    "auteur": "Alexander Schimmeck",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/hw0ZD2JJqPc",
+    "cdn": "photo-1606819788285-5e709f0c798f",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "bonn-cerisiers-en-fleurs",
+    "source": "Unsplash",
+    "sujet": "les cerisiers en fleurs de la Heerstraße, Bonn",
+    "auteur": "Stephan Widua",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/ae4VmMbhanQ",
+    "cdn": "photo-1586789821310-3c0941c56a4f",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "cologne-grue-du-rheinauhafen",
+    "source": "Unsplash",
+    "sujet": "une ancienne grue du port du Rheinauhafen, Cologne",
+    "auteur": "Chris Hoppe",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/s4m74kabDXM",
+    "cdn": "photo-1571423401107-99e9c7977250",
+    "dimensions": "2000x1335 (ratio 1.50)"
+  },
+  {
+    "base": "munster-arcades-de-nuit",
+    "source": "Unsplash",
+    "sujet": "les arcades du centre historique de Münster, de nuit",
+    "auteur": "Nico Brüggemann",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/_5BkX50vkOM",
+    "cdn": "photo-1610893876081-1e7c076a30c3",
+    "dimensions": "2000x1335 (ratio 1.50)"
+  },
+  {
+    "base": "darmstadt-karolinenplatz",
+    "source": "Unsplash",
+    "sujet": "la Karolinenplatz de Darmstadt, de nuit",
+    "auteur": "Abhinav Das",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/sbdwwoT_rcw",
+    "cdn": "photo-1702307383737-5c6c30a2c650",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "francfort-romerberg",
+    "source": "Unsplash",
+    "sujet": "la place de la vieille ville de Francfort, le Römerberg",
+    "auteur": "Lāsma Artmane",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/yatyW_GSvBI",
+    "cdn": "photo-1638648152833-90ee0114f084",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "berlin-porte-de-brandebourg",
+    "source": "Unsplash",
+    "sujet": "la porte de Brandebourg éclairée la nuit, Berlin",
+    "auteur": "Florian Wehde",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/uFGi0_YciE0",
+    "cdn": "photo-1587330979470-3595ac045ab0",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "berlin-cathedrale",
+    "source": "Unsplash",
+    "sujet": "la cathédrale de Berlin",
+    "auteur": "Christian Ladewig",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/Zr-ZnTNekEY",
+    "cdn": "photo-1569404225992-9ac478f3c14e",
+    "dimensions": "2000x1469 (ratio 1.36)"
+  },
+  {
+    "base": "dresde-vieille-ville-et-elbe",
+    "source": "Unsplash",
+    "sujet": "la vieille ville de Dresde et ses bateaux à vapeur sur l'Elbe",
+    "auteur": "Oliver Guhr",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/9YUsgVnnsTk",
+    "cdn": "photo-1619120810930-6ca5048deee1",
+    "dimensions": "2000x1125 (ratio 1.78)"
+  },
+  {
+    "base": "leipzig-monument-bataille-des-nations",
+    "source": "Unsplash",
+    "sujet": "le monument de la Bataille des Nations, Leipzig",
+    "auteur": "Chris",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/XCTL1dnDRP4",
+    "cdn": "photo-1583602690006-31db03a8b86f",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "sarrebruck-bord-de-la-sarre",
+    "source": "Unsplash",
+    "sujet": "un édifice blanc au bord de la Sarre, Sarrebruck",
+    "auteur": "Mariia Yesionova",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/ntHtKyKLDWE",
+    "cdn": "photo-1706112790751-994699168f4f",
+    "dimensions": "2000x1325 (ratio 1.51)"
+  },
+  {
+    "base": "gottingen-ancien-hotel-de-ville",
+    "source": "Wikimedia Commons",
+    "sujet": "l'ancien hôtel de ville et la fontaine de la Gänseliesel, Göttingen",
+    "auteur": "Dewi König",
+    "licence": "CC BY-SA 3.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Blick_auf_das_alte_Rathaus_aus_s%C3%BCd%C3%B6stlicher_Richtung._Im_Vordergrund_ist_der_Marktplatz_mit_dem_G%C3%A4nseliesel_zu_sehen._-_panoramio.jpg",
+    "fichier": "Blick auf das alte Rathaus aus südöstlicher Richtung. Im Vordergrund ist der Marktplatz mit dem Gänseliesel zu sehen. - panoramio.jpg",
+    "original": "3888x2592",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "mayence-cathedrale",
+    "source": "Unsplash",
+    "sujet": "la cathédrale de Mayence",
+    "auteur": "Markus Winkler",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/9c9ES3pmI00",
+    "cdn": "photo-1636381310700-d6931fc00bce",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  }
+]

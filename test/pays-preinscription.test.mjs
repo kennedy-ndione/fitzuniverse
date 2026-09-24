@@ -175,7 +175,10 @@ Turquie: { etablissements: 6, coutsVerifies: 3 },
 // gratuite par l'AMCI). Seule l'UIC reste sans prix.
 Maroc: { etablissements: 19, coutsVerifies: 18 },
 Italie: { etablissements: 16, coutsVerifies: 9 },
-Allemagne: { etablissements: 3, coutsVerifies: 2 },
+// Relevé du 2026-09-24, lot 88 : 19 établissements allemands de plus,
+// tous avec leurs frais 2026-2027 ; les trois existants (Humboldt,
+// Hanovre, Hambourg) avaient déjà les leurs, relevés en septembre.
+Allemagne: { etablissements: 22, coutsVerifies: 22 },
 Canada: { etablissements: 20, coutsVerifies: 20 },
 // Relevé du 2026-09-23 au soir, à l'ouverture des deux pays.
 Chine: { etablissements: 16, coutsVerifies: 16 },

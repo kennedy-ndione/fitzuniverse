@@ -1974,3 +1974,121 @@ Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, décl
 - **Photographe** : Paladuta Stefan
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/8HuFkoTQItQ` (identifiant CDN `photo-1664912879009-fcf1fb932009`)
+
+## Lot 88 — Allemagne (2026-09-24) : 19 photos de ville
+
+Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot88-photos.mjs`. Candidates regardées avant le choix ; une photo provient de Wikimedia Commons (licence CC à attribution obligatoire), les dix-huit autres d'Unsplash. Le premier candidat de chaque liste est crédité ici ; si le script a dû passer au second, `scripts/data/journal-photos-lot88.json` le dit et ce crédit est à corriger.
+
+### `munich-frauenkirche.jpg` — les deux tours de la Frauenkirche au-dessus des toits de Munich
+
+- **Photographe** : Daniel Schmidt
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6lwB0GejTDY` (identifiant CDN `photo-1692726781304-fa1d2f1cc4c5`)
+
+### `munich-marienplatz.jpg` — le nouvel hôtel de ville sur la Marienplatz, Munich
+
+- **Photographe** : Anastasiya Dalenka
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/H-7zZBodgpM` (identifiant CDN `photo-1649609766229-a6c0811161a5`)
+
+### `heidelberg-chateau.jpg` — le château de Heidelberg au coucher du soleil
+
+- **Photographe** : Eli Omen
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/E-Igyj-W7ck` (identifiant CDN `photo-1748198162816-93dd425137f6`)
+
+### `karlsruhe-chateau.jpg` — le château de Karlsruhe et ses pelouses
+
+- **Photographe** : Marc Rentschler
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/y05Z-XD0Frs` (identifiant CDN `photo-1744761402617-d34192e39434`)
+
+### `stuttgart-schlossplatz.jpg` — la Schlossplatz et le Nouveau Château, Stuttgart
+
+- **Photographe** : Margo Evardson
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/bvwiunL3iyI` (identifiant CDN `photo-1778574744503-9c7772f3b9b1`)
+
+### `fribourg-en-brisgau-cathedrale.jpg` — Fribourg-en-Brisgau et la flèche de sa cathédrale
+
+- **Photographe** : David Hertle
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/4RAyNOpulFk` (identifiant CDN `photo-1639910269924-e6229de33e95`)
+
+### `aix-la-chapelle-hotel-de-ville.jpg` — l'hôtel de ville d'Aix-la-Chapelle pendant le marché de Noël
+
+- **Photographe** : Alexander Schimmeck
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/hw0ZD2JJqPc` (identifiant CDN `photo-1606819788285-5e709f0c798f`)
+
+### `bonn-cerisiers-en-fleurs.jpg` — les cerisiers en fleurs de la Heerstraße, Bonn
+
+- **Photographe** : Stephan Widua
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ae4VmMbhanQ` (identifiant CDN `photo-1586789821310-3c0941c56a4f`)
+
+### `cologne-grue-du-rheinauhafen.jpg` — une ancienne grue du port du Rheinauhafen, Cologne
+
+- **Photographe** : Chris Hoppe
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/s4m74kabDXM` (identifiant CDN `photo-1571423401107-99e9c7977250`)
+
+### `munster-arcades-de-nuit.jpg` — les arcades du centre historique de Münster, de nuit
+
+- **Photographe** : Nico Brüggemann
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/_5BkX50vkOM` (identifiant CDN `photo-1610893876081-1e7c076a30c3`)
+
+### `darmstadt-karolinenplatz.jpg` — la Karolinenplatz de Darmstadt, de nuit
+
+- **Photographe** : Abhinav Das
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/sbdwwoT_rcw` (identifiant CDN `photo-1702307383737-5c6c30a2c650`)
+
+### `francfort-romerberg.jpg` — la place de la vieille ville de Francfort, le Römerberg
+
+- **Photographe** : Lāsma Artmane
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/yatyW_GSvBI` (identifiant CDN `photo-1638648152833-90ee0114f084`)
+
+### `berlin-porte-de-brandebourg.jpg` — la porte de Brandebourg éclairée la nuit, Berlin
+
+- **Photographe** : Florian Wehde
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/uFGi0_YciE0` (identifiant CDN `photo-1587330979470-3595ac045ab0`)
+
+### `berlin-cathedrale.jpg` — la cathédrale de Berlin
+
+- **Photographe** : Christian Ladewig
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Zr-ZnTNekEY` (identifiant CDN `photo-1569404225992-9ac478f3c14e`)
+
+### `dresde-vieille-ville-et-elbe.jpg` — la vieille ville de Dresde et ses bateaux à vapeur sur l'Elbe
+
+- **Photographe** : Oliver Guhr
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/9YUsgVnnsTk` (identifiant CDN `photo-1619120810930-6ca5048deee1`)
+
+### `leipzig-monument-bataille-des-nations.jpg` — le monument de la Bataille des Nations, Leipzig
+
+- **Photographe** : Chris
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/XCTL1dnDRP4` (identifiant CDN `photo-1583602690006-31db03a8b86f`)
+
+### `sarrebruck-bord-de-la-sarre.jpg` — un édifice blanc au bord de la Sarre, Sarrebruck
+
+- **Photographe** : Mariia Yesionova
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/ntHtKyKLDWE` (identifiant CDN `photo-1706112790751-994699168f4f`)
+
+### `gottingen-ancien-hotel-de-ville.jpg` — l'ancien hôtel de ville et la fontaine de la Gänseliesel, Göttingen
+
+- **Photographe** : Dewi König
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Blick auf das alte Rathaus aus südöstlicher Richtung. Im Vordergrund ist der Marktplatz mit dem Gänseliesel zu sehen. - panoramio.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Blick_auf_das_alte_Rathaus_aus_südöstlicher_Richtung._Im_Vordergrund_ist_der_Marktplatz_mit_dem_Gänseliesel_zu_sehen._-_panoramio.jpg)
+
+### `mayence-cathedrale.jpg` — la cathédrale de Mayence
+
+- **Photographe** : Markus Winkler
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/9c9ES3pmI00` (identifiant CDN `photo-1636381310700-d6931fc00bce`)
