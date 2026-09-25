@@ -628,7 +628,16 @@ mobile restait à 48px. Règles mortes depuis leur écriture, révélées en
 réduisant la taille de base. Désormais : une règle par contexte ici, et
 les paliers d'en-tête (css/header.css, réécrits en
 .header .fitz-lockup pour garder la priorité) redeviennent effectifs. */
-.header .fitz-lockup,
+/* En-tête : 30 px depuis le 2026-09-25 (était 36) — demande de Charles :
+sur ordinateur, le lockup concurrençait le titre du hero au lieu de
+s'en détacher. « Fitz » passe à 18 px, juste au-dessus des liens de
+navigation (14,4 px) : la marque signe la page, elle ne la titre plus.
+Le mobile (28 px, css/header.css) est inchangé. Le pied de page garde
+36 px : il n'y a là aucun titre à ne pas concurrencer. */
+.header .fitz-lockup{
+--lockup-size:30px;
+}
+
 .footer .fitz-lockup{
 --lockup-size:36px;
 }

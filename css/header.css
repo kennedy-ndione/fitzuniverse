@@ -479,7 +479,8 @@ palier descend d'autant. Sélecteur .header .fitz-lockup : à un seul
 niveau, cette règle perdait contre la taille de contexte de
 css/base.css — et à l'époque des styles inline, elle ne s'appliquait
 tout simplement jamais. */
---lockup-size:32px;
+--lockup-size:30px; /* 2026-09-25 : aligné sur le bureau (30 px) — un
+palier tablette PLUS GRAND que le bureau n'aurait aucun sens. */
 
 }
 
