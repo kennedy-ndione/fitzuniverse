@@ -182,7 +182,9 @@ Allemagne: { etablissements: 22, coutsVerifies: 22 },
 Canada: { etablissements: 20, coutsVerifies: 20 },
 // Relevé du 2026-09-23 au soir, à l'ouverture des deux pays.
 Chine: { etablissements: 16, coutsVerifies: 16 },
-Malaisie: { etablissements: 2, coutsVerifies: 2 }
+// Relevé du 2026-09-25, lot 90 : 15 établissements malaisiens de plus ;
+// SEGi sans frais de scolarité publiés, tous les autres avec les leurs.
+Malaisie: { etablissements: 17, coutsVerifies: 16 }
 };
 assert.deepEqual(Object.keys(PLANCHERS).sort(), PAYS.map((p) => p.nom).sort(), "un plancher par pays, ni plus ni moins");
 

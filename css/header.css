@@ -685,3 +685,40 @@ background:rgba(255,255,255,.12);
 .header-signup-btn{ display:none; }
 
 }
+
+/* ==========================================================
+   NAVIGATION SOBRE (2026-09-25) — demande de Charles : sur ordinateur,
+   les liens et le bouton de l'en-tête étaient trop gros, trop espacés.
+   Mesuré avant : 14,4 px en graisse 600, 56 px entre deux libellés
+   (gap 32 + rembourrages 2 × 12), bordure de 1,5 px sur le bouton.
+   Après : 13,4 px en graisse 500 (le registre des grands sites : le
+   menu se lit, il ne crie pas), ~28 px entre libellés, bouton plus
+   bas et bordure fine. Le logo (30 px, même jour) garde ainsi un
+   léger ascendant sur le menu. Au-dessus de 640 px seulement : en
+   dessous, ces liens vivent dans la feuille du menu mobile.
+   Spécificité : .header-links .header-link.header-signup-btn (0,3,0)
+   arrive après .header-links .header-link:not(...) (0,3,0) et gagne.
+   ========================================================== */
+@media (min-width:641px){
+
+.header-links{ gap:20px; }
+
+.header-nav{ gap:4px; }
+
+.header-cta-group{ gap:12px; }
+
+.header .header-link{
+font-size:.84rem;
+font-weight:500;
+letter-spacing:.005em;
+}
+
+.header-links .header-link:not(.header-link-login){ padding:6px 12px; }
+
+.header-links .header-link.header-signup-btn{
+padding:6px 14px;
+border-width:1px;
+font-weight:600;
+}
+
+}

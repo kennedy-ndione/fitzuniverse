@@ -2192,3 +2192,103 @@ Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, décl
 - **Photographe** : ekrem osmanoglu
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/lf_3JfVcEno` (identifiant CDN `photo-1578999305993-6a63f621cca6`)
+
+## Lot 90 — Malaisie (2026-09-25) : 16 photos de ville
+
+Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot90-photos.mjs`. Planche validée par Charles au navigateur le 2026-09-25 ; onze photos proviennent de Wikimedia Commons, cinq d'Unsplash. Le premier candidat de chaque liste est crédité ici ; si le script a dû passer au second, `scripts/data/journal-photos-lot90.json` le dit et ce crédit est à corriger. Substitutions assumées : Universiti Putra Malaysia (Serdang) reçoit la mosquée Putra de Putrajaya, sa voisine ; Universiti Teknologi PETRONAS (Seri Iskandar) reçoit le château de Kellie, à Batu Gajah ; Universiti Kebangsaan Malaysia quitte `kualalumpur.jpg` pour une photo de Bangi, son campus principal.
+
+### `penang-kek-lok-si.jpg` — le temple de Kek Lok Si et sa pagode blanche, Air Itam, Penang
+
+- **Photographe** : ONG WEI
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/Cs-vCRDsHho` (identifiant CDN `photo-1620488212381-dea91f7dd69a`)
+
+### `putrajaya-mosquee-putra.jpg` — la mosquée Putra au bord du lac, Putrajaya, voisine de Serdang
+
+- **Photographe** : Muhammad Faqih
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Masjid Putra, Putrajaya.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Masjid_Putra,_Putrajaya.jpg)
+
+### `bangi-nuit.jpg` — Bangi de nuit, vue d'une tour
+
+- **Photographe** : Stress 043
+- **Licence** : [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Bangi night time from hotel.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bangi_night_time_from_hotel.jpg)
+
+### `johor-bahru-front-de-mer.jpg` — le front de mer de Johor Bahru au coucher du soleil
+
+- **Photographe** : Afifi Zulkifle
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/MAGKY0NYl2Y` (identifiant CDN `photo-1610917125146-8536b0199df8`)
+
+### `batu-gajah-kellie.jpg` — le château de Kellie à Batu Gajah, à une vingtaine de kilomètres de Seri Iskandar
+
+- **Photographe** : Mszf 92
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Kellie's Castle Batu Gajah.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kellie%27s_Castle_Batu_Gajah.jpg)
+
+### `sintok-mosquee.jpg` — la mosquée Sultan Badlishah, Sintok
+
+- **Photographe** : Chongkian
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Sultan Badlishah Mosque.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Sultan_Badlishah_Mosque.jpg)
+
+### `gombak-bukit-tabur.jpg` — la crête de Bukit Tabur, Gombak
+
+- **Photographe** : James T
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/yVcmWsT2wvU` (identifiant CDN `photo-1665971428347-4b5dbacd1e09`)
+
+### `pekan-musee-mosquee.jpg` — l'ancienne mosquée Sultan Abdullah devenue musée, Pekan
+
+- **Photographe** : Slleong
+- **Licence** : [CC0](https://creativecommons.org/publicdomain/zero/1.0/deed.en) — domaine public, attribution non obligatoire. Créditée ici par choix.
+- **Source** : [File:Pekan 13.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pekan_13.jpg)
+
+### `kajang-nuit.jpg` — le centre de Kajang de nuit
+
+- **Photographe** : Azreey
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Kajang town at night.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Kajang_town_at_night.jpg)
+
+### `cyberjaya-vue.jpg` — Cyberjaya vue d'en haut
+
+- **Photographe** : Laurentiu Morariu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/jziJ5IBqXPM` (identifiant CDN `photo-1592755137776-d4b1d0c98b57`)
+
+### `subang-jaya-ss15.jpg` — le quartier SS15 de Subang Jaya vu de la gare
+
+- **Photographe** : *angys*
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:SS15 skyline from SS15 LRT Station (220711) 01.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:SS15_skyline_from_SS15_LRT_Station_(220711)_01.jpg)
+
+### `bandar-sunway-lac.jpg` — le lac South Quay à Bandar Sunway
+
+- **Photographe** : Azreey
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Bandar Sunway - South Quay Lake.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bandar_Sunway_-_South_Quay_Lake.jpg)
+
+### `kuala-lumpur-sultan-abdul-samad.jpg` — le bâtiment Sultan Abdul Samad et sa tour de l'horloge, place Merdeka, Kuala Lumpur
+
+- **Photographe** : Yosuke Ota
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/vqxnSwBhN0Y` (identifiant CDN `photo-1663237155810-a292cca8fe47`)
+
+### `bukit-jalil-stade.jpg` — le stade national de Bukit Jalil
+
+- **Photographe** : *angys*
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Bukit Jalil National Stadium (220713).jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bukit_Jalil_National_Stadium_(220713).jpg)
+
+### `nilai-tour-horloge.jpg` — la tour de l'horloge de Nilai Square, Nilai
+
+- **Photographe** : AyyanD
+- **Licence** : [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Clock tower, Nilai Square, Nilai.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Clock_tower,_Nilai_Square,_Nilai.jpg)
+
+### `kota-damansara-vue.jpg` — Kota Damansara vue d'en haut
+
+- **Photographe** : Wiki Farazi
+- **Licence** : [CC0](https://creativecommons.org/publicdomain/zero/1.0/deed.en) — domaine public, attribution non obligatoire. Créditée ici par choix.
+- **Source** : [File:Aerial view of Kota Damansara from Emporis Kota Damansara 20230226 175946.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Aerial_view_of_Kota_Damansara_from_Emporis_Kota_Damansara_20230226_175946.jpg)
