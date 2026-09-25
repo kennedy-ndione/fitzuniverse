@@ -86,6 +86,11 @@ margin:0 0 4px;
 line-height:1.55;
 }
 
+.pre-fait-fcfa{
+font-size:var(--fs-caption);
+color:var(--text-muted);
+}
+
 .pre-fait-source{
 font-size:var(--fs-caption);
 color:var(--text-muted);

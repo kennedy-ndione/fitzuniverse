@@ -27,7 +27,7 @@ import { initShellChrome, bootstrapShell } from "./app-shell.js";
 import { calculerDiagnosticPays, devisesDeSaisie, libelleDevise, formatMontant } from "./diagnostic-pays.js";
 import { destination, DIAGNOSTICS, enClairDe } from "./destinations-preinscription.js";
 import { planPreinscriptionPour } from "./plan-features.js";
-import { puisJeMeLancer } from "./recevabilite.js";
+import { puisJeMeLancer, niveauVise } from "./recevabilite.js";
 import { poserQuestions, lireReponses, manquantes, signalerManque, peindreVoyants } from "./recevabilite-ui.js";
 import { trouverProcedure } from "./procedures/index.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
@@ -181,7 +181,8 @@ const questions = document.getElementById("recQuestions");
 poserQuestions(questions, ID, profil);
 
 const recevabilite = (entrees, reponses) => {
-const res = calculerDiagnosticPays(ID, entrees);
+// Le niveau visé choisit les droits (Canada) et le repère du coût de la vie (lot 102).
+const res = calculerDiagnosticPays(ID, { ...entrees, niveau: entrees.niveau || niveauVise(reponses.desiredDegree) });
 return { res, rec: puisJeMeLancer(ID, { ...profil, ...reponses }, { verdictArgent: res.verdict, calendrier: DIAGNOSTICS[ID].calendrier, variante: entrees.variante }) };
 };
 
@@ -281,6 +282,7 @@ if (manque.length) {
 signalerManque(questions, manque);
 return;
 }
+entrees.niveau = niveauVise(reponses.desiredDegree);
 
 const { res: resultat, rec } = recevabilite(entrees, reponses);
 render(resultat);

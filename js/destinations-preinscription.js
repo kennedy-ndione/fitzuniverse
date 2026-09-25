@@ -380,6 +380,16 @@ min: 2000, max: 14850, devise: "USD",
 source: "https://isoidb.ankara.edu.tr/wp-content/uploads/sites/381/2026/08/TRY-2026-2027-Katki-Payi-Ucretleri.pdf",
 verifieLe: "2026-09-23"
 },
+// LE REPÈRE DU COÛT DE LA VIE (lot 102, 2026-09-25). Aucun texte ne chiffre
+// le coût de la vie ; l'État turc, lui, dit ce qu'il donne pour vivre à ses
+// boursiers — logés gratuitement en plus. Moins que cette allocation pour
+// vivre ET se loger, c'est « Pas encore » (js/diagnostic-pays.js).
+repereVie: {
+libelle: "l'allocation mensuelle de la bourse d'État Türkiye Bursları, versée à des boursiers logés gratuitement",
+licence: 6500, master: 9500, doctorat: 13000, devise: "TRY",
+source: "https://turkiyeburslari.gov.tr/fulltimeprograms",
+verifieLe: "2026-09-23"
+},
 frais: [
 { cle: "sejour", texte: "Carte de permis de séjour : 964 TL en 2026. La demande elle-même est gratuite.", montant: 964, devise: "TRY", compte: true, source: "https://en.goc.gov.tr/documents-for-residence-permit-fee-amount", verifieLe: "2026-09-23" },
 { cle: "assurance", texte: "Assurance maladie publique (GSS) : 1 321,20 TL par mois en 2026, à demander dans les trois mois suivant l'inscription. Prise en charge pour les boursiers.", montant: 1321.2, devise: "TRY", periode: "mois", compte: true, source: "https://ogrenci.deu.edu.tr/en/international-students-health-insurance/", verifieLe: "2026-09-23" }
@@ -503,6 +513,27 @@ min: 29446, max: 35006, devise: "CAD",
 source: "https://registraire.umontreal.ca/droits-de-scolarite/couts-des-etudes/",
 verifieLe: "2026-09-23"
 },
+// LES DROITS DE LICENCE (lot 102, 2026-09-25). La licence est accompagnée
+// depuis le lot 101 : le diagnostic lui montrait les droits de MAÎTRISE.
+// Montants des fiches du catalogue, relus le 2026-09-24 sur les grilles
+// des universités ; la source citée est celle du minimum, qui décide du
+// verdict. `droits` (maîtrise) reste la valeur par défaut des autres niveaux.
+droitsParNiveau: {
+licence: {
+texte: "Licence (baccalauréat), université publique, première année 2026-2027 : de 14 345 $ CA (Université de Saint-Boniface, au Manitoba) à 72 860 $ CA (Université de Toronto). Au Québec, 24 552 $ CA au moins (UQAR). Chaque université fixe ses droits.",
+min: 14345, max: 72860, devise: "CAD",
+source: "https://ustboniface.ca/sites/default/files/2026-08/Frais-USB.pdf",
+verifieLe: "2026-09-24",
+variantes: {
+quebec: {
+texte: "Licence (baccalauréat) au Québec, université publique, première année 2026-2027 : de 24 552 $ CA (Université du Québec à Rimouski) à 54 000 $ CA (McGill). Chaque université fixe ses droits.",
+min: 24552, max: 54000, devise: "CAD",
+source: "https://www.uqar.ca/programmes-formations-et-admission/frais-de-scolarite/",
+verifieLe: "2026-09-24"
+}
+}
+}
+},
 frais: [
 { cle: "permis", texte: "Permis d'études : 150 $ CA.", montant: 150, devise: "CAD", compte: true, source: "https://ircc.canada.ca/english/information/fees/fees.asp", verifieLe: "2026-09-23" },
 { cle: "biometrie", texte: "Biométrie (empreintes et photo) : 85 $ CA.", montant: 85, devise: "CAD", compte: true, source: "https://ircc.canada.ca/english/information/fees/fees.asp", verifieLe: "2026-09-23" },
@@ -532,6 +563,16 @@ texte: "Chaque université fixe ses droits. Licence : 26 000 CNY par an en lettr
 min: 26000, max: 70000, devise: "CNY",
 source: "https://international.join-tsinghua.edu.cn/Admission1/Fees.htm",
 verifieLe: "2026-09-23"
+},
+// Le repère du coût de la vie (lot 102) : l'allocation de la bourse du
+// gouvernement chinois, 2026-2027, logement fourni en plus. Lue le
+// 2026-09-25 sur l'avis de l'université Chang'an (Type B), confirmé pour
+// la maîtrise et le doctorat par SUFE et l'UCAS.
+repereVie: {
+libelle: "l'allocation mensuelle de la bourse du gouvernement chinois, versée à des boursiers logés gratuitement",
+licence: 2500, master: 3000, doctorat: 3500, devise: "CNY",
+source: "https://ies.chd.edu.cn/en/2025/1106/c8889a256964/page.htm",
+verifieLe: "2026-09-25"
 },
 frais: [
 { cle: "dossier", texte: "Frais de dossier de chaque université, non remboursables : 800 CNY à Tsinghua, 400 CNY à Sun Yat-sen. Non couverts par la bourse.", montant: 800, devise: "CNY", compte: false, source: "https://yz.tsinghua.edu.cn/en/Costs/Application_Fee.htm", verifieLe: "2026-09-23" },

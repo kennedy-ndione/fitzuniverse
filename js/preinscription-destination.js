@@ -30,6 +30,7 @@ import { lirePays, etatDunPays, estOuverte, faitsPublics, defautsDeDestination }
 import { trouverProcedure, residencesDocumentees, residenceRequise } from "./procedures/index.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
+import { montantsEnFcfa } from "./taux-indicatifs.js";
 import { auPays, avecArticle } from "./pays-grammaire.js";
 
 const ID = (document.body && document.body.dataset.destination) || "";
@@ -86,7 +87,8 @@ const publics = faitsPublics(pays);
 poserHtml("destRegles", publics.map((f) => `<li class="pre-fait">
 <i data-lucide="check" aria-hidden="true"></i>
 <div>
-<p>${escapeHtml(f.texte)}</p>
+<p>${escapeHtml(f.texte)}</p>${montantsEnFcfa(f.texte) ? `
+<p class="pre-fait-fcfa">${escapeHtml(montantsEnFcfa(f.texte))}</p>` : ""}
 <a class="pre-fait-source" href="${escapeHtml(f.source)}" target="_blank" rel="noopener">Vérifié le ${escapeHtml(formaterDate(f.verifieLe))} — source</a>
 </div>
 </li>`).join(""));

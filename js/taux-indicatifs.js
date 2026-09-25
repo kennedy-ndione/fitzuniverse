@@ -129,3 +129,35 @@ if (a === null || b === null) return "";
 const corps = Math.round(a / 1000) === Math.round(b / 1000) ? formatFcfa(a) : `${formatFcfa(a).replace(`${NBSP}F${NBSP}CFA`, "")} à ${formatFcfa(b)}`;
 return conversionExacte(d) ? corps : `environ ${corps}`;
 }
+
+/** Symbole → code de devise, tels qu'ils s'écrivent dans les textes du site. */
+const SYMBOLES_TEXTE = [["€", "EUR"], ["USD", "USD"], ["TL", "TRY"], ["$ CA", "CAD"], ["RM", "MYR"], ["lei", "RON"], ["MAD", "MAD"], ["DH", "MAD"], ["CNY", "CNY"], ["yuans", "CNY"], ["yuan", "CNY"]];
+const RE_MONTANT = /(\d{1,3}(?:[ \u00a0\u202f]\d{3})*(?:,\d{1,2})?)[ \u00a0\u202f]?(€|USD|TL|\$[ \u00a0\u202f]?CA|RM|lei|MAD|DH|CNY|yuans?)(?![A-Za-zÀ-ÿ])/g;
+
+/**
+* Les montants d'un texte officiel, redits en F CFA (lot 102, 2026-09-25) :
+* le texte reste tel quel, la traduction vient à côté. Au plus six montants,
+* sans doublon ; rien pour un texte sans montant ni pour le F CFA lui-même.
+* @returns {string} « En F CFA : 2 000 USD ≈ 1 150 000 F CFA ; … (au taux de référence du …). » ou ""
+*/
+export function montantsEnFcfa(texte) {
+const vus = new Set();
+const morceaux = [];
+let indicatif = false;
+for (const m of String(texte || "").matchAll(RE_MONTANT)) {
+const brut = m[0].replace(/[ \u202f]/g, NBSP);
+if (vus.has(brut) || morceaux.length >= 6) continue;
+vus.add(brut);
+const symbole = m[2].replace(/[ \u00a0\u202f]/g, " ");
+const devise = (SYMBOLES_TEXTE.find(([sym]) => sym === symbole) || [])[1];
+const nombre = Number(m[1].replace(/[ \u00a0\u202f]/g, "").replace(",", "."));
+const xof = devise ? enFcfa(nombre, devise) : null;
+if (xof === null || !(nombre > 0)) continue;
+const exacte = conversionExacte(devise);
+if (!exacte) indicatif = true;
+// L'euro se redit exactement (parité fixe), au franc près ; le reste, arrondi.
+morceaux.push(exacte ? `${brut} = ${groupes(xof)}${NBSP}F${NBSP}CFA` : `${brut} ≈ ${formatFcfa(xof)}`);
+}
+if (!morceaux.length) return "";
+return `En F${NBSP}CFA${NBSP}: ${morceaux.join(" ; ")}${indicatif ? ` (${mentionTaux()})` : ""}.`;
+}

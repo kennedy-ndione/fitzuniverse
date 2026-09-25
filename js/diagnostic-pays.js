@@ -71,7 +71,8 @@ export function formatMontant(montant, devise) {
 const n = Number(montant);
 if (!Number.isFinite(n)) return "";
 const arrondi = devise === "XOF" ? Math.round(n) : Math.round(n * 100) / 100;
-const texte = arrondi.toLocaleString("fr-FR", { maximumFractionDigits: devise === "XOF" ? 0 : 2 }).replace(/ |\s/g, NBSP);
+const decimales = devise !== "XOF" && arrondi % 1 !== 0 ? 2 : 0;
+const texte = arrondi.toLocaleString("fr-FR", { minimumFractionDigits: decimales, maximumFractionDigits: devise === "XOF" ? 0 : 2 }).replace(/ |\s/g, NBSP);
 return `${texte}${NBSP}${libelleDevise(devise)}`;
 }
 
@@ -126,6 +127,13 @@ if (!dest || !faits) return null;
 const dans = auPays(dest.nom);
 const variante = faits.variante && entrees.variante === faits.variante.id ? faits.variante : null;
 const seuil = variante || faits.ressources || null;
+// Le niveau visé (lot 102) : il choisit les droits d'inscription quand le
+// pays les publie par niveau (Canada), et le repère du coût de la vie.
+const niveau = ["licence", "master", "doctorat"].includes(entrees.niveau) ? entrees.niveau : "";
+const droitsNiveau = niveau && faits.droitsParNiveau && faits.droitsParNiveau[niveau];
+const droits = droitsNiveau
+? (variante && droitsNiveau.variantes && droitsNiveau.variantes[variante.id]) || droitsNiveau
+: faits.droits || null;
 
 const devisesPossibles = devisesDeSaisie(id);
 const devise = devisesPossibles.includes(entrees.devise) ? entrees.devise : "XOF";
@@ -139,7 +147,7 @@ const lignes = [];
 if (seuil) lignes.push({ cle: "ressources", libelle: "Ressources exigées", texte: seuil.texte, montant: annuelDe(seuil), devise: seuil.devise, compte: true, source: seuil.source, verifieLe: seuil.verifieLe });
 else if (faits.ressourcesAbsence) lignes.push({ cle: "ressources", libelle: "Ressources exigées", texte: faits.ressourcesAbsence.texte, absente: true, compte: false, source: faits.ressourcesAbsence.source, verifieLe: faits.ressourcesAbsence.verifieLe });
 if (variante && faits.ressources) lignes.push({ cle: "ressourcesHors", libelle: "Hors Québec, pour comparer", texte: faits.ressources.texte, compte: false, source: faits.ressources.source, verifieLe: faits.ressources.verifieLe });
-if (faits.droits) lignes.push({ cle: "droits", libelle: "Droits d'inscription", texte: faits.droits.texte, min: faits.droits.min, max: faits.droits.max, devise: faits.droits.devise, compte: true, source: faits.droits.source, verifieLe: faits.droits.verifieLe, fcfa: equivalentFcfaFourchette(faits.droits.min, faits.droits.max, faits.droits.devise) });
+if (droits) lignes.push({ cle: "droits", libelle: "Droits d'inscription", texte: droits.texte, min: droits.min, max: droits.max, devise: droits.devise, compte: true, source: droits.source, verifieLe: droits.verifieLe, fcfa: equivalentFcfaFourchette(droits.min, droits.max, droits.devise) });
 for (const f of faits.frais || []) {
 // Un frais réservé à une variante (le CAQ, au Québec) ne compte que si
 // l'étudiant l'a choisie ; il reste affiché sinon, à côté.
@@ -245,11 +253,43 @@ resteMensuelXof: Math.round(declareXof),
 phrase: `Aucun seuil de ressources n'est publié ${dans}, et la première année peut s'y faire sans droits d'inscription (dans le public). Vos ${formatFcfa(declareXof)} par mois vont donc tout entiers à la vie sur place, logement compris : comparez-les aux loyers de la ville visée.`
 };
 } else {
+const reste = resteAnnuel / 12;
+const baseReste = `Aucun seuil de ressources n'est publié ${dans}. Avec ${formatFcfa(declareXof)} par mois, les frais les moins chers de la première année (${env}${formatFcfa(totalMinXof)}) vous laisseraient ${env}${formatFcfa(reste)} par mois pour vivre, logement compris`;
+// LE REPÈRE OFFICIEL (lot 102) : ce que l'État verse pour vivre à ses
+// propres boursiers, qu'il loge en plus. En dessous, pour vivre ET se
+// loger, le budget ne tient pas : « manque ».
+const repere = faits.repereVie || null;
+const montantRepere = repere ? repere[niveau || "licence"] : null;
+const repereXof = Number.isFinite(montantRepere) ? enFcfa(montantRepere, repere.devise) : null;
+if (repereXof !== null && reste < repereXof && reste >= repereXof * 0.95) {
+// À moins de 5 % du repère : le taux du jour ne permet pas de trancher.
+verdict = {
+etat: "a-confirmer", source: repere.source, verifieLe: repere.verifieLe,
+resteMensuelXof: Math.round(reste),
+repereMensuelXof: Math.round(repereXof),
+phrase: `${baseReste}. C'est tout près de ${repere.libelle} : ${formatMontant(montantRepere, repere.devise)} par mois (environ ${formatFcfa(repereXof)}), ${mentionTaux()}. Refaites le calcul au taux de votre banque, et vérifiez le prix d'un logement dans la ville visée.`
+};
+} else if (repereXof !== null && reste < repereXof) {
+verdict = {
+etat: "manque", source: repere.source, verifieLe: repere.verifieLe,
+repereMensuelXof: Math.round(repereXof),
+manqueAnnuelXof: Math.round((repereXof - reste) * 12),
+phrase: `${baseReste}. C'est moins que ${repere.libelle} : ${formatMontant(montantRepere, repere.devise)} par mois (environ ${formatFcfa(repereXof)}). Il manque environ ${formatFcfa((repereXof - reste) * 12)} sur l'année pour atteindre ce repère, ${mentionTaux()}.`
+};
+} else if (repereXof !== null) {
+verdict = {
+etat: "sans-seuil", source: repere.source, verifieLe: repere.verifieLe,
+resteMensuelXof: Math.round(reste),
+repereMensuelXof: Math.round(repereXof),
+phrase: `${baseReste}. C'est au-dessus de ${repere.libelle} : ${formatMontant(montantRepere, repere.devise)} par mois (environ ${formatFcfa(repereXof)}). Vérifiez le prix d'un logement dans la ville visée (montants convertis ${mentionTaux()}).`
+};
+} else {
 verdict = {
 etat: "sans-seuil", ...absence,
-resteMensuelXof: Math.round(resteAnnuel / 12),
-phrase: `Aucun seuil de ressources n'est publié ${dans}. Avec ${formatFcfa(declareXof)} par mois, les frais les moins chers de la première année (${env}${formatFcfa(totalMinXof)}) vous laisseraient ${env}${formatFcfa(resteAnnuel / 12)} par mois pour vivre, logement compris : comparez-le aux loyers de la ville visée${precis ? "" : ` (montants convertis ${mentionTaux()})`}.`
+resteMensuelXof: Math.round(reste),
+phrase: `${baseReste} : comparez-le aux loyers de la ville visée${precis ? "" : ` (montants convertis ${mentionTaux()})`}.`
 };
+}
 }
 } else {
 verdict = {
