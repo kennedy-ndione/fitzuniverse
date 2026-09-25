@@ -103,7 +103,7 @@ const refusees = [];
 const journal = [];
 
 async function ecrire(base, original) {
-  const reference = await sharp(original).resize({ width: 2000, withoutEnlargement: true }).jpeg({ quality: QUALITY, mozjpeg: true }).toBuffer();
+  const reference = await sharp(original).rotate().resize({ width: 2000, withoutEnlargement: true }).jpeg({ quality: QUALITY, mozjpeg: true }).toBuffer();
   const meta = await sharp(reference).metadata();
   const ratio = meta.width / meta.height;
   if (ratio < 1.3) throw new Error(`ratio ${ratio.toFixed(2)} < 1,3 (${meta.width}x${meta.height}) — portrait refusé`);
@@ -154,12 +154,16 @@ async function essayer(base, c) {
   journal.push({ base, source: "Wikimedia Commons", sujet: c.sujet, auteur, licence, lien: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(c.fichier.replace(/ /g, "_"))}`, fichier: c.fichier, original: `${info.width}x${info.height}`, dimensions: dims });
 }
 
-const filtres = process.argv.slice(2);
+// --refaire : refabrique une photo déjà présente (correctif du 2026-09-25 :
+// la photo d'Urla était sortie à l'envers, l'orientation EXIF de
+// l'original n'était pas appliquée ; `.rotate()` l'applique désormais).
+const refaire = process.argv.includes("--refaire");
+const filtres = process.argv.slice(2).filter((a) => a !== "--refaire");
 await mkdir(DIR_VILLES, { recursive: true });
 
 for (const { base, candidats } of VILLES) {
   if (filtres.length && !filtres.includes(base)) continue;
-  if (existsSync(join(DIR_VILLES, `${base}-1600w.avif`))) { console.log(`${base} : déjà complète — ignorée.`); reussies.push(base); continue; }
+  if (!refaire && existsSync(join(DIR_VILLES, `${base}-1600w.avif`))) { console.log(`${base} : déjà complète — ignorée.`); reussies.push(base); continue; }
   let ok = false;
   for (const c of candidats) {
     try { await essayer(base, c); ok = true; break; }
