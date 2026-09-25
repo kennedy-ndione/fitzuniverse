@@ -872,6 +872,35 @@ border-color:#8F3E22;
 color:#8F3E22;
 }
 
+/* RETIRER SE CONFIRME DANS LA CARTE (2026-09-25) : la question prend
+toute la largeur, sous le titre du vœu. */
+.rt-voeu-confirmer{
+flex:1 1 100%;
+display:flex;
+flex-direction:column;
+gap:8px;
+padding-top:10px;
+border-top:1px solid var(--border-color);
+}
+
+.rt-voeu-confirmer p{
+margin:0;
+font-size:.9rem;
+}
+
+.rt-voeu-confirmer-gestes{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px 16px;
+}
+
+.rt-btn--retirer{
+background:#8F3E22;
+border-color:#8F3E22;
+color:#fff;
+}
+
 .rt-voeu-actions{
 display:flex;
 flex-wrap:wrap;

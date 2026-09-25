@@ -469,6 +469,9 @@ function htmlGeste(e) {
   if (["situation", "diagnostic", "voeux", "pieces", "motivations", "reponses", "depart", "voie", "candidature"].includes(e.kind)) return "";
   // Une étape déclarée « ne me concerne pas » n'attend plus de geste.
   if (e.nonConcerne) return "";
+  // Un vœu posé après la déclaration du dépôt n'est pas déposé : on le
+  // déclare ici, sans défaire le dépôt déjà déclaré (2026-09-25).
+  if (e.depot && e.cochee && e.voeuxADeclarer > 0) return htmlRedeclarer(e);
   // Hors France, un DÉPÔT se prouve aussi par la capture ou l'e-mail de
   // confirmation (relecture du 2026-09-25) : tous les portails ne donnent
   // pas un numéro. Le fichier se range avec chaque vœu (preuveDepot).
@@ -485,6 +488,7 @@ function htmlGeste(e) {
     ? (e.cochee ? "Visa demandé — annuler" : "J'ai déposé ma demande de visa")
     : (e.cochee ? "Fait — annuler" : "C'est fait");
   return `
+    ${htmlAvantDepot(e)}
     <div class="rt-geste">
       ${preuve}
       <button type="button" class="rt-btn rt-btn--fait${e.cochee ? " is-fait" : ""}" id="rtFait" aria-pressed="${e.cochee ? "true" : "false"}">
@@ -492,6 +496,83 @@ function htmlGeste(e) {
       </button>
       ${e.cochee && e.faitLe ? `<span class="rt-faitle">le ${ech(dateLongue(e.faitLe))}</span>` : ""}
     </div>`;
+}
+
+/**
+ * DÉPOSER AVANT D'AVOIR FINI (test du 2026-09-25). La route ne bloque
+ * pas : l'étudiant peut avoir réglé une étape sans la cocher ici. Mais
+ * elle le dit, avant le dépôt, pour qu'un oubli ne parte pas avec le
+ * dossier.
+ */
+function htmlAvantDepot(e) {
+  if (!(e.depot || e.id === "ef_soumission") || e.cochee || e.faite) return "";
+  const avant = (etat.route && etat.route.etapes || []).filter((x) => x.numero < e.numero && !x.faite);
+  if (!avant.length) return "";
+  const noms = avant.slice(0, 3).map((x) => x.titre).join(", ") + (avant.length > 3 ? "…" : "");
+  const n = avant.length;
+  return `<p class="rt-mention rt-mention--avant-depot"><i data-lucide="alert-triangle"></i><span>Avant de déposer : ${n} étape${n > 1 ? "s" : ""} ne ${n > 1 ? "sont" : "est"} pas encore ${n > 1 ? "faites" : "faite"} ici (${ech(noms)}). Si ${n > 1 ? "elles sont réglées" : "elle est réglée"}, vous pouvez déclarer le dépôt ; sinon, ${n > 1 ? "faites-les" : "faites-la"} d'abord.</span></p>`;
+}
+
+/** Le dépôt est déclaré, mais un vœu posé depuis ne l'est pas encore. */
+function htmlRedeclarer(e) {
+  const n = e.voeuxADeclarer;
+  const numero = e.preuve.valeur === PREUVE_CAPTURE ? "" : e.preuve.valeur;
+  return `
+    <p class="rt-mention"><i data-lucide="info"></i><span>Vous avez déclaré votre dépôt, mais ${n > 1 ? `${n} vœux posés depuis n'y figurent` : "un vœu posé depuis n'y figure"} pas encore. Si vous ${n > 1 ? "les avez ajoutés" : "l'avez ajouté"} à votre dossier, déclarez-le ici, avec le numéro ou la capture de confirmation.</span></p>
+    <div class="rt-geste">
+      <label class="rt-preuve">
+        <span>Le numéro ou la référence de votre dépôt</span>
+        <input type="text" id="rtPreuveBis" maxlength="64" value="${ech(numero)}" autocomplete="off">
+      </label>
+      ${estFrance() ? "" : htmlChampFichier("rtPreuveFichierBis")}
+      <button type="button" class="rt-btn rt-btn--fait" id="rtRedeclarer"><i data-lucide="circle-check"></i><span>${n > 1 ? "Déclarer ces vœux déposés" : "Déclarer ce vœu déposé"}</span></button>
+      <button type="button" class="rt-lien-discret" id="rtFait" aria-pressed="true">Annuler la déclaration du dépôt</button>
+    </div>`;
+}
+
+async function redeclarerDepot() {
+  const champ = document.getElementById("rtPreuveBis");
+  const champFichier = document.getElementById("rtPreuveFichierBis");
+  const fichier = (champFichier && champFichier.files && champFichier.files[0]) || null;
+  const numero = champ ? champ.value.trim() : "";
+  if (!numero && !fichier) {
+    toast("Indiquez le numéro de dépôt, ou joignez la capture ou l'e-mail de confirmation.", "error");
+    if (champ) champ.focus();
+    return;
+  }
+  if (fichier && !fichierAcceptable(fichier)) { toast("La preuve doit être une image, ou un PDF de 5 Mo au plus.", "error"); return; }
+  await declarerDepot(numero, fichier);
+  toast("Dépôt déclaré.");
+  recomposer();
+  peindre();
+}
+
+/**
+ * RETIRER UN VŒU SE CONFIRME (test du 2026-09-25). Un clic sur la croix
+ * supprimait le vœu sur-le-champ, preuve de dépôt comprise. La
+ * confirmation se fait dans la carte, jamais par une boîte du navigateur.
+ */
+function demanderRetrait(bouton) {
+  const id = bouton.getAttribute("data-retirer");
+  const carte = bouton.closest(".rt-voeu");
+  const v = etat.voeux.find((x) => x.id === id);
+  if (!carte || !v || carte.querySelector(".rt-voeu-confirmer")) return;
+  const depose = STATUTS_DEPOSES_VOEU.includes(v.status);
+  const bloc = document.createElement("div");
+  bloc.className = "rt-voeu-confirmer";
+  bloc.setAttribute("role", "group");
+  bloc.setAttribute("aria-label", "Confirmer le retrait");
+  bloc.innerHTML = `
+    <p>${depose ? "Retirer ce vœu ? Il est déjà déclaré déposé : sa déclaration et sa preuve (numéro ou capture) seront perdues." : "Retirer ce vœu ?"}</p>
+    <div class="rt-voeu-confirmer-gestes">
+      <button type="button" class="rt-btn rt-btn--retirer" data-retirer-oui>Oui, le retirer</button>
+      <button type="button" class="rt-lien-discret" data-retirer-non>Non, le garder</button>
+    </div>`;
+  bouton.hidden = true;
+  carte.appendChild(bloc);
+  bloc.querySelector("[data-retirer-oui]").addEventListener("click", () => retirerVoeu(id));
+  bloc.querySelector("[data-retirer-non]").addEventListener("click", () => { bloc.remove(); bouton.hidden = false; bouton.focus(); });
+  bloc.querySelector("[data-retirer-non]").focus();
 }
 
 /**
@@ -813,7 +894,7 @@ function htmlCandidature(e) {
   if (!e.voeux.length) return `<p class="rt-vide">${ech(e.empechement)}</p>`;
   if (e.nonConcerne) return "";
   const jour = aujourdhuiISO();
-  return `
+  return `${e.voeux.some((v) => !v.depose) ? htmlAvantDepot(e) : ""}
     <ol class="rt-cands">${e.voeux.map((v) => {
       const nom = (v.fiche && v.fiche.nom) || v.university;
       const tete = `
@@ -1458,7 +1539,9 @@ function brancherEtape(e) {
   const voeu = section.querySelector("#rtVoeu");
   if (voeu) voeu.addEventListener("submit", (ev) => { ev.preventDefault(); ajouterVoeu(voeu); });
 
-  section.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => retirerVoeu(b.getAttribute("data-retirer"))));
+  section.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => demanderRetrait(b)));
+  const redeclarer = section.querySelector("#rtRedeclarer");
+  if (redeclarer) redeclarer.addEventListener("click", () => redeclarerDepot());
   section.querySelectorAll("[data-piece]").forEach((c) => c.addEventListener("change", () => {
     // PREMIUM 3 : le pop joue À L'INSTANT du geste, pendant que
     // l'enregistrement part au serveur — la classe n'est jamais écrite

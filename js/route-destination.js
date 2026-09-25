@@ -362,6 +362,12 @@ if (def.kind === "candidature" && !def.depot) preuveType = "aucune";
 const nonConcerne = !!(saisie && saisie.nonConcerne === true);
 const preuvePresente = preuveType === "aucune" || nonConcerne || !!(saisie && typeof saisie.preuve === "string" && saisie.preuve.trim());
 const cochee = !!(saisie && saisie.faite === true);
+// UN DÉPÔT DU PAYS VAUT POUR TOUS LES VŒUX (2026-09-25). Un vœu posé
+// après la déclaration (ou reposé après un retrait) n'est pas déposé :
+// l'étape se rouvre d'elle-même tant qu'il n'est pas déclaré.
+const voeuxADeclarer = def.depot && def.kind !== "candidature"
+? listeVoeux.filter((v) => !STATUTS_DEPOSES_VOEU.includes(v.status)).length
+: 0;
 const pieces = def.kind === "pieces" ? piecesDe(officielle).map((p) => ({ ...p, obtenue: piecesCochees[p.slug] === true, ecartee: piecesCochees[p.slug] === "non-concerne" })) : [];
 
 let faite = false;
@@ -387,7 +393,7 @@ faite = nonConcerne || (listeVoeux.length > 0 && listeVoeux.every((v) => STATUTS
 if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
 break;
 case "depart": faite = visaFaites === VISA_ETAPES.length; break;
-default: faite = (cochee && preuvePresente) || nonConcerne;
+default: faite = (cochee && preuvePresente && voeuxADeclarer === 0) || nonConcerne;
 }
 
 return {
@@ -411,6 +417,7 @@ nonConcerne,
 // directement par Universitaly.
 ignorable: ((!!officielle && def.kind !== "voie" && def.kind !== "voeux") || def.kind === "candidature" || def.kind === "universite") && !def.depot,
 depot: !!def.depot,
+voeuxADeclarer,
 empechement,
 outils: (def.outils || []).map((o) => ({ ...o })),
 officielle: officielle ? {
