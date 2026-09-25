@@ -948,6 +948,14 @@ if (!program.language || !langues.length) return null;
 
 const langueProgramme = String(program.language).toLowerCase();
 
+// L'ANNÉE PRÉPARATOIRE (lot 105, 2026-09-25). Quand la bourse enseigne
+// elle-même la langue du cursus (l'année de turc de Türkiye Bursları,
+// l'année de roumain du gouvernement roumain, l'année d'arabe des
+// universités égyptiennes), ne pas la parler encore n'écarte pas : c'est
+// précisément le public de cette année. Seule l'expression « année
+// préparatoire » ouvre la porte, écrite dans le champ à dessein.
+if (/année préparatoire/.test(langueProgramme)) return true;
+
 return langues.some((l) => langueProgramme.includes(l));
 
 }

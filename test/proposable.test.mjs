@@ -110,8 +110,20 @@ test("langue 4 — la preuve par le catalogue : 481 programmes ne sont plus éca
   // Avant le correctif : 26 compatibles, 481 incompatibles.
   assert.ok(compatibles > 400,
     `un francophone anglophone doit pouvoir accéder à l'essentiel du catalogue — ${compatibles} seulement`);
-  assert.ok(incompatibles < 50,
-    `${incompatibles} programmes écartés sur la langue : le bug « [object Object] » est revenu`);
+
+  // LA SIGNATURE DU BUG, et non un plafond (lot 105, 2026-09-25). Le
+  // plafond « moins de 50 écartés » est tombé le jour où le catalogue a
+  // dit la vérité sur les fondations allemandes : elles exigent
+  // l'allemand B2 même pour un cursus en anglais, et 220 programmes
+  // écartent désormais, À RAISON, un étudiant qui ne le parle pas. Le
+  // bug « [object Object] », lui, écartait des programmes EN FRANÇAIS
+  // OU EN ANGLAIS : c'est cela qui doit rester à zéro.
+  const ecartesATort = CATALOGUE.programs.filter((p) =>
+    langueCompatible(p, SENEGALAIS) === false && /anglais|français/i.test(p.language || ""));
+  assert.deepEqual(ecartesATort.map((p) => p.id), [],
+    "un programme qui nomme le français ou l'anglais est écarté pour un francophone anglophone : le bug « [object Object] » est revenu");
+  assert.ok(incompatibles < compatibles / 2,
+    `${incompatibles} programmes écartés sur la langue pour ${compatibles} compatibles`);
 
 });
 

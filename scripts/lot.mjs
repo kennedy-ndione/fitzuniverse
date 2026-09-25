@@ -397,7 +397,9 @@ const programme = {
 id: `${uid}__${lien.scholarshipId}__${SLUG_NIVEAU[niveau]}`,
 universityId: uid,
 scholarshipId: lien.scholarshipId,
-level: niveau
+level: niveau,
+// Champs vérifiés par université (lot 105) : preuve, statut, calendrier.
+...(lien.champs || {})
 };
 if (lien.language) programme.language = lien.language;
 programmesResolus.push(programme);

@@ -68,6 +68,9 @@ export const COLLECTIONS_PATCHABLES = ["scholarships", "universities", "programs
 * @param {string} [override] - `overrideApplicationUrl` de l'entrée
 * @returns {?string} message d'erreur, ou null si l'écriture est permise
 */
+/** Champs qu'un lien peut poser sur les programmes qu'il crée (lot 105). */
+export const CHAMPS_PROGRAMME_LIEN = ["status", "isActive", "deadline", "deadlineISO", "ouverteVerifieeLe", "sourceVerification", "coverage", "description", "duration"];
+
 export function refusPortailProgramme(ou, champs, override) {
 
 if (!champs || !Object.prototype.hasOwnProperty.call(champs, "applicationUrl")) return null;
@@ -472,6 +475,27 @@ const universitesEnBase = [];
 // champ est aujourd'hui ignoré par la construction ci-dessous, mais
 // il vaut mieux REFUSER que d'ignorer en silence — un auteur de lot
 // croirait sinon avoir posé une valeur qui n'existe pas.
+// CHAMPS DU PROGRAMME (lot 105, 2026-09-25). Un lien peut porter,
+// sous `champs`, ce qui se vérifie par université : la preuve
+// (sourceVerification), le statut et le calendrier de l'appel, la
+// couverture, une description. Liste fermée : un champ inconnu est
+// refusé, et les gardes des patches (dates de lecture, preuve, portail)
+// s'appliquent telles quelles.
+if ("champs" in lien) {
+const ch = lien.champs;
+if (!ch || typeof ch !== "object" || Array.isArray(ch) || !Object.keys(ch).length) {
+erreurs.push(`Lien "${lien.scholarshipId}" : "champs" doit être un objet non vide.`);
+continue;
+}
+const intrus = Object.keys(ch).filter((c) => !CHAMPS_PROGRAMME_LIEN.includes(c));
+if (intrus.length) {
+erreurs.push(`Lien "${lien.scholarshipId}" : champ(s) de programme non permis (${intrus.join(", ")}) — permis : ${CHAMPS_PROGRAMME_LIEN.join(", ")}.`);
+continue;
+}
+const refusDates = refusDatesDeLecture(`Lien "${lien.scholarshipId}"`, ch, aujourdhui);
+if (refusDates.length) { erreurs.push(...refusDates); continue; }
+}
+
 if ("applicationUrl" in lien) {
 const refus = refusPortailProgramme(`Lien "${lien.scholarshipId}"`, { applicationUrl: lien.applicationUrl }, lien.overrideApplicationUrl);
 if (refus) erreurs.push(refus);
@@ -529,7 +553,7 @@ erreurs.push(`Collision d'identifiant de programme : "${id}".`);
 continue;
 }
 idsP.add(id);
-const programme = { id, universityId: uid, scholarshipId: lien.scholarshipId, level: niveau };
+const programme = { id, universityId: uid, scholarshipId: lien.scholarshipId, level: niveau, ...(lien.champs || {}) };
 // La langue d'enseignement n'est écrite que lorsqu'elle a été
 // VÉRIFIÉE (champ non vide du lien) — vide = inconnue, jamais "".
 if (lien.language) programme.language = lien.language;
@@ -548,6 +572,7 @@ language: lien.language || "",
 niveaux: restriction,
 pays: lien.pays || "",
 universitesEnBase,
+champs: lien.champs || null,
 motif: lien.motif || ""
 });
 }
