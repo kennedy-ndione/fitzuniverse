@@ -111,6 +111,26 @@ libelles: { etudes_dans_la_langue: l.etudes, test_passe: l.test, test_prevu: "Je
 *                   lettres, quand une pièce en dépend avant le dépôt
 *                   (Chine : le projet d'études de la bourse)
 *   devise          la devise de la plupart des montants du pays
+*   etapesCandidature les étapes où l'étudiant dépose LUI-MÊME sa
+*                   candidature sur le site d'une université (relecture du
+*                   2026-09-25). Elles se règlent VŒU PAR VŒU : chaque vœu
+*                   montre ce que son université demande (le bloc
+*                   « admission » de sa fiche du catalogue), la vérification
+*                   par Fitz, son site, puis se déclare déposé avec un
+*                   numéro, une capture ou l'e-mail de confirmation.
+*   etapeUniversite (Italie) une étape de candidature AJOUTÉE à la
+*                   procédure nationale, placée juste avant l'étape
+*                   `avant` : la plupart des universités italiennes font
+*                   candidater sur leur propre site avant Universitaly.
+*                   Ce n'est pas un dépôt du pays (Universitaly l'est) :
+*                   l'étudiant dont l'université passe directement par
+*                   Universitaly la déclare « ne me concerne pas ».
+*   etapeVoeuxOfficielle l'étape de la procédure qui fait CHOISIR
+*                   l'établissement : elle se fond dans l'étape « vœux »
+*                   de la route (son texte officiel y est servi), au lieu
+*                   de faire choisir deux fois. Pas en Chine ni au Maroc
+*                   (leurs choix vivent dans une voie), ni en Allemagne
+*                   (de_voeux y est le dépôt sur uni-assist).
 *   voies           (Turquie, Maroc, Chine) les PORTES du pays : une étape de la
 *                   procédure où l'étudiant choisit sa voie, et les étapes
 *                   propres à chaque voie. Une fois la voie choisie, les
@@ -125,6 +145,8 @@ plafondVoeux: 7,
 plafondOfficiel: null,
 niveaux: ["Année préparatoire de roumain", "Licence", "Master", "Doctorat"],
 etapesDepot: ["ro_dossier"],
+etapesCandidature: ["ro_dossier"],
+etapeVoeuxOfficielle: "ro_programme",
 etapeReponses: "ro_scrisoare",
 motivations: true,
 devise: "EUR"
@@ -140,6 +162,7 @@ verifieLe: "2026-09-23"
 },
 niveaux: ["Licence", "Master", "Doctorat", "Formation courte (ön lisans)"],
 etapesDepot: ["tr_tb_soumission", "tr_uni_candidature"],
+etapesCandidature: ["tr_uni_candidature"],
 etapeReponses: "tr_admission",
 motivations: true,
 devise: "USD",
@@ -159,6 +182,7 @@ plafondVoeux: 7,
 plafondOfficiel: null,
 niveaux: ["Licence", "Master", "Doctorat", "Classes préparatoires", "École d'ingénieurs", "Médecine, pharmacie ou dentaire"],
 etapesDepot: ["ma_depot", "ma_um6p", "ma_aui"],
+etapesCandidature: ["ma_um6p", "ma_aui"],
 etapeReponses: "ma_autorisation",
 motivations: false,
 devise: "MAD",
@@ -183,8 +207,18 @@ verifieLe: "2026-09-23"
 },
 niveaux: ["Laurea (licence)", "Laurea Magistrale (master)", "Cycle unique (médecine, droit…)", "Doctorat", "Foundation course"],
 etapesDepot: ["it_soumission"],
+etapesCandidature: ["candidature_universite"],
+etapeUniversite: {
+id: "candidature_universite",
+avant: "it_comparabilite",
+titre: "Candidater auprès de votre université",
+enClair: "En Italie, la plupart des universités examinent d'abord votre dossier sur leur propre site, avant Universitaly. Lisez ci-dessous ce que demande la vôtre, faites vérifier votre dossier par Fitz, puis déposez-le sur son site. Gardez le numéro ou l'e-mail de confirmation : il se déclare ici. Si votre université passe directement par Universitaly, dites-le en bas de l'étape."
+},
+etapeVoeuxOfficielle: "it_cours",
 etapeReponses: "it_validation",
 motivations: true,
+// Les lettres se déposent avec la candidature à l'université.
+motivationsAvant: ["candidature_universite"],
 devise: "EUR"
 },
 
@@ -194,6 +228,7 @@ plafondVoeux: 7,
 plafondOfficiel: null,
 niveaux: ["Studienkolleg", "Bachelor (licence)", "Master", "Doctorat"],
 etapesDepot: ["de_voeux"],
+etapesCandidature: ["de_voeux"],
 etapeReponses: "de_zulassung",
 motivations: true,
 devise: "EUR"
@@ -205,6 +240,8 @@ plafondVoeux: 7,
 plafondOfficiel: null,
 niveaux: ["Baccalauréat (licence)", "Maîtrise", "Doctorat", "DESS"],
 etapesDepot: ["ca_candidature"],
+etapesCandidature: ["ca_candidature"],
+etapeVoeuxOfficielle: "ca_eed",
 etapeReponses: "ca_lettre_acceptation",
 motivations: true,
 devise: "CAD"
@@ -220,6 +257,7 @@ verifieLe: "2026-09-23"
 },
 niveaux: ["Année préparatoire de chinois", "Licence", "Master", "Doctorat"],
 etapesDepot: ["cn_bourse_soumission", "cn_uni_candidature"],
+etapesCandidature: ["cn_uni_candidature"],
 etapeReponses: "cn_admission",
 motivations: true,
 // Le projet d'études est une PIÈCE de la bourse : les lettres s'écrivent
@@ -242,6 +280,8 @@ plafondVoeux: 7,
 plafondOfficiel: null,
 niveaux: ["Foundation", "Diploma", "Licence (Bachelor)", "Master", "Doctorat"],
 etapesDepot: ["my_candidature"],
+etapesCandidature: ["my_candidature"],
+etapeVoeuxOfficielle: "my_etablissement",
 etapeReponses: "my_offre",
 motivations: true,
 devise: "MYR"

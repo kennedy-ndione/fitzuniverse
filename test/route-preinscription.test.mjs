@@ -340,7 +340,11 @@ test("route 10 — la page : une seule étape à l'écran, pas de rail ni de rad
   assert.match(moteur, /track: "preinscription"/);
   // 2026-09-23 : pre-N pour la France, pre-<code>-N ailleurs (PREFIXES_VOEU).
   assert.match(moteur, /slotIdLibre\(etat\.voeux, quota, estFrance\(\) \? "pre" : PREFIXES_VOEU\[etat\.destination\]\)/, "les créneaux pre-N de la formule");
-  assert.match(moteur, /preuveDepot: \{ mode: "numero", numeroDossier: numero, deposeLe: jour, declareLe: jour \}/, "le numéro de dossier vaut preuve de dépôt sur chaque vœu");
+  // Relecture du 2026-09-25 : hors France, la capture ou l'e-mail de
+  // confirmation vaut aussi preuve (mode « capture », fichier rangé avec
+  // chaque vœu) ; le numéro, quand il est donné, reste porté.
+  assert.match(moteur, /const preuveDepot = \{ mode: fichier \? "capture" : "numero", deposeLe: jour, declareLe: jour \};/, "le numéro de dossier vaut preuve de dépôt sur chaque vœu");
+  assert.match(moteur, /if \(numero\) preuveDepot\.numeroDossier = numero;/);
   assert.ok(!/<select\b/.test(moteur), "aucun menu déroulant du système : les choix passent par .fitz-choice");
   assert.ok(moteur.includes('class="fitz-choice"'));
   // La feuille : aucune classe qui n'existe que dans un @media.

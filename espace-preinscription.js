@@ -44,8 +44,12 @@
  * ============================================================
  */
 
-import { db } from "./firebase-config.js";
+import { db, storage } from "./firebase-config.js";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { ref as storageRef, uploadBytes } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
+import { compressImageToTarget } from "./js/compression-image.js";
+import { lirePreuve, preuveValide, resumePreuve, cheminCapture, TAILLE_MAX_FICHIER, TYPES_FICHIER } from "./js/preuve-depot.js";
+import { chargerPortails, portailUniversite } from "./js/portails.js";
 import { initShellChrome, bootstrapShell, applyFeatureLocks, isFeatureLocked } from "./js/app-shell.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { lireParcours, PAYS_PREINSCRIPTION } from "./js/parcours.js";
@@ -75,7 +79,7 @@ import { prechargerCatalogue, chargerUniversites } from "./js/catalog-data.js";
 // NAVIGATION RAPIDE, 2026-09-21) — voir js/catalog-data.js.
 prechargerCatalogue();
 import { PLAN_PREINSCRIPTION_LABELS, droitsPreinscription, planPreinscriptionPour, resolvePlanPreinscriptionFrance } from "./js/plan-features.js";
-import { construireRoutePays, questionsSituationPays } from "./js/route-destination.js";
+import { construireRoutePays, questionsSituationPays, STATUTS_DEPOSES_VOEU } from "./js/route-destination.js";
 import { destination as configDestination, PREFIXES_VOEU } from "./js/destinations-preinscription.js";
 import { HORS_TOTAL_PAYS } from "./js/diagnostic-pays.js";
 import { auPays, avecArticle } from "./js/pays-grammaire.js";
@@ -145,6 +149,8 @@ const etat = {
   choisie: null,          // l'id de l'étape affichée
   quota: null,
   universites: null,      // les universités du pays, pour la liste d'aide
+  fichesPays: [],         // les mêmes, entières : leur bloc « admission » nourrit la candidature
+  portails: false,        // vrai une fois la carte des portails chargée (abonnés)
   conseiller: false,
   destination: "france",  // ?d=<pays> ; « france » par défaut
   config: null,           // js/destinations-preinscription.js, hors France
@@ -208,7 +214,10 @@ function recomposer() {
       dossier: etat.dossier,
       // Le départ d'un pays est le sien : ses démarches vivent dans son
       // dossier, pas dans la liste France (users/{uid}.visaChecklist).
-      visaChecklist: (etat.dossier && etat.dossier.visaChecklist) || {}
+      visaChecklist: (etat.dossier && etat.dossier.visaChecklist) || {},
+      // Les fiches du catalogue : ce que CHAQUE université demande, lu
+      // à l'étape de candidature (relecture du 2026-09-25).
+      universites: etat.fichesPays
     });
   }
   if (!etat.route) return;
@@ -457,14 +466,21 @@ function htmlPortail(e) {
 
 /** Le geste : la preuve si elle est requise, et « C'est fait ». */
 function htmlGeste(e) {
-  if (["situation", "diagnostic", "voeux", "pieces", "motivations", "reponses", "depart", "voie"].includes(e.kind)) return "";
+  if (["situation", "diagnostic", "voeux", "pieces", "motivations", "reponses", "depart", "voie", "candidature"].includes(e.kind)) return "";
   // Une étape déclarée « ne me concerne pas » n'attend plus de geste.
   if (e.nonConcerne) return "";
+  // Hors France, un DÉPÔT se prouve aussi par la capture ou l'e-mail de
+  // confirmation (relecture du 2026-09-25) : tous les portails ne donnent
+  // pas un numéro. Le fichier se range avec chaque vœu (preuveDepot).
+  const avecFichier = e.depot && !estFrance() && !e.cochee;
+  const captureJointe = e.preuve.valeur === PREUVE_CAPTURE;
   const preuve = e.preuve.requise ? `
     <label class="rt-preuve">
-      <span>${ech(e.preuve.libelle.charAt(0).toUpperCase() + e.preuve.libelle.slice(1))}</span>
-      <input type="text" id="rtPreuve" maxlength="64" value="${ech(e.preuve.valeur)}" placeholder="${ech(e.id === "ef_soumission" ? "Le numéro que le portail vous a donné" : e.depot ? "Le numéro ou la référence de votre dépôt" : "La référence, pour la retrouver plus tard")}" autocomplete="off">
-    </label>` : "";
+      <span>${ech(e.preuve.libelle.charAt(0).toUpperCase() + e.preuve.libelle.slice(1))}${avecFichier ? " (si le site vous en a donné un)" : ""}</span>
+      <input type="text" id="rtPreuve" maxlength="64" value="${ech(captureJointe ? "" : e.preuve.valeur)}" placeholder="${ech(e.id === "ef_soumission" ? "Le numéro que le portail vous a donné" : e.depot ? "Le numéro ou la référence de votre dépôt" : "La référence, pour la retrouver plus tard")}" autocomplete="off">
+    </label>
+    ${avecFichier ? htmlChampFichier("rtPreuveFichier") : ""}
+    ${captureJointe ? `<p class="rt-mention"><i data-lucide="paperclip"></i><span>Capture de confirmation jointe.</span></p>` : ""}` : "";
   const libelleBouton = e.kind === "visa"
     ? (e.cochee ? "Visa demandé — annuler" : "J'ai déposé ma demande de visa")
     : (e.cochee ? "Fait — annuler" : "C'est fait");
@@ -735,6 +751,118 @@ function htmlMotivations(e) {
     }).join("")}</ol>`;
 }
 
+/**
+* LA CANDIDATURE, UNIVERSITÉ PAR UNIVERSITÉ (relecture du 2026-09-25).
+*
+* L'étudiant dépose LUI-MÊME sur le site de chaque université. Avant,
+* cette étape n'avait que le bouton du portail national et un champ
+* « numéro » : rien de ce que CETTE université demande, alors que le
+* catalogue le sait (bloc « admission » de sa fiche). Chaque vœu a
+* maintenant sa carte, dans l'ordre des gestes : lire ce qu'elle
+* demande, faire vérifier son dossier par Fitz, déposer sur son site,
+* puis déclarer le dépôt ici — un numéro, OU la capture, OU l'e-mail
+* de confirmation (une image ou un PDF).
+*/
+const CHAMPS_ADMISSION = [
+  ["procedure", "Comment candidater"],
+  ["calendrier", "Le calendrier"],
+  ["conditions", "Les conditions"],
+  ["langue", "La langue exigée"],
+  ["fraisDossier", "Les frais de dossier"],
+  ["coutIndicatif", "Le coût indicatif"]
+];
+
+/** La valeur gardée à l'étape quand la preuve est un fichier, pas un numéro. */
+const PREUVE_CAPTURE = "capture jointe";
+
+function htmlChampFichier(id) {
+  return `
+    <label class="rt-preuve rt-preuve--fichier">
+      <span>Ou la capture, ou l'e-mail de confirmation</span>
+      <input type="file" ${id ? `id="${id}" ` : ""}name="fichier" accept="image/*,application/pdf">
+      <small>Une photo de l'écran de confirmation, ou l'e-mail enregistré en PDF. Une image, ou un PDF de 5 Mo au plus.</small>
+    </label>`;
+}
+
+function htmlAdmission(v) {
+  const f = v.fiche;
+  if (!f) {
+    return `<p class="rt-mention"><i data-lucide="info"></i><span>Cet établissement n'est pas encore dans le catalogue de Fitz. Lisez sa page d'admission sur son site officiel : la procédure, la date limite et les pièces demandées.</span></p>`;
+  }
+  const a = f.admission;
+  if (!a) {
+    return `<p class="rt-mention"><i data-lucide="info"></i><span>Fitz n'a pas encore relevé la procédure d'admission de ${ech(f.nom)}. Lisez-la sur son site officiel avant de déposer : la date limite et les pièces demandées y sont.</span></p>`;
+  }
+  const lignes = CHAMPS_ADMISSION.filter(([k]) => a[k]).map(([k, libelle]) => `
+      <div class="rt-adm-ligne"><dt>${ech(libelle)}</dt><dd>${ech(a[k])}</dd></div>`).join("");
+  const sources = a.sources.map((s, i) => `<a href="${ech(s)}" target="_blank" rel="noopener noreferrer">source ${i + 1}</a>`).join(" · ");
+  return `
+    <dl class="rt-admission">${lignes}</dl>
+    <p class="rt-source">${a.verifieLe ? `Relevé le ${ech(formaterDate(a.verifieLe))} sur les pages officielles de l'université` : "Relevé sur les pages officielles de l'université"}${sources ? ` · ${sources}` : ""} · <a href="${ech(f.adresse)}">la fiche complète</a></p>`;
+}
+
+function htmlLienUniversite(v) {
+  const f = v.fiche;
+  const portail = f && etat.portails ? portailUniversite({ universityId: f.id }) : "";
+  if (portail) return `<a href="${ech(portail)}" target="_blank" rel="noopener noreferrer" class="rt-outil"><i data-lucide="external-link"></i><span>Ouvrir son portail de candidature</span></a>`;
+  if (f && f.site) return `<a href="${ech(f.site)}" target="_blank" rel="noopener noreferrer" class="rt-outil"><i data-lucide="external-link"></i><span>Ouvrir son site officiel</span></a>`;
+  return "";
+}
+
+function htmlCandidature(e) {
+  if (!e.voeux.length) return `<p class="rt-vide">${ech(e.empechement)}</p>`;
+  if (e.nonConcerne) return "";
+  const jour = aujourdhuiISO();
+  return `
+    <ol class="rt-cands">${e.voeux.map((v) => {
+      const nom = (v.fiche && v.fiche.nom) || v.university;
+      const tete = `
+        <div class="rt-cand-tete"><strong>${ech(v.university)}</strong><span>${ech([v.formation, v.niveau].filter(Boolean).join(" · "))}</span></div>`;
+      if (v.depose) {
+        const resume = resumePreuve(lirePreuve(v));
+        return `
+      <li class="rt-cand is-depose">${tete}
+        <p class="rt-cand-ok"><i data-lucide="check-circle-2"></i><span>${ech(resume || "Candidature déclarée déposée.")}</span></p>
+      </li>`;
+      }
+      const verifier = avecDestination(`ai-check.html?applicationId=${encodeURIComponent(v.id)}`);
+      return `
+      <li class="rt-cand">${tete}
+        <details class="rt-cand-lire" open>
+          <summary><i data-lucide="book-open"></i><span>Ce que demande ${ech(nom)}</span></summary>
+          ${htmlAdmission(v)}
+        </details>
+        <ol class="rt-cand-gestes">
+          <li>
+            <strong>Faire vérifier votre dossier, avant de l'envoyer</strong>
+            <span>Fitz relit vos pièces et votre lettre pour cette candidature. Une pièce manquante ou mal nommée suffit souvent à faire écarter un dossier.</span>
+            <span data-feature="ai_check"><a href="${ech(verifier)}" data-real-href="${ech(verifier)}" class="rt-btn rt-btn--fitz"><i data-lucide="shield-check"></i><span>Faire vérifier ce dossier par Fitz</span></a></span>
+          </li>
+          <li>
+            <strong>Déposer sur le site de l'université</strong>
+            <span>Suivez sa procédure, écrite ci-dessus. À la fin, gardez le numéro de candidature, ou faites une capture de l'écran de confirmation, ou gardez l'e-mail qu'elle vous envoie.</span>
+            ${htmlLienUniversite(v)}
+          </li>
+          <li>
+            <strong>Déclarer votre dépôt ici</strong>
+            <form class="rt-form rt-depot" data-depot-voeu="${ech(v.id)}" novalidate>
+              <label class="rt-preuve">
+                <span>Le numéro ou la référence de candidature</span>
+                <input type="text" name="numero" maxlength="64" autocomplete="off" placeholder="Si le site vous en a donné un">
+              </label>
+              ${htmlChampFichier("")}
+              <label class="rt-preuve">
+                <span>Déposée le</span>
+                <input type="date" name="deposeLe" value="${ech(jour)}" max="${ech(jour)}">
+              </label>
+              <button type="submit" class="rt-btn rt-btn--fait"><i data-lucide="circle-check"></i><span>J'ai déposé cette candidature</span></button>
+            </form>
+          </li>
+        </ol>
+      </li>`;
+    }).join("")}</ol>`;
+}
+
 // ---- Étape 12 : les réponses, vœu par vœu ----
 function htmlReponses(e) {
   if (!e.voeux.length) return `<p class="rt-vide">${ech(e.empechement)}</p>`;
@@ -822,6 +950,7 @@ function htmlCorps(e) {
     case "pieces": return htmlPieces(e);
     case "motivations": return htmlMotivations(e);
     case "reponses": return htmlReponses(e);
+    case "candidature": return htmlCandidature(e);
     case "visa": return htmlVisa(e);
     default: return `<div class="rt-actions">${htmlOutilPrincipal(e)}${htmlPortail(e)}</div>${htmlGeste(e)}`;
   }
@@ -895,6 +1024,21 @@ function peindre() {
   peindreSuite();
   icones();
   centrerLeFil();
+}
+
+/**
+* Une donnée arrivée après la première peinture (le catalogue, les
+* portails) ne se voit qu'à l'étape de candidature. On ne repeint que
+* celle-là, et jamais sous les doigts de l'étudiant : un champ en cours
+* de saisie ne s'efface pas.
+*/
+function repeindreCandidature() {
+  recomposer();
+  const e = etapeChoisie();
+  if (!e || e.kind !== "candidature") return;
+  const section = document.getElementById("rtEtape");
+  if (section && section.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  peindre();
 }
 
 function aller(id, defiler = true) {
@@ -1045,13 +1189,20 @@ async function cocherPiece(slug, valeur) {
 
 async function basculerFait(e) {
   const champ = document.getElementById("rtPreuve");
-  const preuve = champ ? champ.value.trim() : "";
+  const champFichier = document.getElementById("rtPreuveFichier");
+  const fichier = (champFichier && champFichier.files && champFichier.files[0]) || null;
+  const numero = champ ? champ.value.trim() : "";
   const faite = !e.cochee;
-  if (faite && e.preuve.requise && !preuve) {
-    toast(`Indiquez d'abord ${e.preuve.libelle}.`, "error");
+  if (faite && e.preuve.requise && !numero && !fichier) {
+    toast(champFichier ? `Indiquez d'abord ${e.preuve.libelle}, ou joignez la capture ou l'e-mail de confirmation.` : `Indiquez d'abord ${e.preuve.libelle}.`, "error");
     if (champ) champ.focus();
     return;
   }
+  if (faite && fichier) {
+    if (!fichierAcceptable(fichier)) { toast("La preuve doit être une image, ou un PDF de 5 Mo au plus.", "error"); return; }
+    if (!etat.voeux.length) { toast("Posez d'abord votre vœu (étape 3) : la capture se range avec lui.", "error"); return; }
+  }
+  const preuve = numero || (fichier ? PREUVE_CAPTURE : "");
   const etapes = { ...((etat.dossier && etat.dossier.etapes) || {}) };
   etapes[e.id] = { faite, faitLe: faite ? aujourdhuiISO() : null, preuve };
   try {
@@ -1061,7 +1212,7 @@ async function basculerFait(e) {
     // porte. On le déclare sur chacun, pour que le suivi (et l'admin)
     // sache qu'ils sont déposés.
     // Hors France, l'étape de dépôt du pays (e.depot) joue le même rôle.
-    if ((e.id === "ef_soumission" || e.depot) && faite) await declarerDepot(preuve);
+    if ((e.id === "ef_soumission" || e.depot) && faite) await declarerDepot(numero, fichier);
     toast(faite ? "Étape faite." : "Étape rouverte.");
     recomposer();
     if (faite) etat.choisie = prochaineApres(e.id);
@@ -1072,18 +1223,83 @@ async function basculerFait(e) {
   }
 }
 
-async function declarerDepot(numero) {
+async function declarerDepot(numero, fichier = null) {
   const jour = aujourdhuiISO();
   for (const v of etat.voeux) {
-    if (["deposee", "en_attente", "reponse_recue", "admise", "refusee", "liste_attente"].includes(v.status)) continue;
-    const maj = { status: "deposee", preuveDepot: { mode: "numero", numeroDossier: numero, deposeLe: jour, declareLe: jour }, updatedAt: serverTimestamp() };
+    if (STATUTS_DEPOSES_VOEU.includes(v.status)) continue;
+    const preuveDepot = { mode: fichier ? "capture" : "numero", deposeLe: jour, declareLe: jour };
+    if (numero) preuveDepot.numeroDossier = numero;
+    const maj = { status: "deposee", preuveDepot, updatedAt: serverTimestamp() };
     try {
+      // La capture se range avec CHAQUE vœu : c'est le seul chemin que
+      // storage.rules et firestore.rules acceptent (preuveValide).
+      if (fichier) preuveDepot.fichier = await envoyerPreuve(v.id, fichier);
       await updateDoc(doc(db, "users", etat.session.user.uid, "applications", v.id), maj);
       v.status = "deposee";
       v.preuveDepot = maj.preuveDepot;
     } catch (error) {
       console.warn("Dépôt non déclaré sur un vœu :", v.id, error);
     }
+  }
+}
+
+/** Une image (compressée à l'envoi) ou un PDF de 5 Mo au plus : miroir de storage.rules. */
+function fichierAcceptable(file) {
+  if (!file) return true;
+  const type = file.type || "";
+  if (!TYPES_FICHIER.some((t) => type.startsWith(t))) return false;
+  return type.startsWith("image/") || file.size <= TAILLE_MAX_FICHIER;
+}
+
+// La preuve d'un vœu : compressée si c'est une image (même geste
+// qu'applications.js), puis rangée dans le dossier Storage de CE vœu.
+async function envoyerPreuve(applicationId, file) {
+  let blob = file;
+  let ext = (String(file.name || "").split(".").pop() || "").toLowerCase();
+  if ((file.type || "").startsWith("image/")) {
+    blob = await compressImageToTarget(file, 1.5 * 1024 * 1024);
+    ext = "jpg";
+  }
+  if (file.type === "application/pdf") ext = "pdf";
+  const chemin = cheminCapture(etat.session.user.uid, applicationId, ext);
+  await uploadBytes(storageRef(storage, chemin), blob, { contentType: blob.type || file.type });
+  return chemin;
+}
+
+/** Le dépôt d'UNE candidature, sur le site de SON université. */
+async function declarerCandidature(e, form) {
+  const id = form.getAttribute("data-depot-voeu");
+  const v = etat.voeux.find((x) => x.id === id);
+  if (!v) return;
+  const numero = form.elements.numero.value.trim();
+  const fichier = (form.elements.fichier.files && form.elements.fichier.files[0]) || null;
+  const deposeLe = form.elements.deposeLe.value || aujourdhuiISO();
+  if (!numero && !fichier) {
+    toast("Indiquez le numéro de candidature, ou joignez la capture ou l'e-mail de confirmation.", "error");
+    form.elements.numero.focus();
+    return;
+  }
+  if (!fichierAcceptable(fichier)) { toast("La preuve doit être une image, ou un PDF de 5 Mo au plus.", "error"); return; }
+  const brouillon = { mode: fichier ? "capture" : "numero", deposeLe, numeroDossier: numero || undefined, fichier: fichier ? "a-envoyer" : undefined };
+  if (!preuveValide(brouillon)) { toast("Vérifiez la date du dépôt : elle ne peut pas être dans le futur.", "error"); return; }
+  const bouton = form.querySelector("button[type=submit]");
+  if (bouton) bouton.disabled = true;
+  try {
+    const preuveDepot = { mode: brouillon.mode, deposeLe, declareLe: serverTimestamp() };
+    if (numero) preuveDepot.numeroDossier = numero;
+    if (fichier) preuveDepot.fichier = await envoyerPreuve(v.id, fichier);
+    await updateDoc(doc(db, "users", etat.session.user.uid, "applications", v.id), { status: "deposee", preuveDepot, updatedAt: serverTimestamp() });
+    v.status = "deposee";
+    v.preuveDepot = { ...preuveDepot, declareLe: aujourdhuiISO() };
+    toast(`Candidature à ${v.university} déclarée déposée.`);
+    recomposer();
+    const apres = etat.route.etapes.find((x) => x.id === e.id);
+    if (apres && apres.faite) etat.choisie = prochaineApres(e.id);
+    peindre();
+  } catch (error) {
+    console.error("Dépôt non déclaré :", error);
+    toast("Le dépôt n'a pas pu être enregistré. Réessayez.", "error");
+    if (bouton) bouton.disabled = false;
   }
 }
 
@@ -1223,6 +1439,8 @@ function brancherEtape(e) {
   section.querySelectorAll("[data-lettre]").forEach((b) => b.addEventListener("click", () => cocherLettre(b.getAttribute("data-lettre"), b.getAttribute("aria-pressed") !== "true")));
   section.querySelectorAll("[data-reponse]").forEach((s) => s.addEventListener("change", () => noterReponse(s.getAttribute("data-reponse"), s.value)));
   section.querySelectorAll("[data-visa]").forEach((b) => b.addEventListener("click", () => cocherVisa(b.getAttribute("data-visa"), b.getAttribute("aria-pressed") !== "true")));
+
+  section.querySelectorAll("form[data-depot-voeu]").forEach((f) => f.addEventListener("submit", (ev) => { ev.preventDefault(); declarerCandidature(e, f); }));
 
   const fait = section.querySelector("#rtFait");
   if (fait) fait.addEventListener("click", () => basculerFait(e));
@@ -1381,12 +1599,24 @@ bootstrapShell({ espace: "preinscription" }).then(async (session) => {
   try {
     const unis = await chargerUniversites();
     const pays = nomDestination().toLowerCase();
-    etat.universites = unis
-      .filter((u) => String(u.country || "").trim().toLowerCase() === pays)
+    etat.fichesPays = unis.filter((u) => String(u.country || "").trim().toLowerCase() === pays);
+    etat.universites = etat.fichesPays
       .map((u) => u.name).filter(Boolean).sort((a, b) => a.localeCompare(b, "fr"));
-    // Le champ lit la source à chaque frappe : rien à re-peindre.
+    // Le champ lit la source à chaque frappe : rien à re-peindre — sauf
+    // l'étape de candidature, qui montre ce que chaque université demande.
+    if (!estFrance()) repeindreCandidature();
   } catch (error) {
     console.warn("Catalogue indisponible pour la liste d'aide :", error);
+  }
+
+  // Le portail de candidature de chaque université (réservé aux
+  // abonnés, servi par la Cloud Function) : à défaut, son site officiel.
+  if (!estFrance()) {
+    const carte = await chargerPortails().catch(() => null);
+    if (carte) {
+      etat.portails = true;
+      repeindreCandidature();
+    }
   }
 
 }).catch((error) => {

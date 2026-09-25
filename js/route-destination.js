@@ -46,6 +46,7 @@ import { LIBELLES_PREUVE, ICONES_TYPE, texteConsigne } from "./procedures/vocabu
 import { destination, enClairDe, questionLangue } from "./destinations-preinscription.js";
 import { slugPiece } from "./route-preinscription.js";
 import { auPays } from "./pays-grammaire.js";
+import { adresseFiche } from "./fiche-adresse.js";
 
 /** L'étape de réponse ajoutée à une voie qui n'en a pas (UM6P, Al Akhawayn). */
 export const ETAPE_REPONSE_ETABLISSEMENT = "reponse_etablissement";
@@ -74,6 +75,50 @@ const manquants = questionsSituationPays(id).filter((q) => !String(p[q.cle] || "
 return { pret: manquants.length === 0, manquants };
 }
 
+/** Les statuts d'un vœu dont la candidature est partie (miroir de firestore.rules, estStatutDepose). */
+export const STATUTS_DEPOSES_VOEU = ["deposee", "en_attente", "reponse_recue", "admise", "refusee", "liste_attente"];
+
+function aplatirNom(t) {
+return String(t || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+* LA FICHE DU CATALOGUE D'UN VŒU (relecture du 2026-09-25). Le vœu ne
+* porte que le nom tapé ; on le retrouve dans les universités du pays
+* (par identifiant s'il en a un, sinon par le nom, accents et casse
+* ignorés). Rend ce que l'étudiant doit lire AVANT de déposer : la
+* procédure de CETTE université, son calendrier, ses conditions, sa
+* langue, ses frais de dossier, et les sources officielles. null si
+* l'établissement n'est pas au catalogue.
+*/
+export function ficheDuVoeu(voeu, universites = []) {
+const liste = Array.isArray(universites) ? universites : [];
+if (!voeu || !liste.length) return null;
+const id = String(voeu.universityId || "").trim();
+const nom = aplatirNom(voeu.university);
+const u = (id && liste.find((x) => x && x.id === id)) || (nom && liste.find((x) => x && aplatirNom(x.name) === nom)) || null;
+if (!u) return null;
+const a = u.admission && typeof u.admission === "object" ? u.admission : null;
+const texte = (v) => (typeof v === "string" ? v.trim() : "");
+return {
+id: u.id,
+nom: u.name || "",
+ville: u.city || "",
+site: texte(u.officialWebsite),
+adresse: adresseFiche(u.id),
+admission: a ? {
+procedure: texte(a.procedure),
+calendrier: texte(a.calendrier),
+conditions: texte(a.conditions),
+langue: texte(a.langue),
+fraisDossier: texte(a.fraisDossier),
+coutIndicatif: texte(a.coutIndicatif),
+verifieLe: texte(a.verifieLe),
+sources: Array.isArray(a.sources) ? a.sources.filter((x) => typeof x === "string" && /^https?:\/\//.test(x)) : []
+} : null
+};
+}
+
 /** Les outils de Fitz que chaque type d'étape emporte. */
 const OUTILS_PAR_TYPE = {
 pieces: [
@@ -84,6 +129,16 @@ soumission: [{ feature: "ai_check", href: "ai-check.html", libelle: "Faire véri
 entretien: [{ feature: "interview_prep", href: "interview-prep.html", libelle: "M'entraîner à l'entretien avec Fitz", icone: "messages-square", principal: true }],
 confirmation: [{ feature: "ai_email", href: "ai-email.html", libelle: "Écrire à l'établissement", icone: "mail" }]
 };
+
+/**
+* L'étape de CANDIDATURE à une université : la vérification par Fitz
+* d'abord (l'outil principal, ouvert vœu par vœu), puis l'e-mail à
+* l'établissement pour une question avant de déposer.
+*/
+const OUTILS_CANDIDATURE = [
+{ feature: "ai_check", href: "ai-check.html", libelle: "Faire vérifier mon dossier par Fitz", icone: "shield-check", principal: true },
+{ feature: "ai_email", href: "ai-email.html", libelle: "Écrire à l'établissement", icone: "mail" }
+];
 
 /** Les pièces d'une étape de procédure, avec un slug stable. */
 function piecesDe(etape) {
@@ -128,8 +183,12 @@ return pieces;
 * @param {Array}  p.voeux           applications de ce pays
 * @param {Object} p.dossier         users/{uid}.dossiersPays.<id>
 * @param {Object} p.visaChecklist   users/{uid}.visaChecklist
+* @param {Array}  p.universites     les universités du pays au catalogue
+*                                   (catalogue.json) : leur bloc
+*                                   « admission » nourrit les étapes de
+*                                   candidature, vœu par vœu
 */
-export function construireRoutePays({ id, procedure = null, profile = {}, diagnostic = null, voeux = [], dossier = {}, visaChecklist = {} } = {}) {
+export function construireRoutePays({ id, procedure = null, profile = {}, diagnostic = null, voeux = [], dossier = {}, visaChecklist = {}, universites = [] } = {}) {
 
 const d = destination(id);
 if (!d || !procedure) return null;
@@ -142,6 +201,15 @@ const visa = {};
 VISA_ETAPES.forEach((v) => { visa[v] = !!(visaChecklist && visaChecklist[v] === true); });
 const visaFaites = VISA_ETAPES.filter((v) => visa[v]).length;
 
+// LE CHOIX DE L'ÉTABLISSEMENT NE SE FAIT QU'UNE FOIS (relecture du
+// 2026-09-25). Quand la procédure a sa propre étape « choisir », son
+// texte officiel et son « en clair » passent dans l'étape des vœux, et
+// elle sort de la liste.
+const voeuxOfficielle = d.etapeVoeuxOfficielle ? procedure.etapes.find((x) => x.id === d.etapeVoeuxOfficielle) || null : null;
+const clairVoeux = voeuxOfficielle ? (enClairDe(id, voeuxOfficielle.id) || {}).enClair || "" : "";
+const candidatures = new Set(d.etapesCandidature || []);
+const ajoutee = d.etapeUniversite || null;
+
 const defs = [
 { id: "situation", kind: "situation", icone: "user-round", titre: "Votre situation",
 enClair: "Huit réponses, et Fitz sait d'où vous partez et où vous allez. Tout le reste de la route se règle sur elles." },
@@ -149,7 +217,10 @@ enClair: "Huit réponses, et Fitz sait d'où vous partez et où vous allez. Tout
 enClair: `Avant de commencer un dossier, on vérifie que le projet tient financièrement. Fitz compare ce dont vous disposez au seuil exigé ${dans} et au coût de l'année, chiffre par chiffre, avec les sources.`,
 outils: [{ feature: "diagnostic_france", href: `diagnostic-pays.html?d=${id}`, libelle: "Faire mon diagnostic avec Fitz", icone: "calculator", principal: true }] },
 { id: "voeux", kind: "voeux", icone: "list-checks", titre: d.plafondVoeux === 1 ? "Choisir votre cours" : "Choisir vos vœux",
-enClair: d.plafondVoeux === 1
+procedure: voeuxOfficielle ? voeuxOfficielle.id : undefined,
+enClair: clairVoeux
+? `${clairVoeux} Posez ${d.plafondVoeux === 1 ? "votre cours" : "vos vœux"} ci-dessous : l'établissement, la formation et le niveau.`
+: d.plafondVoeux === 1
 ? "Ici, un seul cours : c'est la règle du pays. Dites l'établissement, la formation et le niveau : Fitz s'occupe du reste, et la route se règle sur ce choix."
 : "Un vœu, c'est une formation dans un établissement. Dites simplement l'établissement, la formation et le niveau : Fitz s'occupe du reste." }
 ];
@@ -179,7 +250,7 @@ o.etapes.filter((x) => !voieChoisie.etapes.includes(x)).forEach((x) => horsVoie.
 // visa ; suivies dans cet ordre, elles feraient candidater l'étudiant
 // après son titre de séjour. On garde l'ordre officiel À L'INTÉRIEUR de
 // chaque bloc : avant le choix, la voie, puis ce qui est commun.
-let etapesProcedure = procedure.etapes.filter((e) => !horsVoie.has(e.id));
+let etapesProcedure = procedure.etapes.filter((e) => !horsVoie.has(e.id) && !(voeuxOfficielle && e.id === voeuxOfficielle.id));
 if (voieChoisie) {
 const propres = new Set(voieChoisie.etapes);
 const iVoie = etapesProcedure.findIndex((e) => e.id === voies.etape);
@@ -195,15 +266,27 @@ etapesProcedure = [
 const reponsePropre = !!voieChoisie && !etapesProcedure.some((e) => e.id === d.etapeReponses);
 const dernierDepot = reponsePropre ? [...etapesProcedure].reverse().find((e) => depots.has(e.id)) : null;
 
-for (const e of etapesProcedure) {
+const poserLettres = (idEtape) => {
 // Les lettres de motivation, vœu par vœu, juste avant le premier dépôt.
-if (!motivationsPosees && (depots.has(e.id) || avantLettres.has(e.id))) {
+if (!motivationsPosees && (depots.has(idEtape) || avantLettres.has(idEtape))) {
 defs.push({ id: "motivations", kind: "motivations", icone: "pen-line", titre: "Écrire vos lettres de motivation",
 enClair: "Chaque établissement veut savoir pourquoi cette formation, pourquoi chez lui, et ce que vous en ferez. Fitz écrit un premier jet avec vous, vœu par vœu. Puis vous le relisez et le déposez." });
 motivationsPosees = true;
 }
+};
+
+for (const e of etapesProcedure) {
+// L'étape de candidature ajoutée (Italie : le site de l'université,
+// avant Universitaly), à sa place dans la procédure.
+if (ajoutee && e.id === ajoutee.avant) {
+poserLettres(ajoutee.id);
+defs.push({ id: ajoutee.id, kind: "candidature", icone: "building-2", titre: ajoutee.titre, enClair: ajoutee.enClair,
+outils: OUTILS_CANDIDATURE.map((o) => ({ ...o })), depot: depots.has(ajoutee.id) });
+}
+poserLettres(e.id);
 const clair = enClairDe(id, e.id) || {};
 const kind = voies && e.id === voies.etape ? "voie"
+: candidatures.has(e.id) ? "candidature"
 : e.type === "pieces" && (e.pieces || []).length ? "pieces"
 : e.id === d.etapeReponses ? "reponses"
 : "procedure";
@@ -213,7 +296,7 @@ kind,
 procedure: e.id,
 titre: clair.titre || e.titre,
 enClair: clair.enClair || "",
-outils: (OUTILS_PAR_TYPE[e.type] || []).map((o) => ({ ...o })),
+outils: (kind === "candidature" ? OUTILS_CANDIDATURE : OUTILS_PAR_TYPE[e.type] || []).map((o) => ({ ...o })),
 depot: depots.has(e.id)
 });
 if (dernierDepot && e.id === dernierDepot.id) {
@@ -231,8 +314,9 @@ const officielle = def.procedure ? procedure.etapes.find((x) => x.id === def.pro
 const saisie = etatEtapes[def.id] && typeof etatEtapes[def.id] === "object" ? etatEtapes[def.id] : null;
 // L'étape de DÉPÔT exige toujours une preuve : c'est elle qui se déclare
 // sur chaque vœu du pays (le statut « déposé » l'exige dans les règles).
-let preuveType = officielle ? (officielle.preuve || "aucune") : "aucune";
+let preuveType = officielle && def.kind !== "voeux" ? (officielle.preuve || "aucune") : "aucune";
 if (def.depot && preuveType === "aucune") preuveType = "capture";
+if (def.kind === "candidature" && !def.depot) preuveType = "aucune";
 const nonConcerne = !!(saisie && saisie.nonConcerne === true);
 const preuvePresente = preuveType === "aucune" || nonConcerne || !!(saisie && typeof saisie.preuve === "string" && saisie.preuve.trim());
 const cochee = !!(saisie && saisie.faite === true);
@@ -254,6 +338,12 @@ faite = nonConcerne || (listeVoeux.length > 0 && listeVoeux.every((v) => ["admis
 if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
 break;
 case "voie": faite = !!voieChoisie; break;
+// La candidature se règle vœu par vœu : chaque vœu déclaré déposé,
+// avec sa preuve (numéro, capture ou e-mail de confirmation).
+case "candidature":
+faite = nonConcerne || (listeVoeux.length > 0 && listeVoeux.every((v) => STATUTS_DEPOSES_VOEU.includes(v.status)));
+if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
+break;
 case "depart": faite = visaFaites === VISA_ETAPES.length; break;
 default: faite = (cochee && preuvePresente) || nonConcerne;
 }
@@ -273,7 +363,11 @@ nonConcerne,
 // dépôt déclaré, ses vœux ne passeraient jamais « déposés », et les
 // réponses ne pourraient plus se noter (règles Firestore). Les pays à
 // plusieurs portes règlent cela par la voie, pas par ce bouton.
-ignorable: !!officielle && def.kind !== "voie" && !def.depot,
+// L'étape des vœux, même quand elle porte le texte officiel du choix,
+// concerne tout le monde. L'étape de candidature AJOUTÉE (Italie),
+// elle, peut ne pas concerner : certaines universités passent
+// directement par Universitaly.
+ignorable: ((!!officielle && def.kind !== "voie" && def.kind !== "voeux") || def.kind === "candidature") && !def.depot,
 depot: !!def.depot,
 empechement,
 outils: (def.outils || []).map((o) => ({ ...o })),
@@ -301,7 +395,9 @@ faitLe: (saisie && saisie.faitLe) || null,
 pieces,
 traduction: def.kind === "pieces" ? { concernees: [], declare: "", reglee: true } : null,
 residenceAbsente: false,
-voeux: ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
+voeux: def.kind === "candidature"
+? listeVoeux.map((v) => ({ ...v, depose: STATUTS_DEPOSES_VOEU.includes(v.status), fiche: ficheDuVoeu(v, universites) }))
+: ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
 visa: def.kind === "depart" ? { etat: visa, faites: visaFaites, total: VISA_ETAPES.length } : null,
 voie: def.kind === "voie" ? {
 question: voies.question,

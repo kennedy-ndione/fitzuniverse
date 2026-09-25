@@ -208,9 +208,11 @@ assert.ok(!route.etapes.slice(0, iMotiv).some((x) => x.depot), `${id} : un dép�
 assert.equal(iMotiv, -1, `${id} : des lettres de motivation qui ne sont pas demandées`);
 }
 // Seules les étapes officielles sont « ne me concerne pas » — ni le choix
-// de voie, ni un dépôt (sans lui, les réponses ne se noteraient plus).
+// de voie, ni un dépôt (sans lui, les réponses ne se noteraient plus),
+// ni les vœux quand ils portent le texte officiel du choix. Plus
+// l'étape de candidature ajoutée (Italie), qui n'est pas un dépôt.
 for (const e of route.etapes) {
-assert.equal(e.ignorable, !!e.officielle && e.kind !== "voie" && !e.depot, `${id} : ${e.id} ignorable à tort`);
+assert.equal(e.ignorable, ((!!e.officielle && e.kind !== "voie" && e.kind !== "voeux") || e.kind === "candidature") && !e.depot, `${id} : ${e.id} ignorable à tort`);
 }
 }
 });
