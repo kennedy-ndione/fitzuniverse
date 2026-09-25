@@ -2332,3 +2332,13 @@ Une photo par bourse (`assets/images/scholarships/`, JPEG + WebP + AVIF, déclin
 - **Photographe** : Jerzystrzelecki
 - **Licence** : [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
 - **Source** : [File:Bab Bou Jeloud(js)1.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bab_Bou_Jeloud%28js%291.jpg)
+
+## Lot 107 — bourse de l'Université Internationale de Rabat (2026-09-25) : 1 photo de bourse
+
+Produite par `scripts/add-lot107-photos.mjs` (`assets/images/scholarships/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`). Le Chellah, nécropole mérinide de Rabat, est un sujet que le site n'utilisait pas encore (la tour Hassan, la kasbah des Oudayas et la marina du Bouregreg sont déjà prises). Si le script a dû passer au second candidat, `scripts/data/journal-photos-lot107.json` le dit et ce crédit est à corriger.
+
+### `uir-bourse-etudes-internationaux.jpg` — la porte monumentale du Chellah, Rabat
+
+- **Photographe** : american_rugbier
+- **Licence** : [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Rabat Chellah (3) (13712768113).jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Rabat_Chellah_%283%29_%2813712768113%29.jpg)
