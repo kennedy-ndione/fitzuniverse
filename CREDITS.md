@@ -2292,3 +2292,43 @@ Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, décl
 - **Photographe** : Wiki Farazi
 - **Licence** : [CC0](https://creativecommons.org/publicdomain/zero/1.0/deed.en) — domaine public, attribution non obligatoire. Créditée ici par choix.
 - **Source** : [File:Aerial view of Kota Damansara from Emporis Kota Damansara 20230226 175946.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Aerial_view_of_Kota_Damansara_from_Emporis_Kota_Damansara_20230226_175946.jpg)
+
+## Lot 106 — bourses des universités privées (2026-09-25) : 6 photos de bourse
+
+Une photo par bourse (`assets/images/scholarships/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot106-photos.mjs` : un monument de la ville, jamais un sujet déjà pris par le site. Trois photos viennent d'Unsplash, trois de Wikimedia Commons. Le premier candidat de chaque liste est crédité ici ; si le script a dû passer au second, `scripts/data/journal-photos-lot106.json` le dit et ce crédit est à corriger. Substitutions assumées : la bourse de Sunway reçoit la mosquée de Shah Alam, sa voisine ; celle d'INTI (Nilai) reçoit l'ancien palais royal de Seri Menanti, dans le même État de Negeri Sembilan.
+
+### `apu-international-merit-awards.jpg` — la mosquée Jamek à l'aube, Kuala Lumpur
+
+- **Photographe** : Ajai Arif
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/HUmo9a5edDI` (identifiant CDN `photo-1598690159505-06420e488d87`)
+
+### `taylors-research-excellence-scholarship.jpg` — le temple Thean Hou, Kuala Lumpur
+
+- **Photographe** : Priyanka Singh
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/4-38745E0NY` (identifiant CDN `photo-1564933862606-7ab4c8246d20`)
+
+### `sunway-academic-excellence-scholarships.jpg` — la mosquée Sultan Salahuddin Abdul Aziz Shah au lever du soleil, Shah Alam
+
+- **Photographe** : Firdouss Ross
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/1Fs3piv9px8` (identifiant CDN `photo-1650163410569-e02adcc8bc59`)
+
+### `inti-international-education-scholarship.jpg` — l'ancien palais royal en bois de Seri Menanti, Negeri Sembilan
+
+- **Photographe** : Adhmi
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Istana Seri Menanti Negeri Sembilan.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Istana_Seri_Menanti_Negeri_Sembilan.jpg)
+
+### `ozyegin-international-admission-scholarships.jpg` — le palais de Beylerbeyi au bord du Bosphore, Istanbul
+
+- **Photographe** : Jordi Vich Navarro
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/eZFjrxZWlDc` (identifiant CDN `photo-1661585115697-67a90d16c7d8`)
+
+### `uemf-bourse-etudiants-internationaux.jpg` — Bab Bou Jeloud, la porte bleue de la médina de Fès
+
+- **Photographe** : Jerzystrzelecki
+- **Licence** : [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Bab Bou Jeloud(js)1.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bab_Bou_Jeloud%28js%291.jpg)

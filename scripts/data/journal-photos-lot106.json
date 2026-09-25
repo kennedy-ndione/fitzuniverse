@@ -1,0 +1,64 @@
+[
+  {
+    "base": "apu-international-merit-awards",
+    "source": "Unsplash",
+    "sujet": "la mosquée Jamek à l'aube, Kuala Lumpur",
+    "auteur": "Ajai Arif",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/HUmo9a5edDI",
+    "cdn": "photo-1598690159505-06420e488d87",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "taylors-research-excellence-scholarship",
+    "source": "Unsplash",
+    "sujet": "le temple Thean Hou, Kuala Lumpur",
+    "auteur": "Priyanka Singh",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/4-38745E0NY",
+    "cdn": "photo-1564933862606-7ab4c8246d20",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "sunway-academic-excellence-scholarships",
+    "source": "Unsplash",
+    "sujet": "la mosquée Sultan Salahuddin Abdul Aziz Shah au lever du soleil, Shah Alam, voisine de Bandar Sunway",
+    "auteur": "Firdouss Ross",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/1Fs3piv9px8",
+    "cdn": "photo-1650163410569-e02adcc8bc59",
+    "dimensions": "2000x1125 (ratio 1.78)"
+  },
+  {
+    "base": "inti-international-education-scholarship",
+    "source": "Wikimedia Commons",
+    "sujet": "l'ancien palais royal en bois de Seri Menanti, Negeri Sembilan, l'État de Nilai",
+    "auteur": "Adhmi",
+    "licence": "CC BY-SA 4.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Istana_Seri_Menanti_Negeri_Sembilan.jpg",
+    "fichier": "Istana Seri Menanti Negeri Sembilan.jpg",
+    "original": "5015x3343",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "ozyegin-international-admission-scholarships",
+    "source": "Unsplash",
+    "sujet": "le palais de Beylerbeyi au bord du Bosphore, rive asiatique d'Istanbul",
+    "auteur": "Jordi Vich Navarro",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/eZFjrxZWlDc",
+    "cdn": "photo-1661585115697-67a90d16c7d8",
+    "dimensions": "2000x1383 (ratio 1.45)"
+  },
+  {
+    "base": "uemf-bourse-etudiants-internationaux",
+    "source": "Wikimedia Commons",
+    "sujet": "Bab Bou Jeloud, la porte bleue de la médina de Fès",
+    "auteur": "Jerzystrzelecki",
+    "licence": "CC BY 3.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Bab_Bou_Jeloud(js)1.jpg",
+    "fichier": "Bab Bou Jeloud(js)1.jpg",
+    "original": "5586x3657",
+    "dimensions": "2000x1309 (ratio 1.53)"
+  }
+]

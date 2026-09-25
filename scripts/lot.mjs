@@ -410,6 +410,19 @@ info(`bourse en base : ${lien.scholarshipId} [${niveaux.join(", ")}] → ${lien.
 
 }
 
+// Universités en base visées par une bourse créée par le lot (lot 106) :
+// elles doivent exister, dans le pays annoncé par le lien.
+for (const { uid, pays, scholarshipId } of validation.universitesDeBase || []) {
+const enBase = basesU.get(uid);
+if (!enBase) {
+err(`ERREUR : université "${uid}" (bourse "${scholarshipId}") absente de la base et absente du lot — rien à lier.`);
+bloquant = true;
+} else if ((enBase.country || "") !== pays) {
+err(`ERREUR : garde pays — "${uid}" est en "${enBase.country || "?"}" mais le lien "${scholarshipId}" annonce "${pays}".`);
+bloquant = true;
+}
+}
+
 for (const p of [...validation.programmes, ...programmesResolus]) {
 if (couples.has(`${p.universityId}||${p.scholarshipId}`)) {
 warn(`couple déjà lié en base : ${p.universityId} × ${p.scholarshipId} — programme ignoré.`);

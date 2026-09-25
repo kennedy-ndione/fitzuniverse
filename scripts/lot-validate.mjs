@@ -405,6 +405,8 @@ if (!SLUG_NIVEAU[n]) erreurs.push(`Bourse "${s.id}" : niveau inattendu "${n}" (a
 const liees = new Set();
 const programmes = [];
 const liensExternes = [];
+// Universités en base visées par une bourse créée par le lot (lot 106).
+const universitesDeBase = [];
 const idsP = new Set();
 
 for (const lien of LINKS) {
@@ -528,12 +530,19 @@ universitesEnBase.push(uid);
 universitesValidees.push(uid);
 continue;
 }
-erreurs.push(`Lien "${lien.scholarshipId}" : université hors lot "${uid}".`);
+// UNE BOURSE DU LOT VERS UNE UNIVERSITÉ DÉJÀ EN BASE (lot 106,
+// 2026-09-25). La bourse propre d'une université existante naît dans
+// le lot, l'université est en base : les niveaux se lisent dans le
+// lot, l'existence et le pays de l'université se contrôlent en base,
+// dans `analyser`, avec la même garde pays stricte.
+if (!externe && typeof uid === "string" && /^[a-z0-9-]+$/.test(uid) && lien.pays) {
+universitesDeBase.push({ uid, pays: lien.pays, scholarshipId: lien.scholarshipId });
+} else {
+erreurs.push(`Lien "${lien.scholarshipId}" : université hors lot "${uid}"${!externe && !lien.pays ? " — déclarez \"pays\" pour viser une université déjà en base" : ""}.`);
 continue;
 }
-
+} else if ((uni.data.country || "") !== (lien.pays || "")) {
 // GARDE PAYS — comparaison STRICTE, accents compris, à dessein.
-if ((uni.data.country || "") !== (lien.pays || "")) {
 erreurs.push(`Garde pays : "${uid}" est en "${uni.data.country || "?"}" mais le lien "${lien.scholarshipId}" annonce "${lien.pays || "?"}".`);
 continue;
 }
@@ -593,6 +602,7 @@ programmes,
 // Liens vers des bourses DÉJÀ EN BASE : `analyser` y lit les niveaux
 // et complète le plan (voir le commentaire dans la boucle LINKS).
 liensExternes,
+universitesDeBase,
 patches: PATCHES,
 suppressions: SUPPRESSIONS,
 attendus: {

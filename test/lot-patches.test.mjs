@@ -353,12 +353,20 @@ test("LINKS vers une bourse DÉJÀ EN BASE : des universités DÉJÀ EN BASE peu
   assert.match(runner, /garde pays — "\$\{uid\}" est en/);
 });
 
-test("LINKS vers une bourse CRÉÉE par le lot : une université hors lot reste refusée", () => {
-  const r = validerLot({
-    SCHOLARSHIPS: [{ id: "s1", data: { title: "S", country: "Canada", levels: ["Doctorat"] } }],
-    LINKS: [{ scholarshipId: "s1", pays: "Canada", universityIds: ["hors-lot"] }]
-  });
-  assert.ok(r.erreurs.some((e) => /université hors lot "hors-lot"/.test(e)));
+test("LINKS vers une bourse CRÉÉE par le lot : une université en base se vise avec son pays, sinon refus", () => {
+  // Lot 106 (2026-09-25) : la bourse propre d'une université existante
+  // naît dans le lot. Avec « pays », l'université est acceptée et
+  // contrôlée en base par analyser ; sans pays, elle reste refusée.
+  const bourse = [{ id: "s1", data: { title: "S", country: "Canada", levels: ["Doctorat"] } }];
+  const sansPays = validerLot({ SCHOLARSHIPS: bourse, LINKS: [{ scholarshipId: "s1", universityIds: ["hors-lot"] }] });
+  assert.ok(sansPays.erreurs.some((e) => /université hors lot "hors-lot" — déclarez "pays"/.test(e)));
+  const avecPays = validerLot({ SCHOLARSHIPS: bourse, LINKS: [{ scholarshipId: "s1", pays: "Canada", universityIds: ["hors-lot"] }] });
+  assert.deepEqual(avecPays.erreurs, []);
+  assert.deepEqual(avecPays.universitesDeBase, [{ uid: "hors-lot", pays: "Canada", scholarshipId: "s1" }]);
+  assert.equal(avecPays.programmes.length, 1);
+  assert.equal(avecPays.programmes[0].id, "hors-lot__s1__doctorat");
+  const runner = readFileSync(new URL("../scripts/lot.mjs", import.meta.url), "utf8");
+  assert.match(runner, /for \(const \{ uid, pays, scholarshipId \} of validation\.universitesDeBase \|\| \[\]\)/);
 });
 
 test("LINKS vers des universités DÉJÀ EN BASE : pays obligatoire, identifiant propre, pas de doublon", () => {
