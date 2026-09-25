@@ -18,7 +18,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/preinscription-malaisie.html</loc><lastmod>2026-09-23</lastmod><priority>0.8</priority></url>
 <url><loc>https://fitzuniverse.com/eligibility-test.html</loc><lastmod>2026-09-20</lastmod><priority>0.8</priority></url>
 <url><loc>https://fitzuniverse.com/eligibility-questions.html</loc><lastmod>2026-09-24</lastmod><priority>0.7</priority></url>
-<url><loc>https://fitzuniverse.com/offers.html</loc><lastmod>2026-09-23</lastmod><priority>0.7</priority></url>
+<url><loc>https://fitzuniverse.com/offers.html</loc><lastmod>2026-09-25</lastmod><priority>0.7</priority></url>
 <url><loc>https://fitzuniverse.com/inscription.html</loc><lastmod>2026-09-21</lastmod><priority>0.7</priority></url>
 <url><loc>https://fitzuniverse.com/contact.html</loc><lastmod>2026-09-20</lastmod><priority>0.4</priority></url>
 <url><loc>https://fitzuniverse.com/mentions-legales.html</loc><lastmod>2026-09-20</lastmod><priority>0.3</priority></url>
@@ -42,7 +42,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=bogazici-university-istanbul</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=budapest-university-of-technology-and-economics-budapest</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=carnegie-mellon-university-africa-kigali</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=concordia-university-montreal</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=concordia-university-montreal</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=corvinus-university-of-budapest-budapest</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=delft-university-of-technology-delft</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=dokuz-eylul-university-izmir</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
@@ -64,7 +64,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=goethe-universitat-frankfurt-francfort</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=hacettepe-university-ankara</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=harbin-institute-of-technology-harbin</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=hec-montreal-montreal</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=hec-montreal-montreal</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=hec-paris-jouy-en-josas</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=hse-university-moscow</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=humboldt-universitat-zu-berlin-berlin</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
@@ -172,7 +172,7 @@ Générateur : scripts/sitemap.mjs · Source : assets/data/catalogue.json
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-abou-bekr-belkaid-tlemcen</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-alexandru-ioan-cuza-iasi</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-alger-1-benyoucef-benkhedda-alger</loc><lastmod>2026-09-13</lastmod><priority>0.6</priority></url>
-<url><loc>https://fitzuniverse.com/universite.html?id=universite-babes-bolyai-cluj-napoca</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
+<url><loc>https://fitzuniverse.com/universite.html?id=universite-babes-bolyai-cluj-napoca</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-cadi-ayyad-marrakech</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-chouaib-doukkali-el-jadida</loc><lastmod>2026-09-24</lastmod><priority>0.6</priority></url>
 <url><loc>https://fitzuniverse.com/universite.html?id=universite-claude-bernard-lyon-1-villeurbanne</loc><lastmod>2026-09-25</lastmod><priority>0.6</priority></url>

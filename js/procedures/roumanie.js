@@ -52,7 +52,10 @@ EVIZA: "https://eviza.mae.ro/",
 EVIZA_TAXES: "https://eviza.mae.ro/ro_VisaFees",
 IGI_ETUDES: "https://igi.mai.gov.ro/studii/",
 IGI_PERMIS: "https://igi.mai.gov.ro/permis-de-sedere/",
-CNRED: "https://cnred.edu.ro/"
+CNRED: "https://cnred.edu.ro/",
+// L'ordre du ministère n° 5655/2024 (méthodologie d'admission des
+// étudiants étrangers payants), relu le 2026-09-25 : art. 8 et 9.
+ORDIN_5655: "https://www.edu.ro/sites/default/files/fisiere%20articole/OM_5655-2024.pdf"
 };
 
 export const PROCEDURE_ROUMANIE = {
@@ -141,7 +144,7 @@ verifieLe: VERIFIE
 id: "ro_langue",
 type: "complement",
 titre: "Année préparatoire de roumain, ou preuve de compétence",
-consigne: "Les ressortissants hors UE ne sont inscrits en langue roumaine qu'APRÈS avoir suivi l'année préparatoire : une année scolaire ou universitaire complète pour le préuniversitaire et la licence, au moins 6 mois pour le master, le doctorat et le rezidentiat. À noter : le rezidentiat, la spécialisation médicale postuniversitaire, ne se fait QU'EN ROUMAIN, sans exception. Vous êtes dispensé de l'année préparatoire si vous présentez des actes d'études roumains ou attestant au moins quatre années consécutives dans le système national roumain, ou si vous réussissez le test de langue roumaine devant une commission de spécialité composée d'enseignants d'au moins rang de lecteur, qui vous délivre alors un Certificat de compétence linguistique. Pour un programme enseigné en langue étrangère, l'admission est conditionnée par un test de connaissances linguistiques, sauf si vous venez d'un pays dont la langue officielle est celle de l'enseignement et que vos documents scolaires le prouvent.",
+consigne: "Les ressortissants hors UE ne sont inscrits en langue roumaine qu'APRÈS avoir suivi l'année préparatoire : une année scolaire ou universitaire complète pour le préuniversitaire et la licence, au moins 6 mois pour le master, le doctorat et le rezidentiat. À noter : le rezidentiat, la spécialisation médicale postuniversitaire, ne se fait QU'EN ROUMAIN, sans exception. L'ordre n° 5655/2024 (art. 8) admet trois preuves du roumain : l'attestation de fin d'année préparatoire ; des études d'au moins trois années consécutives en roumain, dans le système national roumain ; ou un certificat de compétence linguistique de niveau B1 au moins, délivré par une université roumaine qui organise l'année préparatoire, par l'Institut de la langue roumaine ou par l'Institut culturel roumain. Pour un programme enseigné en langue étrangère (art. 9), ce sont les critères de CHAQUE université qui s'appliquent : beaucoup dispensent les candidats d'un pays dont la langue officielle est celle du programme, d'autres demandent un certificat ou des années d'études dans la langue — lisez le règlement de l'université visée.",
 prerequis: ["ro_scrisoare"],
 preuve: "aucune",
 pieces: [
@@ -149,7 +152,7 @@ pieces: [
 ],
 echeance: null,
 fiabilite: "verifie_source_officielle",
-source: SOURCES.MINISTERE,
+source: SOURCES.ORDIN_5655,
 verifieLe: VERIFIE
 },
 

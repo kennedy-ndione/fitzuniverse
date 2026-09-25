@@ -50,6 +50,9 @@ TB_EVALUATION: "https://turkiyeburslari.gov.tr/evaluationandselectionprocess",
 OSYM_OUVERTURE: "https://www.osym.gov.tr/2026-turkiye-yurt-disindan-ogrenci-kabul-sinavi-2026tryos2-basvurularinin-alinmasiapplications-for-2026-exam-for-foreign-students-for-higher-education-in-turkiye-2026tryos2",
 OSYM_PROLONGATION: "https://www.osym.gov.tr/2026-turkiye-yurt-disindan-ogrenci-kabul-sinavi-2026-tr-yos2-basvuru-suresinin-uzatilmasi-extension-of-the-application-period-for-2026-exam-for-foreign-students-for-higher-education-in-turkiye-2026-tr-yos2",
 MEB_DENKLIK: "https://edenklik.meb.gov.tr/",
+// Relu le 2026-09-25 : Yıldız admet sur le bac (Sénégal : au moins 12 sur 20).
+YILDIZ_DIPLOMES: "https://ogi.yildiz.edu.tr/sites/ogi.yildiz.edu.tr/files/ytu-yurt-disindan-lisans-programlarina-ogrenci-kabulunde-kullanilan-sinav-ve-diploma-turleri-2026.pdf",
+YOK_PRINCIPES: "https://egitim.yok.gov.tr/tr/document/2969",
 MFA_VISA: "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa",
 IKAMET: "https://www.goc.gov.tr/ikamet-sss"
 };
@@ -230,11 +233,11 @@ verifieLe: VERIFIE
 id: "tr_uni_candidature",
 type: "soumission",
 titre: "Candidater aux universités sur les quotas internationaux",
-consigne: "Les quotas réservés aux étudiants internationaux, dans les universités publiques comme dans les universités de fondation, sont publiés chaque année par le YÖK sous l'onglet « Students Who will Fund their Studies » de la rubrique « Students ». Chaque université fixe ses PROPRES conditions et la liste des examens qu'elle accepte — TR-YÖS, YÖS maison, Abitur, SAT ou IB — indiquée sur son site officiel. Vous déposez donc un dossier PAR université visée, avec les pièces exigées par chacune. Repère de calendrier : les YÖS organisés par les universités de fondation s'ouvrent généralement en février ou mars, certaines acceptant les candidatures jusqu'en mai. Certains programmes d'arts, de musique et de sport imposent en plus une épreuve d'aptitude spécifique.",
-prerequis: ["tr_yos_paiement", "tr_denklik"],
+consigne: "Les quotas réservés aux étudiants internationaux, dans les universités publiques comme dans les universités de fondation, sont publiés chaque année par le YÖK sous l'onglet « Students Who will Fund their Studies » de la rubrique « Students ». Chaque université fixe ses PROPRES conditions et la liste de ce qu'elle accepte — TR-YÖS, YÖS maison, SAT, Abitur, IB, ou simplement les NOTES DE VOTRE BAC (Yıldız, par exemple, admet le bac sénégalais avec au moins 12 sur 20) — indiquée sur son site officiel. Le principe national du YÖK le permet explicitement. Le denklik de votre bac, lui, se demande à l'inscription : il n'est pas un préalable à la candidature. Vous déposez donc un dossier PAR université visée, avec les pièces exigées par chacune. Repère de calendrier : les YÖS organisés par les universités de fondation s'ouvrent généralement en février ou mars, certaines acceptant les candidatures jusqu'en mai. Certains programmes d'arts, de musique et de sport imposent en plus une épreuve d'aptitude spécifique.",
+prerequis: ["tr_choix_voie"],
 preuve: "numero_dossier",
 pieces: [
-{ nom: "Relevé de score TR-YÖS, YÖS ou examen équivalent accepté par l'université", format: "scan", tailleMax: null, traduction: false, legalisation: false },
+{ nom: "Relevé de score TR-YÖS, YÖS, SAT ou examen équivalent, si l'université admet sur examen", format: "scan", tailleMax: null, traduction: false, legalisation: false },
 { nom: "Diplôme de fin de secondaire et relevé de notes", format: "scan", tailleMax: null, traduction: true, legalisation: false, precision: "traduction assermentée en turc" },
 { nom: "Passeport", format: "scan", tailleMax: null, traduction: false, legalisation: false }
 ],
