@@ -74,6 +74,9 @@ const vieux = niveau("france", bac("SN", { anneeBac: 2024 }));
 assert.equal(vieux.etat, "bloque");
 assert.match(vieux.texte, /bac 2026 ou 2027/);
 assert.match(vieux.deblocage, /ANAQ-Sup/);
+// La phrase finale ne recopie pas le voyant : elle nomme ce qui bloque et renvoie au détail.
+const verdictVieux = lancer("france", bac("SN", { anneeBac: 2024, statutLangue_france: "etudes" })).verdict;
+assert.equal(verdictVieux.phrase, "Pas encore en France : votre niveau d'études ne permet pas encore de postuler. Le détail, et ce qui vous débloque, est juste en dessous.");
 assert.equal(niveau("france", bac("SN", { anneeBac: 2026, reprisesBac: 2 })).etat, "bloque");
 assert.equal(niveau("france", bac("GN", { anneeBac: 2021 })).etat, "bloque");
 assert.equal(niveau("france", bac("GN", { anneeBac: 2024 })).etat, "ok");

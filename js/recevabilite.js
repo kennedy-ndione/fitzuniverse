@@ -513,7 +513,7 @@ return {
 etat: "pas-encore",
 phrase: bloquants.some((v) => v.horsProcedure)
 ? bloquants.find((v) => v.horsProcedure).texte
-: `Pas encore ${dans}. ${bloquants.map((v) => v.texte).join(" ")}`,
+: `Pas encore ${dans} : ${bloquants.map((v) => minuscule(v.voyant)).join(" et ")} ne ${bloquants.length > 1 ? "permettent" : "permet"} pas encore de postuler. Le détail, et ce qui vous débloque, est juste en dessous.`,
 conditions: conditions.map((v) => `${v.voyant} : ${v.titre}`),
 deblocages: bloquants.map((v) => v.deblocage).filter(Boolean)
 };
