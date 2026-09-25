@@ -142,15 +142,15 @@ for (const nom of par("gratuit")) {
 assert.equal(lu.get(nom).politique, "systematique",
 `${nom} est en bande « gratuit » alors que son exonération est « ${lu.get(nom).politique} » : retenir le tarif plein et mettre le montant réduit dans la note`);
 }
-// Deux l'appliquent d'office au 2026-09-13. La liste peut s'allonger.
-for (const nom of ["Université de Toulouse", "Université Paris-Saclay"]) {
-assert.equal(lu.get(nom).bande, "gratuit", nom);
-assert.equal(lu.get(nom).politique, "systematique", nom);
+// LOT 93 (2026-09-25) : le décret n° 2026-385 du 19 mai 2026 supprime
+// les exonérations générales pour les premières inscriptions à partir
+// de 2027-2028. Toulouse, Paris-Saclay, Paris Cité et Rennes, qui
+// exonéraient d'office en 2026-2027, affichent désormais le tarif plein,
+// avec une exonération individuelle possible : jamais « gratuit ».
+for (const nom of ["Université de Toulouse", "Université Paris-Saclay", "Université Paris Cité", "Université de Rennes"]) {
+assert.notEqual(lu.get(nom).bande, "gratuit", nom);
+assert.equal(lu.get(nom).politique, "possible_plafonnee", nom);
 }
-// Une exonération systématique n'impose pas « gratuit » : Rennes
-// exonère d'office mais à 650 €, donc « abordable ».
-assert.equal(lu.get("Université de Rennes").bande, "abordable");
-assert.equal(lu.get("Université de Rennes").politique, "systematique");
 
 // LE REPLI. Un niveau replié n'est jamais classé, quel que soit le
 // montant — mais il s'affiche quand même, avec « à partir de ».
@@ -161,15 +161,13 @@ assert.match(lu.get(nom).puce, /^à partir de /, `${nom} : ${lu.get(nom).puce}`)
 }
 assert.equal(lu.get("Sorbonne Université").puce, "à partir de 398 €/an · doctorat");
 
-// Paris Cité (lot 75, 2026-09-23) : elle n'est plus repliée sur le
-// doctorat. Le moratoire 2026-2027 exonère D'OFFICE les étudiants hors
-// Union européenne, qui paient les droits nationaux : 178 € en licence.
-// « gratuit » est donc permis ici, parce que l'exonération est
-// systématique : c'est exactement la règle ci-dessus.
+// Paris Cité (lot 75, puis lot 93) : non repliée. Son moratoire
+// 2026-2027 ne peut pas valoir pour une première inscription en
+// 2027-2028 (décret du 19 mai 2026) : la fiche affiche le tarif plein
+// de la licence, et la note dit ce qui valait en 2026-2027.
 assert.equal(lu.get("Université Paris Cité").replie, false);
-assert.equal(lu.get("Université Paris Cité").bande, "gratuit");
-assert.equal(lu.get("Université Paris Cité").politique, "systematique");
-assert.match(lu.get("Université Paris Cité").puce, /^178 €\/an/);
+assert.equal(lu.get("Université Paris Cité").politique, "possible_plafonnee");
+assert.match(lu.get("Université Paris Cité").puce, /^2 902 €\/an/);
 
 // L'ESSEC (lot 75) : 27 300 € par an en Master in Management pour un
 // étudiant hors UE, le tarif plein, et une bourse au mérite qu'il faut
