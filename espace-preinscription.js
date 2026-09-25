@@ -1050,6 +1050,11 @@ function peindre() {
   centrerLeFil();
 }
 
+/** L'ordre et la nature des étapes : ce qui, s'il change, impose de tout repeindre. */
+function signatureRoute() {
+  return etat.route ? etat.route.etapes.map((x) => `${x.id}:${x.kind}`).join("|") : "";
+}
+
 /**
 * Une donnée arrivée après la première peinture (le catalogue, les
 * portails) ne se voit qu'à l'étape de candidature. On ne repeint que
@@ -1057,9 +1062,16 @@ function peindre() {
 * de saisie ne s'efface pas.
 */
 function repeindreCandidature() {
+  // Le catalogue peut CHANGER L'ORDRE de la route (Universitaly d'abord :
+  // l'étape de l'université passe après la validation). Trouvé au test du
+  // 2026-09-25 : après un rechargement, la liste restait dans l'ordre de
+  // la première peinture, faite sans le catalogue. Si l'ordre ou la
+  // nature d'une étape a changé, on repeint tout.
+  const avant = signatureRoute();
   recomposer();
+  const change = avant !== signatureRoute();
   const e = etapeChoisie();
-  if (!e || (e.kind !== "candidature" && e.kind !== "universite")) return;
+  if (!change && (!e || (e.kind !== "candidature" && e.kind !== "universite"))) return;
   const section = document.getElementById("rtEtape");
   if (section && section.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   peindre();

@@ -87,4 +87,8 @@ test("l'espace sait peindre l'étape", () => {
 const js = lire("espace-preinscription.js");
 assert.ok(js.includes('case "universite": return htmlUniversiteApres(e);'));
 assert.match(js, /e\.kind !== "candidature" && e\.kind !== "universite"/);
+// Le catalogue arrive après la première peinture et peut changer l'ordre :
+// la liste des étapes doit alors être repeinte (trouvé au test en ligne).
+assert.match(js, /const change = avant !== signatureRoute\(\);/);
+assert.match(js, /if \(!change && \(!e \|\|/);
 });
