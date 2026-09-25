@@ -199,7 +199,8 @@ const donnees = {
 UNIVERSITIES: module.UNIVERSITIES || [],
 SCHOLARSHIPS: module.SCHOLARSHIPS || [],
 LINKS: module.LINKS || [],
-PATCHES: module.PATCHES || []
+PATCHES: module.PATCHES || [],
+SUPPRESSIONS: module.SUPPRESSIONS || []
 };
 
 return { donnees, empreinte, chemin };
@@ -291,7 +292,7 @@ if (d.universityId && d.scholarshipId) couples.add(`${d.universityId}||${d.schol
 }
 
 let bloquant = false;
-const plan = { universites: [], bourses: [], programmes: [], patches: [] };
+const plan = { universites: [], bourses: [], programmes: [], patches: [], suppressions: [] };
 
 for (const u of donnees.UNIVERSITIES) {
 const enBase = basesU.get(u.id);
@@ -493,15 +494,61 @@ motif: patch.motif
 
 }
 
+// --- 2 ter. SUPPRESSIONS (2026-09-25) : documents EXISTANTS à retirer.
+// Un document déjà absent est compté sans effet (relance après une
+// écriture partielle) ; un `attendu` qui ne correspond plus bloque ;
+// une université ne se supprime jamais en laissant derrière elle un
+// programme qui la cite.
+let dejaAbsents = 0;
+const suppressionsDuLot = new Set((validation.suppressions || []).map((s) => `${s.collection}||${s.id}`));
+
+if ((validation.suppressions || []).length) console.log("");
+
+for (const s of validation.suppressions || []) {
+
+const ou = `${s.collection}/${s.id}`;
+const snap = await db.collection(s.collection).doc(s.id).get();
+
+if (!snap.exists) {
+warn(`SANS EFFET : ${ou} n'existe déjà plus — non supprimé.`);
+dejaAbsents++;
+continue;
+}
+
+const ecarts = diffChamps(s.attendu, snap.data());
+if (ecarts.length) {
+err(`ERREUR : ${ou} n'est pas le document attendu par le lot. Diff (lot=attendu / base=réel) :`);
+ecarts.forEach((l) => err(l));
+bloquant = true;
+continue;
+}
+
+if (s.collection === "universities") {
+const restants = snapP.docs
+.filter((p) => p.data().universityId === s.id && !suppressionsDuLot.has(`programs||${p.id}`))
+.map((p) => p.id);
+if (restants.length) {
+err(`ERREUR : ${ou} est encore citée par ${restants.length} programme(s) que le lot ne supprime pas : ${restants.join(", ")}.`);
+bloquant = true;
+continue;
+}
+}
+
+ok(`suppression : ${ou}`);
+info(`    ${s.motif}`);
+plan.suppressions.push({ collection: s.collection, id: s.id, motif: s.motif });
+
+}
+
 // --- 3. Le compte, à comparer à celui annoncé par le lot.
 console.log("");
-info(`COMPTE : ${plan.universites.length} universités, ${plan.bourses.length} bourses, ${plan.programmes.length} programmes à créer, ${plan.patches.length} patches à appliquer${sansEffet ? ` (+ ${sansEffet} sans effet, ignoré${sansEffet > 1 ? "s" : ""})` : ""}.`);
+info(`COMPTE : ${plan.universites.length} universités, ${plan.bourses.length} bourses, ${plan.programmes.length} programmes à créer, ${plan.patches.length} patches à appliquer${sansEffet ? ` (+ ${sansEffet} sans effet, ignoré${sansEffet > 1 ? "s" : ""})` : ""}, ${plan.suppressions.length} suppression(s)${dejaAbsents ? ` (+ ${dejaAbsents} déjà absent${dejaAbsents > 1 ? "s" : ""})` : ""}.`);
 
 // Toujours affiché quand il y en a, en avertissement : vider un champ
 // ne demande aucun motif (voir refusPortailProgramme), le compte est
 // donc le seul garde-fou visible avant l'écriture.
 if (vidages) warn(`DONT ${vidages} PATCH${vidages > 1 ? "ES" : ""} QUI VIDE${vidages > 1 ? "NT" : ""} UN CHAMP — vérifier que c'est bien l'intention du lot.`);
-info(`(le lot en annonce ${validation.attendus.universites} / ${validation.attendus.bourses} / ${validation.attendus.programmes} et ${validation.attendus.patches} patches — un écart est LE signal de ne pas écrire)`);
+info(`(le lot en annonce ${validation.attendus.universites} / ${validation.attendus.bourses} / ${validation.attendus.programmes}, ${validation.attendus.patches} patches et ${validation.attendus.suppressions} suppression(s) — un écart est LE signal de ne pas écrire)`);
 if (validation.liensExternes.length) {
 info(`(dont ${programmesResolus.length} programmes issus de ${validation.liensExternes.length} bourses DÉJÀ EN BASE : leurs niveaux ne sont lisibles qu'ici, pas dans le fichier de données)`);
 }
@@ -584,8 +631,18 @@ await db.collection(patch.collection).doc(patch.id).update(patch.champs);
 ok(`patch appliqué : ${patch.collection}/${patch.id}`);
 }
 
+// SUPPRESSIONS : les programmes d'abord, l'université ensuite — si
+// l'écriture s'interrompt, il ne reste jamais un programme qui cite une
+// université disparue. Une relance les compte « déjà absents ».
+const ordre = { programs: 0, universities: 1 };
+const suppressions = [...(plan.suppressions || [])].sort((a, b) => ordre[a.collection] - ordre[b.collection]);
+for (const s of suppressions) {
+await db.collection(s.collection).doc(s.id).delete();
+ok(`supprimé : ${s.collection}/${s.id}`);
+}
+
 const nbPatches = (plan.patches || []).length;
-ok(`\n${plan.universites.length} universités, ${plan.bourses.length} bourses, ${plan.programmes.length} programmes écrits, ${nbPatches} patches appliqués — étape suivante : node scripts/lot.mjs verifier ${numero}`);
+ok(`\n${plan.universites.length} universités, ${plan.bourses.length} bourses, ${plan.programmes.length} programmes écrits, ${nbPatches} patches appliqués, ${suppressions.length} suppression(s) — étape suivante : node scripts/lot.mjs verifier ${numero}`);
 
 }
 
@@ -632,7 +689,18 @@ await comparer(patch.collection, patch.id, patch.champs);
 }
 
 console.log("");
-const total = plan.universites.length + plan.bourses.length + plan.programmes.length + (plan.patches || []).length;
+// Une suppression se vérifie par l'ABSENCE du document.
+for (const s of plan.suppressions || []) {
+const snap = await db.collection(s.collection).doc(s.id).get();
+if (snap.exists) {
+err(`ENCORE PRÉSENT : ${s.collection}/${s.id}`);
+ecarts++;
+} else {
+ok(`OK supprimé ${s.collection}/${s.id}`);
+}
+}
+
+const total = plan.universites.length + plan.bourses.length + plan.programmes.length + (plan.patches || []).length + (plan.suppressions || []).length;
 if (ecarts === 0) {
 ok(`${total} documents conformes, 0 écart. Lot ${numero} terminé.`);
 } else {

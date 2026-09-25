@@ -266,12 +266,72 @@ return erreurs;
 }
 
 /**
+* SUPPRESSIONS (2026-09-25) — retirer du catalogue un document EXISTANT.
+* ------------------------------------------------------------------
+* Cas fondateur : Sichuan University, dont le portail refuse l'accès
+* depuis Dakar. Charles a décidé de la retirer plutôt que de garder une
+* fiche qu'un étudiant ne peut pas suivre jusqu'au dépôt.
+*
+* Trois garde-fous, en plus de ceux d'`analyser` (existence, programmes
+* qui resteraient orphelins) :
+*   - seules `universities` et `programs` se suppriment. Une bourse ne
+*     se supprime jamais : on la ferme (`isActive:false`), parce que des
+*     étudiants peuvent l'avoir en cours ;
+*   - `attendu` est OBLIGATOIRE : il prouve que le document visé est
+*     bien celui qu'on croit (nom et pays, université et bourse), et
+*     `analyser` refuse s'il ne correspond plus ;
+*   - un même document ne peut pas être patché et supprimé dans le même
+*     lot : c'est une contradiction d'intention.
+*/
+export const COLLECTIONS_SUPPRIMABLES = ["universities", "programs"];
+
+export function validerSuppressions(SUPPRESSIONS = [], PATCHES = []) {
+
+const erreurs = [];
+const vus = new Set();
+const patches = new Set((PATCHES || []).map((p) => `${p && p.collection}||${p && p.id}`));
+
+for (const suppression of SUPPRESSIONS) {
+
+const s = suppression || {};
+const ou = `${s.collection || "?"}/${s.id || "?"}`;
+
+if (!s.id || typeof s.id !== "string" || s.id.includes("/")) {
+erreurs.push(`Suppression ${ou} : identifiant de document absent ou invalide.`);
+continue;
+}
+
+if (!COLLECTIONS_SUPPRIMABLES.includes(s.collection)) {
+erreurs.push(`Suppression ${ou} : collection "${s.collection}" non supprimable (${COLLECTIONS_SUPPRIMABLES.join(", ")} seulement ; une bourse se ferme, elle ne se supprime pas).`);
+}
+
+const cle = `${s.collection}||${s.id}`;
+if (vus.has(cle)) erreurs.push(`Suppression en double sur ${ou}.`);
+vus.add(cle);
+if (patches.has(cle)) erreurs.push(`Suppression ${ou} : le même lot patche ce document — contradiction d'intention.`);
+
+if (!s.motif || !String(s.motif).trim()) {
+erreurs.push(`Suppression ${ou} sans motif — obligatoire.`);
+}
+
+const attendu = s.attendu;
+if (!attendu || typeof attendu !== "object" || Array.isArray(attendu) || !Object.keys(attendu).length) {
+erreurs.push(`Suppression ${ou} : "attendu" obligatoire et non vide — il prouve que le document visé est le bon.`);
+}
+
+}
+
+return erreurs;
+
+}
+
+/**
 * Valide le contenu d'un lot et construit le plan des programmes à
 * créer (lot-interne). Renvoie { erreurs, avertissements, orphelines,
 * programmes, patches, attendus } — `erreurs` non vide = lot bloqué.
 * Un lot peut porter PATCHES seul, ou en plus des trois autres formes.
 */
-export function validerLot({ UNIVERSITIES = [], SCHOLARSHIPS = [], LINKS = [], PATCHES = [] }, aujourdhui = new Date()) {
+export function validerLot({ UNIVERSITIES = [], SCHOLARSHIPS = [], LINKS = [], PATCHES = [], SUPPRESSIONS = [] }, aujourdhui = new Date()) {
 
 const erreurs = [];
 const avertissements = [];
@@ -498,6 +558,7 @@ motif: lien.motif || ""
 const orphelines = SCHOLARSHIPS.filter((s) => !liees.has(s.id)).map((s) => s.id);
 
 erreurs.push(...validerPatches(PATCHES, aujourdhui));
+erreurs.push(...validerSuppressions(SUPPRESSIONS, PATCHES));
 
 return {
 erreurs,
@@ -508,13 +569,15 @@ programmes,
 // et complète le plan (voir le commentaire dans la boucle LINKS).
 liensExternes,
 patches: PATCHES,
+suppressions: SUPPRESSIONS,
 attendus: {
 universites: UNIVERSITIES.length,
 bourses: SCHOLARSHIPS.length,
 // Le compte annoncé ne peut pas inclure les programmes issus des
 // liens externes : ils dépendent des niveaux lus en base.
 programmes: programmes.length,
-patches: PATCHES.length
+patches: PATCHES.length,
+suppressions: SUPPRESSIONS.length
 }
 };
 

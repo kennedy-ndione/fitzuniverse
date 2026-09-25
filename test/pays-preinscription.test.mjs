@@ -168,7 +168,8 @@ France: { etablissements: 26, coutsVerifies: 15 },
 // tous avec leurs frais 2026-2027 ; les deux de Bucarest avaient déjà
 // les leurs, relevés le 2026-09-13.
 Roumanie: { etablissements: 20, coutsVerifies: 20 },
-Turquie: { etablissements: 22, coutsVerifies: 21 },
+// Lot 94 (2026-09-25) : Ege a publié sa grille 2026-2027, les 22 ont un prix.
+Turquie: { etablissements: 22, coutsVerifies: 22 },
 // Relevé du 2026-09-24, lots 76 et 77 : 14 établissements marocains
 // et 17 canadiens de plus, tous les canadiens avec leurs frais.
 // Lot 82 (même jour) : les 13 publics marocains passent à 0 DH (place
@@ -181,7 +182,8 @@ Italie: { etablissements: 16, coutsVerifies: 9 },
 Allemagne: { etablissements: 22, coutsVerifies: 22 },
 Canada: { etablissements: 20, coutsVerifies: 20 },
 // Relevé du 2026-09-23 au soir, à l'ouverture des deux pays.
-Chine: { etablissements: 16, coutsVerifies: 16 },
+// Lot 94 (2026-09-25) : Sichuan retirée (portail refusé depuis Dakar).
+Chine: { etablissements: 15, coutsVerifies: 15 },
 // Relevé du 2026-09-25, lot 90 : 15 établissements malaisiens de plus ;
 // SEGi sans frais de scolarité publiés, tous les autres avec les leurs.
 Malaisie: { etablissements: 17, coutsVerifies: 16 }
