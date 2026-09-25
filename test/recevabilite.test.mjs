@@ -230,3 +230,59 @@ assert.ok(!offers.includes('data-plan="diagnostic-france"'), "plus de bouton d'a
 // ?d=france mène à la page France.
 assert.match(lire("js/diagnostic-pays-page.js"), /if \(ID === "france"\) window\.location\.replace\("diagnostic-france\.html"\);/);
 });
+
+// ------------------------------------------------------------
+// Le test par profils types (2026-09-25, après le lot 98) : treize
+// étudiants fictifs passés dans les neuf pays. Cinq défauts trouvés,
+// tenus ici.
+// ------------------------------------------------------------
+test("une réponse décisive laissée vide ne donne jamais « vous pouvez postuler »", () => {
+const sn = niveau("france", bac("SN"));
+assert.equal(sn.etat, "condition");
+assert.match(sn.titre, /Année du bac/);
+const gn = niveau("france", bac("GN"));
+assert.equal(gn.etat, "condition");
+const de = niveau("allemagne", bac("SN"));
+assert.equal(de.etat, "condition");
+assert.match(de.titre, /Série/);
+const ma = niveau("maroc", bac("SN"));
+assert.equal(ma.etat, "condition");
+assert.match(ma.texte, /l'année de votre bac, votre mention et votre année de naissance/);
+});
+
+test("Maroc : en terminale, la mention reste à obtenir", () => {
+const v = niveau("maroc", { diplomeActuel: "terminale", paysDiplome: "SN", desiredDegree: "Licence", anneeNaissance: 2008 });
+assert.equal(v.etat, "condition");
+assert.match(v.texte, /mention assez bien/);
+assert.doesNotMatch(v.texte, /répond aux critères/);
+});
+
+test("Maroc : qui ne parle pas encore français n'entend pas « C'est bon »", () => {
+const r = lancer("maroc", { ...bac("CM", { systemeBac: "anglophone", anneeBac: 2026, mentionBac: "bien", anneeNaissance: 2007 }), statutLangue_maroc: "aucun" });
+assert.equal(r.voyants[1].etat, "condition");
+assert.equal(r.verdict.etat, "lancer-si");
+});
+
+test("Canada : le bac burkinabè est dispensé du test de français (liste UQAM)", () => {
+const r = lancer("canada", { ...bac("BF"), statutLangue_canada: "etudes" }, { variante: "quebec" });
+assert.equal(r.voyants[1].etat, "ok");
+});
+
+test("France : un diplôme d'un autre pays ne se voit pas imposer le test de français d'office", () => {
+const r = lancer("france", { ...bac("autre"), statutLangue_france: "etudes" });
+assert.equal(r.voyants[1].titre, "À vérifier");
+assert.match(r.voyants[1].texte, /langue officielle de votre pays/);
+});
+
+test("le formulaire exige toute question affichée, et le dit à l'écran", () => {
+const ui = lire("js/recevabilite-ui.js");
+assert.match(ui, /export function manquantes\(reponses, id, conteneur = null\)/);
+assert.match(ui, /!champ\.hidden && !String\(el\.value/);
+assert.match(ui, /Répondez à cette question pour voir votre diagnostic\./);
+assert.match(ui, /\.fitz-select-trigger/);
+for (const f of ["js/diagnostic-pays-page.js", "js/diagnostic-france-page.js"]) {
+const src = lire(f);
+assert.match(src, /manquantes\(reponses, (ID|"france"), questions\)/, f);
+assert.match(src, /signalerManque\(questions, manque\)/, f);
+}
+});

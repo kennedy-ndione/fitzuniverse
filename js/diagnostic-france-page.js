@@ -25,7 +25,7 @@ import { db } from "../firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell } from "./app-shell.js";
 import { puisJeMeLancer } from "./recevabilite.js";
-import { poserQuestions, lireReponses, manquantes, peindreVoyants } from "./recevabilite-ui.js";
+import { poserQuestions, lireReponses, manquantes, signalerManque, peindreVoyants } from "./recevabilite-ui.js";
 import { calculerDiagnostic, formatEUR, verdictChiffre, lignesChiffrees, phraseDeFin } from "./diagnostic-france.js";
 import {
 vigilanceDe,
@@ -359,10 +359,9 @@ exonerationEsperee: document.getElementById("diagExoneration").checked
 };
 
 const reponses = lireReponses(questions, "france");
-const manque = manquantes(reponses, "france");
+const manque = manquantes(reponses, "france", questions);
 if (manque.length) {
-const champ = questions.querySelector(manque[0]);
-if (champ) { champ.closest(".field")?.scrollIntoView({ behavior: "smooth", block: "center" }); champ.focus(); }
+signalerManque(questions, manque);
 return;
 }
 

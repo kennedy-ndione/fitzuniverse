@@ -199,6 +199,11 @@ const NIVEAU = {
 france(e, niveau, ctx) {
 if (niveau === "licence") {
 const R = ctx.rentree;
+if (["SN", "GN"].includes(e.paysDiplome) && ["bac", "bac1"].includes(e.diplome) && !Number.isFinite(e.anneeBac)) {
+return inconnu("Année du bac à préciser", e.paysDiplome === "SN"
+? "Campus France Sénégal n'accepte en première année que le bac de l'année ou de l'année précédente : indiquez l'année de votre bac pour savoir si cette voie vous est ouverte."
+: "Campus France Guinée demande un bac de moins de quatre ans : indiquez l'année de votre bac pour savoir si cette voie vous est ouverte.", src(e.paysDiplome === "SN" ? S.cfSenegal : S.cfGuinee));
+}
 if (e.paysDiplome === "SN" && !enCours(e.diplome)) {
 // Campus France Sénégal : en L1, le bac de l'année ou de la précédente, une reprise au plus.
 if (["bac", "bac1"].includes(e.diplome) && Number.isFinite(e.anneeBac) && e.anneeBac < R - 1) {
@@ -240,6 +245,7 @@ return niveau === "master"
 }
 const annee = RANG[e.diplome] >= RANG.bac1;
 const serie = e.serie;
+if (!serie && ["SN", "CI", "TG", "BJ"].includes(e.paysDiplome)) return inconnu("Série à préciser", "En Allemagne, ce que votre bac vous ouvre dépend de sa série : indiquez-la pour savoir si vous entrez directement à l'université ou par le Studienkolleg.", src(S.daad));
 const direct = (portee) => ok("Accès direct", `Votre bac vous ouvre directement l'université allemande, ${portee}. Pas de Studienkolleg.`, src(S.daad));
 const kolleg = (portee) => condition("Avec une année de plus", `Votre bac seul ne suffit pas : il faut d'abord le Studienkolleg, une année de préparation en allemand conclue par un examen (Feststellungsprüfung)${portee ? `, ${portee}` : ""}.${annee ? "" : " Autre voie : réussir d'abord une année d'université dans votre pays, qui ouvre directement la même discipline."}`, src(S.daad));
 switch (e.paysDiplome) {
@@ -297,11 +303,19 @@ return ok("Vous pouvez postuler", "Le doctorat demande un master avec mémoire ;
 maroc(e, niveau, ctx) {
 if (e.paysDiplome === "MA") return ok("Vous pouvez postuler", "Avec un bac marocain, vous suivez les mêmes conditions d'accès que les bacheliers marocains, sans la procédure des étudiants étrangers.", src(S.amci));
 if (niveau === "licence") {
+const terminale = e.diplome === "terminale";
+const aPreciser = [
+!terminale && !Number.isFinite(e.anneeBac) && "l'année de votre bac",
+!terminale && !e.mention && "votre mention",
+!Number.isFinite(e.anneeNaissance) && "votre année de naissance"
+].filter(Boolean);
+if (aPreciser.length) return inconnu("Réponses à compléter", `Les universités publiques passent par l'AMCI, qui regarde le bac, la mention et l'âge : indiquez ${aPreciser.length > 1 ? `${aPreciser.slice(0, -1).join(", ")} et ${aPreciser[aPreciser.length - 1]}` : aPreciser[0]} pour savoir si cette voie vous est ouverte.`, src(S.amci));
 const conditions = [];
 if (Number.isFinite(e.anneeBac) && e.anneeBac < ctx.annee - 1) conditions.push("un bac récent (celui de l'année, parfois de l'année précédente)");
 if (e.mention === "passable") conditions.push("une mention (assez bien au moins, bien dans certaines écoles)");
 if (Number.isFinite(e.anneeNaissance) && ctx.annee - e.anneeNaissance > 23) conditions.push("un âge maximal de 20 à 23 ans au 31 décembre, selon l'établissement");
 if (conditions.length) return condition("Admission directe seulement", `Les universités publiques passent par l'AMCI, qui demande ${conditions.join(", ")} : ce n'est pas votre cas. Restent les universités à admission directe (UM6P, Al Akhawayn), sur dossier, test et entretien.`, src(S.amci, S.aui));
+if (terminale) return condition("Selon votre mention", "Vous passez le bac cette année : c'est le bac récent que demande l'AMCI, et votre âge convient. Il vous faudra au moins la mention assez bien (bien dans certaines écoles) ; sans elle, restent les universités à admission directe (UM6P, Al Akhawayn).", src(S.amci, S.aui));
 return ok("Vous pouvez postuler", "Votre profil répond aux critères de l'AMCI : bac récent, mention, âge. Votre dossier part par les autorités de votre pays.", src(S.amci));
 }
 return ok("Vous pouvez postuler", niveau === "master" ? "Le master demande une licence, avec l'avis favorable de l'établissement." : "Le doctorat demande un master, avec l'avis favorable de l'établissement.", src(S.amci));
@@ -426,12 +440,14 @@ if (francophone) return r(ok("Dispensé du test", "Vous êtes dispensé du test 
 if (e.paysDiplome === "BF") return r(condition("À confirmer", "Depuis 2023, le français n'est plus langue officielle au Burkina Faso. Vos études secondaires en français devraient vous dispenser du test, mais aucune règle de Campus France Burkina ne le confirme : demandez-le avant de déposer.", src(S.noticeDap)));
 if (e.paysDiplome === "MA") return r(condition("Test obligatoire", "Au Maroc, une certification de français (TCF, DELF B2 ou DALF) est obligatoire pour déposer.", src(S.cfMaroc)));
 if (e.paysDiplome === "CM") return r(condition("Test obligatoire", "Avec le GCE A-Level, le test de français TCF-DAP est obligatoire.", src(S.cfCameroun)));
+if (e.paysDiplome === "autre" || !e.paysDiplome) return r(condition("À vérifier", "Vous êtes dispensé du test de français si le français est la langue officielle de votre pays, ou si vos études secondaires se sont faites en majeure partie en français. Sinon, un test (TCF DAP ou DELF B2) vous sera demandé.", src(S.noticeDap)));
 return r(condition("Test à prévoir", "Un test de français (TCF DAP ou DELF B2) vous sera demandé.", src(S.noticeDap)));
 }
 if (id === "canada") {
-if (aLeTest || francophone) return r(ok("C'est bon", "Les universités francophones du Québec dispensent en général les bacheliers du Sénégal, de Côte d'Ivoire, du Bénin, de Guinée, du Togo et du Burkina Faso. Chacune fixe sa règle.", src(S.uqamFrancais)));
+if (aLeTest || francophone || e.paysDiplome === "BF") return r(ok("C'est bon", "Les universités francophones du Québec dispensent en général les bacheliers du Sénégal, de Côte d'Ivoire, du Bénin, de Guinée, du Togo et du Burkina Faso. Chacune fixe sa règle.", src(S.uqamFrancais)));
 return r(condition("Test à prévoir", "Un test de français (TCF ou TEF) vous sera probablement demandé : chaque université fixe son niveau.", src(S.uqamFrancais)));
 }
+if (id === "maroc" && statut === "aucun") return r(condition("Le français à apprendre", "Dans les universités publiques, les cours sont en français. Aucun test n'est demandé, mais il faudra suivre les cours en français dès la rentrée : commencez à l'apprendre dès maintenant.", src(S.amci)));
 if (id === "maroc") return r(ok("C'est bon", "Dans les universités publiques, les cours sont en français, sans test demandé.", src(S.amci)));
 if (id === "roumanie") return r(francophone || aLeTest ? ok("C'est bon", "Pour un programme en français, chaque université fixe sa règle ; la plupart dispensent les candidats d'un pays où le français est langue officielle.", src(S.roumanie)) : condition("Selon l'université", "Pour un programme en français, chaque université fixe sa règle : un certificat peut vous être demandé.", src(S.roumanie)));
 }

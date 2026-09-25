@@ -83,6 +83,9 @@ montrer(conteneur, "recReprises", id === "france" && pays === "SN" && auNiveauBa
 montrer(conteneur, "recNaissance", id === "maroc" && auNiveauBac);
 };
 conteneur.querySelectorAll("select").forEach((s) => s.addEventListener("change", majVisibilite));
+// Une réponse donnée efface le signal « répondez à cette question ».
+conteneur.addEventListener("change", (ev) => effacerManque(ev.target.closest(".field")));
+conteneur.addEventListener("input", (ev) => effacerManque(ev.target.closest(".field")));
 majVisibilite();
 initFitzSelects(conteneur);
 }
@@ -119,14 +122,56 @@ r[`statutLangue_${id}`] = val("#recStatut");
 return r;
 }
 
-/** Les questions sans lesquelles le verdict ne peut pas se prononcer. */
-export function manquantes(reponses, id) {
-const m = [];
-if (!reponses.desiredDegree) m.push("#recNiveau");
-if (!reponses.diplomeActuel) m.push("#recDiplome");
-if (!reponses.paysDiplome) m.push("#recPays");
-if (!reponses[`statutLangue_${id}`]) m.push("#recStatut");
-return m;
+/** Les questions, dans l'ordre de la page. */
+const ORDRE = ["#recNiveau", "#recDiplome", "#recPays", "#recSysteme", "#recSerie", "#recAnneeBac", "#recMention", "#recReprises", "#recNaissance", "#recLangue", "#recStatut"];
+
+/**
+* Les questions sans lesquelles le verdict ne peut pas se prononcer :
+* les quatre de toujours, et toute question affichée laissée vide (le
+* test du 2026-09-25 : un bac sénégalais sans année passait la règle de
+* Campus France, l'AMCI se jugeait sans mention ni âge, l'Allemagne
+* sans série). Une question cachée ne compte jamais.
+*/
+export function manquantes(reponses, id, conteneur = null) {
+const m = new Set();
+if (!reponses.desiredDegree) m.add("#recNiveau");
+if (!reponses.diplomeActuel) m.add("#recDiplome");
+if (!reponses.paysDiplome) m.add("#recPays");
+if (!reponses[`statutLangue_${id}`]) m.add("#recStatut");
+if (conteneur) {
+for (const sel of ORDRE) {
+const el = conteneur.querySelector(sel);
+const champ = el && el.closest(".field");
+if (champ && !champ.hidden && !String(el.value || "").trim()) m.add(sel);
+}
+}
+return ORDRE.filter((sel) => m.has(sel));
+}
+
+function effacerManque(champ) {
+if (!champ || !champ.classList.contains("has-error")) return;
+champ.classList.remove("has-error");
+champ.querySelector(".rec-manque")?.remove();
+}
+
+/**
+* Montre ce qui manque : chaque question vide est signalée, la première
+* vient à l'écran et prend le focus (le bouton du menu habillé, pas le
+* select natif caché, sinon rien ne se voit).
+*/
+export function signalerManque(conteneur, selecteurs) {
+conteneur.querySelectorAll(".field.has-error").forEach(effacerManque);
+selecteurs.forEach((sel, i) => {
+const champ = conteneur.querySelector(sel)?.closest(".field");
+if (!champ) return;
+champ.classList.add("has-error");
+champ.insertAdjacentHTML("beforeend", `<p class="field-hint rec-manque"${i === 0 ? ' role="alert"' : ""}>Répondez à cette question pour voir votre diagnostic.</p>`);
+});
+const premier = conteneur.querySelector(selecteurs[0])?.closest(".field");
+if (!premier) return;
+premier.scrollIntoView({ behavior: "smooth", block: "center" });
+const cible = premier.querySelector(".fitz-select-trigger") || premier.querySelector("input, select");
+if (cible) cible.focus({ preventScroll: true });
 }
 
 const ICONES = { ok: "circle-check", condition: "circle-alert", bloque: "circle-x", info: "info" };

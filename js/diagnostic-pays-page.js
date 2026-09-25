@@ -28,7 +28,7 @@ import { calculerDiagnosticPays, devisesDeSaisie, libelleDevise, formatMontant }
 import { destination, DIAGNOSTICS, enClairDe } from "./destinations-preinscription.js";
 import { planPreinscriptionPour } from "./plan-features.js";
 import { puisJeMeLancer } from "./recevabilite.js";
-import { poserQuestions, lireReponses, manquantes, peindreVoyants } from "./recevabilite-ui.js";
+import { poserQuestions, lireReponses, manquantes, signalerManque, peindreVoyants } from "./recevabilite-ui.js";
 import { trouverProcedure } from "./procedures/index.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
 import { formaterDate } from "./echeance.js";
@@ -213,10 +213,9 @@ return;
 }
 
 const reponses = lireReponses(questions, ID);
-const manque = manquantes(reponses, ID);
+const manque = manquantes(reponses, ID, questions);
 if (manque.length) {
-const champ = questions.querySelector(manque[0]);
-if (champ) { champ.closest(".field")?.scrollIntoView({ behavior: "smooth", block: "center" }); champ.focus(); }
+signalerManque(questions, manque);
 return;
 }
 
