@@ -1,0 +1,165 @@
+[
+  {
+    "base": "ankara-atakule",
+    "source": "Unsplash",
+    "sujet": "la tour Atakule et son dôme de verre, Ankara",
+    "auteur": "Cengiz Özarpat",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/xYM7T6l9M0g",
+    "cdn": "photo-1787255700155-2d3dcfd3be3a",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "ankara-grande-mosquee",
+    "source": "Unsplash",
+    "sujet": "une grande mosquée d'Ankara et ses quatre minarets",
+    "auteur": "ekrem osmanoglu",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/c9cYtNCXzRs",
+    "cdn": "photo-1771738841091-49dda284e8fe",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "ankara-vue-aerienne",
+    "source": "Unsplash",
+    "sujet": "Ankara vue d'en haut",
+    "auteur": "ekrem osmanoglu",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/S9ULqp6XWps",
+    "cdn": "photo-1584816152587-382580af2d85",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "istanbul-dolmabahce",
+    "source": "Unsplash",
+    "sujet": "le palais de Dolmabahçe vu du Bosphore, Istanbul",
+    "auteur": "Berkin Üregen",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/G4E_ZfGhaGg",
+    "cdn": "photo-1601565465051-67971a2d838c",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "istanbul-ortakoy",
+    "source": "Unsplash",
+    "sujet": "la mosquée d'Ortaköy et le pont du Bosphore au coucher du soleil, Istanbul",
+    "auteur": "Spenser Sembrat",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/O1n-f15L668",
+    "cdn": "photo-1763965368246-5e89755e4455",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "istanbul-mosquee-bleue",
+    "source": "Unsplash",
+    "sujet": "la mosquée Bleue et son parc, Istanbul",
+    "auteur": "Lewis J Goetz",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/QLXwWbismFA",
+    "cdn": "photo-1593544648982-cf4bbfb8fc38",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "istanbul-sainte-sophie",
+    "source": "Unsplash",
+    "sujet": "Sainte-Sophie et ses minarets, Istanbul",
+    "auteur": "Husien Bisky",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/34PWUSxBNiU",
+    "cdn": "photo-1777985329764-f19172bc9aa7",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "gebze-centre",
+    "source": "Wikimedia Commons",
+    "sujet": "le centre de Gebze",
+    "auteur": "Kadı Kadı",
+    "licence": "CC BY-SA 2.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Gebze_Merkez_(20221116).jpg",
+    "fichier": "Gebze Merkez (20221116).jpg",
+    "original": "4032x3024",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "serdivan-sakarya",
+    "source": "Wikimedia Commons",
+    "sujet": "Serdivan et la plaine de Sakarya vues d'en haut",
+    "auteur": "Acar54",
+    "licence": "CC BY-SA 4.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:Serdivan%2C_Sakarya.jpg",
+    "fichier": "Serdivan, Sakarya.jpg",
+    "original": "3872x2592",
+    "dimensions": "2000x1339 (ratio 1.49)"
+  },
+  {
+    "base": "izmir-baie",
+    "source": "Unsplash",
+    "sujet": "la baie d'Izmir vue des hauteurs",
+    "auteur": "Mert Kahveci",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/wQLJSvJd6nw",
+    "cdn": "photo-1676845720871-493d7d821481",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "izmir-tramway",
+    "source": "Unsplash",
+    "sujet": "le tramway d'Izmir entre les immeubles",
+    "auteur": "Parastoo Maleki",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/j49sLH08tM0",
+    "cdn": "photo-1719688550738-c7186f2494b8",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "urla-port",
+    "source": "Wikimedia Commons",
+    "sujet": "le port d'Urla et ses bateaux de pêche",
+    "auteur": "Raicem",
+    "licence": "CC BY-SA 4.0",
+    "lien": "https://commons.wikimedia.org/wiki/File:%C4%B0zmir_Urla_%C4%B0skele.jpg",
+    "fichier": "İzmir Urla İskele.jpg",
+    "original": "4032x3024",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "konya-mosquee",
+    "source": "Unsplash",
+    "sujet": "une grande mosquée à coupoles de Konya",
+    "auteur": "ekrem osmanoglu",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/WU87q6Rkzm8",
+    "cdn": "photo-1759930019002-1361e69bf74e",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "kayseri-mont-erciyes",
+    "source": "Unsplash",
+    "sujet": "Kayseri et le mont Erciyes enneigé",
+    "auteur": "Ömer Haktan Bulut",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/mKsW6suT6yc",
+    "cdn": "photo-1654004669656-0c2408ccdb95",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  },
+  {
+    "base": "erzurum-hiver",
+    "source": "Unsplash",
+    "sujet": "Erzurum sous la neige et sa tour de l'horloge",
+    "auteur": "Alperen Tosun",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/6tH3ikiuTjg",
+    "cdn": "photo-1635433084393-c569daa8b0d5",
+    "dimensions": "2000x1500 (ratio 1.33)"
+  },
+  {
+    "base": "safranbolu-vue",
+    "source": "Unsplash",
+    "sujet": "Safranbolu, ville des facultés de l'université de Karabük, vue d'en haut",
+    "auteur": "ekrem osmanoglu",
+    "licence": "Licence Unsplash",
+    "lien": "https://unsplash.com/photos/lf_3JfVcEno",
+    "cdn": "photo-1578999305993-6a63f621cca6",
+    "dimensions": "2000x1333 (ratio 1.50)"
+  }
+]

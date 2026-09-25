@@ -2092,3 +2092,103 @@ Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, décl
 - **Photographe** : Markus Winkler
 - **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
 - **Source** : `https://unsplash.com/photos/9c9ES3pmI00` (identifiant CDN `photo-1636381310700-d6931fc00bce`)
+
+## Lot 89 — Turquie (2026-09-25) : 16 photos de ville
+
+Une photo par établissement (`assets/images/cities/`, JPEG + WebP + AVIF, déclinaisons `-400w`/`-800w`/`-1200w`/`-1600w`), produites par `scripts/add-lot89-photos.mjs`. Candidates regardées sur planche avant le choix ; trois photos proviennent de Wikimedia Commons (licence CC à attribution obligatoire), les treize autres d'Unsplash. Le premier candidat de chaque liste est crédité ici ; si le script a dû passer au second, `scripts/data/journal-photos-lot89.json` le dit et ce crédit est à corriger. Substitutions assumées : Karabük reçoit Safranbolu, où se trouvent plusieurs de ses facultés ; Yıldız reçoit Dolmabahçe, la tour de Galata étant déjà la photo de Boğaziçi.
+
+### `ankara-atakule.jpg` — la tour Atakule et son dôme de verre, Ankara
+
+- **Photographe** : Cengiz Özarpat
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/xYM7T6l9M0g` (identifiant CDN `photo-1787255700155-2d3dcfd3be3a`)
+
+### `ankara-grande-mosquee.jpg` — une grande mosquée d'Ankara et ses quatre minarets
+
+- **Photographe** : ekrem osmanoglu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/c9cYtNCXzRs` (identifiant CDN `photo-1771738841091-49dda284e8fe`)
+
+### `ankara-vue-aerienne.jpg` — Ankara vue d'en haut
+
+- **Photographe** : ekrem osmanoglu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/S9ULqp6XWps` (identifiant CDN `photo-1584816152587-382580af2d85`)
+
+### `istanbul-dolmabahce.jpg` — le palais de Dolmabahçe vu du Bosphore, Istanbul
+
+- **Photographe** : Berkin Üregen
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/G4E_ZfGhaGg` (identifiant CDN `photo-1601565465051-67971a2d838c`)
+
+### `istanbul-ortakoy.jpg` — la mosquée d'Ortaköy et le pont du Bosphore au coucher du soleil, Istanbul
+
+- **Photographe** : Spenser Sembrat
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/O1n-f15L668` (identifiant CDN `photo-1763965368246-5e89755e4455`)
+
+### `istanbul-mosquee-bleue.jpg` — la mosquée Bleue et son parc, Istanbul
+
+- **Photographe** : Lewis J Goetz
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/QLXwWbismFA` (identifiant CDN `photo-1593544648982-cf4bbfb8fc38`)
+
+### `istanbul-sainte-sophie.jpg` — Sainte-Sophie et ses minarets, Istanbul
+
+- **Photographe** : Husien Bisky
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/34PWUSxBNiU` (identifiant CDN `photo-1777985329764-f19172bc9aa7`)
+
+### `gebze-centre.jpg` — le centre de Gebze
+
+- **Photographe** : Kadı
+- **Licence** : [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Gebze Merkez (20221116).jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Gebze_Merkez_(20221116).jpg)
+
+### `serdivan-sakarya.jpg` — Serdivan et la plaine de Sakarya vues d'en haut
+
+- **Photographe** : Acar54
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:Serdivan, Sakarya.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Serdivan,_Sakarya.jpg)
+
+### `izmir-baie.jpg` — la baie d'Izmir vue des hauteurs
+
+- **Photographe** : Mert Kahveci
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/wQLJSvJd6nw` (identifiant CDN `photo-1676845720871-493d7d821481`)
+
+### `izmir-tramway.jpg` — le tramway d'Izmir entre les immeubles
+
+- **Photographe** : Parastoo Maleki
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/j49sLH08tM0` (identifiant CDN `photo-1719688550738-c7186f2494b8`)
+
+### `urla-port.jpg` — le port d'Urla et ses bateaux de pêche
+
+- **Photographe** : Raicem
+- **Licence** : [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) — attribution obligatoire, à conserver tant que ce fichier est utilisé.
+- **Source** : [File:İzmir Urla İskele.jpg — Wikimedia Commons](https://commons.wikimedia.org/wiki/File:İzmir_Urla_İskele.jpg)
+
+### `konya-mosquee.jpg` — une grande mosquée à coupoles de Konya
+
+- **Photographe** : ekrem osmanoglu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/WU87q6Rkzm8` (identifiant CDN `photo-1759930019002-1361e69bf74e`)
+
+### `kayseri-mont-erciyes.jpg` — Kayseri et le mont Erciyes enneigé
+
+- **Photographe** : Ömer Haktan Bulut
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/mKsW6suT6yc` (identifiant CDN `photo-1654004669656-0c2408ccdb95`)
+
+### `erzurum-hiver.jpg` — Erzurum sous la neige et sa tour de l'horloge
+
+- **Photographe** : Alperen Tosun
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/6tH3ikiuTjg` (identifiant CDN `photo-1635433084393-c569daa8b0d5`)
+
+### `safranbolu-vue.jpg` — Safranbolu, ville des facultés de l'université de Karabük, vue d'en haut
+
+- **Photographe** : ekrem osmanoglu
+- **Licence** : [Unsplash License](https://unsplash.com/license) — usage commercial autorisé, attribution non obligatoire. Créditée ici par choix, pour garder la traçabilité de toutes les sources du projet.
+- **Source** : `https://unsplash.com/photos/lf_3JfVcEno` (identifiant CDN `photo-1578999305993-6a63f621cca6`)

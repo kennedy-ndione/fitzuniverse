@@ -168,7 +168,7 @@ France: { etablissements: 26, coutsVerifies: 15 },
 // tous avec leurs frais 2026-2027 ; les deux de Bucarest avaient déjà
 // les leurs, relevés le 2026-09-13.
 Roumanie: { etablissements: 20, coutsVerifies: 20 },
-Turquie: { etablissements: 6, coutsVerifies: 3 },
+Turquie: { etablissements: 22, coutsVerifies: 21 },
 // Relevé du 2026-09-24, lots 76 et 77 : 14 établissements marocains
 // et 17 canadiens de plus, tous les canadiens avec leurs frais.
 // Lot 82 (même jour) : les 13 publics marocains passent à 0 DH (place
