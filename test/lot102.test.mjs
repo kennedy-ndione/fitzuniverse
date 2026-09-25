@@ -32,6 +32,12 @@ const qc = calculerDiagnosticPays("canada", { ressourcesMensuelles: 0, niveau: "
 assert.equal(qc.lignes.find((l) => l.cle === "droits").min, 24552);
 const mai = calculerDiagnosticPays("canada", { ressourcesMensuelles: 0, niveau: "master" });
 assert.match(mai.lignes.find((l) => l.cle === "droits").texte, /^Maîtrise/);
+// Doctorat (lot 103) : ses propres droits, plus ceux de la maîtrise.
+const doc = calculerDiagnosticPays("canada", { ressourcesMensuelles: 0, niveau: "doctorat", variante: "quebec" });
+const droitsDoc = doc.lignes.find((l) => l.cle === "droits");
+assert.match(droitsDoc.texte, /^Doctorat/);
+assert.equal(droitsDoc.min, 4680);
+assert.match(droitsDoc.source, /^https:\/\/www\.etsmtl\.ca\//);
 // Sans niveau : la valeur d'avant, inchangée.
 assert.match(calculerDiagnosticPays("canada", { ressourcesMensuelles: 0 }).lignes.find((l) => l.cle === "droits").texte, /^Maîtrise/);
 for (const d of [DIAGNOSTICS.canada.droitsParNiveau.licence, DIAGNOSTICS.canada.droitsParNiveau.licence.variantes.quebec]) {

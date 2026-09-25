@@ -532,6 +532,17 @@ source: "https://www.uqar.ca/programmes-formations-et-admission/frais-de-scolari
 verifieLe: "2026-09-24"
 }
 }
+},
+// LE DOCTORAT (lot 103, 2026-09-25) : les droits varient d'un facteur
+// cinq selon que l'université exempte ou non ses doctorants étrangers des
+// droits supplémentaires. Fiches du catalogue relues le 2026-09-24 : ÉTS
+// (« exemption automatique », environ 4 680 $ CA par an) et UQAR
+// (22 458,78 $ CA la première année, avant exemption).
+doctorat: {
+texte: "Doctorat, université publique, première année 2026-2027 : environ 4 680 $ CA à l'ÉTS, qui exempte automatiquement ses doctorants étrangers des droits supplémentaires, et 22 459 $ CA à l'UQAR avant exemption. Chaque université fixe ses droits et ses exemptions : vérifiez ceux de l'université de votre directeur de thèse.",
+min: 4680, max: 22459, devise: "CAD",
+source: "https://www.etsmtl.ca/etudier-a-lets/bourses-finance-et-budget/cout-des-etudes",
+verifieLe: "2026-09-24"
 }
 },
 frais: [
