@@ -94,7 +94,7 @@ assert.ok(Array.isArray(o.highlights) && o.highlights.length >= 4 && o.highlight
 }
 const niveaux = Object.fromEntries(EN_VENTE.map((o) => [o.id, o.niveau]));
 assert.deepEqual(niveaux, {
-fitzExpress: "entree", "premier-dossier": "entree", "diagnostic-france": "entree",
+fitzExpress: "entree", "premier-dossier": "entree",
 "essentiel-4": "recommande", "dossier-france": "recommande",
 "conseiller-6": "humain", "dossier-france-conseiller": "humain"
 });
@@ -102,7 +102,9 @@ fitzExpress: "entree", "premier-dossier": "entree", "diagnostic-france": "entree
 
 test("vitrine 2b — offers.html : chaque puce est un highlight, mot pour mot, et le bouton porte le cta", () => {
 const html = lire("offers.html");
-const cartes = [...html.matchAll(/<article class="plan-card[^"]*">[\s\S]*?<\/article>/g)].map((m) => m[0]);
+// La carte du diagnostic GRATUIT (lot 97) n'est pas une offre vendue :
+// pas de data-plan, un lien vers le diagnostic.
+const cartes = [...html.matchAll(/<article class="plan-card[^"]*">[\s\S]*?<\/article>/g)].map((m) => m[0]).filter((c) => !c.includes('href="diagnostic-france.html"'));
 assert.equal(cartes.length, EN_VENTE.length, "une carte par offre vendue");
 for (const carte of cartes) {
 const id = (carte.match(/data-plan="([^"]+)"/) || [])[1];

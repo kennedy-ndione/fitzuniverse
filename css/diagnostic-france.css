@@ -107,3 +107,30 @@ un effet : un dernier mot qui crie n'en est plus un. */
 .diag-etapes{ padding-left:18px; }
 .diag-section--offre .btn{ width:100%; justify-content:center; }
 }
+
+/* ------------------------------------------------------------------
+« PUIS-JE ME LANCER ? » (lot 98, 2026-09-25) — les questions sur les
+études et les quatre voyants. Tokens existants seulement : le filet
+ambre dit « un point à régler » ou « pas encore », comme la vigilance.
+------------------------------------------------------------------ */
+.rec-questions{ border:0; padding:0 0 18px; margin:0; display:grid; gap:16px; border-bottom:1px solid var(--border-color); }
+.rec-questions legend{ font-size:var(--fs-h4); padding:0; margin-bottom:4px; }
+.rec-questions > .field-hint{ margin:0; }
+.rec-questions input[type=number]{ font-family:var(--font-body); font-size:var(--fs-body); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--background-soft); color:var(--text-color); width:100%; max-width:220px; }
+.rec-questions input[type=number]:focus{ outline:none; border-color:var(--accent-color); }
+.rec-resultat{ display:grid; gap:14px; }
+.rec-titre{ margin:0; font-size:var(--fs-caption); font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); }
+.rec-titre--pas-encore,
+.rec-titre--lancer-si{ color:var(--amber-700); }
+.rec-voyants{ list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+.rec-voyant{ display:grid; grid-template-columns:22px 1fr; gap:12px; align-items:start; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--background-soft); padding:14px 16px; }
+.rec-voyant > i, .rec-voyant > svg{ width:22px; height:22px; margin-top:1px; color:var(--text-muted); }
+.rec-voyant--ok > svg{ color:var(--text-color); }
+.rec-voyant--condition, .rec-voyant--bloque{ border-left:3px solid var(--amber-700); }
+.rec-voyant--condition > svg, .rec-voyant--bloque > svg{ color:var(--amber-700); }
+.rec-voyant strong{ display:block; margin-bottom:4px; }
+.rec-voyant p{ margin:0 0 6px; line-height:1.55; }
+.rec-deblocage{ font-weight:600; }
+/* Une question sans objet pour ce pays ou ce diplôme se retire vraiment :
+.field porte un display qui l'emporte sur l'attribut hidden. */
+.rec-questions .field[hidden]{ display:none; }

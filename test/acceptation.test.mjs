@@ -501,11 +501,12 @@ assert.ok(offers.includes(PHRASE_REGLE), "la règle d'offers.html est le littér
 assert.equal((offers.match(/jusqu'à deux fois par place\. Une fois acceptée, une université ne se change plus\./g) || []).length, 2, "la règle (colonne bourses) et la FAQ « Qui choisit »");
 assert.ok(offers.includes("<span>Jusqu'à quand suis-je accompagné ?</span>"));
 assert.ok(!offers.includes("si mon abonnement se termine avant d'avoir une réponse"));
-assert.ok(offers.includes("Les formules bourses n'ont pas de durée : elles couvrent un nombre de candidatures, et chacune est suivie jusqu'à la décision de l'université. Quand toutes vos réponses sont arrivées, l'équipe FitzUniverse vous indique la suite dans votre espace. Le Pass Découverte et le Diagnostic France durent 14 jours ; les Dossiers France suivent la campagne Études en France, jusqu'au 31 juillet."));
+assert.ok(offers.includes("Les formules bourses n'ont pas de durée : elles couvrent un nombre de candidatures, et chacune est suivie jusqu'à la décision de l'université. Quand toutes vos réponses sont arrivées, l'équipe FitzUniverse vous indique la suite dans votre espace. Le Pass Découverte dure 14 jours ; les Dossiers France suivent la campagne Études en France, jusqu'au 31 juillet."));
 assert.ok(offers.includes("Le nombre de candidatures dépend de votre formule ; elles avancent toutes en même temps."));
 // Ce qui ne change pas.
 assert.ok(offers.includes("1 candidature, sans abonnement"));
-assert.equal((offers.match(/<span class="plan-price-term">14 jours<\/span>/g) || []).length, 2, "Pass et Diagnostic");
+// Le Diagnostic est gratuit depuis le lot 97 : seul le Pass dure 14 jours.
+assert.equal((offers.match(/<span class="plan-price-term">14 jours<\/span>/g) || []).length, 1, "le Pass");
 assert.ok(offers.includes("une campagne, jusqu'au 31 juillet"));
 // payment.html : la ligne « Durée » se masque d'elle-même quand `duration` est absent.
 assert.match(lire("payment.js"), /durationRow\.style\.display = plan\.duration \? "" : "none"/);

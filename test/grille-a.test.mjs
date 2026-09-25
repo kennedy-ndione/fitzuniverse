@@ -98,10 +98,10 @@ assert.notEqual(o.maxPreinscriptions, Infinity, o.id);
 for (const o of Object.values(OFFRES)) assert.notEqual(o.maxAccompaniedApplications, Infinity, `${o.id} : plus aucune offre illimitée, même ancienne`);
 });
 
-test("Ambition, Signature, essentiel, signature-focus et premium sont SUPPRIMÉES de pricing-plans.js ; plus aucune offre dépréciée", () => {
+test("Ambition, Signature, essentiel, signature-focus et premium sont SUPPRIMÉES de pricing-plans.js ; seul le Diagnostic est déprécié (gratuit, lot 97)", () => {
 for (const id of ANCIENS) assert.equal(OFFRES[id], undefined, id);
 for (const id of BOURSES_EN_VENTE) assert.notEqual(OFFRES[id].deprecated, true, id);
-assert.deepEqual(Object.values(OFFRES).filter((o) => o.deprecated === true).map((o) => o.id), []);
+assert.deepEqual(Object.values(OFFRES).filter((o) => o.deprecated === true).map((o) => o.id), ["diagnostic-france"]);
 });
 
 test("les offres préinscription du lot B sont intactes : mêmes ids, mêmes prix, mêmes quotas", () => {
@@ -111,7 +111,11 @@ assert.equal(OFFRES["dossier-france"].priceFCFA, 75000);
 assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 150000);
 assert.equal(OFFRES["dossier-france"].maxPreinscriptions, 7);
 assert.equal(OFFRES["dossier-france-conseiller"].maxPreinscriptions, 7);
-for (const id of PLAN_PREINSCRIPTION_ORDER) assert.notEqual(OFFRES[id].deprecated, true, id);
+// Le Diagnostic est retiré de la vente le 2026-09-25 (lot 97) : il est
+// gratuit. Son identifiant et son prix restent, pour les comptes qui
+// l'ont acheté ; les deux Dossiers restent en vente.
+assert.equal(OFFRES["diagnostic-france"].deprecated, true);
+for (const id of ["dossier-france", "dossier-france-conseiller"]) assert.notEqual(OFFRES[id].deprecated, true, id);
 });
 
 // ------------------------------------------------------------------
@@ -342,7 +346,8 @@ assert.ok(lire("preinscription-france.html").includes("preinscription-destinatio
 // L'adresse est composée par lienOffre(), puis échappée à l'écriture du href (2026-09-23).
 assert.ok(lire("js/preinscription-destination.js").includes("offers.html?parcours=preinscription&destination="));
 assert.ok(!lire("preinscriptions.html").includes("offers.html#preinscriptions"));
-assert.ok(lire("js/diagnostic-france-page.js").includes("offers.html?parcours=preinscription"));
+// Le diagnostic est gratuit (lot 97) : sa page ne renvoie plus aux offres pour s'ouvrir.
+assert.ok(lire("js/diagnostic-france-page.js").includes('retour.setAttribute("href", "preinscription-france.html")'));
 assert.ok(lire("results.html").includes('href="offers.html?parcours=bourse"'));
 assert.ok(lire("scholarship-details.html").includes('href="offers.html?parcours=bourse"'));
 assert.ok(lire("details.js").includes('parcours: "bourse"'));

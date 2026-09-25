@@ -264,11 +264,38 @@ ${(offre.highlights || []).map((h) => `<li><i data-lucide="check" aria-hidden="t
 
 }
 
+/**
+* LE DIAGNOSTIC GRATUIT (lot 97, 2026-09-25) — la première carte, avant
+* toute offre payante : « Puis-je me lancer ? ». Il demande un compte
+* gratuit, jamais un paiement.
+*/
+function carteDiagnosticGratuit(pays) {
+// Une seule adresse : diagnostic-pays.html renvoie lui-même le pays
+// de Campus France vers sa propre page.
+const href = `diagnostic-pays.html?d=${encodeURIComponent(pays.id)}`;
+return `<li class="pre-offre plan-card plan-card--entree">
+<div class="plan-head">
+<h3>Diagnostic ${escapeHtml(pays.nom)}</h3>
+<p class="plan-tagline">Puis-je me lancer ? La réponse avant de payer quoi que ce soit.</p>
+</div>
+<div class="plan-price">
+<span class="plan-price-main"><span class="plan-amount">Gratuit</span></span>
+<span class="plan-price-term">avec un compte gratuit</span>
+</div>
+<ul class="plan-features">
+<li><i data-lucide="check" aria-hidden="true"></i><span>Votre niveau d'études contre les règles officielles : pouvez-vous postuler, et sinon ce qui vous manque</span></li>
+<li><i data-lucide="check" aria-hidden="true"></i><span>La langue des cours, vos ressources contre le seuil publié, et le calendrier</span></li>
+<li><i data-lucide="check" aria-hidden="true"></i><span>Le coût de la première année, chaque montant avec sa source</span></li>
+</ul>
+<a class="btn btn-secondary plan-cta" href="${href}"><span>Faire mon diagnostic gratuit</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+</li>`;
+}
+
 function renderOffres(pays) {
 
 const offres = offresPreinscription(pays);
 
-poserHtml("destOffres", offres.map((offre) => carteFormule(offre, pays)).join(""));
+poserHtml("destOffres", carteDiagnosticGratuit(pays) + offres.map((offre) => carteFormule(offre, pays)).join(""));
 
 // La déduction, dite en clair et sans compte : c'est une règle
 // commerciale, pas un calcul personnel. Le montant exact est recalculé
@@ -280,7 +307,9 @@ const libelle = (id) => {
 const o = aSesOffres(pays) && typeof window.offrePourDestination === "function" ? window.offrePourDestination(id, pays.id) : grille[id];
 return o && o.label;
 };
-const concernees = deduction ? deduction.plans.map(libelle).filter(Boolean) : [];
+// Le diagnostic n'est plus vendu (lot 97) : plus rien à déduire.
+const venduDeclencheur = deduction && grille[deduction.offre] && grille[deduction.offre].deprecated !== true;
+const concernees = deduction && venduDeclencheur ? deduction.plans.map(libelle).filter(Boolean) : [];
 const declencheur = deduction ? libelle(deduction.offre) : "";
 
 poser("destDeduction", deduction && concernees.length && declencheur

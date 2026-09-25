@@ -7,14 +7,19 @@
 // que nous n'avons pas trouvé, les étapes de la procédure, et l'offre une
 // seule fois.
 //
-// QUI Y ENTRE. Une offre préinscription DE CE PAYS (Diagnostic, Dossier
-// ou Dossier + Conseiller), lue dans users/{uid}.preinscriptionsPays.<pays>
-// (planPreinscriptionPour) — un Diagnostic Maroc n'ouvre pas le
-// Diagnostic Italie. L'accès test (testerAccess) ouvre tout, comme
-// ailleurs.
+// QUI Y ENTRE (lot 97, 2026-09-25). TOUT COMPTE, gratuit compris :
+// Charles, « il faut que le diagnostic puisse tout dire à l'étudiant
+// avant de passer à n'importe quel parcours ». L'offre Diagnostic à
+// 10 000 F est retirée de la vente ; la page ne vérifie plus aucune
+// formule.
 //
-// Le résultat est enregistré sur users/{uid}.diagnosticsPays.<pays>, la
-// seule écriture de la page : l'étape 2 de la route du pays le relit.
+// « PUIS-JE ME LANCER ? » (lot 98) : les questions sur les études
+// (js/recevabilite-ui.js) et les quatre voyants (js/recevabilite.js)
+// viennent en tête du résultat, avant le détail chiffré.
+//
+// Le résultat est enregistré sur users/{uid}.diagnosticsPays.<pays>
+// (l'étape 2 de la route du pays le relit), et les réponses sur les
+// études dans le profil : elles valent pour tous les pays.
 // ============================================================
 import { db } from "../firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
@@ -22,6 +27,8 @@ import { initShellChrome, bootstrapShell } from "./app-shell.js";
 import { calculerDiagnosticPays, devisesDeSaisie, libelleDevise, formatMontant } from "./diagnostic-pays.js";
 import { destination, DIAGNOSTICS, enClairDe } from "./destinations-preinscription.js";
 import { planPreinscriptionPour } from "./plan-features.js";
+import { puisJeMeLancer } from "./recevabilite.js";
+import { poserQuestions, lireReponses, manquantes, peindreVoyants } from "./recevabilite-ui.js";
 import { trouverProcedure } from "./procedures/index.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
 import { formaterDate } from "./echeance.js";
@@ -31,6 +38,8 @@ import { auPays, avecArticle } from "./pays-grammaire.js";
 initShellChrome();
 
 const ID = String(new URLSearchParams(window.location.search).get("d") || "").toLowerCase();
+// La France a sa page (Campus France, pays de résidence) : ?d=france y mène.
+if (ID === "france") window.location.replace("diagnostic-france.html");
 const DEST = destination(ID);
 
 function hoteDe(url) {
@@ -91,18 +100,20 @@ ${lienSource(e.source, e.verifieLe)}
 }).join("");
 }
 
-function renderOffre(userData) {
+function renderOffre(userData, etatVerdict) {
 const plan = planPreinscriptionPour(userData || {}, ID);
 const section = document.getElementById("diagSectionOffre");
-// Un compte qui a déjà un dossier de ce pays n'a rien à acheter ici.
-if (plan && plan !== "diagnostic-france") { section.hidden = true; return; }
+// Un compte qui a déjà un dossier de ce pays n'a rien à acheter ici ;
+// et on ne vend jamais un accompagnement à qui ne peut pas encore
+// postuler (lot 98).
+if ((plan && plan !== "diagnostic-france") || etatVerdict === "pas-encore") { section.hidden = true; return; }
 const offrir = typeof window.offrePourDestination === "function";
 const dossier = offrir ? window.offrePourDestination("dossier-france", ID) : null;
 const conseiller = offrir ? window.offrePourDestination("dossier-france-conseiller", ID) : null;
 if (!dossier || !conseiller) { section.hidden = true; return; }
 const tarif = typeof window.prixAvecDeduction === "function" ? window.prixAvecDeduction("dossier-france", userData || {}, new Date(), ID) : null;
 const espacer = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-document.getElementById("diagOffrePreambule").textContent = `Ce diagnostic vous a donné le chiffre. Pour être suivi étape par étape jusqu'au départ ${auPays(DEST.nom)} :`;
+document.getElementById("diagOffrePreambule").textContent = `Vous savez maintenant si vous pouvez vous lancer. Pour être suivi étape par étape jusqu'au départ ${auPays(DEST.nom)} :`;
 document.getElementById("diagOffres").innerHTML = [
 { o: dossier, prix: tarif && tarif.deduction ? `${espacer(tarif.prix)} F au lieu de ${espacer(tarif.base)} F — ${tarif.mention}` : `${espacer(dossier.priceFCFA)} F` },
 { o: conseiller, prix: `${espacer(conseiller.priceFCFA)} F` }
@@ -110,38 +121,37 @@ document.getElementById("diagOffres").innerHTML = [
 section.hidden = false;
 }
 
-function renderLockedState(container) {
-container.innerHTML = `
-<div class="ai-locked-hero">
-<div class="ai-locked-icon"><i data-lucide="lock"></i></div>
-<h2>Diagnostic ${escapeHtml(DEST ? DEST.nom : "")}</h2>
-<p>Cette page est ouverte par une offre préinscription de ce pays : ${escapeHtml(DEST ? `Diagnostic ${DEST.nom}, Dossier ${DEST.nom} ou Dossier ${DEST.nom} + Conseiller` : "")}.</p>
-<a href="${DEST ? `preinscription-${escapeHtml(ID)}.html` : "preinscriptions.html"}" class="btn btn-primary"><span>Voir les offres</span></a>
-</div>`;
-container.hidden = false;
-if (window.lucide) lucide.createIcons();
-}
-
 if (!DEST) {
-window.location.replace("preinscriptions.html");
+if (ID !== "france") window.location.replace("preinscriptions.html");
 } else {
 
 document.title = `Diagnostic ${DEST.nom} | FitzUniverse`;
 document.getElementById("diagTitre").textContent = `Diagnostic ${DEST.nom}`;
-document.getElementById("diagIntroTitre").textContent = `Une réponse chiffrée avant d'engager des frais ${auPays(DEST.nom)}`;
-const retour = document.getElementById("diagRetour");
-if (retour) retour.setAttribute("href", `espace-preinscription.html?d=${encodeURIComponent(ID)}`);
+document.getElementById("diagIntroTitre").textContent = `Puis-je me lancer ${auPays(DEST.nom)} ?`;
 
-bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" }).then(async (ctx) => {
+// Aucune formule exigée : la page s'ouvre à tout compte (lot 97). Elle
+// reste une page de l'espace préinscription.
+bootstrapShell({ espace: "preinscription" }).then(async (ctx) => {
 
 if (!ctx) return;
 
+// Le retour : la route du pays pour qui l'a ouverte, la page du pays sinon.
 const possede = ctx.testerAccess === true || !!planPreinscriptionPour(ctx.userData || {}, ID);
-if (ctx.locked || !possede) {
-document.getElementById("diagnosticApp").remove();
-renderLockedState(document.getElementById("lockedState"));
-return;
+const retour = document.getElementById("diagRetour");
+if (retour) {
+retour.setAttribute("href", possede ? `espace-preinscription.html?d=${encodeURIComponent(ID)}` : `preinscription-${encodeURIComponent(ID)}.html`);
+const texte = retour.querySelector("span");
+if (texte && !possede) texte.textContent = DEST.nom;
 }
+
+const profil = (ctx.userData && ctx.userData.profile) || {};
+const questions = document.getElementById("recQuestions");
+poserQuestions(questions, ID, profil);
+
+const recevabilite = (entrees, reponses) => {
+const res = calculerDiagnosticPays(ID, entrees);
+return { res, rec: puisJeMeLancer(ID, { ...profil, ...reponses }, { verdictArgent: res.verdict, calendrier: DIAGNOSTICS[ID].calendrier, variante: entrees.variante }) };
+};
 
 const form = document.getElementById("diagForm");
 const select = document.getElementById("diagDevise");
@@ -175,14 +185,17 @@ if (precedent && precedent.entrees) {
 document.getElementById("diagRessources").value = precedent.entrees.ressourcesMensuelles ?? "";
 if (precedent.entrees.devise) select.value = precedent.entrees.devise;
 document.getElementById("diagVariante").checked = !!precedent.entrees.variante;
-render(calculerDiagnosticPays(ID, precedent.entrees));
+const { res, rec } = recevabilite(precedent.entrees, lireReponses(questions, ID));
+render(res);
+peindreVoyants(document.getElementById("recResultat"), rec);
+renderOffre(ctx.userData, rec.verdict.etat);
 if (precedent.calculeLe) {
 sauvegarde.textContent = `Diagnostic enregistré le ${formaterDate(String(precedent.calculeLe).slice(0, 10))}. Vos chiffres ont changé ? Modifiez-les ci-dessus et relancez le calcul, sans rien repayer.`;
 sauvegarde.hidden = false;
 }
 }
 
-renderOffre(ctx.userData);
+if (!(precedent && precedent.entrees)) renderOffre(ctx.userData);
 
 form.addEventListener("submit", async (event) => {
 
@@ -199,17 +212,33 @@ document.getElementById("diagRessources").focus();
 return;
 }
 
-const resultat = calculerDiagnosticPays(ID, entrees);
+const reponses = lireReponses(questions, ID);
+const manque = manquantes(reponses, ID);
+if (manque.length) {
+const champ = questions.querySelector(manque[0]);
+if (champ) { champ.closest(".field")?.scrollIntoView({ behavior: "smooth", block: "center" }); champ.focus(); }
+return;
+}
+
+const { res: resultat, rec } = recevabilite(entrees, reponses);
 render(resultat);
+peindreVoyants(document.getElementById("recResultat"), rec);
+renderOffre(ctx.userData, rec.verdict.etat);
+document.getElementById("recResultat").scrollIntoView({ behavior: "smooth", block: "start" });
+
+// Les réponses sur les études vont dans le profil (tous les pays).
+const champsProfil = Object.fromEntries(Object.entries(reponses).map(([k, v]) => [`profile.${k}`, v === undefined ? null : v]));
 
 try {
 await updateDoc(doc(db, "users", ctx.user.uid), {
+...champsProfil,
 [`diagnosticsPays.${ID}`]: {
 entrees,
 verdict: resultat.verdict.phrase,
 etatVerdict: resultat.verdict.etat,
 totaux: resultat.totaux,
 totalTexte: resultat.totalTexte,
+recevabilite: { etat: rec.verdict.etat, phrase: rec.verdict.phrase, voyants: rec.voyants.map((v) => ({ voyant: v.voyant, etat: v.etat, titre: v.titre })) },
 calculeLe: new Date().toISOString()
 }
 });

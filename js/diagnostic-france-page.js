@@ -1,6 +1,8 @@
 // ============================================================
 // diagnostic-france.html — branchement de js/diagnostic-france.js
-// (grille B, 2026-09-07). Verrouillé par "diagnostic_france".
+// (grille B, 2026-09-07). OUVERT À TOUT COMPTE depuis le lot 97
+// (2026-09-25) : le diagnostic est gratuit, et il commence par « Puis-je
+// me lancer ? » (lot 98, js/recevabilite.js).
 //
 // LOT DIAGNOSTIC-2 (2026-09-09) — cette page rendait un TOTAL. Un total
 // est une donnée ; l'étudiant a payé 10 000 F pour une DÉCISION et un
@@ -22,6 +24,8 @@
 import { db } from "../firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { initShellChrome, bootstrapShell } from "./app-shell.js";
+import { puisJeMeLancer } from "./recevabilite.js";
+import { poserQuestions, lireReponses, manquantes, peindreVoyants } from "./recevabilite-ui.js";
 import { calculerDiagnostic, formatEUR, verdictChiffre, lignesChiffrees, phraseDeFin } from "./diagnostic-france.js";
 import {
 vigilanceDe,
@@ -186,7 +190,11 @@ const espacer = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 // précisément de payer ce diagnostic. Le prix affiché est celui du
 // compte ; celui qui FAIT FOI est recalculé par la Cloud Function avant
 // la facture (functions/lib/achat.js).
-function renderOffre(userData) {
+function renderOffre(userData, etatRecevabilite) {
+
+// On ne vend jamais un accompagnement à qui ne peut pas encore postuler (lot 98).
+const section = document.getElementById("diagOffrePreambule").closest("section");
+if (section) section.hidden = etatRecevabilite === "pas-encore";
 
 document.getElementById("diagOffrePreambule").textContent = PREAMBULE_OFFRE;
 
@@ -218,7 +226,7 @@ renderVigilance(resultat.residence.pays);
 renderCalendrier(resultat.residence.pays);
 renderLeviers(resultat);
 renderEtapes(resultat.residence.pays);
-renderOffre(resultat.userData || null);
+renderOffre(resultat.userData || null, resultat.etatRecevabilite);
 
 // Le dernier mot appartient au projet de l'étudiant : la phrase de fin
 // vient APRÈS l'offre, et elle ne vend pas.
@@ -229,40 +237,30 @@ if (window.lucide) lucide.createIcons();
 
 }
 
-// Verrou (grille B) : aucune formule bourse n'ouvre cette page — seules
-// les trois offres préinscription le font. On n'emprunte donc pas
-// unlockingPlans() (qui parcourt les formules bourse) ni la voix de
-// Fitz : la page renvoie vers la colonne préinscription de la grille.
-function renderLockedState(container) {
-container.innerHTML = `
-<div class="ai-locked-hero">
-<div class="ai-locked-icon"><i data-lucide="lock"></i></div>
-<h2>Diagnostic France</h2>
-<p>Cette page est ouverte par les offres préinscription : Diagnostic France, Dossier France ou Dossier France + Conseiller. Elle n'est comprise dans aucune formule bourse.</p>
-<a href="offers.html?parcours=preinscription" class="btn btn-primary"><span>Voir les offres préinscription</span></a>
-</div>
-`;
-container.hidden = false;
-if (window.lucide) lucide.createIcons();
-}
-
-bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" }).then(async (ctx) => {
+// Aucune formule exigée : la page s'ouvre à tout compte (lot 97). Elle
+// reste une page de l'espace préinscription.
+bootstrapShell({ espace: "preinscription" }).then(async (ctx) => {
 
 if (!ctx) return;
 
-// UNE OFFRE FRANCE, PAS UNE OFFRE D'UN AUTRE PAYS (2026-09-23). Le verrou
-// `diagnostic_france` lit la meilleure offre préinscription du compte,
-// tous pays confondus : un Diagnostic Maroc l'ouvrirait. Cette page est
-// un produit France ; elle exige l'offre France (ou l'accès test), comme
-// diagnostic-pays.html exige l'offre de SON pays.
 const offreFrance = ctx.testerAccess === true || !!resolvePlanPreinscriptionFrance(ctx.userData || {});
-if (ctx.locked || !offreFrance) {
-document.getElementById("diagnosticApp").remove();
-renderLockedState(document.getElementById("lockedState"));
-return;
+const retour = document.getElementById("diagRetour");
+if (retour && !offreFrance) {
+retour.setAttribute("href", "preinscription-france.html");
+const texte = retour.querySelector("span");
+if (texte) texte.textContent = "France";
 }
 
 const form = document.getElementById("diagForm");
+const questions = document.getElementById("recQuestions");
+poserQuestions(questions, "france", (ctx.userData && ctx.userData.profile) || ctx.profile || {});
+// Le niveau des droits suit le niveau visé (licence ou master) ; au
+// doctorat, l'étudiant garde la main sur le calcul.
+questions.querySelector("#recNiveau").addEventListener("change", (ev) => {
+const v = String(ev.target.value || "").toLowerCase();
+const radio = form.querySelector(`input[name="niveau"][value="${v}"]`);
+if (radio) radio.checked = true;
+});
 // Lot CONTRÔLES-UNIFIÉS : suggestions au rendu du site (plus de datalist).
 initFitzCombobox(document.getElementById("diagPays"), COUNTRY_NAMES);
 
@@ -313,8 +311,13 @@ console.warn("[FitzUniverse] Catalogue indisponible : les leviers « université
 // « correspond à votre profil ».
 const profil = ctx.profile || null;
 
-function calculer(entrees) {
+function calculer(entrees, reponses = lireReponses(questions, "france")) {
 const resultat = calculerDiagnostic(entrees);
+const v = verdictChiffre(resultat);
+resultat.recevabilite = puisJeMeLancer("france", { ...(profil || {}), ...reponses }, {
+verdictArgent: { etat: v.etat === "tient" ? "atteint" : "manque", phrase: v.phrase }
+});
+resultat.etatRecevabilite = resultat.recevabilite.verdict.etat;
 // Le profil sert au levier « bourses » (filtres durs), le document
 // utilisateur à la déduction des 10 000 F. Ni l'un ni l'autre n'entre
 // dans le CALCUL du total : ils décident de ce qu'on peut dire en plus.
@@ -334,7 +337,9 @@ document.getElementById("diagDevise").value = precedent.entrees.devise || "XOF";
 const niveau = form.querySelector(`input[name="niveau"][value="${precedent.entrees.niveau}"]`);
 if (niveau) niveau.checked = true;
 document.getElementById("diagExoneration").checked = precedent.entrees.exonerationEsperee === true;
-render(calculer(precedent.entrees));
+const r0 = calculer(precedent.entrees);
+render(r0);
+peindreVoyants(document.getElementById("recResultat"), r0.recevabilite);
 if (precedent.calculeLe) {
 sauvegarde.textContent = `Diagnostic enregistré le ${formaterDate(String(precedent.calculeLe).slice(0, 10))}. Vos chiffres ont changé ? Modifiez-les ci-dessus et relancez le calcul : c'est le même diagnostic, remis à jour, sans rien repayer.`;
 sauvegarde.hidden = false;
@@ -353,6 +358,14 @@ niveau: form.querySelector('input[name="niveau"]:checked').value,
 exonerationEsperee: document.getElementById("diagExoneration").checked
 };
 
+const reponses = lireReponses(questions, "france");
+const manque = manquantes(reponses, "france");
+if (manque.length) {
+const champ = questions.querySelector(manque[0]);
+if (champ) { champ.closest(".field")?.scrollIntoView({ behavior: "smooth", block: "center" }); champ.focus(); }
+return;
+}
+
 if (!entrees.paysResidence) {
 document.getElementById("diagPays").focus();
 return;
@@ -363,13 +376,17 @@ document.getElementById("diagRessources").focus();
 return;
 }
 
-const resultat = calculer(entrees);
+const resultat = calculer(entrees, reponses);
 render(resultat);
+peindreVoyants(document.getElementById("recResultat"), resultat.recevabilite);
+document.getElementById("recResultat").scrollIntoView({ behavior: "smooth", block: "start" });
+const champsProfil = Object.fromEntries(Object.entries(reponses).map(([k, v]) => [`profile.${k}`, v === undefined ? null : v]));
 
 const verdict = verdictChiffre(resultat);
 
 try {
 await updateDoc(doc(db, "users", ctx.user.uid), {
+...champsProfil,
 diagnosticFrance: {
 entrees,
 verdict: verdict.phrase,
@@ -384,6 +401,7 @@ ecartMensuel: resultat.ressources.ecartMensuel,
 totalAnnuelEUR: resultat.total.annuelEUR,
 paysResidence: entrees.paysResidence,
 totalInclutFraisDossier: resultat.total.inclutFraisDossier,
+recevabilite: { etat: resultat.recevabilite.verdict.etat, phrase: resultat.recevabilite.verdict.phrase, voyants: resultat.recevabilite.voyants.map((x) => ({ voyant: x.voyant, etat: x.etat, titre: x.titre })) },
 calculeLe: new Date().toISOString()
 }
 });

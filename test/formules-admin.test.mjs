@@ -42,7 +42,7 @@ const ATTENDUES = {
 "premier-dossier": "Premier Dossier · 1 candidature",
 "essentiel-4": "Essentiel · 4 candidatures",
 "conseiller-6": "Conseiller · 6 candidatures",
-"diagnostic-france": "Diagnostic France · 14 jours",
+"diagnostic-france": "Diagnostic France (ancienne) · 14 jours", // retiré de la vente, gratuit (lot 97)
 "dossier-france": "Dossier France · 7 vœux",
 "dossier-france-conseiller": "Dossier France + Conseiller · 7 vœux",
 // Les anciennes formules (essentiel, accompagnement, premium,
@@ -83,27 +83,28 @@ assert.match(etiquetteAdmin(PASS_ID), new RegExp(`· ${plans.fitzExpress.duratio
 for (const id of RETIREES) assert.ok(estRetiree(id) && /\(ancienne\)/.test(etiquetteAdmin(id)));
 });
 
-test("formules-admin 4 — les 7 formules en vente, sous leur titre ; aucune retirée depuis le 2026-09-24, donc aucun groupe vide", () => {
+test("formules-admin 4 — les 6 formules en vente, sous leur titre ; le Diagnostic seul retiré (gratuit, lot 97)", () => {
 const { enVente, retirees } = formulesAdmin();
-assert.equal(enVente.length, 7);
-assert.deepEqual(enVente, [PASS_ID, "premier-dossier", "essentiel-4", "conseiller-6", ...PLAN_PREINSCRIPTION_ORDER]);
+assert.equal(enVente.length, 6);
+assert.deepEqual(enVente, [PASS_ID, "premier-dossier", "essentiel-4", "conseiller-6", "dossier-france", "dossier-france-conseiller"]);
 // Les anciennes formules sont SUPPRIMÉES (décision de Charles,
-// 2026-09-24) : plus aucune retirée, et plus d'identifiant ancien nulle part.
-assert.deepEqual(RETIREES, []);
-assert.deepEqual(retirees, []);
+// 2026-09-24). Le Diagnostic, devenu gratuit le 2026-09-25 (lot 97), est
+// retiré de la vente : ses acheteurs le gardent, l'admin le range à part.
+assert.deepEqual(RETIREES, ["diagnostic-france"]);
+assert.deepEqual(retirees, ["diagnostic-france"]);
 for (const ancien of ["essentiel", "accompagnement", "premium", "signature-focus", "signature"]) {
 assert.ok(!tousLesIdentifiants().includes(ancien), `${ancien} : encore nommée dans l'admin`);
 }
 const html = optionsFormules({ vide: "Toutes les formules", avecGratuit: true });
 assert.match(html, /^<option value="">Toutes les formules<\/option><option value="gratuit">Gratuit<\/option><optgroup label="En vente">/);
 assert.ok(html.includes(`<optgroup label="${TITRE_EN_VENTE}">`));
-assert.ok(!html.includes(TITRE_RETIREES), "pas de groupe « Retirées » vide");
-assert.equal((html.match(/<option /g) || []).length, 1 + 1 + 7);
+assert.ok(html.includes(TITRE_RETIREES), "le groupe « Retirées » porte le Diagnostic");
+assert.equal((html.match(/<option /g) || []).length, 1 + 1 + 6 + 1);
 // La fiche : bourse seule, France seule.
 const bourse = optionsFormules({ vide: "Sans formule", pass: false, preinscription: false });
 assert.ok(!bourse.includes("fitzExpress") && !bourse.includes("dossier-france") && bourse.includes("essentiel-4") && !bourse.includes(TITRE_RETIREES));
 const france = optionsFormules({ vide: "Sans offre", pass: false, bourse: false });
-assert.ok(!france.includes("essentiel") && france.includes("dossier-france-conseiller") && !france.includes(TITRE_RETIREES));
+assert.ok(!france.includes("essentiel") && france.includes("dossier-france-conseiller") && france.includes(TITRE_RETIREES));
 // Le compte : bourse ET France ; Pass seul ; rien.
 assert.deepEqual(etiquettesDuCompte({ planId: "conseiller-6", planPreinscriptionId: "dossier-france" }).map((x) => x.etiquette), ["Conseiller · 6 candidatures", "Dossier France · 7 vœux"]);
 assert.deepEqual(etiquettesDuCompte({ planId: "gratuit", passSeul: true }).map((x) => x.id), [PASS_ID]);

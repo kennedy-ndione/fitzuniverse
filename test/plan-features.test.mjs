@@ -287,11 +287,14 @@ assert.equal(OFFRES[ancien], undefined, `${ancien} : encore dans SCHOLARBRIDGE_P
 
 const depreciees = Object.keys(OFFRES).filter((id) => OFFRES[id].deprecated === true);
 
-assert.deepEqual(depreciees, [], "aucune offre dépréciée aujourd'hui");
+// Le Diagnostic, devenu gratuit le 2026-09-25 (lot 97), est la seule
+// offre dépréciée : ses acheteurs gardent leur identifiant.
+assert.deepEqual(depreciees, ["diagnostic-france"], "seul le Diagnostic est déprécié");
 
 for (const id of depreciees) {
 assert.ok(OFFRES[id], `${id} doit rester dans SCHOLARBRIDGE_PLANS malgré deprecated:true`);
-assert.equal(typeof OFFRES[id].maxAccompaniedApplications, "number", `${id} doit garder un quota résolvable`);
+const quota = OFFRES[id].parcours === "preinscription" ? OFFRES[id].maxPreinscriptions : OFFRES[id].maxAccompaniedApplications;
+assert.equal(typeof quota, "number", `${id} doit garder un quota résolvable`);
 }
 
 });

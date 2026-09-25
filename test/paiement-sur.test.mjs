@@ -82,7 +82,8 @@ const comptes = [
 { planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: FIN_CAMPAGNE },
 ];
 const enVente = Object.keys(GRILLE).filter(estEnVente);
-assert.ok(enVente.length >= 7);
+// Le Diagnostic n'est plus vendu (lot 97, gratuit) : six offres en vente.
+assert.ok(enVente.length >= 6);
 const fautes = [];
 for (const user of comptes) {
 for (const planId of enVente) {
@@ -110,8 +111,9 @@ assert.ok(blanc > 0 && blanc < facture, "le refus du rang inférieur arrive avan
 
 test("paiement-sûr 4 — offers.html : le FCFA en gros, l'euro en petit, sur chaque carte", () => {
 const html = lire("offers.html");
-const cartes = [...html.matchAll(/<div class="plan-price">\n([\s\S]*?)<\/div>/g)].map((m) => m[1]);
-assert.equal(cartes.length, 7);
+// La carte du diagnostic GRATUIT (lot 97) n'a pas de prix à dériver.
+const cartes = [...html.matchAll(/<div class="plan-price">\n([\s\S]*?)<\/div>/g)].map((m) => m[1]).filter((b) => !b.includes('<span class="plan-amount">Gratuit</span>'));
+assert.equal(cartes.length, 6);
 for (const bloc of cartes) {
 const id = (bloc.match(/data-price-of="([^"]+)"/) || [])[1];
 assert.ok(id && GRILLE[id], `carte sans formule connue : ${bloc.slice(0, 80)}`);

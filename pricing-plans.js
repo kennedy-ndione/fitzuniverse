@@ -262,6 +262,12 @@ highlights: [
 "diagnostic-france": {
 id: "diagnostic-france",
 parcours: "preinscription",
+// RETIRÉ DE LA VENTE le 2026-09-25 (lot 97, décision de Charles : « tout
+// gratuit, argent compris »). Le diagnostic de chaque pays est ouvert à
+// tout compte, gratuit compris ; le serveur (functions/lib/achat.js)
+// refuse tout nouvel achat et honore un paiement lancé avant. Les comptes
+// qui l'ont acheté gardent leur identifiant et leurs droits.
+deprecated: true,
 type: "pass",
 label: "Diagnostic France",
 icon: "calculator",
@@ -304,7 +310,7 @@ fitzAccess: "Documents, traductions et légalisations, preuve de ressources, pr�
 maxPreinscriptions: 7,
 highlights: [
 "Jusqu'à 7 vœux suivis, du profil au dépôt : pièces, traductions et légalisations, preuve de ressources",
-"Le Diagnostic France inclus",
+"Votre diagnostic gratuit repris dans votre dossier",
 "Vos lettres de vœu et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
 "Préparation à l'entretien Campus France",
 "Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées",
@@ -538,7 +544,7 @@ highlights: conseiller ? [
 `Vous gardez la main : vous déposez vous-même sur ${d.portail}`
 ] : [
 unVoeu ? `${voeux} de la préinscription au départ — ${d.dans}, la règle est d'un seul cours` : `${voeux}, de la première pièce au visa`,
-`Le Diagnostic ${d.nom} inclus`,
+"Votre diagnostic gratuit repris dans votre dossier",
 "La procédure officielle expliquée étape par étape, en français simple, avec ses sources",
 "Vos lettres et vos e-mails rédigés avec Fitz, votre dossier vérifié avant l'envoi",
 "Messagerie FitzUniverse pour vos questions, réponse généralement sous 48 h ouvrées",

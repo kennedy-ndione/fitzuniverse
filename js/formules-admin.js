@@ -42,9 +42,10 @@ export const PASS_ID = "fitzExpress";
 export const TITRE_EN_VENTE = "En vente";
 export const TITRE_RETIREES = "Retirées de la vente — anciens comptes";
 
-// Les formules bourse retirées de la vente (deprecated:true dans
-// pricing-plans.js — vérifié par le test). Aucune depuis le 2026-09-24.
-export const RETIREES = [];
+// Les formules retirées de la vente (deprecated:true dans
+// pricing-plans.js — vérifié par le test). Depuis le 2026-09-25 (lot 97) :
+// le Diagnostic, devenu gratuit — les comptes qui l'ont acheté le gardent.
+export const RETIREES = ["diagnostic-france"];
 
 // Ce qui distingue chaque formule, dans l'ordre de PLAN_ORDER /
 // PLAN_PREINSCRIPTION_ORDER, plus le Pass.
@@ -97,8 +98,11 @@ export function formulesAdmin({ pass = true, bourse = true, preinscription = tru
 const enVente = [];
 if (pass) enVente.push(PASS_ID);
 if (bourse) enVente.push(...PLAN_ORDER.filter((id) => id !== "gratuit" && !estRetiree(id)));
-if (preinscription) enVente.push(...PLAN_PREINSCRIPTION_ORDER);
-const retirees = bourse ? PLAN_ORDER.filter((id) => id !== "gratuit" && estRetiree(id)) : [];
+if (preinscription) enVente.push(...PLAN_PREINSCRIPTION_ORDER.filter((id) => !estRetiree(id)));
+const retirees = [
+...(bourse ? PLAN_ORDER.filter((id) => id !== "gratuit" && estRetiree(id)) : []),
+...(preinscription ? PLAN_PREINSCRIPTION_ORDER.filter((id) => estRetiree(id)) : [])
+];
 const gratuit = avecGratuit ? ["gratuit"] : [];
 return { gratuit, enVente, retirees };
 }

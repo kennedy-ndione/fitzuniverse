@@ -45,6 +45,7 @@ de visa ; aucune promesse de résultat. -->
 <link rel="modulepreload" href="js/catalog-snapshot.js">
 <link rel="modulepreload" href="js/countries.js">
 <link rel="modulepreload" href="js/delai-reponse.js">
+<link rel="modulepreload" href="js/destinations-preinscription.js">
 <link rel="modulepreload" href="js/diagnostic-conseil.js">
 <link rel="modulepreload" href="js/diagnostic-france-page.js">
 <link rel="modulepreload" href="js/diagnostic-france.js">
@@ -90,6 +91,8 @@ de visa ; aucune promesse de résultat. -->
 <link rel="modulepreload" href="js/procedures/vocabulaire.js">
 <link rel="modulepreload" href="js/profil-par-niveau.js">
 <link rel="modulepreload" href="js/profile-score.js">
+<link rel="modulepreload" href="js/recevabilite-ui.js">
+<link rel="modulepreload" href="js/recevabilite.js">
 <link rel="modulepreload" href="js/recommend-programs.js">
 <link rel="modulepreload" href="js/student-messages.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
@@ -112,7 +115,7 @@ de visa ; aucune promesse de résultat. -->
 <span class="fitz-lockup-text"><span class="fitz-lockup-name">Fitz</span><span class="fitz-lockup-sub">Universe</span></span>
 </a>
 <div class="journey-context">
-<a href="dashboard.html" class="back-link"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
+<a href="dashboard.html" class="back-link" id="diagRetour"><i data-lucide="arrow-left"></i><span>Mon parcours</span></a>
 <h1>Diagnostic France</h1>
 </div>
 <div class="journey-topbar-actions">
@@ -132,12 +135,13 @@ de visa ; aucune promesse de résultat. -->
 <div id="diagnosticApp" class="reveal">
 
 <section class="diag-intro">
-<h2>Une réponse chiffrée avant de payer Campus France</h2>
-<p>Vos ressources contre le seuil publié, chaque montant avec sa source et sa date, les points de vigilance de votre pays, votre calendrier en jours, ce qui peut faire baisser le total, et les étapes qui vous restent. De l'arithmétique sur des chiffres publiés — aucune estimation, aucune promesse de résultat.</p>
-<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
+<h2>Puis-je me lancer en France ?</h2>
+<p>Avant de payer Campus France ou quoi que ce soit : votre niveau d'études et votre pays de diplôme contre les règles officielles, le français, vos ressources contre le seuil publié, et le calendrier. Puis chaque montant avec sa source et sa date, les points de vigilance de votre pays, ce qui peut faire baisser le total, et les étapes qui vous restent.</p>
+<p>Ce diagnostic est gratuit. Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
 </section>
 
 <form class="diag-form card" id="diagForm" novalidate>
+<fieldset class="rec-questions" id="recQuestions"></fieldset>
 <!-- PREMIÈRE question depuis le 2026-09-08, et non la dernière : elle
 décide de ce que les autres réponses veulent dire. Les frais de dossier
 Campus France dépendent de l'espace du pays de résidence ; sans cette
@@ -160,7 +164,7 @@ ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <p class="field-hint">Ce que vous, votre famille ou votre garant pouvez justifier chaque mois, pendant l'année.</p>
 </div>
 <div class="field">
-<span class="field-label">Niveau visé</span>
+<span class="field-label">Niveau pour le calcul des droits</span>
 <div class="diag-choix" role="radiogroup" aria-label="Niveau visé">
 <label><input type="radio" name="niveau" value="licence" checked> Licence</label>
 <label><input type="radio" name="niveau" value="master"> Master</label>
@@ -169,7 +173,7 @@ ailleurs sur le site : on suggère sans jamais bloquer une saisie. -->
 <div class="field">
 <label class="diag-check"><input type="checkbox" id="diagExoneration" name="exoneration"> J'espère une exonération des droits différenciés</label>
 </div>
-<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Calculer</span></button>
+<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Voir mon diagnostic</span></button>
 </form>
 
 <!-- LOT DIAGNOSTIC-2 (2026-09-09) — du total au CHEMIN.
@@ -185,7 +189,12 @@ la procédure. Quatre des sept pays documentés publient un avertissement
 contre les officines qui font l'inverse. -->
 <section class="diag-resultat" id="diagResultat" hidden aria-live="polite">
 
-<p class="diag-verdict" id="diagVerdict"></p>
+<section class="rec-resultat" id="recResultat" hidden></section>
+
+<section class="diag-section" id="diagSectionArgent">
+<h3>Vos ressources</h3>
+<p class="diag-section-intro" id="diagVerdict"></p>
+</section>
 
 <section class="diag-section" id="diagSectionLignes">
 <h3>Le détail, chiffre par chiffre</h3>

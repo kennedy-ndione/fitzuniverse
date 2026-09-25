@@ -316,7 +316,9 @@ const vueB = offersHtml.slice(debutB, debutP);
 const vueP = offersHtml.slice(debutP, offersHtml.indexOf("offer-footnotes"));
 const ids = (html) => [...html.matchAll(/data-plan="([^"]+)"/g)].map((m) => m[1]);
 const idsB = ids(vueB), idsP = ids(vueP);
-assert.deepEqual(idsP.sort(), [...PRE].sort());
+// Le Diagnostic est gratuit (lot 97) : sa carte n'a plus de bouton d'achat.
+assert.deepEqual(idsP.sort(), PRE.filter((id) => !OFFRES[id].deprecated).sort());
+assert.ok(vueP.includes('<a href="diagnostic-france.html" class="btn btn-secondary plan-cta">'), "la carte du diagnostic gratuit mène au diagnostic");
 for (const id of idsB) assert.equal(OFFRES[id].parcours, "bourse", `${id} dans la vue Bourses`);
 for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id} dans la vue Préinscriptions`);
 // Lot LANGAGE (2026-09-10) : « L'unité : … » est devenu « Vous payez
@@ -332,11 +334,12 @@ assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(vueP.replace(/jamais jusqu'à 
 for (const id of [...idsB, ...idsP]) assert.ok(offersHtml.includes(`data-price-of="${id}"`) && offersHtml.includes(`data-eur-of="${id}"`), `prix dérivés pour ${id}`);
 });
 
-test("diagnostic-france.html : verrouillée par diagnostic_france, sans IA, sans promesse", () => {
+test("diagnostic-france.html : ouverte à tout compte (lot 97), sans IA, sans promesse", () => {
 const html = lire("diagnostic-france.html");
 assert.ok(html.includes("noindex"));
 assert.ok(!/data-lucide="sparkle/.test(html));
 assert.ok(!/visa accord|vous aurez votre visa|admission garantie/i.test(html));
-assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ feature: "diagnostic_france", espace: "preinscription" })'));
+assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ espace: "preinscription" })'));
+assert.ok(!/renderLockedState|ctx\.locked/.test(lire("js/diagnostic-france-page.js")), "plus aucun verrou");
 assert.ok(!/fitzGenerate|ai-client|generate\(/.test(lire("js/diagnostic-france.js") + lire("js/diagnostic-france-page.js")), "aucune IA");
 });

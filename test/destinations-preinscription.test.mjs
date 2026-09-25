@@ -542,7 +542,8 @@ assert.ok(js.includes("[`${champDossier()}.visaChecklist`]: visa"), "la route d'
 assert.ok(js.includes("await updateDoc(refUser(), { visaChecklist: visa });"), "la France garde son champ");
 // Un Dossier Italie n'ouvre ni la route France, ni le Diagnostic France.
 assert.ok(js.includes("if (!planPays && !session.testerAccess) {"));
-assert.ok(lire("js/diagnostic-france-page.js").includes("if (ctx.locked || !offreFrance) {"));
+// Le Diagnostic France est gratuit (lot 97) : l'offre France ne décide plus que du lien de retour.
+assert.ok(lire("js/diagnostic-france-page.js").includes("if (retour && !offreFrance) {"));
 // payment.js : la destination gardée ne vaut que pour l'offre gardée ;
 // une adresse qui nomme un plan sans pays veut dire la France.
 const pay = lire("payment.js");

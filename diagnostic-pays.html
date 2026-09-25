@@ -87,6 +87,8 @@ Le verdict parle de seuils publiés, jamais de visa. -->
 <link rel="modulepreload" href="js/procedures/vocabulaire.js">
 <link rel="modulepreload" href="js/profil-par-niveau.js">
 <link rel="modulepreload" href="js/profile-score.js">
+<link rel="modulepreload" href="js/recevabilite-ui.js">
+<link rel="modulepreload" href="js/recevabilite.js">
 <link rel="modulepreload" href="js/student-messages.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
@@ -128,12 +130,13 @@ Le verdict parle de seuils publiés, jamais de visa. -->
 <div id="diagnosticApp" class="reveal">
 
 <section class="diag-intro">
-<h2 id="diagIntroTitre">Une réponse chiffrée avant d'engager des frais</h2>
-<p>Vos ressources contre le seuil publié, le coût de la première année chiffre par chiffre, chaque montant avec sa source et sa date, le calendrier publié et les étapes de la procédure. De l'arithmétique sur des chiffres publiés — aucune estimation, aucun taux de change inventé, aucune promesse de résultat.</p>
-<p>Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
+<h2 id="diagIntroTitre">Puis-je me lancer ?</h2>
+<p>Avant de payer quoi que ce soit, sachez si vous avez le droit de postuler : votre niveau d'études et votre pays de diplôme contre les règles officielles, la langue des cours, vos ressources contre le seuil publié, et le calendrier. Puis le coût de la première année, chiffre par chiffre, chaque montant avec sa source et sa date.</p>
+<p>Ce diagnostic est gratuit. Tout est rendu en entier, tout de suite : rien n'est masqué ici pour vous faire payer la suite.</p>
 </section>
 
 <form class="diag-form card" id="diagForm" novalidate>
+<fieldset class="rec-questions" id="recQuestions"></fieldset>
 <div class="field">
 <label for="diagRessources">Ressources disponibles par mois</label>
 <div class="diag-montant">
@@ -147,12 +150,17 @@ Le verdict parle de seuils publiés, jamais de visa. -->
 <div class="field" id="diagVarianteChamp" hidden>
 <label class="diag-check"><input type="checkbox" id="diagVariante" name="variante"> <span id="diagVarianteLibelle"></span></label>
 </div>
-<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Calculer</span></button>
+<button type="submit" class="btn btn-primary" id="diagCalculer"><i data-lucide="calculator"></i><span>Voir mon diagnostic</span></button>
 </form>
 
 <section class="diag-resultat" id="diagResultat" hidden aria-live="polite">
 
-<p class="diag-verdict" id="diagVerdict"></p>
+<section class="rec-resultat" id="recResultat" hidden></section>
+
+<section class="diag-section" id="diagSectionArgent">
+<h3>Vos ressources</h3>
+<p class="diag-section-intro" id="diagVerdict"></p>
+</section>
 
 <section class="diag-section" id="diagSectionLignes">
 <h3>Le détail, chiffre par chiffre</h3>

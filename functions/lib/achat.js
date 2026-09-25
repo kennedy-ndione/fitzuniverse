@@ -137,7 +137,8 @@ const GRILLE = {
   // pour tous les 9 pays ») ; les identifiants gardent leur « -france »
   // historique, c'est la destination de l'achat qui dit le pays.
   // Prix décidés, ne pas rouvrir.
-  "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription" },
+  // Retiré de la vente le 2026-09-25 (lot 97) : le diagnostic est gratuit.
+  "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription", deprecated: true },
   "dossier-france": { label: "Dossier France", prix: 75000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
   "dossier-france-conseiller": { label: "Dossier France + Conseiller", prix: 150000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
 };
