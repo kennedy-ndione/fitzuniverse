@@ -91,3 +91,10 @@ assert.match(lire("js/preinscription-destination.js"), /<p class="pre-fait-fcfa"
 assert.equal(formatMontant(15854.4, "TRY"), `15${NB}854,40${NB}TL`);
 assert.equal(formatMontant(964, "TRY"), `964${NB}TL`);
 });
+
+test("lot 104 — la page des offres parle des neuf pays, et le menu de langue n'a pas de ligne vide", () => {
+const offres = lire("offers.html");
+assert.ok(!offres.includes("Pour une préinscription en France"));
+assert.match(offres, /un dossier par pays, dans neuf pays, mené jusqu'au dépôt/);
+assert.match(lire("js/recevabilite-ui.js"), /\$\{vide \? `<option value="">\$\{escapeHtml\(vide\)\}<\/option>` : ""\}/);
+});

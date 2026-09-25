@@ -39,7 +39,9 @@ const NIVEAUX = ["Licence", "Master", "Doctorat"];
 const RANG_BAC = ["terminale", "bac", "bac1", "bac2"];
 
 function options(liste, valeur, vide = "Choisissez…") {
-return `<option value="">${escapeHtml(vide)}</option>${liste.map((o) => `<option value="${escapeHtml(o.id)}"${o.id === valeur ? " selected" : ""}>${escapeHtml(o.libelle || o.nom)}</option>`).join("")}`;
+// Sans libellé d'invite (langue des cours, système du bac : une valeur par
+// défaut existe), pas de ligne vide dans le menu (retest du 2026-09-25).
+return `${vide ? `<option value="">${escapeHtml(vide)}</option>` : ""}${liste.map((o) => `<option value="${escapeHtml(o.id)}"${o.id === valeur ? " selected" : ""}>${escapeHtml(o.libelle || o.nom)}</option>`).join("")}`;
 }
 
 function champ(id, libelle, html, aide = "") {
