@@ -496,14 +496,17 @@ const startOfToday = Timestamp.fromDate(
 new Date(new Date().setHours(0, 0, 0, 0))
 );
 
+// Les sessions anonymes (fiches sans e-mail, voir estSessionAnonyme)
+// ne sont pas des inscrits : le compte ne garde que les fiches qui ont
+// un e-mail. Une seule inégalité par requête : pas d'index composite.
 const [totalSnapshot, newTodaySnapshot] = await Promise.all([
-getCountFromServer(usersCollection),
-getCountFromServer(query(usersCollection, where("createdAt", ">=", startOfToday)))
+getCountFromServer(query(usersCollection, where("email", "!=", ""))),
+getDocs(query(usersCollection, where("createdAt", ">=", startOfToday)))
 ]);
 
 return {
 total: totalSnapshot.data().count,
-newToday: newTodaySnapshot.data().count
+newToday: newTodaySnapshot.docs.filter((d) => !estSessionAnonyme(d.data())).length
 };
 
 }
@@ -657,14 +660,27 @@ return getTopDimension("analyticsFieldCounters", topN);
 // propriété exclusive de l'étudiant (voir firestore.rules).
 // ============================================
 
-export async function getAllUsers() {
+/**
+* Une fiche sans nom ni e-mail n'est pas un étudiant : c'est une
+* session anonyme (lecture de Fitz sur la page de résultats) que
+* l'espace prenait, jusqu'au 2026-09-25, pour un compte connecté.
+* Plus aucune ne peut se créer (js/access-guard.js, firestore.rules) ;
+* celles d'avant restent en base, écartées des listes et des comptes.
+*/
+export function estSessionAnonyme(user) {
+return !String((user && user.email) || "").trim() && !String((user && user.name) || "").trim();
+}
+
+export async function getAllUsers({ avecSessionsAnonymes = false } = {}) {
 
 const snapshot = await getDocs(collection(db, "users"));
 
-return snapshot.docs.map((docSnap) => ({
+const tous = snapshot.docs.map((docSnap) => ({
 uid: docSnap.id,
 ...docSnap.data()
 }));
+
+return avecSessionsAnonymes ? tous : tous.filter((u) => !estSessionAnonyme(u));
 
 }
 

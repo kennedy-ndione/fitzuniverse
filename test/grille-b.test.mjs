@@ -165,7 +165,7 @@ test("firestore.rules : les formules restent hors de portée de l'étudiant, et 
 const bloc = regles.slice(regles.indexOf("match /users/{uid} {"), regles.indexOf("match /users/{uid}/messages"));
 
 // L'étudiant : ni à la création, ni à la mise à jour.
-assert.match(bloc, /allow create: if isOwner\(uid\) && !request\.resource\.data\.keys\(\)\.hasAny\(champsFormule\(\)/);
+assert.match(bloc, /allow create: if isOwner\(uid\) && request\.auth\.token\.firebase\.sign_in_provider != 'anonymous' && !request\.resource\.data\.keys\(\)\.hasAny\(champsFormule\(\)/);
 assert.match(bloc, /\(isOwner\(uid\) && !request\.resource\.data\.diff\(resource\.data\)\.affectedKeys\(\)\.hasAny\(champsFormule\(\)/);
 
 // La liste des champs de formule porte les DEUX grilles, et la trace

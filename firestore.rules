@@ -322,7 +322,9 @@ allow read: if isOwner(uid) || isAdmin();
 // produit. On ouvre les deux grilles, on réserve les deux au
 // superAdmin, et on rend la trace explicite des deux côtés
 // (`attributionManuelle`).
-allow create: if isOwner(uid) && !request.resource.data.keys().hasAny(champsFormule().concat(["disabled", "testerAccess"]));
+// Une session ANONYME (lecture de Fitz sur la page de résultats) ne crée
+// jamais de fiche étudiant (2026-09-25) : elle en créait sans nom ni e-mail.
+allow create: if isOwner(uid) && request.auth.token.firebase.sign_in_provider != 'anonymous' && !request.resource.data.keys().hasAny(champsFormule().concat(["disabled", "testerAccess"]));
 allow update: if
 // Le superAdmin : les droits payants, et rien d'autre.
 (isSuperAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(champsFormule().concat(champsAdminOrdinaire()))) ||

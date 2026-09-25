@@ -154,7 +154,16 @@ return new Promise((resolve, reject) => {
 
 onAuthStateChanged(auth, async (firebaseUser) => {
 
-if (!firebaseUser) {
+// UNE SESSION ANONYME N'EST PAS UN COMPTE (2026-09-25). La page de
+// résultats ouvre une session anonyme Firebase pour la lecture de Fitz
+// (js/ai/diagnostic-fitz.js). Le visiteur qui cliquait ensuite vers
+// l'espace ou le paiement était pris pour un étudiant connecté :
+// l'auto-guérison plus bas lui créait un document users SANS nom ni
+// e-mail — les « Sans nom » de l'admin, comptés comme inscrits — et
+// payment.js pouvait même lui ouvrir une facture. Pour tout l'espace,
+// une session anonyme vaut « personne » : il se connecte ou crée son
+// compte, comme n'importe quel visiteur.
+if (!firebaseUser || firebaseUser.isAnonymous) {
 resolve(null);
 return;
 }

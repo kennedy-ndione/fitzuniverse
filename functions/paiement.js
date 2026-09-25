@@ -92,6 +92,20 @@ exports.creerPaiement = onCall(
       );
     }
 
+    // Une session ANONYME (la lecture de Fitz sur la page de résultats)
+    // n'est pas un compte : l'accompagnement payé serait perdu avec elle.
+    // Constaté le 2026-09-25 : deux factures ouvertes par des sessions
+    // anonymes (Essentiel, Dossier France), jamais payées.
+    const fournisseur = request.auth.token && request.auth.token.firebase
+      ? request.auth.token.firebase.sign_in_provider
+      : "";
+    if (fournisseur === "anonymous") {
+      throw new HttpsError(
+        "unauthenticated",
+        "Créez votre compte (ou connectez-vous) pour régler votre accompagnement."
+      );
+    }
+
     const uid = request.auth.uid;
     const { planId, method, destination: destinationDemandee } = request.data || {};
 

@@ -35,7 +35,7 @@ collection,
 onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-import { getAllUsers } from "./firebase-admin.js";
+import { getAllUsers, estSessionAnonyme } from "./firebase-admin.js";
 import { initSidebarToggle } from "./sidebar-toggle.js";
 import { hidePageLoader } from "../js/app-shell.js";
 import { initLogout } from "./deconnexion.js";
@@ -243,8 +243,10 @@ const { chargerAdmin } = await import("./admin-role.js");
 const administrateur = await chargerAdmin();
 if (!administrateur) return; // admin-auth.js redirige déjà
 
-const users = await getAllUsers();
-nomsParUid = new Map(users.map((u) => [u.uid, u.name || u.email || null]));
+// Les sessions anonymes comprises : deux factures en attente (25/09)
+// avaient été ouvertes par l'une d'elles — l'admin doit le lire.
+const users = await getAllUsers({ avecSessionsAnonymes: true });
+nomsParUid = new Map(users.map((u) => [u.uid, u.name || u.email || (estSessionAnonyme(u) ? "Session anonyme (sans compte)" : null)]));
 
 // EN DIRECT : ce callback se déclenche à l'ouverture (premier
 // instantané), puis à chaque création ou changement de statut d'une
