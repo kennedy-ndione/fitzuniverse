@@ -347,11 +347,20 @@ return { montant: Math.round(montantEUR * PARITE_EUR_XOF), devise };
 */
 export function verdictChiffre(resultat) {
 
-const seuil = resultat.ressources.seuilMensuel;
-const ecart = resultat.ressources.ecartMensuel;
+// L'ANNÉE ENTIÈRE, PAS LE SEUIL SEUL (test « Moussa », 2026-09-25). Le
+// verdict comparait les ressources au seul seuil du visa : il disait
+// « il manque 6 871 € » sous un total de 13 562 € que l'étudiant devait
+// réunir, et « ça tient » à qui ne pouvait pas payer ses droits. Il
+// compare maintenant ce dont l'étudiant dispose sur l'année au TOTAL
+// affiché juste au-dessus : ressources exigées, droits, dossier.
+const total = resultat.total.annuelEUR;
+const disponibleAnnuel = arrondi(resultat.ressources.disponibleEUR * 12, 2);
+const ecartAnnuel = arrondi(disponibleAnnuel - total, 2);
+const seuil = total / 12;
+const ecart = arrondi(ecartAnnuel / 12, 2);
 const pays = resultat.residence.pays;
 
-if (ecart >= 0) {
+if (ecartAnnuel >= 0) {
 return {
 etat: "tient",
 phrase: "Votre projet tient financièrement.",
@@ -361,9 +370,16 @@ local: null
 };
 }
 
+const manqueAnnuel = arrondi(Math.abs(ecartAnnuel), 0);
 const manqueMensuel = arrondi(Math.abs(ecart), 2);
-const manqueAnnuel = arrondi(manqueMensuel * 12, 0);
 const important = manqueMensuel >= seuil * SEUIL_ECART_IMPORTANT;
+// D'où vient l'écart : les ressources exigées pour le visa d'abord, puis
+// les droits et le dossier. Dit seulement quand les deux manquent.
+const manqueVisa = Math.max(0, arrondi(resultat.ressources.seuilAnnuel - disponibleAnnuel, 0));
+const manqueFrais = manqueAnnuel - manqueVisa;
+const detail = manqueVisa > 0 && manqueFrais > 0
+? ` : ${formatEUR(manqueVisa)} pour les ressources exigées pour le visa, et ${formatEUR(manqueFrais)} pour les droits d'inscription et le dossier`
+: manqueVisa === 0 ? " pour payer les droits d'inscription et le dossier" : "";
 
 // Le montant redit dans la monnaie du pays porte sur la MÊME période que
 // la phrase : mensuel quand on parle du mois, annuel quand on parle de
@@ -375,8 +391,8 @@ const suffixe = local ? ` (${formatMontant(local.montant, local.devise)})` : "";
 return {
 etat: important ? "ecart-important" : "ecart-faible",
 phrase: important
-? `Il manque ${formatEUR(manqueAnnuel)} sur l'année${suffixe}.`
-: `Il vous manque ${formatEUR(manqueMensuel)} par mois${suffixe}.`,
+? `Il manque ${formatEUR(manqueAnnuel)} sur l'année${suffixe}${detail}.`
+: `Il vous manque ${formatEUR(manqueMensuel)} par mois${suffixe} pour couvrir l'année entière : ressources exigées, droits et dossier.`,
 manqueMensuelEUR: manqueMensuel,
 manqueAnnuelEUR: manqueAnnuel,
 local
@@ -448,7 +464,7 @@ cle: "fraisDossier",
 libelle: "Frais de dossier Campus France",
 montant: null,
 devise: null,
-texte: "Non encore vérifiés pour votre pays. Ils existent et varient d'un espace Campus France à l'autre : le total ci-dessous les EXCLUT, la dépense réelle sera donc plus élevée.",
+texte: "Non encore vérifiés pour votre pays. Ils existent et varient d'un espace Campus France à l'autre : le total ci-dessous les exclut, la dépense réelle sera donc plus élevée.",
 source: null,
 verifieLe: null,
 absente: true,

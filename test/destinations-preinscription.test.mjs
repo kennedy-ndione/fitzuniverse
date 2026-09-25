@@ -332,7 +332,7 @@ assert.ok(!/F CFA/.test(tout), `${id} : « F CFA » avec une espace ordinaire`);
 assert.equal(calculerDiagnosticPays("atlantide", {}), null);
 });
 
-test("le verdict ne compare que ce qui se compare sans taux", () => {
+test("le verdict compare exactement ce qui a une parité fixe, et au taux daté le reste", () => {
 // Maroc et Turquie : aucun seuil publié.
 assert.equal(calculerDiagnosticPays("maroc", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
 assert.equal(calculerDiagnosticPays("turquie", { ressourcesMensuelles: 1e9 }).verdict.etat, "sans-seuil");
@@ -351,9 +351,17 @@ for (const id of ["italie", "allemagne"]) {
 assert.equal(calculerDiagnosticPays(id, { ressourcesMensuelles: 1e9, devise: "XOF" }).verdict.etat, "atteint");
 assert.equal(calculerDiagnosticPays(id, { ressourcesMensuelles: 1, devise: "XOF" }).verdict.etat, "manque");
 }
-// Canada : un seuil en dollars canadiens. En F CFA, on ne devine pas.
-assert.equal(calculerDiagnosticPays("canada", { ressourcesMensuelles: 1e9, devise: "XOF" }).verdict.etat, "a-comparer");
+// Canada : un seuil en dollars canadiens. En F CFA, la comparaison se
+// fait au taux de référence DATÉ, et la phrase le dit (test « Moussa »,
+// 2026-09-25) ; en dollars canadiens, elle reste exacte.
+const caXof = calculerDiagnosticPays("canada", { ressourcesMensuelles: 1e9, devise: "XOF" }).verdict;
+assert.equal(caXof.etat, "atteint");
+assert.match(caXof.phrase, /au taux de référence du 25/);
 assert.equal(calculerDiagnosticPays("canada", { ressourcesMensuelles: 1e9, devise: "CAD" }).verdict.etat, "atteint");
+// Le verdict porte sur la PREMIÈRE ANNÉE entière (droits compris) : le
+// seuil du visa seul ne suffit plus à dire « atteint ».
+const seuilSeul = DIAGNOSTICS.canada.ressources.montant;
+assert.equal(calculerDiagnosticPays("canada", { ressourcesMensuelles: seuilSeul / 12 + 1, devise: "CAD" }).verdict.etat, "manque");
 assert.ok(devisesDeSaisie("canada").includes("CAD"));
 assert.equal(convertir(100, "CAD", "EUR"), null);
 assert.equal(Math.round(convertir(655.957, "XOF", "EUR") * 1000) / 1000, 1);
@@ -366,6 +374,27 @@ const qc = calculerDiagnosticPays("canada", { ressourcesMensuelles: 0, devise: "
 assert.equal(qc.variante, f.variante.id);
 assert.notEqual(qc.verdict.phrase, hors.verdict.phrase);
 }
+});
+
+test("les montants se redisent en F CFA, et un pays sans seuil dit ce qu'il reste pour vivre", () => {
+// Turquie, 200 000 F par mois : le coût de l'année en F CFA, et le reste.
+const tr = calculerDiagnosticPays("turquie", { ressourcesMensuelles: 200000, devise: "XOF" });
+assert.equal(tr.verdict.etat, "sans-seuil");
+assert.ok(Number.isFinite(tr.verdict.resteMensuelXof) && tr.verdict.resteMensuelXof > 0);
+assert.match(tr.verdict.phrase, /vous laisseraient environ .* par mois pour vivre/);
+assert.match(tr.totalTexte, /Soit environ .*F\u00a0CFA, au taux de référence du/);
+assert.ok(tr.lignes.find((l) => l.cle === "droits").fcfa.startsWith("environ "));
+// Malaisie, 200 000 F par mois : même les frais ne sont pas couverts.
+const my = calculerDiagnosticPays("malaisie", { ressourcesMensuelles: 200000, devise: "XOF" });
+assert.equal(my.verdict.etat, "manque");
+assert.match(my.verdict.phrase, /ne couvrent pas les frais les moins chers/);
+// Maroc public : aucun droit, tout va à la vie sur place.
+assert.match(calculerDiagnosticPays("maroc", { ressourcesMensuelles: 200000, devise: "XOF" }).verdict.phrase, /sans droits d'inscription/);
+// L'euro se redit exactement, sans « environ ».
+const it = calculerDiagnosticPays("italie", { ressourcesMensuelles: 200000, devise: "XOF" });
+assert.equal(it.verdict.etat, "manque");
+assert.ok(it.lignes.find((l) => l.cle === "ressources").fcfa && !it.lignes.find((l) => l.cle === "ressources").fcfa.startsWith("environ"));
+assert.match(it.totalTexte, /Soit [0-9]/);
 });
 
 // ------------------------------------------------------------------

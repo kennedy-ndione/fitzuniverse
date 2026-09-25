@@ -125,11 +125,16 @@ faits: [
 {
 cle: "ressources",
 diffusion: "public",
-texte: "Ressources exigées pour le visa étudiant : 877,50 € par mois, soit environ 10 530 € par an, depuis le 1er août 2026 (décret n° 2026-526 du 22 juin 2026).",
+// Source officielle depuis le 2026-09-25 : la fiche F2231 de
+// service-public.gouv.fr (« vérifiée le 1er août 2026 ») écrit « au moins
+// égales à 877,5 € par mois ». L'article de presse qui servait de source
+// est retiré, et avec lui le numéro de décret qu'aucune page officielle
+// lisible ne confirme ici.
+texte: "Ressources exigées pour le visa étudiant : 877,50 € par mois, soit environ 10 530 € par an.",
 montant: 877.5, devise: "EUR",
 montants: { mensuel: 877.5, annuel: 10530 },
-source: "https://www.infomigrants.net/fr/post/72455/france--le-niveau-minimum-de-ressources-pour-les-etudiants-etrangers-passe-a-877-euros-a-compter-du-1er-aout-2026",
-verifieLe: "2026-09-07"
+source: "https://www.service-public.gouv.fr/particuliers/vosdroits/F2231",
+verifieLe: "2026-09-25"
 },
 {
 cle: "droits",
@@ -262,6 +267,23 @@ accompagnement: "ouvert",
 // 2026-09-13 sur turkiyeburslari.gov.tr, studyinturkiye.gov.tr,
 // edenklik.meb.gov.tr et goc.gov.tr.
 faits: [
+// Test « Moussa » (2026-09-25) : la page « partir en me finançant »
+// n'ouvrait que sur la bourse d'État. L'autofinancement vient d'abord.
+{
+cle: "autofinancement",
+diffusion: "public",
+texte: "Autofinancement : vous candidatez directement à chaque université, sur les places réservées chaque année aux étudiants étrangers qui financent leurs études. Chaque université choisit ce qu'elle accepte : l'examen TR-YÖS, un examen équivalent comme le SAT, ou les notes de votre bac.",
+source: "https://studyinturkiye.gov.tr/StudyinTurkey/StudyinTurkeyTRYOS",
+verifieLe: "2026-09-13"
+},
+{
+cle: "droitsAutofinancement",
+diffusion: "public",
+texte: "Les droits d'inscription sont fixés par chaque université. À l'Université d'Ankara, pour 2026-2027 : de 2 000 USD par an (lettres, géographie) à 14 850 USD (médecine en anglais), et 3 600 USD en droit ou en génie informatique.",
+montant: 2000, devise: "USD",
+source: "https://isoidb.ankara.edu.tr/wp-content/uploads/sites/381/2026/08/TRY-2026-2027-Katki-Payi-Ucretleri.pdf",
+verifieLe: "2026-09-23"
+},
 {
 cle: "bourse",
 diffusion: "public",
@@ -280,7 +302,7 @@ verifieLe: "2026-09-23"
 {
 cle: "denklik",
 diffusion: "public",
-texte: "L'équivalence du diplôme de fin de secondaire (denklik) est délivrée par le ministère de l'ÉDUCATION NATIONALE, pas par le YÖK, via le système e-Denklik : 227 centres, dont 81 à l'étranger, ce qui permet d'engager la démarche avant le départ.",
+texte: "L'équivalence du diplôme de fin de secondaire (denklik) est délivrée par le ministère turc de l'Éducation nationale, pas par le YÖK, via le système e-Denklik : 227 centres, dont 81 à l'étranger, ce qui permet d'engager la démarche avant le départ.",
 source: "https://edenklik.meb.gov.tr/",
 verifieLe: "2026-09-13"
 },
@@ -367,7 +389,7 @@ source: "https://aui.ma/admission-aid/international/tuition-and-fees",
 verifieLe: "2026-09-23"
 }
 ],
-positionnement: "Proche, francophone, souvent sans visa : mais dans le public, la porte d'entrée est diplomatique et se ferme le 31 juillet. Pour candidater soi-même, il faut viser le privé — UM6P ou Al Akhawayn."
+positionnement: "Proche, francophone, souvent sans visa : mais dans le public, la porte d'entrée est diplomatique et se ferme le 31 juillet. Pour candidater soi-même, il faut viser les universités à admission directe — UM6P ou Al Akhawayn."
 },
 
 {
@@ -447,7 +469,7 @@ source: "https://www.universitaly.it/it/studenti-stranieri",
 verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales DSU déjà listées. La procédure est entièrement publique et gratuite, mais elle tient à deux dates et à un quota — la date limite du visa (31 octobre 2027 pour la rentrée 2027-2028), le 31 janvier pour l'immatriculation, et 120 % de places validables seulement."
+positionnement: "Sous-estimée : plusieurs établissements déjà au catalogue, et des bourses régionales (DSU) déjà listées. La procédure est publique et gratuite, mais elle se joue sur les dates : le visa se demande avant le 31 octobre 2027 pour la rentrée 2027-2028, l'inscription se fait avant le 31 janvier, et chaque université ne valide qu'un nombre limité de préinscriptions d'étrangers : déposer tôt compte."
 },
 
 {
@@ -561,7 +583,7 @@ source: "https://www.quebec.ca/en/education/study-quebec/temporary-selection-stu
 verifieLe: "2026-09-13"
 }
 ],
-positionnement: "Master et doctorat en établissement public uniquement — c'est aussi l'un des profils dispensés de lettre d'attestation provinciale depuis 2026.",
+positionnement: "Licence, maîtrise et doctorat. Hors Québec, la licence demande en plus une lettre de la province, qui confirme une place dans son quota ; la maîtrise et le doctorat en établissement public en sont dispensés depuis 2026. Au Québec, c'est le CAQ, demandé à tous.",
 avertissement: "Ce n'est pas une destination « pas cher et facile » : les frais sont élevés, la preuve de fonds est le premier motif de refus, et le Volet direct pour les études n'existe plus depuis le 8 novembre 2024."
 },
 
@@ -673,7 +695,7 @@ source: "https://study.um.edu.my/how-to-apply",
 verifieLe: "2026-09-23"
 }
 ],
-positionnement: "Pour l'étudiant à l'aise en anglais qui vise une licence ou un master dans une université publique reconnue, comme l'UM ou l'UKM. Le piège : l'eVAL ne suffit pas au Sénégalais, qui doit aussi obtenir un visa à entrée unique avant de partir, puis passer la visite médicale dans les sept jours ouvrables qui suivent l'arrivée."
+positionnement: "Pour l'étudiant à l'aise en anglais qui vise une licence ou un master dans une université publique reconnue, comme l'UM ou l'UKM. Le piège : la lettre électronique d'approbation du visa (eVAL) ne suffit pas au Sénégalais, qui doit aussi obtenir un visa à entrée unique avant de partir, puis passer la visite médicale dans les sept jours ouvrables qui suivent l'arrivée."
 }
 
 ];

@@ -219,7 +219,7 @@ titre: "Formuler mes vœux de formation et mes motivations",
 //
 // C'est une règle de la PLATEFORME : elle ne dépend d'aucune résidence,
 // et reste donc entière dans le tronc.
-consigne: "Vous pouvez faire au maximum sept (7) choix de formations connectées : ce plafond de 7 est GLOBAL, toutes formations confondues. À l'intérieur de ces 7, chaque type de formation a son propre plafond — Licence 1 (DAP) : 3 formations ; écoles d'architecture (DAP Jaune) : 2 écoles ; BUT : 7 formations ; Licences 2, 3 et Masters : 7 formations. Ces sous-plafonds ne s'ajoutent pas au total, ils s'y logent : une Licence 1 en Droit (3 universités) et un BUT en carrières juridiques (4 IUT), cela fait 3 + 4 = 7, et vos vœux sont épuisés. Rédigez pour chacun une motivation claire et personnalisée, et veillez à la cohérence de l'ensemble.",
+consigne: "Vous pouvez faire au maximum sept (7) choix de formations connectées : ce plafond de 7 vaut pour l'ensemble, toutes formations confondues. À l'intérieur de ces 7, chaque type de formation a son propre plafond — Licence 1 (DAP) : 3 formations ; écoles d'architecture (DAP Jaune) : 2 écoles ; BUT : 7 formations ; Licences 2, 3 et Masters : 7 formations. Ces sous-plafonds ne s'ajoutent pas au total, ils s'y logent : une Licence 1 en Droit (3 universités) et un BUT en carrières juridiques (4 IUT), cela fait 3 + 4 = 7, et vos vœux sont épuisés. Rédigez pour chacun une motivation claire et personnalisée, et veillez à la cohérence de l'ensemble.",
 prerequis: ["ef_pieces"],
 preuve: "aucune",
 pieces: [],
@@ -259,7 +259,7 @@ titre: "Payer les frais de dossier",
 // vraiment l'étudiant et qui ne dépend d'aucun pays : on ne paie
 // qu'après avoir reçu la demande de paiement. La couche Sénégal
 // REMPLACE cette consigne par la sienne, plus précise, avec sa source.
-consigne: "Attendez le courriel de demande de paiement, envoyé après la soumission et le traitement de votre dossier : ne payez JAMAIS avant. La demande de paiement ne signifie pas que le dossier est éligible.",
+consigne: "Attendez le courriel de demande de paiement, envoyé après la soumission et le traitement de votre dossier : ne payez jamais avant. La demande de paiement ne signifie pas que le dossier est éligible.",
 prerequis: ["ef_soumission"],
 preuve: "recu",
 pieces: [],

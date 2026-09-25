@@ -33,6 +33,7 @@ import { trouverProcedure } from "./procedures/index.js";
 import { texteConsigne } from "./procedures/vocabulaire.js";
 import { formaterDate } from "./echeance.js";
 import { escapeHtml } from "./ai/format.js";
+import { initFitzSelects } from "./fitz-select.js";
 import { auPays, avecArticle } from "./pays-grammaire.js";
 
 initShellChrome();
@@ -41,6 +42,18 @@ const ID = String(new URLSearchParams(window.location.search).get("d") || "").to
 // La France a sa page (Campus France, pays de résidence) : ?d=france y mène.
 if (ID === "france") window.location.replace("diagnostic-france.html");
 const DEST = destination(ID);
+
+function minusculeInitiale(t) {
+const x = String(t || "");
+return x.charAt(0).toLowerCase() + x.slice(1);
+}
+
+/** La voie choisie dans le formulaire (Turquie, Maroc, Chine), ou "". */
+function voieChoisie() {
+const el = document.getElementById("diagVoie");
+const champ = document.getElementById("diagVoieChamp");
+return el && champ && !champ.hidden ? String(el.value || "") : "";
+}
 
 function hoteDe(url) {
 try {
@@ -62,7 +75,7 @@ document.getElementById("diagVerdict").textContent = resultat.verdict.phrase;
 
 document.getElementById("diagBlocs").innerHTML = resultat.lignes.map((l) => `
 <li class="diag-bloc ${l.absente ? "is-ecart" : ""}">
-<strong>${escapeHtml(l.libelle)}${l.compte && Number.isFinite(l.montant) ? ` — ${escapeHtml(formatMontant(l.montant, l.devise))}${l.cle === "ressources" ? " sur l'année" : ""}` : ""}${l.compte && l.cle === "droits" ? ` — de ${escapeHtml(formatMontant(l.min, l.devise))} à ${escapeHtml(formatMontant(l.max, l.devise))} par an` : ""}</strong>
+<strong>${escapeHtml(l.libelle)}${l.compte && Number.isFinite(l.montant) ? ` — ${escapeHtml(formatMontant(l.montant, l.devise))}${l.cle === "ressources" ? " sur l'année" : ""}` : ""}${l.compte && l.cle === "droits" ? ` — de ${escapeHtml(formatMontant(l.min, l.devise))} à ${escapeHtml(formatMontant(l.max, l.devise))} par an` : ""}${l.fcfa ? ` <span class="diag-fcfa">(${escapeHtml(l.fcfa)})</span>` : ""}</strong>
 <p>${escapeHtml(l.texte)}</p>
 ${lienSource(l.source, l.verifieLe)}
 </li>`).join("");
@@ -78,18 +91,37 @@ const absences = resultat.absences || [];
 document.getElementById("diagSectionAbsences").hidden = !absences.length;
 document.getElementById("diagAbsences").innerHTML = absences.map((a) => `<li><p>${escapeHtml(a)}</p></li>`).join("");
 
-renderEtapes();
+renderEtapes(voieChoisie());
 
 document.getElementById("diagResultat").hidden = false;
 if (window.lucide) lucide.createIcons();
 
 }
 
-function renderEtapes() {
+/**
+* Les étapes des AUTRES voies sortent de la liste (test « Moussa » : parti
+* « en me finançant », il lisait sept étapes de la bourse d'État sur seize).
+* Sans voie choisie, tout reste affiché.
+*/
+function etapesHorsVoie(voie) {
+const voies = DEST && DEST.voies;
+if (!voies || !voie) return new Set();
+const choisie = voies.options.find((o) => o.id === voie);
+if (!choisie) return new Set();
+const garder = new Set(choisie.etapes);
+const hors = new Set();
+for (const o of voies.options) if (o.id !== voie) for (const e of o.etapes) if (!garder.has(e)) hors.add(e);
+return hors;
+}
+
+function renderEtapes(voie = "") {
 const procedure = trouverProcedure({ paysDestination: DEST.nom });
 if (!procedure) return;
-document.getElementById("diagEtapesIntro").textContent = `La procédure ${procedure.portail.nom}, ${procedure.etapes.length} étapes, dans l'ordre. Elle est écrite ici en entier — vous pouvez la suivre seul ; votre espace vous la présente une étape à la fois.`;
-document.getElementById("diagEtapes").innerHTML = procedure.etapes.map((e) => {
+const hors = etapesHorsVoie(voie);
+const etapes = procedure.etapes.filter((e) => !hors.has(e.id));
+const option = voie && DEST.voies ? DEST.voies.options.find((o) => o.id === voie) : null;
+document.getElementById("diagEtapesIntro").textContent = `La procédure ${procedure.portail.nom}${option ? `, pour ${minusculeInitiale(option.libelle)}` : ""} : ${etapes.length} étapes, dans l'ordre. Elle est écrite ici en entier — vous pouvez la suivre seul ; votre espace vous la présente une étape à la fois.`;
+document.getElementById("diagEtapes").innerHTML = etapes.map((e) => {
 const clair = enClairDe(ID, e.id);
 return `
 <li>
@@ -162,20 +194,51 @@ const seuil = faits.ressources;
 // F CFA (dollar canadien, lei) — c'est la seule qui permette un verdict
 // sans taux de change. Sinon le F CFA, comme pour la France.
 select.innerHTML = devisesDeSaisie(ID).map((d) => `<option value="${d}">${escapeHtml(libelleDevise(d))}</option>`).join("");
-select.value = seuil && !["EUR", "XOF"].includes(seuil.devise) ? seuil.devise : "XOF";
+// Le F CFA par défaut, partout : c'est la monnaie dans laquelle la famille
+// compte (test « Moussa »). Un seuil en dollars canadiens ou en lei se
+// compare alors au taux de référence daté, et le résultat le dit.
+select.value = "XOF";
 if (seuil && !["EUR", "XOF"].includes(seuil.devise)) {
-document.getElementById("diagDeviseAide").textContent = `Le seuil ${auPays(DEST.nom)} est fixé en ${libelleDevise(seuil.devise)} : indiquez vos ressources dans cette devise pour une comparaison exacte. Nous n'utilisons aucun taux de change.`;
+document.getElementById("diagDeviseAide").textContent = `Tout ce que votre famille ou votre garant peut réunir pour l'année, ramené au mois. Le seuil ${auPays(DEST.nom)} est fixé en ${libelleDevise(seuil.devise)} : nous le comparons à vos F CFA au taux de référence du jour indiqué ; pour un calcul exact, saisissez vos ressources en ${libelleDevise(seuil.devise)}.`;
+} else if (seuil) {
+document.getElementById("diagDeviseAide").textContent = "Tout ce que votre famille ou votre garant peut réunir pour l'année, ramené au mois : il doit couvrir la vie sur place, les droits d'inscription et les frais.";
 } else if (!seuil) {
 // « Le Maroc », « La Chine »… : l'article vient de la grammaire des pays,
 // jamais d'une alternative écrite pour deux pays (elle disait « La Turquie »
 // pour la Chine et la Malaisie).
 const sujet = avecArticle(DEST.nom);
-document.getElementById("diagDeviseAide").textContent = `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ne chiffre aucun seuil : vos ressources ne décident d'aucun verdict ici, mais le coût de l'année vous est donné en entier.`;
+document.getElementById("diagDeviseAide").textContent = `${sujet.charAt(0).toUpperCase()}${sujet.slice(1)} ne chiffre aucun seuil : nous vous disons ce qu'il vous resterait chaque mois pour vivre, une fois payés les frais les moins chers de l'année.`;
 }
 
 if (faits.variante) {
 document.getElementById("diagVarianteChamp").hidden = false;
 document.getElementById("diagVarianteLibelle").textContent = faits.variante.libelle;
+}
+
+// LA VOIE (Turquie, Maroc, Chine) : la bourse ou ses propres moyens. Elle
+// trie les étapes affichées ; elle se reprend du dossier ou du dernier
+// diagnostic, et ne s'écrit que dans le diagnostic (la route garde son
+// propre choix).
+if (DEST.voies) {
+const champVoie = document.getElementById("diagVoieChamp");
+const selVoie = document.getElementById("diagVoie");
+document.getElementById("diagVoieLibelle").textContent = DEST.voies.question;
+selVoie.innerHTML = `<option value="">Je ne sais pas encore</option>${DEST.voies.options.map((o) => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.libelle)}</option>`).join("")}`;
+const dejaDossier = ctx.userData && ctx.userData.dossiersPays && ctx.userData.dossiersPays[ID] && ctx.userData.dossiersPays[ID].voie;
+const dejaDiag = ctx.userData && ctx.userData.diagnosticsPays && ctx.userData.diagnosticsPays[ID] && ctx.userData.diagnosticsPays[ID].voie;
+const deja = String(dejaDossier || dejaDiag || "");
+if (DEST.voies.options.some((o) => o.id === deja)) selVoie.value = deja;
+const aide = () => {
+const o = DEST.voies.options.find((x) => x.id === selVoie.value);
+document.getElementById("diagVoieAide").textContent = o ? o.aide : "Toutes les étapes s'affichent, celles de chaque voie.";
+};
+selVoie.addEventListener("change", () => {
+aide();
+if (!document.getElementById("diagResultat").hidden) renderEtapes(voieChoisie());
+});
+aide();
+champVoie.hidden = false;
+initFitzSelects(champVoie);
 }
 
 const sauvegarde = document.getElementById("diagSauvegarde");
@@ -233,6 +296,7 @@ await updateDoc(doc(db, "users", ctx.user.uid), {
 ...champsProfil,
 [`diagnosticsPays.${ID}`]: {
 entrees,
+voie: voieChoisie(),
 verdict: resultat.verdict.phrase,
 etatVerdict: resultat.verdict.etat,
 totaux: resultat.totaux,

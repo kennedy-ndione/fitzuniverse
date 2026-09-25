@@ -254,13 +254,17 @@ if (texte) texte.textContent = "France";
 const form = document.getElementById("diagForm");
 const questions = document.getElementById("recQuestions");
 poserQuestions(questions, "france", (ctx.userData && ctx.userData.profile) || ctx.profile || {});
-// Le niveau des droits suit le niveau visé (licence ou master) ; au
-// doctorat, l'étudiant garde la main sur le calcul.
-questions.querySelector("#recNiveau").addEventListener("change", (ev) => {
-const v = String(ev.target.value || "").toLowerCase();
+// Le niveau des droits suit le niveau visé (licence ou master), et la
+// question ne se pose plus deux fois (test « Moussa », 2026-09-25) : elle
+// ne réapparaît qu'au doctorat, où l'étudiant garde la main sur le calcul.
+const majNiveauDroits = () => {
+const v = String(questions.querySelector("#recNiveau").value || "").toLowerCase();
 const radio = form.querySelector(`input[name="niveau"][value="${v}"]`);
 if (radio) radio.checked = true;
-});
+document.getElementById("diagNiveauChamp").hidden = !!radio;
+};
+questions.querySelector("#recNiveau").addEventListener("change", majNiveauDroits);
+majNiveauDroits();
 // Lot CONTRÔLES-UNIFIÉS : suggestions au rendu du site (plus de datalist).
 initFitzCombobox(document.getElementById("diagPays"), COUNTRY_NAMES);
 
@@ -315,7 +319,7 @@ function calculer(entrees, reponses = lireReponses(questions, "france")) {
 const resultat = calculerDiagnostic(entrees);
 const v = verdictChiffre(resultat);
 resultat.recevabilite = puisJeMeLancer("france", { ...(profil || {}), ...reponses }, {
-verdictArgent: { etat: v.etat === "tient" ? "atteint" : "manque", phrase: v.phrase }
+verdictArgent: { etat: v.etat === "tient" ? "atteint" : "manque", phrase: v.phrase, source: resultat.ressources.source, verifieLe: resultat.ressources.verifieLe }
 });
 resultat.etatRecevabilite = resultat.recevabilite.verdict.etat;
 // Le profil sert au levier « bourses » (filtres durs), le document

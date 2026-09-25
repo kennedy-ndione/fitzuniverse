@@ -95,38 +95,44 @@ return calculerDiagnostic({ devise: "EUR", niveau: "licence", ...entrees });
 
 test("les trois verdicts basculent aux bons seuils", () => {
 
-// La frontière est à 20 % du seuil, soit 175,50 € par mois.
-const frontiere = SEUIL_MENSUEL * SEUIL_ECART_IMPORTANT;
-assert.equal(frontiere, 175.5);
+// L'ANNÉE ENTIÈRE (test « Moussa », 2026-09-25) : le verdict compare ce
+// dont l'étudiant dispose sur l'année au total affiché — ressources
+// exigées, droits, dossier —, plus au seul seuil du visa.
+const DOSSIER_SN = Math.round(85000 / 655.957);
+const total = SEUIL_ANNUEL + DROITS_LICENCE + DOSSIER_SN;
+assert.equal(total, 13562);
+const frontiere = (total / 12) * SEUIL_ECART_IMPORTANT;
+assert.equal(Math.round(frontiere * 100) / 100, 226.03);
 
-// Au seuil PILE : ça tient. Un centime en dessous : ça ne tient plus.
-assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL, paysResidence: "Sénégal" })).etat, "tient");
-assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL + 400, paysResidence: "Sénégal" })).etat, "tient");
-assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL - 0.01, paysResidence: "Sénégal" })).etat, "ecart-faible");
+// Au-dessus du total de l'année : ça tient. Juste en dessous : ça ne tient plus.
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 1131, paysResidence: "Sénégal" })).etat, "tient");
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 1600, paysResidence: "Sénégal" })).etat, "tient");
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 1130, paysResidence: "Sénégal" })).etat, "ecart-faible");
+// Le seuil du visa seul (877,50 €) ne suffit plus : les droits restent à payer.
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL, paysResidence: "Sénégal" })).etat, "ecart-important");
 
-// Juste SOUS la frontière : écart faible. PILE dessus : important.
-// L'égalité bascule du côté « important » à dessein — au seuil, aucun
-// des trois leviers ne suffit plus seul, et le dire trop tard coûte
-// plus cher que le dire trop tôt.
-assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL - frontiere + 0.01, paysResidence: "Sénégal" })).etat, "ecart-faible");
-assert.equal(verdictChiffre(diag({ ressourcesMensuelles: SEUIL_MENSUEL - frontiere, paysResidence: "Sénégal" })).etat, "ecart-important");
+// Sous la frontière de 20 % : écart faible. Au-delà : important.
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 1000, paysResidence: "Sénégal" })).etat, "ecart-faible");
+assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 900, paysResidence: "Sénégal" })).etat, "ecart-important");
 assert.equal(verdictChiffre(diag({ ressourcesMensuelles: 0, paysResidence: "Sénégal" })).etat, "ecart-important");
 
 });
 
 test("l'écart affiché est exact, au mois comme à l'année", () => {
 
-const v = verdictChiffre(diag({ ressourcesMensuelles: 800, paysResidence: "Sénégal" }));
+const v = verdictChiffre(diag({ ressourcesMensuelles: 1100, paysResidence: "Sénégal" }));
 assert.equal(v.etat, "ecart-faible");
-assert.equal(v.manqueMensuelEUR, 77.5);
-assert.equal(v.manqueAnnuelEUR, 930);
-assert.match(v.phrase, /^Il vous manque 77,50 € par mois/);
+assert.equal(v.manqueMensuelEUR, 30.17);
+assert.equal(v.manqueAnnuelEUR, 362);
+assert.match(v.phrase, /^Il vous manque 30,17 € par mois/);
+assert.match(v.phrase, /pour couvrir l'année entière : ressources exigées, droits et dossier/);
 
+// L'écart annoncé est celui du TOTAL, et il dit d'où il vient.
 const g = verdictChiffre(diag({ ressourcesMensuelles: 400, paysResidence: "Sénégal" }));
 assert.equal(g.etat, "ecart-important");
-assert.equal(g.manqueMensuelEUR, 477.5);
-assert.equal(g.manqueAnnuelEUR, 5730);
-assert.match(g.phrase, /^Il manque 5 730 € sur l'année/);
+assert.equal(g.manqueAnnuelEUR, 8762);
+assert.match(g.phrase, /^Il manque 8 762 € sur l'année/);
+assert.match(g.phrase, /5 730 € pour les ressources exigées pour le visa, et 3 032 € pour les droits d'inscription et le dossier/);
 
 // Le verdict qui tient ne chiffre rien : il n'y a pas d'écart.
 const t = verdictChiffre(diag({ ressourcesMensuelles: 1200, paysResidence: "Sénégal" }));
@@ -138,10 +144,10 @@ assert.equal(t.manqueMensuelEUR, 0);
 test("le montant manquant se redit en franc CFA, jamais en dirham ni en franc guinéen", () => {
 
 // PARITÉ FIXE (655,957) : le franc CFA se redit, c'est une opération
-// exacte. 77,50 € = 50 837 F.
-const sn = verdictChiffre(diag({ ressourcesMensuelles: 800, paysResidence: "Sénégal" }));
-assert.deepEqual(sn.local, { montant: 50837, devise: "XOF" });
-assert.match(sn.phrase, /\(50 837 F CFA\)/);
+// exacte. 30,17 € = 19 790 F.
+const sn = verdictChiffre(diag({ ressourcesMensuelles: 1100, paysResidence: "Sénégal" }));
+assert.deepEqual(sn.local, { montant: 19790, devise: "XOF" });
+assert.match(sn.phrase, /\(19[\s\u00a0]790[\s\u00a0]F[\s\u00a0]CFA\)/);
 
 // PAS DE PARITÉ FIXE : le dirham et le franc guinéen ne se redisent
 // pas. Un « environ » à un taux du jour serait exactement le chiffre
@@ -439,7 +445,7 @@ assert.match(n.texte, /1 048 €/);
 const e = levierExoneration("master");
 assert.equal(e.montantEUR, DROITS_MASTER);
 assert.match(e.texte, /3 950 €/);
-assert.match(e.texte, /n'est PAS garantie/);
+assert.match(e.texte, /n'est pas garantie/);
 // Décret du 19 mai 2026 : 25 % pour une première inscription en 2027-2028.
 assert.match(e.texte, /25 %/);
 
@@ -509,7 +515,7 @@ test("les quatre phrases de fin, chacune sur son cas", () => {
 
 const cas = {
 tient: diag({ ressourcesMensuelles: 1200, paysResidence: "Sénégal" }),
-"ecart-faible": diag({ ressourcesMensuelles: 800, paysResidence: "Sénégal" }),
+"ecart-faible": diag({ ressourcesMensuelles: 1100, paysResidence: "Sénégal" }),
 "ecart-important": diag({ ressourcesMensuelles: 400, paysResidence: "Sénégal" }),
 "residence-non-documentee": diag({ ressourcesMensuelles: 1200, paysResidence: TEMOIN })
 };
@@ -519,8 +525,8 @@ assert.equal(phraseDeFin(resultat).cas, attendu);
 }
 
 // Chaque phrase porte son chiffre, et c'est le bon.
-assert.match(phraseDeFin(cas["ecart-faible"]).texte, /Il vous manque 77,50 € par mois/);
-assert.match(phraseDeFin(cas["ecart-important"]).texte, /l'écart est de 5 730 € sur l'année/);
+assert.match(phraseDeFin(cas["ecart-faible"]).texte, /Il vous manque 30,17 € par mois/);
+assert.match(phraseDeFin(cas["ecart-important"]).texte, /l'écart est de 8 762 € sur l'année/);
 assert.match(phraseDeFin(cas.tient).texte, /arriver à temps, avec un dossier complet/);
 assert.match(phraseDeFin(cas["residence-non-documentee"]).texte, /sans rien repayer/);
 

@@ -134,6 +134,8 @@ ambre dit « un point à régler » ou « pas encore », comme la vigilance.
 /* Une question sans objet pour ce pays ou ce diplôme se retire vraiment :
 .field porte un display qui l'emporte sur l'attribut hidden. */
 .rec-questions .field[hidden]{ display:none; }
+.diag-form .field[hidden]{ display:none; }
+.diag-fcfa{ font-weight:400; color:var(--text-muted); }
 .rec-questions .field.has-error .fitz-select-trigger,
 .rec-questions .field.has-error input[type=number]{ border-color:var(--danger); }
 .rec-questions .rec-manque{ color:var(--danger); font-weight:600; }

@@ -145,6 +145,7 @@ for (const ligne of c.lignes) {
 const li = element("li", ligne.verifie ? "" : "is-inconnu");
 const valeur = element("div", "fiche-couts-valeur");
 valeur.append(element("strong", "", ligne.montant || ligne.texte));
+if (ligne.fcfa) valeur.append(element("small", "", ligne.fcfa));
 if (ligne.mention) valeur.append(element("small", "", ligne.mention));
 li.append(element("span", "", ligne.niveau || "Tous niveaux"), valeur);
 liste.append(li);

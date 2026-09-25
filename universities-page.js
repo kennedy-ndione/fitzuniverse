@@ -14,6 +14,7 @@ import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.j
 // js/frais.js. Règle des trois valeurs : sans prix VÉRIFIÉ (sourcé et
 // daté), la carte dit « Frais non vérifiés », jamais « gratuit ».
 import { BANDES, LIBELLES_BANDES, LIBELLE_SANS_PRIX, LIBELLES_EXONERATION, lireFrais, lireExoneration, bandeCout, libellePuce, premierNiveauVerifie } from "./js/frais.js";
+import { enFcfa, conversionExacte, formatFcfaCourt } from "./js/taux-indicatifs.js";
 import { formaterDate, etatCarteUniversite } from "./js/echeance.js";
 // Recherche insensible aux accents et à la casse (clôture, 2026-09-07) :
 // « ecole » doit trouver « École polytechnique », « koc » « Koç ». Même
@@ -100,8 +101,17 @@ const scholarshipLabel = university.scholarshipTitles.length
 // ce n'est pas une alerte, c'est une information manquante.
 const { frais, exoneration, niveau, replie } = university.cout || { frais: { etat: "inconnu" }, exoneration: { politique: "inconnue" }, niveau: "", replie: false };
 
+// Le coût redit en F CFA, pour qui compte en F CFA (test « Moussa ») :
+// exact pour l'euro, « ≈ » au taux daté pour les autres devises.
+const puceFcfa = (f) => {
+if (!f || f.etat !== "verifie" || !(f.montant > 0) || f.devise === "XOF") return "";
+const xof = enFcfa(f.montant, f.devise);
+if (xof === null) return "";
+return ` · ${conversionExacte(f.devise) ? "" : "≈ "}${formatFcfaCourt(xof).replace(" de F", " F")}`;
+};
+
 const costChip = frais.etat === "verifie"
-? `<span class="uni-card-chip is-cost" title="${niveau} : ${frais.fraiche ? "montant vérifié le" : "montant à revérifier, dernière vérification le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}</span>`
+? `<span class="uni-card-chip is-cost" title="${niveau} : ${frais.fraiche ? "montant vérifié le" : "montant à revérifier, dernière vérification le"} ${formaterDate(frais.verifieLe)}"><i data-lucide="wallet"></i>${libellePuce(frais, { niveau, replie })}${puceFcfa(frais)}</span>`
 : `<span class="uni-card-chip is-cost-unknown" title="Aucun montant vérifié pour cet établissement"><i data-lucide="wallet"></i>${LIBELLE_SANS_PRIX}</span>`;
 
 const exonerationChip = exoneration.politique !== "inconnue"

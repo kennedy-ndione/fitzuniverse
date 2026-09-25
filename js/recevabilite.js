@@ -137,6 +137,7 @@ uottawa: "https://www.uottawa.ca/study/undergraduate-studies/international-appli
 uottawaCycles: "https://www.uottawa.ca/study/graduate-studies/international-equivalencies",
 utorontoAnglais: "https://future.utoronto.ca/english-language-requirements",
 ircc: "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit/prepare/choose-school-college-university.html",
+lap: "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/obtenir-documents/lettre-attestation-provinciale.html",
 roumanie: "https://www.edu.ro/sites/default/files/fisiere%20articole/OM_5655-2024.pdf",
 yok: "https://egitim.yok.gov.tr/tr/document/2969",
 yokLangue: "https://kmu.edu.tr/mevzuat/bilgi/1081/yuksekogretim-kurumlarinda-yabanci-dil-ogretimi-ve-yabanci-dille-ogretim-yapilmasinda-uyulacak-esaslara-iliskin-yonetmelik",
@@ -277,8 +278,11 @@ if (niveau === "licence") {
 if (e.paysDiplome === "MA" && quebec && RANG[e.diplome] < RANG.bac1) {
 return condition("Avec une année de plus", "Au Québec, il faut treize années de scolarité : le bac marocain en compte douze. Il faut donc d'abord réussir une année d'université au Maroc, ou faire une année préparatoire au Québec (trente crédits à Laval).", src(S.lavalMaroc, S.uqamPays));
 }
-if (quebec) return ok("Vous pouvez postuler", "Au Québec, votre bac (treize années de scolarité) ouvre directement le baccalauréat, la licence québécoise. Chaque université fixe ensuite sa moyenne.", src(S.laval, S.udemSenegal, S.uqamPays));
-return ok("Vous pouvez postuler", `Hors Québec, chaque université fixe ses règles : le bac${e.paysDiplome === "MA" ? " marocain" : ""} y donne en général l'accès direct, avec une moyenne minimale (à Ottawa, 13 sur 20${e.paysDiplome === "MA" ? ", mais 16 sur 20 pour le Maroc" : ""}). Vous pouvez candidater en terminale.`, src(S.ircc, S.uottawa));
+if (quebec) return ok("Vous pouvez postuler", "Au Québec, votre bac (treize années de scolarité) ouvre directement le baccalauréat, la licence québécoise. Chaque université fixe ensuite sa moyenne. Une fois admis, le Certificat d'acceptation du Québec (CAQ) tient lieu de lettre de la province.", src(S.laval, S.udemSenegal, S.uqamPays, S.lap));
+// Hors Québec, la licence n'est pas dispensée de la lettre d'attestation
+// provinciale (seules la maîtrise et le doctorat en EED public le sont) :
+// une place dans le quota de la province, délivrée par l'université.
+return condition("Avec la lettre de la province", `Hors Québec, chaque université fixe ses règles : le bac${e.paysDiplome === "MA" ? " marocain" : ""} y donne en général l'accès direct, avec une moyenne minimale (à Ottawa, 13 sur 20${e.paysDiplome === "MA" ? ", mais 16 sur 20 pour le Maroc" : ""}). Vous pouvez candidater en terminale. Pour le permis d'études, la licence demande en plus la lettre d'attestation de la province : elle confirme qu'une place du quota provincial vous est attribuée, et c'est votre université qui la demande pour vous, souvent après votre acceptation de l'offre.`, src(S.ircc, S.uottawa, S.lap));
 }
 if (niveau === "master") return condition("Selon l'université", "Une licence de trois ans suffit à Laval, à Montréal et à Ottawa ; Toronto demande quatre années d'études. Vérifiez la règle de chaque université visée.", src(S.laval, S.uottawaCycles));
 return ok("Vous pouvez postuler", "Le doctorat demande un master, selon chaque université.", src(S.laval, S.uottawaCycles));
@@ -497,12 +501,24 @@ return { etat: "info", titre: "Les dates publiées", texte: calendrier.texte, so
 // ------------------------------------------------------------
 
 /** etat du verdict chiffré → voyant. */
+/**
+* L'ARGENT QUI MANQUE BLOQUE (décision de Charles, 2026-09-25, après le
+* test « Moussa »). « Vous pouvez vous lancer » à qui il manque 4,5
+* millions de F CFA, c'était l'inviter à payer Campus France et
+* FitzUniverse pour un visa refusé. Le manque devient « Pas encore »,
+* avec ce qui débloque ; un écart trop fin pour un taux du jour reste « à
+* confirmer » ; sans seuil publié, le budget de vie est « à vérifier ».
+*/
+export const DEBLOCAGE_ARGENT = "Réunir la somme qui manque (votre famille, ou un garant qui s'engage par écrit), viser un établissement ou un pays moins cher, ou décrocher une bourse qui couvre l'écart.";
+
 export function voyantArgent(verdict) {
 const titre = "Vos ressources";
 if (!verdict) return { etat: "info", titre: "À calculer", texte: "Indiquez vos ressources pour les comparer au seuil publié.", sources: [], voyant: titre };
 const sources = verdict.source ? [{ url: verdict.source, verifieLe: verdict.verifieLe }] : [];
-if (verdict.etat === "atteint") return { etat: "ok", titre: "Seuil atteint", texte: verdict.phrase, sources, voyant: titre };
-if (verdict.etat === "manque") return { etat: "condition", titre: "Il vous manque de l'argent", texte: verdict.phrase, sources, voyant: titre };
+if (verdict.etat === "atteint") return { etat: "ok", titre: "La première année est couverte", texte: verdict.phrase, sources, voyant: titre };
+if (verdict.etat === "manque") return { etat: "bloque", titre: "Il vous manque de l'argent", texte: verdict.phrase, sources, deblocage: DEBLOCAGE_ARGENT, voyant: titre };
+if (verdict.etat === "a-confirmer") return { etat: "condition", titre: "Tout juste : à confirmer", texte: verdict.phrase, sources, voyant: titre };
+if (verdict.etat === "sans-seuil" && Number.isFinite(verdict.resteMensuelXof)) return { etat: "condition", titre: "Budget de vie à vérifier", texte: verdict.phrase, sources, voyant: titre };
 return { etat: "info", titre: verdict.etat === "sans-seuil" ? "Aucun seuil publié" : "À comparer", texte: verdict.phrase, sources, voyant: titre };
 }
 
@@ -520,6 +536,12 @@ const x = String(t || "");
 return x.charAt(0).toLowerCase() + x.slice(1);
 }
 
+/** Ce que chaque voyant bloquant empêche, en une proposition. */
+const EMPECHE = {
+"Votre niveau d'études": "votre niveau d'études ne permet pas encore de postuler",
+"Vos ressources": "vos ressources ne couvrent pas encore la première année"
+};
+
 export function verdictGlobal(voyants, nomPays) {
 const dans = auPays(nomPays);
 const bloquants = voyants.filter((v) => v && v.etat === "bloque");
@@ -529,7 +551,7 @@ return {
 etat: "pas-encore",
 phrase: bloquants.some((v) => v.horsProcedure)
 ? bloquants.find((v) => v.horsProcedure).texte
-: `Pas encore ${dans} : ${bloquants.map((v) => minuscule(v.voyant)).join(" et ")} ne ${bloquants.length > 1 ? "permettent" : "permet"} pas encore de postuler. Le détail, et ce qui vous débloque, est juste en dessous.`,
+: `Pas encore ${dans} : ${bloquants.map((v) => EMPECHE[v.voyant] || `${minuscule(v.voyant)} ne permet pas encore de postuler`).join(", et ")}. Le détail, et ce qui vous débloque, est juste en dessous.`,
 conditions: conditions.map((v) => `${v.voyant} : ${v.titre}`),
 deblocages: bloquants.map((v) => v.deblocage).filter(Boolean)
 };

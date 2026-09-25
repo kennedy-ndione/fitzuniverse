@@ -370,7 +370,7 @@ absences: [
 turquie: {
 ressources: null,
 ressourcesAbsence: {
-texte: "La Turquie ne chiffre aucun seuil de ressources : pour le permis de séjour étudiant, la déclaration de l'étudiant suffit, sauf si l'administration demande des justificatifs. Aucun verdict « seuil atteint » n'est donc possible — seulement le coût de l'année.",
+texte: "La Turquie ne chiffre aucun seuil de ressources : pour le permis de séjour étudiant, la déclaration de l'étudiant suffit, sauf si l'administration demande des justificatifs. Nous vous disons donc ce qu'il vous resterait pour vivre, une fois payés les frais de l'année.",
 source: "https://www.goc.gov.tr/ikamet-sss",
 verifieLe: "2026-09-23"
 },
@@ -398,7 +398,7 @@ absences: [
 maroc: {
 ressources: null,
 ressourcesAbsence: {
-texte: "Le Maroc ne chiffre aucun seuil de ressources : la loi exige des « moyens d'existence suffisants », sans montant, et le visa étudiant demande une prise en charge légalisée d'un garant. Aucun verdict « seuil atteint » n'est donc possible — seulement le coût de l'année.",
+texte: "Le Maroc ne chiffre aucun seuil de ressources : la loi exige des « moyens d'existence suffisants », sans montant, et le visa étudiant demande une prise en charge légalisée d'un garant. Nous vous disons donc ce qu'il vous resterait pour vivre, une fois payés les frais de l'année.",
 source: "https://www.sgg.gov.ma/Portals/0/profession_reglementee/Dahir_immigration_fr.pdf",
 verifieLe: "2026-09-23"
 },
@@ -523,7 +523,7 @@ absences: [
 chine: {
 ressources: null,
 ressourcesAbsence: {
-texte: "La Chine ne chiffre aucun seuil de ressources pour le visa d'études X1 : les pièces officielles sont le passeport, le formulaire, la photo, l'avis d'admission et le formulaire JW201 ou JW202, sans montant minimum. Aucun verdict « seuil atteint » n'est donc possible — seulement le coût de l'année.",
+texte: "La Chine ne chiffre aucun seuil de ressources pour le visa d'études X1 : les pièces officielles sont le passeport, le formulaire, la photo, l'avis d'admission et le formulaire JW201 ou JW202, sans montant minimum. Nous vous disons donc ce qu'il vous resterait pour vivre, une fois payés les frais de l'année.",
 source: "https://french.beijing.gov.cn/studyinginbeijing/visaapplications/202306/t20230626_3146191.html",
 verifieLe: "2026-09-23"
 },

@@ -175,7 +175,7 @@ return {
 cle: "exoneration",
 disponible: true,
 montantEUR: montant,
-texte: `Une exonération des droits différenciés retirerait ${formatEUR(montant)} de ce total. Elle n'est PAS garantie : depuis le décret du 19 mai 2026, seule une exonération individuelle reste possible, sur demande, dans la limite de ${Math.round(plafond * 100)} % des inscrits hors Union européenne pour une première inscription en 2027-2028, et chaque établissement décide des siennes. Budgétez le montant plein, et considérez l'exonération comme un allègement possible, jamais comme un acquis.`,
+texte: `Une exonération des droits différenciés retirerait ${formatEUR(montant)} de ce total. Elle n'est pas garantie : depuis le décret du 19 mai 2026, seule une exonération individuelle reste possible, sur demande, dans la limite de ${Math.round(plafond * 100)} % des inscrits hors Union européenne pour une première inscription en 2027-2028, et chaque établissement décide des siennes. Budgétez le montant plein, et considérez l'exonération comme un allègement possible, jamais comme un acquis.`,
 source: droits.source,
 verifieLe: droits.verifieLe
 };

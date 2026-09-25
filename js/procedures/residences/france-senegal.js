@@ -131,7 +131,7 @@ verifieLe: VERIFIE
 // baccalauréat sénégalais (« Arabe L-AR ») : il n'a de sens que pour un
 // candidat qui a passé ce bac-là.
 ef_pieces: {
-consigneSup: "Si votre baccalauréat porte la mention Arabe L-AR, vous devez obligatoirement passer un test de français AVANT de déposer votre dossier sur la plateforme : ne le laissez pas pour la fin, il conditionne le dépôt.",
+consigneSup: "Si votre baccalauréat porte la mention Arabe L-AR, vous devez obligatoirement passer un test de français avant de déposer votre dossier sur la plateforme : ne le laissez pas pour la fin, il conditionne le dépôt.",
 // « B2 » EST DIT EN FRANÇAIS ORDINAIRE (lot R24).
 //
 // Charles, le 2026-09-18 : « la plupart des étudiants ou ressortissants
@@ -141,7 +141,7 @@ consigneSup: "Si votre baccalauréat porte la mention Arabe L-AR, vous devez obl
 // — c'est le titre du papier qu'on lui demandera — et l'aide dit ce que
 // B2 veut dire, avec les mots exacts que R16 a retenus pour ce niveau.
 piecesSup: [
-{ slug: "certification-b2-de-francais-bac-arabe-l-ar-uniquement", nom: "Certification B2 de français (bac Arabe L-AR uniquement)", aide: "Seulement si votre baccalauréat porte la mention Arabe L-AR. Le niveau B2, c'est « je suis à l'aise, je pourrais étudier en français » : passez le test AVANT de déposer votre dossier.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
+{ slug: "certification-b2-de-francais-bac-arabe-l-ar-uniquement", nom: "Certification B2 de français (bac Arabe L-AR uniquement)", aide: "Seulement si votre baccalauréat porte la mention Arabe L-AR. Le niveau B2, c'est « je suis à l'aise, je pourrais étudier en français » : passez le test avant de déposer votre dossier.", format: "scan", tailleMax: "500 Ko", traduction: false, legalisation: false }
 ],
 source: SOURCES.DOSSIER,
 verifieLe: VERIFIE
@@ -159,7 +159,7 @@ verifieLe: VERIFIE
 // 85 000 F au moment de payer a déjà organisé son budget sans eux.
 ef_paiement: {
 titre: "Payer les frais de dossier — 85 000 F, non remboursables",
-consigne: "Attendez le courriel de demande de paiement, envoyé après la soumission et le traitement de votre dossier : ne payez JAMAIS avant. Réglez en agence SUNU BANK (ex-BICIS) avec la demande de paiement, une pièce d'identité et votre numéro de dossier. Si le paiement n'est pas validé après 7 jours, présentez le reçu à l'espace Campus France le plus proche ou écrivez depuis votre compte. La demande de paiement ne signifie pas que le dossier est éligible.",
+consigne: "Attendez le courriel de demande de paiement, envoyé après la soumission et le traitement de votre dossier : ne payez jamais avant. Réglez en agence SUNU BANK (ex-BICIS) avec la demande de paiement, une pièce d'identité et votre numéro de dossier. Si le paiement n'est pas validé après 7 jours, présentez le reçu à l'espace Campus France le plus proche ou écrivez depuis votre compte. La demande de paiement ne signifie pas que le dossier est éligible.",
 montant: 85000,
 devise: "XOF",
 source: SOURCES.FAQ,

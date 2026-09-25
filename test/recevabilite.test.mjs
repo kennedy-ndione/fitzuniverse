@@ -117,8 +117,14 @@ assert.equal(niveau("canada", bac("MA"), { variante: "quebec" }).etat, "conditio
 assert.match(niveau("canada", bac("MA"), { variante: "quebec" }).texte, /douze/);
 assert.equal(niveau("canada", bac("SN"), { variante: "quebec" }).etat, "ok");
 assert.equal(niveau("canada", { diplomeActuel: "bac1", paysDiplome: "MA", desiredDegree: "Licence" }, { variante: "quebec" }).etat, "ok");
-assert.equal(niveau("canada", bac("MA")).etat, "ok", "hors Québec : accès direct");
+// Hors Québec : accès direct, mais la licence demande la lettre de la
+// province (seules maîtrise et doctorat en EED public en sont dispensés).
+assert.equal(niveau("canada", bac("MA")).etat, "condition", "hors Québec : accès direct, avec la lettre de la province");
 assert.match(niveau("canada", bac("MA")).texte, /16 sur 20/);
+assert.match(niveau("canada", bac("MA")).texte, /lettre d'attestation de la province/);
+assert.ok(niveau("canada", bac("SN")).sources.some((s) => /lettre-attestation-provinciale/.test(s.url)));
+assert.match(niveau("canada", bac("SN"), { variante: "quebec" }).texte, /CAQ/);
+assert.equal(niveau("canada", { diplomeActuel: "licence", paysDiplome: "SN", desiredDegree: "Master" }).etat, "condition", "maîtrise : selon l'université");
 });
 
 test("Malaisie — la liste de la MQA : ni la Côte d'Ivoire ni le Burkina", () => {
@@ -158,8 +164,12 @@ assert.match(ok.verdict.phrase, /l'admission, elle, reste la décision de chaque
 const si = lancer("allemagne", bac("GN", { serieBac: "scientifique", langueCours_allemagne: "allemand", statutLangue_allemagne: "aucun" }));
 assert.equal(si.verdict.etat, "lancer-si");
 assert.match(si.verdict.phrase, /2 points à régler/);
+// L'argent qui manque BLOQUE (décision de Charles, 2026-09-25) : « Pas
+// encore », avec ce qui débloque.
 const manque = lancer("allemagne", bac("SN", { serieBac: "scientifique", statutLangue_allemagne: "test" }), { verdictArgent: { etat: "manque", phrase: "Il vous manque 200 €." } });
-assert.equal(manque.verdict.etat, "lancer-si");
+assert.equal(manque.verdict.etat, "pas-encore");
+assert.match(manque.verdict.phrase, /^Pas encore en Allemagne : vos ressources ne couvrent pas encore la première année\./);
+assert.ok(manque.verdict.deblocages.some((d) => /garant/.test(d)));
 for (const r of [ok, si, manque]) assert.ok(!/serez admis|admission garantie|vous aurez votre visa/i.test(JSON.stringify(r)));
 });
 

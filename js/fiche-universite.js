@@ -36,6 +36,7 @@
 */
 
 import { lireFrais, lireExoneration, libelleFrais, libelleMontant, LIBELLES_EXONERATION, ORDRE_NIVEAUX } from "./frais.js";
+import { equivalentFcfa } from "./taux-indicatifs.js";
 import { lireVoieAdmission, VOIES_ADMISSION } from "./voie-admission.js";
 import { formaterDate, etatCandidature } from "./echeance.js";
 import { PAYS, estOuverte, pageDeDestination } from "./pays-preinscription.js";
@@ -126,6 +127,9 @@ niveau: n,
 texte: libelleFrais(u, n, { aujourdhui }),
 montant: libelleMontant(f),
 mention: verifie ? (f.fraiche ? `vérifié le ${formaterDate(f.verifieLe)}` : "à recouper") : "",
+// Le montant en F CFA, pour qui compte en F CFA (test « Moussa ») : exact
+// pour l'euro, « environ », au taux daté, pour les autres devises.
+fcfa: verifie && f.montant > 0 && equivalentFcfa(f.montant, f.devise) ? `soit ${equivalentFcfa(f.montant, f.devise)}${f.periode === "an" ? " par an" : ""}` : "",
 verifie
 };
 });

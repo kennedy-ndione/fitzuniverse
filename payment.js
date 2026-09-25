@@ -708,6 +708,22 @@ if (window.lucide) lucide.createIcons();
 
 }
 
+// LE RÉCAPITULATIF TOUT DE SUITE (test « Moussa », 2026-09-25) : il restait
+// en tirets le temps de vérifier la session, quatre secondes sur un bon
+// réseau. La formule et son prix ne dépendent pas du compte : ils
+// s'affichent dès le chargement, puis bootstrap() les reprend avec la
+// session (déduction éventuelle, moyen de paiement).
+try {
+const planInitial = getRequestedPlanId();
+if (planInitial) {
+const destinationInitiale = getRequestedDestination();
+const plan = typeof offrePourDestination === "function" ? offrePourDestination(planInitial, destinationInitiale) : SCHOLARBRIDGE_PLANS[planInitial];
+if (plan) renderPlan(plan, null);
+}
+} catch (error) {
+console.warn("Récapitulatif différé à la vérification de session :", error);
+}
+
 resolveSession().then(bootstrap).catch((error) => {
 
 // Une session qu'on n'arrive pas à vérifier doit se comporter comme

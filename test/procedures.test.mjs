@@ -143,13 +143,13 @@ assert.match(procedureFrance.texte, /AU TOTAL/, "le fait public doit dire que le
 assert.equal(procedureFrance.source, FR.sources.DOSSIER);
 });
 
-test("les vœux : le plafond de 7 est GLOBAL, et le sous-plafond de la Licence 1 est dit", () => {
+test("les vœux : le plafond de 7 vaut pour l'ensemble, et le sous-plafond de la Licence 1 est dit", () => {
 const voeux = FR.etapes.find((e) => e.type === "voeux");
 assert.equal(voeux.fiabilite, "verifie_source_officielle");
 assert.equal(voeux.source, FR.sources.DOSSIER);
 // Le total ET le sous-plafond qui coûte le plus cher à ignorer.
 assert.match(voeux.consigne, /sept \(7\) choix de formations connectées/);
-assert.match(voeux.consigne, /GLOBAL/);
+assert.match(voeux.consigne, /vaut pour l'ensemble/);
 assert.match(voeux.consigne, /Licence 1 \(DAP\)\s*:\s*3 formations/);
 // L'exemple qui montre que les sous-plafonds s'additionnent DANS le total.
 assert.match(voeux.consigne, /3 \+ 4 = 7/);
@@ -175,7 +175,7 @@ assert.equal(pieces.source, FR.sources.DOSSIER, "les tailles sont sur DOSSIER, p
 assert.match(pieces.consigne, /Tous les documents doivent être en français ou traduits en Français auprès d'un traducteur assermenté\. Dans le cas où le document est traduit, il faut joindre aussi obligatoirement le document original\./);
 assert.match(pieces.consigne, /plafond est général/);
 assert.match(pieces.consigne, /L-AR/);
-assert.match(pieces.consigne, /AVANT de déposer/);
+assert.match(pieces.consigne, /avant de déposer/i);
 });
 
 test("aucune étape n'a une taille de fichier sans source ; les tailles citées sont celles de la page « je constitue mon dossier » ou de la FAQ", () => {
