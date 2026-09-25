@@ -863,6 +863,29 @@ function htmlCandidature(e) {
     }).join("")}</ol>`;
 }
 
+/**
+* L'université après Universitaly (2026-09-25) : ce qu'elle demande, son
+* site, puis « C'est fait ». Rien à déposer ici : le dossier est parti
+* sur Universitaly.
+*/
+function htmlUniversiteApres(e) {
+  if (!e.voeux.length) return htmlGeste(e);
+  const cartes = e.nonConcerne ? "" : `
+    <ol class="rt-cands">${e.voeux.map((v) => {
+      const nom = (v.fiche && v.fiche.nom) || v.university;
+      return `
+      <li class="rt-cand">
+        <div class="rt-cand-tete"><strong>${ech(v.university)}</strong><span>${ech([v.formation, v.niveau].filter(Boolean).join(" · "))}</span></div>
+        <details class="rt-cand-lire" open>
+          <summary><i data-lucide="book-open"></i><span>Ce que demande ${ech(nom)}</span></summary>
+          ${htmlAdmission(v)}
+        </details>
+        ${htmlLienUniversite(v)}
+      </li>`;
+    }).join("")}</ol>`;
+  return `${cartes}${htmlGeste(e)}`;
+}
+
 // ---- Étape 12 : les réponses, vœu par vœu ----
 function htmlReponses(e) {
   if (!e.voeux.length) return `<p class="rt-vide">${ech(e.empechement)}</p>`;
@@ -951,6 +974,7 @@ function htmlCorps(e) {
     case "motivations": return htmlMotivations(e);
     case "reponses": return htmlReponses(e);
     case "candidature": return htmlCandidature(e);
+    case "universite": return htmlUniversiteApres(e);
     case "visa": return htmlVisa(e);
     default: return `<div class="rt-actions">${htmlOutilPrincipal(e)}${htmlPortail(e)}</div>${htmlGeste(e)}`;
   }
@@ -1035,7 +1059,7 @@ function peindre() {
 function repeindreCandidature() {
   recomposer();
   const e = etapeChoisie();
-  if (!e || e.kind !== "candidature") return;
+  if (!e || (e.kind !== "candidature" && e.kind !== "universite")) return;
   const section = document.getElementById("rtEtape");
   if (section && section.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   peindre();

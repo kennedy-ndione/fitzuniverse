@@ -114,9 +114,40 @@ langue: texte(a.langue),
 fraisDossier: texte(a.fraisDossier),
 coutIndicatif: texte(a.coutIndicatif),
 verifieLe: texte(a.verifieLe),
-sources: Array.isArray(a.sources) ? a.sources.filter((x) => typeof x === "string" && /^https?:\/\//.test(x)) : []
+sources: Array.isArray(a.sources) ? a.sources.filter((x) => typeof x === "string" && /^https?:\/\//.test(x)) : [],
+portailNationalDabord: Array.isArray(a.portailNationalDabord) ? a.portailNationalDabord.filter((x) => typeof x === "string") : []
 } : null
 };
+}
+
+/**
+* LE NIVEAU D'UN VŒU, en clé de fiche (2026-09-25). Les niveaux du vœu
+* sont ceux de la destination (« Laurea (licence) », « Cycle unique
+* (médecine, droit…) »…) ; la fiche d'une université les nomme par
+* clé : licence, master, cycle_unique, doctorat, foundation.
+*/
+export function cleNiveauVoeu(niveau) {
+const n = aplatirNom(niveau);
+if (!n) return "";
+if (/cycle unique/.test(n)) return "cycle_unique";
+if (/foundation/.test(n)) return "foundation";
+if (/doctorat/.test(n)) return "doctorat";
+if (/magistrale|master/.test(n)) return "master";
+if (/laurea|licence|bachelor/.test(n)) return "licence";
+return "";
+}
+
+/**
+* UNIVERSITALY D'ABORD ? (2026-09-25) Vrai quand la fiche de l'université
+* du vœu dit, pour son niveau, que la candidature passe d'abord par le
+* portail national et seulement ensuite par l'université (Italie :
+* Naples ; Florence et Pise en licence et en cycle unique). Sans fiche,
+* sans niveau reconnu ou sans mention : faux, l'ordre habituel vaut.
+*/
+export function portailNationalDabord(voeu, universites = []) {
+const f = ficheDuVoeu(voeu, universites);
+const cle = cleNiveauVoeu(voeu && voeu.niveau);
+return !!(f && f.admission && cle && f.admission.portailNationalDabord.includes(cle));
 }
 
 /** Les outils de Fitz que chaque type d'étape emporte. */
@@ -209,6 +240,13 @@ const voeuxOfficielle = d.etapeVoeuxOfficielle ? procedure.etapes.find((x) => x.
 const clairVoeux = voeuxOfficielle ? (enClairDe(id, voeuxOfficielle.id) || {}).enClair || "" : "";
 const candidatures = new Set(d.etapesCandidature || []);
 const ajoutee = d.etapeUniversite || null;
+// L'ÉTAPE DE L'UNIVERSITÉ, APRÈS LE PORTAIL NATIONAL (2026-09-25). Quand
+// l'université de CHAQUE vœu fait passer d'abord par Universitaly, son
+// étape ne se place plus avant : elle vient après la validation, et ce
+// n'est plus un dépôt mais les démarches qu'elle demande ensuite (tests,
+// évaluation du dossier, inscription).
+const universiteApres = !!(ajoutee && ajoutee.apres && listeVoeux.length > 0
+&& listeVoeux.every((v) => portailNationalDabord(v, universites)));
 
 const defs = [
 { id: "situation", kind: "situation", icone: "user-round", titre: "Votre situation",
@@ -278,7 +316,7 @@ motivationsPosees = true;
 for (const e of etapesProcedure) {
 // L'étape de candidature ajoutée (Italie : le site de l'université,
 // avant Universitaly), à sa place dans la procédure.
-if (ajoutee && e.id === ajoutee.avant) {
+if (ajoutee && !universiteApres && e.id === ajoutee.avant) {
 poserLettres(ajoutee.id);
 defs.push({ id: ajoutee.id, kind: "candidature", icone: "building-2", titre: ajoutee.titre, enClair: ajoutee.enClair,
 outils: OUTILS_CANDIDATURE.map((o) => ({ ...o })), depot: depots.has(ajoutee.id) });
@@ -299,6 +337,10 @@ enClair: clair.enClair || "",
 outils: (kind === "candidature" ? OUTILS_CANDIDATURE : OUTILS_PAR_TYPE[e.type] || []).map((o) => ({ ...o })),
 depot: depots.has(e.id)
 });
+if (universiteApres && e.id === ajoutee.apres) {
+defs.push({ id: ajoutee.id, kind: "universite", icone: "building-2", titre: ajoutee.titreApres, enClair: ajoutee.enClairApres,
+outils: OUTILS_CANDIDATURE.filter((o) => o.feature === "ai_email").map((o) => ({ ...o })), depot: false });
+}
 if (dernierDepot && e.id === dernierDepot.id) {
 defs.push({ id: ETAPE_REPONSE_ETABLISSEMENT, kind: "reponses", icone: "mail-check", titre: "Noter la réponse de l'établissement",
 enClair: "Quand l'établissement vous répond, notez sa réponse ici, vœu par vœu : admis, refusé ou en liste d'attente. La suite de votre route se règle sur elle." });
@@ -367,7 +409,7 @@ nonConcerne,
 // concerne tout le monde. L'étape de candidature AJOUTÉE (Italie),
 // elle, peut ne pas concerner : certaines universités passent
 // directement par Universitaly.
-ignorable: ((!!officielle && def.kind !== "voie" && def.kind !== "voeux") || def.kind === "candidature") && !def.depot,
+ignorable: ((!!officielle && def.kind !== "voie" && def.kind !== "voeux") || def.kind === "candidature" || def.kind === "universite") && !def.depot,
 depot: !!def.depot,
 empechement,
 outils: (def.outils || []).map((o) => ({ ...o })),
@@ -395,7 +437,7 @@ faitLe: (saisie && saisie.faitLe) || null,
 pieces,
 traduction: def.kind === "pieces" ? { concernees: [], declare: "", reglee: true } : null,
 residenceAbsente: false,
-voeux: def.kind === "candidature"
+voeux: def.kind === "candidature" || def.kind === "universite"
 ? listeVoeux.map((v) => ({ ...v, depose: STATUTS_DEPOSES_VOEU.includes(v.status), fiche: ficheDuVoeu(v, universites) }))
 : ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
 visa: def.kind === "depart" ? { etat: visa, faites: visaFaites, total: VISA_ETAPES.length } : null,

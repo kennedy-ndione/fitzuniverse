@@ -123,8 +123,12 @@ libelles: { etudes_dans_la_langue: l.etudes, test_passe: l.test, test_prevu: "Je
 *                   `avant` : la plupart des universités italiennes font
 *                   candidater sur leur propre site avant Universitaly.
 *                   Ce n'est pas un dépôt du pays (Universitaly l'est) :
-*                   l'étudiant dont l'université passe directement par
-*                   Universitaly la déclare « ne me concerne pas ».
+*                   Quand la fiche de l'université du vœu dit que ce niveau
+*                   passe d'abord par Universitaly (admission.
+*                   portailNationalDabord), l'étape se place après
+*                   `apres` et devient « Suivre les démarches de votre
+*                   université » (titreApres, enClairApres) : ni dépôt ni
+*                   preuve, un simple « C'est fait ».
 *   etapeVoeuxOfficielle l'étape de la procédure qui fait CHOISIR
 *                   l'établissement : elle se fond dans l'étape « vœux »
 *                   de la route (son texte officiel y est servi), au lieu
@@ -211,6 +215,12 @@ etapesCandidature: ["candidature_universite"],
 etapeUniversite: {
 id: "candidature_universite",
 avant: "it_comparabilite",
+// Quand l'université du vœu fait passer d'abord par Universitaly (sa
+// fiche le dit : admission.portailNationalDabord), l'étape vient après
+// la validation, sous ce titre-là.
+apres: "it_validation",
+titreApres: "Suivre les démarches de votre université",
+enClairApres: "Votre université fait passer d'abord par Universitaly. Une fois votre préinscription validée, c'est elle qui vous demande la suite : un test, l'évaluation de votre dossier, puis l'inscription. Lisez ci-dessous ce qu'elle demande, suivez-le sur son site, puis dites que c'est fait.",
 titre: "Candidater auprès de votre université",
 enClair: "En Italie, la plupart des universités examinent d'abord votre dossier sur leur propre site, avant Universitaly. Lisez ci-dessous ce que demande la vôtre, faites vérifier votre dossier par Fitz, puis déposez-le sur son site. Gardez le numéro ou l'e-mail de confirmation : il se déclare ici. Si votre université passe directement par Universitaly, dites-le en bas de l'étape."
 },
