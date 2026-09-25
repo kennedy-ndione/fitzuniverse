@@ -45,7 +45,7 @@
  */
 
 import { db, storage } from "./firebase-config.js";
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { ref as storageRef, uploadBytes } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 import { compressImageToTarget } from "./js/compression-image.js";
 import { lirePreuve, preuveValide, resumePreuve, cheminCapture, TAILLE_MAX_FICHIER, TYPES_FICHIER } from "./js/preuve-depot.js";
@@ -80,7 +80,7 @@ import { prechargerCatalogue, chargerUniversites } from "./js/catalog-data.js";
 prechargerCatalogue();
 import { PLAN_PREINSCRIPTION_LABELS, droitsPreinscription, planPreinscriptionPour, resolvePlanPreinscriptionFrance } from "./js/plan-features.js";
 import { construireRoutePays, questionsSituationPays, STATUTS_DEPOSES_VOEU } from "./js/route-destination.js";
-import { destination as configDestination, PREFIXES_VOEU } from "./js/destinations-preinscription.js";
+import { destination as configDestination, PREFIXES_VOEU, DESTINATIONS_VENDUES } from "./js/destinations-preinscription.js";
 import { HORS_TOTAL_PAYS } from "./js/diagnostic-pays.js";
 import { auPays, avecArticle } from "./js/pays-grammaire.js";
 import {
@@ -267,7 +267,10 @@ function peindreTete() {
   // destinations passe de l'une à l'autre ici ; avec une seule, rien.
   const nav = document.getElementById("rtDestinations");
   if (nav) {
-    const liste = etat.droits.some((x) => x.destination === etat.destination) ? etat.droits : [...etat.droits, { destination: etat.destination }];
+    // Un compte en accès test voit les neuf pays : c'est là qu'on les
+    // essaie tous (2026-09-25).
+    const liste = estCompteTest() ? DESTINATIONS_VENDUES.map((d) => ({ destination: d }))
+      : etat.droits.some((x) => x.destination === etat.destination) ? etat.droits : [...etat.droits, { destination: etat.destination }];
     nav.hidden = liste.length < 2;
     nav.innerHTML = liste.length < 2 ? "" : liste.map((x) => {
       const nom = x.destination === "france" ? "France" : ((configDestination(x.destination) || {}).nom || x.destination);
@@ -1127,8 +1130,65 @@ function peindre() {
   peindreTete();
   peindreEtape();
   peindreSuite();
+  peindreCompteTest();
   icones();
   centrerLeFil();
+}
+
+// ==========================================================
+// LE COMPTE DE TEST (2026-09-25)
+// ==========================================================
+// Un compte en « accès test complet » (testerAccess, que seul
+// l'administrateur pose) ouvre les neuf pays. Pour qu'on puisse y
+// rejouer chaque route du début, il peut remettre le pays affiché à
+// zéro : ses vœux, ses étapes et pièces cochées, son diagnostic. Le
+// profil, les autres pays et l'espace Bourses ne bougent pas. Aucun
+// compte payant ne voit ce bouton.
+function estCompteTest() {
+  return !!(etat.session && etat.session.testerAccess === true);
+}
+
+function peindreCompteTest() {
+  const zone = document.getElementById("rtTest");
+  if (!zone) return;
+  zone.hidden = !estCompteTest();
+  if (zone.hidden) { zone.innerHTML = ""; return; }
+  const n = etat.voeux.length;
+  zone.innerHTML = `
+    <h2 class="rt-test-h"><i data-lucide="flask-conical"></i><span>Compte de test</span></h2>
+    <p>Ce compte a l'accès test complet : les neuf pays sont ouverts. Pour rejouer la route ${ech(auPays(nomDestination()))} depuis le début, remettez-la à zéro. Seront effacés : ${n ? `${n} vœu${n > 1 ? "x" : ""}, ` : ""}les étapes et les pièces cochées, et le diagnostic de ce pays. Le profil, les autres pays et l'espace Bourses ne changent pas.</p>
+    <div class="rt-test-gestes" id="rtTestGestes">
+      <button type="button" class="rt-lien-discret" id="rtRemiseZero">Remettre ce pays à zéro</button>
+    </div>`;
+  const bouton = zone.querySelector("#rtRemiseZero");
+  bouton.addEventListener("click", () => {
+    const gestes = zone.querySelector("#rtTestGestes");
+    gestes.innerHTML = `
+      <span>Tout effacer pour ce pays ?</span>
+      <button type="button" class="rt-btn rt-btn--retirer" id="rtRemiseOui">Oui, remettre à zéro</button>
+      <button type="button" class="rt-lien-discret" id="rtRemiseNon">Non</button>`;
+    gestes.querySelector("#rtRemiseOui").addEventListener("click", () => remettreAZero());
+    gestes.querySelector("#rtRemiseNon").addEventListener("click", () => peindreCompteTest());
+    gestes.querySelector("#rtRemiseNon").focus();
+  });
+}
+
+async function remettreAZero() {
+  if (!estCompteTest()) return;
+  try {
+    for (const v of [...etat.voeux]) {
+      await deleteDoc(doc(db, "users", etat.session.user.uid, "applications", v.id));
+    }
+    await updateDoc(refUser(), estFrance()
+      ? { dossierFrance: deleteField(), diagnosticFrance: deleteField() }
+      : { [`dossiersPays.${etat.destination}`]: deleteField(), [`diagnosticsPays.${etat.destination}`]: deleteField() });
+    toast("Ce pays est remis à zéro.");
+    // On recharge : le diagnostic, le dossier et les vœux se relisent.
+    window.location.reload();
+  } catch (error) {
+    console.error("Remise à zéro impossible :", error);
+    toast("La remise à zéro n'a pas pu se faire. Réessayez.", "error");
+  }
 }
 
 /** L'ordre et la nature des étapes : ce qui, s'il change, impose de tout repeindre. */

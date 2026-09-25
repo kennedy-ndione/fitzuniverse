@@ -1850,3 +1850,42 @@ padding-left:0;
 padding-top:34px;
 }
 }
+
+
+/* LE COMPTE DE TEST (2026-09-25) : visible seulement avec l'accès test
+complet. Discret, en pointillés, pour qu'on ne le confonde jamais avec
+une étape de la route. */
+.rt-test{
+margin-top:24px;
+padding:16px 18px;
+border:1px dashed var(--border-color);
+border-radius:14px;
+font-size:.9rem;
+color:var(--text-light);
+}
+
+.rt-test-h{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0 0 8px;
+font-size:1rem;
+color:var(--text);
+}
+
+.rt-test-h i,
+.rt-test-h svg{
+width:18px;
+height:18px;
+}
+
+.rt-test p{
+margin:0 0 10px;
+}
+
+.rt-test-gestes{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:8px 16px;
+}
