@@ -463,8 +463,18 @@ function htmlPortail(e) {
   // L'étape de réponse ajoutée à une voie directe (UM6P, Al Akhawayn) n'a
   // pas de portail : celui du pays (l'AMCI) n'est pas le sien.
   if (e.id === "reponse_etablissement") return "";
+  // Quand le dossier se dépose université par université (Canada,
+  // Roumanie, Malaisie, voies directes…), le portail du pays n'est pas
+  // celui des lettres ni des réponses : au Canada, c'était « Ouvrir
+  // Compte IRCC » sous les lettres de motivation (test du 2026-09-25).
+  if ((e.kind === "motivations" || e.kind === "reponses") && !estFrance() && !portailNationalDeDepot()) return "";
   const p = etat.route.portail;
   return `<a href="${ech(p.url)}" target="_blank" rel="noopener noreferrer" class="rt-btn rt-btn--portail"><i data-lucide="external-link"></i><span>Ouvrir ${ech(p.nom)}</span></a>`;
+}
+
+/** Vrai si la route dépose le dossier sur un portail du pays (Universitaly, AMCI…), pas université par université. */
+function portailNationalDeDepot() {
+  return !!(etat.route && etat.route.etapes.some((x) => x.depot && x.kind !== "candidature"));
 }
 
 /** Le geste : la preuve si elle est requise, et « C'est fait ». */
@@ -482,7 +492,7 @@ function htmlGeste(e) {
   const captureJointe = e.preuve.valeur === PREUVE_CAPTURE;
   const preuve = e.preuve.requise ? `
     <label class="rt-preuve">
-      <span>${ech(e.preuve.libelle.charAt(0).toUpperCase() + e.preuve.libelle.slice(1))}${avecFichier ? " (si le site vous en a donné un)" : ""}</span>
+      <span>${ech(e.preuve.libelle.charAt(0).toUpperCase() + e.preuve.libelle.slice(1))}${avecFichier ? " (ou joignez la capture ci-dessous)" : ""}</span>
       <input type="text" id="rtPreuve" maxlength="64" value="${ech(captureJointe ? "" : e.preuve.valeur)}" placeholder="${ech(e.id === "ef_soumission" ? "Le numéro que le portail vous a donné" : e.depot ? "Le numéro ou la référence de votre dépôt" : "La référence, pour la retrouver plus tard")}" autocomplete="off">
     </label>
     ${avecFichier ? htmlChampFichier("rtPreuveFichier") : ""}
@@ -513,7 +523,7 @@ function htmlAvantDepot(e) {
   if (!avant.length) return "";
   const noms = avant.slice(0, 3).map((x) => x.titre).join(", ") + (avant.length > 3 ? "…" : "");
   const n = avant.length;
-  return `<p class="rt-mention rt-mention--avant-depot"><i data-lucide="alert-triangle"></i><span>Avant de déposer : ${n} étape${n > 1 ? "s" : ""} ne ${n > 1 ? "sont" : "est"} pas encore ${n > 1 ? "faites" : "faite"} ici (${ech(noms)}). Si ${n > 1 ? "elles sont réglées" : "elle est réglée"}, vous pouvez déclarer le dépôt ; sinon, ${n > 1 ? "faites-les" : "faites-la"} d'abord.</span></p>`;
+  return `<p class="rt-mention rt-mention--avant-depot"><i data-lucide="alert-triangle"></i><span>Avant de déposer : ${n} étape${n > 1 ? "s ne sont" : " n'est"} pas encore ${n > 1 ? "faites" : "faite"} ici (${ech(noms)}). Si ${n > 1 ? "elles sont réglées" : "elle est réglée"}, vous pouvez déclarer le dépôt ; sinon, ${n > 1 ? "faites-les" : "faites-la"} d'abord.</span></p>`;
 }
 
 /** Le dépôt est déclaré, mais un vœu posé depuis ne l'est pas encore. */

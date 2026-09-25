@@ -134,12 +134,13 @@ verifieLe: "2026-09-07"
 {
 cle: "droits",
 diffusion: "public",
-texte: "Droits d'inscription différenciés 2026-2027 : 2 902 € en licence, 3 950 € en master. Les exonérations sont plafonnées à 30 % des étudiants non européens (25 % en 2027-2028).",
+texte: "Droits d'inscription différenciés 2026-2027 : 2 902 € en licence, 3 950 € en master. Depuis le décret du 19 mai 2026, une exonération ne peut plus viser toute une catégorie d'étudiants : seule une exonération individuelle reste possible, dans la limite de 30 % des inscrits hors Union européenne en 2026-2027 et de 25 % en 2027-2028.",
 montant: 3950, devise: "EUR",
 montants: { licence: 2902, master: 3950 },
-plafondExoneration: 0.30,
-source: "https://www.service-public.gouv.fr/particuliers/actualites/A18927?lang=en",
-verifieLe: "2026-09-07"
+// La rentrée que préparent nos étudiants est celle de 2027-2028 : 25 %.
+plafondExoneration: 0.25,
+source: "https://www.enseignementsup-recherche.gouv.fr/fr/faq-droits-d-inscription-differencies-pour-les-etudiants-extra-communautaires-103043",
+verifieLe: "2026-09-25"
 },
 // Réécrit le 2026-09-08 (lot EEF-DOC). Ce fait venait d'un agrégateur
 // et portait la MÊME erreur que l'étape « vœux » de la procédure :
@@ -177,9 +178,9 @@ verifieLe: "2026-09-07"
 {
 cle: "calendrier",
 diffusion: "client",
-texte: "Calendrier Sénégal, rentrée 2026 : ouverture le 1er octobre, dépôt jusqu'au 15 décembre pour les formations connectées (du 1er avril au 12 juillet pour les non connectées), vérification des documents jusqu'au 27 juillet — la campagne se termine fin juillet.",
-source: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
-verifieLe: "2026-09-07"
+texte: "Calendrier Sénégal, rentrée 2027, formations connectées : dépôt du dossier du 1er octobre au 15 décembre 2026, frais payés au plus tard le 19 décembre 2026, choix confirmé au plus tard le 31 mai 2027, compléments et vérification des originaux jusqu'au 30 juillet 2027. Formations non connectées : dépôt du 1er avril au 15 juillet 2027.",
+source: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure",
+verifieLe: "2026-09-25"
 }
 ],
 positionnement: "Le plus gros marché francophone, aux règles désormais publiées noir sur blanc : droits, ressources exigées et plafond d'exonération."
@@ -827,13 +828,16 @@ faitCalendrier: "calendrier",
 // juillet ceux de l'année de clôture — jalonDeCampagne() fait le calcul.
 jalons: {
 soumission: { mois: 12, jour: 15, libelle: "Soumission du dossier (formations connectées)" },
-paiement: { mois: 12, jour: 27, libelle: "Paiement des frais de dossier" },
+// Relu le 2026-09-25 (test des parcours) : le paiement est dû au plus
+// tard le 19 décembre, les compléments jusqu'au 30 juillet — la page
+// disait 27 et 27 à la lecture du 2026-09-07.
+paiement: { mois: 12, jour: 19, libelle: "Paiement des frais de dossier" },
 visa: { mois: 5, jour: 1, libelle: "Demande de visa possible à partir du", debut: true },
 confirmation: { mois: 5, jour: 31, libelle: "Confirmation du choix définitif" },
-complements: { mois: 7, jour: 27, libelle: "Compléments de dossier et vérification des originaux" }
+complements: { mois: 7, jour: 30, libelle: "Compléments de dossier et vérification des originaux" }
 },
-sourceJalons: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure-2026",
-jalonsVerifiesLe: "2026-09-07"
+sourceJalons: "https://www.senegal.campusfrance.org/calendrier-de-la-procedure",
+jalonsVerifiesLe: "2026-09-25"
 };
 
 /**

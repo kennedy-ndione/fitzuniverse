@@ -196,11 +196,11 @@ for (const e of FR.etapes.filter((x) => x.echeance)) {
 assert.equal(e.echeance.depuis, "calendrier", e.id);
 assert.ok(CAMPAGNE_FRANCE.jalons[e.echeance.cle], `${e.id} : jalon « ${e.echeance.cle} » inconnu`);
 }
-assert.match(CAMPAGNE_FRANCE.sourceJalons, /calendrier-de-la-procedure-2026/);
+assert.match(CAMPAGNE_FRANCE.sourceJalons, /senegal\.campusfrance\.org\/calendrier-de-la-procedure/);
 assert.equal(jalonDeCampagne("soumission", AUJOURDHUI).iso, "2026-12-15");
-assert.equal(jalonDeCampagne("paiement", AUJOURDHUI).iso, "2026-12-27");
+assert.equal(jalonDeCampagne("paiement", AUJOURDHUI).iso, "2026-12-19");
 assert.equal(jalonDeCampagne("confirmation", AUJOURDHUI).iso, "2027-05-31");
-assert.equal(jalonDeCampagne("complements", AUJOURDHUI).iso, "2027-07-27");
+assert.equal(jalonDeCampagne("complements", AUJOURDHUI).iso, "2027-07-30");
 assert.equal(jalonDeCampagne("visa", AUJOURDHUI).iso, "2027-05-01");
 assert.equal(jalonDeCampagne("confirmation", new Date("2027-03-01T00:00:00Z")).iso, "2027-05-31");
 assert.equal(jalonDeCampagne("soumission", new Date("2027-03-01T00:00:00Z")).iso, "2026-12-15", "en mars, la campagne en cours a ouvert en octobre précédent");
@@ -211,7 +211,7 @@ assert.equal(jalonDeCampagne("soumission", AUJOURDHUI, COUCHE_FRANCE_SENEGAL.fai
 assert.equal(jalonDeCampagne("soumission", AUJOURDHUI, {}), null, "un calendrier sans ce jalon ne rend aucune date");
 // Les DONNÉES de la procédure ne portent aucune date : seul l'en-tête cite les sources.
 const sansDates = JSON.stringify(FR.etapes).replace(/"verifieLe(Residence)?":"\d{4}-\d{2}-\d{2}"/g, "");
-assert.ok(!/\d{4}-\d{2}-\d{2}|\b(15 décembre|27 décembre|31 mai|27 juillet|1er mai)\b/.test(sansDates), "aucune date recopiée dans les étapes");
+assert.ok(!/\d{4}-\d{2}-\d{2}|\b(15 décembre|19 décembre|27 décembre|31 mai|27 juillet|30 juillet|1er mai)\b/.test(sansDates), "aucune date recopiée dans les étapes");
 });
 
 // ------------------------------------------------------------------

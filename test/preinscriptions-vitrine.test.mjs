@@ -262,7 +262,7 @@ assert.ok((c.pointsDeVigilance || []).length >= 1, `${c.pays} : vigilance perdue
 // pas sur les commentaires, qui ont le droit de raconter la règle.
 const CHAINES_INTERDITES = [
 "SUNU BANK", "85 000", "80 000", "1 500 000", "1 900 Dhs",
-"1er octobre", "15 décembre", "27 juillet", "Société Générale", "TLS Contact", "VISTA-GUI"
+"1er octobre", "15 décembre", "19 décembre", "27 juillet", "30 juillet", "Société Générale", "TLS Contact", "VISTA-GUI"
 ];
 
 function sansCommentaires(source) {

@@ -195,8 +195,8 @@ etape: "ma_porte_entree",
 question: "Par quelle porte entrez-vous ?",
 options: [
 { id: "amci", libelle: "Une université publique, par l'AMCI", aide: "Votre dossier part d'un service de votre pays, puis passe par les ambassades jusqu'à l'AMCI.", etapes: ["ma_formulaire", "ma_voeux", "ma_pieces", "ma_depot", "ma_transmission", "ma_selection", "ma_autorisation"] },
-{ id: "um6p", libelle: "L'UM6P, en direct", aide: "Université privée : vous candidatez vous-même sur son site, formation par formation.", etapes: ["ma_um6p"] },
-{ id: "aui", libelle: "Al Akhawayn, en direct", aide: "Université privée, où l'on étudie en anglais : vous candidatez vous-même.", etapes: ["ma_aui"] }
+{ id: "um6p", libelle: "L'UM6P, en direct", aide: "Université à but non lucratif, reconnue par l'État : vous candidatez vous-même sur son site, formation par formation.", etapes: ["ma_um6p"], universites: ["universite-mohammed-vi-polytechnique-benguerir"], motifs: ["um6p", "mohammed vi polytechnique"], libelleVoeu: "à l'UM6P" },
+{ id: "aui", libelle: "Al Akhawayn, en direct", aide: "Université publique autonome, où l'on étudie en anglais : vous candidatez vous-même, sans l'AMCI.", etapes: ["ma_aui"], universites: ["al-akhawayn-university-ifrane"], motifs: ["akhawayn"], libelleVoeu: "à Al Akhawayn" }
 ]
 }
 },
@@ -642,7 +642,7 @@ tr_assurance: { titre: "Prendre votre assurance santé à temps", enClair: "Vous
 
 // maroc — textes écrits le 2026-09-23 depuis js/procedures/maroc.js
 maroc: {
-ma_porte_entree: { titre: "Comprendre qu'il n'y a pas de candidature directe", enClair: "Pour une université publique marocaine, vous ne candidatez pas vous-même : lui écrire ne donne rien. Votre dossier part d'un service de votre pays, puis passe par les ambassades jusqu'à l'AMCI. Repérez ce service chez vous, ou visez l'une des deux universités privées qui admettent en direct." },
+ma_porte_entree: { titre: "Comprendre qu'il n'y a pas de candidature directe", enClair: "Pour une université publique marocaine, vous ne candidatez pas vous-même : lui écrire ne donne rien. Votre dossier part d'un service de votre pays, puis passe par les ambassades jusqu'à l'AMCI. Repérez ce service chez vous, ou visez l'une des deux universités qui admettent en direct, présentées plus bas." },
 ma_formulaire: { titre: "Remplir le formulaire de l'AMCI", enClair: "Ce formulaire papier est le cœur de votre dossier : il n'y a pas de saisie en ligne. Demandez d'abord la version de cette année au service de votre pays ou à l'ambassade. Remplissez chaque rubrique, puis datez et signez." },
 ma_voeux: { titre: "Classer mes vœux par ordre de préférence", enClair: "Pour chaque vœu, indiquez l'établissement, la filière, la ville et le diplôme, dans votre vrai ordre de préférence. Aucun vœu n'est garanti : l'AMCI choisit selon des places limitées. Et être retenu ne veut pas dire être boursier." },
 ma_pieces: { titre: "Réunir les pièces de mon dossier", enClair: "Rassemblez chaque pièce demandée par le formulaire, souvent en double exemplaire. Faites certifier conformes les copies de vos diplômes et de vos relevés de notes. Aucune traduction n'est demandée : ne la payez pas, mais faites-le confirmer par le service de votre pays." },

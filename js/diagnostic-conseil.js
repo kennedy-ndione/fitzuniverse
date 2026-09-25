@@ -158,8 +158,9 @@ verifieLe: droits.verifieLe
 }
 
 /**
-* b) L'EXONÉRATION. Plafonnée à 30 % des étudiants non européens depuis
-* le 1er septembre 2026 — et 25 % en 2027-2028. On affiche ce qu'elle
+* b) L'EXONÉRATION. Depuis le décret du 19 mai 2026 (relu le 2026-09-25) :
+* individuelle seulement, 30 % des inscrits hors UE en 2026-2027, 25 % en
+* 2027-2028 — la rentrée que préparent nos étudiants. On affiche ce qu'elle
 * RETIRERAIT du total, en disant dans la même phrase qu'elle n'est pas
 * garantie : un chiffre d'exonération présenté seul se lit comme un
 * rabais acquis, et c'est le budget de l'étudiant qui paie l'erreur.
@@ -174,7 +175,7 @@ return {
 cle: "exoneration",
 disponible: true,
 montantEUR: montant,
-texte: `Une exonération des droits différenciés retirerait ${formatEUR(montant)} de ce total. Elle n'est PAS garantie : les exonérations sont plafonnées à ${Math.round(plafond * 100)} % des étudiants non européens, et chaque établissement décide des siennes. Budgétez le montant plein, et considérez l'exonération comme un allègement possible, jamais comme un acquis.`,
+texte: `Une exonération des droits différenciés retirerait ${formatEUR(montant)} de ce total. Elle n'est PAS garantie : depuis le décret du 19 mai 2026, seule une exonération individuelle reste possible, sur demande, dans la limite de ${Math.round(plafond * 100)} % des inscrits hors Union européenne pour une première inscription en 2027-2028, et chaque établissement décide des siennes. Budgétez le montant plein, et considérez l'exonération comme un allègement possible, jamais comme un acquis.`,
 source: droits.source,
 verifieLe: droits.verifieLe
 };

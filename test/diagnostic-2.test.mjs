@@ -440,7 +440,8 @@ const e = levierExoneration("master");
 assert.equal(e.montantEUR, DROITS_MASTER);
 assert.match(e.texte, /3 950 €/);
 assert.match(e.texte, /n'est PAS garantie/);
-assert.match(e.texte, /30 %/);
+// Décret du 19 mai 2026 : 25 % pour une première inscription en 2027-2028.
+assert.match(e.texte, /25 %/);
 
 for (const l of [n, e]) {
 assert.match(l.source, /^https?:\/\//);

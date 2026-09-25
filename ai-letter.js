@@ -25,7 +25,7 @@ import { calculateAiScore, PROFILE_READY_THRESHOLD, libellePourcentProfil } from
 // de motivation d'une page pour une bourse, une lettre de vœu de quatre
 // à cinq lignes, une par formation, pour une préinscription.
 import { parcoursDOutil, titreDuVoeu, paysDuVoeu, degreDuVoeu, PAYS_PREINSCRIPTION } from "./js/parcours.js";
-import { paysDeLAdresse } from "./js/plan-features.js";
+import { paysDeLAdresse, destinationDeLAdresse } from "./js/plan-features.js";
 // Lot ACCEPTATION (2026-09-11) : la lettre exige, en bourses, une
 // candidature ACCEPTÉE — plus de mode libre pour une bourse.
 import { candidaturesPourOutils } from "./js/fitz-choisit.js";
@@ -324,9 +324,23 @@ function parcoursCourant() {
 return parcoursDOutil({ espace: ctx.espace, application });
 }
 
+// LA LETTRE DE VŒU EST UNE RÈGLE D'ÉTUDES EN FRANCE (test du 2026-09-25).
+// Un vœu au Canada ouvrait ici « quatre à cinq lignes à recopier dans
+// Études en France ». Hors France, c'est une lettre de motivation
+// d'admission, déposée sur le portail de l'université : js/ai/prompts.js
+// reçoit la destination et choisit la forme.
+function destinationLettre() {
+if (application && typeof application.destination === "string" && application.destination) return application.destination;
+return destinationDeLAdresse(window.location.search) || "france";
+}
+
+function lettreDeVoeu() {
+return parcoursCourant() === "preinscription" && destinationLettre() === "france";
+}
+
 function appliquerMode() {
 
-const voeu = parcoursCourant() === "preinscription";
+const voeu = lettreDeVoeu();
 
 document.body.dataset.modeLettre = voeu ? "voeu" : "motivation";
 
@@ -523,7 +537,7 @@ previewEdit.value = text;
 } else {
 previewContent.innerHTML = text
 ? renderMarkdownLite(text)
-: `<div class="ai-preview-empty"><i data-lucide="pen-line"></i><span>${parcoursCourant() === "preinscription" ? "Votre lettre de vœu apparaîtra ici — quatre à cinq lignes, pour cette formation." : "Votre lettre de motivation apparaîtra ici."}</span></div>`;
+: `<div class="ai-preview-empty"><i data-lucide="pen-line"></i><span>${lettreDeVoeu() ? "Votre lettre de vœu apparaîtra ici — quatre à cinq lignes, pour cette formation." : "Votre lettre de motivation apparaîtra ici."}</span></div>`;
 if (window.lucide) lucide.createIcons();
 }
 
@@ -546,6 +560,9 @@ return {
 // Le parcours voyage avec la demande : c'est lui qui décide, dans
 // js/ai/prompts.js et le simulateur, de la forme de la lettre.
 parcours: parcoursCourant(),
+// La destination décide de la forme en préinscription : lettre de vœu
+// (France) ou lettre de motivation d'admission (ailleurs).
+destination: parcoursCourant() === "preinscription" ? destinationLettre() : undefined,
 track: application ? application.track : undefined,
 style: selectedStyle,
 country: fieldCountry.value.trim(),
@@ -603,7 +620,7 @@ onToken: (partial) => setPreviewText(partial)
 setPreviewText(text);
 setToolbarEnabled(true);
 
-const voeu = parcoursCourant() === "preinscription";
+const voeu = lettreDeVoeu();
 
 saveGeneratedDocument({
 icon: "pen-line",
@@ -652,7 +669,7 @@ showToast(messageErreurFitz(error), { type: "error" });
 } finally {
 
 generateBtn.disabled = false;
-generateBtn.querySelector("span").textContent = parcoursCourant() === "preinscription" ? "Régénérer ma lettre de vœu" : "Régénérer ma lettre";
+generateBtn.querySelector("span").textContent = lettreDeVoeu() ? "Régénérer ma lettre de vœu" : "Régénérer ma lettre";
 activeController = null;
 
 }

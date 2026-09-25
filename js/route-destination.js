@@ -275,6 +275,25 @@ const voies = d.voies || null;
 const voieChoisie = voies && dossier && typeof dossier.voie === "string"
 ? voies.options.find((o) => o.id === dossier.voie) || null
 : null;
+// UNE VOIE DIRECTE NE PORTE QUE LES VŒUX DE SON UNIVERSITÉ (test du
+// 2026-09-25). Au Maroc, la voie Al Akhawayn affichait un vœu à Mohammed V,
+// déjà déclaré déposé par l'AMCI, comme une candidature à Al Akhawayn.
+// Une option de voie peut nommer ses universités (`universites` : ids du
+// catalogue, `motifs` : un morceau du nom, pour un vœu posé avant que le
+// catalogue soit chargé) ; ses étapes et sa réponse ne voient qu'eux.
+const filtreVoie = voieChoisie && Array.isArray(voieChoisie.universites) && voieChoisie.universites.length ? voieChoisie : null;
+const voeuxVoie = filtreVoie
+? listeVoeux.filter((v) => {
+const f = ficheDuVoeu(v, universites);
+if (f) return filtreVoie.universites.includes(f.id);
+const nom = aplatirNom(v.university);
+return (filtreVoie.motifs || []).some((m) => nom.includes(aplatirNom(m)));
+})
+: listeVoeux;
+const voeuxDe = (def) => filtreVoie && (filtreVoie.etapes.includes(def.id) || def.id === ETAPE_REPONSE_ETABLISSEMENT) ? voeuxVoie : listeVoeux;
+const sansVoeu = (def) => filtreVoie && voeuxDe(def) === voeuxVoie
+? `Posez d'abord un vœu ${filtreVoie.libelleVoeu || "dans cette université"} (étape 3).`
+: "Posez d'abord au moins un vœu (étape 3).";
 const horsVoie = new Set();
 if (voieChoisie) {
 for (const o of voies.options) {
@@ -382,15 +401,15 @@ faite = listeVoeux.length > 0 && listeVoeux.every((v) => v.motivation && v.motiv
 if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
 break;
 case "reponses":
-faite = nonConcerne || (listeVoeux.length > 0 && listeVoeux.every((v) => ["admise", "refusee", "liste_attente"].includes(v.status)));
-if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
+faite = nonConcerne || (voeuxDe(def).length > 0 && voeuxDe(def).every((v) => ["admise", "refusee", "liste_attente"].includes(v.status)));
+if (!voeuxDe(def).length) empechement = sansVoeu(def);
 break;
 case "voie": faite = !!voieChoisie; break;
 // La candidature se règle vœu par vœu : chaque vœu déclaré déposé,
 // avec sa preuve (numéro, capture ou e-mail de confirmation).
 case "candidature":
-faite = nonConcerne || (listeVoeux.length > 0 && listeVoeux.every((v) => STATUTS_DEPOSES_VOEU.includes(v.status)));
-if (!listeVoeux.length) empechement = "Posez d'abord au moins un vœu (étape 3).";
+faite = nonConcerne || (voeuxDe(def).length > 0 && voeuxDe(def).every((v) => STATUTS_DEPOSES_VOEU.includes(v.status)));
+if (!voeuxDe(def).length) empechement = sansVoeu(def);
 break;
 case "depart": faite = visaFaites === VISA_ETAPES.length; break;
 default: faite = (cochee && preuvePresente && voeuxADeclarer === 0) || nonConcerne;
@@ -445,8 +464,9 @@ pieces,
 traduction: def.kind === "pieces" ? { concernees: [], declare: "", reglee: true } : null,
 residenceAbsente: false,
 voeux: def.kind === "candidature" || def.kind === "universite"
-? listeVoeux.map((v) => ({ ...v, depose: STATUTS_DEPOSES_VOEU.includes(v.status), fiche: ficheDuVoeu(v, universites) }))
-: ["voeux", "motivations", "reponses"].includes(def.kind) ? listeVoeux : [],
+? voeuxDe(def).map((v) => ({ ...v, depose: STATUTS_DEPOSES_VOEU.includes(v.status), fiche: ficheDuVoeu(v, universites) }))
+: def.kind === "reponses" ? voeuxDe(def)
+: ["voeux", "motivations"].includes(def.kind) ? listeVoeux : [],
 visa: def.kind === "depart" ? { etat: visa, faites: visaFaites, total: VISA_ETAPES.length } : null,
 voie: def.kind === "voie" ? {
 question: voies.question,

@@ -285,6 +285,35 @@ letter(input) {
 // Aucune louange sur la France ni son enseignement — la source le dit
 // elle-même, c'est inutile. Et aucun style à choisir : la forme est
 // imposée par le portail, pas par l'étudiant.
+// LA LETTRE DE VŒU EST UNE RÈGLE D'ÉTUDES EN FRANCE, PAS DE LA
+// PRÉINSCRIPTION EN GÉNÉRAL (test du 2026-09-25). Un vœu au Canada, en
+// Italie ou en Allemagne recevait « quatre à cinq lignes à recopier dans
+// Études en France » : faux. Hors France, l'université demande une vraie
+// lettre de motivation d'admission, déposée sur SON portail, dans la
+// langue de la formation.
+const destinationLettre = String(input.destination || "france").toLowerCase();
+if (lireParcoursDeSaisie(input) === "preinscription" && destinationLettre !== "france") {
+return {
+system: `${baseSystem(input)} Tu rédiges la lettre de motivation d'une candidature d'admission, que l'étudiant déposera lui-même sur le portail de l'établissement : une page au plus, en trois à cinq paragraphes, adressée au comité d'admission de la formation nommée. Contenu, dans cet ordre : le parcours en bref, l'intérêt précis pour cette formation dans cet établissement, ce que l'étudiant y apportera, et le lien avec son objectif professionnel. Langue : celle de la formation. Si l'établissement ou la formation enseigne en anglais, rédige la lettre en anglais ; sinon en français. Cette consigne de langue l'emporte sur la langue de réponse. Interdit : toute louange convenue sur le pays d'accueil, toute phrase générique réutilisable pour une autre formation, toute promesse de financement par un tiers. ${FAITS_DE_LA_LETTRE} ${SANS_COMMENTAIRE}`,
+user: [
+"Rédige la lettre de motivation d'admission pour :",
+`Établissement : ${input.university || "non précisé"}`,
+`Formation : ${input.program || "non précisée"}`,
+`Niveau : ${input.level || "non précisé"}`,
+`Pays : ${input.country || "non précisé"}`,
+"",
+"Profil de l'étudiant :",
+describeProfile(input.profile, lireParcoursDeSaisie(input)),
+"",
+"Éléments fournis par l'étudiant :",
+`Parcours et expériences : ${input.experiences || "—"}`,
+`Compétences : ${input.skills || "—"}`,
+`Ce qui l'attire dans cette formation précisément : ${input.motivations || "—"}`,
+`Objectif professionnel : ${input.goals || "—"}`
+].join("\n")
+};
+}
+
 if (lireParcoursDeSaisie(input) === "preinscription") {
 return {
 system: `${baseSystem(input)} Tu rédiges une lettre de vœu pour un dossier de préinscription : quatre à cinq lignes au total, sans faute, adressée à la commission pédagogique de la formation nommée. Contenu, dans cet ordre : le parcours en bref, l'intérêt PRÉCIS pour cette formation dans cet établissement, et le lien avec l'objectif professionnel. Interdit : toute louange sur le pays d'accueil ou son enseignement, toute phrase générique réutilisable pour une autre formation, tout paragraphe de plus. La lettre est un brouillon que l'étudiant recopiera lui-même dans son compte sur le portail. ${SANS_COMMENTAIRE}`,

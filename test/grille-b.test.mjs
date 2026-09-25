@@ -297,7 +297,7 @@ assert.equal(r.droits.source, droits.source);
 assert.equal(r.fraisDossier.montant, dossier.montant);
 assert.equal(r.fraisDossier.source, dossier.source);
 for (const f of [ressources, droits, dossier]) { assert.match(f.source, /^https?:\/\//); assert.match(f.verifieLe, /^\d{4}-\d{2}-\d{2}$/); }
-assert.match(r.droits.texte, /30 %/);
+assert.match(r.droits.texte, /25 %/);
 assert.match(r.fraisDossier.texte, /85 000 F CFA/);
 assert.equal(formatEUR(877.5), "877,50 €");
 // Les faits France portent toujours source + date (test parcourant TOUS les faits).
