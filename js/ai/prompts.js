@@ -574,7 +574,11 @@ system: `${baseSystem(input)} Tu évalues si UNE candidature précise est prête
 user: [
 `Université : ${input.university || "non précisée"}`,
 `Bourse : ${input.scholarship || "non précisée"}`,
-`Date limite : ${input.deadline || "non précisée"}`,
+`Date limite : ${input.deadline || input.deadlineCatalogue || (input.dateNonPubliee ? "non publiée par l'organisme (ce n'est PAS un manque du dossier : ne la réclame pas)" : "non précisée")}`,
+...(input.paysBourse ? [`Pays de la bourse : ${input.paysBourse}`] : []),
+...(input.voieDeDepot ? [`Le dossier se dépose ${input.voieDeDepot}`] : []),
+...(Array.isArray(input.exigencesBourse) && input.exigencesBourse.length ? [`Exigences connues de la bourse (codes) : ${input.exigencesBourse.join(", ")}`] : []),
+...(Array.isArray(input.conditionsBourse) && input.conditionsBourse.length ? ["Conditions publiées de la bourse :", ...input.conditionsBourse.map((c) => `- ${c}`)] : []),
 `Lettre de motivation générée pour cette candidature : ${input.hasGeneratedLetter ? "oui" : "non"}`,
 "",
 "Dossier de candidature (checklist) :",

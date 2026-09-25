@@ -168,6 +168,9 @@ fundingGoal: responses.goal || "",
 // restriction officielle exclut cette nationalité (champ eligibility
 // des bourses, posé par admin/expand-catalog-batch20).
 nationality: responses.nationality || "",
+// Lot 108 (2026-09-26) : le pays de RÉSIDENCE, pour écarter les bourses
+// qu'on ne demande qu'une fois sur place (accesDepuisLeProfil).
+country: responses.country || "",
 // ageBracket : la tranche d'âge du diagnostic (questions.js) servait
 // déjà au score (calculateAge, eligibility-ai.js) mais n'atteignait
 // pas le moteur — depuis le branchement des limites d'âge

@@ -914,8 +914,23 @@ return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").r
 * Sans aucun dossier, on rend null et le guide sert le socle seul.
 */
 function procedureDeDepart(applications, procedureDe) {
+// Lot 109 (2026-09-26) — audit : une candidature REFUSÉE comptait autant
+// qu'une admission, et si le pays de l'admission n'avait pas de guide,
+// le code prenait celui d'une autre candidature (admis au Rwanda, une
+// carte Canada encore à préparer : guide canadien). Dès qu'une admission
+// existe, c'est elle seule qui décide ; sans guide pour son pays, le
+// socle générique, jamais le guide d'un autre pays.
+const admises = applications.filter((a) => a.status === "admise");
+if (admises.length) {
+for (const app of admises) {
+const procedure = procedureDe(app);
+if (procedure) return procedure;
+}
+return null;
+}
+const candidates = applications.filter((a) => a.status !== "refusee");
 const rang = (app) => (STATUTS_REPONSE.includes(app.status) ? 3 : STATUTS_DEPOSES.includes(app.status) ? 2 : 1);
-const trie = applications.slice().sort((a, b) => rang(b) - rang(a));
+const trie = candidates.slice().sort((a, b) => rang(b) - rang(a));
 for (const app of trie) {
 const procedure = procedureDe(app);
 if (procedure) return procedure;

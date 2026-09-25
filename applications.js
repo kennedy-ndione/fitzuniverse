@@ -104,7 +104,7 @@ import { trouverProcedure } from "./js/procedures/index.js";
 // candidature créée depuis une recommandation doit quand même arriver
 // avec son lien — sinon l'étudiant qui paie retrouve la case vide que
 // l'audit du 2026-08-28 avait justement fait remplir.
-import { chargerPortails, portailUniversite } from "./js/portails.js";
+import { chargerPortails, portailUniversite, portailBourse } from "./js/portails.js";
 import { texteConsigne, LIBELLES_FIABILITE, LIBELLES_PREUVE } from "./js/procedures/vocabulaire.js";
 import { joursRestants, JOURS_PROCHE } from "./js/next-action.js";
 // Le quota de candidatures : une seule définition pour la page ET pour
@@ -722,7 +722,8 @@ ${app.notes ? `<p class="app-card-notes">${escapeHtml(app.notes)}</p>` : ""}
 
 ${(app.universityWebsite || app.portalUrl) ? `<div class="app-card-actions">
 ${app.universityWebsite ? `<a href="${escapeHtml(app.universityWebsite)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
-${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
+${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>${depotChezLeBailleur(lecture) ? "Admission université" : "Candidature"}</span></a>` : ""}
+${renderActionsBourse(app, lecture)}
 </div>` : ""}
 </article>
 `;
@@ -1654,6 +1655,31 @@ ${gratuit ? `<button type="button" class="btn btn-secondary btn-sm app-remplacer
 </div>`;
 }
 
+// LOT 109 (2026-09-26) — LA BOURSE ELLE-MÊME, DANS L'ESPACE.
+// L'audit du 26/09 : pour une bourse qui se dépose chez le BAILLEUR
+// (Konrad-Adenauer, Open Doors, Türkiye Bursları Research…), le bouton
+// « Candidature » de la carte ouvrait le portail de l'UNIVERSITÉ, et
+// aucun lien de l'espace ne menait à la fiche de la bourse, où vivent
+// ses conditions. Deux liens de plus sur la carte : la fiche, et le
+// guichet de la bourse quand ce n'est pas celui de l'université.
+function depotChezLeBailleur(lecture) {
+return !!(lecture && lecture.bourse && lecture.bourse.entryPoint === "bourse");
+}
+
+function renderActionsBourse(app, lecture) {
+const liens = [];
+if (app.programId) {
+liens.push(`<a href="scholarship-details.html?id=${encodeURIComponent(app.programId)}" class="btn btn-ghost btn-sm"><i data-lucide="file-text"></i><span>Fiche et conditions</span></a>`);
+}
+if (depotChezLeBailleur(lecture)) {
+const url = portailBourse(app.scholarshipId) || lecture.bourse.officialWebsite || "";
+if (/^https:\/\//.test(url)) {
+liens.push(`<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Dépôt de la bourse</span></a>`);
+}
+}
+return liens.join("\n");
+}
+
 function renderCard(app, lecture) {
 
 const urgency = urgencyLabel(app);
@@ -1751,7 +1777,8 @@ ${refusable && !carteCatalogue(app) ? `<button type="button" class="btn btn-seco
 <button type="button" class="btn btn-secondary btn-sm app-checkin-btn"><i data-lucide="check"></i><span>J'ai vérifié</span></button>
 ${outils ? `<button type="button" class="btn btn-secondary btn-sm app-readiness-btn"><i data-lucide="shield-check"></i><span>Vérifier avant de déposer</span></button>` : ""}
 ${app.universityWebsite ? `<a href="${escapeHtml(app.universityWebsite)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Site université</span></a>` : ""}
-${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>Candidature</span></a>` : ""}
+${app.portalUrl ? `<a href="${escapeHtml(app.portalUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm"><i data-lucide="external-link"></i><span>${depotChezLeBailleur(lecture) ? "Admission université" : "Candidature"}</span></a>` : ""}
+${renderActionsBourse(app, lecture)}
 <button type="button" class="btn btn-ghost btn-sm app-ics-btn"><i data-lucide="calendar-plus"></i><span>Rappel .ics</span></button>
 <button type="button" class="btn btn-ghost btn-sm app-edit-btn" aria-label="Modifier"><i data-lucide="pen-line"></i></button>
 ${peutSupprimer(app, planId) ? `<button type="button" class="btn btn-ghost btn-sm app-delete-btn" aria-label="Supprimer le suivi" title="Supprimer le suivi"><i data-lucide="trash-2"></i></button>` : ""}
@@ -2064,6 +2091,20 @@ aujourdhui.setHours(0, 0, 0, 0);
 return Math.round((cible - aujourdhui) / 86400000);
 }
 
+function contexteBoursePourFitz(app) {
+const lecture = app && catalogueIndex ? etatDeLaCandidature(app, catalogueIndex) : null;
+const bourse = lecture && lecture.bourse;
+if (!bourse) return {};
+return {
+deadlineCatalogue: lecture.dateCatalogue || "",
+dateNonPubliee: !lecture.dateCatalogue && !app.deadline,
+exigencesBourse: lireExigences(bourse).map((code) => code),
+voieDeDepot: bourse.entryPoint === "bourse" ? "chez l'organisme de la bourse" : "auprès de l'université",
+paysBourse: bourse.country || "",
+conditionsBourse: String(bourse.generalCriteria || "").split("\n").filter(Boolean).slice(0, 8)
+};
+}
+
 async function runReadinessCheck(app) {
 
 const btn = document.getElementById(app.id)?.querySelector(".app-readiness-btn");
@@ -2092,6 +2133,10 @@ etapesProcedure,
 checklist: app.checklist || [],
 hasGeneratedLetter: !!app.generatedLetter,
 deadline: app.deadline,
+// Lot 109 (2026-09-26) : ce que le catalogue sait de la bourse, pour que
+// Fitz juge le dossier sur les vraies règles et sans réclamer une date
+// que l'organisme ne publie pas (audit : l'étape restait rouge à vie).
+...contexteBoursePourFitz(app),
 profileScore,
 applicationId: app.id,
 profile

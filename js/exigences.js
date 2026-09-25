@@ -131,6 +131,26 @@ libelle: "Deux ans d'expérience professionnelle",
 explication: "Le programme demande au moins deux années d'expérience professionnelle après le diplôme. C'est une condition d'éligibilité, pas un critère de préférence."
 },
 
+// LOT 108 (2026-09-26) — DEUX CONDITIONS QUI FERMENT LA BOURSE À QUI
+// PART DE CHEZ LUI. L'audit du diagnostic l'a mesuré : la bourse JASSO
+// (déjà inscrit au Japon) sortait pour 54 profils sur 72, Vanier (déjà
+// doctorant au Canada) pour 16, le mémoire Zeno Karl Schindler (déjà en
+// master) pour 24 candidats qui n'ont que leur licence. Le moteur lit
+// désormais ces deux codes comme des filtres durs
+// (js/recommend-programs.js, accesDepuisLeProfil).
+
+deja_inscrit_sur_place: {
+forme: "condition",
+libelle: "Réservée aux étudiants déjà inscrits sur place",
+explication: "Cette bourse ne se demande pas depuis votre pays : il faut déjà être inscrit dans un établissement du pays d'accueil. Elle vous concernera une fois sur place, pas pour partir."
+},
+
+cycle_en_cours: {
+forme: "condition",
+libelle: "Réservée aux étudiants déjà engagés dans ce cycle",
+explication: "Il faut déjà être inscrit dans le cycle financé (en master pour un mémoire, en doctorat pour une recherche) : elle ne finance pas l'entrée dans ce cycle."
+},
+
 diplome_recent: {
 forme: "condition",
 libelle: "Diplôme récent exigé",

@@ -537,6 +537,72 @@ return { ouverte: jours >= 0, jours, certitude: "lue", verifieLe: "" };
 
 }
 
+/**
+* LOT 108 (2026-09-26) — CE QUE LA BOURSE EXIGE D'AVOIR DÉJÀ.
+*
+* L'audit des 72 profils types du 26/09 a trouvé trois familles de
+* bourses proposées à des étudiants qui ne pouvaient pas les obtenir :
+*   1. `deja_inscrit_sur_place` : JASSO (déjà inscrit au Japon), Vanier
+*      (déjà doctorant au Canada), les fondations allemandes pour un
+*      candidat d'Afrique de l'Ouest (déjà inscrit en Allemagne),
+*      Türkiye Bursları Success (déjà inscrit en Turquie). Proposable
+*      seulement si l'étudiant RÉSIDE dans le pays de la bourse.
+*   2. `cycle_en_cours` : le mémoire Zeno Karl Schindler (déjà en
+*      master), Türkiye Bursları Research (déjà doctorant ou docteur).
+*      Proposable seulement si l'étudiant est déjà dans le cycle visé.
+*   3. `domaines` / `domainesExclus` : une bourse attachée à une discipline, ou qui en exclut une (EDIC de l'EPFL :
+*      informatique et communications ; IHEID : relations
+*      internationales, développement, économie, droit). Proposable
+*      seulement si le domaine de l'étudiant en fait partie.
+*
+* @returns {boolean|null} false = exclue ; true = rien ne s'y oppose ;
+* null = on ne sait pas (domaine ou niveau inconnus).
+*/
+export function accesDepuisLeProfil(scholarship, profile) {
+
+if (!scholarship) return null;
+
+const p = profile || {};
+const exigences = Array.isArray(scholarship.exigences) ? scholarship.exigences : [];
+
+if (exigences.includes("deja_inscrit_sur_place")) {
+const residence = String(p.country || p.originCountry || "").trim();
+// Inconnue ou différente : exclue. Nos étudiants postulent depuis leur
+// pays ; proposer une bourse qu'on ne demande qu'une fois sur place
+// serait leur promettre ce qu'ils ne peuvent pas obtenir.
+if (!residence || residence !== scholarship.country) return false;
+}
+
+if (exigences.includes("cycle_en_cours")) {
+const cible = studentTargetLevel(p);
+const valides = Object.values(PISTES);
+const palier = valides.includes(p.palier) ? p.palier : pisteDepuisNiveau(p.lastDegree || p.currentDegree);
+if (palier) {
+const admis = cible === "Master" ? [PISTES.MASTER_EN_COURS]
+: cible === "Doctorat" ? [PISTES.DOCTORAT_EN_COURS, PISTES.DOCTORAT_OBTENU]
+: [];
+if (!admis.includes(palier)) return false;
+}
+}
+
+// Réservée aux femmes (Mastercard Foundation à l'UM6P, programme 100 %
+// féminin depuis novembre 2025) : exclue pour un profil « homme » ;
+// inconnu ou « autre » n'exclut pas.
+if (scholarship.reserveeAuxFemmes === true && String(p.gender || "") === "homme") return false;
+
+const famille = familleDeDomaine(p.desiredField);
+const domaines = Array.isArray(scholarship.domaines) ? scholarship.domaines.filter(Boolean) : [];
+if (famille && domaines.length && !domaines.includes(famille)) return false;
+// Et l'inverse : les disciplines qu'une bourse ouverte à presque tout
+// EXCLUT (la médecine pour Reach Oxford, Koç, Sunway, la bourse du
+// gouvernement roumain…).
+const exclus = Array.isArray(scholarship.domainesExclus) ? scholarship.domainesExclus.filter(Boolean) : [];
+if (famille && exclus.includes(famille)) return false;
+
+return true;
+
+}
+
 // Score de compatibilité programme↔profil — mêmes critères que
 // details.js:computeCompatibility (niveau, langue, pays), adaptés pour
 // lire indifféremment le profil Firestore persistant (profile.js) ou le
@@ -568,6 +634,13 @@ return -1;
 // La fenêtre du bac (lot DÉPART) : même filtre DUR, même règle — sur
 // false seulement.
 if (fenetreBacMatch(scholarship, profile) === false) {
+return -1;
+}
+
+// Lot 108 (2026-09-26) : ce que la bourse exige d'avoir DÉJÀ (être sur
+// place, être dans le cycle) ou d'étudier (sa discipline). Même filtre
+// DUR, sur false seulement.
+if (accesDepuisLeProfil(scholarship, profile) === false) {
 return -1;
 }
 
@@ -1325,6 +1398,9 @@ scholarshipId: idDe(c.scholarship),
 programId: idDe(c.program),
 scholarshipTitle: c.scholarship ? c.scholarship.title : "",
 deadline: c.program.deadline || null,
+// Lot 109 (2026-09-26) : la date VÉRIFIÉE du catalogue, pour que la
+// carte que Fitz écrit la porte dès sa création (fitz-choisit.js).
+deadlineISO: /^\d{4}-\d{2}-\d{2}$/.test(String(c.program.deadlineISO || "")) ? c.program.deadlineISO : null,
 jours: c.echeance.jours,
 echeanceOuverte: c.echeance.ouverte,
 // Lot PROPOSABLE : la carte doit pouvoir DIRE « date non confirmée ».
@@ -1395,6 +1471,13 @@ return "votre âge dépasse la limite fixée par cette bourse";
 if (fenetreBacMatch(scholarship, p) === false) {
 const min = Number(scholarship && scholarship.anneeBacMin);
 return `elle est réservée aux élèves de terminale et aux bacheliers de ${min} ou après`;
+}
+
+if (accesDepuisLeProfil(scholarship, p) === false) {
+const ex = (scholarship && scholarship.exigences) || [];
+if (ex.includes("deja_inscrit_sur_place") && String(p.country || p.originCountry || "") !== scholarship.country) return "elle est réservée aux étudiants déjà inscrits sur place";
+if (ex.includes("cycle_en_cours")) return "elle est réservée aux étudiants déjà engagés dans ce cycle";
+return "elle ne concerne pas votre domaine d'études";
 }
 
 const cible = studentTargetLevel(p);

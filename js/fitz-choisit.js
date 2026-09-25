@@ -108,7 +108,12 @@ portalUrl: portalUrl || "",
 universityWebsite: rec.universityWebsite || "",
 status: "a_preparer",
 track: "bourse",
-deadline: null,
+// Lot 109 (2026-09-26) : la date limite VÉRIFIÉE du catalogue quand
+// elle existe. Elle était toujours laissée vide : la vérification de
+// Fitz recevait « Date limite : non précisée », même pour une bourse
+// datée, et le bouton « Reprendre la date du catalogue » n'apparaissait
+// que si l'étudiant avait déjà saisi une date lui-même.
+deadline: /^\d{4}-\d{2}-\d{2}$/.test(String(rec.deadlineISO || "")) ? rec.deadlineISO : null,
 reminderFrequency,
 notes: "",
 checklist: [],
