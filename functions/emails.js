@@ -36,6 +36,8 @@
 
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const rappels = require("./lib/rappels");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
@@ -374,8 +376,14 @@ exports.desabonnementAlertes = onRequest(
       return;
     }
 
+    // Lot 111 : le même lien sert aux rappels d'échéance (t=rappels).
+    const pourRappels = String(req.query.t || "") === "rappels";
+
     try {
-      await admin.firestore().doc(`users/${uid}`).set({
+      await admin.firestore().doc(`users/${uid}`).set(pourRappels ? {
+        rappelsEcheances: false,
+        rappelsEcheancesMajLe: admin.firestore.FieldValue.serverTimestamp(),
+      } : {
         alerteBourses: false,
         alerteBoursesMajLe: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
@@ -385,8 +393,103 @@ exports.desabonnementAlertes = onRequest(
       return;
     }
 
-    logger.info("Désabonnement des alertes", { uid });
-    res.status(200).send(page("C'est fait", "Vous ne recevrez plus d'alertes de bourses. Vous pourrez les réactiver depuis votre espace, si vous changez d'avis."));
+    logger.info(pourRappels ? "Désabonnement des rappels d'échéance" : "Désabonnement des alertes", { uid });
+    res.status(200).send(pourRappels
+      ? page("C'est fait", "Vous ne recevrez plus de rappels de dates limites par e-mail. Vos échéances restent affichées dans votre espace.")
+      : page("C'est fait", "Vous ne recevrez plus d'alertes de bourses. Vous pourrez les réactiver depuis votre espace, si vous changez d'avis."));
 
+  }
+);
+
+
+// ============================================================
+// 4. rappelsEcheances — LOT 111 (2026-09-26). Chaque matin, 8 h à
+//    Dakar : un e-mail à l'étudiant dont une candidature qu'il suit
+//    arrive à J-30, J-14, J-7, J-3, J-1 ou au jour J. Logique pure :
+//    functions/lib/rappels.js.
+//
+//    Ce n'est pas une alerte de bourse (celles-là restent un geste
+//    admin) : c'est la date que l'étudiant a lui-même acceptée, ou
+//    que le catalogue a vérifiée pour lui, et qu'il ne doit pas rater.
+//    Registre rappelsEcheances/{cle} : jamais deux fois le même palier.
+//    Désinscription : users/{uid}.rappelsEcheances = false (lien au pied).
+// ============================================================
+
+/* Sous les 300 e-mails par jour du plan gratuit Brevo, en laissant la
+   place aux bienvenues du jour. */
+const RAPPELS_MAX_PAR_JOUR = 200;
+
+async function executerRappels(aujourdhuiISO) {
+
+  const db = admin.firestore();
+  const users = await db.collection("users").get();
+  let envoyes = 0;
+  let sautes = 0;
+
+  for (const docUser of users.docs) {
+
+    if (envoyes >= RAPPELS_MAX_PAR_JOUR) {
+      logger.warn("Plafond quotidien des rappels atteint", { envoyes });
+      break;
+    }
+
+    const u = docUser.data() || {};
+    if (!u.email || u.rappelsEcheances === false) continue;
+
+    const apps = await db.collection(`users/${docUser.id}/applications`).get();
+    const candidats = rappels.rappelsDuJour(apps.docs.map((d) => ({ id: d.id, ...d.data() })), aujourdhuiISO);
+    if (!candidats.length) continue;
+
+    // Le registre d'abord : un palier déjà envoyé ne repart pas.
+    const aEnvoyer = [];
+    for (const r of candidats) {
+      const deja = await db.doc(`rappelsEcheances/${rappels.cleRappel(docUser.id, r)}`).get();
+      if (!deja.exists) aEnvoyer.push(r);
+    }
+    if (!aEnvoyer.length) { sautes++; continue; }
+
+    const prenom = String(u.name || "").trim().split(/\s+/)[0] || "";
+    const pied = `Vous recevez ce rappel parce que vous suivez ces candidatures sur fitzuniverse.com. <a href="${lienDesabonnement(docUser.id)}&t=rappels" style="color:#6b6459;">Ne plus recevoir les rappels de dates limites</a>.`;
+
+    try {
+      await envoyerEmail({
+        aEmail: u.email,
+        aNom: u.name || "",
+        sujet: rappels.sujetRappel(aEnvoyer),
+        html: gabarit(rappels.corpsRappel(aEnvoyer, { prenom, site: SITE }), pied),
+      });
+      envoyes++;
+      const lot = db.batch();
+      for (const r of aEnvoyer) {
+        lot.set(db.doc(`rappelsEcheances/${rappels.cleRappel(docUser.id, r)}`), {
+          uid: docUser.id, applicationId: r.id, deadline: r.deadline, jours: r.jours,
+          envoyeLe: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+      await lot.commit();
+    } catch (erreur) {
+      // Pas de registre : le rappel sera retenté demain seulement s'il
+      // tombe encore sur un palier ; l'échec reste au journal.
+      logger.error("Rappel non envoyé", { uid: docUser.id, message: erreur.message });
+    }
+
+  }
+
+  logger.info("Rappels d'échéance", { jour: aujourdhuiISO, envoyes, sautes });
+  return { envoyes, sautes };
+
+}
+
+exports.rappelsEcheances = onSchedule(
+  {
+    schedule: "0 8 * * *",
+    timeZone: "Africa/Dakar",
+    region: "europe-west1",
+    secrets: [cleBrevo],
+    maxInstances: 1,
+    timeoutSeconds: 300,
+  },
+  async () => {
+    await executerRappels(new Date().toISOString().slice(0, 10));
   }
 );

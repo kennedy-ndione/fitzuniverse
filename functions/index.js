@@ -77,3 +77,11 @@ exports.verifierBourse = require("./verification").verifierBourse;
 exports.emailBienvenue = require("./emails").emailBienvenue;
 exports.envoyerAlerteBourse = require("./emails").envoyerAlerteBourse;
 exports.desabonnementAlertes = require("./emails").desabonnementAlertes;
+
+// ------------------------------------------------------------
+// Rappels d'échéance (lot 111, 2026-09-26) — voir functions/emails.js
+// et functions/lib/rappels.js. Chaque matin à 8 h (Dakar), un e-mail à
+// l'étudiant dont une candidature suivie arrive à J-30, J-14, J-7, J-3,
+// J-1 ou au jour J. Désinscription par le lien au pied (t=rappels).
+// ------------------------------------------------------------
+exports.rappelsEcheances = require("./emails").rappelsEcheances;
