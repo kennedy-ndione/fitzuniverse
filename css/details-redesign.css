@@ -161,3 +161,28 @@ d'autres pages, n'est pas touché.
 display:none;
 }
 }
+
+/* ==========================================================
+PIÈCES À PRÉPARER (lot 110, 2026-09-26) — une liste lisible, une
+pièce par ligne, le nom en gras puis sa précision.
+========================================================== */
+.details-pieces{
+list-style:none;
+padding:0;
+margin:12px 0 0;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.details-pieces li{
+padding:10px 12px;
+border-radius:10px;
+background:rgba(217,128,90,.08);
+line-height:1.5;
+overflow-wrap:anywhere;
+}
+
+#piecesSource{
+margin-top:10px;
+}

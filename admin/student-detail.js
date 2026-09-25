@@ -770,12 +770,14 @@ return `<div class="timeline-meta" style="color:var(--success);">Preuve de dép�
 // plutôt qu'importés : applications.js est un script de page sans
 // exports, pas un module partageable.
 const CHECKLIST_TYPE_LABELS = {
+piece_bourse: "Pièce demandée par la bourse",
 recommendation: "Lettre de recommandation",
 language_test: "Test de langue",
 financial_proof: "Preuve financière"
 };
 
 const CHECKLIST_STATUS_LABELS = {
+piece_bourse: { manquant: "À préparer", en_cours: "En préparation", complete: "Prête" },
 recommendation: { manquant: "Non demandée", en_cours: "Demandée", complete: "Reçue" },
 language_test: { manquant: "Non planifié", en_cours: "Planifié", complete: "Passé" },
 financial_proof: { manquant: "Manquant", en_cours: "En préparation", complete: "Prêt" }

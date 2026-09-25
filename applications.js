@@ -85,7 +85,7 @@ import { formaterDate } from "./js/echeance.js";
 // Passe 3/3 : `exigences` (99 bourses) trouve enfin un destinataire.
 // Vocabulaire et libellés dans js/exigences.js — jamais deux façons de
 // dire la même exigence.
-import { lireExigences, groupees, elementsAAjouter } from "./js/exigences.js";
+import { lireExigences, groupees, elementsAAjouter, dossierAAjouter, piecesDeLaBourse } from "./js/exigences.js";
 // Lot A (2026-09-07) : le parcours porté par la candidature — bourse ou
 // préinscription. Lu avec défaut « bourse », jamais rattrapé en base.
 import { lireParcours, LIBELLES as LIBELLES_PARCOURS } from "./js/parcours.js";
@@ -212,6 +212,15 @@ refusee: "Refusée"
 const CHECKLIST_STATUS_ORDER = ["manquant", "en_cours", "complete"];
 
 const CHECKLIST_TYPE_META = {
+// Lot 110 (2026-09-26) : les pièces que la BOURSE demande, lues sur sa
+// page officielle (champ piecesDossier, js/exigences.js). En premier :
+// c'est la liste qui fait le dossier.
+piece_bourse: {
+title: "Pièces demandées par la bourse",
+icon: "file-check",
+addLabel: "Ajouter une pièce",
+statusLabels: { manquant: "À préparer", en_cours: "En préparation", complete: "Prête" }
+},
 recommendation: {
 title: "Lettres de recommandation",
 icon: "mail-check",
@@ -384,16 +393,22 @@ function renderSuggestionDossier(app, lecture) {
 
 if (!lecture || !lecture.lie || !lecture.bourse) return "";
 
-const aAjouter = elementsAAjouter(lireExigences(lecture.bourse), app.checklist);
+const aAjouter = dossierAAjouter(lecture.bourse, app.checklist);
 
 if (!aAjouter.length) return "";
 
 const noms = aAjouter.map((e) => e.label.toLowerCase()).join(", ");
+// Lot 110 : dire D'OÙ vient la liste — la candidature à la bourse, ou le
+// dossier d'admission qui vaut candidature.
+const lot = piecesDeLaBourse(lecture.bourse);
+const intro = lot && lot.type === "admission"
+? "Cette bourse s'obtient avec l'admission. Le dossier d'admission demande"
+: "Cette bourse demande";
 
 return `
 <div class="app-exigence-suggestion">
 <i data-lucide="list-plus"></i>
-<p>Cette bourse demande : ${escapeHtml(noms)}.</p>
+<p>${intro} : ${escapeHtml(noms)}.${lot && lot.source ? ` <a href="${escapeHtml(lot.source)}" target="_blank" rel="noopener">Voir la liste officielle</a>` : ""}</p>
 <button type="button" class="app-exigence-ajouter" data-ajouter-dossier="${escapeHtml(app.id)}">
 <i data-lucide="plus"></i><span>Ajouter à mon dossier</span>
 </button>
@@ -1687,7 +1702,7 @@ const urgency = urgencyLabel(app);
 // sont pas encore dans le dossier empêchent l'étape « Dossier » de
 // passer au vert (js/application-journey.js).
 const exigencesManquantes = lecture && lecture.lie && lecture.bourse
-? elementsAAjouter(lireExigences(lecture.bourse), app.checklist).length
+? dossierAAjouter(lecture.bourse, app.checklist).length
 : 0;
 const journeySteps = computeJourneySteps(app, { profileScore, advisorUnlocked, advisorRequests, documentsObtained, procedure: procedurePour(app), exigencesManquantes });
 
@@ -1837,7 +1852,7 @@ card.querySelector("[data-ajouter-dossier]")?.addEventListener("click", async (e
 
 const btn = event.currentTarget;
 const aAjouter = lecture && lecture.lie && lecture.bourse
-? elementsAAjouter(lireExigences(lecture.bourse), app.checklist)
+? dossierAAjouter(lecture.bourse, app.checklist)
 : [];
 
 if (!aAjouter.length) return;
@@ -1849,7 +1864,7 @@ id: makeChecklistItemId(),
 type: e.type,
 label: e.label,
 status: "manquant",
-meta: {}
+meta: e.detail ? { detail: e.detail } : {}
 }));
 
 try {

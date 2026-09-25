@@ -599,6 +599,17 @@ if (famille && domaines.length && !domaines.includes(famille)) return false;
 const exclus = Array.isArray(scholarship.domainesExclus) ? scholarship.domainesExclus.filter(Boolean) : [];
 if (famille && exclus.includes(famille)) return false;
 
+// Lot 110 : une SPÉCIALITÉ exclue, plus fine que la famille (la médecine
+// ne se fait pas en premier cycle au Canada pour un étudiant
+// international, alors que les soins infirmiers, de la même famille, s'y
+// font). Comparée au domaine saisi, sans accents ni casse.
+const specialites = Array.isArray(scholarship.specialitesExclues) ? scholarship.specialitesExclues.filter(Boolean) : [];
+if (specialites.length && p.desiredField) {
+const sansAccent = (t) => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const saisi = sansAccent(p.desiredField);
+if (specialites.some((sp) => saisi.includes(sansAccent(sp)))) return false;
+}
+
 return true;
 
 }

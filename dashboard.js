@@ -23,7 +23,7 @@ import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js"
 // un profil que Fitz refusait de servir.
 import { profilPretPourFitz } from "./js/fitz-choisit.js";
 import { computeJourneySteps } from "./js/application-journey.js";
-import { lireExigences, elementsAAjouter } from "./js/exigences.js";
+import { lireExigences, elementsAAjouter, dossierAAjouter } from "./js/exigences.js";
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage.
@@ -1298,7 +1298,7 @@ const echeance = opps.index ? etatDeLaCandidature(app, opps.index) : null;
 // l'étape « Dossier » ne se valide pas tant qu'une pièce exigée par la
 // bourse manque au dossier.
 const exigencesManquantes = echeance && echeance.lie && echeance.bourse
-? elementsAAjouter(lireExigences(echeance.bourse), app.checklist).length
+? dossierAAjouter(echeance.bourse, app.checklist).length
 : 0;
 return {
 ...app,

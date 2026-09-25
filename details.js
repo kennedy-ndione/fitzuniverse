@@ -43,7 +43,7 @@ import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits
 // fonction qui explique les recommandations du tableau de bord, et
 // createApplicationFromRecommendation la même écriture que le bouton
 // « Candidater » — jamais une seconde façon de faire la même chose.
-import { lireExigences, groupees, ORDRE_FORMES } from "./js/exigences.js";
+import { lireExigences, groupees, ORDRE_FORMES, piecesDeLaBourse } from "./js/exigences.js";
 import { explainMatch } from "./js/recommend-programs.js";
 import { createApplicationFromRecommendation } from "./js/application-actions.js";
 import { isQuotaReached } from "./js/plan-features.js";
@@ -297,6 +297,41 @@ sectionEl.hidden = false;
 // Règle des trois valeurs : sans exigence exploitable, la section reste
 // hidden. Un code inconnu est écarté par lireExigences(), jamais rendu
 // brut sur une page publique.
+// Lot 110 (2026-09-26) — « Pièces à préparer ». Même règle des trois
+// valeurs : sans liste lue sur une page officielle, la section reste
+// cachée. textContent partout.
+function afficherPieces(bourse) {
+const section = document.getElementById("piecesSection");
+const liste = document.getElementById("piecesListe");
+const intro = document.getElementById("piecesIntro");
+const source = document.getElementById("piecesSource");
+if (!section || !liste || !intro) return;
+const lot = piecesDeLaBourse(bourse);
+if (!lot) return;
+intro.textContent = lot.type === "admission"
+? "Cette bourse s'obtient avec l'admission : ce sont les pièces du dossier d'admission qui comptent."
+: "Les pièces demandées pour la candidature à cette bourse.";
+liste.innerHTML = "";
+for (const p of lot.pieces) {
+const li = document.createElement("li");
+const nom = document.createElement("strong");
+nom.textContent = p.label;
+li.append(nom);
+if (p.detail) li.append(document.createTextNode(` : ${p.detail}`));
+liste.append(li);
+}
+if (source && /^https:\/\//.test(lot.source)) {
+const a = document.createElement("a");
+a.href = lot.source;
+a.target = "_blank";
+a.rel = "noopener";
+a.textContent = "Voir la liste sur la page officielle";
+source.replaceChildren(a);
+source.hidden = false;
+}
+section.hidden = false;
+}
+
 function afficherExigences(bourse, sectionEl, contenuEl) {
 
 if (!sectionEl || !contenuEl) return;
@@ -785,6 +820,8 @@ generalCriteria: scholarshipData.generalCriteria || "",
 // Les exigences de dépôt, portées par la BOURSE. Tableau absent =
 // inconnu : lireExigences() rendra [] et la section restera masquée.
 exigences: Array.isArray(scholarshipData.exigences) ? scholarshipData.exigences : null,
+// Lot 110 : les pièces lues sur la page officielle, ou null.
+piecesDossier: scholarshipData.piecesDossier || null,
 // Limite d'âge de la bourse (2026-08-30) — même règle des trois
 // valeurs : ageMax absent reste null, un inconnu, jamais « pas de
 // limite » (voir js/age-limits.js).
@@ -900,6 +937,7 @@ if (description) description.textContent = university.description || "Aucune des
 afficherCriteresGeneraux(university.generalCriteria, criteriaSection, generalCriteriaEl);
 
 afficherExigences(university, document.getElementById("exigencesSection"), document.getElementById("exigencesContent"));
+afficherPieces(university);
 
 if (securityNotice && securityNoticeText && university.securityNotice) {
 securityNoticeText.textContent = university.securityNotice;

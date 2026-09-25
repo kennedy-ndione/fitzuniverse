@@ -332,6 +332,57 @@ return elementsDeDossier(codes).filter((e) => !dejaLa.has(e.type));
 }
 
 /**
+* LOT 110 (2026-09-26) — LES PIÈCES QUE LA BOURSE DEMANDE VRAIMENT.
+*
+* L'audit du 26/09 : 44 bourses proposables sur 52 n'offraient dans
+* l'espace qu'une liste générique (lettres, test de langue, preuve
+* financière). Le champ `piecesDossier` d'une bourse porte désormais la
+* liste lue sur la page officielle :
+*   { type: "propre" | "admission", pieces: [{ label, detail }],
+*     sourceVerification: { url, citation, le, parUid } }
+* « propre » : les pièces de la candidature à la bourse elle-même ;
+* « admission » : la bourse s'obtient avec l'admission, et ce sont les
+* pièces du dossier d'admission qui comptent.
+*
+* @returns {{type: string, pieces: {label: string, detail: string}[], source: string}|null}
+*/
+export function piecesDeLaBourse(bourse) {
+const d = bourse && bourse.piecesDossier;
+if (!d || !Array.isArray(d.pieces)) return null;
+const pieces = d.pieces
+.filter((p) => p && typeof p.label === "string" && p.label.trim())
+.map((p) => ({ label: p.label.trim(), detail: typeof p.detail === "string" ? p.detail.trim() : "" }));
+if (!pieces.length) return null;
+return {
+type: d.type === "admission" ? "admission" : "propre",
+pieces,
+source: (d.sourceVerification && d.sourceVerification.url) || ""
+};
+}
+
+/** Normalisation d'un libellé pour reconnaître une pièce déjà au dossier. */
+function cleDePiece(label) {
+return String(label || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+}
+
+/**
+* Tout ce que le catalogue demande et qui manque au dossier : les
+* éléments tirés des exigences (lettres, test de langue) PUIS les pièces
+* propres à la bourse. Une pièce déjà présente (même libellé, accents et
+* casse ignorés) n'est jamais reproposée.
+*/
+export function dossierAAjouter(bourse, checklist) {
+const liste = Array.isArray(checklist) ? checklist : [];
+const depuisExigences = elementsAAjouter(lireExigences(bourse), liste);
+const dejaLa = new Set(liste.map((i) => cleDePiece(i && i.label)));
+const lot = piecesDeLaBourse(bourse);
+const pieces = lot
+? lot.pieces.filter((p) => !dejaLa.has(cleDePiece(p.label))).map((p) => ({ type: "piece_bourse", label: p.label, detail: p.detail }))
+: [];
+return [...depuisExigences, ...pieces];
+}
+
+/**
 * Vrai quand l'étudiant NE DÉPOSE PAS lui-même. C'est la question la
 * plus utile que ce module sache répondre : elle change la nature même
 * de ce qu'il doit surveiller.
