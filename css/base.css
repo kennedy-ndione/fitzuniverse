@@ -514,17 +514,15 @@ de la connexion admin. */
 .header:not(.is-scrolled),
 .footer,
 .fitz-fab,
-.admin-logo-wrap{
+.admin-logo-wrap,
+.sidebar-brand{
 --logo-structure:#FDFCFA;
 --logo-descriptor:#E9A319;
 }
-/* .sidebar-brand a QUITTÉ ce bloc le 2026-09-04 : la sidebar de
-l'admin est claire depuis la refonte du 2026-09-02, et
-admin/control-center.css redéclarait les tokens clairs pour
-compenser — ce qui donnait DEUX sources pour --logo-descriptor et
-faisait échouer test/logo-lockup.test.mjs. Elle hérite désormais
-des valeurs claires de :root, qui sont exactement celles que la
-surcharge rétablissait. */
+/* .sidebar-brand avait QUITTÉ ce bloc le 2026-09-04 (sidebar admin
+claire) ; elle y REVIENT le 2026-09-26 avec le Control Center « Nuit »
+(lot 122, admin/nuit.css) : la sidebar est de nouveau sombre. Une seule
+source pour --logo-descriptor, ici. */
 
 /* Balisage canonique (identique dans tous les fichiers) : un <svg
 class="fitz-mark"> sans AUCUN attribut stroke= ; le grand arc porte

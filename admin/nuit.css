@@ -1,0 +1,1413 @@
+/* ==========================================================
+FITZUNIVERSE — CONTROL CENTER « NUIT » (lot 122, 2026-09-26)
+==========================================================
+Demande de Charles : « un espace admin extraordinaire, haut de gamme,
+très dynamique et très moderne, avec un fond sombre et des animations,
+un espace qui donne envie de travailler et de revenir ».
+
+UN SOMBRE CHAUD, JAMAIS BLEU. Le 2026-09-02, Charles avait écarté le
+premier thème sombre (« je ne veux plus de bleu foncé ») : celui-ci est
+bâti sur l'ENCRE CHAUDE du site (noir brun, jamais navy), éclairé par
+l'AMBRE de la marque. Le violet reste réservé à ce que font Fitz et les
+étudiants (doctrine DESIGN_SYSTEM.md).
+
+Cette feuille se charge APRÈS control-center.css sur toutes les pages du
+Control Center. Elle procède en deux temps : (1) elle redéfinit les
+jetons que tout le Control Center consomme (fond, filets, textes,
+accents) — la plupart des composants basculent d'eux-mêmes ; (2) elle
+reprend les composants qui portaient des valeurs claires littérales, et
+leur donne leur version « nuit » : verre dépoli, lueurs, mouvement.
+
+Le mouvement est piloté par admin/nuit.js (apparitions, compteurs,
+projecteur sous le curseur). Tout mouvement s'éteint sous
+prefers-reduced-motion.
+========================================================== */
+
+:root{
+
+color-scheme:dark;
+
+/* -------- La nuit : cinq profondeurs d'encre chaude -------- */
+--nuit-0:#0A0806;
+--nuit-1:#100D0A;
+--nuit-2:#16120E;
+--nuit-3:#1D1813;
+--nuit-4:#262019;
+
+--nuit-verre:rgba(24,20,15,.72);
+--nuit-verre-fort:rgba(30,25,19,.86);
+--nuit-filet:rgba(245,234,214,.08);
+--nuit-filet-fort:rgba(245,234,214,.14);
+--nuit-reflet:rgba(255,248,235,.05);
+
+/* -------- La lumière -------- */
+--nuit-ambre:#E9A319;
+--nuit-ambre-clair:#F5C35A;
+--nuit-ambre-lueur:rgba(233,163,25,.38);
+--nuit-cuivre:#D9782F;
+--nuit-violet:#A396F2;
+--nuit-vert:#3DD68C;
+--nuit-rouge:#F47171;
+--nuit-orange:#F5B544;
+
+--nuit-texte:#F4EEE4;
+--nuit-texte-2:#C9BFB1;
+--nuit-texte-3:#9A9083;
+
+/* -------- Les jetons que TOUT le Control Center consomme -------- */
+--background:var(--nuit-2);
+--background-soft:var(--nuit-0);
+--background-alt:var(--nuit-3);
+--background-light:rgba(233,163,25,.10);
+--surface:var(--nuit-2);
+
+--border-color:var(--nuit-filet);
+
+--text-color:var(--nuit-texte);
+--text-light:var(--nuit-texte-2);
+--text-muted:var(--nuit-texte-3);
+--text-decorative:#6E655A;
+
+/* L'ambre « texte » : sur la nuit, c'est la version CLAIRE qui se lit
+   (le --amber-700 du site est fait pour le papier). */
+--amber-700:var(--nuit-ambre-clair);
+--amber-600:#EDAE2F;
+--fitz-color:var(--nuit-ambre-clair);
+
+--accent-100:rgba(163,150,242,.14);
+--accent-500:var(--nuit-violet);
+--accent-600:#B4A9F6;
+
+--success:var(--nuit-vert);
+--success-50:rgba(61,214,140,.10);
+--success-600:#5BE0A0;
+--success-700:#7BE8B4;
+--warning:var(--nuit-orange);
+--warning-50:rgba(245,181,68,.10);
+--warning-600:#F7C25F;
+--warning-700:#F9CF7E;
+--danger:var(--nuit-rouge);
+--danger-50:rgba(244,113,113,.10);
+--danger-600:#F68A8A;
+--danger-700:#F8A3A3;
+
+/* L'encre « d'autorité » devient une surface levée ; ce qui était encre
+   pleine (boutons, puces actives) est repris composant par composant. */
+--ink-surface:#2B241C;
+--ink-surface-hover:#372E24;
+--primary-600:var(--nuit-texte);
+
+--gradient-primary:linear-gradient(135deg,#3A2E1F 0%,#241D16 55%,#18130F 100%);
+
+--shadow-xs:0 1px 0 rgba(255,248,235,.03) inset, 0 2px 10px rgba(0,0,0,.35);
+--shadow-sm:0 1px 0 rgba(255,248,235,.04) inset, 0 10px 26px rgba(0,0,0,.40);
+--shadow-md:0 1px 0 rgba(255,248,235,.05) inset, 0 18px 40px rgba(0,0,0,.48);
+--shadow-lg:0 1px 0 rgba(255,248,235,.06) inset, 0 28px 70px rgba(0,0,0,.55);
+--admin-glow:0 0 0 1px rgba(233,163,25,.16), 0 18px 60px rgba(233,163,25,.10);
+
+--glass:var(--nuit-verre);
+--glass-border:var(--nuit-filet);
+
+--nuit-ease:cubic-bezier(.16,1,.3,1);
+
+}
+
+/* ==========================================================
+1. LA TOILE — fond, aurore, trame
+========================================================== */
+
+html{ background:var(--nuit-0); }
+
+/* Le fond est porté par <html> ; <body> reste transparent, sinon il
+   couvrirait l'aurore et la trame (pseudo-éléments en z-index négatif,
+   peints SOUS les fonds des blocs). */
+body{
+background:transparent;
+color:var(--nuit-texte);
+-webkit-font-smoothing:antialiased;
+-moz-osx-font-smoothing:grayscale;
+}
+
+/* L'aurore : trois nappes de lumière chaude qui dérivent lentement
+   derrière tout le Control Center. Couche fixe, peinte une fois, animée
+   en transform seulement (GPU) : aucun coût de repeinture au défilement. */
+body::before{
+content:"";
+position:fixed;
+inset:-20vmax;
+z-index:-2;
+pointer-events:none;
+background:
+radial-gradient(38vmax 30vmax at 22% 14%,rgba(233,163,25,.22),transparent 70%),
+radial-gradient(34vmax 28vmax at 86% 10%,rgba(217,120,47,.15),transparent 70%),
+radial-gradient(40vmax 34vmax at 72% 90%,rgba(163,150,242,.09),transparent 70%),
+radial-gradient(30vmax 26vmax at 10% 86%,rgba(233,163,25,.08),transparent 70%);
+filter:saturate(115%);
+animation:nuitAurore 38s ease-in-out infinite alternate;
+}
+
+/* La trame : une grille très fine, qui s'efface vers les bords — le
+   « poste de pilotage », sans jamais gêner la lecture. */
+body::after{
+content:"";
+position:fixed;
+inset:0;
+z-index:-1;
+pointer-events:none;
+background-image:
+linear-gradient(rgba(245,234,214,.028) 1px,transparent 1px),
+linear-gradient(90deg,rgba(245,234,214,.028) 1px,transparent 1px);
+background-size:48px 48px;
+-webkit-mask-image:radial-gradient(ellipse 80% 70% at 55% 30%,#000 30%,transparent 85%);
+mask-image:radial-gradient(ellipse 80% 70% at 55% 30%,#000 30%,transparent 85%);
+}
+
+@keyframes nuitAurore{
+0%{ transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+50%{ transform:translate3d(3vmax,-2vmax,0) rotate(6deg) scale(1.06); }
+100%{ transform:translate3d(-3vmax,2vmax,0) rotate(-4deg) scale(1.02); }
+}
+
+::selection{ background:rgba(233,163,25,.35); color:#fff; }
+
+/* Barres de défilement fines, couleur encre. */
+*{ scrollbar-width:thin; scrollbar-color:rgba(245,234,214,.16) transparent; }
+*::-webkit-scrollbar{ width:10px; height:10px; }
+*::-webkit-scrollbar-thumb{ background:rgba(245,234,214,.14); border-radius:10px; border:2px solid transparent; background-clip:padding-box; }
+*::-webkit-scrollbar-thumb:hover{ background:rgba(233,163,25,.45); background-clip:padding-box; }
+*::-webkit-scrollbar-track{ background:transparent; }
+
+:focus-visible{ outline:2px solid var(--nuit-ambre); outline-offset:2px; }
+
+h1,h2,h3,h4{ color:var(--nuit-texte); }
+
+/* ==========================================================
+2. CHARGEMENT — un anneau qui respire
+========================================================== */
+
+.auth-page-loader{ background:var(--nuit-0); }
+
+.loader-spinner{
+width:52px;
+height:52px;
+border:3px solid rgba(245,234,214,.08);
+border-top-color:var(--nuit-ambre);
+border-right-color:rgba(233,163,25,.45);
+box-shadow:0 0 40px rgba(233,163,25,.25);
+}
+
+/* ==========================================================
+3. BARRE LATÉRALE — verre sombre, lumière d'ambre sur la page active
+========================================================== */
+
+.sidebar{
+background:linear-gradient(180deg,rgba(18,15,11,.92),rgba(12,10,8,.94));
+border-right:1px solid var(--nuit-filet);
+box-shadow:1px 0 0 rgba(233,163,25,.05), 20px 0 60px rgba(0,0,0,.35);
+-webkit-backdrop-filter:blur(18px) saturate(140%);
+backdrop-filter:blur(18px) saturate(140%);
+}
+
+/* Un filet de lumière qui descend le long du bord droit. */
+.sidebar::after{
+content:"";
+position:absolute;
+top:0;
+right:-1px;
+width:1px;
+height:100%;
+pointer-events:none;
+background:linear-gradient(180deg,transparent,rgba(233,163,25,.55) 30%,rgba(233,163,25,.08) 70%,transparent);
+opacity:.6;
+}
+
+.sidebar-top{ border-bottom-color:var(--nuit-filet); }
+
+/* La marque sur la nuit : .sidebar-brand a rejoint le bloc « fond
+   sombre » du lockup dans css/base.css (source unique des tokens). */
+.sidebar-brand .fitz-mark{ filter:drop-shadow(0 0 10px rgba(233,163,25,.35)); }
+
+.sidebar-badge{
+background:linear-gradient(135deg,rgba(233,163,25,.18),rgba(233,163,25,.06));
+border:1px solid rgba(233,163,25,.30);
+color:var(--nuit-ambre-clair);
+box-shadow:0 0 24px rgba(233,163,25,.12), inset 0 1px 0 rgba(255,248,235,.08);
+letter-spacing:.08em;
+}
+
+.sidebar-badge i,
+.sidebar-badge svg{ color:var(--nuit-ambre); }
+
+.sidebar-section-label{
+color:#7C7266;
+letter-spacing:.14em;
+font-size:.68rem;
+}
+
+.nav-link{
+position:relative;
+color:var(--nuit-texte-2);
+border:1px solid transparent;
+transition:color .25s var(--nuit-ease), background .25s var(--nuit-ease), border-color .25s var(--nuit-ease), transform .25s var(--nuit-ease);
+}
+
+.nav-link i,
+.nav-link svg{ color:#8C8276; transition:color .25s var(--nuit-ease), transform .35s var(--nuit-ease), filter .25s; }
+
+.nav-link:hover{
+color:var(--nuit-texte);
+background:rgba(245,234,214,.045);
+border-color:rgba(245,234,214,.06);
+transform:translateX(2px);
+}
+
+.nav-link:hover i,
+.nav-link:hover svg{ color:var(--nuit-ambre-clair); transform:scale(1.08); }
+
+.nav-link.is-active{
+color:#FFF7E8;
+background:linear-gradient(100deg,rgba(233,163,25,.22),rgba(233,163,25,.06) 70%,transparent);
+border-color:rgba(233,163,25,.22);
+box-shadow:inset 0 1px 0 rgba(255,248,235,.06), 0 8px 24px rgba(233,163,25,.10);
+}
+
+.nav-link.is-active::before{
+content:"";
+position:absolute;
+left:-9px;
+top:22%;
+bottom:22%;
+width:3px;
+border-radius:0 3px 3px 0;
+background:var(--nuit-ambre);
+box-shadow:0 0 12px var(--nuit-ambre), 0 0 24px rgba(233,163,25,.55);
+}
+
+.nav-link.is-active i,
+.nav-link.is-active svg{ color:var(--nuit-ambre); filter:drop-shadow(0 0 6px rgba(233,163,25,.55)); }
+
+.nav-link.is-soon{ color:#6E655A; }
+.nav-link.is-soon:hover{ transform:none; background:none; border-color:transparent; }
+
+.nav-soon-badge{
+background:rgba(163,150,242,.12);
+color:var(--nuit-violet);
+border:1px solid rgba(163,150,242,.22);
+}
+
+.nav-count-badge{
+background:var(--nuit-ambre);
+color:#1A1206;
+box-shadow:0 0 0 3px rgba(233,163,25,.18), 0 0 14px rgba(233,163,25,.45);
+}
+
+.sidebar-bottom{ border-top-color:var(--nuit-filet); }
+
+.sidebar-logout{
+color:var(--nuit-texte-2);
+border-color:var(--nuit-filet);
+background:rgba(245,234,214,.03);
+}
+
+.sidebar-logout:hover{
+color:#FFB4B4;
+border-color:rgba(244,113,113,.35);
+background:rgba(244,113,113,.08);
+}
+
+.sidebar-backdrop{ background:rgba(5,4,3,.62); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+
+/* La recherche globale (Ctrl+K) dans la barre latérale. */
+.cmdk-trigger{
+background:rgba(245,234,214,.035);
+border-color:var(--nuit-filet);
+color:var(--nuit-texte-3);
+}
+
+.cmdk-trigger:hover{ border-color:rgba(233,163,25,.35); color:var(--nuit-texte); background:rgba(233,163,25,.06); }
+
+.cmdk-trigger kbd,
+.cmdk-trigger .cmdk-kbd{ background:var(--nuit-3); border-color:var(--nuit-filet-fort); color:var(--nuit-texte-2); }
+
+/* ==========================================================
+4. BARRE DU HAUT (pages de travail) et titres de page
+========================================================== */
+
+.topbar{
+background:rgba(12,10,8,.72);
+border-bottom:1px solid var(--nuit-filet);
+-webkit-backdrop-filter:blur(16px) saturate(140%);
+backdrop-filter:blur(16px) saturate(140%);
+}
+
+.topbar-title h1{
+background:linear-gradient(100deg,#FFF7E8 10%,#F5C35A 60%,#E9A319);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+}
+
+.topbar-search input,
+.msg-list-search input,
+.cmdk-champ input{
+background:rgba(245,234,214,.04);
+border-color:var(--nuit-filet);
+color:var(--nuit-texte);
+}
+
+.topbar-menu-btn{ color:var(--nuit-texte); border-color:var(--nuit-filet); background:rgba(245,234,214,.04); }
+
+/* ==========================================================
+5. LES CARTES — verre dépoli, filet lumineux, projecteur au curseur
+   (--mx / --my posés par nuit.js)
+========================================================== */
+
+.panel-card,
+.journee-card,
+.pulse-card,
+.stat-card,
+.outcome-card,
+.overview-card,
+.tool-card,
+.detail-section,
+.msg-center,
+.plans-pays,
+.admin-table-wrap,
+.passation-guide,
+.pending-section{
+position:relative;
+background:
+radial-gradient(420px circle at var(--mx,50%) var(--my,-40%),rgba(233,163,25,.075),transparent 60%),
+linear-gradient(180deg,rgba(255,248,235,.035),rgba(255,248,235,.012) 40%,transparent),
+var(--nuit-verre);
+border:1px solid var(--nuit-filet);
+box-shadow:var(--shadow-md);
+-webkit-backdrop-filter:blur(14px) saturate(130%);
+backdrop-filter:blur(14px) saturate(130%);
+transition:border-color .35s var(--nuit-ease), box-shadow .35s var(--nuit-ease), transform .35s var(--nuit-ease);
+}
+
+/* Le tableau posé DANS une carte ne double pas le verre. */
+.panel-card .admin-table-wrap,
+.plans-pays .admin-table-wrap,
+.detail-section .admin-table-wrap{
+background:transparent;
+border-color:var(--nuit-filet);
+box-shadow:none;
+-webkit-backdrop-filter:none;
+backdrop-filter:none;
+}
+
+.panel-card:hover,
+.journee-card:hover,
+.pulse-card:hover,
+.overview-card:hover,
+.tool-card:hover,
+.detail-section:hover{
+border-color:rgba(233,163,25,.20);
+box-shadow:var(--shadow-lg), 0 0 0 1px rgba(233,163,25,.05);
+}
+
+/* Un filet de lumière sur l'arête haute de chaque carte. */
+.panel-card::before,
+.journee-card::before,
+.pulse-card::before,
+.overview-card::before,
+.tool-card::before,
+.detail-section::before{
+content:"";
+position:absolute;
+top:0;
+left:12%;
+right:12%;
+height:1px;
+pointer-events:none;
+background:linear-gradient(90deg,transparent,rgba(245,195,90,.45),transparent);
+opacity:.55;
+}
+
+.panel-card h2,
+.journee-head h2,
+.pulse-head h2,
+.detail-section h2,
+.overview-card h2,
+.tool-card h2{
+font-family:var(--font-display);
+letter-spacing:-.01em;
+color:var(--nuit-texte);
+}
+
+.panel-card-subtext,
+.journee-head-sub,
+.pulse-head-sub{ color:var(--nuit-texte-3); }
+
+.dash-footnote{ color:#8A8074; }
+.dash-footnote i,
+.dash-footnote svg{ color:#8A8074; }
+
+/* ==========================================================
+6. LE HERO — la salle de commande
+========================================================== */
+
+.exec-hero{
+isolation:isolate;
+background:
+radial-gradient(700px 320px at 92% -10%,rgba(233,163,25,.30),transparent 60%),
+radial-gradient(520px 300px at -5% 110%,rgba(217,120,47,.18),transparent 60%),
+radial-gradient(420px 260px at 55% 130%,rgba(163,150,242,.10),transparent 65%),
+linear-gradient(150deg,#241C14 0%,#17120D 55%,#100C09 100%);
+border:1px solid rgba(233,163,25,.22);
+box-shadow:0 1px 0 rgba(255,248,235,.08) inset, 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4), 0 0 120px rgba(233,163,25,.08);
+}
+
+/* Le balayage lumineux qui traverse le hero, lentement. */
+.exec-hero::before{
+content:"";
+position:absolute;
+inset:0;
+z-index:-1;
+pointer-events:none;
+background:linear-gradient(110deg,transparent 35%,rgba(255,236,200,.07) 48%,transparent 60%);
+background-size:250% 100%;
+animation:nuitBalayage 9s var(--nuit-ease) infinite;
+}
+
+/* L'anneau de fond : deux orbites qui tournent, comme un radar. */
+.exec-hero::after{
+content:"";
+position:absolute;
+right:-120px;
+top:-160px;
+width:520px;
+height:520px;
+z-index:-1;
+border-radius:50%;
+pointer-events:none;
+background:
+repeating-radial-gradient(circle at center,transparent 0 58px,rgba(245,195,90,.07) 59px 60px),
+conic-gradient(from 0deg,transparent 0 300deg,rgba(233,163,25,.22) 340deg,transparent 360deg);
+-webkit-mask-image:radial-gradient(circle,#000 30%,transparent 70%);
+mask-image:radial-gradient(circle,#000 30%,transparent 70%);
+animation:nuitRadar 14s linear infinite;
+opacity:.9;
+}
+
+@keyframes nuitBalayage{
+0%{ background-position:120% 0; }
+60%,100%{ background-position:-120% 0; }
+}
+
+@keyframes nuitRadar{
+to{ transform:rotate(360deg); }
+}
+
+.exec-avatar{
+position:relative;
+background:linear-gradient(145deg,#F5C35A,#E9A319 45%,#B97809);
+color:#1A1206;
+border:none;
+box-shadow:0 0 0 4px rgba(233,163,25,.14), 0 0 36px rgba(233,163,25,.45), inset 0 1px 0 rgba(255,255,255,.45);
+font-weight:800;
+}
+
+/* Un halo qui pulse autour de l'avatar : l'administrateur est « en ligne ». */
+.exec-avatar::after{
+content:"";
+position:absolute;
+inset:-7px;
+border-radius:inherit;
+border:1px solid rgba(233,163,25,.45);
+animation:nuitHalo 2.8s var(--nuit-ease) infinite;
+pointer-events:none;
+}
+
+@keyframes nuitHalo{
+0%{ transform:scale(.92); opacity:.9; }
+100%{ transform:scale(1.25); opacity:0; }
+}
+
+.exec-identity-text h1{
+font-size:clamp(1.7rem,2.6vw,2.35rem);
+letter-spacing:-.025em;
+background:linear-gradient(100deg,#FFF9EE 0%,#FFE9BF 45%,#F5C35A 75%,#E9A319 100%);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+text-shadow:none;
+}
+
+.exec-role{ color:var(--nuit-ambre-clair); letter-spacing:.12em; }
+.exec-role::before{ box-shadow:0 0 10px var(--nuit-ambre); }
+
+.exec-briefing{ color:rgba(244,238,228,.80); }
+.exec-briefing strong,
+.exec-briefing b{ color:#FFF7E8; }
+
+.exec-badge{
+background:rgba(10,8,6,.45);
+border:1px solid rgba(245,234,214,.10);
+color:rgba(244,238,228,.88);
+-webkit-backdrop-filter:blur(10px);
+backdrop-filter:blur(10px);
+box-shadow:inset 0 1px 0 rgba(255,248,235,.05);
+font-variant-numeric:tabular-nums;
+}
+
+.exec-badge i,
+.exec-badge svg{ color:var(--nuit-ambre-clair); }
+
+.exec-badge .status-dot.is-online{ background:var(--nuit-vert); box-shadow:0 0 0 3px rgba(61,214,140,.18), 0 0 10px rgba(61,214,140,.8); animation:nuitPoint 2.2s ease-in-out infinite; }
+.exec-badge .status-dot.is-pending{ background:var(--nuit-orange); box-shadow:0 0 0 3px rgba(245,181,68,.18), 0 0 10px rgba(245,181,68,.7); }
+.exec-badge .status-dot.is-offline{ background:var(--nuit-rouge); box-shadow:0 0 0 3px rgba(244,113,113,.18), 0 0 10px rgba(244,113,113,.7); }
+
+@keyframes nuitPoint{
+0%,100%{ opacity:1; }
+50%{ opacity:.45; }
+}
+
+.exec-action-btn{
+position:relative;
+overflow:hidden;
+color:#F4EEE4;
+background:rgba(245,234,214,.05);
+border:1px solid rgba(245,234,214,.12);
+-webkit-backdrop-filter:blur(8px);
+backdrop-filter:blur(8px);
+transition:transform .3s var(--nuit-ease), border-color .3s var(--nuit-ease), background .3s var(--nuit-ease), box-shadow .3s var(--nuit-ease);
+}
+
+.exec-action-btn i,
+.exec-action-btn svg{ color:var(--nuit-ambre-clair); }
+
+.exec-action-btn:hover{
+color:#FFF7E8;
+background:rgba(233,163,25,.12);
+border-color:rgba(233,163,25,.45);
+transform:translateY(-2px);
+box-shadow:0 12px 30px rgba(0,0,0,.35), 0 0 24px rgba(233,163,25,.18);
+}
+
+.exec-action-btn:hover i,
+.exec-action-btn:hover svg{ color:var(--nuit-ambre); }
+
+.exec-action-btn.is-primary{
+color:#1A1206;
+background:linear-gradient(135deg,#F7C860 0%,#E9A319 50%,#D38A0C 100%);
+border-color:rgba(255,220,150,.6);
+box-shadow:0 10px 30px rgba(233,163,25,.35), inset 0 1px 0 rgba(255,255,255,.45);
+}
+
+.exec-action-btn.is-primary i,
+.exec-action-btn.is-primary svg{ color:#1A1206; }
+
+.exec-action-btn.is-primary:hover{
+color:#1A1206;
+background:linear-gradient(135deg,#FFD57A 0%,#F0AE26 50%,#DB920F 100%);
+box-shadow:0 16px 40px rgba(233,163,25,.45), 0 0 0 4px rgba(233,163,25,.14), inset 0 1px 0 rgba(255,255,255,.5);
+}
+
+.exec-action-btn.is-primary:hover i,
+.exec-action-btn.is-primary:hover svg{ color:#1A1206; }
+
+/* L'éclat qui glisse sur un bouton au survol. */
+.exec-action-btn::after,
+.btn-page-action::after,
+.btn-profile-save::after{
+content:"";
+position:absolute;
+inset:0;
+pointer-events:none;
+background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);
+transform:translateX(-120%);
+transition:transform .8s var(--nuit-ease);
+}
+
+.exec-action-btn:hover::after,
+.btn-page-action:hover::after,
+.btn-profile-save:hover::after{ transform:translateX(120%); }
+
+/* ==========================================================
+7. LES CHIFFRES — tuiles de statistiques
+========================================================== */
+
+.stat-card{
+overflow:hidden;
+}
+
+.stat-card:hover{
+transform:translateY(-3px);
+border-color:rgba(233,163,25,.24);
+box-shadow:var(--shadow-lg), 0 0 40px rgba(233,163,25,.06);
+}
+
+.stat-card-icon{
+color:var(--nuit-ambre);
+background:linear-gradient(145deg,rgba(233,163,25,.20),rgba(233,163,25,.05));
+border:1px solid rgba(233,163,25,.25);
+box-shadow:0 0 20px rgba(233,163,25,.12), inset 0 1px 0 rgba(255,248,235,.08);
+}
+
+.stat-card-icon i,
+.stat-card-icon svg{ color:var(--nuit-ambre-clair); }
+
+.stat-card-value{
+font-family:var(--font-display);
+color:#FFF7E8;
+font-variant-numeric:tabular-nums;
+letter-spacing:-.03em;
+}
+
+.stat-card-label{ color:var(--nuit-texte-2); }
+
+.stat-card.is-accent .stat-card-value{ color:var(--nuit-ambre-clair); text-shadow:0 0 24px rgba(233,163,25,.35); }
+
+/* La tuile vedette : une bordure de lumière qui tourne tout autour. */
+.stat-card.is-featured{
+background:
+radial-gradient(500px circle at 85% -10%,rgba(233,163,25,.30),transparent 60%),
+radial-gradient(380px circle at 0% 120%,rgba(217,120,47,.18),transparent 60%),
+linear-gradient(150deg,#271E15,#16110C);
+border:1px solid transparent;
+}
+
+.stat-card.is-featured::after{
+content:"";
+position:absolute;
+inset:0;
+border-radius:inherit;
+padding:1px;
+pointer-events:none;
+background:conic-gradient(from var(--nuit-angle,0deg),rgba(233,163,25,.05),rgba(245,195,90,.9) 12%,rgba(233,163,25,.05) 26%,rgba(233,163,25,.05) 60%,rgba(217,120,47,.6) 72%,rgba(233,163,25,.05) 86%);
+-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+-webkit-mask-composite:xor;
+mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+animation:nuitTour 7s linear infinite;
+}
+
+@property --nuit-angle{
+syntax:"<angle>";
+inherits:false;
+initial-value:0deg;
+}
+
+@keyframes nuitTour{
+to{ --nuit-angle:360deg; }
+}
+
+.stat-card.is-featured .stat-card-icon{
+color:#1A1206;
+background:linear-gradient(145deg,#F7C860,#E9A319);
+border-color:transparent;
+box-shadow:0 0 30px rgba(233,163,25,.45);
+}
+
+.stat-card.is-featured .stat-card-icon i,
+.stat-card.is-featured .stat-card-icon svg{ color:#1A1206; }
+
+.stat-card.is-featured .stat-card-value{
+font-size:clamp(3rem,5vw,4.2rem);
+background:linear-gradient(180deg,#FFFFFF 20%,#F5C35A 100%);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+}
+
+.stat-card.is-featured .stat-card-label{ color:rgba(244,238,228,.82); }
+
+.stat-card-delta{ font-variant-numeric:tabular-nums; }
+.stat-card-delta.is-up{ color:var(--success-600); }
+.stat-card-delta.is-down{ color:var(--danger-600); }
+
+.stat-card.is-pending .stat-card-icon{ background:rgba(245,234,214,.05); border-color:var(--nuit-filet); box-shadow:none; }
+.stat-card-pending-note{ color:var(--nuit-texte-3); }
+
+/* ==========================================================
+8. VOTRE JOURNÉE, VISITEURS, ISSUES, OBSERVATIONS
+========================================================== */
+
+.journee-tuile{
+position:relative;
+background:linear-gradient(180deg,rgba(255,248,235,.035),rgba(255,248,235,.01));
+border:1px solid var(--nuit-filet);
+transition:transform .3s var(--nuit-ease), border-color .3s var(--nuit-ease), box-shadow .3s var(--nuit-ease), background .3s;
+}
+
+.journee-tuile:hover{
+transform:translateY(-3px);
+border-color:color-mix(in srgb,var(--tuile-ton,#E9A319) 45%,transparent);
+box-shadow:0 14px 34px rgba(0,0,0,.4), 0 0 30px color-mix(in srgb,var(--tuile-ton,#E9A319) 16%,transparent);
+background:linear-gradient(180deg,color-mix(in srgb,var(--tuile-ton,#E9A319) 8%,transparent),rgba(255,248,235,.01));
+}
+
+.journee-tuile-titre{ color:var(--nuit-texte); }
+
+.journee-tuile-compte{
+font-family:var(--font-display);
+color:#FFF7E8;
+font-variant-numeric:tabular-nums;
+text-shadow:0 0 22px color-mix(in srgb,var(--tuile-ton,#E9A319) 55%,transparent);
+}
+
+.journee-tuile-icone{
+background:color-mix(in srgb,var(--tuile-ton,#E9A319) 16%,transparent);
+border:1px solid color-mix(in srgb,var(--tuile-ton,#E9A319) 30%,transparent);
+color:var(--tuile-ton,#E9A319);
+box-shadow:0 0 18px color-mix(in srgb,var(--tuile-ton,#E9A319) 20%,transparent);
+}
+
+.journee-tuile-action{ color:var(--nuit-ambre-clair); }
+.journee-tuile-action:hover{ color:#FFE3A6; }
+
+.journee-lignes,
+.journee-zero{ color:var(--nuit-texte-3); }
+.journee-lignes strong{ color:var(--nuit-texte); }
+
+.visiteurs-chiffre{
+position:relative;
+overflow:hidden;
+background:linear-gradient(160deg,rgba(233,163,25,.10),rgba(233,163,25,.02) 60%);
+border:1px solid rgba(233,163,25,.16);
+transition:transform .3s var(--nuit-ease), border-color .3s var(--nuit-ease);
+}
+
+.visiteurs-chiffre:hover{ transform:translateY(-2px); border-color:rgba(233,163,25,.38); }
+
+.visiteurs-valeur{
+font-family:var(--font-display);
+color:#FFF7E8;
+font-variant-numeric:tabular-nums;
+text-shadow:0 0 26px rgba(233,163,25,.35);
+}
+
+.visiteurs-libelle{ color:var(--nuit-texte-3); }
+
+.outcome-card{
+border-left:3px solid var(--outcome-color);
+}
+
+.outcome-card i,
+.outcome-card svg{
+color:var(--outcome-color);
+filter:drop-shadow(0 0 10px color-mix(in srgb,var(--outcome-color) 70%,transparent));
+}
+
+.outcome-card-value{
+font-family:var(--font-display);
+color:#FFF7E8;
+font-variant-numeric:tabular-nums;
+}
+
+.outcome-card-label{ color:var(--nuit-texte-2); }
+
+.ai-observations{
+position:relative;
+overflow:hidden;
+background:
+radial-gradient(600px 200px at 0% 0%,rgba(163,150,242,.16),transparent 60%),
+linear-gradient(120deg,rgba(163,150,242,.08),rgba(233,163,25,.06)),
+var(--nuit-verre);
+border:1px solid rgba(163,150,242,.22);
+box-shadow:var(--shadow-md);
+-webkit-backdrop-filter:blur(14px);
+backdrop-filter:blur(14px);
+}
+
+.ai-observations h2{ color:var(--nuit-texte); }
+.ai-observations p{ color:var(--nuit-texte-2); }
+
+.ai-observations-icon{
+color:#120E1F;
+background:linear-gradient(145deg,#C7BEFA,#A396F2);
+box-shadow:0 0 30px rgba(163,150,242,.45);
+}
+
+.ai-observations-icon i,
+.ai-observations-icon svg{ color:#120E1F; }
+
+/* ==========================================================
+9. LA PULSATION — commandes et courbes
+========================================================== */
+
+.pulse-card{
+background:
+radial-gradient(900px 260px at 30% -20%,rgba(233,163,25,.10),transparent 60%),
+linear-gradient(180deg,rgba(255,248,235,.035),transparent 40%),
+var(--nuit-verre);
+}
+
+/* Le chiffre-titre de la pulsation. */
+.pulse-resume{
+display:flex;
+align-items:baseline;
+flex-wrap:wrap;
+gap:6px 12px;
+margin-top:14px;
+}
+
+.pulse-resume-valeur{
+font-family:var(--font-display);
+font-size:clamp(2.2rem,3.4vw,3rem);
+font-weight:800;
+line-height:1;
+letter-spacing:-.035em;
+font-variant-numeric:tabular-nums;
+background:linear-gradient(180deg,#FFFFFF 15%,#F5C35A 100%);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+filter:drop-shadow(0 0 18px rgba(233,163,25,.25));
+}
+
+.pulse-resume-libelle{ color:var(--nuit-texte-2); font-weight:600; }
+
+.pulse-resume-ecart{
+padding:3px 10px;
+border-radius:999px;
+font-size:.78rem;
+font-weight:700;
+font-variant-numeric:tabular-nums;
+color:var(--nuit-texte-2);
+background:rgba(245,234,214,.06);
+border:1px solid var(--nuit-filet-fort);
+}
+
+.pulse-resume-ecart.is-up{ color:#5BE0A0; background:rgba(61,214,140,.10); border-color:rgba(61,214,140,.30); }
+.pulse-resume-ecart.is-down{ color:#F68A8A; background:rgba(244,113,113,.10); border-color:rgba(244,113,113,.30); }
+
+.seg-control{
+background:rgba(10,8,6,.55);
+border:1px solid var(--nuit-filet);
+box-shadow:inset 0 1px 3px rgba(0,0,0,.5);
+}
+
+.seg-btn{ color:var(--nuit-texte-3); transition:color .25s, background .3s var(--nuit-ease), box-shadow .3s var(--nuit-ease); }
+.seg-btn:hover{ color:var(--nuit-texte); }
+
+.seg-btn.is-active{
+color:#1A1206;
+background:linear-gradient(135deg,#F7C860,#E9A319);
+box-shadow:0 4px 16px rgba(233,163,25,.35), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+.serie-chip{
+background:rgba(245,234,214,.03);
+border:1px solid var(--nuit-filet);
+color:var(--nuit-texte-3);
+transition:all .3s var(--nuit-ease);
+}
+
+.serie-chip.is-active{
+color:var(--nuit-texte);
+background:color-mix(in srgb,var(--serie-color) 12%,transparent);
+border-color:color-mix(in srgb,var(--serie-color) 45%,transparent);
+box-shadow:0 0 18px color-mix(in srgb,var(--serie-color) 18%,transparent);
+}
+
+.serie-chip.is-off{ opacity:.55; }
+
+.serie-dot{
+background:var(--serie-color);
+box-shadow:0 0 8px var(--serie-color);
+}
+
+.serie-chip.is-off .serie-dot{ box-shadow:none; background:transparent; border:1.5px solid var(--serie-color); }
+
+.demo-toggle{ color:var(--nuit-violet); border-color:rgba(163,150,242,.28); background:rgba(163,150,242,.06); }
+.demo-track{ background:rgba(245,234,214,.10); }
+.demo-toggle[aria-pressed="true"] .demo-track{ background:var(--nuit-violet); box-shadow:0 0 14px rgba(163,150,242,.5); }
+.demo-toggle .demo-thumb{ background:#FFF7E8; box-shadow:0 2px 6px rgba(0,0,0,.5); }
+
+.demo-banner{
+background:rgba(163,150,242,.08);
+border-color:rgba(163,150,242,.28);
+color:#CFC7FA;
+}
+
+.chart-empty-state{ color:var(--nuit-texte-3); }
+.chart-empty-state i,
+.chart-empty-state svg{ color:rgba(233,163,25,.55); }
+
+/* ==========================================================
+10. LISTES : tops, entonnoir, chronologie, infrastructure
+========================================================== */
+
+.top-list-row{ border-color:var(--nuit-filet); transition:background .25s, transform .25s var(--nuit-ease); }
+.top-list-row:hover{ background:rgba(233,163,25,.05); transform:translateX(3px); }
+.top-list-rank{ color:var(--nuit-ambre-clair); background:rgba(233,163,25,.10); border:1px solid rgba(233,163,25,.2); }
+.top-list-label{ color:var(--nuit-texte); }
+.top-list-count{ color:var(--nuit-ambre-clair); font-variant-numeric:tabular-nums; }
+.top-list-empty{ color:var(--nuit-texte-3); }
+
+.funnel-row-label{ color:var(--nuit-texte-2); }
+.funnel-row-value{ color:#FFF7E8; font-variant-numeric:tabular-nums; }
+
+.funnel-bar{ background:rgba(245,234,214,.06); overflow:hidden; }
+
+.funnel-bar-fill{
+background:linear-gradient(90deg,#B97809,#E9A319 60%,#F7C860);
+box-shadow:0 0 16px rgba(233,163,25,.45);
+position:relative;
+}
+
+.funnel-bar-fill::after{
+content:"";
+position:absolute;
+inset:0;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+transform:translateX(-100%);
+animation:nuitFil 3.2s var(--nuit-ease) infinite;
+}
+
+@keyframes nuitFil{
+0%{ transform:translateX(-100%); }
+70%,100%{ transform:translateX(100%); }
+}
+
+.timeline-dot{ background:var(--nuit-ambre); box-shadow:0 0 0 4px rgba(233,163,25,.14), 0 0 12px rgba(233,163,25,.6); }
+.timeline-item::before,
+.timeline::before{ background:linear-gradient(180deg,rgba(233,163,25,.4),rgba(233,163,25,.02)); }
+.timeline-label{ color:var(--nuit-texte); }
+.timeline-meta{ color:var(--nuit-texte-3); }
+.timeline-empty{ color:var(--nuit-texte-3); }
+
+.infra-item{
+background:rgba(245,234,214,.03);
+border:1px solid var(--nuit-filet);
+transition:border-color .3s, background .3s;
+}
+
+.infra-item:hover{ border-color:rgba(61,214,140,.3); background:rgba(61,214,140,.04); }
+.infra-item-name{ color:var(--nuit-texte); }
+
+/* ==========================================================
+11. TABLEAUX, PASTILLES D'ÉTAT, BOUTONS, CHAMPS
+========================================================== */
+
+.admin-table,
+.table{ color:var(--nuit-texte); }
+
+.admin-table th,
+.table th{
+color:#8C8276;
+background:rgba(10,8,6,.35);
+border-bottom-color:var(--nuit-filet-fort);
+letter-spacing:.08em;
+font-size:.72rem;
+text-transform:uppercase;
+}
+
+.admin-table td,
+.table td{ border-bottom-color:var(--nuit-filet); color:var(--nuit-texte-2); }
+
+.admin-table td.is-name,
+.admin-table td strong,
+.table td strong{ color:var(--nuit-texte); }
+
+.admin-table tbody tr,
+.table tbody tr{ transition:background .2s ease; }
+
+.admin-table tbody tr:hover,
+.table tbody tr:hover{ background:linear-gradient(90deg,rgba(233,163,25,.07),rgba(233,163,25,.02)); }
+
+.admin-table-empty{ color:var(--nuit-texte-3); }
+
+.status-pill{
+background:rgba(245,234,214,.06);
+border:1px solid var(--nuit-filet-fort);
+color:var(--nuit-texte-2);
+}
+
+.status-pill.is-attente{ background:rgba(233,163,25,.12); border-color:rgba(233,163,25,.32); color:var(--nuit-ambre-clair); }
+
+.btn-page-action,
+.btn-detail-action,
+.btn-profile-save,
+.msg-groupe-envoyer,
+.alertes-envoyer{
+position:relative;
+overflow:hidden;
+color:#1A1206;
+background:linear-gradient(135deg,#F7C860 0%,#E9A319 55%,#D38A0C 100%);
+border:1px solid rgba(255,220,150,.55);
+box-shadow:0 10px 26px rgba(233,163,25,.28), inset 0 1px 0 rgba(255,255,255,.45);
+transition:transform .25s var(--nuit-ease), box-shadow .25s var(--nuit-ease), filter .25s;
+}
+
+.btn-page-action i,
+.btn-page-action svg,
+.btn-detail-action i,
+.btn-detail-action svg,
+.btn-profile-save i,
+.btn-profile-save svg{ color:#1A1206; }
+
+.btn-page-action:hover,
+.btn-detail-action:hover,
+.btn-profile-save:hover,
+.msg-groupe-envoyer:hover,
+.alertes-envoyer:hover{
+color:#1A1206;
+transform:translateY(-2px);
+box-shadow:0 16px 36px rgba(233,163,25,.38), 0 0 0 4px rgba(233,163,25,.12), inset 0 1px 0 rgba(255,255,255,.5);
+}
+
+.btn-page-action.is-secondary,
+.btn-detail-action.is-secondary{
+color:var(--nuit-texte);
+background:rgba(245,234,214,.05);
+border-color:var(--nuit-filet-fort);
+box-shadow:none;
+}
+
+.btn-page-action.is-secondary i,
+.btn-page-action.is-secondary svg,
+.btn-detail-action.is-secondary i,
+.btn-detail-action.is-secondary svg{ color:var(--nuit-ambre-clair); }
+
+.btn-page-action.is-secondary:hover,
+.btn-detail-action.is-secondary:hover{
+color:#FFF7E8;
+background:rgba(233,163,25,.10);
+border-color:rgba(233,163,25,.40);
+box-shadow:0 0 22px rgba(233,163,25,.14);
+}
+
+.btn-primary{
+color:#1A1206;
+background:linear-gradient(135deg,#F7C860,#E9A319);
+border-color:transparent;
+}
+
+.btn-primary:hover{ color:#1A1206; background:linear-gradient(135deg,#FFD57A,#F0AE26); box-shadow:0 12px 30px rgba(233,163,25,.35); }
+
+.btn-secondary{ color:var(--nuit-texte); background:rgba(245,234,214,.04); border-color:var(--nuit-filet-fort); }
+.btn-secondary:hover{ color:#FFF7E8; background:rgba(233,163,25,.10); border-color:rgba(233,163,25,.4); }
+
+.table-icon-btn,
+.table-link-btn{
+color:var(--nuit-texte-2);
+background:rgba(245,234,214,.04);
+border-color:var(--nuit-filet-fort);
+}
+
+.table-icon-btn:hover,
+.table-link-btn:hover{
+color:#1A1206;
+background:var(--nuit-ambre);
+border-color:var(--nuit-ambre);
+box-shadow:0 0 18px rgba(233,163,25,.4);
+}
+
+.table-icon-btn.is-danger:hover{ color:#fff; background:#D94A4A; border-color:#D94A4A; box-shadow:0 0 18px rgba(244,113,113,.4); }
+
+/* Les champs : une surface d'encre, un anneau d'ambre au focus. */
+.content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+.content select,
+.content textarea,
+.modal-base input:not([type="checkbox"]):not([type="radio"]),
+.modal-base select,
+.modal-base textarea,
+.fitz-select-trigger{
+background:rgba(10,8,6,.55);
+border-color:var(--nuit-filet-fort);
+color:var(--nuit-texte);
+transition:border-color .2s, box-shadow .25s var(--nuit-ease), background .2s;
+}
+
+.content input::placeholder,
+.content textarea::placeholder,
+.modal-base input::placeholder,
+.modal-base textarea::placeholder{ color:#7C7266; }
+
+.content input:not([type="checkbox"]):not([type="radio"]):focus,
+.content select:focus,
+.content textarea:focus,
+.modal-base input:focus,
+.modal-base select:focus,
+.modal-base textarea:focus{
+outline:none;
+background:rgba(10,8,6,.75);
+border-color:rgba(233,163,25,.65);
+box-shadow:0 0 0 4px rgba(233,163,25,.14), 0 0 24px rgba(233,163,25,.12);
+}
+
+.content option,
+.content optgroup{ background:var(--nuit-3); color:var(--nuit-texte); }
+
+input[type="date"]::-webkit-calendar-picker-indicator{ filter:invert(1) sepia(.4) saturate(2) hue-rotate(-10deg); opacity:.7; }
+
+.field label,
+.detail-field-label,
+.form-hint,
+.detail-field-hint{ color:var(--nuit-texte-3); }
+
+.detail-field-value{ color:var(--nuit-texte); }
+
+/* Le menu déroulant maison (js/fitz-select.js) : le panneau passe à la nuit. */
+.fitz-select-trigger:hover{ background:rgba(10,8,6,.75); border-color:rgba(233,163,25,.4); }
+
+.fitz-select-list{
+background:var(--nuit-verre-fort);
+border:1px solid var(--nuit-filet-fort);
+box-shadow:0 24px 60px rgba(0,0,0,.6);
+-webkit-backdrop-filter:blur(18px);
+backdrop-filter:blur(18px);
+color:var(--nuit-texte);
+}
+
+.fitz-select-option{ color:var(--nuit-texte-2); }
+.fitz-select-option-text{ color:inherit; }
+.fitz-select-group{ color:#8C8276; }
+.fitz-select-option + .fitz-select-group{ border-top-color:var(--nuit-filet); }
+
+.fitz-select-option:hover,
+.fitz-select-option.is-focused{ background:rgba(233,163,25,.12); color:#FFF7E8; }
+
+.fitz-select-option.is-selected,
+.fitz-select-option.is-selected:hover,
+.fitz-select-option.is-selected.is-focused{ background:linear-gradient(135deg,rgba(233,163,25,.30),rgba(233,163,25,.16)); color:#FFF7E8; }
+
+.checkbox-pill{ background:rgba(245,234,214,.04); border-color:var(--nuit-filet-fort); color:var(--nuit-texte-2); }
+.checkbox-pill:has(input:checked){ background:rgba(233,163,25,.14); border-color:rgba(233,163,25,.45); color:#FFF7E8; }
+
+/* Les interrupteurs de la page Formules. */
+.plan-toggle-track{ background:rgba(245,234,214,.10); border-color:var(--nuit-filet-fort); }
+.plan-toggle input:checked + .plan-toggle-track{ background:linear-gradient(135deg,#F7C860,#E9A319); box-shadow:0 0 14px rgba(233,163,25,.45); }
+.plan-toggle input:checked + .plan-toggle-track .plan-toggle-thumb{ background:#1A1206; }
+.plan-toggle-thumb{ background:#F4EEE4; }
+
+.plans-group-row th,
+.plans-group-row td{ background:rgba(233,163,25,.06); color:var(--nuit-ambre-clair); }
+
+.plans-legend-title{ color:#8C8276; }
+
+.profile-save-bar{
+background:rgba(12,10,8,.82);
+border:1px solid var(--nuit-filet-fort);
+-webkit-backdrop-filter:blur(16px);
+backdrop-filter:blur(16px);
+box-shadow:0 -10px 40px rgba(0,0,0,.45);
+}
+
+.profile-save-note{ color:var(--nuit-texte-3); }
+
+/* ==========================================================
+12. FICHE ÉTUDIANT, ONGLETS, FENÊTRES, RECHERCHE, NOTIFICATIONS
+========================================================== */
+
+.detail-header{ border-color:var(--nuit-filet); }
+
+.detail-avatar{
+color:#1A1206;
+background:linear-gradient(145deg,#F5C35A,#E9A319 45%,#B97809);
+box-shadow:0 0 30px rgba(233,163,25,.35);
+}
+
+.detail-tabs{ border-color:var(--nuit-filet); }
+.tab-btn{ color:var(--nuit-texte-3); }
+.tab-btn:hover{ color:var(--nuit-texte); }
+
+.tab-btn.is-active{
+color:#FFF7E8;
+border-color:var(--nuit-ambre);
+box-shadow:0 1px 0 var(--nuit-ambre), 0 6px 18px -8px rgba(233,163,25,.8);
+}
+
+.modal-base{
+background:var(--nuit-verre-fort);
+border:1px solid var(--nuit-filet-fort);
+box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 0 1px rgba(233,163,25,.06);
+-webkit-backdrop-filter:blur(22px) saturate(140%);
+backdrop-filter:blur(22px) saturate(140%);
+color:var(--nuit-texte);
+}
+
+.cmdk-overlay{ background:rgba(5,4,3,.66); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+
+.cmdk-panel{
+background:var(--nuit-verre-fort);
+border:1px solid rgba(233,163,25,.22);
+box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 60px rgba(233,163,25,.10);
+-webkit-backdrop-filter:blur(22px);
+backdrop-filter:blur(22px);
+}
+
+.cmdk-section{ color:#8C8276; }
+.cmdk-item{ color:var(--nuit-texte-2); }
+.cmdk-item-titre{ color:var(--nuit-texte); }
+.cmdk-item-sous{ color:var(--nuit-texte-3); }
+.cmdk-item.is-select{ background:rgba(233,163,25,.12); border-color:rgba(233,163,25,.3); }
+.cmdk-item.is-select svg{ color:var(--nuit-ambre); }
+.cmdk-vide{ color:var(--nuit-texte-3); }
+
+.admin-notifier{
+background:var(--nuit-verre-fort);
+border-color:var(--nuit-filet-fort);
+color:var(--nuit-texte);
+box-shadow:0 20px 50px rgba(0,0,0,.55);
+-webkit-backdrop-filter:blur(16px);
+backdrop-filter:blur(16px);
+}
+
+.passation-etape,
+.passation-note code{ background:rgba(245,234,214,.04); border-color:var(--nuit-filet); color:var(--nuit-texte-2); }
+.passation-num{ background:rgba(233,163,25,.14); color:var(--nuit-ambre-clair); }
+.passation-guide > h2 svg{ color:var(--nuit-ambre); }
+
+.overview-item-text{ color:var(--nuit-texte-2); }
+
+/* Présence de l'équipe (en ligne / hors ligne). */
+.presence-admin{ color:var(--nuit-texte-3); }
+.presence-admin-dot{ background:#5A5147; }
+.presence-admin.is-en-ligne{ color:var(--nuit-vert); }
+.presence-admin.is-en-ligne .presence-admin-dot{ background:var(--nuit-vert); box-shadow:0 0 0 3px rgba(61,214,140,.18), 0 0 10px rgba(61,214,140,.8); animation:nuitPoint 2.2s ease-in-out infinite; }
+.presence-compteur{ background:rgba(61,214,140,.07); border-color:rgba(61,214,140,.28); color:var(--nuit-vert); }
+.presence-compteur .presence-admin-dot{ background:var(--nuit-vert); }
+.presence-compteur.is-vide .presence-admin-dot{ background:#5A5147; }
+
+/* ==========================================================
+13. MESSAGERIE
+========================================================== */
+
+.msg-list-pane,
+.msg-thread-pane{ border-color:var(--nuit-filet); }
+
+.msg-conv-item{ border-color:var(--nuit-filet); transition:background .2s; }
+.msg-conv-item:hover{ background:rgba(245,234,214,.04); }
+.msg-conv-item.is-active{ background:linear-gradient(90deg,rgba(233,163,25,.14),rgba(233,163,25,.03)); box-shadow:inset 3px 0 0 var(--nuit-ambre); }
+
+.msg-conv-avatar,
+.msg-thread-avatar{ color:#1A1206; background:linear-gradient(145deg,#F5C35A,#E9A319); }
+.msg-conv-avatar.is-en-ligne::after{ background:var(--nuit-vert); box-shadow:0 0 0 2px var(--nuit-2), 0 0 8px rgba(61,214,140,.8); }
+
+.msg-conv-preview{ color:var(--nuit-texte-3); }
+.msg-conv-unread{ background:var(--nuit-ambre); color:#1A1206; box-shadow:0 0 12px rgba(233,163,25,.55); }
+
+.msg-thread-head{ border-color:var(--nuit-filet); background:rgba(10,8,6,.35); }
+
+.msg-bubble{ background:rgba(245,234,214,.05); border:1px solid var(--nuit-filet); color:var(--nuit-texte); }
+.msg-bubble-row.is-admin .msg-bubble,
+.msg-bubble-row.is-mine .msg-bubble{ background:linear-gradient(135deg,rgba(233,163,25,.22),rgba(233,163,25,.10)); border-color:rgba(233,163,25,.30); }
+.msg-bubble p{ color:var(--nuit-texte); }
+.msg-bubble-author,
+.msg-bubble-date{ color:var(--nuit-texte-3); }
+.msg-bubble-lu.is-lu{ color:var(--nuit-vert); }
+
+.msg-thread-composer{ border-color:var(--nuit-filet); background:rgba(10,8,6,.35); }
+.msg-thread-composer textarea{ background:rgba(10,8,6,.55); border-color:var(--nuit-filet-fort); color:var(--nuit-texte); }
+
+.msg-support-item,
+.message-item,
+.note-item{ background:rgba(245,234,214,.03); border-color:var(--nuit-filet); }
+
+/* ==========================================================
+13 bis. LA PORTE D'ENTRÉE — admin/login.html
+========================================================== */
+
+.admin-auth-card{
+background:
+radial-gradient(420px circle at var(--mx,50%) var(--my,-30%),rgba(233,163,25,.09),transparent 60%),
+linear-gradient(180deg,rgba(255,248,235,.045),rgba(255,248,235,.012) 45%,transparent),
+var(--nuit-verre);
+border:1px solid rgba(233,163,25,.18);
+box-shadow:0 1px 0 rgba(255,248,235,.06) inset, 0 40px 100px rgba(0,0,0,.6), 0 0 80px rgba(233,163,25,.08);
+-webkit-backdrop-filter:blur(18px) saturate(140%);
+backdrop-filter:blur(18px) saturate(140%);
+}
+
+.admin-logo-wrap{ box-shadow:0 0 60px rgba(233,163,25,.30); }
+
+.admin-auth-hero h1{
+background:linear-gradient(100deg,#FFF9EE 0%,#FFE9BF 50%,#F5C35A 100%);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+}
+
+.btn-admin-submit{
+color:#1A1206;
+background:linear-gradient(135deg,#F7C860 0%,#E9A319 55%,#D38A0C 100%);
+box-shadow:0 12px 32px rgba(233,163,25,.32), inset 0 1px 0 rgba(255,255,255,.45);
+}
+
+.btn-admin-submit:hover{ box-shadow:0 18px 44px rgba(233,163,25,.42), 0 0 0 4px rgba(233,163,25,.14), inset 0 1px 0 rgba(255,255,255,.5); }
+
+/* ==========================================================
+14. MOUVEMENT — apparitions (nuit.js pose .nuit-apparait / .is-vu)
+========================================================== */
+
+.nuit-apparait{
+opacity:0;
+transform:translate3d(0,18px,0) scale(.985);
+filter:blur(4px);
+transition:opacity .8s var(--nuit-ease), transform .9s var(--nuit-ease), filter .8s var(--nuit-ease);
+transition-delay:var(--nuit-delai,0ms);
+}
+
+.nuit-apparait.is-vu{
+opacity:1;
+transform:none;
+filter:none;
+}
+
+/* Un chiffre qui vient de changer brille un instant. */
+.nuit-flash{ animation:nuitFlash 1.2s var(--nuit-ease); }
+
+@keyframes nuitFlash{
+0%{ text-shadow:0 0 0 rgba(245,195,90,0); }
+30%{ text-shadow:0 0 22px rgba(245,195,90,.9); }
+100%{ text-shadow:0 0 0 rgba(245,195,90,0); }
+}
+
+/* L'onde d'un clic sur un bouton (nuit.js). */
+.nuit-onde{
+position:absolute;
+border-radius:50%;
+pointer-events:none;
+background:rgba(255,236,200,.45);
+transform:scale(0);
+animation:nuitOnde .7s var(--nuit-ease) forwards;
+}
+
+@keyframes nuitOnde{
+to{ transform:scale(1); opacity:0; }
+}
+
+/* ==========================================================
+15. SOBRIÉTÉ — moins de mouvement quand le système le demande
+========================================================== */
+
+@media (prefers-reduced-motion: reduce){
+body::before,
+.exec-hero::before,
+.exec-hero::after,
+.exec-avatar::after,
+.stat-card.is-featured::after,
+.funnel-bar-fill::after,
+.exec-badge .status-dot.is-online,
+.presence-admin.is-en-ligne .presence-admin-dot{ animation:none !important; }
+
+.nuit-apparait{ opacity:1; transform:none; filter:none; transition:none; }
+.nuit-onde{ display:none; }
+}
+
+/* Sur téléphone : moins de flou (coûteux), mêmes couleurs. */
+@media (max-width:720px){
+.panel-card,
+.journee-card,
+.pulse-card,
+.stat-card,
+.outcome-card,
+.overview-card,
+.tool-card,
+.detail-section,
+.msg-center,
+.plans-pays,
+.admin-table-wrap{
+-webkit-backdrop-filter:none;
+backdrop-filter:none;
+background:linear-gradient(180deg,rgba(255,248,235,.035),transparent 40%),var(--nuit-2);
+}
+
+.exec-hero::after{ width:360px; height:360px; right:-140px; top:-140px; }
+.nav-link.is-active::before{ left:-6px; }
+}

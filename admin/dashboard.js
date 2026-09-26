@@ -65,8 +65,17 @@ const MOYENS_DE_PAIEMENT_OUVERTS = "Orange Money (Wave et carte : à la validati
 // l'acteur (même doctrine que DESIGN_SYSTEM.md, section Icônes).
 // ==========================================================
 
-const CHART_TEXT = "#6E6760";
-const CHART_GRID = "rgba(26,23,20,.07)";
+//
+// LOT 122 « NUIT » (2026-09-26) : le Control Center passe au sombre chaud
+// (admin/nuit.css). Axes et grille s'éclaircissent sur l'encre ; les six
+// séries prennent une palette VALIDÉE sur la surface sombre #16130F
+// (script du skill dataviz : bande de luminance, chroma, séparation
+// daltonisme ≥ 8 entre voisines, contraste ≥ 3:1). L'ordre des séries
+// EST l'ordre validé — ne pas le permuter sans relancer la validation.
+// Jamais de bleu (demande de Charles, 2026-09-02).
+const CHART_TEXT = "#9A9083";
+const CHART_GRID = "rgba(245,234,214,.06)";
+const CHART_SURFACE = "#16120E";
 
 // Les cinq séries de la pulsation. `fields` liste les compteurs
 // quotidiens (analyticsDailyCounters) additionnés pour chaque jour.
@@ -76,43 +85,43 @@ const PULSE_SERIES = [
 // série principale ; « Entrées » compte les sessions (une personne
 // peut en faire plusieurs dans la journée).
 {
+key: "entrees",
+label: "Entrées (sessions)",
+color: "#199E70",
+fields: ["visit", "signup", "login"]
+},
+{
 key: "visiteurs",
 label: "Visiteurs",
-color: "#E9A319",
+color: "#C98500",
 fields: ["visiteurs"],
 fill: true
 },
 {
-key: "entrees",
-label: "Entrées (sessions)",
-color: "#C9860B",
-fields: ["visit", "signup", "login"]
-},
-{
 key: "sorties",
 label: "Sorties",
-color: "#8A837A",
+color: "#D55181",
 fields: ["logout"]
+},
+{
+key: "admissions",
+label: "Admissions",
+color: "#008300",
+fields: ["application_admitted"]
 },
 {
 key: "interactions",
 label: "Interactions étudiantes",
-color: "#7E71D8",
+color: "#9085E9",
 fields: [
 "ai_chat_message_sent", "advisor_request_sent", "admin_message_sent",
 "letter_generated", "email_generated", "verification_run", "translation_run"
 ]
 },
 {
-key: "admissions",
-label: "Admissions",
-color: "#16A34A",
-fields: ["application_admitted"]
-},
-{
 key: "refus",
 label: "Refus",
-color: "#DC2626",
+color: "#E66767",
 fields: ["application_rejected"]
 }
 ];
@@ -234,7 +243,7 @@ const dateLabel = now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long
 
 const badges = [
 { icon: "calendar", text: dateLabel },
-{ icon: "clock", text: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), id: "execClockBadge" },
+{ icon: "clock", text: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }), id: "execClockBadge" },
 { icon: "refresh-cw", text: "Synchronisé à l'instant" },
 { icon: "database", text: "Firestore", dot: "is-online" },
 { icon: "bar-chart-3", text: "Analytics", dot: "is-online" },
@@ -268,10 +277,11 @@ const clockBadge = document.getElementById("execClockBadge");
 
 if (clockBadge) {
 clockBadge.querySelector("span:last-child").textContent =
-new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-}, 30000);
+// Lot 122 « NUIT » : l'horloge bat la seconde — le poste de pilotage vit.
+}, 1000);
 
 }
 
@@ -339,21 +349,108 @@ data: days.map((dayKey, i) => pulseState.demo
 ? demoValue(serie.key, i, days.length)
 : realValue(serie, dayKey)),
 borderColor: serie.color,
-backgroundColor: serie.fill ? `${serie.color}26` : "transparent",
+// Lot 122 : la série principale se remplit d'un dégradé d'ambre qui
+// s'éteint vers l'axe (calculé à la taille réelle du graphique).
+backgroundColor: serie.fill ? degradeAmbre : "transparent",
 fill: !!serie.fill,
-tension: .38,
-borderWidth: 2.5,
+tension: .4,
+borderWidth: 2,
 pointRadius: 0,
-pointHoverRadius: 4,
-pointHoverBackgroundColor: serie.color
+pointHoverRadius: 5,
+pointHoverBorderWidth: 2,
+pointHoverBorderColor: CHART_SURFACE,
+pointHoverBackgroundColor: serie.color,
+cubicInterpolationMode: "monotone"
 }));
 
+}
+
+// ==========================================================
+// LOT 122 « NUIT » — les effets du graphique de la pulsation
+// ==========================================================
+
+// Le remplissage de la série principale : ambre en haut, rien à l'axe.
+function degradeAmbre(context) {
+const { chart } = context;
+const { ctx, chartArea } = chart;
+if (!chartArea) return "rgba(233,163,25,.12)";
+const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+g.addColorStop(0, "rgba(233,163,25,.34)");
+g.addColorStop(.55, "rgba(233,163,25,.08)");
+g.addColorStop(1, "rgba(233,163,25,0)");
+return g;
+}
+
+// Chaque courbe porte une lueur de sa propre couleur.
+const pluginLueur = {
+id: "nuitLueur",
+beforeDatasetDraw(chart, args) {
+const ds = chart.data.datasets[args.index];
+chart.ctx.save();
+chart.ctx.shadowColor = ds.borderColor;
+chart.ctx.shadowBlur = 14;
+chart.ctx.shadowOffsetY = 4;
+},
+afterDatasetDraw(chart) {
+chart.ctx.restore();
+}
+};
+
+// La ligne de visée : un trait vertical lumineux sous le curseur.
+const pluginVisee = {
+id: "nuitVisee",
+afterDatasetsDraw(chart) {
+const actifs = chart.tooltip && chart.tooltip.getActiveElements ? chart.tooltip.getActiveElements() : [];
+if (!actifs.length) return;
+const x = actifs[0].element.x;
+const { ctx, chartArea } = chart;
+const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+g.addColorStop(0, "rgba(245,195,90,0)");
+g.addColorStop(.5, "rgba(245,195,90,.55)");
+g.addColorStop(1, "rgba(245,195,90,0)");
+ctx.save();
+ctx.strokeStyle = g;
+ctx.lineWidth = 1;
+ctx.beginPath();
+ctx.moveTo(x, chartArea.top);
+ctx.lineTo(x, chartArea.bottom);
+ctx.stroke();
+ctx.restore();
+}
+};
+
+// LOT 122 « NUIT » — le chiffre-titre de la pulsation : les visiteurs de
+// la période, et l'écart avec la période précédente de même durée. Sans
+// période précédente mesurée, aucun pourcentage n'est inventé.
+function renderPulseResume(days) {
+const total = document.getElementById("pulseTotal");
+const libelle = document.getElementById("pulseTotalLibelle");
+const ecart = document.getElementById("pulseEcart");
+if (!total || !libelle || !ecart) return;
+const serie = PULSE_SERIES.find((s) => s.key === "visiteurs");
+const valeur = (jours) => jours.reduce((somme, jour, i) => somme + (pulseState.demo ? demoValue("visiteurs", i, jours.length) : realValue(serie, jour)), 0);
+const courant = valeur(days);
+const precedents = buildLastDays(days.length * 2).slice(0, days.length);
+const avant = pulseState.demo ? Math.round(courant * .82) : valeur(precedents);
+total.textContent = formatNumber(courant);
+libelle.textContent = `visiteur${courant > 1 ? "s" : ""} sur ${days.length} jours${pulseState.demo ? " (démo)" : ""}`;
+ecart.className = "pulse-resume-ecart";
+if (avant > 0) {
+const pct = Math.round(((courant - avant) / avant) * 100);
+ecart.textContent = `${pct > 0 ? "+" : ""}${pct} % par rapport aux ${days.length} jours précédents`;
+ecart.classList.add(pct >= 0 ? "is-up" : "is-down");
+ecart.hidden = false;
+} else {
+ecart.textContent = "";
+ecart.hidden = true;
+}
 }
 
 function renderPulseChart() {
 
 const days = buildLastDays(pulseState.days);
 const datasets = pulseDatasets(days);
+renderPulseResume(days);
 
 const emptyState = document.getElementById("pulseChartEmpty");
 const hasData = pulseState.demo || datasets.some((ds) => ds.data.some((v) => v > 0));
@@ -380,25 +477,43 @@ pulseChart.update();
 pulseChart = new Chart(canvas, {
 type: "line",
 data: { labels, datasets },
+plugins: [pluginLueur, pluginVisee],
 options: {
 responsive: true,
 maintainAspectRatio: false,
 interaction: { mode: "index", intersect: false },
+// Les courbes MONTENT depuis l'axe, l'une après l'autre.
+animation: {
+duration: 1300,
+easing: "easeOutQuart",
+delay: (c) => (c.type === "data" && c.mode === "default" ? c.datasetIndex * 110 : 0)
+},
+animations: {
+y: {
+from: (c) => (c.chart && c.chart.scales && c.chart.scales.y ? c.chart.scales.y.getPixelForValue(0) : undefined)
+}
+},
 plugins: {
 legend: { display: false },
 tooltip: {
-backgroundColor: "#211D18",
-titleColor: "#F5F0E7",
-bodyColor: "#F5F0E7",
-borderColor: "rgba(233,163,25,.4)",
+backgroundColor: "rgba(16,13,10,.94)",
+titleColor: "#FFF7E8",
+bodyColor: "#E7DED0",
+borderColor: "rgba(233,163,25,.35)",
 borderWidth: 1,
-padding: 12,
-cornerRadius: 10
+padding: 14,
+cornerRadius: 12,
+titleFont: { family: "Sora", weight: "700", size: 13 },
+bodyFont: { family: "Inter", size: 12 },
+usePointStyle: true,
+boxPadding: 6,
+caretSize: 6,
+itemSort: (a, b) => b.parsed.y - a.parsed.y
 }
 },
 scales: {
-x: { ticks: { color: CHART_TEXT, maxTicksLimit: 10 }, grid: { display: false } },
-y: { beginAtZero: true, ticks: { color: CHART_TEXT, precision: 0 }, grid: { color: CHART_GRID } }
+x: { ticks: { color: CHART_TEXT, maxTicksLimit: 10, font: { family: "Inter", size: 11 } }, grid: { display: false }, border: { display: false } },
+y: { beginAtZero: true, ticks: { color: CHART_TEXT, precision: 0, padding: 10, font: { family: "Inter", size: 11 } }, grid: { color: CHART_GRID, drawTicks: false }, border: { display: false } }
 }
 }
 });
@@ -760,16 +875,23 @@ data: planIds.map((id) => breakdown[id] || 0),
 // sombre est remplacée par la progression chaude du site —
 // gris chaud (gratuit) → gamme ambre (offres en vente : Pass, 3
 // bourses, 3 France) → gris et encre (formules retirées).
-backgroundColor: ["#B7AFA3", "#F2B640", "#E9A319", "#C9860B", "#8A5D00", "#D9B26A", "#B08A3E", "#7A5F25", "#8A837A", "#6E6860", "#524D46", "#3A3630", "#211D18"],
-borderColor: "#FFFFFF",
-borderWidth: 2
+// Lot 122 « NUIT » : la même progression, éclaircie pour l'encre —
+// gris chaud (gratuit), ambres (offres en vente), gris sombres
+// (retirées) ; un filet de la couleur du fond sépare les parts.
+backgroundColor: ["#8A8074", "#F7C860", "#E9A319", "#C98500", "#A96F05", "#F5B87A", "#D9782F", "#B25F22", "#7A7065", "#655C52", "#524A42", "#403A33", "#2F2A25"],
+borderColor: CHART_SURFACE,
+borderWidth: 3,
+hoverOffset: 10
 }]
 },
 options: {
 responsive: true,
 maintainAspectRatio: false,
+cutout: "70%",
+animation: { animateRotate: true, animateScale: true, duration: 1300, easing: "easeOutQuart" },
 plugins: {
-legend: { position: "bottom", labels: { color: "#57514A", boxWidth: 12 } }
+legend: { position: "bottom", labels: { color: "#C9BFB1", boxWidth: 10, usePointStyle: true, padding: 14, font: { family: "Inter", size: 12 } } },
+tooltip: { backgroundColor: "rgba(16,13,10,.94)", borderColor: "rgba(233,163,25,.35)", borderWidth: 1, padding: 12, cornerRadius: 12, titleColor: "#FFF7E8", bodyColor: "#E7DED0" }
 }
 }
 });
