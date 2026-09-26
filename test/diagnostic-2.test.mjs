@@ -558,7 +558,7 @@ assert.ok(!p.toLowerCase().includes(interdite), `formule interdite « ${interdit
 // Finir sur une ACTION ou un CHEMIN, jamais sur un prix. Les seuls
 // montants tolérés sont ceux qui NOMMENT l'écart de l'étudiant ; un
 // tarif d'offre n'a rien à faire dans le dernier mot.
-assert.ok(!/(75 000|150 000|10 000)/.test(p), `un prix dans la phrase de fin : ${p.slice(0, 60)}…`);
+assert.ok(!/(45 000|70 000|90 000|75 000|150 000|10 000)/.test(p), `un prix dans la phrase de fin : ${p.slice(0, 60)}…`);
 
 // La réassurance vient de la PRÉCISION : chaque phrase dit quoi faire
 // ensuite, pas ce qu'il faut ressentir.
@@ -687,7 +687,7 @@ test("un diagnostic payé depuis moins de 30 jours retire 10 000 F des deux Doss
 const maintenant = new Date("2026-09-09T12:00:00Z");
 const recent = { diagnosticPayeLe: "2026-09-04T00:00:00Z" };
 
-for (const [id, base] of [["dossier-france", 75000], ["dossier-france-conseiller", 150000]]) {
+for (const [id, base] of [["dossier-france", 45000], ["dossier-france-conseiller", 70000]]) {
 const t = prixAvecDeduction(id, recent, maintenant);
 assert.equal(t.base, base, id);
 assert.equal(t.deduction, 10000, id);
@@ -699,7 +699,7 @@ assert.equal(t.mention, "vos 10 000 F de diagnostic sont déduits", id);
 for (const user of [{}, { diagnosticPayeLe: "2026-07-31T00:00:00Z" }, { diagnosticPayeLe: "2026-12-01T00:00:00Z" }]) {
 const t = prixAvecDeduction("dossier-france", user, maintenant);
 assert.equal(t.deduction, 0, JSON.stringify(user));
-assert.equal(t.prix, 75000, JSON.stringify(user));
+assert.equal(t.prix, 45000, JSON.stringify(user));
 }
 
 // PILE 30 jours : encore déduit. 31 : plus.

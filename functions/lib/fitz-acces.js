@@ -84,6 +84,14 @@ const OFFRES_PREINSCRIPTION = ["diagnostic-france", "dossier-france", "dossier-f
  *                    plafond mensuel est donc, s'il pèche, généreux.
  *   dossier-france-conseiller 150 000 F / 10 mois = 15 000 F/mois → 3 750 F → 375 → 380 pts
  *
+ * PRIX BAISSÉS LE 2026-09-26 (lot 118) : Dossier 45 000 F, Dossier +
+ * Conseiller 70 000 F, Conseiller 90 000 F. Les plafonds NE CHANGENT PAS :
+ * le volume quotidien est annoncé sur chaque carte d'offre. Au prix
+ * mesuré du point (7 à 10 F), un mois entier AU PLAFOND coûte au plus
+ * ~4 000 F (Dossier, 400 pts) et ~6 500 F (Conseiller, 650 pts) ; l'usage
+ * réel reste très en dessous. À surveiller dans admin/tools.html si les
+ * ventes suivent.
+ *
  * ⚠️ CE SONT DES ESTIMATIONS, PAS DES MESURES. Un plafond trop bas atteint
  * par un étudiant sérieux est un incident commercial : il se relève, il
  * ne se défend pas.

@@ -79,7 +79,7 @@ if (q !== undefined) assert.ok(Number.isFinite(q) && q <= 6, `${id} : quota ${q}
 assert.equal(OFFRES["essentiel-4"].maxAccompaniedApplications, 4);
 assert.equal(OFFRES["conseiller-6"].maxAccompaniedApplications, 6);
 assert.equal(OFFRES["essentiel-4"].priceFCFA, 45000);
-assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
+assert.equal(OFFRES["conseiller-6"].priceFCFA, 90000);
 // Lot ACCEPTATION (2026-09-11), décision 7 : plus de durée en mois — une
 // formule bourses se définit par son nombre de candidatures.
 assert.equal(OFFRES["essentiel-4"].duration, undefined, "essentiel-4 n'a plus de durée");
@@ -107,8 +107,8 @@ assert.deepEqual(Object.values(OFFRES).filter((o) => o.deprecated === true).map(
 test("les offres préinscription du lot B sont intactes : mêmes ids, mêmes prix, mêmes quotas", () => {
 assert.deepEqual(PLAN_PREINSCRIPTION_ORDER, ["diagnostic-france", "dossier-france", "dossier-france-conseiller"]);
 assert.equal(OFFRES["diagnostic-france"].priceFCFA, 10000);
-assert.equal(OFFRES["dossier-france"].priceFCFA, 75000);
-assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 150000);
+assert.equal(OFFRES["dossier-france"].priceFCFA, 45000);
+assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 70000);
 assert.equal(OFFRES["dossier-france"].maxPreinscriptions, 7);
 assert.equal(OFFRES["dossier-france-conseiller"].maxPreinscriptions, 7);
 // Le Diagnostic est retiré de la vente le 2026-09-25 (lot 97) : il est

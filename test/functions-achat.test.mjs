@@ -114,8 +114,8 @@ assert.equal(calculerMiseAJour({ planId: ancien, user: {}, supprimer: SUPPRIMER 
 
 test("GRILLE serveur : les trois offres préinscription, prix décidés, parcours sur toutes les offres", () => {
 assert.equal(GRILLE["diagnostic-france"].prix, 10000);
-assert.equal(GRILLE["dossier-france"].prix, 75000);
-assert.equal(GRILLE["dossier-france-conseiller"].prix, 150000);
+assert.equal(GRILLE["dossier-france"].prix, 45000);
+assert.equal(GRILLE["dossier-france-conseiller"].prix, 70000);
 for (const [id, o] of Object.entries(GRILLE)) assert.ok(["bourse", "preinscription"].includes(o.parcours), `${id} sans parcours`);
 assert.equal(GRILLE["dossier-france"].maxPreinscriptions, 7);
 assert.equal(GRILLE["dossier-france-conseiller"].maxPreinscriptions, 7);

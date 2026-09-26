@@ -30,8 +30,9 @@
 * résidence : rien de ce module ne la touche.
 *
 * LES FORMULES SONT CELLES DE LA FRANCE (décision de Charles, même
-* jour) : 10 000 F le diagnostic, 75 000 F le dossier, 150 000 F avec
-* un conseiller, pour chaque pays. Les identifiants d'offre ne changent
+* jour) : le dossier et le dossier avec un conseiller, pour chaque pays
+* (45 000 et 70 000 F depuis le lot 118 du 2026-09-26 ; le diagnostic
+* est gratuit depuis le lot 97). Les identifiants d'offre ne changent
 * pas (diagnostic-france, dossier-france, dossier-france-conseiller) :
 * c'est la DESTINATION, portée par l'achat, qui dit à quel pays la
 * formule s'applique (users/{uid}.preinscriptionsPays.<id>).

@@ -57,11 +57,11 @@ const offersHtml = lire("offers.html");
 // pricing-plans.js
 // ------------------------------------------------------------------
 
-test("trois offres préinscription, aux prix décidés : 10 000 / 75 000 / 150 000", () => {
+test("trois offres préinscription, aux prix du lot 118 : 10 000 (retiré) / 45 000 / 70 000", () => {
 assert.deepEqual(PLAN_PREINSCRIPTION_ORDER, PRE);
 assert.equal(OFFRES["diagnostic-france"].priceFCFA, 10000);
-assert.equal(OFFRES["dossier-france"].priceFCFA, 75000);
-assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 150000);
+assert.equal(OFFRES["dossier-france"].priceFCFA, 45000);
+assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 70000);
 for (const id of PRE) {
 assert.equal(OFFRES[id].parcours, "preinscription");
 assert.ok(PLAN_PREINSCRIPTION_LABELS[id]);
@@ -100,7 +100,7 @@ test("les prix et quotas des offres BOURSE n'ont pas bougé", () => {
 assert.equal(OFFRES.fitzExpress.priceFCFA, 10000);
 assert.equal(OFFRES["premier-dossier"].priceFCFA, 25000);
 assert.equal(OFFRES["essentiel-4"].priceFCFA, 45000);
-assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
+assert.equal(OFFRES["conseiller-6"].priceFCFA, 90000);
 assert.equal(OFFRES["premier-dossier"].maxAccompaniedApplications, 1);
 assert.equal(OFFRES["essentiel-4"].maxAccompaniedApplications, 4);
 assert.equal(OFFRES["conseiller-6"].maxAccompaniedApplications, 6);

@@ -74,10 +74,10 @@ if (GRILLE[id]) assert.equal(GRILLE[id].prix, offre.priceFCFA, `${id} : affiché
 }
 assert.equal(OFFRES.fitzExpress.priceFCFA, 10000);
 assert.equal(OFFRES["essentiel-4"].priceFCFA, 45000);
-assert.equal(OFFRES["conseiller-6"].priceFCFA, 150000);
+assert.equal(OFFRES["conseiller-6"].priceFCFA, 90000);
 assert.equal(OFFRES["diagnostic-france"].priceFCFA, 10000);
-assert.equal(OFFRES["dossier-france"].priceFCFA, 75000);
-assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 150000);
+assert.equal(OFFRES["dossier-france"].priceFCFA, 45000);
+assert.equal(OFFRES["dossier-france-conseiller"].priceFCFA, 70000);
 // Plus aucun « 15 000 F » vivant pour le Premier Dossier.
 assert.ok(!/priceFCFA: 15000\b/.test(lire("pricing-plans.js")));
 });

@@ -34,8 +34,8 @@
  * SIX DESTINATIONS DE PLUS (2026-09-23, décision de Charles)
  * ---------------------------------------------------------
  * La Roumanie, la Turquie, le Maroc, l'Italie, l'Allemagne et le Canada
- * se vendent avec LA MÊME GRILLE que la France (10 000 / 75 000 /
- * 150 000 F) et les MÊMES identifiants d'offre. Ce qui change, c'est la
+ * se vendent avec LA MÊME GRILLE que la France (45 000 / 70 000 F
+ * depuis le lot 118 du 2026-09-26) et les MÊMES identifiants d'offre. Ce qui change, c'est la
  * DESTINATION, envoyée par le navigateur avec l'identifiant d'offre et
  * vérifiée ici contre DESTINATIONS_VENDUES :
  *
@@ -125,7 +125,8 @@ const GRILLE = {
   // Grille A (2026-09-07) : les deux offres bourses révisées. Lot
   // ACCEPTATION : sans échéance, comme Premier Dossier.
   "essentiel-4": { label: "Forfait Essentiel", prix: 45000, dureeMois: null, parcours: "bourse", quota: 4 },
-  "conseiller-6": { label: "Forfait Conseiller", prix: 150000, dureeMois: null, parcours: "bourse", quota: 6 },
+  // 150 000 → 90 000 F le 2026-09-26 (lot 118, décision de Charles).
+  "conseiller-6": { label: "Forfait Conseiller", prix: 90000, dureeMois: null, parcours: "bourse", quota: 6 },
   // LES ANCIENNES FORMULES (essentiel, accompagnement, signature-focus,
   // signature) ONT ÉTÉ SUPPRIMÉES LE 2026-09-24 (décision de Charles) :
   // aucun compte ne les portait, aucun paiement ne les nommait. Un
@@ -136,11 +137,13 @@ const GRILLE = {
   // dans les neuf pays (décision de Charles, 2026-09-24 : « gardons P1
   // pour tous les 9 pays ») ; les identifiants gardent leur « -france »
   // historique, c'est la destination de l'achat qui dit le pays.
-  // Prix décidés, ne pas rouvrir.
+  // Prix rouverts par Charles le 2026-09-26 (lot 118) : Dossier
+  // 75 000 → 45 000 F, Dossier + Conseiller 150 000 → 70 000 F. Une
+  // facture créée avant garde son montant (montantAttendu).
   // Retiré de la vente le 2026-09-25 (lot 97) : le diagnostic est gratuit.
   "diagnostic-france": { label: "Diagnostic France", prix: 10000, dureeJours: 14, parcours: "preinscription", deprecated: true },
-  "dossier-france": { label: "Dossier France", prix: 75000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
-  "dossier-france-conseiller": { label: "Dossier France + Conseiller", prix: 150000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
+  "dossier-france": { label: "Dossier France", prix: 45000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
+  "dossier-france-conseiller": { label: "Dossier France + Conseiller", prix: 70000, campagne: true, parcours: "preinscription", maxPreinscriptions: 7 },
 };
 
 // Miroir de PLAN_ORDER (js/plan-features.js). Sert uniquement à ne

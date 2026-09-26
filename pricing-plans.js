@@ -27,11 +27,12 @@
 //                       ne touche jamais `plan`) ;
 //      premier-dossier  Forfait Premier Dossier, 25 000 F, 1 candidature ;
 //      essentiel-4      Forfait Essentiel, 45 000 F, 4 candidatures ;
-//      conseiller-6     Forfait Conseiller, 150 000 F, 6 candidatures,
+//      conseiller-6     Forfait Conseiller, 90 000 F, 6 candidatures,
 //                       chacune relue par un conseiller.
 //
 //  - PRÉINSCRIPTIONS (`parcours: "preinscription"`) : Diagnostic
-//    (10 000 F), Dossier (75 000 F), Dossier + Conseiller (150 000 F),
+//    (retiré de la vente, gratuit), Dossier (45 000 F), Dossier +
+//    Conseiller (70 000 F),
 //    les MÊMES trois offres et les mêmes prix pour les neuf pays
 //    (décision de Charles, 2026-09-24). La France s'écrit dans
 //    `planPreinscription`, les huit autres dans `preinscriptionsPays`.
@@ -71,6 +72,31 @@
 // DOIVENT CHANGER AVEC LUI. Un chiffre faux ici coûte plus cher qu'un
 // chiffre absent : il se vérifie.
 // ============================================================
+
+// ==========================================================
+// LOT 118 — LES PRIX BAISSENT (2026-09-26, décision de Charles)
+// ==========================================================
+// « mon site est en train d'attirer beaucoup de gens mais personne n'a
+// encore choisi de paiement » :
+//   Dossier (préinscription, les neuf pays)   75 000 → 45 000 F
+//   Dossier + Conseiller (les neuf pays)     150 000 → 70 000 F
+//   Forfait Conseiller (bourses)             150 000 → 90 000 F
+// Premier Dossier (25 000), Essentiel (45 000) et le Pass Découverte
+// (10 000) ne bougent pas.
+//
+// LES IDENTIFIANTS RESTENT. La règle « un nouveau quota est un nouvel
+// identifiant » vise les QUOTAS ; un prix qui baisse ne retire rien à
+// personne. Aucun compte ne détenait ces trois formules le jour du
+// changement.
+//
+// Une facture PayDunya créée AVANT le déploiement garde son montant :
+// le webhook compare l'encaissé au `montantAttendu` enregistré à la
+// création (functions/paiement.js), pas à cette grille.
+//
+// On affiche le nouveau prix, SANS prix barré : « 45 000 F au lieu de
+// 75 000 » annoncerait une remise sur un prix auquel personne n'a
+// jamais acheté.
+// ==========================================================
 
 const SCHOLARBRIDGE_PLANS = {
 
@@ -229,7 +255,8 @@ tagline: "6 candidatures, chacune relue par un conseiller avant l'envoi.",
 badge: "Accompagnement humain",
 niveau: "humain",
 cta: "Être accompagné par un conseiller",
-priceFCFA: 150000,
+// 150 000 → 90 000 F le 2026-09-26 (lot 118).
+priceFCFA: 90000,
 // Lot ACCEPTATION (2026-09-11) : plus de durée en mois — voir la note
 // d'essentiel-4 ci-dessus (même exception assumée, même raison).
 // `duration` retirée (elle valait « 9 mois »).
@@ -252,7 +279,8 @@ highlights: [
 // et `users.preinscriptionsPays` (les huit autres pays, depuis le
 // 2026-09-23), écrits par le webhook seul, jamais `plan`. Trois offres
 // décidées, ne pas rouvrir ; les mêmes, au même prix, dans les neuf pays
-// (voir DESTINATIONS_OFFRE plus bas). Paiement en une fois, jamais de
+// (voir DESTINATIONS_OFFRE plus bas) ; prix rouverts par Charles le
+// 2026-09-26 (lot 118). Paiement en une fois, jamais de
 // remboursement, jamais de mensualité. `maxPreinscriptions` = les 7
 // vœux d'un dossier Études en France — dupliqué dans firestore.rules
 // (pre-[1-7]) et functions/lib/achat.js, test/grille-b.test.mjs
@@ -304,7 +332,8 @@ tagline: "Un dossier Études en France, jusqu'à 7 vœux, accompagné jusqu'au d
 badge: "Une campagne",
 niveau: "recommande",
 cta: "Préparer mon dossier France",
-priceFCFA: 75000,
+// 75 000 → 45 000 F le 2026-09-26 (lot 118).
+priceFCFA: 45000,
 duration: "une campagne, jusqu'au 31 juillet",
 fitzAccess: "Documents, traductions et légalisations, preuve de ressources, préparation à l'entretien, messagerie FitzUniverse",
 maxPreinscriptions: 7,
@@ -335,7 +364,8 @@ tagline: "Le même dossier, plus une relecture humaine avant des frais de dossie
 badge: "Relecture humaine",
 niveau: "humain",
 cta: "Préparer mon dossier avec un conseiller",
-priceFCFA: 150000,
+// 150 000 → 70 000 F le 2026-09-26 (lot 118).
+priceFCFA: 70000,
 duration: "une campagne, jusqu'au 31 juillet",
 fitzAccess: "Tout Dossier France, plus la relecture de votre conseiller",
 maxPreinscriptions: 7,
@@ -466,7 +496,8 @@ window.prixAvecDeduction = prixAvecDeduction;
 // LES HUIT AUTRES DESTINATIONS (2026-09-23, décision de Charles)
 // ==========================================================
 //
-// La même grille que la France — 10 000 / 75 000 / 150 000 F — et les
+// La même grille que la France — 45 000 / 70 000 F depuis le lot 118
+// (2026-09-26), le diagnostic étant gratuit depuis le lot 97 — et les
 // MÊMES identifiants d'offre. La destination voyage avec l'achat
 // (payment.html?plan=dossier-france&destination=italie) jusqu'au
 // serveur, qui la vérifie et ouvre users/{uid}.preinscriptionsPays.<pays>.
