@@ -70,7 +70,7 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre } = require("./lib/achat");
+const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -229,6 +229,11 @@ exports.creerPaiement = onCall(
           "https://europe-west1-scholarbridge-e0d84.cloudfunctions.net/paydunyaWebhook",
       },
     };
+
+    // LOT 121 (2026-09-26) : nom, e-mail et téléphone sénégalais du
+    // compte, pour que l'étudiant n'ait pas à les retaper chez PayDunya.
+    const client = clientPayDunya(profil, request.auth.token && request.auth.token.email);
+    if (client) facture.invoice.customer = client;
 
     // Les moyens de paiement ne sont volontairement PAS restreints
     // (`channels` absent) : la page PayDunya affiche alors tout ce qui

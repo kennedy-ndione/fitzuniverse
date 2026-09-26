@@ -572,4 +572,35 @@ function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = ne
   return null;
 }
 
-module.exports = { GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, DESTINATIONS_VENDUES, DUREE_DOSSIER_PAYS_MOIS, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre };
+/**
+ * LOT 121 (2026-09-26) — LA PAGE PAYDUNYA ARRIVE PRÉ-REMPLIE.
+ *
+ * Testé en production le jour même (Dossier France, 45 000 F) : la page
+ * de paiement redemandait le nom, le téléphone et l'e-mail, trois champs
+ * vides, alors que le compte les connaît. PayDunya accepte un objet
+ * `invoice.customer` { name, email, phone } qui remplit ces champs
+ * (documentation HTTP/JSON, « customer »).
+ *
+ * Le téléphone n'est pré-rempli que s'il est SÉNÉGALAIS (+221 suivi de
+ * 9 chiffres) : la page s'ouvre sur le Sénégal avec l'indicatif déjà
+ * affiché, et attend les 9 chiffres seuls. Un autre numéro y serait
+ * faux ; mieux vaut un champ vide qu'un champ à corriger.
+ *
+ * Rien n'est inventé : un champ inconnu reste absent, et sans aucun
+ * champ la fonction rend null (la facture part sans `customer`).
+ */
+function clientPayDunya(profil, emailAuth) {
+  const u = profil || {};
+  const p = u.profile || {};
+  const nom = ([p.firstName, p.lastName].filter(Boolean).join(" ").trim() || String(u.name || "").trim()).slice(0, 100);
+  const email = String(emailAuth || u.email || "").trim();
+  const tel = String(p.phone || "").replace(/[\s.\-()]/g, "");
+  const senegal = tel.match(/^\+221(\d{9})$/);
+  const client = {};
+  if (nom) client.name = nom;
+  if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) client.email = email;
+  if (senegal) client.phone = senegal[1];
+  return Object.keys(client).length ? client : null;
+}
+
+module.exports = { clientPayDunya, GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, DESTINATIONS_VENDUES, DUREE_DOSSIER_PAYS_MOIS, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre };
