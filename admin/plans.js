@@ -182,6 +182,32 @@ function francs(n) {
 return Number.isFinite(n) ? `${new Intl.NumberFormat("fr-FR").format(n)} F` : "—";
 }
 
+// Une offre retirée de la vente (le diagnostic, gratuit depuis le lot 97)
+// ne se vend plus : l'admin lisait « 10 000 F » là où l'étudiant ne paie rien.
+function gratuitOuPrix(plan) {
+return plan && plan.deprecated ? "Gratuit" : francs(plan && plan.priceFCFA);
+}
+
+// LOT 119 (2026-09-26) : les formules bourses, avec leur prix.
+function renderBourses() {
+const tbody = document.getElementById("plansBoursesBody");
+if (!tbody) return;
+const plans = window.SCHOLARBRIDGE_PLANS || {};
+const ids = Object.keys(plans).filter((id) => plans[id].parcours === "bourse" && !plans[id].deprecated);
+tbody.innerHTML = ids.map((id) => {
+const p = plans[id];
+const q = p.maxAccompaniedApplications;
+const couvre = Number.isFinite(q) ? `${q} candidature${q > 1 ? "s" : ""}` : (p.duration ? `Fitz, ${p.duration}` : "—");
+return `<tr>
+<td class="is-name">${p.label}</td>
+<td class="is-nombre">${francs(p.priceFCFA)}</td>
+<td>${couvre}</td>
+<td>${p.type === "human" ? "Fitz + un conseiller" : "Fitz"}</td>
+<td><a class="table-link-btn" href="../offers.html?parcours=bourse" target="_blank" rel="noopener" aria-label="Voir la page publique ${p.label}">Voir</a></td>
+</tr>`;
+}).join("");
+}
+
 function renderPays() {
 const tbody = document.getElementById("plansPaysBody");
 if (!tbody) return;
@@ -192,7 +218,7 @@ const v = voeuxDuPays(pays);
 const dossier = offre("dossier-france", pays);
 return `<tr>
 <td class="is-name">${nomDuPays(pays)}</td>
-<td class="is-nombre">${francs(offre("diagnostic-france", pays).priceFCFA)}</td>
+<td class="is-nombre">${gratuitOuPrix(offre("diagnostic-france", pays))}</td>
 <td class="is-nombre">${francs(dossier.priceFCFA)}</td>
 <td class="is-nombre">${francs(offre("dossier-france-conseiller", pays).priceFCFA)}</td>
 <td>${v === 1 ? "1 cours" : `${v} vœux`}</td>
@@ -237,6 +263,7 @@ console.warn("Impossible de lire la configuration des formules, utilisation des 
 featureFlags = resolveFeatureFlags(rawConfig);
 
 renderTable();
+renderBourses();
 renderPays();
 
 if (window.lucide) lucide.createIcons();

@@ -1355,11 +1355,16 @@ applyBtn.hidden = !isPaidUser || !aUnPortail;
 // disparaît — au passage, l'étudiant apprend le nom de ce qu'il devra
 // affronter.
 const procedureLink = document.getElementById("procedureLink");
+const pageDeProcedure = (p) => `preinscription-${String(p.paysDestination || "France").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()}.html`;
 if (procedureLink) {
 const procedure = trouverProcedure({ paysDestination: university.country });
 procedureLink.hidden = !procedure;
 if (procedure) {
-procedureLink.href = `preinscriptions.html#procedure-${encodeURIComponent(String(university.country || "france").toLowerCase())}`;
+// LOT 119 (2026-09-26) : chaque destination a SA page depuis le
+// 2026-09-23. L'ancre « #procedure-<pays> » de preinscriptions.html ne
+// menait plus à rien : la page des préinscriptions n'a plus de bloc par
+// pays, l'étudiant atterrissait en haut de la liste des destinations.
+procedureLink.href = pageDeProcedure(procedure);
 const etiquette = document.getElementById("procedureLabel");
 // « AMCI — Agence Marocaine de Coopération Internationale » ne tient
 // pas sur un bouton : on garde ce qui précède le tiret cadratin, qui

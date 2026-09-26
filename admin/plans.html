@@ -143,6 +143,28 @@ les trois colonnes préinscription de la grille valent pour les neuf pays.
 Cette carte dit, pays par pays, ce qui se vend : prix (lus dans
 pricing-plans.js), vœux suivis, durée, page publique. Rendue par
 plans.js. -->
+<!-- LOT 119 (2026-09-26, « vérifie que tout est relié à la page
+admin ») : les prix des formules BOURSES n'apparaissaient nulle part
+dans l'administration. Même source que la page des offres. -->
+<section class="plans-pays" aria-labelledby="plansBoursesTitre">
+<h2 id="plansBoursesTitre">Bourses : les formules en vente</h2>
+<p class="text-small">Prix et quotas lus dans pricing-plans.js, la même source que la page des offres. Le montant facturé est celui du serveur (functions/lib/achat.js) ; un test vérifie que les deux sont égaux.</p>
+<div class="admin-table-wrap">
+<table class="table admin-table pays-table">
+<thead>
+<tr>
+<th scope="col">Formule</th>
+<th scope="col" class="is-nombre">Prix</th>
+<th scope="col">Ce qu'elle couvre</th>
+<th scope="col">Accompagnement</th>
+<th scope="col">Page</th>
+</tr>
+</thead>
+<tbody id="plansBoursesBody"></tbody>
+</table>
+</div>
+</section>
+
 <section class="plans-pays" aria-labelledby="plansPaysTitre">
 <h2 id="plansPaysTitre">Préinscriptions : les neuf pays</h2>
 <p class="text-small">Les colonnes Diagnostic, Dossier et Dossier + Conseiller de la grille ci-dessus valent pour les neuf pays à la fois : un outil se règle une fois, pour tous. Les prix sont les mêmes partout. Pour poser ou retirer l'offre d'un pays à un étudiant, passez par sa fiche.</p>

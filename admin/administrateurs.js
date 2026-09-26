@@ -28,8 +28,13 @@ import { hidePageLoader } from "../js/app-shell.js";
 import { chargerAdmin, estSuperAdminDoc, porteRoleProprietaire, defautDeRole, libelleDefautDeRole } from "./admin-role.js";
 import { listerAdmins, changerActivationAdmin } from "./firebase-admin.js";
 import { succes, echec, notifier } from "./notifier.js";
+// LOT 119 (2026-09-26) : le bouton Déconnexion de cette page n'était
+// branché à rien — l'audit des boutons l'a trouvé inerte. La même
+// fonction que les autres pages du Control Center (deconnexion.js).
+import { initLogout } from "./deconnexion.js";
 
 initSidebarToggle();
+initLogout();
 
 const corps = document.getElementById("adminsTable");
 

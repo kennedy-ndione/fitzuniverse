@@ -1557,7 +1557,7 @@ return `<div class="app-acceptation app-acceptation--acceptee" data-etat="accept
 const restants = refusRestants(app);
 if (etat.code === "finale") {
 return `<div class="app-acceptation app-acceptation--finale" data-etat="finale">
-<p><i data-lucide="info"></i><span>Fitz a fait sa proposition finale pour cette place. Si cette université pose un vrai problème, <a href="messages.html#supportCard">écrivez-nous</a>.</span></p>
+<p><i data-lucide="info"></i><span>Fitz a fait sa proposition finale pour cette place. Si cette université pose un vrai problème, <a href="messages.html">écrivez-nous</a>.</span></p>
 <div class="app-acceptation-actions"><button type="button" class="btn btn-primary btn-sm app-accept-btn"><i data-lucide="check"></i><span>J'accepte cette université</span></button></div>
 </div>`;
 }

@@ -476,6 +476,10 @@ line-height:1.2;
 white-space:nowrap;
 }
 
+/* Le mot « En ligne » : sa propre classe, que le téléphone retire à
+l'œil (voir le lot 119 plus bas). */
+.presence-texte{ white-space:nowrap; }
+
 .presence-dot{
 width:8px;
 height:8px;
@@ -501,6 +505,46 @@ box-shadow:none;
 @media (prefers-reduced-motion: no-preference){
 .presence-pill:not(.is-hors-ligne) .presence-dot{
 animation:presence-pouls 2.4s ease-in-out infinite;
+}
+}
+
+/* LOT 119 (2026-09-26) — SUR TÉLÉPHONE, LE POINT SEUL. Mesuré en ligne
+à 375 px : depuis l'arrivée de la pastille (23/09), la rangée d'actions
+(pastille 79 + bascule 73 + cloche 40 + formule) débordait de la barre
+de 9 à 34 px sur huit pages de l'espace (documents, compte, lettre,
+entretien, compression, tests, vérification, traduction) : la page
+entière glissait de côté. Le texte « En ligne » reste lu par les
+lecteurs d'écran (role="status") et dans l'infobulle ; l'œil garde le
+point vert qui pulse. */
+@media (max-width: 480px){
+.presence-pill{ padding:7px; gap:0; }
+.presence-pill .presence-texte{
+position:absolute;
+width:1px;
+height:1px;
+overflow:hidden;
+clip:rect(0 0 0 0);
+clip-path:inset(50%);
+white-space:nowrap;
+}
+}
+
+/* Et sous 400 px, sur les pages outils (celles qui ont « ← Mon
+parcours »), le titre de la barre se retire à son tour : il ne tenait
+plus qu'en « Fitz… », et la pastille de formule, comprimée à 24 px,
+n'était plus qu'un rond vide. Mesuré en ligne à 320 et 360 px sur dix
+pages : plus aucun débordement, et la pastille relit « Conseiller ». Le
+titre reste dans la page pour les lecteurs d'écran. */
+@media (max-width: 400px){
+.journey-context .back-link ~ h1,
+.journey-context .back-link ~ h2{
+position:absolute;
+width:1px;
+height:1px;
+overflow:hidden;
+clip:rect(0 0 0 0);
+clip-path:inset(50%);
+white-space:nowrap;
 }
 }
 

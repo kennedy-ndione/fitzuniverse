@@ -94,6 +94,12 @@ sheet.addEventListener("click", (event) => {
 if (event.target === sheet) fermer();
 });
 
+// LOT 119 (2026-09-26) : « Signaler un problème » ailleurs dans l'espace
+// (js/fitz-recours.js) mène à messages.html#signaler. L'ancre n'existait
+// pas : l'étudiant arrivait sur la conversation, sans la feuille, et
+// devait trouver le bouton lui-même. La feuille s'ouvre désormais seule.
+if (window.location.hash === "#signaler") ouvrir();
+
 form.addEventListener("submit", async (event) => {
 
 event.preventDefault();

@@ -538,7 +538,7 @@ assert.match(js, /if \(lien\.programId && !app\.accepteeLe\) patch\.accepteeLe =
 assert.match(js, /if \(editingId\) delete payload\.track;/, "en édition, le parcours n'est pas renvoyé");
 assert.match(js, /Après acceptation, vous ne pourrez plus changer cette université\./);
 assert.match(js, /Après acceptation, vous ne pourrez plus changer ces universités\./);
-assert.match(js, /Fitz a fait sa proposition finale pour cette place\. Si cette université pose un vrai problème, <a href="messages\.html#supportCard">écrivez-nous<\/a>\./);
+assert.match(js, /Fitz a fait sa proposition finale pour cette place\. Si cette université pose un vrai problème, <a href="messages\.html">écrivez-nous<\/a>\./);
 assert.match(js, /Cette bourse a été fermée par l'organisme : Fitz vous propose une remplaçante\./);
 assert.match(js, /Acceptez cette université pour commencer votre dossier\./);
 });
