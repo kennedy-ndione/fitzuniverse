@@ -127,6 +127,18 @@ export const AFRIQUE_OUEST = [
 "BJ","BF","CV","CI","GM","GH","GN","GW","LR","ML","MR","NE","NG","SN","SL","TG"
 ];
 
+/**
+* LOT 113 — l'Union européenne (27 États membres depuis le 01/02/2020),
+* et l'Espace économique européen (UE + Islande, Liechtenstein,
+* Norvège). Servent aux exclusions « ouverte à tous sauf… » (champ
+* `exclude`), jamais comme groupe d'éligibilité.
+*/
+export const UE = [
+"AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV",
+"LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE"
+];
+export const EEE = [...UE, "IS", "LI", "NO"];
+
 /** Table des groupes adressables depuis un document Firestore. */
 export const GROUPES = {
 commonwealth: { label: "Pays du Commonwealth", codes: COMMONWEALTH },
@@ -247,7 +259,9 @@ return PAR_NOM.get(clefPays) || ALIAS[clefPays] || null;
 *     scope: "monde" | "groupes" | "liste",
 *     groups: ["commonwealth"],   // ids de GROUPES
 *     include: ["SN","ML"],       // codes ISO ajoutés au-delà des groupes
-*     exclude: ["GH"],            // codes ISO retirés
+*     exclude: ["GH"],            // codes ISO retirés (aussi avec « monde »)
+*     base: "residence",          // lot 113 : juger le pays de RÉSIDENCE
+*     nationalitesToujours: ["PS"], // lot 113 : admis quel que soit le lieu de vie
 *     note: "phrase courte affichée telle quelle"
 *   }
 *
@@ -284,15 +298,43 @@ return codes.size ? codes : null;
 * par l'auteur du lot, valable quelle que soit la nationalité) ; false
 * exclu ; null indéterminé.
 */
-export function estEligible(eligibility, nationalite) {
+export function estEligible(eligibility, nationalite, residence = "") {
 // scope:"monde" est une AFFIRMATION d'ouverture, pas une absence
 // d'information. paysEligibles() renvoie null dans les deux cas — c'est
 // ici, et seulement ici, qu'il faut les distinguer. Placé AVANT la
 // résolution de la nationalité : l'ouverture d'une bourse ne dépend pas
 // de notre capacité à reconnaître le pays saisi.
-if (eligibility && eligibility.scope === "monde") return true;
+//
+// LOT 113 (2026-09-26) — « OUVERTE À TOUS, SAUF… ». Beaucoup de bourses
+// nationales sont ouvertes au monde entier sauf aux citoyens du pays
+// hôte (Türkiye Bursları, Eiffel, CSC chinoise, MEXT), ou sauf à ceux
+// de l'Union européenne (NL Scholarship, Émile Boutmy, bourse du
+// gouvernement roumain). `exclude` s'applique donc aussi à « monde » :
+// false seulement si la nationalité est reconnue ET exclue ; une
+// nationalité inconnue garde l'ouverture (true).
+if (eligibility && eligibility.scope === "monde") {
+const exclus = (eligibility.exclude || []).map((c) => String(c).toUpperCase());
+if (exclus.length) {
+const iso = isoDeNationalite(nationalite);
+if (iso && exclus.includes(iso)) return false;
+}
+return true;
+}
 const autorises = paysEligibles(eligibility);
 if (!autorises) return null;
+// LOT 113 — QUAND C'EST LE PAYS DE RÉSIDENCE QUI COMPTE. Les bourses de
+// l'ARES s'adressent à qui « réside en permanence et travaille » dans
+// l'un des pays de l'appel, quelle que soit sa nationalité (et aux
+// Palestiniens où qu'ils vivent : `nationalitesToujours`). Sans pays de
+// résidence connu, on ne tranche pas.
+if (eligibility.base === "residence") {
+const isoNat = isoDeNationalite(nationalite);
+const toujours = (eligibility.nationalitesToujours || []).map((c) => String(c).toUpperCase());
+if (isoNat && toujours.includes(isoNat)) return true;
+const isoRes = isoDeNationalite(residence);
+if (!isoRes) return null;
+return autorises.has(isoRes);
+}
 const iso = isoDeNationalite(nationalite);
 if (!iso) return null;
 return autorises.has(iso);

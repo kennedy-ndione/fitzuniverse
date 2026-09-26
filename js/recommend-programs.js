@@ -708,7 +708,7 @@ function scoreProgram(program, university, scholarship, profile) {
 // retirer des points ne suffirait pas, une bourse fermée ne doit jamais
 // remonter, même faute de mieux. Rien dans explainMatch() : c'est un
 // FILTRE, pas un bonus (voir l'en-tête du fichier).
-if (scholarship && estEligible(scholarship.eligibility, profile.nationality) === false) {
+if (scholarship && estEligible(scholarship.eligibility, profile.nationality, profile.country || profile.originCountry) === false) {
 return -1;
 }
 
@@ -1551,7 +1551,10 @@ if (!program) return "";
 
 const p = profile || {};
 
-if (scholarship && estEligible(scholarship.eligibility, p.nationality) === false) {
+if (scholarship && estEligible(scholarship.eligibility, p.nationality, p.country || p.originCountry) === false) {
+// Lot 113 : quand c'est le pays de résidence qui compte (ARES), le motif
+// le dit — « votre nationalité » serait faux.
+if (scholarship.eligibility && scholarship.eligibility.base === "residence") return "elle est réservée aux personnes qui vivent dans l'un des pays de son appel";
 return "cette bourse n'est pas ouverte à votre nationalité";
 }
 

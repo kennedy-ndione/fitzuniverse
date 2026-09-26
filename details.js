@@ -36,6 +36,7 @@ import { porteDeBourseDeLaFiche } from "./js/portails-opportunite.js";
 import { phraseVoieAdmission } from "./js/voie-admission.js";
 import { etatCandidature } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
+import { auPays } from "./js/pays-grammaire.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
 
 // Bloc « Votre situation face à cette bourse » (2026-08-31) : tout est
@@ -234,10 +235,32 @@ return niveaux.every((n) => respecteLimiteAge(ageMax, age, n) === false);
 // RÈGLE ABSOLUE, la même que partout ailleurs : null n'est PAS « oui ».
 // On n'écrit jamais « vous êtes éligible » sur un inconnu — on dit
 // qu'aucune restriction n'est connue, ce qui est autre chose.
-export function verdictNationalite(eligibility, nationalite) {
+export function verdictNationalite(eligibility, nationalite, residence = "") {
+
+// Lot 113 (2026-09-26) : une bourse qui juge le pays de RÉSIDENCE (ARES)
+// ne parle pas de nationalité. Sans pays de résidence, on invite à le
+// renseigner ; sinon on dit ce que ce pays permet.
+if (eligibility && eligibility.base === "residence") {
+if (!residence) {
+return { ton: "invitation", texte: "Cette bourse dépend du pays où vous vivez : renseignez-le pour savoir si elle vous est ouverte.", lien: "profile.html" };
+}
+const surPlace = estEligible(eligibility, nationalite, residence);
+if (surPlace === true) return { ton: "favorable", texte: `Ouverte aux personnes qui vivent ${auPays(residence)}` };
+if (surPlace === false) return { ton: "defavorable", texte: `Réservée aux personnes qui vivent dans l'un des pays de son appel : ${residence} n'en fait pas partie` };
+return { ton: "neutre", texte: "Cette bourse dépend du pays où vous vivez : vérifiez la liste de l'appel" };
+}
 
 if (!nationalite) {
 return { ton: "invitation", texte: "Renseignez votre nationalité pour savoir si cette bourse vous est ouverte.", lien: "profile.html" };
+}
+
+const verdict = estEligible(eligibility, nationalite);
+
+if (verdict === true) return { ton: "favorable", texte: `Ouverte à votre nationalité (${nationalite})` };
+if (verdict === false) return { ton: "defavorable", texte: `Fermée aux ressortissants ${paysAvecArticle(nationalite)}` };
+
+return { ton: "neutre", texte: "Aucune restriction de nationalité connue pour cette bourse" };
+
 }
 
 const verdict = estEligible(eligibility, nationalite);
@@ -522,7 +545,7 @@ const verdictsEl = document.getElementById("situationVerdicts");
 
 // --- Verdicts nationalité et âge.
 const verdicts = [
-verdictNationalite(university.eligibility, profile.nationality || ""),
+verdictNationalite(university.eligibility, profile.nationality || "", profile.country || profile.originCountry || ""),
 verdictAge(limitesAgeDuProfil(university, profile), profile.birthDate || "", university.level)
 ].filter(Boolean);
 

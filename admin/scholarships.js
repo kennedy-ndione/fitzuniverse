@@ -103,7 +103,8 @@ function syncEligibilityFields() {
 const scope = eligibilityScopeInput ? eligibilityScopeInput.value : "";
 if (eligibilityGroupsField) eligibilityGroupsField.hidden = scope !== "groupes";
 if (eligibilityIncludeField) eligibilityIncludeField.hidden = !(scope === "groupes" || scope === "liste");
-if (eligibilityExcludeField) eligibilityExcludeField.hidden = !(scope === "groupes" || scope === "liste");
+// Lot 113 : « monde » peut aussi exclure (« ouverte à tous sauf… »).
+if (eligibilityExcludeField) eligibilityExcludeField.hidden = !(scope === "groupes" || scope === "liste" || scope === "monde");
 // TOUJOURS visible, même sans scope : 9 bourses du lot 20 (Chevening,
 // MEXT, Global Korea, Türkiye Bursları…) sont enregistrées en « note
 // seule » — le masquer les rendait inéditables et faisait croire à un
@@ -144,16 +145,31 @@ if (groups.length) eligibility.groups = groups;
 }
 if (scope === "groupes" || scope === "liste") {
 const include = parseIsoCodes(eligibilityIncludeInput && eligibilityIncludeInput.value);
-const exclude = parseIsoCodes(eligibilityExcludeInput && eligibilityExcludeInput.value);
 if (include.length) eligibility.include = include;
+}
+if (scope === "groupes" || scope === "liste" || scope === "monde") {
+const exclude = parseIsoCodes(eligibilityExcludeInput && eligibilityExcludeInput.value);
 if (exclude.length) eligibility.exclude = exclude;
+}
+// Lot 113 : les champs que le formulaire ne montre pas (`base`,
+// `nationalitesToujours`) sont GARDÉS tels qu'ils ont été chargés —
+// enregistrer une fiche ne doit pas effacer la règle de l'ARES.
+if (eligibiliteChargee) {
+for (const cle of ["base", "nationalitesToujours"]) {
+if (eligibiliteChargee[cle] !== undefined) eligibility[cle] = eligibiliteChargee[cle];
+}
 }
 if (note) eligibility.note = note;
 return eligibility;
 }
 
+// Lot 113 : l'éligibilité telle qu'elle a été chargée, pour garder à
+// l'enregistrement les champs sans contrôle dans le formulaire.
+let eligibiliteChargee = null;
+
 function fillEligibilityForm(eligibility) {
 const e = eligibility && typeof eligibility === "object" ? eligibility : null;
+eligibiliteChargee = e;
 if (eligibilityScopeInput) eligibilityScopeInput.value = e ? (e.scope || "") : "";
 const groups = (e && e.groups) || [];
 eligibilityGroupCheckboxes.forEach((c) => { c.checked = groups.includes(c.value); });
@@ -526,6 +542,7 @@ function closeModal() {
 modal.hidden = true;
 form.reset();
 editingId = null;
+eligibiliteChargee = null;
 resetUniversitiesPicker();
 }
 
@@ -534,6 +551,9 @@ function openCreateModal() {
 editingId = null;
 modalTitle.textContent = "Ajouter une bourse";
 form.reset();
+// Lot 113 : une bourse neuve n'hérite pas des champs cachés de la
+// dernière fiche ouverte.
+eligibiliteChargee = null;
 statusInput.value = "Ouverte";
 // form.reset() a vidé les champs — resynchronise la visibilité du
 // bloc éligibilité (tout masqué, scope « Non renseignée »).

@@ -767,6 +767,9 @@ scope: d.eligibility.scope || null,
 groups: d.eligibility.groups || [],
 include: d.eligibility.include || [],
 exclude: d.eligibility.exclude || [],
+// Lot 113 : le critère de résidence (ARES) et ses exceptions.
+base: d.eligibility.base || null,
+nationalitesToujours: d.eligibility.nationalitesToujours || [],
 note: d.eligibility.note ? "(renseignée)" : null
 }
 : null
