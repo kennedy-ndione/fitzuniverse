@@ -22,7 +22,7 @@
 
 import { creerCompteGratuit } from "./js/creer-compte.js";
 import { trackEvent } from "./js/analytics.js";
-import { retourSur, avecRetour } from "./js/retour-apres-compte.js";
+import { retourSur, avecRetour, phraseDeRetour } from "./js/retour-apres-compte.js";
 
 // COMPTE D'ABORD (2026-09-21) : un visiteur qui vient d'une formule
 // (payment.html) y retourne une fois son compte créé — voir
@@ -32,6 +32,12 @@ const RETOUR = retourSur(window.location.search);
 if (RETOUR) {
 document.querySelectorAll('a[href="login.html"]').forEach((a) => a.setAttribute("href", avecRetour("login.html", RETOUR)));
 }
+
+// Venu d'un diagnostic gratuit (2026-09-26) : le texte dit ce qui l'attend
+// après le compte, au lieu du texte général.
+const phraseRetour = phraseDeRetour(RETOUR, "inscription");
+const sousTitre = document.querySelector(".auth-card-subtext");
+if (phraseRetour && sousTitre) sousTitre.textContent = phraseRetour;
 
 const form = document.getElementById("inscriptionForm");
 const nomInput = document.getElementById("inscriptionNom");

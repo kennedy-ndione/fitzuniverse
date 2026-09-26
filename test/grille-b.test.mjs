@@ -339,7 +339,7 @@ const html = lire("diagnostic-france.html");
 assert.ok(html.includes("noindex"));
 assert.ok(!/data-lucide="sparkle/.test(html));
 assert.ok(!/visa accord|vous aurez votre visa|admission garantie/i.test(html));
-assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ espace: "preinscription" })'));
+assert.ok(lire("js/diagnostic-france-page.js").includes('bootstrapShell({ espace: "preinscription", ouvertATous: true })'));
 assert.ok(!/renderLockedState|ctx\.locked/.test(lire("js/diagnostic-france-page.js")), "plus aucun verrou");
 assert.ok(!/fitzGenerate|ai-client|generate\(/.test(lire("js/diagnostic-france.js") + lire("js/diagnostic-france-page.js")), "aucune IA");
 });

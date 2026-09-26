@@ -161,9 +161,10 @@ document.title = `Diagnostic ${DEST.nom} | FitzUniverse`;
 document.getElementById("diagTitre").textContent = `Diagnostic ${DEST.nom}`;
 document.getElementById("diagIntroTitre").textContent = `Puis-je me lancer ${auPays(DEST.nom)} ?`;
 
-// Aucune formule exigée : la page s'ouvre à tout compte (lot 97). Elle
-// reste une page de l'espace préinscription.
-bootstrapShell({ espace: "preinscription" }).then(async (ctx) => {
+// Aucune formule exigée : la page s'ouvre à tout compte (lot 97), un
+// client bourse compris (`ouvertATous`, 2026-09-26). Elle reste une page
+// de l'espace préinscription.
+bootstrapShell({ espace: "preinscription", ouvertATous: true }).then(async (ctx) => {
 
 if (!ctx) return;
 
@@ -307,7 +308,11 @@ recevabilite: { etat: rec.verdict.etat, phrase: rec.verdict.phrase, voyants: rec
 calculeLe: new Date().toISOString()
 }
 });
-sauvegarde.textContent = "Diagnostic enregistré dans votre dossier : l'étape 2 de votre route est faite.";
+// Sans dossier de ce pays, il n'y a pas de « route » : on dit où le
+// diagnostic se retrouve (l'accueil de l'espace, 2026-09-26).
+sauvegarde.textContent = possede
+? "Diagnostic enregistré dans votre dossier : l'étape 2 de votre route est faite."
+: "Diagnostic enregistré dans votre compte : vous le retrouverez sur l'accueil de votre espace, et vous pourrez le refaire quand vos chiffres changeront.";
 sauvegarde.hidden = false;
 } catch (error) {
 console.error("Diagnostic non enregistré :", error);

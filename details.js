@@ -557,11 +557,19 @@ verdictsEl.appendChild(li);
 }
 }
 
+// FERMÉE À CE PROFIL (2026-09-26, demande de Charles). La fiche du
+// Stipendium Hungaricum disait « Fermée aux ressortissants du Sénégal »,
+// puis juste dessous « Pourquoi cette bourse vous correspond ». Quand la
+// nationalité, le pays de résidence ou l'âge ferment la bourse, on ne
+// liste pas de raisons de correspondance, et on ne propose pas de
+// l'ajouter au parcours.
+const fermeeAuProfil = verdicts.some((v) => v.ton === "defavorable");
+
 // --- Raisons de correspondance : explainMatch(), la fonction qui
 // explique déjà les recommandations du tableau de bord. Aucun second
 // calcul, aucune phrase réécrite ici.
-const raisons = explainMatch(program, universityProfile, scholarshipData, profile) || [];
-const messageVide = messageRaisonsVides(raisons);
+const raisons = fermeeAuProfil ? [] : (explainMatch(program, universityProfile, scholarshipData, profile) || []);
+const messageVide = fermeeAuProfil ? "" : messageRaisonsVides(raisons);
 
 const reasonsEl = document.getElementById("situationReasons");
 const listEl = document.getElementById("situationReasonsList");
@@ -576,7 +584,7 @@ a.textContent = "Compléter mon profil";
 emptyEl.appendChild(a);
 emptyEl.hidden = false;
 }
-} else if (reasonsEl && listEl) {
+} else if (reasonsEl && listEl && raisons.length) {
 listEl.innerHTML = "";
 for (const raison of raisons) {
 const li = document.createElement("li");
@@ -591,7 +599,7 @@ reasonsEl.hidden = false;
 // d'abonné : pour un compte sans formule, le lien part avec les autres
 // actions — sinon la lecture gratuite se terminerait sur un mur.
 if (actions) {
-await brancherActionsSituation({ session, university });
+await brancherActionsSituation({ session, university, fermeeAuProfil });
 } else {
 const docs = document.getElementById("documentsBtn");
 if (docs) docs.remove();
@@ -607,7 +615,7 @@ if (window.lucide) lucide.createIcons();
 // Le quota est vérifié par l'appelant, comme le veut le contrat de
 // createApplicationFromRecommendation() : isQuotaReached() vit dans
 // js/plan-features.js et le plafond dans window.SCHOLARBRIDGE_PLANS.
-async function brancherActionsSituation({ session, university }) {
+async function brancherActionsSituation({ session, university, fermeeAuProfil = false }) {
 
 const addBtn = document.getElementById("addToJourneyBtn");
 const letterBtn = document.getElementById("letterBtn");
@@ -666,6 +674,14 @@ if (letterBtn) {
 letterBtn.href = `ai-letter.html?applicationId=${encodeURIComponent(existante.id)}`;
 letterBtn.hidden = false;
 }
+return;
+}
+
+// Fermée à ce profil (nationalité, résidence ou âge) : pas de bouton
+// qui l'ajouterait au parcours. Une candidature déjà créée reste
+// joignable juste au-dessus.
+if (fermeeAuProfil) {
+direNotice("D'après votre profil, cette bourse ne vous est pas ouverte : elle n'entre pas dans votre parcours.", "scholarships.html", "Voir les autres bourses");
 return;
 }
 

@@ -154,7 +154,7 @@ test("C — sur les pages catalogue aussi, la barre retire ce que le compte n'a 
 
 test("B — un compte gratuit lit sa situation sans finir sur un mur : « Voir les pièces du dossier » part avec les actions", () => {
   const js = sansCommentaires(lire("details.js"));
-  assert.match(js, /if \(actions\) \{\s*await brancherActionsSituation\(\{ session, university \}\);\s*\} else \{\s*const docs = document\.getElementById\("documentsBtn"\);\s*if \(docs\) docs\.remove\(\);\s*\}/);
+  assert.match(js, /if \(actions\) \{\s*await brancherActionsSituation\(\{ session, university, fermeeAuProfil \}\);\s*\} else \{\s*const docs = document\.getElementById\("documentsBtn"\);\s*if \(docs\) docs\.remove\(\);\s*\}/);
 });
 
 test("C — l'accueil d'un compte sans accompagnement ne promet pas candidatures, documents et Fitz", () => {

@@ -15,7 +15,7 @@ getAuthErrorMessage
 } from "./auth-ui.js";
 
 import { trackEvent } from "./js/analytics.js";
-import { retourSur, avecRetour } from "./js/retour-apres-compte.js";
+import { retourSur, avecRetour, phraseDeRetour } from "./js/retour-apres-compte.js";
 
 // COMPTE D'ABORD (2026-09-21) : un visiteur envoyé ici par sa formule
 // (payment.html) y retourne une fois connecté ; le lien vers
@@ -271,3 +271,7 @@ if (emailInput) emailInput.focus();
 }
 
 appliquerAccueil();
+
+// Venu d'un diagnostic gratuit (2026-09-26) : on lui dit qu'il y revient.
+const phraseRetour = phraseDeRetour(RETOUR, "connexion");
+if (phraseRetour && sousTitreEl) sousTitreEl.textContent = phraseRetour;

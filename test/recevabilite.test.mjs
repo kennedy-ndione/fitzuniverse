@@ -212,7 +212,8 @@ assert.match(lire("functions/lib/achat.js"), /"diagnostic-france": \{ label: "Di
 test("lot 97 — les deux pages du diagnostic s'ouvrent à tout compte, et posent la question des études", () => {
 for (const f of ["js/diagnostic-pays-page.js", "js/diagnostic-france-page.js"]) {
 const js = lire(f);
-assert.ok(js.includes('bootstrapShell({ espace: "preinscription" })'), f);
+// Ouverte à tout compte, un client bourse compris (2026-09-26).
+assert.ok(js.includes('bootstrapShell({ espace: "preinscription", ouvertATous: true })'), f);
 assert.ok(!/feature: "diagnostic_france"|ctx\.locked|renderLockedState/.test(js), `${f} : plus de verrou`);
 assert.match(js, /poserQuestions\(/);
 assert.match(js, /peindreVoyants\(/);

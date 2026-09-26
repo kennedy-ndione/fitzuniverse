@@ -32,6 +32,7 @@ import { initShellChrome, bootstrapShell, lireEspaceChoisi } from "./app-shell.j
 import { resoudreEspace, HUB_ESPACE } from "./access-guard.js";
 import { lireMemoire } from "./diagnostic-garde.js";
 import { trackEvent } from "./analytics.js";
+import { diagnosticsPreinscription } from "./diagnostics-sauvegardes.js";
 
 initShellChrome();
 
@@ -60,6 +61,7 @@ const accueil = document.getElementById("accueilMinimal");
 if (accueil) accueil.hidden = false;
 
 brancherDiagnostic(session.userData);
+brancherDiagnosticsPreinscription(session.userData);
 rendreOffres(session.userData);
 
 demasquerLesPhases();
@@ -159,6 +161,55 @@ Promise.resolve(trackEvent("espace_gratuit_diagnostic", { dejaFait: !!reponses }
 new Promise((resoudre) => setTimeout(resoudre, 1000))
 ]).finally(partir);
 });
+
+}
+
+/**
+* Bloc 02 (2026-09-26). Les diagnostics « Puis-je me lancer ? » déjà faits,
+* une carte par pays, du plus récent au plus ancien ; sans diagnostic, le
+* bloc en propose un. Constat de Charles : après le diagnostic gratuit d'un
+* pays, « on ne le voit même pas ».
+*/
+function brancherDiagnosticsPreinscription(userData) {
+
+const hote = document.getElementById("accueilPreListe");
+if (!hote) return;
+
+const faits = diagnosticsPreinscription(userData);
+if (!faits.length) return;   // le bloc reste une invitation
+
+const titre = document.getElementById("accueilPreTitre");
+const texte = document.getElementById("accueilPreTexte");
+const bouton = document.getElementById("accueilPreBtn");
+if (titre) titre.textContent = faits.length > 1 ? "Vos diagnostics de préinscription" : "Votre diagnostic de préinscription";
+if (texte) texte.textContent = "Revoyez-les quand vous voulez, et refaites-les si vos chiffres changent : c'est gratuit.";
+if (bouton) {
+bouton.className = "jy-btn";
+const libelle = bouton.querySelector("span");
+if (libelle) libelle.textContent = "Un autre pays";
+}
+
+// Construit élément par élément : aucun texte du compte n'est lu comme du HTML.
+const el = (balise, classe, contenu) => {
+const n = document.createElement(balise);
+n.className = classe;
+if (contenu) n.textContent = contenu;
+return n;
+};
+
+hote.replaceChildren(...faits.map((d) => {
+const carte = el("a", "jy-offre");
+carte.href = d.href;
+carte.append(el("span", "jy-offre-nom", d.nom), el("span", "jy-offre-texte", d.libelle));
+if (d.date) carte.append(el("span", "jy-offre-prix", `Fait le ${d.date}`));
+const cta = el("span", "jy-offre-cta", "Revoir mon diagnostic");
+const icone = document.createElement("i");
+icone.dataset.lucide = "arrow-right";
+cta.append(icone);
+carte.append(cta);
+return carte;
+}));
+hote.hidden = false;
 
 }
 

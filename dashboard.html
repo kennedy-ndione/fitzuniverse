@@ -56,6 +56,7 @@ journey.css (le parcours) les surclassent — ordre significatif. -->
 <link rel="modulepreload" href="js/diagnostic-france.js">
 <link rel="modulepreload" href="js/diagnostic-garde.js">
 <link rel="modulepreload" href="js/diagnostic-vers-profil.js">
+<link rel="modulepreload" href="js/diagnostics-sauvegardes.js">
 <link rel="modulepreload" href="js/documents-slugs.js">
 <link rel="modulepreload" href="js/echeance.js">
 <link rel="modulepreload" href="js/eligibility-pistes.js">
@@ -95,6 +96,7 @@ journey.css (le parcours) les surclassent — ordre significatif. -->
 <link rel="modulepreload" href="js/procedures/vocabulaire.js">
 <link rel="modulepreload" href="js/profil-par-niveau.js">
 <link rel="modulepreload" href="js/profile-score.js">
+<link rel="modulepreload" href="js/retour-apres-compte.js">
 <link rel="modulepreload" href="js/student-messages.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
@@ -216,9 +218,25 @@ il faut les faire :
 </div>
 </section>
 
-<section class="jy-phase">
+<!-- LES DIAGNOSTICS DE PRÉINSCRIPTION (2026-09-26). Constat de Charles :
+après le diagnostic gratuit d'un pays, « on ne le voit même pas » sur
+l'accueil. Ce bloc les liste (js/aiguillage.js,
+js/diagnostics-sauvegardes.js) ; sans diagnostic, il en propose un. -->
+<section class="jy-phase" id="accueilPreinscription">
 <div class="jy-phase-head">
 <span class="jy-phase-num">02</span>
+<h2 id="accueilPreTitre" data-sans-glossaire>Étudier à l'étranger : puis-je me lancer ?</h2>
+</div>
+<p class="jy-phase-sub" id="accueilPreTexte">Un diagnostic gratuit par pays vous dit si vous pouvez postuler dans une université, dans quelle langue, avec quel budget et à quelles dates.</p>
+<div class="jy-offres" id="accueilPreListe" hidden></div>
+<div class="jy-phase-actions">
+<a href="preinscriptions.html" class="jy-btn jy-btn--primary" id="accueilPreBtn"><i data-lucide="landmark"></i><span>Choisir un pays</span></a>
+</div>
+</section>
+
+<section class="jy-phase">
+<div class="jy-phase-head">
+<span class="jy-phase-num">03</span>
 <h2>Votre compte est prêt</h2>
 </div>
 <p class="jy-phase-sub">Votre profil, vos paramètres et le catalogue en accès libre. Une question ? L'équipe FitzUniverse vous répond dans votre espace.</p>
@@ -232,7 +250,7 @@ il faut les faire :
 
 <section class="jy-phase" id="accueilOffres">
 <div class="jy-phase-head">
-<span class="jy-phase-num">03</span>
+<span class="jy-phase-num">04</span>
 <h2>Nos propositions d'accompagnement</h2>
 </div>
 <p class="jy-phase-sub">Un paiement unique, sans abonnement. Deux parcours distincts : on ne vous demandera jamais de choisir les deux.</p>

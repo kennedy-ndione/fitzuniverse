@@ -239,7 +239,7 @@ if (window.lucide) lucide.createIcons();
 
 // Aucune formule exigée : la page s'ouvre à tout compte (lot 97). Elle
 // reste une page de l'espace préinscription.
-bootstrapShell({ espace: "preinscription" }).then(async (ctx) => {
+bootstrapShell({ espace: "preinscription", ouvertATous: true }).then(async (ctx) => {
 
 if (!ctx) return;
 

@@ -71,6 +71,10 @@ import { boutonRecours } from "./fitz-recours.js";
 // pas dépendre d'un effet de bord. On l'appelle.
 import { oublierPortails } from "./portails.js";
 
+// Le diagnostic gratuit sans session : revenir à la page après le compte
+// (2026-09-26). Voir js/retour-apres-compte.js.
+import { retourDepuisPage, pageDeCompte } from "./retour-apres-compte.js";
+
 // applyFeatureLocks est exporté depuis le 2026-08-30 : les rendus
 // DYNAMIQUES (cartes de réponse du hub) insèrent des [data-feature]
 // après le bootstrap et doivent pouvoir re-appliquer les verrous.
@@ -589,7 +593,7 @@ if (window.FitzMobileNav && window.FitzMobileNav.appliquerPassSeul) window.FitzM
 
 }
 
-export function bootstrapShell({ feature, espace = "", pageLoaderId = "pageLoader", contentSelector = ".content" } = {}) {
+export function bootstrapShell({ feature, espace = "", ouvertATous = false, pageLoaderId = "pageLoader", contentSelector = ".content" } = {}) {
 
 const content = document.querySelector(contentSelector);
 
@@ -613,7 +617,16 @@ content.innerHTML = `
 return resolveSession().then(async (session) => {
 
 if (!session) {
-window.location.replace("login.html");
+// LE DIAGNOSTIC GRATUIT (2026-09-26). Sans session, un visiteur venu
+// d'un diagnostic partait vers login.html SANS retour : après
+// l'inscription ou la connexion, il atterrissait sur son accueil et ne
+// revoyait jamais le diagnostic qu'il était venu faire. Il part
+// désormais vers l'inscription (ou la connexion, si ce navigateur l'a
+// déjà connu), qui le ramène ici. Toute autre page garde login.html.
+const retour = retourDepuisPage(window.location.pathname, window.location.search);
+let connu = false;
+try { connu = !!localStorage.getItem("sb_visiteur_connu"); } catch { /* stockage bloqué */ }
+window.location.replace(retour ? pageDeCompte(retour, connu) : "login.html");
 return new Promise(() => {});
 }
 
@@ -643,7 +656,12 @@ return new Promise(() => {});
 // qui a déjà payé — il s'est trompé de porte, on lui montre la sienne.
 const espaceUtilisateur = resoudreEspace(session);
 
-if (espace && !espaceAutorise(espaceUtilisateur, espace) && espaceUtilisateur !== "aucun") {
+// `ouvertATous` (2026-09-26) : les deux pages de diagnostic gratuit
+// appartiennent à l'espace préinscription (pastille, menu) mais
+// s'ouvrent à TOUT compte, un client bourse compris (lot 97 : « tout
+// compte, gratuit compris ») — il était renvoyé chez lui avant de voir
+// la moindre question.
+if (espace && !ouvertATous && !espaceAutorise(espaceUtilisateur, espace) && espaceUtilisateur !== "aucun") {
 window.location.replace(HUB_ESPACE[espaceUtilisateur]);
 return new Promise(() => {});
 }

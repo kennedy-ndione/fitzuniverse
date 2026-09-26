@@ -357,7 +357,10 @@ return autorises.has(iso);
 * Un pays inconnu revient NU, sans article deviné.
 */
 export function paysAvecArticle(nom) {
-return duPays(nom);
+// UN GENTILÉ (2026-09-26) : depuis le lot NATIONALITÉS, le profil porte
+// « Sénégalais(e) », et la fiche disait « Fermée aux ressortissants
+// Sénégalais(e) ». Le gentilé est ramené à son pays avant l'article.
+return duPays(paysDeNationalite(nom) || nom);
 }
 
 /**
