@@ -263,15 +263,6 @@ return { ton: "neutre", texte: "Aucune restriction de nationalité connue pour c
 
 }
 
-const verdict = estEligible(eligibility, nationalite);
-
-if (verdict === true) return { ton: "favorable", texte: `Ouverte à votre nationalité (${nationalite})` };
-if (verdict === false) return { ton: "defavorable", texte: `Fermée aux ressortissants ${paysAvecArticle(nationalite)}` };
-
-return { ton: "neutre", texte: "Aucune restriction de nationalité connue pour cette bourse" };
-
-}
-
 // null -> on ne rend RIEN (surtout pas « aucune limite d'âge » : le
 // champ absent est un inconnu, pas une absence de plafond).
 export function verdictAge(ageMax, birthDate, niveau) {
