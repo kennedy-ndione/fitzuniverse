@@ -34,8 +34,8 @@ color-scheme:dark;
 --nuit-3:#1D1813;
 --nuit-4:#262019;
 
---nuit-verre:rgba(24,20,15,.72);
---nuit-verre-fort:rgba(30,25,19,.86);
+--nuit-verre:rgba(22,18,14,.93);
+--nuit-verre-fort:rgba(28,23,18,.97);
 --nuit-filet:rgba(245,234,214,.08);
 --nuit-filet-fort:rgba(245,234,214,.14);
 --nuit-reflet:rgba(255,248,235,.05);
@@ -128,9 +128,11 @@ color:var(--nuit-texte);
 -moz-osx-font-smoothing:grayscale;
 }
 
-/* L'aurore : trois nappes de lumière chaude qui dérivent lentement
-   derrière tout le Control Center. Couche fixe, peinte une fois, animée
-   en transform seulement (GPU) : aucun coût de repeinture au défilement. */
+/* L'aurore : quatre nappes de lumière chaude derrière tout le Control
+   Center. IMMOBILE depuis le lot 123 (2026-09-26) : animée, elle obligeait
+   chaque carte en verre flouté à recalculer son flou à chaque image —
+   13 images/s mesurées au lieu de 60, et une navigation lente constatée
+   par Charles. Couche fixe, peinte une seule fois. */
 body::before{
 content:"";
 position:fixed;
@@ -142,8 +144,6 @@ radial-gradient(38vmax 30vmax at 22% 14%,rgba(233,163,25,.22),transparent 70%),
 radial-gradient(34vmax 28vmax at 86% 10%,rgba(217,120,47,.15),transparent 70%),
 radial-gradient(40vmax 34vmax at 72% 90%,rgba(163,150,242,.09),transparent 70%),
 radial-gradient(30vmax 26vmax at 10% 86%,rgba(233,163,25,.08),transparent 70%);
-filter:saturate(115%);
-animation:nuitAurore 38s ease-in-out infinite alternate;
 }
 
 /* La trame : une grille très fine, qui s'efface vers les bords — le
@@ -160,12 +160,6 @@ linear-gradient(90deg,rgba(245,234,214,.028) 1px,transparent 1px);
 background-size:48px 48px;
 -webkit-mask-image:radial-gradient(ellipse 80% 70% at 55% 30%,#000 30%,transparent 85%);
 mask-image:radial-gradient(ellipse 80% 70% at 55% 30%,#000 30%,transparent 85%);
-}
-
-@keyframes nuitAurore{
-0%{ transform:translate3d(0,0,0) rotate(0deg) scale(1); }
-50%{ transform:translate3d(3vmax,-2vmax,0) rotate(6deg) scale(1.06); }
-100%{ transform:translate3d(-3vmax,2vmax,0) rotate(-4deg) scale(1.02); }
 }
 
 ::selection{ background:rgba(233,163,25,.35); color:#fff; }
@@ -204,8 +198,6 @@ box-shadow:0 0 40px rgba(233,163,25,.25);
 background:linear-gradient(180deg,rgba(18,15,11,.92),rgba(12,10,8,.94));
 border-right:1px solid var(--nuit-filet);
 box-shadow:1px 0 0 rgba(233,163,25,.05), 20px 0 60px rgba(0,0,0,.35);
--webkit-backdrop-filter:blur(18px) saturate(140%);
-backdrop-filter:blur(18px) saturate(140%);
 }
 
 /* Un filet de lumière qui descend le long du bord droit. */
@@ -336,8 +328,6 @@ color:var(--nuit-texte-3);
 .topbar{
 background:rgba(12,10,8,.72);
 border-bottom:1px solid var(--nuit-filet);
--webkit-backdrop-filter:blur(16px) saturate(140%);
-backdrop-filter:blur(16px) saturate(140%);
 }
 
 .topbar-title h1{
@@ -382,8 +372,6 @@ linear-gradient(180deg,rgba(255,248,235,.035),rgba(255,248,235,.012) 40%,transpa
 var(--nuit-verre);
 border:1px solid var(--nuit-filet);
 box-shadow:var(--shadow-md);
--webkit-backdrop-filter:blur(14px) saturate(130%);
-backdrop-filter:blur(14px) saturate(130%);
 transition:border-color .35s var(--nuit-ease), box-shadow .35s var(--nuit-ease), transform .35s var(--nuit-ease);
 }
 
@@ -394,8 +382,6 @@ transition:border-color .35s var(--nuit-ease), box-shadow .35s var(--nuit-ease),
 background:transparent;
 border-color:var(--nuit-filet);
 box-shadow:none;
--webkit-backdrop-filter:none;
-backdrop-filter:none;
 }
 
 .panel-card:hover,
@@ -460,7 +446,7 @@ border:1px solid rgba(233,163,25,.22);
 box-shadow:0 1px 0 rgba(255,248,235,.08) inset, 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4), 0 0 120px rgba(233,163,25,.08);
 }
 
-/* Le balayage lumineux qui traverse le hero, lentement. */
+/* Le balayage lumineux du hero. */
 .exec-hero::before{
 content:"";
 position:absolute;
@@ -469,8 +455,13 @@ z-index:-1;
 pointer-events:none;
 background:linear-gradient(110deg,transparent 35%,rgba(255,236,200,.07) 48%,transparent 60%);
 background-size:250% 100%;
-animation:nuitBalayage 9s var(--nuit-ease) infinite;
+background-position:120% 0;
+transition:background-position 1.6s var(--nuit-ease);
 }
+
+/* Le balayage ne passe plus en boucle (il repeignait le hero à chaque
+   image) : il traverse le hero une fois, quand la souris y entre. */
+.exec-hero:hover::before{ background-position:-120% 0; }
 
 /* L'anneau de fond : deux orbites qui tournent, comme un radar. */
 .exec-hero::after{
@@ -490,11 +481,6 @@ conic-gradient(from 0deg,transparent 0 300deg,rgba(233,163,25,.22) 340deg,transp
 mask-image:radial-gradient(circle,#000 30%,transparent 70%);
 animation:nuitRadar 14s linear infinite;
 opacity:.9;
-}
-
-@keyframes nuitBalayage{
-0%{ background-position:120% 0; }
-60%,100%{ background-position:-120% 0; }
 }
 
 @keyframes nuitRadar{
@@ -547,8 +533,6 @@ text-shadow:none;
 background:rgba(10,8,6,.45);
 border:1px solid rgba(245,234,214,.10);
 color:rgba(244,238,228,.88);
--webkit-backdrop-filter:blur(10px);
-backdrop-filter:blur(10px);
 box-shadow:inset 0 1px 0 rgba(255,248,235,.05);
 font-variant-numeric:tabular-nums;
 }
@@ -571,8 +555,6 @@ overflow:hidden;
 color:#F4EEE4;
 background:rgba(245,234,214,.05);
 border:1px solid rgba(245,234,214,.12);
--webkit-backdrop-filter:blur(8px);
-backdrop-filter:blur(8px);
 transition:transform .3s var(--nuit-ease), border-color .3s var(--nuit-ease), background .3s var(--nuit-ease), box-shadow .3s var(--nuit-ease);
 }
 
@@ -681,8 +663,11 @@ background:conic-gradient(from var(--nuit-angle,0deg),rgba(233,163,25,.05),rgba(
 -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
 -webkit-mask-composite:xor;
 mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
-animation:nuitTour 7s linear infinite;
 }
+
+/* Elle ne tourne qu'au survol : une propriété personnalisée animée
+   repeint la tuile à chaque image, ce qui coûtait en continu. */
+.stat-card.is-featured:hover::after{ animation:nuitTour 4s linear infinite; }
 
 @property --nuit-angle{
 syntax:"<angle>";
@@ -808,8 +793,6 @@ linear-gradient(120deg,rgba(163,150,242,.08),rgba(233,163,25,.06)),
 var(--nuit-verre);
 border:1px solid rgba(163,150,242,.22);
 box-shadow:var(--shadow-md);
--webkit-backdrop-filter:blur(14px);
-backdrop-filter:blur(14px);
 }
 
 .ai-observations h2{ color:var(--nuit-texte); }
@@ -955,7 +938,7 @@ position:absolute;
 inset:0;
 background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
 transform:translateX(-100%);
-animation:nuitFil 3.2s var(--nuit-ease) infinite;
+animation:nuitFil 3.2s var(--nuit-ease) 3;
 }
 
 @keyframes nuitFil{
@@ -1149,8 +1132,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{ filter:invert(1) sepia(.4
 background:var(--nuit-verre-fort);
 border:1px solid var(--nuit-filet-fort);
 box-shadow:0 24px 60px rgba(0,0,0,.6);
--webkit-backdrop-filter:blur(18px);
-backdrop-filter:blur(18px);
 color:var(--nuit-texte);
 }
 
@@ -1183,8 +1164,6 @@ color:var(--nuit-texte);
 .profile-save-bar{
 background:rgba(12,10,8,.82);
 border:1px solid var(--nuit-filet-fort);
--webkit-backdrop-filter:blur(16px);
-backdrop-filter:blur(16px);
 box-shadow:0 -10px 40px rgba(0,0,0,.45);
 }
 
@@ -1244,8 +1223,6 @@ background:var(--nuit-verre-fort);
 border-color:var(--nuit-filet-fort);
 color:var(--nuit-texte);
 box-shadow:0 20px 50px rgba(0,0,0,.55);
--webkit-backdrop-filter:blur(16px);
-backdrop-filter:blur(16px);
 }
 
 .passation-etape,
@@ -1310,8 +1287,6 @@ linear-gradient(180deg,rgba(255,248,235,.045),rgba(255,248,235,.012) 45%,transpa
 var(--nuit-verre);
 border:1px solid rgba(233,163,25,.18);
 box-shadow:0 1px 0 rgba(255,248,235,.06) inset, 0 40px 100px rgba(0,0,0,.6), 0 0 80px rgba(233,163,25,.08);
--webkit-backdrop-filter:blur(18px) saturate(140%);
-backdrop-filter:blur(18px) saturate(140%);
 }
 
 .admin-logo-wrap{ box-shadow:0 0 60px rgba(233,163,25,.30); }
@@ -1337,16 +1312,14 @@ box-shadow:0 12px 32px rgba(233,163,25,.32), inset 0 1px 0 rgba(255,255,255,.45)
 
 .nuit-apparait{
 opacity:0;
-transform:translate3d(0,18px,0) scale(.985);
-filter:blur(4px);
-transition:opacity .8s var(--nuit-ease), transform .9s var(--nuit-ease), filter .8s var(--nuit-ease);
+transform:translate3d(0,18px,0);
+transition:opacity .7s var(--nuit-ease), transform .8s var(--nuit-ease);
 transition-delay:var(--nuit-delai,0ms);
 }
 
 .nuit-apparait.is-vu{
 opacity:1;
 transform:none;
-filter:none;
 }
 
 /* Un chiffre qui vient de changer brille un instant. */
@@ -1403,8 +1376,6 @@ body::before,
 .msg-center,
 .plans-pays,
 .admin-table-wrap{
--webkit-backdrop-filter:none;
-backdrop-filter:none;
 background:linear-gradient(180deg,rgba(255,248,235,.035),transparent 40%),var(--nuit-2);
 }
 

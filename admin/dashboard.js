@@ -384,12 +384,16 @@ return g;
 // Chaque courbe porte une lueur de sa propre couleur.
 const pluginLueur = {
 id: "nuitLueur",
+// Lot 123 : la lueur ne porte plus que sur la série remplie (Visiteurs).
+// Une ombre floutée sur les six courbes, redessinée à chaque mouvement de
+// souris, coûtait cher sur un ordinateur modeste.
 beforeDatasetDraw(chart, args) {
 const ds = chart.data.datasets[args.index];
 chart.ctx.save();
+if (!ds.fill) return;
 chart.ctx.shadowColor = ds.borderColor;
-chart.ctx.shadowBlur = 14;
-chart.ctx.shadowOffsetY = 4;
+chart.ctx.shadowBlur = 10;
+chart.ctx.shadowOffsetY = 3;
 },
 afterDatasetDraw(chart) {
 chart.ctx.restore();
