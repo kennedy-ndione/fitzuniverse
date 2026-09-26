@@ -350,3 +350,61 @@ text-decoration:underline;
 .parcours-choice-actions{ grid-template-columns:1fr 1fr; }
 }
 }
+
+/* ==========================================================
+LOT 127 (2026-09-26) — le choix du pays, en tête de la vue
+préinscriptions (offers.js, initDestinations). Des pastilles simples,
+qui passent à la ligne sur téléphone : jamais de défilement de côté.
+========================================================== */
+
+.destination-choix{
+margin:0 0 28px;
+padding:18px 18px 16px;
+border:1px solid var(--border-color);
+border-radius:18px;
+background:var(--surface, #fff);
+}
+
+.destination-choix-titre{
+margin:0 0 12px;
+font-weight:700;
+font-size:1rem;
+color:var(--text-color);
+}
+
+.destination-choix-liste{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.destination-choix-pays{
+min-height:40px;
+padding:8px 16px;
+border:1px solid var(--border-color);
+border-radius:999px;
+background:transparent;
+color:var(--text-color);
+font:inherit;
+font-size:.92rem;
+font-weight:600;
+cursor:pointer;
+transition:border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+
+.destination-choix-pays:hover,
+.destination-choix-pays:focus-visible{
+border-color:var(--amber-700);
+}
+
+.destination-choix-pays[aria-pressed="true"]{
+background:var(--text-color);
+border-color:var(--text-color);
+color:var(--background, #fff);
+}
+
+.destination-choix-note{
+margin:12px 0 0;
+font-size:.88rem;
+color:var(--text-light);
+}

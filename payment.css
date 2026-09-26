@@ -118,6 +118,21 @@ background:radial-gradient(circle,rgba(126,113,216,.2) 0%,rgba(126,113,216,.13) 
 
 }
 
+/* LOT 128 (2026-09-26) — audit avant la présentation au public : sur
+téléphone, le halo de droite (.container::after, right:-18 %, 320 px)
+dépassait de l'écran et la page de paiement glissait de côté (438 px
+de large pour 390 px d'écran, mesuré). Le halo est rogné au bord du
+contenu ; `clip` et non `hidden` : aucun conteneur de défilement créé. */
+@media (max-width: 720px){
+
+main.container{
+
+overflow-x:clip;
+
+}
+
+}
+
 /* Les animations heroHaloA / heroHaloB (24 s et 28 s, infinies) ont été
 retirées avec le lot DEUX-MOTEURS : règle déjà écrite pour offers.css,
 aucune animation en boucle hors halo Fitz — et un calque animé en

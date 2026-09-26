@@ -328,7 +328,9 @@ for (const id of idsP) assert.equal(OFFRES[id].parcours, "preinscription", `${id
 // candidatures travaillées en même temps — plus « à la fois : terminer
 // une candidature libère sa place ».
 assert.ok(/Vous payez une formule, en une fois, sans abonnement\. Elle couvre un nombre de candidatures, travaillées <strong>en même temps<\/strong>/.test(vueB));
-assert.ok(/Vous payez pour <strong>un dossier Études en France<\/strong>/.test(vueP));
+// Lot 127 (2026-09-26) : la préinscription est ouverte dans neuf pays —
+// la vue ne présente plus le seul dossier Études en France.
+assert.ok(/Vous payez pour <strong>un dossier, dans le pays de votre choix<\/strong>/.test(vueP));
 assert.ok(!/jusqu'à l'admission(?!\.| —)/.test(vueP.replace(/jamais jusqu'à l'admission/g, "")), "aucune promesse d'admission");
 // Les prix portent leur source (offers.js les remplit depuis pricing-plans.js).
 for (const id of [...idsB, ...idsP]) assert.ok(offersHtml.includes(`data-price-of="${id}"`) && offersHtml.includes(`data-eur-of="${id}"`), `prix dérivés pour ${id}`);

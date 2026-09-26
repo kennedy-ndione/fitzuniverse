@@ -128,9 +128,14 @@ const payload = buildCheckoutPayload(planId);
 
 if (!payload) return;
 
+// Lot 127 : la destination choisie voyage jusqu'au paiement (payment.js
+// la lit dans l'adresse, le serveur ouvre le dossier de CE pays).
+const destination = button.dataset.destination || "";
+if (destination && destination !== "france") payload.destination = destination;
+
 sessionStorage.setItem("scholarbridgeCheckout", JSON.stringify(payload));
 
-window.location.href = `payment.html?plan=${encodeURIComponent(planId)}`;
+window.location.href = `payment.html?plan=${encodeURIComponent(planId)}${destination && destination !== "france" ? `&destination=${encodeURIComponent(destination)}` : ""}`;
 
 });
 
@@ -138,9 +143,161 @@ window.location.href = `payment.html?plan=${encodeURIComponent(planId)}`;
 
 }
 
+// ==========================================================
+// LOT 127 (2026-09-26) — LA PRÉINSCRIPTION DANS NEUF PAYS
+// ==========================================================
+// Charles, sur téléphone : « Formules » côté préinscriptions menait au
+// seul Diagnostic France. La vue commence désormais par le choix du
+// pays. Les trois cartes du HTML (France) restent la référence et le
+// repli sans JavaScript ; pour un autre pays, elles sont réécrites
+// depuis offrePourDestination (pricing-plans.js) — la même source que
+// les pages de destination (js/preinscription-destination.js). Le
+// pays choisi reste dans l'adresse (?destination=), que l'on peut
+// partager, et que les pages de destination utilisent déjà.
+
+const NOM_FRANCE = "France";
+
+function destinationsDisponibles() {
+const autres = window.SCHOLARBRIDGE_DESTINATIONS || {};
+return [{ id: "france", nom: NOM_FRANCE }].concat(Object.keys(autres).map((id) => ({ id, nom: autres[id].nom })));
+}
+
+function echapper(texte) {
+return String(texte == null ? "" : texte).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+}
+
+function puces(liste) {
+return liste.map((h) => `<li><i data-lucide="check"></i><span>${echapper(h)}</span></li>`).join("");
+}
+
+function initDestinations() {
+
+const section = document.getElementById("preinscriptions");
+const choix = document.getElementById("destinationChoix");
+const liste = document.getElementById("destinationChoixListe");
+const grille = document.getElementById("preinscriptionGrille");
+if (!section || !choix || !liste || !grille || typeof window.offrePourDestination !== "function") return;
+
+const cartes = [...grille.querySelectorAll("article.plan-card")];
+const carteDiagnostic = cartes.find((c) => c.querySelector('a[href="diagnostic-france.html"]'));
+const carteDe = (planId) => cartes.find((c) => c.querySelector(`[data-plan="${planId}"]`));
+// Les textes France du HTML, relevés une fois : revenir à la France,
+// c'est les reposer. Les ÉLÉMENTS ne sont jamais recréés — les boutons
+// gardent leurs écouteurs (initPlanSelection) et leurs marques
+// (js/offers-current-plan.js).
+const lireTexte = (carte, sel) => { const el = carte.querySelector(sel); return el ? el.textContent : ""; };
+const lireHtml = (carte, sel) => { const el = carte.querySelector(sel); return el ? el.innerHTML : ""; };
+const originaux = new Map(cartes.map((c) => [c, {
+titre: lireTexte(c, ".plan-head h2"),
+promesse: lireTexte(c, ".plan-tagline"),
+terme: lireTexte(c, ".plan-price-term"),
+note: c.querySelector(".plan-price-note"),
+quota: lireHtml(c, ".plan-quota"),
+puces: lireHtml(c, ".plan-features"),
+cta: lireTexte(c, ".plan-cta span"),
+lien: c.querySelector("a.plan-cta") ? c.querySelector("a.plan-cta").getAttribute("href") : null
+}]));
+
+function reposerFrance(carte) {
+const o = originaux.get(carte);
+const poser = (sel, texte) => { const el = carte.querySelector(sel); if (el) el.textContent = texte; };
+poser(".plan-head h2", o.titre);
+poser(".plan-tagline", o.promesse);
+poser(".plan-price-term", o.terme);
+poser(".plan-cta span", o.cta);
+if (o.note && !o.note.isConnected) { const terme = carte.querySelector(".plan-price-term"); if (terme) terme.after(o.note); }
+const quota = carte.querySelector(".plan-quota"); if (quota) quota.innerHTML = o.quota;
+const liste = carte.querySelector(".plan-features"); if (liste) liste.innerHTML = o.puces;
+if (o.lien) carte.querySelector("a.plan-cta").setAttribute("href", o.lien);
+}
+
+document.querySelectorAll("[data-prix-note]").forEach((el) => {
+const plan = SCHOLARBRIDGE_PLANS[el.dataset.prixNote];
+if (plan) el.textContent = formatF(plan.priceFCFA).replace(/ /g, "\u00a0");
+});
+
+const destinations = destinationsDisponibles();
+liste.innerHTML = destinations.map((d) => `<button type="button" class="destination-choix-pays" data-destination="${echapper(d.id)}" aria-pressed="false">${echapper(d.nom)}</button>`).join("");
+
+function ecrireDiagnostic(d) {
+if (!carteDiagnostic) return;
+carteDiagnostic.querySelector(".plan-head h2").textContent = `Diagnostic ${d.nom}`;
+carteDiagnostic.querySelector(".plan-features").innerHTML = puces([
+"Votre niveau d'études contre les règles officielles : pouvez-vous postuler, et sinon ce qui vous manque",
+"La langue des cours, vos ressources contre le seuil publié, et le calendrier",
+"Le coût de la première année, chaque montant avec sa source"
+]);
+carteDiagnostic.querySelector("a.plan-cta").setAttribute("href", `diagnostic-pays.html?d=${encodeURIComponent(d.id)}`);
+}
+
+function ecrireDossier(planId, d) {
+const carte = carteDe(planId);
+const offre = window.offrePourDestination(planId, d.id);
+if (!carte || !offre) return;
+carte.querySelector(".plan-head h2").textContent = offre.label;
+carte.querySelector(".plan-tagline").textContent = offre.tagline;
+const terme = carte.querySelector(".plan-price-term");
+if (terme) terme.textContent = offre.duration ? `accompagnement de ${offre.duration}` : "";
+const note = carte.querySelector(".plan-price-note");
+if (note) note.remove();
+const quota = carte.querySelector(".plan-quota");
+if (quota) {
+quota.innerHTML = offre.maxPreinscriptions === 1
+? "<strong>1 cours</strong><span>la règle du pays : un seul choix</span>"
+: `<strong>Jusqu'à ${offre.maxPreinscriptions}</strong><span>vœux, dans un seul dossier</span>`;
+}
+carte.querySelector(".plan-features").innerHTML = puces(offre.highlights || []);
+const bouton = carte.querySelector("[data-plan]");
+bouton.querySelector("span").textContent = offre.cta;
+bouton.dataset.destination = d.id;
+}
+
+function appliquer(id, { memoriser } = { memoriser: true }) {
+const d = destinations.find((x) => x.id === id);
+if (!d) return;
+liste.querySelectorAll(".destination-choix-pays").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.destination === id)));
+cartes.forEach(reposerFrance);
+if (id !== "france") {
+ecrireDiagnostic(d);
+ecrireDossier("dossier-france", d);
+ecrireDossier("dossier-france-conseiller", d);
+}
+grille.querySelectorAll("[data-plan]").forEach((b) => { b.dataset.destination = id; });
+grille.hidden = false;
+if (window.lucide) window.lucide.createIcons();
+if (memoriser) {
+try {
+const url = new URL(window.location.href);
+url.searchParams.set("parcours", "preinscription");
+url.searchParams.set("destination", id);
+history.replaceState(history.state, "", url);
+} catch (e) { /* l'adresse reste telle quelle */ }
+}
+}
+
+liste.addEventListener("click", (evenement) => {
+const bouton = evenement.target.closest(".destination-choix-pays");
+if (!bouton) return;
+appliquer(bouton.dataset.destination);
+grille.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+choix.hidden = false;
+const demandee = new URLSearchParams(window.location.search).get("destination");
+if (demandee && destinations.some((d) => d.id === demandee)) {
+appliquer(demandee, { memoriser: false });
+} else {
+// Aucun pays encore : les prix sont dans la note, les cartes attendent
+// le choix — plus de « Diagnostic France » présenté à tout le monde.
+grille.hidden = true;
+}
+
+}
+
 initFitzRotator();
 initReveal();
 initDerivedPrices();
+initDestinations();
 initPlanSelection();
 
 // lucide est chargé avec `defer` (2026-08-29) : ce script classique

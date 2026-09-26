@@ -1,4 +1,27 @@
-import { trackEvent } from "./js/analytics.js";
+// LOT 126 (2026-09-26) — le module de suivi (js/analytics.js, qui
+// importe Firebase) n'est plus un import statique : il partait avec la
+// page, en concurrence avec le catalogue. Il est chargé une fois la
+// page affichée (load, puis temps libre du navigateur) — bien avant
+// qu'un visiteur ait choisi une carte — ou au premier événement. Même
+// promesse pour tous les appels : un seul téléchargement. Même schéma
+// que js/homepage-teaser.js (lot A).
+let analytique = null;
+function chargerAnalytique() {
+if (!analytique) analytique = import("./js/analytics.js");
+return analytique;
+}
+function trackEvent(type, donnees) {
+return chargerAnalytique().then((m) => m.trackEvent(type, donnees)).catch(() => {});
+}
+(function precharger() {
+const lancer = () => {
+const tache = () => { chargerAnalytique().catch(() => {}); };
+if ("requestIdleCallback" in window) requestIdleCallback(tache, { timeout: 3000 });
+else setTimeout(tache, 1);
+};
+if (document.readyState === "complete") lancer();
+else window.addEventListener("load", lancer, { once: true });
+})();
 
 import { resolveCityImage } from "./js/scholarship-image.js";
 

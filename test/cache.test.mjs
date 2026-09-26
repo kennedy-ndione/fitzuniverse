@@ -32,6 +32,25 @@
 //
 // Les images et les polices gardent leur cache long : leur contenu ne
 // change pas sous le même nom.
+//
+// LOT 125 (2026-09-26) — LE 304 N'EXISTAIT PAS. Mesuré en production
+// dans le navigateur : avec « no-cache », Firebase Hosting ne garde pas
+// le fichier sur son CDN (x-cache: MISS) et répond 200 AVEC LE FICHIER
+// ENTIER même quand l'étiquette (If-None-Match) correspond — seul
+// catalogue.json, marqué « public », répondait 304. Chaque visite
+// retéléchargeait donc tout : 510 Ko pour espace-bourse.html, 386 à
+// 447 Ko par page du Control Center, 206 Ko pour l'accueil. C'est la
+// lenteur que Charles ressentait sur tout le site.
+//
+// LA RÈGLE DEVIENT : « public, max-age=0, s-maxage=86400,
+// must-revalidate ».
+//   - Le navigateur : max-age=0 + must-revalidate — il redemande À
+//     CHAQUE chargement, exactement comme avant ; aucun fichier périmé.
+//   - Le CDN : public + s-maxage — il garde le fichier et répond 304
+//     (quelques centaines d'octets) quand rien n'a changé. Firebase
+//     vide tout le cache du CDN à chaque déploiement (documentation
+//     « Manage cache behavior ») : un fichier neuf est servi dès le
+//     déploiement suivant.
 // ============================================================
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -50,21 +69,35 @@ function entete(source) {
   return cc.value;
 }
 
-test("cache 1 — le HTML n'est jamais gardé (déjà acquis, on le garde)", () => {
+// Le navigateur revalide à chaque chargement : max-age=0 (et aucun
+// autre max-age navigateur), must-revalidate, jamais de contenu périmé.
+function revalideAChaqueChargement(v, source) {
+  assert.match(v, /(^|[\s,])max-age=0(,|$)/, `${source} : max-age=0 pour le navigateur`);
+  assert.ok(!/(^|[\s,])max-age=[1-9]/.test(v), `${source} : un max-age navigateur non nul laisse tourner l'ancien code (${v})`);
+  assert.match(v, /must-revalidate/, source);
+  assert.ok(!/stale-while-revalidate/.test(v), `${source} : servir du périmé pendant la revalidation, c'est le défaut de septembre`);
+}
+
+// Le CDN garde le fichier pour répondre 304 (lot 125) : sans « public »,
+// Firebase renvoie le fichier entier à chaque visite.
+function gardeParLeCdn(v, source) {
+  assert.match(v, /(^|[\s,])public(,|$)/, `${source} : « public », sinon le CDN ne répond jamais 304`);
+  assert.match(v, /s-maxage=\d+/, `${source} : s-maxage pour le CDN`);
+  assert.ok(!/no-cache|no-store|private/.test(v), `${source} : ${v} empêche le 304 (mesuré le 2026-09-26)`);
+}
+
+test("cache 1 — le HTML se revalide à chaque chargement, et le CDN répond 304", () => {
   for (const source of ["**/*.html", "/"]) {
     const v = entete(source);
-    assert.match(v, /no-cache/, source);
-    assert.match(v, /must-revalidate/, source);
+    revalideAChaqueChargement(v, source);
+    gardeParLeCdn(v, source);
   }
 });
 
 test("cache 2 — un script ou une feuille se revalide à CHAQUE chargement", () => {
   const v = entete("**/*.@(css|js|mjs)");
-  assert.match(v, /no-cache/, "un max-age sur du JS non versionné laisse tourner l'ancien code");
-  assert.match(v, /must-revalidate/);
-  // Les deux formes qui ont produit le défaut, nommément interdites.
-  assert.ok(!/max-age=[1-9]/.test(v), `un max-age non nul est revenu : ${v}`);
-  assert.ok(!/stale-while-revalidate/.test(v), "servir du périmé pendant la revalidation, c'est le défaut lui-même");
+  revalideAChaqueChargement(v, "scripts et feuilles");
+  gardeParLeCdn(v, "scripts et feuilles");
 });
 
 test("cache 3 — les images et les polices gardent leur cache long", () => {

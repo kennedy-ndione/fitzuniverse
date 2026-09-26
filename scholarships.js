@@ -1,11 +1,8 @@
-import { db, auth } from "./firebase-config.js";
-
-import {
-doc,
-getDoc
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+// LOT 126 (2026-09-26) — plus d'import statique de Firebase ici : le
+// catalogue public n'en a besoin que pour pré-remplir la nationalité
+// d'un étudiant CONNECTÉ (plus bas). Firebase n'est chargé que si le
+// navigateur garde une trace de session (js/session-memorisee.js).
+import { sessionMemorisee } from "./js/session-memorisee.js";
 
 import { estEligible, paysAvecArticle } from "./js/eligibility-countries.js";
 
@@ -176,8 +173,16 @@ if (ageCheck && ageFiltreInitial !== null) ageCheck.checked = true;
 
 // Pré-remplissage depuis le profil Firestore quand l'étudiant est
 // connecté. Arrive après le rendu initial : on re-filtre si besoin.
+// Lot 126 : seulement pour un navigateur qui garde une session.
+sessionMemorisee().then(async (memorisee) => {
+if (!memorisee || !nationalityInput) return;
+const [{ db, auth }, { doc, getDoc }, { onAuthStateChanged }] = await Promise.all([
+import("./firebase-config.js"),
+import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"),
+import("https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js")
+]);
 onAuthStateChanged(auth, async (user) => {
-if (!user || !nationalityInput) return;
+if (!user) return;
 try {
 const snap = await getDoc(doc(db, "users", user.uid));
 const natio = snap.exists() && snap.data().profile && snap.data().profile.nationality;
@@ -189,6 +194,7 @@ if (allScholarships.length) applyFilters();
 }
 } catch { /* hors ligne ou règles : le champ garde la valeur locale */ }
 });
+}).catch(() => { /* le pré-remplissage ne doit jamais toucher au catalogue */ });
 
 function renderSkeleton() {
 

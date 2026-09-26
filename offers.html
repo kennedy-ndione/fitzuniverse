@@ -422,14 +422,27 @@ avec la personne qui relit votre dossier. Liste = `highlights` de pricing-plans.
 jamais jusqu'à l'admission » est devenu une promesse tenable et
 positive — on dit ce qu'on FAIT (un dossier complet et vérifié),
 les limites vivront dans les conditions de vente. -->
-<p>Vous payez pour <strong>un dossier Études en France</strong> : jusqu'à 7 vœux, pour <strong>une campagne</strong> (jusqu'au 31 juillet). Vous visez la Roumanie, la Turquie, le Maroc, l'Italie, l'Allemagne, le Canada, la Chine ou la Malaisie ? Le même diagnostic gratuit et les deux mêmes offres existent pour chacun, aux mêmes prix, avec la procédure du pays : <a href="preinscriptions.html">choisir ma destination</a>. Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié. La messagerie FitzUniverse est comprise dans les deux offres : un dossier bloqué se débloque.</p>
+<!-- LOT 127 (2026-09-26) — Charles, sur téléphone : « Formules »
+côté préinscriptions menait au seul « Diagnostic France », alors que
+la préinscription est ouverte dans neuf pays. La vue commence donc par
+le CHOIX DU PAYS ; les trois cartes se réécrivent pour ce pays
+(offrePourDestination, pricing-plans.js — la même carte que les pages
+de destination) et le bouton d'achat emporte la destination jusqu'au
+paiement. Sans JavaScript, les cartes France ci-dessous restent. -->
+<p>Vous payez pour <strong>un dossier, dans le pays de votre choix</strong> : neuf destinations, les mêmes prix partout. Le nombre de vœux et le portail de dépôt suivent la règle de chaque pays. Accompagné pas à pas jusqu'au dépôt d'un dossier complet et vérifié. La messagerie FitzUniverse est comprise dans les deux offres : un dossier bloqué se débloque.</p>
+</div>
+
+<div class="destination-choix" id="destinationChoix" hidden>
+<p class="destination-choix-titre" id="destinationChoixTitre">Pour quel pays ?</p>
+<div class="destination-choix-liste" id="destinationChoixListe" role="group" aria-labelledby="destinationChoixTitre"></div>
+<p class="destination-choix-note">Les mêmes prix dans les neuf pays : diagnostic gratuit, Dossier <span data-prix-note="dossier-france"></span> F CFA, Dossier + Conseiller <span data-prix-note="dossier-france-conseiller"></span> F CFA.</p>
 </div>
 
 <!-- Les trois cartes de la préinscription sur UNE rangée : entrée
 (Diagnostic), recommandé (Dossier France), accompagnement humain
 (Dossier France + Conseiller). Même composant que les bourses
 (css/formule.css) ; chaque puce = `highlights` de pricing-plans.js. -->
-<div class="pricing-grid-wrap">
+<div class="pricing-grid-wrap" id="preinscriptionGrille">
 <div class="pricing-grid pricing-grid--trio">
 
 <article class="plan-card plan-card--entree reveal">

@@ -548,6 +548,39 @@ white-space:nowrap;
 }
 }
 
+/* LOT 127 (2026-09-26) — LA PAGE NE GLISSE PLUS DE CÔTÉ SUR TÉLÉPHONE.
+Charles, sur iPhone, dans le diagnostic préinscription : « ça va dans
+tous les sens ». MESURÉ entre 402 et 430 px (grands iPhone), sur
+diagnostic-france.html et diagnostic-pays.html, pour un compte qui a
+les deux accompagnements : bouton retour + titre + point « en ligne » +
+bascule AVEC ses libellés (225 px) + cloche + pastille = 474 à 493 px,
+soit 50 à 70 px de page qui débordait et se déplaçait sous le doigt.
+La règle « icône seule » de la bascule ne jouait que sous 400 px.
+1. Sur une page qui a son titre dans la barre (.journey-context), la
+   bascule passe en icônes seules jusqu'à 520 px ; le libellé reste
+   dans aria-label et title, l'état actif reste le fond plein.
+2. Filet de sécurité : la page de l'espace ne défile JAMAIS de côté.
+   `clip` et non `hidden` : pas de nouveau conteneur de défilement,
+   la barre haute reste collante (position:sticky). Les rails qui
+   défilent exprès (parcours, étapes) gardent leur propre défilement. */
+@media (max-width: 520px){
+.journey-topbar:has(.journey-context) .espace-bascule-btn{ padding:6px 8px; }
+.journey-topbar:has(.journey-context) .espace-bascule-btn i,
+.journey-topbar:has(.journey-context) .espace-bascule-btn svg{ width:16px; height:16px; }
+.journey-topbar:has(.journey-context) .espace-bascule-libelle{ display:none; }
+/* Le titre cède la place avant la pastille : « Gratuit » se lit en
+   entier, le titre s'arrête sur une ellipse (il est aussi dans la page). */
+.journey-topbar .journey-context{ flex-shrink:8; }
+.journey-topbar:has(.journey-context) .topbar-plan-chip{ min-width:88px; justify-content:center; }
+}
+
+html:has(.journey-topbar),
+html:has(.journey-topbar) body{
+overflow-x:clip;
+}
+
+.journey-topbar{ max-width:100%; }
+
 @keyframes presence-pouls{
 0%, 100%{ box-shadow:0 0 0 3px rgba(47,122,70,.18); }
 50%{ box-shadow:0 0 0 5px rgba(47,122,70,.06); }

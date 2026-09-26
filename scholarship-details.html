@@ -623,9 +623,18 @@ isQuotaReached() ne bloquerait jamais — un dépassement silencieux. -->
 <script src="pricing-plans.js"></script>
 <script type="module" src="details.js"></script>
 
+<!-- LOT 126 (2026-09-26) — la coquille de l'espace (js/dual-shell.js)
+et la pastille admin ne se chargent QUE si le navigateur garde une trace
+de session (js/session-memorisee.js, même test que l'accueil). Un
+visiteur jamais connecté ne télécharge plus Firebase ni l'espace
+étudiant pour lire le catalogue. -->
 <script type="module">
-import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
-applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "detailsMain" });
+import { sessionMemorisee } from "./js/session-memorisee.js";
+if (await sessionMemorisee()) {
+  import("./js/dual-shell.js")
+    .then(({ applyAuthenticatedShellIfLoggedIn }) => applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "detailsMain" }))
+    .catch((erreur) => console.warn("Coquille de l'espace ignorée sur une page publique :", erreur));
+}
 </script>
 
 <!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,

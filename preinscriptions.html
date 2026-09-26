@@ -73,8 +73,6 @@ user-round, clipboard-list, shield-check. Pas d'étincelle. -->
 <script src="js/mobile-nav.js" defer></script>
 <link rel="stylesheet" href="css/vivant.css">
 <!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
-<link rel="modulepreload" href="firebase-config.js">
-<link rel="modulepreload" href="js/admin-access.js">
 <link rel="modulepreload" href="js/ai/format.js">
 <link rel="modulepreload" href="js/catalog-cache.js">
 <link rel="modulepreload" href="js/catalog-data.js">
@@ -105,10 +103,6 @@ user-round, clipboard-list, shield-check. Pas d'étincelle. -->
 <link rel="modulepreload" href="js/procedures/roumanie.js">
 <link rel="modulepreload" href="js/procedures/turquie.js">
 <link rel="modulepreload" href="js/procedures/vocabulaire.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
 <!-- précharge:fin -->
 </head>
 
@@ -234,7 +228,12 @@ Un client arrive ici par le lien de son hub ; il en repart par le même.
 Rien à verrouiller, donc rien à charger : aucune session n'est résolue
 sur cette page. -->
 
-<script type="module" src="js/admin-access.js"></script>
+<script type="module">
+// LOT 126 (2026-09-26) — la pastille admin (et donc Firebase) seulement
+// si le navigateur garde une trace de session (js/session-memorisee.js).
+import { sessionMemorisee } from "./js/session-memorisee.js";
+if (await sessionMemorisee()) import("./js/admin-access.js").catch(() => {});
+</script>
 <script src="js/vivant.js" defer></script>
 <!-- Plus de pied de page ici (décision de Charles, 2026-09-11) : il ne
 reste que sur l'accueil. Le glossaire (js/glossaire.js) reste :

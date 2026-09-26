@@ -82,8 +82,6 @@ reste et n'utilise donc aucun !important hors mouvement réduit.
 Voir css/vivant.css. -->
 <link rel="stylesheet" href="css/vivant.css">
 <!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
-<link rel="modulepreload" href="firebase-config.js">
-<link rel="modulepreload" href="js/admin-access.js">
 <link rel="modulepreload" href="js/age-limits.js">
 <link rel="modulepreload" href="js/catalog-cache.js">
 <link rel="modulepreload" href="js/catalog-data.js">
@@ -97,11 +95,8 @@ Voir css/vivant.css. -->
 <link rel="modulepreload" href="js/pays-grammaire.js">
 <link rel="modulepreload" href="js/scholarship-filters.js">
 <link rel="modulepreload" href="js/scholarship-image.js">
+<link rel="modulepreload" href="js/session-memorisee.js">
 <link rel="modulepreload" href="scholarships.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
 <!-- précharge:fin -->
 </head>
 
@@ -487,15 +482,25 @@ n'importe rien de scholarships.js, ne fait qu'écouter/déclencher le
 `change` du <select> d'origine. -->
 <script src="js/catalog-select.js"></script>
 
+<!-- LOT 126 (2026-09-26) — la coquille de l'espace (js/dual-shell.js)
+et la pastille admin ne se chargent QUE si le navigateur garde une trace
+de session (js/session-memorisee.js, même test que l'accueil). Un
+visiteur jamais connecté ne télécharge plus Firebase ni l'espace
+étudiant pour lire le catalogue. -->
 <script type="module">
-import { applyAuthenticatedShellIfLoggedIn } from "./js/dual-shell.js";
-applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" });
+import { sessionMemorisee } from "./js/session-memorisee.js";
+if (await sessionMemorisee()) {
+  import("./js/dual-shell.js")
+    .then(({ applyAuthenticatedShellIfLoggedIn }) => applyAuthenticatedShellIfLoggedIn({ publicHeaderId: "publicHeader", mainId: "pageMain" }))
+    .catch((erreur) => console.warn("Coquille de l'espace ignorée sur une page publique :", erreur));
+  import("./js/admin-access.js").catch(() => {});
+}
 </script>
 
 <!-- Pastille « Control Center » : rendue UNIQUEMENT pour un compte
 administrateur actif (voir js/admin-access.js) — invisible et
 inexistante pour tout autre visiteur. -->
-<script type="module" src="js/admin-access.js"></script>
+<!-- js/admin-access.js : chargé plus haut, seulement si une session est mémorisée (lot 126). -->
 
 <!-- Moteur de la couche « vivant ». <script> CLASSIQUE et non module,
 volontairement : comme js/catalog-watchdog.js, il doit survivre à

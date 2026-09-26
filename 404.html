@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page introuvable | FitzUniverse</title>
+<meta name="description" content="Cette adresse ne mène à aucune page de FitzUniverse. Le catalogue des bourses, les préinscriptions et le diagnostic gratuit restent ouverts.">
+<meta name="theme-color" content="#211D18">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/logo/favicon-16x16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+<!-- LOT 128 (2026-09-26) — audit avant la présentation au public : une
+adresse mal tapée ou un vieux lien affichait la page anglaise de Firebase
+(« Page Not Found »). Firebase Hosting sert ce fichier pour toute adresse
+inconnue, À N'IMPORTE QUELLE PROFONDEUR : tous les chemins sont donc
+absolus (/css/…, /assets/…), jamais relatifs. -->
+<style>
+body{ min-height:100svh; display:flex; flex-direction:column; }
+.introuvable{ flex:1 0 auto; min-height:60vh; display:flex; align-items:center; }
+.introuvable .container{ max-width:640px; padding:56px 24px 72px; }
+.introuvable h1{ font-family:var(--font-affirmation); font-size:var(--fs-h2, 2rem); margin:0 0 14px; }
+.introuvable p{ color:var(--text-light); line-height:var(--lh-relaxed); margin:0 0 12px; }
+.introuvable-kicker{ font-size:var(--fs-caption); letter-spacing:var(--ls-wide); text-transform:uppercase; font-weight:700; color:var(--amber-700); margin-bottom:10px; }
+.introuvable-liens{ display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<header class="page-brandbar">
+<a href="/" class="fitz-lockup" aria-label="FitzUniverse — accueil">
+<svg class="fitz-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<circle class="mark-structure" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="130 83.6" transform="rotate(-90 50 50)"/>
+<circle class="mark-accent" cx="50" cy="50" r="34" stroke-width="11" stroke-linecap="round" stroke-dasharray="42 171.6" stroke-dashoffset="-150" transform="rotate(-90 50 50)"/>
+</svg>
+<span class="fitz-lockup-text">
+<span class="fitz-lockup-name">Fitz</span>
+<span class="fitz-lockup-sub">Universe</span>
+</span>
+</a>
+</header>
+
+<main class="introuvable" id="main-content" tabindex="-1">
+<div class="container">
+<p class="introuvable-kicker">Page introuvable</p>
+<h1>Cette page n'existe pas, ou plus</h1>
+<p>L'adresse est peut-être mal tapée, ou la page a changé de place. Tout le reste de FitzUniverse est ouvert :</p>
+<div class="introuvable-liens">
+<a href="/" class="btn btn-primary">Retour à l'accueil</a>
+<a href="/scholarships.html" class="btn btn-secondary">Les bourses</a>
+<a href="/preinscriptions.html" class="btn btn-secondary">Les préinscriptions</a>
+</div>
+</div>
+</main>
+
+</body>
+</html>
