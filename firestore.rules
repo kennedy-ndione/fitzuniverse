@@ -792,9 +792,23 @@ allow read: if isAdmin();
 }
 
 // ------------------------------------------------------------
-// Catalogue public (lu par tous les visiteurs, y compris non
-// connectés, depuis scholarships.js/universities-page.js/details.js).
-// Seuls les administrateurs déclarés peuvent le modifier.
+// Catalogue : LU PAR LES ADMINISTRATEURS SEULS DEPUIS LE 2026-09-26.
+//
+// Les visiteurs lisent le catalogue dans l'instantané publié
+// (assets/data/catalogue.json, écrit par `lot.mjs export`), jamais ici.
+// Cet instantané ne porte AUCUN portail de candidature : les liens
+// réservés aux abonnés (universities.applicationPortalUrl,
+// scholarships.applicationPortalUrl, programs.applicationUrl) partent
+// dans la carte privée des Cloud Functions (lot S3). Mais tant que ces
+// trois collections restaient en `allow read: if true`, n'importe qui
+// pouvait lire ces mêmes liens en interrogeant Firestore directement,
+// sans compte (constat du 2026-09-26, lecture REST sans jeton : 200).
+// Le verrou du site ne gardait qu'un bouton.
+//
+// Ce qui lit encore ces collections : l'administration (isAdmin), les
+// Cloud Functions et scripts/lot.mjs (SDK serveur, hors règles), et les
+// get() des règles ci-dessous (hors règles de lecture). Le repli
+// Firestore de js/catalog-data.js ne sert plus qu'aux administrateurs.
 //
 // Architecture relationnelle (2026-07-30, remplace le champ texte
 // libre "university" sur les bourses) : "scholarships" et
@@ -808,12 +822,12 @@ allow read: if isAdmin();
 // motif jusqu'à confirmation que "programs" est fiable.
 // ------------------------------------------------------------
 match /scholarships/{scholarshipId} {
-allow read: if true;
+allow read: if isAdmin();
 allow write: if isAdmin();
 }
 
 match /universities/{universityId} {
-allow read: if true;
+allow read: if isAdmin();
 allow write: if isAdmin();
 }
 
@@ -836,7 +850,7 @@ request.resource.data.universityId != "" &&
 }
 
 match /programs/{programId} {
-allow read: if true;
+allow read: if isAdmin();
 allow create, update: if isAdmin() && isValidProgram();
 allow delete: if isAdmin();
 }

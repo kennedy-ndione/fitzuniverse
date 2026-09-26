@@ -19,8 +19,12 @@
  *      semaine, le site éteint pour tous à chaque fois.)
  *
  *   2. FIRESTORE — le repli, exactement le chargement d'avant, si le
- *      fichier manque ou n'est pas exploitable. Le site ne peut donc
- *      pas être plus fragile qu'hier.
+ *      fichier manque ou n'est pas exploitable. DEPUIS LE 2026-09-26, CE
+ *      REPLI NE SERT PLUS QU'AUX ADMINISTRATEURS : les trois collections
+ *      ne sont lisibles que par eux (firestore.rules), pour que les
+ *      portails réservés aux abonnés ne se lisent plus en interrogeant
+ *      Firestore directement. Pour un visiteur, un instantané absent
+ *      donne l'état d'erreur de chaque page, comme une coupure réseau.
  *
  * Dans les deux cas, la mémoïsation PAR COLLECTION de
  * js/catalog-cache.js reste en place : deux modules d'une même page

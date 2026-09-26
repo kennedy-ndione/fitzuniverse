@@ -754,6 +754,9 @@ throw new Error("ID du programme manquant.");
 // et à sa bourse pour l'affichage.
 // Un document du catalogue : l'instantané d'abord (undefined = pas
 // d'instantané → getDoc, exactement comme avant), null = absent.
+// Depuis le 2026-09-26, ce getDoc n'aboutit que pour un administrateur
+// (firestore.rules) ; pour les autres, l'erreur mène à « Chargement
+// interrompu », ce qui est juste : l'instantané n'a pas pu se charger.
 async function lireDocument(nom, docId) {
 const depuisInstantane = await documentDuCatalogue(nom, docId);
 if (depuisInstantane !== undefined) return depuisInstantane;

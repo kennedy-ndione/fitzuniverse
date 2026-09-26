@@ -674,10 +674,19 @@ test("fuite 1 — rien de personnel n'entre dans une collection publique", () =>
 
   // Et la règle qui rend ce test nécessaire, pour qu'on la relise si
   // elle change un jour.
+  //
+  // 2026-09-26 : la collection est devenue lisible par l'administration
+  // seule (les portails réservés aux abonnés se lisaient en interrogeant
+  // Firestore). Le test NE SE RELÂCHE PAS pour autant : chaque programme
+  // part tel quel dans assets/data/catalogue.json, que Hosting sert à
+  // tout le monde. Une adresse e-mail écrite ici serait donc toujours
+  // publiée.
   const regles = lire("firestore.rules");
   const bloc = regles.slice(regles.indexOf("match /programs/{programId}"));
-  assert.match(bloc.slice(0, 200), /allow read: if true;/,
-    "si cette collection devenait privée, ce test pourrait se relâcher — pas avant");
+  assert.match(bloc.slice(0, 200), /allow read: if isAdmin\(\);/,
+    "la collection se lit par l'administration seule");
+  assert.match(lire("scripts/lot.mjs"), /programs: brut\(programmesSnap\)/,
+    "et elle part quand même, document par document, dans l'instantané public");
 
 });
 

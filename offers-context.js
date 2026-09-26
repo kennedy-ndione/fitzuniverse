@@ -8,12 +8,10 @@
 // Sans "program" dans l'URL, ce fichier ne fait rien — la page se
 // comporte exactement comme avant.
 
-import { db } from "./firebase-config.js";
-
-import {
-doc,
-getDoc
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+// Le catalogue se lit dans l'instantané publié (js/catalog-data.js), plus
+// dans Firestore : depuis le 2026-09-26, les trois collections du
+// catalogue ne sont lisibles que par l'administration (firestore.rules).
+import { documentDuCatalogue } from "./js/catalog-data.js";
 
 async function initOffersContext() {
 
@@ -29,19 +27,17 @@ if (!banner || !text) return;
 
 try {
 
-const programSnap = await getDoc(doc(db, "programs", programId));
+const program = await documentDuCatalogue("programs", programId);
 
-if (!programSnap.exists()) return;
+if (!program) return;
 
-const program = programSnap.data();
-
-const [universitySnap, scholarshipSnap] = await Promise.all([
-program.universityId ? getDoc(doc(db, "universities", program.universityId)) : null,
-program.scholarshipId ? getDoc(doc(db, "scholarships", program.scholarshipId)) : null
+const [university, scholarship] = await Promise.all([
+program.universityId ? documentDuCatalogue("universities", program.universityId) : null,
+program.scholarshipId ? documentDuCatalogue("scholarships", program.scholarshipId) : null
 ]);
 
-const universityName = universitySnap && universitySnap.exists() ? universitySnap.data().name : "";
-const scholarshipTitle = scholarshipSnap && scholarshipSnap.exists() ? scholarshipSnap.data().title : "";
+const universityName = university ? university.name || "" : "";
+const scholarshipTitle = scholarship ? scholarship.title || "" : "";
 
 const programLabel = universityName
 ? (scholarshipTitle ? `${universityName} (${scholarshipTitle})` : universityName)
