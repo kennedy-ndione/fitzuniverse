@@ -52,7 +52,7 @@ import { retenirOpportunites } from "./js/recommend-programs.js";
 // Reconnaissance du niveau d'études par mots-clés — voir l'en-tête de
 // js/eligibility-pistes.js. Sert ici à l'échelle de « potentiel » et,
 // à terme, au barème par cycle.
-import { pisteDepuisNiveau, PISTES } from "./js/eligibility-pistes.js";
+import { pisteDepuisNiveau, PISTES, genreDepuisReponse } from "./js/eligibility-pistes.js";
 import { resolveCityImage } from "./js/scholarship-image.js";
 
 // Champ lexical de Fitz (js/fitz-voice.js) : ce fichier ne rédige plus
@@ -183,7 +183,14 @@ ageBracket: responses.ageBracket || "",
 // les bourses réservées aux bacheliers de l'année (anneeBacMin,
 // js/recommend-programs.js:fenetreBacMatch).
 palier: responses.piste || "",
-diplomaWhen: responses.diplomaWhen || ""
+diplomaWhen: responses.diplomaWhen || "",
+// Lot 112 (2026-09-26) : le genre (bourses réservées aux femmes, limites
+// d'âge qui en dépendent) et la tranche d'expérience professionnelle
+// (DAAD-EPOS, Chevening, Banque mondiale…), lus par accesDepuisLeProfil
+// et ageMatch (js/recommend-programs.js). « Je préfère ne pas répondre »
+// donne "" : un inconnu, qui n'écarte rien.
+gender: genreDepuisReponse(responses.gender),
+experienceProTranche: responses.workExperience || ""
 };
 
 }

@@ -105,8 +105,11 @@ const html = lire("account.html").replace(/<!--[\s\S]*?-->/g, "");
 assert.ok(!/ne sont pas encore envoyés automatiquement/.test(html),
 "la phrase qui démentait les alertes est revenue");
 // Le réglage qui n'envoie encore rien le DIT, et dit où lire en attendant.
-assert.match(html, /Rappels d'échéances et messages de l'équipe/);
+// Lot 112 (2026-09-26) : les rappels partent depuis le lot 111 ; ils ont
+// leur propre case, et seuls les messages restent « pas encore envoyés ».
+assert.match(html, /Messages de l'équipe par e-mail/);
 assert.match(html, /Pas encore envoyés par e-mail/);
+assert.match(html, /M'écrire avant les dates limites de mes candidatures/);
 
 });
 

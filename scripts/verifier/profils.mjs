@@ -37,6 +37,9 @@ const COMMUN = {
   destinationCountry: "France",
   goal: "Une bourse complète",
   passport: "Passeport valide",
+  // Lot 112 : la question du genre. La réponse neutre ne ferme aucune
+  // bourse : les profils restent comparables à ce qu'ils étaient.
+  gender: "Je préfère ne pas répondre",
   averageScale: "20"
 };
 

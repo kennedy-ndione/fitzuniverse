@@ -53,7 +53,8 @@ import { liensDOpportunite, portailDeBourseOuRepli } from "./js/portails-opportu
 // autofinancé). Il vit désormais dans un seul module, qui sert la
 // variante du parcours et va chercher, dans la procédure de la
 // destination, les étapes réelles avec leur source et leur date.
-import { guideVisaPour } from "./js/visa-depart.js";
+import { guideVisaPour, etapesDeDestination } from "./js/visa-depart.js";
+import { guideDepartPour } from "./js/visa-destinations.js";
 import { texteConsigne } from "./js/procedures/vocabulaire.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
@@ -1398,9 +1399,20 @@ renderReponse(applications, opps.count);
 // donc evalues sur la seule formule bourse.
 applyFeatureLocks(planId, featureFlags, testerAccess, hasFitzExpress, session.planPreinscriptionId);
 
+// Lot 112 (2026-09-26) : le guide de départ d'un pays sans procédure
+// de préinscription (Royaume-Uni, Suisse, Japon, Corée) vient de
+// js/visa-destinations.js. Une procédure qui porte déjà des étapes de
+// départ garde la priorité.
+const departDe = (app) => {
+const procedure = procedureDe(app);
+if (procedure && etapesDeDestination(procedure).length) return procedure;
+const uni = opps.index && app.universityId ? opps.index.uniParId.get(app.universityId) : null;
+return guideDepartPour((uni && uni.country) || app.country || "") || procedure;
+};
+
 initVisaChecklist(user.uid, visaChecklist, rafraichirCarte, guideVisaPour({
 espace: ESPACE,
-procedure: procedureDeDepart(applications, procedureDe)
+procedure: procedureDeDepart(applications, departDe)
 }), applications.some((app) => app.status === "admise"));
 
 if (window.lucide) lucide.createIcons();

@@ -820,6 +820,27 @@ options: [
 ]
 },
 
+// LOT 112 (2026-09-26) — LE GENRE, PARCE QUE DEUX BOURSES LE FONT
+// JOUER. La Mastercard Foundation à l'UM6P est réservée aux jeunes
+// femmes (um6p.ma : « un programme exclusivement féminin ») ; l'appel de
+// l'Université panafricaine fixe des limites d'âge différentes pour les
+// hommes et pour les femmes (25 et 28 ans en master, 28 et 30 ans en
+// doctorat). Sans la question, le diagnostic proposait l'UM6P à des
+// garçons et retenait pour eux la limite d'âge des femmes. « Je préfère
+// ne pas répondre » n'écarte aucune bourse (js/recommend-programs.js).
+{
+id: "gender",
+icon: "user",
+question: "Vous êtes :",
+assistant: "Je vous le demande pour deux raisons précises : certaines bourses sont réservées aux femmes, et d'autres fixent une limite d'âge différente selon le genre. Si vous préférez ne pas répondre, je ne vous écarterai d'aucune bourse.",
+type: "cards",
+options: [
+{ label: "Une femme" },
+{ label: "Un homme" },
+{ label: "Je préfère ne pas répondre" }
+]
+},
+
 {
 id: "english",
 icon: "languages",
@@ -978,6 +999,41 @@ const FAMILLES_CATALOGUE = [
 ["Sciences", ["biologie", "chimie", "physique", "mathématiques", "mathematiques", "maths", "statistique", "géologie", "geologie", "biotechnologie", "astronomie", "astrophysique", "océanographie", "oceanographie"]]
 
 ];
+
+/**
+* LOT 112 — la réponse à la question « gender », ramenée au vocabulaire
+* du profil (profile.html : "femme", "homme", "autre"). « Je préfère ne
+* pas répondre » et l'absence de réponse rendent "" : un inconnu, qui
+* n'écarte jamais rien.
+*/
+export function genreDepuisReponse(reponse) {
+const r = String(reponse || "").trim();
+if (r === "Une femme") return "femme";
+if (r === "Un homme") return "homme";
+return "";
+}
+
+/**
+* LOT 112 — L'EXPÉRIENCE PROFESSIONNELLE, EN ANNÉES.
+*
+* La question « workExperience » répond par tranches ; le profil de
+* l'espace peut en porter une (reprise du diagnostic) ou un texte libre.
+* On ne sait lire que les tranches : un texte libre rend null, un
+* inconnu, qui n'écarte rien. { min, max } en années ; max = Infinity
+* pour « Plus de 5 ans ».
+*/
+export const TRANCHES_EXPERIENCE = {
+"Aucune pour l'instant": { min: 0, max: 0 },
+"Moins d'un an": { min: 0, max: 0.99 },
+"1 à 2 ans": { min: 1, max: 2 },
+"2 à 5 ans": { min: 2, max: 5 },
+"Plus de 5 ans": { min: 5, max: Infinity }
+};
+
+export function trancheExperience(reponse) {
+const r = String(reponse || "").trim();
+return Object.prototype.hasOwnProperty.call(TRANCHES_EXPERIENCE, r) ? TRANCHES_EXPERIENCE[r] : null;
+}
 
 /**
 * La famille du catalogue correspondant à un domaine saisi, ou "" si

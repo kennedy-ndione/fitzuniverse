@@ -131,6 +131,19 @@ libelle: "Deux ans d'expérience professionnelle",
 explication: "Le programme demande au moins deux années d'expérience professionnelle après le diplôme. C'est une condition d'éligibilité, pas un critère de préférence."
 },
 
+// LOT 112 (2026-09-26) — LA DURÉE N'EST PAS TOUJOURS DEUX ANS. La bourse
+// de la Banque mondiale (JJ/WBGSP) portait « deux ans » alors qu'elle en
+// exige trois ; la KOICA en exige deux en master et trois après le
+// master en doctorat, l'Université Senghor un an, le Swedish Institute
+// 3 000 heures. Ce code dit la condition sans chiffre : la durée exacte
+// est dans les conditions de la fiche, et le moteur lit le nombre dans
+// le champ `experienceProMinAns` (js/recommend-programs.js).
+experience_pro_requise: {
+forme: "condition",
+libelle: "Expérience professionnelle exigée",
+explication: "Le programme exige une expérience professionnelle minimale : sa durée, et ce qui compte ou non (stages, bénévolat, temps partiel), sont précisés dans les conditions de la fiche. C'est une condition d'éligibilité, pas un critère de préférence."
+},
+
 // LOT 108 (2026-09-26) — DEUX CONDITIONS QUI FERMENT LA BOURSE À QUI
 // PART DE CHEZ LUI. L'audit du diagnostic l'a mesuré : la bourse JASSO
 // (déjà inscrit au Japon) sortait pour 54 profils sur 72, Vanier (déjà

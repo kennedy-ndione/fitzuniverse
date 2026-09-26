@@ -395,7 +395,7 @@ exports.desabonnementAlertes = onRequest(
 
     logger.info(pourRappels ? "Désabonnement des rappels d'échéance" : "Désabonnement des alertes", { uid });
     res.status(200).send(pourRappels
-      ? page("C'est fait", "Vous ne recevrez plus de rappels de dates limites par e-mail. Vos échéances restent affichées dans votre espace.")
+      ? page("C'est fait", "Vous ne recevrez plus de rappels de dates limites par e-mail. Vos échéances restent affichées dans votre espace, et vous pourrez réactiver les rappels depuis « Mes paramètres », rubrique Notifications e-mail.")
       : page("C'est fait", "Vous ne recevrez plus d'alertes de bourses. Vous pourrez les réactiver depuis votre espace, si vous changez d'avis."));
 
   }

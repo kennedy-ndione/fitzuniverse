@@ -339,10 +339,26 @@ FitzUniverse vous écrit à l'adresse de votre compte, depuis contact@fitzuniver
 
 <div id="alerteBoursesStatus" class="ai-field-hint" style="margin-top:8px;"></div>
 
+<!-- LOT 112 (2026-09-26) : les rappels de dates limites partent par
+e-mail depuis le lot 111 (rappelsEcheances, chaque matin à 8 h). Ils ont
+leur propre réglage, lu par la fonction : `rappelsEcheances` — tout sauf
+false veut dire « oui », comme à l'envoi. Le lien du pied de chaque
+rappel l'éteint ; c'est ici qu'on le rallume. Le réglage « messages »
+reste à part, et dit qu'il n'envoie encore rien. -->
+<label class="account-toggle-row" for="rappelsEcheancesToggle" id="rappels" style="margin-top:16px;">
+<span>
+<strong>M'écrire avant les dates limites de mes candidatures</strong>
+<span class="ai-field-hint">Un e-mail 30, 14, 7, 3 et 1 jour(s) avant la date limite, puis le jour même, pour chaque candidature datée que vous suivez et n'avez pas encore déposée. Un seul e-mail par jour, qui regroupe tout. Chaque rappel porte un lien pour se désabonner en un clic.</span>
+</span>
+<input type="checkbox" id="rappelsEcheancesToggle">
+</label>
+
+<div id="rappelsEcheancesStatus" class="ai-field-hint" style="margin-top:8px;"></div>
+
 <label class="account-toggle-row" for="emailNotificationsToggle" style="margin-top:16px;">
 <span>
-<strong>Rappels d'échéances et messages de l'équipe</strong>
-<span class="ai-field-hint">Pas encore envoyés par e-mail : ce réglage s'appliquera dès leur mise en service. En attendant, rappels et messages restent dans votre espace.</span>
+<strong>Messages de l'équipe par e-mail</strong>
+<span class="ai-field-hint">Pas encore envoyés par e-mail : ce réglage s'appliquera dès leur mise en service. En attendant, les messages de l'équipe restent dans « Mes messages ».</span>
 </span>
 <input type="checkbox" id="emailNotificationsToggle">
 </label>

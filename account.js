@@ -234,6 +234,57 @@ alerteToggle.disabled = false;
 // ==========================================================
 // Notifications e-mail
 // ==========================================================
+// LOT 112 (2026-09-26) — LES RAPPELS DE DATES LIMITES
+// ==========================================================
+// Le lot 111 envoie les rappels chaque matin (functions/emails.js,
+// rappelsEcheances) à tout compte dont `rappelsEcheances` n'est pas
+// false. Le lien du pied de chaque rappel écrit false ; jusqu'ici, rien
+// ne permettait de revenir en arrière. La case lit la même règle que
+// l'envoi : coché sauf false.
+
+const rappelsToggle = document.getElementById("rappelsEcheancesToggle");
+const rappelsStatus = document.getElementById("rappelsEcheancesStatus");
+
+if (rappelsToggle) {
+
+rappelsToggle.checked = ctx.userData.rappelsEcheances !== false;
+
+rappelsToggle.addEventListener("change", async () => {
+
+const active = rappelsToggle.checked;
+
+rappelsToggle.disabled = true;
+
+try {
+
+await updateDoc(doc(db, "users", user.uid), {
+rappelsEcheances: active,
+rappelsEcheancesMajLe: serverTimestamp()
+});
+
+rappelsStatus.textContent = active
+? "Rappels activés : vous recevrez un e-mail avant chaque date limite de vos candidatures datées."
+: "Rappels désactivés : vos échéances restent affichées dans votre espace, sans e-mail.";
+
+showToast(active ? "Rappels de dates limites activés." : "Rappels de dates limites désactivés.");
+
+} catch (error) {
+
+console.error(error);
+rappelsToggle.checked = !active;
+rappelsStatus.textContent = "Un souci est survenu — réessayez dans un instant.";
+
+} finally {
+
+rappelsToggle.disabled = false;
+
+}
+
+});
+
+}
+
+// ==========================================================
 
 const emailToggle = document.getElementById("emailNotificationsToggle");
 const emailStatus = document.getElementById("emailNotificationsStatus");

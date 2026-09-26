@@ -198,6 +198,17 @@ parent.insertBefore(funderBtn, lockedNote || null);
 // (respecteLimiteAge, js/age-limits.js) — un seul cycle encore possible
 // ou inconnu (null), et on ne dit rien. Aucun niveau reconnu dans le
 // texte -> false : on n'avertit jamais sur un « on ne sait pas ».
+/**
+* Lot 112 : la limite d'âge qui vaut pour CE profil — celle des hommes
+* quand l'appel en fixe une plus basse (`ageMaxHommes`) et que le profil
+* dit « homme » ; sinon `ageMax`, la plus favorable.
+*/
+function limitesAgeDuProfil(university, profile) {
+const p = profile || {};
+if (String(p.gender || "") === "homme" && university && university.ageMaxHommes && typeof university.ageMaxHommes === "object") return university.ageMaxHommes;
+return university ? university.ageMax : null;
+}
+
 function depasseLimiteAgePartout(ageMax, age, levelText) {
 
 const niveaux = ["Licence", "Master", "Doctorat"]
@@ -512,7 +523,7 @@ const verdictsEl = document.getElementById("situationVerdicts");
 // --- Verdicts nationalité et âge.
 const verdicts = [
 verdictNationalite(university.eligibility, profile.nationality || ""),
-verdictAge(university.ageMax, profile.birthDate || "", university.level)
+verdictAge(limitesAgeDuProfil(university, profile), profile.birthDate || "", university.level)
 ].filter(Boolean);
 
 if (verdictsEl) {
@@ -826,6 +837,9 @@ piecesDossier: scholarshipData.piecesDossier || null,
 // valeurs : ageMax absent reste null, un inconnu, jamais « pas de
 // limite » (voir js/age-limits.js).
 ageMax: scholarshipData.ageMax || null,
+// Lot 112 : la limite des hommes quand l'appel en fixe une plus basse
+// (Université panafricaine). Lue seulement pour un profil « homme ».
+ageMaxHommes: scholarshipData.ageMaxHommes || null,
 ageMaxNote: scholarshipData.ageMaxNote || "",
 description: program.description || scholarshipData.description || universityProfile.description || "",
 securityNotice: scholarshipData.securityNotice || "",
@@ -1122,7 +1136,7 @@ ageLimitNote.hidden = false;
 const ageEtudiant = computeAge(session && session.profile && session.profile.birthDate);
 const ageLimitWarning = document.getElementById("ageLimitWarning");
 
-if (ageLimitWarning && ageEtudiant !== null && depasseLimiteAgePartout(university.ageMax, ageEtudiant, university.level)) {
+if (ageLimitWarning && ageEtudiant !== null && depasseLimiteAgePartout(limitesAgeDuProfil(university, session && session.profile), ageEtudiant, university.level)) {
 ageLimitWarning.textContent = `D'après les critères officiels, ce programme fixe une limite d'âge (${libelleAge}) que votre profil dépasse. Vérifiez sur le site officiel avant de candidater.`;
 ageLimitWarning.hidden = false;
 }

@@ -43,7 +43,7 @@
 import { estEligible } from "./eligibility-countries.js";
 import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
-import { familleDeDomaine, pisteDepuisNiveau, PISTES } from "./eligibility-pistes.js";
+import { familleDeDomaine, pisteDepuisNiveau, PISTES, trancheExperience } from "./eligibility-pistes.js";
 import { analyserEcheance, joursAvant, formaterDate } from "./echeance.js";
 import { languesParlees } from "./niveaux-langue.js";
 
@@ -238,17 +238,92 @@ return null;
 // estEligible, verrouillée par test (test/age-limits.test.mjs).
 function ageMatch(scholarship, profile) {
 
-if (!scholarship || !scholarship.ageMax) return null;
+const limites = limitesAgePour(scholarship, profile);
+
+if (!limites) return null;
 
 const niveau = studentTargetLevel(profile);
 
 const age = computeAge(profile.birthDate);
-if (age !== null) return respecteLimiteAge(scholarship.ageMax, age, niveau);
+if (age !== null) return respecteLimiteAge(limites, age, niveau);
 
-if (profile.ageBracket) return respecteLimiteAgeTranche(scholarship.ageMax, profile.ageBracket, niveau);
+if (profile.ageBracket) return respecteLimiteAgeTranche(limites, profile.ageBracket, niveau);
 
 return null;
 
+}
+
+/**
+* LOT 112 (2026-09-26) — LES LIMITES D'ÂGE QUI DÉPENDENT DU GENRE.
+*
+* L'appel de l'Université panafricaine fixe 25 ans pour les hommes et
+* 28 ans pour les femmes en master, 28 et 30 ans en doctorat. `ageMax`
+* retient la plus favorable (règle de js/age-limits.js) ; `ageMaxHommes`
+* porte celle des hommes, même forme que `ageMax`. Elle ne s'applique
+* qu'à un profil « homme » : genre inconnu ou « autre », on garde la
+* limite la plus favorable, comme avant.
+*/
+export function limitesAgePour(scholarship, profile) {
+if (!scholarship) return null;
+const hommes = scholarship.ageMaxHommes;
+if (String((profile && profile.gender) || "") === "homme" && hommes && typeof hommes === "object") return hommes;
+return scholarship.ageMax || null;
+}
+
+/**
+* LOT 112 — L'EXPÉRIENCE PROFESSIONNELLE EXIGÉE, EN ANNÉES, POUR UN CYCLE.
+*
+* `experienceProMinAns` : un nombre (même exigence à tous les cycles) ou
+* { licence?, master?, doctorat? } (la KOICA : deux ans en master, trois
+* après le master en doctorat). Rend null quand rien n'est exigé ou que
+* le cycle n'est pas connu.
+*/
+export function experienceExigee(scholarship, niveau) {
+const e = scholarship && scholarship.experienceProMinAns;
+const valide = (v) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
+if (typeof e === "number") return valide(e);
+if (e && typeof e === "object") {
+const cle = niveau === "Licence" ? "licence" : niveau === "Master" ? "master" : niveau === "Doctorat" ? "doctorat" : "";
+return cle ? valide(e[cle]) : null;
+}
+return null;
+}
+
+// Le diplôme qui PRÉCÈDE le cycle visé, et les paliers qui ne l'ont pas
+// encore : un étudiant en licence ne peut pas avoir d'expérience acquise
+// APRÈS la licence.
+const PALIERS_SANS_DIPLOME_PRECEDENT = {
+Master: [PISTES.LYCEE, PISTES.BAC_OBTENU, PISTES.LICENCE_EN_COURS],
+Doctorat: [PISTES.LYCEE, PISTES.BAC_OBTENU, PISTES.LICENCE_EN_COURS, PISTES.LICENCE_OBTENUE, PISTES.MASTER_EN_COURS]
+};
+
+/**
+* LOT 112 — l'expérience du profil suffit-elle ? true | false | null.
+*
+* false seulement quand c'est SÛR :
+*  - la bourse exige une expérience acquise APRÈS le diplôme précédent
+*    (`experienceApresDiplome`, booléen ou par cycle) et l'étudiant ne
+*    l'a pas encore ;
+*  - ou sa tranche (réponse du diagnostic, reprise dans le profil) est
+*    ENTIÈREMENT en dessous du minimum. « 1 à 2 ans » face à deux ans
+*    exigés ne tranche pas : règle des trois valeurs, comme l'âge.
+* Un texte libre dans le profil, ou aucune réponse : null.
+*/
+export function experienceSuffit(scholarship, profile) {
+const p = profile || {};
+const niveau = studentTargetLevel(p);
+const exigee = experienceExigee(scholarship, niveau);
+if (!exigee) return null;
+const apres = scholarship.experienceApresDiplome;
+const apresDiplome = apres === true || (apres && typeof apres === "object" && apres[niveau === "Master" ? "master" : niveau === "Doctorat" ? "doctorat" : "licence"] === true);
+if (apresDiplome) {
+const valides = Object.values(PISTES);
+const palier = valides.includes(p.palier) ? p.palier : pisteDepuisNiveau(p.lastDegree || p.currentDegree);
+if (palier && (PALIERS_SANS_DIPLOME_PRECEDENT[niveau] || []).includes(palier)) return false;
+}
+const tranche = trancheExperience(p.experienceProTranche) || trancheExperience(p.workExperience);
+if (!tranche) return null;
+return tranche.max < exigee ? false : true;
 }
 
 // LA FENÊTRE DU BAC (lot DÉPART, 2026-09-21).
@@ -589,6 +664,11 @@ if (!admis.includes(palier)) return false;
 // féminin depuis novembre 2025) : exclue pour un profil « homme » ;
 // inconnu ou « autre » n'exclut pas.
 if (scholarship.reserveeAuxFemmes === true && String(p.gender || "") === "homme") return false;
+
+// Lot 112 : l'expérience professionnelle exigée (DAAD-EPOS, Chevening,
+// Banque mondiale, KOICA, Senghor, Swedish Institute) — filtre dur, mais
+// seulement quand c'est sûr (experienceSuffit).
+if (experienceSuffit(scholarship, p) === false) return false;
 
 const famille = familleDeDomaine(p.desiredField);
 const domaines = Array.isArray(scholarship.domaines) ? scholarship.domaines.filter(Boolean) : [];
@@ -1488,6 +1568,10 @@ if (accesDepuisLeProfil(scholarship, p) === false) {
 const ex = (scholarship && scholarship.exigences) || [];
 if (ex.includes("deja_inscrit_sur_place") && String(p.country || p.originCountry || "") !== scholarship.country) return "elle est réservée aux étudiants déjà inscrits sur place";
 if (ex.includes("cycle_en_cours")) return "elle est réservée aux étudiants déjà engagés dans ce cycle";
+// Lot 112 : chaque motif dit la vraie raison. Avant, une bourse réservée
+// aux femmes sortait avec « elle ne concerne pas votre domaine d'études ».
+if (scholarship.reserveeAuxFemmes === true && String(p.gender || "") === "homme") return "elle est réservée aux femmes";
+if (experienceSuffit(scholarship, p) === false) return "elle exige une expérience professionnelle que votre profil n'atteint pas encore";
 return "elle ne concerne pas votre domaine d'études";
 }
 

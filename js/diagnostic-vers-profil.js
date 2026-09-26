@@ -32,7 +32,7 @@
 * ============================================================
 */
 
-import { pisteDepuisNiveau, PISTES } from "./eligibility-pistes.js";
+import { pisteDepuisNiveau, PISTES, genreDepuisReponse, trancheExperience } from "./eligibility-pistes.js";
 
 // ---------- Tables, depuis les définitions réelles ----------
 
@@ -175,6 +175,17 @@ if (chaine(r.passport) === "Passeport valide") pose("documentsAvailable", ["pass
 //     pour l'instant » n'est pas une expérience.
 const exp = chaine(r.workExperience);
 if (exp && exp !== "Aucune pour l'instant") pose("workExperience", exp);
+
+// Lot 112 : la TRANCHE elle-même, « Aucune » comprise, dans un champ à
+// part que le moteur sait lire (experienceProTranche). La zone de texte
+// `workExperience` décrit des expériences ; « Aucune pour l'instant » n'y
+// a pas sa place, mais c'est une réponse, et elle ferme le DAAD-EPOS ou
+// Chevening. Seulement pour les paliers où la question est posée.
+const PALIERS_EXPERIENCE = [PISTES.LICENCE_OBTENUE, PISTES.MASTER_EN_COURS, PISTES.MASTER_OBTENU, PISTES.DOCTORAT_OBTENU];
+if (trancheExperience(exp) && PALIERS_EXPERIENCE.includes(palier)) pose("experienceProTranche", exp);
+
+// Lot 112 : le genre, au vocabulaire du profil (profile.html).
+pose("gender", genreDepuisReponse(r.gender));
 
 // 13. L'année d'obtention, quand la question la date sans ambiguïté.
 const quand = chaine(r.diplomaWhen);
