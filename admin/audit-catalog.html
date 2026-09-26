@@ -16,9 +16,8 @@
 
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="control-center.css">
-<!-- Lot 122 « NUIT » : le Control Center sombre chaud (admin/nuit.css, admin/nuit.js). -->
+<!-- Lot 124 : le Control Center sombre et sobre (admin/nuit.css, sans script). -->
 <link rel="stylesheet" href="nuit.css">
-<script src="nuit.js" defer></script>
 
 <style>
 
@@ -140,7 +139,25 @@ background:var(--background-soft); border:1px solid var(--border-color);
 
 </style>
 
-<meta name="theme-color" content="#0A0806">
+<meta name="theme-color" content="#0F0E0C">
+<!-- précharge:début — généré par scripts/precharger.mjs, ne pas modifier à la main -->
+<link rel="modulepreload" href="../firebase-config.js">
+<link rel="modulepreload" href="../js/catalog-cache.js">
+<link rel="modulepreload" href="../js/catalog-data.js">
+<link rel="modulepreload" href="../js/catalog-snapshot.js">
+<link rel="modulepreload" href="../js/fitz-select.js">
+<link rel="modulepreload" href="../js/plan-features.js">
+<link rel="modulepreload" href="../js/roles-admin.js">
+<link rel="modulepreload" href="admin-auth.js">
+<link rel="modulepreload" href="admin-role.js">
+<link rel="modulepreload" href="audit-catalog.js">
+<link rel="modulepreload" href="firebase-admin.js">
+<link rel="modulepreload" href="recherche.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js">
+<!-- précharge:fin -->
 </head>
 
 <body>

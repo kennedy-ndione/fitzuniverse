@@ -8,7 +8,8 @@
 * recalculait son flou. Après correction : 60 images/s, et le tableau de
 * bord coûte moins de calcul qu'avant le lot 122.
 *
-* Ces garde-fous empêchent le retour de ce qui coûtait.
+* Ces garde-fous empêchent le retour de ce qui coûtait. Lot 124 : resserrés
+* (plus aucune animation en boucle, plus de lueur).
 */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -27,24 +28,19 @@ if (/backdrop-filter/.test(corps)) assert.match(sel, permis, `flou d'arrière-pl
 }
 });
 
-test("123 — l'aurore est immobile, sans filtre", () => {
+test("123 — plus d'aurore derrière les cartes (lot 124 : fond sombre uni)", () => {
 const aurore = regles.find((r) => r.sel === "body::before");
-assert.ok(aurore);
-assert.ok(!/animation|filter/.test(aurore.corps), "body::before ne doit être ni animé ni filtré");
+if (aurore) assert.ok(!/animation|filter/.test(aurore.corps), "body::before ne doit être ni animé ni filtré");
 });
 
 test("123 — aucune animation infinie qui repeint à chaque image", () => {
 for (const { sel, corps } of regles) {
-if (!/infinite/.test(corps)) continue;
-// Seules restent en boucle des animations de transform/opacity (composées
-// par le GPU) ; la bordure tournante ne tourne qu'au survol.
-assert.ok(/nuit(Radar|Halo|Point)\b/.test(corps) || /:hover/.test(sel), `« ${sel} » : animation infinie coûteuse`);
+assert.ok(!/infinite/.test(corps), `« ${sel} » : animation infinie`);
 }
-const apparait = regles.find((r) => r.sel === ".nuit-apparait");
-assert.ok(!/filter/.test(apparait.corps), "l'apparition n'anime plus de flou");
+assert.ok(!regles.some((r) => r.sel === ".nuit-apparait"), "les apparitions animées sont retirées");
 });
 
-test("123 — la lueur des courbes ne porte que sur la série remplie", () => {
+test("123 — plus de lueur floutée sur les courbes (lot 124)", () => {
 const js = readFileSync(join(racine, "admin/dashboard.js"), "utf8");
-assert.match(js, /if \(!ds\.fill\) return;/);
+assert.ok(!/shadowBlur/.test(js), "aucune ombre floutée dans le graphique");
 });

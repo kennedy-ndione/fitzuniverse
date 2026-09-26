@@ -109,12 +109,22 @@ export function avecBloc(fichierHtml) {
   return html.replace("</head>", `${bloc}${fin}</head>`);
 }
 
-/** Les pages du site qui chargent au moins un module (racine du dépôt). */
+// Lot 124 (2026-09-26) : le Control Center aussi. MESURÉ : 60 à 70
+// modules sur 7 à 8 niveaux par page admin, sans aucun préchargement —
+// c'est ce qui rendait sa navigation lente sur la connexion de Charles
+// (370 à 900 ms par aller-retour). Les pages d'outillage NON publiées
+// (firebase.json, hosting.ignore) restent hors du jeu : elles n'existent
+// que sur l'ordinateur de Charles.
+const ADMIN_NON_PUBLIEES = /^(expand-catalog|import-|migrate|backfill|diag-)/;
+
+/** Les pages du site qui chargent au moins un module (racine et admin/). */
 export function pagesAModules() {
-  return fs.readdirSync(RACINE)
-    .filter((f) => f.endsWith(".html"))
-    .filter((f) => /<script\b[^>]*\btype="module"[^>]*\bsrc=/.test(fs.readFileSync(path.join(RACINE, f), "utf8")))
-    .sort();
+  const aModules = (f) => /<script\b[^>]*\btype="module"[^>]*\bsrc=/.test(fs.readFileSync(path.join(RACINE, f), "utf8"));
+  const racine = fs.readdirSync(RACINE).filter((f) => f.endsWith(".html"));
+  const admin = fs.readdirSync(path.join(RACINE, "admin"))
+    .filter((f) => f.endsWith(".html") && !ADMIN_NON_PUBLIEES.test(f))
+    .map((f) => `admin/${f}`);
+  return [...racine, ...admin].filter(aModules).sort();
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

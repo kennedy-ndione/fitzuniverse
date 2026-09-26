@@ -75,7 +75,7 @@ const MOYENS_DE_PAIEMENT_OUVERTS = "Orange Money (Wave et carte : à la validati
 // Jamais de bleu (demande de Charles, 2026-09-02).
 const CHART_TEXT = "#9A9083";
 const CHART_GRID = "rgba(245,234,214,.06)";
-const CHART_SURFACE = "#16120E";
+const CHART_SURFACE = "#1A1916";
 
 // Les cinq séries de la pulsation. `fields` liste les compteurs
 // quotidiens (analyticsDailyCounters) additionnés pour chaque jour.
@@ -243,7 +243,7 @@ const dateLabel = now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long
 
 const badges = [
 { icon: "calendar", text: dateLabel },
-{ icon: "clock", text: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }), id: "execClockBadge" },
+{ icon: "clock", text: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }), id: "execClockBadge" },
 { icon: "refresh-cw", text: "Synchronisé à l'instant" },
 { icon: "database", text: "Firestore", dot: "is-online" },
 { icon: "bar-chart-3", text: "Analytics", dot: "is-online" },
@@ -277,11 +277,11 @@ const clockBadge = document.getElementById("execClockBadge");
 
 if (clockBadge) {
 clockBadge.querySelector("span:last-child").textContent =
-new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Lot 122 « NUIT » : l'horloge bat la seconde — le poste de pilotage vit.
-}, 1000);
+// Lot 124 : retour à l'heure et la minute, relue toutes les 15 s.
+}, 15000);
 
 }
 
@@ -349,8 +349,8 @@ data: days.map((dayKey, i) => pulseState.demo
 ? demoValue(serie.key, i, days.length)
 : realValue(serie, dayKey)),
 borderColor: serie.color,
-// Lot 122 : la série principale se remplit d'un dégradé d'ambre qui
-// s'éteint vers l'axe (calculé à la taille réelle du graphique).
+// La série principale se remplit d'un voile léger de sa couleur, qui
+// s'éteint vers l'axe (lot 124 : plus discret, sans or vif).
 backgroundColor: serie.fill ? degradeAmbre : "transparent",
 fill: !!serie.fill,
 tension: .4,
@@ -369,38 +369,22 @@ cubicInterpolationMode: "monotone"
 // LOT 122 « NUIT » — les effets du graphique de la pulsation
 // ==========================================================
 
-// Le remplissage de la série principale : ambre en haut, rien à l'axe.
+// Le remplissage de la série principale : un voile de sa couleur (#C98500)
+// en haut, rien à l'axe. Un seul dégradé, calculé une fois par dessin.
 function degradeAmbre(context) {
 const { chart } = context;
 const { ctx, chartArea } = chart;
-if (!chartArea) return "rgba(233,163,25,.12)";
+if (!chartArea) return "rgba(201,133,0,.08)";
 const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-g.addColorStop(0, "rgba(233,163,25,.34)");
-g.addColorStop(.55, "rgba(233,163,25,.08)");
-g.addColorStop(1, "rgba(233,163,25,0)");
+g.addColorStop(0, "rgba(201,133,0,.20)");
+g.addColorStop(1, "rgba(201,133,0,0)");
 return g;
 }
 
-// Chaque courbe porte une lueur de sa propre couleur.
-const pluginLueur = {
-id: "nuitLueur",
-// Lot 123 : la lueur ne porte plus que sur la série remplie (Visiteurs).
-// Une ombre floutée sur les six courbes, redessinée à chaque mouvement de
-// souris, coûtait cher sur un ordinateur modeste.
-beforeDatasetDraw(chart, args) {
-const ds = chart.data.datasets[args.index];
-chart.ctx.save();
-if (!ds.fill) return;
-chart.ctx.shadowColor = ds.borderColor;
-chart.ctx.shadowBlur = 10;
-chart.ctx.shadowOffsetY = 3;
-},
-afterDatasetDraw(chart) {
-chart.ctx.restore();
-}
-};
+// Lot 124 : plus de lueur (ombre floutée) sur les courbes — Charles veut
+// un Control Center simple et rapide.
 
-// La ligne de visée : un trait vertical lumineux sous le curseur.
+// La ligne de visée : un trait vertical discret sous le curseur.
 const pluginVisee = {
 id: "nuitVisee",
 afterDatasetsDraw(chart) {
@@ -409,9 +393,9 @@ if (!actifs.length) return;
 const x = actifs[0].element.x;
 const { ctx, chartArea } = chart;
 const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-g.addColorStop(0, "rgba(245,195,90,0)");
-g.addColorStop(.5, "rgba(245,195,90,.55)");
-g.addColorStop(1, "rgba(245,195,90,0)");
+g.addColorStop(0, "rgba(236,231,222,0)");
+g.addColorStop(.5, "rgba(236,231,222,.32)");
+g.addColorStop(1, "rgba(236,231,222,0)");
 ctx.save();
 ctx.strokeStyle = g;
 ctx.lineWidth = 1;
@@ -481,32 +465,23 @@ pulseChart.update();
 pulseChart = new Chart(canvas, {
 type: "line",
 data: { labels, datasets },
-plugins: [pluginLueur, pluginVisee],
+plugins: [pluginVisee],
 options: {
 responsive: true,
 maintainAspectRatio: false,
 interaction: { mode: "index", intersect: false },
-// Les courbes MONTENT depuis l'axe, l'une après l'autre.
-animation: {
-duration: 1300,
-easing: "easeOutQuart",
-delay: (c) => (c.type === "data" && c.mode === "default" ? c.datasetIndex * 110 : 0)
-},
-animations: {
-y: {
-from: (c) => (c.chart && c.chart.scales && c.chart.scales.y ? c.chart.scales.y.getPixelForValue(0) : undefined)
-}
-},
+// Lot 124 : une seule entrée courte, sans cascade.
+animation: { duration: 500, easing: "easeOutCubic" },
 plugins: {
 legend: { display: false },
 tooltip: {
-backgroundColor: "rgba(16,13,10,.94)",
-titleColor: "#FFF7E8",
-bodyColor: "#E7DED0",
-borderColor: "rgba(233,163,25,.35)",
+backgroundColor: "rgba(20,19,16,.96)",
+titleColor: "#EEEAE3",
+bodyColor: "#BDB6AB",
+borderColor: "rgba(255,255,255,.12)",
 borderWidth: 1,
-padding: 14,
-cornerRadius: 12,
+padding: 12,
+cornerRadius: 10,
 titleFont: { family: "Sora", weight: "700", size: 13 },
 bodyFont: { family: "Inter", size: 12 },
 usePointStyle: true,
@@ -879,23 +854,23 @@ data: planIds.map((id) => breakdown[id] || 0),
 // sombre est remplacée par la progression chaude du site —
 // gris chaud (gratuit) → gamme ambre (offres en vente : Pass, 3
 // bourses, 3 France) → gris et encre (formules retirées).
-// Lot 122 « NUIT » : la même progression, éclaircie pour l'encre —
-// gris chaud (gratuit), ambres (offres en vente), gris sombres
-// (retirées) ; un filet de la couleur du fond sépare les parts.
-backgroundColor: ["#8A8074", "#F7C860", "#E9A319", "#C98500", "#A96F05", "#F5B87A", "#D9782F", "#B25F22", "#7A7065", "#655C52", "#524A42", "#403A33", "#2F2A25"],
+// Lot 124 : la même progression, sans or vif — gris chaud (gratuit),
+// sables et terres (offres en vente), gris sombres (retirées) ; un
+// filet de la couleur du fond sépare les parts.
+backgroundColor: ["#8A8074", "#D6C4A1", "#C2A878", "#A88E62", "#8C744C", "#C9A18A", "#AD7F63", "#8F6450", "#7A7065", "#655C52", "#524A42", "#403A33", "#2F2A25"],
 borderColor: CHART_SURFACE,
-borderWidth: 3,
-hoverOffset: 10
+borderWidth: 2,
+hoverOffset: 6
 }]
 },
 options: {
 responsive: true,
 maintainAspectRatio: false,
 cutout: "70%",
-animation: { animateRotate: true, animateScale: true, duration: 1300, easing: "easeOutQuart" },
+animation: { animateRotate: true, animateScale: false, duration: 500, easing: "easeOutCubic" },
 plugins: {
 legend: { position: "bottom", labels: { color: "#C9BFB1", boxWidth: 10, usePointStyle: true, padding: 14, font: { family: "Inter", size: 12 } } },
-tooltip: { backgroundColor: "rgba(16,13,10,.94)", borderColor: "rgba(233,163,25,.35)", borderWidth: 1, padding: 12, cornerRadius: 12, titleColor: "#FFF7E8", bodyColor: "#E7DED0" }
+tooltip: { backgroundColor: "rgba(20,19,16,.96)", borderColor: "rgba(255,255,255,.12)", borderWidth: 1, padding: 12, cornerRadius: 10, titleColor: "#EEEAE3", bodyColor: "#BDB6AB" }
 }
 }
 });

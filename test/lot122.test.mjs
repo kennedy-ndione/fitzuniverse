@@ -3,13 +3,16 @@
 *
 * Demande de Charles : un espace admin sombre, haut de gamme, dynamique,
 * animé. Sombre CHAUD, jamais bleu (refus du navy le 2026-09-02).
+*
+* Lot 124 : Charles garde le fond sombre mais veut « quelque chose de
+* simple » — nuit.js (compteurs, apparitions, ondes) et la lueur des
+* courbes sont retirés ; ce qui reste de ce lot est vérifié ici.
 */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import vm from "node:vm";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
@@ -27,8 +30,8 @@ const html = lire(p);
 const i = html.indexOf("control-center.css");
 const j = html.indexOf('href="nuit.css"');
 assert.ok(j > i, `${p} : nuit.css absent ou chargé avant control-center.css`);
-assert.match(html, /<script src="nuit\.js" defer><\/script>/, `${p} : nuit.js`);
-assert.match(html, /<meta name="theme-color" content="#0A0806">/, `${p} : couleur de thème`);
+assert.ok(!html.includes("nuit.js"), `${p} : nuit.js est retiré (lot 124)`);
+assert.match(html, /<meta name="theme-color" content="#0F0E0C">/, `${p} : couleur de thème`);
 }
 assert.ok(lire("admin/login.html").includes('href="nuit.css"'), "la porte d'entrée aussi");
 });
@@ -49,22 +52,15 @@ const css = lire("admin/nuit.css");
 const i = css.indexOf("@media (prefers-reduced-motion: reduce)");
 assert.ok(i > 0);
 assert.match(css.slice(i, i + 700), /animation:none !important;/);
-const js = lire("admin/nuit.js");
-assert.match(js, /prefers-reduced-motion: reduce/);
-// Script classique : il doit se compiler tel quel.
-assert.doesNotThrow(() => new vm.Script(js));
-});
-
-test("122 — les compteurs laissent toujours le texte final exact de la page", () => {
-const js = lire("admin/nuit.js");
-assert.match(js, /var texte = p === 1 \? final : /);
+// Lot 124 : plus de script d'animation — aucune page ne charge nuit.js
+// (vérifié dans le premier test et dans test/lot124.test.mjs).
 });
 
 test("122 — la pulsation garde l'ordre de palette validé sur la nuit", () => {
 const js = lire("admin/dashboard.js");
 const couleurs = [...js.slice(js.indexOf("const PULSE_SERIES = ["), js.indexOf("const pulseState")).matchAll(/color: "(#[0-9A-F]{6})"/g)].map((m) => m[1]);
 assert.deepEqual(couleurs, ["#199E70", "#C98500", "#D55181", "#008300", "#9085E9", "#E66767"]);
-assert.match(js, /plugins: \[pluginLueur, pluginVisee\]/);
+assert.match(js, /plugins: \[pluginVisee\]/);
 assert.match(js, /function renderPulseResume\(days\)/);
 assert.match(lire("admin/dashboard.html"), /id="pulseTotal"/);
 });
