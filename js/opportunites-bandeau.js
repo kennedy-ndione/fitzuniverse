@@ -20,24 +20,21 @@
 * Une page sans bandeau reste une page correcte. Une page avec un
 * faux bandeau ne l'est pas.
 *
-* POURQUOI IL N'Y A PAS DE MIGRATION DERRIÈRE
-* -------------------------------------------
-* Les échéances sont lues à l'affichage par js/echeance.js, depuis le
-* champ `deadline` tel qu'il existe déjà. Aucun document Firestore
-* n'est modifié, aucun champ n'est ajouté, et le jour où une
-* migration rendra ces échéances durables, ce fichier n'aura pas à
-* changer : il lira le même objet.
+* CE QUI EST MONTRÉ (lot 114, 2026-09-26)
+* ---------------------------------------
+* Le choix des cartes vit dans js/bandeau-selection.js, un module pur
+* testé hors navigateur (test/lot114.test.mjs) : programme ouvert, bourse
+* ouverte, date vérifiée d'abord, au moins 30 jours devant soi, jamais
+* une bourse réservée aux étudiants déjà inscrits sur place, les dates
+* « par pays » dites en fourchette, et la une en tête. Ce fichier-ci ne
+* fait plus que le rendu.
 * ============================================================
 */
 
-import {
-analyserEcheance,
-libelleEcheance,
-formaterDate,
-classerOpportunites,
-opportunitesOuvertes,
-etatCandidature
-} from "./echeance.js";
+import { formaterDate } from "./echeance.js";
+
+// Lot 114 : ce que le bandeau a le droit de montrer — voir l'en-tête.
+import { selectionnerOpportunites, libelleCarte } from "./bandeau-selection.js";
 
 import { resolveScholarshipImage, sourcesModernes } from "./scholarship-image.js";
 
@@ -47,13 +44,6 @@ import { chargerCatalogue } from "./catalog-data.js";
 // Les « révélations » (2026-09-24) : une voie que les agences ne disent
 // pas, prouvée par le catalogue. Voir l'en-tête de js/revelations.js.
 import { lireRevelation } from "./revelations.js";
-
-/**
-* Nombre de cartes retenues. Au-delà, la piste devient si longue
-* qu'une carte donnée ne repasse qu'après plusieurs minutes — le
-* bandeau cesse d'être une annonce et devient un catalogue lent.
-*/
-const MAX_CARTES = 12;
 
 /**
 * Sous ce seuil, on ne défile pas : trois cartes qui tournent en
@@ -83,124 +73,6 @@ return { programmes: catalogue.programmes, bourses, universites, listeUniversite
 
 }
 
-/**
-* Un même couple bourse × pays existe en plusieurs programmes (un par
-* université et par niveau). Le Stipendium Hungaricum occuperait 33
-* cartes à lui seul. On n'en garde qu'une, celle dont l'échéance est
-* la plus proche, et on cumule les niveaux rencontrés.
-*/
-function regrouper(programmes, bourses, universites) {
-
-const parCle = new Map();
-
-// L'ÉTAT RÉEL DE CHAQUE BOURSE, calculé une fois (2026-09-05).
-//
-// Ce bandeau lisait la seule date du programme. Une date future
-// suffisait donc à faire une carte « 31 jours restants » sous un
-// titre qui promet « candidatures encore ouvertes » — y compris pour
-// une bourse dont le portail n'ouvre PAS encore. Après le lot 40,
-// 13 des 34 cartes étaient dans ce cas (Commonwealth, AUC, ETH,
-// Rotary, bourse saoudienne…), et l'accueil contredisait le
-// catalogue, qui les affiche « pas encore ouvertes ».
-//
-// La règle est la même que partout ailleurs depuis le lot 38 :
-// etatCandidature() est la seule autorité. Une date à venir
-// n'ouvre rien si le statut dit que le cycle est clos.
-const echeancesParBourse = new Map();
-
-for (const p of programmes) {
-if (!p.scholarshipId) continue;
-if (!echeancesParBourse.has(p.scholarshipId)) echeancesParBourse.set(p.scholarshipId, []);
-echeancesParBourse.get(p.scholarshipId).push(p.deadline);
-}
-
-const etatParBourse = new Map();
-
-const estOuverte = (bourse) => {
-
-if (!etatParBourse.has(bourse.id)) {
-etatParBourse.set(bourse.id, etatCandidature({
-statut: bourse.status,
-actif: bourse.isActive,
-echeances: echeancesParBourse.get(bourse.id) || [],
-periodeOuverture: bourse.periodeOuverture,
-verifieLe: bourse.verifieLe,
-echeanceVariable: bourse.echeanceVariable
-}));
-}
-
-const etat = etatParBourse.get(bourse.id);
-
-// Le bandeau est un COMPTE À REBOURS : il lui faut une date qui
-// vaille pour tout le monde. Quand la date dépend du pays ou de
-// l'établissement, la fiche le dit en toutes lettres et aucun
-// chiffre ne serait vrai pour l'étudiant qui lit — la bourse reste
-// au catalogue, pas ici.
-return etat.ton === "ouverte" && !bourse.echeanceVariable;
-
-};
-
-for (const p of programmes) {
-
-const bourse = bourses.get(p.scholarshipId);
-const universite = universites.get(p.universityId);
-
-// Sans titre de bourse, la carte n'aurait rien à annoncer.
-if (!bourse || !bourse.title) continue;
-
-// Une bourse pas encore ouverte n'a pas sa place sous un titre qui
-// annonce des candidatures ouvertes.
-if (!estOuverte(bourse)) continue;
-
-const pays = p.country || universite?.country || "";
-const cle = `${p.scholarshipId}|${pays}`;
-
-const echeance = analyserEcheance(p.deadline);
-
-const existant = parCle.get(cle);
-
-if (existant) {
-
-// Niveaux cumulés, dans l'ordre où ils apparaissent.
-for (const niveau of String(p.level || "").split("/").map((s) => s.trim())) {
-if (niveau && !existant.niveaux.includes(niveau)) existant.niveaux.push(niveau);
-}
-
-// On garde l'échéance la plus proche du couple.
-if (echeance.date && (!existant.echeance.date || echeance.date < existant.echeance.date)) {
-existant.echeance = echeance;
-}
-
-continue;
-
-}
-
-const { image, imageSrcset } = resolveScholarshipImage({
-pays,
-texteHash: bourse.title || p.scholarshipId,
-universiteImage: universite?.image || null,
-bourseImage: bourse.image || null
-});
-
-parCle.set(cle, {
-nom: bourse.title,
-pays,
-drapeau: universite?.flag || "",
-universite: universite?.name || "",
-couverture: p.coverage || bourse.coverage || "",
-niveaux: String(p.level || "").split("/").map((s) => s.trim()).filter(Boolean),
-verifieLe: p.verifieLe || null,
-echeance,
-image,
-imageSrcset
-});
-
-}
-
-return [...parCle.values()];
-
-}
-
 /* ------------------------------------------------------------------
 * Rendu
 * ------------------------------------------------------------------ */
@@ -219,11 +91,11 @@ return niveaux.join(" / ");
 
 function construireCarte(opp, aujourdhui) {
 
-const l = libelleEcheance(opp.echeance, aujourdhui);
+const l = libelleCarte(opp, aujourdhui);
 
 const a = document.createElement("a");
 a.className = "opportunite";
-a.href = "scholarships.html";
+a.href = opp.lien || "scholarships.html";
 
 const niveaux = texteNiveaux(opp.niveaux);
 const viseAfrique = RE_AFRIQUE.test(opp.couverture);
@@ -345,7 +217,7 @@ const titre = el("h3", "", r.titre);
 titre.id = "revelationTitre";
 
 // Une seule ligne d'actions, en liens texte : le seul BOUTON du bloc
-// reste « Voir les N échéances à venir ». Deux boutons pleins côte à
+// reste « Voir les N échéances encore dans les temps ». Deux boutons pleins côte à
 // côte se disputeraient le regard.
 const actions = el("p", "revelation-actions");
 const cta = el("a", "revelation-cta", r.lien.texte);
@@ -397,15 +269,16 @@ return retirer(section);
 
 const aujourdhui = new Date();
 
-const ouvertes = opportunitesOuvertes(
-regrouper(catalogue.programmes, catalogue.bourses, catalogue.universites),
-aujourdhui
+const { ouvertes, retenues } = selectionnerOpportunites(
+catalogue.programmes, catalogue.bourses, catalogue.universites, aujourdhui
 );
 
 // Rien de sûr à montrer : on ne montre rien. Voir l'en-tête.
 if (!ouvertes.length) return retirer(section);
 
-const retenues = classerOpportunites(ouvertes, aujourdhui).slice(0, MAX_CARTES);
+// La photo de chaque carte retenue, résolue ici : js/scholarship-image.js
+// reste hors du module de sélection, qui ne connaît ni DOM ni images.
+for (const opp of retenues) Object.assign(opp, resolveScholarshipImage(opp.imageEntree));
 
 // Deux passes : la seconde permet la boucle sans saut, puisque
 // l'animation s'arrête exactement à -50 % de la piste. Elle est
@@ -454,14 +327,15 @@ marquee.addEventListener(fin, () => section.classList.remove("est-touchee"), { p
 // entier si le span manquait (ancienne version du HTML en cache).
 //
 // Le mot compte : ce nombre-ci n'est PAS celui du catalogue. Ici on
-// compte des ÉCHÉANCES fermes encore à venir (couple bourse × pays) ;
+// compte des ÉCHÉANCES encore dans les temps (couple bourse × pays, au
+// moins 30 jours devant soi depuis le lot 114) ;
 // le catalogue, lui, compte des bourses ouvertes, y compris celles
 // dont la date dépend du pays ou n'est pas publiée — il y en a
 // toujours davantage. Écrire « N opportunités ouvertes » sur un
 // bouton qui mène à une page qui en montre trois fois plus a été
 // jugé trompeur le 2026-09-05 : on annonce donc ce qu'on a compté.
 const lien = section.querySelector("#opportunitesLienLabel") || section.querySelector("#opportunitesLien");
-if (lien) lien.textContent = `Voir les ${ouvertes.length} échéances à venir`;
+if (lien) lien.textContent = `Voir les ${ouvertes.length} échéances encore dans les temps`;
 
 // Fraîcheur : affichée seulement si elle est vraie. Voir
 // verificationLaPlusAncienne().

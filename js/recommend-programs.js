@@ -40,7 +40,7 @@
 
 // Le chemin d'import est relatif à CE fichier (js/) — eligibility-
 // countries.js vit dans le même dossier.
-import { estEligible } from "./eligibility-countries.js";
+import { estEligible, isoDeNationalite } from "./eligibility-countries.js";
 import { auPays } from "./pays-grammaire.js";
 import { computeAge, respecteLimiteAge, respecteLimiteAgeTranche } from "./age-limits.js";
 import { familleDeDomaine, pisteDepuisNiveau, PISTES, trancheExperience } from "./eligibility-pistes.js";
@@ -613,6 +613,46 @@ return { ouverte: jours >= 0, jours, certitude: "lue", verifieLe: "" };
 }
 
 /**
+* LOT 114 (2026-09-26) — UNE DATE LIMITE PAR PAYS.
+*
+* Les bourses d'excellence de la Confédération suisse n'ont pas UNE date
+* limite : le SEFRI en publie une par pays (du 13 octobre pour la
+* Tunisie au 30 novembre pour le Sénégal, en 2026). La prose du
+* programme ne peut donc porter aucune date, sans quoi analyserEcheance()
+* la lirait comme celle de tout le monde. La bourse porte la table
+* `echeancesParPays` ({ "SN": "2026-11-30", … }), et le moteur donne à
+* chaque étudiant SA date, par sa nationalité.
+*
+* Sans nationalité reconnue, ou pour un pays absent de la table, rien ne
+* change : la date reste inconnue, et le programme est proposé en
+* dernier, « date non confirmée », comme avant.
+*
+* @param {Object} porteur - la bourse, ou tout objet portant `echeancesParPays`
+* @param {string} nationalite - « Sénégalais(e) », « Sénégal »…
+* @returns {string|null} la date ISO du pays de l'étudiant, ou null
+*/
+export function echeanceDuPays(porteur, nationalite) {
+const table = porteur && porteur.echeancesParPays;
+if (!table || typeof table !== "object" || Array.isArray(table)) return null;
+const code = isoDeNationalite(nationalite || "");
+const iso = code ? table[code] : null;
+return typeof iso === "string" && /^\d{4}-\d{2}-\d{2}$/.test(iso) && lireDateISO(iso) ? iso : null;
+}
+
+/**
+* Le programme tel que CET étudiant le voit : la date de son pays devient
+* la `deadlineISO` du programme, lue par etatEcheance() comme n'importe
+* quelle date vérifiée (le plancher de 30 jours s'y applique donc). Le
+* document d'origine n'est jamais modifié : une copie, et seulement
+* quand il y a une date à poser.
+*/
+export function programmePourLeProfil(program, scholarship, profile) {
+if (!program) return program;
+const iso = echeanceDuPays(scholarship, profile && profile.nationality);
+return iso ? { ...program, deadlineISO: iso } : program;
+}
+
+/**
 * LOT 108 (2026-09-26) — CE QUE LA BOURSE EXIGE D'AVOIR DÉJÀ.
 *
 * L'audit des 72 profils types du 26/09 a trouvé trois familles de
@@ -886,7 +926,8 @@ reasons.push(`Établissement actif dans votre domaine (${domaine})`);
 // « Ouverte » dont la date est passée ne doit pas être présenté comme
 // ouvert (mesure du 2026-09-05 : 167 « Ouverte » pour 39 dates encore
 // futures).
-const echeance = etatEcheance(program);
+// Lot 114 : la date du pays de l'étudiant, quand la bourse en publie une par pays.
+const echeance = etatEcheance(programmePourLeProfil(program, scholarship, profile));
 
 if (echeance.ouverte === true && echeance.porte) {
 reasons.push(`Candidatures ouvertes — première étape (${echeance.porte.quoi}) dans ${echeance.porte.jours} jour${echeance.porte.jours > 1 ? "s" : ""}`);
@@ -1359,11 +1400,20 @@ const aEviter = exclureUniversites instanceof Set ? exclureUniversites : new Set
 
 const candidats = [];
 
-for (const program of programs) {
+for (const programDuCatalogue of programs) {
 
-const university = universitiesById.get(program.universityId);
+const university = universitiesById.get(programDuCatalogue.universityId);
 
 if (!university) continue;
+
+// Lot 114 : la date limite du pays de l'étudiant, quand la bourse en
+// publie une par pays (bourses suisses). Tout ce qui suit — le plancher
+// de 30 jours, le tri, la carte retenue — lit cette date-là.
+const program = programmePourLeProfil(
+programDuCatalogue,
+programDuCatalogue.scholarshipId ? scholarshipsById.get(programDuCatalogue.scholarshipId) : null,
+profile
+);
 
 // 0 — jamais une université refusée ou déjà occupée.
 if (aEviter.has(program.universityId)) continue;
@@ -1583,7 +1633,7 @@ if (cible && program.level && normalizeLevel(program.level) !== cible) {
 return `ce programme est de niveau ${program.level}, et vous visez désormais un autre cycle`;
 }
 
-const echeance = etatEcheance(program, aujourdhui);
+const echeance = etatEcheance(programmePourLeProfil(program, scholarship, p), aujourdhui);
 
 if (echeance.porteManquee) {
 return `l'étape obligatoire « ${echeance.porteManquee.quoi} » était à faire au plus tard le ${formaterDate(echeance.porteManquee.dateISO)}`;

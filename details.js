@@ -34,7 +34,7 @@ import { porteDeBourseDeLaFiche } from "./js/portails-opportunite.js";
 // où l'on passe, sinon elle laisse le visiteur guetter un portail qui
 // n'existe pas. Champ PUBLIC, contrairement au portail.
 import { phraseVoieAdmission } from "./js/voie-admission.js";
-import { etatCandidature } from "./js/echeance.js";
+import { etatCandidature, formaterDate } from "./js/echeance.js";
 import { estEligible, libelleEligibilite, paysAvecArticle } from "./js/eligibility-countries.js";
 import { auPays } from "./js/pays-grammaire.js";
 import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits.js";
@@ -45,7 +45,7 @@ import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits
 // createApplicationFromRecommendation la même écriture que le bouton
 // « Candidater » — jamais une seconde façon de faire la même chose.
 import { lireExigences, groupees, ORDRE_FORMES, piecesDeLaBourse } from "./js/exigences.js";
-import { explainMatch } from "./js/recommend-programs.js";
+import { explainMatch, echeanceDuPays } from "./js/recommend-programs.js";
 import { createApplicationFromRecommendation } from "./js/application-actions.js";
 import { isQuotaReached } from "./js/plan-features.js";
 
@@ -822,6 +822,9 @@ periodeOuverture: program.periodeOuverture || scholarshipData.periodeOuverture |
 verifieLe: program.verifieLe || scholarshipData.verifieLe || "",
 sourceEcheance: program.sourceEcheance || scholarshipData.sourceEcheance || "",
 echeanceVariable: program.echeanceVariable || scholarshipData.echeanceVariable || "",
+// Lot 114 : une date limite par pays (bourses suisses), lue plus bas
+// avec la nationalité de l'étudiant.
+echeancesParPays: scholarshipData.echeancesParPays || null,
 statutBourse: scholarshipData.status || "",
 actifBourse: scholarshipData.isActive,
 // Modèle "Option B" (migration du 2026-08-10, voir admin/migrate-portal.js) :
@@ -1023,6 +1026,19 @@ cityImage.alt = university.city || "Ville";
 // dépassée ferme, quoi que dise le statut, et la date dépassée
 // change alors d'étiquette — « Dernière échéance connue », plus
 // jamais « Date limite ».
+// LOT 114 (2026-09-26) — LA DATE DE VOTRE PAYS. Quand la bourse publie
+// une date limite par pays (bourses suisses), la fiche donne la sienne à
+// l'étudiant dont on connaît la nationalité (compte, ou diagnostic fait
+// sans compte). Elle passe alors par etatCandidature() comme une date
+// lue : « 30 novembre 2026 », « Il vous reste 65 jours », et elle ferme
+// d'elle-même le lendemain. Sans nationalité, rien ne change : « Selon
+// votre pays ».
+let nationaliteFiche = (session && session.profile && session.profile.nationality) || "";
+if (!nationaliteFiche) {
+try { nationaliteFiche = localStorage.getItem("fitzNationalite") || ""; } catch { /* stockage bloqué */ }
+}
+const datePays = echeanceDuPays(university, nationaliteFiche);
+
 const candidature = etatCandidature({
 // LES DEUX statuts, pas l'un OU l'autre. Les 33 programmes de
 // Stipendium Hungaricum disent « Ouverte » quand la bourse dit
@@ -1033,13 +1049,13 @@ const candidature = etatCandidature({
 // portail ouvert.
 statut: [university.status, university.statutBourse],
 actif: university.actifBourse,
-echeances: [university.deadline],
+echeances: datePays ? [`Date limite : ${formaterDate(datePays)}.`] : [university.deadline],
 // La date vérifiée passe avant la prose et avant le statut (règle
 // 1 bis de etatCandidature) : une échéance dépassée est une preuve.
-echeanceISO: university.deadlineISO,
+echeanceISO: datePays || university.deadlineISO,
 periodeOuverture: university.periodeOuverture,
 verifieLe: university.verifieLe,
-echeanceVariable: university.echeanceVariable
+echeanceVariable: datePays ? "" : university.echeanceVariable
 });
 
 if (deadline) deadline.textContent = candidature.valeur;
@@ -1060,6 +1076,7 @@ const source = university.sourceEcheance
 
 deadlineNote.innerHTML = "";
 deadlineNote.append(candidature.detail);
+if (datePays) deadlineNote.append(" C'est la date fixée pour votre pays dans la liste officielle.");
 if (candidature.verifie) deadlineNote.append(` · ${candidature.verifie}`);
 if (source) deadlineNote.insertAdjacentHTML("beforeend", source);
 
