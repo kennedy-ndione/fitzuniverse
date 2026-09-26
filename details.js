@@ -45,7 +45,7 @@ import { computeAge, respecteLimiteAge, libelleLimiteAge } from "./js/age-limits
 // createApplicationFromRecommendation la même écriture que le bouton
 // « Candidater » — jamais une seconde façon de faire la même chose.
 import { lireExigences, groupees, ORDRE_FORMES, piecesDeLaBourse } from "./js/exigences.js";
-import { explainMatch, echeanceDuPays } from "./js/recommend-programs.js";
+import { explainMatch, echeanceDuPays, motifAccesFerme } from "./js/recommend-programs.js";
 import { createApplicationFromRecommendation } from "./js/application-actions.js";
 import { isQuotaReached } from "./js/plan-features.js";
 
@@ -539,6 +539,12 @@ const verdicts = [
 verdictNationalite(university.eligibility, profile.nationality || "", profile.country || profile.originCountry || ""),
 verdictAge(limitesAgeDuProfil(university, profile), profile.birthDate || "", university.level)
 ].filter(Boolean);
+
+// LOT 117 (2026-09-26) : ce que le profil ferme d'autre (déjà inscrit sur
+// place, cycle en cours, domaine, expérience, fenêtre du bac). Même motif,
+// mot pour mot, que la page des candidatures (motifAccesFerme).
+const motifAcces = motifAccesFerme(scholarshipData, profile);
+if (motifAcces) verdicts.push({ ton: "defavorable", texte: `${motifAcces.charAt(0).toUpperCase()}${motifAcces.slice(1)}` });
 
 if (verdictsEl) {
 verdictsEl.innerHTML = "";

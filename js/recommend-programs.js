@@ -1579,6 +1579,40 @@ pays: new Set(retenues.map((r) => r.country).filter(Boolean)).size
 }
 
 /**
+* LOT 117 (2026-09-26) — CE QUE LE PROFIL FERME, SANS LA NATIONALITÉ NI
+* L'ÂGE (la fiche a déjà ses propres verdicts pour ces deux-là).
+*
+* Test du parcours de Brigitte, le 26/09 : la fiche Konrad-Adenauer
+* (réservée aux étudiants déjà inscrits en Allemagne) disait « Pourquoi
+* cette bourse vous correspond » à une étudiante qui vit au Sénégal, et
+* l'espace suivait la candidature comme les autres. Le motif vivait
+* seulement dans pourquoiPlusProposable(), lu par la seule page des
+* candidatures. Il est sorti ici pour que la fiche et l'espace disent la
+* même chose, avec les mêmes mots.
+*
+* @returns {string} "" si rien ne ferme ; sinon le motif, pour l'étudiant
+*/
+export function motifAccesFerme(scholarship, profile) {
+const p = profile || {};
+if (!scholarship) return "";
+if (fenetreBacMatch(scholarship, p) === false) {
+const min = Number(scholarship.anneeBacMin);
+return `elle est réservée aux élèves de terminale et aux bacheliers de ${min} ou après`;
+}
+if (accesDepuisLeProfil(scholarship, p) === false) {
+const ex = scholarship.exigences || [];
+if (ex.includes("deja_inscrit_sur_place") && String(p.country || p.originCountry || "") !== scholarship.country) return "elle est réservée aux étudiants déjà inscrits sur place";
+if (ex.includes("cycle_en_cours")) return "elle est réservée aux étudiants déjà engagés dans ce cycle";
+// Lot 112 : chaque motif dit la vraie raison. Avant, une bourse réservée
+// aux femmes sortait avec « elle ne concerne pas votre domaine d'études ».
+if (scholarship.reserveeAuxFemmes === true && String(p.gender || "") === "homme") return "elle est réservée aux femmes";
+if (experienceSuffit(scholarship, p) === false) return "elle exige une expérience professionnelle que votre profil n'atteint pas encore";
+return "elle ne concerne pas votre domaine d'études";
+}
+return "";
+}
+
+/**
 * UNE PROPOSITION DÉJÀ POSÉE SE REVÉRIFIE (finitions, 2026-09-21).
 *
 * Fitz filtre ce qu'il PROPOSE ; il ne relisait jamais ce qu'il avait
@@ -1612,21 +1646,8 @@ if (ageMatch(scholarship, p) === false) {
 return "votre âge dépasse la limite fixée par cette bourse";
 }
 
-if (fenetreBacMatch(scholarship, p) === false) {
-const min = Number(scholarship && scholarship.anneeBacMin);
-return `elle est réservée aux élèves de terminale et aux bacheliers de ${min} ou après`;
-}
-
-if (accesDepuisLeProfil(scholarship, p) === false) {
-const ex = (scholarship && scholarship.exigences) || [];
-if (ex.includes("deja_inscrit_sur_place") && String(p.country || p.originCountry || "") !== scholarship.country) return "elle est réservée aux étudiants déjà inscrits sur place";
-if (ex.includes("cycle_en_cours")) return "elle est réservée aux étudiants déjà engagés dans ce cycle";
-// Lot 112 : chaque motif dit la vraie raison. Avant, une bourse réservée
-// aux femmes sortait avec « elle ne concerne pas votre domaine d'études ».
-if (scholarship.reserveeAuxFemmes === true && String(p.gender || "") === "homme") return "elle est réservée aux femmes";
-if (experienceSuffit(scholarship, p) === false) return "elle exige une expérience professionnelle que votre profil n'atteint pas encore";
-return "elle ne concerne pas votre domaine d'études";
-}
+const motif = motifAccesFerme(scholarship, p);
+if (motif) return motif;
 
 const cible = studentTargetLevel(p);
 if (cible && program.level && normalizeLevel(program.level) !== cible) {

@@ -357,7 +357,11 @@ etapes,
 complete: etapes.length > 0 && restantes.length === 0,
 faisable: prochaineEtapeFaisable(etapes),
 jours: joursDeLaCandidature(app, aujourdhui),
-clos: cycleClos(app)
+clos: cycleClos(app),
+// Lot 117 : la bourse n'est pas ouverte à ce profil (motif calculé par
+// dashboard.js avec motifAccesFerme). Traitée comme un cycle clos : ni
+// échéance à tenir, ni étape à pousser — une décision à prendre.
+fermee: typeof app.fermeeAuProfil === "string" && app.fermeeAuProfil ? app.fermeeAuProfil : ""
 };
 
 })
@@ -368,7 +372,8 @@ clos: cycleClos(app)
 // produit jamais « Il reste N jours ». Elle a sa propre action, plus
 // bas — après une vraie urgence sur un dossier encore ouvert.
 const closes = enCours.filter((c) => c.clos);
-const ouvertes = enCours.filter((c) => !c.clos);
+const fermees = enCours.filter((c) => !c.clos && c.fermee);
+const ouvertes = enCours.filter((c) => !c.clos && !c.fermee);
 
 // Les candidatures sans date limite passent après celles qui en ont
 // une : une échéance connue est une contrainte réelle, une échéance
@@ -424,6 +429,26 @@ etapeId: null,
 applicationId: c.app.id,
 titre: `Le cycle de ${bourse} est clos`,
 texte: `Le cycle de ${bourse} est clos. Vérifiez la prochaine ouverture ou choisissez une autre opportunité.`,
+cta: "Voir cette candidature",
+href: `applications.html#${c.app.id}`,
+action: null,
+urgence: "haute"
+};
+
+}
+
+// ---- 2 ter : un dossier vers une bourse fermée à ce profil ----
+if (fermees.length) {
+
+const c = fermees[0];
+const bourse = c.app.scholarship || c.app.university || "Cette bourse";
+
+return {
+cle: `fermee-au-profil:${c.app.id}`,
+etapeId: null,
+applicationId: c.app.id,
+titre: `${bourse} ne vous est pas ouverte`,
+texte: `D'après votre profil, ${c.fermee}. Tout ce que vous prépareriez pour ce dossier le serait pour rien : choisissez une autre opportunité.`,
 cta: "Voir cette candidature",
 href: `applications.html#${c.app.id}`,
 action: null,

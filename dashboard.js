@@ -17,7 +17,8 @@ import { initShellChrome, bootstrapShell, PLAN_LABELS, nextPlanId, isFeatureLock
 // retenirOpportunites : la MEME selection que results.js (le diagnostic
 // gratuit) — cinq filtres, dedoublonnage par bourse et par universite,
 // plafond par pays. Voir chargerOpportunites() plus bas.
-import { retenirOpportunites, libelleFenetre } from "./js/recommend-programs.js";
+import { retenirOpportunites, libelleFenetre, motifAccesFerme } from "./js/recommend-programs.js";
+import { avecArticle } from "./js/pays-grammaire.js";
 // Lot P3 (2026-09-19) : LE MÊME garde que seedRecommendedSlots(). Le hub
 // avait le sien, plus faible, et laissait donc voir des propositions à
 // un profil que Fitz refusait de servir.
@@ -752,7 +753,11 @@ wrap.innerHTML = enPreparation.map((app) => {
 // calcul d'origine sur la date saisie, avec tonEcheance().
 let echeance = "";
 
-if (app.echeance && app.echeance.lie && app.echeance.etat) {
+if (app.fermeeAuProfil) {
+// Lot 117 : pas de date à tenir pour une bourse qui n'est pas ouverte à
+// ce profil — le motif, à la place.
+echeance = `<span class="jy-app-deadline is-close" title="${ech(app.fermeeAuProfil)}">Pas ouverte à votre profil</span>`;
+} else if (app.echeance && app.echeance.lie && app.echeance.etat) {
 const etat = app.echeance.etat;
 echeance = `<span class="jy-app-deadline is-${etat.ton}" title="${(etat.detail || "").replace(/"/g, "&quot;")}">${etat.etiquette} : ${etat.valeur}</span>`;
 } else {
@@ -929,7 +934,13 @@ if (procedure) return procedure;
 }
 return null;
 }
-const candidates = applications.filter((a) => a.status !== "refusee");
+// Lot 117 (2026-09-26) : sans admission, ni un cycle clos ni une bourse
+// fermée au profil ne choisissent le pays du guide. Constaté sur le
+// compte de test : le guide de la Turquie venait de la bourse Diyanet,
+// dont le cycle était clos.
+const candidates = applications.filter((a) => a.status !== "refusee"
+&& !a.fermeeAuProfil
+&& !(a.echeance && a.echeance.lie && a.echeance.etat && a.echeance.etat.ouvert === false));
 const rang = (app) => (STATUTS_REPONSE.includes(app.status) ? 3 : STATUTS_DEPOSES.includes(app.status) ? 2 : 1);
 const trie = candidates.slice().sort((a, b) => rang(b) - rang(a));
 for (const app of trie) {
@@ -985,7 +996,7 @@ if (!destination || !destination.documentee) { bloc.hidden = true; bloc.innerHTM
 
 bloc.hidden = false;
 bloc.innerHTML = `
-<h3><i data-lucide="map-pin"></i>Et pour ${ech(destination.pays)}, précisément</h3>
+<h3><i data-lucide="map-pin"></i>Et pour ${ech(avecArticle(destination.pays))}, précisément</h3>
 <p class="jy-destination-sub">${destination.etapes.length} étape${destination.etapes.length > 1 ? "s" : ""} de votre destination, vérifiée${destination.etapes.length > 1 ? "s" : ""} sur les sources officielles. Les délais ci-dessous sont ceux qui vous concernent vraiment.</p>
 <ol class="jy-destination-list">
 ${destination.etapes.map((e) => `
@@ -1304,7 +1315,10 @@ const exigencesManquantes = echeance && echeance.lie && echeance.bourse
 return {
 ...app,
 etapes: computeJourneySteps(app, { profileScore, documentsObtained: userData?.documentsObtained || {}, procedure: procedureDe(app), exigencesManquantes }),
-echeance
+echeance,
+// Lot 117 : la bourse n'est pas ouverte à ce profil (déjà inscrit sur
+// place, cycle en cours…). Même motif que la fiche et les candidatures.
+fermeeAuProfil: echeance && echeance.lie && echeance.bourse ? motifAccesFerme(echeance.bourse, profile || {}) : ""
 };
 });
 
@@ -1365,7 +1379,8 @@ rafraichirCarte(visaChecklist);
 // c'est l'arrivée des données qui ouvre.
 document.body.dataset.parcoursPret = "1";
 
-renderRadar(applications);
+// Lot 117 : une bourse fermée au profil n'a pas d'échéance à rappeler.
+renderRadar(applications.filter((app) => !app.fermeeAuProfil));
 
 // La prochaine action ne se calcule que sur les dossiers ENCORE EN
 // PRÉPARATION : une candidature déjà déposée n'a plus de checklist à

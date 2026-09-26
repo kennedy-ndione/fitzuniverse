@@ -125,5 +125,6 @@ assert.match(lire("applications.js"), /\.\.\.contexteBoursePourFitz\(app\),/);
 test("109 — le guide de départ suit l'admission, jamais un refus ni le pays d'une autre candidature", () => {
 const js = lire("dashboard.js");
 assert.match(js, /const admises = applications\.filter\(\(a\) => a\.status === "admise"\);/);
-assert.match(js, /const candidates = applications\.filter\(\(a\) => a\.status !== "refusee"\);/);
+// Lot 117 : le filtre écarte aussi, sans admission, les cycles clos et les bourses fermées au profil.
+assert.match(js, /const candidates = applications\.filter\(\(a\) => a\.status !== "refusee"/);
 });
