@@ -63,74 +63,16 @@ import { analyserEcheance, formaterDate } from "./echeance.js";
 import { DELAI_REPONSE } from "./delai-reponse.js";
 import { lireParcours } from "./parcours.js";
 import { formatMontant } from "./diagnostic-france.js";
+// Le catalogue des blocages et le bouton : un petit module à part, que
+// les pages qui n'ont besoin QUE du bouton importent directement (lot
+// PERF 3G) — ré-exportés ici, pour tous les autres.
+import { CODES_BLOCAGE } from "./fitz-recours-lien.js";
+export { CODES_BLOCAGE, LIBELLE_RECOURS, lienRecours, lireBlocage, boutonRecours } from "./fitz-recours-lien.js";
 
 // ==========================================================
-// LE CATALOGUE DES BLOCAGES CONNUS — fermé, et chaque code a sa donnée
+// LE CATALOGUE DES BLOCAGES CONNUS ET LE LIEN — dans js/fitz-recours-lien.js
+// (lot PERF 3G, 2026-09-28), importés et ré-exportés en tête de ce module.
 // ==========================================================
-
-export const CODES_BLOCAGE = [
-"verrou",       // « cet outil est fermé »           → decideVerrou + la grille
-"prerequis",    // « je ne peux pas générer ma lettre » → qualifierEtapes / LIBELLE_PREREQUIS
-"quoi_faire",   // « je ne sais pas quoi faire »      → prochaineAction
-"documents",    // « quels documents ? »              → lireExigences + documents-data
-"etape",        // « je ne comprends pas cette étape » → texteConsigne + source + verifieLe
-"paiement",     // « où et quand payer ? »            → la couche de résidence
-"echeance",     // « c'est quand la date limite ? »   → analyserEcheance / jalons
-"depot_tiers",  // « je ne dépose pas moi-même ? »    → deposeParUnTiers
-"preuve",       // « comment prouver mon dépôt ? »    → preuve-depot
-"sans_reponse"  // « je n'ai pas de nouvelles »       → DELAI_REPONSE + l'état réel
-];
-
-/** Le libellé de l'affordance, le même partout. */
-export const LIBELLE_RECOURS = "Bloqué ? Demandez à Fitz";
-
-// ==========================================================
-// LE LIEN — un seul composant, six contextes
-// ==========================================================
-
-/**
-* L'URL vers Fitz, avec le contexte du blocage. Le motif existe déjà :
-* ai-chat.html lit `?prep=<test>` ; on l'étend avec `?bloc=<code>` et,
-* selon le cas, `app`, `etape`, `feature`.
-*/
-export function lienRecours({ code, app = "", etape = "", feature = "" } = {}) {
-const params = new URLSearchParams();
-params.set("bloc", CODES_BLOCAGE.includes(code) ? code : "quoi_faire");
-if (app) params.set("app", String(app));
-if (etape) params.set("etape", String(etape));
-if (feature) params.set("feature", String(feature));
-return `ai-chat.html?${params.toString()}`;
-}
-
-/**
-* Lit un blocage dans une chaîne de recherche. Un code inconnu ou
-* fabriqué dans la barre d'adresse rend `null` : le chat s'ouvre
-* normalement, sans erreur.
-*/
-export function lireBlocage(search) {
-const params = new URLSearchParams(String(search || ""));
-const code = params.get("bloc");
-if (!code || !CODES_BLOCAGE.includes(code)) return null;
-return {
-code,
-app: params.get("app") || "",
-etape: params.get("etape") || "",
-feature: params.get("feature") || ""
-};
-}
-
-function echapper(texte) {
-return String(texte == null ? "" : texte).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-/**
-* L'affordance « Bloqué ? Demandez à Fitz », en HTML — un lien, une
-* classe, une icône. Elle se pose à l'endroit du blocage ; le bouton
-* flottant et l'onglet mobile restent l'entrée générale.
-*/
-export function boutonRecours(blocage, { classe = "", libelle = LIBELLE_RECOURS } = {}) {
-return `<a href="${echapper(lienRecours(blocage))}" class="fitz-recours${classe ? ` ${classe}` : ""}" data-recours="${echapper(blocage.code)}"><i data-lucide="life-buoy" aria-hidden="true"></i><span>${echapper(libelle)}</span></a>`;
-}
 
 // ==========================================================
 // L'ÉCHELLE DE RECOURS — jamais d'impasse, jamais un maillon fermé

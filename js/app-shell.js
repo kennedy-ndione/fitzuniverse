@@ -61,7 +61,8 @@ import { advisorOuvert, ESPACE_OUTILS, passSeul, PASS_LABEL, resolvePlanPreinscr
 // Lot FITZ-RECOURS : à la place d'un outil verrouillé, « Bloqué ?
 // Demandez à Fitz » — le diagnostic (quelle formule l'ouvre) est
 // calculé, donc gratuit ; la conversation, elle, reste réservée.
-import { boutonRecours } from "./fitz-recours.js";
+// Lot PERF 3G : le bouton seul (js/fitz-recours-lien.js), pas tout le diagnostic de Fitz.
+import { boutonRecours } from "./fitz-recours-lien.js";
 // Les portails sont une donnée PAYANTE gardée en mémoire le temps de la
 // session. js/portails.js annonce depuis le lot S3 qu'elle est retirée à
 // la déconnexion — mais `oublierPortails()` n'était appelée NULLE PART.

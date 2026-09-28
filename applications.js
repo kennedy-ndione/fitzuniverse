@@ -113,7 +113,8 @@ import { quotaDeLaFormule } from "./js/parcours-quota.js";
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage — une étape
 // prématurée, une étape de procédure, une échéance proche, un élément de
 // dossier. Un seul composant, le contexte voyage dans le lien.
-import { boutonRecours } from "./js/fitz-recours.js";
+// Lot PERF 3G : le bouton seul (js/fitz-recours-lien.js), pas tout le diagnostic de Fitz.
+import { boutonRecours } from "./js/fitz-recours-lien.js";
 import { storage } from "./firebase-config.js";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js";
 

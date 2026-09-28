@@ -69,7 +69,8 @@ import { quotaDeLaFormule } from "./js/parcours-quota.js";
 // d'elle — la citation reste intacte (data-sans-glossaire, lot R21).
 import { motsTechniques } from "./js/glossaire.js";
 import { slotIdLibre } from "./js/application-actions.js";
-import { boutonRecours } from "./js/fitz-recours.js";
+// Lot PERF 3G : le bouton seul (js/fitz-recours-lien.js), pas tout le diagnostic de Fitz.
+import { boutonRecours } from "./js/fitz-recours-lien.js";
 import { guideVisaPour } from "./js/visa-depart.js";
 import { VISA_ETAPES } from "./js/journey-map.js";
 import { COUNTRY_NAMES } from "./js/countries.js";

@@ -28,7 +28,8 @@ import { lireExigences, elementsAAjouter, dossierAAjouter } from "./js/exigences
 import { trouverProcedure } from "./js/procedures/index.js";
 import { prochaineAction, qualifierEtapes, joursRestants, LIBELLE_PREREQUIS } from "./js/next-action.js";
 // Lot FITZ-RECOURS : le recours est à l'endroit du blocage.
-import { boutonRecours } from "./js/fitz-recours.js";
+// Lot PERF 3G : le bouton seul (js/fitz-recours-lien.js), pas tout le diagnostic de Fitz.
+import { boutonRecours } from "./js/fitz-recours-lien.js";
 import { lireParcours } from "./js/parcours.js";
 import { etatDesPhases, radarEcheances, tonEcheance, STATUTS_DEPOSES, STATUTS_REPONSE, VISA_ETAPES } from "./js/journey-map.js";
 // LOT ESPACE-ÉTUDIANT (2026-09-13) — deux décisions sortent d'ici, et
