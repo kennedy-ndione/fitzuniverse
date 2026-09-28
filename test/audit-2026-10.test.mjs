@@ -142,3 +142,34 @@ assert.ok(bloc.includes("aEmail: emailCompte,"));
 assert.ok(!bloc.includes("aEmail: u.email"));
 assert.ok(bloc.indexOf("getUser(uid)") < bloc.indexOf("emailsEnvoyes/bienvenue-"), "contrôle avant le verrou d'idempotence");
 });
+
+// ------------------------------------------------------------------
+// Le rapport d'audit décrit des failles non corrigées : il ne part JAMAIS
+// en ligne (firebase.json publie la racine par défaut).
+// ------------------------------------------------------------------
+test("le rapport AUDIT-2026-10.md n'est pas publié par Firebase Hosting", async () => {
+const { lireMotifs, listerPublies, motifVersRegex } = await import("../scripts/hosting-publie.mjs");
+assert.ok(lireMotifs().includes("AUDIT-*.md"));
+assert.ok(motifVersRegex("AUDIT-*.md").test("AUDIT-2026-10.md"));
+const publies = listerPublies();
+assert.ok(!publies.some((f) => /^AUDIT-/.test(f)), "un rapport d'audit serait servi en ligne");
+});
+
+// ------------------------------------------------------------------
+// Harnais (audit 2026-10) : « Fitz a besoin de le niveau visé » sur le hub
+// ------------------------------------------------------------------
+test("hub : la phrase des champs manquants reste française pour toute combinaison", async () => {
+const { CHAMPS_PROFIL_REQUIS } = await import("../js/fitz-choisit.js");
+const tableau = lire("dashboard.js");
+const m = tableau.match(/\? `Avant de choisir, ([^$]*)\$\{listeFrancaise\(manquants\)\}\./);
+assert.ok(m, "la phrase du hub compose toujours la liste des manquants");
+assert.equal(m[1], "il manque encore à Fitz ");
+// La liste telle que listeFrancaise() la compose (dashboard.js).
+const liste = (l) => (l.length <= 1 ? l[0] || "" : `${l.slice(0, -1).join(", ")} et ${l[l.length - 1]}`);
+const libelles = CHAMPS_PROFIL_REQUIS.map((c) => c.libelle);
+for (let masque = 1; masque < 1 << libelles.length; masque++) {
+const choisis = libelles.filter((_, i) => masque & (1 << i));
+const phrase = `Avant de choisir, ${m[1]}${liste(choisis)}.`;
+assert.doesNotMatch(phrase, /\bde (le|les|au|aux)\b|\bde [aeiouéè]/i, phrase);
+}
+});
