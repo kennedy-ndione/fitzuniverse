@@ -54,6 +54,7 @@
       "REDACTION.md",
       "TESTING.md",
       "AUDIT-*.md",
+      "PERF-*.md",
       "package.json",
       "package-lock.json",
       "firestore.rules",
