@@ -502,6 +502,48 @@ for (const nom of Object.keys(expires)) {
   await admin.doc(`supportTickets/t-${EXP(nom)}`).delete();
 }
 
+// AUDIT 2026-10 — LA SUSPENSION VIT HORS DU PROFIL (suspensions/{uid}).
+console.log("Audit 2026-10 — suspension hors du profil :");
+const { ROLE_ADMIN: ROLE_ADMIN_SUSP } = await import("../js/roles-admin.js");
+const ADMIN_SUSP = `rejeu-admin-susp-${T}`;
+const SUSP = `rejeu-suspendu-${T}`;
+const AUTRE_ETUDIANT = `rejeu-autre-etudiant-${T}`;
+await admin.doc(`admins/${ADMIN_SUSP}`).set({ isActive: true, role: ROLE_ADMIN_SUSP, email: "moderation@rejeu.test" });
+await admin.doc(`users/${SUSP}`).set({ uid: SUSP, name: "Suspendu", email: "s@rejeu.test", plan: "conseiller-6" });
+await admin.doc(`users/${AUTRE_ETUDIANT}`).set({ uid: AUTRE_ETUDIANT, name: "Autre", email: "a@rejeu.test" });
+// Écrire suspensions/{uid} comme `uid_auteur`, `le` à l'heure du serveur
+// (serverTimestamp() côté client).
+async function ecrireSuspension(auteur, cible, champs, avecHeure = true) {
+  const name = `projects/${PROJET}/databases/(default)/documents/suspensions/${cible}`;
+  const write = { update: { name, fields: Object.fromEntries(Object.entries(champs).map(([k, v]) => [k, versValeur(v)])) } };
+  if (avecHeure) write.updateTransforms = [{ fieldPath: "le", setToServerValue: "REQUEST_TIME" }];
+  const r = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton(auteur)}` },
+    body: JSON.stringify({ writes: [write] })
+  });
+  return r.status;
+}
+const lireCommeEtudiant = async (uid, chemin) => (await fetch(`${BASE}/${chemin}`, { headers: { Authorization: `Bearer ${jeton(uid)}` } })).status;
+attendre("l'étudiant ne se suspend ni ne se lève lui-même", await ecrireSuspension(SUSP, SUSP, { suspendu: false, par: SUSP }), 403);
+attendre("un autre étudiant ne suspend personne", await ecrireSuspension(AUTRE_ETUDIANT, SUSP, { suspendu: true, par: AUTRE_ETUDIANT }), 403);
+attendre("l'admin ne signe pas au nom d'un autre", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: AUTRE_ETUDIANT }), 403);
+attendre("l'admin n'antidate pas (le = heure du serveur)", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP, le: "2020-01-01" }, false), 403);
+attendre("un champ de plus est refusé", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP, motif: "x" }), 403);
+attendre("l'admin (ordinaire) suspend : accepté", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP }), 200);
+attendre("l'étudiant lit SA suspension", await lireCommeEtudiant(SUSP, `suspensions/${SUSP}`), 200);
+attendre("un autre étudiant ne la lit pas", await lireCommeEtudiant(AUTRE_ETUDIANT, `suspensions/${SUSP}`), 403);
+attendre("profil SANS disabled : le suspendu n'écrit plus à l'équipe", await creerCommeEtudiant(SUSP, `users/${SUSP}/messages/m1`, message), 403);
+attendre("le suspendu supprime son profil (droit à l'effacement)", await supprimerCommeEtudiant(SUSP, `users/${SUSP}`), 200);
+attendre("… mais ne le RECRÉE pas", await creerCommeEtudiant(SUSP, `users/${SUSP}`, { uid: SUSP, name: "Suspendu", email: "s@rejeu.test" }), 403);
+attendre("personne ne supprime une suspension, l'étudiant", await supprimerCommeEtudiant(SUSP, `suspensions/${SUSP}`), 403);
+attendre("personne ne supprime une suspension, l'admin", await supprimerCommeEtudiant(ADMIN_SUSP, `suspensions/${SUSP}`), 403);
+attendre("l'admin lève la suspension (suspendu: false)", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: false, par: ADMIN_SUSP }), 200);
+attendre("suspension levée : le profil se recrée", await creerCommeEtudiant(SUSP, `users/${SUSP}`, { uid: SUSP, name: "Suspendu", email: "s@rejeu.test" }), 200);
+attendre("suspension levée : il écrit de nouveau à l'équipe", await creerCommeEtudiant(SUSP, `users/${SUSP}/messages/m1`, message), 200);
+for (const d of (await admin.collection(`users/${SUSP}/messages`).get()).docs) await d.ref.delete();
+for (const d of [`users/${SUSP}`, `users/${AUTRE_ETUDIANT}`, `suspensions/${SUSP}`, `admins/${ADMIN_SUSP}`]) await admin.doc(d).delete();
+
 // AUDIT 2026-10 — le journal analytics et ses compteurs, ouverts à tous
 // mais dans la forme exacte de js/analytics.js.
 console.log("Audit 2026-10 — analytics :");

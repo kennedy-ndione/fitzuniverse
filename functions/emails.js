@@ -41,6 +41,8 @@ const rappels = require("./lib/rappels");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+// La suspension, lue hors du profil (audit 2026-10).
+const { uidsSuspendus } = require("./lib/suspension");
 const crypto = require("crypto");
 
 if (!admin.apps.length) admin.initializeApp();
@@ -296,9 +298,13 @@ exports.envoyerAlerteBourse = onCall(
     const abonnes = await admin.firestore().collection("users")
       .where("alerteBourses", "==", true).get();
 
+    // Audit 2026-10 : les suspendus d'après suspensions/{uid}, en une
+    // requête ; `disabled` reste lu.
+    const suspendus = await uidsSuspendus(admin.firestore());
+
     const aServir = abonnes.docs
       .map((d) => ({ uid: d.id, ...(d.data() || {}) }))
-      .filter((u) => u.email && !dejaServis.has(u.uid) && u.disabled !== true);
+      .filter((u) => u.email && !dejaServis.has(u.uid) && u.disabled !== true && !suspendus.has(u.uid));
 
     const lot = aServir.slice(0, LOT_MAX);
 

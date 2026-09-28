@@ -22,7 +22,8 @@ orderBy,
 limit,
 Timestamp,
 serverTimestamp,
-deleteField
+deleteField,
+writeBatch
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 // Une seule orthographe de rôle, déclarée dans js/roles-admin.js. Un
@@ -705,8 +706,15 @@ export async function updateUserTesterAccess(uid, enabled) {
 await updateDoc(doc(db, "users", uid), { testerAccess: enabled });
 }
 
+// AUDIT 2026-10 : la suspension vit HORS du profil, dans suspensions/{uid}
+// (firestore.rules) — un étudiant qui supprime puis recrée son profil ne
+// l'efface plus. Les deux écritures partent ensemble (lot atomique) :
+// "disabled" reste sur le profil pour l'affichage et les anciens lecteurs.
 export async function setUserDisabled(uid, disabled) {
-await updateDoc(doc(db, "users", uid), { disabled });
+const lot = writeBatch(db);
+lot.set(doc(db, "suspensions", uid), { suspendu: disabled === true, par: auth.currentUser.uid, le: serverTimestamp() });
+lot.update(doc(db, "users", uid), { disabled });
+await lot.commit();
 }
 
 // planExpiresAt/fitzExpressExpiresAt (pricing pivot 2026-07-30) — mêmes

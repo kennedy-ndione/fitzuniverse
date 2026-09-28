@@ -189,10 +189,19 @@ return planOf(uid) == 'conseiller-6';
 // voir la règle du fil de messages plus bas, et DROITS_UNIVERSELS
 // (js/plan-features.js).
 
-// Un compte suspendu par l'administrateur (champ "disabled", qu'il est
-// seul à pouvoir écrire) ne peut plus écrire à l'équipe.
+// Un compte suspendu par l'administrateur ne peut plus écrire à l'équipe.
+// AUDIT 2026-10 : la suspension vit HORS du profil, dans
+// suspensions/{uid}, que seul un administrateur écrit (règle plus bas).
+// Le champ "disabled" du profil ne suffisait pas : l'étudiant supprimait
+// son profil puis le recréait sans lui, et la suspension disparaissait.
+// "disabled" reste lu, pour les suspensions posées avant ce lot.
+function suspenduHorsProfil(uid) {
+return exists(/databases/$(database)/documents/suspensions/$(uid)) &&
+get(/databases/$(database)/documents/suspensions/$(uid)).data.get('suspendu', false) == true;
+}
+
 function compteSuspendu(uid) {
-return get(/databases/$(database)/documents/users/$(uid)).data.get('disabled', false) == true;
+return suspenduHorsProfil(uid) || get(/databases/$(database)/documents/users/$(uid)).data.get('disabled', false) == true;
 }
 
 // Un Pass Découverte EN COURS sur ce compte (audit 2026-10 : l'échéance
@@ -378,7 +387,9 @@ allow read: if isOwner(uid) || isAdmin();
 // (`attributionManuelle`).
 // Une session ANONYME (lecture de Fitz sur la page de résultats) ne crée
 // jamais de fiche étudiant (2026-09-25) : elle en créait sans nom ni e-mail.
-allow create: if isOwner(uid) && request.auth.token.firebase.sign_in_provider != 'anonymous' && !request.resource.data.keys().hasAny(champsFormule().concat(["disabled", "testerAccess"]));
+// AUDIT 2026-10 : un compte SUSPENDU (suspensions/{uid}) ne recrée pas de
+// profil — c'est ce qui rend la suspension indépendante du profil.
+allow create: if isOwner(uid) && request.auth.token.firebase.sign_in_provider != 'anonymous' && !request.resource.data.keys().hasAny(champsFormule().concat(["disabled", "testerAccess"])) && !suspenduHorsProfil(uid);
 allow update: if
 // Le superAdmin : les droits payants, et rien d'autre.
 (isSuperAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(champsFormule().concat(champsAdminOrdinaire()))) ||
@@ -972,6 +983,27 @@ allow update: if isSuperAdmin()
 
 allow delete: if false;
 
+}
+
+// ------------------------------------------------------------
+// LES SUSPENSIONS (audit 2026-10) — suspensions/{uid}, hors du profil.
+// - Écriture : un administrateur (ordinaire compris : suspendre est de la
+//   modération, comme "disabled"), forme imposée, signée de son uid et
+//   datée par le serveur.
+// - Lecture : l'intéressé (js/access-guard.js le redirige vers
+//   suspended.html) et l'administration.
+// - Suppression : personne. On lève une suspension (suspendu: false), on
+//   n'efface pas qu'elle a existé.
+// Les Cloud Functions la lisent aussi (functions/lib/suspension.js).
+// ------------------------------------------------------------
+match /suspensions/{uid} {
+allow read: if isOwner(uid) || isAdmin();
+allow create, update: if isAdmin() &&
+request.resource.data.keys().hasOnly(["suspendu", "par", "le"]) &&
+request.resource.data.suspendu is bool &&
+request.resource.data.par == request.auth.uid &&
+request.resource.data.le == request.time;
+allow delete: if false;
 }
 
 // ------------------------------------------------------------

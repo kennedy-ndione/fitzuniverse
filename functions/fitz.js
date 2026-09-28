@@ -262,6 +262,8 @@ const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // Elle est désormais dans un module PUR, testé sous Node et comparé à la
 // grille par test/pre-fitz.test.mjs (lot PRÉ-FITZ, 2026-09-10).
 const { formuleActive, formuleDeDerogation, plafondsDe, pointsValides, tacheConnue, verdictSysteme } = require("./lib/fitz-acces");
+// La suspension, lue hors du profil (audit 2026-10).
+const { estSuspendu } = require("./lib/suspension");
 
 // ============================================================
 // COMPTEUR D'USAGE
@@ -582,7 +584,9 @@ exports.fitzGenerate = onCall(
     const snap = await admin.firestore().doc(`users/${uid}`).get();
     const profil = snap.data();
 
-    if (profil?.disabled === true) {
+    // Audit 2026-10 : suspensions/{uid} fait foi, même si l'étudiant a
+    // supprimé ou recréé son profil ; `disabled` reste lu.
+    if (await estSuspendu(admin.firestore(), uid, profil)) {
       throw refus("permission-denied", "AUTH", "Ce compte est suspendu.");
     }
 

@@ -73,6 +73,8 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // AUDIT 2026-10 : la confirmation de PayDunya, seule source de vérité
 // avant de créditer (functions/lib/confirmation-paydunya.js).
 const { jetonValide, cheminConfirmation, verdictConfirmation } = require("./lib/confirmation-paydunya");
+// La suspension, lue hors du profil (audit 2026-10).
+const { estSuspendu } = require("./lib/suspension");
 const { GRILLE, offreDe, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
 
 // ============================================================
@@ -147,7 +149,8 @@ exports.creerPaiement = onCall(
     const snap = await admin.firestore().doc(`users/${uid}`).get();
     const profil = snap.data() || {};
 
-    if (profil.disabled === true) {
+    // Audit 2026-10 : suspensions/{uid} fait foi ; `disabled` reste lu.
+    if (await estSuspendu(admin.firestore(), uid, profil)) {
       throw new HttpsError("permission-denied", "Ce compte est suspendu.");
     }
 
