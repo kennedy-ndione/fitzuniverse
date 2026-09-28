@@ -357,7 +357,10 @@ async function messages({ navigateur, base }) {
     for (const e of erreurs) anomalies.push(`${ou} — ${e}`);
     await contexte.close();
   }
-  // f) Un compte Pass Découverte seul voit le bouton (pas la réponse).
+  // f) Un compte Pass Découverte seul voit le bouton — ET peut répondre :
+  //    la messagerie est ouverte à tous les comptes, gratuits compris,
+  //    depuis le 2026-09-23 (student_messaging dans DROITS_UNIVERSELS,
+  //    js/plan-features.js ; doctrine de .claude/CLAUDE.md §6).
   {
     const { contexte, page, erreurs } = await ouvrir(navigateur, base, { viewport: { width: 390, height: 844 }, mobile: true, session: { etudiant: PASS_SEUL } });
     try {
@@ -366,8 +369,9 @@ async function messages({ navigateur, base }) {
       await page.waitForTimeout(700);
       const lu = await page.evaluate(LIRE_MESSAGES);
       if (lu.boutonCache) anomalies.push("messages.html (Pass Découverte seul) — le bouton « Signaler un problème » est masqué");
-      if (!lu.verrou) anomalies.push("messages.html (Pass Découverte seul) — la réponse devrait être verrouillée (student_messaging)");
-      notes.push("messages.html (Pass Découverte seul) : bouton « Signaler un problème » visible, réponse verrouillée");
+      if (lu.verrou) anomalies.push("messages.html (Pass Découverte seul) — la réponse est verrouillée alors que la messagerie est ouverte à tous les comptes (student_messaging, 2026-09-23)");
+      if (!lu.saisie) anomalies.push("messages.html (Pass Découverte seul) — aucune zone de saisie : il doit pouvoir écrire à l'équipe");
+      notes.push("messages.html (Pass Découverte seul) : bouton « Signaler un problème » visible, réponse ouverte");
     } catch (e) {
       anomalies.push(`messages.html (Pass Découverte seul) — ÉCHEC : ${e.message.split("\n")[0].slice(0, 140)}`);
     }

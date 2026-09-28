@@ -966,8 +966,13 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
           residences: [...document.querySelectorAll("#destResidencesListe li")].map((li) => li.textContent.trim()),
           residencesPhrase: texte(document.getElementById("destResidencesPhrase")),
           procedureTitre: texte(document.getElementById("destProcedureTitre")),
+          // Lot 97 (2026-09-25) : la première carte est le diagnostic
+          // GRATUIT (plan-card--entree, sans .pre-offre-prix, lien
+          // diagnostic-pays.html?d=<pays>) ; les deux suivantes sont payantes.
           offres: [...document.querySelectorAll("#destOffres .pre-offre")].map((o) => ({
-            titre: texte(o.querySelector("h3")), prix: texte(o.querySelector(".pre-offre-prix")), lien: o.querySelector("a").getAttribute("href")
+            titre: texte(o.querySelector("h3")), prix: texte(o.querySelector(".pre-offre-prix")),
+            gratuit: /^Gratuit$/.test(texte(o.querySelector(".plan-amount"))),
+            lien: o.querySelector("a").getAttribute("href")
           })),
           deduction: texte(document.getElementById("destDeduction")),
           catalogue: texte(document.getElementById("destCatalogue")),
@@ -1012,10 +1017,14 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       // Le pays voyage jusqu'à la caisse.
       if (vu.offres.length !== 3) anomalies.push(`page destination : ${vu.offres.length} offre(s) au lieu de 3.`);
       for (const o of vu.offres) {
-        if (!o.lien.includes(`destination=${france.id}`)) anomalies.push(`offre « ${o.titre} » : lien « ${o.lien} » sans destination.`);
-        if (!/\d/.test(o.prix)) anomalies.push(`offre « ${o.titre} » : aucun prix.`);
+        const paysDansLeLien = o.gratuit ? o.lien.includes(`d=${france.id}`) : o.lien.includes(`destination=${france.id}`);
+        if (!paysDansLeLien) anomalies.push(`offre « ${o.titre} » : lien « ${o.lien} » sans destination.`);
+        if (!o.gratuit && !/\d/.test(o.prix)) anomalies.push(`offre « ${o.titre} » : aucun prix.`);
       }
-      if (!/10 000 F/.test(vu.deduction)) anomalies.push("page destination : la déduction du diagnostic n'est pas annoncée.");
+      if (vu.offres.filter((o) => o.gratuit).length !== 1) anomalies.push(`page destination : ${vu.offres.filter((o) => o.gratuit).length} carte(s) « Gratuit » au lieu du seul diagnostic.`);
+      // Le diagnostic n'est plus vendu (lot 97) : plus rien à déduire, et
+      // la page ne doit plus promettre les 10 000 F.
+      if (vu.deduction) anomalies.push(`page destination : une déduction du diagnostic est encore annoncée (« ${vu.deduction.slice(0, 80)} »).`);
 
       // ET SURTOUT : rien de ce que le Diagnostic vend.
       for (const interdite of CHAINES_INTERDITES) {
@@ -1053,7 +1062,10 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       return {
         visible: r.width > 0 && r.height > 0,
         colonnes: [...f.querySelectorAll(".footer-col-title")].map((e) => e.textContent.trim()),
-        legal: [...f.querySelectorAll("a[href^='bientot.html']")].map((a) => a.textContent.trim()),
+        // Depuis le 2026-09-20 : colonne Contact à la place de Légal, liens
+        // légaux en petit dans la ligne du bas (.footer-legal), vers leurs
+        // vraies pages (test/pied-de-page.test.mjs).
+        legal: [...f.querySelectorAll(".footer-legal a")].map((a) => a.getAttribute("href")),
         h1: document.querySelectorAll("h1").length,
         deborde: document.scrollingElement.scrollWidth > window.innerWidth + 1,
         // Lot PIED-DE-PAGE : moins d'un demi-écran à 375 px, sans photo.
@@ -1065,7 +1077,7 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
     try {
       // a) scholarships.html, en direct.
       await page.goto(`${base}/scholarships.html`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector("#scholarshipsContainer .scholarship-card, #resultsCount", { timeout: 30000 });
+      await page.waitForSelector("#scholarship-list .scholarship-card, #resultsCount", { timeout: 30000 });
       await page.waitForFunction(() => !document.getElementById("heroBoursesTotal").hidden, null, { timeout: 20000 });
       await page.waitForTimeout(800);
       const bourses = await page.evaluate(() => ({
@@ -1089,23 +1101,20 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       if (!bourses.glossaire) anomalies.push("LANGAGE scholarships : js/glossaire-seul.js absent — le glossaire a disparu avec le pied de page.");
       notes.push(`LANGAGE scholarships.html à 375 px : « ${bourses.phrase.slice(0, 52)}… », ${bourses.nombre} bourses lues, sans pied de page, glossaire chargé`);
 
-      // b) Le questionnaire : le bandeau avant la question.
+      // b) Le questionnaire : le bandeau d'entrée a été RETIRÉ le
+      // 2026-09-20 (décision de Charles, test/langage.test.mjs « langage 6 ») :
+      // la question d'abord, un seul <h1> (visuellement masqué).
       await page.goto(`${base}/eligibility-questions.html`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("#question", { timeout: 20000 });
-      const q = await page.evaluate(() => {
-        const e = document.getElementById("entree"), qh = document.getElementById("question");
-        return {
-          present: !!e && !e.hidden, y: e ? e.getBoundingClientRect().top : null, yq: qh.getBoundingClientRect().top,
-          texte: e ? e.innerText.replace(/\s+/g, " ") : "", h1: document.querySelectorAll("h1").length
-        };
-      });
-      if (!q.present) anomalies.push("LANGAGE questionnaire : pas de bandeau d'entrée.");
-      else {
-        if (q.y >= q.yq) anomalies.push("LANGAGE questionnaire : le bandeau n'est pas AVANT la question.");
-        for (const attendu of ["minutes", "Gratuit", "sans compte", "votre score"]) if (!q.texte.includes(attendu)) anomalies.push(`LANGAGE questionnaire : « ${attendu} » manque au bandeau.`);
-        if (q.h1 !== 1) anomalies.push(`LANGAGE questionnaire : ${q.h1} <h1>.`);
-      }
-      notes.push(`LANGAGE questionnaire : bandeau « ${q.texte.slice(0, 70)}… » avant la première question`);
+      const q = await page.evaluate(() => ({
+        bandeau: !!document.getElementById("entree"),
+        h1: document.querySelectorAll("h1").length,
+        question: (document.getElementById("question")?.textContent || "").trim()
+      }));
+      if (q.bandeau) anomalies.push("LANGAGE questionnaire : le bandeau d'entrée est revenu (retiré le 2026-09-20).");
+      if (q.h1 !== 1) anomalies.push(`LANGAGE questionnaire : ${q.h1} <h1>.`);
+      if (!q.question) anomalies.push("LANGAGE questionnaire : aucune question affichée d'emblée.");
+      notes.push(`LANGAGE questionnaire : sans bandeau, première question « ${q.question.slice(0, 60)} »`);
 
       // c) Le glossaire, sur la page qui parle d'apostille.
       await page.goto(`${base}/preinscriptions.html`, { waitUntil: "domcontentloaded" });
@@ -1145,8 +1154,10 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       const pied = await lirePied();
       if (!pied || !pied.visible) anomalies.push("PIED-DE-PAGE accueil : pas de pied de page visible.");
       else {
-        if (!pied.colonnes.includes("Légal")) anomalies.push(`PIED-DE-PAGE accueil : colonnes « ${pied.colonnes.join(", ")} » sans Légal.`);
-        if (pied.legal.length !== 4) anomalies.push(`PIED-DE-PAGE accueil : ${pied.legal.length} liens légaux au lieu de 4.`);
+        if (!pied.colonnes.includes("Contact")) anomalies.push(`PIED-DE-PAGE accueil : colonnes « ${pied.colonnes.join(", ")} » sans Contact.`);
+        for (const cible of ["mentions-legales.html", "cgv.html", "confidentialite.html"]) {
+          if (!pied.legal.includes(cible)) anomalies.push(`PIED-DE-PAGE accueil : le lien légal vers ${cible} manque dans la ligne du bas.`);
+        }
         if (pied.deborde) anomalies.push("PIED-DE-PAGE accueil : la page déborde horizontalement à 375 px.");
         if (pied.hauteur > 406) anomalies.push(`PIED-DE-PAGE : ${pied.hauteur} px de haut à 375 px, plus d'un demi-écran (406).`);
         if (pied.photo) anomalies.push("PIED-DE-PAGE : la bande photo s'affiche à 375 px.");

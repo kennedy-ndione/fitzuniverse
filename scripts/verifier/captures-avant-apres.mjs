@@ -40,7 +40,7 @@ fs.mkdirSync(DOSSIER, { recursive: true });
 // Les pages touchées, et — quand elle en porte une — la surface Fitz à
 // mesurer. Aucune page de l'ESPACE ne porte .fitz-surface (relevé du
 // 2026-09-11 : eligibility-questions, eligibility-test, results
-// seulement) ; l'accueil porte la recette d'origine sur .hero-demo.
+// seulement ; results ne la porte plus depuis le 2026-09-23) ; l'accueil porte la recette d'origine sur .hero-demo.
 const PAGES = [
 { page: "index.html", surface: "#fitz-demo .hero-demo", defiler: "#fitz-demo" },
 { page: "offers.html" },
@@ -49,7 +49,9 @@ const PAGES = [
 { page: "payment.html?plan=essentiel-4" },
 { page: "eligibility-questions.html", surface: ".container.fitz-surface" },
 { page: "eligibility-test.html", surface: ".card.fitz-surface" },
-{ page: "results.html", surface: "#narrativeIntro", questionnaire: "licence-obtenue" }
+// results.html ne porte plus de surface Fitz (#narrativeIntro retiré le
+// 2026-09-23, « la réponse d'abord ») : capture pleine page seulement.
+{ page: "results.html", questionnaire: "licence-obtenue" }
 ];
 const VUES = [{ nom: "375", viewport: { width: 375, height: 812 }, mobile: true }, { nom: "1280", viewport: { width: 1280, height: 900 }, mobile: false }];
 

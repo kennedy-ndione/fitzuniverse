@@ -85,7 +85,11 @@ const LIRE_PAGE = () => {
   const vides = interactifs.filter((e) => {
     if (e.textContent.trim()) return false;
     const descendants = [...e.querySelectorAll("*")];
-    if (!descendants.length) return true;
+    // Un contrôle SANS enfant peut être dessiné par lui-même : les points
+    // du carrousel d'annonces de l'accueil (lot 130, .annonces-point :
+    // fond sur content-box, nom dans aria-label). Seul ce cas est admis —
+    // un bouton à icône reste jugé sur ses descendants.
+    if (!descendants.length) return !dessine(e);
     return !descendants.some(dessine);
   }).map(decrire);
   // Lot CONTRÔLES-UNIFIÉS : aucun contrôle dessiné par le système ne doit
