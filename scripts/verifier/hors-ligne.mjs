@@ -30,6 +30,8 @@
 // chargement et le harnais échoue — c'est le comportement voulu : on
 // veut être prévenu, pas dépanné en silence.
 import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
 
 const SYMBOLES = {
   "firebase-app.js": ["initializeApp", "getApp", "getApps"],
@@ -194,14 +196,46 @@ function doublureFirebase(fichier, admin = false, etudiant = null) {
 
 // Lucide : le site appelle window.lucide.createIcons() à plusieurs
 // endroits et remplace des <i data-lucide> par des <svg>. La doublure
-// ne dessine rien — elle laisse les <i> en place, ce qui est
-// suffisant : le harnais vérifie la logique, pas le dessin.
+// ne dessine rien — elle laisse les <i> en place. Ce n'est plus qu'un
+// repli : depuis le lot ICONE-BTN, le peigne juge les icônes RENDUES, et
+// sous la coquille il accuse chaque bouton à icône (voir LUCIDE_SERVI).
 const DOUBLURE_LUCIDE = `window.lucide = { createIcons: function(){}, icons: {} };`;
 
+// Le paquet est cherché là où Node le trouve (même méthode que
+// test/icones.test.mjs, PR #3), et non à un chemin fixe sous la racine :
+// un worktree n'a pas de node_modules à lui, la résolution remonte
+// jusqu'à celui de la copie principale, et « ../../node_modules » y
+// servait la coquille. On résout le point d'entrée (un champ « exports »
+// peut refuser un chemin profond), puis on remonte au dossier dont le
+// package.json porte le nom du paquet.
+function dossierDuPaquet(nom) {
+  let d = path.dirname(createRequire(import.meta.url).resolve(nom));
+  while (!(fs.existsSync(path.join(d, "package.json")) && JSON.parse(fs.readFileSync(path.join(d, "package.json"), "utf8")).name === nom)) {
+    const parent = path.dirname(d);
+    if (parent === d) throw new Error(`${nom} : dossier du paquet introuvable`);
+    d = parent;
+  }
+  return d;
+}
+
+// Ce que le harnais sert pour unpkg.com/lucide, dit à voix haute
+// (2026-09-28). Dans un worktree, la coquille était servie sans un mot,
+// et le peigne sortait sur ai-chat.html la même liste de huit boutons
+// « vides », défaut réel ou pas. Le « témoin lucide » de verifier.mjs lit
+// LUCIDE_SERVI et ÉCHOUE sous la coquille (décision de Charles) ;
+// l'avertissement ci-dessous vaut pour les autres points d'entrée
+// (scripts de captures, preuve ciblée avec peignerPage).
 let LUCIDE_REEL = null;
+export const LUCIDE_SERVI = { reel: false, version: null, dossier: null, raison: null };
 try {
-  LUCIDE_REEL = fs.readFileSync(new URL("../../node_modules/lucide/dist/umd/lucide.js", import.meta.url), "utf8");
-} catch { LUCIDE_REEL = null; }
+  const dossier = dossierDuPaquet("lucide");
+  LUCIDE_REEL = fs.readFileSync(path.join(dossier, "dist/umd/lucide.js"), "utf8");
+  Object.assign(LUCIDE_SERVI, { reel: true, version: JSON.parse(fs.readFileSync(path.join(dossier, "package.json"), "utf8")).version, dossier });
+} catch (e) {
+  LUCIDE_REEL = null;
+  LUCIDE_SERVI.raison = String((e && e.message) || e).split("\n")[0];
+  console.warn(`[harnais] lucide : coquille servie, paquet introuvable (${LUCIDE_SERVI.raison}). Aucune icône n'est dessinée : le contrôle « contenu rendu vide » du peigne ne vaut rien.`);
+}
 
 /**
  * Branche l'interception sur un contexte Playwright.
@@ -273,7 +307,8 @@ export async function couperLeReseau(context, options = {}) {
       // Lot ICONE-BTN (2026-09-11) : le VRAI lucide, depuis le paquet
       // installé (même version que le site), pour que le peigne voie les
       // icônes rendues — une coquille qui ne dessine rien cachait un
-      // bouton dont l'icône faisait 0×0. Si le paquet manque, la coquille.
+      // bouton dont l'icône faisait 0×0. Si le paquet manque, la coquille,
+      // annoncée (voir LUCIDE_SERVI).
       return route.fulfill({
         status: 200,
         contentType: "text/javascript; charset=utf-8",
