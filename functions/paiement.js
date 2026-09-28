@@ -70,7 +70,7 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
+const { GRILLE, offreDe, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -112,7 +112,7 @@ exports.creerPaiement = onCall(
     // 2. Le prix. Le navigateur envoie un IDENTIFIANT, jamais un
     //    montant. Sans cette ligne, une console de développeur suffit
     //    à acheter Signature à 100 F.
-    const offre = GRILLE[planId];
+    const offre = offreDe(planId);
 
     if (!offre) {
       throw new HttpsError("invalid-argument", "Cette formule n'est pas disponible.");
@@ -406,7 +406,7 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
       return "montant-incoherent";
     }
 
-    const offre = GRILLE[p.planId];
+    const offre = offreDe(p.planId);
 
     if (!offre) {
       logger.error("Formule inconnue dans un paiement", { token, planId: p.planId });
@@ -520,17 +520,27 @@ exports.paydunyaWebhook = onRequest(
     // Seul « completed » active quoi que ce soit. Les autres statuts
     // (pending, cancelled, failed) sont enregistrés pour le suivi mais
     // ne touchent jamais au compte.
+    //
+    // AUDIT 2026-10 : jamais par-dessus un paiement déjà appliqué, jamais
+    // pour une facture qu'on n'a pas créée. Un `set(merge)` aveugle
+    // remplaçait `statut: "paye"` — le verrou d'idempotence de
+    // appliquerAchat — par « pending » : le rejeu suivant de l'IPN
+    // « completed » créditait une seconde fois la durée (Pass Découverte,
+    // dossier pays). Il créait aussi payments/<jeton inventé>.
     if (data.status !== "completed") {
+      const statutIpn = String(data.status || "inconnu").slice(0, 40);
+      const refPaiement = admin.firestore().doc(`payments/${token}`);
       await admin
         .firestore()
-        .doc(`payments/${token}`)
-        .set(
-          {
-            statut: String(data.status || "inconnu"),
+        .runTransaction(async (tx) => {
+          const snap = await tx.get(refPaiement);
+          if (!snap.exists) return;
+          tx.update(refPaiement, {
+            dernierStatutIpn: statutIpn,
             majLe: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        )
+            ...(snap.data().statut === "paye" ? {} : { statut: statutIpn }),
+          });
+        })
         .catch(() => {});
 
       res.status(200).send("OK");

@@ -143,6 +143,17 @@ exports.emailBienvenue = onDocumentCreated(
       return;
     }
 
+    // AUDIT 2026-10 : l'adresse vient du compte Firebase Auth, jamais du
+    // seul document users/{uid}, que le navigateur écrit librement. Sans
+    // cela, n'importe quel compte gratuit faisait écrire FitzUniverse à
+    // l'adresse de son choix (un compte = un e-mail signé du domaine).
+    const compte = await admin.auth().getUser(uid).catch(() => null);
+    const emailCompte = String((compte && compte.email) || "").trim();
+    if (!emailCompte || emailCompte.toLowerCase() !== String(u.email).trim().toLowerCase()) {
+      logger.warn("Bienvenue sautée : e-mail du profil différent du compte", { uid });
+      return;
+    }
+
     // IDEMPOTENCE. Firestore garantit « au moins une fois », pas
     // « exactement une fois » : le registre emailsEnvoyes fait foi.
     // create() échoue si le document existe — c'est le verrou.
@@ -156,7 +167,9 @@ exports.emailBienvenue = onDocumentCreated(
       return;
     }
 
-    const prenom = String(u.name || "").trim().split(/\s+/)[0] || "";
+    // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
+    // caractères au plus (le nom arrive du navigateur, sans borne).
+    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
 
     const corps = `
 <p style="margin:0 0 16px;">Bonjour${prenom ? " " + echapper(prenom) : ""},</p>
@@ -177,8 +190,8 @@ Quand une bourse qui vous concerne ouvre ses candidatures, nous vous écrivons.<
 
     try {
       await envoyerEmail({
-        aEmail: u.email,
-        aNom: u.name || "",
+        aEmail: emailCompte,
+        aNom: String(u.name || "").replace(/[^\p{L}\p{M}' -]/gu, "").trim().slice(0, 80),
         sujet: "Votre compte FitzUniverse est prêt",
         html: gabarit(corps, pied),
       });
@@ -286,7 +299,9 @@ exports.envoyerAlerteBourse = onCall(
     const servisCeTour = [];
 
     for (const u of lot) {
-      const prenom = String(u.name || "").trim().split(/\s+/)[0] || "";
+      // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
+    // caractères au plus (le nom arrive du navigateur, sans borne).
+    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
       const corps = `
 <p style="margin:0 0 16px;">Bonjour${prenom ? " " + echapper(prenom) : ""},</p>
 <p style="margin:0 0 16px;">Une bourse suivie par FitzUniverse a ouvert ses candidatures :</p>
@@ -448,7 +463,9 @@ async function executerRappels(aujourdhuiISO) {
     }
     if (!aEnvoyer.length) { sautes++; continue; }
 
-    const prenom = String(u.name || "").trim().split(/\s+/)[0] || "";
+    // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
+    // caractères au plus (le nom arrive du navigateur, sans borne).
+    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
     const pied = `Vous recevez ce rappel parce que vous suivez ces candidatures sur fitzuniverse.com. <a href="${lienDesabonnement(docUser.id)}&t=rappels" style="color:#6b6459;">Ne plus recevoir les rappels de dates limites</a>.`;
 
     try {

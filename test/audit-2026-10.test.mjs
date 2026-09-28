@@ -8,12 +8,18 @@
 * js/analytics.js. Ces tests lisent les deux fichiers comme texte ; le
 * rejeu réel est dans scripts/rejouer-regles.mjs (section « Audit
 * 2026-10 — analytics »).
+*
+* Même audit, functions/ : les identifiants venus du navigateur (tâche
+* Fitz, formule achetée) ne lisent plus les propriétés héritées du
+* prototype ; une IPN « non completed » ne touche plus un paiement
+* appliqué ; l'e-mail de bienvenue part à l'adresse du compte Auth.
 * ============================================================
 */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -68,4 +74,71 @@ for (const f of fichiers) {
 const s = lire(f);
 assert.ok(!/deleteDoc\([^)]*["']analytics/.test(s), `${f} supprime un document analytics`);
 }
+});
+
+// ------------------------------------------------------------------
+// functions/ — les clés du prototype
+// ------------------------------------------------------------------
+const require = createRequire(import.meta.url);
+const HERITEES = ["constructor", "__proto__", "toString", "hasOwnProperty", "valueOf"];
+
+test("Fitz : une tâche héritée du prototype n'est pas une tâche", () => {
+const { tacheConnue } = require(join(racine, "functions/lib/fitz-acces.js"));
+const taches = { chat: { poids: 1 }, check: { poids: 7 } };
+for (const t of HERITEES) assert.equal(tacheConnue(taches, t), null, t);
+assert.equal(tacheConnue(taches, undefined), null);
+assert.equal(tacheConnue(taches, ["chat"]), null, "un tableau n'est pas un nom de tâche");
+assert.deepEqual(tacheConnue(taches, "chat"), { poids: 1 });
+});
+
+test("Fitz : des points illisibles ne se réservent jamais, et ne passent pas le plafond du site", () => {
+const { pointsValides, verdictSysteme } = require(join(racine, "functions/lib/fitz-acces.js"));
+for (const p of [NaN, undefined, null, 0, -1, 1.5, Infinity, "4"]) assert.equal(pointsValides(p), false, String(p));
+for (const p of [1, 4, 7, 23]) assert.equal(pointsValides(p), true, String(p));
+const jour = "2026-10-01";
+assert.equal(verdictSysteme({ systeme: { jour, pointsJour: 199 }, jourCourant: jour, points: NaN }).ok, false);
+assert.equal(verdictSysteme({ systeme: {}, jourCourant: jour, points: NaN }).ok, false);
+assert.equal(verdictSysteme({ systeme: {}, jourCourant: jour, points: 1 }).ok, true, "un appel normal passe");
+});
+
+test("Fitz : fitz.js lit la tâche par tacheConnue et refuse les points invalides avant toute transaction", () => {
+const fitz = lire("functions/fitz.js");
+assert.ok(fitz.includes("const config = tacheConnue(TACHES, task);"));
+assert.ok(!/TACHES\[task\]/.test(fitz), "plus de lecture directe TACHES[task]");
+const reserver = fitz.slice(fitz.indexOf("async function reserverPoints("));
+assert.ok(reserver.indexOf("if (!pointsValides(points))") < reserver.indexOf("runTransaction"));
+});
+
+test("Achat : une formule héritée du prototype n'est pas en vente, n'a ni offre ni rang", () => {
+const { estEnVente, offreDe, calculerMiseAJour, refusAchat, libelleOffre } = require(join(racine, "functions/lib/achat.js"));
+for (const t of HERITEES) {
+assert.equal(estEnVente(t), false, t);
+assert.equal(offreDe(t), undefined, t);
+assert.equal(calculerMiseAJour({ planId: t, user: {}, supprimer: null }).statut, "formule-inconnue", t);
+assert.equal(libelleOffre(t, "france"), "", t);
+}
+assert.equal(estEnVente("essentiel-4"), true, "une vraie formule reste en vente");
+assert.equal(typeof refusAchat, "function");
+const paiement = lire("functions/paiement.js");
+assert.ok(!/GRILLE\[(planId|p\.planId)\]/.test(paiement), "paiement.js passe par offreDe");
+});
+
+test("IPN non completed : jamais par-dessus « paye », jamais pour une facture inconnue", () => {
+const paiement = lire("functions/paiement.js");
+const bloc = paiement.slice(paiement.indexOf('if (data.status !== "completed") {'));
+const fin = bloc.indexOf('res.status(200).send("OK");');
+const corps = bloc.slice(0, fin);
+assert.ok(corps.includes("runTransaction"));
+assert.ok(corps.includes("if (!snap.exists) return;"));
+assert.ok(corps.includes('...(snap.data().statut === "paye" ? {} : { statut: statutIpn })'));
+assert.ok(!corps.includes("{ merge: true }"), "plus de set(merge) aveugle");
+});
+
+test("E-mail de bienvenue : l'adresse du compte Auth, jamais celle du seul profil", () => {
+const emails = lire("functions/emails.js");
+const bloc = emails.slice(emails.indexOf("exports.emailBienvenue"), emails.indexOf("exports.envoyerAlerteBourse"));
+assert.ok(bloc.includes("await admin.auth().getUser(uid)"));
+assert.ok(bloc.includes("aEmail: emailCompte,"));
+assert.ok(!bloc.includes("aEmail: u.email"));
+assert.ok(bloc.indexOf("getUser(uid)") < bloc.indexOf("emailsEnvoyes/bienvenue-"), "contrôle avant le verrou d'idempotence");
 });

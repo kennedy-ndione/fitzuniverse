@@ -261,7 +261,7 @@ const TYPES_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // bourse vendues absentes, et aucune lecture de `planPreinscription`.
 // Elle est désormais dans un module PUR, testé sous Node et comparé à la
 // grille par test/pre-fitz.test.mjs (lot PRÉ-FITZ, 2026-09-10).
-const { formuleActive, formuleDeDerogation, plafondsDe, verdictSysteme } = require("./lib/fitz-acces");
+const { formuleActive, formuleDeDerogation, plafondsDe, pointsValides, tacheConnue, verdictSysteme } = require("./lib/fitz-acces");
 
 // ============================================================
 // COMPTEUR D'USAGE
@@ -289,6 +289,11 @@ function clesPeriode(maintenant) {
  * yeux à chaque message.
  */
 async function reserverPoints(uid, formule, points) {
+  // Jamais de points illisibles dans un compteur (audit 2026-10).
+  if (!pointsValides(points)) {
+    throw refus("invalid-argument", "INCONNU", "Cette demande n'est pas reconnue.");
+  }
+
   const db = admin.firestore();
   const ref = db.doc(`users/${uid}/interne/usageFitz`);
   // Le document du SITE : robinet + plafond global + compteur du jour.
@@ -544,8 +549,9 @@ exports.fitzGenerate = onCall(
     const uid = request.auth.uid;
     const { task, system, user, images, documents } = request.data || {};
 
-    // 2. Tâche connue.
-    const config = TACHES[task];
+    // 2. Tâche connue — propriété propre de TACHES seulement (audit
+    //    2026-10 : « constructor » remettait les compteurs à zéro).
+    const config = tacheConnue(TACHES, task);
 
     if (!config) {
       throw refus("invalid-argument", "INCONNU", "Cette demande n'est pas reconnue.");

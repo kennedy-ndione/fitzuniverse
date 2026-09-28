@@ -307,9 +307,32 @@ const PLAFOND_GLOBAL_JOUR = 200;
  * @param {string} ctx.jourCourant  clé ISO du jour (AAAA-MM-JJ)
  * @param {number} ctx.points       points que cet appel veut réserver
  */
+/**
+ * La tâche demandée par le navigateur — PROPRIÉTÉ PROPRE de la table
+ * seulement (audit 2026-10). `TACHES["constructor"]` rendait la fonction
+ * Object : la garde `!config` la laissait passer, son poids `undefined`
+ * donnait des points `NaN`, et `NaN > plafond` étant toujours faux, la
+ * réservation écrivait NaN dans le compteur de l'étudiant ET dans celui
+ * du site — que `Number(NaN) || 0` relisait ensuite comme ZÉRO.
+ */
+function tacheConnue(taches, task) {
+  return typeof task === "string" && Object.hasOwn(taches, task) ? taches[task] : null;
+}
+
+// Un nombre de points réservable : entier strictement positif.
+function pointsValides(points) {
+  return Number.isInteger(points) && points > 0;
+}
+
 function verdictSysteme({ systeme = {}, jourCourant = "", points = 0 } = {}) {
   if (systeme && systeme.actif === false) {
     return { ok: false, portee: "robinet" };
+  }
+
+  // Des points illisibles ne passent jamais : sinon `deja + NaN > plafond`
+  // est faux, et le compteur global devient NaN, relu comme zéro.
+  if (!Number.isFinite(points) || points < 0) {
+    return { ok: false, portee: "global", plafond: PLAFOND_GLOBAL_JOUR };
   }
 
   const declare = Number(systeme && systeme.plafondJour);
@@ -330,4 +353,4 @@ function plafondsDe(formule) {
   return PLAFONDS[formule] || PLAFOND_PAR_DEFAUT;
 }
 
-module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, PLAFOND_GLOBAL_JOUR, formuleActive, formuleDeDerogation, plafondsDe, verdictSysteme };
+module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, PLAFOND_GLOBAL_JOUR, formuleActive, formuleDeDerogation, plafondsDe, pointsValides, tacheConnue, verdictSysteme };
