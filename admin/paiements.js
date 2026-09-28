@@ -71,7 +71,10 @@ const STATUTS = {
 "en-attente": { libelle: "En attente", classe: "is-attente", famille: "en-attente" },
 "montant-incoherent": { libelle: "Montant incohérent", classe: "is-disabled", famille: "anomalie" },
 "mode-incoherent": { libelle: "Mode incohérent", classe: "is-disabled", famille: "anomalie" },
-"formule-inconnue": { libelle: "Formule inconnue", classe: "is-disabled", famille: "anomalie" }
+"formule-inconnue": { libelle: "Formule inconnue", classe: "is-disabled", famille: "anomalie" },
+// Audit 2026-10 : la confirmation de PayDunya (statut non « completed »,
+// facture d'un autre jeton) n'a pas permis de créditer.
+"confirmation-refusee": { libelle: "Refusé à la confirmation", classe: "is-disabled", famille: "anomalie" }
 };
 
 function statutDe(p) {

@@ -69,8 +69,15 @@ assert.ok(lecture > 0 && refus > lecture && facture > refus, "le mode est lu et 
 assert.match(code, /statut: "en-attente",\n\s*mode,/, "le mode est enregistré sur le paiement");
 
 // Le webhook connaît le mode du site et le compare avant toute activation.
-assert.match(code, /secrets: \[paydunyaMasterKey, paydunyaPrivateKey\]/);
-assert.match(code, /appliquerAchat\(token, data, modePaydunya\(paydunyaPrivateKey\.value\(\)\)\)/);
+// Audit 2026-10 : il redemande aussi l'état de la facture à PayDunya (la
+// troisième clé), et passe la CONFIRMATION — pas le corps de l'IPN — avec
+// le mode du site.
+const webhook = code.slice(code.indexOf("exports.paydunyaWebhook"));
+assert.match(webhook, /secrets: \[paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken\]/);
+const modeWebhook = webhook.indexOf("const mode = modePaydunya(paydunyaPrivateKey.value());");
+const appel = webhook.indexOf("appliquerAchat(token, confirmation, mode)");
+assert.ok(modeWebhook > 0 && appel > modeWebhook, "le webhook lit le mode du site et le passe à appliquerAchat");
+assert.ok(!/appliquerAchat\(token, data\b/.test(code), "le corps de l'IPN n'est plus passé à appliquerAchat");
 const garde = code.indexOf("if (!modeAcceptable(p.mode, modeActuel))");
 const activation = code.indexOf("const decision = calculerMiseAJour(");
 assert.ok(garde > 0 && garde < activation, "le mode est vérifié avant toute mise à jour du compte");

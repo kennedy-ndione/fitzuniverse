@@ -70,6 +70,9 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
+// AUDIT 2026-10 : la confirmation de PayDunya, seule source de vérité
+// avant de créditer (functions/lib/confirmation-paydunya.js).
+const { jetonValide, cheminConfirmation, verdictConfirmation } = require("./lib/confirmation-paydunya");
 const { GRILLE, offreDe, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
 
 // ============================================================
@@ -350,7 +353,7 @@ exports.creerPaiement = onCall(
  *    production, et l'inverse. Le document est marqué, le compte n'est
  *    pas touché.
  */
-async function appliquerAchat(token, donneesPaydunya, modeActuel) {
+async function appliquerAchat(token, confirmation, modeActuel) {
   const fs = admin.firestore();
   const refPaiement = fs.doc(`payments/${token}`);
 
@@ -386,25 +389,34 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
       return "mode-incoherent";
     }
 
-    // Le montant réellement encaissé doit correspondre à celui qu'on a
-    // demandé. Défense en profondeur : PayDunya ne devrait jamais
-    // renvoyer autre chose, mais un paiement partiel accepté en
-    // silence coûterait de l'argent réel.
-    const encaisse = Number(donneesPaydunya?.invoice?.total_amount);
+    // AUDIT 2026-10 : la CONFIRMATION de PayDunya (et non le corps de
+    // l'IPN) décide. Statut "completed", et montant encaissé présent et
+    // ÉGAL au prix que ce serveur a calculé à la création de la facture.
+    // Absent, illisible, inférieur ou supérieur : rien n'est crédité. Le
+    // document reste hors de « paye » : une confirmation ultérieure
+    // correcte (nouvelle IPN) pourra encore l'appliquer.
+    const verdict = verdictConfirmation(confirmation, { token, montantAttendu: p.montantAttendu });
 
-    if (Number.isFinite(encaisse) && encaisse < p.montantAttendu) {
-      logger.error("Montant encaissé inférieur au montant attendu", {
+    if (!verdict.ok) {
+      const montantEnCause = verdict.motif === "montant-absent" || verdict.motif === "montant-different";
+      logger.error("Confirmation PayDunya refusée — aucune activation", {
         token,
+        motif: verdict.motif,
+        statutPaydunya: verdict.statutPaydunya || null,
         attendu: p.montantAttendu,
-        encaisse,
+        encaisse: verdict.montant ?? null,
       });
       tx.update(refPaiement, {
-        statut: "montant-incoherent",
-        montantEncaisse: encaisse,
+        statut: montantEnCause ? "montant-incoherent" : "confirmation-refusee",
+        motifRefus: verdict.motif,
+        statutPaydunya: verdict.statutPaydunya || null,
+        montantEncaisse: verdict.montant ?? null,
         traiteLe: admin.firestore.FieldValue.serverTimestamp(),
       });
-      return "montant-incoherent";
+      return verdict.motif;
     }
+
+    const encaisse = verdict.montant;
 
     const offre = offreDe(p.planId);
 
@@ -453,7 +465,7 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
     tx.update(refPaiement, {
       statut: "paye",
       applique: true,
-      montantEncaisse: Number.isFinite(encaisse) ? encaisse : p.montantAttendu,
+      montantEncaisse: encaisse,
       traiteLe: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -468,9 +480,10 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
 
 exports.paydunyaWebhook = onRequest(
   {
-    // La clé privée n'est pas envoyée à PayDunya ici : elle sert
-    // seulement à savoir dans quel mode le site tourne (modeAcceptable).
-    secrets: [paydunyaMasterKey, paydunyaPrivateKey],
+    // Les trois clés : le webhook redemande l'état de la facture à
+    // PayDunya avant de créditer (audit 2026-10). La clé privée dit aussi
+    // dans quel mode le site tourne (modeAcceptable).
+    secrets: [paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken],
     region: "europe-west1",
     maxInstances: 10,
     timeoutSeconds: 60,
@@ -511,8 +524,10 @@ exports.paydunyaWebhook = onRequest(
 
     const token = data?.invoice?.token;
 
-    if (!token) {
-      logger.warn("Webhook sans jeton de facture");
+    // Le jeton entre dans une URL (confirmation) et dans un chemin
+    // Firestore : sa forme est vérifiée avant tout usage.
+    if (!jetonValide(token)) {
+      logger.warn("Webhook sans jeton de facture valide");
       res.status(400).send("Bad Request");
       return;
     }
@@ -547,8 +562,37 @@ exports.paydunyaWebhook = onRequest(
       return;
     }
 
+    // AUDIT 2026-10 : « completed » dans l'IPN ne suffit pas. On
+    // redemande à PayDunya l'état de CETTE facture, et c'est sa réponse
+    // — statut et montant — qui décide dans appliquerAchat. Si PayDunya
+    // ne répond pas, 500 : il réessaiera, et rien n'est crédité d'ici là.
+    const mode = modePaydunya(paydunyaPrivateKey.value());
+    let confirmation;
+
+    if (!baseApi(mode)) {
+      logger.error("Clé privée PayDunya illisible — confirmation impossible, rien n'est crédité", { token });
+      res.status(500).send("Erreur interne");
+      return;
+    }
+
     try {
-      const issue = await appliquerAchat(token, data, modePaydunya(paydunyaPrivateKey.value()));
+      const appel = await fetch(`${baseApi(mode)}${cheminConfirmation(token)}`, {
+        method: "GET",
+        headers: {
+          "PAYDUNYA-MASTER-KEY": paydunyaMasterKey.value(),
+          "PAYDUNYA-PRIVATE-KEY": paydunyaPrivateKey.value(),
+          "PAYDUNYA-TOKEN": paydunyaToken.value(),
+        },
+      });
+      confirmation = await appel.json();
+    } catch (erreur) {
+      logger.error("Confirmation PayDunya injoignable — rien n'est crédité", { token, message: erreur.message });
+      res.status(500).send("Erreur interne");
+      return;
+    }
+
+    try {
+      const issue = await appliquerAchat(token, confirmation, mode);
       logger.info("Webhook traité", { token, issue });
     } catch (erreur) {
       logger.error("Échec du traitement du webhook", { token, message: erreur.message });
