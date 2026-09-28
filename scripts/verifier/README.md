@@ -151,3 +151,23 @@ page sur l'accueil seul, sans page collée au bas ni finissant sur un vide.
 `node scripts/verifier/captures-finitions.mjs avant|apres` — les captures des
 écrans de Charles (accueil 1366 × 768, profil 1440, messages 390 × 844, fiche
 admin liste ouverte, bas de page), dans sortie/<date>/finitions/.
+
+## Chevauchements (2026-09-28)
+
+Le peigne signale deux **contrôles dessinés qui se chevauchent** : liens,
+boutons ou étiquettes à fond ou à bordure, en flux (ni fixes, ni collants,
+ni posés en absolu), dont les boîtes se recouvrent de plus d'un pixel. La
+boîte mesurée est celle qu'on VOIT, rognée par les conteneurs qui coupent
+ce qui dépasse : une pastille qui déborde d'une rangée à défilement
+(`.fitz-chips` de profile.html) n'est pas dessinée sur la colonne voisine.
+Avant de lire une page de l'espace, il ouvre les phases scellées (« Jeter un
+œil ») : leur contenu est à un clic de l'étudiant.
+
+Le défaut qui l'a fait naître : sur téléphone, la « zone tactile » de
+`css/mobile-nav.css` (rembourrage + marge négative), posée sur `.jy-tool`
+qui avait déjà son rembourrage, retirait 16 px à chaque outil. Deux lignes
+d'outils qui passent à la ligne se chevauchaient de 8 px (test-prep.html,
+espace-bourse.html), du 2026-09-06 au 2026-09-28. Le peigne ne le voyait
+pas : il ne mesurait pas les chevauchements, et les outils dormaient dans
+des phases scellées. La règle CSS elle-même est gardée sans navigateur par
+`test/zone-tactile.test.mjs`.
