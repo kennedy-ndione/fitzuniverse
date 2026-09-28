@@ -86,7 +86,14 @@ const MARQUEURS_CONTINUS = [
 const MARQUEURS_INCERTAINS = [
 "a confirmer", "estimee", "estime", "non encore annoncee",
 "non datee", "non confirmee", "a verifier", "variable",
-"prochaine fenetre", "publiee ensuite", "deadline par pays"
+"prochaine fenetre", "publiee ensuite", "deadline par pays",
+// Lot 129 (2026-09-28) — « Elle a ouvert le 23 juin 2026 ; la date de
+// clôture n'est pas publiée » (UIR) : la seule date du texte est celle
+// d'OUVERTURE. La lire comme une échéance fermait la bourse depuis 97
+// jours, et le moteur ne la proposait plus à personne. Formulation
+// étroite exprès : elle ne vise que la date de CLÔTURE, jamais une autre
+// information « pas publiée ».
+"cloture n'est pas publiee", "cloture n'est pas encore publiee", "cloture non publiee"
 ];
 
 function contient(texteNormalise, marqueurs) {

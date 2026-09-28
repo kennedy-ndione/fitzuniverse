@@ -883,7 +883,11 @@ return score;
 * @returns {Array<string>} raisons, de la plus forte à la plus faible ;
 * peut être vide si rien ne correspond (l'appelant garde son repli).
 */
-export function explainMatch(program, university, scholarship, profile) {
+// Lot 129 (2026-09-28) : `aujourdhui` est optionnel et vaut maintenant par
+// défaut, comme pour etatEcheance(). Il existe pour les tests : sans lui,
+// « il vous reste 65 jours » n'était vrai que le jour où le test a été
+// écrit (test/lot114, échec du 28/09). Aucun appelant ne change.
+export function explainMatch(program, university, scholarship, profile, aujourdhui = new Date()) {
 
 const reasons = [];
 
@@ -927,7 +931,7 @@ reasons.push(`Établissement actif dans votre domaine (${domaine})`);
 // ouvert (mesure du 2026-09-05 : 167 « Ouverte » pour 39 dates encore
 // futures).
 // Lot 114 : la date du pays de l'étudiant, quand la bourse en publie une par pays.
-const echeance = etatEcheance(programmePourLeProfil(program, scholarship, profile));
+const echeance = etatEcheance(programmePourLeProfil(program, scholarship, profile), aujourdhui);
 
 if (echeance.ouverte === true && echeance.porte) {
 reasons.push(`Candidatures ouvertes — première étape (${echeance.porte.quoi}) dans ${echeance.porte.jours} jour${echeance.porte.jours > 1 ? "s" : ""}`);

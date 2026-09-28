@@ -151,9 +151,35 @@ export function verificationFraiche(verifieLe, aujourdhui = new Date()) {
   return jours >= 0 && jours <= JOURS_VERIFICATION_FRAICHE;
 }
 
+/**
+ * Lot 129 (2026-09-28) — LE RADAR LIT LA MÊME DATE QUE LE MOTEUR.
+ *
+ * `deadlineISO` est la date écrite après lecture humaine de la page
+ * officielle ; js/recommend-programs.js la fait primer sur la prose
+ * depuis le lot P5a. Le radar, lui, ne lisait que la prose : sur
+ * Edinburgh (« séances d'information du 15 au 24 septembre… dossier
+ * avant le 19 novembre »), il prenait le 24 septembre pour l'échéance et
+ * criait à la contradiction, alors que le moteur montrait aux étudiants
+ * la bonne date, le 19 novembre, vérifiée le 20/09.
+ *
+ * Un constat qui ne lit pas la même chose que le site n'est pas un
+ * constat. Sans `deadlineISO` valide, rien ne change : la prose.
+ */
+export function echeanceDuProgramme(program) {
+  const iso = String(program.deadlineISO || "").trim();
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (m) {
+    const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+    if (d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3])) {
+      return { etat: "datee", date: iso, heure: null, fuseau: null, confiance: "haute", texte: String(program.deadline || "") };
+    }
+  }
+  return analyserEcheance(program.deadline);
+}
+
 export function risqueDUnProgramme(program, statutBourse, aujourdhui = new Date()) {
 
-  const echeance = analyserEcheance(program.deadline);
+  const echeance = echeanceDuProgramme(program);
   const etat = etatAffichable(echeance, aujourdhui);
   const jours = joursAvant(echeance, aujourdhui);
 
@@ -341,7 +367,7 @@ export function bascules(catalogue, aujourdhui = new Date(), { recemment = 30, b
     const bourse = boursesById.get(program.scholarshipId);
     if (!bourse) continue;
 
-    const echeance = analyserEcheance(program.deadline);
+    const echeance = echeanceDuProgramme(program);
     if (echeance.etat !== "datee") continue;
 
     const jours = joursAvant(echeance, aujourdhui);

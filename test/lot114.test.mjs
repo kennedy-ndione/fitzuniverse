@@ -116,7 +116,7 @@ const tun = etatEcheance(programmePourLeProfil(p, bourse, { nationality: "Tunisi
 assert.equal(tun.jours, 17);
 assert.equal(proposable(p, bourse, tun).raison, "trop_tard", "17 jours ne suffisent pas à réunir un dossier");
 
-assert.ok(explainMatch(p, U.get(p.universityId), bourse, { nationality: "Sénégalais(e)" }).includes("Candidatures ouvertes — il vous reste 65 jours"));
+assert.ok(explainMatch(p, U.get(p.universityId), bourse, { nationality: "Sénégalais(e)" }, JOUR).includes("Candidatures ouvertes — il vous reste 65 jours"));
 assert.equal(pourquoiPlusProposable({ program: p, scholarship: bourse, profile: { nationality: "Tunisien(ne)" }, aujourdhui: new Date("2026-10-14T09:00:00Z") }), "sa date limite est passée pour ce cycle");
 assert.equal(pourquoiPlusProposable({ program: p, scholarship: bourse, profile: { nationality: "Sénégalais(e)" }, aujourdhui: new Date("2026-10-14T09:00:00Z") }), "");
 });
