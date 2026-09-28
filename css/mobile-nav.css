@@ -853,13 +853,21 @@ min-height:44px;
 min-height:40px;
 }
 
-/* Liens d'action posés dans un texte (alerte de bienvenue, étape
-gratuite des formules, outils du parcours). */
-.welcome-alert-cta,
+/* Liens d'action posés dans un texte (étape gratuite des formules,
+outils du parcours). */
 .free-step-link,
 .jy-tool{
 padding-block:8px;
 margin-block:-8px;
+}
+
+/* Lien de l'alerte de bienvenue : il porte margin-top:10px
+(dashboard.css), que la marge de -8px écrasait — le lien remontait de
+7px contre son paragraphe (mesuré le 2026-09-28). 2px de marge + 8px de
+rembourrage rendent les 10px ; en bas, -8 + 8 = 0, comme avant. */
+.welcome-alert-cta{
+padding-block:8px;
+margin-block:2px -8px;
 }
 
 /* Libellés de la barre d'onglets : 10,6px → 11,5px (Android : 12sp,
