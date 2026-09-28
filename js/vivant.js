@@ -267,7 +267,8 @@ function surveille() {
 pays vit dans .uni-card-location, à l'intérieur du même conteneur
 média. Mesuré : avec le sélecteur large, les 146 drapeaux étaient
 comptés comme des photos et passaient en opacity:0. */
-var SELECTEUR_IMAGES = ".scholarship-card-media > img, .uni-card-media > img";
+// Lot PERF 3G : la photo peut être dans un <picture> (AVIF, WebP, JPEG).
+var SELECTEUR_IMAGES = ".scholarship-card-media > img, .uni-card-media > img, .scholarship-card-media > picture > img, .uni-card-media > picture > img";
 
 function marqueChargee() {
   this.classList.add("est-chargee");

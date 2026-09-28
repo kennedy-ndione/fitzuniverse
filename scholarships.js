@@ -19,7 +19,7 @@ correspondTypeBourse,
 premierePhrase
 } from "./js/scholarship-filters.js";
 
-import { resolveScholarshipImage } from "./js/scholarship-image.js";
+import { resolveScholarshipImage, sourcesPicture } from "./js/scholarship-image.js";
 
 import { etatCandidature } from "./js/echeance.js";
 
@@ -553,9 +553,17 @@ const levelChips = (scholarship.levels || [])
 const otherCountries = (scholarship.countries || []).filter((c) => c !== scholarship.country);
 const showCountriesRow = otherCountries.length > 0;
 
+const TAILLES_CARTE = "(max-width:640px) 100vw, (max-width:1024px) 50vw, 380px";
+
 const srcsetAttr = scholarship.imageSrcset
-? ` srcset="${scholarship.imageSrcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 380px"`
+? ` srcset="${scholarship.imageSrcset}" sizes="${TAILLES_CARTE}"`
 : "";
+
+// Lot PERF 3G (2026-09-28) : AVIF puis WebP quand la variante 800 suffit
+// à cet écran — même largeur que le JPEG, format plus léger (voir
+// mediaModernes, js/scholarship-image.js). Sinon, le JPEG, comme avant.
+const sourcesModernesCarte = scholarship.imageSrcset ? sourcesPicture(scholarship.image, TAILLES_CARTE) : "";
+const photoCarte = `<img src="${scholarship.image}"${srcsetAttr} width="800" height="533" alt="" loading="lazy" decoding="async">`;
 
 // Repli sur l'icône globe si aucune université liée ne porte de champ
 // flag (en théorie jamais atteint, chaque bourse du catalogue a au
@@ -615,7 +623,7 @@ const funderHtml = typeBourse
 // toutes les cartes, pour zéro information nouvelle.
 card.innerHTML = `
 <div class="scholarship-card-media">
-<img src="${scholarship.image}"${srcsetAttr} width="800" height="533" alt="" loading="lazy" decoding="async">
+${sourcesModernesCarte ? `<picture>${sourcesModernesCarte}${photoCarte}</picture>` : photoCarte}
 <span class="scholarship-card-status ${isOpen ? "is-open" : ""}" title="${candidature.detail}">${candidature.badge}</span>
 </div>
 
@@ -898,8 +906,14 @@ renderIndexPays(groupesIndex, vue);
 // visible (LCP). Les deux premières photos rendues repassent en
 // chargement prioritaire — les suivantes restent différées.
 // (2026-08-29, passe de fluidité.)
+// Lot PERF 3G (2026-09-28) : seulement si elles sont VRAIMENT au-dessus
+// de la ligne de flottaison. Sur téléphone, la bannière occupe tout le
+// premier écran : ces deux photos passaient en priorité haute devant la
+// bannière et les feuilles de style, sur une 3G. Elles restent alors
+// `lazy`, et le navigateur les charge à l'approche, comme les suivantes.
+const hauteurEcran = window.innerHeight || document.documentElement.clientHeight;
 container.querySelectorAll(".scholarship-card-media img, .uni-card-media img").forEach((img, i) => {
-if (i < 2) {
+if (i < 2 && img.getBoundingClientRect().top < hauteurEcran) {
 img.loading = "eager";
 img.setAttribute("fetchpriority", "high");
 }

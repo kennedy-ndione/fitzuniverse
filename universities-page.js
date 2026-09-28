@@ -23,7 +23,7 @@ if (document.readyState === "complete") lancer();
 else window.addEventListener("load", lancer, { once: true });
 })();
 
-import { resolveCityImage } from "./js/scholarship-image.js";
+import { resolveCityImage, sourcesPicture } from "./js/scholarship-image.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 // Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
@@ -150,6 +150,14 @@ const exonerationChip = exoneration.politique !== "inconnue"
 // Voir resolveCityImage() dans js/scholarship-image.js.
 const cityPhoto = resolveCityImage(university.image);
 
+// Lot PERF 3G (2026-09-28) : AVIF puis WebP quand la variante 800 suffit
+// à cet écran (mediaModernes, js/scholarship-image.js). Le repli retire
+// d'abord les <source> : sans cela, le navigateur y retournerait.
+const TAILLES_CARTE = "(max-width:640px) 100vw, (max-width:1024px) 50vw, 360px";
+const modernesCarte = sourcesPicture(cityPhoto.src, TAILLES_CARTE);
+const imgCarte = `<img src="${cityPhoto.src}" srcset="${cityPhoto.srcset}" sizes="${TAILLES_CARTE}" width="800" height="533" alt="${university.city || university.name}" loading="lazy" decoding="async" onerror="this.onerror=null;if(this.parentNode.tagName==='PICTURE')this.parentNode.querySelectorAll('source').forEach(function(s){s.remove()});this.removeAttribute('srcset');this.src='${cityPhoto.fallbackOriginal}'">`;
+const photoCarte = modernesCarte ? `<picture>${modernesCarte}${imgCarte}</picture>` : imgCarte;
+
 // L'état des candidatures, calculé (lot 74) — voir etatCarteUniversite()
 // dans js/echeance.js. Le badge de la photo dit l'état, le pied de
 // carte dit la date : deux textes courts, jamais un paragraphe brut.
@@ -157,7 +165,7 @@ const candidature = university.candidature || null;
 
 card.innerHTML = `
 <div class="uni-card-media uni-card-media--variant-${university.photoVariant || 0}">
-<img src="${cityPhoto.src}" srcset="${cityPhoto.srcset}" sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 360px" width="800" height="533" alt="${university.city || university.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${cityPhoto.fallbackOriginal}'">
+${photoCarte}
 ${university.ranking || candidature ? `<div class="uni-card-badges">
 ${university.ranking ? `<span class="uni-card-rank"><i data-lucide="trophy"></i><span>${university.ranking}</span></span>` : ""}
 ${candidature ? `<span class="uni-card-status ${candidature.ouvert === true ? "is-open" : ""}" title="${candidature.badge}. ${candidature.detail || ""}">${candidature.court}</span>` : ""}
@@ -520,8 +528,14 @@ renderIndexPays(groupesIndex, vue, country);
 // visible (LCP). Les deux premières photos rendues repassent en
 // chargement prioritaire — les suivantes restent différées.
 // (2026-08-29, passe de fluidité.)
+// Lot PERF 3G (2026-09-28) : seulement si elles sont VRAIMENT au-dessus
+// de la ligne de flottaison. Sur téléphone, la bannière occupe tout le
+// premier écran : ces deux photos passaient en priorité haute devant la
+// bannière et les feuilles de style, sur une 3G. Elles restent alors
+// `lazy`, et le navigateur les charge à l'approche, comme les suivantes.
+const hauteurEcran = window.innerHeight || document.documentElement.clientHeight;
 container.querySelectorAll(".scholarship-card-media img, .uni-card-media img").forEach((img, i) => {
-if (i < 2) {
+if (i < 2 && img.getBoundingClientRect().top < hauteurEcran) {
 img.loading = "eager";
 img.setAttribute("fetchpriority", "high");
 }

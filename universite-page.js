@@ -19,7 +19,7 @@
 // tout ce qu'il lit (test/catalogue-liste.test.mjs, fiche université).
 import { chargerCatalogue, chargerCatalogueListe, documentDuCatalogue } from "./js/catalog-data.js";
 import { ficheUniversite, resumeFiche, domaineDe } from "./js/fiche-universite.js";
-import { resolveCityImage } from "./js/scholarship-image.js";
+import { resolveCityImage, poserSourcesModernes, retirerSourcesModernes } from "./js/scholarship-image.js";
 import { trackEvent } from "./js/analytics.js";
 import { resolveSession } from "./js/access-guard.js";
 import { chargerPortails, portailUniversite } from "./js/portails.js";
@@ -103,11 +103,14 @@ if (ogDesc && resume) ogDesc.setAttribute("content", resume);
 function poserHero(vue) {
 const photo = resolveCityImage(vue.image);
 const img = $("ficheImage");
+// Lot PERF 3G (2026-09-28) : AVIF puis WebP quand la variante 800 suffit
+// à l'écran — posés AVANT la source de l'image (sinon, deux téléchargements).
+poserSourcesModernes(img, photo.src, "100vw");
 img.src = photo.src;
 img.srcset = photo.srcset;
 img.sizes = "100vw";
 img.alt = vue.lieu || vue.titre;
-img.onerror = () => { img.onerror = null; img.removeAttribute("srcset"); img.src = photo.fallbackOriginal; };
+img.onerror = () => { img.onerror = null; retirerSourcesModernes(img); img.removeAttribute("srcset"); img.src = photo.fallbackOriginal; };
 
 const drapeau = $("ficheDrapeau");
 if (vue.drapeau) {

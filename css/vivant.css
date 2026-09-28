@@ -151,9 +151,13 @@ photo) : on ne touche qu'à l'<img>, jamais au conteneur.
 /* `> img` et non ` img` : le drapeau du pays vit dans
 .uni-card-location, à l'intérieur du même conteneur média. Avec le
 sélecteur large, les 146 drapeaux passaient en opacity:0 sans jamais
-recevoir `est-chargee`. Ne pas élargir. */
+recevoir `est-chargee`. Ne pas élargir.
+Lot PERF 3G (2026-09-28) : la photo peut être dans un <picture> (AVIF,
+WebP, puis JPEG) — même règle, un niveau plus bas, jamais plus large. */
 html.vivant .scholarship-card-media > img,
-html.vivant .uni-card-media > img {
+html.vivant .uni-card-media > img,
+html.vivant .scholarship-card-media > picture > img,
+html.vivant .uni-card-media > picture > img {
   opacity: 0;
   transform: scale(1.04);
   filter: blur(8px);
@@ -164,7 +168,9 @@ html.vivant .uni-card-media > img {
 }
 
 html.vivant .scholarship-card-media > img.est-chargee,
-html.vivant .uni-card-media > img.est-chargee {
+html.vivant .uni-card-media > img.est-chargee,
+html.vivant .scholarship-card-media > picture > img.est-chargee,
+html.vivant .uni-card-media > picture > img.est-chargee {
   opacity: 1;
   transform: none;
   filter: none;
@@ -273,7 +279,9 @@ gardent le halo, sans le fondu : dégradation propre. */
   }
 
   .scholarship-card:hover .scholarship-card-media > img.est-chargee,
-  .uni-card:hover .uni-card-media > img.est-chargee {
+  .uni-card:hover .uni-card-media > img.est-chargee,
+  .scholarship-card:hover .scholarship-card-media > picture > img.est-chargee,
+  .uni-card:hover .uni-card-media > picture > img.est-chargee {
     transform: scale(1.05);
   }
 

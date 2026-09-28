@@ -53,7 +53,7 @@ import { retenirOpportunites } from "./js/recommend-programs.js";
 // js/eligibility-pistes.js. Sert ici à l'échelle de « potentiel » et,
 // à terme, au barème par cycle.
 import { pisteDepuisNiveau, PISTES, genreDepuisReponse } from "./js/eligibility-pistes.js";
-import { resolveCityImage } from "./js/scholarship-image.js";
+import { resolveCityImage, sourcesPicture } from "./js/scholarship-image.js";
 
 // Champ lexical de Fitz (js/fitz-voice.js) : ce fichier ne rédige plus
 // aucune phrase de Fitz lui-même — il ne fait que les afficher. Voir la
@@ -1162,9 +1162,14 @@ const subtitleParts = [scholarship.university, scholarship.country].filter(Boole
 // utilisées pour cette université sur universities.html/
 // scholarship-details.html, rendent ici visible la reconnexion au vrai
 // catalogue plutôt qu'une icône générique.
+// Lot PERF 3G (2026-09-28) : 44 px d'affichage — la variante 400 suffit
+// à tous les écrans, en AVIF ou WebP. Le repli retire d'abord les <source>.
+const vignette = `<img class="opportunity-thumb" src="${scholarship.photo.src}" srcset="${scholarship.photo.srcset}" sizes="44px" width="800" height="533" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;if(this.parentNode.tagName==='PICTURE')this.parentNode.querySelectorAll('source').forEach(function(s){s.remove()});this.removeAttribute('srcset');this.src='${scholarship.photo.fallbackOriginal}'">`;
+const sourcesVignette = sourcesPicture(scholarship.photo.src, "44px");
+
 card.innerHTML = `
 <div class="opportunity-head">
-<img class="opportunity-thumb" src="${scholarship.photo.src}" srcset="${scholarship.photo.srcset}" sizes="44px" width="800" height="533" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${scholarship.photo.fallbackOriginal}'">
+${sourcesVignette ? `<picture>${sourcesVignette}${vignette}</picture>` : vignette}
 <div>
 <h3></h3>
 <span class="opportunity-country"><img class="opportunity-flag" src="assets/flags/${scholarship.flag}" alt="" onerror="this.onerror=null;this.src='assets/flags/default.svg'"><span></span></span>
