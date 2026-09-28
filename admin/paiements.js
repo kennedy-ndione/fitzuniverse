@@ -202,7 +202,7 @@ return `
 <td>${echapper(p.methodeChoisie || "—")}</td>
 <td>${p.mode === "live" ? `<span class="status-pill is-active">production</span>` : `<span class="status-pill">test</span>`}</td>
 <td>${pillStatut(p)}</td>
-<td>${p.uid ? `<a class="table-link-btn" href="student-detail.html?uid=${encodeURIComponent(p.uid)}">Voir la fiche</a>` : ""}${p.statut === "en-attente" ? `<button type="button" class="table-link-btn" data-reverifier="${echapper(p.id)}">Revérifier auprès de PayDunya</button>` : ""}</td>
+<td>${p.uid ? `<a class="table-link-btn" href="student-detail.html?uid=${encodeURIComponent(p.uid)}">Voir la fiche</a>` : ""}${peutReverifier(p) ? `<button type="button" class="table-link-btn" data-reverifier="${echapper(p.id)}">Revérifier auprès de PayDunya</button>` : ""}</td>
 </tr>`;
 
 }).join("");
@@ -217,6 +217,14 @@ return `
 // serveur (reverifierPaiement) : PayDunya décide, et un paiement déjà
 // appliqué ne l'est jamais deux fois. Le tableau se met à jour de lui-même
 // (onSnapshot) quand le statut change.
+// Toute facture qui n'est pas « paye » peut être revérifiée : en attente,
+// pending, confirmation-refusee, montant-incoherent, cancelled… PayDunya
+// tranche, et une facture déjà payée ne l'est jamais deux fois
+// (reverifierPaiement, côté serveur).
+function peutReverifier(p) {
+return p.statut !== "paye";
+}
+
 const ISSUES_REVERIFICATION = {
 "applique": "Payé : formule créditée",
 "rang-inferieur": "Payé : compte déjà mieux doté, rien changé",

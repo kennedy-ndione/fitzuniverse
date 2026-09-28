@@ -192,9 +192,17 @@ assert.ok(bouton.includes("adminSnap.data().isActive !== true"));
 assert.match(lire("functions/index.js"), /exports\.reverifierPaiement = require\("\.\/paiement"\)\.reverifierPaiement;/);
 });
 
-test("admin/paiements : un bouton « Revérifier auprès de PayDunya » sur chaque facture en attente, et seulement elles", () => {
+test("admin/paiements : un bouton « Revérifier auprès de PayDunya » sur toute facture qui n'est pas « paye »", () => {
 const page = lire("admin/paiements.js");
 assert.ok(page.includes('httpsCallable(getFunctions(app, REGION), "reverifierPaiement")'));
-assert.match(page, /p\.statut === "en-attente"\s*\?\s*`<button[^`]*data-reverifier="\$\{echapper\(p\.id\)\}"[^`]*>Revérifier auprès de PayDunya<\/button>`/);
+assert.match(page, /peutReverifier\(p\)\s*\?\s*`<button[^`]*data-reverifier="\$\{echapper\(p\.id\)\}"[^`]*>Revérifier auprès de PayDunya<\/button>`/);
 assert.ok(page.includes("appeler({ token })"));
+// La règle d'affichage, exécutée telle qu'écrite dans la page.
+const debut = page.indexOf("function peutReverifier(");
+const peutReverifier = new Function(`${page.slice(debut, page.indexOf("\n}\n", debut) + 2)}\nreturn peutReverifier;`)();
+for (const statut of ["en-attente", "pending", "confirmation-refusee", "montant-incoherent", "cancelled", "failed", "mode-incoherent", "formule-inconnue", undefined]) {
+assert.equal(peutReverifier({ statut }), true, String(statut));
+}
+assert.equal(peutReverifier({ statut: "paye" }), false, "une facture payée n'a pas de bouton");
+assert.equal(peutReverifier({ statut: "paye", applique: false }), false, "payée mais non appliquée (rang inférieur) : pas de bouton non plus");
 });
