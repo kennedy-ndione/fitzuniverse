@@ -31,6 +31,9 @@
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerCatalogue } from "./catalog-data.js";
+// Le calcul image par image des compteurs, pur et testé sous Node — voir
+// js/compteur-anime.js.
+import { imageDuCompteur } from "./compteur-anime.js";
 
 // Entrée du site pour le Control Center (2026-09-02) : une visite par
 // session de navigateur, signalée depuis la page d'accueil — le point
@@ -118,11 +121,13 @@ const start = performance.now();
 // redevient « le nombre ne s'anime pas », jamais « le nombre dit zéro ».
 const filet = setTimeout(() => { el.textContent = `${target}`; }, duration + 200);
 
+// `now` est l'horodatage du DÉBUT de l'image, qui peut précéder `start` :
+// imageDuCompteur borne la progression à [0, 1]. Sans cette borne, la
+// première image affichait un nombre négatif (« -6 », 2026-09-28).
 function step(now) {
-const progress = Math.min((now - start) / duration, 1);
-const eased = 1 - Math.pow(1 - progress, 3);
-el.textContent = `${Math.round(eased * target)}`;
-if (progress < 1) requestAnimationFrame(step);
+const image = imageDuCompteur(now, start, duration, target);
+el.textContent = image.texte;
+if (image.enCours) requestAnimationFrame(step);
 else clearTimeout(filet);
 }
 
