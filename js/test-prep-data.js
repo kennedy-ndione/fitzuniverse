@@ -247,3 +247,24 @@ const ids = Object.entries(TESTS_PAR_LANGUE).find(([k]) => l.includes(k));
 if (!ids) return [];
 return ids[1].map((id) => TESTS.find((t) => t.id === id)).filter(Boolean);
 }
+
+/**
+* Langue d'enseignement par nom d'université (clé : le nom sans espaces
+* de bord), pour les suggestions de test-prep.js. Le premier programme
+* qui porte une langue décide pour son université.
+*
+* Reçoit le catalogue tel que le rend js/catalog-data.js : des objets
+* simples { id, …champs }, que la source soit l'instantané ou Firestore.
+* Jamais de .data() ici : c'est ce qui éteignait toutes les suggestions
+* par langue depuis au moins le 2026-09-01 (trouvé le 2026-09-28,
+* test/test-prep-langues.test.mjs).
+*/
+export function languesParNomUniversite(programmes, universites) {
+const nomsParId = new Map(universites.map((u) => [u.id, (u.name || "").trim()]));
+const langues = new Map();
+programmes.forEach((p) => {
+const nom = nomsParId.get(p.universityId);
+if (nom && p.language && !langues.has(nom)) langues.set(nom, p.language);
+});
+return langues;
+}

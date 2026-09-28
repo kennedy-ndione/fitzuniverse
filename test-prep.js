@@ -22,7 +22,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { joursRestants } from "./js/next-action.js";
 import { tonEcheance } from "./js/journey-map.js";
-import { TESTS, testDepuisNom, testsPourLangue } from "./js/test-prep-data.js";
+import { TESTS, testDepuisNom, testsPourLangue, languesParNomUniversite } from "./js/test-prep-data.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerProgrammesEtUniversites } from "./js/catalog-data.js";
@@ -49,14 +49,9 @@ try {
 // Deux collections seulement : cette page n'a pas besoin des bourses,
 // et le chargeur ne lit que ce qu'on lui demande.
 const { programmes, universites } = await chargerProgrammesEtUniversites();
-const nomsParId = new Map(universites.map((u) => [u.id, (u.name || "").trim()]));
-const langues = new Map();
-programmes.forEach((d) => {
-const p = d.data();
-const nom = nomsParId.get(p.universityId);
-if (nom && p.language && !langues.has(nom)) langues.set(nom, p.language);
-});
-return langues;
+// Des objets simples { id, …champs }, pas des instantanés Firestore :
+// la jointure vit dans js/test-prep-data.js, où Node la vérifie.
+return languesParNomUniversite(programmes, universites);
 } catch (error) {
 console.warn("Catalogue injoignable — les suggestions par langue sont désactivées :", error);
 return new Map();
