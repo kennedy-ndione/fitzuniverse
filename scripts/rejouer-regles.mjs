@@ -458,6 +458,50 @@ attendre("étudiant : s'offrir Dossier Chine : refusé", await patchMasque(UID_G
 await admin.doc(`admins/${UID_PROPRIO}`).delete();
 await admin.doc(`admins/${UID_ADMIN_ORD}`).delete();
 
+// AUDIT 2026-10 — UNE FORMULE EXPIRÉE NE DONNE PLUS AUCUN ACCÈS. Chaque
+// forme d'échéance que les écrivains produisent (toISOString() du webhook,
+// AAAA-MM-JJ de l'administration, Timestamp), passée ou à venir.
+console.log("Audit 2026-10 — formules expirées :");
+const { Timestamp } = await import("firebase-admin/firestore");
+const hierJour = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+const demainJour = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+const EXP = (nom) => `rejeu-exp-${nom}-${T}`;
+const expires = {
+  consIso: { plan: "conseiller-6", planExpiresAt: dans(-1) },
+  consJour: { plan: "conseiller-6", planExpiresAt: hierJour },
+  consTs: { plan: "conseiller-6", planExpiresAt: Timestamp.fromMillis(Date.now() - 3600000) },
+  consIllisible: { plan: "conseiller-6", planExpiresAt: "bientôt" },
+  consAvenirJour: { plan: "conseiller-6", planExpiresAt: demainJour },
+  consSansFin: { plan: "conseiller-6" },
+  dossierExpire: { planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dans(-1) },
+  paysExpire: { preinscriptionsPays: { maroc: { plan: "dossier-france-conseiller", expiresAt: dans(-1) } } },
+  paysSansEcheance: { preinscriptionsPays: { maroc: { plan: "dossier-france" } } },
+  paysActif: { preinscriptionsPays: { maroc: { plan: "dossier-france", expiresAt: dans(30) } } },
+  passExpire: { fitzExpressExpiresAt: dans(-1) }
+};
+for (const [nom, champs] of Object.entries(expires)) await admin.doc(`users/${EXP(nom)}`).set({ uid: EXP(nom), name: nom, ...champs });
+const cree = (nom, chemin, data) => creerCommeEtudiant(EXP(nom), chemin.replace("{u}", EXP(nom)), data);
+attendre("conseiller-6 échu (ISO) : bourse slot-1 refusée", await cree("consIso", "users/{u}/applications/slot-1", candidature("bourse")), 403);
+attendre("conseiller-6 échu (ISO) : demande conseiller refusée", await cree("consIso", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 échu (ISO) : signalement refusé", await cree("consIso", `supportTickets/t-${EXP("consIso")}`, signalement(EXP("consIso"))), 403);
+attendre("conseiller-6 échu (AAAA-MM-JJ d'hier) : demande conseiller refusée", await cree("consJour", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 échu (Timestamp) : demande conseiller refusée", await cree("consTs", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6, échéance illisible : demande conseiller refusée", await cree("consIllisible", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 valable jusqu'à après-demain (AAAA-MM-JJ) : demande conseiller acceptée", await cree("consAvenirJour", "users/{u}/advisorRequests/r1", revue), 200);
+attendre("conseiller-6 sans échéance (sans fin) : bourse slot-1 acceptée", await cree("consSansFin", "users/{u}/applications/slot-1", candidature("bourse")), 200);
+attendre("Dossier France + Conseiller échu : vœu pre-1 refusé", await cree("dossierExpire", "users/{u}/applications/pre-1", candidature("preinscription")), 403);
+attendre("Dossier France + Conseiller échu : demande conseiller refusée", await cree("dossierExpire", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("Dossier Maroc échu : vœu pre-ma-1 refusé", await cree("paysExpire", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 403);
+attendre("Dossier Maroc échu : signalement refusé", await cree("paysExpire", `supportTickets/t-${EXP("paysExpire")}`, signalement(EXP("paysExpire"))), 403);
+attendre("Dossier Maroc sans échéance : vœu pre-ma-1 refusé", await cree("paysSansEcheance", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 403);
+attendre("Dossier Maroc valable : vœu pre-ma-1 accepté", await cree("paysActif", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 200);
+attendre("Pass Découverte échu : signalement refusé", await cree("passExpire", `supportTickets/t-${EXP("passExpire")}`, signalement(EXP("passExpire"))), 403);
+for (const nom of Object.keys(expires)) {
+  for (const sc of ["applications", "advisorRequests"]) for (const d of (await admin.collection(`users/${EXP(nom)}/${sc}`).get()).docs) await d.ref.delete();
+  await admin.doc(`users/${EXP(nom)}`).delete();
+  await admin.doc(`supportTickets/t-${EXP(nom)}`).delete();
+}
+
 // AUDIT 2026-10 — le journal analytics et ses compteurs, ouverts à tous
 // mais dans la forme exacte de js/analytics.js.
 console.log("Audit 2026-10 — analytics :");
