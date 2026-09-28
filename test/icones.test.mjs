@@ -4,8 +4,9 @@
 * Chaque nom d'icône employé dans le site (`data-lucide="…"`, `icon: "…"`,
 * `icon("…")`, et les branches littérales d'un `data-lucide="${…}"`) est
 * validé contre LE PAQUET INSTALLÉ (node_modules/lucide@1.31.0, dans sa
-* forme UMD — celle que le site charge depuis unpkg), pas contre une
-* liste recopiée. Un nom qui ne correspond à aucune icône rend un <i>
+* forme UMD — celle que le site chargeait depuis unpkg jusqu'au lot PERF 3G
+* du 2026-09-28, et dont js/lucide-icones.js garde les icônes employées),
+* pas contre une liste recopiée. Un nom qui ne correspond à aucune icône rend un <i>
 * vide à l'écran, sans erreur : c'est ce test qui l'attrape.
 *
 * Preuve par mutation (2026-09-10) : `data-lucide="nom-inventé"` posé
@@ -88,15 +89,18 @@ assert.ok(ICONES_INTERDITES.test("sparkles") && ICONES_INTERDITES.test("star") &
 assert.ok(!ICONES_INTERDITES.test("flag") && !ICONES_INTERDITES.test("start"));
 });
 
+// Lot PERF 3G (2026-09-28) : lucide n'est plus chargé depuis unpkg mais
+// depuis js/lucide-icones.js (voir test/icones-locales.test.mjs) ; la
+// règle, elle, ne change pas.
 test("icônes 2 — toute page qui charge lucide charge js/icones.js juste après", () => {
 const pages = fichiersDuSite().filter((f) => f.endsWith(".html"));
 let n = 0;
 for (const f of pages) {
 const html = lire(f).replace(/<!--[\s\S]*?-->/g, "");
-if (!/unpkg\.com\/lucide/.test(html)) continue;
+if (!/unpkg\.com\/lucide|js\/lucide-icones\.js/.test(html)) continue;
 n += 1;
 const prefixe = f.startsWith("admin") ? "../js/icones.js" : "js/icones.js";
-assert.ok(new RegExp(`unpkg\\.com/lucide[^>]*></script>\\s*<script src="${prefixe.replace(/[./]/g, "\\$&")}" defer></script>`).test(html), `${f} : js/icones.js absent après lucide`);
+assert.ok(new RegExp(`(unpkg\\.com/lucide|js/lucide-icones\\.js)[^>]*></script>\\s*<script src="${prefixe.replace(/[./]/g, "\\$&")}" defer></script>`).test(html), `${f} : js/icones.js absent après lucide`);
 }
 assert.ok(n >= 30, `${n} pages chargent lucide`);
 });

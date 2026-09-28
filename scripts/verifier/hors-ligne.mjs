@@ -11,7 +11,9 @@
  *      statiquement par firebase-config.js. Sans lui, le module
  *      eligibility-questions.js ne se charge même pas : ce n'est pas
  *      un détail décoratif, c'est une dépendance de démarrage.
- *   2. https://unpkg.com/lucide          — les icônes.
+ *   2. https://unpkg.com/lucide          — les icônes, jusqu'au 2026-09-28 : elles
+ *      sont depuis servies par le site (js/lucide-icones.js, lot PERF
+ *      3G). La doublure ci-dessous ne sert plus qu'à un arbre plus ancien.
  *   3. https://fonts.googleapis.com/…    — les polices.
  *
  * On les remplace par des doublures MINIMALES. Ce que la doublure
