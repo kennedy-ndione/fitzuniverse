@@ -3,11 +3,11 @@
 * Lot 131 — audit des échéances des bourses (audit 2026-10).
 *
 * Le lot a été préparé dans une session cloud qui ne pouvait ouvrir
-* aucune page officielle : il ne doit JAMAIS pouvoir s'écrire avant la
-* relecture au navigateur. Tant que RELU_LE vaut "AAAA-MM-JJ",
-* validerLot() le refuse (et `analyser` s'arrête avant de lire la base).
-* Une fois la date posée — et les citations recopiées pour la
-* section B —, il doit passer la même validation que le runner.
+* aucune page officielle. Seul ce que Charles a vérifié au navigateur le
+* 2026-09-28 (Chevening, Commonwealth Master's et PhD) est dans PATCHES ;
+* le reste attend sa relecture en PATCHES_CONDITIONNELS. Le lot passe la
+* même validation que le runner, section B comprise une fois les
+* citations recopiées.
 * ============================================================
 */
 
@@ -42,12 +42,52 @@ rmSync(dossier, { recursive: true, force: true });
 }
 }
 
-test("lot 131 : bloqué tant que la relecture n'est pas datée", async (t) => {
-if (relu) return t.skip("RELU_LE est rempli : la relecture a eu lieu");
+// Ce que Charles a vérifié au navigateur le 2026-09-28, et rien d'autre.
+const VERIFIE = {
+scholarships: ["chevening-scholarships", "commonwealth-masters-scholarships", "commonwealth-phd-scholarships"],
+programs: [
+"imperial-college-london-london__chevening-scholarships",
+"university-of-edinburgh-edinburgh__chevening-scholarships",
+"university-of-oxford-oxford__chevening-scholarships",
+"imperial-college-london-london__commonwealth-masters-scholarships__master",
+"university-of-edinburgh-edinburgh__commonwealth-masters-scholarships__master",
+"university-of-oxford-oxford__commonwealth-masters-scholarships__master",
+"imperial-college-london-london__commonwealth-phd-scholarships__doctorat",
+"university-of-edinburgh-edinburgh__commonwealth-phd-scholarships__doctorat",
+"university-of-oxford-oxford__commonwealth-phd-scholarships__doctorat"
+]
+};
+
+test("lot 131 : PATCHES ne porte que ce que Charles a vérifié au navigateur (Chevening, Commonwealth Master's et PhD)", async () => {
 const lot = await import(pathToFileURL(CHEMIN).href);
-const { erreurs } = validerLot({ PATCHES: lot.PATCHES });
-assert.ok(erreurs.length > 0, "un lot non relu ne doit pas passer la validation");
-for (const e of erreurs) assert.match(e, /AAAA-MM-JJ/, e);
+assert.ok(relu, "la relecture est datée");
+assert.match(source, /const RELU_LE = "2026-09-28";/);
+const ecrits = lot.PATCHES.map((p) => `${p.collection}/${p.id}`).sort();
+const attendus = [...VERIFIE.scholarships.map((id) => `scholarships/${id}`), ...VERIFIE.programs.map((id) => `programs/${id}`)].sort();
+assert.deepEqual(ecrits, attendus);
+// Les programmes passent de « Fermée » à « Ouverte », et rien d'autre ne
+// change sur eux ; les bourses gardent la date de relecture.
+for (const p of lot.PATCHES.filter((x) => x.collection === "programs")) {
+assert.deepEqual(p.attendu, { status: "Fermée" }, p.id);
+assert.deepEqual(p.champs, { status: "Ouverte" }, p.id);
+}
+for (const p of lot.PATCHES.filter((x) => x.collection === "scholarships")) assert.equal(p.champs.verifieLe, "2026-09-28", p.id);
+// Chaque motif cite la page officielle et la date confirmée.
+for (const p of lot.PATCHES) {
+if (p.id.includes("chevening")) assert.ok(p.motif.includes("https://www.chevening.org/scholarships/application-timeline/") && p.motif.includes("6 octobre 2026 à 11:00 UTC"), p.id);
+if (p.id.includes("commonwealth-masters")) assert.ok(p.motif.includes("https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/") && p.motif.includes("20 octobre 2026 à 16:00 BST"), p.id);
+if (p.id.includes("commonwealth-phd")) assert.ok(p.motif.includes("https://cscuk.fcdo.gov.uk/scholarships/commonwealth-phd-scholarships/") && p.motif.includes("20 octobre 2026 à 16:00 BST"), p.id);
+}
+assert.deepEqual(validerLot({ PATCHES: lot.PATCHES }).erreurs, []);
+});
+
+test("lot 131 : ce qui n'a pas été relu (Fribourg, ETH, UCT, section B) reste hors de PATCHES", async () => {
+const lot = await import(pathToFileURL(CHEMIN).href);
+const ids = new Set(lot.PATCHES.map((p) => p.id));
+for (const id of ["universite-de-fribourg-fribourg__unifr-research-scholarships__doctorat", "eth-zurich-zurich__eth-esop", "university-of-cape-town-le-cap__mastercard-foundation-scholars-uct", "honjo-international-scholarship", "uni-hamburg-leistungsstipendien", "nl-scholarship"]) {
+assert.ok(!ids.has(id), `${id} n'a pas été relu`);
+assert.ok(lot.PATCHES_CONDITIONNELS.some((p) => p.id === id), `${id} reste proposé en section conditionnelle`);
+}
 });
 
 test("lot 131 : la section B reste bloquée tant que la citation officielle n'est pas recopiée", async () => {

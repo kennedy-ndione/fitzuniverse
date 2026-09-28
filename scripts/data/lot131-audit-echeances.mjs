@@ -3,36 +3,40 @@
 * LOT 131 : AUDIT DES ÉCHÉANCES DES BOURSES (audit 2026-10)
 * ============================================================
 *
-* BROUILLON À VÉRIFIER AU NAVIGATEUR DEPUIS L'AFRIQUE DE L'OUEST.
-* Préparé le 2026-09-28 dans une session cloud dont le réseau refusait
-* TOUS les sites officiels (et web.archive.org) : aucune page n'a été
-* ouverte. Chaque patch s'appuie soit sur une citation DÉJÀ stockée dans
-* `sourceVerification` (campagne du 19-22/09), soit sur une incohérence
-* interne du catalogue. Rien n'est inventé ; rien n'est confirmé non plus.
-* Détail et tableau complet : AUDIT-2026-10.md, section 3.
+* PATCHES (ce que `lot.mjs` écrit) : SEULEMENT ce que Charles a vérifié
+* au navigateur, sur les sites officiels, le 2026-09-28 :
+*   - Chevening : clôture le 6 octobre 2026 à 11:00 UTC
+*     https://www.chevening.org/scholarships/application-timeline/
+*   - Commonwealth Master's : clôture le 20 octobre 2026 à 16:00 BST
+*     https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/
+*   - Commonwealth PhD : clôture le 20 octobre 2026 à 16:00 BST
+*     https://cscuk.fcdo.gov.uk/scholarships/commonwealth-phd-scholarships/
+* Ces trois dates sont déjà celles du catalogue (prose des programmes, et
+* deadlineISO + citation pour Chevening) : seul le STATUT était faux. Aucune
+* deadlineISO n'est ajoutée aux Commonwealth — elle exigerait une citation
+* relevée mot pour mot ; la carte lit déjà la date de la prose et se ferme
+* d'elle-même le 21 octobre (simulé avec js/echeance.js).
 *
-* LE LOT EST BLOQUÉ EXPRÈS. `RELU_LE` vaut "AAAA-MM-JJ" : validerLot()
-* refuse ce format, et `analyser` s'arrête avant de lire la base
-* (« rien n'a été lu ni écrit en base »). Une chaîne vide ne bloquerait
-* PAS : refusDatesDeLecture() la lit comme « vider le champ ».
+* PATCHES_CONDITIONNELS (jamais écrits par `lot.mjs`) : tout le reste,
+* préparé dans une session cloud dont le réseau refusait les sites
+* officiels. Chaque bloc attend la relecture de sa page, et la section B
+* sa phrase officielle recopiée dans A_RELEVER. Détail : AUDIT-2026-10.md.
+* ATTENTION : ces blocs réutilisent RELU_LE (verifieLe, ouverteVerifieeLe,
+* sourceVerification.le). Un bloc relu un AUTRE jour doit porter la date
+* de SA relecture — la remplacer dans le bloc avant de le déplacer.
 *
-* ORDRE SUR LE PC DE CHARLES :
-*   1. Ouvrir chaque URL citée dans un `motif`, retrouver la phrase
-*      (Ctrl+F), et retirer du lot ce qui ne se confirme pas.
-*   2. Mettre la date de cette relecture dans RELU_LE.
-*   3. Section B : recopier la phrase officielle dans A_RELEVER (ou une
-*      constante par bloc), puis déplacer le bloc confirmé dans PATCHES
-*      (scripts/lot.mjs ne lit QUE `PATCHES`).
-*   4. Sauvegarde du jour, puis analyser / ecrire / verifier 131-audit-echeances.
+* À ÉCRIRE AVANT LE 6 OCTOBRE 2026 (clôture de Chevening) :
+*   sauvegarde du jour, puis analyser / ecrire / verifier 131-audit-echeances.
 *
 * Export de référence : assets/data/catalogue.json, genereLe
-* 2026-09-26T13:45:32.033Z (69 champs `attendu` contrôlés, 0 écart).
-* `analyser` refusera tout `attendu` qui ne correspond plus à la base.
+* 2026-09-26T13:45:32.033Z. `analyser` refusera tout `attendu` qui ne
+* correspond plus à la base.
 * ============================================================
 */
 
-const RELU_LE = "AAAA-MM-JJ";              // jour de la relecture au navigateur (AAAA-MM-JJ)
+const RELU_LE = "2026-09-28";              // relecture au navigateur par Charles (Chevening, Commonwealth)
 const LU = `${RELU_LE}T12:00:00.000Z`;     // idem, avec l'heure
+
 const PAR = "IlXJmAScj2U5ucV2ctUgeJjadNd2";
 const A_RELEVER = "";                      // phrase officielle, mot pour mot
 
@@ -66,60 +70,74 @@ const ETH_NOUVELLE = "Clôture le 30 novembre 2026 à 11h59, heure d'Europe cent
 export const PATCHES = [
 
 // ============================================================
-// SECTION A — incohérences internes, corrigées avec la preuve DÉJÀ
-// stockée. Un coup d'œil au navigateur suffit avant d'écrire.
+// VÉRIFIÉ LE 2026-09-28 PAR CHARLES, AU NAVIGATEUR
 // ============================================================
 
-// A1. Chevening : la bourse dit « Ouverte », ses 3 programmes « Fermée ».
-// La fiche (details.js lit les deux statuts) affiche donc « Candidatures
-// pas encore ouvertes » alors que la prose dit « ouvertes depuis le 4 août
-// 2026 ». À N'ÉCRIRE QU'AVANT LE 6 OCTOBRE 2026 : après, la date ferme
-// d'elle-même et le patch est sans objet.
+// Chevening : la bourse dit « Ouverte », ses 3 programmes « Fermée ». La
+// fiche (details.js lit les deux statuts) affichait « Candidatures pas
+// encore ouvertes », et le moteur écartait la bourse. Clôture confirmée :
+// 6 octobre 2026 à 11:00 UTC. Après cette date, la carte se ferme d'elle-
+// même (deadlineISO 2026-10-06).
 ...CHEVENING_PROGRAMMES.map((id) => ({
 collection: "programs",
 id,
 attendu: { status: "Fermée" },
 champs: { status: "Ouverte" },
-motif: "Audit du 2026-09-28 : appel 2027-2028 ouvert depuis le 4 août (prose du programme), clôture le 6 octobre 2026 à 11h00 UTC (citation stockée le 2026-09-19). La fiche affichait « pas encore ouvertes »."
+motif: "Vérifié le 2026-09-28 sur https://www.chevening.org/scholarships/application-timeline/ : candidatures ouvertes, clôture le 6 octobre 2026 à 11:00 UTC. Le programme affichait « Fermée » sous une bourse ouverte."
 })),
+{
+collection: "scholarships",
+id: "chevening-scholarships",
+attendu: { verifieLe: "2026-09-05" },
+champs: { verifieLe: RELU_LE },
+motif: "Vérifié le 2026-09-28 sur https://www.chevening.org/scholarships/application-timeline/ : clôture le 6 octobre 2026 à 11:00 UTC."
+},
 
-// A2. Commonwealth Master's : la citation stockée le 2026-09-19 dit
-// « Applications ... are now open », la prose dit « Ouverture le 8
-// septembre 2026 » ; bourse ET programmes disent « Fermée ». La carte et
-// la fiche affichent « Candidatures pas encore ouvertes » à 22 jours de
-// la clôture (20 octobre 2026, 16h00 BST).
+// Commonwealth Master's : bourse ET programmes disaient « Fermée » ; la
+// carte et la fiche affichaient « Candidatures pas encore ouvertes » à 22
+// jours de la clôture. Clôture confirmée : 20 octobre 2026 à 16:00 BST.
 {
 collection: "scholarships",
 id: "commonwealth-masters-scholarships",
 attendu: { status: "Fermée", verifieLe: "2026-09-05" },
 champs: { status: "Ouverte", verifieLe: RELU_LE },
-motif: "Audit du 2026-09-28 : appel 2027-2028 ouvert depuis le 8 septembre 2026, clôture le 20 octobre 2026 à 16h00 BST (citation stockée : « Applications for Commonwealth Master’s Scholarships for the 2027/28 academic year are now open »)."
+motif: "Vérifié le 2026-09-28 sur https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/ : candidatures 2027-2028 ouvertes, clôture le 20 octobre 2026 à 16:00 BST."
 },
 ...CSC_MASTER.map((id) => ({
 collection: "programs",
 id,
 attendu: { status: "Fermée" },
 champs: { status: "Ouverte" },
-motif: "Audit du 2026-09-28 : même appel, même preuve que la bourse (citation stockée le 2026-09-19)."
+motif: "Vérifié le 2026-09-28 sur https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/ : clôture le 20 octobre 2026 à 16:00 BST."
 })),
 
-// A3. Commonwealth PhD : même cas.
+// Commonwealth PhD : même cas, même date.
 {
 collection: "scholarships",
 id: "commonwealth-phd-scholarships",
 attendu: { status: "Fermée", verifieLe: "2026-09-05" },
 champs: { status: "Ouverte", verifieLe: RELU_LE },
-motif: "Audit du 2026-09-28 : appel 2027-2028 ouvert depuis le 8 septembre 2026, clôture le 20 octobre 2026 à 16h00 BST (citation stockée : « Applications for Commonwealth PhD Scholarships for the 2027/28 academic year are now open »)."
+motif: "Vérifié le 2026-09-28 sur https://cscuk.fcdo.gov.uk/scholarships/commonwealth-phd-scholarships/ : candidatures 2027-2028 ouvertes, clôture le 20 octobre 2026 à 16:00 BST."
 },
 ...CSC_PHD.map((id) => ({
 collection: "programs",
 id,
 attendu: { status: "Fermée" },
 champs: { status: "Ouverte" },
-motif: "Audit du 2026-09-28 : même appel, même preuve que la bourse (citation stockée le 2026-09-19)."
-})),
+motif: "Vérifié le 2026-09-28 sur https://cscuk.fcdo.gov.uk/scholarships/commonwealth-phd-scholarships/ : clôture le 20 octobre 2026 à 16:00 BST."
+}))
 
-// A4. Fribourg : deadlineISO = 2026-11-01, qui est le jour où le LIEN
+];
+
+// ============================================================
+// SECTION B — à n'écrire QU'APRÈS relecture de la page. Les preuves
+// portent A_RELEVER (vide) : validerPatches() bloque le lot tant que la
+// phrase officielle n'est pas recopiée. scripts/lot.mjs ne lit QUE
+// `PATCHES` : déplacer chaque bloc dans PATCHES après relecture.
+// ============================================================
+export const PATCHES_CONDITIONNELS = [
+
+// B9 (ex-A4, NON RELU). Fribourg : deadlineISO = 2026-11-01, qui est le jour où le LIEN
 // de candidature est publié, pas une clôture (citation stockée). Dès le
 // 2 novembre, le moteur tiendrait la bourse pour close pendant toute sa
 // vraie fenêtre (1er novembre -> 28 février).
@@ -131,7 +149,7 @@ champs: { deadlineISO: "2027-02-28" },
 motif: "Audit du 2026-09-28 : la citation stockée dit « 28 February for stays starting on the following 1 September at the earliest (the application link will be published on 1 November) ». Le 1er novembre est l'ouverture, la clôture est le 28 février 2027."
 },
 
-// A5. ETH ESOP : la prose dit 12h59, la citation stockée dit
+// B10 (ex-A5, NON RELU). ETH ESOP : la prose dit 12h59, la citation stockée dit
 // « 11.59h, MEZ ». On retient la lecture la plus prudente (11h59) ; si
 // la page dit 23h59, corriger ici avant d'écrire.
 {
@@ -140,17 +158,7 @@ id: "eth-zurich-zurich__eth-esop",
 attendu: { deadline: ETH_ANCIENNE },
 champs: { deadline: ETH_NOUVELLE },
 motif: "Audit du 2026-09-28 : l'heure de la prose (12h59) ne correspond pas à la citation stockée « Nov, 1 - Nov, 30 2026, 11.59h, MEZ »."
-}
-
-];
-
-// ============================================================
-// SECTION B — à n'écrire QU'APRÈS relecture de la page. Les preuves
-// portent A_RELEVER (vide) : validerPatches() bloque le lot tant que la
-// phrase officielle n'est pas recopiée. scripts/lot.mjs ne lit QUE
-// `PATCHES` : déplacer chaque bloc dans PATCHES après relecture.
-// ============================================================
-export const PATCHES_CONDITIONNELS = [
+},
 
 // B0 (ex-A6, déplacé par la revue). UCT : la prose commence par la date de la LICENCE (30 septembre).
 // Dès le 1er octobre, carte et fiche disent « Candidatures closes » alors
