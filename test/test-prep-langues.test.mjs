@@ -8,26 +8,37 @@
 * d.data(), comme un instantané Firestore. Or js/catalog-data.js rend
 * des objets simples { id, …champs } — depuis l'instantané comme depuis
 * Firestore (lireFirestore fait déjà le .data()). L'exception était
-* avalée par le try/catch de languesParUniversite(), qui journalisait
-* « Catalogue injoignable » à CHAQUE chargement de la page : aucune
-* suggestion par langue ne s'est affichée depuis l'entrée du fichier au
-* dépôt (2026-09-01).
+* avalée par le try/catch de la page, qui journalisait « Catalogue
+* injoignable » à CHAQUE chargement : aucune suggestion par langue ne
+* s'est affichée depuis l'entrée du fichier au dépôt (2026-09-01).
 *
-* test-prep.js ne se charge pas sous Node (Firebase, DOM) : la jointure
-* vit désormais dans js/test-prep-data.js, languesParNomUniversite(), et
-* la page ne fait plus que lui passer le catalogue reçu. D'où :
+* LA JOINTURE. Une fois l'exception levée, la jointure par NOM
+* d'université (premier programme gagnant) donnait à 441 programmes sur
+* 828 la langue d'un AUTRE programme de la même université — et à 334,
+* d'autres tests que les leurs. Chaque candidature prend désormais la
+* langue de SON programme (programId), et le nom d'université ne sert
+* plus qu'en repli.
 *
-*  1. la jointure, sur des objets { id, universityId, language } ;
+* test-prep.js ne se charge pas sous Node (Firebase, DOM) : tout le calcul
+* vit dans js/test-prep-data.js, et la page ne fait plus que lui passer le
+* catalogue reçu. D'où :
+*
+*  1. la jointure par nom, sur des objets { id, universityId, language } ;
 *  2. le vrai instantané, servi par le chargeur que la page importe
 *     vraiment : des objets simples, des langues, des suggestions ;
 *  3. le branchement dans test-prep.js : le catalogue passe tel quel,
-*     sans .data().
+*     sans .data(), et chaque candidature prend SA langue ;
+*  4. la langue d'une candidature : son programme d'abord, sur des
+*     exemples puis sur TOUS les programmes du vrai catalogue ;
+*  5. la langue écrite dans une phrase, sigles gardés.
 *
 * Preuves par mutation (2026-09-28) : `const p = d.data();` remis dans
 * languesParNomUniversite() → tests 1a, 1b et 2 rouges (« d.data is not
 * a function ») ; test-prep.js rendu à son état d'avant → test 3 rouge ;
-* import gardé mais une boucle en d.data() remise dans
-* languesParUniversite() → test 3 rouge aussi.
+* import gardé mais une boucle en d.data() remise dans la page → test 3
+* rouge aussi ; programId ignoré par langueDeLaCandidature() → 4a et 4b
+* rouges ; la page revenue à la recherche par nom → 3 rouge ;
+* toLowerCase() complet dans langueDansUnePhrase() → 5 rouge.
 * ============================================================
 */
 
@@ -37,7 +48,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { languesParNomUniversite, testsPourLangue } from "../js/test-prep-data.js";
+import {
+languesParNomUniversite, languesDuCatalogue, langueDeLaCandidature, langueDansUnePhrase, testsPourLangue
+} from "../js/test-prep-data.js";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -46,7 +59,7 @@ const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => fs.readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
 
 // ------------------------------------------------------------
-// 1. La jointure
+// 1. La jointure par nom d'université
 // ------------------------------------------------------------
 
 test("1a. une langue par université, depuis des objets simples { id, universityId, language }", () => {
@@ -122,10 +135,10 @@ assert.ok(programmes.length > 0 && universites.length > 0, "le chargeur a rendu 
 // Le contrat que l'ancien code ignorait.
 assert.ok(programmes.every((p) => typeof p.data !== "function"), "le chargeur rend des instantanés Firestore, pas des objets simples");
 
-const langues = languesParNomUniversite(programmes, universites);
-assert.ok(langues.size > 0, "aucune langue d'enseignement tirée du catalogue : la page ne suggérerait rien");
+const langues = languesDuCatalogue(programmes, universites);
+assert.ok(langues.parProgramme.size > 0 && langues.parNom.size > 0, "aucune langue d'enseignement tirée du catalogue : la page ne suggérerait rien");
 
-const suggerees = [...langues.values()].filter((l) => testsPourLangue(l).length > 0);
+const suggerees = [...langues.parProgramme.values()].filter((l) => testsPourLangue(l).length > 0);
 assert.ok(suggerees.length > 0, "aucune langue du catalogue ne correspond à une fiche de test");
 });
 
@@ -133,18 +146,82 @@ assert.ok(suggerees.length > 0, "aucune langue du catalogue ne correspond à une
 // 3. Le branchement dans test-prep.js
 // ------------------------------------------------------------
 
-test("3. test-prep.js passe le catalogue tel quel à languesParNomUniversite, sans .data()", () => {
+test("3. test-prep.js passe le catalogue tel quel, sans .data(), et chaque candidature prend SA langue", () => {
 const src = lire("test-prep.js");
-assert.match(src, /import\s*\{[^}]*\blanguesParNomUniversite\b[^}]*\}\s*from\s*"\.\/js\/test-prep-data\.js"/,
-"test-prep.js n'importe pas languesParNomUniversite depuis js/test-prep-data.js");
+for (const fn of ["languesDuCatalogue", "langueDeLaCandidature", "langueDansUnePhrase"]) {
+assert.match(src, new RegExp(`import\\s*\\{[^}]*\\b${fn}\\b[^}]*\\}\\s*from\\s*"\\./js/test-prep-data\\.js"`),
+`test-prep.js n'importe pas ${fn} depuis js/test-prep-data.js`);
+}
 
-const debut = src.indexOf("async function languesParUniversite()");
-assert.ok(debut >= 0, "test-prep.js : languesParUniversite() introuvable");
+const debut = src.indexOf("async function chargerLangues()");
+assert.ok(debut >= 0, "test-prep.js : chargerLangues() introuvable");
 const fin = src.indexOf("\nfunction ", debut);
 const corps = src.slice(debut, fin < 0 ? undefined : fin);
 
-assert.match(corps, /languesParNomUniversite\(\s*programmes\s*,\s*universites\s*\)/,
-"languesParUniversite() doit passer { programmes, universites } du chargeur à languesParNomUniversite()");
+assert.match(corps, /languesDuCatalogue\(\s*programmes\s*,\s*universites\s*\)/,
+"chargerLangues() doit passer { programmes, universites } du chargeur à languesDuCatalogue()");
 assert.doesNotMatch(corps, /\.data\(\)/,
-"languesParUniversite() lit le catalogue comme un instantané Firestore (.data()) : js/catalog-data.js rend des objets simples");
+"chargerLangues() lit le catalogue comme un instantané Firestore (.data()) : js/catalog-data.js rend des objets simples");
+
+// La langue d'une candidature vient de langueDeLaCandidature(), plus
+// d'une recherche par nom écrite dans la page.
+assert.match(src, /const langue = langueDeLaCandidature\(app, langues\);/,
+"collecterSuggestions() doit prendre la langue de la candidature par langueDeLaCandidature()");
+assert.match(src, /enseigne en \$\{langueDansUnePhrase\(langue\)\}/,
+"la carte doit écrire la langue par langueDansUnePhrase(), qui garde les sigles");
+assert.doesNotMatch(src, /langue\.toLowerCase\(\)/,
+"langue.toLowerCase() écrirait « niveau b2 » et « jlpt n2 »");
+});
+
+// ------------------------------------------------------------
+// 4. La langue d'une candidature : son programme d'abord
+// ------------------------------------------------------------
+
+test("4a. une candidature prend la langue de SON programme ; le nom d'université n'est qu'un repli", () => {
+const universites = [{ id: "u-berlin", name: "Freie Universität Berlin" }];
+const programmes = [
+{ id: "berlin-daad", universityId: "u-berlin", language: "Anglais / Allemand" },
+{ id: "berlin-kas", universityId: "u-berlin", language: "Allemand, niveau B2 exigé quelle que soit la langue du cursus" },
+{ id: "berlin-sans-langue", universityId: "u-berlin" }
+];
+const langues = languesDuCatalogue(programmes, universites);
+const nom = "Freie Universität Berlin";
+
+assert.equal(langueDeLaCandidature({ programId: "berlin-kas", university: nom }, langues),
+"Allemand, niveau B2 exigé quelle que soit la langue du cursus", "liée : la langue de son programme, pas celle du premier");
+assert.equal(langueDeLaCandidature({ university: nom }, langues), "Anglais / Allemand", "sans clé : repli par le nom");
+assert.equal(langueDeLaCandidature({ programId: "retire-du-catalogue", university: nom }, langues), "Anglais / Allemand", "clé inconnue : repli par le nom");
+assert.equal(langueDeLaCandidature({ programId: "berlin-sans-langue", university: ` ${nom} ` }, langues), "Anglais / Allemand", "programme sans langue : repli par le nom");
+assert.equal(langueDeLaCandidature({ university: "Université de Nulle Part" }, langues), null, "hors catalogue : rien");
+assert.equal(langueDeLaCandidature({}, languesDuCatalogue([], [])), null);
+});
+
+test("4b. sur le vrai catalogue, chaque programme donne à sa candidature SA propre langue", () => {
+const brut = JSON.parse(lire("assets/data/catalogue.json"));
+const langues = languesDuCatalogue(brut.programs, brut.universities);
+const nomParId = new Map(brut.universities.map((u) => [u.id, u.name]));
+
+const avecLangue = brut.programs.filter((p) => p.language && nomParId.has(p.universityId));
+assert.ok(avecLangue.length > 0, "aucun programme avec une langue dans l'instantané");
+
+// Par le nom seul, 441 des 828 programmes recevaient le 2026-09-28 la
+// langue d'un autre programme de la même université (preuve par
+// mutation : programId ignoré → ce test rouge, « 441 programme(s) »).
+const ecarts = avecLangue.filter((p) => langueDeLaCandidature({ programId: p.id, university: nomParId.get(p.universityId) }, langues) !== p.language);
+assert.deepEqual(ecarts.map((p) => p.id), [], `${ecarts.length} programme(s) sur ${avecLangue.length} reçoivent une autre langue que la leur`);
+});
+
+// ------------------------------------------------------------
+// 5. La langue dans une phrase
+// ------------------------------------------------------------
+
+test("5. une langue s'écrit en minuscules dans la phrase, sigles gardés", () => {
+assert.equal(langueDansUnePhrase("Anglais"), "anglais");
+assert.equal(langueDansUnePhrase("Français / Anglais selon la formation"), "français / anglais selon la formation");
+assert.equal(langueDansUnePhrase("Allemand, niveau B2 exigé quelle que soit la langue du cursus"),
+"allemand, niveau B2 exigé quelle que soit la langue du cursus");
+assert.equal(langueDansUnePhrase("Japonais (JLPT N2) / Anglais (B2) selon le cursus"),
+"japonais (JLPT N2) / anglais (B2) selon le cursus");
+assert.equal(langueDansUnePhrase(""), "");
+assert.equal(langueDansUnePhrase(undefined), "");
 });

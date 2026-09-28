@@ -7,10 +7,10 @@
 //     candidature (applications.html) : nom du test, seuil requis par
 //     la bourse, date prévue, statut — saisis depuis la fiche de la
 //     bourse elle-même.
-//  2. La langue d'enseignement des programmes visés (jointure par le
-//     nom d'université avec le catalogue — les candidatures créées
-//     par Fitz portent les noms exacts du catalogue), pour SUGGÉRER
-//     un test quand la checklist n'en exige pas encore.
+//  2. La langue d'enseignement des programmes visés — celle du programme
+//     de la candidature (programId), à défaut celle de son université
+//     (par le nom exact du catalogue) — pour SUGGÉRER un test quand la
+//     checklist n'en exige pas encore.
 //
 // Les fiches (format, exigences habituelles, plan) viennent de
 // js/test-prep-data.js — factuelles, avec les mises en garde honnêtes
@@ -22,7 +22,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { joursRestants } from "./js/next-action.js";
 import { tonEcheance } from "./js/journey-map.js";
-import { TESTS, testDepuisNom, testsPourLangue, languesParNomUniversite } from "./js/test-prep-data.js";
+import { TESTS, testDepuisNom, testsPourLangue, languesDuCatalogue, langueDeLaCandidature, langueDansUnePhrase } from "./js/test-prep-data.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerProgrammesEtUniversites } from "./js/catalog-data.js";
@@ -42,19 +42,20 @@ return [];
 }
 }
 
-// Langue d'enseignement par candidature, via le catalogue (jointure par
-// nom d'université — même donnée que details.js, lue, jamais réécrite).
-async function languesParUniversite() {
+// Langues d'enseignement du catalogue (même donnée que details.js, lue,
+// jamais réécrite) : par programme et par nom d'université. Chaque
+// candidature y prend la sienne — voir langueDeLaCandidature().
+async function chargerLangues() {
 try {
 // Deux collections seulement : cette page n'a pas besoin des bourses,
 // et le chargeur ne lit que ce qu'on lui demande.
 const { programmes, universites } = await chargerProgrammesEtUniversites();
 // Des objets simples { id, …champs }, pas des instantanés Firestore :
 // la jointure vit dans js/test-prep-data.js, où Node la vérifie.
-return languesParNomUniversite(programmes, universites);
+return languesDuCatalogue(programmes, universites);
 } catch (error) {
 console.warn("Catalogue injoignable — les suggestions par langue sont désactivées :", error);
-return new Map();
+return languesDuCatalogue([], []);
 }
 }
 
@@ -81,13 +82,13 @@ return exigences;
 
 }
 
-function collecterSuggestions(applications, languesParUni, dejaExiges) {
+function collecterSuggestions(applications, langues, dejaExiges) {
 
 const suggestions = [];
 const vus = new Set(dejaExiges.map((e) => e.fiche && e.fiche.id).filter(Boolean));
 
 applications.forEach((app) => {
-const langue = languesParUni.get((app.university || "").trim());
+const langue = langueDeLaCandidature(app, langues);
 if (!langue) return;
 testsPourLangue(langue).forEach((fiche) => {
 if (vus.has(fiche.id)) return;
@@ -145,7 +146,7 @@ cartes.push(`
 <article class="jy-card">
 <div class="jy-app-top">
 <h3>${fiche.nom}</h3>
-<span class="jy-app-meta">Suggéré — ${app.university || "votre programme"} enseigne en ${langue.toLowerCase()}</span>
+<span class="jy-app-meta">Suggéré — ${app.university || "votre programme"} enseigne en ${langueDansUnePhrase(langue)}</span>
 </div>
 <p class="jy-opp-reason"><i data-lucide="book-open"></i><span>${fiche.exigenceHabituelle}</span></p>
 <div class="jy-tools">
@@ -216,7 +217,7 @@ document.body.dataset.parcoursPret = "1";
 
 const [applications, langues] = await Promise.all([
 chargerCandidatures(session.user.uid),
-languesParUniversite()
+chargerLangues()
 ]);
 
 const exigences = collecterExigences(applications);

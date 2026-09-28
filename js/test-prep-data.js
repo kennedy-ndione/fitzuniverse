@@ -268,3 +268,39 @@ if (nom && p.language && !langues.has(nom)) langues.set(nom, p.language);
 });
 return langues;
 }
+
+/**
+* Les langues d'enseignement du catalogue, prêtes pour les candidatures :
+* par programme (id → langue) et par nom d'université (ci-dessus).
+*/
+export function languesDuCatalogue(programmes, universites) {
+return {
+parProgramme: new Map(programmes.filter((p) => p.language).map((p) => [p.id, p.language])),
+parNom: languesParNomUniversite(programmes, universites)
+};
+}
+
+/**
+* La langue d'enseignement d'UNE candidature, ou null.
+*
+* D'abord celle de SON programme : les candidatures choisies par Fitz
+* portent son programId (lot FITZ-CHOISIT), et le rattrapage le pose sur
+* les anciennes qu'il sait relier. À défaut, celle de son université, par
+* le nom exact du catalogue. Par le nom seul, mesuré le 2026-09-28, 441
+* programmes sur 828 recevaient la langue d'un AUTRE programme de la même
+* université, et 334 d'autres tests que les leurs : Aix-Marseille + bourse
+* France–Sénégal, programme en français, se voyait proposer IELTS.
+*/
+export function langueDeLaCandidature(app, langues) {
+const duProgramme = app.programId ? langues.parProgramme.get(app.programId) : undefined;
+return duProgramme || langues.parNom.get(String(app.university || "").trim()) || null;
+}
+
+/**
+* Une langue du catalogue telle qu'elle s'écrit dans une phrase : noms de
+* langues en minuscules, sigles gardés. « Allemand, niveau B2 exigé… »
+* devient « allemand, niveau B2 exigé… », jamais « niveau b2 ».
+*/
+export function langueDansUnePhrase(langue) {
+return String(langue || "").replace(/\p{L}+/gu, (mot) => (/^\p{Lu}\p{Ll}+$/u.test(mot) ? mot.toLowerCase() : mot));
+}
