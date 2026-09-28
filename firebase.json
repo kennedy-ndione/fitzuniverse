@@ -53,6 +53,7 @@
       "PROMPT_JOURNEE.md",
       "REDACTION.md",
       "TESTING.md",
+      "AUDIT-*.md",
       "package.json",
       "package-lock.json",
       "firestore.rules",

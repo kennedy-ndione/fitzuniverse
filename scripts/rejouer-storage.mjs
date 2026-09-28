@@ -24,16 +24,16 @@ const PROJET = "scholarbridge-e0d84";
 const BUCKET = `${PROJET}.firebasestorage.app`;
 const BASE = `http://${HOTE}/v0/b/${BUCKET}/o`;
 
-function jeton(uid) {
+function jeton(uid, fournisseur = "password") {
   const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
   const t = Math.floor(Date.now() / 1000);
-  return `${b64({ alg: "none", typ: "JWT" })}.${b64({ iss: `https://securetoken.google.com/${PROJET}`, aud: PROJET, sub: uid, user_id: uid, uid, iat: t, exp: t + 3600, auth_time: t, firebase: { sign_in_provider: "password", identities: {} } })}.`;
+  return `${b64({ alg: "none", typ: "JWT" })}.${b64({ iss: `https://securetoken.google.com/${PROJET}`, aud: PROJET, sub: uid, user_id: uid, uid, iat: t, exp: t + 3600, auth_time: t, firebase: { sign_in_provider: fournisseur, identities: {} } })}.`;
 }
 
-async function envoyer(uid, chemin, octets, contentType) {
+async function envoyer(uid, chemin, octets, contentType, fournisseur) {
   const r = await fetch(`${BASE}?name=${encodeURIComponent(chemin)}&uploadType=media`, {
     method: "POST",
-    headers: { "Content-Type": contentType, Authorization: `Firebase ${jeton(uid)}` },
+    headers: { "Content-Type": contentType, Authorization: `Firebase ${jeton(uid, fournisseur)}` },
     body: octets
   });
   return r.status;
@@ -41,6 +41,11 @@ async function envoyer(uid, chemin, octets, contentType) {
 
 async function lireFichier(uid, chemin) {
   const r = await fetch(`${BASE}/${encodeURIComponent(chemin)}?alt=media`, { headers: uid ? { Authorization: `Firebase ${jeton(uid)}` } : {} });
+  return r.status;
+}
+
+async function supprimer(uid, chemin) {
+  const r = await fetch(`${BASE}/${encodeURIComponent(chemin)}`, { method: "DELETE", headers: { Authorization: `Firebase ${jeton(uid)}` } });
   return r.status;
 }
 
@@ -68,6 +73,18 @@ attendre("un visiteur anonyme ne lit pas la capture", await lireFichier(null, ch
 attendre("un AUTRE uid n'écrit pas dans le dossier", await envoyer(AUTRE, `users/${PROPRIO}/applications/slot-1/autre.jpg`, png, "image/png"), 403);
 attendre("le reste de users/{uid}/ n'est pas inscriptible", await envoyer(PROPRIO, `users/${PROPRIO}/libre.jpg`, png, "image/png"), 403);
 attendre("hors de users/ : refusé", await envoyer(PROPRIO, `public/${T}.jpg`, png, "image/png"), 403);
+
+// AUDIT 2026-10 : un fichier par candidature, jamais de SVG, jamais une
+// session anonyme.
+console.log("\n=== storage.rules — audit 2026-10 ===");
+attendre("un nom libre dans le dossier de la candidature est refusé", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/photo-${T}.jpg`, png, "image/png"), 403);
+attendre("une image SVG est refusée", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/preuve-depot.svg`, Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"), "image/svg+xml"), 403);
+attendre("une image SVG au type en majuscules est refusée", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/preuve-depot.svg`, Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"), "image/SVG+xml"), 403);
+const ANONYME = `rejeu-anonyme-${T}`;
+attendre("une session ANONYME n'envoie rien, même dans son propre dossier", await envoyer(ANONYME, `users/${ANONYME}/applications/slot-1/preuve-depot.jpg`, png, "image/png", "anonymous"), 403);
+attendre("le propriétaire remplace sa capture (même nom)", await envoyer(PROPRIO, chemin, png, "image/jpeg"), 200);
+attendre("un AUTRE uid ne supprime pas la capture", await supprimer(AUTRE, chemin), 403);
+attendre("le propriétaire supprime sa capture", await supprimer(PROPRIO, chemin), [200, 204]);
 
 const ko = resultats.filter((r) => !r.ok);
 console.log(`\n${resultats.length - ko.length}/${resultats.length} attentes tenues.`);

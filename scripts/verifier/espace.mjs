@@ -593,11 +593,15 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       // légalisation obtenues : l'étape 3 de slot-6 doit être FAITE, la
       // 4 non — c'est la moitié « après rechargement » du contrôle du
       // clic « J'ai ce document » (section 3 ci-dessous).
+      // Le stub est un client Forfait Conseiller (conseiller-6, depuis le
+      // 2026-09-24) : l'étape « Revue conseiller » (advisor) ferme chaque
+      // parcours. Et un vœu n'a plus d'étape « Dossier de candidature »
+      // (lot B2-bis, 2026-09-18 — js/application-journey.js).
       const idsBourse = vu.etapes.slot3.map((e) => e.id).join(",");
-      if (idsBourse !== "profile,checklist,letter,readiness") anomalies.push(`slot-3 (bourse) : étapes « ${idsBourse} » au lieu de profile,checklist,letter,readiness.`);
+      if (idsBourse !== "profile,checklist,letter,readiness,advisor") anomalies.push(`slot-3 (bourse) : étapes « ${idsBourse} » au lieu de profile,checklist,letter,readiness,advisor.`);
 
       const idsPre = vu.etapes.slot6.map((e) => e.id).join(",");
-      if (idsPre !== "profile,checklist,traductions,ressources") anomalies.push(`slot-6 (préinscription) : étapes « ${idsPre} » au lieu de profile,checklist,traductions,ressources.`);
+      if (idsPre !== "profile,traductions,ressources,advisor") anomalies.push(`slot-6 (préinscription) : étapes « ${idsPre} » au lieu de profile,traductions,ressources,advisor.`);
       if (vu.etapes.slot6.some((e) => /Lettre de motivation|Vérifiée par Fitz/.test(e.label))) anomalies.push("slot-6 (préinscription) : une étape de concours (lettre / vérification Fitz) s'affiche.");
 
       const traductions = vu.etapes.slot6.find((e) => e.id === "traductions");
@@ -1108,13 +1112,15 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
       await contexte.close();
     }
 
-    // Une page de l'AUTRE espace ne le renvoie pas aux offres.
+    // Une page de l'AUTRE espace ne le renvoie pas aux offres. Depuis le
+    // lot 97 (2026-09-25), le diagnostic France est GRATUIT et ouvert à
+    // tout compte : le client bourse y reste, il n'est plus ramené au hub.
     {
       const { vu, erreurs, contexte } = await lireEspace(CLIENT_BOURSE, "diagnostic-france.html", ["espace-bourse.html", "offers.html", "diagnostic-france.html"]);
       if (vu) {
         if (vu.page === "offers.html") anomalies.push("client bourse sur diagnostic-france.html : renvoyé sur la page d'offres — on ne vend pas à quelqu'un qui a déjà payé.");
-        else if (vu.page !== "espace-bourse.html") anomalies.push(`client bourse sur diagnostic-france.html : atterrit sur ${vu.page} au lieu de son hub.`);
-        else notes.push("S4 URL forcée : diagnostic-france.html ramène le client bourse à espace-bourse.html");
+        else if (vu.page !== "diagnostic-france.html") anomalies.push(`client bourse sur diagnostic-france.html : atterrit sur ${vu.page} — le diagnostic gratuit lui est ouvert (lot 97).`);
+        else notes.push("S4 URL forcée : diagnostic-france.html reste ouvert au client bourse (diagnostic gratuit, lot 97)");
       }
       anomalies.push(...erreurs);
       await contexte.close();
@@ -1619,7 +1625,11 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
           if (c.scholarshipId === avant.scholarshipId && c.universityId === avant.universityId) anomalies.push("FITZ-CHOISIT : après le refus, ni scholarshipId ni universityId n'ont changé.");
           if (c.universityId === cartes[1].universityId) anomalies.push("FITZ-CHOISIT : Fitz a proposé l'université déjà occupée par slot-2.");
           if (c.universityId === avant.universityId) anomalies.push("FITZ-CHOISIT : Fitz a re-proposé l'université refusée.");
-          if (c.status !== "a_preparer" || c.deadline !== null || !Array.isArray(c.checklist) || c.checklist.length) anomalies.push("FITZ-CHOISIT : la carte de remplacement ne repart pas neuve (statut, date ou dossier hérités).");
+          // Lot 109 (2026-09-25) : une carte de Fitz porte la date VÉRIFIÉE
+          // du catalogue (deadlineISO) quand elle existe. « Neuve » veut dire :
+          // pas la date saisie sur la carte refusée.
+          const dateHeritee = c.deadline !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.deadline)) || (avant.deadline && c.deadline === avant.deadline));
+          if (c.status !== "a_preparer" || dateHeritee || !Array.isArray(c.checklist) || c.checklist.length) anomalies.push("FITZ-CHOISIT : la carte de remplacement ne repart pas neuve (statut, date ou dossier hérités).");
           if (!c.universityId || !c.programId || !c.scholarshipId) anomalies.push("FITZ-CHOISIT : la carte de remplacement n'a pas ses trois clés du catalogue.");
           notes.push(`FITZ-CHOISIT : refus de « ${avant.university} » → « ${c.university} » (${c.programId})`);
         }
@@ -1643,7 +1653,9 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
           lien: !!document.querySelector('#fitzChoixEtat a[href="profile.html"]')
         }));
         if (vu.sets) anomalies.push(`FITZ-CHOISIT (profil incomplet) : ${vu.sets} place(s) remplie(s) alors que Fitz ne connaît pas l'étudiant.`);
-        if (vu.etat !== "profil" || !/Complétez votre profil/.test(vu.texte)) anomalies.push(`FITZ-CHOISIT (profil incomplet) : ligne d'état « ${vu.texte.slice(0, 80)} » (état ${vu.etat}).`);
+        // Lot P3 (2026-09-19) : la ligne NOMME ce qui manque (« Il manque … : Fitz
+        // choisira … ») ; « Complétez votre profil » ne reste que sans liste.
+        if (vu.etat !== "profil" || !/^(Complétez votre profil|Il manque .+) : Fitz choisira/.test(vu.texte)) anomalies.push(`FITZ-CHOISIT (profil incomplet) : ligne d'état « ${vu.texte.slice(0, 80)} » (état ${vu.etat}).`);
         if (!vu.lien) anomalies.push("FITZ-CHOISIT (profil incomplet) : aucun lien vers le profil dans la ligne d'état.");
         notes.push(`FITZ-CHOISIT : profil incomplet → aucun remplissage, « ${vu.texte.slice(0, 70)} »`);
       } catch (e) {
@@ -1746,7 +1758,10 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
                 fermes: t(carte?.querySelector(".app-outils-fermes")),
                 pastille: t(carte?.querySelector(".app-acceptee-pill")),
                 finale: t(carte?.querySelector('[data-etat="finale"]')),
-                lienSupport: !!carte?.querySelector('[data-etat="finale"] a[href="messages.html#supportCard"]'),
+                // #supportCard a quitté messages.html (feuille « Signaler un
+                // problème », finitions.mjs exige son absence) : le lien mène
+                // à la messagerie elle-même.
+                lienSupport: !!carte?.querySelector('[data-etat="finale"] a[href^="messages.html"]'),
                 supprimer: !!carte?.querySelector(".app-delete-btn")
               };
             };
@@ -1943,8 +1958,8 @@ export async function verifierEspaceEtudiant({ navigateur, base }) {
         { id: "essentiel-4", userData: { plan: "essentiel-4" }, cartes: [carteDe(choisis[0], "slot-1"), carteDe(choisis[1], "slot-2")], profile: PROFIL_PRET, hub: "espace-bourse.html", etape: "#applicationsList .app-accept-btn" },
         { id: "conseiller-6", userData: { plan: "conseiller-6" }, cartes: [carteDe(choisis[0], "slot-1"), carteDe(choisis[1], "slot-2"), carteDe(choisis[2], "slot-3")], profile: PROFIL_PRET, hub: "espace-bourse.html", etape: "#applicationsList .app-accept-btn" },
         { id: "diagnostic-france", userData: { plan: "gratuit", planPreinscription: "diagnostic-france", planPreinscriptionExpiresAt: dansNJours(10) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#diagForm" },
-        { id: "dossier-france", userData: { plan: "gratuit", planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#jyApps, #applicationModal" },
-        { id: "dossier-france-conseiller", userData: { plan: "gratuit", planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#jyApps, #applicationModal" }
+        { id: "dossier-france", userData: { plan: "gratuit", planPreinscription: "dossier-france", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#rtEtape" },
+        { id: "dossier-france-conseiller", userData: { plan: "gratuit", planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dansNJours(200) }, cartes: [], profile: PROFIL_PRET, hub: "espace-preinscription.html", etape: "#rtEtape" }
       ];
       for (const cas of MATRICE) {
         const client = compte({ ...cas.userData, profile: cas.profile }, cas.cartes, `harnais-matrice-${cas.id}`);

@@ -72,8 +72,9 @@ import { fileURLToPath } from "node:url";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-// L'écran de réflexion dure 12–18 s par construction (PALIER_MS dans
-// results.js). La marge sert au chargement du catalogue, pas au décor.
+// L'écran de réflexion dure 6–8 s par construction (PALIER_MS dans
+// results.js, réduit le 2026-09-23 ; test/resultats-lecture.test.mjs,
+// lecture 6). La marge sert au chargement du catalogue, pas au décor.
 const ATTENTE_RESULTATS = 60000;
 
 // Les 404 sur ces extensions font ÉCHOUER : une feuille de style ou un
@@ -186,17 +187,21 @@ async function verifierUnProfil({ navigateur, base, profil }) {
 
     if (!chargementCache) anomalies.push("L'écran de chargement est resté affiché sous le contenu.");
 
-    // Le temps de réflexion est un engagement produit (12–18 s) : trop
-    // court, il n'inspire rien ; trop long, on perd des gens sur un
-    // téléphone. On le mesure au lieu de l'espérer.
-    if (dureeReflexion < 10000) anomalies.push(`Réflexion trop courte : ${(dureeReflexion / 1000).toFixed(1)} s (cible 12–18 s).`);
-    if (dureeReflexion > 25000) anomalies.push(`Réflexion trop longue : ${(dureeReflexion / 1000).toFixed(1)} s (cible 12–18 s).`);
+    // Le temps de réflexion est un engagement produit (6–8 s depuis le
+    // 2026-09-23, cinq paliers de 1,1 à 1,7 s) : trop court, il n'inspire
+    // rien ; trop long, on perd des gens sur un téléphone. On le mesure
+    // au lieu de l'espérer.
+    if (dureeReflexion < 6000) anomalies.push(`Réflexion trop courte : ${(dureeReflexion / 1000).toFixed(1)} s (cible 6–8 s).`);
+    if (dureeReflexion > 15000) anomalies.push(`Réflexion trop longue : ${(dureeReflexion / 1000).toFixed(1)} s (cible 6–8 s).`);
 
     // ---- 4. Ce que la page affiche vraiment
     const vu = await page.evaluate(() => {
 
+      // Refonte du 2026-09-23 (« la réponse d'abord ») : le nombre de
+      // retenues est dans le titre du verdict — « N opportunités
+      // correspondent à votre profil » —, plus dans la légende des cartes.
       const nombre = (texte) => {
-        const m = (texte || "").match(/retenu (\d+) opportunit/i);
+        const m = (texte || "").match(/^(\d+) opportunités? correspond/i);
         return m ? Number(m[1]) : null;
       };
 
@@ -205,11 +210,13 @@ async function verifierUnProfil({ navigateur, base, profil }) {
       return {
         score: Number(document.getElementById("score")?.textContent || "0"),
         palier: document.getElementById("scoreTier")?.textContent?.trim() || "",
-        legende: document.getElementById("opportunitiesSubtext")?.textContent?.trim() || "",
-        retenu: nombre(document.getElementById("opportunitiesSubtext")?.textContent),
+        legende: document.getElementById("verdictTitre")?.textContent?.trim() || "",
+        retenu: nombre(document.getElementById("verdictTitre")?.textContent?.trim()),
         cartes: document.querySelectorAll("#scholarships .opportunity-card").length,
+        // Une raison visible (« Pourquoi vous : »), les autres repliées
+        // dans .opportunity-plus (refonte 2026-09-23).
         raisonsVides: [...document.querySelectorAll("#scholarships .opportunity-card")]
-          .filter((c) => c.querySelectorAll(".opportunity-reasons li").length === 0).length,
+          .filter((c) => !(c.querySelector(".opportunity-pourquoi-texte")?.textContent || "").trim()).length,
         decomposition: [...document.querySelectorAll("#scoreBreakdown .score-breakdown-row")].map((l) => ({
           label: l.querySelector(".score-breakdown-label")?.textContent?.trim(),
           pct: l.querySelector(".score-breakdown-pct")?.textContent?.trim()
@@ -219,21 +226,23 @@ async function verifierUnProfil({ navigateur, base, profil }) {
         recommandations: document.querySelectorAll("#recommendations li").length,
         etapes: etapes.length,
         etapesInachevees: etapes.filter((li) => !li.classList.contains("is-done")).length,
-        narratif: (document.getElementById("narrativeText")?.textContent || "").trim().length
+        // Le récit d'ouverture (#narrativeText) est parti le 2026-09-23 :
+        // la phrase du verdict le remplace.
+        narratif: (document.getElementById("verdictSous")?.textContent || "").trim().length
       };
 
     });
 
     if (vu.score <= 0 || vu.score > 100) anomalies.push(`Score hors bornes : ${vu.score}.`);
     if (!vu.palier) anomalies.push("Aucun palier affiché à côté du score.");
-    if (!vu.retenu) anomalies.push(`La légende n'annonce aucune opportunité retenue : « ${vu.legende.slice(0, 120)} »`);
+    if (!vu.retenu) anomalies.push(`Le verdict n'annonce aucune opportunité retenue : « ${vu.legende.slice(0, 120)} »`);
     if (vu.cartes !== Math.min(3, vu.retenu || 0)) anomalies.push(`${vu.cartes} carte(s) d'opportunité affichée(s), ${Math.min(3, vu.retenu || 0)} attendue(s).`);
     if (vu.raisonsVides) anomalies.push(`${vu.raisonsVides} carte(s) sans aucune raison « pourquoi cette opportunité vous correspond ».`);
     if (!vu.decomposition.length) anomalies.push("Décomposition du score vide.");
     if (vu.decomposition.some((l) => !l.pct)) anomalies.push("Une ligne de décomposition n'affiche pas de pourcentage.");
     if (!vu.pays) anomalies.push("Aucun pays d'éligibilité affiché.");
-    if (!vu.narratif) anomalies.push("Le paragraphe d'introduction est vide.");
-    if (vu.etapes < 6) anomalies.push(`Seulement ${vu.etapes} étapes de réflexion (6 attendues).`);
+    if (!vu.narratif) anomalies.push("La phrase du verdict (#verdictSous) est vide.");
+    if (vu.etapes < 5) anomalies.push(`Seulement ${vu.etapes} étapes de réflexion (5 attendues).`);
     if (vu.etapesInachevees) anomalies.push(`${vu.etapesInachevees} étape(s) de réflexion sans coche à la fin.`);
 
     notes.push(`score ${vu.score} (${vu.palier}) · ${vu.retenu} retenues · ${vu.cartes} cartes · ${vu.decomposition.length} axes · ${vu.pays} pays · réflexion ${(dureeReflexion / 1000).toFixed(1)} s`);

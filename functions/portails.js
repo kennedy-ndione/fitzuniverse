@@ -44,6 +44,8 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+// La suspension, lue hors du profil (audit 2026-10).
+const { estSuspendu } = require("./lib/suspension");
 
 const { droitAuxPortails } = require("./lib/acces");
 
@@ -99,6 +101,20 @@ exports.portails = onCall(
     } catch (cause) {
       logger.error("portails : lecture users échouée", { uid, message: cause.message });
       throw new HttpsError("internal", "Impossible de vérifier votre accès pour le moment.");
+    }
+
+    // Audit 2026-10 : un compte suspendu n'obtient pas les portails, même
+    // avec une formule en cours (suspensions/{uid}, ou `disabled`).
+    let suspendu;
+    try {
+      suspendu = await estSuspendu(admin.firestore(), uid, user);
+    } catch (cause) {
+      logger.error("portails : lecture de la suspension échouée", { uid, message: cause.message });
+      throw new HttpsError("internal", "Impossible de vérifier votre accès pour le moment.");
+    }
+
+    if (suspendu) {
+      throw new HttpsError("permission-denied", "Ce compte est suspendu.");
     }
 
     const droit = droitAuxPortails(user, new Date());

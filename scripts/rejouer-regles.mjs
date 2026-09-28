@@ -458,6 +458,123 @@ attendre("étudiant : s'offrir Dossier Chine : refusé", await patchMasque(UID_G
 await admin.doc(`admins/${UID_PROPRIO}`).delete();
 await admin.doc(`admins/${UID_ADMIN_ORD}`).delete();
 
+// AUDIT 2026-10 — UNE FORMULE EXPIRÉE NE DONNE PLUS AUCUN ACCÈS. Chaque
+// forme d'échéance que les écrivains produisent (toISOString() du webhook,
+// AAAA-MM-JJ de l'administration, Timestamp), passée ou à venir.
+console.log("Audit 2026-10 — formules expirées :");
+const { Timestamp } = await import("firebase-admin/firestore");
+const hierJour = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+const demainJour = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+const EXP = (nom) => `rejeu-exp-${nom}-${T}`;
+const expires = {
+  consIso: { plan: "conseiller-6", planExpiresAt: dans(-1) },
+  consJour: { plan: "conseiller-6", planExpiresAt: hierJour },
+  consTs: { plan: "conseiller-6", planExpiresAt: Timestamp.fromMillis(Date.now() - 3600000) },
+  consIllisible: { plan: "conseiller-6", planExpiresAt: "bientôt" },
+  consAvenirJour: { plan: "conseiller-6", planExpiresAt: demainJour },
+  consSansFin: { plan: "conseiller-6" },
+  dossierExpire: { planPreinscription: "dossier-france-conseiller", planPreinscriptionExpiresAt: dans(-1) },
+  paysExpire: { preinscriptionsPays: { maroc: { plan: "dossier-france-conseiller", expiresAt: dans(-1) } } },
+  paysSansEcheance: { preinscriptionsPays: { maroc: { plan: "dossier-france" } } },
+  paysActif: { preinscriptionsPays: { maroc: { plan: "dossier-france", expiresAt: dans(30) } } },
+  passExpire: { fitzExpressExpiresAt: dans(-1) }
+};
+for (const [nom, champs] of Object.entries(expires)) await admin.doc(`users/${EXP(nom)}`).set({ uid: EXP(nom), name: nom, ...champs });
+const cree = (nom, chemin, data) => creerCommeEtudiant(EXP(nom), chemin.replace("{u}", EXP(nom)), data);
+attendre("conseiller-6 échu (ISO) : bourse slot-1 refusée", await cree("consIso", "users/{u}/applications/slot-1", candidature("bourse")), 403);
+attendre("conseiller-6 échu (ISO) : demande conseiller refusée", await cree("consIso", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 échu (ISO) : signalement refusé", await cree("consIso", `supportTickets/t-${EXP("consIso")}`, signalement(EXP("consIso"))), 403);
+attendre("conseiller-6 échu (AAAA-MM-JJ d'hier) : demande conseiller refusée", await cree("consJour", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 échu (Timestamp) : demande conseiller refusée", await cree("consTs", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6, échéance illisible : demande conseiller refusée", await cree("consIllisible", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("conseiller-6 valable jusqu'à après-demain (AAAA-MM-JJ) : demande conseiller acceptée", await cree("consAvenirJour", "users/{u}/advisorRequests/r1", revue), 200);
+attendre("conseiller-6 sans échéance (sans fin) : bourse slot-1 acceptée", await cree("consSansFin", "users/{u}/applications/slot-1", candidature("bourse")), 200);
+attendre("Dossier France + Conseiller échu : vœu pre-1 refusé", await cree("dossierExpire", "users/{u}/applications/pre-1", candidature("preinscription")), 403);
+attendre("Dossier France + Conseiller échu : demande conseiller refusée", await cree("dossierExpire", "users/{u}/advisorRequests/r1", revue), 403);
+attendre("Dossier Maroc échu : vœu pre-ma-1 refusé", await cree("paysExpire", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 403);
+attendre("Dossier Maroc échu : signalement refusé", await cree("paysExpire", `supportTickets/t-${EXP("paysExpire")}`, signalement(EXP("paysExpire"))), 403);
+attendre("Dossier Maroc sans échéance : vœu pre-ma-1 refusé", await cree("paysSansEcheance", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 403);
+attendre("Dossier Maroc valable : vœu pre-ma-1 accepté", await cree("paysActif", "users/{u}/applications/pre-ma-1", candidature("preinscription")), 200);
+attendre("Pass Découverte échu : signalement refusé", await cree("passExpire", `supportTickets/t-${EXP("passExpire")}`, signalement(EXP("passExpire"))), 403);
+for (const nom of Object.keys(expires)) {
+  for (const sc of ["applications", "advisorRequests"]) for (const d of (await admin.collection(`users/${EXP(nom)}/${sc}`).get()).docs) await d.ref.delete();
+  await admin.doc(`users/${EXP(nom)}`).delete();
+  await admin.doc(`supportTickets/t-${EXP(nom)}`).delete();
+}
+
+// AUDIT 2026-10 — LA SUSPENSION VIT HORS DU PROFIL (suspensions/{uid}).
+console.log("Audit 2026-10 — suspension hors du profil :");
+const { ROLE_ADMIN: ROLE_ADMIN_SUSP } = await import("../js/roles-admin.js");
+const ADMIN_SUSP = `rejeu-admin-susp-${T}`;
+const SUSP = `rejeu-suspendu-${T}`;
+const AUTRE_ETUDIANT = `rejeu-autre-etudiant-${T}`;
+await admin.doc(`admins/${ADMIN_SUSP}`).set({ isActive: true, role: ROLE_ADMIN_SUSP, email: "moderation@rejeu.test" });
+await admin.doc(`users/${SUSP}`).set({ uid: SUSP, name: "Suspendu", email: "s@rejeu.test", plan: "conseiller-6" });
+await admin.doc(`users/${AUTRE_ETUDIANT}`).set({ uid: AUTRE_ETUDIANT, name: "Autre", email: "a@rejeu.test" });
+// Écrire suspensions/{uid} comme `uid_auteur`, `le` à l'heure du serveur
+// (serverTimestamp() côté client).
+async function ecrireSuspension(auteur, cible, champs, avecHeure = true) {
+  const name = `projects/${PROJET}/databases/(default)/documents/suspensions/${cible}`;
+  const write = { update: { name, fields: Object.fromEntries(Object.entries(champs).map(([k, v]) => [k, versValeur(v)])) } };
+  if (avecHeure) write.updateTransforms = [{ fieldPath: "le", setToServerValue: "REQUEST_TIME" }];
+  const r = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton(auteur)}` },
+    body: JSON.stringify({ writes: [write] })
+  });
+  return r.status;
+}
+const lireCommeEtudiant = async (uid, chemin) => (await fetch(`${BASE}/${chemin}`, { headers: { Authorization: `Bearer ${jeton(uid)}` } })).status;
+attendre("l'étudiant ne se suspend ni ne se lève lui-même", await ecrireSuspension(SUSP, SUSP, { suspendu: false, par: SUSP }), 403);
+attendre("un autre étudiant ne suspend personne", await ecrireSuspension(AUTRE_ETUDIANT, SUSP, { suspendu: true, par: AUTRE_ETUDIANT }), 403);
+attendre("l'admin ne signe pas au nom d'un autre", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: AUTRE_ETUDIANT }), 403);
+attendre("l'admin n'antidate pas (le = heure du serveur)", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP, le: "2020-01-01" }, false), 403);
+attendre("un champ de plus est refusé", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP, motif: "x" }), 403);
+attendre("l'admin (ordinaire) suspend : accepté", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: true, par: ADMIN_SUSP }), 200);
+attendre("l'étudiant lit SA suspension", await lireCommeEtudiant(SUSP, `suspensions/${SUSP}`), 200);
+attendre("un autre étudiant ne la lit pas", await lireCommeEtudiant(AUTRE_ETUDIANT, `suspensions/${SUSP}`), 403);
+attendre("profil SANS disabled : le suspendu n'écrit plus à l'équipe", await creerCommeEtudiant(SUSP, `users/${SUSP}/messages/m1`, message), 403);
+attendre("le suspendu supprime son profil (droit à l'effacement)", await supprimerCommeEtudiant(SUSP, `users/${SUSP}`), 200);
+attendre("… mais ne le RECRÉE pas", await creerCommeEtudiant(SUSP, `users/${SUSP}`, { uid: SUSP, name: "Suspendu", email: "s@rejeu.test" }), 403);
+attendre("personne ne supprime une suspension, l'étudiant", await supprimerCommeEtudiant(SUSP, `suspensions/${SUSP}`), 403);
+attendre("personne ne supprime une suspension, l'admin", await supprimerCommeEtudiant(ADMIN_SUSP, `suspensions/${SUSP}`), 403);
+attendre("l'admin lève la suspension (suspendu: false)", await ecrireSuspension(ADMIN_SUSP, SUSP, { suspendu: false, par: ADMIN_SUSP }), 200);
+attendre("suspension levée : le profil se recrée", await creerCommeEtudiant(SUSP, `users/${SUSP}`, { uid: SUSP, name: "Suspendu", email: "s@rejeu.test" }), 200);
+attendre("suspension levée : il écrit de nouveau à l'équipe", await creerCommeEtudiant(SUSP, `users/${SUSP}/messages/m1`, message), 200);
+for (const d of (await admin.collection(`users/${SUSP}/messages`).get()).docs) await d.ref.delete();
+for (const d of [`users/${SUSP}`, `users/${AUTRE_ETUDIANT}`, `suspensions/${SUSP}`, `admins/${ADMIN_SUSP}`]) await admin.doc(d).delete();
+
+// AUDIT 2026-10 — le journal analytics et ses compteurs, ouverts à tous
+// mais dans la forme exacte de js/analytics.js.
+console.log("Audit 2026-10 — analytics :");
+async function evenement(uid, champs, heureServeur = true) {
+  const name = `projects/${PROJET}/databases/(default)/documents/analyticsEvents/rejeu-${T}-${Math.random().toString(36).slice(2)}`;
+  const write = { update: { name, fields: Object.fromEntries(Object.entries(champs).map(([k, v]) => [k, versValeur(v)])) }, currentDocument: { exists: false } };
+  if (heureServeur) write.updateTransforms = [{ fieldPath: "createdAt", setToServerValue: "REQUEST_TIME" }];
+  const r = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(uid ? { Authorization: `Bearer ${jeton(uid)}` } : {}) },
+    body: JSON.stringify({ writes: [write] })
+  });
+  return r.status;
+}
+attendre("visiteur sans compte : événement de la forme du client : accepté", await evenement(null, { type: "page_view", uid: null, payload: { page: "/" }, clientTs: Date.now() }), 200);
+attendre("étudiant : événement signé de son uid : accepté", await evenement(UID_GRATUIT, { type: "page_view", uid: UID_GRATUIT, payload: {}, clientTs: Date.now() }), 200);
+attendre("visiteur sans compte : événement au nom d'un étudiant : refusé", await evenement(null, { type: "payment_completed", uid: UID_GRATUIT, payload: {}, clientTs: 1 }), 403);
+attendre("étudiant : événement au nom d'un AUTRE étudiant : refusé", await evenement(UID_GRATUIT, { type: "page_view", uid: UID_CONS6, payload: {}, clientTs: 1 }), 403);
+attendre("événement sans heure du serveur : refusé", await evenement(null, { type: "page_view", uid: null, payload: {}, clientTs: 1, createdAt: "2030-01-01" }, false), 403);
+attendre("événement avec un champ de plus : refusé", await evenement(null, { type: "page_view", uid: null, payload: {}, clientTs: 1, admin: true }), 403);
+await admin.doc("analyticsCounters/totals").set({ rejeu: 1 }, { merge: true });
+const effacerCompteur = await fetch(`${BASE}/analyticsCounters/totals`, { method: "DELETE" });
+attendre("visiteur sans compte : supprimer analyticsCounters/totals : refusé", effacerCompteur.status, 403);
+const incrementer = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ writes: [{ transform: { document: `projects/${PROJET}/databases/(default)/documents/analyticsDailyCounters/rejeu-${T}`, fieldTransforms: [{ fieldPath: "visiteurs", increment: { integerValue: "1" } }] } }] })
+});
+attendre("visiteur sans compte : incrément d'un compteur (setDoc merge + increment) : accepté", incrementer.status, 200);
+for (const d of (await admin.collection("analyticsEvents").get()).docs) if (d.id.startsWith(`rejeu-${T}`)) await d.ref.delete();
+await admin.doc(`analyticsDailyCounters/rejeu-${T}`).delete();
+
 // Nettoyage.
 for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `programs/${PROG_FERME}`, `programs/${PROG_3}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `universities/${UNI_3}`, `scholarships/${BOURSE}`, `scholarships/${BOURSE_FERMEE}`]) await admin.doc(d).delete();
 for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1, UID_FC, UID_ACC]) {

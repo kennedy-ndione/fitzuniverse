@@ -79,12 +79,28 @@ function destinationVendue(destination) {
 }
 
 /**
+ * L'offre d'un identifiant venu du navigateur — PROPRIÉTÉ PROPRE de la
+ * GRILLE seulement (audit 2026-10). `GRILLE["constructor"]` rend la
+ * fonction Object, que `!offre` ne refuse pas : estEnVente("constructor")
+ * valait true. Toute lecture de la grille par un identifiant passe ici.
+ */
+function offreDe(planId) {
+  return typeof planId === "string" && Object.hasOwn(GRILLE, planId) ? GRILLE[planId] : undefined;
+}
+
+// Le rang d'une formule dans une table de rangs, 0 si elle n'y est pas
+// en propre (même raison que offreDe).
+function rangDans(table, id) {
+  return typeof id === "string" && Object.hasOwn(table, id) ? table[id] : 0;
+}
+
+/**
  * Le libellé d'une offre pour une destination : « Dossier Italie »,
  * « Diagnostic Maroc », « Dossier Canada + Conseiller ». Inchangé pour
  * la France et pour toute offre bourse.
  */
 function libelleOffre(planId, destination) {
-  const offre = GRILLE[planId];
+  const offre = offreDe(planId);
   if (!offre) return "";
   const d = destinationNormalisee(destination);
   if (offre.parcours !== "preinscription" || d === "france") return offre.label;
@@ -160,7 +176,7 @@ const RANG = {
  * Vérifié par creerPaiement AVANT de créer la facture.
  */
 function estEnVente(planId) {
-  const offre = GRILLE[planId];
+  const offre = offreDe(planId);
   return !!offre && offre.deprecated !== true;
 }
 
@@ -228,7 +244,7 @@ function diagnosticPayeLe(user = {}, destination = "france") {
  *          null pour une formule inconnue.
  */
 function prixAvecDeduction(planId, user = {}, maintenant = new Date(), destination = "france") {
-  const offre = GRILLE[planId];
+  const offre = offreDe(planId);
   if (!offre) return null;
 
   const base = offre.prix;
@@ -310,7 +326,7 @@ function ajouterMois(depart, mois) {
  *             misAJour?: Object, planActuel?: string }}
  */
 function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprimer, destination = "france" }) {
-  const offre = GRILLE[planId];
+  const offre = offreDe(planId);
   if (!offre) return { statut: "formule-inconnue" };
 
   const misAJour = {
@@ -351,8 +367,8 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
     const expiration = dateValide(entree.expiresAt);
     const encoreActif = !!actuel && !!expiration && expiration > maintenant;
 
-    const rangActuel = encoreActif ? RANG_PREINSCRIPTION[actuel] ?? 0 : 0;
-    const rangAchete = RANG_PREINSCRIPTION[planId] ?? 0;
+    const rangActuel = encoreActif ? rangDans(RANG_PREINSCRIPTION, actuel) : 0;
+    const rangAchete = rangDans(RANG_PREINSCRIPTION, planId);
 
     if (rangAchete < rangActuel) {
       return { statut: "rang-inferieur", misAJour, planActuel: actuel };
@@ -380,8 +396,8 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
     const expiration = dateValide(user.planPreinscriptionExpiresAt);
     const encoreActif = !!actuel && !!expiration && expiration > maintenant;
 
-    const rangActuel = encoreActif ? RANG_PREINSCRIPTION[actuel] ?? 0 : 0;
-    const rangAchete = RANG_PREINSCRIPTION[planId] ?? 0;
+    const rangActuel = encoreActif ? rangDans(RANG_PREINSCRIPTION, actuel) : 0;
+    const rangAchete = rangDans(RANG_PREINSCRIPTION, planId);
 
     if (rangAchete < rangActuel) {
       return { statut: "rang-inferieur", misAJour, planActuel: actuel };
@@ -419,8 +435,8 @@ function calculerMiseAJour({ planId, user = {}, maintenant = new Date(), supprim
   const expiration = dateValide(user.planExpiresAt);
   const encoreActif = !user.planExpiresAt || (expiration && expiration > maintenant);
 
-  const rangActuel = encoreActif ? RANG[planActuel] ?? 0 : 0;
-  const rangAchete = RANG[planId] ?? 0;
+  const rangActuel = encoreActif ? rangDans(RANG, planActuel) : 0;
+  const rangAchete = rangDans(RANG, planId);
 
   if (rangAchete < rangActuel) {
     return { statut: "rang-inferieur", misAJour, planActuel };
@@ -500,7 +516,7 @@ function dateLongue(d) {
  * @returns {{ code: string, message: string }|null} null = rien ne s'oppose à la vente
  */
 function refusAchat({ planId, user = {}, nombreCartesBourse = 0, maintenant = new Date(), destination = "france" }) {
-  const offre = GRILLE[planId];
+  const offre = offreDe(planId);
   if (!offre) return null;
 
   // 3. Le Pass à un compte qui a déjà le chat.
@@ -603,4 +619,4 @@ function clientPayDunya(profil, emailAuth) {
   return Object.keys(client).length ? client : null;
 }
 
-module.exports = { clientPayDunya, GRILLE, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, DESTINATIONS_VENDUES, DUREE_DOSSIER_PAYS_MOIS, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre };
+module.exports = { clientPayDunya, GRILLE, offreDe, RANG, RANG_PREINSCRIPTION, CLOTURE_CAMPAGNE, DEDUCTION_DIAGNOSTIC, FORMULE_SUIVANTE, PREINSCRIPTION_SUIVANTE, DESTINATIONS_VENDUES, DUREE_DOSSIER_PAYS_MOIS, finDeCampagne, calculerMiseAJour, dateValide, estEnVente, diagnosticPayeLe, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre };

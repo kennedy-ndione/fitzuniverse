@@ -23,12 +23,13 @@ Pour chaque profil d'étudiant (`profils.mjs`), il :
 3. arrive sur `results.html`, attend que l'écran de réflexion cède la place ;
 4. vérifie ce qui s'affiche vraiment :
    - le profil transmis contient bien `targetLevel` et `piste` ;
-   - le temps de réflexion tient l'engagement produit (12–18 s) ;
+   - le temps de réflexion tient l'engagement produit (6–8 s depuis le
+     2026-09-23) ;
    - le score est dans ses bornes et porte un palier ;
-   - la légende annonce un nombre d'opportunités **retenues** non nul ;
-   - il y a exactement `min(3, retenues)` cartes, chacune avec ses raisons ;
+   - le titre du verdict annonce un nombre d'opportunités **retenues** non nul ;
+   - il y a exactement `min(3, retenues)` cartes, chacune avec sa raison visible ;
    - la décomposition du score n'est pas vide et chaque axe a son pourcentage ;
-   - les pays, l'introduction et les six étapes de réflexion sont là, cochées ;
+   - les pays, la phrase du verdict et les cinq étapes de réflexion sont là, cochées ;
    - **aucune** exception JavaScript, **aucune** erreur de console, **aucun**
      fichier `.js` / `.css` / `.json` manquant.
 

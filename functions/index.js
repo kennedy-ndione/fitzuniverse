@@ -36,6 +36,9 @@ exports.ping = onRequest((req, res) => {
 // ------------------------------------------------------------
 exports.creerPaiement = require("./paiement").creerPaiement;
 exports.paydunyaWebhook = require("./paiement").paydunyaWebhook;
+// Audit 2026-10 : « Revérifier auprès de PayDunya » (admin/paiements.html),
+// la même confirmation que le webhook, réservée aux administrateurs.
+exports.reverifierPaiement = require("./paiement").reverifierPaiement;
 
 // ------------------------------------------------------------
 // Relais IA de Fitz — voir functions/fitz.js.

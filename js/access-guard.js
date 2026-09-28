@@ -187,6 +187,7 @@ const adminEnVol = getDoc(doc(db, "admins", firebaseUser.uid)).catch(() => null)
 
 const userRef = doc(db, "users", firebaseUser.uid);
 let userSnap = await getDoc(userRef);
+let suspenduHorsProfil = false;
 
 // Auto-guérison : recrée le document Firestore s'il n'existe pas
 // (ex. écriture échouée pendant l'inscription, ou compte Auth créé
@@ -204,12 +205,22 @@ email: firebaseUser.email || ""
 })
 };
 
+// AUDIT 2026-10 : un compte SUSPENDU ne recrée pas son profil
+// (firestore.rules refuse la création quand suspensions/{uid} le dit).
+// Seul ce chemin d'échec lit la suspension : aucune lecture de plus
+// pour les autres étudiants.
+try {
 await setDoc(userRef, defaultData);
 userSnap = await getDoc(userRef);
+} catch (erreur) {
+const suspension = await getDoc(doc(db, "suspensions", firebaseUser.uid)).catch(() => null);
+if (!(suspension && suspension.exists() && suspension.data().suspendu === true)) throw erreur;
+suspenduHorsProfil = true;
+}
 
 }
 
-const userData = userSnap.data();
+const userData = suspenduHorsProfil ? {} : userSnap.data();
 
 const profile = Object.assign(
 createDefaultProfile(userData),
@@ -242,7 +253,7 @@ user: firebaseUser,
 userData,
 profile,
 planId,
-disabled: userData.disabled === true,
+disabled: suspenduHorsProfil || userData.disabled === true,
 testerAccess: userData.testerAccess === true,
 hasFitzExpress: hasFitzExpressAccess(userData),
 planPreinscriptionId: resolvePlanPreinscription(userData),

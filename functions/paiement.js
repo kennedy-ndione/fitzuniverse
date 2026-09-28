@@ -70,7 +70,12 @@ const { modePaydunya, baseApi, modeAcceptable } = require("./lib/paydunya-mode")
 // Grille tarifaire et décision d'achat : functions/lib/achat.js (pur,
 // testé par test/functions-achat.test.mjs). Grille B (2026-09-07) : les
 // offres préinscription y écrivent `planPreinscription`, jamais `plan`.
-const { GRILLE, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
+// AUDIT 2026-10 : la confirmation de PayDunya, seule source de vérité
+// avant de créditer (functions/lib/confirmation-paydunya.js).
+const { jetonValide, cheminConfirmation, verdictConfirmation } = require("./lib/confirmation-paydunya");
+// La suspension, lue hors du profil (audit 2026-10).
+const { estSuspendu } = require("./lib/suspension");
+const { GRILLE, offreDe, calculerMiseAJour, estEnVente, prixAvecDeduction, refusAchat, destinationNormalisee, destinationVendue, libelleOffre, clientPayDunya } = require("./lib/achat");
 
 // ============================================================
 // 1. creerPaiement — le navigateur demande une facture
@@ -112,7 +117,7 @@ exports.creerPaiement = onCall(
     // 2. Le prix. Le navigateur envoie un IDENTIFIANT, jamais un
     //    montant. Sans cette ligne, une console de développeur suffit
     //    à acheter Signature à 100 F.
-    const offre = GRILLE[planId];
+    const offre = offreDe(planId);
 
     if (!offre) {
       throw new HttpsError("invalid-argument", "Cette formule n'est pas disponible.");
@@ -144,7 +149,8 @@ exports.creerPaiement = onCall(
     const snap = await admin.firestore().doc(`users/${uid}`).get();
     const profil = snap.data() || {};
 
-    if (profil.disabled === true) {
+    // Audit 2026-10 : suspensions/{uid} fait foi ; `disabled` reste lu.
+    if (await estSuspendu(admin.firestore(), uid, profil)) {
       throw new HttpsError("permission-denied", "Ce compte est suspendu.");
     }
 
@@ -350,7 +356,7 @@ exports.creerPaiement = onCall(
  *    production, et l'inverse. Le document est marqué, le compte n'est
  *    pas touché.
  */
-async function appliquerAchat(token, donneesPaydunya, modeActuel) {
+async function appliquerAchat(token, confirmation, modeActuel) {
   const fs = admin.firestore();
   const refPaiement = fs.doc(`payments/${token}`);
 
@@ -386,27 +392,36 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
       return "mode-incoherent";
     }
 
-    // Le montant réellement encaissé doit correspondre à celui qu'on a
-    // demandé. Défense en profondeur : PayDunya ne devrait jamais
-    // renvoyer autre chose, mais un paiement partiel accepté en
-    // silence coûterait de l'argent réel.
-    const encaisse = Number(donneesPaydunya?.invoice?.total_amount);
+    // AUDIT 2026-10 : la CONFIRMATION de PayDunya (et non le corps de
+    // l'IPN) décide. Statut "completed", et montant encaissé présent et
+    // ÉGAL au prix que ce serveur a calculé à la création de la facture.
+    // Absent, illisible, inférieur ou supérieur : rien n'est crédité. Le
+    // document reste hors de « paye » : une confirmation ultérieure
+    // correcte (nouvelle IPN) pourra encore l'appliquer.
+    const verdict = verdictConfirmation(confirmation, { token, montantAttendu: p.montantAttendu });
 
-    if (Number.isFinite(encaisse) && encaisse < p.montantAttendu) {
-      logger.error("Montant encaissé inférieur au montant attendu", {
+    if (!verdict.ok) {
+      const montantEnCause = verdict.motif === "montant-absent" || verdict.motif === "montant-different";
+      logger.error("Confirmation PayDunya refusée — aucune activation", {
         token,
+        motif: verdict.motif,
+        statutPaydunya: verdict.statutPaydunya || null,
         attendu: p.montantAttendu,
-        encaisse,
+        encaisse: verdict.montant ?? null,
       });
       tx.update(refPaiement, {
-        statut: "montant-incoherent",
-        montantEncaisse: encaisse,
+        statut: montantEnCause ? "montant-incoherent" : "confirmation-refusee",
+        motifRefus: verdict.motif,
+        statutPaydunya: verdict.statutPaydunya || null,
+        montantEncaisse: verdict.montant ?? null,
         traiteLe: admin.firestore.FieldValue.serverTimestamp(),
       });
-      return "montant-incoherent";
+      return verdict.motif;
     }
 
-    const offre = GRILLE[p.planId];
+    const encaisse = verdict.montant;
+
+    const offre = offreDe(p.planId);
 
     if (!offre) {
       logger.error("Formule inconnue dans un paiement", { token, planId: p.planId });
@@ -453,7 +468,7 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
     tx.update(refPaiement, {
       statut: "paye",
       applique: true,
-      montantEncaisse: Number.isFinite(encaisse) ? encaisse : p.montantAttendu,
+      montantEncaisse: encaisse,
       traiteLe: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -466,11 +481,48 @@ async function appliquerAchat(token, donneesPaydunya, modeActuel) {
 // Les dates (chaînes ISO, jamais des Timestamp) et l'arithmétique des
 // échéances vivent dans functions/lib/achat.js.
 
+// ============================================================
+// LA CONFIRMATION PAYDUNYA — UN SEUL CODE (audit 2026-10)
+// ============================================================
+//
+// Utilisée par le webhook ET par le bouton « Revérifier auprès de
+// PayDunya » de l'administration (reverifierPaiement) : jamais deux
+// copies. Demande à PayDunya l'état de la facture (GET
+// /checkout-invoice/confirm/{token}, bac à sable en mode test, API réelle
+// en production — functions/lib/paydunya-mode.js), puis l'applique dans
+// la transaction idempotente d'appliquerAchat : un paiement déjà « paye »
+// n'est jamais crédité deux fois, d'où qu'arrive la demande.
+//
+// Lève une erreur si la clé privée est illisible ou si PayDunya ne répond
+// pas : rien n'est crédité, l'appelant décide (500 pour le webhook,
+// « unavailable » pour l'administration).
+function urlConfirmation(token) {
+  const mode = modePaydunya(paydunyaPrivateKey.value());
+  const base = baseApi(mode);
+  if (!base) throw new Error("Clé privée PayDunya illisible — confirmation impossible");
+  return { mode, url: `${base}${cheminConfirmation(token)}` };
+}
+
+async function confirmerEtAppliquer(token) {
+  const { mode, url } = urlConfirmation(token);
+  const appel = await fetch(url, {
+    method: "GET",
+    headers: {
+      "PAYDUNYA-MASTER-KEY": paydunyaMasterKey.value(),
+      "PAYDUNYA-PRIVATE-KEY": paydunyaPrivateKey.value(),
+      "PAYDUNYA-TOKEN": paydunyaToken.value(),
+    },
+  });
+  const confirmation = await appel.json();
+  return appliquerAchat(token, confirmation, mode);
+}
+
 exports.paydunyaWebhook = onRequest(
   {
-    // La clé privée n'est pas envoyée à PayDunya ici : elle sert
-    // seulement à savoir dans quel mode le site tourne (modeAcceptable).
-    secrets: [paydunyaMasterKey, paydunyaPrivateKey],
+    // Les trois clés : le webhook redemande l'état de la facture à
+    // PayDunya avant de créditer (audit 2026-10). La clé privée dit aussi
+    // dans quel mode le site tourne (modeAcceptable).
+    secrets: [paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken],
     region: "europe-west1",
     maxInstances: 10,
     timeoutSeconds: 60,
@@ -511,8 +563,10 @@ exports.paydunyaWebhook = onRequest(
 
     const token = data?.invoice?.token;
 
-    if (!token) {
-      logger.warn("Webhook sans jeton de facture");
+    // Le jeton entre dans une URL (confirmation) et dans un chemin
+    // Firestore : sa forme est vérifiée avant tout usage.
+    if (!jetonValide(token)) {
+      logger.warn("Webhook sans jeton de facture valide");
       res.status(400).send("Bad Request");
       return;
     }
@@ -520,25 +574,40 @@ exports.paydunyaWebhook = onRequest(
     // Seul « completed » active quoi que ce soit. Les autres statuts
     // (pending, cancelled, failed) sont enregistrés pour le suivi mais
     // ne touchent jamais au compte.
+    //
+    // AUDIT 2026-10 : jamais par-dessus un paiement déjà appliqué, jamais
+    // pour une facture qu'on n'a pas créée. Un `set(merge)` aveugle
+    // remplaçait `statut: "paye"` — le verrou d'idempotence de
+    // appliquerAchat — par « pending » : le rejeu suivant de l'IPN
+    // « completed » créditait une seconde fois la durée (Pass Découverte,
+    // dossier pays). Il créait aussi payments/<jeton inventé>.
     if (data.status !== "completed") {
+      const statutIpn = String(data.status || "inconnu").slice(0, 40);
+      const refPaiement = admin.firestore().doc(`payments/${token}`);
       await admin
         .firestore()
-        .doc(`payments/${token}`)
-        .set(
-          {
-            statut: String(data.status || "inconnu"),
+        .runTransaction(async (tx) => {
+          const snap = await tx.get(refPaiement);
+          if (!snap.exists) return;
+          tx.update(refPaiement, {
+            dernierStatutIpn: statutIpn,
             majLe: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        )
+            ...(snap.data().statut === "paye" ? {} : { statut: statutIpn }),
+          });
+        })
         .catch(() => {});
 
       res.status(200).send("OK");
       return;
     }
 
+    // AUDIT 2026-10 : « completed » dans l'IPN ne suffit pas. On
+    // redemande à PayDunya l'état de CETTE facture, et c'est sa réponse
+    // — statut et montant — qui décide (confirmerEtAppliquer, le même
+    // code que le bouton « Revérifier » de l'administration). Si PayDunya
+    // ne répond pas, 500 : il réessaiera, et rien n'est crédité d'ici là.
     try {
-      const issue = await appliquerAchat(token, data, modePaydunya(paydunyaPrivateKey.value()));
+      const issue = await confirmerEtAppliquer(token);
       logger.info("Webhook traité", { token, issue });
     } catch (erreur) {
       logger.error("Échec du traitement du webhook", { token, message: erreur.message });
@@ -564,3 +633,68 @@ function egalConstant(a, b) {
   if (A.length !== B.length) return false;
   return crypto.timingSafeEqual(A, B);
 }
+
+// ============================================================
+// 3. reverifierPaiement — le bouton « Revérifier auprès de PayDunya »
+// ============================================================
+//
+// AUDIT 2026-10. Une IPN perdue (PayDunya en panne, webhook refusé
+// pendant un déploiement) laisse une facture « en-attente » alors que
+// l'étudiant a payé. L'administrateur relance la MÊME confirmation que le
+// webhook (confirmerEtAppliquer) : même appel à PayDunya, mêmes refus
+// (statut, jeton, montant), même transaction — jamais de double crédit.
+// Réservé aux administrateurs actifs (admins/{uid}.isActive, comme
+// verifierBourse et envoyerAlerteBourse).
+exports.reverifierPaiement = onCall(
+  {
+    secrets: [paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken],
+    region: "europe-west1",
+    maxInstances: 5,
+    timeoutSeconds: 60,
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Connectez-vous.");
+    }
+
+    const adminSnap = await admin.firestore().doc(`admins/${request.auth.uid}`).get();
+
+    if (!adminSnap.exists || adminSnap.data().isActive !== true) {
+      throw new HttpsError("permission-denied", "Réservé à l'administration.");
+    }
+
+    const token = request.data && request.data.token;
+
+    if (!jetonValide(token)) {
+      throw new HttpsError("invalid-argument", "Jeton de facture invalide.");
+    }
+
+    const snap = await admin.firestore().doc(`payments/${token}`).get();
+
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "Facture inconnue.");
+    }
+
+    let issue;
+
+    try {
+      issue = await confirmerEtAppliquer(token);
+    } catch (erreur) {
+      logger.error("Revérification PayDunya impossible", { token, par: request.auth.uid, message: erreur.message });
+      throw new HttpsError("unavailable", "PayDunya ne répond pas. Réessayez dans un instant.");
+    }
+
+    // La trace : qui a relancé, quand, avec quelle issue.
+    await admin.firestore().doc(`payments/${token}`).update({
+      derniereReverification: {
+        par: request.auth.uid,
+        issue: String(issue),
+        le: admin.firestore.FieldValue.serverTimestamp(),
+      },
+    });
+
+    logger.info("Revérification PayDunya", { token, par: request.auth.uid, issue });
+
+    return { issue };
+  }
+);

@@ -551,7 +551,7 @@ if (!profil.pret) {
 const manquants = profil.manquants || [];
 
 sub.textContent = manquants.length
-? `Avant de choisir, Fitz a besoin de ${listeFrancaise(manquants)}. C'est ce qu'il croise avec le catalogue pour repérer où votre dossier est compétitif.`
+? `Avant de choisir, il manque encore à Fitz ${listeFrancaise(manquants)}. C'est ce qu'il croise avec le catalogue pour repérer où votre dossier est compétitif.`
 : "Complétez d'abord votre profil : c'est lui que Fitz croise avec le catalogue pour repérer où votre dossier est compétitif.";
 
 grid.innerHTML = `<div class="jy-card jy-empty">Votre profil est la seule chose que Fitz ne peut pas deviner — <a href="profile.html">complétez-le</a> et il choisira vos universités.</div>`;

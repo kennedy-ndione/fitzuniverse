@@ -65,7 +65,9 @@ export async function verifierProfilParNiveau({ navigateur, base, ouvrir, etudia
     publications: !!document.getElementById("publications") && document.getElementById("publications").offsetParent !== null,
     recherche: !!document.getElementById("researchExperience") && document.getElementById("researchExperience").offsetParent !== null,
     stages: !!document.getElementById("internships") && document.getElementById("internships").offsetParent !== null,
-    facultatif: !!document.getElementById("experiencesFacultatif") && !document.getElementById("experiencesFacultatif").hidden,
+    // Depuis le lot ESPACE-ÉTUDIANT (2026-09-13), une section facultative
+    // porte la pastille « facultatif » dans son titre (profile.js).
+    facultatif: !!document.querySelector("#sec-experiences .section-facultative:not([hidden])"),
     bac: !document.getElementById("bacFieldsBlock").hidden,
     niveau: !document.getElementById("currentLevelBlock").hidden,
     compteur: (document.getElementById("navScoreValue") || {}).textContent || "",
@@ -89,7 +91,9 @@ export async function verifierProfilParNiveau({ navigateur, base, ouvrir, etudia
       if (vu.stages) anomalies.push("PROFIL lycéen : « Stages » est visible.");
       if (!vu.facultatif) anomalies.push("PROFIL lycéen : « Expériences » n'est pas dite facultative (« si vous en avez »).");
       if (!vu.bac || vu.niveau) anomalies.push(`PROFIL lycéen : bloc Bac ${vu.bac ? "visible" : "masqué"}, bloc niveau ${vu.niveau ? "visible" : "masqué"} (attendu : Bac seul).`);
-      if (!/\/8$/.test(vu.compteur)) anomalies.push(`PROFIL lycéen : compteur « ${vu.compteur} » (attendu sur 8).`);
+      // Six sections requises pour TOUS les paliers depuis le 2026-09-13
+      // (test/profil-par-niveau.test.mjs) ; les autres sont facultatives.
+      if (!/\/6$/.test(vu.compteur)) anomalies.push(`PROFIL lycéen : compteur « ${vu.compteur} » (attendu sur 6).`);
       if (!vu.navMasques.includes("sec-academique")) anomalies.push("PROFIL lycéen : la nav propose encore « Niveau académique ».");
       if (!/^Plus que \d+ informations pour que Fitz choisisse vos 4 universités\.$/.test(vu.etat)) anomalies.push(`PROFIL lycéen : ligne d'état « ${vu.etat} ».`);
       notes.push(`PROFIL lycéen : académique masquée, Expériences facultative, compteur ${vu.compteur}, « ${vu.etat} »`);
@@ -107,10 +111,12 @@ export async function verifierProfilParNiveau({ navigateur, base, ouvrir, etudia
       const vu = await page.evaluate(lireVisibilite);
       if (!vu.academique) anomalies.push("PROFIL doctorant : la section « Niveau académique » est masquée.");
       if (!vu.memoire || !vu.publications || !vu.recherche) anomalies.push(`PROFIL doctorant : mémoire ${vu.memoire}, publications ${vu.publications}, recherche ${vu.recherche} (attendu : les trois visibles).`);
-      if (vu.facultatif) anomalies.push("PROFIL doctorant : « Expériences » est dite facultative.");
+      // Lot ESPACE-ÉTUDIANT (2026-09-13) : « Expériences » est facultative
+      // pour TOUS les paliers (js/profil-par-niveau.js, ENRICHISSENT).
+      if (!vu.facultatif) anomalies.push("PROFIL doctorant : « Expériences » n'est pas dite facultative (facultative pour tous depuis le 2026-09-13).");
       if (!vu.stages) anomalies.push("PROFIL doctorant : « Stages » est masqué.");
       if (vu.bac || !vu.niveau) anomalies.push("PROFIL doctorant : bloc Bac visible ou bloc niveau masqué.");
-      if (!/\/10$/.test(vu.compteur)) anomalies.push(`PROFIL doctorant : compteur « ${vu.compteur} » (attendu sur 10).`);
+      if (!/\/6$/.test(vu.compteur)) anomalies.push(`PROFIL doctorant : compteur « ${vu.compteur} » (attendu sur 6).`);
       notes.push(`PROFIL doctorant : mémoire, publications, recherche visibles, compteur ${vu.compteur}`);
     } catch (e) {
       anomalies.push(`ÉCHEC PROFIL doctorant : ${e.message.split("\n")[0]}`);
@@ -132,8 +138,10 @@ export async function verifierProfilParNiveau({ navigateur, base, ouvrir, etudia
         pays: document.getElementById("country").value,
         bacMoyenne: document.getElementById("bacAverage").value,
         bacSerie: document.getElementById("bacSeries").value,
-        test: document.getElementById("testLangueNature").value,
-        francais: !!document.querySelector('#languagesList .language-row--sans-niveau'),
+        // Lot R17 : l'état du test est un champ à lui (radios testLangueEtat) ;
+        // lot R16 : les langues sont des .langue-bloc, sans code CECRL.
+        test: (document.querySelector('input[name="testLangueEtat"]:checked') || {}).value || "",
+        francais: !!document.querySelector('#languagesList .langue-bloc--sans-niveau'),
         mentions: [...document.querySelectorAll(".field-repris:not([hidden])")].map((e) => e.dataset.repris),
         mentionTexte: (document.querySelector('.field-repris[data-repris="nationality"]') || {}).textContent || "",
         passeport: !!document.querySelector('#documentsGroup input[value="passport"]:checked'),
@@ -188,7 +196,9 @@ export async function verifierProfilParNiveau({ navigateur, base, ouvrir, etudia
       const choisir = (id, valeur) => page.evaluate(([i, v]) => { const el = document.getElementById(i); el.value = v; el.dispatchEvent(new Event("change", { bubbles: true })); }, [id, valeur]);
       await choisir("desiredDegree", "Licence");
       await page.fill("#desiredField", "Informatique");
-      await page.click('#languagesList .cecrl-picker[data-code="fr"] button[data-level="C1"]');
+      // Lot R16 (2026-09-18) : plus de boutons A1…C2 — quatre phrases par
+      // langue ; « etudes » est le niveau B2 à C2.
+      await page.locator("#languagesList .langue-bloc", { hasText: "Français" }).first().locator('input[value="etudes"]').check({ force: true });
       await choisir("testLangueNature", "TCF");
       await page.check('input[name="testLangueEtat"][value="prevu"]', { force: true });
       await page.fill("#testLanguePrevuLe", "2026-12-01");

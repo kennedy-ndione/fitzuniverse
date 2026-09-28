@@ -28,7 +28,11 @@
  * ============================================================
  */
 
-import { db } from "../firebase-config.js";
+import { app, db } from "../firebase-config.js";
+
+// Audit 2026-10 : la revérification passe par la fonction reverifierPaiement
+// (functions/paiement.js), dans la région des paiements.
+const REGION = "europe-west1";
 
 import {
 collection,
@@ -71,7 +75,10 @@ const STATUTS = {
 "en-attente": { libelle: "En attente", classe: "is-attente", famille: "en-attente" },
 "montant-incoherent": { libelle: "Montant incohérent", classe: "is-disabled", famille: "anomalie" },
 "mode-incoherent": { libelle: "Mode incohérent", classe: "is-disabled", famille: "anomalie" },
-"formule-inconnue": { libelle: "Formule inconnue", classe: "is-disabled", famille: "anomalie" }
+"formule-inconnue": { libelle: "Formule inconnue", classe: "is-disabled", famille: "anomalie" },
+// Audit 2026-10 : la confirmation de PayDunya (statut non « completed »,
+// facture d'un autre jeton) n'a pas permis de créditer.
+"confirmation-refusee": { libelle: "Refusé à la confirmation", classe: "is-disabled", famille: "anomalie" }
 };
 
 function statutDe(p) {
@@ -195,12 +202,64 @@ return `
 <td>${echapper(p.methodeChoisie || "—")}</td>
 <td>${p.mode === "live" ? `<span class="status-pill is-active">production</span>` : `<span class="status-pill">test</span>`}</td>
 <td>${pillStatut(p)}</td>
-<td>${p.uid ? `<a class="table-link-btn" href="student-detail.html?uid=${encodeURIComponent(p.uid)}">Voir la fiche</a>` : ""}</td>
+<td>${p.uid ? `<a class="table-link-btn" href="student-detail.html?uid=${encodeURIComponent(p.uid)}">Voir la fiche</a>` : ""}${peutReverifier(p) ? `<button type="button" class="table-link-btn" data-reverifier="${echapper(p.id)}">Revérifier auprès de PayDunya</button>` : ""}</td>
 </tr>`;
 
 }).join("");
 
 }
+
+// ==========================================================
+// « Revérifier auprès de PayDunya » (audit 2026-10)
+// ==========================================================
+// Une IPN perdue laisse une facture « en attente » alors que l'étudiant a
+// payé. Le bouton relance la MÊME confirmation que le webhook, côté
+// serveur (reverifierPaiement) : PayDunya décide, et un paiement déjà
+// appliqué ne l'est jamais deux fois. Le tableau se met à jour de lui-même
+// (onSnapshot) quand le statut change.
+// Toute facture qui n'est pas « paye » peut être revérifiée : en attente,
+// pending, confirmation-refusee, montant-incoherent, cancelled… PayDunya
+// tranche, et une facture déjà payée ne l'est jamais deux fois
+// (reverifierPaiement, côté serveur).
+function peutReverifier(p) {
+return p.statut !== "paye";
+}
+
+const ISSUES_REVERIFICATION = {
+"applique": "Payé : formule créditée",
+"rang-inferieur": "Payé : compte déjà mieux doté, rien changé",
+"deja-traite": "Déjà payé : rien de plus",
+"non-complete": "Pas encore payé chez PayDunya",
+"confirmation-refusee": "Refusé par PayDunya",
+"montant-absent": "Montant absent : à examiner",
+"montant-different": "Montant différent : à examiner",
+"jeton-different": "Facture incohérente : à examiner",
+"mode-incoherent": "Mode incohérent : à examiner"
+};
+
+async function reverifier(token) {
+const { getFunctions, httpsCallable } = await import(
+"https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js"
+);
+const appeler = httpsCallable(getFunctions(app, REGION), "reverifierPaiement");
+const reponse = await appeler({ token });
+return reponse.data;
+}
+
+document.getElementById("paiementsTableBody").addEventListener("click", async (event) => {
+const bouton = event.target.closest("[data-reverifier]");
+if (!bouton || bouton.disabled) return;
+bouton.disabled = true;
+bouton.textContent = "Vérification…";
+try {
+const { issue } = await reverifier(bouton.dataset.reverifier);
+bouton.textContent = ISSUES_REVERIFICATION[issue] || `Issue : ${issue}`;
+} catch (erreur) {
+console.error(erreur);
+bouton.textContent = erreur && erreur.code === "functions/unavailable" ? "PayDunya ne répond pas : réessayer" : "Échec : réessayer";
+bouton.disabled = false;
+}
+});
 
 // ==========================================================
 // Chargement
