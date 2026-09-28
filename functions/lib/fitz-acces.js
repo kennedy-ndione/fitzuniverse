@@ -300,14 +300,6 @@ function formuleDeDerogation({ adminActif, testerAccess } = {}) {
 const PLAFOND_GLOBAL_JOUR = 200;
 
 /**
- * Le verdict du site entier, avant celui du compte.
- *
- * @param {Object} ctx
- * @param {Object} ctx.systeme      document systeme/fitz (ou {})
- * @param {string} ctx.jourCourant  clé ISO du jour (AAAA-MM-JJ)
- * @param {number} ctx.points       points que cet appel veut réserver
- */
-/**
  * La tâche demandée par le navigateur — PROPRIÉTÉ PROPRE de la table
  * seulement (audit 2026-10). `TACHES["constructor"]` rendait la fonction
  * Object : la garde `!config` la laissait passer, son poids `undefined`
@@ -324,6 +316,14 @@ function pointsValides(points) {
   return Number.isInteger(points) && points > 0;
 }
 
+/**
+ * Le verdict du site entier, avant celui du compte.
+ *
+ * @param {Object} ctx
+ * @param {Object} ctx.systeme      document systeme/fitz (ou {})
+ * @param {string} ctx.jourCourant  clé ISO du jour (AAAA-MM-JJ)
+ * @param {number} ctx.points       points que cet appel veut réserver
+ */
 function verdictSysteme({ systeme = {}, jourCourant = "", points = 0 } = {}) {
   if (systeme && systeme.actif === false) {
     return { ok: false, portee: "robinet" };

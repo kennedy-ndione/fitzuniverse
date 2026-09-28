@@ -120,9 +120,9 @@ test("storage.rules : capture réservée au propriétaire, image ou PDF, 5 Mo ; 
 const s = lire("storage.rules");
 assert.ok(s.includes("match /users/{uid}/applications/{applicationId}/{fichier}"));
 assert.ok(s.includes("request.resource.size <= 5 * 1024 * 1024"));
-// Audit 2026-10 : image (sauf SVG, document actif) ou PDF — la règle
-// d'origine reste le plancher, le SVG en est retiré.
-assert.ok(s.includes("(request.resource.contentType.matches('image/.*') && request.resource.contentType != 'image/svg+xml') || request.resource.contentType == 'application/pdf'"));
+// Audit 2026-10 : image (sauf SVG, document actif, quelle que soit la
+// casse) ou PDF — la règle d'origine reste le plancher, le SVG en est retiré.
+assert.ok(s.includes("(request.resource.contentType.matches('image/.*') && !request.resource.contentType.lower().matches('image/svg.*')) || request.resource.contentType == 'application/pdf'"));
 assert.ok(s.includes("allow read: if estProprietaire(uid);"));
 assert.ok(/match \/users\/\{uid\}\/\{allPaths=\*\*\} \{\nallow read: if estProprietaire\(uid\);\nallow write: if false;/.test(s));
 assert.ok(!/isAdmin/.test(s), "aucun accès admin à la capture");

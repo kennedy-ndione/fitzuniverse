@@ -37,13 +37,14 @@ function estCompteReel() {
 return request.auth.token.firebase.sign_in_provider != 'anonymous';
 }
 
-// L'image SVG est refusée : c'est un document actif (scripts), jamais
-// une capture d'écran. Le client compresse toute image en JPEG avant
-// l'envoi (applications.js, espace-preinscription.js).
+// L'image SVG est refusée, quelle que soit la casse du type (un
+// navigateur lit « image/SVG+xml » comme du SVG) : c'est un document actif
+// (scripts), jamais une capture d'écran. Le client compresse toute image
+// en JPEG avant l'envoi (applications.js, espace-preinscription.js).
 function estCaptureAcceptable() {
 return request.resource != null &&
 request.resource.size <= 5 * 1024 * 1024 &&
-((request.resource.contentType.matches('image/.*') && request.resource.contentType != 'image/svg+xml') || request.resource.contentType == 'application/pdf');
+((request.resource.contentType.matches('image/.*') && !request.resource.contentType.lower().matches('image/svg.*')) || request.resource.contentType == 'application/pdf');
 }
 
 // AUDIT 2026-10 : UN fichier par candidature, au nom que donne

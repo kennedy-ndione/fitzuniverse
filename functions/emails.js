@@ -107,6 +107,19 @@ function echapper(s) {
   return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// AUDIT 2026-10 : le nom arrive du navigateur, sans borne. Dans un e-mail
+// signé du domaine, on n'en garde que ce qui peut être un nom : lettres
+// (accents compris), apostrophes droite et typographique (le clavier de
+// l'iPhone écrit « N’Diaye »), trait d'union — et l'espace pour le nom
+// complet. Un prénom, pas une phrase ni une adresse web.
+function prenomDe(nom) {
+  return (String(nom || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'’-]/gu, "").slice(0, 40);
+}
+
+function nomAffichable(nom) {
+  return String(nom || "").replace(/[^\p{L}\p{M}'’ -]/gu, "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
 // ------------------------------------------------------------
 // Le lien de désinscription : uid + jeton HMAC, vérifiable sans
 // stocker quoi que ce soit. La clé du HMAC est la clé Brevo — si elle
@@ -167,9 +180,7 @@ exports.emailBienvenue = onDocumentCreated(
       return;
     }
 
-    // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
-    // caractères au plus (le nom arrive du navigateur, sans borne).
-    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
+    const prenom = prenomDe(u.name);
 
     const corps = `
 <p style="margin:0 0 16px;">Bonjour${prenom ? " " + echapper(prenom) : ""},</p>
@@ -191,7 +202,7 @@ Quand une bourse qui vous concerne ouvre ses candidatures, nous vous écrivons.<
     try {
       await envoyerEmail({
         aEmail: emailCompte,
-        aNom: String(u.name || "").replace(/[^\p{L}\p{M}' -]/gu, "").trim().slice(0, 80),
+        aNom: nomAffichable(u.name),
         sujet: "Votre compte FitzUniverse est prêt",
         html: gabarit(corps, pied),
       });
@@ -299,9 +310,7 @@ exports.envoyerAlerteBourse = onCall(
     const servisCeTour = [];
 
     for (const u of lot) {
-      // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
-    // caractères au plus (le nom arrive du navigateur, sans borne).
-    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
+      const prenom = prenomDe(u.name);
       const corps = `
 <p style="margin:0 0 16px;">Bonjour${prenom ? " " + echapper(prenom) : ""},</p>
 <p style="margin:0 0 16px;">Une bourse suivie par FitzUniverse a ouvert ses candidatures :</p>
@@ -463,9 +472,7 @@ async function executerRappels(aujourdhuiISO) {
     }
     if (!aEnvoyer.length) { sautes++; continue; }
 
-    // Un prénom, pas une phrase : lettres, apostrophe, trait d'union, 40
-    // caractères au plus (le nom arrive du navigateur, sans borne).
-    const prenom = (String(u.name || "").trim().split(/\s+/)[0] || "").replace(/[^\p{L}\p{M}'-]/gu, "").slice(0, 40);
+    const prenom = prenomDe(u.name);
     const pied = `Vous recevez ce rappel parce que vous suivez ces candidatures sur fitzuniverse.com. <a href="${lienDesabonnement(docUser.id)}&t=rappels" style="color:#6b6459;">Ne plus recevoir les rappels de dates limites</a>.`;
 
     try {

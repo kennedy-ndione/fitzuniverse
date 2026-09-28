@@ -79,6 +79,7 @@ attendre("hors de users/ : refusé", await envoyer(PROPRIO, `public/${T}.jpg`, p
 console.log("\n=== storage.rules — audit 2026-10 ===");
 attendre("un nom libre dans le dossier de la candidature est refusé", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/photo-${T}.jpg`, png, "image/png"), 403);
 attendre("une image SVG est refusée", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/preuve-depot.svg`, Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"), "image/svg+xml"), 403);
+attendre("une image SVG au type en majuscules est refusée", await envoyer(PROPRIO, `users/${PROPRIO}/applications/slot-1/preuve-depot.svg`, Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"), "image/SVG+xml"), 403);
 const ANONYME = `rejeu-anonyme-${T}`;
 attendre("une session ANONYME n'envoie rien, même dans son propre dossier", await envoyer(ANONYME, `users/${ANONYME}/applications/slot-1/preuve-depot.jpg`, png, "image/png", "anonymous"), 403);
 attendre("le propriétaire remplace sa capture (même nom)", await envoyer(PROPRIO, chemin, png, "image/jpeg"), 200);

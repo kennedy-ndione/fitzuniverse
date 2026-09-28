@@ -143,6 +143,30 @@ assert.ok(!bloc.includes("aEmail: u.email"));
 assert.ok(bloc.indexOf("getUser(uid)") < bloc.indexOf("emailsEnvoyes/bienvenue-"), "contrôle avant le verrou d'idempotence");
 });
 
+test("E-mails : le nom venu du navigateur est réduit à un nom, apostrophe typographique comprise", () => {
+const emails = lire("functions/emails.js");
+// Les deux fonctions, extraites telles qu'écrites (emails.js exige
+// firebase-functions, absent de la suite de tests).
+const source = (nom) => {
+const debut = emails.indexOf(`function ${nom}(`);
+assert.ok(debut >= 0, nom);
+return emails.slice(debut, emails.indexOf("\n}\n", debut) + 2);
+};
+const { prenomDe, nomAffichable } = new Function(`${source("prenomDe")}\n${source("nomAffichable")}\nreturn { prenomDe, nomAffichable };`)();
+assert.equal(prenomDe("N’Deye  Awa N’Diaye"), "N’Deye");
+assert.equal(nomAffichable("N’Deye  Awa N’Diaye"), "N’Deye Awa N’Diaye");
+assert.equal(nomAffichable("Aïssatou-Marie O'Neil"), "Aïssatou-Marie O'Neil");
+assert.doesNotMatch(prenomDe("https://hameçon.example/?q=1"), /[:/.?=]/);
+assert.doesNotMatch(nomAffichable("Awa https://hameçon.example/?q=1"), /[:/.?=]/);
+assert.ok(prenomDe("A".repeat(500)).length <= 40);
+assert.ok(nomAffichable("A ".repeat(500)).length <= 80);
+assert.equal(prenomDe(undefined), "");
+// Les trois e-mails passent par ces fonctions, plus aucun par u.name brut.
+assert.equal((emails.match(/const prenom = prenomDe\(u\.name\);/g) || []).length, 3);
+assert.ok(!/const prenom = String\(u\.name/.test(emails));
+assert.ok(emails.includes("aNom: nomAffichable(u.name),"));
+});
+
 // ------------------------------------------------------------------
 // Le rapport d'audit décrit des failles non corrigées : il ne part JAMAIS
 // en ligne (firebase.json publie la racine par défaut).
