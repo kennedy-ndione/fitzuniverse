@@ -43,7 +43,15 @@ import { chargerCatalogue } from "./catalog-data.js";
 
 // Les « révélations » (2026-09-24) : une voie que les agences ne disent
 // pas, prouvée par le catalogue. Voir l'en-tête de js/revelations.js.
-import { lireRevelation } from "./revelations.js";
+// Lot 130 (2026-09-28) : elles défilent avec les ANNONCES de campagne
+// (Campus France Sénégal…), qui meurent d'elles-mêmes à leur date.
+import { lireAnnonces } from "./revelations.js";
+
+/**
+* Une annonce toutes les 8 secondes (choix de Charles, 2026-09-28). Plus
+* court, une annonce de deux lignes ne se lit pas sur un téléphone.
+*/
+const DELAI_ANNONCE_MS = 8000;
 
 /**
 * Sous ce seuil, on ne défile pas : trois cartes qui tournent en
@@ -184,7 +192,7 @@ return dates.length ? dates.sort()[0] : null;
 * Il n'a PAS le décompte ni le titre de la frise, à dessein : ce n'est
 * ni une bourse ni une candidature ouverte. Voir js/revelations.js.
 */
-function construireRevelation(r) {
+function construireRevelation(r, rang = 0) {
 
 const el = (balise, classe, texte) => {
 const n = document.createElement(balise);
@@ -194,7 +202,9 @@ return n;
 };
 
 const bloc = el("aside", "revelation");
-bloc.setAttribute("aria-labelledby", "revelationTitre");
+// Un identifiant par annonce : plusieurs blocs vivent dans la page.
+const idTitre = `annonceTitre-${rang}`;
+bloc.setAttribute("aria-labelledby", idTitre);
 
 const chiffre = el("div", "revelation-chiffre");
 chiffre.append(el("b", "", r.chiffre), el("span", "", r.chiffreLegende));
@@ -202,7 +212,7 @@ chiffre.append(el("b", "", r.chiffre), el("span", "", r.chiffreLegende));
 const corps = el("div", "revelation-corps");
 
 const haut = el("div", "revelation-haut");
-haut.append(el("span", "revelation-kicker", "Révélé par FitzUniverse"));
+haut.append(el("span", "revelation-kicker", r.kicker || "Révélé par FitzUniverse"));
 if (r.drapeau) {
 const img = el("img", "revelation-flag");
 img.src = `assets/flags/${r.drapeau}`;
@@ -214,7 +224,7 @@ haut.append(el("span", "revelation-pays", r.pays));
 if (r.verifieLe) haut.append(el("span", "revelation-verif", `Vérifié le ${formaterDate(r.verifieLe)}`));
 
 const titre = el("h3", "", r.titre);
-titre.id = "revelationTitre";
+titre.id = idTitre;
 
 // Une seule ligne d'actions, en liens texte : le seul BOUTON du bloc
 // reste « Voir les N échéances encore dans les temps ». Deux boutons pleins côte à
@@ -222,8 +232,9 @@ titre.id = "revelationTitre";
 const actions = el("p", "revelation-actions");
 const cta = el("a", "revelation-cta", r.lien.texte);
 cta.href = r.lien.href;
-const cat = el("a", "revelation-lien", r.lienCatalogue.texte);
-cat.href = r.lienCatalogue.href;
+// Le lien vers le catalogue n'existe que pour une révélation.
+const cat = r.lienCatalogue ? el("a", "revelation-lien", r.lienCatalogue.texte) : null;
+if (cat) cat.href = r.lienCatalogue.href;
 const lienSource = el("a", "revelation-source", "Source");
 lienSource.href = r.source.url;
 lienSource.target = "_blank";
@@ -231,12 +242,101 @@ lienSource.rel = "noopener";
 lienSource.title = r.verifieLe
 ? `${r.source.nom}, vérifié le ${formaterDate(r.verifieLe)}`
 : r.source.nom;
-actions.append(cta, cat, lienSource);
+actions.append(...[cta, cat, lienSource].filter(Boolean));
 
 corps.append(haut, titre, el("p", "revelation-texte", r.texte), actions);
 bloc.append(chiffre, corps);
 
 return bloc;
+
+}
+
+/**
+* Les annonces qui défilent (lot 130). Une seule visible à la fois ;
+* les autres restent dans la même case de grille (css), cachées : la
+* bande garde la hauteur de la plus longue et la page ne saute jamais.
+*
+* Le défilement s'arrête :
+*   - au survol, au clavier (focus) et au toucher, pour qu'on puisse
+*     lire et cliquer ;
+*   - quand le visiteur a demandé moins d'animations
+*     (prefers-reduced-motion) : les points restent, le choix est manuel ;
+*   - quand il a appuyé sur « Arrêter le défilement » (section
+*     .est-figee), qui arrête ainsi TOUT le bloc, frise et annonces ;
+*   - quand l'onglet n'est pas visible.
+*/
+function construireAnnonces(annonces, section) {
+
+const racine = document.createElement("div");
+racine.className = "annonces";
+racine.setAttribute("role", "region");
+racine.setAttribute("aria-roledescription", "carrousel");
+racine.setAttribute("aria-label", "Annonces FitzUniverse");
+
+const rail = document.createElement("div");
+rail.className = "annonces-piste";
+racine.append(rail);
+
+const blocs = annonces.map((a, i) => construireRevelation(a, i));
+blocs.forEach((b) => rail.append(b));
+
+if (blocs.length < 2) return racine;
+
+// Plusieurs annonces : la css ne cache les inactives que dans ce cas.
+racine.classList.add("est-multiple");
+
+const points = document.createElement("div");
+points.className = "annonces-points";
+const boutons = blocs.map((_, i) => {
+const b = document.createElement("button");
+b.type = "button";
+b.className = "annonces-point";
+b.setAttribute("aria-label", `Annonce ${i + 1} sur ${blocs.length}`);
+b.addEventListener("click", () => { montrer(i); pause.manuelle = true; });
+points.append(b);
+return b;
+});
+racine.append(points);
+
+let active = 0;
+const pause = { survol: false, manuelle: false };
+
+function montrer(i) {
+active = (i + blocs.length) % blocs.length;
+blocs.forEach((b, k) => {
+const vu = k === active;
+b.classList.toggle("est-active", vu);
+b.toggleAttribute("inert", !vu);
+b.setAttribute("aria-hidden", String(!vu));
+});
+boutons.forEach((b, k) => b.setAttribute("aria-current", String(k === active)));
+}
+
+montrer(0);
+
+const moinsDAnimations = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+if (moinsDAnimations) return racine;
+
+// Défilement en cours : les lecteurs d'écran ne sont pas interrompus
+// toutes les 8 secondes (aria-live off) ; au clic sur un point, oui.
+rail.setAttribute("aria-live", "off");
+
+const suspendre = () => { pause.survol = true; };
+const reprendre = () => { pause.survol = false; };
+racine.addEventListener("mouseenter", suspendre);
+racine.addEventListener("mouseleave", reprendre);
+racine.addEventListener("focusin", suspendre);
+racine.addEventListener("focusout", reprendre);
+racine.addEventListener("touchstart", suspendre, { passive: true });
+racine.addEventListener("touchend", () => setTimeout(reprendre, DELAI_ANNONCE_MS), { passive: true });
+
+setInterval(() => {
+if (pause.survol || pause.manuelle || document.hidden) return;
+if (section.classList.contains("est-figee")) return;
+montrer(active + 1);
+}, DELAI_ANNONCE_MS);
+
+return racine;
 
 }
 
@@ -364,14 +464,15 @@ bouton.textContent = figee ? "Reprendre le défilement" : "Arrêter le défileme
 
 }
 
-// La révélation, sous la frise et avant le pied. Une erreur ici ne
-// doit jamais emporter la frise : elle est isolée.
+// Les annonces (campagnes datées, puis révélation), sous la frise et
+// avant le pied. Une erreur ici ne doit jamais emporter la frise :
+// elle est isolée. Aucune annonce valable → aucune bande.
 try {
-const revelation = lireRevelation(catalogue.listeUniversites, aujourdhui);
+const annonces = lireAnnonces(catalogue.listeUniversites, aujourdhui);
 const pied = section.querySelector(".opportunites-foot");
-if (revelation && pied) pied.before(construireRevelation(revelation));
+if (annonces.length && pied) pied.before(construireAnnonces(annonces, section));
 } catch (error) {
-console.error("[bandeau] révélation ignorée :", error);
+console.error("[bandeau] annonces ignorées :", error);
 }
 
 section.hidden = false;

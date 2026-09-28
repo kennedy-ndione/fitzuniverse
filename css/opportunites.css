@@ -636,3 +636,59 @@ gap:12px;
 .revelation-chiffre span{ white-space:normal; max-width:6.5em; line-height:1.25; }
 .revelation-verif{ margin-left:0; width:100%; }
 }
+
+/* ----------------------------------------------------------
+   Les annonces (lot 130, 2026-09-28)
+   ----------------------------------------------------------
+   La bande de la révélation devient une suite d'annonces qui
+   défilent toutes les 8 secondes (js/opportunites-bandeau.js,
+   construireAnnonces) : campagnes datées d'abord, révélation ensuite.
+   Toutes les annonces occupent LA MÊME case de grille : la bande prend
+   la hauteur de la plus longue, et rien ne saute sous le doigt quand
+   l'annonce change. Les inactives sont invisibles ET hors du clavier
+   (visibility + inert côté JS). */
+.annonces-piste{
+display:grid;
+}
+.annonces-piste > .revelation{
+grid-area:1 / 1;
+width:100%;
+box-sizing:border-box;
+transition:opacity .45s ease;
+}
+.annonces.est-multiple .revelation:not(.est-active){
+opacity:0;
+visibility:hidden;
+}
+.annonces-points{
+max-width:1240px;
+margin:6px auto 0;
+padding:0 var(--space-md);
+display:flex;
+gap:2px;
+}
+/* Cible tactile de 24 px, point visible de 8 px (padding + content-box). */
+.annonces-point{
+width:24px;
+height:24px;
+padding:8px;
+border:0;
+border-radius:50%;
+background:rgba(255,255,255,.3);
+background-clip:content-box;
+cursor:pointer;
+transition:width .3s ease, background-color .3s ease;
+}
+.annonces-point[aria-current="true"]{
+width:36px;
+border-radius:6px;
+background-color:var(--amber-500);
+}
+.annonces-point:focus-visible{
+outline:2px solid var(--amber-500);
+outline-offset:0;
+}
+@media (prefers-reduced-motion: reduce){
+.annonces-piste > .revelation,
+.annonces-point{ transition:none; }
+}

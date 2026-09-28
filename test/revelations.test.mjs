@@ -89,8 +89,11 @@ assert.equal(r, null);
 
 test("le bandeau pose la révélation AVANT le pied, hors de la frise, sans innerHTML", () => {
 const src = readFileSync(new URL("../js/opportunites-bandeau.js", import.meta.url), "utf8");
-assert.match(src, /import \{ lireRevelation \} from "\.\/revelations\.js";/);
-assert.match(src, /pied\.before\(construireRevelation\(revelation\)\)/);
+// Lot 130 : la révélation défile désormais avec les annonces de
+// campagne ; elle passe par lireAnnonces() et construireAnnonces(),
+// toujours avant le pied et toujours hors de la frise.
+assert.match(src, /import \{ lireAnnonces \} from "\.\/revelations\.js";/);
+assert.match(src, /pied\.before\(construireAnnonces\(annonces, section\)\)/);
 const corps = src.slice(src.indexOf("function construireRevelation"), src.indexOf("* Montage"));
 assert.ok(corps.length > 200, "construireRevelation introuvable");
 assert.ok(!/innerHTML/.test(corps), "la révélation doit être construite en textContent");
