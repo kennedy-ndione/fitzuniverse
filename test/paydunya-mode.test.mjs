@@ -72,11 +72,15 @@ assert.match(code, /statut: "en-attente",\n\s*mode,/, "le mode est enregistré s
 // Audit 2026-10 : il redemande aussi l'état de la facture à PayDunya (la
 // troisième clé), et passe la CONFIRMATION — pas le corps de l'IPN — avec
 // le mode du site.
-const webhook = code.slice(code.indexOf("exports.paydunyaWebhook"));
+// La confirmation est UN seul code (confirmerEtAppliquer), partagé par le
+// webhook et le bouton « Revérifier » de l'administration.
+const webhook = code.slice(code.indexOf("exports.paydunyaWebhook"), code.indexOf("exports.reverifierPaiement"));
 assert.match(webhook, /secrets: \[paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken\]/);
-const modeWebhook = webhook.indexOf("const mode = modePaydunya(paydunyaPrivateKey.value());");
-const appel = webhook.indexOf("appliquerAchat(token, confirmation, mode)");
-assert.ok(modeWebhook > 0 && appel > modeWebhook, "le webhook lit le mode du site et le passe à appliquerAchat");
+assert.ok(webhook.includes("await confirmerEtAppliquer(token)"), "le webhook passe par la confirmation partagée");
+const partage = code.slice(code.indexOf("function urlConfirmation("), code.indexOf("exports.paydunyaWebhook"));
+const modeLu = partage.indexOf("const mode = modePaydunya(paydunyaPrivateKey.value());");
+const appel = partage.indexOf("return appliquerAchat(token, confirmation, mode);");
+assert.ok(modeLu > 0 && appel > modeLu, "le mode du site est lu et passé à appliquerAchat");
 assert.ok(!/appliquerAchat\(token, data\b/.test(code), "le corps de l'IPN n'est plus passé à appliquerAchat");
 const garde = code.indexOf("if (!modeAcceptable(p.mode, modeActuel))");
 const activation = code.indexOf("const decision = calculerMiseAJour(");

@@ -481,6 +481,42 @@ async function appliquerAchat(token, confirmation, modeActuel) {
 // Les dates (chaînes ISO, jamais des Timestamp) et l'arithmétique des
 // échéances vivent dans functions/lib/achat.js.
 
+// ============================================================
+// LA CONFIRMATION PAYDUNYA — UN SEUL CODE (audit 2026-10)
+// ============================================================
+//
+// Utilisée par le webhook ET par le bouton « Revérifier auprès de
+// PayDunya » de l'administration (reverifierPaiement) : jamais deux
+// copies. Demande à PayDunya l'état de la facture (GET
+// /checkout-invoice/confirm/{token}, bac à sable en mode test, API réelle
+// en production — functions/lib/paydunya-mode.js), puis l'applique dans
+// la transaction idempotente d'appliquerAchat : un paiement déjà « paye »
+// n'est jamais crédité deux fois, d'où qu'arrive la demande.
+//
+// Lève une erreur si la clé privée est illisible ou si PayDunya ne répond
+// pas : rien n'est crédité, l'appelant décide (500 pour le webhook,
+// « unavailable » pour l'administration).
+function urlConfirmation(token) {
+  const mode = modePaydunya(paydunyaPrivateKey.value());
+  const base = baseApi(mode);
+  if (!base) throw new Error("Clé privée PayDunya illisible — confirmation impossible");
+  return { mode, url: `${base}${cheminConfirmation(token)}` };
+}
+
+async function confirmerEtAppliquer(token) {
+  const { mode, url } = urlConfirmation(token);
+  const appel = await fetch(url, {
+    method: "GET",
+    headers: {
+      "PAYDUNYA-MASTER-KEY": paydunyaMasterKey.value(),
+      "PAYDUNYA-PRIVATE-KEY": paydunyaPrivateKey.value(),
+      "PAYDUNYA-TOKEN": paydunyaToken.value(),
+    },
+  });
+  const confirmation = await appel.json();
+  return appliquerAchat(token, confirmation, mode);
+}
+
 exports.paydunyaWebhook = onRequest(
   {
     // Les trois clés : le webhook redemande l'état de la facture à
@@ -567,35 +603,11 @@ exports.paydunyaWebhook = onRequest(
 
     // AUDIT 2026-10 : « completed » dans l'IPN ne suffit pas. On
     // redemande à PayDunya l'état de CETTE facture, et c'est sa réponse
-    // — statut et montant — qui décide dans appliquerAchat. Si PayDunya
+    // — statut et montant — qui décide (confirmerEtAppliquer, le même
+    // code que le bouton « Revérifier » de l'administration). Si PayDunya
     // ne répond pas, 500 : il réessaiera, et rien n'est crédité d'ici là.
-    const mode = modePaydunya(paydunyaPrivateKey.value());
-    let confirmation;
-
-    if (!baseApi(mode)) {
-      logger.error("Clé privée PayDunya illisible — confirmation impossible, rien n'est crédité", { token });
-      res.status(500).send("Erreur interne");
-      return;
-    }
-
     try {
-      const appel = await fetch(`${baseApi(mode)}${cheminConfirmation(token)}`, {
-        method: "GET",
-        headers: {
-          "PAYDUNYA-MASTER-KEY": paydunyaMasterKey.value(),
-          "PAYDUNYA-PRIVATE-KEY": paydunyaPrivateKey.value(),
-          "PAYDUNYA-TOKEN": paydunyaToken.value(),
-        },
-      });
-      confirmation = await appel.json();
-    } catch (erreur) {
-      logger.error("Confirmation PayDunya injoignable — rien n'est crédité", { token, message: erreur.message });
-      res.status(500).send("Erreur interne");
-      return;
-    }
-
-    try {
-      const issue = await appliquerAchat(token, confirmation, mode);
+      const issue = await confirmerEtAppliquer(token);
       logger.info("Webhook traité", { token, issue });
     } catch (erreur) {
       logger.error("Échec du traitement du webhook", { token, message: erreur.message });
@@ -621,3 +633,68 @@ function egalConstant(a, b) {
   if (A.length !== B.length) return false;
   return crypto.timingSafeEqual(A, B);
 }
+
+// ============================================================
+// 3. reverifierPaiement — le bouton « Revérifier auprès de PayDunya »
+// ============================================================
+//
+// AUDIT 2026-10. Une IPN perdue (PayDunya en panne, webhook refusé
+// pendant un déploiement) laisse une facture « en-attente » alors que
+// l'étudiant a payé. L'administrateur relance la MÊME confirmation que le
+// webhook (confirmerEtAppliquer) : même appel à PayDunya, mêmes refus
+// (statut, jeton, montant), même transaction — jamais de double crédit.
+// Réservé aux administrateurs actifs (admins/{uid}.isActive, comme
+// verifierBourse et envoyerAlerteBourse).
+exports.reverifierPaiement = onCall(
+  {
+    secrets: [paydunyaMasterKey, paydunyaPrivateKey, paydunyaToken],
+    region: "europe-west1",
+    maxInstances: 5,
+    timeoutSeconds: 60,
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Connectez-vous.");
+    }
+
+    const adminSnap = await admin.firestore().doc(`admins/${request.auth.uid}`).get();
+
+    if (!adminSnap.exists || adminSnap.data().isActive !== true) {
+      throw new HttpsError("permission-denied", "Réservé à l'administration.");
+    }
+
+    const token = request.data && request.data.token;
+
+    if (!jetonValide(token)) {
+      throw new HttpsError("invalid-argument", "Jeton de facture invalide.");
+    }
+
+    const snap = await admin.firestore().doc(`payments/${token}`).get();
+
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "Facture inconnue.");
+    }
+
+    let issue;
+
+    try {
+      issue = await confirmerEtAppliquer(token);
+    } catch (erreur) {
+      logger.error("Revérification PayDunya impossible", { token, par: request.auth.uid, message: erreur.message });
+      throw new HttpsError("unavailable", "PayDunya ne répond pas. Réessayez dans un instant.");
+    }
+
+    // La trace : qui a relancé, quand, avec quelle issue.
+    await admin.firestore().doc(`payments/${token}`).update({
+      derniereReverification: {
+        par: request.auth.uid,
+        issue: String(issue),
+        le: admin.firestore.FieldValue.serverTimestamp(),
+      },
+    });
+
+    logger.info("Revérification PayDunya", { token, par: request.auth.uid, issue });
+
+    return { issue };
+  }
+);
