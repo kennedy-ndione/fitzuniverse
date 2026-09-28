@@ -30,7 +30,8 @@
 
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./catalog-data.js";
 
 // Entrée du site pour le Control Center (2026-09-02) : une visite par
 // session de navigateur, signalée depuis la page d'accueil — le point
@@ -222,7 +223,7 @@ try {
 // Passe par le chargeur partagé (js/catalog-data.js) : ce module et
 // js/opportunites-bandeau.js lisaient chacun les trois collections
 // entières sur la MÊME page, soit le double du nécessaire.
-const { universites, bourses } = await chargerCatalogue();
+const { universites, bourses } = await chargerCatalogueListe();
 
 renderTrustStats(universites, bourses.length);
 

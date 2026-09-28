@@ -35,7 +35,8 @@ etapesRestantes,
 PREAMBULE_OFFRE,
 OFFRES_ACCOMPAGNEMENT
 } from "./diagnostic-conseil.js";
-import { chargerCatalogue } from "./catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./catalog-data.js";
 import { COUNTRY_NAMES } from "./countries.js";
 import { initFitzCombobox } from "./fitz-combobox.js";
 import { formaterDate } from "./echeance.js";
@@ -301,7 +302,7 @@ if (window.lucide) lucide.createIcons();
 // Le catalogue n'est chargé QUE pour les leviers, et son échec ne doit
 // rien casser : deux leviers de moins valent mieux qu'une page morte.
 try {
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 // chargerCatalogue() rend { programmes, universites, bourses } ; le
 // moteur de recommandation, lui, parle anglais. La traduction est ici,
 // une fois — pas dans le module pur, qui ne doit connaître qu'une forme.

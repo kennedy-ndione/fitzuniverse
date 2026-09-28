@@ -68,7 +68,9 @@ ETATS_VIDES
 } from "./js/fitz-voice.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES — le moteur n'y lit rien de plus
+// (test/catalogue-liste.test.mjs rejoue retenirOpportunites sur les deux).
+import { chargerCatalogueListe } from "./js/catalog-data.js";
 import { formaterDate } from "./js/echeance.js";
 
 // Lecture personnalisée du diagnostic par Fitz. Appelée APRÈS le rendu,
@@ -215,7 +217,7 @@ const OPPORTUNITES_DETAILLEES = 3;
 // en-tête pour le détail et pour l'histoire du « 154 opportunités ».
 async function loadRealOpportunities(responses, journal) {
 
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 
 if (journal) journal.catalogueCharge(catalogue);
 

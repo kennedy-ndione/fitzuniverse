@@ -25,7 +25,8 @@
 // js/pays-preinscription.js (`diffusion`), et faitsPublics() est la
 // seule porte. Un fait ajouté demain sans `diffusion` ne sort pas.
 // ============================================================
-import { chargerCatalogue } from "./catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./catalog-data.js";
 import { lirePays, etatDunPays, estOuverte, faitsPublics, defautsDeDestination } from "./pays-preinscription.js";
 import { trouverProcedure, residencesDocumentees, residenceRequise } from "./procedures/index.js";
 import { formaterDate } from "./echeance.js";
@@ -329,7 +330,7 @@ const section = document.getElementById("destSectionCatalogue");
 
 let catalogue = null;
 try {
-catalogue = await chargerCatalogue();
+catalogue = await chargerCatalogueListe();
 } catch (e) {
 console.warn("Catalogue indisponible pour les effectifs de la destination :", e);
 }

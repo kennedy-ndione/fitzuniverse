@@ -94,9 +94,15 @@ test("navigation 3 — compte, fiche admin et configuration sont lus en parallè
 
 test("navigation 4 — les hubs lancent le catalogue dès leur chargement", () => {
   assert.match(lire("js/catalog-data.js"), /export function prechargerCatalogue\(\) \{\s*telechargerInstantane\(\);\s*\}/);
+  // Lot PERF 3G (2026-09-28) : un hub précharge le fichier qu'il LIT —
+  // le catalogue des listes pour le tableau de bord (voir
+  // test/catalogue-liste.test.mjs), le complet pour les deux autres.
+  assert.match(lire("js/catalog-data.js"), /export function prechargerCatalogueListe\(\) \{\s*telechargerListe\(\);\s*\}/);
   for (const f of ["dashboard.js", "applications.js", "espace-preinscription.js"]) {
     const js = sansCommentaires(lire(f));
-    assert.match(js, /import \{ prechargerCatalogue, [^}]+\} from "\.\/js\/catalog-data\.js";\s*prechargerCatalogue\(\);/, f);
+    assert.match(js, /import \{ (prechargerCatalogue, [^}]+|prechargerCatalogueListe, chargerCatalogueListe\s*)\} from "\.\/js\/catalog-data\.js";\s*(prechargerCatalogue|prechargerCatalogueListe)\(\);/, f);
+    const lit = /\bchargerCatalogueListe\(\)/.test(js) ? "Liste" : "";
+    assert.ok(js.includes(`precharger${lit ? "CatalogueListe" : "Catalogue"}();`), `${f} précharge le fichier qu'il lit`);
   }
 });
 

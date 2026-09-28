@@ -39,7 +39,8 @@ import { selectionnerOpportunites, libelleCarte } from "./bandeau-selection.js";
 import { resolveScholarshipImage, sourcesModernes } from "./scholarship-image.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./catalog-data.js";
 
 // Les « révélations » (2026-09-24) : une voie que les agences ne disent
 // pas, prouvée par le catalogue. Voir l'en-tête de js/revelations.js.
@@ -72,7 +73,7 @@ async function lireCatalogue() {
 // Même chargeur que js/homepage-teaser.js : sur l'accueil, les deux
 // modules démarrent dans le même tick et se partagent les trois
 // mêmes promesses — un seul aller-retour par collection.
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 
 const bourses = new Map(catalogue.bourses.map((b) => [b.id, b]));
 const universites = new Map(catalogue.universites.map((u) => [u.id, u]));

@@ -59,11 +59,12 @@ import { guideDepartPour } from "./js/visa-destinations.js";
 import { texteConsigne } from "./js/procedures/vocabulaire.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { prechargerCatalogue, chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES, préchargé de même.
+import { prechargerCatalogueListe, chargerCatalogueListe } from "./js/catalog-data.js";
 
 // Le catalogue part tout de suite, en parallèle de la connexion (lot
 // NAVIGATION RAPIDE, 2026-09-21) — voir js/catalog-data.js.
-prechargerCatalogue();
+prechargerCatalogueListe();
 // Passe espace étudiant 1/3 (2026-09-06) : chaque candidature est reliée
 // à sa fiche du catalogue et porte l'état que la fiche publie
 // (`app.echeance`) — consommé par la prochaine action, le radar et les
@@ -81,7 +82,7 @@ async function chargerOpportunites(profile, dejaSuivies = null) {
 
 try {
 
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 
 const index = indexerCatalogue(catalogue);
 

@@ -25,7 +25,8 @@ import { tonEcheance } from "./js/journey-map.js";
 import { TESTS, testDepuisNom, testsPourLangue } from "./js/test-prep-data.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerProgrammesEtUniversites } from "./js/catalog-data.js";
+// Lot PERF 3G : langue et nom suffisent — le catalogue des LISTES.
+import { chargerProgrammesEtUniversitesListe as chargerProgrammesEtUniversites } from "./js/catalog-data.js";
 
 const STATUT_ITEM = { manquant: "Non planifié", en_cours: "Planifié", complete: "Passé" };
 

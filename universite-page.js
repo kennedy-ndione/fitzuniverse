@@ -13,7 +13,11 @@
 // exactement comme sur la fiche programme (details.js).
 // ============================================================
 
-import { chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G (2026-09-28) : l'établissement arrive COMPLET par sa fiche
+// (assets/data/fiches/universities/<id>.json, 2 Ko) ; ses programmes et ses
+// bourses par le catalogue des LISTES, où js/fiche-universite.js trouve
+// tout ce qu'il lit (test/catalogue-liste.test.mjs, fiche université).
+import { chargerCatalogue, chargerCatalogueListe, documentDuCatalogue } from "./js/catalog-data.js";
 import { ficheUniversite, resumeFiche, domaineDe } from "./js/fiche-universite.js";
 import { resolveCityImage } from "./js/scholarship-image.js";
 import { trackEvent } from "./js/analytics.js";
@@ -278,15 +282,22 @@ return;
 }
 
 let catalogue;
+let universite;
 try {
-catalogue = await chargerCatalogue();
+[catalogue, universite] = await Promise.all([
+chargerCatalogueListe(),
+// null : absent du catalogue. undefined : aucun instantané (ni fiche ni
+// catalogue.json) — alors le chargeur complet, comme avant ce lot.
+documentDuCatalogue("universities", id).then((u) => (u !== undefined
+? u
+: chargerCatalogue().then((c) => (c.universites || []).find((x) => x && x.id === id))))
+]);
 } catch (erreur) {
 console.error("Catalogue indisponible :", erreur);
 afficherErreur("Chargement interrompu", "Vérifiez votre connexion Internet, puis rechargez la page.");
 return;
 }
 
-const universite = (catalogue.universites || []).find((u) => u && u.id === id);
 const vue = ficheUniversite({ universite, programmes: catalogue.programmes, bourses: catalogue.bourses });
 
 if (!vue) {

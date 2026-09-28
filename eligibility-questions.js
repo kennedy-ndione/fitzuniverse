@@ -28,7 +28,8 @@
 * ============================================================
 */
 
-import { chargerUniversites } from "./js/catalog-data.js";
+// Lot PERF 3G : les noms de pays suffisent — le catalogue des LISTES.
+import { chargerUniversitesListe as chargerUniversites } from "./js/catalog-data.js";
 
 import {
 questionsPour,

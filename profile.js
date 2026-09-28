@@ -38,7 +38,8 @@ import { appliquerDiagnostic, lireReponsesDiagnostic } from "./js/diagnostic-ver
 const POUR_FITZ = new URLSearchParams(window.location.search).get("pour") === "fitz";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerUniversites } from "./js/catalog-data.js";
+// Lot PERF 3G : les noms de pays suffisent — le catalogue des LISTES.
+import { chargerUniversitesListe as chargerUniversites } from "./js/catalog-data.js";
 import { NIVEAUX_LANGUE, niveauDepuisCode, codeDepuisNiveau, MENTION_ECHELLE } from "./js/niveaux-langue.js";
 
 // ==========================================================

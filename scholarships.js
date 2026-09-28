@@ -28,7 +28,8 @@ import { etatCandidature } from "./js/echeance.js";
 import { decouperVue, ligneEtendue, libelleVoirTout } from "./js/catalogue-vue.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./js/catalog-data.js";
 
 // Signale à js/catalog-watchdog.js que ce module a bien démarré.
 // À GARDER COMME PREMIÈRE INSTRUCTION EXÉCUTABLE du fichier, et à ne
@@ -343,7 +344,7 @@ renderSkeleton();
 
 try {
 
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 
 const programs = catalogue.programmes;
 programmesCharges = programs;

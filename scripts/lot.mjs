@@ -44,6 +44,7 @@ import process from "node:process";
 
 import { validerLot, SLUG_NIVEAU, boursesSansProgramme, boursesSansPortail } from "./lot-validate.mjs";
 import { separerPortails } from "./instantane-portails.mjs";
+import { ecrireDerives, LISTE, FICHES } from "./catalogue-liste.mjs";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROJECT_ID = "scholarbridge-e0d84";
@@ -1003,6 +1004,14 @@ await mkdir(dirname(PORTAILS_PATH), { recursive: true });
 await writeFile(PORTAILS_PATH, JSON.stringify(portails, null, 2), "utf8");
 
 ok(`assets/data/catalogue.json écrit (${Math.round(texte.length / 1024)} Ko) — c'est CE fichier que le site public sert. Le déployer : firebase deploy --only hosting.`);
+
+// LOT PERF 3G (2026-09-28) — les DÉRIVÉS de l'instantané public, sur les
+// mêmes documents : le catalogue des listes (sans les champs que seules
+// les fiches lisent) et une fiche par document. Voir
+// scripts/catalogue-liste.mjs. Toujours depuis instantanePublic : rien
+// de ce que separerPortails a retiré ne peut y revenir.
+const derives = ecrireDerives(instantanePublic);
+ok(`${LISTE} écrit (${Math.round(derives.listeOctets / 1024)} Ko) et ${derives.fiches} fiche(s) dans ${FICHES}/${derives.retirees ? ` (${derives.retirees} retirée(s))` : ""} — servis avec le site, même déploiement.`);
 ok(`functions/data/catalogue-portails.json écrit : ${comptes.universites} université(s), ${comptes.programmes} programme(s), ${comptes.bourses} bourse(s). Le déployer : firebase deploy --only functions.`);
 
 if (sansPortail.length) {

@@ -26,7 +26,8 @@ else window.addEventListener("load", lancer, { once: true });
 import { resolveCityImage } from "./js/scholarship-image.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
-import { chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./js/catalog-data.js";
 
 // La vue par pays, partagée avec scholarships.js — voir l'en-tête de
 // js/catalogue-vue.js. Cette page souffrait du même mal : 155 cartes
@@ -607,7 +608,7 @@ renderSkeleton();
 
 try {
 
-const catalogue = await chargerCatalogue();
+const catalogue = await chargerCatalogueListe();
 
 // Cette page nomme l'identifiant `firestoreId` : le chargeur renvoie
 // `id`, on renomme ici plutôt que d'imposer une convention au reste.
