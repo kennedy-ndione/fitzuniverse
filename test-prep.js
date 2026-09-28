@@ -204,6 +204,16 @@ if (!session) return;
 
 renderFiches();
 
+// css/journey.css replie le contenu de toute .jy-phase tant que le
+// <body> ne porte pas data-parcours-pret : c'est le repli du hub « Mon
+// parcours » (lot ESPACE-ETUDIANT, 2026-09-14), levé par dashboard.js et
+// js/aiguillage.js. Cette page emprunte .jy-phase sans rien à replier, et
+// ne le levait pas : depuis ce lot, l'étudiant n'y voyait que les deux
+// titres (trouvé le 2026-09-28, garde 8 bis de
+// test/diagnostic-garde.test.mjs). On le lève dès que les fiches sont
+// peintes ; « Vos tests » affiche son propre « Chargement… » en attendant.
+document.body.dataset.parcoursPret = "1";
+
 const [applications, langues] = await Promise.all([
 chargerCandidatures(session.user.uid),
 languesParUniversite()

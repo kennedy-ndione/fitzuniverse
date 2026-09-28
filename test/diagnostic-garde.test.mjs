@@ -13,6 +13,8 @@
  *     js/aiguillage.js pour les comptes SANS accompagnement, ne passait
  *     jamais par là. L'étudiant voyait deux titres nus, sous une phrase
  *     qui lui promettait une action « juste en dessous ».
+ *     Le 2026-09-28, la même panne sur test-prep.html : la garde 8 bis
+ *     tient désormais la règle pour TOUTE page qui porte des phases.
  *
  *  2. « CONSERVEZ VOTRE DIAGNOSTIC » N'ÉTAIT PAS TENU. Les réponses
  *     vivaient dans le sessionStorage de l'onglet, et le report vers le
@@ -36,6 +38,7 @@ import {
 memoriser, lireMemoire, oublier, miseAJourDuCompte, CLE_MEMOIRE, JOURS_VALIDITE
 } from "../js/diagnostic-garde.js";
 import { lireReponsesDiagnostic } from "../js/diagnostic-vers-profil.js";
+import { pagesAModules, entreesDe, grapheDe } from "../scripts/precharger.mjs";
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
@@ -234,6 +237,35 @@ assert.match(aiguillage, /\.catch\(/,
 // Les deux sorties de dashboard.js ne se perdent pas non plus.
 assert.equal((lire("dashboard.js").match(/dataset\.parcoursPret = "1"/g) || []).length, 2,
 "dashboard.js doit lever le repli à la fin du rendu ET dans son .catch");
+
+});
+
+test("garde 8 bis — toute page qui porte des phases lève le repli, dans son propre graphe de modules", () => {
+
+// Trouvé le 2026-09-28 : test-prep.html charge css/journey.css et porte
+// deux .jy-phase, mais aucun de ses modules ne levait le repli. Depuis le
+// lot ESPACE-ETUDIANT (2026-09-14), la page ne montrait que ses deux
+// titres — ni fiches, ni tests. La garde 8 ne pouvait pas le voir : elle
+// relit les deux fichiers qui lèvent DÉJÀ le repli. Celle-ci part des
+// PAGES : chacune doit avoir, dans le graphe statique de ses modules
+// (celui du bloc de préchargement), au moins un module qui le lève.
+// Preuve par mutation (2026-09-28) : la levée retirée de test-prep.js →
+// rouge sur test-prep.html seul (« aucun de ses 55 modules »).
+const classePhase = /class="(?:[^"]*\s)?jy-phase(?:\s[^"]*)?"/;
+const pages = pagesAModules().filter((page) => {
+const html = lire(page);
+return html.includes('href="css/journey.css"') && classePhase.test(html);
+});
+assert.ok(pages.includes("test-prep.html"), `test-prep.html n'est plus parmi les pages à phases (${pages.join(", ")}) : cette garde doit être relue`);
+
+for (const page of pages) {
+const fichier = path.join(RACINE, page);
+const dossier = path.dirname(fichier);
+const modules = grapheDe(entreesDe(readFileSync(fichier, "utf8"), dossier), dossier).filter((m) => !/^https?:\/\//.test(m));
+const leveurs = modules.filter((m) => readFileSync(path.join(dossier, m), "utf8").includes('document.body.dataset.parcoursPret = "1"'));
+assert.ok(leveurs.length > 0,
+`${page} porte des .jy-phase et charge css/journey.css, mais aucun de ses ${modules.length} modules ne lève le repli : l'étudiant ne voit que les titres des phases`);
+}
 
 });
 
