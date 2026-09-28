@@ -30,7 +30,9 @@
 *     sans .data(), et chaque candidature prend SA langue ;
 *  4. la langue d'une candidature : son programme d'abord, sur des
 *     exemples puis sur TOUS les programmes du vrai catalogue ;
-*  5. la langue écrite dans une phrase, sigles gardés.
+*  5. la langue écrite dans une phrase, sigles gardés ;
+*  6. une chaîne bilingue : la première langue citée décide, et la
+*     règle d'honnêteté du turc (aucun test à suggérer) tient.
 *
 * Preuves par mutation (2026-09-28) : `const p = d.data();` remis dans
 * languesParNomUniversite() → tests 1a, 1b et 2 rouges (« d.data is not
@@ -38,7 +40,8 @@
 * import gardé mais une boucle en d.data() remise dans la page → test 3
 * rouge aussi ; programId ignoré par langueDeLaCandidature() → 4a et 4b
 * rouges ; la page revenue à la recherche par nom → 3 rouge ;
-* toLowerCase() complet dans langueDansUnePhrase() → 5 rouge.
+* toLowerCase() complet dans langueDansUnePhrase() → 5 rouge ; ancienne
+* règle de testsPourLangue() (première clé du tableau) → 6a et 6b rouges.
 * ============================================================
 */
 
@@ -224,4 +227,33 @@ assert.equal(langueDansUnePhrase("Japonais (JLPT N2) / Anglais (B2) selon le cur
 "japonais (JLPT N2) / anglais (B2) selon le cursus");
 assert.equal(langueDansUnePhrase(""), "");
 assert.equal(langueDansUnePhrase(undefined), "");
+});
+
+// ------------------------------------------------------------
+// 6. Une chaîne bilingue : la première langue citée décide
+// ------------------------------------------------------------
+
+const idsPour = (langue) => testsPourLangue(langue).map((t) => t.id);
+
+test("6a. dans une chaîne bilingue, la première langue citée décide", () => {
+assert.deepEqual(idsPour("Français / Anglais selon la formation"), ["delf-dalf", "tcf"]);
+assert.deepEqual(idsPour("Allemand / Anglais selon le cursus"), ["testdaf", "ielts"]);
+assert.deepEqual(idsPour("Japonais (JLPT N2) / Anglais (B2) selon le cursus"), ["jlpt", "toefl"]);
+assert.deepEqual(idsPour("Coréen / Anglais selon le département"), ["topik", "toefl"]);
+assert.deepEqual(idsPour("Anglais / Allemand"), ["ielts", "toefl", "duolingo"]);
+assert.deepEqual(idsPour("Anglais (cours d'allemand de 4 mois inclus)"), ["ielts", "toefl", "duolingo"]);
+// Une langue sans fiche citée d'abord : la suivante connue décide.
+assert.deepEqual(idsPour("Italien / Anglais"), ["ielts", "toefl", "duolingo"]);
+assert.deepEqual(idsPour("Roumain uniquement, après une année préparatoire de roumain si vous ne le parlez pas"), []);
+assert.deepEqual(idsPour(""), []);
+});
+
+test("6b. règle d'honnêteté : aucune langue du catalogue qui commence par le turc ne suggère de test", () => {
+// TESTS_PAR_LANGUE.turc est vide exprès : les bourses turques incluent
+// une année de langue. Relevé le 2026-09-28 : les 65 programmes de la
+// famille Türkiye Bursları recevaient IELTS, TOEFL et Duolingo.
+const brut = JSON.parse(lire("assets/data/catalogue.json"));
+const turques = [...new Set(brut.programs.map((p) => p.language).filter((l) => /^turc\b/i.test(l || "")))];
+assert.ok(turques.length > 0, "aucune langue du catalogue ne commence par « Turc » : cette garde doit être relue");
+for (const l of turques) assert.deepEqual(idsPour(l), [], `« ${l} » suggère ${idsPour(l).join(", ")}`);
 });

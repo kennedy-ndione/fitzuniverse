@@ -240,12 +240,27 @@ if (!n) return null;
 return TESTS.find((t) => t.aliases.some((a) => n.includes(a))) || null;
 }
 
-/** Fiches pertinentes pour une langue d'enseignement du catalogue. */
+/**
+* Fiches pertinentes pour une langue d'enseignement du catalogue.
+*
+* Une chaîne peut citer plusieurs langues (« Français / Anglais selon la
+* formation », « Turc ou anglais selon le programme, après une année
+* préparatoire de turc ») : la PREMIÈRE langue citée décide. Jusqu'au
+* 2026-09-28, c'était la première clé de TESTS_PAR_LANGUE, et l'anglais
+* passait devant tout : 161 programmes du catalogue, dont les 65 de la
+* famille Türkiye Bursları, recevaient IELTS malgré `turc: []` — la règle
+* d'honnêteté de l'en-tête (année de langue incluse). L'allemand, le
+* japonais et le coréen gardent un test d'anglais en second, pour les
+* cursus anglophones.
+*/
 export function testsPourLangue(langue) {
 const l = String(langue || "").toLowerCase();
-const ids = Object.entries(TESTS_PAR_LANGUE).find(([k]) => l.includes(k));
-if (!ids) return [];
-return ids[1].map((id) => TESTS.find((t) => t.id === id)).filter(Boolean);
+const citees = Object.keys(TESTS_PAR_LANGUE)
+.map((cle) => ({ cle, position: l.indexOf(cle) }))
+.filter((c) => c.position >= 0)
+.sort((a, b) => a.position - b.position);
+if (!citees.length) return [];
+return TESTS_PAR_LANGUE[citees[0].cle].map((id) => TESTS.find((t) => t.id === id)).filter(Boolean);
 }
 
 /**
