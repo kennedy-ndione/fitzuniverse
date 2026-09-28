@@ -46,6 +46,9 @@ import { listerPublies } from "./hosting-publie.mjs";
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const SORTIE = "js/lucide-icones.js";
+// L'observateur des icônes injectées après coup (lot PEIGNE-FIN), embarqué
+// à la fin de SORTIE : les pages ne le chargent plus à part.
+export const OBSERVATEUR = "js/icones.js";
 export const COMPLETE = "js/lucide-1.31.0.min.js";
 const UMD = "node_modules/lucide/dist/umd/lucide.js";
 const UMD_MIN = "node_modules/lucide/dist/umd/lucide.min.js";
@@ -133,6 +136,8 @@ export function genererIcones(racine = RACINE) {
 // mêmes <svg> qu'avant, quand ce fichier était chargé depuis unpkg.com.
 // Une icône absente d'ici fait charger, une fois, la bibliothèque
 // complète servie par le site (${COMPLETE}) — voir scripts/icones.mjs.
+// En fin de fichier : ${OBSERVATEUR}, recopié (les icônes posées après
+// coup) — les pages ne le chargent plus à part.
 // ============================================================
 
 (function () {
@@ -320,6 +325,16 @@ function manquante(nom) {
 window.lucide = { icons: I, createIcons, createElement };
 
 })();
+
+// ============================================================
+// ${OBSERVATEUR}, recopié à l'identique par scripts/icones.mjs (lot PERF 3G,
+// 2026-09-28) : l'observateur qui convertit les icônes posées après coup.
+// Il était chargé juste après lucide sur chaque page ; il vit désormais
+// dans le même fichier — une requête de moins par page, même ordre
+// d'exécution. Le modifier dans ${OBSERVATEUR}, puis node scripts/icones.mjs.
+// ============================================================
+
+${fs.readFileSync(path.join(racine, OBSERVATEUR), "utf8").replace(/\r\n/g, "\n").trimEnd()}
 `;
 }
 

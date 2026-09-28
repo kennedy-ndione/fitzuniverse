@@ -90,17 +90,20 @@ assert.ok(!ICONES_INTERDITES.test("flag") && !ICONES_INTERDITES.test("start"));
 });
 
 // Lot PERF 3G (2026-09-28) : lucide n'est plus chargé depuis unpkg mais
-// depuis js/lucide-icones.js (voir test/icones-locales.test.mjs) ; la
-// règle, elle, ne change pas.
-test("icônes 2 — toute page qui charge lucide charge js/icones.js juste après", () => {
+// depuis js/lucide-icones.js (voir test/icones-locales.test.mjs), et
+// js/icones.js y est RECOPIÉ en fin de fichier au lieu d'être chargé à
+// part. La règle ne change pas : toute page qui a lucide a l'observateur.
+test("icônes 2 — toute page qui charge lucide reçoit l'observateur de js/icones.js", () => {
 const pages = fichiersDuSite().filter((f) => f.endsWith(".html"));
+const observateur = lire("js/icones.js").trimEnd();
+assert.ok(lire("js/lucide-icones.js").trimEnd().endsWith(observateur), "js/lucide-icones.js doit se terminer par js/icones.js, à l'identique : node scripts/icones.mjs");
 let n = 0;
 for (const f of pages) {
 const html = lire(f).replace(/<!--[\s\S]*?-->/g, "");
 if (!/unpkg\.com\/lucide|js\/lucide-icones\.js/.test(html)) continue;
 n += 1;
-const prefixe = f.startsWith("admin") ? "../js/icones.js" : "js/icones.js";
-assert.ok(new RegExp(`(unpkg\\.com/lucide|js/lucide-icones\\.js)[^>]*></script>\\s*<script src="${prefixe.replace(/[./]/g, "\\$&")}" defer></script>`).test(html), `${f} : js/icones.js absent après lucide`);
+assert.ok(/<script src="(\.\.\/)?js\/lucide-icones\.js" defer><\/script>/.test(html), `${f} : lucide doit venir de js/lucide-icones.js`);
+assert.ok(!/<script src="(\.\.\/)?js\/icones\.js"/.test(html), `${f} : js/icones.js chargé en plus de sa copie — l'observateur tournerait deux fois`);
 }
 assert.ok(n >= 30, `${n} pages chargent lucide`);
 });

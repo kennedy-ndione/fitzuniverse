@@ -71,9 +71,12 @@ function domFactice() {
 /** Évalue un script de lucide (local ou complet) dans un bac à sable, rend son window.lucide. */
 function charger(source, dom, avertissements = []) {
   const window = {};
+  // Minuteurs inertes : l'observateur de js/icones.js, recopié en fin de
+  // js/lucide-icones.js, en arme un au chargement.
   const ctx = {
     window, self: window, document: dom.document, console: { warn: (m) => avertissements.push(String(m)) },
-    location: { hostname: "fitzuniverse.com" }, URL
+    location: { hostname: "fitzuniverse.com" }, URL,
+    setInterval: () => 0, clearInterval: () => {}, setTimeout: () => 0, clearTimeout: () => {}
   };
   ctx.globalThis = ctx;
   vm.runInNewContext(`${source}\n;this.__lucide = window.lucide || this.lucide;`, ctx);
