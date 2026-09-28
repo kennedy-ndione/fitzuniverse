@@ -965,40 +965,56 @@ allow write: if false;
 //    corriger quand l'agrégation passera côté serveur (trigger
 //    Firestore) : ce jour-là, remplacer par write: if false. Lecture
 //    réservée aux administrateurs (statistiques internes).
+//    AUDIT 2026-10 : la SUPPRESSION est fermée — aucun client ne
+//    supprime un compteur (js/analytics.js ne fait que setDoc/merge), et
+//    un visiteur sans compte pouvait effacer analyticsCounters/totals.
 // ------------------------------------------------------------
+// AUDIT 2026-10 : le journal reste ouvert à tous, mais dans la forme
+// exacte qu'écrit js/analytics.js (trackEvent) : l'uid est celui de la
+// session ou null — personne ne signe un événement au nom d'un autre
+// compte — et createdAt est l'heure du serveur.
 match /analyticsEvents/{eventId} {
-allow create: if true;
+allow create: if request.resource.data.keys().hasOnly(["type", "uid", "payload", "createdAt", "clientTs"]) &&
+request.resource.data.type is string && request.resource.data.type.size() <= 64 &&
+(request.resource.data.uid == null || (isSignedIn() && request.resource.data.uid == request.auth.uid)) &&
+request.resource.data.createdAt == request.time;
 allow read, update, delete: if isAdmin();
 }
 
 match /analyticsCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 match /analyticsDailyCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 match /analyticsPlanCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 match /analyticsCountryCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 match /analyticsUniversityCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 match /analyticsFieldCounters/{document} {
 allow read: if isAdmin();
-allow write: if true;
+allow create, update: if true;
+allow delete: if false;
 }
 
 // ------------------------------------------------------------

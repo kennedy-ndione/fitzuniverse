@@ -120,10 +120,26 @@ test("storage.rules : capture réservée au propriétaire, image ou PDF, 5 Mo ; 
 const s = lire("storage.rules");
 assert.ok(s.includes("match /users/{uid}/applications/{applicationId}/{fichier}"));
 assert.ok(s.includes("request.resource.size <= 5 * 1024 * 1024"));
-assert.ok(s.includes("request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf'"));
+// Audit 2026-10 : image (sauf SVG, document actif) ou PDF — la règle
+// d'origine reste le plancher, le SVG en est retiré.
+assert.ok(s.includes("(request.resource.contentType.matches('image/.*') && request.resource.contentType != 'image/svg+xml') || request.resource.contentType == 'application/pdf'"));
 assert.ok(s.includes("allow read: if estProprietaire(uid);"));
 assert.ok(/match \/users\/\{uid\}\/\{allPaths=\*\*\} \{\nallow read: if estProprietaire\(uid\);\nallow write: if false;/.test(s));
 assert.ok(!/isAdmin/.test(s), "aucun accès admin à la capture");
+});
+
+test("storage.rules (audit 2026-10) : un seul fichier par candidature, au nom de cheminCapture, jamais depuis une session anonyme", () => {
+const s = lire("storage.rules");
+const regle = s.slice(s.indexOf("match /users/{uid}/applications/{applicationId}/{fichier}"));
+const bloc = regle.slice(0, regle.indexOf("\n}") + 2);
+assert.ok(bloc.includes("allow create, update: if estProprietaire(uid) && estCompteReel() && fichier.matches('preuve-depot[.][a-z0-9]{1,5}') && estCaptureAcceptable();"));
+assert.ok(bloc.includes("allow delete: if estProprietaire(uid);"));
+assert.ok(!bloc.includes("allow write"), "plus de write global : la suppression a sa propre règle");
+assert.ok(!s.includes("request.method"), "request.method n'existe pas dans les règles Storage");
+assert.ok(s.includes("return request.auth.token.firebase.sign_in_provider != 'anonymous';"));
+// Le nom que la règle accepte est celui que le client écrit.
+const nom = (c) => c.split("/").pop();
+for (const ext of ["jpg", "pdf", "png"]) assert.match(nom(cheminCapture("u1", "slot-1", ext)), /^preuve-depot[.][a-z0-9]{1,5}$/);
 });
 
 test("aucune capture dans l'export du catalogue : scripts/lot.mjs ne lit pas users/", () => {

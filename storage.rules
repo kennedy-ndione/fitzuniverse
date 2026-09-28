@@ -29,15 +29,32 @@ function estProprietaire(uid) {
 return request.auth != null && request.auth.uid == uid;
 }
 
+// AUDIT 2026-10 : une session ANONYME (lecture de Fitz sur la page de
+// résultats) n'a ni profil ni candidature. Elle n'écrit rien ici : sans
+// cela, chaque session anonyme ouvrait un dossier de 5 Mo par fichier,
+// sans limite de nombre.
+function estCompteReel() {
+return request.auth.token.firebase.sign_in_provider != 'anonymous';
+}
+
+// L'image SVG est refusée : c'est un document actif (scripts), jamais
+// une capture d'écran. Le client compresse toute image en JPEG avant
+// l'envoi (applications.js, espace-preinscription.js).
 function estCaptureAcceptable() {
 return request.resource != null &&
 request.resource.size <= 5 * 1024 * 1024 &&
-(request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+((request.resource.contentType.matches('image/.*') && request.resource.contentType != 'image/svg+xml') || request.resource.contentType == 'application/pdf');
 }
 
+// AUDIT 2026-10 : UN fichier par candidature, au nom que donne
+// cheminCapture (js/preuve-depot.js) — « preuve-depot.<ext> ». Un nouvel
+// envoi remplace l'ancien au lieu de s'ajouter. La suppression a sa
+// propre règle : la propriété « method » de la requête n'existe pas dans les règles
+// Storage (l'émulateur le signalait à chaque écriture).
 match /users/{uid}/applications/{applicationId}/{fichier} {
 allow read: if estProprietaire(uid);
-allow write: if estProprietaire(uid) && (request.method == 'delete' || estCaptureAcceptable());
+allow create, update: if estProprietaire(uid) && estCompteReel() && fichier.matches('preuve-depot[.][a-z0-9]{1,5}') && estCaptureAcceptable();
+allow delete: if estProprietaire(uid);
 }
 
 match /users/{uid}/{allPaths=**} {

@@ -458,6 +458,37 @@ attendre("étudiant : s'offrir Dossier Chine : refusé", await patchMasque(UID_G
 await admin.doc(`admins/${UID_PROPRIO}`).delete();
 await admin.doc(`admins/${UID_ADMIN_ORD}`).delete();
 
+// AUDIT 2026-10 — le journal analytics et ses compteurs, ouverts à tous
+// mais dans la forme exacte de js/analytics.js.
+console.log("Audit 2026-10 — analytics :");
+async function evenement(uid, champs, heureServeur = true) {
+  const name = `projects/${PROJET}/databases/(default)/documents/analyticsEvents/rejeu-${T}-${Math.random().toString(36).slice(2)}`;
+  const write = { update: { name, fields: Object.fromEntries(Object.entries(champs).map(([k, v]) => [k, versValeur(v)])) }, currentDocument: { exists: false } };
+  if (heureServeur) write.updateTransforms = [{ fieldPath: "createdAt", setToServerValue: "REQUEST_TIME" }];
+  const r = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(uid ? { Authorization: `Bearer ${jeton(uid)}` } : {}) },
+    body: JSON.stringify({ writes: [write] })
+  });
+  return r.status;
+}
+attendre("visiteur sans compte : événement de la forme du client : accepté", await evenement(null, { type: "page_view", uid: null, payload: { page: "/" }, clientTs: Date.now() }), 200);
+attendre("étudiant : événement signé de son uid : accepté", await evenement(UID_GRATUIT, { type: "page_view", uid: UID_GRATUIT, payload: {}, clientTs: Date.now() }), 200);
+attendre("visiteur sans compte : événement au nom d'un étudiant : refusé", await evenement(null, { type: "payment_completed", uid: UID_GRATUIT, payload: {}, clientTs: 1 }), 403);
+attendre("étudiant : événement au nom d'un AUTRE étudiant : refusé", await evenement(UID_GRATUIT, { type: "page_view", uid: UID_CONS6, payload: {}, clientTs: 1 }), 403);
+attendre("événement sans heure du serveur : refusé", await evenement(null, { type: "page_view", uid: null, payload: {}, clientTs: 1, createdAt: "2030-01-01" }, false), 403);
+attendre("événement avec un champ de plus : refusé", await evenement(null, { type: "page_view", uid: null, payload: {}, clientTs: 1, admin: true }), 403);
+await admin.doc("analyticsCounters/totals").set({ rejeu: 1 }, { merge: true });
+const effacerCompteur = await fetch(`${BASE}/analyticsCounters/totals`, { method: "DELETE" });
+attendre("visiteur sans compte : supprimer analyticsCounters/totals : refusé", effacerCompteur.status, 403);
+const incrementer = await fetch(`http://${HOTE}/v1/projects/${PROJET}/databases/(default)/documents:commit`, {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ writes: [{ transform: { document: `projects/${PROJET}/databases/(default)/documents/analyticsDailyCounters/rejeu-${T}`, fieldTransforms: [{ fieldPath: "visiteurs", increment: { integerValue: "1" } }] } }] })
+});
+attendre("visiteur sans compte : incrément d'un compteur (setDoc merge + increment) : accepté", incrementer.status, 200);
+for (const d of (await admin.collection("analyticsEvents").get()).docs) if (d.id.startsWith(`rejeu-${T}`)) await d.ref.delete();
+await admin.doc(`analyticsDailyCounters/rejeu-${T}`).delete();
+
 // Nettoyage.
 for (const d of [`programs/${PROG}`, `programs/${AUTRE_PROG}`, `programs/${PROG_FERME}`, `programs/${PROG_3}`, `universities/${UNI}`, `universities/${AUTRE_UNI}`, `universities/${UNI_3}`, `scholarships/${BOURSE}`, `scholarships/${BOURSE_FERMEE}`]) await admin.doc(d).delete();
 for (const uid of [UID_BOURSE, UID_DOSSIER, UID_LES_DEUX, UID_DIAG, UID_ESS4, UID_CONS6, UID_ESS_ANCIEN, UID_PREMIER, UID_GRATUIT, UID_PASS, UID_SIGNATURE, UID_E1, UID_FC, UID_ACC]) {
