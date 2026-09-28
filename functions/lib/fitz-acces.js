@@ -299,6 +299,24 @@ function formuleDeDerogation({ adminActif, testerAccess } = {}) {
    le document, en cinq secondes, sans déploiement. */
 const PLAFOND_GLOBAL_JOUR = 200;
 
+/* LE PLAFOND DES SESSIONS ANONYMES (audit 2026-10). Une session anonyme
+   (lecture de Fitz sur la page de résultats, sans compte) se crée en une
+   requête : le plafond de 4 points par uid ne borne donc rien, et 50
+   sessions épuisaient les 200 points du jour — Fitz refusé à tous les
+   clients payants jusqu'à minuit.
+
+   Désormais les anonymes ont LEUR compteur (`pointsJourAnonymes`) et LEUR
+   plafond (`plafondJourAnonymes` dans systeme/fitz, ce repli sinon). Leurs
+   points ne s'ajoutent JAMAIS à `pointsJour`, le compteur que lit le
+   plafond des comptes : quoi que fassent les anonymes, le budget des
+   clients reste entier. La facture maximale d'un jour devient
+   PLAFOND_GLOBAL_JOUR + PLAFOND_ANONYMES_JOUR.
+
+   60 points ≈ 60 lectures du diagnostic (1 point chacune, ~7 F CFA) :
+   environ 420 F CFA par jour au plus. Le régler se fait dans le document,
+   sans déploiement. */
+const PLAFOND_ANONYMES_JOUR = 60;
+
 /**
  * La tâche demandée par le navigateur — PROPRIÉTÉ PROPRE de la table
  * seulement (audit 2026-10). `TACHES["constructor"]` rendait la fonction
@@ -323,8 +341,9 @@ function pointsValides(points) {
  * @param {Object} ctx.systeme      document systeme/fitz (ou {})
  * @param {string} ctx.jourCourant  clé ISO du jour (AAAA-MM-JJ)
  * @param {number} ctx.points       points que cet appel veut réserver
+ * @param {boolean} [ctx.anonyme]   session anonyme : compteur et plafond à part
  */
-function verdictSysteme({ systeme = {}, jourCourant = "", points = 0 } = {}) {
+function verdictSysteme({ systeme = {}, jourCourant = "", points = 0, anonyme = false } = {}) {
   if (systeme && systeme.actif === false) {
     return { ok: false, portee: "robinet" };
   }
@@ -335,22 +354,38 @@ function verdictSysteme({ systeme = {}, jourCourant = "", points = 0 } = {}) {
     return { ok: false, portee: "global", plafond: PLAFOND_GLOBAL_JOUR };
   }
 
+  // Un compteur qui porte la date d'hier vaut zéro : le jour tourne tout
+  // seul, personne n'a à le remettre à zéro à minuit. Les DEUX compteurs
+  // sont rendus à chaque verdict : l'écriture les pose ensemble, sans quoi
+  // le premier appel du jour laisserait l'autre compteur à sa valeur d'hier
+  // sous la date d'aujourd'hui.
+  const memeJour = !!systeme && systeme.jour === jourCourant;
+  const dejaComptes = memeJour ? Number(systeme.pointsJour) || 0 : 0;
+  const dejaAnonymes = memeJour ? Number(systeme.pointsJourAnonymes) || 0 : 0;
+
+  if (anonyme) {
+    const declareA = Number(systeme && systeme.plafondJourAnonymes);
+    const plafondA = Number.isFinite(declareA) && declareA > 0 ? declareA : PLAFOND_ANONYMES_JOUR;
+
+    if (dejaAnonymes + points > plafondA) {
+      return { ok: false, portee: "anonymes", plafond: plafondA, deja: dejaAnonymes };
+    }
+
+    return { ok: true, plafond: plafondA, pointsJour: dejaComptes, pointsJourAnonymes: dejaAnonymes + points };
+  }
+
   const declare = Number(systeme && systeme.plafondJour);
   const plafond = Number.isFinite(declare) && declare > 0 ? declare : PLAFOND_GLOBAL_JOUR;
 
-  // Un compteur qui porte la date d'hier vaut zéro : le jour tourne tout
-  // seul, personne n'a à le remettre à zéro à minuit.
-  const deja = systeme && systeme.jour === jourCourant ? Number(systeme.pointsJour) || 0 : 0;
-
-  if (deja + points > plafond) {
-    return { ok: false, portee: "global", plafond, deja };
+  if (dejaComptes + points > plafond) {
+    return { ok: false, portee: "global", plafond, deja: dejaComptes };
   }
 
-  return { ok: true, plafond, pointsJour: deja + points };
+  return { ok: true, plafond, pointsJour: dejaComptes + points, pointsJourAnonymes: dejaAnonymes };
 }
 
 function plafondsDe(formule) {
   return PLAFONDS[formule] || PLAFOND_PAR_DEFAUT;
 }
 
-module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, PLAFOND_GLOBAL_JOUR, formuleActive, formuleDeDerogation, plafondsDe, pointsValides, tacheConnue, verdictSysteme };
+module.exports = { FORMULES_AVEC_FITZ, OFFRES_PREINSCRIPTION, PLAFONDS, PLAFOND_PAR_DEFAUT, PLAFOND_GLOBAL_JOUR, PLAFOND_ANONYMES_JOUR, formuleActive, formuleDeDerogation, plafondsDe, pointsValides, tacheConnue, verdictSysteme };

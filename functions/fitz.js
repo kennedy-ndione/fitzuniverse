@@ -288,7 +288,7 @@ function clesPeriode(maintenant) {
  * découvrir la grille de plafonds ni à voir son solde changer sous ses
  * yeux à chaque message.
  */
-async function reserverPoints(uid, formule, points) {
+async function reserverPoints(uid, formule, points, { anonyme = false } = {}) {
   // Jamais de points illisibles dans un compteur (audit 2026-10).
   if (!pointsValides(points)) {
     throw refus("invalid-argument", "INCONNU", "Cette demande n'est pas reconnue.");
@@ -313,7 +313,9 @@ async function reserverPoints(uid, formule, points) {
     // LE SITE AVANT LE COMPTE. Un robinet fermé ou un plafond global
     // atteint arrêtent tout le monde, y compris le propriétaire : c'est
     // la facture de FitzUniverse qu'ils protègent, pas un droit d'accès.
-    const global = verdictSysteme({ systeme, jourCourant: jour, points });
+    // Audit 2026-10 : une session anonyme a son propre compteur et son
+    // propre plafond ; elle n'entame jamais le budget des comptes.
+    const global = verdictSysteme({ systeme, jourCourant: jour, points, anonyme });
 
     if (!global.ok) {
       return { ok: false, portee: global.portee, plafond: global.plafond };
@@ -351,7 +353,7 @@ async function reserverPoints(uid, formule, points) {
     // il faudra répartir ce compteur sur N documents — pas avant.
     tx.set(
       refSysteme,
-      { jour, pointsJour: global.pointsJour, dernierAppelLe: maintenant.toISOString() },
+      { jour, pointsJour: global.pointsJour, pointsJourAnonymes: global.pointsJourAnonymes, dernierAppelLe: maintenant.toISOString() },
       { merge: true }
     );
 
@@ -624,7 +626,21 @@ exports.fitzGenerate = onCall(
       config.poids +
       imagesValides.length * POIDS_PAR_IMAGE +
       documentsValides.length * POIDS_PAR_DOCUMENT;
-    const reservation = await reserverPoints(uid, formule, points);
+    const anonyme = request.auth.token?.firebase?.sign_in_provider === "anonymous";
+    const reservation = await reserverPoints(uid, formule, points, { anonyme });
+
+    // Audit 2026-10 : le plafond des sessions ANONYMES est atteint. Ce
+    // n'est pas le site qui s'arrête — les comptes sont servis — mais le
+    // visiteur sans compte doit attendre : même message honnête.
+    if (!reservation.ok && reservation.portee === "anonymes") {
+      logger.warn("Plafond des sessions anonymes atteint", { plafond: reservation.plafond });
+
+      throw refus(
+        "resource-exhausted",
+        "QUOTA_FOURNISSEUR",
+        "Fitz est très sollicité en ce moment. Réessayez dans quelques minutes."
+      );
+    }
 
     // Le site d'abord — et ces deux refus-là NE SONT PAS des refus de
     // formule. Le dire avec QUOTA_PLAN afficherait un message de vente à
