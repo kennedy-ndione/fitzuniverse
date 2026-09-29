@@ -14,11 +14,15 @@
 *     <i data-lucide> et oublie l'appel. → Un MutationObserver convertit
 *     ce qui arrive, avec un léger regroupement.
 *
-* Script classique, chargé juste après lucide sur chaque page : aucun
+* Script classique, exécuté juste après lucide sur chaque page : aucun
 * module à modifier, et une page qui n'en a pas besoin ne paie qu'un
-* observateur inactif. Ne fait rien si lucide ne charge jamais (réseau
-* filtrant) : les pages gardent leurs <i> vides, comme avant — le
-* harnais hors ligne double lucide par une coquille et n'attend rien.
+* observateur inactif. Depuis le lot PERF 3G (2026-09-28), il n'est plus
+* chargé à part : scripts/icones.mjs le recopie à la fin de
+* js/lucide-icones.js (une requête de moins par page). Le modifier ICI,
+* puis relancer node scripts/icones.mjs.
+* Ne fait rien si lucide ne charge jamais (réseau filtrant) : les pages
+* gardent leurs <i> vides, comme avant — le harnais hors ligne double
+* lucide par une coquille et n'attend rien.
 * ==========================================================
 */
 

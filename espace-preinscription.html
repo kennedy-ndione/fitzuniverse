@@ -32,8 +32,8 @@ voir css/journey-shell.css). -->
 
 <!-- Version figée + defer — standard du site (tout createIcons() de
 script classique attend DOMContentLoaded ; les modules sont sûrs). -->
-<script src="https://unpkg.com/lucide@1.31.0" defer></script>
-<script src="js/icones.js" defer></script>
+<!-- Icônes servies par le site (lot PERF 3G, 2026-09-28) : seules celles que le site cite, générées par scripts/icones.mjs — plus unpkg.com. -->
+<script src="js/lucide-icones.js" defer></script>
 
 <!-- Design system Fitz. app-shell.css/dashboard.css restent chargées
 pour la cloche de messages, le loader et la pastille de formule ;
@@ -66,22 +66,19 @@ surclassent — ordre significatif. -->
 <link rel="modulepreload" href="js/champs-guides.js">
 <link rel="modulepreload" href="js/compression-image.js">
 <link rel="modulepreload" href="js/countries.js">
-<link rel="modulepreload" href="js/delai-reponse.js">
 <link rel="modulepreload" href="js/destinations-preinscription.js">
 <link rel="modulepreload" href="js/diagnostic-france.js">
 <link rel="modulepreload" href="js/diagnostic-pays.js">
 <link rel="modulepreload" href="js/documents-slugs.js">
 <link rel="modulepreload" href="js/echeance.js">
 <link rel="modulepreload" href="js/eligibility-pistes.js">
-<link rel="modulepreload" href="js/exigences.js">
 <link rel="modulepreload" href="js/fiche-adresse.js">
-<link rel="modulepreload" href="js/fitz-recours.js">
+<link rel="modulepreload" href="js/fitz-recours-lien.js">
 <link rel="modulepreload" href="js/fitz-select.js">
 <link rel="modulepreload" href="js/frais.js">
 <link rel="modulepreload" href="js/glossaire.js">
 <link rel="modulepreload" href="js/journey-map.js">
 <link rel="modulepreload" href="js/nationalites.js">
-<link rel="modulepreload" href="js/next-action.js">
 <link rel="modulepreload" href="js/niveaux-langue.js">
 <link rel="modulepreload" href="js/parcours-quota.js">
 <link rel="modulepreload" href="js/parcours.js">

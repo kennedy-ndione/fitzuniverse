@@ -32,6 +32,7 @@ import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
 import { etatCandidature, analyserEcheance, etatAffichable } from "../../js/echeance.js";
 import { lirePays, etatDunPays, estOuverte, faitsPublics } from "../../js/pays-preinscription.js";
 import { trouverProcedure, residencesDocumentees } from "../../js/procedures/index.js";
+import { versionListe } from "../catalogue-liste.mjs";
 
 // LES CHAÎNES QUI NE DOIVENT PLUS PARAÎTRE EN PUBLIC (lot
 // PRÉINSCRIPTIONS-VITRINE, 2026-09-09). Ce sont exactement les faits que
@@ -724,7 +725,11 @@ export async function verifierPagesCatalogue({ navigateur, base }) {
       const catalogue = { ...snapshot, universities: [...snapshot.universities, ...fixtures], programs: [...snapshot.programs, ...programmes] };
 
       // Enregistrée APRÈS couperLeReseau : la route la plus récente gagne.
+      // Depuis le lot PERF 3G (2026-09-28), universities.html lit le
+      // catalogue des listes : les fixtures y sont servies aussi, sous la
+      // forme exacte que lot.mjs export produit (versionListe).
       await page.route("**/assets/data/catalogue.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(catalogue) }));
+      await page.route("**/assets/data/catalogue-liste.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(versionListe(catalogue)) }));
 
       await page.goto(`${base}/universities.html?search=harnais`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector(".uni-card", { timeout: 20000 });

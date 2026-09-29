@@ -225,3 +225,157 @@ const jeu = (format) => [400, 800].map((w) => `${m[1]}-${w}w.${format} ${w}w`).j
 return { avif: jeu("avif"), webp: jeu("webp") };
 
 }
+
+/**
+ * LOT PERF 3G (2026-09-28) — l'AVIF et le WebP sur les CARTES et les FICHES,
+ * sans rien changer à la netteté.
+ *
+ * Les jumeaux modernes n'existent qu'en 400 et 800 px (voir
+ * sourcesModernes et scripts/formats-modernes.mjs) ; le JPEG monte à 1600.
+ * Sur un écran 3x, une carte pleine largeur demande ~1 200 px : un
+ * <source> AVIF sans condition y servirait la variante 800, moins nette
+ * que le JPEG d'aujourd'hui. Créer les jumeaux 1200 et 1600 coûterait
+ * ~270 Mo au dépôt (mesuré le 2026-09-28 sur huit photos).
+ *
+ * D'où cette condition `media` : le <source> moderne ne sert QUE lorsque la
+ * largeur que le navigateur prendrait dans le JPEG ne dépasse pas 800 px
+ * (largeur de l'emplacement × densité de l'écran ≤ 800). Même largeur
+ * qu'aujourd'hui, dans tous les navigateurs ; seul le format change.
+ * Au-delà, le JPEG, exactement comme avant. Un navigateur qui ne connaît
+ * pas `resolution` ignore le <source> : JPEG, comme avant.
+ *
+ * Ne sait lire que les `sizes` du site : des entrées « (max-width:Npx) L »
+ * puis une longueur par défaut, L en px ou en vw. Toute autre forme rend
+ * null : pas de <source> moderne, le JPEG seul.
+ *
+ * @param {string} sizes l'attribut sizes de l'<img>
+ * @returns {string|null} "" = toujours ; une liste de requêtes ; null = jamais
+ */
+export const LARGEUR_MAX_MODERNE = 800;
+
+const DENSITES_MODERNES = [1, 1.5, 2, 2.5, 3, 3.5, 4];
+
+// Aucun téléphone n'a un écran de moins de 300 px CSS : une condition qui
+// ne servirait qu'en dessous est retirée (ces écrans auraient le JPEG).
+const LARGEUR_UTILE_MIN = 300;
+
+const mediaDejaCalcules = new Map();
+
+export function mediaModernes(sizes) {
+
+const cle = String(sizes || "");
+if (!mediaDejaCalcules.has(cle)) mediaDejaCalcules.set(cle, calculerMediaModernes(cle));
+return mediaDejaCalcules.get(cle);
+
+}
+
+function calculerMediaModernes(sizes) {
+
+const branches = [];
+let bas = 0;
+const entrees = String(sizes || "").split(",");
+
+for (let i = 0; i < entrees.length; i++) {
+const m = /^\s*(?:\(\s*max-width\s*:\s*(\d+)px\s*\)\s*)?(\d+(?:\.\d+)?)(px|vw)\s*$/.exec(entrees[i]);
+if (!m) return null;
+const derniere = i === entrees.length - 1;
+if (derniere === Boolean(m[1])) return null; // la longueur par défaut, et elle seule, ferme la liste
+const haut = m[1] ? Number(m[1]) : Infinity;
+branches.push({ bas, haut, valeur: Number(m[2]), unite: m[3] });
+bas = haut + 1;
+}
+
+// Pour chaque densité, les largeurs d'écran où la variante 800 suffit.
+let clauses = [];
+for (const d of DENSITES_MODERNES) {
+for (const b of branches) {
+const fin = b.unite === "px"
+? (b.valeur * d <= LARGEUR_MAX_MODERNE ? b.haut : -1)
+: Math.min(b.haut, Math.floor(LARGEUR_MAX_MODERNE / (d * b.valeur / 100)));
+if (fin < b.bas || fin < LARGEUR_UTILE_MIN) continue;
+clauses.push({ d, bas: b.bas, fin });
+}
+}
+
+// Une clause couverte par une autre (densité plus haute, largeurs plus
+// larges) ne dit rien de plus.
+clauses = clauses.filter((c, i) => !clauses.some((o, j) => j !== i && o.d >= c.d && o.bas <= c.bas && o.fin >= c.fin && (o.d > c.d || o.bas < c.bas || o.fin > c.fin)));
+
+if (!clauses.length) return null;
+// Toutes largeurs jusqu'à 4x : aucune condition utile.
+if (clauses.some((c) => c.d === DENSITES_MODERNES[DENSITES_MODERNES.length - 1] && c.bas === 0 && c.fin === Infinity)) return "";
+
+return clauses.map((c) => [
+`(max-resolution: ${c.d}dppx)`,
+c.bas > 0 ? `(min-width: ${c.bas}px)` : "",
+c.fin !== Infinity ? `(max-width: ${c.fin}px)` : ""
+].filter(Boolean).join(" and ")).join(", ");
+
+}
+
+/**
+ * Les deux <source> modernes d'une photo, à poser devant son <img> dans un
+ * <picture> — "" quand il n'y en a pas (repli hero-bg, `sizes` inconnu).
+ *
+ * `hidden` sur chaque <source> : `picture { display: contents }`
+ * (css/base.css) en fait des enfants du conteneur de l'image, et Chromium
+ * leur donne une boîte (display: block). Dans un conteneur flex à `gap`
+ * (la vignette de results.html), chacune ajoutait un écart : 28 px de
+ * décalage, mesuré le 2026-09-28. `hidden` retire la boîte sans rien
+ * changer au choix de l'image.
+ * @param {string} image la variante JPEG servie en `src`
+ * @param {string} sizes le même `sizes` que l'<img>
+ */
+export function sourcesPicture(image, sizes) {
+
+const modernes = sourcesModernes(image);
+const media = modernes ? mediaModernes(sizes) : null;
+if (!modernes || media === null) return "";
+const condition = media ? ` media="${media}"` : "";
+return `<source hidden type="image/avif"${condition} srcset="${modernes.avif}" sizes="${sizes}"><source hidden type="image/webp"${condition} srcset="${modernes.webp}" sizes="${sizes}">`;
+
+}
+
+/**
+ * Pour une <img> déjà dans la page (couverture des fiches) : l'enveloppe
+ * dans un <picture> et pose les deux <source> AVANT que l'image ne reçoive
+ * sa source — sinon le navigateur partirait sur le JPEG, puis sur l'AVIF.
+ * `picture { display: contents }` (css/base.css) : aucune boîte en plus.
+ * @returns {boolean} vrai si des <source> ont été posés
+ */
+export function poserSourcesModernes(img, image, sizes) {
+
+const modernes = sourcesModernes(image);
+const media = modernes ? mediaModernes(sizes) : null;
+if (!img || !img.parentNode || !modernes || media === null) return false;
+const doc = img.ownerDocument;
+let picture = img.parentNode;
+if (picture.tagName !== "PICTURE") {
+picture = doc.createElement("picture");
+img.parentNode.insertBefore(picture, img);
+picture.appendChild(img);
+}
+picture.querySelectorAll("source").forEach((s) => s.remove());
+for (const [type, srcset] of [["image/avif", modernes.avif], ["image/webp", modernes.webp]]) {
+const s = doc.createElement("source");
+s.hidden = true;
+s.type = type;
+if (media) s.media = media;
+s.srcset = srcset;
+s.sizes = sizes;
+picture.insertBefore(s, img);
+}
+return true;
+
+}
+
+/**
+ * Le repli d'une photo en erreur, dans un <picture> : retirer d'abord les
+ * <source>, sinon le navigateur y retourne et l'image reste cassée.
+ */
+export function retirerSourcesModernes(img) {
+
+const parent = img && img.parentNode;
+if (parent && parent.tagName === "PICTURE") parent.querySelectorAll("source").forEach((s) => s.remove());
+
+}

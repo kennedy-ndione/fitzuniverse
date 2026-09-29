@@ -16,7 +16,7 @@ import { documentDuCatalogue } from "./js/catalog-data.js";
 import { trackEvent } from "./js/analytics.js";
 import { resolveSession, fetchFeatureFlags, isFeatureLocked } from "./js/access-guard.js";
 
-import { resolveCityImage } from "./js/scholarship-image.js";
+import { resolveCityImage, poserSourcesModernes, retirerSourcesModernes } from "./js/scholarship-image.js";
 
 import { trouverProcedure } from "./js/procedures/index.js";
 // Lot S3 : le portail de candidature ne vient plus du catalogue public
@@ -1014,6 +1014,9 @@ if (cityImage) {
 // "default.jpg" visait en plus un fichier absent du dépôt.
 // Voir resolveCityImage() dans js/scholarship-image.js.
 const photo = resolveCityImage(university.image);
+// Lot PERF 3G (2026-09-28) : AVIF puis WebP quand la variante 800 suffit
+// à l'écran (téléphones jusqu'à 2x) — posés AVANT la source de l'image.
+poserSourcesModernes(cityImage, photo.src, "100vw");
 cityImage.srcset = photo.srcset;
 cityImage.sizes = "100vw";
 cityImage.src = photo.src;
@@ -1022,6 +1025,7 @@ cityImage.height = 533;
 cityImage.decoding = "async";
 cityImage.onerror = () => {
 cityImage.onerror = null;
+retirerSourcesModernes(cityImage);
 cityImage.removeAttribute("srcset");
 cityImage.src = photo.fallbackOriginal;
 };

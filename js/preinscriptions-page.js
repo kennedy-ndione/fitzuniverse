@@ -25,7 +25,8 @@
 // pays de "a_venir" à "ouvert" dans js/pays-preinscription.js lui donne
 // son bouton, sans toucher à ce fichier ni au HTML.
 // ============================================================
-import { chargerCatalogue } from "./catalog-data.js";
+// Lot PERF 3G : le catalogue des LISTES (sans les champs des fiches).
+import { chargerCatalogueListe } from "./catalog-data.js";
 import { lirePays, etatDunPays, estOuverte, pageDeDestination } from "./pays-preinscription.js";
 import { residencesDocumentees } from "./procedures/index.js";
 import { escapeHtml } from "./ai/format.js";
@@ -102,7 +103,7 @@ const pays = lirePays();
 // compteurs, elle garde tout le reste.
 let catalogue = null;
 try {
-catalogue = await chargerCatalogue();
+catalogue = await chargerCatalogueListe();
 } catch (e) {
 console.warn("Catalogue indisponible pour les effectifs par destination :", e);
 }

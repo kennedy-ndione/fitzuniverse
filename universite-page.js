@@ -13,9 +13,13 @@
 // exactement comme sur la fiche programme (details.js).
 // ============================================================
 
-import { chargerCatalogue } from "./js/catalog-data.js";
+// Lot PERF 3G (2026-09-28) : l'établissement arrive COMPLET par sa fiche
+// (assets/data/fiches/universities/<id>.json, 2 Ko) ; ses programmes et ses
+// bourses par le catalogue des LISTES, où js/fiche-universite.js trouve
+// tout ce qu'il lit (test/catalogue-liste.test.mjs, fiche université).
+import { chargerCatalogue, chargerCatalogueListe, documentDuCatalogue } from "./js/catalog-data.js";
 import { ficheUniversite, resumeFiche, domaineDe } from "./js/fiche-universite.js";
-import { resolveCityImage } from "./js/scholarship-image.js";
+import { resolveCityImage, poserSourcesModernes, retirerSourcesModernes } from "./js/scholarship-image.js";
 import { trackEvent } from "./js/analytics.js";
 import { resolveSession } from "./js/access-guard.js";
 import { chargerPortails, portailUniversite } from "./js/portails.js";
@@ -99,11 +103,14 @@ if (ogDesc && resume) ogDesc.setAttribute("content", resume);
 function poserHero(vue) {
 const photo = resolveCityImage(vue.image);
 const img = $("ficheImage");
+// Lot PERF 3G (2026-09-28) : AVIF puis WebP quand la variante 800 suffit
+// à l'écran — posés AVANT la source de l'image (sinon, deux téléchargements).
+poserSourcesModernes(img, photo.src, "100vw");
 img.src = photo.src;
 img.srcset = photo.srcset;
 img.sizes = "100vw";
 img.alt = vue.lieu || vue.titre;
-img.onerror = () => { img.onerror = null; img.removeAttribute("srcset"); img.src = photo.fallbackOriginal; };
+img.onerror = () => { img.onerror = null; retirerSourcesModernes(img); img.removeAttribute("srcset"); img.src = photo.fallbackOriginal; };
 
 const drapeau = $("ficheDrapeau");
 if (vue.drapeau) {
@@ -278,15 +285,22 @@ return;
 }
 
 let catalogue;
+let universite;
 try {
-catalogue = await chargerCatalogue();
+[catalogue, universite] = await Promise.all([
+chargerCatalogueListe(),
+// null : absent du catalogue. undefined : aucun instantané (ni fiche ni
+// catalogue.json) — alors le chargeur complet, comme avant ce lot.
+documentDuCatalogue("universities", id).then((u) => (u !== undefined
+? u
+: chargerCatalogue().then((c) => (c.universites || []).find((x) => x && x.id === id))))
+]);
 } catch (erreur) {
 console.error("Catalogue indisponible :", erreur);
 afficherErreur("Chargement interrompu", "Vérifiez votre connexion Internet, puis rechargez la page.");
 return;
 }
 
-const universite = (catalogue.universites || []).find((u) => u && u.id === id);
 const vue = ficheUniversite({ universite, programmes: catalogue.programmes, bourses: catalogue.bourses });
 
 if (!vue) {

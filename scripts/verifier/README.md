@@ -203,3 +203,38 @@ espace-bourse.html), du 2026-09-06 au 2026-09-28. Le peigne ne le voyait
 pas : il ne mesurait pas les chevauchements, et les outils dormaient dans
 des phases scellées. La règle CSS elle-même est gardée sans navigateur par
 `test/zone-tactile.test.mjs`.
+
+## mesure-3g (lot PERF 3G, 2026-09-28)
+
+`node scripts/verifier/mesure-3g.mjs` — le **premier chargement** de sept
+pages sur une 3G simulée (1,6 Mbit/s, 300 ms), à 390 × 844 en 2x : requêtes
+(dont JS), octets transférés (site, CDN, Firebase), temps jusqu'au contenu
+utile, FCP, LCP, erreurs console, URL demandées deux fois, puis le
+débordement horizontal à 360, 390 et 430 px. C'est lui qui a produit les
+tableaux de PERF-2026-10.md.
+
+Différences avec `mesure` ci-dessus : HTTP/2 sur TLS et brotli, comme
+Firebase Hosting ; les vrais SDK (pas de doublure) ; un visiteur neuf ET
+l'étudiant de test de l'**émulateur**, connecté. Tout ce que Hosting publie
+est compressé d'avance (~20 s au démarrage) : compressé à la première
+demande, un gros fichier bloquait le serveur local pendant la mesure
+(catalogue.json : ~2 s) et faussait les temps. Il faut, avant :
+
+```
+npm run emulators          (terminal 1, reste ouvert)
+npm run seed:emulator      (une fois)
+```
+
+`openssl` doit être dans le PATH (Git pour Windows le fournit). Options :
+`--racine=<dossier>` mesure un autre arbre (un `git worktree` de main pour
+« avant ») ; `--miroir=<dossier>` sert unpkg, gstatic et Google Fonts depuis
+une copie locale, fabriquée une fois par `--preparer-miroir=<dossier>` (utile
+quand ces CDN sont filtrés, comme dans une session cloud) ; `--sortie=` garde
+les chiffres en JSON ; `--cache-desactive` imite la case « Disable cache » de
+DevTools.
+
+**Jamais la production** : chaque page est ouverte avec `?useEmulator=1` sur
+localhost, et les hôtes du projet réel (liste `PRODUCTION`) ne se résolvent
+pas dans le navigateur de mesure — une requête qui les vise arrête la mesure.
+Sans miroir, la fonction Fitz de production est donc injoignable :
+results.html y montre sa lecture de secours.

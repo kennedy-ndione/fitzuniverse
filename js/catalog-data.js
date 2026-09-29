@@ -26,6 +26,21 @@
  *      Firestore directement. Pour un visiteur, un instantané absent
  *      donne l'état d'erreur de chaque page, comme une coupure réseau.
  *
+ * LE CATALOGUE DES LISTES ET LES FICHES (lot PERF 3G, 2026-09-28)
+ *
+ *   assets/data/catalogue.json pèse 2,2 Mo (262 Ko compressés) ; plus de
+ *   la moitié ne sert qu'aux fiches. `lot.mjs export` écrit aussi, sur les
+ *   mêmes documents (scripts/catalogue-liste.mjs) :
+ *   - assets/data/catalogue-liste.json, le même instantané sans les champs
+ *     que seules les fiches lisent — chargerCatalogueListe() et ses deux
+ *     sœurs, pour les listes, le moteur de recommandation et les
+ *     diagnostics (126 Ko compressés) ;
+ *   - assets/data/fiches/<collection>/<id>.json, UN document complet —
+ *     documentDuCatalogue(), pour les fiches (2 Ko chacun).
+ *   Sans ces fichiers (export plus ancien), tout retombe sur catalogue.json.
+ *   Les fonctions sans « Liste » rendent toujours le catalogue COMPLET :
+ *   l'administration et les pages qui lisent un champ de fiche s'en servent.
+ *
  * Dans les deux cas, la mémoïsation PAR COLLECTION de
  * js/catalog-cache.js reste en place : deux modules d'une même page
  * partagent la même promesse, et une page qui ne veut que les
@@ -54,6 +69,10 @@ import { creerLecteurAvecInstantane, documentDeLInstantane, validerInstantane } 
 // Résolu par rapport à CE fichier (js/), donc valable depuis n'importe
 // quelle page du site, à la racine comme dans un sous-dossier.
 const URL_INSTANTANE = new URL("../assets/data/catalogue.json", import.meta.url);
+const URL_LISTE = new URL("../assets/data/catalogue-liste.json", import.meta.url);
+const COLLECTIONS_FICHES = ["programs", "universities", "scholarships"];
+// Mêmes identifiants que ceux qui ont une fiche (scripts/catalogue-liste.mjs).
+const ID_DE_FICHE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 // « no-cache » = le navigateur revalide auprès du serveur (ETag) à
 // chaque page : un nouvel export déployé est vu au rechargement
@@ -82,19 +101,44 @@ export function prechargerCatalogue() {
   telechargerInstantane();
 }
 
-const lecteur = creerLecteurAvecInstantane({
-  chargerInstantane: telechargerInstantane,
-  lireFirestore: async (nom) => {
-    const [{ db }, { collection, getDocs }] = await Promise.all([
-      import("../firebase-config.js"),
-      import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js")
-    ]);
-    const snap = await getDocs(collection(db, nom));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+// Le fichier des listes (lot PERF 3G). Absent ou illisible — un export
+// antérieur à ce lot, un réseau qui coupe : c'est le catalogue complet qui
+// répond, avec les mêmes documents, seulement plus lourd.
+let promesseListe = null;
+function telechargerListe() {
+  if (!promesseListe) {
+    promesseListe = fetch(URL_LISTE, { cache: "no-cache" })
+      .then((rep) => (rep.ok ? rep.json() : null))
+      .catch(() => null)
+      .then((json) => (validerInstantane(json) ? json : telechargerInstantane()));
   }
-});
+  return promesseListe;
+}
+
+/** Comme prechargerCatalogue(), pour un hub qui lit le catalogue des listes. */
+export function prechargerCatalogueListe() {
+  telechargerListe();
+}
+
+async function lireFirestore(nom) {
+  const [{ db }, { collection, getDocs }] = await Promise.all([
+    import("../firebase-config.js"),
+    import("https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js")
+  ]);
+  const snap = await getDocs(collection(db, nom));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+const lecteur = creerLecteurAvecInstantane({ chargerInstantane: telechargerInstantane, lireFirestore });
 
 const cache = creerCacheCatalogue(lecteur.lireCollection);
+
+// Le catalogue des listes a son propre lecteur et sa propre mémoïsation :
+// une page qui lit les deux (rare) ne mélange jamais un document allégé
+// et un document complet sous la même clé.
+const lecteurListe = creerLecteurAvecInstantane({ chargerInstantane: telechargerListe, lireFirestore });
+
+const cacheListe = creerCacheCatalogue(lecteurListe.lireCollection);
 
 // Journal de développement seulement : un coût qu'on ne voit pas est un
 // coût que personne ne surveille — c'est ce qui a permis à l'accueil de
@@ -111,16 +155,17 @@ function estDeveloppement() {
 // N'annonce QUE lorsque le compteur a bougé : sans cette garde, chaque
 // appelant réaffiche le même total et on ne voit plus ce qui a
 // réellement coûté quelque chose.
-let dernierTotalAnnonce = 0;
+const dernierTotalAnnonce = new Map();
 
-function annoncerCout() {
+function annoncerCout(c = cache, l = lecteur, fichier = "catalogue.json") {
   if (!estDeveloppement()) return;
-  const total = cache.lectures();
-  if (total === dernierTotalAnnonce) return;
-  const delta = total - dernierTotalAnnonce;
-  dernierTotalAnnonce = total;
-  if (lecteur.source() === "instantane") {
-    console.info(`[Fitz] catalogue servi par l'instantané statique (généré le ${lecteur.genereLe() || "?"}) — ${delta} documents, 0 lecture Firestore`);
+  const total = c.lectures();
+  const avant = dernierTotalAnnonce.get(c) || 0;
+  if (total === avant) return;
+  const delta = total - avant;
+  dernierTotalAnnonce.set(c, total);
+  if (l.source() === "instantane") {
+    console.info(`[Fitz] catalogue servi par l'instantané statique ${fichier} (généré le ${l.genereLe() || "?"}) — ${delta} documents, 0 lecture Firestore`);
   } else {
     console.info(`[Fitz] catalogue chargé depuis FIRESTORE — ${delta} lectures (total page : ${total}). L'instantané assets/data/catalogue.json est absent ou invalide : lancer \`node scripts/lot.mjs export\`.`);
   }
@@ -166,6 +211,37 @@ export async function chargerProgrammesEtUniversites() {
   return { programmes: r.programs, universites: r.universities };
 }
 
+// ---- Le catalogue des LISTES (lot PERF 3G, 2026-09-28) ----
+// Mêmes documents, sans les champs que seules les fiches lisent (liste
+// dans scripts/catalogue-liste.mjs, DETAIL). Pour les listes, le moteur de
+// recommandation et les diagnostics : test/catalogue-liste.test.mjs
+// vérifie qu'ils donnent exactement les mêmes résultats qu'avec le complet.
+
+/** Comme chargerCatalogue(), sur le catalogue des listes. */
+export async function chargerCatalogueListe() {
+  const r = await cacheListe.charger(["programs", "universities", "scholarships"]);
+  annoncerCout(cacheListe, lecteurListe, "catalogue-liste.json");
+  return {
+    programmes: r.programs,
+    universites: r.universities,
+    bourses: r.scholarships
+  };
+}
+
+/** Comme chargerUniversites(), sur le catalogue des listes. */
+export async function chargerUniversitesListe() {
+  const r = await cacheListe.charger(["universities"]);
+  annoncerCout(cacheListe, lecteurListe, "catalogue-liste.json");
+  return r.universities;
+}
+
+/** Comme chargerProgrammesEtUniversites(), sur le catalogue des listes. */
+export async function chargerProgrammesEtUniversitesListe() {
+  const r = await cacheListe.charger(["programs", "universities"]);
+  annoncerCout(cacheListe, lecteurListe, "catalogue-liste.json");
+  return { programmes: r.programs, universites: r.universities };
+}
+
 /**
  * Un document ciblé — pour la fiche (details.js), qui a besoin d'UN
  * programme, de SON université et de SA bourse. Servi par l'instantané
@@ -173,10 +249,25 @@ export async function chargerProgrammesEtUniversites() {
  * comme avant : cette fonction renvoie alors `undefined`, jamais null,
  * pour distinguer « pas d'instantané » de « document absent ».
  *
+ * Lot PERF 3G (2026-09-28) : la FICHE du document d'abord
+ * (assets/data/fiches/<collection>/<id>.json, le document complet, 2 Ko)
+ * plutôt que tout le catalogue (262 Ko compressés) pour trois documents.
+ * Fiche absente ou illisible (document retiré, export antérieur à ce
+ * lot) : l'instantané complet, exactement comme avant.
+ *
  * @returns {Promise<object|null|undefined>} {id,…} ; null = absent de
  * l'instantané ; undefined = pas d'instantané, lire Firestore.
  */
 export async function documentDuCatalogue(nom, id) {
+  if (COLLECTIONS_FICHES.includes(nom) && typeof id === "string" && ID_DE_FICHE.test(id)) {
+    try {
+      const rep = await fetch(new URL(`../assets/data/fiches/${nom}/${id}.json`, import.meta.url), { cache: "no-cache" });
+      const docu = rep.ok ? await rep.json() : null;
+      if (docu && typeof docu === "object" && docu.id === id) return docu;
+    } catch {
+      // Réseau, JSON illisible : l'instantané complet prend le relais.
+    }
+  }
   const snap = validerInstantane(await telechargerInstantane());
   if (!snap) return undefined;
   return documentDeLInstantane(snap, nom, id);

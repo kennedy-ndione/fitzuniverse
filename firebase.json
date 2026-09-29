@@ -54,6 +54,7 @@
       "REDACTION.md",
       "TESTING.md",
       "AUDIT-*.md",
+      "PERF-*.md",
       "package.json",
       "package-lock.json",
       "firestore.rules",
@@ -82,6 +83,24 @@
       },
       {
         "source": "/assets/data/catalogue.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300, stale-while-revalidate=3600"
+          }
+        ]
+      },
+      {
+        "source": "/assets/data/catalogue-liste.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300, stale-while-revalidate=3600"
+          }
+        ]
+      },
+      {
+        "source": "/assets/data/fiches/**",
         "headers": [
           {
             "key": "Cache-Control",
