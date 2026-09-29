@@ -7,10 +7,10 @@
 //     candidature (applications.html) : nom du test, seuil requis par
 //     la bourse, date prévue, statut — saisis depuis la fiche de la
 //     bourse elle-même.
-//  2. La langue d'enseignement des programmes visés (jointure par le
-//     nom d'université avec le catalogue — les candidatures créées
-//     par Fitz portent les noms exacts du catalogue), pour SUGGÉRER
-//     un test quand la checklist n'en exige pas encore.
+//  2. La langue d'enseignement des programmes visés — celle du programme
+//     de la candidature (programId), à défaut celle de son université
+//     (par le nom exact du catalogue) — pour SUGGÉRER un test quand la
+//     checklist n'en exige pas encore.
 //
 // Les fiches (format, exigences habituelles, plan) viennent de
 // js/test-prep-data.js — factuelles, avec les mises en garde honnêtes
@@ -22,7 +22,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/
 import { initShellChrome, bootstrapShell } from "./js/app-shell.js";
 import { joursRestants } from "./js/next-action.js";
 import { tonEcheance } from "./js/journey-map.js";
-import { TESTS, testDepuisNom, testsPourLangue } from "./js/test-prep-data.js";
+import { TESTS, testDepuisNom, testsPourLangue, languesDuCatalogue, langueDeLaCandidature, langueDansUnePhrase } from "./js/test-prep-data.js";
 
 // Chargeur de catalogue partagé et mémoïsé — voir js/catalog-data.js.
 import { chargerProgrammesEtUniversites } from "./js/catalog-data.js";
@@ -42,24 +42,20 @@ return [];
 }
 }
 
-// Langue d'enseignement par candidature, via le catalogue (jointure par
-// nom d'université — même donnée que details.js, lue, jamais réécrite).
-async function languesParUniversite() {
+// Langues d'enseignement du catalogue (même donnée que details.js, lue,
+// jamais réécrite) : par programme et par nom d'université. Chaque
+// candidature y prend la sienne — voir langueDeLaCandidature().
+async function chargerLangues() {
 try {
 // Deux collections seulement : cette page n'a pas besoin des bourses,
 // et le chargeur ne lit que ce qu'on lui demande.
 const { programmes, universites } = await chargerProgrammesEtUniversites();
-const nomsParId = new Map(universites.map((u) => [u.id, (u.name || "").trim()]));
-const langues = new Map();
-programmes.forEach((d) => {
-const p = d.data();
-const nom = nomsParId.get(p.universityId);
-if (nom && p.language && !langues.has(nom)) langues.set(nom, p.language);
-});
-return langues;
+// Des objets simples { id, …champs }, pas des instantanés Firestore :
+// la jointure vit dans js/test-prep-data.js, où Node la vérifie.
+return languesDuCatalogue(programmes, universites);
 } catch (error) {
 console.warn("Catalogue injoignable — les suggestions par langue sont désactivées :", error);
-return new Map();
+return languesDuCatalogue([], []);
 }
 }
 
@@ -86,13 +82,13 @@ return exigences;
 
 }
 
-function collecterSuggestions(applications, languesParUni, dejaExiges) {
+function collecterSuggestions(applications, langues, dejaExiges) {
 
 const suggestions = [];
 const vus = new Set(dejaExiges.map((e) => e.fiche && e.fiche.id).filter(Boolean));
 
 applications.forEach((app) => {
-const langue = languesParUni.get((app.university || "").trim());
+const langue = langueDeLaCandidature(app, langues);
 if (!langue) return;
 testsPourLangue(langue).forEach((fiche) => {
 if (vus.has(fiche.id)) return;
@@ -150,7 +146,7 @@ cartes.push(`
 <article class="jy-card">
 <div class="jy-app-top">
 <h3>${fiche.nom}</h3>
-<span class="jy-app-meta">Suggéré — ${app.university || "votre programme"} enseigne en ${langue.toLowerCase()}</span>
+<span class="jy-app-meta">Suggéré — ${app.university || "votre programme"} enseigne en ${langueDansUnePhrase(langue)}</span>
 </div>
 <p class="jy-opp-reason"><i data-lucide="book-open"></i><span>${fiche.exigenceHabituelle}</span></p>
 <div class="jy-tools">
@@ -209,9 +205,19 @@ if (!session) return;
 
 renderFiches();
 
+// css/journey.css replie le contenu de toute .jy-phase tant que le
+// <body> ne porte pas data-parcours-pret : c'est le repli du hub « Mon
+// parcours » (lot ESPACE-ETUDIANT, 2026-09-14), levé par dashboard.js et
+// js/aiguillage.js. Cette page emprunte .jy-phase sans rien à replier, et
+// ne le levait pas : depuis ce lot, l'étudiant n'y voyait que les deux
+// titres (trouvé le 2026-09-28, garde 8 bis de
+// test/diagnostic-garde.test.mjs). On le lève dès que les fiches sont
+// peintes ; « Vos tests » affiche son propre « Chargement… » en attendant.
+document.body.dataset.parcoursPret = "1";
+
 const [applications, langues] = await Promise.all([
 chargerCandidatures(session.user.uid),
-languesParUniversite()
+chargerLangues()
 ]);
 
 const exigences = collecterExigences(applications);

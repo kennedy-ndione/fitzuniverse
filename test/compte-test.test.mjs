@@ -18,7 +18,11 @@ import { resoudreEspace } from "../js/plan-features.js";
 import { DESTINATIONS_VENDUES } from "../js/destinations-preinscription.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
-const lire = (f) => readFileSync(join(racine, f), "utf8");
+// Fins de ligne normalisées à la lecture : un worktree (core.autocrlf à
+// true) rend espace-preinscription.js en CRLF, et un « \n » placé après
+// un jeton (« \{\n ») bute sur le \r. Les motifs décrivent le code, pas
+// son encodage.
+const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
 const js = lire("espace-preinscription.js");
 
 test("l'accès test ouvre les deux espaces, et les neuf pays sont vendus", () => {

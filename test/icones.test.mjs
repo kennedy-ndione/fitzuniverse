@@ -16,7 +16,8 @@
 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import vm from "node:vm";
@@ -24,8 +25,23 @@ import vm from "node:vm";
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(path.join(RACINE, f), "utf8").replace(/\r\n/g, "\n");
 
+// Le paquet est cherché là où Node le trouve, pas à un chemin fixe sous
+// RACINE : un worktree n'a pas de node_modules à lui, et la résolution
+// remonte jusqu'à celui de la copie principale. On résout le point d'entrée (un
+// champ « exports » peut refuser un chemin profond), puis on remonte au
+// dossier dont le package.json porte le nom du paquet.
+function dossierDuPaquet(nom) {
+let d = path.dirname(createRequire(import.meta.url).resolve(nom));
+while (!(existsSync(path.join(d, "package.json")) && JSON.parse(readFileSync(path.join(d, "package.json"), "utf8")).name === nom)) {
+const parent = path.dirname(d);
+if (parent === d) throw new Error(`${nom} : dossier du paquet introuvable`);
+d = parent;
+}
+return d;
+}
+
 function iconesDuPaquet() {
-const src = readFileSync(path.join(RACINE, "node_modules/lucide/dist/umd/lucide.js"), "utf8");
+const src = readFileSync(path.join(dossierDuPaquet("lucide"), "dist/umd/lucide.js"), "utf8");
 const ctx = { window: {}, self: {} };
 ctx.globalThis = ctx;
 vm.runInNewContext(src + "\n;this.__lucide = (typeof lucide !== 'undefined' ? lucide : window.lucide);", ctx);

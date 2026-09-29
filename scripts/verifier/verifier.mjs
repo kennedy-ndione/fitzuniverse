@@ -54,7 +54,7 @@
  */
 
 import { demarrerServeur } from "./serveur.mjs";
-import { couperLeReseau, estBruitConsole, TITRES_LECTURE_FITZ, REFUS_FITZ } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole, LUCIDE_SERVI, TITRES_LECTURE_FITZ, REFUS_FITZ } from "./hors-ligne.mjs";
 import { jouerQuestionnaire } from "./questionnaire.mjs";
 import { verifierPagesCatalogue } from "./pages.mjs";
 import { verifierEspaceEtudiant } from "./espace.mjs";
@@ -395,6 +395,48 @@ async function temoinEmulation({ navigateur, base, moteur }) {
 }
 
 /**
+ * Témoin lucide (2026-09-28), même leçon. Le peigne juge un bouton à
+ * icône sur son <svg> RENDU (contrôle « contenu rendu vide », lot
+ * ICONE-BTN) : il suppose le VRAI lucide servi, et qui dessine. Sous la
+ * coquille, aucun <i data-lucide> ne devient <svg>, et le peigne sort la
+ * même liste de boutons « vides » avec ou sans défaut réel — vu dans un
+ * worktree, où le paquet était cherché à un chemin fixe. En échec, ce
+ * contrôle du peigne ne vaut rien sous ce moteur. Les messages ne nomment
+ * pas le moteur (le préfixe du rapport le fait) : un même échec sous les
+ * deux moteurs ne doit pas passer pour un écart entre eux.
+ */
+async function temoinLucide({ navigateur, base }) {
+  const anomalies = [];
+  const notes = [];
+  if (!LUCIDE_SERVI.reel) {
+    anomalies.push(`coquille servie, paquet introuvable (${LUCIDE_SERVI.raison}) : le contrôle « contenu rendu vide » du peigne ne vaut rien`);
+    return { anomalies, notes };
+  }
+  const contexte = await navigateur.newContext({ locale: "fr-FR" });
+  const externes = await couperLeReseau(contexte);
+  const page = await contexte.newPage();
+  try {
+    await page.goto(`${base}/login.html`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    // js/icones.js convertit dès que lucide est là. Options en 3e
+    // paramètre de waitForFunction (voir verifierUnProfil).
+    await page.waitForFunction(() => document.querySelector("svg.lucide") && !document.querySelector("i[data-lucide]"), null, { timeout: 10000 }).catch(() => {});
+    const lu = await page.evaluate(() => ({
+      icones: Object.keys((window.lucide && window.lucide.icons) || {}).length,
+      svg: document.querySelectorAll("svg.lucide").length,
+      restes: document.querySelectorAll("i[data-lucide]").length
+    }));
+    const demande = (externes.find((u) => u.includes("unpkg.com/lucide")) || "").match(/lucide@([^/?#]+)/);
+    const servi = `lucide ${LUCIDE_SERVI.version}, paquet installé${demande ? ` (le site demande lucide@${demande[1]})` : ""}`;
+    if (!lu.svg || lu.restes) anomalies.push(`${servi}, mais ${lu.svg} <svg> dessiné(s) et ${lu.restes} <i data-lucide> resté(s) vide(s) sur login.html`);
+    else notes.push(`${servi} : ${lu.icones} icônes, ${lu.svg} <svg> dessinés sur login.html`);
+  } catch (e) {
+    anomalies.push(`témoin lucide impossible : ${e.message.split("\n")[0]}`);
+  }
+  await contexte.close();
+  return { anomalies, notes };
+}
+
+/**
  * La catégorie d'une anomalie, pour la comparaison entre moteurs.
  * WebKit et Chromium ne formulent pas leurs exceptions de la même façon :
  * on compare « page @vue + catégorie », jamais le texte exact.
@@ -450,6 +492,9 @@ async function passerUnMoteur({ moteur, lanceur, montrer, base, choisis, cles, s
 
   // 1.3 — le témoin d'émulation, avant tout ce qui se joue à 375 px.
   noter("témoin 375", await temoinEmulation({ navigateur, base, moteur }));
+
+  // Le témoin lucide, avant tout ce qui juge une icône (peigne, finitions).
+  noter("témoin lucide", await temoinLucide({ navigateur, base }));
 
   for (const profil of choisis) {
     noter(profil.cle, await verifierUnProfil({ navigateur, base, profil }));
