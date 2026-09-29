@@ -49,11 +49,16 @@ le calcul n'était pas faux, c'est qu'on ne l'appelait pas. La pastille du
 catalogue lisait `isActive`, un drapeau éditorial — 45 cartes sur 156
 annonçaient l'inverse des échéances.
 
-Il tourne **hors ligne** : Firebase, Lucide et les polices sont remplacés par
-des doublures (`hors-ligne.mjs`). Le catalogue doit donc arriver par
+Il tourne **hors ligne** : Firebase et les polices sont remplacés par des
+doublures (`hors-ligne.mjs`). Le catalogue doit donc arriver par
 `assets/data/catalogue.json`, l'instantané statique. Si un module se remettait
 à lire Firestore, le harnais le verrait sous la forme d'un catalogue vide —
 pas sous la forme d'une facture.
+
+Lucide, lui, n'est pas doublé : c'est le vrai paquet installé, trouvé là où
+Node le trouve (un worktree compris), pour que le peigne voie les icônes
+rendues. S'il manque, la coquille servie à sa place est annoncée et fait
+échouer le rapport (témoin lucide, plus bas).
 
 ## Deux moteurs (lot DEUX-MOTEURS, 2026-09-11)
 
@@ -77,6 +82,13 @@ exact — WebKit et Chromium ne formulent pas leurs exceptions pareil.
   `innerWidth === 375` et `clientWidth === 375`, sinon ÉCHEC explicite
   (« émulation mobile inopérante sous <moteur> »). Un défaut de ce type a
   existé dans WebKit sous Windows (playwright#33702).
+- **Témoin lucide** (2026-09-28) : sous chaque moteur, le harnais exige que le
+  vrai lucide soit servi et dessine (`login.html` : chaque `<i data-lucide>`
+  devient un `<svg>`), et donne sa version ; sinon ÉCHEC explicite. Sous la
+  coquille, le contrôle « contenu rendu vide » du peigne accuse chaque bouton
+  à icône : sur `ai-chat.html`, la même liste de huit boutons sortait avec ou
+  sans défaut réel. C'était le cas dans un worktree, où le paquet était
+  cherché à un chemin fixe (`../../node_modules`), sans que rien ne le dise.
 - `mesure` repose sur le protocole Chrome (CDP) : **Chromium seulement**. Sous
   WebKit, le rapport le dit en clair ; ce n'est jamais une erreur.
 - `npm run verifier -- iphone` : captures ciblées 375 × 812, dpr 3, avec les
@@ -116,7 +128,7 @@ moteur.
 | `questionnaire.mjs` | joue le questionnaire ; pilote par `#question[data-question]`, et attend après chaque clic *soit* la question suivante *soit* l'arrivée sur `results.html` (la dernière réponse peut finir pendant l'attente) |
 | `profils.mjs` | les six étudiants joués — un par piste d'études |
 | `pages.mjs` | la liste des bourses et deux fiches, recomptées contre le catalogue |
-| `hors-ligne.mjs` | les doublures Firebase / Lucide / polices (option `polices: true` : les polices Google passent, et elles seules) ; la liste du bruit de console commune à tous les modules |
+| `hors-ligne.mjs` | les doublures Firebase / polices (option `polices: true` : les polices Google passent, et elles seules) ; le vrai Lucide, résolu par Node (`LUCIDE_SERVI` dit ce qui est servi ; coquille annoncée si le paquet manque) ; la liste du bruit de console commune à tous les modules |
 | `captures-iphone.mjs` | les captures ciblées 375 × 812 sous chaque moteur (`iphone`) |
 | `captures-avant-apres.mjs` | captures Chromium 375/1280 des pages touchées par un lot visuel, couleurs de la surface Fitz, comparaison pixel à pixel (`node scripts/verifier/captures-avant-apres.mjs avant\|apres`) |
 | `serveur.mjs` | le site servi en local (`Cache-Control: no-store`) |

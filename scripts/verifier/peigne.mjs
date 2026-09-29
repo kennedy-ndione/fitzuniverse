@@ -18,7 +18,8 @@
 *     système : select non habillé, datalist, nombre à curseur, date nue ;
 *  6. (lot ICONE-BTN, 2026-09-11) aucun élément interactif visible au
 *     contenu rendu vide : ni texte, ni <svg>/<img> de dimensions non
-*     nulles — lucide est le VRAI paquet installé, pas une coquille.
+*     nulles — lucide est le VRAI paquet installé, pas une coquille ; le
+*     « témoin lucide » de verifier.mjs le prouve sous chaque moteur.
 *
 * Ce que le peigne NE voit PAS : les états vides « muets », qui se
 * lisent, pas ne se mesurent.
