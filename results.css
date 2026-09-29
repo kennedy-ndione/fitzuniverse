@@ -1579,6 +1579,17 @@ opacity:.85;
 
 }
 
+/* results.js masque la note (hidden) pour un client qui a déjà une
+formule : sous « Continuer dans mon espace », « Aucun engagement à
+cette étape » n'a plus de sens. Le display:flex ci-dessus, règle
+d'auteur, l'emportait sur [hidden] du navigateur : la note restait à
+l'écran (2026-09-29, test/hidden-respecte.test.mjs). */
+.closing-note[hidden]{
+
+display:none;
+
+}
+
 .closing-note i,
 .closing-note svg{
 
