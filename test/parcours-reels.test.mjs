@@ -25,7 +25,11 @@ import { trouverProcedure } from "../js/procedures/index.js";
 import { CAMPAGNE_FRANCE, jalonDeCampagne, faitFrance } from "../js/pays-preinscription.js";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
-const lire = (f) => readFileSync(join(racine, f), "utf8");
+// Fins de ligne normalisées à la lecture : un worktree (core.autocrlf à
+// true) rend ai-letter.js en CRLF, et un « \n » placé après un jeton
+// (« \{\n ») bute sur le \r. Les motifs décrivent le code, pas son
+// encodage.
+const lire = (f) => readFileSync(join(racine, f), "utf8").replace(/\r\n/g, "\n");
 
 test("1 — hors France, une lettre de motivation d'admission ; en France, la lettre de vœu", () => {
 const base = { parcours: "preinscription", university: "University of Toronto", program: "Computer Science", level: "Licence", profile: {} };

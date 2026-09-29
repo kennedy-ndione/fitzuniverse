@@ -396,11 +396,22 @@ ce fichier en entier.
 
 Aucune couleur ni police nouvelle : tokens de base.css et catalog-*.
 ================================================================== */
+/* TROIS COLONNES AU PLUS (2026-09-28, décision de Charles). La grille
+auto-fit (minmax 280 px) passait à quatre colonnes dès que le conteneur
+atteint 1180 px, soit une fenêtre de 1283 px (mesuré sans barre de
+défilement) : à 1366, 1440 ou 1920, neuf destinations se rangeaient en
+4 + 4 + 1. Trois colonnes sur
+ordinateur (3 × 3), deux sur tablette, une sur téléphone (plus bas),
+la même découpe à 1023 px que .pre-offres. */
 .pre-dest-liste{
 display:grid;
-grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+grid-template-columns:repeat(3, minmax(0, 1fr));
 gap:20px;
 margin-top:8px;
+}
+
+@media(max-width:1023px){
+.pre-dest-liste{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
 
 .pre-dest{
@@ -414,14 +425,17 @@ gap:12px;
 min-width:0;
 }
 
-/* La destination ouverte prend toute la largeur : elle est le sujet de
-la page, les autres en sont la suite annoncée. */
+/* PLUS DE PLEINE LARGEUR (2026-09-28). « La destination ouverte prend
+toute la largeur : elle est le sujet de la page, les autres en sont la
+suite annoncée » : vrai tant que la France était seule ouverte. Depuis
+le 23/09, les neuf le sont, et neuf cartes de 1178 px s'empilaient
+(section de 3051 px à 1280, lignes de ~150 caractères). Chacune prend
+désormais une case de la grille, comme toute destination. */
 /* Une SURFACE, pas le fond nu : --card-background ne résout à rien dans
 la portée sombre de #pageMain (transparent, mesuré), et le bouton encre
 (.btn-primary = --ink-surface) disparaissait sur l'encre du fond. Sur
 --background-soft, il se lit comme sur les cartes d'offres. */
 .pre-dest--ouverte{
-grid-column:1 / -1;
 background:var(--background-soft);
 border-color:var(--amber-700);
 }
@@ -466,7 +480,14 @@ line-height:1.5;
 .pre-dest-residences i, .pre-dest-residences svg,
 .pre-dest-langues i, .pre-dest-langues svg{ width:16px; height:16px; flex:none; margin-top:2px; }
 
-.pre-dest-cta{ align-self:flex-start; margin-top:4px; }
+/* Le bouton se cale en bas de sa carte : dans une rangée, la grille
+étire les cartes à la même hauteur, et les boutons s'alignent. La marge
+automatique absorbe l'espace libre ; les 4 px sous la ligne des langues
+(toujours juste avant le bouton, js/preinscriptions-page.js) gardent
+l'écart d'avant, 12 + 4 px, là où il n'y a rien à absorber : sur
+téléphone, rien ne bouge. */
+.pre-dest--ouverte .pre-dest-langues{ margin-bottom:4px; }
+.pre-dest-cta{ align-self:flex-start; margin-top:auto; }
 
 /* ---------- La page d'une destination ---------- */
 .dest-langues{

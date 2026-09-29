@@ -189,6 +189,20 @@ assert.ok(/id="activateButton" class="btn btn-accent/.test(lire("payment.html"))
 assert.ok(/class="btn btn-accent btn-lg steps-cta"/.test(lire("index.html")));
 });
 
+test("vitrine 4c — le hub des préinscriptions : les cartes générées n'ajoutent aucun bouton principal", () => {
+// 4b lit le HTML STATIQUE : il ne voit pas les cartes que
+// js/preinscriptions-page.js rend dans section#pays. Neuf destinations
+// ouvertes le 23/09 y ont posé neuf .btn-accent sans qu'un test bouge ;
+// seul le peigne l'a vu (contrôle 9, 2026-09-28). Neuf choix égaux n'ont
+// pas d'action principale : la carte porte un bouton secondaire, et
+// l'ambre de la page reste « Voir les établissements », seul dans sa
+// section (4b).
+const hub = sansCommentairesJs(lire("js/preinscriptions-page.js"));
+assert.ok(!/btn-accent/.test(hub), "le hub génère un bouton principal par carte");
+assert.ok(hub.includes('class="btn btn-secondary pre-dest-cta"'), "le bouton de carte est secondaire (papier plein)");
+assert.ok(/href="universities\.html" class="btn btn-accent"/.test(visible(lire("preinscriptions.html"))), "la page a perdu son action principale");
+});
+
 // ============================================================
 // 5. Le ton
 // ============================================================
