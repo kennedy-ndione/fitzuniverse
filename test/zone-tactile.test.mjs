@@ -29,11 +29,23 @@
 *  2. les outils du parcours gardent 44 px de haut sur téléphone ;
 *  3. le détecteur est prouvé sur des feuilles écrites pour lui.
 *
-* Limite : la base se lit par sélecteur EXACT (`.jy-tool` ↔ `.jy-tool`).
-* Une règle de base écrite autrement (`.jy-tools > a`, `.back-link` pour
-* `a.back-link`) n'est pas vue. Le rendu, lui, est mesuré par le peigne
-* du harnais (scripts/verifier/peigne.mjs : deux contrôles dessinés qui
-* se chevauchent).
+* Limite : la base se lit par sélecteur exact, ou par sa forme nue
+* (`a.back-link:not(…)` → `.back-link`, depuis le 2026-09-29, voir
+* formesDeBase()). Une règle de base écrite autrement (`.jy-tools > a`)
+* n'est pas vue. Le rendu, lui, est mesuré par le peigne du harnais
+* (scripts/verifier/peigne.mjs : deux contrôles dessinés qui se
+* chevauchent).
+*
+* « RETOUR » (2026-09-29, test 4). Jusque-là, `a.back-link` portait
+* l'idiome (mobile-nav.css, payment-redesign.css, login-redesign.css),
+* que la limite ci-dessus rendait invisible : sa base est `.back-link`
+* (css/base.css : margin-bottom:32px). Sur téléphone, le contenu sous
+* « Retour » remontait de 28 px (offers, payment, results,
+* eligibility-test ; Chromium et WebKit, 320 à 414 px) et recouvrait le
+* bas de la zone de toucher. Le lien a trois bases (32 px dans la page,
+* 20 dans le héros des fiches, 0 dans l'en-tête) : aucune compensation
+* unique ne les sert toutes. Sa zone de toucher est donc un ::after posé
+* en absolu, hors de la mise en page.
 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -120,6 +132,25 @@ return [...raisons];
 // exactement -P, déclarés par la même règle. Un `margin:-1px` de texte
 // masqué (.visually-hidden) ou la marge négative d'un héros qui chevauche
 // sa photo ne sont pas des zones tactiles : ce sont leurs propres bases.
+/**
+* Les sélecteurs dont une règle de base compte pour `sel` : lui-même, et
+* sa forme nue quand il n'a qu'un seul composé — sans son type ni ses
+* :not(…). `a.back-link:not(.journey-context .back-link)` a pour base
+* `.back-link`.
+*/
+export function formesDeBase(sel) {
+let nu = "";
+for (let i = 0, prof = 0; i < sel.length; i += 1) {
+if (prof === 0 && sel.startsWith(":not(", i)) { prof = 1; i += 4; continue; }
+if (prof > 0) { if (sel[i] === "(") prof += 1; else if (sel[i] === ")") prof -= 1; continue; }
+nu += sel[i];
+}
+nu = nu.trim();
+if (/[\s>+~]/.test(nu)) return [sel];
+nu = nu.replace(/^[a-z][a-z0-9-]*(?=[.#[:])/i, "");
+return [...new Set([sel, nu])];
+}
+
 const estIdiome = (r) => {
 const marge = vertical(r.decl, "margin");
 const rembourrage = vertical(r.decl, "padding");
@@ -138,7 +169,8 @@ const ecarts = [];
 for (const r of idiomes) {
 for (const sel of r.selecteurs) {
 const base = { padding: {}, margin: {}, sources: new Set(), peinture: new Set() };
-for (const b of bases.filter((x) => x.selecteurs.includes(sel))) {
+const formes = formesDeBase(sel);
+for (const b of bases.filter((x) => x.selecteurs.some((s) => formes.includes(s)))) {
 for (const famille of ["padding", "margin"]) {
 const v = vertical(b.decl, famille);
 for (const cote of ["haut", "bas"]) if (v[cote] !== undefined) { base[famille][cote] = v[cote]; base.sources.add(b.feuille); }
@@ -207,4 +239,93 @@ assert.deepEqual(ecarts(`.e{ background:none; border:none; padding:0; } ${idiome
 assert.deepEqual(ecarts(`@media (min-width:900px){ .f{ padding:20px; } } ${idiome(".f")}`), []);
 // Une valeur qu'on ne sait pas lire est signalée, pas devinée.
 assert.match(ecarts(`.g{ padding:var(--x); } ${idiome(".g")}`)[0], /non comparables/);
+// La panne de « Retour » (2026-09-29) : l'idiome visait `a.x:not(…)`, la
+// base était écrite `.x` — le détecteur la voit par sa forme nue.
+assert.match(ecarts(`.x{ margin-bottom:32px; } ${idiome("a.x:not(.y .x)", "padding-block:10px; margin-block:-10px;")}`)[0], /« a\.x:not\(\.y \.x\) » \(bas\).*bouge de -32 px/);
+assert.deepEqual(formesDeBase("a.back-link:not(.journey-context .back-link)"), ["a.back-link:not(.journey-context .back-link)", ".back-link"]);
+// Un sélecteur à plusieurs composés garde sa seule forme exacte.
+assert.deepEqual(formesDeBase(".header a.back-link"), [".header a.back-link"]);
+});
+
+// ------------------------------------------------------------
+// 4. « Retour » (2026-09-29) : la zone de toucher hors du flux
+// ------------------------------------------------------------
+
+// Les classes des éléments ouverts autour de chaque « Retour » d'une page.
+export function contextesDesRetours(html) {
+const s = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<script\b[\s\S]*?<\/script>/gi, "");
+const VIDES = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+const pile = [];
+const contextes = [];
+for (const m of s.matchAll(/<(\/?)([a-z][a-z0-9-]*)\b([^>]*)>/gi)) {
+const [, fin, balise, attributs] = m;
+const nom = balise.toLowerCase();
+if (fin) { const i = pile.map((p) => p.nom).lastIndexOf(nom); if (i >= 0) pile.length = i; continue; }
+const classes = ((attributs.match(/\bclass="([^"]*)"/) || [])[1] || "").split(/\s+/).filter(Boolean);
+if (nom === "a" && classes.includes("back-link")) contextes.push(pile.flatMap((p) => p.classes));
+if (!VIDES.has(nom) && !/\/\s*$/.test(attributs)) pile.push({ nom, classes });
+}
+return contextes;
+}
+
+const pagesServies = () => listerPublies(RACINE).map((f) => f.replace(/\\/g, "/")).filter((f) => f.endsWith(".html"));
+const feuillesDe = (html) => [...html.replace(/<!--[\s\S]*?-->/g, "").matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"?#]+)/g)].map((m) => m[1]).filter((f) => !/^https?:/.test(f));
+const valeur = (regle, prop) => { const d = regle.decl.filter(([p]) => p === prop); return d.length ? d[d.length - 1][1].replace(/\s+/g, "") : undefined; };
+
+test("zone tactile 4 — « Retour » : 32 px rendus sous le lien, zone de toucher par ::after, en-têtes et barre de l'espace centrés", () => {
+const regles = feuillesServies().flatMap((f) => reglesDe(lire(f), f));
+
+// a. Plus aucun idiome de marge négative sur « Retour » : il écrasait
+//    la marge de 32 px de la base (css/base.css).
+const idiomesRetour = regles.filter((r) => estIdiome(r) && r.selecteurs.some((s) => /back-link/.test(s)));
+assert.deepEqual(idiomesRetour.map((r) => `${r.feuille} ${r.selecteurs.join(", ")}`), [],
+"« Retour » ne prend plus de marge négative : sa zone de toucher est un ::after hors du flux");
+
+// b. Chaque page qui pose un « Retour » hors de la barre de l'espace
+//    charge une feuille qui, sur téléphone, lui donne sa zone de toucher :
+//    ::after absolu, 10 px au-dessus et au-dessous, sur un lien en
+//    position:relative.
+const telephone = (r) => r.at.some((a) => /max-width:\s*720px/.test(a));
+const zoneDans = (feuille) => {
+const rs = reglesDe(lire(feuille), feuille).filter(telephone);
+const apres = rs.find((r) => r.selecteurs.some((s) => /^a\.back-link(:not\([^)]*\))?::after$/.test(s))
+&& valeur(r, "content") !== undefined && valeur(r, "position") === "absolute" && valeur(r, "top") === "-10px" && valeur(r, "bottom") === "-10px");
+const relatif = rs.find((r) => r.selecteurs.some((s) => /^a\.back-link(:not\([^)]*\))?$/.test(s)) && valeur(r, "position") === "relative");
+return !!(apres && relatif);
+};
+const sansZone = [];
+const enteteSansFeuille = [];
+let pagesVues = 0;
+for (const f of pagesServies()) {
+const html = lire(f);
+const hors = contextesDesRetours(html).filter((c) => !c.includes("journey-context"));
+if (!hors.length) continue;
+pagesVues += 1;
+const feuilles = feuillesDe(html).map((x) => path.posix.normalize(path.posix.join(path.posix.dirname(f), x)));
+if (!feuilles.some((x) => zoneDans(x))) sansZone.push(f);
+if (hors.some((c) => c.includes("header")) && !feuilles.includes("css/header.css")) enteteSansFeuille.push(f);
+}
+assert.ok(pagesVues >= 15, `${pagesVues} pages avec un « Retour » hors de l'espace : le périmètre semble faux`);
+// eligibility-questions.html ne charge aucune feuille à zone tactile :
+// ses 32 px ont toujours été intacts, et son « Retour » n'a jamais eu de
+// zone agrandie. Hors du lot du 2026-09-29 (signalé dans la PR) : s'il
+// en reçoit une, retirer l'exception.
+const SANS_ZONE_CONNUE = ["eligibility-questions.html"];
+assert.deepEqual(sansZone.filter((f) => !SANS_ZONE_CONNUE.includes(f)), [], "pages dont le « Retour » n'a pas de zone de toucher ::after sur téléphone");
+assert.deepEqual(enteteSansFeuille, [], "pages dont l'en-tête porte un « Retour » sans charger css/header.css");
+
+// c. Dans l'en-tête, « Retour » vit dans la ligne du logo : marge 0,
+//    déclarée par css/header.css, que chargent TOUTES les pages à en-tête
+//    (universite.html et scholarship-details.html ne chargent pas
+//    catalog.css : leur lien tombait 16 px au-dessus du logo).
+const entete = reglesDe(lire("css/header.css"), "css/header.css").filter((r) => r.selecteurs.includes(".header .back-link") && !r.at.length);
+assert.ok(entete.some((r) => valeur(r, "margin") === "0"), "css/header.css : « .header .back-link { margin:0 } » manquant");
+assert.ok(!reglesDe(lire("css/catalog.css"), "css/catalog.css").some((r) => r.selecteurs.some((s) => /^\.header(:not\([^)]*\)|\.is-scrolled)? \.back-link/.test(s))),
+"le bloc « .header .back-link » vit dans css/header.css seulement, pas aussi dans css/catalog.css");
+
+// d. Dans la barre de l'espace, « Mon parcours » s'aligne sur le titre :
+//    la marge de 32 px de la base agissait dans la rangée flex (16 px
+//    au-dessus du titre, sur ordinateur).
+const barre = reglesDe(lire("css/journey-shell.css"), "css/journey-shell.css").filter((r) => r.selecteurs.includes(".journey-context .back-link") && !r.at.length);
+assert.ok(barre.some((r) => valeur(r, "margin") === "0"), "css/journey-shell.css : « .journey-context .back-link { margin:0 } » manquant");
 });

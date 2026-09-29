@@ -132,3 +132,20 @@ letter-spacing:-.02em;
 font-family:var(--font-affirmation);
 font-weight:700;
 }
+
+/* ==========================================================
+« RETOUR À L'ACCUEIL » SUR LE FOND SOMBRE (2026-09-29)
+==========================================================
+Le lien est posé sur --gradient-deep, hors de la carte. Sa couleur de
+base (--text-light, css/base.css) y lisait à 1,5:1 sur téléphone, 1,9:1
+sur ordinateur. Même clair que les liens des autres surfaces sombres
+du site (.header .back-link et .header-link sur la photo,
+.auth-back-link) : rgba(255,255,255,.94), blanc plein au survol.
+Contraste mesuré à l'écran, gardé par test/retour-contraste.test.mjs. */
+.back-link{
+color:rgba(255,255,255,.94);
+}
+
+.back-link:hover{
+color:#fff;
+}

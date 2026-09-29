@@ -121,5 +121,7 @@ flex-shrink:0;
 @media (max-width:720px){
 .password-toggle{ width:40px; height:40px; }
 .forgot-link{ padding-block:10px; margin-block:-10px; display:inline-block; }
-a.back-link{ padding-block:10px; margin-block:-10px; }
+/* (2026-09-29) La règle « a.back-link » qui suivait est retirée :
+login.html et inscription.html n'ont que .auth-back-link, elle ne
+visait rien — et elle écrasait la marge de 32 px de la base. */
 }

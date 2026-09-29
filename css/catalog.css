@@ -1610,63 +1610,10 @@ de la bannière et celui de la page étant désormais la même encre, ces
 
 }
 
-/* ==========================================================
-LIEN « ACCUEIL » DU HEADER (2026-09-01)
-==========================================================
-Le header des deux pages catalogue ne portait plus aucune navigation
-sur mobile (liens croisés masqués sous 640px par css/header.css,
-Connexion et CTA retirés à la demande de l'utilisateur) : un visiteur
-arrivé sur le catalogue n'avait aucun retour visible vers l'accueil.
-Même composant .back-link que le header de scholarship-details, aux
-couleurs des deux états du header : clair sur la photo (header
-transparent), encre une fois défilé (.is-scrolled, fond papier). Le
-margin-bottom:32px du .back-link générique (css/base.css, pensé pour
-un lien posé au-dessus d'un titre) est neutralisé — ici il vit DANS la
-ligne du header. */
-.header .back-link{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:8px;
-
-margin:0;
-
-font-weight:var(--fw-semibold);
-
-font-size:var(--fs-small);
-
-}
-
-.header .back-link i,
-.header .back-link svg{
-
-width:16px;
-
-height:16px;
-
-flex-shrink:0;
-
-}
-
-.header:not(.is-scrolled) .back-link{
-
-color:rgba(255,255,255,.94);
-
-}
-
-.header.is-scrolled .back-link{
-
-color:var(--text-light);
-
-}
-
-.header.is-scrolled .back-link:hover{
-
-color:var(--text-color);
-
-}
+/* LIEN « ACCUEIL » DU HEADER (2026-09-01) : le bloc « .header
+.back-link » (marge et couleurs) vit dans css/header.css depuis le
+2026-09-29 — universite.html et scholarship-details.html ne chargent
+pas cette feuille, et leur « Retour » tombait 16 px au-dessus du logo. */
 
 /* ==========================================================
    LA VUE PAR PAYS — donner une fin au catalogue (2026-09-06)
