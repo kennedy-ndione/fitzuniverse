@@ -388,6 +388,31 @@ assert.equal(pageDeDestination({ id: "roumanie" }), "preinscription-roumanie.htm
 
 });
 
+test("le hub range ses destinations en grille : trois colonnes au plus, aucune carte en pleine largeur", () => {
+
+// DÉCISION DE CHARLES, 2026-09-28. La carte ouverte prenait toute la
+// ligne (grid-column: 1 / -1) quand la France était seule ouverte : à
+// neuf, c'étaient neuf bandeaux empilés, 3051 px de section à 1280. Et
+// la grille auto-fit passait à quatre colonnes dès 1283 px de fenêtre
+// (4 + 4 + 1). Trois colonnes sur ordinateur, deux sur tablette, une
+// sur téléphone ; les boutons s'alignent en bas de chaque rangée.
+const css = sansCommentaires(lire("css/preinscriptions.css"));
+// La PREMIÈRE règle du sélecteur en début de ligne : celle hors média.
+const regle = (selecteur) => {
+const m = css.match(new RegExp(`(?:^|\\n)${selecteur.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{([^}]*)\\}`));
+assert.ok(m, `${selecteur} introuvable`);
+return m[1];
+};
+
+assert.ok(!/grid-column/.test(regle(".pre-dest--ouverte")), "la destination ouverte reprend toute la ligne");
+assert.match(regle(".pre-dest-liste"), /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/, "trois colonnes sur ordinateur");
+assert.ok(!/\.pre-dest-liste\s*\{[^}]*auto-fit/.test(css), "auto-fit : quatre colonnes dès 1283 px");
+assert.match(css, /@media\s*\(max-width:\s*1023px\)\s*\{\s*\.pre-dest-liste\s*\{[^}]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/, "deux colonnes sur tablette");
+assert.match(css, /@media\s*\(max-width:\s*640px\)\s*\{[^@]*\.pre-dest-liste\s*\{\s*grid-template-columns:\s*1fr;/, "une colonne sur téléphone");
+assert.match(regle(".pre-dest-cta"), /margin-top:\s*auto/, "les boutons ne s'alignent plus en bas de la rangée");
+
+});
+
 // ------------------------------------------------------------------
 // 6. LA PAGE DE DESTINATION — la preuve gratuite, le calcul payant
 // ------------------------------------------------------------------

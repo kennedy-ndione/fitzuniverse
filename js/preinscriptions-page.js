@@ -63,6 +63,14 @@ return `<article class="pre-dest pre-dest--a-venir" id="pays-${escapeHtml(pays.i
 * rejoue lireFrais), et le nombre de pays de résidence vient du registre
 * des couches. Aucun chiffre n'est tapé ici : le premier pays ajouté
 * ferait mentir celui qui le serait.
+*
+* Le bouton est SECONDAIRE (papier), pas principal (2026-09-28, décision
+* de Charles). Ambre tant que la France était seule ouverte ; depuis le
+* 23/09, neuf destinations ouvertes faisaient neuf boutons ambre dans la
+* même section, et un ambre répété neuf fois ne désigne plus rien
+* (contrôle 9 du peigne, scripts/verifier/peigne.mjs). Neuf choix égaux
+* n'ont pas d'action principale : l'ambre de la page reste « Voir les
+* établissements », seul dans sa section. Gardé par « vitrine 4c ».
 */
 function carteOuverte(pays, etat) {
 
@@ -78,7 +86,7 @@ return `<article class="pre-dest pre-dest--ouverte" id="pays-${escapeHtml(pays.i
 ${etat ? `<p class="pre-dest-effectifs"><strong>${etat.etablissements}</strong> établissement${etat.etablissements > 1 ? "s" : ""} au catalogue · <strong>${etat.coutsVerifies}</strong> avec coût vérifié</p>` : ""}
 ${residences.length ? `<p class="pre-dest-residences"><i data-lucide="map-pin" aria-hidden="true"></i><span>Frais, calendrier et pièces vérifiés depuis <strong>${residences.length} pays de résidence</strong></span></p>` : ""}
 <p class="pre-dest-langues"><i data-lucide="languages" aria-hidden="true"></i><span>${escapeHtml(pays.langue.join(", "))}</span></p>
-<a class="btn btn-accent pre-dest-cta" href="${escapeHtml(pageDeDestination(pays))}"><span>Étudier ${escapeHtml(auPays(pays.nom))}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
+<a class="btn btn-secondary pre-dest-cta" href="${escapeHtml(pageDeDestination(pays))}"><span>Étudier ${escapeHtml(auPays(pays.nom))}</span><i data-lucide="arrow-right" aria-hidden="true"></i></a>
 </article>`;
 
 }
