@@ -252,6 +252,15 @@ return TESTS.find((t) => t.aliases.some((a) => n.includes(a))) || null;
 * d'honnêteté de l'en-tête (année de langue incluse). L'allemand, le
 * japonais et le coréen gardent un test d'anglais en second, pour les
 * cursus anglophones.
+*
+* « SELON » (2026-09-29). « Français / Anglais selon la formation »
+* (masters Eiffel) : la langue dépend du master, pas de l'ordre de la
+* chaîne. Chaque autre langue citée apporte alors son premier test,
+* sauf si la liste en a déjà un pour elle : « Français / Anglais selon
+* la formation » → DELF/DALF, TCF, IELTS ; « Allemand / Anglais selon
+* le cursus » reste TestDaF, IELTS. Sans « selon », la première langue
+* décide seule. Une chaîne qui commence par le turc ne suggère toujours
+* rien (règle d'honnêteté, année de langue incluse).
 */
 export function testsPourLangue(langue) {
 const l = String(langue || "").toLowerCase();
@@ -260,7 +269,16 @@ const citees = Object.keys(TESTS_PAR_LANGUE)
 .filter((c) => c.position >= 0)
 .sort((a, b) => a.position - b.position);
 if (!citees.length) return [];
-return TESTS_PAR_LANGUE[citees[0].cle].map((id) => TESTS.find((t) => t.id === id)).filter(Boolean);
+const fiche = (id) => TESTS.find((t) => t.id === id);
+const fiches = TESTS_PAR_LANGUE[citees[0].cle].map(fiche).filter(Boolean);
+if (!fiches.length || !/\bselon\b/.test(l)) return fiches;
+for (const { cle } of citees.slice(1)) {
+const deCetteLangue = (t) => t.langue.toLowerCase() === cle;
+if (fiches.some(deCetteLangue)) continue;
+const premier = TESTS_PAR_LANGUE[cle].map(fiche).find((t) => t && deCetteLangue(t));
+if (premier) fiches.push(premier);
+}
+return fiches;
 }
 
 /**

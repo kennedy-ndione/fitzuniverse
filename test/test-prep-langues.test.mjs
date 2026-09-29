@@ -32,7 +32,13 @@
 *     exemples puis sur TOUS les programmes du vrai catalogue ;
 *  5. la langue écrite dans une phrase, sigles gardés ;
 *  6. une chaîne bilingue : la première langue citée décide, et la
-*     règle d'honnêteté du turc (aucun test à suggérer) tient.
+*     règle d'honnêteté du turc (aucun test à suggérer) tient ; avec
+*     « selon » (« Français / Anglais selon la formation », masters
+*     Eiffel), chaque langue citée apporte son test (2026-09-29).
+*
+* Preuves par mutation (2026-09-29) : la règle « selon » retirée de
+* testsPourLangue() → 6c rouge ; la carte revenue à « {université}
+* enseigne en {langue} » → 3 rouge.
 *
 * Preuves par mutation (2026-09-28) : `const p = d.data();` remis dans
 * languesParNomUniversite() → tests 1a, 1b et 2 rouges (« d.data is not
@@ -170,8 +176,12 @@ assert.doesNotMatch(corps, /\.data\(\)/,
 // d'une recherche par nom écrite dans la page.
 assert.match(src, /const langue = langueDeLaCandidature\(app, langues\);/,
 "collecterSuggestions() doit prendre la langue de la candidature par langueDeLaCandidature()");
-assert.match(src, /enseigne en \$\{langueDansUnePhrase\(langue\)\}/,
-"la carte doit écrire la langue par langueDansUnePhrase(), qui garde les sigles");
+assert.match(src, /Langue d'enseignement : \$\{langueDansUnePhrase\(langue\)\}/,
+"la carte doit écrire « Langue d'enseignement : {langue} », par langueDansUnePhrase(), qui garde les sigles");
+// « Aix-Marseille Université enseigne en français / anglais selon la
+// formation » : lourd, et faux pour une université qui enseigne dans
+// plusieurs langues (demande de Charles, 2026-09-29).
+assert.doesNotMatch(src, /enseigne en \$\{/, "la carte ne dit plus « {université} enseigne en {langue} »");
 assert.doesNotMatch(src, /langue\.toLowerCase\(\)/,
 "langue.toLowerCase() écrirait « niveau b2 » et « jlpt n2 »");
 });
@@ -236,7 +246,7 @@ assert.equal(langueDansUnePhrase(undefined), "");
 const idsPour = (langue) => testsPourLangue(langue).map((t) => t.id);
 
 test("6a. dans une chaîne bilingue, la première langue citée décide", () => {
-assert.deepEqual(idsPour("Français / Anglais selon la formation"), ["delf-dalf", "tcf"]);
+assert.deepEqual(idsPour("Français / Anglais"), ["delf-dalf", "tcf"]);
 assert.deepEqual(idsPour("Allemand / Anglais selon le cursus"), ["testdaf", "ielts"]);
 assert.deepEqual(idsPour("Japonais (JLPT N2) / Anglais (B2) selon le cursus"), ["jlpt", "toefl"]);
 assert.deepEqual(idsPour("Coréen / Anglais selon le département"), ["topik", "toefl"]);
@@ -256,4 +266,33 @@ const brut = JSON.parse(lire("assets/data/catalogue.json"));
 const turques = [...new Set(brut.programs.map((p) => p.language).filter((l) => /^turc\b/i.test(l || "")))];
 assert.ok(turques.length > 0, "aucune langue du catalogue ne commence par « Turc » : cette garde doit être relue");
 for (const l of turques) assert.deepEqual(idsPour(l), [], `« ${l} » suggère ${idsPour(l).join(", ")}`);
+});
+
+test("6c. « selon » : la langue dépend de la formation, chaque langue citée apporte son test", () => {
+// Masters Eiffel (2026-09-29) : « Français / Anglais selon la
+// formation ». La première langue seule donnait DELF/TCF, et un master
+// enseigné en anglais restait sans IELTS.
+assert.deepEqual(idsPour("Français / Anglais selon la formation"), ["delf-dalf", "tcf", "ielts"]);
+assert.deepEqual(idsPour("Français / Anglais selon le programme"), ["delf-dalf", "tcf", "ielts"]);
+assert.deepEqual(idsPour("Anglais / Français selon le programme"), ["ielts", "toefl", "duolingo", "delf-dalf"]);
+assert.deepEqual(idsPour("Anglais / Allemand selon le cursus"), ["ielts", "toefl", "duolingo", "testdaf"]);
+// Une langue déjà couverte par un test de la liste n'en ajoute pas un
+// second : l'anglais a déjà IELTS ou TOEFL derrière l'allemand, le
+// japonais et le coréen.
+assert.deepEqual(idsPour("Allemand / Anglais selon le cursus"), ["testdaf", "ielts"]);
+assert.deepEqual(idsPour("Japonais (JLPT N2) / Anglais (B2) selon le cursus"), ["jlpt", "toefl"]);
+assert.deepEqual(idsPour("Coréen / Anglais selon le département"), ["topik", "toefl"]);
+// Une langue sans fiche n'ajoute rien.
+assert.deepEqual(idsPour("Français / Arabe selon la filière"), ["delf-dalf", "tcf"]);
+// Règle d'honnêteté : une chaîne qui commence par le turc ne suggère
+// toujours rien, « selon » ou pas (année de langue incluse).
+assert.deepEqual(idsPour("Turc ou anglais selon le programme, après une année préparatoire de turc"), []);
+assert.deepEqual(idsPour("Turc / Anglais selon le programme (cours de turc inclus)"), []);
+
+// Sur le vrai catalogue : chaque master Eiffel « selon la formation »
+// propose DELF/TCF ET IELTS.
+const brut = JSON.parse(lire("assets/data/catalogue.json"));
+const eiffel = brut.programs.filter((p) => /eiffel/.test(p.scholarshipId || "") && /^Français \/ Anglais selon\b/.test(p.language || ""));
+assert.ok(eiffel.length >= 40, `${eiffel.length} programmes Eiffel « Français / Anglais selon… » : le catalogue a changé, cette garde doit être relue`);
+for (const p of eiffel) assert.deepEqual(idsPour(p.language), ["delf-dalf", "tcf", "ielts"], `${p.id} : ${idsPour(p.language).join(", ")}`);
 });

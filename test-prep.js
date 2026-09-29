@@ -147,7 +147,7 @@ cartes.push(`
 <article class="jy-card">
 <div class="jy-app-top">
 <h3>${fiche.nom}</h3>
-<span class="jy-app-meta">Suggéré — ${app.university || "votre programme"} enseigne en ${langueDansUnePhrase(langue)}</span>
+<span class="jy-app-meta">Suggéré — Langue d'enseignement : ${langueDansUnePhrase(langue)}</span>
 </div>
 <p class="jy-opp-reason"><i data-lucide="book-open"></i><span>${fiche.exigenceHabituelle}</span></p>
 <div class="jy-tools">
