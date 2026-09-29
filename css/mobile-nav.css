@@ -821,10 +821,26 @@ la zone de toucher est agrandie par rembourrage + marge négative :
 le rendu ne bouge pas d'un pixel, seul le doigt y gagne. */
 @media (max-width:720px){
 
-/* Liens « Retour » texte (offers, results, diagnostic, catalogue). */
+/* Liens « Retour » texte (offers, results, eligibility-test, catalogue,
+fiches). Zone de toucher : un ::after posé en absolu, 10 px au-dessus
+et au-dessous du lien, HORS de la mise en page (2026-09-29). Jusque-là,
+l'idiome padding-block:10px + margin-block:-10px ÉCRASAIT la marge de
+base du lien (.back-link{margin-bottom:32px}, css/base.css) : le
+contenu sous « Retour » remontait de 28 px et recouvrait le bas de la
+zone. Le lien a trois bases (32 px dans la page, 20 dans le héros des
+fiches, 0 dans l'en-tête) : aucune compensation unique ne les sert
+toutes, le ::after n'en touche aucune. Gardé par
+test/zone-tactile.test.mjs (test 4). */
 a.back-link:not(.journey-context .back-link){
-padding-block:10px;
-margin-block:-10px;
+position:relative;
+}
+a.back-link:not(.journey-context .back-link)::after{
+content:"";
+position:absolute;
+top:-10px;
+bottom:-10px;
+left:0;
+right:0;
 }
 
 /* Pastilles de la barre haute de l'espace : 40px (36/38 avant). */

@@ -195,7 +195,11 @@ color:var(--primary-900);
 
 /* Cibles tactiles (audit 2026-09-03). */
 @media (max-width:720px){
-a.back-link{ padding-block:10px; margin-block:-10px; }
+/* « Retour » : zone de toucher hors du flux, comme css/mobile-nav.css
+(que cette page ne charge pas) — la marge négative écrasait les 32 px
+sous le lien (2026-09-29, test/zone-tactile.test.mjs). */
+a.back-link{ position:relative; }
+a.back-link::after{ content:""; position:absolute; top:-10px; bottom:-10px; left:0; right:0; }
 .free-step-link{ padding-block:8px; margin-block:-8px; }
 }
 

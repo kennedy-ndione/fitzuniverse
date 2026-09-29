@@ -139,6 +139,11 @@ flex:1 1 auto;
 display:inline-flex;
 align-items:center;
 gap:6px;
+/* margin:0 (2026-09-29) : la marge de base (css/base.css,
+margin-bottom:32px) agissait dans cette rangée flex, et « Mon
+parcours » tombait 16 px au-dessus du titre sur ordinateur. Sur
+téléphone, css/mobile-nav.css la remettait déjà à 0. */
+margin:0;
 font-size:.85rem;
 font-weight:600;
 color:var(--amber-700);
