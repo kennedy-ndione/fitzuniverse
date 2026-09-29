@@ -853,14 +853,31 @@ min-height:44px;
 min-height:40px;
 }
 
-/* Liens d'action posés dans un texte (alerte de bienvenue, étape
-gratuite des formules, outils du parcours). */
-.welcome-alert-cta,
-.free-step-link,
-.jy-tool{
+/* Lien d'action posé dans un texte (étape gratuite des formules). */
+.free-step-link{
 padding-block:8px;
 margin-block:-8px;
 }
+
+/* Lien de l'alerte de bienvenue : il porte margin-top:10px
+(dashboard.css), que la marge de -8px écrasait — le lien remontait de
+7px contre son paragraphe (mesuré le 2026-09-28). 2px de marge + 8px de
+rembourrage rendent les 10px ; en bas, -8 + 8 = 0, comme avant. */
+.welcome-alert-cta{
+padding-block:8px;
+margin-block:2px -8px;
+}
+
+/* Outils du parcours : 38,5px → 44px. Ce sont des pastilles À BORDURE
+déjà rembourrées (padding:8px 13px, css/journey.css) : l'idiome de
+cette section (rembourrage + marge négative) remplaçait leur
+rembourrage au lieu de l'agrandir, et sa marge de -8px leur retirait
+16px de place. Dans une rangée qui passe à la ligne, deux lignes
+d'outils se chevauchaient de 8px (test-prep, espace-bourse ; mesuré le
+2026-09-28 à 320, 375 et 414px, Chromium et WebKit). Une pastille
+visible gagne sa hauteur tactile visiblement, et l'écart de 8px de
+.jy-tools reste entier. Gardé par test/zone-tactile.test.mjs. */
+.jy-tool{ min-height:44px; }
 
 /* Libellés de la barre d'onglets : 10,6px → 11,5px (Android : 12sp,
 iOS : 10pt) — lisibles sans grossir la barre. */

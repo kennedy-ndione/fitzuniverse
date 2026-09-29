@@ -136,7 +136,59 @@ const LIRE_PAGE = () => {
       if (bas.length === rangee.length && Math.max(...bas) - Math.min(...bas) > 2) cartes.push(`boutons non alignés (${bas.map(Math.round).join(" / ")} px)`);
     }
   }
-  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), systeme: [...new Set(systeme)].slice(0, 8), courts: [...new Set(courts)].slice(0, 8), principaux, cartes: [...new Set(cartes)].slice(0, 8), titre: document.title };
+  // 11. (2026-09-28) deux contrôles DESSINÉS (fond ou bordure) qui se
+  //     chevauchent. Sur téléphone, la « zone tactile » de mobile-nav.css
+  //     (rembourrage + marge négative) posée sur .jy-tool, déjà rembourré,
+  //     retirait 16 px à chaque outil : dans une rangée qui passe à la
+  //     ligne, la seconde ligne recouvrait la première de 8 px. Seuls les
+  //     contrôles EN FLUX comptent : un en-tête fixe, une barre d'onglets
+  //     ou un bouton posé en absolu recouvrent le contenu par construction.
+  //     Et on mesure la partie PEINTE : une pastille qui dépasse d'une
+  //     rangée à défilement (.fitz-chips, overflow-x:auto) est rognée par
+  //     elle — sa boîte déborde sur la colonne voisine, pas son dessin.
+  const peint = (e) => {
+    const cs = getComputedStyle(e);
+    if (cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== "transparent") return true;
+    if (cs.backgroundImage !== "none") return true;
+    return ["Top", "Right", "Bottom", "Left"].some((c) => parseFloat(cs[`border${c}Width`]) > 0 && !/^(none|hidden)$/.test(cs[`border${c}Style`]));
+  };
+  // La boîte visible d'un contrôle en flux, rognée par chaque ancêtre qui
+  // coupe ce qui dépasse ; null s'il est hors flux ou rogné tout entier.
+  const boiteVisible = (e) => {
+    const r = e.getBoundingClientRect();
+    const g = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+    for (let n = e; n && n !== document.body; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (/^(fixed|sticky|absolute)$/.test(cs.position)) return null;
+      // display:contents ne produit pas de boîte : rien à rogner.
+      if (n === e || cs.display === "contents") continue;
+      const c = n.getBoundingClientRect();
+      if (cs.overflowX !== "visible") { g.left = Math.max(g.left, c.left); g.right = Math.min(g.right, c.right); }
+      if (cs.overflowY !== "visible") { g.top = Math.max(g.top, c.top); g.bottom = Math.min(g.bottom, c.bottom); }
+    }
+    return g.right - g.left > 1 && g.bottom - g.top > 1 ? g : null;
+  };
+  const nommer = (e) => `${decrire(e)} « ${e.textContent.trim().replace(/\s+/g, " ").slice(0, 32)} »`;
+  const dessines = [];
+  const boitesDessinees = [];
+  for (const e of document.querySelectorAll("a[href], button, [role='button'], summary, label")) {
+    if (!visible(e) || !e.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }) || e.closest("[aria-hidden='true']") || !peint(e)) continue;
+    const g = boiteVisible(e);
+    if (g) { dessines.push(e); boitesDessinees.push(g); }
+  }
+  const chevauchements = [];
+  for (let i = 0; i < dessines.length; i++) {
+    for (let j = i + 1; j < dessines.length; j++) {
+      if (dessines[i].contains(dessines[j]) || dessines[j].contains(dessines[i])) continue;
+      const a = boitesDessinees[i], b = boitesDessinees[j];
+      const dx = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const dy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      // Plus d'un pixel dans les deux sens : deux bordures accolées
+      // (margin:-1px d'un groupe de boutons) ne sont pas un chevauchement.
+      if (dx > 1 && dy > 1) chevauchements.push(`${nommer(dessines[i])} / ${nommer(dessines[j])} (${Math.round(Math.min(dx, dy))} px)`);
+    }
+  }
+  return { scrollW: document.scrollingElement.scrollWidth, innerW: window.innerWidth, muets: [...new Set(muets)].slice(0, 8), vides: [...new Set(vides)].slice(0, 8), systeme: [...new Set(systeme)].slice(0, 8), courts: [...new Set(courts)].slice(0, 8), principaux, cartes: [...new Set(cartes)].slice(0, 8), chevauchements: chevauchements.slice(0, 6), nbChevauchements: chevauchements.length, titre: document.title };
 };
 
 // Deux lignes de la carte « Analyse en direct » l'une sur l'autre.
@@ -177,6 +229,17 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
     // qu'au survol : on survole la première avant de lire la page.
     const item = await page.$(".ai-chat-history-item");
     if (item) { await item.hover().catch(() => {}); await page.waitForTimeout(150); }
+    // (2026-09-28) Les phases de l'espace qui ne sont pas encore les
+    // siennes sont scellées (js/revelation.js), et « Jeter un œil » les
+    // ouvre d'un clic. Leur contenu est à un geste de l'étudiant : le
+    // peigne l'ouvre aussi. Sans ce clic, les outils du parcours
+    // (phases 3 et 5) n'étaient jamais peints, et leur chevauchement
+    // jamais vu.
+    let devoilees = 0;
+    for (const bouton of await page.$$(".jy-voile-btn")) {
+      if (await bouton.isVisible().catch(() => false)) { await bouton.click().catch(() => {}); devoilees += 1; }
+    }
+    if (devoilees) await page.waitForTimeout(250);
     const lu = await page.evaluate(LIRE_PAGE);
     // Lot DEUX-MOTEURS (2026-09-11) : la largeur de référence est celle
     // de la FENÊTRE DEMANDÉE, pas window.innerWidth. En émulation mobile,
@@ -192,6 +255,7 @@ export async function peignerPage({ navigateur, base, page: cible, session, vue 
     if (vue.mobile && lu.courts.length) erreurs.push(`bouton sous 44 px sur téléphone : ${lu.courts.join(", ")}`);
     if (lu.principaux.length) erreurs.push(`hiérarchie des boutons : ${lu.principaux.join(" ; ")}`);
     if (!vue.mobile && lu.cartes.length) erreurs.push(`cartes de formule : ${lu.cartes.join(" ; ")}`);
+    if (lu.chevauchements.length) erreurs.push(`contrôles dessinés qui se chevauchent (${lu.nbChevauchements}) : ${lu.chevauchements.join(" ; ")}`);
     if (cible === "index.html") {
       await page.evaluate(() => document.getElementById("fitz-demo")?.scrollIntoView());
       for (let i = 0; i < 12; i++) {
