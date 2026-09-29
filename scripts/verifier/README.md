@@ -30,8 +30,28 @@ Pour chaque profil d'étudiant (`profils.mjs`), il :
    - il y a exactement `min(3, retenues)` cartes, chacune avec sa raison visible ;
    - la décomposition du score n'est pas vide et chaque axe a son pourcentage ;
    - les pays, la phrase du verdict et les cinq étapes de réflexion sont là, cochées ;
+   - l'analyse de Fitz, lancée sans `await` après le rendu, est attendue
+     jusqu'à sa **fin** ; la lecture doublée doit s'afficher en quatre
+     cartes (« En bref », « Votre atout », « Votre frein », « Par où
+     commencer ») ;
    - **aucune** exception JavaScript, **aucune** erreur de console, **aucun**
-     fichier `.js` / `.css` / `.json` manquant.
+     fichier `.js` / `.css` / `.json` manquant. La console n'est relevée
+     qu'**après** la fin de l'analyse de Fitz.
+
+Une fois par moteur, le premier profil est rejoué avec **Fitz refusé**
+(contrôle « analyse Fitz refusée »), comme le refuse le vrai serveur au
+plafond des sessions anonymes. L'échec doit s'afficher avec le message du
+serveur et un bouton « Réessayer », le reste de la page doit rester entier,
+et l'échec doit être signalé en console : cette ligne-là est attendue, une
+fois, par son texte exact, et toute autre erreur compte.
+
+Pourquoi attendre la fin (lot FITZ-CONSOLE, 2026-09-28) : `verifier.mjs
+--moteur=webkit licence-obtenue` échouait une passe sur trois. L'ancienne
+doublure faisait échouer l'analyse, et l'erreur console de cet échec
+arrivait entre −19 et +187 ms autour du relevé. Elle a été comptée 6 fois
+sur 32 passes chronométrées, sous les deux moteurs, alors que la page
+finissait chaque fois dans le même état : le verdict dépendait du
+chronométrage, pas du site.
 
 Puis, une fois pour toutes (ces pages ne dépendent d'aucun profil), il ouvre
 **la liste des bourses et deux fiches** — une à cycle clos, une à cycle ouvert,
@@ -116,7 +136,7 @@ moteur.
 | `questionnaire.mjs` | joue le questionnaire ; pilote par `#question[data-question]`, et attend après chaque clic *soit* la question suivante *soit* l'arrivée sur `results.html` (la dernière réponse peut finir pendant l'attente) |
 | `profils.mjs` | les six étudiants joués — un par piste d'études |
 | `pages.mjs` | la liste des bourses et deux fiches, recomptées contre le catalogue |
-| `hors-ligne.mjs` | les doublures Firebase / Lucide / polices (option `polices: true` : les polices Google passent, et elles seules) ; la liste du bruit de console commune à tous les modules |
+| `hors-ligne.mjs` | les doublures Firebase / Lucide / polices (option `polices: true` : les polices Google passent, et elles seules) ; pour un visiteur, une session anonyme et la lecture du diagnostic écrite comme par le vrai serveur (option `fitz: "refus"` : le refus du plafond des sessions anonymes) ; la liste du bruit de console commune à tous les modules |
 | `captures-iphone.mjs` | les captures ciblées 375 × 812 sous chaque moteur (`iphone`) |
 | `captures-avant-apres.mjs` | captures Chromium 375/1280 des pages touchées par un lot visuel, couleurs de la surface Fitz, comparaison pixel à pixel (`node scripts/verifier/captures-avant-apres.mjs avant\|apres`) |
 | `serveur.mjs` | le site servi en local (`Cache-Control: no-store`) |

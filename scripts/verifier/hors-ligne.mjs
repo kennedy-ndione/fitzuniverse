@@ -53,6 +53,63 @@ const SYMBOLES = {
   "firebase-functions.js": ["getFunctions", "httpsCallable", "connectFunctionsEmulator"]
 };
 
+// ------------------------------------------------------------
+// LA LECTURE DU DIAGNOSTIC PAR FITZ (lot FITZ-CONSOLE, 2026-09-28)
+// ------------------------------------------------------------
+// En production, results.html ouvre une session ANONYME pour le
+// visiteur (js/ai/diagnostic-fitz.js, identifier()), et le vrai serveur
+// lui ÉCRIT sa lecture : `diagnostic` est la seule tâche ouverte au
+// gratuit (functions/fitz.js). La doublure fait de même.
+//
+// Avant ce lot, signInAnonymously était une coquille qui ne rendait
+// AUCUN utilisateur (ce que le vrai SDK ne fait jamais), puis
+// fitzGenerate refusait « unauthenticated ». Le harnais ne voyait donc
+// que l'échec, jamais une lecture affichée. Et l'erreur console de cet
+// échec, émise par une analyse lancée sans `await` en fin de rendu
+// (results.js), arrivait entre −19 et +187 ms autour du relevé de
+// verifierUnProfil() : comptée 6 passes sur 32, selon le moteur et le
+// moment, sur une page chaque fois dans le même état. Le relevé attend
+// désormais la fin de l'analyse (voir lireAnalyseFitz() dans
+// verifier.mjs).
+//
+// Les quatre titres sont ceux qu'impose le prompt `diagnostic`
+// (js/ai/prompts.js) ; diagnostic-fitz.js en fait quatre cartes.
+export const TITRES_LECTURE_FITZ = ["En bref", "Votre atout", "Votre frein", "Par où commencer"];
+
+// Diffusée par fragments, comme le vrai serveur (response.sendChunk).
+const MORCEAUX_LECTURE_FITZ = TITRES_LECTURE_FITZ.flatMap((titre) => [
+  `### ${titre}\n`,
+  `Lecture doublée par le harnais, section « ${titre} » : hors ligne, aucun modèle n'est appelé.\n`,
+  "\n"
+]);
+
+// L'option `fitz: "refus"` de couperLeReseau() : le refus que le vrai
+// serveur oppose à un visiteur quand le plafond des sessions anonymes
+// est atteint (functions/fitz.js, « Plafond des sessions anonymes
+// atteint »). C'est l'échec réaliste d'un visiteur ; il est
+// réessayable, donc il passe aussi par les réessais de generate().
+export const REFUS_FITZ = {
+  code: "functions/resource-exhausted",
+  fitzCode: "QUOTA_FOURNISSEUR",
+  message: "Fitz est très sollicité en ce moment. Réessayez dans quelques minutes."
+};
+
+// Le module doublé de `httpsCallable`, côté visiteur. Toute autre
+// fonction que fitzGenerate, et toute autre tâche que `diagnostic`,
+// garde le refus « unauthenticated » du LOT S3 (voir IMPLEMENTATIONS).
+function callableVisiteur(fitz) {
+  return `const __MORCEAUX = ${JSON.stringify(MORCEAUX_LECTURE_FITZ)};
+const __REFUS = ${JSON.stringify(fitz === "refus" ? REFUS_FITZ : null)};
+function __horsLigne(){ const e = new Error('[harnais] hors ligne'); e.code = 'unauthenticated'; return e; }
+function __echec(charge){ if (!charge || charge.task !== 'diagnostic') return __horsLigne(); if (!__REFUS) return null; const e = new Error(__REFUS.message); e.code = __REFUS.code; e.details = { fitzCode: __REFUS.fitzCode }; return e; }
+export function httpsCallable(_f, nom){
+  if (nom !== 'fitzGenerate') return function(){ return Promise.reject(__horsLigne()); };
+  const appel = function(charge){ const e = __echec(charge); return e ? Promise.reject(e) : Promise.resolve({ data: { text: __MORCEAUX.join('') } }); };
+  appel.stream = function(charge){ const e = __echec(charge); if (e) return Promise.reject(e); return Promise.resolve({ stream: (async function*(){ for (const delta of __MORCEAUX) yield { delta }; })(), data: Promise.resolve({ text: __MORCEAUX.join('') }) }); };
+  return appel;
+}`;
+}
+
 // Quelques symboles ont besoin d'un vrai comportement, pas d'une
 // coquille : le code du site consomme leur résultat immédiatement.
 const IMPLEMENTATIONS = {
@@ -67,6 +124,9 @@ const IMPLEMENTATIONS = {
   getCountFromServer: "export function getCountFromServer(){ return Promise.resolve({ data: () => ({ count: 0 }) }); }",
   setPersistence: "export function setPersistence(){ return Promise.resolve(); }",
   writeBatch: "export function writeBatch(){ return { set(){}, update(){}, delete(){}, commit: () => Promise.resolve() }; }",
+  // Lot FITZ-CONSOLE : une vraie session anonyme, comme le SDK en ouvre
+  // une au visiteur de results.html (voir TITRES_LECTURE_FITZ).
+  signInAnonymously: "export function signInAnonymously(){ return Promise.resolve({ user: { uid: 'harnais-anonyme', isAnonymous: true } }); }",
   // LOT S3 : la Cloud Function `portails` sert la carte des portails de
   // candidature, retirée du catalogue public. Hors ligne et sans compte,
   // la doublure rend ce que rendrait le vrai serveur à un visiteur : un
@@ -75,7 +135,9 @@ const IMPLEMENTATIONS = {
   // portail, sans cadenas et sans bloc vide. La coquille par défaut
   // aurait « marché » aussi, en levant un TypeError attrapé plus loin :
   // on préfère doubler le refus réel plutôt que compter sur une panne.
-  httpsCallable: "export function httpsCallable(){ return function(){ const e = new Error('[harnais] hors ligne'); e.code = 'unauthenticated'; return Promise.reject(e); }; }"
+  // Lot FITZ-CONSOLE : sauf fitzGenerate, qui écrit au visiteur la
+  // lecture du diagnostic, comme le vrai serveur (voir plus haut).
+  httpsCallable: callableVisiteur("lecture")
 };
 
 // En mode admin, la doublure rend un utilisateur connecté et un
@@ -166,7 +228,7 @@ export function getDocs(ref){ const c = ref && ref.__chemin || ''; if (c.endsWit
 
 }
 
-function doublureFirebase(fichier, admin = false, etudiant = null) {
+function doublureFirebase(fichier, admin = false, etudiant = null, fitz = "lecture") {
 
   const noms = SYMBOLES[fichier];
 
@@ -184,7 +246,8 @@ function doublureFirebase(fichier, admin = false, etudiant = null) {
   const implementations = etudiant
     ? { ...IMPLEMENTATIONS, ...implementationsEtudiant(etudiant) }
     : admin && typeof admin === "object" ? { ...IMPLEMENTATIONS, ...implementationsAdmin(admin) }
-    : admin ? { ...IMPLEMENTATIONS, ...IMPLEMENTATIONS_ADMIN } : IMPLEMENTATIONS;
+    : admin ? { ...IMPLEMENTATIONS, ...IMPLEMENTATIONS_ADMIN }
+    : fitz === "refus" ? { ...IMPLEMENTATIONS, httpsCallable: callableVisiteur("refus") } : IMPLEMENTATIONS;
 
   return noms
     .map((nom) => implementations[nom] || `export function ${nom}(){ return { __doublure: "${nom}" }; }`)
@@ -235,6 +298,12 @@ export async function couperLeReseau(context, options = {}) {
   // (captures-iphone.mjs) ; le défaut reste hors ligne, tout compris.
   const polices = options.polices === true;
 
+  // Lot FITZ-CONSOLE (2026-09-28) : `fitz: "refus"` fait refuser la
+  // lecture du diagnostic comme le vrai serveur au plafond des sessions
+  // anonymes (REFUS_FITZ). Par défaut, la lecture est écrite. Mode
+  // visiteur seulement.
+  const fitz = options.fitz === "refus" ? "refus" : "lecture";
+
   await context.route("**/*", async (route) => {
 
     const url = route.request().url();
@@ -265,7 +334,7 @@ export async function couperLeReseau(context, options = {}) {
       return route.fulfill({
         status: 200,
         contentType: "text/javascript; charset=utf-8",
-        body: doublureFirebase(firebase[1], admin, etudiant)
+        body: doublureFirebase(firebase[1], admin, etudiant, fitz)
       });
     }
 

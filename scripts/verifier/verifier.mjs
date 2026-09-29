@@ -54,7 +54,7 @@
  */
 
 import { demarrerServeur } from "./serveur.mjs";
-import { couperLeReseau, estBruitConsole } from "./hors-ligne.mjs";
+import { couperLeReseau, estBruitConsole, TITRES_LECTURE_FITZ, REFUS_FITZ } from "./hors-ligne.mjs";
 import { jouerQuestionnaire } from "./questionnaire.mjs";
 import { verifierPagesCatalogue } from "./pages.mjs";
 import { verifierEspaceEtudiant } from "./espace.mjs";
@@ -77,6 +77,18 @@ const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..
 // lecture 6). La marge sert au chargement du catalogue, pas au décor.
 const ATTENTE_RESULTATS = 60000;
 
+// L'analyse de Fitz, après les résultats (lot FITZ-CONSOLE, 2026-09-28).
+// La lecture doublée s'écrit en quelques millisecondes ; le refus
+// arrive après les deux réessais de generate() (0,5 s puis 1 s). Ces
+// quinze secondes évitent seulement d'attendre sans fin : un bloc encore
+// « en cours » au-delà est un défaut.
+const ATTENTE_FITZ = 15000;
+
+// Sous refus, l'échec DOIT être signalé en console (FitzError
+// « signalable », js/ai/ai-errors.js) : cette ligne-là, et elle seule.
+// Chromium ajoute la pile à la suite : on compare la première ligne.
+const LIGNE_REFUS_FITZ = `[Fitz] analyse du diagnostic : FitzError: ${REFUS_FITZ.message}`;
+
 // Les 404 sur ces extensions font ÉCHOUER : une feuille de style ou un
 // module manquant casse la page. Les autres (images, polices) sont
 // signalés sans faire échouer — dans ce harnais hors ligne, une
@@ -95,14 +107,66 @@ function estBloquante(url) {
   return EXTENSIONS_BLOQUANTES.some((ext) => chemin.endsWith(ext));
 }
 
-async function verifierUnProfil({ navigateur, base, profil }) {
+/**
+ * L'analyse de Fitz, une fois FINIE (lot FITZ-CONSOLE, 2026-09-28).
+ *
+ * results.js la lance sans `await`, en dernier : elle se termine APRÈS
+ * l'apparition des résultats. Tant que le harnais relevait la console
+ * dès les résultats affichés, une erreur de l'analyse arrivait entre −19
+ * et +187 ms autour du relevé. Elle était comptée 6 passes sur 32, selon
+ * le moteur et le moment, alors que la page finissait chaque fois dans
+ * le même état. On attend donc l'état final du bloc, quel qu'il soit,
+ * AVANT le relevé : l'erreur console qui l'accompagne est émise avant
+ * lui (même tâche, diagnostic-fitz.js) et arrive donc avant la réponse
+ * de cette attente.
+ */
+async function lireAnalyseFitz(page) {
+
+  const etat = await page.waitForFunction(
+    () => {
+      const bloc = document.getElementById("fitzAnalysis");
+      if (!bloc) return "absent";
+      if (bloc.hidden) return "masqué";
+      if (bloc.classList.contains("is-ready")) return "affichée";
+      if (bloc.classList.contains("is-error")) return "échec affiché";
+      return false;
+    },
+    null,
+    { timeout: ATTENTE_FITZ }
+  ).then((h) => h.jsonValue()).catch(() => `toujours en cours après ${ATTENTE_FITZ / 1000} s`);
+
+  const vu = await page.evaluate(() => {
+    // Visible à l'œil, pas seulement présent : un élément masqué garde
+    // son textContent, et un bouton `hidden` existe toujours dans le DOM.
+    const visible = (el) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden" && (!el.checkVisibility || el.checkVisibility());
+    };
+    const bloc = document.getElementById("fitzAnalysis");
+    const message = bloc?.querySelector(":scope > p");
+    return {
+      titres: [...(bloc ? bloc.querySelectorAll(".fitz-point") : [])].filter(visible).map((c) => (c.querySelector("h3")?.textContent || "").trim()),
+      message: visible(message) ? message.textContent.trim() : "",
+      reessayer: visible(bloc?.querySelector("#fitzAnalysisRetry"))
+    };
+  });
+
+  return { etat, ...vu };
+
+}
+
+// `fitz` : "lecture" (défaut), Fitz écrit la lecture comme le vrai
+// serveur ; "refus", il la refuse comme au plafond des sessions anonymes
+// (REFUS_FITZ, hors-ligne.mjs).
+async function verifierUnProfil({ navigateur, base, profil, fitz = "lecture" }) {
 
   const contexte = await navigateur.newContext({
     viewport: { width: 390, height: 844 },
     locale: "fr-FR"
   });
 
-  await couperLeReseau(contexte);
+  await couperLeReseau(contexte, { fitz });
 
   const page = await contexte.newPage();
 
@@ -247,15 +311,47 @@ async function verifierUnProfil({ navigateur, base, profil }) {
 
     notes.push(`score ${vu.score} (${vu.palier}) · ${vu.retenu} retenues · ${vu.cartes} cartes · ${vu.decomposition.length} axes · ${vu.pays} pays · réflexion ${(dureeReflexion / 1000).toFixed(1)} s`);
 
+    // ---- 4 bis. L'analyse de Fitz, une fois finie (voir lireAnalyseFitz)
+    const analyse = await lireAnalyseFitz(page);
+
+    if (fitz === "refus") {
+      // Ce que l'étudiant voit quand la lecture n'arrive pas : le message
+      // du serveur, un moyen de relancer, et le reste de la page (vérifié
+      // ci-dessus comme pour tout profil).
+      if (analyse.etat !== "échec affiché") anomalies.push(`Fitz refusé : l'analyse finit en « ${analyse.etat} » au lieu d'afficher l'échec.`);
+      else {
+        if (analyse.message !== REFUS_FITZ.message) anomalies.push(`Fitz refusé : ${analyse.message ? `message affiché « ${analyse.message} »` : "aucun message visible"}, attendu celui du serveur, « ${REFUS_FITZ.message} ».`);
+        if (!analyse.reessayer) anomalies.push("Fitz refusé : aucun bouton « Réessayer » visible sous l'échec.");
+      }
+      notes.push(`analyse de Fitz refusée : ${analyse.etat}, « ${analyse.message} »${analyse.reessayer ? ", bouton Réessayer" : ""}`);
+    } else {
+      if (analyse.etat !== "affichée") anomalies.push(`L'analyse de Fitz finit en « ${analyse.etat} » au lieu de s'afficher${analyse.message ? ` : « ${analyse.message} »` : ""}.`);
+      else if (analyse.titres.join(" | ") !== TITRES_LECTURE_FITZ.join(" | ")) {
+        anomalies.push(`L'analyse de Fitz ne rend pas ses quatre cartes (${TITRES_LECTURE_FITZ.join(", ")}) : ${analyse.titres.join(", ") || "aucune"}.`);
+      }
+      notes.push(`analyse de Fitz : ${analyse.etat}, ${analyse.titres.length} carte(s)`);
+    }
+
   } catch (erreur) {
 
     anomalies.push(`ÉCHEC : ${erreur.message}`);
 
   }
 
-  // ---- 5. Rien n'a cassé en silence
+  // ---- 5. Rien n'a cassé en silence. Le relevé vient APRÈS la fin de
+  // l'analyse de Fitz (4 bis) : il ne dépend plus du chronométrage. Sous
+  // refus, la ligne qui signale l'échec est attendue une fois, par son
+  // texte exact ; toute autre erreur compte, un doublon compris.
+  let erreursComptees = erreursConsole;
+
+  if (fitz === "refus") {
+    const i = erreursConsole.findIndex((m) => m.split("\n")[0] === LIGNE_REFUS_FITZ);
+    if (i < 0) anomalies.push(`Fitz refusé : l'échec n'est pas signalé en console (attendu : « ${LIGNE_REFUS_FITZ} »).`);
+    else erreursComptees = erreursConsole.filter((_, j) => j !== i);
+  }
+
   for (const message of erreursPage) anomalies.push(`Exception JavaScript : ${message}`);
-  for (const message of erreursConsole) anomalies.push(`Erreur console : ${message}`);
+  for (const message of erreursComptees) anomalies.push(`Erreur console : ${message}`);
 
   const bloquants = manquants.filter((m) => estBloquante(base + m.url));
   const decoratifs = manquants.filter((m) => !estBloquante(base + m.url));
@@ -358,6 +454,13 @@ async function passerUnMoteur({ moteur, lanceur, montrer, base, choisis, cles, s
   for (const profil of choisis) {
     noter(profil.cle, await verifierUnProfil({ navigateur, base, profil }));
   }
+
+  // L'autre chemin de l'analyse de Fitz (lot FITZ-CONSOLE), une fois par
+  // moteur : le premier profil rejoué, Fitz refusé comme le refuse le
+  // vrai serveur au plafond des sessions anonymes. Les profils ci-dessus
+  // vérifient la lecture ; celui-ci, ce que l'étudiant voit quand elle
+  // n'arrive pas.
+  if (choisis.length) noter("analyse Fitz refusée", await verifierUnProfil({ navigateur, base, profil: choisis[0], fitz: "refus" }));
 
   // Les pages publiques du catalogue, une fois pour toutes (elles ne
   // dépendent d'aucun profil). Sautées quand un profil précis est
