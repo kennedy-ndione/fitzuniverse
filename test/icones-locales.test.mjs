@@ -110,8 +110,11 @@ test("icônes locales 1 — aucune page publiée ne charge lucide depuis un autr
 });
 
 test("icônes locales 2 — js/lucide-icones.js et la bibliothèque de secours sont à jour", () => {
-  assert.equal(lire(SORTIE), genererIcones(), "js/lucide-icones.js est périmé : node scripts/icones.mjs");
-  assert.equal(lire(COMPLETE), genererComplete(), `${COMPLETE} est périmé : node scripts/icones.mjs`);
+  // Fins de ligne ramenées à LF des deux côtés : sous Windows, Git écrit
+  // ces fichiers générés en CRLF, sans que leur contenu ait changé.
+  const lf = (s) => s.replace(/\r\n/g, "\n");
+  assert.equal(lf(lire(SORTIE)), lf(genererIcones()), "js/lucide-icones.js est périmé : node scripts/icones.mjs");
+  assert.equal(lf(lire(COMPLETE)), lf(genererComplete()), `${COMPLETE} est périmé : node scripts/icones.mjs`);
 });
 
 test("icônes locales 3 — toute icône citée par le site est dans le fichier local", () => {

@@ -405,7 +405,10 @@ test("catalogue des listes 3f — la fiche université : son document complet + 
 async function chargeurAvec(absents, tag) {
   const demandes = [];
   globalThis.fetch = async (url) => {
-    const chemin = decodeURIComponent(new URL(url).pathname);
+    // fileURLToPath : sous Windows, pathname vaut « /C:/… » et ne désigne
+    // aucun fichier ; le chargeur retombait alors sur Firestore (import https).
+    const adresse = new URL(url);
+    const chemin = adresse.protocol === "file:" ? fileURLToPath(adresse) : decodeURIComponent(adresse.pathname);
     const relatif = path.relative(RACINE, chemin).split(path.sep).join("/");
     demandes.push(relatif);
     if (absents.some((a) => relatif.startsWith(a)) || !fs.existsSync(chemin)) return { ok: false, status: 404, json: async () => null };

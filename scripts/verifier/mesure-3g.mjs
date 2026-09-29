@@ -55,6 +55,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { chromium } from "playwright";
 
 import { RESEAU_LENT } from "./mesure.mjs";
@@ -64,6 +65,22 @@ import { profilParCle } from "./profils.mjs";
 import { listerPublies } from "../hosting-publie.mjs";
 
 const DEPOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+// lucide.min.js, trouvé comme dans hors-ligne.mjs : Node résout le point
+// d'entrée du paquet, puis on remonte au dossier dont le package.json porte
+// son nom. Un chemin fixe sous la racine ne vaut rien dans un worktree.
+function fichierLucideMin() {
+  try {
+    let d = path.dirname(createRequire(import.meta.url).resolve("lucide"));
+    while (d !== path.dirname(d)) {
+      const p = path.join(d, "package.json");
+      if (fs.existsSync(p) && JSON.parse(fs.readFileSync(p, "utf8")).name === "lucide") return path.join(d, "dist", "umd", "lucide.min.js");
+      d = path.dirname(d);
+    }
+  } catch { /* paquet absent : rien à servir */ }
+  return null;
+}
+const LUCIDE_MIN = fichierLucideMin();
 
 const COMPTE_EMULATEUR = { email: "test.essentiel@scholarbridge.local", motDePasse: "TestEssentiel123!" };
 
@@ -167,7 +184,7 @@ function enTetesHosting(racine) {
  */
 export function precompresser(racine, miroir) {
   const fichiers = listerPublies(racine).map((relatif) => path.join(racine, relatif));
-  fichiers.push(path.join(DEPOT, "node_modules", "lucide", "dist", "umd", "lucide.min.js"));
+  if (LUCIDE_MIN) fichiers.push(LUCIDE_MIN);
   if (miroir) {
     const sdk = path.join(miroir, "firebasejs");
     if (fs.existsSync(sdk)) for (const v of fs.readdirSync(sdk)) for (const f of fs.readdirSync(path.join(sdk, v))) fichiers.push(path.join(sdk, v, f));
@@ -205,7 +222,7 @@ function repondre(res, statut, type, corps, extra = {}) {
  */
 export async function demarrerServeur({ racine, miroir, cle, cert }) {
   const entetes = enTetesHosting(racine);
-  const lucide = path.join(DEPOT, "node_modules", "lucide", "dist", "umd", "lucide.min.js");
+  const lucide = LUCIDE_MIN || path.join(DEPOT, "lucide-introuvable");
   const serveur = http2.createSecureServer({ key: cle, cert, allowHTTP1: true }, (req, res) => {
     const hote = String(req.headers[":authority"] || req.headers.host || "").replace(/:\d+$/, "");
     const url = new URL(req.url, `https://${hote}`);
